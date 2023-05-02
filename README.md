@@ -1,4 +1,4 @@
-# ReSolve
+# ReSolve (formerly known as &#346;wiryLU)
 
 
 
