@@ -18,25 +18,34 @@ namespace ReSolve
     std::stringstream ss;
     if (file.is_open()) {
       std::string line;
-      int i = 0;
-      long  int m, n, nnz;
+      resolveInt i = 0;
+      resolveInt m, n, nnz;
+      bool symmetric = false;
+      bool expanded = true;
       std::getline(file, line);
+      //symmetric?
+      size_t found = line.find("symmetric");
+      if (found != std::string::npos) {
+        symmetric = true;
+        expanded = false;
+      } 
+      printf("symmetric? %d \n",symmetric );
       while (line.at(0) == '%') {
         std::getline(file, line); 
-       // std::cout<<line<<std::endl;
+        // std::cout<<line<<std::endl;
       }
       ss << line;
       ss >> n >> m >> nnz;
       std::cout<<"Matrix size: "<<n<<" x "<<m<<", nnz: "<<nnz<<std::endl; 
       //create matrix object
-      resolveMatrix* A = new resolveMatrix(n, m, nnz);  
+      resolveMatrix* A = new resolveMatrix(n, m, nnz,symmetric, expanded );  
       //create coo arrays
-      int* coo_rows = new int[nnz];
-      int* coo_cols = new int[nnz];
-      double* coo_vals = new double[nnz];
+      resolveInt* coo_rows = new resolveInt[nnz];
+      resolveInt* coo_cols = new resolveInt[nnz];
+      resolveReal* coo_vals = new resolveReal[nnz];
       i = 0;
-      int a, b;
-      double c;
+      resolveInt a, b;
+      resolveReal c;
       while (file >> a>>b>>c){
         coo_rows[i] = a;
         coo_cols[i] = b;
@@ -54,10 +63,40 @@ namespace ReSolve
   }
 
 
-  double* resolveMatrixIO::readRhsFromFile(std::string filename)
+  resolveReal* resolveMatrixIO::readRhsFromFile(std::string filename)
   {
 
-  } 
+    std::ifstream file(filename);
+    std::stringstream ss;
+    if (file.is_open()) {
+
+      std::string line;
+      resolveInt i = 0;
+      resolveInt n, m;
+      std::getline(file, line);
+      while (line.at(0) == '%') {
+        std::getline(file, line); 
+        // std::cout<<line<<std::endl;
+      }
+      ss << line;
+      ss >> n >> m ;
+
+      resolveReal* vec = new resolveReal[n];
+      resolveReal a;
+      while (file >> a){
+        vec[i] = a;
+        i++;
+      }
+      printf("VEC has %d elements \n", i);
+      return vec;
+      file.close();
+    } else { 
+      std::cout<<"Error opening file"<<std::endl;
+      return nullptr;
+    }
+
+  }
+
 
   void resolveMatrixIO::readAndUpdateMatrix(std::string filename, resolveMatrix* A)
   {
@@ -66,12 +105,12 @@ namespace ReSolve
     std::stringstream ss;
     if (file.is_open()) {
       std::string line;
-      int i = 0;
-      long  int m, n, nnz;
+      resolveInt i = 0;
+      resolveInt m, n, nnz;
       std::getline(file, line);
       while (line.at(0) == '%') {
         std::getline(file, line); 
-      //  std::cout<<line<<std::endl;
+        //  std::cout<<line<<std::endl;
       }
       ss << line;
       ss >> n >> m >> nnz;
@@ -81,12 +120,12 @@ namespace ReSolve
         exit(0);
       }
       //create coo arrays
-      int* coo_rows = A->getCooRowIndices("cpu");
-      int* coo_cols = A->getCooColIndices("cpu");
-      double* coo_vals = A->getCooValues("cpu");
+      resolveInt* coo_rows = A->getCooRowIndices("cpu");
+      resolveInt* coo_cols = A->getCooColIndices("cpu");
+      resolveReal* coo_vals = A->getCooValues("cpu");
       i = 0;
-      int a, b;
-      double c;
+      resolveInt a, b;
+      resolveReal c;
       while (file >> a>>b>>c){
         coo_rows[i] = a;
         coo_cols[i] = b;
@@ -100,15 +139,45 @@ namespace ReSolve
 
   }
 
-  double* resolveMatrixIO::readAndUpdateRhs(std::string filename, double* rhs) 
+  resolveReal* resolveMatrixIO::readAndUpdateRhs(std::string filename, resolveReal* rhs) 
+  {
+
+    std::ifstream file(filename);
+    std::stringstream ss;
+    if (file.is_open()) {
+
+      std::string line;
+      resolveInt i = 0;
+      resolveInt n, m;
+      std::getline(file, line);
+      while (line.at(0) == '%') {
+        std::getline(file, line); 
+        // std::cout<<line<<std::endl;
+      }
+      ss << line;
+      ss >> n >> m ;
+
+      if(rhs == nullptr) { 
+        resolveReal* rhs = new resolveReal[n];
+      } 
+      resolveReal a;
+      while (file >> a){
+        rhs[i] = a;
+        i++;
+      }
+      printf("VEC has %d elements \n", i);
+      file.close();
+    } else { 
+      std::cout<<"Error opening file"<<std::endl;
+    }
+
+  }
+
+  resolveInt resolveMatrixIO::writeMatrixToFile(resolveMatrix* A, std::string filename)
   {
   }
 
-  int resolveMatrixIO::writeMatrixToFile(resolveMatrix* A, std::string filename)
-  {
-  }
-
-  int resolveMatrixIO::writeVectorToFile(double* x, std::string filename)
+  resolveInt resolveMatrixIO::writeVectorToFile(resolveReal* x, std::string filename)
   {
   }
 }

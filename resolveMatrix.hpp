@@ -2,86 +2,104 @@
 // Mirroring memory approach 
 #pragma once
 #include <string>
+#include "resolveCommon.hpp"
+#include<cstring>
 namespace ReSolve {
   class resolveMatrix {
 
     public:
       //basic constructor
       resolveMatrix();
-      resolveMatrix(int n, int m, int nnz);
+      resolveMatrix(resolveInt n, resolveInt m, resolveInt nnz);
+      resolveMatrix(resolveInt n, 
+                    resolveInt m, 
+                    resolveInt nnz,
+                    bool symmetric,
+                    bool expanded);
       ~resolveMatrix();
 
       // accessors
-      int getNumRows();
-      int getNumColumns();
-      int getNnz();
+      resolveInt getNumRows();
+      resolveInt getNumColumns();
+      resolveInt getNnz();
+      resolveInt getNnzExpanded();
+      
+      bool symmetric(); 
+      bool expanded();
+      void setSymmetric(bool symmetric);
+      void setExpanded(bool expanded);
+      void setNnzExpanded(resolveInt nnz_expanded_new);
 
-      int* getCsrRowPointers(std::string memspace);
-      int* getCsrColIndices(std::string memspace);
-      double* getCsrValues(std::string memspace);
+      
+      resolveInt* getCsrRowPointers(std::string memspace);
+      resolveInt* getCsrColIndices(std::string memspace);
+      resolveReal* getCsrValues(std::string memspace);
 
-      int* getCscColPointers(std::string memspace);
-      int* getCscRowIndices(std::string memspace);
-      double* getCscValues(std::string memspace);
+      resolveInt* getCscColPointers(std::string memspace);
+      resolveInt* getCscRowIndices(std::string memspace);
+      resolveReal* getCscValues(std::string memspace);
 
-      int* getCooRowIndices(std::string memspace);
-      int* getCooColIndices(std::string memspace);
-      double* getCooValues(std::string memspace);
+      resolveInt* getCooRowIndices(std::string memspace);
+      resolveInt* getCooColIndices(std::string memspace);
+      resolveReal* getCooValues(std::string memspace);
+// n does not change but nnz might!
+      resolveInt setCsr(resolveInt* csr_p, resolveInt* csr_i, resolveReal* csr_x, resolveInt new_nnz, std::string memspaceIn, std::string memspaceOut);
+      resolveInt setCsc(resolveInt* csc_p, resolveInt* csc_i, resolveReal* csc_x, resolveInt new_nnz, std::string memspace);
+      resolveInt setCoo(resolveInt* coo_rows, resolveInt* coo_cols, resolveReal* coo_vals, resolveInt new_nnz, std::string memspace);
 
-      int setCsr(int* csr_p, int* csr_i, double* csr_x, std::string memspace);
-      int setCsc(int* csc_p, int* csc_i, double* csc_x, std::string memspace);
-      int setCoo(int* coo_rows, int* coo_cols, double* coo_vals, std::string memspace);
 
-      //int setCudaWorkspace(resolveWorkspace* cudaWorkspace);
-      //format conversion
-      int convertCooToCsr(std::string memspace);
-      int convertCsrToCsc(std::string memspace);
+
+//DESTROY!
+      resolveInt destroyCsr(std::string memspace);
+      resolveInt destroyCsc(std::string memspace);
+      resolveInt destroyCoo(std::string memspace);
+       
 
     private:
       //size
-      int n;
-      int m;
-      int nnz;
+      resolveInt n;
+      resolveInt m;
+      resolveInt nnz;
+      resolveInt nnz_expanded;
 
-      //memory space (cpu or gpu)
-      std::string memspace;
-
+      bool is_symmetric;
+      bool is_expanded;
+      
       //host data
       // COO format:
-      int* h_coo_rows;
-      int* h_coo_cols;
-      double* h_coo_vals;
+      resolveInt* h_coo_rows;
+      resolveInt* h_coo_cols;
+      resolveReal* h_coo_vals;
 
       // CSR format:
-      int* h_csr_p; //row starts
-      int* h_csr_i; //column indices
-      double* h_csr_x;//values 
+      resolveInt* h_csr_p; //row starts
+      resolveInt* h_csr_i; //column indices
+      resolveReal* h_csr_x;//values 
 
       // CSC format:
-      int* h_csc_p; //column starts
-      int* h_csc_i; //row indices
-      double* h_csc_x;//values 
+      resolveInt* h_csc_p; //column starts
+      resolveInt* h_csc_i; //row indices
+      resolveReal* h_csc_x;//values 
 
       //device data
 
       /* note -- COO format not typically kept on the gpu anyways */
 
       //COO format:
-      int* d_coo_rows;
-      int* d_coo_cols;
-      double* d_coo_vals;
+      resolveInt* d_coo_rows;
+      resolveInt* d_coo_cols;
+      resolveReal* d_coo_vals;
 
       // CSR format:
-      int* d_csr_p; //row starts
-      int* d_csr_i; //column indices
-      double* d_csr_x;//values 
+      resolveInt* d_csr_p; //row starts
+      resolveInt* d_csr_i; //column indices
+      resolveReal* d_csr_x;//values 
 
       // CSC format:
-      int* d_csc_p; //column starts
-      int* d_csc_i; //row indices
-      double* d_csc_x;//values 
+      resolveInt* d_csc_p; //column starts
+      resolveInt* d_csc_i; //row indices
+      resolveReal* d_csc_x;//values 
+      
 
-      // if cuda functions are used, we need "workspace" that stores buffers and handles
-      //resolveWorkspace* cuda_workspace;
   };
 }

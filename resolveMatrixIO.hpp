@@ -1,6 +1,8 @@
 // this is for standalone testing (will NOT  be used in hiop)
 //
+#include "resolveCommon.hpp"
 #include "resolveMatrix.hpp"
+
 namespace ReSolve
 {
   class resolveMatrixIO{
@@ -10,10 +12,10 @@ namespace ReSolve
 
       resolveMatrix* readMatrixFromFile(std::string filename);
       void readAndUpdateMatrix(std::string filename, resolveMatrix* A);
-      double* readRhsFromFile(std::string filename); 
-      double* readAndUpdateRhs(std::string filename, double* rhs); 
+      resolveReal* readRhsFromFile(std::string filename); 
+      resolveReal* readAndUpdateRhs(std::string filename, resolveReal* rhs); 
 
-      int writeMatrixToFile(resolveMatrix* A, std::string filename); 
-      int writeVectorToFile(double* x, std::string filename); 
+      resolveInt writeMatrixToFile(resolveMatrix* A, std::string filename); 
+      resolveInt writeVectorToFile(resolveReal* x, std::string filename); 
   };
 }
