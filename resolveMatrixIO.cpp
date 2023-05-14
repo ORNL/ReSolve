@@ -47,8 +47,8 @@ namespace ReSolve
       resolveInt a, b;
       resolveReal c;
       while (file >> a>>b>>c){
-        coo_rows[i] = a;
-        coo_cols[i] = b;
+        coo_rows[i] = a - 1;
+        coo_cols[i] = b - 1;
         coo_vals[i] = c;
 
         i++;
@@ -104,6 +104,7 @@ namespace ReSolve
     std::ifstream file(filename);
     std::stringstream ss;
     if (file.is_open()) {
+	    A->setExpanded(false);
       std::string line;
       resolveInt i = 0;
       resolveInt m, n, nnz;
@@ -127,8 +128,8 @@ namespace ReSolve
       resolveInt a, b;
       resolveReal c;
       while (file >> a>>b>>c){
-        coo_rows[i] = a;
-        coo_cols[i] = b;
+        coo_rows[i] = a - 1;
+        coo_cols[i] = b - 1;
         coo_vals[i] = c;
         i++;
       }

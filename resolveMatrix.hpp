@@ -42,12 +42,23 @@ namespace ReSolve {
       resolveInt* getCooRowIndices(std::string memspace);
       resolveInt* getCooColIndices(std::string memspace);
       resolveReal* getCooValues(std::string memspace);
-// n does not change but nnz might!
-      resolveInt setCsr(resolveInt* csr_p, resolveInt* csr_i, resolveReal* csr_x, resolveInt new_nnz, std::string memspaceIn, std::string memspaceOut);
-      resolveInt setCsc(resolveInt* csc_p, resolveInt* csc_i, resolveReal* csc_x, resolveInt new_nnz, std::string memspace);
-      resolveInt setCoo(resolveInt* coo_rows, resolveInt* coo_cols, resolveReal* coo_vals, resolveInt new_nnz, std::string memspace);
 
+      // Set functions just set the values. It is always a pointer copy, not a deep copy.
+      resolveInt setCsr(resolveInt* csr_p, resolveInt* csr_i, resolveReal* csr_x, std::string memspace);
+      resolveInt setCsc(resolveInt* csc_p, resolveInt* csc_i, resolveReal* csc_x, std::string memspace);
+      resolveInt setCoo(resolveInt* coo_rows, resolveInt* coo_cols, resolveReal* coo_vals, std::string memspace);
 
+// Update functions update the data. There is always a deep copy, never a pointer copy
+// These function would allocate the space, if necessary.
+      resolveInt updateCsr(resolveInt* csr_p, resolveInt* csr_i, resolveReal* csr_x, std::string memspaceIn, std::string memspaceOut);
+      resolveInt updateCsc(resolveInt* csc_p, resolveInt* csc_i, resolveReal* csc_x, std::string memspaceIn, std::string memspaceOut);
+      resolveInt updateCoo(resolveInt* coo_rows, resolveInt* coo_cols, resolveReal* coo_vals, std::string memspaceIn, std::string memspaceOut);
+
+      //these functions should be used when, for instance, nnz changes (matrix get expanded, etc)
+
+      resolveInt updateCsr(resolveInt* csr_p, resolveInt* csr_i, resolveReal* csr_x, resolveInt new_nnz, std::string memspaceIn, std::string memspaceOut);
+      resolveInt updateCsc(resolveInt* csc_p, resolveInt* csc_i, resolveReal* csc_x, resolveInt new_nnz, std::string memspaceIn, std::string memspaceOut);
+      resolveInt updateCoo(resolveInt* coo_rows, resolveInt* coo_cols, resolveReal* coo_vals, resolveInt new_nnz,  std::string memspaceIn, std::string memspaceOut);
 
 //DESTROY!
       resolveInt destroyCsr(std::string memspace);

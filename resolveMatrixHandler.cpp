@@ -62,10 +62,10 @@ namespace ReSolve
     bool expanded = A->expanded();
 
     resolveInt* nnz_counts =  new resolveInt[n];
-
-    resolveInt* coo_rows = A->getCsrRowPointers("cpu");
-    resolveInt* coo_cols = A->getCsrColIndices("cpu");
-    resolveReal* coo_vals = A->getCsrValues("cpu");
+    std::fill_n(nnz_counts, n, 0);
+    resolveInt* coo_rows = A->getCooRowIndices("cpu");
+    resolveInt* coo_cols = A->getCooColIndices("cpu");
+    resolveReal* coo_vals = A->getCooValues("cpu");
 
     //maybe check if they exist?
     
@@ -81,11 +81,13 @@ namespace ReSolve
     }
     A->setExpanded(true);
     A->setNnzExpanded(nnz_unpacked);
-
+    printf("original A nnz: %d expanded nnz %d \n", nnz, nnz_unpacked);
     resolveInt* csr_ia = new resolveInt[n+1];
+    std::fill_n(csr_ia, n + 1, 0);
     resolveInt* csr_ja = new resolveInt[nnz_unpacked];
     resolveReal* csr_a = new resolveReal[nnz_unpacked];
     resolveInt* nnz_shifts = new resolveInt[n];
+    std::fill_n(nnz_shifts, n , 0);
 
     indexPlusValue* tmp = new indexPlusValue[nnz_unpacked]; 
 
@@ -97,12 +99,15 @@ namespace ReSolve
 
     int r, start;
 
+
+    printf("\n\n");
     for (resolveInt i = 0; i < nnz; ++i){
       //which row
       r = coo_rows[i];
       start = csr_ia[r];
+
       if ((start + nnz_shifts[r]) > nnz_unpacked)
-        printf("index out of boubds\n");
+        printf("index out of bounds 1: start %d nnz_shifts[%d] = %d \n", start, r, nnz_shifts[r]);
 
       tmp[start + nnz_shifts[r]].setIdx(coo_cols[i]);
       tmp[start + nnz_shifts[r]].setValue(coo_vals[i]);
@@ -116,7 +121,7 @@ namespace ReSolve
         start = csr_ia[r];
 
         if ((start + nnz_shifts[r]) > nnz_unpacked)
-          printf("index out of boubds 2\n");
+          printf("index out of bounds 2\n");
         tmp[start + nnz_shifts[r]].setIdx(coo_rows[i]);
         tmp[start + nnz_shifts[r]].setValue(coo_vals[i]);
         nnz_shifts[r]++;
@@ -141,20 +146,12 @@ namespace ReSolve
       csr_a[i] = tmp[i].getValue();
     }
 
-    if (memspace == "cpu"){
-      A->setCsr(csr_ia, csr_ja, csr_a, nnz_unpacked, "cpu");
-    } else {
-      if (memspace == "cuda"){
-        resolveInt* d_csr_ia;
-        resolveInt* d_csr_ja;
-        resolveReal* d_csr_a;
-        cudaMalloc(&d_csr_ia, (n + 1)*sizeof(resolveInt)); 
-        cudaMalloc(&d_csr_ja, (nnz_unpacked)*sizeof(resolveInt)); 
-        cudaMalloc(&d_csr_a, (nnz_unpacked)*sizeof(resolveReal)); 
 
-        cudaMemcpy(d_csr_ia, csr_ia, (n + 1) * sizeof(resolveInt), cudaMemcpyHostToDevice);
-        cudaMemcpy(d_csr_ja, csr_ja, (nnz_unpacked) * sizeof(resolveInt), cudaMemcpyHostToDevice);
-        cudaMemcpy(d_csr_a, csr_a, (nnz_unpacked) * sizeof(resolveReal), cudaMemcpyHostToDevice);
+    if (memspace == "cpu"){
+      A->updateCsr(csr_ia, csr_ja, csr_a, "cpu", "cpu");
+    } else {
+      if (memspace == "cuda"){      
+      A->updateCsr(csr_ia, csr_ja, csr_a, "cpu", "cuda");
       } else {
       //display error
       }
@@ -162,6 +159,9 @@ namespace ReSolve
     delete [] nnz_counts;
     delete [] tmp;
     delete [] nnz_shifts;
+    delete [] csr_ia;
+    delete [] csr_ja;
+    delete [] csr_a;
 
   }
 }
