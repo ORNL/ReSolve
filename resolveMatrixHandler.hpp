@@ -4,7 +4,7 @@
 // (2) Matrix vector product (SpMV)
 // (3) Matrix 1-norm
 #include "resolveMatrix.hpp"
-#include "resolveMatrixHandlerWorkspace.hpp"
+#include "resolveLinAlgWorkspace.hpp"
 #include <algorithm>
 namespace ReSolve
 {
@@ -45,7 +45,8 @@ namespace ReSolve
     void resolveMatrix1Norm(resolveMatrix *A, resolveReal* norm);
 
   private: 
-    resolveMatrixHandlerWorkspace* workspace;
-};
+    resolveLinAlgWorkspace* workspace;
+    bool new_matrix; //if the structure changed, you need a new handler.
+  };
 }
 

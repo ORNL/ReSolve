@@ -43,7 +43,7 @@ namespace ReSolve
   {
   }
 
-  resolveMatrixHandler::resolveMatrixHandler(resolveMatrixHandlerWorkspace* new_workspace)
+  resolveMatrixHandler::resolveMatrixHandler(resolveLinAlgWorkspace* new_workspace)
   {
     workspace = new_workspace;
   }
@@ -68,7 +68,7 @@ namespace ReSolve
     resolveReal* coo_vals = A->getCooValues("cpu");
 
     //maybe check if they exist?
-    
+
     for (resolveInt i = 0; i < nnz; ++i)
     {
       nnz_counts[coo_rows[i]]++;
@@ -151,9 +151,9 @@ namespace ReSolve
       A->updateCsr(csr_ia, csr_ja, csr_a, "cpu", "cpu");
     } else {
       if (memspace == "cuda"){      
-      A->updateCsr(csr_ia, csr_ja, csr_a, "cpu", "cuda");
+        A->updateCsr(csr_ia, csr_ja, csr_a, "cpu", "cuda");
       } else {
-      //display error
+        //display error
       }
     }
     delete [] nnz_counts;
@@ -163,5 +163,76 @@ namespace ReSolve
     delete [] csr_ja;
     delete [] csr_a;
 
+    void resolveMatrixHandler::resolveMatvec(resolveMatrix* A, resolveReal* x, resolveReal* result, resolveReal* alpha, resolveReal* beta, std::string memspace) {
+
+      //result = alpha *A*x + beta * result
+      if (memspace == "cuda" ){
+
+
+        resolveLinAlgWorkspaceCUDA* workspaceCUDA = (resolveLinAlgWorkspaceCUDA*) workspace;
+
+        cusparseDnVecDescr_t vecx = workspaceCUDA->getVecX;
+        cusparseCreateDnVec(&vecx, A->getNumRows(), x , CUDA_R_64F);
+        cusparseDnVecDescr_t vecAx = workspaceCUDA->getVecY;
+        cusparseCreateDnVec(&vecAx, getNumRows(), result, CUDA_R_64F);
+        cusparseSpMatDescr_t matA = workspaceCUDA->getSpmvMatrixDescriptor();
+
+        if (!workspaceCUDA->matvecSetup()){
+          //setup first, allocate, etc.
+          if (buffer_spmv != nullptr) {
+            free(buffer_spmv);
+          }
+          size_t bufferSize = 0;
+          resolveReal minusone = -1.0;
+          resolveReal one = 1.0;
+
+          checkCudaErrors( cusparseCreateCsr(&matA, 
+                                             A->getNumRows(), 
+                                             A->getNumCols(), 
+                                             A->getNnzExpanded(),
+                                             A->getCsrRowPointers("cuda"), 
+                                             A->getCsrColIndices("cuda"), 
+                                             A->getCsrValues("cuda"),
+                                             CUSPARSE_INDEX_32I, 
+                                             CUSPARSE_INDEX_32I,
+                                             CUSPARSE_INDEX_BASE_ZERO,
+                                             CUDA_R_64F));
+
+          cusparseSpMV_bufferSize(handle_cusparse, 
+                                  CUSPARSE_OPERATION_NON_TRANSPOSE,
+                                  &minusone,
+                                  matA,
+                                  vecx,
+                                  &one,
+                                  vecAx,
+                                  CUDA_R_64F,
+                                  CUSPARSE_MV_CSR_ALG2, 
+                                  &bufferSize);
+
+          cudaDeviceSynchronize();
+          cudaMalloc(&buffer_spmv, bufferSize);
+
+
+          workspaceCUDA->matvecSetupDone();
+        } 
+
+        checkCudaErrors( cusparseSpMV(handle_cusparse,
+                                      CUSPARSE_OPERATION_NON_TRANSPOSE,       
+                                      alpha, 
+                                      matA, 
+                                      vecx, 
+                                      beta, 
+                                      vecAx, 
+                                      CUDA_R_64F,
+                                      CUSPARSE_MV_ALG_DEFAULT, 
+                                      buffer_spmv));
+      } else {
+        std::cout<<"Not implemented (yet)"<<std::endl;
+      }
+
+
+
+    }
+
+
   }
-}
