@@ -1,4 +1,4 @@
-#include "tesolveLinSolverDirectKLU.hpp"
+#include "resolveLinSolverDirectKLU.hpp"
 
 namespace ReSolve {
 
@@ -6,7 +6,7 @@ namespace ReSolve {
   {
     Symbolic = nullptr;
     Numeric = nullptr;
-    klu_defaults(&Common) ;
+    klu_defaults(&common) ;
   } 
   resolveLinSolverDirectKLU::~resolveLinSolverDirectKLU()
   {
@@ -18,36 +18,55 @@ namespace ReSolve {
 
   void resolveLinSolverDirectKLU::setupParameters(int ordering, double KLU_threshold, bool halt_if_singular) 
   {
-    Common->btf  = 0;
-    Common->ordering = ordering;
-    Common->tol = KLU_threshold;
-    Common->scale = -1;
-    Common->halt_if_singular=halt_if_singular;
+    common.btf  = 0;
+    common.ordering = ordering;
+    common.tol = KLU_threshold;
+    common.scale = -1;
+    common.halt_if_singular = halt_if_singular;
   }
 
-
-  void resolveLinSolverDirectKLU::analyze() 
+  int resolveLinSolverDirectKLU::analyze() 
   {
-    Symbolic = klu_analyze(A->getNumRows(), A->getiCsrRowPointers("cpu"), A->getCsrColumnIndices("cpu"), &Common) ;
-    if (Symbolic == NULL){
-      exit(1);
+    Symbolic = klu_analyze(A->getNumRows(), A->getCsrRowPointers("cpu"), A->getCsrColIndices("cpu"), &common) ;
+    if (Symbolic == nullptr){
+      return -1;
     }
+    return 0;
   }
-  void resolveLinSolverDirectKLU::factorize() 
+
+  int resolveLinSolverDirectKLU::factorize() 
   {
-
-    Numeric = klu_factor(A->getCsrRowPointers("cpu"), A->getCsrColumnIndices("cpu"),A->getCsrVals("cpu"), Symbolic, &Common);
-
-
-
-    void resolveLinSolverDirectKLU::refactorize() 
-    {
-
+    Numeric = klu_factor(A->getCsrRowPointers("cpu"), A->getCsrColIndices("cpu"),A->getCsrValues("cpu"), Symbolic, &common);
+    if (Numeric == nullptr){
+      return -1;
     }
-    resolveReal* resolveLinSolverDirectKLU::solve(resolveReal* rhs) 
-    {
-
-    }
+    return 0;
   }
 
+  int  resolveLinSolverDirectKLU::refactorize() 
+  {
+    int kluStatus = klu_refactor (A->getCsrRowPointers("cpu"), A->getCsrColIndices("cpu"), A->getCsrValues("cpu"), Symbolic, Numeric, &common);
+
+    if (!kluStatus){
+      //display error
+      return -1;
+    }
+    return 0;
+  }
+
+  int resolveLinSolverDirectKLU::solve(resolveReal* rhs, resolveReal* x) 
+  {
+    //copy the vector
+
+    std::memcpy(x, rhs, A->getNumRows() * sizeof(resolveReal));
+    int kluStatus = klu_solve(Symbolic, Numeric, A->getNumRows(), 1, x, &common);
+
+    if (!kluStatus){
+      return -1;
+    }
+
+    return 0;
+  }
 }
+
+

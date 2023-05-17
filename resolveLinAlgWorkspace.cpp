@@ -76,17 +76,17 @@ namespace ReSolve
 
   void resolveLinAlgWorkspaceCUDA::setCusolverSpHandle(cusolverSpHandle_t handle)
   {
-    handle_cusolverSp = handle;
+    handle_cusolversp = handle;
   }
 
 
 
-  cusparseSpMatDescr_t resolveLinAlgWorkspaceCUDA::etSpmvMatrixDescriptor()
+  cusparseSpMatDescr_t resolveLinAlgWorkspaceCUDA::getSpmvMatrixDescriptor()
   {
     return mat_A;
   }
 
-  void resolveLinAlgWorkspaceCUDA::setSomvMatrixDescriptor(cusparseSpMatDescr_t mat)
+  void resolveLinAlgWorkspaceCUDA::setSpmvMatrixDescriptor(cusparseSpMatDescr_t mat)
   {
     mat_A = mat;
   }
@@ -102,11 +102,11 @@ namespace ReSolve
   }
 
   bool resolveLinAlgWorkspaceCUDA::matvecSetup(){
-    return matvec_setup;
+    return matvec_setup_done;
   }
 
   void resolveLinAlgWorkspaceCUDA::matvecSetupDone() {
-    matvec_setup = true;
+    matvec_setup_done = true;
   }
 
   void resolveLinAlgWorkspaceCUDA::initializeHandles()

@@ -81,16 +81,19 @@ namespace ReSolve {
       resolveInt* h_coo_rows;
       resolveInt* h_coo_cols;
       resolveReal* h_coo_vals;
+      bool h_coo_updated;
 
       // CSR format:
       resolveInt* h_csr_p; //row starts
       resolveInt* h_csr_i; //column indices
       resolveReal* h_csr_x;//values 
+      bool h_csr_updated;
 
       // CSC format:
       resolveInt* h_csc_p; //column starts
       resolveInt* h_csc_i; //row indices
       resolveReal* h_csc_x;//values 
+      bool h_csc_updated;
 
       //device data
 
@@ -100,17 +103,23 @@ namespace ReSolve {
       resolveInt* d_coo_rows;
       resolveInt* d_coo_cols;
       resolveReal* d_coo_vals;
+      bool d_coo_updated;
 
       // CSR format:
       resolveInt* d_csr_p; //row starts
       resolveInt* d_csr_i; //column indices
       resolveReal* d_csr_x;//values 
+      bool d_csr_updated;
 
       // CSC format:
       resolveInt* d_csc_p; //column starts
       resolveInt* d_csc_i; //row indices
-      resolveReal* d_csc_x;//values 
+      resolveReal* d_csc_x;//values  
+      bool d_csc_updated;
       
-
+      void setNotUpdated();
+      void copyCsr(std::string memspaceOut);
+      void copyCsc(std::string memspaceOut);
+      void copyCoo(std::string memspaceOut);
   };
 }

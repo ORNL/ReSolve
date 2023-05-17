@@ -2,18 +2,19 @@
 #include <string>
 #include "resolveCommon.hpp"
 #include "resolveMatrix.hpp"
-
+#include "resolveMatrixHandler.hpp"
+#include "resolveVectorHandler.hpp"
 namespace ReSolve {
   class resolveLinSolver {
     public:
       resolveLinSolver();
       ~resolveLinSolver();
 
-      virtual setup(resolveMatrix* A);
-      resolveReal evaluteResidual();
+      virtual void setup(resolveMatrix* A);
+      resolveReal evaluateResidual();
     
       
-    private:
+    protected:
       
       resolveMatrix* A;
       resolveReal* rhs;
@@ -23,23 +24,23 @@ namespace ReSolve {
       resolveVectorHandler *vector_handler;
   };
 
-  class resolveLinSolverDirect : resolveLinSolver {
+  class resolveLinSolverDirect : public resolveLinSolver {
     public:
       resolveLinSolverDirect();
       ~resolveLinSolverDirect();
-
-      virtual void analyze(); //the same as symbolic factorization
-      virtual void factorize();
-      virtual void refactorize();
-      virtual resolveReal* solve(resolveReal* rhs); 
+      //return 0 if successful!
+      virtual int analyze(); //the same as symbolic factorization
+      virtual int factorize();
+      virtual int refactorize();
+      virtual int solve(resolveReal* rhs, resolveReal* x); 
      
-      virtual resolvematrix* getLFactor(); 
-      virtual resolvematrix* getUFactor(); 
+      virtual resolveMatrix* getLFactor(); 
+      virtual resolveMatrix* getUFactor(); 
       virtual resolveInt*  getPOrdering();
       virtual resolveInt*  getQOrdering();
   };
 
-  class resolveLinSolverIterative : resolveLinSolver {
+  class resolveLinSolverIterative : public resolveLinSolver {
     public:
       resolveLinSolverIterative();
       ~resolveLinSolverIterative();

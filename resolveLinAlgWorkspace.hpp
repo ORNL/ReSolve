@@ -1,11 +1,14 @@
 #include <cuda_runtime.h>
 #include "cublas_v2.h"
+#include "cusparse.h"
+#include "cusolverSp.h"
+#pragma once
 namespace ReSolve
 {
   class resolveLinAlgWorkspace
   {
     public:
-      resolveLinAlgrWorkspace();
+      resolveLinAlgWorkspace();
       ~resolveLinAlgWorkspace();
     private:
   };
@@ -14,7 +17,7 @@ namespace ReSolve
   class resolveLinAlgWorkspaceCUDA : public resolveLinAlgWorkspace
   {
     public:
-      resolveLinAlgWorkspaceCUDA();
+resolveLinAlgWorkspaceCUDA();
       ~resolveLinAlgWorkspaceCUDA();
 
       //accessors
@@ -26,17 +29,17 @@ namespace ReSolve
       void setSpmvBuffer(void* buffer);
       void setNormBuffer(void* buffer);
 
-      cusparseHandle_t getCusparseHandle();
+      cublasHandle_t getCublasHandle();
       cusolverSpHandle_t getCusolverSpHandle(); //needed for 1-norms etc
-      cusparsHandle_t getCusparseHandle();      
+      cusparseHandle_t getCusparseHandle();      
       cusparseSpMatDescr_t getSpmvMatrixDescriptor();
       cusparseDnVecDescr_t getVecX();
       cusparseDnVecDescr_t  getVecY();
 
-      void setCusparseHandle(cusparseHandle_t handle);
+      void setCublasHandle(cublasHandle_t handle);
       void setCusolverSpHandle( cusolverSpHandle_t handle);
       void setCusparseHandle(cusparseHandle_t handle);
-      void setSomvMatrixDescriptor(cusparseSpMatDescr_t mat);
+      void setSpmvMatrixDescriptor(cusparseSpMatDescr_t mat);
       
       void initializeHandles();
 
@@ -45,7 +48,7 @@ namespace ReSolve
     
     private:
       //handles
-      cusparseHandle_t handle_cusparse;
+      cublasHandle_t handle_cublas;
       cusolverSpHandle_t handle_cusolversp;//needed for 1-norm
       cusparseHandle_t handle_cusparse;
 
