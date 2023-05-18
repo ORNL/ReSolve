@@ -72,9 +72,6 @@ namespace ReSolve
 
     resolveInt* diag_control = new resolveInt[n]; //for DEDUPLICATION of the diagonal
     std::fill_n(diag_control, n, 0);
-    bool* diag_init =  new bool[n];
-    std::fill_n(diag_control, n, false);
-
     resolveInt nnz_unpacked_no_duplicates = 0;
     resolveInt nnz_no_duplicates = nnz;
 
@@ -131,32 +128,32 @@ namespace ReSolve
         printf("index out of bounds 1: start %d nnz_shifts[%d] = %d \n", start, r, nnz_shifts[r]);
       }
       if (r == coo_cols[i]){ //diagonal
-       // printf("diagnoal %d diag_control[%d] = %d \n", r, r, diag_control[r]);
         if (diag_control[r] > 1) {//there are duplicates
-          if (diag_init[r] == false)
+          bool already_there = false;  
+          for (resolveInt j = start; j < start + nnz_shifts[r]; ++j)
           {
+            resolveInt c = tmp[j].getIdx();
+            if (c == r) {
+              resolveReal val = tmp[j].getValue();
+              val += coo_vals[i];
+              tmp[j].setValue(val);
+              already_there = true;
+              //printf("duplicate found, row %d, adding in place %d current value %f \n", c, j, val);
+            }  
+          }  
+          if (!already_there){ // first time this duplicates appears
+
             tmp[start + nnz_shifts[r]].setIdx(coo_cols[i]);
             tmp[start + nnz_shifts[r]].setValue(coo_vals[i]);
 
             nnz_shifts[r]++;
-            diag_init[r] = true;
-          } else {
-            for (resolveInt j = start; j < start + nnz_shifts[r]; ++j)
-            {
-              resolveInt c = tmp[j].getIdx();
-              if (c == r) {
-                resolveReal val = tmp[j].getValue();
-                val += coo_vals[i];
-                tmp[j].setValue(val);
-              }  
-            }  
           }
         }
       } else {
         tmp[start + nnz_shifts[r]].setIdx(coo_cols[i]);
         tmp[start + nnz_shifts[r]].setValue(coo_vals[i]);
         nnz_shifts[r]++;
-        
+
         if ((coo_rows[i] != coo_cols[i]) && (symmetric == 1))
         {
           r = coo_cols[i];
@@ -205,9 +202,9 @@ namespace ReSolve
     delete [] csr_ia;
     delete [] csr_ja;
     delete [] csr_a;
-    delete [] diag_init;
     delete [] diag_control; 
   }
+
   void resolveMatrixHandler::resolveMatvec(resolveMatrix* A, 
                                            resolveReal* x, 
                                            resolveReal* result, 
@@ -236,12 +233,12 @@ namespace ReSolve
         resolveReal minusone = -1.0;
         resolveReal one = 1.0;
         cusparseCreateCsr(&matA, 
-                          A->getNumRows(), 
-                          A->getNumColumns(), 
+                          A->getNumRows(),
+                          A->getNumColumns(),
                           A->getNnzExpanded(),
-                          A->getCsrRowPointers("cuda"), 
-                          A->getCsrColIndices("cuda"), 
-                          A->getCsrValues("cuda"),
+                          A->getCsrRowPointers("gpu"),
+                          A->getCsrColIndices("gpu"),
+                          A->getCsrValues("gpu"), 
                           CUSPARSE_INDEX_32I, 
                           CUSPARSE_INDEX_32I,
                           CUSPARSE_INDEX_BASE_ZERO,
