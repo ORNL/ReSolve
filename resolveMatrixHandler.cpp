@@ -1,10 +1,13 @@
 #include "resolveMatrixHandler.hpp"
 #include <iostream>
+
 namespace ReSolve
 {
   //helper class
   indexPlusValue::indexPlusValue()
   {
+    idx = 0;
+    value = 0.0;
   }
 
 
@@ -67,21 +70,39 @@ namespace ReSolve
     resolveInt* coo_cols = A->getCooColIndices("cpu");
     resolveReal* coo_vals = A->getCooValues("cpu");
 
-    //maybe check if they exist?
+    resolveInt* diag_control = new resolveInt[n]; //for DEDUPLICATION of the diagonal
+    std::fill_n(diag_control, n, 0);
+    bool* diag_init =  new bool[n];
+    std::fill_n(diag_control, n, false);
 
+    resolveInt nnz_unpacked_no_duplicates = 0;
+    resolveInt nnz_no_duplicates = nnz;
+
+
+    //maybe check if they exist?
     for (resolveInt i = 0; i < nnz; ++i)
     {
       nnz_counts[coo_rows[i]]++;
       nnz_unpacked++;
+      nnz_unpacked_no_duplicates++;
       if ((coo_rows[i] != coo_cols[i])&& (symmetric) && (!expanded))
       {
         nnz_counts[coo_cols[i]]++;
         nnz_unpacked++;
+        nnz_unpacked_no_duplicates++;
+      }
+      if (coo_rows[i] == coo_cols[i]){
+        if (diag_control[coo_rows[i]] > 0) {
+          //duplicate
+          nnz_unpacked_no_duplicates--;
+          nnz_no_duplicates--;
+        }
+        diag_control[coo_rows[i]]++;
       }
     }
     A->setExpanded(true);
-    A->setNnzExpanded(nnz_unpacked);
-    printf("original A nnz: %d expanded nnz %d \n", nnz, nnz_unpacked);
+    A->setNnzExpanded(nnz_unpacked_no_duplicates);
+    printf("original A nnz: %d true nnz %d expanded nnz %d de-duplicated unpacked nnz %d \n", nnz,nnz_no_duplicates, nnz_unpacked, nnz_unpacked_no_duplicates);
     resolveInt* csr_ia = new resolveInt[n+1];
     std::fill_n(csr_ia, n + 1, 0);
     resolveInt* csr_ja = new resolveInt[nnz_unpacked];
@@ -94,7 +115,7 @@ namespace ReSolve
     csr_ia[0] = 0;
 
     for (resolveInt i = 1; i < n + 1; ++i){
-      csr_ia[i] = csr_ia[i - 1] + nnz_counts[i - 1];
+      csr_ia[i] = csr_ia[i - 1] + nnz_counts[i - 1] - (diag_control[i-1] - 1);
     }
 
     int r, start;
@@ -106,25 +127,47 @@ namespace ReSolve
       r = coo_rows[i];
       start = csr_ia[r];
 
-      if ((start + nnz_shifts[r]) > nnz_unpacked)
+      if ((start + nnz_shifts[r]) > nnz_unpacked) {
         printf("index out of bounds 1: start %d nnz_shifts[%d] = %d \n", start, r, nnz_shifts[r]);
+      }
+      if (r == coo_cols[i]){ //diagonal
+       // printf("diagnoal %d diag_control[%d] = %d \n", r, r, diag_control[r]);
+        if (diag_control[r] > 1) {//there are duplicates
+          if (diag_init[r] == false)
+          {
+            tmp[start + nnz_shifts[r]].setIdx(coo_cols[i]);
+            tmp[start + nnz_shifts[r]].setValue(coo_vals[i]);
 
-      tmp[start + nnz_shifts[r]].setIdx(coo_cols[i]);
-      tmp[start + nnz_shifts[r]].setValue(coo_vals[i]);
-
-      nnz_shifts[r]++;
-
-      if ((coo_rows[i] != coo_cols[i]) && (symmetric == 1))
-      {
-
-        r = coo_cols[i];
-        start = csr_ia[r];
-
-        if ((start + nnz_shifts[r]) > nnz_unpacked)
-          printf("index out of bounds 2\n");
-        tmp[start + nnz_shifts[r]].setIdx(coo_rows[i]);
+            nnz_shifts[r]++;
+            diag_init[r] = true;
+          } else {
+            for (resolveInt j = start; j < start + nnz_shifts[r]; ++j)
+            {
+              resolveInt c = tmp[j].getIdx();
+              if (c == r) {
+                resolveReal val = tmp[j].getValue();
+                val += coo_vals[i];
+                tmp[j].setValue(val);
+              }  
+            }  
+          }
+        }
+      } else {
+        tmp[start + nnz_shifts[r]].setIdx(coo_cols[i]);
         tmp[start + nnz_shifts[r]].setValue(coo_vals[i]);
         nnz_shifts[r]++;
+        
+        if ((coo_rows[i] != coo_cols[i]) && (symmetric == 1))
+        {
+          r = coo_cols[i];
+          start = csr_ia[r];
+
+          if ((start + nnz_shifts[r]) > nnz_unpacked)
+            printf("index out of bounds 2\n");
+          tmp[start + nnz_shifts[r]].setIdx(coo_rows[i]);
+          tmp[start + nnz_shifts[r]].setValue(coo_vals[i]);
+          nnz_shifts[r]++;
+        }
       }
     }
     //now sort whatever is inside rows
@@ -146,7 +189,7 @@ namespace ReSolve
       csr_a[i] = tmp[i].getValue();
     }
 
-
+    A->setNnz(nnz_no_duplicates);
     if (memspace == "cpu"){
       A->updateCsr(csr_ia, csr_ja, csr_a, "cpu", "cpu");
     } else {
@@ -162,6 +205,8 @@ namespace ReSolve
     delete [] csr_ia;
     delete [] csr_ja;
     delete [] csr_a;
+    delete [] diag_init;
+    delete [] diag_control; 
   }
   void resolveMatrixHandler::resolveMatvec(resolveMatrix* A, 
                                            resolveReal* x, 
@@ -233,10 +278,5 @@ namespace ReSolve
     } else {
       std::cout<<"Not implemented (yet)"<<std::endl;
     }
-
-
-
   }
-
-
 }

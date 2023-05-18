@@ -23,14 +23,14 @@ namespace ReSolve {
       resolveInt getNumColumns();
       resolveInt getNnz();
       resolveInt getNnzExpanded();
-      
+
       bool symmetric(); 
       bool expanded();
       void setSymmetric(bool symmetric);
       void setExpanded(bool expanded);
       void setNnzExpanded(resolveInt nnz_expanded_new);
+      void setNnz(resolveInt nnz_new); // for resetting when removing duplicates
 
-      
       resolveInt* getCsrRowPointers(std::string memspace);
       resolveInt* getCsrColIndices(std::string memspace);
       resolveReal* getCsrValues(std::string memspace);
@@ -48,8 +48,8 @@ namespace ReSolve {
       resolveInt setCsc(resolveInt* csc_p, resolveInt* csc_i, resolveReal* csc_x, std::string memspace);
       resolveInt setCoo(resolveInt* coo_rows, resolveInt* coo_cols, resolveReal* coo_vals, std::string memspace);
 
-// Update functions update the data. There is always a deep copy, never a pointer copy
-// These function would allocate the space, if necessary.
+      // Update functions update the data. There is always a deep copy, never a pointer copy
+      // These function would allocate the space, if necessary.
       resolveInt updateCsr(resolveInt* csr_p, resolveInt* csr_i, resolveReal* csr_x, std::string memspaceIn, std::string memspaceOut);
       resolveInt updateCsc(resolveInt* csc_p, resolveInt* csc_i, resolveReal* csc_x, std::string memspaceIn, std::string memspaceOut);
       resolveInt updateCoo(resolveInt* coo_rows, resolveInt* coo_cols, resolveReal* coo_vals, std::string memspaceIn, std::string memspaceOut);
@@ -60,11 +60,11 @@ namespace ReSolve {
       resolveInt updateCsc(resolveInt* csc_p, resolveInt* csc_i, resolveReal* csc_x, resolveInt new_nnz, std::string memspaceIn, std::string memspaceOut);
       resolveInt updateCoo(resolveInt* coo_rows, resolveInt* coo_cols, resolveReal* coo_vals, resolveInt new_nnz,  std::string memspaceIn, std::string memspaceOut);
 
-//DESTROY!
+      //DESTROY!
       resolveInt destroyCsr(std::string memspace);
       resolveInt destroyCsc(std::string memspace);
       resolveInt destroyCoo(std::string memspace);
-       
+
 
     private:
       //size
@@ -75,7 +75,7 @@ namespace ReSolve {
 
       bool is_symmetric;
       bool is_expanded;
-      
+
       //host data
       // COO format:
       resolveInt* h_coo_rows;
@@ -116,7 +116,8 @@ namespace ReSolve {
       resolveInt* d_csc_i; //row indices
       resolveReal* d_csc_x;//values  
       bool d_csc_updated;
-      
+
+      //auxiliary functions for managing updating data between cpu and cuda
       void setNotUpdated();
       void copyCsr(std::string memspaceOut);
       void copyCsc(std::string memspaceOut);

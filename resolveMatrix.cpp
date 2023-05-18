@@ -1,7 +1,9 @@
 #include "resolveMatrix.hpp"
 #include <cuda_runtime.h>
 
-namespace ReSolve {
+
+namespace ReSolve 
+{
 
   resolveMatrix::resolveMatrix()
   {
@@ -37,7 +39,6 @@ namespace ReSolve {
     d_csc_i = nullptr;
     d_csc_x = nullptr;
 
-
     h_coo_rows = nullptr;
     h_coo_cols = nullptr;
     h_coo_vals = nullptr;
@@ -46,6 +47,7 @@ namespace ReSolve {
     d_coo_cols = nullptr;
     d_coo_vals = nullptr;
   }
+
   resolveMatrix::resolveMatrix(resolveInt n, 
                                resolveInt m, 
                                resolveInt nnz,
@@ -63,8 +65,32 @@ namespace ReSolve {
       this->nnz_expanded = 0;
     }
     setNotUpdated();
-  }
 
+    //set everything to nullptr
+    h_csr_p = nullptr;
+    h_csr_i = nullptr;
+    h_csr_x = nullptr;
+
+    d_csr_p = nullptr;
+    d_csr_i = nullptr;
+    d_csr_x = nullptr;
+
+    h_csc_p = nullptr;
+    h_csc_i = nullptr;
+    h_csc_x = nullptr;
+
+    d_csc_p = nullptr;
+    d_csc_i = nullptr;
+    d_csc_x = nullptr;
+
+    h_coo_rows = nullptr;
+    h_coo_cols = nullptr;
+    h_coo_vals = nullptr;
+
+    d_coo_rows = nullptr;
+    d_coo_cols = nullptr;
+    d_coo_vals = nullptr;
+  }
 
   resolveMatrix::~resolveMatrix()
   {
@@ -119,7 +145,6 @@ namespace ReSolve {
       }
     }
   }
-
 
   void   resolveMatrix::copyCsc(std::string memspaceOut)
   {
@@ -242,6 +267,11 @@ namespace ReSolve {
   void resolveMatrix::setNnzExpanded(resolveInt nnz_expanded_new)
   {
     nnz_expanded = nnz_expanded_new;
+  }
+  
+  void resolveMatrix::setNnz(resolveInt nnz_new)
+  {
+    nnz = nnz_new;
   }
 
   resolveInt* resolveMatrix::getCsrRowPointers(std::string memspace)
@@ -398,8 +428,6 @@ namespace ReSolve {
       } else {
         return -1;
       }
-
-
     }
     return 0;
   }
@@ -422,14 +450,12 @@ namespace ReSolve {
       } else {
         return -1;
       }
-
     }
     return 0;
   }
 
   int resolveMatrix::setCoo(int* coo_rows, int* coo_cols, double* coo_vals, std::string memspace)
   {
-
     setNotUpdated();
     if (memspace == "cpu"){
       this->h_coo_rows = coo_rows;
@@ -452,7 +478,6 @@ namespace ReSolve {
 
   resolveInt resolveMatrix::updateCsr(resolveInt* csr_p, resolveInt* csr_i, resolveReal* csr_x,  std::string memspaceIn, std::string memspaceOut)
   {
-
     //four cases (for now)
     setNotUpdated();
     int control=-1;
@@ -589,7 +614,6 @@ namespace ReSolve {
 
   resolveInt resolveMatrix::updateCoo(resolveInt* coo_rows, resolveInt* coo_cols, resolveReal* coo_vals,  std::string memspaceIn, std::string memspaceOut)
   {
-
     //four cases (for now)
     setNotUpdated();
     int control=-1;

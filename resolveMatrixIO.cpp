@@ -116,8 +116,8 @@ namespace ReSolve
       ss << line;
       ss >> n >> m >> nnz;
       std::cout<<"Matrix size: "<<n<<" x "<<m<<", nnz: "<<nnz<<std::endl; 
-      if ((A->getNumRows() != n) || (A->getNumColumns() != m) || (A->getNnz() != nnz)){
-        printf("Wrong matrix size! \n ");
+      if ((A->getNumRows() != n) || (A->getNumColumns() != m) || (A->getNnz() < nnz)){      
+        printf("Wrong matrix size! Cannot update \n ");
         exit(0);
       }
       //create coo arrays

@@ -38,6 +38,11 @@ namespace ReSolve {
       virtual resolveMatrix* getUFactor(); 
       virtual resolveInt*  getPOrdering();
       virtual resolveInt*  getQOrdering();
+    protected:
+      resolveMatrix* L;
+      resolveMatrix* U;
+      resolveInt* P;
+      resolveInt* Q;
   };
 
   class resolveLinSolverIterative : public resolveLinSolver {
