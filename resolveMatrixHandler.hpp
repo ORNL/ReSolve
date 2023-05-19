@@ -3,6 +3,7 @@
 // (1) Matrix format conversion: coo2csr, csr2csc
 // (2) Matrix vector product (SpMV)
 // (3) Matrix 1-norm
+#pragma once
 #include "resolveMatrix.hpp"
 #include "resolveLinAlgWorkspace.hpp"
 #include <algorithm>
@@ -42,7 +43,7 @@ namespace ReSolve
       void csr2csc(resolveMatrix* A, std::string memspace);//memspace decides on what is returned (cpu or cuda pointer)
       void coo2csr(resolveMatrix* A, std::string memspace);
 
-      void resolveMatvec(resolveMatrix* A, resolveReal* x, resolveReal* result, resolveReal* alpha, resolveReal* beta, std::string memspace);
+      void matvec(resolveMatrix* A, resolveReal* x, resolveReal* result, resolveReal* alpha, resolveReal* beta, std::string memspace);
       void resolveMatrix1Norm(resolveMatrix *A, resolveReal* norm);
 
     private: 

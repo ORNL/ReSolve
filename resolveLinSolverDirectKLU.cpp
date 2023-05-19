@@ -14,6 +14,7 @@ namespace ReSolve {
   }
   void resolveLinSolverDirectKLU::setup(resolveMatrix* A)
   {
+    this->A = A;
   }
 
   void resolveLinSolverDirectKLU::setupParameters(int ordering, double KLU_threshold, bool halt_if_singular) 
@@ -29,6 +30,7 @@ namespace ReSolve {
   {
     Symbolic = klu_analyze(A->getNumRows(), A->getCsrRowPointers("cpu"), A->getCsrColIndices("cpu"), &common) ;
     if (Symbolic == nullptr){
+      printf("Symbolic factorization crashed withcommon.status = %d \n", common.status);
       return -1;
     }
     return 0;

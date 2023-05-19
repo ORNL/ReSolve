@@ -1,4 +1,5 @@
 
+#pragma once
 #include "klu.h"
 #include "resolveCommon.hpp"
 #include "resolveMatrix.hpp"

@@ -127,153 +127,158 @@ namespace ReSolve
       if ((start + nnz_shifts[r]) > nnz_unpacked) {
         printf("index out of bounds 1: start %d nnz_shifts[%d] = %d \n", start, r, nnz_shifts[r]);
       }
-      if (r == coo_cols[i]){ //diagonal
-        if (diag_control[r] > 1) {//there are duplicates
-          bool already_there = false;  
-          for (resolveInt j = start; j < start + nnz_shifts[r]; ++j)
-          {
-            resolveInt c = tmp[j].getIdx();
-            if (c == r) {
-              resolveReal val = tmp[j].getValue();
-              val += coo_vals[i];
-              tmp[j].setValue(val);
-              already_there = true;
-              //printf("duplicate found, row %d, adding in place %d current value %f \n", c, j, val);
-            }  
-          }  
-          if (!already_there){ // first time this duplicates appears
-
-            tmp[start + nnz_shifts[r]].setIdx(coo_cols[i]);
-            tmp[start + nnz_shifts[r]].setValue(coo_vals[i]);
-
-            nnz_shifts[r]++;
-          }
-        }
-      } else {
-        tmp[start + nnz_shifts[r]].setIdx(coo_cols[i]);
-        tmp[start + nnz_shifts[r]].setValue(coo_vals[i]);
-        nnz_shifts[r]++;
-
-        if ((coo_rows[i] != coo_cols[i]) && (symmetric == 1))
+      if ((r == coo_cols[i])&&(diag_control[r] > 1)) {//diagonal, and there are duplicates
+        bool already_there = false;  
+        for (resolveInt j = start; j < start + nnz_shifts[r]; ++j)
         {
-          r = coo_cols[i];
-          start = csr_ia[r];
+          resolveInt c = tmp[j].getIdx();
+          if (c == r) {
+            resolveReal val = tmp[j].getValue();
+            val += coo_vals[i];
+            tmp[j].setValue(val);
+            already_there = true;
+            //printf("duplicate found, row %d, adding in place %d current value %f \n", c, j, val);
+          }  
+        }  
+        if (!already_there){ // first time this duplicates appears
 
-          if ((start + nnz_shifts[r]) > nnz_unpacked)
-            printf("index out of bounds 2\n");
-          tmp[start + nnz_shifts[r]].setIdx(coo_rows[i]);
+          tmp[start + nnz_shifts[r]].setIdx(coo_cols[i]);
           tmp[start + nnz_shifts[r]].setValue(coo_vals[i]);
+
           nnz_shifts[r]++;
         }
+    } else {//not diagonal
+      tmp[start + nnz_shifts[r]].setIdx(coo_cols[i]);
+      tmp[start + nnz_shifts[r]].setValue(coo_vals[i]);
+      nnz_shifts[r]++;
+
+      if ((coo_rows[i] != coo_cols[i]) && (symmetric == 1))
+      {
+        r = coo_cols[i];
+        start = csr_ia[r];
+
+        if ((start + nnz_shifts[r]) > nnz_unpacked)
+          printf("index out of bounds 2\n");
+        tmp[start + nnz_shifts[r]].setIdx(coo_rows[i]);
+        tmp[start + nnz_shifts[r]].setValue(coo_vals[i]);
+        nnz_shifts[r]++;
       }
     }
-    //now sort whatever is inside rows
-
-    for (int i = 0; i < n; ++i)
-    {
-
-      //now sorting (and adding 1)
-      int colStart = csr_ia[i];
-      int colEnd = csr_ia[i + 1];
-      int length = colEnd - colStart;
-
-      std::sort(&tmp[colStart],&tmp[colStart] + length);
-    }
-
-    for (resolveInt i = 0; i < nnz_unpacked; ++i)
-    {
-      csr_ja[i] = tmp[i].getIdx();
-      csr_a[i] = tmp[i].getValue();
-    }
-
-    A->setNnz(nnz_no_duplicates);
-    if (memspace == "cpu"){
-      A->updateCsr(csr_ia, csr_ja, csr_a, "cpu", "cpu");
-    } else {
-      if (memspace == "cuda"){      
-        A->updateCsr(csr_ia, csr_ja, csr_a, "cpu", "cuda");
-      } else {
-        //display error
-      }
-    }
-    delete [] nnz_counts;
-    delete [] tmp;
-    delete [] nnz_shifts;
-    delete [] csr_ia;
-    delete [] csr_ja;
-    delete [] csr_a;
-    delete [] diag_control; 
   }
+  //now sort whatever is inside rows
 
-  void resolveMatrixHandler::resolveMatvec(resolveMatrix* A, 
-                                           resolveReal* x, 
-                                           resolveReal* result, 
-                                           resolveReal* alpha, 
-                                           resolveReal* beta, 
-                                           std::string memspace) 
+  for (int i = 0; i < n; ++i)
   {
 
-    //result = alpha *A*x + beta * result
-    if (memspace == "cuda" ){
+    //now sorting (and adding 1)
+    int colStart = csr_ia[i];
+    int colEnd = csr_ia[i + 1];
+    int length = colEnd - colStart;
+    std::sort(&tmp[colStart],&tmp[colStart] + length);
+  }
 
-
-      resolveLinAlgWorkspaceCUDA* workspaceCUDA = (resolveLinAlgWorkspaceCUDA*) workspace;
-
-      cusparseDnVecDescr_t vecx = workspaceCUDA->getVecX();
-      cusparseCreateDnVec(&vecx, A->getNumRows(), x , CUDA_R_64F);
-      cusparseDnVecDescr_t vecAx = workspaceCUDA->getVecY();
-      cusparseCreateDnVec(&vecAx, A->getNumRows(), result, CUDA_R_64F);
-      cusparseSpMatDescr_t matA = workspaceCUDA->getSpmvMatrixDescriptor();
-
-      void* buffer_spmv = workspaceCUDA->getSpmvBuffer();
-      cusparseHandle_t handle_cusparse = workspaceCUDA->getCusparseHandle();
-      if (!workspaceCUDA->matvecSetup()){
-        //setup first, allocate, etc.
-        size_t bufferSize = 0;
-        resolveReal minusone = -1.0;
-        resolveReal one = 1.0;
-        cusparseCreateCsr(&matA, 
-                          A->getNumRows(),
-                          A->getNumColumns(),
-                          A->getNnzExpanded(),
-                          A->getCsrRowPointers("gpu"),
-                          A->getCsrColIndices("gpu"),
-                          A->getCsrValues("gpu"), 
-                          CUSPARSE_INDEX_32I, 
-                          CUSPARSE_INDEX_32I,
-                          CUSPARSE_INDEX_BASE_ZERO,
-                          CUDA_R_64F);
-
-        cusparseSpMV_bufferSize(handle_cusparse, 
-                                CUSPARSE_OPERATION_NON_TRANSPOSE,
-                                &minusone,
-                                matA,
-                                vecx,
-                                &one,
-                                vecAx,
-                                CUDA_R_64F,
-                                CUSPARSE_SPMV_CSR_ALG2, 
-                                &bufferSize);
-
-        cudaDeviceSynchronize();
-        cudaMalloc(&buffer_spmv, bufferSize);
-
-
-        workspaceCUDA->matvecSetupDone();
-      } 
-
-      cusparseSpMV(handle_cusparse,
-                   CUSPARSE_OPERATION_NON_TRANSPOSE,       
-                   alpha, 
-                   matA, 
-                   vecx, 
-                   beta, 
-                   vecAx, 
-                   CUDA_R_64F,
-                   CUSPARSE_SPMV_CSR_ALG2, 
-                   buffer_spmv);
+  for (resolveInt i = 0; i < nnz_unpacked; ++i)
+  {
+    csr_ja[i] = tmp[i].getIdx();
+    csr_a[i] = tmp[i].getValue();
+  }
+#if 0
+  for (int i = 0; i<n; ++i){
+    printf("Row: %d \n", i);
+    for (int j = csr_ia[i]; j<csr_ia[i+1]; ++j){
+      printf("(%d %16.16f) ", csr_ja[j], csr_a[j]);
+    }
+    printf("\n");
+  }
+#endif
+  A->setNnz(nnz_no_duplicates);
+  if (memspace == "cpu"){
+    A->updateCsr(csr_ia, csr_ja, csr_a, "cpu", "cpu");
+  } else {
+    if (memspace == "cuda"){      
+      A->updateCsr(csr_ia, csr_ja, csr_a, "cpu", "cuda");
     } else {
-      std::cout<<"Not implemented (yet)"<<std::endl;
+      //display error
     }
   }
+  delete [] nnz_counts;
+  delete [] tmp;
+  delete [] nnz_shifts;
+  delete [] csr_ia;
+  delete [] csr_ja;
+  delete [] csr_a;
+  delete [] diag_control; 
+}
+
+void resolveMatrixHandler::matvec(resolveMatrix* A, 
+                                         resolveReal* x, 
+                                         resolveReal* result, 
+                                         resolveReal* alpha, 
+                                         resolveReal* beta, 
+                                         std::string memspace) 
+{
+
+  //result = alpha *A*x + beta * result
+  if (memspace == "cuda" ){
+
+
+    resolveLinAlgWorkspaceCUDA* workspaceCUDA = (resolveLinAlgWorkspaceCUDA*) workspace;
+
+    cusparseDnVecDescr_t vecx = workspaceCUDA->getVecX();
+    cusparseCreateDnVec(&vecx, A->getNumRows(), x , CUDA_R_64F);
+    cusparseDnVecDescr_t vecAx = workspaceCUDA->getVecY();
+    cusparseCreateDnVec(&vecAx, A->getNumRows(), result, CUDA_R_64F);
+    cusparseSpMatDescr_t matA = workspaceCUDA->getSpmvMatrixDescriptor();
+
+    void* buffer_spmv = workspaceCUDA->getSpmvBuffer();
+    cusparseHandle_t handle_cusparse = workspaceCUDA->getCusparseHandle();
+    if (!workspaceCUDA->matvecSetup()){
+      //setup first, allocate, etc.
+      size_t bufferSize = 0;
+      resolveReal minusone = -1.0;
+      resolveReal one = 1.0;
+      cusparseCreateCsr(&matA, 
+                        A->getNumRows(),
+                        A->getNumColumns(),
+                        A->getNnzExpanded(),
+                        A->getCsrRowPointers("gpu"),
+                        A->getCsrColIndices("gpu"),
+                        A->getCsrValues("gpu"), 
+                        CUSPARSE_INDEX_32I, 
+                        CUSPARSE_INDEX_32I,
+                        CUSPARSE_INDEX_BASE_ZERO,
+                        CUDA_R_64F);
+
+      cusparseSpMV_bufferSize(handle_cusparse, 
+                              CUSPARSE_OPERATION_NON_TRANSPOSE,
+                              &minusone,
+                              matA,
+                              vecx,
+                              &one,
+                              vecAx,
+                              CUDA_R_64F,
+                              CUSPARSE_SPMV_CSR_ALG2, 
+                              &bufferSize);
+
+      cudaDeviceSynchronize();
+      cudaMalloc(&buffer_spmv, bufferSize);
+
+
+      workspaceCUDA->matvecSetupDone();
+    } 
+
+    cusparseSpMV(handle_cusparse,
+                 CUSPARSE_OPERATION_NON_TRANSPOSE,       
+                 alpha, 
+                 matA, 
+                 vecx, 
+                 beta, 
+                 vecAx, 
+                 CUDA_R_64F,
+                 CUSPARSE_SPMV_CSR_ALG2, 
+                 buffer_spmv);
+  } else {
+    std::cout<<"Not implemented (yet)"<<std::endl;
+  }
+}
 }
