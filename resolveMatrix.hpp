@@ -4,9 +4,11 @@
 #include <string>
 #include "resolveCommon.hpp"
 #include<cstring>
-namespace ReSolve {
-  class resolveMatrix {
 
+namespace ReSolve {
+
+  class resolveMatrix 
+  {
     public:
       //basic constructor
       resolveMatrix();

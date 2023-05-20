@@ -56,12 +56,16 @@ namespace ReSolve {
     return 0;
   }
 
-  int resolveLinSolverDirectKLU::solve(resolveReal* rhs, resolveReal* x) 
+  int resolveLinSolverDirectKLU::solve(resolveVector* rhs, resolveVector* x) 
   {
     //copy the vector
 
-    std::memcpy(x, rhs, A->getNumRows() * sizeof(resolveReal));
-    int kluStatus = klu_solve(Symbolic, Numeric, A->getNumRows(), 1, x, &common);
+    //  std::memcpy(x, rhs, A->getNumRows() * sizeof(resolveReal));
+
+    x->update(rhs->getData("cpu"), "cpu", "cpu");
+    x->setDataUpdated("cpu");
+
+    int kluStatus = klu_solve(Symbolic, Numeric, A->getNumRows(), 1, x->getData("cpu"), &common);
 
     if (!kluStatus){
       return -1;

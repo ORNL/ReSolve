@@ -19,7 +19,7 @@ namespace ReSolve {
       int analyze(); //the same as symbolic factorization
       int factorize();
       int refactorize();
-      int solve(resolveReal* rhs, resolveReal* x); 
+      int solve(resolveVector* rhs, resolveVector* x); 
     
     private:
 

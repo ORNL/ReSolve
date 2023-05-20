@@ -2,6 +2,7 @@
 #include <string>
 #include "resolveCommon.hpp"
 #include "resolveMatrix.hpp"
+#include "resolveVector.hpp"
 #include "resolveMatrixHandler.hpp"
 #include "resolveVectorHandler.hpp"
 namespace ReSolve {
@@ -32,7 +33,7 @@ namespace ReSolve {
       virtual int analyze(); //the same as symbolic factorization
       virtual int factorize();
       virtual int refactorize();
-      virtual int solve(resolveReal* rhs, resolveReal* x); 
+      virtual int solve(resolveVector* rhs, resolveVector* x); 
      
       virtual resolveMatrix* getLFactor(); 
       virtual resolveMatrix* getUFactor(); 
@@ -50,7 +51,7 @@ namespace ReSolve {
       resolveLinSolverIterative();
       ~resolveLinSolverIterative();
 
-      virtual resolveReal* solve(resolveReal* rhs, resolveReal* init_guess);
+      virtual resolveReal* solve(resolveVector* rhs, resolveVector* init_guess);
 
   };
 }

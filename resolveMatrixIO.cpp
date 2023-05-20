@@ -29,14 +29,12 @@ namespace ReSolve
         symmetric = true;
         expanded = false;
       } 
-      printf("symmetric? %d \n",symmetric );
       while (line.at(0) == '%') {
         std::getline(file, line); 
         // std::cout<<line<<std::endl;
       }
       ss << line;
       ss >> n >> m >> nnz;
-      std::cout<<"Matrix size: "<<n<<" x "<<m<<", nnz: "<<nnz<<std::endl; 
       //create matrix object
       resolveMatrix* A = new resolveMatrix(n, m, nnz,symmetric, expanded );  
       //create coo arrays
@@ -87,7 +85,6 @@ namespace ReSolve
         vec[i] = a;
         i++;
       }
-      printf("VEC has %d elements \n", i);
       return vec;
       file.close();
     } else { 
@@ -115,11 +112,11 @@ namespace ReSolve
       }
       ss << line;
       ss >> n >> m >> nnz;
-      std::cout<<"Matrix size: "<<n<<" x "<<m<<", nnz: "<<nnz<<std::endl; 
       if ((A->getNumRows() != n) || (A->getNumColumns() != m) || (A->getNnz() < nnz)){      
         printf("Wrong matrix size! Cannot update \n ");
         exit(0);
       }
+	    A->setNnz(nnz);
       //create coo arrays
       resolveInt* coo_rows = A->getCooRowIndices("cpu");
       resolveInt* coo_cols = A->getCooColIndices("cpu");
@@ -166,7 +163,6 @@ namespace ReSolve
         rhs[i] = a;
         i++;
       }
-      printf("VEC has %d elements \n", i);
       file.close();
     } else { 
       std::cout<<"Error opening file"<<std::endl;
