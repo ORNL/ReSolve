@@ -32,6 +32,7 @@ namespace ReSolve {
       void setExpanded(bool expanded);
       void setNnzExpanded(resolveInt nnz_expanded_new);
       void setNnz(resolveInt nnz_new); // for resetting when removing duplicates
+      void setUpdated(std::string what);
 
       resolveInt* getCsrRowPointers(std::string memspace);
       resolveInt* getCsrColIndices(std::string memspace);
@@ -67,7 +68,10 @@ namespace ReSolve {
       resolveInt destroyCsc(std::string memspace);
       resolveInt destroyCoo(std::string memspace);
 
-
+      //allocate, sometimes needed
+      void allocateCsr(std::string memspace);
+      void allocateCsc(std::string memspace);
+      void allocateCoo(std::string memspace);
     private:
       //size
       resolveInt n;

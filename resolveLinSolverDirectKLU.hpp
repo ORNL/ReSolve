@@ -21,6 +21,10 @@ namespace ReSolve {
       int refactorize();
       int solve(resolveVector* rhs, resolveVector* x); 
     
+      resolveMatrix* getLFactor(); 
+      resolveMatrix* getUFactor(); 
+      resolveInt*  getPOrdering();
+      resolveInt*  getQOrdering();
     private:
 
       klu_common common; //settings

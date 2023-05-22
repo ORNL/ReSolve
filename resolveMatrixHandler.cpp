@@ -230,8 +230,8 @@ namespace ReSolve
       //printf("is vec_x NULL? %d\n", vec_x->getData("cuda") == nullptr);
       //printf("is vec_result NULL? %d\n", vec_result->getData("cuda") == nullptr);
       cusparseCreateDnVec(&vecx, A->getNumRows(), vec_x->getData("cuda"), CUDA_R_64F);
-      
-     
+
+
       cusparseDnVecDescr_t vecAx = workspaceCUDA->getVecY();
       cusparseCreateDnVec(&vecAx, A->getNumRows(), vec_result->getData("cuda"), CUDA_R_64F);
 
@@ -239,17 +239,17 @@ namespace ReSolve
 
       void* buffer_spmv = workspaceCUDA->getSpmvBuffer();
       cusparseHandle_t handle_cusparse = workspaceCUDA->getCusparseHandle();
-        cusparseCreateCsr(&matA, 
-                          A->getNumRows(),
-                          A->getNumColumns(),
-                          A->getNnzExpanded(),
-                          A->getCsrRowPointers("cuda"),
-                          A->getCsrColIndices("cuda"),
-                          A->getCsrValues("cuda"), 
-                          CUSPARSE_INDEX_32I, 
-                          CUSPARSE_INDEX_32I,
-                          CUSPARSE_INDEX_BASE_ZERO,
-                          CUDA_R_64F);
+      cusparseCreateCsr(&matA, 
+                        A->getNumRows(),
+                        A->getNumColumns(),
+                        A->getNnzExpanded(),
+                        A->getCsrRowPointers("cuda"),
+                        A->getCsrColIndices("cuda"),
+                        A->getCsrValues("cuda"), 
+                        CUSPARSE_INDEX_32I, 
+                        CUSPARSE_INDEX_32I,
+                        CUSPARSE_INDEX_BASE_ZERO,
+                        CUDA_R_64F);
       if (!workspaceCUDA->matvecSetup()){
         //setup first, allocate, etc.
         size_t bufferSize = 0;
@@ -295,5 +295,58 @@ namespace ReSolve
     } else {
       std::cout<<"Not implemented (yet)"<<std::endl;
     }
+  }
+
+  void resolveMatrixHandler::csc2csr(resolveMatrix* A, std::string memspace)
+  {
+    //it ONLY WORKS WITH CUDA
+    if (memspace == "cuda") { 
+      resolveLinAlgWorkspaceCUDA* workspaceCUDA = (resolveLinAlgWorkspaceCUDA*) workspace;
+
+      A->allocateCsr("cuda");
+      resolveInt n = A->getNumRows();
+      resolveInt m = A->getNumRows();
+      resolveInt nnz = A->getNnz();
+
+      size_t bufferSize;
+      void* d_work;
+      cusparseStatus_t status = cusparseCsr2cscEx2_bufferSize(workspaceCUDA->getCusparseHandle(),
+                                                              n, 
+                                                              m, 
+                                                              nnz, 
+                                                              A->getCscValues("cuda"), 
+                                                              A->getCscColPointers("cuda"), 
+                                                              A->getCscRowIndices("cuda"), 
+                                                              A->getCsrValues("cuda"), 
+                                                              A->getCsrRowPointers("cuda"),
+                                                              A->getCsrColIndices("cuda"), 
+                                                              CUDA_R_64F, 
+                                                              CUSPARSE_ACTION_NUMERIC,
+                                                              CUSPARSE_INDEX_BASE_ZERO, 
+                                                              CUSPARSE_CSR2CSC_ALG1, 
+                                                              &bufferSize);
+
+      cudaMalloc((void**)&d_work, bufferSize);
+      status = cusparseCsr2cscEx2(workspaceCUDA->getCusparseHandle(),
+                                  n, 
+                                  m, 
+                                  nnz, 
+                                  A->getCscValues("cuda"), 
+                                  A->getCscColPointers("cuda"), 
+                                  A->getCscRowIndices("cuda"), 
+                                  A->getCsrValues("cuda"), 
+                                  A->getCsrRowPointers("cuda"),
+                                  A->getCsrColIndices("cuda"),                              CUDA_R_64F,
+                                  CUSPARSE_ACTION_NUMERIC,
+                                  CUSPARSE_INDEX_BASE_ZERO,
+                                  CUSPARSE_CSR2CSC_ALG1,
+                                  d_work);
+
+      cudaFree(d_work);
+    } else { 
+      std::cout<<"Not implemented (yet)"<<std::endl;
+    } 
+
+
   }
 }

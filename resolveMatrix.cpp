@@ -280,6 +280,42 @@ namespace ReSolve
     nnz = nnz_new;
   }
 
+ void resolveMatrix::setUpdated(std::string what)
+ {
+   if (what == "h_csr") 
+   {
+     h_csr_updated = true;
+     d_csr_updated = false;
+   }
+   if (what == "d_csr") 
+   {
+     d_csr_updated = true;
+     h_csr_updated = false;
+   }
+   if (what == "h_csc") 
+   {
+     h_csc_updated = true;
+     d_csc_updated = false;
+   }
+   if (what == "d_csc") 
+   {
+     d_csc_updated = true;
+     h_csc_updated = false;
+   }
+   if (what == "h_coo") 
+   {
+     h_coo_updated = true;
+     d_coo_updated = false;
+   }
+   if (what == "d_coo") 
+   {
+     d_coo_updated = true;
+     h_coo_updated = false;
+   }
+
+
+ }
+
   resolveInt* resolveMatrix::getCsrRowPointers(std::string memspace)
   {
     if (memspace == "cpu") {
@@ -765,5 +801,63 @@ namespace ReSolve
       }
     }
     return 0;
+  }
+ 
+  void resolveMatrix::allocateCsr(std::string memspace)
+  {
+    resolveInt nnz_current = nnz;
+    if (is_expanded) {nnz_current = nnz_expanded;}
+    destroyCsr(memspace);//just in case
+
+    if (memspace == "cpu") {
+      this->h_csr_p = new resolveInt[n+1];
+      this->h_csr_i = new resolveInt[nnz_current];
+      this->h_csr_x = new resolveReal[nnz_current];
+    }
+
+    if (memspace == "cuda") {
+      cudaMalloc(&d_csr_p, (n + 1)*sizeof(resolveInt)); 
+      cudaMalloc(&d_csr_i, nnz_current * sizeof(resolveInt)); 
+      cudaMalloc(&d_csr_x, nnz_current * sizeof(resolveReal)); 
+    }
+  }
+
+
+  void resolveMatrix::allocateCsc(std::string memspace)
+  {
+    resolveInt nnz_current = nnz;
+    if (is_expanded) {nnz_current = nnz_expanded;}
+    destroyCsc(memspace);//just in case
+
+    if (memspace == "cpu") {
+      this->h_csc_p = new resolveInt[n+1];
+      this->h_csc_i = new resolveInt[nnz_current];
+      this->h_csc_x = new resolveReal[nnz_current];
+    }
+
+    if (memspace == "cuda") {
+      cudaMalloc(&d_csc_p, (n + 1)*sizeof(resolveInt)); 
+      cudaMalloc(&d_csc_i, nnz_current * sizeof(resolveInt)); 
+      cudaMalloc(&d_csc_x, nnz_current * sizeof(resolveReal)); 
+    }
+  }
+  
+  void resolveMatrix::allocateCoo(std::string memspace)
+  {
+    resolveInt nnz_current = nnz;
+    if (is_expanded) {nnz_current = nnz_expanded;}
+    destroyCoo(memspace);//just in case
+
+    if (memspace == "cpu") {
+      this->h_coo_rows = new resolveInt[nnz_current];
+      this->h_coo_cols = new resolveInt[nnz_current];
+      this->h_coo_vals = new resolveReal[nnz_current];
+    }
+
+    if (memspace == "cuda") {
+      cudaMalloc(&d_coo_rows, nnz_current * sizeof(resolveInt)); 
+      cudaMalloc(&d_coo_cols, nnz_current * sizeof(resolveInt)); 
+      cudaMalloc(&d_coo_vals, nnz_current * sizeof(resolveReal)); 
+    }
   }
 }

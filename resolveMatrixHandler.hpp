@@ -41,7 +41,7 @@ namespace ReSolve
       resolveMatrixHandler(resolveLinAlgWorkspace* workspace);
       ~resolveMatrixHandler();
 
-      void csr2csc(resolveMatrix* A, std::string memspace);//memspace decides on what is returned (cpu or cuda pointer)
+      void csc2csr(resolveMatrix* A, std::string memspace);//memspace decides on what is returned (cpu or cuda pointer)
       void coo2csr(resolveMatrix* A, std::string memspace);
 
       void matvec(resolveMatrix* A, resolveVector* vec_x, resolveVector* vec_result, resolveReal* alpha, resolveReal* beta, std::string memspace);

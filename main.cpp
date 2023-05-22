@@ -4,6 +4,7 @@
 #include "resolveMatrixHandler.hpp"
 #include "resolveVectorHandler.hpp"
 #include "resolveLinSolverDirectKLU.hpp"
+#include "resolveLinSolverDirectCuSolverRf.hpp"
 #include <string>
 #include <iostream>
 
@@ -38,6 +39,7 @@ int main(resolveInt argc, char *argv[] ){
   resolveReal minusone = -1.0;
 
   ReSolve::resolveLinSolverDirectKLU* KLU = new ReSolve::resolveLinSolverDirectKLU;
+  ReSolve::resolveLinSolverDirectCuSolverRf* Rf = new ReSolve::resolveLinSolverDirectCuSolverRf;
 
   for (int i = 0; i < numSystems; ++i)
   {
@@ -94,6 +96,26 @@ int main(resolveInt argc, char *argv[] ){
       std::cout<<"KLU factorization status: "<<status<<std::endl;
       status = KLU->solve(vec_rhs, vec_x);
       std::cout<<"KLU solve status: "<<status<<std::endl;      
+      if (i == 1) {
+        ReSolve::resolveMatrix* L = KLU->getLFactor();
+        ReSolve::resolveMatrix* U = KLU->getUFactor();
+        matrix_handler->csc2csr(L, "cuda");
+        matrix_handler->csc2csr(U, "cuda");
+        if (L == nullptr) {printf("ERROR");}
+        resolveInt* P = KLU->getPOrdering();
+        resolveInt* Q = KLU->getQOrdering();
+        Rf->setup(A, L, U, P, Q); 
+      }
+    } else {
+      //status =  KLU->refactorize();
+      std::cout<<"Using CUSOLVER RF"<<std::endl;
+      status = Rf->refactorize();
+      std::cout<<"CUSOLVER RF refactorization status: "<<status<<std::endl;      
+      status = Rf->solve(vec_rhs, vec_x);
+      std::cout<<"CUSOLVER RF solve status: "<<status<<std::endl;      
+      //std::cout<<"KLU re-factorization status: "<<status<<std::endl;
+      //status = KLU->solve(vec_rhs, vec_x);
+      //std::cout<<"KLU solve status: "<<status<<std::endl;      
     }
     vec_r->update(rhs, "cpu", "cuda");
 

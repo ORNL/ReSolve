@@ -44,6 +44,7 @@ namespace ReSolve {
       resolveMatrix* U;
       resolveInt* P;
       resolveInt* Q;
+      bool factors_extracted_;
   };
 
   class resolveLinSolverIterative : public resolveLinSolver {
