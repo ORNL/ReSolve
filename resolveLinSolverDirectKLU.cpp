@@ -1,36 +1,38 @@
 #include "resolveLinSolverDirectKLU.hpp"
 
-namespace ReSolve {
-
+namespace ReSolve 
+{
   resolveLinSolverDirectKLU::resolveLinSolverDirectKLU()
   {
-    Symbolic = nullptr;
-    Numeric = nullptr;
-    klu_defaults(&common) ;
+    Symbolic_ = nullptr;
+    Numeric_ = nullptr;
+    klu_defaults(&Common_) ;
   } 
+
   resolveLinSolverDirectKLU::~resolveLinSolverDirectKLU()
   {
-
   }
+
   void resolveLinSolverDirectKLU::setup(resolveMatrix* A)
   {
-    this->A = A;
+    this->A_ = A;
   }
 
   void resolveLinSolverDirectKLU::setupParameters(int ordering, double KLU_threshold, bool halt_if_singular) 
   {
-    common.btf  = 0;
-    common.ordering = ordering;
-    common.tol = KLU_threshold;
-    common.scale = -1;
-    common.halt_if_singular = halt_if_singular;
+    Common_.btf  = 0;
+    Common_.ordering = ordering;
+    Common_.tol = KLU_threshold;
+    Common_.scale = -1;
+    Common_.halt_if_singular = halt_if_singular;
   }
 
   int resolveLinSolverDirectKLU::analyze() 
   {
-    Symbolic = klu_analyze(A->getNumRows(), A->getCsrRowPointers("cpu"), A->getCsrColIndices("cpu"), &common) ;
-    if (Symbolic == nullptr){
-      printf("Symbolic factorization crashed withcommon.status = %d \n", common.status);
+    Symbolic_ = klu_analyze(A_->getNumRows(), A_->getCsrRowPointers("cpu"), A_->getCsrColIndices("cpu"), &Common_) ;
+
+    if (Symbolic_ == nullptr){
+      printf("Symbolic_ factorization crashed withCommon_.status = %d \n", Common_.status);
       return -1;
     }
     return 0;
@@ -38,8 +40,9 @@ namespace ReSolve {
 
   int resolveLinSolverDirectKLU::factorize() 
   {
-    Numeric = klu_factor(A->getCsrRowPointers("cpu"), A->getCsrColIndices("cpu"),A->getCsrValues("cpu"), Symbolic, &common);
-    if (Numeric == nullptr){
+    Numeric_ = klu_factor(A_->getCsrRowPointers("cpu"), A_->getCsrColIndices("cpu"),A_->getCsrValues("cpu"), Symbolic_, &Common_);
+
+    if (Numeric_ == nullptr){
       return -1;
     }
     return 0;
@@ -47,7 +50,7 @@ namespace ReSolve {
 
   int  resolveLinSolverDirectKLU::refactorize() 
   {
-    int kluStatus = klu_refactor (A->getCsrRowPointers("cpu"), A->getCsrColIndices("cpu"), A->getCsrValues("cpu"), Symbolic, Numeric, &common);
+    int kluStatus = klu_refactor (A_->getCsrRowPointers("cpu"), A_->getCsrColIndices("cpu"), A_->getCsrValues("cpu"), Symbolic_, Numeric_, &Common_);
 
     if (!kluStatus){
       //display error
@@ -65,7 +68,7 @@ namespace ReSolve {
     x->update(rhs->getData("cpu"), "cpu", "cpu");
     x->setDataUpdated("cpu");
 
-    int kluStatus = klu_solve(Symbolic, Numeric, A->getNumRows(), 1, x->getData("cpu"), &common);
+    int kluStatus = klu_solve(Symbolic_, Numeric_, A_->getNumRows(), 1, x->getData("cpu"), &Common_);
 
     if (!kluStatus){
       return -1;
@@ -76,21 +79,21 @@ namespace ReSolve {
   resolveMatrix* resolveLinSolverDirectKLU::getLFactor()
   {
     if (!factors_extracted_) {
-      const int nnzL = Numeric->lnz;
-      const int nnzU = Numeric->unz;
+      const int nnzL = Numeric_->lnz;
+      const int nnzU = Numeric_->unz;
 
-      L = new resolveMatrix(A->getNumRows(), A->getNumColumns(), nnzL);
-      U = new resolveMatrix(A->getNumRows(), A->getNumColumns(), nnzU);
-      L->allocateCsc("cpu");
-      U->allocateCsc("cpu");
-      int ok = klu_extract(Numeric, 
-                           Symbolic, 
-                           L->getCscColPointers("cpu"), 
-                           L->getCscRowIndices("cpu"), 
-                           L->getCscValues("cpu"), 
-                           U->getCscColPointers("cpu"), 
-                           U->getCscRowIndices("cpu"), 
-                           U->getCscValues("cpu"), 
+      L_ = new resolveMatrix(A_->getNumRows(), A_->getNumColumns(), nnzL);
+      U_ = new resolveMatrix(A_->getNumRows(), A_->getNumColumns(), nnzU);
+      L_->allocateCsc("cpu");
+      U_->allocateCsc("cpu");
+      int ok = klu_extract(Numeric_, 
+                           Symbolic_, 
+                           L_->getCscColPointers("cpu"), 
+                           L_->getCscRowIndices("cpu"), 
+                           L_->getCscValues("cpu"), 
+                           U_->getCscColPointers("cpu"), 
+                           U_->getCscRowIndices("cpu"), 
+                           U_->getCscValues("cpu"), 
                            nullptr, 
                            nullptr, 
                            nullptr, 
@@ -98,32 +101,34 @@ namespace ReSolve {
                            nullptr,
                            nullptr,
                            nullptr,
-                           &common);
-      L->setUpdated("h_csc");
-      U->setUpdated("h_csc");
+                           &Common_);
+
+      L_->setUpdated("h_csc");
+      U_->setUpdated("h_csc");
+
       factors_extracted_ = true;
     }
-    return L;
+    return L_;
   }
 
   resolveMatrix* resolveLinSolverDirectKLU::getUFactor()
   {
     if (!factors_extracted_) {
-      const int nnzL = Numeric->lnz;
-      const int nnzU = Numeric->unz;
+      const int nnzL = Numeric_->lnz;
+      const int nnzU = Numeric_->unz;
 
-      L = new resolveMatrix(A->getNumRows(), A->getNumColumns(), nnzL);
-      U = new resolveMatrix(A->getNumRows(), A->getNumColumns(), nnzU);
-      L->allocateCsc("cpu");
-      U->allocateCsc("cpu");
-      int ok = klu_extract(Numeric, 
-                           Symbolic, 
-                           L->getCscColPointers("cpu"), 
-                           L->getCscRowIndices("cpu"), 
-                           L->getCscValues("cpu"), 
-                           U->getCscColPointers("cpu"), 
-                           U->getCscRowIndices("cpu"), 
-                           U->getCscValues("cpu"), 
+      L_ = new resolveMatrix(A_->getNumRows(), A_->getNumColumns(), nnzL);
+      U_ = new resolveMatrix(A_->getNumRows(), A_->getNumColumns(), nnzU);
+      L_->allocateCsc("cpu");
+      U_->allocateCsc("cpu");
+      int ok = klu_extract(Numeric_, 
+                           Symbolic_, 
+                           L_->getCscColPointers("cpu"), 
+                           L_->getCscRowIndices("cpu"), 
+                           L_->getCscValues("cpu"), 
+                           U_->getCscColPointers("cpu"), 
+                           U_->getCscRowIndices("cpu"), 
+                           U_->getCscValues("cpu"), 
                            nullptr, 
                            nullptr, 
                            nullptr, 
@@ -131,20 +136,21 @@ namespace ReSolve {
                            nullptr,
                            nullptr,
                            nullptr,
-                           &common);
-      L->setUpdated("h_csc");
-      U->setUpdated("h_csc");
+                           &Common_);
+
+      L_->setUpdated("h_csc");
+      U_->setUpdated("h_csc");
       factors_extracted_ = true;
     }
-    return U;
+    return U_;
   }
 
   resolveInt* resolveLinSolverDirectKLU::getPOrdering()
   {
-    if (Numeric != nullptr){
-      P = new resolveInt[A->getNumRows()];
-      std::memcpy(P, Numeric->Pnum, A->getNumRows() * sizeof(resolveInt));
-   return P;
+    if (Numeric_ != nullptr){
+      P_ = new resolveInt[A_->getNumRows()];
+      std::memcpy(P_, Numeric_->Pnum, A_->getNumRows() * sizeof(resolveInt));
+      return P_;
     } else {
       return nullptr;
     }
@@ -153,14 +159,12 @@ namespace ReSolve {
 
   resolveInt* resolveLinSolverDirectKLU::getQOrdering()
   {
-    if (Numeric != nullptr){
-      Q = new resolveInt[A->getNumRows()];
-      std::memcpy(Q, Symbolic->Q, A->getNumRows() * sizeof(resolveInt));
-  return Q;
+    if (Numeric_ != nullptr){
+      Q_ = new resolveInt[A_->getNumRows()];
+      std::memcpy(Q_, Symbolic_->Q, A_->getNumRows() * sizeof(resolveInt));
+      return Q_;
     } else {
       return nullptr;
     }
   }
 }
-
-

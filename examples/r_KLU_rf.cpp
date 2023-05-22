@@ -121,6 +121,7 @@ int main(resolveInt argc, char *argv[] ){
 
 
     matrix_handler->matvec(A, vec_x, vec_r, &one, &minusone, "cuda"); 
+    resolveReal* test = vec_r->getData("cpu");
 
     printf("\t 2-Norm of the residual: %16.16e\n", sqrt(vector_handler->dot(vec_r, vec_r, "cuda")));
 

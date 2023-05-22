@@ -26,7 +26,6 @@ namespace ReSolve
       resolveReal* mass_dot(resolveReal size, resolveReal* V, resolveReal k, resolveReal* x);
 
     private:
-
       resolveLinAlgWorkspace* workspace_;
   };
 

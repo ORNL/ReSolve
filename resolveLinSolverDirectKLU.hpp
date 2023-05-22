@@ -1,11 +1,11 @@
-
 #pragma once
 #include "klu.h"
 #include "resolveCommon.hpp"
 #include "resolveMatrix.hpp"
 #include "resolveLinSolver.hpp"
 
-namespace ReSolve {
+namespace ReSolve 
+{
   class resolveLinSolverDirectKLU : public resolveLinSolverDirect 
   {
     public:
@@ -14,7 +14,6 @@ namespace ReSolve {
       void setup(resolveMatrix* A);
      
       void setupParameters(int ordering, double KLU_threshold, bool halt_if_singular);
-
 
       int analyze(); //the same as symbolic factorization
       int factorize();
@@ -25,10 +24,10 @@ namespace ReSolve {
       resolveMatrix* getUFactor(); 
       resolveInt*  getPOrdering();
       resolveInt*  getQOrdering();
-    private:
 
-      klu_common common; //settings
-      klu_symbolic* Symbolic;
-      klu_numeric* Numeric; 
+    private:
+      klu_common Common_; //settings
+      klu_symbolic* Symbolic_;
+      klu_numeric* Numeric_; 
   };
 }

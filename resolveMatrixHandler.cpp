@@ -6,8 +6,8 @@ namespace ReSolve
   //helper class
   indexPlusValue::indexPlusValue()
   {
-    idx = 0;
-    value = 0.0;
+    idx_ = 0;
+    value_ = 0.0;
   }
 
 
@@ -17,27 +17,25 @@ namespace ReSolve
 
   void indexPlusValue::setIdx(resolveInt new_idx)
   {
-    idx = new_idx;
+    idx_ = new_idx;
   }
 
   void indexPlusValue::setValue(resolveReal new_value)
   {
-    value = new_value;
+    value_ = new_value;
   }
 
   resolveInt indexPlusValue::getIdx()
   {
-    return idx;
+    return idx_;
   }
 
   resolveReal indexPlusValue::getValue()
   {
-    return value;
+    return value_;
   }
-
   //end of helper class
-
-
+  
   resolveMatrixHandler::resolveMatrixHandler()
   {
   }
@@ -48,7 +46,7 @@ namespace ReSolve
 
   resolveMatrixHandler::resolveMatrixHandler(resolveLinAlgWorkspace* new_workspace)
   {
-    workspace = new_workspace;
+    workspace_ = new_workspace;
   }
 
   void resolveMatrixHandler::coo2csr(resolveMatrix* A, std::string memspace)
@@ -135,7 +133,7 @@ namespace ReSolve
             val += coo_vals[i];
             tmp[j].setValue(val);
             already_there = true;
-            //printf("duplicate found, row %d, adding in place %d current value %f \n", c, j, val);
+            //printf("duplicate found, row %d, adding in place %d current value_ %f \n", c, j, val);
           }  
         }  
         if (!already_there){ // first time this duplicates appears
@@ -219,7 +217,7 @@ namespace ReSolve
     //result = alpha *A*x + beta * result
     if (memspace == "cuda" ){
 
-      resolveLinAlgWorkspaceCUDA* workspaceCUDA = (resolveLinAlgWorkspaceCUDA*) workspace;
+      resolveLinAlgWorkspaceCUDA* workspaceCUDA = (resolveLinAlgWorkspaceCUDA*) workspace_;
 
 
 
@@ -301,7 +299,7 @@ namespace ReSolve
   {
     //it ONLY WORKS WITH CUDA
     if (memspace == "cuda") { 
-      resolveLinAlgWorkspaceCUDA* workspaceCUDA = (resolveLinAlgWorkspaceCUDA*) workspace;
+      resolveLinAlgWorkspaceCUDA* workspaceCUDA = (resolveLinAlgWorkspaceCUDA*) workspace_;
 
       A->allocateCsr("cuda");
       resolveInt n = A->getNumRows();

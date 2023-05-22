@@ -25,13 +25,12 @@ namespace ReSolve
 
       bool operator < (const indexPlusValue& str) const
       {
-        return (idx < str.idx);
+        return (idx_ < str.idx_);
       }  
 
     private:
-      resolveInt idx;
-      resolveReal value;
-
+      resolveInt idx_;
+      resolveReal value_;
   };
 
   class resolveMatrixHandler
@@ -48,8 +47,8 @@ namespace ReSolve
       void resolveMatrix1Norm(resolveMatrix *A, resolveReal* norm);
 
     private: 
-      resolveLinAlgWorkspace* workspace;
-      bool new_matrix; //if the structure changed, you need a new handler.
+      resolveLinAlgWorkspace* workspace_;
+      bool new_matrix_; //if the structure changed, you need a new handler.
   };
 }
 

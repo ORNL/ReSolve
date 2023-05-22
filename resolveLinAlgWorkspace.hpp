@@ -3,6 +3,7 @@
 #include "cusparse.h"
 #include "cusolverSp.h"
 #pragma once
+
 namespace ReSolve
 {
   class resolveLinAlgWorkspace
@@ -17,12 +18,10 @@ namespace ReSolve
   class resolveLinAlgWorkspaceCUDA : public resolveLinAlgWorkspace
   {
     public:
-resolveLinAlgWorkspaceCUDA();
+      resolveLinAlgWorkspaceCUDA();
       ~resolveLinAlgWorkspaceCUDA();
 
       //accessors
-
-      //accessors:
       void* getSpmvBuffer();
       void* getNormBuffer();
 
@@ -40,29 +39,28 @@ resolveLinAlgWorkspaceCUDA();
       void setCusolverSpHandle( cusolverSpHandle_t handle);
       void setCusparseHandle(cusparseHandle_t handle);
       void setSpmvMatrixDescriptor(cusparseSpMatDescr_t mat);
-      
+
       void initializeHandles();
 
       bool matvecSetup();
       void matvecSetupDone();
-    
+
     private:
       //handles
-      cublasHandle_t handle_cublas;
-      cusolverSpHandle_t handle_cusolversp;//needed for 1-norm
-      cusparseHandle_t handle_cusparse;
+      cublasHandle_t handle_cublas_;
+      cusolverSpHandle_t handle_cusolversp_;//needed for 1-norm
+      cusparseHandle_t handle_cusparse_;
 
       //matrix descriptors
-      cusparseSpMatDescr_t mat_A; 
+      cusparseSpMatDescr_t mat_A_; 
 
       //vector descriptors
-
-       cusparseDnVecDescr_t vec_x, vec_y;
+      cusparseDnVecDescr_t vec_x_, vec_y_;
 
       //buffers
-      void* buffer_spmv;
-      void* buffer_1norm;
+      void* buffer_spmv_;
+      void* buffer_1norm_;
 
-      bool matvec_setup_done; //check if setup is done for matvec i.e. if buffer is allocated, csr structure is set etc.
+      bool matvec_setup_done_; //check if setup is done for matvec i.e. if buffer is allocated, csr structure is set etc.
   };
 }

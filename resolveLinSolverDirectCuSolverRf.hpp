@@ -4,8 +4,8 @@
 #include "resolveLinSolver.hpp"
 #include "cusolverRf.h"
 
-
-namespace ReSolve {
+namespace ReSolve 
+{
   class resolveLinSolverDirectCuSolverRf : public resolveLinSolverDirect 
   {
     public: 
@@ -18,12 +18,13 @@ namespace ReSolve {
       
       int refactorize();
       int solve(resolveVector* rhs, resolveVector* x);
+
     private:
-      cusolverRfHandle_t handle_cusolverrf;
-      cusolverStatus_t status_cusolverrf;
+      cusolverRfHandle_t handle_cusolverrf_;
+      cusolverStatus_t status_cusolverrf_;
       
-      resolveInt* d_P;
-      resolveInt* d_Q;
-      resolveReal* d_T;
+      resolveInt* d_P_;
+      resolveInt* d_Q_;
+      resolveReal* d_T_;
   };
 }

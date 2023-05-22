@@ -104,7 +104,6 @@ namespace ReSolve
 
   int resolveVector::copyData(std::string memspaceIn, std::string memspaceOut)
   {
-
     int control=-1;
     if ((memspaceIn == "cpu") && (memspaceOut == "cuda")){ control = 0;}
     if ((memspaceIn == "cuda") && (memspaceOut == "cpu")){ control = 1;}

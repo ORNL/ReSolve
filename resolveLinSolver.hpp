@@ -5,27 +5,29 @@
 #include "resolveVector.hpp"
 #include "resolveMatrixHandler.hpp"
 #include "resolveVectorHandler.hpp"
-namespace ReSolve {
-  class resolveLinSolver {
+
+namespace ReSolve 
+{
+  class resolveLinSolver 
+  {
     public:
       resolveLinSolver();
       ~resolveLinSolver();
 
       virtual void setup(resolveMatrix* A);
       resolveReal evaluateResidual();
-    
-      
-    protected:
-      
-      resolveMatrix* A;
-      resolveReal* rhs;
-      resolveReal* sol;
+        
+    protected:  
+      resolveMatrix* A_;
+      resolveReal* rhs_;
+      resolveReal* sol_;
 
-      resolveMatrixHandler *matrix_handler;
-      resolveVectorHandler *vector_handler;
+      resolveMatrixHandler *matrix_handler_;
+      resolveVectorHandler *vector_handler_;
   };
 
-  class resolveLinSolverDirect : public resolveLinSolver {
+  class resolveLinSolverDirect : public resolveLinSolver 
+  {
     public:
       resolveLinSolverDirect();
       ~resolveLinSolverDirect();
@@ -39,15 +41,17 @@ namespace ReSolve {
       virtual resolveMatrix* getUFactor(); 
       virtual resolveInt*  getPOrdering();
       virtual resolveInt*  getQOrdering();
+    
     protected:
-      resolveMatrix* L;
-      resolveMatrix* U;
-      resolveInt* P;
-      resolveInt* Q;
+      resolveMatrix* L_;
+      resolveMatrix* U_;
+      resolveInt* P_;
+      resolveInt* Q_;
       bool factors_extracted_;
   };
 
-  class resolveLinSolverIterative : public resolveLinSolver {
+  class resolveLinSolverIterative : public resolveLinSolver 
+  {
     public:
       resolveLinSolverIterative();
       ~resolveLinSolverIterative();

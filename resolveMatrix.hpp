@@ -5,8 +5,8 @@
 #include "resolveCommon.hpp"
 #include<cstring>
 
-namespace ReSolve {
-
+namespace ReSolve 
+{
   class resolveMatrix 
   {
     public:
@@ -72,56 +72,57 @@ namespace ReSolve {
       void allocateCsr(std::string memspace);
       void allocateCsc(std::string memspace);
       void allocateCoo(std::string memspace);
+ 
     private:
       //size
-      resolveInt n;
-      resolveInt m;
-      resolveInt nnz;
-      resolveInt nnz_expanded;
+      resolveInt n_;
+      resolveInt m_;
+      resolveInt nnz_;
+      resolveInt nnz_expanded_;
 
-      bool is_symmetric;
-      bool is_expanded;
+      bool is_symmetric_;
+      bool is_expanded_;
 
       //host data
       // COO format:
-      resolveInt* h_coo_rows;
-      resolveInt* h_coo_cols;
-      resolveReal* h_coo_vals;
-      bool h_coo_updated;
+      resolveInt* h_coo_rows_;
+      resolveInt* h_coo_cols_;
+      resolveReal* h_coo_vals_;
+      bool h_coo_updated_;
 
       // CSR format:
-      resolveInt* h_csr_p; //row starts
-      resolveInt* h_csr_i; //column indices
-      resolveReal* h_csr_x;//values 
-      bool h_csr_updated;
+      resolveInt* h_csr_p_; //row starts
+      resolveInt* h_csr_i_; //column indices
+      resolveReal* h_csr_x_;//values 
+      bool h_csr_updated_;
 
       // CSC format:
-      resolveInt* h_csc_p; //column starts
-      resolveInt* h_csc_i; //row indices
-      resolveReal* h_csc_x;//values 
-      bool h_csc_updated;
+      resolveInt* h_csc_p_; //column starts
+      resolveInt* h_csc_i_; //row indices
+      resolveReal* h_csc_x_;//values 
+      bool h_csc_updated_;
 
       //device data
 
       /* note -- COO format not typically kept on the gpu anyways */
 
       //COO format:
-      resolveInt* d_coo_rows;
-      resolveInt* d_coo_cols;
-      resolveReal* d_coo_vals;
-      bool d_coo_updated;
+      resolveInt* d_coo_rows_;
+      resolveInt* d_coo_cols_;
+      resolveReal* d_coo_vals_;
+      bool d_coo_updated_;
 
       // CSR format:
-      resolveInt* d_csr_p; //row starts
-      resolveInt* d_csr_i; //column indices
-      resolveReal* d_csr_x;//values 
-      bool d_csr_updated;
+      resolveInt* d_csr_p_; //row starts
+      resolveInt* d_csr_i_; //column indices
+      resolveReal* d_csr_x_;//values 
+      bool d_csr_updated_;
 
       // CSC format:
-      resolveInt* d_csc_p; //column starts
-      resolveInt* d_csc_i; //row indices
-      resolveReal* d_csc_x;//values  
-      bool d_csc_updated;
+      resolveInt* d_csc_p_; //column starts
+      resolveInt* d_csc_i_; //row indices
+      resolveReal* d_csc_x_;//values  
+      bool d_csc_updated_;
 
       //auxiliary functions for managing updating data between cpu and cuda
       void setNotUpdated();
