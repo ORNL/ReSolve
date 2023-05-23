@@ -1,49 +1,16 @@
 # ReSolve (formerly known as &#346;wiryLU)
 
-## Code structure
-### General
-
-- Member functions **DO RETURN** 0 if no error was encountered. Otherwise, they do return -1 or specific (other) error code.
-- The variables with underscore are member variables (private or protected). For instance, `resolveInt* this_is_member_variable_` is a member variable.
-- Function names and class names are generally in the format `thisIsFunctionName()`.
-- The pointer `*` belongs to the type. So `resolveInt* some_variable_` is ok, but `double * other_variable_, * variable2_` is **not ok**.
-
-### Braces and spaces
-- Use spaces, not tabs. Standard indent is 2 spaces (not 4).
-- Namespaces, classes and functions: use new line afterwards, i.e.,  
-```
-namespace someNamespace
-{
-//some code 
-}
-```
-* For short functions (i.e., empty constructor), do not inline braces.
-```
-classA::classA()
-{
-}
-```
-- For `for`, `if`, `while` : the opening brace is in the same line as the statement. Leave a space between the statement and the brace. When using `else`, follow the example below. 
-```
-if (cond == true) {
-  //some code
-  } else {
-
-  }
- ```
-- Do not use one-line `if`s and `for`s. Always use braces.
-- There should be spaces between arithmetic operators. This is ok `c * (a + b)`and this is **not ok**: `c*(a+b)`
-- When defining member functions, use one empty line between the functions.
-- Leave one empty line between all the includes and the first line of the actual code. 
-
-### Naming convention
-- All class names start with `resolve`. 
+ReSolve is a library of GPU-resident linear solver. It is very much work in progres. When completed, it will contain iterative and direct linear solvers designed to run on NVIDIA and AMD GPUs, as well as CPU devices.
 
 ## Getting started
 
 To make it easy for you to get started with GitLab, here's a list of recommended next steps.
 
 Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+
+## Contributing
+
+For all contributions to ReSolve please follow the [developer guidelines](CONTRIBUTING.md)
 
 ## Add your files
 
