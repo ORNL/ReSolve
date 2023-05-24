@@ -5,7 +5,7 @@ LIBS := -lklu
 SRCCPU := resolveMatrixHandler.cpp  resolveVectorHandler.cpp resolveMatrixIO.cpp resolveLinSolver.cpp resolveLinSolverDirectKLU.cpp main.cpp
 OBJSCPU := $(foreach f,$(SRCCPU),$(f:%.cpp=%.o))
 
-SRCCUDA := resolveMatrix.cpp resolveVector.cpp resolveLinAlgWorkspace.cpp resolveLinSolverDirectCuSolverRf.cpp
+SRCCUDA := resolveMatrix.cpp resolveVector.cpp resolveLinAlgWorkspace.cpp resolveLinSolverDirectCuSolverRf.cpp resolveLinSolverDirectCuSolverGLU.cpp
 
 OBJSCUDA := $(foreach f,$(SRCCUDA),$(f:%.cpp=%.o))
 

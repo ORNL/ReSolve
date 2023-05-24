@@ -132,4 +132,20 @@ namespace ReSolve
     return 0;
   }
 
+  void resolveVector::allocate(std::string memspace) 
+  {
+    if (memspace == "cpu") {
+      if (h_data_ != nullptr) {
+        delete [] h_data_;
+      }
+      h_data_ = new resolveReal[n_]; 
+    } else {
+      if (memspace == "cuda") {
+        if (d_data_ != nullptr) {
+          cudaFree(d_data_);
+        }
+        cudaMalloc(&d_data_, (n_) * sizeof(resolveReal)); 
+      }
+    }
+  }
 }

@@ -18,7 +18,7 @@ namespace ReSolve
       resolveInt getSize();
 
       void setDataUpdated(std::string memspace);
-   
+      void allocate(std::string memspace);   
     private:
       resolveInt n_; //size
       resolveReal* d_data_;
