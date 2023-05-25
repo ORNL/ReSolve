@@ -1,4 +1,4 @@
-#include "resolveMatrixHandler.hpp"
+#include "MatrixHandler.hpp"
 #include <iostream>
 
 namespace ReSolve

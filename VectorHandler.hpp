@@ -1,6 +1,6 @@
 #pragma once
-#include "resolveLinAlgWorkspace.hpp"
-#include "resolveVector.hpp"
+#include "LinAlgWorkspace.hpp"
+#include "Vector.hpp"
 
 namespace ReSolve
 {

@@ -1,10 +1,10 @@
 #pragma once
 #include <string>
-#include "resolveCommon.hpp"
-#include "resolveMatrix.hpp"
-#include "resolveVector.hpp"
-#include "resolveMatrixHandler.hpp"
-#include "resolveVectorHandler.hpp"
+#include "Common.hpp"
+#include "Matrix.hpp"
+#include "Vector.hpp"
+#include "MatrixHandler.hpp"
+#include "VectorHandler.hpp"
 
 namespace ReSolve 
 {

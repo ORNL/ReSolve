@@ -1,7 +1,7 @@
 // this is for standalone testing (will NOT  be used in hiop)
 //
-#include "resolveCommon.hpp"
-#include "resolveMatrix.hpp"
+#include "Common.hpp"
+#include "Matrix.hpp"
 
 namespace ReSolve
 {

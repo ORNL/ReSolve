@@ -1,10 +1,10 @@
-#include "resolveMatrixIO.hpp"
-#include "resolveMatrix.hpp"
-#include "resolveVector.hpp"
-#include "resolveMatrixHandler.hpp"
-#include "resolveVectorHandler.hpp"
-#include "resolveLinSolverDirectKLU.hpp"
-#include "resolveLinSolverDirectCuSolverRf.hpp"
+#include "MatrixIO.hpp"
+#include "Matrix.hpp"
+#include "Vector.hpp"
+#include "MatrixHandler.hpp"
+#include "VectorHandler.hpp"
+#include "LinSolverDirectKLU.hpp"
+#include "LinSolverDirectCuSolverRf.hpp"
 #include <string>
 #include <iostream>
 
