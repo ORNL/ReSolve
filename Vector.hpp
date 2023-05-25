@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 #include <cuda_runtime.h>
-#include "resolveCommon.hpp"
+#include "Common.hpp"
 #include<cstring>
 
 namespace ReSolve 

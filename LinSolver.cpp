@@ -1,4 +1,4 @@
-#include "resolveLinSolver.hpp"
+#include "LinSolver.hpp"
 
 
 namespace ReSolve 

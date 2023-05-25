@@ -4,9 +4,9 @@
 // (2) Matrix vector product (SpMV)
 // (3) Matrix 1-norm
 #pragma once
-#include "resolveMatrix.hpp"
-#include "resolveVector.hpp"
-#include "resolveLinAlgWorkspace.hpp"
+#include "Matrix.hpp"
+#include "Vector.hpp"
+#include "LinAlgWorkspace.hpp"
 #include <algorithm>
 
 namespace ReSolve

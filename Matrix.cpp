@@ -1,4 +1,4 @@
-#include "resolveMatrix.hpp"
+#include "Matrix.hpp"
 #include <cuda_runtime.h>
 
 namespace ReSolve 

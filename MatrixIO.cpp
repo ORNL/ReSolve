@@ -1,7 +1,7 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
-#include "resolveMatrixIO.hpp"
+#include "MatrixIO.hpp"
 
 namespace ReSolve
 {

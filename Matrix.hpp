@@ -2,7 +2,7 @@
 // Mirroring memory approach 
 #pragma once
 #include <string>
-#include "resolveCommon.hpp"
+#include "Common.hpp"
 #include<cstring>
 
 namespace ReSolve 

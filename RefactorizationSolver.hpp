@@ -1,6 +1,6 @@
 #pragma once
-#include "resolveMatrix.hpp"
-#include "resolveVector.hpp"
+#include "Matrix.hpp"
+#include "Vector.hpp"
 
 namespace ReSolve
 {

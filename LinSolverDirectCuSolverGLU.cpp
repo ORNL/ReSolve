@@ -1,4 +1,5 @@
-#include "resolveLinSolverDirectCuSolverGLU.hpp"
+#include "LinSolverDirectCuSolverGLU.hpp"
+#include <vector>
 
 namespace ReSolve
 {

@@ -1,7 +1,7 @@
 #pragma once
-#include "resolveCommon.hpp"
-#include "resolveMatrix.hpp"
-#include "resolveLinSolver.hpp"
+#include "Common.hpp"
+#include "Matrix.hpp"
+#include "LinSolver.hpp"
 #include "cusolverRf.h"
 
 namespace ReSolve 

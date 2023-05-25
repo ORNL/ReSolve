@@ -2,10 +2,10 @@ CC := g++
 NVCC := nvcc
 CUDA_LIBS := -lcusparse -lcublas -lcusolver
 LIBS := -lklu
-SRCCPU := resolveMatrixHandler.cpp  resolveVectorHandler.cpp resolveMatrixIO.cpp resolveLinSolver.cpp resolveLinSolverDirectKLU.cpp main.cpp
+SRCCPU := MatrixHandler.cpp  VectorHandler.cpp MatrixIO.cpp LinSolver.cpp LinSolverDirectKLU.cpp main.cpp
 OBJSCPU := $(foreach f,$(SRCCPU),$(f:%.cpp=%.o))
 
-SRCCUDA := resolveMatrix.cpp resolveVector.cpp resolveLinAlgWorkspace.cpp resolveLinSolverDirectCuSolverRf.cpp resolveLinSolverDirectCuSolverGLU.cpp
+SRCCUDA := Matrix.cpp Vector.cpp LinAlgWorkspace.cpp LinSolverDirectCuSolverRf.cpp LinSolverDirectCuSolverGLU.cpp
 
 OBJSCUDA := $(foreach f,$(SRCCUDA),$(f:%.cpp=%.o))
 

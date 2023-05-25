@@ -1,4 +1,4 @@
-#include "resolveVector.hpp"
+#include "Vector.hpp"
 
 namespace ReSolve 
 {

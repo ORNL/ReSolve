@@ -1,4 +1,4 @@
-#include "resolveLinAlgWorkspace.hpp"
+#include "LinAlgWorkspace.hpp"
 
 namespace ReSolve
 {
