@@ -9,6 +9,11 @@ namespace ReSolve
 
   resolveLinSolverDirectCuSolverGLU::~resolveLinSolverDirectCuSolverGLU()
   {
+    cudaFree(glu_buffer_);
+    cusparseDestroyMatDescr(descr_M_);
+    cusparseDestroyMatDescr(descr_A_);
+    cusolverSpDestroyGluInfo(info_M_);
+    delete M_;
   }
 
   void resolveLinSolverDirectCuSolverGLU::setup(resolveMatrix* A, resolveMatrix* L, resolveMatrix* U, resolveInt* P, resolveInt* Q)

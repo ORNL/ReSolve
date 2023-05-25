@@ -92,6 +92,14 @@ namespace ReSolve
 
   resolveMatrix::~resolveMatrix()
   {
+    this->destroyCsr("cpu");
+    this->destroyCsr("cuda");
+    
+    this->destroyCsc("cpu");
+    this->destroyCsc("cuda");
+  
+    this->destroyCoo("cpu");
+    this->destroyCoo("cuda");
   }
 
   void resolveMatrix::setNotUpdated()

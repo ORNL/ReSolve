@@ -9,6 +9,10 @@ namespace ReSolve
 
   resolveLinSolverDirectCuSolverRf::~resolveLinSolverDirectCuSolverRf()
   {
+    cusolverRfDestroy(handle_cusolverrf_);
+    cudaFree(d_P_);
+    cudaFree(d_Q_);
+    cudaFree(d_T_);
   }
 
   void resolveLinSolverDirectCuSolverRf::setup(resolveMatrix* A, resolveMatrix* L, resolveMatrix* U, resolveInt* P, resolveInt* Q)
@@ -23,6 +27,9 @@ namespace ReSolve
 
     cudaMemcpy(d_P_, P, n  * sizeof(resolveInt), cudaMemcpyHostToDevice);
     cudaMemcpy(d_Q_, Q, n  * sizeof(resolveInt), cudaMemcpyHostToDevice);
+
+
+    status_cusolverrf_ = cusolverRfSetResetValuesFastMode(handle_cusolverrf_, CUSOLVERRF_RESET_VALUES_FAST_MODE_ON);
 
     cusolverRfSetupDevice(n, 
                           A_->getNnzExpanded(),

@@ -56,7 +56,7 @@ namespace ReSolve
       resolveLinSolverIterative();
       ~resolveLinSolverIterative();
 
-      virtual resolveReal* solve(resolveVector* rhs, resolveVector* init_guess);
+      virtual void solve(resolveVector* rhs, resolveVector* init_guess);
 
   };
 }

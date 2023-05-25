@@ -11,6 +11,8 @@ namespace ReSolve
 
   resolveLinSolverDirectKLU::~resolveLinSolverDirectKLU()
   {
+    klu_free_symbolic(&Symbolic_, &Common_);
+    klu_free_numeric(&Numeric_, &Common_);
   }
 
   void resolveLinSolverDirectKLU::setup(resolveMatrix* A)

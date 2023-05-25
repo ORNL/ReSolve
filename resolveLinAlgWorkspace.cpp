@@ -17,6 +17,7 @@ namespace ReSolve
     handle_cublas_ = nullptr;
     buffer_spmv_ = nullptr;
     buffer_1norm_ = nullptr;    
+
     matvec_setup_done_ = false;
   }
 
