@@ -6,25 +6,25 @@
 
 namespace ReSolve 
 {
-  class resolveLinSolverDirectCuSolverRf : public resolveLinSolverDirect 
+  class LinSolverDirectCuSolverRf : public LinSolverDirect 
   {
     public: 
-      resolveLinSolverDirectCuSolverRf();
-      ~resolveLinSolverDirectCuSolverRf();
+      LinSolverDirectCuSolverRf();
+      ~LinSolverDirectCuSolverRf();
       
-      void setup(resolveMatrix* A, resolveMatrix* L, resolveMatrix* U, resolveInt* P, resolveInt* Q);
+      void setup(Matrix* A, Matrix* L, Matrix* U, Int* P, Int* Q);
 
       void setAlgorithms(cusolverRfFactorization_t fact_alg,  cusolverRfTriangularSolve_t solve_alg);
       
       int refactorize();
-      int solve(resolveVector* rhs, resolveVector* x);
+      int solve(Vector* rhs, Vector* x);
 
     private:
       cusolverRfHandle_t handle_cusolverrf_;
       cusolverStatus_t status_cusolverrf_;
       
-      resolveInt* d_P_;
-      resolveInt* d_Q_;
-      resolveReal* d_T_;
+      Int* d_P_;
+      Int* d_Q_;
+      Real* d_T_;
   };
 }

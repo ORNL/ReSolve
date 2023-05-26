@@ -3,24 +3,24 @@
 
 namespace ReSolve
 {
-  resolveVectorHandler::resolveVectorHandler()
+  VectorHandler::VectorHandler()
   {
   }
 
-  resolveVectorHandler:: resolveVectorHandler(resolveLinAlgWorkspace* new_workspace)
+  VectorHandler:: VectorHandler(LinAlgWorkspace* new_workspace)
   {
     workspace_ = new_workspace;
   }
 
-  resolveVectorHandler::~resolveVectorHandler()
+  VectorHandler::~VectorHandler()
   {
     //delete the workspace TODO
   }
 
-  resolveReal resolveVectorHandler::dot(resolveVector* x, resolveVector* y, std::string memspace)
+  Real VectorHandler::dot(Vector* x, Vector* y, std::string memspace)
   { 
     if (memspace == "cuda" ){ 
-      resolveLinAlgWorkspaceCUDA* workspaceCUDA = (resolveLinAlgWorkspaceCUDA*) workspace_;
+      LinAlgWorkspaceCUDA* workspaceCUDA = (LinAlgWorkspaceCUDA*) workspace_;
       cublasHandle_t handle_cublas =  workspaceCUDA->getCublasHandle();
       double nrm = 0.0;
       cublasStatus_t st= cublasDdot (handle_cublas,  x->getSize(), x->getData("cuda"), 1, y->getData("cuda"), 1, &nrm);

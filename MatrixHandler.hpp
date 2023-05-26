@@ -17,11 +17,11 @@ namespace ReSolve
     public:
       indexPlusValue();
       ~indexPlusValue();
-      void setIdx (resolveInt new_idx);
-      void setValue (resolveReal new_value);
+      void setIdx (Int new_idx);
+      void setValue (Real new_value);
 
-      resolveInt getIdx();
-      resolveReal getValue();
+      Int getIdx();
+      Real getValue();
 
       bool operator < (const indexPlusValue& str) const
       {
@@ -29,25 +29,25 @@ namespace ReSolve
       }  
 
     private:
-      resolveInt idx_;
-      resolveReal value_;
+      Int idx_;
+      Real value_;
   };
 
-  class resolveMatrixHandler
+  class MatrixHandler
   {
     public:
-      resolveMatrixHandler();
-      resolveMatrixHandler(resolveLinAlgWorkspace* workspace);
-      ~resolveMatrixHandler();
+      MatrixHandler();
+      MatrixHandler(LinAlgWorkspace* workspace);
+      ~MatrixHandler();
 
-      void csc2csr(resolveMatrix* A, std::string memspace);//memspace decides on what is returned (cpu or cuda pointer)
-      void coo2csr(resolveMatrix* A, std::string memspace);
+      void csc2csr(Matrix* A, std::string memspace);//memspace decides on what is returned (cpu or cuda pointer)
+      void coo2csr(Matrix* A, std::string memspace);
 
-      void matvec(resolveMatrix* A, resolveVector* vec_x, resolveVector* vec_result, resolveReal* alpha, resolveReal* beta, std::string memspace);
-      void resolveMatrix1Norm(resolveMatrix *A, resolveReal* norm);
+      void matvec(Matrix* A, Vector* vec_x, Vector* vec_result, Real* alpha, Real* beta, std::string memspace);
+      void Matrix1Norm(Matrix *A, Real* norm);
 
     private: 
-      resolveLinAlgWorkspace* workspace_;
+      LinAlgWorkspace* workspace_;
       bool new_matrix_; //if the structure changed, you need a new handler.
   };
 }

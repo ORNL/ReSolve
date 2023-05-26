@@ -3,27 +3,27 @@
 
 namespace ReSolve 
 {
-  resolveLinSolver::resolveLinSolver()
+  LinSolver::LinSolver()
   {
   }
 
-  resolveLinSolver::~resolveLinSolver()
+  LinSolver::~LinSolver()
   {
     //destroy the matrix and hadlers
   }
 
-  void resolveLinSolver::setup(resolveMatrix* A)
+  void LinSolver::setup(Matrix* A)
   {
     this->A_ = A;
   }
 
-  resolveReal resolveLinSolver::evaluateResidual()
+  Real LinSolver::evaluateResidual()
   {
     //to be implemented
     return 1.0;
   }
 
-  resolveLinSolverDirect::resolveLinSolverDirect()
+  LinSolverDirect::LinSolverDirect()
   {
     L_ = nullptr;
     U_ = nullptr;
@@ -32,7 +32,7 @@ namespace ReSolve
     factors_extracted_ = false;
   }
 
-  resolveLinSolverDirect::~resolveLinSolverDirect()
+  LinSolverDirect::~LinSolverDirect()
   {
     delete L_;
     delete U_;
@@ -40,44 +40,44 @@ namespace ReSolve
     delete [] Q_;
   }
 
-  int resolveLinSolverDirect::analyze()
+  int LinSolverDirect::analyze()
   {
     return 0;
   } //the same as symbolic factorization
 
-  int resolveLinSolverDirect::factorize()
+  int LinSolverDirect::factorize()
   {
     factors_extracted_ = false;
     return 0;
   }
 
-  int resolveLinSolverDirect::refactorize()
+  int LinSolverDirect::refactorize()
   {
     factors_extracted_ = false;
     return 0;
   }
 
-  int resolveLinSolverDirect::solve(resolveVector* rhs, resolveVector* x) 
+  int LinSolverDirect::solve(Vector* rhs, Vector* x) 
   {
     return 0;
   }
 
-  resolveMatrix* resolveLinSolverDirect::getLFactor()
+  Matrix* LinSolverDirect::getLFactor()
   {
     return nullptr;
   } 
   
-  resolveMatrix* resolveLinSolverDirect::getUFactor()
+  Matrix* LinSolverDirect::getUFactor()
   {
     return nullptr;
   } 
   
-  resolveInt*  resolveLinSolverDirect::getPOrdering()
+  Int*  LinSolverDirect::getPOrdering()
   {
     return nullptr;
   } 
   
-  resolveInt*  resolveLinSolverDirect::getQOrdering()
+  Int*  LinSolverDirect::getQOrdering()
   {
     return nullptr;
   } 

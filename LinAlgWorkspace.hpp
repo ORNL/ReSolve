@@ -6,20 +6,20 @@
 
 namespace ReSolve
 {
-  class resolveLinAlgWorkspace
+  class LinAlgWorkspace
   {
     public:
-      resolveLinAlgWorkspace();
-      ~resolveLinAlgWorkspace();
+      LinAlgWorkspace();
+      ~LinAlgWorkspace();
     private:
   };
 
 
-  class resolveLinAlgWorkspaceCUDA : public resolveLinAlgWorkspace
+  class LinAlgWorkspaceCUDA : public LinAlgWorkspace
   {
     public:
-      resolveLinAlgWorkspaceCUDA();
-      ~resolveLinAlgWorkspaceCUDA();
+      LinAlgWorkspaceCUDA();
+      ~LinAlgWorkspaceCUDA();
 
       //accessors
       void* getSpmvBuffer();

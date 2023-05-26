@@ -15,67 +15,67 @@ namespace ReSolve
   {
   }
 
-  void indexPlusValue::setIdx(resolveInt new_idx)
+  void indexPlusValue::setIdx(Int new_idx)
   {
     idx_ = new_idx;
   }
 
-  void indexPlusValue::setValue(resolveReal new_value)
+  void indexPlusValue::setValue(Real new_value)
   {
     value_ = new_value;
   }
 
-  resolveInt indexPlusValue::getIdx()
+  Int indexPlusValue::getIdx()
   {
     return idx_;
   }
 
-  resolveReal indexPlusValue::getValue()
+  Real indexPlusValue::getValue()
   {
     return value_;
   }
   //end of helper class
   
-  resolveMatrixHandler::resolveMatrixHandler()
+  MatrixHandler::MatrixHandler()
   {
   }
 
-  resolveMatrixHandler::~resolveMatrixHandler()
+  MatrixHandler::~MatrixHandler()
   {
   }
 
-  resolveMatrixHandler::resolveMatrixHandler(resolveLinAlgWorkspace* new_workspace)
+  MatrixHandler::MatrixHandler(LinAlgWorkspace* new_workspace)
   {
     workspace_ = new_workspace;
   }
 
-  void resolveMatrixHandler::coo2csr(resolveMatrix* A, std::string memspace)
+  void MatrixHandler::coo2csr(Matrix* A, std::string memspace)
   {
     //this happens on the CPU not on the GPU
     //but will return whatever memspace requested.
 
     //count nnzs first
 
-    resolveInt nnz_unpacked = 0;
-    resolveInt nnz = A->getNnz();
-    resolveInt n = A->getNumRows();
+    Int nnz_unpacked = 0;
+    Int nnz = A->getNnz();
+    Int n = A->getNumRows();
     bool symmetric = A->symmetric();
     bool expanded = A->expanded();
 
-    resolveInt* nnz_counts =  new resolveInt[n];
+    Int* nnz_counts =  new Int[n];
     std::fill_n(nnz_counts, n, 0);
-    resolveInt* coo_rows = A->getCooRowIndices("cpu");
-    resolveInt* coo_cols = A->getCooColIndices("cpu");
-    resolveReal* coo_vals = A->getCooValues("cpu");
+    Int* coo_rows = A->getCooRowIndices("cpu");
+    Int* coo_cols = A->getCooColIndices("cpu");
+    Real* coo_vals = A->getCooValues("cpu");
 
-    resolveInt* diag_control = new resolveInt[n]; //for DEDUPLICATION of the diagonal
+    Int* diag_control = new Int[n]; //for DEDUPLICATION of the diagonal
     std::fill_n(diag_control, n, 0);
-    resolveInt nnz_unpacked_no_duplicates = 0;
-    resolveInt nnz_no_duplicates = nnz;
+    Int nnz_unpacked_no_duplicates = 0;
+    Int nnz_no_duplicates = nnz;
 
 
     //maybe check if they exist?
-    for (resolveInt i = 0; i < nnz; ++i)
+    for (Int i = 0; i < nnz; ++i)
     {
       nnz_counts[coo_rows[i]]++;
       nnz_unpacked++;
@@ -97,25 +97,25 @@ namespace ReSolve
     }
     A->setExpanded(true);
     A->setNnzExpanded(nnz_unpacked_no_duplicates);
-    resolveInt* csr_ia = new resolveInt[n+1];
+    Int* csr_ia = new Int[n+1];
     std::fill_n(csr_ia, n + 1, 0);
-    resolveInt* csr_ja = new resolveInt[nnz_unpacked];
-    resolveReal* csr_a = new resolveReal[nnz_unpacked];
-    resolveInt* nnz_shifts = new resolveInt[n];
+    Int* csr_ja = new Int[nnz_unpacked];
+    Real* csr_a = new Real[nnz_unpacked];
+    Int* nnz_shifts = new Int[n];
     std::fill_n(nnz_shifts, n , 0);
 
     indexPlusValue* tmp = new indexPlusValue[nnz_unpacked]; 
 
     csr_ia[0] = 0;
 
-    for (resolveInt i = 1; i < n + 1; ++i){
+    for (Int i = 1; i < n + 1; ++i){
       csr_ia[i] = csr_ia[i - 1] + nnz_counts[i - 1] - (diag_control[i-1] - 1);
     }
 
     int r, start;
 
 
-    for (resolveInt i = 0; i < nnz; ++i){
+    for (Int i = 0; i < nnz; ++i){
       //which row
       r = coo_rows[i];
       start = csr_ia[r];
@@ -125,11 +125,11 @@ namespace ReSolve
       }
       if ((r == coo_cols[i]) && (diag_control[r] > 1)) {//diagonal, and there are duplicates
         bool already_there = false;  
-        for (resolveInt j = start; j < start + nnz_shifts[r]; ++j)
+        for (Int j = start; j < start + nnz_shifts[r]; ++j)
         {
-          resolveInt c = tmp[j].getIdx();
+          Int c = tmp[j].getIdx();
           if (c == r) {
-            resolveReal val = tmp[j].getValue();
+            Real val = tmp[j].getValue();
             val += coo_vals[i];
             tmp[j].setValue(val);
             already_there = true;
@@ -173,7 +173,7 @@ namespace ReSolve
       std::sort(&tmp[colStart],&tmp[colStart] + length);
     }
 
-    for (resolveInt i = 0; i < nnz_unpacked; ++i)
+    for (Int i = 0; i < nnz_unpacked; ++i)
     {
       csr_ja[i] = tmp[i].getIdx();
       csr_a[i] = tmp[i].getValue();
@@ -206,18 +206,18 @@ namespace ReSolve
     delete [] diag_control; 
   }
 
-  void resolveMatrixHandler::matvec(resolveMatrix* A, 
-                                    resolveVector* vec_x, 
-                                    resolveVector* vec_result, 
-                                    resolveReal* alpha, 
-                                    resolveReal* beta, 
+  void MatrixHandler::matvec(Matrix* A, 
+                                    Vector* vec_x, 
+                                    Vector* vec_result, 
+                                    Real* alpha, 
+                                    Real* beta, 
                                     std::string memspace) 
   {
 
     //result = alpha *A*x + beta * result
     if (memspace == "cuda" ){
 
-      resolveLinAlgWorkspaceCUDA* workspaceCUDA = (resolveLinAlgWorkspaceCUDA*) workspace_;
+      LinAlgWorkspaceCUDA* workspaceCUDA = (LinAlgWorkspaceCUDA*) workspace_;
 
 
 
@@ -251,8 +251,8 @@ namespace ReSolve
       if (!workspaceCUDA->matvecSetup()){
         //setup first, allocate, etc.
         size_t bufferSize = 0;
-        resolveReal minusone = -1.0;
-        resolveReal one = 1.0;
+        Real minusone = -1.0;
+        Real one = 1.0;
 
         cusparseSpMV_bufferSize(handle_cusparse, 
                                 CUSPARSE_OPERATION_NON_TRANSPOSE,
@@ -295,16 +295,16 @@ namespace ReSolve
     }
   }
 
-  void resolveMatrixHandler::csc2csr(resolveMatrix* A, std::string memspace)
+  void MatrixHandler::csc2csr(Matrix* A, std::string memspace)
   {
     //it ONLY WORKS WITH CUDA
     if (memspace == "cuda") { 
-      resolveLinAlgWorkspaceCUDA* workspaceCUDA = (resolveLinAlgWorkspaceCUDA*) workspace_;
+      LinAlgWorkspaceCUDA* workspaceCUDA = (LinAlgWorkspaceCUDA*) workspace_;
 
       A->allocateCsr("cuda");
-      resolveInt n = A->getNumRows();
-      resolveInt m = A->getNumRows();
-      resolveInt nnz = A->getNnz();
+      Int n = A->getNumRows();
+      Int m = A->getNumRows();
+      Int nnz = A->getNnz();
 
       size_t bufferSize;
       void* d_work;

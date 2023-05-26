@@ -1,3 +1,3 @@
 #pragma once
-using resolveReal = double;
-using resolveInt = int;
+using Real = double;
+using Int = int;

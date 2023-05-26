@@ -3,13 +3,13 @@
 
 namespace ReSolve 
 {
-  resolveMatrix::resolveMatrix()
+  Matrix::Matrix()
   {
   }
 
-  resolveMatrix::resolveMatrix(resolveInt n, 
-                               resolveInt m, 
-                               resolveInt nnz):
+  Matrix::Matrix(Int n, 
+                               Int m, 
+                               Int nnz):
     n_{n},
     m_{m},
     nnz_{nnz}
@@ -46,9 +46,9 @@ namespace ReSolve
     d_coo_vals_ = nullptr;
   }
 
-  resolveMatrix::resolveMatrix(resolveInt n, 
-                               resolveInt m, 
-                               resolveInt nnz,
+  Matrix::Matrix(Int n, 
+                               Int m, 
+                               Int nnz,
                                bool symmetric,
                                bool expanded):
     n_{n},
@@ -90,7 +90,7 @@ namespace ReSolve
     d_coo_vals_ = nullptr;
   }
 
-  resolveMatrix::~resolveMatrix()
+  Matrix::~Matrix()
   {
     this->destroyCsr("cpu");
     this->destroyCsr("cuda");
@@ -102,7 +102,7 @@ namespace ReSolve
     this->destroyCoo("cuda");
   }
 
-  void resolveMatrix::setNotUpdated()
+  void Matrix::setNotUpdated()
   { 
     h_coo_updated_ = false;
     h_csr_updated_ = false;
@@ -113,27 +113,27 @@ namespace ReSolve
     d_csc_updated_ = false;
   }
 
-  void  resolveMatrix::copyCsr(std::string memspaceOut)
+  void  Matrix::copyCsr(std::string memspaceOut)
   {
 
-    resolveInt nnz_current = nnz_;
+    Int nnz_current = nnz_;
     if (is_expanded_) {nnz_current = nnz_expanded_;}
 
     if (memspaceOut == "cpu") {
       //check if we need to copy or not
       if ((d_csr_updated_ == true) && (h_csr_updated_ == false)) {
         if (h_csr_p_ == nullptr) {
-          h_csr_p_ = new resolveInt[n_ + 1];      
+          h_csr_p_ = new Int[n_ + 1];      
         }
         if (h_csr_i_ == nullptr) {
-          h_csr_i_ = new resolveInt[nnz_current];      
+          h_csr_i_ = new Int[nnz_current];      
         }
         if (h_csr_x_ == nullptr) {
-          h_csr_x_ = new resolveReal[nnz_current];      
+          h_csr_x_ = new Real[nnz_current];      
         }
-        cudaMemcpy(h_csr_p_, d_csr_p_, (n_ + 1) * sizeof(resolveInt), cudaMemcpyDeviceToHost);
-        cudaMemcpy(h_csr_i_, d_csr_i_, nnz_current * sizeof(resolveInt), cudaMemcpyDeviceToHost);
-        cudaMemcpy(h_csr_x_, d_csr_x_, nnz_current * sizeof(resolveReal), cudaMemcpyDeviceToHost);
+        cudaMemcpy(h_csr_p_, d_csr_p_, (n_ + 1) * sizeof(Int), cudaMemcpyDeviceToHost);
+        cudaMemcpy(h_csr_i_, d_csr_i_, nnz_current * sizeof(Int), cudaMemcpyDeviceToHost);
+        cudaMemcpy(h_csr_x_, d_csr_x_, nnz_current * sizeof(Real), cudaMemcpyDeviceToHost);
         h_csr_updated_ = true;
       }
     }
@@ -141,42 +141,42 @@ namespace ReSolve
     if (memspaceOut == "cuda") {
       if ((d_csr_updated_ == false) && (h_csr_updated_ == true)) {
         if (d_csr_p_ == nullptr) {
-          cudaMalloc(&d_csr_p_, (n_ + 1)*sizeof(resolveInt)); 
+          cudaMalloc(&d_csr_p_, (n_ + 1)*sizeof(Int)); 
         }
         if (d_csr_i_ == nullptr) {
-          cudaMalloc(&d_csr_i_, nnz_current * sizeof(resolveInt)); 
+          cudaMalloc(&d_csr_i_, nnz_current * sizeof(Int)); 
         }
         if (d_csr_x_ == nullptr) {
-          cudaMalloc(&d_csr_x_, nnz_current * sizeof(resolveReal)); 
+          cudaMalloc(&d_csr_x_, nnz_current * sizeof(Real)); 
         }
-        cudaMemcpy(d_csr_p_, h_csr_p_, (n_ + 1) * sizeof(resolveInt), cudaMemcpyHostToDevice);
-        cudaMemcpy(d_csr_i_, h_csr_i_, nnz_current * sizeof(resolveInt), cudaMemcpyHostToDevice);
-        cudaMemcpy(d_csr_x_, h_csr_x_, nnz_current * sizeof(resolveReal), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_csr_p_, h_csr_p_, (n_ + 1) * sizeof(Int), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_csr_i_, h_csr_i_, nnz_current * sizeof(Int), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_csr_x_, h_csr_x_, nnz_current * sizeof(Real), cudaMemcpyHostToDevice);
         d_csr_updated_ = true;
       }
     }
   }
 
-  void   resolveMatrix::copyCsc(std::string memspaceOut)
+  void   Matrix::copyCsc(std::string memspaceOut)
   {  
-    resolveInt nnz_current = nnz_;
+    Int nnz_current = nnz_;
     if (is_expanded_) {nnz_current = nnz_expanded_;}
    
     if (memspaceOut == "cpu") {
       //check if we need to copy or not
       if ((d_csc_updated_ == true) && (h_csc_updated_ == false)) {
         if (h_csc_p_ == nullptr) {
-          h_csc_p_ = new resolveInt[n_ + 1];      
+          h_csc_p_ = new Int[n_ + 1];      
         }
         if (h_csc_i_ == nullptr) {
-          h_csc_i_ = new resolveInt[nnz_current];      
+          h_csc_i_ = new Int[nnz_current];      
         }
         if (h_csc_x_ == nullptr) {
-          h_csc_x_ = new resolveReal[nnz_current];      
+          h_csc_x_ = new Real[nnz_current];      
         }
-        cudaMemcpy(h_csc_p_, d_csc_p_, (n_ + 1) * sizeof(resolveInt), cudaMemcpyDeviceToHost);
-        cudaMemcpy(h_csc_i_, d_csc_i_, nnz_current * sizeof(resolveInt), cudaMemcpyDeviceToHost);
-        cudaMemcpy(h_csc_x_, d_csc_x_, nnz_current * sizeof(resolveReal), cudaMemcpyDeviceToHost);
+        cudaMemcpy(h_csc_p_, d_csc_p_, (n_ + 1) * sizeof(Int), cudaMemcpyDeviceToHost);
+        cudaMemcpy(h_csc_i_, d_csc_i_, nnz_current * sizeof(Int), cudaMemcpyDeviceToHost);
+        cudaMemcpy(h_csc_x_, d_csc_x_, nnz_current * sizeof(Real), cudaMemcpyDeviceToHost);
         h_csc_updated_ = true;
       }
     }
@@ -184,42 +184,42 @@ namespace ReSolve
     if (memspaceOut == "cuda") {
       if ((d_csc_updated_ == false) && (h_csc_updated_ == true)) {
         if (d_csc_p_ == nullptr) {
-          cudaMalloc(&d_csc_p_, (n_ + 1) * sizeof(resolveInt)); 
+          cudaMalloc(&d_csc_p_, (n_ + 1) * sizeof(Int)); 
         }
         if (d_csc_i_ == nullptr) {
-          cudaMalloc(&d_csc_i_, nnz_current * sizeof(resolveInt)); 
+          cudaMalloc(&d_csc_i_, nnz_current * sizeof(Int)); 
         }
         if (d_csc_x_ == nullptr) {
-          cudaMalloc(&d_csc_x_, nnz_current * sizeof(resolveReal)); 
+          cudaMalloc(&d_csc_x_, nnz_current * sizeof(Real)); 
         }
-        cudaMemcpy(d_csc_p_, h_csc_p_, (n_ + 1) * sizeof(resolveInt), cudaMemcpyHostToDevice);
-        cudaMemcpy(d_csc_i_, h_csc_i_, nnz_current * sizeof(resolveInt), cudaMemcpyHostToDevice);
-        cudaMemcpy(d_csc_x_, h_csc_x_, nnz_current * sizeof(resolveReal), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_csc_p_, h_csc_p_, (n_ + 1) * sizeof(Int), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_csc_i_, h_csc_i_, nnz_current * sizeof(Int), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_csc_x_, h_csc_x_, nnz_current * sizeof(Real), cudaMemcpyHostToDevice);
         d_csc_updated_ = true;
       }
     }
   }
 
-  void resolveMatrix::copyCoo(std::string memspaceOut)
+  void Matrix::copyCoo(std::string memspaceOut)
   {
-    resolveInt nnz_current = nnz_;
+    Int nnz_current = nnz_;
     if (is_expanded_) {nnz_current = nnz_expanded_;}
    
     if (memspaceOut == "cpu") {
       //check if we need to copy or not
       if ((d_coo_updated_ == true) && (h_coo_updated_ == false)) {
         if (h_coo_rows_ == nullptr) {
-          h_coo_rows_ = new resolveInt[nnz_current];      
+          h_coo_rows_ = new Int[nnz_current];      
         }
         if (h_coo_cols_ == nullptr) {
-          h_coo_cols_ = new resolveInt[nnz_current];      
+          h_coo_cols_ = new Int[nnz_current];      
         }
         if (h_coo_vals_ == nullptr) {
-          h_coo_vals_ = new resolveReal[nnz_current];      
+          h_coo_vals_ = new Real[nnz_current];      
         }
-        cudaMemcpy(h_coo_rows_, d_coo_rows_, nnz_current * sizeof(resolveInt), cudaMemcpyDeviceToHost);
-        cudaMemcpy(h_coo_cols_, d_coo_cols_, nnz_current * sizeof(resolveInt), cudaMemcpyDeviceToHost);
-        cudaMemcpy(h_coo_vals_, d_coo_vals_, nnz_current * sizeof(resolveReal), cudaMemcpyDeviceToHost);
+        cudaMemcpy(h_coo_rows_, d_coo_rows_, nnz_current * sizeof(Int), cudaMemcpyDeviceToHost);
+        cudaMemcpy(h_coo_cols_, d_coo_cols_, nnz_current * sizeof(Int), cudaMemcpyDeviceToHost);
+        cudaMemcpy(h_coo_vals_, d_coo_vals_, nnz_current * sizeof(Real), cudaMemcpyDeviceToHost);
         h_coo_updated_ = true;
       }
     }
@@ -227,73 +227,73 @@ namespace ReSolve
     if (memspaceOut == "cuda") {
       if ((d_coo_updated_ == false) && (h_coo_updated_ == true)) {
         if (d_coo_rows_ == nullptr) {
-          cudaMalloc(&d_coo_rows_, nnz_current *sizeof(resolveInt)); 
+          cudaMalloc(&d_coo_rows_, nnz_current *sizeof(Int)); 
         }
         if (d_coo_cols_ == nullptr) {
-          cudaMalloc(&d_coo_cols_, nnz_current * sizeof(resolveInt)); 
+          cudaMalloc(&d_coo_cols_, nnz_current * sizeof(Int)); 
         }
         if (d_coo_vals_ == nullptr) {
-          cudaMalloc(&d_coo_vals_, nnz_current * sizeof(resolveReal)); 
+          cudaMalloc(&d_coo_vals_, nnz_current * sizeof(Real)); 
         }
-        cudaMemcpy(d_coo_rows_, h_coo_rows_, nnz_current * sizeof(resolveInt), cudaMemcpyHostToDevice);
-        cudaMemcpy(d_coo_cols_, h_coo_cols_, nnz_current * sizeof(resolveInt), cudaMemcpyHostToDevice);
-        cudaMemcpy(d_coo_vals_, h_coo_vals_, nnz_current * sizeof(resolveReal), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_coo_rows_, h_coo_rows_, nnz_current * sizeof(Int), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_coo_cols_, h_coo_cols_, nnz_current * sizeof(Int), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_coo_vals_, h_coo_vals_, nnz_current * sizeof(Real), cudaMemcpyHostToDevice);
         d_coo_updated_ = true;
       }
     }
   }
 
-  resolveInt resolveMatrix::getNumRows()
+  Int Matrix::getNumRows()
   {
     return this->n_;
   }
 
-  resolveInt resolveMatrix::getNumColumns()
+  Int Matrix::getNumColumns()
   {
     return this->m_;
   }
 
-  resolveInt resolveMatrix::getNnz()
+  Int Matrix::getNnz()
   {
     return this->nnz_;
   }
 
-  resolveInt resolveMatrix::getNnzExpanded()
+  Int Matrix::getNnzExpanded()
   {
     return this->nnz_expanded_;
   }
 
-  bool resolveMatrix::symmetric()
+  bool Matrix::symmetric()
   {
     return is_symmetric_;
   }
 
-  bool resolveMatrix::expanded()
+  bool Matrix::expanded()
   {
     return is_expanded_;
   }
 
-  void resolveMatrix::setSymmetric(bool symmetric)
+  void Matrix::setSymmetric(bool symmetric)
   {
     this->is_symmetric_ = symmetric;
   }
 
-  void resolveMatrix::setExpanded(bool expanded)
+  void Matrix::setExpanded(bool expanded)
   {
     this->is_expanded_ = expanded;
   }
 
-  void resolveMatrix::setNnzExpanded(resolveInt nnz_expanded_new)
+  void Matrix::setNnzExpanded(Int nnz_expanded_new)
   {
     this->nnz_expanded_ = nnz_expanded_new;
   }
   
-  void resolveMatrix::setNnz(resolveInt nnz_new)
+  void Matrix::setNnz(Int nnz_new)
   {
     this->nnz_ = nnz_new;
   }
 
- void resolveMatrix::setUpdated(std::string what)
+ void Matrix::setUpdated(std::string what)
  {
    if (what == "h_csr") 
    {
@@ -327,7 +327,7 @@ namespace ReSolve
    }
  }
 
-  resolveInt* resolveMatrix::getCsrRowPointers(std::string memspace)
+  Int* Matrix::getCsrRowPointers(std::string memspace)
   {
     if (memspace == "cpu") {
       copyCsr("cpu");
@@ -342,7 +342,7 @@ namespace ReSolve
     }
   }
 
-  resolveInt* resolveMatrix::getCsrColIndices(std::string memspace)
+  Int* Matrix::getCsrColIndices(std::string memspace)
   {
     if (memspace == "cpu") {
       copyCsr("cpu");
@@ -357,7 +357,7 @@ namespace ReSolve
     }
   }
 
-  resolveReal* resolveMatrix::getCsrValues(std::string memspace)
+  Real* Matrix::getCsrValues(std::string memspace)
   {
     if (memspace == "cpu") {
       copyCsr("cpu");
@@ -372,7 +372,7 @@ namespace ReSolve
     }
   }
 
-  resolveInt* resolveMatrix::getCscColPointers(std::string memspace)
+  Int* Matrix::getCscColPointers(std::string memspace)
   {
     if (memspace == "cpu") {
       copyCsc("cpu");
@@ -387,7 +387,7 @@ namespace ReSolve
     }
   }
 
-  resolveInt* resolveMatrix::getCscRowIndices(std::string memspace) 
+  Int* Matrix::getCscRowIndices(std::string memspace) 
   {
     if (memspace == "cpu") {
       copyCsc("cpu");
@@ -402,7 +402,7 @@ namespace ReSolve
     }
   }
 
-  resolveReal* resolveMatrix::getCscValues(std::string memspace)
+  Real* Matrix::getCscValues(std::string memspace)
   {
     if (memspace == "cpu") {
       copyCsc("cpu");
@@ -417,7 +417,7 @@ namespace ReSolve
     }
   }
 
-  resolveInt* resolveMatrix::getCooRowIndices(std::string memspace)
+  Int* Matrix::getCooRowIndices(std::string memspace)
   {
     if (memspace == "cpu") {
       copyCoo("cpu");
@@ -432,7 +432,7 @@ namespace ReSolve
     }
   }
 
-  resolveInt* resolveMatrix::getCooColIndices(std::string memspace)
+  Int* Matrix::getCooColIndices(std::string memspace)
   {
     if (memspace == "cpu") {
       copyCoo("cpu");
@@ -447,7 +447,7 @@ namespace ReSolve
     }
   }
 
-  resolveReal* resolveMatrix::getCooValues(std::string memspace)
+  Real* Matrix::getCooValues(std::string memspace)
   {
     if (memspace == "cpu") {
       copyCoo("cpu");
@@ -462,7 +462,7 @@ namespace ReSolve
     }
   }
 
-  int resolveMatrix::setCsr(int* csr_p, int* csr_i, double* csr_x, std::string memspace)
+  int Matrix::setCsr(int* csr_p, int* csr_i, double* csr_x, std::string memspace)
   {
 
     setNotUpdated();
@@ -485,7 +485,7 @@ namespace ReSolve
     return 0;
   }
 
-  int resolveMatrix::setCsc(int* csc_p, int* csc_i, double* csc_x, std::string memspace)
+  int Matrix::setCsc(int* csc_p, int* csc_i, double* csc_x, std::string memspace)
   {
     setNotUpdated();
 
@@ -507,7 +507,7 @@ namespace ReSolve
     return 0;
   }
 
-  int resolveMatrix::setCoo(int* coo_rows, int* coo_cols, double* coo_vals, std::string memspace)
+  int Matrix::setCoo(int* coo_rows, int* coo_cols, double* coo_vals, std::string memspace)
   {
     setNotUpdated();
     if (memspace == "cpu"){
@@ -529,10 +529,10 @@ namespace ReSolve
   }
 
 
-  resolveInt resolveMatrix::updateCsr(resolveInt* csr_p, resolveInt* csr_i, resolveReal* csr_x,  std::string memspaceIn, std::string memspaceOut)
+  Int Matrix::updateCsr(Int* csr_p, Int* csr_i, Real* csr_x,  std::string memspaceIn, std::string memspaceOut)
   {
     //four cases (for now)
-    resolveInt nnz_current = nnz_;
+    Int nnz_current = nnz_;
     if (is_expanded_) {nnz_current = nnz_expanded_;}
     setNotUpdated();
     int control=-1;
@@ -544,53 +544,53 @@ namespace ReSolve
     if (memspaceOut == "cpu") {
       //check if cpu data allocated
       if (h_csr_p_ == nullptr) {
-        this->h_csr_p_ = new resolveInt[n_ + 1];
+        this->h_csr_p_ = new Int[n_ + 1];
       }
       if (h_csr_i_ == nullptr) {
-        this->h_csr_i_ = new resolveInt[nnz_current];
+        this->h_csr_i_ = new Int[nnz_current];
       } 
       if (h_csr_x_ == nullptr) {
-        this->h_csr_x_ = new resolveReal[nnz_current];
+        this->h_csr_x_ = new Real[nnz_current];
       }
     }
 
     if (memspaceOut == "cuda") {
       //check if cuda data allocated
       if (d_csr_p_ == nullptr) {
-        cudaMalloc(&d_csr_p_, (n_ + 1) * sizeof(resolveInt)); 
+        cudaMalloc(&d_csr_p_, (n_ + 1) * sizeof(Int)); 
       }
       if (d_csr_i_ == nullptr) {
-        cudaMalloc(&d_csr_i_, nnz_current * sizeof(resolveInt)); 
+        cudaMalloc(&d_csr_i_, nnz_current * sizeof(Int)); 
       }
       if (d_csr_x_ == nullptr) {
-        cudaMalloc(&d_csr_x_, nnz_current * sizeof(resolveReal)); 
+        cudaMalloc(&d_csr_x_, nnz_current * sizeof(Real)); 
       }
     }
 
     //copy	
     switch(control)  {
       case 0: //cpu->cpu
-        std::memcpy(h_csr_p_, csr_p, (n_ + 1) * sizeof(resolveInt));
-        std::memcpy(h_csr_i_, csr_i, (nnz_current) * sizeof(resolveInt));
-        std::memcpy(h_csr_x_, csr_x, (nnz_current) * sizeof(resolveReal));
+        std::memcpy(h_csr_p_, csr_p, (n_ + 1) * sizeof(Int));
+        std::memcpy(h_csr_i_, csr_i, (nnz_current) * sizeof(Int));
+        std::memcpy(h_csr_x_, csr_x, (nnz_current) * sizeof(Real));
         h_csr_updated_ = true;
         break;
       case 2://cuda->cpu
-        cudaMemcpy(h_csr_p_, csr_p, (n_ + 1) * sizeof(resolveInt), cudaMemcpyDeviceToHost);
-        cudaMemcpy(h_csr_i_, csr_i, (nnz_current) * sizeof(resolveInt), cudaMemcpyDeviceToHost);
-        cudaMemcpy(h_csr_x_, csr_x, (nnz_current) * sizeof(resolveReal), cudaMemcpyDeviceToHost);
+        cudaMemcpy(h_csr_p_, csr_p, (n_ + 1) * sizeof(Int), cudaMemcpyDeviceToHost);
+        cudaMemcpy(h_csr_i_, csr_i, (nnz_current) * sizeof(Int), cudaMemcpyDeviceToHost);
+        cudaMemcpy(h_csr_x_, csr_x, (nnz_current) * sizeof(Real), cudaMemcpyDeviceToHost);
         h_csr_updated_ = true;
         break;
       case 1://cpu->cuda
-        cudaMemcpy(d_csr_p_, csr_p, (n_ + 1) * sizeof(resolveInt), cudaMemcpyHostToDevice);
-        cudaMemcpy(d_csr_i_, csr_i, (nnz_current) * sizeof(resolveInt), cudaMemcpyHostToDevice);
-        cudaMemcpy(d_csr_x_, csr_x, (nnz_current) * sizeof(resolveReal), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_csr_p_, csr_p, (n_ + 1) * sizeof(Int), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_csr_i_, csr_i, (nnz_current) * sizeof(Int), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_csr_x_, csr_x, (nnz_current) * sizeof(Real), cudaMemcpyHostToDevice);
         d_csr_updated_ = true;
         break;
       case 3://cuda->cuda
-        cudaMemcpy(d_csr_p_, csr_p, (n_ + 1) * sizeof(resolveInt), cudaMemcpyDeviceToDevice);
-        cudaMemcpy(d_csr_i_, csr_i, (nnz_current) * sizeof(resolveInt), cudaMemcpyDeviceToDevice);
-        cudaMemcpy(d_csr_x_, csr_x, (nnz_current) * sizeof(resolveReal), cudaMemcpyDeviceToDevice);
+        cudaMemcpy(d_csr_p_, csr_p, (n_ + 1) * sizeof(Int), cudaMemcpyDeviceToDevice);
+        cudaMemcpy(d_csr_i_, csr_i, (nnz_current) * sizeof(Int), cudaMemcpyDeviceToDevice);
+        cudaMemcpy(d_csr_x_, csr_x, (nnz_current) * sizeof(Real), cudaMemcpyDeviceToDevice);
         d_csr_updated_ = true;
         break;
       default:
@@ -599,10 +599,10 @@ namespace ReSolve
     return 0;
   }
 
-  resolveInt resolveMatrix::updateCsc(resolveInt* csc_p, resolveInt* csc_i, resolveReal* csc_x,  std::string memspaceIn, std::string memspaceOut)
+  Int Matrix::updateCsc(Int* csc_p, Int* csc_i, Real* csc_x,  std::string memspaceIn, std::string memspaceOut)
   {
 
-    resolveInt nnz_current = nnz_;
+    Int nnz_current = nnz_;
     if (is_expanded_) {nnz_current = nnz_expanded_;}
     //four cases (for now)
     int control=-1;
@@ -615,52 +615,52 @@ namespace ReSolve
     if (memspaceOut == "cpu") {
       //check if cpu data allocated
       if (h_csc_p_ == nullptr) {
-        this->h_csc_p_ = new resolveInt[n_ + 1];
+        this->h_csc_p_ = new Int[n_ + 1];
       }
       if (h_csc_i_ == nullptr) {
-        this->h_csc_i_ = new resolveInt[nnz_current];
+        this->h_csc_i_ = new Int[nnz_current];
       } 
       if (h_csc_x_ == nullptr) {
-        this->h_csc_x_ = new resolveReal[nnz_current];
+        this->h_csc_x_ = new Real[nnz_current];
       }
     }
 
     if (memspaceOut == "cuda") {
       //check if cuda data allocated
       if (d_csc_p_ == nullptr) {
-        cudaMalloc(&d_csc_p_, (n_ + 1) * sizeof(resolveInt)); 
+        cudaMalloc(&d_csc_p_, (n_ + 1) * sizeof(Int)); 
       }
       if (d_csc_i_ == nullptr) {
-        cudaMalloc(&d_csc_i_, nnz_current * sizeof(resolveInt)); 
+        cudaMalloc(&d_csc_i_, nnz_current * sizeof(Int)); 
       }
       if (d_csc_x_ == nullptr) {
-        cudaMalloc(&d_csc_x_, nnz_current * sizeof(resolveReal)); 
+        cudaMalloc(&d_csc_x_, nnz_current * sizeof(Real)); 
       }
     }
 
     switch(control)  {
       case 0: //cpu->cpu
-        std::memcpy(h_csc_p_, csc_p, (n_ + 1) * sizeof(resolveInt));
-        std::memcpy(h_csc_i_, csc_i, (nnz_current) * sizeof(resolveInt));
-        std::memcpy(h_csc_x_, csc_x, (nnz_current) * sizeof(resolveReal));
+        std::memcpy(h_csc_p_, csc_p, (n_ + 1) * sizeof(Int));
+        std::memcpy(h_csc_i_, csc_i, (nnz_current) * sizeof(Int));
+        std::memcpy(h_csc_x_, csc_x, (nnz_current) * sizeof(Real));
         h_csc_updated_ = true;
         break;
       case 2://cuda->cpu
-        cudaMemcpy(h_csc_p_, csc_p, (n_ + 1) * sizeof(resolveInt), cudaMemcpyDeviceToHost);
-        cudaMemcpy(h_csc_i_, csc_i, (nnz_current) * sizeof(resolveInt), cudaMemcpyDeviceToHost);
-        cudaMemcpy(h_csc_x_, csc_x, (nnz_current) * sizeof(resolveReal), cudaMemcpyDeviceToHost);
+        cudaMemcpy(h_csc_p_, csc_p, (n_ + 1) * sizeof(Int), cudaMemcpyDeviceToHost);
+        cudaMemcpy(h_csc_i_, csc_i, (nnz_current) * sizeof(Int), cudaMemcpyDeviceToHost);
+        cudaMemcpy(h_csc_x_, csc_x, (nnz_current) * sizeof(Real), cudaMemcpyDeviceToHost);
         h_csc_updated_ = true;
         break;
       case 1://cpu->cuda
-        cudaMemcpy(d_csc_p_, csc_p, (n_ + 1) * sizeof(resolveInt), cudaMemcpyHostToDevice);
-        cudaMemcpy(d_csc_i_, csc_i, (nnz_current) * sizeof(resolveInt), cudaMemcpyHostToDevice);
-        cudaMemcpy(d_csc_x_, csc_x, (nnz_current) * sizeof(resolveReal), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_csc_p_, csc_p, (n_ + 1) * sizeof(Int), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_csc_i_, csc_i, (nnz_current) * sizeof(Int), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_csc_x_, csc_x, (nnz_current) * sizeof(Real), cudaMemcpyHostToDevice);
         d_csc_updated_ = true;
         break;
       case 3://cuda->cuda
-        cudaMemcpy(d_csc_p_, csc_p, (n_ + 1) * sizeof(resolveInt), cudaMemcpyDeviceToDevice);
-        cudaMemcpy(d_csc_i_, csc_i, (nnz_current) * sizeof(resolveInt), cudaMemcpyDeviceToDevice);
-        cudaMemcpy(d_csc_x_, csc_x, (nnz_current) * sizeof(resolveReal), cudaMemcpyDeviceToDevice);
+        cudaMemcpy(d_csc_p_, csc_p, (n_ + 1) * sizeof(Int), cudaMemcpyDeviceToDevice);
+        cudaMemcpy(d_csc_i_, csc_i, (nnz_current) * sizeof(Int), cudaMemcpyDeviceToDevice);
+        cudaMemcpy(d_csc_x_, csc_x, (nnz_current) * sizeof(Real), cudaMemcpyDeviceToDevice);
         d_csc_updated_ = true;
         break;
       default:
@@ -669,10 +669,10 @@ namespace ReSolve
     return 0;
   }
 
-  resolveInt resolveMatrix::updateCoo(resolveInt* coo_rows, resolveInt* coo_cols, resolveReal* coo_vals,  std::string memspaceIn, std::string memspaceOut)
+  Int Matrix::updateCoo(Int* coo_rows, Int* coo_cols, Real* coo_vals,  std::string memspaceIn, std::string memspaceOut)
   {
     //four cases (for now)
-    resolveInt nnz_current = nnz_;
+    Int nnz_current = nnz_;
     if (is_expanded_) {nnz_current = nnz_expanded_;}
     setNotUpdated();
     int control=-1;
@@ -684,52 +684,52 @@ namespace ReSolve
     if (memspaceOut == "cpu") {
       //check if cpu data allocated	
       if (h_coo_rows_ == nullptr) {
-        this->h_coo_rows_ = new resolveInt[nnz_current];
+        this->h_coo_rows_ = new Int[nnz_current];
       }
       if (h_coo_cols_ == nullptr) {
-        this->h_coo_cols_ = new resolveInt[nnz_current];
+        this->h_coo_cols_ = new Int[nnz_current];
       }
       if (h_coo_vals_ == nullptr) {
-        this->h_coo_vals_ = new resolveReal[nnz_current];
+        this->h_coo_vals_ = new Real[nnz_current];
       }
     }
 
     if (memspaceOut == "cuda") {
       //check if cuda data allocated
       if (d_coo_rows_ == nullptr) {
-        cudaMalloc(&d_coo_rows_, nnz_current * sizeof(resolveInt)); 
+        cudaMalloc(&d_coo_rows_, nnz_current * sizeof(Int)); 
       }
       if (d_coo_cols_ == nullptr) {
-        cudaMalloc(&d_coo_cols_, nnz_current * sizeof(resolveInt)); 
+        cudaMalloc(&d_coo_cols_, nnz_current * sizeof(Int)); 
       }
       if (d_coo_vals_ == nullptr) {
-        cudaMalloc(&d_coo_vals_, nnz_current * sizeof(resolveReal)); 
+        cudaMalloc(&d_coo_vals_, nnz_current * sizeof(Real)); 
       }
     }
 
     switch(control)  {
       case 0: //cpu->cpu
-        std::memcpy(h_coo_rows_, coo_rows, (nnz_current) * sizeof(resolveInt));
-        std::memcpy(h_coo_cols_, coo_cols, (nnz_current) * sizeof(resolveInt));
-        std::memcpy(h_coo_vals_, coo_vals, (nnz_current) * sizeof(resolveReal));
+        std::memcpy(h_coo_rows_, coo_rows, (nnz_current) * sizeof(Int));
+        std::memcpy(h_coo_cols_, coo_cols, (nnz_current) * sizeof(Int));
+        std::memcpy(h_coo_vals_, coo_vals, (nnz_current) * sizeof(Real));
         h_coo_updated_ = true;
         break;
       case 2://cuda->cpu
-        cudaMemcpy(h_coo_rows_, coo_rows, (nnz_current) * sizeof(resolveInt), cudaMemcpyDeviceToHost);
-        cudaMemcpy(h_coo_cols_, coo_cols, (nnz_current) * sizeof(resolveInt), cudaMemcpyDeviceToHost);
-        cudaMemcpy(h_coo_vals_, coo_vals, (nnz_current) * sizeof(resolveReal), cudaMemcpyDeviceToHost);
+        cudaMemcpy(h_coo_rows_, coo_rows, (nnz_current) * sizeof(Int), cudaMemcpyDeviceToHost);
+        cudaMemcpy(h_coo_cols_, coo_cols, (nnz_current) * sizeof(Int), cudaMemcpyDeviceToHost);
+        cudaMemcpy(h_coo_vals_, coo_vals, (nnz_current) * sizeof(Real), cudaMemcpyDeviceToHost);
         h_coo_updated_ = true;
         break;
       case 1://cpu->cuda
-        cudaMemcpy(d_coo_rows_, coo_rows, (nnz_current) * sizeof(resolveInt), cudaMemcpyHostToDevice);
-        cudaMemcpy(d_coo_cols_, coo_cols, (nnz_current) * sizeof(resolveInt), cudaMemcpyHostToDevice);
-        cudaMemcpy(d_coo_vals_, coo_vals, (nnz_current) * sizeof(resolveReal), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_coo_rows_, coo_rows, (nnz_current) * sizeof(Int), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_coo_cols_, coo_cols, (nnz_current) * sizeof(Int), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_coo_vals_, coo_vals, (nnz_current) * sizeof(Real), cudaMemcpyHostToDevice);
         d_coo_updated_ = true;
         break;
       case 3://cuda->cuda
-        cudaMemcpy(d_coo_rows_, coo_rows, (nnz_current) * sizeof(resolveInt), cudaMemcpyDeviceToDevice);
-        cudaMemcpy(d_coo_cols_, coo_cols, (nnz_current) * sizeof(resolveInt), cudaMemcpyDeviceToDevice);
-        cudaMemcpy(d_coo_vals_, coo_vals, (nnz_current) * sizeof(resolveReal), cudaMemcpyDeviceToDevice);
+        cudaMemcpy(d_coo_rows_, coo_rows, (nnz_current) * sizeof(Int), cudaMemcpyDeviceToDevice);
+        cudaMemcpy(d_coo_cols_, coo_cols, (nnz_current) * sizeof(Int), cudaMemcpyDeviceToDevice);
+        cudaMemcpy(d_coo_vals_, coo_vals, (nnz_current) * sizeof(Real), cudaMemcpyDeviceToDevice);
         d_coo_updated_ = true;
         break;
       default:
@@ -739,28 +739,28 @@ namespace ReSolve
   }
 
 
-  resolveInt resolveMatrix::updateCsr(resolveInt* csr_p, resolveInt* csr_i, resolveReal* csr_x, resolveInt new_nnz, std::string memspaceIn, std::string memspaceOut)
+  Int Matrix::updateCsr(Int* csr_p, Int* csr_i, Real* csr_x, Int new_nnz, std::string memspaceIn, std::string memspaceOut)
   {
     this->destroyCsr(memspaceOut);
     int i = this->updateCsr(csr_p, csr_i, csr_x, memspaceIn, memspaceOut);
     return i;
   }
 
-  resolveInt resolveMatrix::updateCsc(resolveInt* csc_p, resolveInt* csc_i, resolveReal* csc_x, resolveInt new_nnz, std::string memspaceIn, std::string memspaceOut)
+  Int Matrix::updateCsc(Int* csc_p, Int* csc_i, Real* csc_x, Int new_nnz, std::string memspaceIn, std::string memspaceOut)
   {
     this->destroyCsc(memspaceOut);
     int i = this->updateCsc(csc_p, csc_i, csc_x, memspaceIn, memspaceOut);
     return i;
   }
 
-  resolveInt resolveMatrix::updateCoo(resolveInt* coo_rows, resolveInt* coo_cols, resolveReal* coo_vals, resolveInt new_nnz, std::string memspaceIn, std::string memspaceOut)
+  Int Matrix::updateCoo(Int* coo_rows, Int* coo_cols, Real* coo_vals, Int new_nnz, std::string memspaceIn, std::string memspaceOut)
   {
     this->destroyCoo(memspaceOut);
     int i = this->updateCoo(coo_rows, coo_cols, coo_vals, memspaceIn, memspaceOut);
     return i;
   }
 
-  resolveInt resolveMatrix::destroyCsr(std::string memspace)
+  Int Matrix::destroyCsr(std::string memspace)
   {
     if (memspace == "cpu"){  
       if (h_csr_p_ != nullptr) delete [] h_csr_p_;
@@ -778,7 +778,7 @@ namespace ReSolve
     return 0;
   }
 
-  resolveInt resolveMatrix::destroyCsc(std::string memspace)
+  Int Matrix::destroyCsc(std::string memspace)
   {   
     if (memspace == "cpu"){  
       if (h_csc_p_ != nullptr) delete [] h_csc_p_;
@@ -796,7 +796,7 @@ namespace ReSolve
     return 0;
   }
 
-  resolveInt resolveMatrix::destroyCoo(std::string memspace)
+  Int Matrix::destroyCoo(std::string memspace)
   { 
     if (memspace == "cpu"){  
       if (h_coo_rows_ != nullptr) delete [] h_coo_rows_;
@@ -814,61 +814,61 @@ namespace ReSolve
     return 0;
   }
  
-  void resolveMatrix::allocateCsr(std::string memspace)
+  void Matrix::allocateCsr(std::string memspace)
   {
-    resolveInt nnz_current = nnz_;
+    Int nnz_current = nnz_;
     if (is_expanded_) {nnz_current = nnz_expanded_;}
     destroyCsr(memspace);//just in case
 
     if (memspace == "cpu") {
-      this->h_csr_p_ = new resolveInt[n_ + 1];
-      this->h_csr_i_ = new resolveInt[nnz_current];
-      this->h_csr_x_ = new resolveReal[nnz_current];
+      this->h_csr_p_ = new Int[n_ + 1];
+      this->h_csr_i_ = new Int[nnz_current];
+      this->h_csr_x_ = new Real[nnz_current];
     }
 
     if (memspace == "cuda") {
-      cudaMalloc(&d_csr_p_, (n_ + 1) * sizeof(resolveInt)); 
-      cudaMalloc(&d_csr_i_, nnz_current * sizeof(resolveInt)); 
-      cudaMalloc(&d_csr_x_, nnz_current * sizeof(resolveReal)); 
+      cudaMalloc(&d_csr_p_, (n_ + 1) * sizeof(Int)); 
+      cudaMalloc(&d_csr_i_, nnz_current * sizeof(Int)); 
+      cudaMalloc(&d_csr_x_, nnz_current * sizeof(Real)); 
     }
   }
 
 
-  void resolveMatrix::allocateCsc(std::string memspace)
+  void Matrix::allocateCsc(std::string memspace)
   {
-    resolveInt nnz_current = nnz_;
+    Int nnz_current = nnz_;
     if (is_expanded_) {nnz_current = nnz_expanded_;}
     destroyCsc(memspace);//just in case
 
     if (memspace == "cpu") {
-      this->h_csc_p_ = new resolveInt[n_ + 1];
-      this->h_csc_i_ = new resolveInt[nnz_current];
-      this->h_csc_x_ = new resolveReal[nnz_current];
+      this->h_csc_p_ = new Int[n_ + 1];
+      this->h_csc_i_ = new Int[nnz_current];
+      this->h_csc_x_ = new Real[nnz_current];
     }
 
     if (memspace == "cuda") {
-      cudaMalloc(&d_csc_p_, (n_ + 1) * sizeof(resolveInt)); 
-      cudaMalloc(&d_csc_i_, nnz_current * sizeof(resolveInt)); 
-      cudaMalloc(&d_csc_x_, nnz_current * sizeof(resolveReal)); 
+      cudaMalloc(&d_csc_p_, (n_ + 1) * sizeof(Int)); 
+      cudaMalloc(&d_csc_i_, nnz_current * sizeof(Int)); 
+      cudaMalloc(&d_csc_x_, nnz_current * sizeof(Real)); 
     }
   }
   
-  void resolveMatrix::allocateCoo(std::string memspace)
+  void Matrix::allocateCoo(std::string memspace)
   {
-    resolveInt nnz_current = nnz_;
+    Int nnz_current = nnz_;
     if (is_expanded_) {nnz_current = nnz_expanded_;}
     destroyCoo(memspace);//just in case
 
     if (memspace == "cpu") {
-      this->h_coo_rows_ = new resolveInt[nnz_current];
-      this->h_coo_cols_ = new resolveInt[nnz_current];
-      this->h_coo_vals_ = new resolveReal[nnz_current];
+      this->h_coo_rows_ = new Int[nnz_current];
+      this->h_coo_cols_ = new Int[nnz_current];
+      this->h_coo_vals_ = new Real[nnz_current];
     }
 
     if (memspace == "cuda") {
-      cudaMalloc(&d_coo_rows_, nnz_current * sizeof(resolveInt)); 
-      cudaMalloc(&d_coo_cols_, nnz_current * sizeof(resolveInt)); 
-      cudaMalloc(&d_coo_vals_, nnz_current * sizeof(resolveReal)); 
+      cudaMalloc(&d_coo_rows_, nnz_current * sizeof(Int)); 
+      cudaMalloc(&d_coo_cols_, nnz_current * sizeof(Int)); 
+      cudaMalloc(&d_coo_vals_, nnz_current * sizeof(Real)); 
     }
   }
 }

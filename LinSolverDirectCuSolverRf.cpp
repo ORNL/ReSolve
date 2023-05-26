@@ -2,12 +2,12 @@
 
 namespace ReSolve 
 {
-  resolveLinSolverDirectCuSolverRf::resolveLinSolverDirectCuSolverRf()
+  LinSolverDirectCuSolverRf::LinSolverDirectCuSolverRf()
   {
     cusolverRfCreate(&handle_cusolverrf_);
   }
 
-  resolveLinSolverDirectCuSolverRf::~resolveLinSolverDirectCuSolverRf()
+  LinSolverDirectCuSolverRf::~LinSolverDirectCuSolverRf()
   {
     cusolverRfDestroy(handle_cusolverrf_);
     cudaFree(d_P_);
@@ -15,18 +15,18 @@ namespace ReSolve
     cudaFree(d_T_);
   }
 
-  void resolveLinSolverDirectCuSolverRf::setup(resolveMatrix* A, resolveMatrix* L, resolveMatrix* U, resolveInt* P, resolveInt* Q)
+  void LinSolverDirectCuSolverRf::setup(Matrix* A, Matrix* L, Matrix* U, Int* P, Int* Q)
   {
     //remember - P and Q are generally CPU variables
 
-    resolveInt n = A_->getNumRows();
+    Int n = A_->getNumRows();
 
-    cudaMalloc(&d_P_, n * sizeof(resolveInt)); 
-    cudaMalloc(&d_Q_, n * sizeof(resolveInt));
-    cudaMalloc(&d_T_, n * sizeof(resolveReal));
+    cudaMalloc(&d_P_, n * sizeof(Int)); 
+    cudaMalloc(&d_Q_, n * sizeof(Int));
+    cudaMalloc(&d_T_, n * sizeof(Real));
 
-    cudaMemcpy(d_P_, P, n  * sizeof(resolveInt), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_Q_, Q, n  * sizeof(resolveInt), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_P_, P, n  * sizeof(Int), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_Q_, Q, n  * sizeof(Int), cudaMemcpyHostToDevice);
 
 
     status_cusolverrf_ = cusolverRfSetResetValuesFastMode(handle_cusolverrf_, CUSOLVERRF_RESET_VALUES_FAST_MODE_ON);
@@ -61,12 +61,12 @@ namespace ReSolve
     this->setAlgorithms(fact_alg, solve_alg);
   }
 
-  void resolveLinSolverDirectCuSolverRf::setAlgorithms(cusolverRfFactorization_t fact_alg,  cusolverRfTriangularSolve_t solve_alg)
+  void LinSolverDirectCuSolverRf::setAlgorithms(cusolverRfFactorization_t fact_alg,  cusolverRfTriangularSolve_t solve_alg)
   {
     cusolverRfSetAlgs(handle_cusolverrf_, fact_alg, solve_alg);
   }
 
-  int resolveLinSolverDirectCuSolverRf::refactorize()
+  int LinSolverDirectCuSolverRf::refactorize()
   {
     status_cusolverrf_ = cusolverRfResetValues(A_->getNumRows(), 
                                                A_->getNnzExpanded(), 
@@ -81,7 +81,7 @@ namespace ReSolve
     return status_cusolverrf_; 
   }
 
-  int resolveLinSolverDirectCuSolverRf::solve(resolveVector* rhs, resolveVector* x)
+  int LinSolverDirectCuSolverRf::solve(Vector* rhs, Vector* x)
   {
     x->update(rhs->getData("cpu"), "cpu", "cuda");
     x->setDataUpdated("cuda");

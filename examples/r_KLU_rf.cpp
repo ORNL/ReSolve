@@ -8,12 +8,12 @@
 #include <string>
 #include <iostream>
 
-int main(resolveInt argc, char *argv[] ){
+int main(Int argc, char *argv[] ){
 
   std::string  matrixFileName = argv[1];
   std::string  rhsFileName = argv[2];
 
-  resolveInt numSystems = atoi(argv[3]);
+  Int numSystems = atoi(argv[3]);
   std::cout<<"Family mtx file name: "<< matrixFileName << ", total number of matrices: "<<numSystems<<std::endl;
   std::cout<<"Family rhs file name: "<< rhsFileName << ", total number of RHSes: " << numSystems<<std::endl;
 
@@ -22,28 +22,28 @@ int main(resolveInt argc, char *argv[] ){
   std::string matrixFileNameFull;
   std::string rhsFileNameFull;
 
-  ReSolve::resolveMatrixIO* reader = new ReSolve::resolveMatrixIO;
-  ReSolve::resolveMatrix* A;
-  ReSolve::resolveLinAlgWorkspaceCUDA* workspace_CUDA = new ReSolve::resolveLinAlgWorkspaceCUDA;
+  ReSolve::MatrixIO* reader = new ReSolve::MatrixIO;
+  ReSolve::Matrix* A;
+  ReSolve::LinAlgWorkspaceCUDA* workspace_CUDA = new ReSolve::LinAlgWorkspaceCUDA;
   workspace_CUDA->initializeHandles();
-  ReSolve::resolveMatrixHandler* matrix_handler =  new ReSolve::resolveMatrixHandler(workspace_CUDA);
-  ReSolve::resolveVectorHandler* vector_handler =  new ReSolve::resolveVectorHandler(workspace_CUDA);
-  resolveReal* rhs;
-  resolveReal* x;
+  ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(workspace_CUDA);
+  ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(workspace_CUDA);
+  Real* rhs;
+  Real* x;
 
-  ReSolve::resolveVector* vec_rhs;
-  ReSolve::resolveVector* vec_x;
-  ReSolve::resolveVector* vec_r;
+  ReSolve::Vector* vec_rhs;
+  ReSolve::Vector* vec_x;
+  ReSolve::Vector* vec_r;
 
-  resolveReal one = 1.0;
-  resolveReal minusone = -1.0;
+  Real one = 1.0;
+  Real minusone = -1.0;
 
-  ReSolve::resolveLinSolverDirectKLU* KLU = new ReSolve::resolveLinSolverDirectKLU;
-  ReSolve::resolveLinSolverDirectCuSolverRf* Rf = new ReSolve::resolveLinSolverDirectCuSolverRf;
+  ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
+  ReSolve::LinSolverDirectCuSolverRf* Rf = new ReSolve::LinSolverDirectCuSolverRf;
 
   for (int i = 0; i < numSystems; ++i)
   {
-    resolveInt j = 4 + i * 2;
+    Int j = 4 + i * 2;
     fileId = argv[j];
     rhsId = argv[j + 1];
 
@@ -62,10 +62,10 @@ int main(resolveInt argc, char *argv[] ){
       A = reader->readMatrixFromFile(matrixFileNameFull);
 
       rhs = reader->readRhsFromFile(rhsFileNameFull);
-      x = new resolveReal[A->getNumRows()];
-      vec_rhs = new ReSolve::resolveVector(A->getNumRows());
-      vec_x = new ReSolve::resolveVector(A->getNumRows());
-      vec_r = new ReSolve::resolveVector(A->getNumRows());
+      x = new Real[A->getNumRows()];
+      vec_rhs = new ReSolve::Vector(A->getNumRows());
+      vec_x = new ReSolve::Vector(A->getNumRows());
+      vec_r = new ReSolve::Vector(A->getNumRows());
     }
     else {
       reader->readAndUpdateMatrix(matrixFileNameFull, A);
@@ -97,13 +97,13 @@ int main(resolveInt argc, char *argv[] ){
       status = KLU->solve(vec_rhs, vec_x);
       std::cout<<"KLU solve status: "<<status<<std::endl;      
       if (i == 1) {
-        ReSolve::resolveMatrix* L = KLU->getLFactor();
-        ReSolve::resolveMatrix* U = KLU->getUFactor();
+        ReSolve::Matrix* L = KLU->getLFactor();
+        ReSolve::Matrix* U = KLU->getUFactor();
         matrix_handler->csc2csr(L, "cuda");
         matrix_handler->csc2csr(U, "cuda");
         if (L == nullptr) {printf("ERROR");}
-        resolveInt* P = KLU->getPOrdering();
-        resolveInt* Q = KLU->getQOrdering();
+        Int* P = KLU->getPOrdering();
+        Int* Q = KLU->getQOrdering();
         Rf->setup(A, L, U, P, Q); 
       }
     } else {
@@ -121,7 +121,7 @@ int main(resolveInt argc, char *argv[] ){
 
 
     matrix_handler->matvec(A, vec_x, vec_r, &one, &minusone, "cuda"); 
-    resolveReal* test = vec_r->getData("cpu");
+    Real* test = vec_r->getData("cpu");
 
     printf("\t 2-Norm of the residual: %16.16e\n", sqrt(vector_handler->dot(vec_r, vec_r, "cuda")));
 

@@ -5,17 +5,17 @@
 
 namespace ReSolve
 {
-  class resolveMatrixIO{
+  class MatrixIO{
     public:
-      resolveMatrixIO();
-      ~resolveMatrixIO();
+      MatrixIO();
+      ~MatrixIO();
 
-      resolveMatrix* readMatrixFromFile(std::string filename);
-      void readAndUpdateMatrix(std::string filename, resolveMatrix* A);
-      resolveReal* readRhsFromFile(std::string filename); 
-      resolveReal* readAndUpdateRhs(std::string filename, resolveReal* rhs); 
+      Matrix* readMatrixFromFile(std::string filename);
+      void readAndUpdateMatrix(std::string filename, Matrix* A);
+      Real* readRhsFromFile(std::string filename); 
+      Real* readAndUpdateRhs(std::string filename, Real* rhs); 
 
-      resolveInt writeMatrixToFile(resolveMatrix* A, std::string filename); 
-      resolveInt writeVectorToFile(resolveReal* x, std::string filename); 
+      Int writeMatrixToFile(Matrix* A, std::string filename); 
+      Int writeVectorToFile(Real* x, std::string filename); 
   };
 }

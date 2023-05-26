@@ -1,6 +1,6 @@
-namespace resolve
+namespace 
 {
-  resolveSystemSolver::resolveSystemSolver(){
+  SystemSolver::SystemSolver(){
   //set defaults:
   factorizationMethod = "klu";
   refactorizationMethod = "glu";
@@ -9,19 +9,19 @@ namespace resolve
   
   this->setup();
   }
-  resolveSystemSolver::~resolveSystemSoler()
+  SystemSolver::~SystemSoler()
   {
   //delete the matrix and all the solvers and all their workspace
   
   }
 
-  resolveSystemSolver::setup(){
+  SystemSolver::setup(){
     if (factorizationMethod == "klu"){
        
     }
   }
 
-  resolveSystemSolver::analyze()
+  SystemSolver::analyze()
   {
     if (factorizationMethod == "klu"){
     //call klu_analyze
