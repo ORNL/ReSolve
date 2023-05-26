@@ -6,24 +6,24 @@
 
 namespace ReSolve 
 {
-  class resolveLinSolverDirectKLU : public resolveLinSolverDirect 
+  class LinSolverDirectKLU : public LinSolverDirect 
   {
     public:
-      resolveLinSolverDirectKLU();
-      ~resolveLinSolverDirectKLU();
-      void setup(resolveMatrix* A);
+      LinSolverDirectKLU();
+      ~LinSolverDirectKLU();
+      void setup(Matrix* A);
      
       void setupParameters(int ordering, double KLU_threshold, bool halt_if_singular);
 
       int analyze(); //the same as symbolic factorization
       int factorize();
       int refactorize();
-      int solve(resolveVector* rhs, resolveVector* x); 
+      int solve(Vector* rhs, Vector* x); 
     
-      resolveMatrix* getLFactor(); 
-      resolveMatrix* getUFactor(); 
-      resolveInt*  getPOrdering();
-      resolveInt*  getQOrdering();
+      Matrix* getLFactor(); 
+      Matrix* getUFactor(); 
+      Int*  getPOrdering();
+      Int*  getQOrdering();
 
     private:
       klu_common Common_; //settings

@@ -2,15 +2,15 @@
 
 namespace ReSolve
 {
-  resolveLinAlgWorkspace::resolveLinAlgWorkspace()
+  LinAlgWorkspace::LinAlgWorkspace()
   {
   }
   
-  resolveLinAlgWorkspace::~resolveLinAlgWorkspace()
+  LinAlgWorkspace::~LinAlgWorkspace()
   {
   }
 
-  resolveLinAlgWorkspaceCUDA::resolveLinAlgWorkspaceCUDA()
+  LinAlgWorkspaceCUDA::LinAlgWorkspaceCUDA()
   {
     handle_cusolversp_ = nullptr;
     handle_cusparse_ = nullptr;
@@ -21,7 +21,7 @@ namespace ReSolve
     matvec_setup_done_ = false;
   }
 
-  resolveLinAlgWorkspaceCUDA::~resolveLinAlgWorkspaceCUDA()
+  LinAlgWorkspaceCUDA::~LinAlgWorkspaceCUDA()
   {
     cudaFree(buffer_spmv_);
     cudaFree(buffer_1norm_);
@@ -33,85 +33,85 @@ namespace ReSolve
     cusparseDestroyDnVec(vec_y_);
   }
 
-  void* resolveLinAlgWorkspaceCUDA::getSpmvBuffer()
+  void* LinAlgWorkspaceCUDA::getSpmvBuffer()
   {
     return buffer_spmv_;
   }
 
-  void* resolveLinAlgWorkspaceCUDA::getNormBuffer()
+  void* LinAlgWorkspaceCUDA::getNormBuffer()
   {
     return buffer_1norm_;
   }
 
-  void resolveLinAlgWorkspaceCUDA::setSpmvBuffer(void* buffer)
+  void LinAlgWorkspaceCUDA::setSpmvBuffer(void* buffer)
   {
     buffer_spmv_ =  buffer;
   }
 
-  void resolveLinAlgWorkspaceCUDA::setNormBuffer(void* buffer)
+  void LinAlgWorkspaceCUDA::setNormBuffer(void* buffer)
   {
     buffer_1norm_ =  buffer;
   }
 
-  cusparseHandle_t resolveLinAlgWorkspaceCUDA::getCusparseHandle()
+  cusparseHandle_t LinAlgWorkspaceCUDA::getCusparseHandle()
   {
     return handle_cusparse_;
   }
 
-  void resolveLinAlgWorkspaceCUDA::setCusparseHandle(cusparseHandle_t handle)
+  void LinAlgWorkspaceCUDA::setCusparseHandle(cusparseHandle_t handle)
   {
     handle_cusparse_ = handle;
   }
 
-  cublasHandle_t resolveLinAlgWorkspaceCUDA::getCublasHandle()
+  cublasHandle_t LinAlgWorkspaceCUDA::getCublasHandle()
   {
     return handle_cublas_;
   }
 
-  void resolveLinAlgWorkspaceCUDA::setCublasHandle(cublasHandle_t handle)
+  void LinAlgWorkspaceCUDA::setCublasHandle(cublasHandle_t handle)
   {
     handle_cublas_ = handle;
   }
 
-  cusolverSpHandle_t resolveLinAlgWorkspaceCUDA::getCusolverSpHandle()
+  cusolverSpHandle_t LinAlgWorkspaceCUDA::getCusolverSpHandle()
   {
     return handle_cusolversp_;
   }
 
-  void resolveLinAlgWorkspaceCUDA::setCusolverSpHandle(cusolverSpHandle_t handle)
+  void LinAlgWorkspaceCUDA::setCusolverSpHandle(cusolverSpHandle_t handle)
   {
     handle_cusolversp_ = handle;
   }
 
-  cusparseSpMatDescr_t resolveLinAlgWorkspaceCUDA::getSpmvMatrixDescriptor()
+  cusparseSpMatDescr_t LinAlgWorkspaceCUDA::getSpmvMatrixDescriptor()
   {
     return mat_A_;
   }
 
-  void resolveLinAlgWorkspaceCUDA::setSpmvMatrixDescriptor(cusparseSpMatDescr_t mat)
+  void LinAlgWorkspaceCUDA::setSpmvMatrixDescriptor(cusparseSpMatDescr_t mat)
   {
     mat_A_ = mat;
   }
 
-  cusparseDnVecDescr_t   resolveLinAlgWorkspaceCUDA::getVecX()
+  cusparseDnVecDescr_t   LinAlgWorkspaceCUDA::getVecX()
   {
     return vec_x_;
   }
 
-  cusparseDnVecDescr_t   resolveLinAlgWorkspaceCUDA::getVecY()
+  cusparseDnVecDescr_t   LinAlgWorkspaceCUDA::getVecY()
   {
     return vec_y_;
   }
 
-  bool resolveLinAlgWorkspaceCUDA::matvecSetup(){
+  bool LinAlgWorkspaceCUDA::matvecSetup(){
     return matvec_setup_done_;
   }
 
-  void resolveLinAlgWorkspaceCUDA::matvecSetupDone() {
+  void LinAlgWorkspaceCUDA::matvecSetupDone() {
     matvec_setup_done_ = true;
   }
 
-  void resolveLinAlgWorkspaceCUDA::initializeHandles()
+  void LinAlgWorkspaceCUDA::initializeHandles()
   {
     cusparseCreate(&handle_cusparse_);
     cublasCreate(&handle_cublas_);

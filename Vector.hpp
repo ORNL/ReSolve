@@ -6,23 +6,23 @@
 
 namespace ReSolve 
 {
-  class resolveVector 
+  class Vector 
   {
     public:
-      resolveVector(resolveInt n);
-      ~resolveVector();
+      Vector(Int n);
+      ~Vector();
 
-      int update(resolveReal* data, std::string memspaceIn, std::string memspaceOut);
-      resolveReal* getData(std::string memspace);
+      int update(Real* data, std::string memspaceIn, std::string memspaceOut);
+      Real* getData(std::string memspace);
 
-      resolveInt getSize();
+      Int getSize();
 
       void setDataUpdated(std::string memspace);
       void allocate(std::string memspace);   
     private:
-      resolveInt n_; //size
-      resolveReal* d_data_;
-      resolveReal* h_data_;
+      Int n_; //size
+      Real* d_data_;
+      Real* h_data_;
       bool gpu_updated_;
       bool cpu_updated_;
       int copyData(std::string memspaceIn, std::string memspaceOut); 

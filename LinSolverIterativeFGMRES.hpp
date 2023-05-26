@@ -5,23 +5,23 @@
 
 namespace ReSolve 
 {
-  class resolveLinSolverIterativeFGMRES : public resolveLinSolverIterative
+  class LinSolverIterativeFGMRES : public LinSolverIterative
   {
     public:
-      resolveLinSolverIterativeFGMRES();
-      resolveLinSolverIterativeFGMRES(resolveInt restart, resolveReal tol, resolveInt maxit);
-      ~resolveLinSolverIterativeFGMRES();
+      LinSolverIterativeFGMRES();
+      LinSolverIterativeFGMRES(Int restart, Real tol, Int maxit);
+      ~LinSolverIterativeFGMRES();
 
-      int solve(resolveVector* rhs, resolveVector* x);
+      int solve(Vector* rhs, Vector* x);
     private:
       //remember matrix handler and vector handler are inherited.
-      resolveLinAlgWorkspace* workspace_;
+      LinAlgWorkspace* workspace_;
       
-      resolveReal tol_;
-      resolveInt maxit_;
-      resolveInt restart_;
+      Real tol_;
+      Int maxit_;
+      Int restart_;
       
-      resolveReal* V;
+      Real* V;
 
 
   };

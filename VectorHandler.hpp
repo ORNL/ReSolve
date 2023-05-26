@@ -4,29 +4,29 @@
 
 namespace ReSolve
 {
-  class resolveVectorHandler { 
+  class VectorHandler { 
     public:
-      resolveVectorHandler();
-      resolveVectorHandler(resolveLinAlgWorkspace* new_workspace);
-      ~resolveVectorHandler();
+      VectorHandler();
+      VectorHandler(LinAlgWorkspace* new_workspace);
+      ~VectorHandler();
 
       //y = alpha x + y
-      void axpy( resolveReal* alpha, resolveVector* x, resolveVector* y );
+      void axpy( Real* alpha, Vector* x, Vector* y );
 
       //dot: x \cdot y
-      resolveReal dot(resolveVector* x, resolveVector* y, std::string memspace );
+      Real dot(Vector* x, Vector* y, std::string memspace );
 
       //scal = alpha * x
-      void scal(resolveReal* alpha, resolveVector* x);
+      void scal(Real* alpha, Vector* x);
 
       //mass axpy: x*alpha + y where x is [n x k] and alpha is [k x 1]; x is stored columnwise
-      void mass_axpy(resolveInt size, resolveReal* alpha, resolveReal k, resolveReal* x,resolveReal* y);
+      void mass_axpy(Int size, Real* alpha, Real k, Real* x,Real* y);
 
       //mass dot: V^T x, where V is [n x k] and x is [k x 2], everything is stored and returned columnwise
-      resolveReal* mass_dot(resolveReal size, resolveReal* V, resolveReal k, resolveReal* x);
+      Real* mass_dot(Real size, Real* V, Real k, Real* x);
 
     private:
-      resolveLinAlgWorkspace* workspace_;
+      LinAlgWorkspace* workspace_;
   };
 
 }

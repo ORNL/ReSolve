@@ -13,22 +13,22 @@ namespace ReSolve
                 std::string refact_solver_, 
                 std::string use_ir_);
 
-      int setup_ir(resolveReal ir_tol, resolveInt ir_maxit, resolveInt ir_gs_);
+      int setup_ir(Real ir_tol, Int ir_maxit, Int ir_gs_);
       
-      int solve(resolveMatrix* A, resolveVector* vec_rhs, resolveVector* vec_x);
+      int solve(Matrix* A, Vector* vec_rhs, Vector* vec_x);
     
     private:
       std::string first_solver_name_;
       std::string refact_solver_name_;
       std::string use_ir_;
       //IR parameters
-      resolveReal ir_tol_;
-      resolveInt ir_maxit_;
-      resolveInt ir_gs_;
+      Real ir_tol_;
+      Int ir_maxit_;
+      Int ir_gs_;
 
-      resolveLinSolverDirect* first_solver_;
-      resolveLinSolverDirect* refact_solver_;
-      resolveLinSolverIterative* ir_solver_;
+      LinSolverDirect* first_solver_;
+      LinSolverDirect* refact_solver_;
+      LinSolverIterative* ir_solver_;
       bool factorization_exists_;        
   };
 }

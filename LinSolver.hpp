@@ -8,55 +8,55 @@
 
 namespace ReSolve 
 {
-  class resolveLinSolver 
+  class LinSolver 
   {
     public:
-      resolveLinSolver();
-      ~resolveLinSolver();
+      LinSolver();
+      ~LinSolver();
 
-      virtual void setup(resolveMatrix* A);
-      resolveReal evaluateResidual();
+      virtual void setup(Matrix* A);
+      Real evaluateResidual();
         
     protected:  
-      resolveMatrix* A_;
-      resolveReal* rhs_;
-      resolveReal* sol_;
+      Matrix* A_;
+      Real* rhs_;
+      Real* sol_;
 
-      resolveMatrixHandler *matrix_handler_;
-      resolveVectorHandler *vector_handler_;
+      MatrixHandler *matrix_handler_;
+      VectorHandler *vector_handler_;
   };
 
-  class resolveLinSolverDirect : public resolveLinSolver 
+  class LinSolverDirect : public LinSolver 
   {
     public:
-      resolveLinSolverDirect();
-      ~resolveLinSolverDirect();
+      LinSolverDirect();
+      ~LinSolverDirect();
       //return 0 if successful!
       virtual int analyze(); //the same as symbolic factorization
       virtual int factorize();
       virtual int refactorize();
-      virtual int solve(resolveVector* rhs, resolveVector* x); 
+      virtual int solve(Vector* rhs, Vector* x); 
      
-      virtual resolveMatrix* getLFactor(); 
-      virtual resolveMatrix* getUFactor(); 
-      virtual resolveInt*  getPOrdering();
-      virtual resolveInt*  getQOrdering();
+      virtual Matrix* getLFactor(); 
+      virtual Matrix* getUFactor(); 
+      virtual Int*  getPOrdering();
+      virtual Int*  getQOrdering();
     
     protected:
-      resolveMatrix* L_;
-      resolveMatrix* U_;
-      resolveInt* P_;
-      resolveInt* Q_;
+      Matrix* L_;
+      Matrix* U_;
+      Int* P_;
+      Int* Q_;
       bool factors_extracted_;
   };
 
-  class resolveLinSolverIterative : public resolveLinSolver 
+  class LinSolverIterative : public LinSolver 
   {
     public:
-      resolveLinSolverIterative();
-      ~resolveLinSolverIterative();
+      LinSolverIterative();
+      ~LinSolverIterative();
 
-      virtual void solve(resolveVector* rhs, resolveVector* init_guess);
+      virtual void solve(Vector* rhs, Vector* init_guess);
 
   };
 }

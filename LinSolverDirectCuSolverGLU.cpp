@@ -3,12 +3,12 @@
 
 namespace ReSolve
 {
-  resolveLinSolverDirectCuSolverGLU::resolveLinSolverDirectCuSolverGLU(resolveLinAlgWorkspace* workspace)
+  LinSolverDirectCuSolverGLU::LinSolverDirectCuSolverGLU(LinAlgWorkspace* workspace)
   {
     this->workspace_ = workspace;
   }
 
-  resolveLinSolverDirectCuSolverGLU::~resolveLinSolverDirectCuSolverGLU()
+  LinSolverDirectCuSolverGLU::~LinSolverDirectCuSolverGLU()
   {
     cudaFree(glu_buffer_);
     cusparseDestroyMatDescr(descr_M_);
@@ -17,15 +17,15 @@ namespace ReSolve
     delete M_;
   }
 
-  void resolveLinSolverDirectCuSolverGLU::setup(resolveMatrix* A, resolveMatrix* L, resolveMatrix* U, resolveInt* P, resolveInt* Q)
+  void LinSolverDirectCuSolverGLU::setup(Matrix* A, Matrix* L, Matrix* U, Int* P, Int* Q)
   {
-    resolveLinAlgWorkspaceCUDA* workspaceCUDA = (resolveLinAlgWorkspaceCUDA*) workspace_;
+    LinAlgWorkspaceCUDA* workspaceCUDA = (LinAlgWorkspaceCUDA*) workspace_;
     //get the handle
     handle_cusolversp_ = workspaceCUDA->getCusolverSpHandle();
 
     A_ = A;
-    resolveInt n = A_->getNumRows();
-    resolveInt nnz = A_->getNnzExpanded();
+    Int n = A_->getNumRows();
+    Int nnz = A_->getNnzExpanded();
     //create combined factor
     addFactors(L,U);
 
@@ -77,25 +77,25 @@ namespace ReSolve
     cusolverSpDgluFactor(handle_cusolversp_, info_M_, glu_buffer_);
   }
 
-  void resolveLinSolverDirectCuSolverGLU::addFactors(resolveMatrix* L, resolveMatrix* U)
+  void LinSolverDirectCuSolverGLU::addFactors(Matrix* L, Matrix* U)
   {
-    resolveInt n = L->getNumRows();
-    resolveInt* Lp = L->getCscColPointers("cpu"); 
-    resolveInt* Li = L->getCscRowIndices("cpu"); 
-    resolveInt* Up = U->getCscColPointers("cpu"); 
-    resolveInt* Ui = U->getCscRowIndices("cpu"); 
+    Int n = L->getNumRows();
+    Int* Lp = L->getCscColPointers("cpu"); 
+    Int* Li = L->getCscRowIndices("cpu"); 
+    Int* Up = U->getCscColPointers("cpu"); 
+    Int* Ui = U->getCscRowIndices("cpu"); 
 
-    resolveInt nnzM = ( L->getNnz() + U->getNnz() - n );
-    M_ = new resolveMatrix(n, n, nnzM);
+    Int nnzM = ( L->getNnz() + U->getNnz() - n );
+    M_ = new Matrix(n, n, nnzM);
     M_->allocateCsr("cpu");
 
-    resolveInt* mia = M_->getCsrRowPointers("cpu");
-    resolveInt* mja = M_->getCsrColIndices("cpu");
+    Int* mia = M_->getCsrRowPointers("cpu");
+    Int* mja = M_->getCsrColIndices("cpu");
 
-    resolveInt row;
-    for(resolveInt i = 0; i < n; ++i) {
+    Int row;
+    for(Int i = 0; i < n; ++i) {
       // go through EACH COLUMN OF L first
-      for(resolveInt j = Lp[i]; j < Lp[i + 1]; ++j) {
+      for(Int j = Lp[i]; j < Lp[i + 1]; ++j) {
         row = Li[j];
         // BUT dont count diagonal twice, important
         if(row != i) {
@@ -103,19 +103,19 @@ namespace ReSolve
         }
       }
       // then each column of U
-      for(resolveInt j = Up[i]; j < Up[i + 1]; ++j) {
+      for(Int j = Up[i]; j < Up[i + 1]; ++j) {
         row = Ui[j];
         mia[row + 1]++;
       }
     }
     // then organize mia_;
     mia[0] = 0;
-    for(resolveInt i = 1; i < n + 1; i++) {
+    for(Int i = 1; i < n + 1; i++) {
       mia[i] += mia[i - 1];
     }
 
     std::vector<int> Mshifts(n, 0);
-    for(resolveInt i = 0; i < n; ++i) {
+    for(Int i = 0; i < n; ++i) {
       // go through EACH COLUMN OF L first
       for(int j = Lp[i]; j < Lp[i + 1]; ++j) {
         row = Li[j];
@@ -126,7 +126,7 @@ namespace ReSolve
         }
       }
       // each column of U next
-      for(resolveInt j = Up[i]; j < Up[i + 1]; ++j) {
+      for(Int j = Up[i]; j < Up[i + 1]; ++j) {
         row = Ui[j];
         mja[mia[row] + Mshifts[row]] = i;
         Mshifts[row]++;
@@ -135,7 +135,7 @@ namespace ReSolve
     //Mshifts.~vector(); 
   }
 
-  int resolveLinSolverDirectCuSolverGLU::refactorize()
+  int LinSolverDirectCuSolverGLU::refactorize()
   {
     status_cusolver_ =  cusolverSpDgluReset(handle_cusolversp_, 
                                             A_->getNumRows(),
@@ -150,7 +150,7 @@ namespace ReSolve
     return status_cusolver_;
   }
 
-  int resolveLinSolverDirectCuSolverGLU::solve(resolveVector* rhs, resolveVector* x)
+  int LinSolverDirectCuSolverGLU::solve(Vector* rhs, Vector* x)
   {
 
     status_cusolver_ =  cusolverSpDgluSolve(handle_cusolversp_,

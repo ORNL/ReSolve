@@ -1,12 +1,12 @@
 //this is to solve the system, can call different linear solvers if necessary
-namespace resolve
+namespace 
 {
-  class resolveSystemSolver
+  class SystemSolver
   {
-    resolveSystemSolver();
-    resolveSystemSolver(std::string factorizationMethod, std::string refactorizationMethod, std::string solveMethod, std::string IRMethod);
+    SystemSolver();
+    SystemSolver(std::string factorizationMethod, std::string refactorizationMethod, std::string solveMethod, std::string IRMethod);
 
-    ~resolveSystemSolver();
+    ~SystemSolver();
 
     public:
     analyze(); //    symbolic part
@@ -20,7 +20,7 @@ namespace resolve
 
     private:
     
-    resolveMatrix A;
+    Matrix A;
     std::string factorizationMethod;
     std::string refactorizationMethod;
     std::string solveMethod;

@@ -2,7 +2,7 @@
 
 namespace ReSolve 
 {
-  resolveVector::resolveVector(resolveInt n):
+  Vector::Vector(Int n):
     n_{n}
   {
     d_data_ = nullptr;
@@ -11,19 +11,19 @@ namespace ReSolve
     cpu_updated_ = false;
   }
 
-  resolveVector::~resolveVector()
+  Vector::~Vector()
   {
     if (h_data_ != nullptr) delete [] h_data_;
     if (d_data_ != nullptr) cudaFree(d_data_);
   }
 
 
-  resolveInt resolveVector::getSize()
+  Int Vector::getSize()
   {
     return n_;
   }
 
-  void resolveVector::setDataUpdated(std::string memspace)
+  void Vector::setDataUpdated(std::string memspace)
   { 
     if (memspace == "cpu") {
       cpu_updated_ = true;
@@ -38,7 +38,7 @@ namespace ReSolve
     }
   }
 
-  int resolveVector::update(resolveReal* data, std::string memspaceIn, std::string memspaceOut)
+  int Vector::update(Real* data, std::string memspaceIn, std::string memspaceOut)
   {
     int control=-1;
     if ((memspaceIn == "cpu") && (memspaceOut == "cpu")){ control = 0;}
@@ -48,31 +48,31 @@ namespace ReSolve
 
     if ((memspaceOut == "cpu") && (h_data_ == nullptr)){
       //allocate first
-      h_data_ = new resolveReal[n_]; 
+      h_data_ = new Real[n_]; 
     }
     if ((memspaceOut == "cuda") && (d_data_ == nullptr)){
       //allocate first
-      cudaMalloc(&d_data_, (n_) * sizeof(resolveReal)); 
+      cudaMalloc(&d_data_, (n_) * sizeof(Real)); 
     } 
 
     switch(control)  {
       case 0: //cpu->cpu
-        std::memcpy(h_data_, data, (n_) * sizeof(resolveReal));
+        std::memcpy(h_data_, data, (n_) * sizeof(Real));
         cpu_updated_ = true;
         gpu_updated_ = false;
         break;
       case 2: //cuda->cpu
-        cudaMemcpy(h_data_, data, (n_) * sizeof(resolveReal), cudaMemcpyDeviceToHost);
+        cudaMemcpy(h_data_, data, (n_) * sizeof(Real), cudaMemcpyDeviceToHost);
         cpu_updated_ = true;
         gpu_updated_ = false;
         break;
       case 1: //cpu->cuda
-        cudaMemcpy(d_data_, data, (n_) * sizeof(resolveReal), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_data_, data, (n_) * sizeof(Real), cudaMemcpyHostToDevice);
         gpu_updated_ = true;
         cpu_updated_ = false;
         break;
       case 3: //cuda->cuda
-        cudaMemcpy(d_data_, data, (n_) * sizeof(resolveReal), cudaMemcpyDeviceToDevice);
+        cudaMemcpy(d_data_, data, (n_) * sizeof(Real), cudaMemcpyDeviceToDevice);
         gpu_updated_ = true;
         cpu_updated_ = false;
         break;
@@ -82,7 +82,7 @@ namespace ReSolve
     return 0;
   }
 
-  resolveReal* resolveVector::getData(std::string memspace)
+  Real* Vector::getData(std::string memspace)
   {
     if ((memspace == "cpu") && (cpu_updated_ == false) && (gpu_updated_ == true )) {
       copyData("cuda", "cpu");
@@ -102,7 +102,7 @@ namespace ReSolve
     }
   }
 
-  int resolveVector::copyData(std::string memspaceIn, std::string memspaceOut)
+  int Vector::copyData(std::string memspaceIn, std::string memspaceOut)
   {
     int control=-1;
     if ((memspaceIn == "cpu") && (memspaceOut == "cuda")){ control = 0;}
@@ -110,19 +110,19 @@ namespace ReSolve
 
     if ((memspaceOut == "cpu") && (h_data_ == nullptr)){
       //allocate first
-      h_data_ = new resolveReal[n_]; 
+      h_data_ = new Real[n_]; 
     }
     if ((memspaceOut == "cuda") && (d_data_ == nullptr)){
       //allocate first
-      cudaMalloc(&d_data_, (n_) * sizeof(resolveReal)); 
+      cudaMalloc(&d_data_, (n_) * sizeof(Real)); 
     } 
 
     switch(control)  {
       case 0: //cpu->cuda
-        cudaMemcpy(d_data_, h_data_, (n_) * sizeof(resolveReal), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_data_, h_data_, (n_) * sizeof(Real), cudaMemcpyHostToDevice);
         break;
       case 1: //cuda->cpu
-        cudaMemcpy(h_data_, d_data_, (n_) * sizeof(resolveReal), cudaMemcpyDeviceToHost);
+        cudaMemcpy(h_data_, d_data_, (n_) * sizeof(Real), cudaMemcpyDeviceToHost);
         break;
       default:
         return -1;
@@ -132,19 +132,19 @@ namespace ReSolve
     return 0;
   }
 
-  void resolveVector::allocate(std::string memspace) 
+  void Vector::allocate(std::string memspace) 
   {
     if (memspace == "cpu") {
       if (h_data_ != nullptr) {
         delete [] h_data_;
       }
-      h_data_ = new resolveReal[n_]; 
+      h_data_ = new Real[n_]; 
     } else {
       if (memspace == "cuda") {
         if (d_data_ != nullptr) {
           cudaFree(d_data_);
         }
-        cudaMalloc(&d_data_, (n_) * sizeof(resolveReal)); 
+        cudaMalloc(&d_data_, (n_) * sizeof(Real)); 
       }
     }
   }

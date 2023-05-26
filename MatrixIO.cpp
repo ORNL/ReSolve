@@ -6,20 +6,20 @@
 namespace ReSolve
 {
 
-  resolveMatrixIO::resolveMatrixIO(){};
+  MatrixIO::MatrixIO(){};
 
-  resolveMatrixIO::~resolveMatrixIO()
+  MatrixIO::~MatrixIO()
   {
   }
 
-  resolveMatrix* resolveMatrixIO::readMatrixFromFile(std::string filename)
+  Matrix* MatrixIO::readMatrixFromFile(std::string filename)
   {
     std::ifstream file(filename);
     std::stringstream ss;
     if (file.is_open()) {
       std::string line;
-      resolveInt i = 0;
-      resolveInt m, n, nnz;
+      Int i = 0;
+      Int m, n, nnz;
       bool symmetric = false;
       bool expanded = true;
       std::getline(file, line);
@@ -36,14 +36,14 @@ namespace ReSolve
       ss << line;
       ss >> n >> m >> nnz;
       //create matrix object
-      resolveMatrix* A = new resolveMatrix(n, m, nnz,symmetric, expanded );  
+      Matrix* A = new Matrix(n, m, nnz,symmetric, expanded );  
       //create coo arrays
-      resolveInt* coo_rows = new resolveInt[nnz];
-      resolveInt* coo_cols = new resolveInt[nnz];
-      resolveReal* coo_vals = new resolveReal[nnz];
+      Int* coo_rows = new Int[nnz];
+      Int* coo_cols = new Int[nnz];
+      Real* coo_vals = new Real[nnz];
       i = 0;
-      resolveInt a, b;
-      resolveReal c;
+      Int a, b;
+      Real c;
       while (file >> a>>b>>c){
         coo_rows[i] = a - 1;
         coo_cols[i] = b - 1;
@@ -61,7 +61,7 @@ namespace ReSolve
   }
 
 
-  resolveReal* resolveMatrixIO::readRhsFromFile(std::string filename)
+  Real* MatrixIO::readRhsFromFile(std::string filename)
   {
 
     std::ifstream file(filename);
@@ -69,8 +69,8 @@ namespace ReSolve
     if (file.is_open()) {
 
       std::string line;
-      resolveInt i = 0;
-      resolveInt n, m;
+      Int i = 0;
+      Int n, m;
       std::getline(file, line);
       while (line.at(0) == '%') {
         std::getline(file, line); 
@@ -79,8 +79,8 @@ namespace ReSolve
       ss << line;
       ss >> n >> m ;
 
-      resolveReal* vec = new resolveReal[n];
-      resolveReal a;
+      Real* vec = new Real[n];
+      Real a;
       while (file >> a){
         vec[i] = a;
         i++;
@@ -95,7 +95,7 @@ namespace ReSolve
   }
 
 
-  void resolveMatrixIO::readAndUpdateMatrix(std::string filename, resolveMatrix* A)
+  void MatrixIO::readAndUpdateMatrix(std::string filename, Matrix* A)
   {
 
     std::ifstream file(filename);
@@ -103,8 +103,8 @@ namespace ReSolve
     if (file.is_open()) {
 	    A->setExpanded(false);
       std::string line;
-      resolveInt i = 0;
-      resolveInt m, n, nnz;
+      Int i = 0;
+      Int m, n, nnz;
       std::getline(file, line);
       while (line.at(0) == '%') {
         std::getline(file, line); 
@@ -118,12 +118,12 @@ namespace ReSolve
       }
 	    A->setNnz(nnz);
       //create coo arrays
-      resolveInt* coo_rows = A->getCooRowIndices("cpu");
-      resolveInt* coo_cols = A->getCooColIndices("cpu");
-      resolveReal* coo_vals = A->getCooValues("cpu");
+      Int* coo_rows = A->getCooRowIndices("cpu");
+      Int* coo_cols = A->getCooColIndices("cpu");
+      Real* coo_vals = A->getCooValues("cpu");
       i = 0;
-      resolveInt a, b;
-      resolveReal c;
+      Int a, b;
+      Real c;
       while (file >> a>>b>>c){
         coo_rows[i] = a - 1;
         coo_cols[i] = b - 1;
@@ -137,7 +137,7 @@ namespace ReSolve
 
   }
 
-  resolveReal* resolveMatrixIO::readAndUpdateRhs(std::string filename, resolveReal* rhs) 
+  Real* MatrixIO::readAndUpdateRhs(std::string filename, Real* rhs) 
   {
 
     std::ifstream file(filename);
@@ -145,8 +145,8 @@ namespace ReSolve
     if (file.is_open()) {
 
       std::string line;
-      resolveInt i = 0;
-      resolveInt n, m;
+      Int i = 0;
+      Int n, m;
       std::getline(file, line);
       while (line.at(0) == '%') {
         std::getline(file, line); 
@@ -156,9 +156,9 @@ namespace ReSolve
       ss >> n >> m ;
 
       if(rhs == nullptr) { 
-        resolveReal* rhs = new resolveReal[n];
+        Real* rhs = new Real[n];
       } 
-      resolveReal a;
+      Real a;
       while (file >> a){
         rhs[i] = a;
         i++;
@@ -170,11 +170,11 @@ namespace ReSolve
 
   }
 
-  resolveInt resolveMatrixIO::writeMatrixToFile(resolveMatrix* A, std::string filename)
+  Int MatrixIO::writeMatrixToFile(Matrix* A, std::string filename)
   {
   }
 
-  resolveInt resolveMatrixIO::writeVectorToFile(resolveReal* x, std::string filename)
+  Int MatrixIO::writeVectorToFile(Real* x, std::string filename)
   {
   }
 }
