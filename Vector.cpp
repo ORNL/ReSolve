@@ -23,6 +23,22 @@ namespace ReSolve
     return n_;
   }
 
+  void Vector::setData(Real* data, std::string memspace)
+  {
+
+  if (memspace == "cpu") {
+    h_data_ = data;
+    cpu_updated_ = true;
+  } else {
+    if (memspace == "cuda") { 
+      d_data_ = data;
+      gpu_updated_ = true;
+    } else {
+      //error
+    } 
+  }
+}
+
   void Vector::setDataUpdated(std::string memspace)
   { 
     if (memspace == "cpu") {

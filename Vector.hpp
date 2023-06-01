@@ -18,6 +18,7 @@ namespace ReSolve
       Int getSize();
 
       void setDataUpdated(std::string memspace);
+      void setData(Real* data, std::string memspace);
       void allocate(std::string memspace);   
     private:
       Int n_; //size
