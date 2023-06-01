@@ -18,9 +18,8 @@ namespace ReSolve
   void LinSolverDirectCuSolverRf::setup(Matrix* A, Matrix* L, Matrix* U, Int* P, Int* Q)
   {
     //remember - P and Q are generally CPU variables
-
+this->A_ = A;
     Int n = A_->getNumRows();
-
     cudaMalloc(&d_P_, n * sizeof(Int)); 
     cudaMalloc(&d_Q_, n * sizeof(Int));
     cudaMalloc(&d_T_, n * sizeof(Real));
@@ -83,7 +82,7 @@ namespace ReSolve
 
   int LinSolverDirectCuSolverRf::solve(Vector* rhs, Vector* x)
   {
-    x->update(rhs->getData("cpu"), "cpu", "cuda");
+    x->update(rhs->getData("cuda"), "cuda", "cuda");
     x->setDataUpdated("cuda");
     status_cusolverrf_ =  cusolverRfSolve(handle_cusolverrf_,
                                           d_P_,

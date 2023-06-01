@@ -104,10 +104,10 @@ int main(Int argc, char *argv[] ){
         Int* Q = KLU->getQOrdering();
         GLU->setup(A, L, U, P, Q); 
         status = GLU->solve(vec_rhs, vec_x);
-      std::cout<<"GLU solve status: "<<status<<std::endl;      
+        std::cout<<"GLU solve status: "<<status<<std::endl;      
       } else { 
-      status = KLU->solve(vec_rhs, vec_x);
-      std::cout<<"KLU solve status: "<<status<<std::endl;      
+        status = KLU->solve(vec_rhs, vec_x);
+        std::cout<<"KLU solve status: "<<status<<std::endl;      
       }
     } else {
       //status =  KLU->refactorize();
@@ -126,6 +126,19 @@ int main(Int argc, char *argv[] ){
 
 
   }
+
+  //now DELETE
+  delete reader;
+
+  delete A;
+  delete KLU;
+  delete GLU;
+  delete x;
+  delete vec_r;
+  delete vec_x;
+  delete workspace_CUDA;
+  delete matrix_handler;
+  delete vector_handler;
 
   return 0;
 }

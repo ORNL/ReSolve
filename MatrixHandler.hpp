@@ -45,10 +45,13 @@ namespace ReSolve
 
       void matvec(Matrix* A, Vector* vec_x, Vector* vec_result, Real* alpha, Real* beta, std::string memspace);
       void Matrix1Norm(Matrix *A, Real* norm);
-
+     bool getValuesChanged();
+     void setValuesChanged(bool toWhat); 
+    
     private: 
       LinAlgWorkspace* workspace_;
       bool new_matrix_; //if the structure changed, you need a new handler.
+      bool values_changed_; // needed for matvec
   };
 }
 

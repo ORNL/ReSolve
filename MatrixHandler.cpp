@@ -38,6 +38,8 @@ namespace ReSolve
   
   MatrixHandler::MatrixHandler()
   {
+    this->new_matrix_ = true;
+    this->values_changed_ = true;
   }
 
   MatrixHandler::~MatrixHandler()
@@ -47,6 +49,16 @@ namespace ReSolve
   MatrixHandler::MatrixHandler(LinAlgWorkspace* new_workspace)
   {
     workspace_ = new_workspace;
+  }
+
+  bool MatrixHandler::getValuesChanged()
+  {
+     return this->values_changed_;
+  }
+  
+  void MatrixHandler::setValuesChanged(bool toWhat)
+  {
+     this->values_changed_ = toWhat;
   }
 
   void MatrixHandler::coo2csr(Matrix* A, std::string memspace)
@@ -207,24 +219,18 @@ namespace ReSolve
   }
 
   void MatrixHandler::matvec(Matrix* A, 
-                                    Vector* vec_x, 
-                                    Vector* vec_result, 
-                                    Real* alpha, 
-                                    Real* beta, 
-                                    std::string memspace) 
+                             Vector* vec_x, 
+                             Vector* vec_result, 
+                             Real* alpha, 
+                             Real* beta, 
+                             std::string memspace) 
   {
 
     //result = alpha *A*x + beta * result
     if (memspace == "cuda" ){
 
       LinAlgWorkspaceCUDA* workspaceCUDA = (LinAlgWorkspaceCUDA*) workspace_;
-
-
-
       cusparseDnVecDescr_t vecx = workspaceCUDA->getVecX();
-
-
-
       //printf("is vec_x NULL? %d\n", vec_x->getData("cuda") == nullptr);
       //printf("is vec_result NULL? %d\n", vec_result->getData("cuda") == nullptr);
       cusparseCreateDnVec(&vecx, A->getNumRows(), vec_x->getData("cuda"), CUDA_R_64F);
@@ -237,17 +243,20 @@ namespace ReSolve
 
       void* buffer_spmv = workspaceCUDA->getSpmvBuffer();
       cusparseHandle_t handle_cusparse = workspaceCUDA->getCusparseHandle();
-      cusparseCreateCsr(&matA, 
-                        A->getNumRows(),
-                        A->getNumColumns(),
-                        A->getNnzExpanded(),
-                        A->getCsrRowPointers("cuda"),
-                        A->getCsrColIndices("cuda"),
-                        A->getCsrValues("cuda"), 
-                        CUSPARSE_INDEX_32I, 
-                        CUSPARSE_INDEX_32I,
-                        CUSPARSE_INDEX_BASE_ZERO,
-                        CUDA_R_64F);
+      if (values_changed_){ 
+        cusparseCreateCsr(&matA, 
+                          A->getNumRows(),
+                          A->getNumColumns(),
+                          A->getNnzExpanded(),
+                          A->getCsrRowPointers("cuda"),
+                          A->getCsrColIndices("cuda"),
+                          A->getCsrValues("cuda"), 
+                          CUSPARSE_INDEX_32I, 
+                          CUSPARSE_INDEX_32I,
+                          CUSPARSE_INDEX_BASE_ZERO,
+                          CUDA_R_64F);
+        values_changed_ = false;
+      }
       if (!workspaceCUDA->matvecSetup()){
         //setup first, allocate, etc.
         size_t bufferSize = 0;
@@ -334,7 +343,8 @@ namespace ReSolve
                                   A->getCscRowIndices("cuda"), 
                                   A->getCsrValues("cuda"), 
                                   A->getCsrRowPointers("cuda"),
-                                  A->getCsrColIndices("cuda"),                              CUDA_R_64F,
+                                  A->getCsrColIndices("cuda"),                             
+                                  CUDA_R_64F,
                                   CUSPARSE_ACTION_NUMERIC,
                                   CUSPARSE_INDEX_BASE_ZERO,
                                   CUSPARSE_CSR2CSC_ALG1,

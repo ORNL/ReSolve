@@ -81,6 +81,20 @@ namespace ReSolve
   {
     return nullptr;
   } 
+
+  LinSolverIterative::LinSolverIterative()
+  {
+  }
+  
+  LinSolverIterative::~LinSolverIterative()
+  {
+  }
+
+
+  int LinSolverIterative::solve(Vector* rhs, Vector* init_guess)
+  {
+    return 0;
+  }
 }
 
 
