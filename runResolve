@@ -1,0 +1,21 @@
+#!/bin/bash
+
+foo="";
+
+for i in 0{0..9};
+do
+foo=" ${foo} ${i} ${i}"
+done
+
+for i in {10..21};
+do
+foo=" ${foo} ${i} ${i}"
+done
+
+
+matfile="/gpfs/wolf/csc359/scratch/peles/testcases/ACTIVSg10k_AC/matrix_ACTIVSg10k_AC_"
+
+rhsfile="/gpfs/wolf/csc359/scratch/peles/testcases/ACTIVSg10k_AC/rhs_ACTIVSg10k_AC_"
+
+
+./resolve/klu_rf_fgmres.exe $matfile $rhsfile 10 $foo
