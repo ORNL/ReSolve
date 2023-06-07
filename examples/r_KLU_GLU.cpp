@@ -1,12 +1,13 @@
-#include "MatrixIO.hpp"
-#include "Matrix.hpp"
-#include "Vector.hpp"
-#include "MatrixHandler.hpp"
-#include "VectorHandler.hpp"
-#include "LinSolverDirectKLU.hpp"
-#include "LinSolverDirectCuSolverGLU.hpp"
 #include <string>
 #include <iostream>
+
+#include <resolve/MatrixIO.hpp>
+#include <resolve/Matrix.hpp>
+#include <resolve/Vector.hpp>
+#include <resolve/MatrixHandler.hpp>
+#include <resolve/VectorHandler.hpp>
+#include <resolve/LinSolverDirectKLU.hpp>
+#include <resolve/LinSolverDirectCuSolverGLU.hpp>
 
 int main(Int argc, char *argv[] ){
 
