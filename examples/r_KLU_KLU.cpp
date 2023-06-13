@@ -104,6 +104,7 @@ int main(Int argc, char *argv[] ){
     }
     vec_r->update(rhs, "cpu", "cuda");
 
+    matrix_handler->setValuesChanged(true);
 
     matrix_handler->matvec(A, vec_x, vec_r, &one, &minusone, "cuda"); 
     Real* test = vec_r->getData("cpu");
