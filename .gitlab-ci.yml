@@ -1,0 +1,65 @@
+
+# Ascent Variables
+.ornl_environment_template:
+  variables:
+    SCHEDULER_PARAMETERS: "-P CSC359 -nnodes 1 -W 120"
+    WORKDIR: /gpfs/wolf/proj-shared/csc359/ci/${CI_PIPELINE_ID}
+
+.SVC-Account-Cleanup:
+  stage: .pre
+  tags:
+    - batch 
+  variables:
+    SCHEDULER_PARAMETERS: "-P CSC359 -nnodes 1 -W 120"
+  script:
+    - export WORKDIR="/gpfs/wolf/proj-shared/csc359/ci/"
+    # clears directory of files more than 1 hour/60 minutes old
+    - find $WORKDIR -D -type d -mindepth 1 -mmin +60 -prune -print -exec rm -rf {} \; || true
+    - ls -hal $WORKDIR    
+  allow_failure: true
+  resource_group: cleanup
+
+.resolve_build_script:
+  script:
+    # Do _not_ clean up WORKDIR as files are needed for testing
+    - |
+      set -xv
+      mkdir -p "$WORKDIR"
+      cp -r . "$WORKDIR"
+      cd "$WORKDIR"
+      export srcdir=$WORKDIR builddir=$WORKDIR/build installdir=$WORKDIR/install
+      ls
+      ./buildsystem/build.sh 
+
+# .resolve_script_template:
+#  script:
+#     - |
+#       # this is where we would actually run tests like runResolve
+
+
+cleanup:
+ stage: .pre
+ extends: .SVC-Account-Cleanup
+
+# For Ascent CI
+Ascent Build:
+  stage: build
+  tags:
+    - nobatch
+  extends:
+    - .resolve_build_script
+    - .ornl_environment_template
+
+# Ascent Test:
+#   stage: test
+#   dependencies:
+#     - 'Ascent Build'
+#   tags:
+#     - batch
+#   variables:
+#     # Don't clone for test jobs
+#     GIT_STRATEGY: none
+#     CTESTARGS: "--output-on-failure -E Python"
+#   extends:
+#     - .resolve_script_template
+#     - .ornl_environment_template
