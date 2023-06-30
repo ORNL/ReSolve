@@ -12,4 +12,4 @@ target_link_libraries(resolve_cuda INTERFACE
   CUDA::cudart
   )
 
-install(TARGETS resolve_cuda EXPORT ReSolve-targets)
+install(TARGETS resolve_cuda EXPORT ReSolveTargets)
