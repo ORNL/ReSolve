@@ -19,6 +19,32 @@ $ make
 
 To run it, download [test linear systems](https://github.com/NREL/opf_matrices/tree/master/acopf/activsg10k) and then edit script [`runResolve`](runResolve) to match locations of your linear systems and binary installation. The script will emulate nonlinear solver calling the linear solver repeatedly.
 
+## To install the library 
+In the directory where you built the library run
+```shell
+$ cmake --install . --prefix optional_path_to_install_directory
+```
+
+## To use the ReSolve library in your own project
+Make sure Resolve library is installed (see above)
+
+Below is an example CMakeList.txt file to use ReSolve library in your project
+```cpp
+cmake_minimum_required(VERSION 3.20)
+project(my_app LANGUAGES CXX)
+
+# optional path to ReSolve CMake config file
+set(ReSolve_DIR "optional_path_to_ReSolveConfig.cmake")
+find_package(ReSolve REQUIRED)
+git 
+# Build your executable 
+add_executable(my_app my_app.cpp)
+target_link_libraries(my_app PRIVATE ReSolve::ReSolve)
+```
+
+You can now include a header file from ReSolve library in your source code. For example
+```#include <resolve/MatrixIO.hpp>```
+
 
 ## Contributing
 

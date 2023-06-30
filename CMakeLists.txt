@@ -20,7 +20,18 @@ option(RESOLVE_TEST_WITH_BSUB "Use `jsrun` instead of `mpirun` commands when run
 option(RESOLVE_USE_KLU "Use KLU, AMD and COLAMD libraries from SuiteSparse" ON)
 set(RESOLVE_CTEST_OUTPUT_DIR ${PROJECT_BINARY_DIR} CACHE PATH "Directory where CTest outputs are saved")
 
+set(CMAKE_MACOSX_RPATH 1)
+# set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+# https://gitlab.kitware.com/cmake/community/-/wikis/doc/cmake/RPATH-handling#always-full-rpath
+# use, i.e. don't skip the full RPATH for the build tree
+#set(CMAKE_SKIP_BUILD_RPATH FALSE)
+
+# when building, don't use the install RPATH already
+# (but later on when installing)
+set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+#list(APPEND CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib)
 
 # Add CMake sources from `cmake` dir
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
@@ -58,7 +69,7 @@ set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-extended-lambda")
 
 
 # Link in required cuda dependencies
-find_package(CUDAToolkit REQUIRED)
+#find_package(CUDAToolkit REQUIRED)
 
 include(ReSolveFindCudaLibraries)
 
@@ -75,12 +86,14 @@ include(CMakePackageConfigHelpers)
 write_basic_package_version_file(ReSolveConfigVersion.cmake
                                  VERSION ${CMAKE_PROJECT_VERSION}
                                  COMPATIBILITY AnyNewerVersion)
+
 # Generate install rules for targets
-install(EXPORT ReSolve-targets
+install(EXPORT ReSolveTargets
         FILE ReSolveTargets.cmake
         NAMESPACE ReSolve::
-        DESTINATION 
-        share/resolve/cmake)
+        DESTINATION share/resolve/cmake
+)
+
 
 # Creates a config file
 configure_package_config_file(./cmake/ReSolveConfig.cmake.in
@@ -89,8 +102,11 @@ configure_package_config_file(./cmake/ReSolveConfig.cmake.in
 
 # Generates install rules for cmake config files
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/ReSolveConfig.cmake"
-        "${PROJECT_SOURCE_DIR}/build/ReSolveConfigVersion.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/ReSolveConfigVersion.cmake"
         DESTINATION share/resolve/cmake)
+    
+# Install directory with example on how to consume ReSolve
+install(DIRECTORY examples/resolve_consumer DESTINATION share/examples)
 
 # Add examples
 add_subdirectory(examples)
