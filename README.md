@@ -17,33 +17,31 @@ $ cmake ../resolve
 $ make
 ```
 
-To run it, download [test linear systems](https://github.com/NREL/opf_matrices/tree/master/acopf/activsg10k) and then edit script [`runResolve`](runResolve) to match locations of your linear systems and binary installation. The script will emulate nonlinear solver calling the linear solver repeatedly.
-
 ## To install the library 
 In the directory where you built the library run
 ```shell
-$ cmake --install . --prefix optional_path_to_install_directory
+$ make install
 ```
+
+To run it, download [test linear systems](https://github.com/NREL/opf_matrices/tree/master/acopf/activsg10k) and then edit script [`runResolve`](runResolve) to match locations of your linear systems and binary installation. The script will emulate nonlinear solver calling the linear solver repeatedly.
 
 ## To use the ReSolve library in your own project
 Make sure Resolve library is installed (see above)
 
 Below is an example CMakeList.txt file to use ReSolve library in your project
-```cpp
+```cmake
 cmake_minimum_required(VERSION 3.20)
 project(my_app LANGUAGES CXX)
 
-# optional path to ReSolve CMake config file
-set(ReSolve_DIR "optional_path_to_ReSolveConfig.cmake")
-find_package(ReSolve REQUIRED)
-git 
+find_package(ReSolve CONFIG 
+  PATHS ${ReSolve_DIR} ${ReSolve_DIR}/share/resolve/cmake
+  ENV LD_LIBRARY_PATH ENV DYLD_LIBRARY_PATH
+  REQUIRED)
+
 # Build your executable 
 add_executable(my_app my_app.cpp)
 target_link_libraries(my_app PRIVATE ReSolve::ReSolve)
 ```
-
-You can now include a header file from ReSolve library in your source code. For example
-```#include <resolve/MatrixIO.hpp>```
 
 
 ## Contributing
@@ -56,43 +54,18 @@ For all contributions to ReSolve please follow the [developer guidelines](CONTRI
 
 Use the built-in continuous integration in GitLab.
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
 
 
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
 
 ## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-
+For any questions or to report a bug please submit a [GitLab issue](https://code.ornl.gov/ecpcitest/exasgd/resolve/-/issues). 
 
 ## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+Primary author of this project is Kasia &#346;wirydowicz <kasia.swirydowicz@pnnl.gov>.  
+
+Development of this coede was supported by the Exascale Computing Project (ECP), Project Number: 17-SC-20-SC, a collaborative effort of two DOE organizations—the Office of Science and the National Nuclear Security Administration—responsible for the planning and preparation of a capable exascale ecosystem—including software, applications, hardware, advanced system engineering, and early testbed platforms—to support the nation's exascale computing imperative.
 
 ## License
-For open source projects, say how it is licensed.
+Copyright &copy; 2023, UT-Battelle, LLC, and Battelle Memorial Institute.
 
+ReSolve is a free software distributed under a BSD-style license. See the [LICENSE](LICENSE) and [NOTICE](NOTICE) files for details. All new contributions to ReSolve must be made under the smae licensing terms.
