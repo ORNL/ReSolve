@@ -24,7 +24,7 @@ namespace ReSolve
       LinAlgWorkspaceCUDA* workspaceCUDA = (LinAlgWorkspaceCUDA*) workspace_;
       cublasHandle_t handle_cublas =  workspaceCUDA->getCublasHandle();
       double nrm = 0.0;
-      cublasStatus_t st= cublasDdot (handle_cublas,  x->getSize(), x->getData("cuda"), 1, y->getData("cuda"), 1, &nrm);
+    cublasStatus_t st= cublasDdot (handle_cublas,  x->getSize(), x->getData("cuda"), 1, y->getData("cuda"), 1, &nrm);
       if (st!=0) {printf("dot product crashed with code %d \n", st);}
       return nrm;
     } else {
@@ -139,7 +139,7 @@ namespace ReSolve
   }
 
   //mass dot: V^T x, where V is [n x k] and x is [k x 2], everything is stored and returned columnwise
-  Real* VectorHandler::massDot2Vec(Int size, Real* V, Real k, Real* x, Real* res, std::string memspace)
+  void VectorHandler::massDot2Vec(Int size, Real* V, Real k, Real* x, Real* res, std::string memspace)
   {
 
     if (memspace == "cuda") {
@@ -151,17 +151,17 @@ namespace ReSolve
         cublasDgemm(handle_cublas,
                     CUBLAS_OP_T,
                     CUBLAS_OP_N,
-                    k + 1,//m
-                    2,//n
-                    size,//k
-                    &one_,//alpha
-                    V,//A
-                    size,//lda
-                    x,//B
-                    size,//ldb
+                    k + 1,   //m
+                    2,       //n
+                    size,    //k
+                    &one_,   //alpha
+                    V,       //A
+                    size,    //lda
+                    x,       //B
+                    size,    //ldb
                     &zero_,
-                    res,//c
-                    k + 1);//ldc 
+                    res,     //c
+                    k + 1);  //ldc 
       }
     } else {
       std::cout<<"Not implemented (yet)"<<std::endl;

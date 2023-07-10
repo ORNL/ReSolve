@@ -20,7 +20,7 @@ namespace ReSolve
       ~LinSolverIterativeFGMRES();
 
       int solve(Vector* rhs, Vector* x);
-      void setup(Matrix* A);
+      int setup(Matrix* A);
       int resetMatrix(Matrix* new_A); 
       int setupPreconditioner(std::string name, LinSolverDirect* LU_solver);
 

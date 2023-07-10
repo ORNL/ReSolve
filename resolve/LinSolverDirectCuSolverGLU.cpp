@@ -17,8 +17,10 @@ namespace ReSolve
     delete M_;
   }
 
-  void LinSolverDirectCuSolverGLU::setup(Matrix* A, Matrix* L, Matrix* U, Int* P, Int* Q)
+  int LinSolverDirectCuSolverGLU::setup(Matrix* A, Matrix* L, Matrix* U, Int* P, Int* Q)
   {
+    int error_sum = 0;
+
     LinAlgWorkspaceCUDA* workspaceCUDA = (LinAlgWorkspaceCUDA*) workspace_;
     //get the handle
     handle_cusolversp_ = workspaceCUDA->getCusolverSpHandle();
@@ -53,28 +55,34 @@ namespace ReSolve
                                            M_->getCsrRowPointers("cpu"), 
                                            M_->getCsrColIndices("cpu"), 
                                            info_M_);
-    
+    error_sum += status_cusolver_; 
     //NOW the buffer 
     size_t buffer_size;
-    cusolverSpDgluBufferSize(handle_cusolversp_, info_M_, &buffer_size);
+    status_cusolver_ = cusolverSpDgluBufferSize(handle_cusolversp_, info_M_, &buffer_size);
+    error_sum += status_cusolver_; 
 
     cudaMalloc((void**)&glu_buffer_, buffer_size);
 
-    cusolverSpDgluAnalysis(handle_cusolversp_, info_M_, glu_buffer_);
+    status_cusolver_ = cusolverSpDgluAnalysis(handle_cusolversp_, info_M_, glu_buffer_);
+    error_sum += status_cusolver_; 
 
     // reset and refactor so factors are ON THE GPU
 
-    cusolverSpDgluReset(handle_cusolversp_, 
-                        n,
-                        /* A is original matrix */
-                        nnz, 
-                        descr_A_, 
-                        A_->getCsrValues("cuda"),  //da_, 
-                        A_->getCsrRowPointers("cuda"), //kRowPtr_,
-                        A_->getCsrColIndices("cuda"), //jCol_, 
-                        info_M_);
+    status_cusolver_ = cusolverSpDgluReset(handle_cusolversp_, 
+                                           n,
+                                           /* A is original matrix */
+                                           nnz, 
+                                           descr_A_, 
+                                           A_->getCsrValues("cuda"),  //da_, 
+                                           A_->getCsrRowPointers("cuda"), //kRowPtr_,
+                                           A_->getCsrColIndices("cuda"), //jCol_, 
+                                           info_M_);
+    error_sum += status_cusolver_; 
 
-    cusolverSpDgluFactor(handle_cusolversp_, info_M_, glu_buffer_);
+    status_cusolver_ = cusolverSpDgluFactor(handle_cusolversp_, info_M_, glu_buffer_);
+    error_sum += status_cusolver_; 
+
+    return error_sum;
   }
 
   void LinSolverDirectCuSolverGLU::addFactors(Matrix* L, Matrix* U)
@@ -137,6 +145,7 @@ namespace ReSolve
 
   int LinSolverDirectCuSolverGLU::refactorize()
   {
+    int error_sum = 0;
     status_cusolver_ =  cusolverSpDgluReset(handle_cusolversp_, 
                                             A_->getNumRows(),
                                             /* A is original matrix */
@@ -146,8 +155,12 @@ namespace ReSolve
                                             A_->getCsrRowPointers("cuda"), //kRowPtr_,
                                             A_->getCsrColIndices("cuda"), //jCol_, 
                                             info_M_);
+    error_sum += status_cusolver_;
+
     status_cusolver_ =  cusolverSpDgluFactor(handle_cusolversp_, info_M_, glu_buffer_);
-    return status_cusolver_;
+    error_sum += status_cusolver_;
+
+    return error_sum;
   }
 
   int LinSolverDirectCuSolverGLU::solve(Vector* rhs, Vector* x)

@@ -15,9 +15,10 @@ namespace ReSolve
     klu_free_numeric(&Numeric_, &Common_);
   }
 
-  void LinSolverDirectKLU::setup(Matrix* A)
+  int LinSolverDirectKLU::setup(Matrix* A)
   {
     this->A_ = A;
+    return 0;
   }
 
   void LinSolverDirectKLU::setupParameters(int ordering, double KLU_threshold, bool halt_if_singular) 
@@ -35,7 +36,7 @@ namespace ReSolve
 
     if (Symbolic_ == nullptr){
       printf("Symbolic_ factorization crashed withCommon_.status = %d \n", Common_.status);
-      return -1;
+      return 1;
     }
     return 0;
   }
@@ -45,7 +46,7 @@ namespace ReSolve
     Numeric_ = klu_factor(A_->getCsrRowPointers("cpu"), A_->getCsrColIndices("cpu"),A_->getCsrValues("cpu"), Symbolic_, &Common_);
 
     if (Numeric_ == nullptr){
-      return -1;
+      return 1;
     }
     return 0;
   }
@@ -56,7 +57,7 @@ namespace ReSolve
 
     if (!kluStatus){
       //display error
-      return -1;
+      return 1;
     }
     return 0;
   }
@@ -73,7 +74,7 @@ namespace ReSolve
     int kluStatus = klu_solve(Symbolic_, Numeric_, A_->getNumRows(), 1, x->getData("cpu"), &Common_);
 
     if (!kluStatus){
-      return -1;
+      return 1;
     }
     return 0;
   }

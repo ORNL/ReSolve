@@ -12,7 +12,7 @@ namespace ReSolve
       LinSolverDirectCuSolverRf();
       ~LinSolverDirectCuSolverRf();
       
-      void setup(Matrix* A, Matrix* L, Matrix* U, Int* P, Int* Q);
+      int setup(Matrix* A, Matrix* L, Matrix* U, Int* P, Int* Q);
 
       void setAlgorithms(cusolverRfFactorization_t fact_alg,  cusolverRfTriangularSolve_t solve_alg);
       

@@ -11,7 +11,7 @@ namespace ReSolve
     public:
       LinSolverDirectKLU();
       ~LinSolverDirectKLU();
-      void setup(Matrix* A);
+      int setup(Matrix* A);
      
       void setupParameters(int ordering, double KLU_threshold, bool halt_if_singular);
 
