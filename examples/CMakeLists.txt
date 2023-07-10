@@ -1,6 +1,6 @@
 #[[
 
-@brief Build ReSolve library
+@brief Build ReSolve examples
 
 @author Slaven Peles <peless@ornl.gov>
 
@@ -22,8 +22,11 @@ target_link_libraries(klu_rf.exe PRIVATE ReSolve)
 add_executable(klu_rf_fgmres.exe r_KLU_rf_FGMRES.cpp)
 target_link_libraries(klu_rf_fgmres.exe PRIVATE ReSolve)
 
+# Build example where matrix is factorized once, refactorized once and then the preconditioner is REUSED
+add_executable(klu_rf_fgmres_reuse_refactorization.exe r_KLU_rf_FGMRES_reuse_factorization.cpp)
+target_link_libraries(klu_rf_fgmres_reuse_refactorization.exe PRIVATE ReSolve)
+
+# Install all examples in bin directory
 set(installable_executables klu_klu.exe klu_glu.exe klu_rf.exe klu_rf_fgmres.exe)
 install(TARGETS ${installable_executables} 
         RUNTIME DESTINATION bin)
-# SP: I want to use a generator expression here, but I am not sure what is the right one
-set_property(TARGET ${installable_executables} APPEND PROPERTY INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib) #$<TARGET_FILE_DIR:ReSolve>)

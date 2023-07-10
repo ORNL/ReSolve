@@ -2,6 +2,8 @@
 //
 #include "Common.hpp"
 #include "Matrix.hpp"
+#include "Vector.hpp"
+#include <iomanip>
 
 namespace ReSolve
 {
@@ -16,6 +18,6 @@ namespace ReSolve
       Real* readAndUpdateRhs(std::string filename, Real* rhs); 
 
       Int writeMatrixToFile(Matrix* A, std::string filename); 
-      Int writeVectorToFile(Real* x, std::string filename); 
+      Int writeVectorToFile(Vector* vec_x, std::string filename); 
   };
 }

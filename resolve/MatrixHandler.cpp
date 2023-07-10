@@ -35,7 +35,7 @@ namespace ReSolve
     return value_;
   }
   //end of helper class
-  
+
   MatrixHandler::MatrixHandler()
   {
     this->new_matrix_ = true;
@@ -53,12 +53,12 @@ namespace ReSolve
 
   bool MatrixHandler::getValuesChanged()
   {
-     return this->values_changed_;
+    return this->values_changed_;
   }
-  
+
   void MatrixHandler::setValuesChanged(bool toWhat)
   {
-     this->values_changed_ = toWhat;
+    this->values_changed_ = toWhat;
   }
 
   void MatrixHandler::coo2csr(Matrix* A, std::string memspace)
@@ -218,14 +218,15 @@ namespace ReSolve
     delete [] diag_control; 
   }
 
-  void MatrixHandler::matvec(Matrix* A, 
-                             Vector* vec_x, 
-                             Vector* vec_result, 
-                             Real* alpha, 
-                             Real* beta, 
-                             std::string memspace) 
+  int MatrixHandler::matvec(Matrix* A, 
+                            Vector* vec_x, 
+                            Vector* vec_result, 
+                            Real* alpha, 
+                            Real* beta, 
+                            std::string memspace) 
   {
-
+    int error_sum = 0;
+    cusparseStatus_t status;
     //result = alpha *A*x + beta * result
     if (memspace == "cuda" ){
 
@@ -244,17 +245,18 @@ namespace ReSolve
       void* buffer_spmv = workspaceCUDA->getSpmvBuffer();
       cusparseHandle_t handle_cusparse = workspaceCUDA->getCusparseHandle();
       if (values_changed_){ 
-        cusparseCreateCsr(&matA, 
-                          A->getNumRows(),
-                          A->getNumColumns(),
-                          A->getNnzExpanded(),
-                          A->getCsrRowPointers("cuda"),
-                          A->getCsrColIndices("cuda"),
-                          A->getCsrValues("cuda"), 
-                          CUSPARSE_INDEX_32I, 
-                          CUSPARSE_INDEX_32I,
-                          CUSPARSE_INDEX_BASE_ZERO,
-                          CUDA_R_64F);
+        status = cusparseCreateCsr(&matA, 
+                                   A->getNumRows(),
+                                   A->getNumColumns(),
+                                   A->getNnzExpanded(),
+                                   A->getCsrRowPointers("cuda"),
+                                   A->getCsrColIndices("cuda"),
+                                   A->getCsrValues("cuda"), 
+                                   CUSPARSE_INDEX_32I, 
+                                   CUSPARSE_INDEX_32I,
+                                   CUSPARSE_INDEX_BASE_ZERO,
+                                   CUDA_R_64F);
+        error_sum += status;
         values_changed_ = false;
       }
       if (!workspaceCUDA->matvecSetup()){
@@ -263,17 +265,17 @@ namespace ReSolve
         Real minusone = -1.0;
         Real one = 1.0;
 
-        cusparseSpMV_bufferSize(handle_cusparse, 
-                                CUSPARSE_OPERATION_NON_TRANSPOSE,
-                                &minusone,
-                                matA,
-                                vecx,
-                                &one,
-                                vecAx,
-                                CUDA_R_64F,
-                                CUSPARSE_SPMV_CSR_ALG2, 
-                                &bufferSize);
-
+        status = cusparseSpMV_bufferSize(handle_cusparse, 
+                                         CUSPARSE_OPERATION_NON_TRANSPOSE,
+                                         &minusone,
+                                         matA,
+                                         vecx,
+                                         &one,
+                                         vecAx,
+                                         CUDA_R_64F,
+                                         CUSPARSE_SPMV_CSR_ALG2, 
+                                         &bufferSize);
+        error_sum += status;
         cudaDeviceSynchronize();
         cudaMalloc(&buffer_spmv, bufferSize);
         workspaceCUDA->setSpmvMatrixDescriptor(matA);
@@ -282,25 +284,27 @@ namespace ReSolve
         workspaceCUDA->matvecSetupDone();
       } 
 
-      cusparseStatus_t status = cusparseSpMV(handle_cusparse,
-                                             CUSPARSE_OPERATION_NON_TRANSPOSE,       
-                                             alpha, 
-                                             matA, 
-                                             vecx, 
-                                             beta, 
-                                             vecAx, 
-                                             CUDA_R_64F,
-                                             CUSPARSE_SPMV_CSR_ALG2, 
-                                             buffer_spmv);
+      status = cusparseSpMV(handle_cusparse,
+                            CUSPARSE_OPERATION_NON_TRANSPOSE,       
+                            alpha, 
+                            matA, 
+                            vecx, 
+                            beta, 
+                            vecAx, 
+                            CUDA_R_64F,
+                            CUSPARSE_SPMV_CSR_ALG2, 
+                            buffer_spmv);
+      error_sum += status;
       cudaDeviceSynchronize();
       if (status) printf("Matvec status: %d Last ERROR %d \n", status,  	cudaGetLastError() );
       vec_result->setDataUpdated("cuda");
 
       cusparseDestroyDnVec(vecx);
       cusparseDestroyDnVec(vecAx);
-
+      return error_sum;
     } else {
       std::cout<<"Not implemented (yet)"<<std::endl;
+      return 1;
     }
   }
 

@@ -12,9 +12,10 @@ namespace ReSolve
     //destroy the matrix and hadlers
   }
 
-  void LinSolver::setup(Matrix* A)
+  int LinSolver::setup(Matrix* A)
   {
     this->A_ = A;
+    return 0;
   }
 
   Real LinSolver::evaluateResidual()

@@ -54,11 +54,11 @@ namespace ReSolve
       A->setCoo(coo_rows, coo_cols, coo_vals, "cpu");
       return A;
       file.close();
-    } else {
-      std::cout<<"Error opening file"<<std::endl;
-      return nullptr;
     }
+    std::cout<<"Error opening file"<<std::endl;
+    return nullptr;
   }
+
 
 
   Real* MatrixIO::readRhsFromFile(std::string filename)
@@ -78,21 +78,20 @@ namespace ReSolve
       }
       ss << line;
       ss >> n >> m ;
-
       Real* vec = new Real[n];
       Real a;
       while (file >> a){
         vec[i] = a;
         i++;
       }
-      return vec;
       file.close();
-    } else { 
-      std::cout<<"Error opening file"<<std::endl;
-      return nullptr;
+      return vec;
     }
-
+    std::cout<<"Error opening file"<<std::endl;
+    return nullptr;
   }
+
+  
 
 
   void MatrixIO::readAndUpdateMatrix(std::string filename, Matrix* A)
@@ -101,7 +100,7 @@ namespace ReSolve
     std::ifstream file(filename);
     std::stringstream ss;
     if (file.is_open()) {
-	    A->setExpanded(false);
+      A->setExpanded(false);
       std::string line;
       Int i = 0;
       Int m, n, nnz;
@@ -116,7 +115,7 @@ namespace ReSolve
         printf("Wrong matrix size! Cannot update \n ");
         exit(0);
       }
-	    A->setNnz(nnz);
+      A->setNnz(nnz);
       //create coo arrays
       Int* coo_rows = A->getCooRowIndices("cpu");
       Int* coo_cols = A->getCooColIndices("cpu");
@@ -164,18 +163,30 @@ namespace ReSolve
         i++;
       }
       file.close();
-    } else { 
-      std::cout<<"Error opening file"<<std::endl;
+      return rhs;
     }
-
+    std::cout<<"Error opening file"<<std::endl;
+    return nullptr;
   }
 
   Int MatrixIO::writeMatrixToFile(Matrix* A, std::string filename)
   {
+    std::cout << "writeMatrixToFile function not implemented!\n";
+    return -1;
   }
 
-  Int MatrixIO::writeVectorToFile(Real* x, std::string filename)
+  Int MatrixIO::writeVectorToFile(Vector* vec_x, std::string filename)
   {
+    Real* x_data = vec_x->getData("cpu");
+    std::ofstream file_out (filename, std::ofstream::out);
+    file_out << "%%MatrixMarket matrix array real general \n";
+    file_out << "% ID: XXX \n";
+    file_out << vec_x->getSize()<<" "<<1<<"\n";
+    for (int i = 0; i < vec_x->getSize(); ++i) {
+      file_out << std::setprecision(32)<<std::scientific << x_data[i]<<"\n";
+    }
+    file_out.close();
+    return 0;
   }
 }
 

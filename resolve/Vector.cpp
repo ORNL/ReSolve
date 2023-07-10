@@ -26,18 +26,18 @@ namespace ReSolve
   void Vector::setData(Real* data, std::string memspace)
   {
 
-  if (memspace == "cpu") {
-    h_data_ = data;
-    cpu_updated_ = true;
-  } else {
-    if (memspace == "cuda") { 
-      d_data_ = data;
-      gpu_updated_ = true;
+    if (memspace == "cpu") {
+      h_data_ = data;
+      cpu_updated_ = true;
     } else {
-      //error
-    } 
+      if (memspace == "cuda") { 
+        d_data_ = data;
+        gpu_updated_ = true;
+      } else {
+        //error
+      } 
+    }
   }
-}
 
   void Vector::setDataUpdated(std::string memspace)
   { 
@@ -161,6 +161,26 @@ namespace ReSolve
           cudaFree(d_data_);
         }
         cudaMalloc(&d_data_, (n_) * sizeof(Real)); 
+      }
+    }
+  }
+
+
+  void Vector::setToZero(std::string memspace) 
+  {
+    if (memspace == "cpu") {
+      if (h_data_ == nullptr) {
+        h_data_ = new Real[n_]; 
+      }
+      for (int i = 0; i < n_; ++i){
+        h_data_[i] = 0.0;
+      }
+    } else {
+      if (memspace == "cuda") {
+        if (d_data_ == nullptr) {
+          cudaMalloc(&d_data_, (n_) * sizeof(Real)); 
+        }
+        cudaMemset(d_data_, 0.0, n_ * sizeof(Real));
       }
     }
   }

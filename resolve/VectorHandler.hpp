@@ -24,7 +24,7 @@ namespace ReSolve
 
       //mass dot: V^T x, where V is [n x k] and x is [k x 2], everything is stored and returned columnwise
       //Size = n
-      Real* massDot2Vec(Int size, Real* V, Real k, Real* x, Real* res,  std::string memspace);
+      void massDot2Vec(Int size, Real* V, Real k, Real* x, Real* res,  std::string memspace);
 
       //gemv:
       //if transpose = N(no), x = beta*x +  alpha*V*y,

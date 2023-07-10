@@ -14,7 +14,7 @@ namespace ReSolve
       LinSolver();
       ~LinSolver();
 
-      virtual void setup(Matrix* A);
+      virtual int setup(Matrix* A);
       Real evaluateResidual();
         
     protected:  

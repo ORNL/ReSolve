@@ -31,6 +31,8 @@ set(CMAKE_MACOSX_RPATH 1)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
+set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib)
 #list(APPEND CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib)
 
 # Add CMake sources from `cmake` dir
@@ -74,7 +76,7 @@ set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-extended-lambda")
 include(ReSolveFindCudaLibraries)
 
 # Enable testing
-# enable_testing()
+enable_testing()
 
 # Add directory with library code
 add_subdirectory(resolve)
@@ -111,3 +113,5 @@ install(DIRECTORY examples/resolve_consumer DESTINATION share/examples)
 # Add examples
 add_subdirectory(examples)
 
+# Add tests
+add_subdirectory(tests)

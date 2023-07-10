@@ -15,7 +15,7 @@ namespace ReSolve
       int refactorize();
       int solve(Vector* rhs, Vector* x);
 
-      void setup(Matrix* A, Matrix* L, Matrix* U, Int* P, Int* Q);
+      int setup(Matrix* A, Matrix* L, Matrix* U, Int* P, Int* Q);
     
     private:
       void addFactors(Matrix* L, Matrix* U); //create L+U from sepeate L, U factors
@@ -26,6 +26,7 @@ namespace ReSolve
       LinAlgWorkspace *workspace_;// so we can copy cusparse handle
       cusolverSpHandle_t handle_cusolversp_; 
       cusolverStatus_t status_cusolver_;
+      cusparseStatus_t status_cusparse_;
       csrgluInfo_t info_M_;
       void* glu_buffer_;
       double r_nrminf_;

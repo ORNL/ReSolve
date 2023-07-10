@@ -20,6 +20,7 @@ namespace ReSolve
       void setDataUpdated(std::string memspace);
       void setData(Real* data, std::string memspace);
       void allocate(std::string memspace);   
+      void setToZero(std::string memspace);
     private:
       Int n_; //size
       Real* d_data_;

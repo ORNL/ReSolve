@@ -68,7 +68,7 @@ namespace ReSolve
     }
   }
 
-  void LinSolverIterativeFGMRES::setup(Matrix* A)
+  int LinSolverIterativeFGMRES::setup(Matrix* A)
   {
     this->A_ = A;
     n_ = A_->getNumRows();
@@ -96,6 +96,7 @@ namespace ReSolve
     if(orth_option_ == "mgs_pm") {
       h_aux_ = new Real[restart_ + 1];
     }
+    return 0;
   }
 
   int  LinSolverIterativeFGMRES::solve(Vector* rhs, Vector* x)
@@ -129,6 +130,8 @@ namespace ReSolve
     //rnorm = ||V_1||
     rnorm = sqrt(rnorm);
     bnorm = sqrt(bnorm);
+    //printf("FGMRES: init rel norm of R %16.16e \n", rnorm/bnorm);
+    initial_residual_norm_ = rnorm;
     while(outer_flag) {
       // check if maybe residual is already small enough?
       if(it == 0) {
@@ -163,7 +166,6 @@ namespace ReSolve
       vector_handler_->scal(&t, vec_v, "cuda");
       // initialize norm history
       h_rs_[0] = rnorm;
-      initial_residual_norm_ = rnorm;
       i = -1;
       notconv = 1;
 
@@ -270,7 +272,7 @@ namespace ReSolve
   {
     if (name != "CuSolverRf") {
       std::cout<<"Only cusolverRf tri solve can be used as a preconditioner at thistime"<<std::endl;
-      return -1;
+      return 1;
     } else {
       LU_solver_ = LU_solver;  
     return 0;
@@ -333,9 +335,6 @@ namespace ReSolve
   int  LinSolverIterativeFGMRES::GramSchmidt(Int i) 
   {
     double t;
-    const double one = 1.0;
-    const double minusone = -1.0;
-    const double zero = 0.0;
     double s;
     int sw = 0;
     if(orth_option_ == "mgs") {
