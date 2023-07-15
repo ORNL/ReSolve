@@ -121,7 +121,7 @@ namespace ReSolve
     //cudaMatvec(d_x, d_V_, "residual");
     vec_v->setData(d_V_, "cuda");
 
-    matrix_handler_->matvec(A_, x, vec_v, &minusone_, &one_, "cuda"); 
+    matrix_handler_->matvec(A_, x, vec_v, &minusone_, &one_,"csr", "cuda"); 
     rnorm = 0.0;
     //cublasDdot (cublas_handle_,  n_, d_b, 1, d_b, 1, &bnorm);
     bnorm = vector_handler_->dot(rhs, rhs, "cuda");
@@ -184,7 +184,7 @@ namespace ReSolve
 
         vec_v->setData(&d_V_[(i + 1) * n_], "cuda");
 
-        matrix_handler_->matvec(A_, vec_z, vec_v, &one_, &zero_, "cuda"); 
+        matrix_handler_->matvec(A_, vec_z, vec_v, &one_, &zero_,"csr", "cuda"); 
         //   cudaMatvec(&d_Z_[i * n_], &d_V_[(i + 1) * n_], "matvec");
         // orthogonalize V[i+1], form a column of h_L
         GramSchmidt(i);
@@ -254,7 +254,7 @@ namespace ReSolve
       cudaMemcpy(&d_V_[0], rhs->getData("cuda"), sizeof(double)*n_, cudaMemcpyDeviceToDevice);
       //cudaMatvec(d_x, d_V_, "residual");
       vec_v->setData(d_V_, "cuda");
-      matrix_handler_->matvec(A_, x, vec_v, &minusone_, &one_, "cuda"); 
+      matrix_handler_->matvec(A_, x, vec_v, &minusone_, &one_,"csr", "cuda"); 
       rnorm = vector_handler_->dot(vec_v, vec_v, "cuda");
       //cublasDdot(cublas_handle_, n_, d_V_, 1, d_V_, 1, &rnorm);
       // rnorm = ||V_1||

@@ -32,7 +32,7 @@ namespace ReSolve
 
   int LinSolverDirectKLU::analyze() 
   {
-    Symbolic_ = klu_analyze(A_->getNumRows(), A_->getCsrRowPointers("cpu"), A_->getCsrColIndices("cpu"), &Common_) ;
+    Symbolic_ = klu_analyze(A_->getNumRows(), A_->getRowData("cpu"), A_->getColData("cpu"), &Common_) ;
 
     if (Symbolic_ == nullptr){
       printf("Symbolic_ factorization crashed withCommon_.status = %d \n", Common_.status);
@@ -43,7 +43,7 @@ namespace ReSolve
 
   int LinSolverDirectKLU::factorize() 
   {
-    Numeric_ = klu_factor(A_->getCsrRowPointers("cpu"), A_->getCsrColIndices("cpu"),A_->getCsrValues("cpu"), Symbolic_, &Common_);
+    Numeric_ = klu_factor(A_->getRowData("cpu"), A_->getColData("cpu"),A_->getValues("cpu"), Symbolic_, &Common_);
 
     if (Numeric_ == nullptr){
       return 1;
@@ -53,7 +53,7 @@ namespace ReSolve
 
   int  LinSolverDirectKLU::refactorize() 
   {
-    int kluStatus = klu_refactor (A_->getCsrRowPointers("cpu"), A_->getCsrColIndices("cpu"), A_->getCsrValues("cpu"), Symbolic_, Numeric_, &Common_);
+    int kluStatus = klu_refactor (A_->getRowData("cpu"), A_->getColData("cpu"), A_->getValues("cpu"), Symbolic_, Numeric_, &Common_);
 
     if (!kluStatus){
       //display error
@@ -85,18 +85,18 @@ namespace ReSolve
       const int nnzL = Numeric_->lnz;
       const int nnzU = Numeric_->unz;
 
-      L_ = new Matrix(A_->getNumRows(), A_->getNumColumns(), nnzL);
-      U_ = new Matrix(A_->getNumRows(), A_->getNumColumns(), nnzU);
-      L_->allocateCsc("cpu");
-      U_->allocateCsc("cpu");
+      L_ = new MatrixCSC(A_->getNumRows(), A_->getNumColumns(), nnzL);
+      U_ = new MatrixCSC(A_->getNumRows(), A_->getNumColumns(), nnzU);
+      L_->allocateMatrixData("cpu");
+      U_->allocateMatrixData("cpu");
       int ok = klu_extract(Numeric_, 
                            Symbolic_, 
-                           L_->getCscColPointers("cpu"), 
-                           L_->getCscRowIndices("cpu"), 
-                           L_->getCscValues("cpu"), 
-                           U_->getCscColPointers("cpu"), 
-                           U_->getCscRowIndices("cpu"), 
-                           U_->getCscValues("cpu"), 
+                           L_->getColData("cpu"), 
+                           L_->getRowData("cpu"), 
+                           L_->getValues("cpu"), 
+                           U_->getColData("cpu"), 
+                           U_->getRowData("cpu"), 
+                           U_->getValues("cpu"), 
                            nullptr, 
                            nullptr, 
                            nullptr, 
@@ -106,8 +106,8 @@ namespace ReSolve
                            nullptr,
                            &Common_);
 
-      L_->setUpdated("h_csc");
-      U_->setUpdated("h_csc");
+      L_->setUpdated("cpu");
+      U_->setUpdated("cpu");
 
       factors_extracted_ = true;
     }
@@ -120,18 +120,18 @@ namespace ReSolve
       const int nnzL = Numeric_->lnz;
       const int nnzU = Numeric_->unz;
 
-      L_ = new Matrix(A_->getNumRows(), A_->getNumColumns(), nnzL);
-      U_ = new Matrix(A_->getNumRows(), A_->getNumColumns(), nnzU);
-      L_->allocateCsc("cpu");
-      U_->allocateCsc("cpu");
+      L_ = new MatrixCSC(A_->getNumRows(), A_->getNumColumns(), nnzL);
+      U_ = new MatrixCSC(A_->getNumRows(), A_->getNumColumns(), nnzU);
+      L_->allocateMatrixData("cpu");
+      U_->allocateMatrixData("cpu");
       int ok = klu_extract(Numeric_, 
                            Symbolic_, 
-                           L_->getCscColPointers("cpu"), 
-                           L_->getCscRowIndices("cpu"), 
-                           L_->getCscValues("cpu"), 
-                           U_->getCscColPointers("cpu"), 
-                           U_->getCscRowIndices("cpu"), 
-                           U_->getCscValues("cpu"), 
+                           L_->getColData("cpu"), 
+                           L_->getRowData("cpu"), 
+                           L_->getValues("cpu"), 
+                           U_->getColData("cpu"), 
+                           U_->getRowData("cpu"), 
+                           U_->getValues("cpu"), 
                            nullptr, 
                            nullptr, 
                            nullptr, 
@@ -141,8 +141,8 @@ namespace ReSolve
                            nullptr,
                            &Common_);
 
-      L_->setUpdated("h_csc");
-      U_->setUpdated("h_csc");
+      L_->setUpdated("cpu");
+      U_->setUpdated("cpu");
       factors_extracted_ = true;
     }
     return U_;

@@ -28,8 +28,24 @@ namespace ReSolve
       if (st!=0) {printf("dot product crashed with code %d \n", st);}
       return nrm;
     } else {
-      std::cout<<"Not implemented (yet)"<<std::endl;
-      return NAN;
+      if (memspace == "cpu") {
+        Real* x_data = x->getData("cpu");
+        Real* y_data = y->getData("cpu");
+        Real sum = 0.0;
+        Real c;
+        Real t, y;
+        for (int i = 0; i < x->getSize(); ++i){
+          y = (x_data[i] * y_data[i]) - c;
+          t = sum + y;
+          c = (t - sum) - y;
+          sum = t;        
+//   sum += (x_data[i] * y_data[i]);
+         } 
+        return sum;
+      } else {
+        std::cout<<"Not implemented (yet)"<<std::endl;
+        return NAN;
+      }
     }
   }
 

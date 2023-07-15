@@ -1,7 +1,7 @@
 // this is for standalone testing (will NOT  be used in hiop)
 //
 #include "Common.hpp"
-#include "Matrix.hpp"
+#include "MatrixCOO.hpp"
 #include "Vector.hpp"
 #include <iomanip>
 
@@ -13,7 +13,7 @@ namespace ReSolve
       ~MatrixIO();
 
       Matrix* readMatrixFromFile(std::string filename);
-      void readAndUpdateMatrix(std::string filename, Matrix* A);
+      void readAndUpdateMatrix(std::string filename, MatrixCOO* A);
       Real* readRhsFromFile(std::string filename); 
       Real* readAndUpdateRhs(std::string filename, Real* rhs); 
 

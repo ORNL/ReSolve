@@ -19,7 +19,9 @@ int main(Int argc, char *argv[] )
   int error_sum = 0;
   int status = 0;
 
-  ReSolve::Matrix* A;
+  ReSolve::MatrixCOO* A_coo;
+  ReSolve::MatrixCSR* A;
+
   ReSolve::MatrixIO* reader = new ReSolve::MatrixIO;
   ReSolve::LinAlgWorkspaceCUDA* workspace_CUDA = new ReSolve::LinAlgWorkspaceCUDA;
   workspace_CUDA->initializeHandles();
@@ -53,7 +55,8 @@ int main(Int argc, char *argv[] )
 
   // Read first matrix
 
-  A = reader->readMatrixFromFile(matrixFileName1);
+  A_coo = (ReSolve::MatrixCOO*) reader->readMatrixFromFile(matrixFileName1);
+  A = new ReSolve::MatrixCSR(A_coo->getNumRows(), A_coo->getNumColumns(), A_coo->getNnz(), A_coo->expanded(), A_coo->symmetric());
   rhs = reader->readRhsFromFile(rhsFileName1);
   x = new Real[A->getNumRows()];
   vec_rhs = new ReSolve::Vector(A->getNumRows());
@@ -62,7 +65,7 @@ int main(Int argc, char *argv[] )
 
   // Convert first matrix to CSR format
 
-  matrix_handler->coo2csr(A, "cpu");
+  matrix_handler->coo2csr(A_coo, A, "cpu");
   vec_rhs->update(rhs, "cpu", "cpu");
   vec_rhs->setDataUpdated("cpu");
 
@@ -95,7 +98,7 @@ int main(Int argc, char *argv[] )
 
   Real normXmatrix1 = sqrt(vector_handler->dot(vec_test, vec_test, "cuda"));
   matrix_handler->setValuesChanged(true);
-  status = matrix_handler->matvec(A, vec_x, vec_r, &one, &minusone, "cuda"); 
+  status = matrix_handler->matvec(A, vec_x, vec_r, &one, &minusone,"csr","cuda"); 
   error_sum += status;
   
   Real normRmatrix1 = sqrt(vector_handler->dot(vec_r, vec_r, "cuda"));
@@ -113,22 +116,31 @@ int main(Int argc, char *argv[] )
  
   //compute the residual using exact solution
   vec_r->update(rhs, "cpu", "cuda");
-  status = matrix_handler->matvec(A, vec_test, vec_r, &one, &minusone, "cuda"); 
+  status = matrix_handler->matvec(A, vec_test, vec_r, &one, &minusone,"csr", "cuda"); 
   error_sum += status;
   Real exactSol_normRmatrix1 = sqrt(vector_handler->dot(vec_r, vec_r, "cuda"));
-  
+  //evaluate the residual ON THE CPU using COMPUTED solution
+ 
+  vec_r->update(rhs, "cpu", "cpu");
+
+  status = matrix_handler->matvec(A, vec_x, vec_r, &one, &minusone,"csr", "cpu");
+  error_sum += status;
+ 
+  Real normRmatrix1CPU = sqrt(vector_handler->dot(vec_r, vec_r, "cuda"));
+ 
   std::cout<<"Results (first matrix): "<<std::endl<<std::endl;
   std::cout<<"\t ||b-A*x||_2                 : "<<std::setprecision(16)<<normRmatrix1<<" (residual norm)"<<std::endl;
+  std::cout<<"\t ||b-A*x||_2  (CPU)          : "<<std::setprecision(16)<<normRmatrix1CPU<<" (residual norm)"<<std::endl;
   std::cout<<"\t ||b-A*x||_2/||b||_2         : "<<normRmatrix1/normB1<<" (scaled residual norm)"<<std::endl;
   std::cout<<"\t ||x-x_true||_2              : "<<normDiffMatrix1<<" (solution error)"<<std::endl;
   std::cout<<"\t ||x-x_true||_2/||x_true||_2 : "<<normDiffMatrix1/normXtrue<<" (scaled solution error)"<<std::endl;
   std::cout<<"\t ||b-A*x_exact||_2           : "<<exactSol_normRmatrix1<<" (control; residual norm with exact solution)"<<std::endl<<std::endl;
  // Load the second matrix
 
-  reader->readAndUpdateMatrix(matrixFileName2, A);
+  reader->readAndUpdateMatrix(matrixFileName2, A_coo);
   reader->readAndUpdateRhs(rhsFileName2, rhs);
 
-  matrix_handler->coo2csr(A, "cuda");
+  matrix_handler->coo2csr(A_coo,A, "cuda");
   vec_rhs->update(rhs, "cpu", "cuda");
 
   // and solve it too
@@ -141,7 +153,7 @@ int main(Int argc, char *argv[] )
   vec_r->update(rhs, "cpu", "cuda");
   matrix_handler->setValuesChanged(true);
 
-  status = matrix_handler->matvec(A, vec_x, vec_r, &one, &minusone, "cuda"); 
+  status = matrix_handler->matvec(A, vec_x, vec_r, &one, &minusone, "csr", "cuda"); 
   error_sum += status;
 
   Real normRmatrix2 = sqrt(vector_handler->dot(vec_r, vec_r, "cuda"));
@@ -156,7 +168,7 @@ int main(Int argc, char *argv[] )
  
   //compute the residual using exact solution
   vec_r->update(rhs, "cpu", "cuda");
-  status = matrix_handler->matvec(A, vec_test, vec_r, &one, &minusone, "cuda"); 
+  status = matrix_handler->matvec(A, vec_test, vec_r, &one, &minusone, "csr", "cuda"); 
   error_sum += status;
   Real exactSol_normRmatrix2 = sqrt(vector_handler->dot(vec_r, vec_r, "cuda"));
   
@@ -173,7 +185,7 @@ int main(Int argc, char *argv[] )
     std::cout<<"Test 1 (KLU with KLU refactorization) PASSED"<<std::endl;
   } else {
 
-    std::cout<<"Test 1 (KLU with KLU refactorization) FAILED"<<std::endl;
+    std::cout<<"Test 1 (KLU with KLU refactorization) FAILED, error sum: "<<error_sum<<std::endl;
   }
   return error_sum;
 }
