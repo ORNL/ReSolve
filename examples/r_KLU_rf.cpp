@@ -24,7 +24,9 @@ int main(Int argc, char *argv[] ){
   std::string rhsFileNameFull;
 
   ReSolve::MatrixIO* reader = new ReSolve::MatrixIO;
-  ReSolve::Matrix* A;
+  ReSolve::MatrixCOO* A_coo;
+  ReSolve::MatrixCSR* A;
+
   ReSolve::LinAlgWorkspaceCUDA* workspace_CUDA = new ReSolve::LinAlgWorkspaceCUDA;
   workspace_CUDA->initializeHandles();
   ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(workspace_CUDA);
@@ -60,7 +62,8 @@ int main(Int argc, char *argv[] ){
     std::cout<<"========================================================================================================================"<<std::endl;
     std::cout<<std::endl;
     if (i == 0) {
-      A = reader->readMatrixFromFile(matrixFileNameFull);
+      A_coo = (ReSolve::MatrixCOO*) reader->readMatrixFromFile(matrixFileNameFull);
+      A = new ReSolve::MatrixCSR(A_coo->getNumRows(), A_coo->getNumColumns(), A_coo->getNnz(), A_coo->expanded(), A_coo->symmetric());
 
       rhs = reader->readRhsFromFile(rhsFileNameFull);
       x = new Real[A->getNumRows()];
@@ -69,18 +72,18 @@ int main(Int argc, char *argv[] ){
       vec_r = new ReSolve::Vector(A->getNumRows());
     }
     else {
-      reader->readAndUpdateMatrix(matrixFileNameFull, A);
+      reader->readAndUpdateMatrix(matrixFileNameFull, A_coo);
       reader->readAndUpdateRhs(rhsFileNameFull, rhs);
     }
     std::cout<<"Finished reading the matrix and rhs, size: "<<A->getNumRows()<<" x "<<A->getNumColumns()<< ", nnz: "<< A->getNnz()<< ", symmetric? "<<A->symmetric()<< ", Expanded? "<<A->expanded()<<std::endl;
 
     //Now convert to CSR.
     if (i < 2) { 
-      matrix_handler->coo2csr(A, "cpu");
+      matrix_handler->coo2csr(A_coo, A, "cpu");
       vec_rhs->update(rhs, "cpu", "cpu");
       vec_rhs->setDataUpdated("cpu");
     } else { 
-      matrix_handler->coo2csr(A, "cuda");
+      matrix_handler->coo2csr(A_coo, A, "cuda");
       vec_rhs->update(rhs, "cpu", "cuda");
     }
     std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnzExpanded()<<std::endl;
@@ -98,10 +101,12 @@ int main(Int argc, char *argv[] ){
       status = KLU->solve(vec_rhs, vec_x);
       std::cout<<"KLU solve status: "<<status<<std::endl;      
       if (i == 1) {
-        ReSolve::Matrix* L = KLU->getLFactor();
-        ReSolve::Matrix* U = KLU->getUFactor();
-        matrix_handler->csc2csr(L, "cuda");
-        matrix_handler->csc2csr(U, "cuda");
+        ReSolve::MatrixCSC* L_csc = (ReSolve::MatrixCSC*) KLU->getLFactor();
+        ReSolve::MatrixCSC* U_csc = (ReSolve::MatrixCSC*) KLU->getUFactor();
+        ReSolve::MatrixCSR* L = new ReSolve::MatrixCSR(L_csc->getNumRows(), L_csc->getNumColumns(), L_csc->getNnz());
+        ReSolve::MatrixCSR* U = new ReSolve::MatrixCSR(U_csc->getNumRows(), U_csc->getNumColumns(), U_csc->getNnz());
+        matrix_handler->csc2csr(L_csc,L, "cuda");
+        matrix_handler->csc2csr(U_csc,U, "cuda");
         if (L == nullptr) {printf("ERROR");}
         Int* P = KLU->getPOrdering();
         Int* Q = KLU->getQOrdering();
@@ -122,7 +127,7 @@ int main(Int argc, char *argv[] ){
 
     matrix_handler->setValuesChanged(true);
 
-    matrix_handler->matvec(A, vec_x, vec_r, &one, &minusone, "cuda"); 
+    matrix_handler->matvec(A, vec_x, vec_r, &one, &minusone,"csr", "cuda"); 
     Real* test = vec_r->getData("cpu");
 
     printf("\t 2-Norm of the residual: %16.16e\n", sqrt(vector_handler->dot(vec_r, vec_r, "cuda")));

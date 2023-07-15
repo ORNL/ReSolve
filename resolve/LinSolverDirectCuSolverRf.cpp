@@ -19,7 +19,7 @@ namespace ReSolve
   {
     //remember - P and Q are generally CPU variables
     int error_sum = 0;
-    this->A_ = A;
+    this->A_ = (MatrixCSR*) A;
     Int n = A_->getNumRows();
     cudaMalloc(&d_P_, n * sizeof(Int)); 
     cudaMalloc(&d_Q_, n * sizeof(Int));
@@ -31,20 +31,19 @@ namespace ReSolve
 
     status_cusolverrf_ = cusolverRfSetResetValuesFastMode(handle_cusolverrf_, CUSOLVERRF_RESET_VALUES_FAST_MODE_ON);
     error_sum += status_cusolverrf_;
-
     status_cusolverrf_ = cusolverRfSetupDevice(n, 
                                                A_->getNnzExpanded(),
-                                               A_->getCsrRowPointers("cuda"), //dia_,
-                                               A_->getCsrColIndices("cuda"), //dja_,
-                                               A_->getCsrValues("cuda"),  //da_,
+                                               A_->getRowData("cuda"), //dia_,
+                                               A_->getColData("cuda"), //dja_,
+                                               A_->getValues("cuda"),  //da_,
                                                L->getNnz(),
-                                               L->getCsrRowPointers("cuda"),
-                                               L->getCsrColIndices("cuda"),
-                                               L->getCsrValues("cuda"),
+                                               L->getRowData("cuda"),
+                                               L->getColData("cuda"),
+                                               L->getValues("cuda"),
                                                U->getNnz(),
-                                               U->getCsrRowPointers("cuda"),
-                                               U->getCsrColIndices("cuda"),
-                                               U->getCsrValues("cuda"),
+                                               U->getRowData("cuda"),
+                                               U->getColData("cuda"),
+                                               U->getValues("cuda"),
                                                d_P_,
                                                d_Q_,
                                                handle_cusolverrf_);
@@ -75,9 +74,9 @@ namespace ReSolve
     int error_sum = 0;
     status_cusolverrf_ = cusolverRfResetValues(A_->getNumRows(), 
                                                A_->getNnzExpanded(), 
-                                               A_->getCsrRowPointers("cuda"), //dia_,
-                                               A_->getCsrColIndices("cuda"), //dja_,
-                                               A_->getCsrValues("cuda"),  //da_,
+                                               A_->getRowData("cuda"), //dia_,
+                                               A_->getColData("cuda"), //dja_,
+                                               A_->getValues("cuda"),  //da_,
                                                d_P_,
                                                d_Q_,
                                                handle_cusolverrf_);

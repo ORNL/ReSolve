@@ -4,7 +4,9 @@
 // (2) Matrix vector product (SpMV)
 // (3) Matrix 1-norm
 #pragma once
-#include "Matrix.hpp"
+#include "MatrixCSR.hpp"
+#include "MatrixCSC.hpp"
+#include "MatrixCOO.hpp"
 #include "Vector.hpp"
 #include "LinAlgWorkspace.hpp"
 #include <algorithm>
@@ -40,10 +42,10 @@ namespace ReSolve
       MatrixHandler(LinAlgWorkspace* workspace);
       ~MatrixHandler();
 
-      void csc2csr(Matrix* A, std::string memspace);//memspace decides on what is returned (cpu or cuda pointer)
-      void coo2csr(Matrix* A, std::string memspace);
+      void csc2csr(MatrixCSC* A_csr, MatrixCSR* A_csc, std::string memspace);//memspace decides on what is returned (cpu or cuda pointer)
+      void coo2csr(MatrixCOO* A_coo, MatrixCSR* A_csr, std::string memspace);
 
-      int matvec(Matrix* A, Vector* vec_x, Vector* vec_result, Real* alpha, Real* beta, std::string memspace);
+      int matvec(Matrix* A, Vector* vec_x, Vector* vec_result, Real* alpha, Real* beta,std::string matrix_type, std::string memspace);
       void Matrix1Norm(Matrix *A, Real* norm);
      bool getValuesChanged();
      void setValuesChanged(bool toWhat); 

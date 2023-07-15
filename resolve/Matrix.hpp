@@ -14,10 +14,10 @@ namespace ReSolve
       Matrix();
       Matrix(Int n, Int m, Int nnz);
       Matrix(Int n, 
-                    Int m, 
-                    Int nnz,
-                    bool symmetric,
-                    bool expanded);
+             Int m, 
+             Int nnz,
+             bool symmetric,
+             bool expanded);
       ~Matrix();
 
       // accessors
@@ -32,48 +32,21 @@ namespace ReSolve
       void setExpanded(bool expanded);
       void setNnzExpanded(Int nnz_expanded_new);
       void setNnz(Int nnz_new); // for resetting when removing duplicates
-      void setUpdated(std::string what);
+      Int setUpdated(std::string what);
 
-      Int* getCsrRowPointers(std::string memspace);
-      Int* getCsrColIndices(std::string memspace);
-      Real* getCsrValues(std::string memspace);
+      virtual Int* getRowData(std::string memspace){return nullptr;};
+      virtual Int* getColData(std::string memspace){return nullptr;};
+      virtual Real* getValues(std::string memspace){return nullptr;}; 
 
-      Int* getCscColPointers(std::string memspace);
-      Int* getCscRowIndices(std::string memspace);
-      Real* getCscValues(std::string memspace);
+      virtual Int updateData(Int* row_data, Int* col_data, Real* val_data, std::string memspaceIn, std::string memspaceOut){return -1;}; 
+      virtual Int updateData(Int* row_data, Int* col_data, Real* val_data, Int new_nnz, std::string memspaceIn, std::string memspaceOut){return -1;}; 
 
-      Int* getCooRowIndices(std::string memspace);
-      Int* getCooColIndices(std::string memspace);
-      Real* getCooValues(std::string memspace);
+      virtual Int allocateMatrixData(std::string memspace){return -1;}; 
+      Int setMatrixData(Int* row_data, Int* col_data, Real* val_data, std::string memspace);
 
-      // Set functions just set the values. It is always a pointer copy, not a deep copy.
-      Int setCsr(Int* csr_p, Int* csr_i, Real* csr_x, std::string memspace);
-      Int setCsc(Int* csc_p, Int* csc_i, Real* csc_x, std::string memspace);
-      Int setCoo(Int* coo_rows, Int* coo_cols, Real* coo_vals, std::string memspace);
-
-      // Update functions update the data. There is always a deep copy, never a pointer copy
-      // These function would allocate the space, if necessary.
-      Int updateCsr(Int* csr_p, Int* csr_i, Real* csr_x, std::string memspaceIn, std::string memspaceOut);
-      Int updateCsc(Int* csc_p, Int* csc_i, Real* csc_x, std::string memspaceIn, std::string memspaceOut);
-      Int updateCoo(Int* coo_rows, Int* coo_cols, Real* coo_vals, std::string memspaceIn, std::string memspaceOut);
-
-      //these functions should be used when, for instance, nnz changes (matrix get expanded, etc)
-
-      Int updateCsr(Int* csr_p, Int* csr_i, Real* csr_x, Int new_nnz, std::string memspaceIn, std::string memspaceOut);
-      Int updateCsc(Int* csc_p, Int* csc_i, Real* csc_x, Int new_nnz, std::string memspaceIn, std::string memspaceOut);
-      Int updateCoo(Int* coo_rows, Int* coo_cols, Real* coo_vals, Int new_nnz,  std::string memspaceIn, std::string memspaceOut);
-
-      //DESTROY!
-      Int destroyCsr(std::string memspace);
-      Int destroyCsc(std::string memspace);
-      Int destroyCoo(std::string memspace);
-
-      //allocate, sometimes needed
-      void allocateCsr(std::string memspace);
-      void allocateCsc(std::string memspace);
-      void allocateCoo(std::string memspace);
- 
-    private:
+      Int destroyMatrixData(std::string memspace);
+    
+    protected:
       //size
       Int n_;
       Int m_;
@@ -84,50 +57,19 @@ namespace ReSolve
       bool is_expanded_;
 
       //host data
-      // COO format:
-      Int* h_coo_rows_;
-      Int* h_coo_cols_;
-      Real* h_coo_vals_;
-      bool h_coo_updated_;
+      Int* h_row_data_;
+      Int* h_col_data_;
+      Real* h_val_data_;
 
-      // CSR format:
-      Int* h_csr_p_; //row starts
-      Int* h_csr_i_; //column indices
-      Real* h_csr_x_;//values 
-      bool h_csr_updated_;
+      bool h_data_updated_;
 
-      // CSC format:
-      Int* h_csc_p_; //column starts
-      Int* h_csc_i_; //row indices
-      Real* h_csc_x_;//values 
-      bool h_csc_updated_;
+      //gpu data
+      Int* d_row_data_;
+      Int* d_col_data_;
+      Real* d_val_data_;
+      bool d_data_updated_;
 
-      //device data
-
-      /* note -- COO format not typically kept on the gpu anyways */
-
-      //COO format:
-      Int* d_coo_rows_;
-      Int* d_coo_cols_;
-      Real* d_coo_vals_;
-      bool d_coo_updated_;
-
-      // CSR format:
-      Int* d_csr_p_; //row starts
-      Int* d_csr_i_; //column indices
-      Real* d_csr_x_;//values 
-      bool d_csr_updated_;
-
-      // CSC format:
-      Int* d_csc_p_; //column starts
-      Int* d_csc_i_; //row indices
-      Real* d_csc_x_;//values  
-      bool d_csc_updated_;
-
-      //auxiliary functions for managing updating data between cpu and cuda
       void setNotUpdated();
-      void copyCsr(std::string memspaceOut);
-      void copyCsc(std::string memspaceOut);
-      void copyCoo(std::string memspaceOut);
+
   };
 }

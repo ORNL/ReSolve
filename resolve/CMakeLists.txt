@@ -7,6 +7,7 @@
 ]]
 
 set(ReSolve_SRC
+    Matrix.cpp
     MatrixHandler.cpp
     VectorHandler.cpp
     MatrixIO.cpp
@@ -16,7 +17,9 @@ set(ReSolve_SRC
 
 
 set(ReSolve_SRC_CUDA
-    Matrix.cpp
+    MatrixCOO.cpp
+    MatrixCSR.cpp
+    MatrixCSC.cpp
     Vector.cpp
     LinAlgWorkspace.cpp
     LinSolverDirectCuSolverRf.cpp
@@ -36,6 +39,9 @@ set(ReSolve_HEADER_INSTALL
     LinSolverDirectKLU.hpp
     LinSolverIterativeFGMRES.hpp
     Matrix.hpp
+    MatrixCOO.hpp
+    MatrixCSR.hpp
+    MatrixCSC.hpp
     MatrixIO.hpp
     MatrixHandler.hpp
     RefactorizationSolver.hpp

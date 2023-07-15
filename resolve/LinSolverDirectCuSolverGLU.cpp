@@ -25,7 +25,7 @@ namespace ReSolve
     //get the handle
     handle_cusolversp_ = workspaceCUDA->getCusolverSpHandle();
 
-    A_ = A;
+    A_ = (MatrixCSR*) A;
     Int n = A_->getNumRows();
     Int nnz = A_->getNnzExpanded();
     //create combined factor
@@ -46,14 +46,14 @@ namespace ReSolve
                                            n,
                                            nnz, 
                                            descr_A_, 
-                                           A_->getCsrRowPointers("cpu"), //kRowPtr_,
-                                           A_->getCsrColIndices("cpu"), //jCol_, 
+                                           A_->getRowData("cpu"), //kRowPtr_,
+                                           A_->getColData("cpu"), //jCol_, 
                                            P, /* base-0 */
                                            Q,   /* base-0 */
                                            M_->getNnz(),           /* nnzM */
                                            descr_M_, 
-                                           M_->getCsrRowPointers("cpu"), 
-                                           M_->getCsrColIndices("cpu"), 
+                                           M_->getRowData("cpu"), 
+                                           M_->getColData("cpu"), 
                                            info_M_);
     error_sum += status_cusolver_; 
     //NOW the buffer 
@@ -73,9 +73,9 @@ namespace ReSolve
                                            /* A is original matrix */
                                            nnz, 
                                            descr_A_, 
-                                           A_->getCsrValues("cuda"),  //da_, 
-                                           A_->getCsrRowPointers("cuda"), //kRowPtr_,
-                                           A_->getCsrColIndices("cuda"), //jCol_, 
+                                           A_->getValues("cuda"),  //da_, 
+                                           A_->getRowData("cuda"), //kRowPtr_,
+                                           A_->getColData("cuda"), //jCol_, 
                                            info_M_);
     error_sum += status_cusolver_; 
 
@@ -87,18 +87,19 @@ namespace ReSolve
 
   void LinSolverDirectCuSolverGLU::addFactors(Matrix* L, Matrix* U)
   {
+// L and U need to be in CSC format
     Int n = L->getNumRows();
-    Int* Lp = L->getCscColPointers("cpu"); 
-    Int* Li = L->getCscRowIndices("cpu"); 
-    Int* Up = U->getCscColPointers("cpu"); 
-    Int* Ui = U->getCscRowIndices("cpu"); 
+    Int* Lp = L->getColData("cpu"); 
+    Int* Li = L->getRowData("cpu"); 
+    Int* Up = U->getColData("cpu"); 
+    Int* Ui = U->getRowData("cpu"); 
 
     Int nnzM = ( L->getNnz() + U->getNnz() - n );
-    M_ = new Matrix(n, n, nnzM);
-    M_->allocateCsr("cpu");
+    M_ = new MatrixCSR(n, n, nnzM);
+    M_->allocateMatrixData("cpu");
 
-    Int* mia = M_->getCsrRowPointers("cpu");
-    Int* mja = M_->getCsrColIndices("cpu");
+    Int* mia = M_->getRowData("cpu");
+    Int* mja = M_->getColData("cpu");
 
     Int row;
     for(Int i = 0; i < n; ++i) {
@@ -151,9 +152,9 @@ namespace ReSolve
                                             /* A is original matrix */
                                             A_->getNnzExpanded(),
                                             descr_A_,
-                                            A_->getCsrValues("cuda"),  //da_, 
-                                            A_->getCsrRowPointers("cuda"), //kRowPtr_,
-                                            A_->getCsrColIndices("cuda"), //jCol_, 
+                                            A_->getValues("cuda"),  //da_, 
+                                            A_->getRowData("cuda"), //kRowPtr_,
+                                            A_->getColData("cuda"), //jCol_, 
                                             info_M_);
     error_sum += status_cusolver_;
 
@@ -171,9 +172,9 @@ namespace ReSolve
                                             /* A is original matrix */
                                             A_->getNnz(),
                                             descr_A_,
-                                            A_->getCsrValues("cuda"),  //da_, 
-                                            A_->getCsrRowPointers("cuda"), //kRowPtr_,
-                                            A_->getCsrColIndices("cuda"), //jCol_, 
+                                            A_->getValues("cuda"),  //da_, 
+                                            A_->getRowData("cuda"), //kRowPtr_,
+                                            A_->getColData("cuda"), //jCol_, 
                                             rhs->getData("cuda"),/* right hand side */
                                             x->getData("cuda"),/* left hand side */
                                             &ite_refine_succ_,

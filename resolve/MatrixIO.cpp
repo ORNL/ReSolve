@@ -36,7 +36,7 @@ namespace ReSolve
       ss << line;
       ss >> n >> m >> nnz;
       //create matrix object
-      Matrix* A = new Matrix(n, m, nnz,symmetric, expanded );  
+      MatrixCOO* A = new MatrixCOO(n, m, nnz,symmetric, expanded );  
       //create coo arrays
       Int* coo_rows = new Int[nnz];
       Int* coo_cols = new Int[nnz];
@@ -51,7 +51,7 @@ namespace ReSolve
 
         i++;
       }
-      A->setCoo(coo_rows, coo_cols, coo_vals, "cpu");
+      A->setMatrixData(coo_rows, coo_cols, coo_vals, "cpu");
       return A;
       file.close();
     }
@@ -94,7 +94,7 @@ namespace ReSolve
   
 
 
-  void MatrixIO::readAndUpdateMatrix(std::string filename, Matrix* A)
+  void MatrixIO::readAndUpdateMatrix(std::string filename, MatrixCOO* A)
   {
 
     std::ifstream file(filename);
@@ -117,9 +117,9 @@ namespace ReSolve
       }
       A->setNnz(nnz);
       //create coo arrays
-      Int* coo_rows = A->getCooRowIndices("cpu");
-      Int* coo_cols = A->getCooColIndices("cpu");
-      Real* coo_vals = A->getCooValues("cpu");
+      Int* coo_rows = A->getRowData("cpu");
+      Int* coo_cols = A->getColData("cpu");
+      Real* coo_vals = A->getValues("cpu");
       i = 0;
       Int a, b;
       Real c;
