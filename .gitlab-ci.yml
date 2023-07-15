@@ -28,38 +28,23 @@
       cp -r . "$WORKDIR"
       cd "$WORKDIR"
       export srcdir=$WORKDIR builddir=$WORKDIR/build installdir=$WORKDIR/install
+      mkdir build
       ls
       ./buildsystem/build.sh 
-
-# .resolve_script_template:
-#  script:
-#     - |
-#       # this is where we would actually run tests like runResolve
-
+      chmod -R +X ./build
+      source buildsystem/ascent-env.sh
+      cd build
+      make test
 
 cleanup:
  stage: .pre
  extends: .SVC-Account-Cleanup
 
-# For Ascent CI
-Ascent Build:
+ # For Ascent CI
+Ascent-Build-Test:
   stage: build
   tags:
-    - nobatch
+    - batch
   extends:
     - .resolve_build_script
     - .ornl_environment_template
-
-# Ascent Test:
-#   stage: test
-#   dependencies:
-#     - 'Ascent Build'
-#   tags:
-#     - batch
-#   variables:
-#     # Don't clone for test jobs
-#     GIT_STRATEGY: none
-#     CTESTARGS: "--output-on-failure -E Python"
-#   extends:
-#     - .resolve_script_template
-#     - .ornl_environment_template
