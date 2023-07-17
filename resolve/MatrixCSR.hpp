@@ -28,6 +28,8 @@ namespace ReSolve
 
       virtual Int allocateMatrixData(std::string memspace); 
 
+      virtual void print() {return;}
+
     private:
       Int copyCsr(std::string memspaceOut);
   };

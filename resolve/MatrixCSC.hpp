@@ -23,7 +23,9 @@ namespace ReSolve
       virtual Int updateData(Int* row_data, Int* col_data, Real* val_data, std::string memspaceIn, std::string memspaceOut); 
       virtual Int updateData(Int* row_data, Int* col_data, Real* val_data, Int new_nnz, std::string memspaceIn, std::string memspaceOut); 
 
-      virtual Int allocateMatrixData(std::string memspace); 
+      virtual Int allocateMatrixData(std::string memspace);
+
+      virtual void print() {return;}
 
     private:
       Int  copyCsc(std::string memspaceOut);

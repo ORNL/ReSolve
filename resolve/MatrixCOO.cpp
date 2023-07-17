@@ -1,5 +1,11 @@
-#include "MatrixCOO.hpp"
+#include <cstring>  // <-- includes memcpy
+#include <iostream>
+#include <iomanip> 
+
 #include <cuda_runtime.h>
+
+#include "MatrixCOO.hpp"
+
 
 namespace ReSolve 
 {
@@ -213,4 +219,15 @@ namespace ReSolve
     }
     return -1;
   }
-}
+
+  void MatrixCOO::print()
+  {
+    std::cout << "  Row:        Column:           Value:\n";
+    for(int i = 0; i < nnz_; ++i) {
+      std::cout << std::setw(12)  << h_row_data_[i] << " "
+                << std::setw(12)  << h_col_data_[i] << " "
+                << std::setw(20) << std::setprecision(16) << h_val_data_[i] << "\n";
+    }
+  }
+
+} // namespace ReSolve

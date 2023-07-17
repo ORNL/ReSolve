@@ -3,7 +3,6 @@
 #pragma once
 #include <string>
 #include "Common.hpp"
-#include<cstring>
 
 namespace ReSolve 
 {
@@ -18,7 +17,7 @@ namespace ReSolve
              Int nnz,
              bool symmetric,
              bool expanded);
-      ~Matrix();
+      virtual ~Matrix();
 
       // accessors
       Int getNumRows();
@@ -34,40 +33,41 @@ namespace ReSolve
       void setNnz(Int nnz_new); // for resetting when removing duplicates
       Int setUpdated(std::string what);
 
-      virtual Int* getRowData(std::string memspace){return nullptr;};
-      virtual Int* getColData(std::string memspace){return nullptr;};
-      virtual Real* getValues(std::string memspace){return nullptr;}; 
+      virtual Int* getRowData(std::string memspace) = 0;
+      virtual Int* getColData(std::string memspace) = 0;
+      virtual Real* getValues(std::string memspace) = 0;
 
-      virtual Int updateData(Int* row_data, Int* col_data, Real* val_data, std::string memspaceIn, std::string memspaceOut){return -1;}; 
-      virtual Int updateData(Int* row_data, Int* col_data, Real* val_data, Int new_nnz, std::string memspaceIn, std::string memspaceOut){return -1;}; 
+      virtual Int updateData(Int* row_data, Int* col_data, Real* val_data, std::string memspaceIn, std::string memspaceOut) = 0;
+      virtual Int updateData(Int* row_data, Int* col_data, Real* val_data, Int new_nnz, std::string memspaceIn, std::string memspaceOut) = 0;
 
-      virtual Int allocateMatrixData(std::string memspace){return -1;}; 
+      virtual Int allocateMatrixData(std::string memspace) = 0;
       Int setMatrixData(Int* row_data, Int* col_data, Real* val_data, std::string memspace);
 
       Int destroyMatrixData(std::string memspace);
+
+      virtual void print() = 0;
     
     protected:
       //size
-      Int n_;
-      Int m_;
-      Int nnz_;
-      Int nnz_expanded_;
+      Int n_{0};
+      Int m_{0};
+      Int nnz_{0};
+      Int nnz_expanded_{0};
 
-      bool is_symmetric_;
-      bool is_expanded_;
+      bool is_symmetric_{false};
+      bool is_expanded_{false};
 
       //host data
-      Int* h_row_data_;
-      Int* h_col_data_;
-      Real* h_val_data_;
-
-      bool h_data_updated_;
+      Int* h_row_data_{nullptr};
+      Int* h_col_data_{nullptr};
+      Real* h_val_data_{nullptr};
+      bool h_data_updated_{false};
 
       //gpu data
-      Int* d_row_data_;
-      Int* d_col_data_;
-      Real* d_val_data_;
-      bool d_data_updated_;
+      Int* d_row_data_{nullptr};
+      Int* d_col_data_{nullptr};
+      Real* d_val_data_{nullptr};
+      bool d_data_updated_{false};
 
       void setNotUpdated();
 

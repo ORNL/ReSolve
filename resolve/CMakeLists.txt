@@ -6,11 +6,12 @@
 
 ]]
 
+add_subdirectory(matrix)
+
 set(ReSolve_SRC
     Matrix.cpp
     MatrixHandler.cpp
     VectorHandler.cpp
-    MatrixIO.cpp
     LinSolver.cpp
     LinSolverDirectKLU.cpp
 )
@@ -42,7 +43,6 @@ set(ReSolve_HEADER_INSTALL
     MatrixCOO.hpp
     MatrixCSR.hpp
     MatrixCSC.hpp
-    MatrixIO.hpp
     MatrixHandler.hpp
     RefactorizationSolver.hpp
     SystemSolver.hpp
