@@ -18,7 +18,7 @@ namespace ReSolve
     //delete the workspace TODO
   }
 
-  Real VectorHandler::dot(Vector* x, Vector* y, std::string memspace)
+  real_type VectorHandler::dot(Vector* x, Vector* y, std::string memspace)
   { 
     if (memspace == "cuda" ){ 
       LinAlgWorkspaceCUDA* workspaceCUDA = (LinAlgWorkspaceCUDA*) workspace_;
@@ -29,11 +29,11 @@ namespace ReSolve
       return nrm;
     } else {
       if (memspace == "cpu") {
-        Real* x_data = x->getData("cpu");
-        Real* y_data = y->getData("cpu");
-        Real sum = 0.0;
-        Real c;
-        Real t, y;
+        real_type* x_data = x->getData("cpu");
+        real_type* y_data = y->getData("cpu");
+        real_type sum = 0.0;
+        real_type c;
+        real_type t, y;
         for (int i = 0; i < x->getSize(); ++i){
           y = (x_data[i] * y_data[i]) - c;
           t = sum + y;
@@ -49,7 +49,7 @@ namespace ReSolve
     }
   }
 
-  void VectorHandler::scal(Real* alpha, Vector* x, std::string memspace)
+  void VectorHandler::scal(real_type* alpha, Vector* x, std::string memspace)
   {
     if (memspace == "cuda" ) { 
       LinAlgWorkspaceCUDA* workspaceCUDA = (LinAlgWorkspaceCUDA*) workspace_;
@@ -61,7 +61,7 @@ namespace ReSolve
       std::cout<<"Not implemented (yet)"<<std::endl;
     }
   }
-  void VectorHandler::axpy( Real* alpha, Vector* x, Vector* y, std::string memspace )
+  void VectorHandler::axpy( real_type* alpha, Vector* x, Vector* y, std::string memspace )
   {
 
     if (memspace == "cuda" ) { 
@@ -84,7 +84,7 @@ namespace ReSolve
   //where x is [n x 1], V is [n x k] and y is [k x 1]
   //if transpose =T(yes), x = beta*x + alpha*V^T*y
   //where x is [k x 1], V is [n x k] and y is [n x 1] 
-  void VectorHandler::gemv(std::string transpose, Int n, Int k, Real* alpha, Real* beta, Real* V, Real* y, Real* x, std::string memspace)
+  void VectorHandler::gemv(std::string transpose, index_type n, index_type k, real_type* alpha, real_type* beta, real_type* V, real_type* y, real_type* x, std::string memspace)
   {
     if (memspace == "cuda") {
       LinAlgWorkspaceCUDA* workspaceCUDA = (LinAlgWorkspaceCUDA*) workspace_;
@@ -126,7 +126,7 @@ namespace ReSolve
   }
 
   //mass axpy: y = x*alpha  where x is [n x k] and alpha is [k x 1]; x is stored columnwise
-  void VectorHandler::massAxpy(Int size, Real* alpha, Real k, Real* x, Real* y, std::string memspace)
+  void VectorHandler::massAxpy(index_type size, real_type* alpha, real_type k, real_type* x, real_type* y, std::string memspace)
   {
     if (memspace == "cuda") {
       if (k < 200) {
@@ -155,7 +155,7 @@ namespace ReSolve
   }
 
   //mass dot: V^T x, where V is [n x k] and x is [k x 2], everything is stored and returned columnwise
-  void VectorHandler::massDot2Vec(Int size, Real* V, Real k, Real* x, Real* res, std::string memspace)
+  void VectorHandler::massDot2Vec(index_type size, real_type* V, real_type k, real_type* x, real_type* res, std::string memspace)
   {
 
     if (memspace == "cuda") {

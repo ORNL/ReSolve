@@ -8,27 +8,27 @@ namespace ReSolve
   {
     public:
       MatrixCSC();
-      MatrixCSC(Int n, Int m, Int nnz);
-      MatrixCSC(Int n, 
-                Int m, 
-                Int nnz,
+      MatrixCSC(index_type n, index_type m, index_type nnz);
+      MatrixCSC(index_type n, 
+                index_type m, 
+                index_type nnz,
                 bool symmetric,
                 bool expanded);
       ~MatrixCSC();
 
-      virtual Int* getRowData(std::string memspace);
-      virtual Int* getColData(std::string memspace);
-      virtual Real* getValues(std::string memspace); 
+      virtual index_type* getRowData(std::string memspace);
+      virtual index_type* getColData(std::string memspace);
+      virtual real_type* getValues(std::string memspace); 
 
-      virtual Int updateData(Int* row_data, Int* col_data, Real* val_data, std::string memspaceIn, std::string memspaceOut); 
-      virtual Int updateData(Int* row_data, Int* col_data, Real* val_data, Int new_nnz, std::string memspaceIn, std::string memspaceOut); 
+      virtual index_type updateData(index_type* row_data, index_type* col_data, real_type* val_data, std::string memspaceIn, std::string memspaceOut); 
+      virtual index_type updateData(index_type* row_data, index_type* col_data, real_type* val_data, index_type new_nnz, std::string memspaceIn, std::string memspaceOut); 
 
-      virtual Int allocateMatrixData(std::string memspace);
+      virtual index_type allocateMatrixData(std::string memspace);
 
       virtual void print() {return;}
 
     private:
-      Int  copyCsc(std::string memspaceOut);
+      index_type  copyCsc(std::string memspaceOut);
 
   };
 }

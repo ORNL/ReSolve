@@ -18,7 +18,7 @@ namespace ReSolve
     return 0;
   }
 
-  Real LinSolver::evaluateResidual()
+  real_type LinSolver::evaluateResidual()
   {
     //to be implemented
     return 1.0;
@@ -73,12 +73,12 @@ namespace ReSolve
     return nullptr;
   } 
   
-  Int*  LinSolverDirect::getPOrdering()
+  index_type*  LinSolverDirect::getPOrdering()
   {
     return nullptr;
   } 
   
-  Int*  LinSolverDirect::getQOrdering()
+  index_type*  LinSolverDirect::getQOrdering()
   {
     return nullptr;
   } 

@@ -11,8 +11,12 @@
 //author: KS
 //functionality test to check whether KLU works correctly.
 
-int main(Int argc, char *argv[] )
+int main(int argc, char *argv[])
 {
+  // Use ReSolve data types.
+  using index_type = ReSolve::index_type;
+  using real_type  = ReSolve::real_type;
+
   //we want error sum to be 0 at the end
   //that means PASS.
   //otheriwse it is a FAIL.
@@ -24,9 +28,9 @@ int main(Int argc, char *argv[] )
   ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(workspace_CUDA);
   ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(workspace_CUDA);
 
-  Real one = 1.0;
-  Real minusone = -1.0;
-  Real zero = 0.0;
+  real_type one = 1.0;
+  real_type minusone = -1.0;
+  real_type zero = 0.0;
   
   ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
   KLU->setupParameters(1, 0.1, false);
@@ -59,8 +63,8 @@ int main(Int argc, char *argv[] )
     std::cout << "Failed to open file " << rhsFileName1 << "\n";
     return -1;
   }
-  Real* rhs = ReSolve::matrix::io::readRhsFromFile(rhs1_file);
-  Real* x = new Real[A->getNumRows()];
+  real_type* rhs = ReSolve::matrix::io::readRhsFromFile(rhs1_file);
+  real_type* x = new real_type[A->getNumRows()];
   ReSolve::Vector* vec_rhs = new ReSolve::Vector(A->getNumRows());
   ReSolve::Vector* vec_x   = new ReSolve::Vector(A->getNumRows());
   ReSolve::Vector* vec_r   = new ReSolve::Vector(A->getNumRows());
@@ -89,7 +93,7 @@ int main(Int argc, char *argv[] )
   ReSolve::Vector* vec_diff;
   vec_test  = new ReSolve::Vector(A->getNumRows());
   vec_diff  = new ReSolve::Vector(A->getNumRows());
-  Real* x_data = new Real[A->getNumRows()];
+  real_type* x_data = new real_type[A->getNumRows()];
   for (int i=0; i<A->getNumRows(); ++i){
     x_data[i] = 1.0;
   }
@@ -98,29 +102,29 @@ int main(Int argc, char *argv[] )
   vec_r->update(rhs, "cpu", "cuda");
   vec_diff->update(x_data, "cpu", "cuda");
 
-  Real normXmatrix1 = sqrt(vector_handler->dot(vec_test, vec_test, "cuda"));
+  real_type normXmatrix1 = sqrt(vector_handler->dot(vec_test, vec_test, "cuda"));
   matrix_handler->setValuesChanged(true);
   status = matrix_handler->matvec(A, vec_x, vec_r, &one, &minusone,"csr","cuda"); 
   error_sum += status;
   
-  Real normRmatrix1 = sqrt(vector_handler->dot(vec_r, vec_r, "cuda"));
+  real_type normRmatrix1 = sqrt(vector_handler->dot(vec_r, vec_r, "cuda"));
 
 
   //for testing only - control
   
-  Real normXtrue = sqrt(vector_handler->dot(vec_x, vec_x, "cuda"));
-  Real normB1 = sqrt(vector_handler->dot(vec_rhs, vec_rhs, "cuda"));
+  real_type normXtrue = sqrt(vector_handler->dot(vec_x, vec_x, "cuda"));
+  real_type normB1 = sqrt(vector_handler->dot(vec_rhs, vec_rhs, "cuda"));
   
   //compute x-x_true
   vector_handler->axpy(&minusone, vec_x, vec_diff, "cuda");
   //evaluate its norm
-  Real normDiffMatrix1 = sqrt(vector_handler->dot(vec_diff, vec_diff, "cuda"));
+  real_type normDiffMatrix1 = sqrt(vector_handler->dot(vec_diff, vec_diff, "cuda"));
  
   //compute the residual using exact solution
   vec_r->update(rhs, "cpu", "cuda");
   status = matrix_handler->matvec(A, vec_test, vec_r, &one, &minusone,"csr", "cuda"); 
   error_sum += status;
-  Real exactSol_normRmatrix1 = sqrt(vector_handler->dot(vec_r, vec_r, "cuda"));
+  real_type exactSol_normRmatrix1 = sqrt(vector_handler->dot(vec_r, vec_r, "cuda"));
   //evaluate the residual ON THE CPU using COMPUTED solution
  
   vec_r->update(rhs, "cpu", "cpu");
@@ -128,7 +132,7 @@ int main(Int argc, char *argv[] )
   status = matrix_handler->matvec(A, vec_x, vec_r, &one, &minusone,"csr", "cpu");
   error_sum += status;
  
-  Real normRmatrix1CPU = sqrt(vector_handler->dot(vec_r, vec_r, "cuda"));
+  real_type normRmatrix1CPU = sqrt(vector_handler->dot(vec_r, vec_r, "cuda"));
  
   std::cout<<"Results (first matrix): "<<std::endl<<std::endl;
   std::cout<<"\t ||b-A*x||_2                 : " << std::setprecision(16) << normRmatrix1    << " (residual norm)" << std::endl;
@@ -174,21 +178,21 @@ int main(Int argc, char *argv[] )
   status = matrix_handler->matvec(A, vec_x, vec_r, &one, &minusone, "csr", "cuda"); 
   error_sum += status;
 
-  Real normRmatrix2 = sqrt(vector_handler->dot(vec_r, vec_r, "cuda"));
+  real_type normRmatrix2 = sqrt(vector_handler->dot(vec_r, vec_r, "cuda"));
   
   //for testing only - control
-  Real normB2 = sqrt(vector_handler->dot(vec_rhs, vec_rhs, "cuda"));
+  real_type normB2 = sqrt(vector_handler->dot(vec_rhs, vec_rhs, "cuda"));
   //compute x-x_true
   vec_diff->update(x_data, "cpu", "cuda");
   vector_handler->axpy(&minusone, vec_x, vec_diff, "cuda");
   //evaluate its norm
-  Real normDiffMatrix2 = sqrt(vector_handler->dot(vec_diff, vec_diff, "cuda"));
+  real_type normDiffMatrix2 = sqrt(vector_handler->dot(vec_diff, vec_diff, "cuda"));
  
   //compute the residual using exact solution
   vec_r->update(rhs, "cpu", "cuda");
   status = matrix_handler->matvec(A, vec_test, vec_r, &one, &minusone, "csr", "cuda"); 
   error_sum += status;
-  Real exactSol_normRmatrix2 = sqrt(vector_handler->dot(vec_r, vec_r, "cuda"));
+  real_type exactSol_normRmatrix2 = sqrt(vector_handler->dot(vec_r, vec_r, "cuda"));
   
   std::cout<<"Results (second matrix): "<<std::endl<<std::endl;
   std::cout<<"\t ||b-A*x||_2                 : "<<normRmatrix2<<" (residual norm)"<<std::endl;

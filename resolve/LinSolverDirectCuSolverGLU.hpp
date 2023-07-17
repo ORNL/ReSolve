@@ -15,7 +15,7 @@ namespace ReSolve
       int refactorize();
       int solve(Vector* rhs, Vector* x);
 
-      int setup(Matrix* A, Matrix* L, Matrix* U, Int* P, Int* Q);
+      int setup(Matrix* A, Matrix* L, Matrix* U, index_type* P, index_type* Q);
     
     private:
       void addFactors(Matrix* L, Matrix* U); //create L+U from sepeate L, U factors

@@ -10,12 +10,16 @@
 #include <resolve/LinSolverDirectCuSolverRf.hpp>
 #include <resolve/LinSolverIterativeFGMRES.hpp>
 
-int main(Int argc, char *argv[] ){
+int main(int argc, char *argv[])
+{
+  // Use the same data types as those you specified in ReSolve build.
+  using index_type = ReSolve::index_type;
+  using real_type  = ReSolve::real_type;
 
   std::string  matrixFileName = argv[1];
   std::string  rhsFileName = argv[2];
 
-  Int numSystems = atoi(argv[3]);
+  index_type numSystems = atoi(argv[3]);
   std::cout<<"Family mtx file name: "<< matrixFileName << ", total number of matrices: "<<numSystems<<std::endl;
   std::cout<<"Family rhs file name: "<< rhsFileName << ", total number of RHSes: " << numSystems<<std::endl;
 
@@ -31,15 +35,15 @@ int main(Int argc, char *argv[] ){
   workspace_CUDA->initializeHandles();
   ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(workspace_CUDA);
   ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(workspace_CUDA);
-  Real* rhs;
-  Real* x;
+  real_type* rhs;
+  real_type* x;
 
   ReSolve::Vector* vec_rhs;
   ReSolve::Vector* vec_x;
   ReSolve::Vector* vec_r;
 
-  Real one = 1.0;
-  Real minusone = -1.0;
+  real_type one = 1.0;
+  real_type minusone = -1.0;
 
   ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
   ReSolve::LinSolverDirectCuSolverRf* Rf = new ReSolve::LinSolverDirectCuSolverRf;
@@ -47,7 +51,7 @@ int main(Int argc, char *argv[] ){
 
   for (int i = 0; i < numSystems; ++i)
   {
-    Int j = 4 + i * 2;
+    index_type j = 4 + i * 2;
     fileId = argv[j];
     rhsId = argv[j + 1];
 
@@ -79,7 +83,7 @@ int main(Int argc, char *argv[] ){
       A_coo = ReSolve::matrix::io::readMatrixFromFile(mat_file);
       A = new ReSolve::MatrixCSR(A_coo->getNumRows(), A_coo->getNumColumns(), A_coo->getNnz(), A_coo->expanded(), A_coo->symmetric());
       rhs = ReSolve::matrix::io::readRhsFromFile(rhs_file);
-      x = new Real[A->getNumRows()];
+      x = new real_type[A->getNumRows()];
       vec_rhs = new ReSolve::Vector(A->getNumRows());
       vec_x = new ReSolve::Vector(A->getNumRows());
       vec_x->allocate("cpu");//for KLU
@@ -109,7 +113,7 @@ int main(Int argc, char *argv[] ){
       KLU->setupParameters(1, 0.1, false);
     }
     int status;
-    Real norm_b;
+    real_type norm_b;
     if (i < 2){
       KLU->setup(A);
       matrix_handler->setValuesChanged(true);
@@ -134,8 +138,8 @@ int main(Int argc, char *argv[] ){
         matrix_handler->csc2csr(L_csc,L, "cuda");
         matrix_handler->csc2csr(U_csc,U, "cuda");
         if (L == nullptr) {printf("ERROR");}
-        Int* P = KLU->getPOrdering();
-        Int* Q = KLU->getQOrdering();
+        index_type* P = KLU->getPOrdering();
+        index_type* Q = KLU->getQOrdering();
         Rf->setup(A, L, U, P, Q);
         std::cout<<"about to set FGMRES" <<std::endl;
         FGMRES->setRestart(1000); 
@@ -154,7 +158,7 @@ int main(Int argc, char *argv[] ){
         FGMRES->setupPreconditioner("CuSolverRf", Rf);
       }
      //if (i%2!=0)  vec_x->setToZero("cuda");
-      Real norm_x =  vector_handler->dot(vec_x, vec_x, "cuda");
+      real_type norm_x =  vector_handler->dot(vec_x, vec_x, "cuda");
       printf("Norm of x(before solve): %16.16e \n", sqrt(norm_x));
       std::cout<<"CUSOLVER RF solve status: "<<status<<std::endl;      
       

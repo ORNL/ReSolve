@@ -13,7 +13,7 @@ namespace ReSolve
                 std::string refact_solver_, 
                 std::string use_ir_);
 
-      int setup_ir(Real ir_tol, Int ir_maxit, Int ir_gs_);
+      int setup_ir(real_type ir_tol, index_type ir_maxit, index_type ir_gs_);
       
       int solve(Matrix* A, Vector* vec_rhs, Vector* vec_x);
     
@@ -22,9 +22,9 @@ namespace ReSolve
       std::string refact_solver_name_;
       std::string use_ir_;
       //IR parameters
-      Real ir_tol_;
-      Int ir_maxit_;
-      Int ir_gs_;
+      real_type ir_tol_;
+      index_type ir_maxit_;
+      index_type ir_gs_;
 
       LinSolverDirect* first_solver_;
       LinSolverDirect* refact_solver_;

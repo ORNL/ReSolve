@@ -15,22 +15,22 @@ namespace ReSolve
   {
   }
 
-  void indexPlusValue::setIdx(Int new_idx)
+  void indexPlusValue::setIdx(index_type new_idx)
   {
     idx_ = new_idx;
   }
 
-  void indexPlusValue::setValue(Real new_value)
+  void indexPlusValue::setValue(real_type new_value)
   {
     value_ = new_value;
   }
 
-  Int indexPlusValue::getIdx()
+  index_type indexPlusValue::getIdx()
   {
     return idx_;
   }
 
-  Real indexPlusValue::getValue()
+  real_type indexPlusValue::getValue()
   {
     return value_;
   }
@@ -68,26 +68,26 @@ namespace ReSolve
 
     //count nnzs first
 
-    Int nnz_unpacked = 0;
-    Int nnz = A_coo->getNnz();
-    Int n = A_coo->getNumRows();
+    index_type nnz_unpacked = 0;
+    index_type nnz = A_coo->getNnz();
+    index_type n = A_coo->getNumRows();
     bool symmetric = A_coo->symmetric();
     bool expanded = A_coo->expanded();
 
-    Int* nnz_counts =  new Int[n];
+    index_type* nnz_counts =  new index_type[n];
     std::fill_n(nnz_counts, n, 0);
-    Int* coo_rows = A_coo->getRowData("cpu");
-    Int* coo_cols = A_coo->getColData("cpu");
-    Real* coo_vals = A_coo->getValues("cpu");
+    index_type* coo_rows = A_coo->getRowData("cpu");
+    index_type* coo_cols = A_coo->getColData("cpu");
+    real_type* coo_vals = A_coo->getValues("cpu");
 
-    Int* diag_control = new Int[n]; //for DEDUPLICATION of the diagonal
+    index_type* diag_control = new index_type[n]; //for DEDUPLICATION of the diagonal
     std::fill_n(diag_control, n, 0);
-    Int nnz_unpacked_no_duplicates = 0;
-    Int nnz_no_duplicates = nnz;
+    index_type nnz_unpacked_no_duplicates = 0;
+    index_type nnz_no_duplicates = nnz;
 
 
     //maybe check if they exist?
-    for (Int i = 0; i < nnz; ++i)
+    for (index_type i = 0; i < nnz; ++i)
     {
       nnz_counts[coo_rows[i]]++;
       nnz_unpacked++;
@@ -110,25 +110,25 @@ namespace ReSolve
 
     A_csr->setExpanded(true);
     A_csr->setNnzExpanded(nnz_unpacked_no_duplicates);
-    Int* csr_ia = new Int[n+1];
+    index_type* csr_ia = new index_type[n+1];
     std::fill_n(csr_ia, n + 1, 0);
-    Int* csr_ja = new Int[nnz_unpacked];
-    Real* csr_a = new Real[nnz_unpacked];
-    Int* nnz_shifts = new Int[n];
+    index_type* csr_ja = new index_type[nnz_unpacked];
+    real_type* csr_a = new real_type[nnz_unpacked];
+    index_type* nnz_shifts = new index_type[n];
     std::fill_n(nnz_shifts, n , 0);
 
     indexPlusValue* tmp = new indexPlusValue[nnz_unpacked]; 
 
     csr_ia[0] = 0;
 
-    for (Int i = 1; i < n + 1; ++i){
+    for (index_type i = 1; i < n + 1; ++i){
       csr_ia[i] = csr_ia[i - 1] + nnz_counts[i - 1] - (diag_control[i-1] - 1);
     }
 
     int r, start;
 
 
-    for (Int i = 0; i < nnz; ++i){
+    for (index_type i = 0; i < nnz; ++i){
       //which row
       r = coo_rows[i];
       start = csr_ia[r];
@@ -138,11 +138,11 @@ namespace ReSolve
       }
       if ((r == coo_cols[i]) && (diag_control[r] > 1)) {//diagonal, and there are duplicates
         bool already_there = false;  
-        for (Int j = start; j < start + nnz_shifts[r]; ++j)
+        for (index_type j = start; j < start + nnz_shifts[r]; ++j)
         {
-          Int c = tmp[j].getIdx();
+          index_type c = tmp[j].getIdx();
           if (c == r) {
-            Real val = tmp[j].getValue();
+            real_type val = tmp[j].getValue();
             val += coo_vals[i];
             tmp[j].setValue(val);
             already_there = true;
@@ -186,7 +186,7 @@ namespace ReSolve
       std::sort(&tmp[colStart],&tmp[colStart] + length);
     }
 
-    for (Int i = 0; i < nnz_unpacked; ++i)
+    for (index_type i = 0; i < nnz_unpacked; ++i)
     {
       csr_ja[i] = tmp[i].getIdx();
       csr_a[i] = tmp[i].getValue();
@@ -222,8 +222,8 @@ namespace ReSolve
   int MatrixHandler::matvec(Matrix* Ageneric, 
                             Vector* vec_x, 
                             Vector* vec_result, 
-                            Real* alpha, 
-                            Real* beta,
+                            real_type* alpha, 
+                            real_type* beta,
                             std::string matrixFormat, 
                             std::string memspace) 
   {
@@ -265,8 +265,8 @@ namespace ReSolve
         if (!workspaceCUDA->matvecSetup()){
           //setup first, allocate, etc.
           size_t bufferSize = 0;
-          Real minusone = -1.0;
-          Real one = 1.0;
+          real_type minusone = -1.0;
+          real_type one = 1.0;
 
           status = cusparseSpMV_bufferSize(handle_cusparse, 
                                            CUSPARSE_OPERATION_NON_TRANSPOSE,
@@ -308,14 +308,14 @@ namespace ReSolve
       } else {
         if (memspace == "cpu"){
           //cpu csr matvec
-          Int* ia = A->getRowData("cpu");
-          Int* ja = A->getColData("cpu");
-          Real* a = A->getValues("cpu");
+          index_type* ia = A->getRowData("cpu");
+          index_type* ja = A->getColData("cpu");
+          real_type* a = A->getValues("cpu");
 
-          Real* x_data = vec_x->getData("cpu");
-          Real* result_data = vec_result->getData("cpu");
-          Real sum;
-          Real y, t, c;
+          real_type* x_data = vec_x->getData("cpu");
+          real_type* result_data = vec_result->getData("cpu");
+          real_type sum;
+          real_type y, t, c;
           //Kahan algorithm for stability; Kahan-Babushka version didnt make a difference   
           for (int i = 0; i < A->getNumRows(); ++i) {
             sum = 0.0;
@@ -353,9 +353,9 @@ namespace ReSolve
       LinAlgWorkspaceCUDA* workspaceCUDA = (LinAlgWorkspaceCUDA*) workspace_;
 
       A_csr->allocateMatrixData("cuda");
-      Int n = A_csc->getNumRows();
-      Int m = A_csc->getNumRows();
-      Int nnz = A_csc->getNnz();
+      index_type n = A_csc->getNumRows();
+      index_type m = A_csc->getNumRows();
+      index_type nnz = A_csc->getNnz();
       size_t bufferSize;
       void* d_work;
       cusparseStatus_t status = cusparseCsr2cscEx2_bufferSize(workspaceCUDA->getCusparseHandle(),

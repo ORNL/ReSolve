@@ -9,12 +9,16 @@
 #include <resolve/LinSolverDirectKLU.hpp>
 #include <resolve/LinSolverDirectCuSolverGLU.hpp>
 
-int main(Int argc, char *argv[] ){
+int main(int argc, char *argv[])
+{
+  // Use the same data types as those you specified in ReSolve build.
+  using index_type = ReSolve::index_type;
+  using real_type  = ReSolve::real_type;
 
   std::string  matrixFileName = argv[1];
   std::string  rhsFileName = argv[2];
 
-  Int numSystems = atoi(argv[3]);
+  index_type numSystems = atoi(argv[3]);
   std::cout<<"Family mtx file name: "<< matrixFileName << ", total number of matrices: "<<numSystems<<std::endl;
   std::cout<<"Family rhs file name: "<< rhsFileName << ", total number of RHSes: " << numSystems<<std::endl;
 
@@ -29,22 +33,22 @@ int main(Int argc, char *argv[] ){
   workspace_CUDA->initializeHandles();
   ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(workspace_CUDA);
   ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(workspace_CUDA);
-  Real* rhs;
-  Real* x;
+  real_type* rhs;
+  real_type* x;
 
   ReSolve::Vector* vec_rhs;
   ReSolve::Vector* vec_x;
   ReSolve::Vector* vec_r;
 
-  Real one = 1.0;
-  Real minusone = -1.0;
+  real_type one = 1.0;
+  real_type minusone = -1.0;
 
   ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
   ReSolve::LinSolverDirectCuSolverGLU* GLU = new ReSolve::LinSolverDirectCuSolverGLU(workspace_CUDA);
 
   for (int i = 0; i < numSystems; ++i)
   {
-    Int j = 4 + i * 2;
+    index_type j = 4 + i * 2;
     fileId = argv[j];
     rhsId = argv[j + 1];
 
@@ -77,7 +81,7 @@ int main(Int argc, char *argv[] ){
       A = new ReSolve::MatrixCSR(A_coo->getNumRows(), A_coo->getNumColumns(), A_coo->getNnz(), A_coo->expanded(), A_coo->symmetric());
 
       rhs = ReSolve::matrix::io::readRhsFromFile(rhs_file);
-      x = new Real[A->getNumRows()];
+      x = new real_type[A->getNumRows()];
       vec_rhs = new ReSolve::Vector(A->getNumRows());
       vec_x = new ReSolve::Vector(A->getNumRows());
       vec_x->allocate("cpu");//for KLU
@@ -117,8 +121,8 @@ int main(Int argc, char *argv[] ){
         ReSolve::Matrix* L = KLU->getLFactor();
         ReSolve::Matrix* U = KLU->getUFactor();
         if (L == nullptr) {printf("ERROR");}
-        Int* P = KLU->getPOrdering();
-        Int* Q = KLU->getQOrdering();
+        index_type* P = KLU->getPOrdering();
+        index_type* Q = KLU->getQOrdering();
         GLU->setup(A, L, U, P, Q); 
         status = GLU->solve(vec_rhs, vec_x);
         std::cout<<"GLU solve status: "<<status<<std::endl;      

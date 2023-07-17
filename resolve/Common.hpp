@@ -1,4 +1,8 @@
 #pragma once
-using Real = double;
-using Int = int;
 
+namespace ReSolve {
+
+using real_type = double;
+using index_type = int;
+
+} // namespace ReSolve

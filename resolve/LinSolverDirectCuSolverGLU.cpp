@@ -17,7 +17,7 @@ namespace ReSolve
     delete M_;
   }
 
-  int LinSolverDirectCuSolverGLU::setup(Matrix* A, Matrix* L, Matrix* U, Int* P, Int* Q)
+  int LinSolverDirectCuSolverGLU::setup(Matrix* A, Matrix* L, Matrix* U, index_type* P, index_type* Q)
   {
     int error_sum = 0;
 
@@ -26,8 +26,8 @@ namespace ReSolve
     handle_cusolversp_ = workspaceCUDA->getCusolverSpHandle();
 
     A_ = (MatrixCSR*) A;
-    Int n = A_->getNumRows();
-    Int nnz = A_->getNnzExpanded();
+    index_type n = A_->getNumRows();
+    index_type nnz = A_->getNnzExpanded();
     //create combined factor
     addFactors(L,U);
 
@@ -88,23 +88,23 @@ namespace ReSolve
   void LinSolverDirectCuSolverGLU::addFactors(Matrix* L, Matrix* U)
   {
 // L and U need to be in CSC format
-    Int n = L->getNumRows();
-    Int* Lp = L->getColData("cpu"); 
-    Int* Li = L->getRowData("cpu"); 
-    Int* Up = U->getColData("cpu"); 
-    Int* Ui = U->getRowData("cpu"); 
+    index_type n = L->getNumRows();
+    index_type* Lp = L->getColData("cpu"); 
+    index_type* Li = L->getRowData("cpu"); 
+    index_type* Up = U->getColData("cpu"); 
+    index_type* Ui = U->getRowData("cpu"); 
 
-    Int nnzM = ( L->getNnz() + U->getNnz() - n );
+    index_type nnzM = ( L->getNnz() + U->getNnz() - n );
     M_ = new MatrixCSR(n, n, nnzM);
     M_->allocateMatrixData("cpu");
 
-    Int* mia = M_->getRowData("cpu");
-    Int* mja = M_->getColData("cpu");
+    index_type* mia = M_->getRowData("cpu");
+    index_type* mja = M_->getColData("cpu");
 
-    Int row;
-    for(Int i = 0; i < n; ++i) {
+    index_type row;
+    for(index_type i = 0; i < n; ++i) {
       // go through EACH COLUMN OF L first
-      for(Int j = Lp[i]; j < Lp[i + 1]; ++j) {
+      for(index_type j = Lp[i]; j < Lp[i + 1]; ++j) {
         row = Li[j];
         // BUT dont count diagonal twice, important
         if(row != i) {
@@ -112,19 +112,19 @@ namespace ReSolve
         }
       }
       // then each column of U
-      for(Int j = Up[i]; j < Up[i + 1]; ++j) {
+      for(index_type j = Up[i]; j < Up[i + 1]; ++j) {
         row = Ui[j];
         mia[row + 1]++;
       }
     }
     // then organize mia_;
     mia[0] = 0;
-    for(Int i = 1; i < n + 1; i++) {
+    for(index_type i = 1; i < n + 1; i++) {
       mia[i] += mia[i - 1];
     }
 
     std::vector<int> Mshifts(n, 0);
-    for(Int i = 0; i < n; ++i) {
+    for(index_type i = 0; i < n; ++i) {
       // go through EACH COLUMN OF L first
       for(int j = Lp[i]; j < Lp[i + 1]; ++j) {
         row = Li[j];
@@ -135,7 +135,7 @@ namespace ReSolve
         }
       }
       // each column of U next
-      for(Int j = Up[i]; j < Up[i + 1]; ++j) {
+      for(index_type j = Up[i]; j < Up[i + 1]; ++j) {
         row = Ui[j];
         mja[mia[row] + Mshifts[row]] = i;
         Mshifts[row]++;

@@ -66,7 +66,7 @@ namespace ReSolve
   {
     //copy the vector
 
-    //  std::memcpy(x, rhs, A->getNumRows() * sizeof(Real));
+    //  std::memcpy(x, rhs, A->getNumRows() * sizeof(real_type));
 
     x->update(rhs->getData("cpu"), "cpu", "cpu");
     x->setDataUpdated("cpu");
@@ -148,11 +148,11 @@ namespace ReSolve
     return U_;
   }
 
-  Int* LinSolverDirectKLU::getPOrdering()
+  index_type* LinSolverDirectKLU::getPOrdering()
   {
     if (Numeric_ != nullptr){
-      P_ = new Int[A_->getNumRows()];
-      std::memcpy(P_, Numeric_->Pnum, A_->getNumRows() * sizeof(Int));
+      P_ = new index_type[A_->getNumRows()];
+      std::memcpy(P_, Numeric_->Pnum, A_->getNumRows() * sizeof(index_type));
       return P_;
     } else {
       return nullptr;
@@ -160,11 +160,11 @@ namespace ReSolve
   }
 
 
-  Int* LinSolverDirectKLU::getQOrdering()
+  index_type* LinSolverDirectKLU::getQOrdering()
   {
     if (Numeric_ != nullptr){
-      Q_ = new Int[A_->getNumRows()];
-      std::memcpy(Q_, Symbolic_->Q, A_->getNumRows() * sizeof(Int));
+      Q_ = new index_type[A_->getNumRows()];
+      std::memcpy(Q_, Symbolic_->Q, A_->getNumRows() * sizeof(index_type));
       return Q_;
     } else {
       return nullptr;
