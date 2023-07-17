@@ -2,9 +2,9 @@
 #include <iostream>
 #include <iomanip>
 
-#include <resolve/MatrixIO.hpp>
-#include <resolve/Matrix.hpp>
+#include <resolve/MatrixCOO.hpp>
 #include <resolve/Vector.hpp>
+#include <resolve/matrix/io.hpp>
 #include <resolve/MatrixHandler.hpp>
 #include <resolve/VectorHandler.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
@@ -19,22 +19,10 @@ int main(Int argc, char *argv[] )
   int error_sum = 0;
   int status = 0;
 
-  ReSolve::MatrixCOO* A_coo;
-  ReSolve::MatrixCSR* A;
-
-  ReSolve::MatrixIO* reader = new ReSolve::MatrixIO;
   ReSolve::LinAlgWorkspaceCUDA* workspace_CUDA = new ReSolve::LinAlgWorkspaceCUDA;
   workspace_CUDA->initializeHandles();
   ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(workspace_CUDA);
-
-
   ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(workspace_CUDA);
-  Real* rhs;
-  Real* x;
-
-  ReSolve::Vector* vec_rhs;
-  ReSolve::Vector* vec_x;
-  ReSolve::Vector* vec_r;
 
   Real one = 1.0;
   Real minusone = -1.0;
@@ -54,17 +42,31 @@ int main(Int argc, char *argv[] )
   std::string rhsFileName2 = data_path + "data/rhs_ACTIVSg200_AC_11.mtx.ones";
 
   // Read first matrix
+  std::ifstream mat1(matrixFileName1);
+  if(!mat1.is_open())
+  {
+    std::cout << "Failed to open file " << matrixFileName1 << "\n";
+    return -1;
+  }
+  ReSolve::MatrixCOO* A_coo = ReSolve::matrix::io::readMatrixFromFile(mat1);
+  ReSolve::MatrixCSR* A = new ReSolve::MatrixCSR(A_coo->getNumRows(), A_coo->getNumColumns(), A_coo->getNnz(), A_coo->expanded(), A_coo->symmetric());
+  mat1.close();
 
-  A_coo = (ReSolve::MatrixCOO*) reader->readMatrixFromFile(matrixFileName1);
-  A = new ReSolve::MatrixCSR(A_coo->getNumRows(), A_coo->getNumColumns(), A_coo->getNnz(), A_coo->expanded(), A_coo->symmetric());
-  rhs = reader->readRhsFromFile(rhsFileName1);
-  x = new Real[A->getNumRows()];
-  vec_rhs = new ReSolve::Vector(A->getNumRows());
-  vec_x = new ReSolve::Vector(A->getNumRows());
-  vec_r = new ReSolve::Vector(A->getNumRows());
+  // Read first rhs vector
+  std::ifstream rhs1_file(rhsFileName1);
+  if(!rhs1_file.is_open())
+  {
+    std::cout << "Failed to open file " << rhsFileName1 << "\n";
+    return -1;
+  }
+  Real* rhs = ReSolve::matrix::io::readRhsFromFile(rhs1_file);
+  Real* x = new Real[A->getNumRows()];
+  ReSolve::Vector* vec_rhs = new ReSolve::Vector(A->getNumRows());
+  ReSolve::Vector* vec_x   = new ReSolve::Vector(A->getNumRows());
+  ReSolve::Vector* vec_r   = new ReSolve::Vector(A->getNumRows());
+  rhs1_file.close();
 
   // Convert first matrix to CSR format
-
   matrix_handler->coo2csr(A_coo, A, "cpu");
   vec_rhs->update(rhs, "cpu", "cpu");
   vec_rhs->setDataUpdated("cpu");
@@ -129,18 +131,34 @@ int main(Int argc, char *argv[] )
   Real normRmatrix1CPU = sqrt(vector_handler->dot(vec_r, vec_r, "cuda"));
  
   std::cout<<"Results (first matrix): "<<std::endl<<std::endl;
-  std::cout<<"\t ||b-A*x||_2                 : "<<std::setprecision(16)<<normRmatrix1<<" (residual norm)"<<std::endl;
-  std::cout<<"\t ||b-A*x||_2  (CPU)          : "<<std::setprecision(16)<<normRmatrix1CPU<<" (residual norm)"<<std::endl;
-  std::cout<<"\t ||b-A*x||_2/||b||_2         : "<<normRmatrix1/normB1<<" (scaled residual norm)"<<std::endl;
-  std::cout<<"\t ||x-x_true||_2              : "<<normDiffMatrix1<<" (solution error)"<<std::endl;
-  std::cout<<"\t ||x-x_true||_2/||x_true||_2 : "<<normDiffMatrix1/normXtrue<<" (scaled solution error)"<<std::endl;
-  std::cout<<"\t ||b-A*x_exact||_2           : "<<exactSol_normRmatrix1<<" (control; residual norm with exact solution)"<<std::endl<<std::endl;
- // Load the second matrix
+  std::cout<<"\t ||b-A*x||_2                 : " << std::setprecision(16) << normRmatrix1    << " (residual norm)" << std::endl;
+  std::cout<<"\t ||b-A*x||_2  (CPU)          : " << std::setprecision(16) << normRmatrix1CPU << " (residual norm)" << std::endl;
+  std::cout<<"\t ||b-A*x||_2/||b||_2         : " << normRmatrix1/normB1   << " (scaled residual norm)"             << std::endl;
+  std::cout<<"\t ||x-x_true||_2              : " << normDiffMatrix1       << " (solution error)"                   << std::endl;
+  std::cout<<"\t ||x-x_true||_2/||x_true||_2 : " << normDiffMatrix1/normXtrue << " (scaled solution error)"        << std::endl;
+  std::cout<<"\t ||b-A*x_exact||_2           : " << exactSol_normRmatrix1 << " (control; residual norm with exact solution)\n\n";
 
-  reader->readAndUpdateMatrix(matrixFileName2, A_coo);
-  reader->readAndUpdateRhs(rhsFileName2, rhs);
+  // Load the second matrix
+  std::ifstream mat2(matrixFileName2);
+  if(!mat2.is_open())
+  {
+    std::cout << "Failed to open file " << matrixFileName2 << "\n";
+    return -1;
+  }
+  ReSolve::matrix::io::readAndUpdateMatrix(mat2, A_coo);
+  mat2.close();
 
-  matrix_handler->coo2csr(A_coo,A, "cuda");
+  // Load the second rhs vector
+  std::ifstream rhs2_file(rhsFileName2);
+  if(!rhs2_file.is_open())
+  {
+    std::cout << "Failed to open file " << rhsFileName2 << "\n";
+    return -1;
+  }
+  ReSolve::matrix::io::readAndUpdateRhs(rhs2_file, &rhs);
+  rhs2_file.close();
+
+  matrix_handler->coo2csr(A_coo, A, "cuda");
   vec_rhs->update(rhs, "cpu", "cuda");
 
   // and solve it too

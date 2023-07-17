@@ -8,7 +8,7 @@
 
 # Build KLU+KLU test
 add_executable(klu_klu_test.exe testKLU.cpp)
-target_link_libraries(klu_klu_test.exe PRIVATE ReSolve)
+target_link_libraries(klu_klu_test.exe PRIVATE ReSolve resolve_matrix)
 
 # Install tests
 set(installable_tests klu_klu_test.exe)

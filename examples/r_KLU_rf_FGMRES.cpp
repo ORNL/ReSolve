@@ -1,9 +1,9 @@
 #include <string>
 #include <iostream>
 
-#include <resolve/MatrixIO.hpp>
-#include <resolve/Matrix.hpp>
+#include <resolve/MatrixCOO.hpp>
 #include <resolve/Vector.hpp>
+#include <resolve/matrix/io.hpp>
 #include <resolve/MatrixHandler.hpp>
 #include <resolve/VectorHandler.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
@@ -24,7 +24,6 @@ int main(Int argc, char *argv[] ){
   std::string matrixFileNameFull;
   std::string rhsFileNameFull;
 
-  ReSolve::MatrixIO* reader = new ReSolve::MatrixIO;
   ReSolve::MatrixCOO* A_coo;
   ReSolve::MatrixCSR* A;
   ReSolve::LinAlgWorkspaceCUDA* workspace_CUDA = new ReSolve::LinAlgWorkspaceCUDA;
@@ -57,16 +56,29 @@ int main(Int argc, char *argv[] ){
     // Read matrix first
     matrixFileNameFull = matrixFileName + fileId + ".mtx";
     rhsFileNameFull = rhsFileName + rhsId + ".mtx";
-    std::cout<<std::endl<<std::endl<<std::endl;
-    std::cout<<"========================================================================================================================"<<std::endl;
-    std::cout<<"Reading: "<<matrixFileNameFull<<std::endl;
-    std::cout<<"========================================================================================================================"<<std::endl;
-    std::cout<<std::endl;
+    std::cout << std::endl << std::endl << std::endl;
+    std::cout << "========================================================================================================================"<<std::endl;
+    std::cout << "Reading: " << matrixFileNameFull << std::endl;
+    std::cout << "========================================================================================================================"<<std::endl;
+    std::cout << std::endl;
+    // Read first matrix
+    std::ifstream mat_file(matrixFileNameFull);
+    if(!mat_file.is_open())
+    {
+      std::cout << "Failed to open file " << matrixFileNameFull << "\n";
+      return -1;
+    }
+    std::ifstream rhs_file(rhsFileNameFull);
+    if(!rhs_file.is_open())
+    {
+      std::cout << "Failed to open file " << rhsFileNameFull << "\n";
+      return -1;
+    }
     if (i == 0) {
-      A_coo = (ReSolve::MatrixCOO*)  reader->readMatrixFromFile(matrixFileNameFull);
-
+      A_coo = ReSolve::matrix::io::readMatrixFromFile(mat_file);
       A = new ReSolve::MatrixCSR(A_coo->getNumRows(), A_coo->getNumColumns(), A_coo->getNnz(), A_coo->expanded(), A_coo->symmetric());
-      rhs = reader->readRhsFromFile(rhsFileNameFull);
+
+      rhs = ReSolve::matrix::io::readRhsFromFile(rhs_file);
       x = new Real[A->getNumRows()];
       vec_rhs = new ReSolve::Vector(A->getNumRows());
       vec_x = new ReSolve::Vector(A->getNumRows());
@@ -75,10 +87,12 @@ int main(Int argc, char *argv[] ){
       vec_r = new ReSolve::Vector(A->getNumRows());
     }
     else {
-      reader->readAndUpdateMatrix(matrixFileNameFull, A_coo);
-      reader->readAndUpdateRhs(rhsFileNameFull, rhs);
+      ReSolve::matrix::io::readAndUpdateMatrix(mat_file, A_coo);
+      ReSolve::matrix::io::readAndUpdateRhs(rhs_file, &rhs);
     }
     std::cout<<"Finished reading the matrix and rhs, size: "<<A->getNumRows()<<" x "<<A->getNumColumns()<< ", nnz: "<< A->getNnz()<< ", symmetric? "<<A->symmetric()<< ", Expanded? "<<A->expanded()<<std::endl;
+    mat_file.close();
+    rhs_file.close();
 
     //Now convert to CSR.
     if (i < 2) { 

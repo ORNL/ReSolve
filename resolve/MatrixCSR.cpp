@@ -1,5 +1,6 @@
-#include "MatrixCSR.hpp"
+#include <cstring>  // <-- includes memcpy
 #include <cuda_runtime.h>
+#include "MatrixCSR.hpp"
 
 namespace ReSolve 
 {
