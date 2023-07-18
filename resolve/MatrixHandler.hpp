@@ -19,11 +19,11 @@ namespace ReSolve
     public:
       indexPlusValue();
       ~indexPlusValue();
-      void setIdx (Int new_idx);
-      void setValue (Real new_value);
+      void setIdx (index_type new_idx);
+      void setValue (real_type new_value);
 
-      Int getIdx();
-      Real getValue();
+      index_type getIdx();
+      real_type getValue();
 
       bool operator < (const indexPlusValue& str) const
       {
@@ -31,8 +31,8 @@ namespace ReSolve
       }  
 
     private:
-      Int idx_;
-      Real value_;
+      index_type idx_;
+      real_type value_;
   };
 
   class MatrixHandler
@@ -45,8 +45,8 @@ namespace ReSolve
       void csc2csr(MatrixCSC* A_csr, MatrixCSR* A_csc, std::string memspace);//memspace decides on what is returned (cpu or cuda pointer)
       void coo2csr(MatrixCOO* A_coo, MatrixCSR* A_csr, std::string memspace);
 
-      int matvec(Matrix* A, Vector* vec_x, Vector* vec_result, Real* alpha, Real* beta,std::string matrix_type, std::string memspace);
-      void Matrix1Norm(Matrix *A, Real* norm);
+      int matvec(Matrix* A, Vector* vec_x, Vector* vec_result, real_type* alpha, real_type* beta,std::string matrix_type, std::string memspace);
+      void Matrix1Norm(Matrix *A, real_type* norm);
      bool getValuesChanged();
      void setValuesChanged(bool toWhat); 
     

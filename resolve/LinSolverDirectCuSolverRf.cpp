@@ -15,18 +15,18 @@ namespace ReSolve
     cudaFree(d_T_);
   }
 
-  int LinSolverDirectCuSolverRf::setup(Matrix* A, Matrix* L, Matrix* U, Int* P, Int* Q)
+  int LinSolverDirectCuSolverRf::setup(Matrix* A, Matrix* L, Matrix* U, index_type* P, index_type* Q)
   {
     //remember - P and Q are generally CPU variables
     int error_sum = 0;
     this->A_ = (MatrixCSR*) A;
-    Int n = A_->getNumRows();
-    cudaMalloc(&d_P_, n * sizeof(Int)); 
-    cudaMalloc(&d_Q_, n * sizeof(Int));
-    cudaMalloc(&d_T_, n * sizeof(Real));
+    index_type n = A_->getNumRows();
+    cudaMalloc(&d_P_, n * sizeof(index_type)); 
+    cudaMalloc(&d_Q_, n * sizeof(index_type));
+    cudaMalloc(&d_T_, n * sizeof(real_type));
 
-    cudaMemcpy(d_P_, P, n  * sizeof(Int), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_Q_, Q, n  * sizeof(Int), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_P_, P, n  * sizeof(index_type), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_Q_, Q, n  * sizeof(index_type), cudaMemcpyHostToDevice);
 
 
     status_cusolverrf_ = cusolverRfSetResetValuesFastMode(handle_cusolverrf_, CUSOLVERRF_RESET_VALUES_FAST_MODE_ON);

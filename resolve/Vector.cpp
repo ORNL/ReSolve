@@ -2,7 +2,7 @@
 
 namespace ReSolve 
 {
-  Vector::Vector(Int n):
+  Vector::Vector(index_type n):
     n_{n}
   {
     d_data_ = nullptr;
@@ -18,12 +18,12 @@ namespace ReSolve
   }
 
 
-  Int Vector::getSize()
+  index_type Vector::getSize()
   {
     return n_;
   }
 
-  void Vector::setData(Real* data, std::string memspace)
+  void Vector::setData(real_type* data, std::string memspace)
   {
 
     if (memspace == "cpu") {
@@ -54,7 +54,7 @@ namespace ReSolve
     }
   }
 
-  int Vector::update(Real* data, std::string memspaceIn, std::string memspaceOut)
+  int Vector::update(real_type* data, std::string memspaceIn, std::string memspaceOut)
   {
     int control=-1;
     if ((memspaceIn == "cpu") && (memspaceOut == "cpu")){ control = 0;}
@@ -64,31 +64,31 @@ namespace ReSolve
 
     if ((memspaceOut == "cpu") && (h_data_ == nullptr)){
       //allocate first
-      h_data_ = new Real[n_]; 
+      h_data_ = new real_type[n_]; 
     }
     if ((memspaceOut == "cuda") && (d_data_ == nullptr)){
       //allocate first
-      cudaMalloc(&d_data_, (n_) * sizeof(Real)); 
+      cudaMalloc(&d_data_, (n_) * sizeof(real_type)); 
     } 
 
     switch(control)  {
       case 0: //cpu->cpu
-        std::memcpy(h_data_, data, (n_) * sizeof(Real));
+        std::memcpy(h_data_, data, (n_) * sizeof(real_type));
         cpu_updated_ = true;
         gpu_updated_ = false;
         break;
       case 2: //cuda->cpu
-        cudaMemcpy(h_data_, data, (n_) * sizeof(Real), cudaMemcpyDeviceToHost);
+        cudaMemcpy(h_data_, data, (n_) * sizeof(real_type), cudaMemcpyDeviceToHost);
         cpu_updated_ = true;
         gpu_updated_ = false;
         break;
       case 1: //cpu->cuda
-        cudaMemcpy(d_data_, data, (n_) * sizeof(Real), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_data_, data, (n_) * sizeof(real_type), cudaMemcpyHostToDevice);
         gpu_updated_ = true;
         cpu_updated_ = false;
         break;
       case 3: //cuda->cuda
-        cudaMemcpy(d_data_, data, (n_) * sizeof(Real), cudaMemcpyDeviceToDevice);
+        cudaMemcpy(d_data_, data, (n_) * sizeof(real_type), cudaMemcpyDeviceToDevice);
         gpu_updated_ = true;
         cpu_updated_ = false;
         break;
@@ -98,7 +98,7 @@ namespace ReSolve
     return 0;
   }
 
-  Real* Vector::getData(std::string memspace)
+  real_type* Vector::getData(std::string memspace)
   {
     if ((memspace == "cpu") && (cpu_updated_ == false) && (gpu_updated_ == true )) {
       copyData("cuda", "cpu");
@@ -126,19 +126,19 @@ namespace ReSolve
 
     if ((memspaceOut == "cpu") && (h_data_ == nullptr)){
       //allocate first
-      h_data_ = new Real[n_]; 
+      h_data_ = new real_type[n_]; 
     }
     if ((memspaceOut == "cuda") && (d_data_ == nullptr)){
       //allocate first
-      cudaMalloc(&d_data_, (n_) * sizeof(Real)); 
+      cudaMalloc(&d_data_, (n_) * sizeof(real_type)); 
     } 
 
     switch(control)  {
       case 0: //cpu->cuda
-        cudaMemcpy(d_data_, h_data_, (n_) * sizeof(Real), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_data_, h_data_, (n_) * sizeof(real_type), cudaMemcpyHostToDevice);
         break;
       case 1: //cuda->cpu
-        cudaMemcpy(h_data_, d_data_, (n_) * sizeof(Real), cudaMemcpyDeviceToHost);
+        cudaMemcpy(h_data_, d_data_, (n_) * sizeof(real_type), cudaMemcpyDeviceToHost);
         break;
       default:
         return -1;
@@ -154,13 +154,13 @@ namespace ReSolve
       if (h_data_ != nullptr) {
         delete [] h_data_;
       }
-      h_data_ = new Real[n_]; 
+      h_data_ = new real_type[n_]; 
     } else {
       if (memspace == "cuda") {
         if (d_data_ != nullptr) {
           cudaFree(d_data_);
         }
-        cudaMalloc(&d_data_, (n_) * sizeof(Real)); 
+        cudaMalloc(&d_data_, (n_) * sizeof(real_type)); 
       }
     }
   }
@@ -170,7 +170,7 @@ namespace ReSolve
   {
     if (memspace == "cpu") {
       if (h_data_ == nullptr) {
-        h_data_ = new Real[n_]; 
+        h_data_ = new real_type[n_]; 
       }
       for (int i = 0; i < n_; ++i){
         h_data_[i] = 0.0;
@@ -178,9 +178,9 @@ namespace ReSolve
     } else {
       if (memspace == "cuda") {
         if (d_data_ == nullptr) {
-          cudaMalloc(&d_data_, (n_) * sizeof(Real)); 
+          cudaMalloc(&d_data_, (n_) * sizeof(real_type)); 
         }
-        cudaMemset(d_data_, 0.0, n_ * sizeof(Real));
+        cudaMemset(d_data_, 0.0, n_ * sizeof(real_type));
       }
     }
   }

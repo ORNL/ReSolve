@@ -12,7 +12,7 @@ namespace ReSolve
       LinSolverDirectCuSolverRf();
       ~LinSolverDirectCuSolverRf();
       
-      int setup(Matrix* A, Matrix* L, Matrix* U, Int* P, Int* Q);
+      int setup(Matrix* A, Matrix* L, Matrix* U, index_type* P, index_type* Q);
 
       void setAlgorithms(cusolverRfFactorization_t fact_alg,  cusolverRfTriangularSolve_t solve_alg);
       
@@ -23,8 +23,8 @@ namespace ReSolve
       cusolverRfHandle_t handle_cusolverrf_;
       cusolverStatus_t status_cusolverrf_;
       
-      Int* d_P_;
-      Int* d_Q_;
-      Real* d_T_;
+      index_type* d_P_;
+      index_type* d_Q_;
+      real_type* d_T_;
   };
 }

@@ -22,8 +22,8 @@ namespace ReSolve
     
       Matrix* getLFactor(); 
       Matrix* getUFactor(); 
-      Int*  getPOrdering();
-      Int*  getQOrdering();
+      index_type*  getPOrdering();
+      index_type*  getQOrdering();
 
     private:
       klu_common Common_; //settings

@@ -15,12 +15,12 @@ namespace ReSolve
       ~LinSolver();
 
       virtual int setup(Matrix* A);
-      Real evaluateResidual();
+      real_type evaluateResidual();
         
     protected:  
       Matrix* A_;
-      Real* rhs_;
-      Real* sol_;
+      real_type* rhs_;
+      real_type* sol_;
 
       MatrixHandler *matrix_handler_;
       VectorHandler *vector_handler_;
@@ -39,14 +39,14 @@ namespace ReSolve
      
       virtual Matrix* getLFactor(); 
       virtual Matrix* getUFactor(); 
-      virtual Int*  getPOrdering();
-      virtual Int*  getQOrdering();
+      virtual index_type*  getPOrdering();
+      virtual index_type*  getQOrdering();
     
     protected:
       Matrix* L_;
       Matrix* U_;
-      Int* P_;
-      Int* Q_;
+      index_type* P_;
+      index_type* Q_;
       bool factors_extracted_;
   };
 

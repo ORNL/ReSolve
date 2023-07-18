@@ -9,12 +9,12 @@
 #include <resolve/LinSolverDirectKLU.hpp>
 
 
-int main(Int argc, char *argv[] ){
+int main(index_type argc, char *argv[] ){
 
   std::string  matrixFileName = argv[1];
   std::string  rhsFileName = argv[2];
 
-  Int numSystems = atoi(argv[3]);
+  index_type numSystems = atoi(argv[3]);
   std::cout<<"Family mtx file name: "<< matrixFileName << ", total number of matrices: "<<numSystems<<std::endl;
   std::cout<<"Family rhs file name: "<< rhsFileName << ", total number of RHSes: " << numSystems<<std::endl;
 
@@ -29,21 +29,21 @@ int main(Int argc, char *argv[] ){
   workspace_CUDA->initializeHandles();
   ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(workspace_CUDA);
   ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(workspace_CUDA);
-  Real* rhs;
-  Real* x;
+  real_type* rhs;
+  real_type* x;
 
   ReSolve::Vector* vec_rhs;
   ReSolve::Vector* vec_x;
   ReSolve::Vector* vec_r;
 
-  Real one = 1.0;
-  Real minusone = -1.0;
+  real_type one = 1.0;
+  real_type minusone = -1.0;
 
   ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
 
   for (int i = 0; i < numSystems; ++i)
   {
-    Int j = 4 + i * 2;
+    index_type j = 4 + i * 2;
     fileId = argv[j];
     rhsId = argv[j + 1];
 
@@ -62,7 +62,7 @@ int main(Int argc, char *argv[] ){
       A = reader->readMatrixFromFile(matrixFileNameFull);
 
       rhs = reader->readRhsFromFile(rhsFileNameFull);
-      x = new Real[A->getNumRows()];
+      x = new real_type[A->getNumRows()];
       vec_rhs = new ReSolve::Vector(A->getNumRows());
       vec_x = new ReSolve::Vector(A->getNumRows());
       vec_r = new ReSolve::Vector(A->getNumRows());
@@ -107,7 +107,7 @@ int main(Int argc, char *argv[] ){
     matrix_handler->setValuesChanged(true);
 
     matrix_handler->matvec(A, vec_x, vec_r, &one, &minusone, "cuda"); 
-    Real* test = vec_r->getData("cpu");
+    real_type* test = vec_r->getData("cpu");
 
     printf("\t 2-Norm of the residual: %16.16e\n", sqrt(vector_handler->dot(vec_r, vec_r, "cuda")));
 

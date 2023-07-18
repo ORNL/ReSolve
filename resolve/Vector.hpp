@@ -9,22 +9,22 @@ namespace ReSolve
   class Vector 
   {
     public:
-      Vector(Int n);
+      Vector(index_type n);
       ~Vector();
 
-      int update(Real* data, std::string memspaceIn, std::string memspaceOut);
-      Real* getData(std::string memspace);
+      int update(real_type* data, std::string memspaceIn, std::string memspaceOut);
+      real_type* getData(std::string memspace);
 
-      Int getSize();
+      index_type getSize();
 
       void setDataUpdated(std::string memspace);
-      void setData(Real* data, std::string memspace);
+      void setData(real_type* data, std::string memspace);
       void allocate(std::string memspace);   
       void setToZero(std::string memspace);
     private:
-      Int n_; //size
-      Real* d_data_;
-      Real* h_data_;
+      index_type n_; //size
+      real_type* d_data_;
+      real_type* h_data_;
       bool gpu_updated_;
       bool cpu_updated_;
       int copyData(std::string memspaceIn, std::string memspaceOut); 

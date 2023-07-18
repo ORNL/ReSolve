@@ -34,7 +34,7 @@ namespace ReSolve
     d_Z_ = nullptr;
   }
 
-  LinSolverIterativeFGMRES::LinSolverIterativeFGMRES(Int restart, Real tol, Int maxit, std::string GS_version, Int conv_cond, MatrixHandler* matrix_handler, VectorHandler* vector_handler)
+  LinSolverIterativeFGMRES::LinSolverIterativeFGMRES(index_type restart, real_type tol, index_type maxit, std::string GS_version, index_type conv_cond, MatrixHandler* matrix_handler, VectorHandler* vector_handler)
   {
     this->matrix_handler_ = matrix_handler;
     this->vector_handler_ = vector_handler;
@@ -72,29 +72,29 @@ namespace ReSolve
   {
     this->A_ = A;
     n_ = A_->getNumRows();
-    cudaMalloc(&(d_V_),      n_ * (restart_ + 1) * sizeof(Real));
-    cudaMalloc(&(d_Z_),      n_ * (restart_ + 1) * sizeof(Real));
-    cudaMalloc(&(d_rvGPU_),   2 * (restart_ + 1) * sizeof(Real));
-    cudaMalloc(&(d_Hcolumn_), 2 * (restart_ + 1) * (restart_ + 1) * sizeof(Real));
+    cudaMalloc(&(d_V_),      n_ * (restart_ + 1) * sizeof(real_type));
+    cudaMalloc(&(d_Z_),      n_ * (restart_ + 1) * sizeof(real_type));
+    cudaMalloc(&(d_rvGPU_),   2 * (restart_ + 1) * sizeof(real_type));
+    cudaMalloc(&(d_Hcolumn_), 2 * (restart_ + 1) * (restart_ + 1) * sizeof(real_type));
 
-    h_H_  = new Real[restart_ * (restart_ + 1)];
-    h_c_  = new Real[restart_];      // needed for givens
-    h_s_  = new Real[restart_];      // same
-    h_rs_ = new Real[restart_ + 1]; // for residual norm history
+    h_H_  = new real_type[restart_ * (restart_ + 1)];
+    h_c_  = new real_type[restart_];      // needed for givens
+    h_s_  = new real_type[restart_];      // same
+    h_rs_ = new real_type[restart_ + 1]; // for residual norm history
 
     // for specific orthogonalization options, need a little more memory
     if(orth_option_ == "mgs_two_synch" || orth_option_ == "mgs_pm") {
-      h_L_  = new Real[restart_ * (restart_ + 1)];
-      h_rv_ = new Real[restart_ + 1];
+      h_L_  = new real_type[restart_ * (restart_ + 1)];
+      h_rv_ = new real_type[restart_ + 1];
     }
 
     if(orth_option_ == "cgs2") {
-      h_aux_ = new Real[restart_ + 1];
-      cudaMalloc(&(d_H_col_), (restart_ + 1) * sizeof(Real));
+      h_aux_ = new real_type[restart_ + 1];
+      cudaMalloc(&(d_H_col_), (restart_ + 1) * sizeof(real_type));
     }
 
     if(orth_option_ == "mgs_pm") {
-      h_aux_ = new Real[restart_ + 1];
+      h_aux_ = new real_type[restart_ + 1];
     }
     return 0;
   }
@@ -109,15 +109,15 @@ namespace ReSolve
     int k;
     int k1;
 
-    Real t;
-    Real rnorm;
-    Real bnorm;
-    // Real rnorm_aux;
-    Real tolrel;
+    real_type t;
+    real_type rnorm;
+    real_type bnorm;
+    // real_type rnorm_aux;
+    real_type tolrel;
     Vector* vec_v = new Vector(n_);
     Vector* vec_z = new Vector(n_);
     //V[0] = b-A*x_0
-    cudaMemcpy(&(d_V_[0]), rhs->getData("cuda"), sizeof(Real) * n_, cudaMemcpyDeviceToDevice);
+    cudaMemcpy(&(d_V_[0]), rhs->getData("cuda"), sizeof(real_type) * n_, cudaMemcpyDeviceToDevice);
     //cudaMatvec(d_x, d_V_, "residual");
     vec_v->setData(d_V_, "cuda");
 
@@ -280,37 +280,37 @@ namespace ReSolve
 
   }
 
-  Real  LinSolverIterativeFGMRES::getTol()
+  real_type  LinSolverIterativeFGMRES::getTol()
   {
     return tol_;
   }
 
-  Int  LinSolverIterativeFGMRES::getMaxit()
+  index_type  LinSolverIterativeFGMRES::getMaxit()
   {
     return maxit_;
   }
 
-  Int  LinSolverIterativeFGMRES::getRestart()
+  index_type  LinSolverIterativeFGMRES::getRestart()
   {
     return restart_;
   }
 
-  Int  LinSolverIterativeFGMRES::getConvCond()
+  index_type  LinSolverIterativeFGMRES::getConvCond()
   {
     return conv_cond_;
   }
 
-  void  LinSolverIterativeFGMRES::setTol(Real new_tol)
+  void  LinSolverIterativeFGMRES::setTol(real_type new_tol)
   {
     this->tol_ = new_tol;
   }
 
-  void  LinSolverIterativeFGMRES::setMaxit(Int new_maxit)
+  void  LinSolverIterativeFGMRES::setMaxit(index_type new_maxit)
   {
     this->maxit_ = new_maxit;
   }
 
-  void  LinSolverIterativeFGMRES::setRestart(Int new_restart)
+  void  LinSolverIterativeFGMRES::setRestart(index_type new_restart)
   {
     this->restart_ = new_restart;
   }
@@ -320,7 +320,7 @@ namespace ReSolve
     this->orth_option_ =  new_GS;
   }
 
-  void  LinSolverIterativeFGMRES::setConvCond(Int new_conv_cond)
+  void  LinSolverIterativeFGMRES::setConvCond(index_type new_conv_cond)
   {
     this->conv_cond_ = new_conv_cond;
   }
@@ -332,7 +332,7 @@ namespace ReSolve
     return 0;
   }
 
-  int  LinSolverIterativeFGMRES::GramSchmidt(Int i) 
+  int  LinSolverIterativeFGMRES::GramSchmidt(index_type i) 
   {
     double t;
     double s;
@@ -717,17 +717,17 @@ namespace ReSolve
   //  x->update(rhs->getData("cuda"), "cuda", "cuda");
   }
 
-  Real LinSolverIterativeFGMRES::getFinalResidualNorm()
+  real_type LinSolverIterativeFGMRES::getFinalResidualNorm()
   {
     return final_residual_norm_;
   }
 
-  Real LinSolverIterativeFGMRES::getInitResidualNorm()
+  real_type LinSolverIterativeFGMRES::getInitResidualNorm()
   {
     return initial_residual_norm_;
   }
 
-  Int LinSolverIterativeFGMRES::getNumIter()
+  index_type LinSolverIterativeFGMRES::getNumIter()
   {
     return fgmres_iters_;
   }

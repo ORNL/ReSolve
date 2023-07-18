@@ -19,8 +19,8 @@ namespace ReSolve { namespace matrix { namespace io {
 
     std::stringstream ss;
     std::string line;
-    Int i = 0;
-    Int m, n, nnz;
+    index_type i = 0;
+    index_type m, n, nnz;
     bool symmetric = false;
     bool expanded = true;
     std::getline(file, line);
@@ -39,12 +39,12 @@ namespace ReSolve { namespace matrix { namespace io {
     //create matrix object
     MatrixCOO* A = new MatrixCOO(n, m, nnz,symmetric, expanded );  
     //create coo arrays
-    Int* coo_rows = new Int[nnz];
-    Int* coo_cols = new Int[nnz];
-    Real* coo_vals = new Real[nnz];
+    index_type* coo_rows = new index_type[nnz];
+    index_type* coo_cols = new index_type[nnz];
+    real_type* coo_vals = new real_type[nnz];
     i = 0;
-    Int a, b;
-    Real c;
+    index_type a, b;
+    real_type c;
     while (file >> a >> b >> c) {
       coo_rows[i] = a - 1;
       coo_cols[i] = b - 1;
@@ -56,7 +56,7 @@ namespace ReSolve { namespace matrix { namespace io {
   }
 
 
-  Real* readRhsFromFile(std::istream& file)
+  real_type* readRhsFromFile(std::istream& file)
   {
     if(!file) {
       std::cout << "Empty input to " << __func__ << " function ... \n" << std::endl;
@@ -65,8 +65,8 @@ namespace ReSolve { namespace matrix { namespace io {
 
     std::stringstream ss;
     std::string line;
-    Int i = 0;
-    Int n, m;
+    index_type i = 0;
+    index_type n, m;
 
     std::getline(file, line);
     while (line.at(0) == '%') {
@@ -76,8 +76,8 @@ namespace ReSolve { namespace matrix { namespace io {
     ss << line;
     ss >> n >> m ;
 
-    Real* vec = new Real[n];
-    Real a;
+    real_type* vec = new real_type[n];
+    real_type a;
     while (file >> a){
       vec[i] = a;
       i++;
@@ -95,8 +95,8 @@ namespace ReSolve { namespace matrix { namespace io {
     std::stringstream ss;
     A->setExpanded(false);
     std::string line;
-    Int i = 0;
-    Int m, n, nnz;
+    index_type i = 0;
+    index_type m, n, nnz;
     std::getline(file, line);
     while (line.at(0) == '%') {
       std::getline(file, line); 
@@ -112,12 +112,12 @@ namespace ReSolve { namespace matrix { namespace io {
     }
     A->setNnz(nnz);
     //create coo arrays
-    Int* coo_rows = A->getRowData("cpu");
-    Int* coo_cols = A->getColData("cpu");
-    Real* coo_vals = A->getValues("cpu");
+    index_type* coo_rows = A->getRowData("cpu");
+    index_type* coo_cols = A->getColData("cpu");
+    real_type* coo_vals = A->getValues("cpu");
     i = 0;
-    Int a, b;
-    Real c;
+    index_type a, b;
+    real_type c;
     while (file >> a >> b >> c) {
       coo_rows[i] = a - 1;
       coo_cols[i] = b - 1;
@@ -126,17 +126,17 @@ namespace ReSolve { namespace matrix { namespace io {
     }
   }
 
-  void readAndUpdateRhs(std::istream& file, Real** p_rhs) 
+  void readAndUpdateRhs(std::istream& file, real_type** p_rhs) 
   {
     if (!file) {
       std::cout << "Empty input to readAndUpdateRhs function ... \n" <<std::endl;
       return;
     }
 
-    Real* rhs = *p_rhs;
+    real_type* rhs = *p_rhs;
     std::stringstream ss;
     std::string line;
-    Int n, m;
+    index_type n, m;
 
     std::getline(file, line);
     while (line.at(0) == '%') {
@@ -148,10 +148,10 @@ namespace ReSolve { namespace matrix { namespace io {
 
     if (rhs == nullptr) {
       // std::cout << "Allocating array of size " << n << "\n";
-      rhs = new Real[n];
+      rhs = new real_type[n];
     } 
-    Real a;
-    Int i = 0;
+    real_type a;
+    index_type i = 0;
     while (file >> a) {
       rhs[i] = a;
       // std::cout << i << ": " << a << "\n";
@@ -167,7 +167,7 @@ namespace ReSolve { namespace matrix { namespace io {
 
   int writeVectorToFile(Vector* vec_x, std::ostream file_out)
   {
-    Real* x_data = vec_x->getData("cpu");
+    real_type* x_data = vec_x->getData("cpu");
     // std::ofstream file_out (filename, std::ofstream::out);
     file_out << "%%MatrixMarket matrix array real general \n";
     file_out << "% ID: XXX \n";

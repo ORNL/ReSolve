@@ -7,9 +7,9 @@ namespace ReSolve
   {
   }
 
-  Matrix::Matrix(Int n, 
-                 Int m, 
-                 Int nnz):
+  Matrix::Matrix(index_type n, 
+                 index_type m, 
+                 index_type nnz):
     n_{n},
     m_{m},
     nnz_{nnz}
@@ -30,9 +30,9 @@ namespace ReSolve
     d_val_data_ = nullptr;
   }
 
-  Matrix::Matrix(Int n, 
-                 Int m, 
-                 Int nnz,
+  Matrix::Matrix(index_type n, 
+                 index_type m, 
+                 index_type nnz,
                  bool symmetric,
                  bool expanded):
     n_{n},
@@ -70,22 +70,22 @@ namespace ReSolve
     d_data_updated_ = false; 
   }
   
-Int Matrix::getNumRows()
+index_type Matrix::getNumRows()
   {
     return this->n_;
   }
 
-  Int Matrix::getNumColumns()
+  index_type Matrix::getNumColumns()
   {
     return this->m_;
   }
 
-  Int Matrix::getNnz()
+  index_type Matrix::getNnz()
   {
     return this->nnz_;
   }
 
-  Int Matrix::getNnzExpanded()
+  index_type Matrix::getNnzExpanded()
   {
     return this->nnz_expanded_;
   }
@@ -110,12 +110,12 @@ Int Matrix::getNumRows()
     this->is_expanded_ = expanded;
   }
 
-  void Matrix::setNnzExpanded(Int nnz_expanded_new)
+  void Matrix::setNnzExpanded(index_type nnz_expanded_new)
   {
     this->nnz_expanded_ = nnz_expanded_new;
   }
 
-  void Matrix::setNnz(Int nnz_new)
+  void Matrix::setNnz(index_type nnz_new)
   {
     this->nnz_ = nnz_new;
   }
@@ -137,7 +137,7 @@ Int Matrix::getNumRows()
     return 0;
   }
 
-  int Matrix::setMatrixData(Int* row_data, Int* col_data, Real* val_data, std::string memspace)
+  int Matrix::setMatrixData(index_type* row_data, index_type* col_data, real_type* val_data, std::string memspace)
   {
 
     setNotUpdated();
@@ -160,7 +160,7 @@ Int Matrix::getNumRows()
     return 0;
   }
 
-  Int Matrix::destroyMatrixData(std::string memspace)
+  index_type Matrix::destroyMatrixData(std::string memspace)
   { 
     if (memspace == "cpu"){  
       if (h_row_data_ != nullptr) delete [] h_row_data_;
