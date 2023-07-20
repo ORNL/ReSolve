@@ -134,7 +134,7 @@ int main(int argc, char *argv[])
         ReSolve::MatrixCSC* U_csc = (ReSolve::MatrixCSC*) KLU->getUFactor();
         ReSolve::MatrixCSR* L = new ReSolve::MatrixCSR(L_csc->getNumRows(), L_csc->getNumColumns(), L_csc->getNnz());
         ReSolve::MatrixCSR* U = new ReSolve::MatrixCSR(U_csc->getNumRows(), U_csc->getNumColumns(), U_csc->getNnz());
-;
+
         matrix_handler->csc2csr(L_csc,L, "cuda");
         matrix_handler->csc2csr(U_csc,U, "cuda");
         if (L == nullptr) {printf("ERROR");}

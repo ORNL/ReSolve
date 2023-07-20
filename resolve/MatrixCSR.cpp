@@ -154,8 +154,11 @@ namespace ReSolve
 
     if (memspace == "cpu") {
       this->h_row_data_ = new index_type[n_ + 1];
+      std::fill(h_row_data_, h_row_data_ + n_ + 1, 0);  
       this->h_col_data_ = new index_type[nnz_current];
+      std::fill(h_col_data_, h_col_data_ + nnz_current, 0);  
       this->h_val_data_ = new real_type[nnz_current];
+      std::fill(h_val_data_, h_val_data_ + nnz_current, 0.0);  
       return 0;   
     }
 
@@ -179,40 +182,41 @@ namespace ReSolve
       if ((d_data_updated_ == true) && (h_data_updated_ == false)) {
         if (h_row_data_ == nullptr) {
           h_row_data_ = new index_type[n_ + 1];      
-        }
-        if (h_col_data_ == nullptr) {
-          h_col_data_ = new index_type[nnz_current];      
-        }
-        if (h_val_data_ == nullptr) {
-          h_val_data_ = new real_type[nnz_current];      
-        }
-        cudaMemcpy(h_row_data_, d_row_data_, (n_ + 1) * sizeof(index_type), cudaMemcpyDeviceToHost);
-        cudaMemcpy(h_col_data_, d_col_data_, nnz_current * sizeof(index_type), cudaMemcpyDeviceToHost);
-        cudaMemcpy(h_val_data_, d_val_data_, nnz_current * sizeof(real_type), cudaMemcpyDeviceToHost);
-        h_data_updated_ = true;
       }
-      return 0;
-    }
-
-    if (memspaceOut == "cuda") {
-      if ((d_data_updated_ == false) && (h_data_updated_ == true)) {
-        if (d_row_data_ == nullptr) {
-          cudaMalloc(&d_row_data_, (n_ + 1)*sizeof(index_type)); 
-        }
-        if (d_col_data_ == nullptr) {
-          cudaMalloc(&d_col_data_, nnz_current * sizeof(index_type)); 
-        }
-        if (d_val_data_ == nullptr) {
-          cudaMalloc(&d_val_data_, nnz_current * sizeof(real_type)); 
-        }
-        cudaMemcpy(d_row_data_, h_row_data_, (n_ + 1) * sizeof(index_type), cudaMemcpyHostToDevice);
-        cudaMemcpy(d_col_data_, h_col_data_, nnz_current * sizeof(index_type), cudaMemcpyHostToDevice);
-        cudaMemcpy(d_val_data_, h_val_data_, nnz_current * sizeof(real_type), cudaMemcpyHostToDevice);
-        d_data_updated_ = true;
+      if (h_col_data_ == nullptr) {
+        h_col_data_ = new index_type[nnz_current];      
       }
-      return 0;
+      if (h_val_data_ == nullptr) {
+        h_val_data_ = new real_type[nnz_current];      
+      }
+      cudaMemcpy(h_row_data_, d_row_data_, (n_ + 1) * sizeof(index_type), cudaMemcpyDeviceToHost);
+      cudaMemcpy(h_col_data_, d_col_data_, nnz_current * sizeof(index_type), cudaMemcpyDeviceToHost);
+      cudaMemcpy(h_val_data_, d_val_data_, nnz_current * sizeof(real_type), cudaMemcpyDeviceToHost);
+      h_data_updated_ = true;
     }
-    return -1;  
+    return 0;
   }
 
+  if (memspaceOut == "cuda") {
+    if ((d_data_updated_ == false) && (h_data_updated_ == true)) {
+      if (d_row_data_ == nullptr) {
+        cudaMalloc(&d_row_data_, (n_ + 1)*sizeof(index_type)); 
+      }
+      if (d_col_data_ == nullptr) {
+        cudaMalloc(&d_col_data_, nnz_current * sizeof(index_type)); 
+      }
+      if (d_val_data_ == nullptr) {
+        cudaMalloc(&d_val_data_, nnz_current * sizeof(real_type)); 
+      }
+      cudaMemcpy(d_row_data_, h_row_data_, (n_ + 1) * sizeof(index_type), cudaMemcpyHostToDevice);
+      cudaMemcpy(d_col_data_, h_col_data_, nnz_current * sizeof(index_type), cudaMemcpyHostToDevice);
+      cudaMemcpy(d_val_data_, h_val_data_, nnz_current * sizeof(real_type), cudaMemcpyHostToDevice);
+      d_data_updated_ = true;
+    }
+    return 0;
+  }
+  return -1;  
 }
+
+} // namespace ReSolve 
+

@@ -346,9 +346,10 @@ namespace ReSolve
   }
 
 
-  void MatrixHandler::csc2csr(MatrixCSC* A_csc, MatrixCSR* A_csr, std::string memspace)
+  index_type MatrixHandler::csc2csr(MatrixCSC* A_csc, MatrixCSR* A_csr, std::string memspace)
   {
     //it ONLY WORKS WITH CUDA
+   index_type error_sum = 0;
     if (memspace == "cuda") { 
       LinAlgWorkspaceCUDA* workspaceCUDA = (LinAlgWorkspaceCUDA*) workspace_;
 
@@ -373,6 +374,7 @@ namespace ReSolve
                                                               CUSPARSE_INDEX_BASE_ZERO, 
                                                               CUSPARSE_CSR2CSC_ALG1, 
                                                               &bufferSize);
+      error_sum += status;
       cudaMalloc((void**)&d_work, bufferSize);
       status = cusparseCsr2cscEx2(workspaceCUDA->getCusparseHandle(),
                                   n, 
@@ -389,10 +391,12 @@ namespace ReSolve
                                   CUSPARSE_INDEX_BASE_ZERO,
                                   CUSPARSE_CSR2CSC_ALG1,
                                   d_work);
-
+     error_sum += status;
+     return error_sum;
       cudaFree(d_work);
     } else { 
       std::cout<<"Not implemented (yet)"<<std::endl;
+      return -1;
     } 
 
 

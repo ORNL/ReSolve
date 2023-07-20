@@ -169,8 +169,7 @@ int main(int argc, char *argv[])
       printf("FGMRES: init nrm: %16.16e final nrm: %16.16e iter: %d \n", FGMRES->getInitResidualNorm()/norm_b, FGMRES->getFinalResidualNorm()/norm_b, FGMRES->getNumIter());
     }
 
-
-  }
+  } // for (int i = 0; i < numSystems; ++i)
 
   return 0;
 }

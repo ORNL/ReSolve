@@ -42,7 +42,7 @@ namespace ReSolve
       MatrixHandler(LinAlgWorkspace* workspace);
       ~MatrixHandler();
 
-      void csc2csr(MatrixCSC* A_csr, MatrixCSR* A_csc, std::string memspace);//memspace decides on what is returned (cpu or cuda pointer)
+      index_type csc2csr(MatrixCSC* A_csr, MatrixCSR* A_csc, std::string memspace);//memspace decides on what is returned (cpu or cuda pointer)
       void coo2csr(MatrixCOO* A_coo, MatrixCSR* A_csr, std::string memspace);
 
       int matvec(Matrix* A, Vector* vec_x, Vector* vec_result, real_type* alpha, real_type* beta,std::string matrix_type, std::string memspace);

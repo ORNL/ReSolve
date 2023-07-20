@@ -119,7 +119,7 @@ int main(int argc, char *argv[])
       status = KLU->solve(vec_rhs, vec_x);
       std::cout<<"KLU solve status: "<<status<<std::endl;      
     } else {
-  status =  KLU->refactorize();
+      status =  KLU->refactorize();
       std::cout<<"KLU re-factorization status: "<<status<<std::endl;
       status = KLU->solve(vec_rhs, vec_x);
       std::cout<<"KLU solve status: "<<status<<std::endl;      
@@ -135,6 +135,15 @@ int main(int argc, char *argv[])
 
 
   }
+
+  //now DELETE
+  delete A;
+  delete KLU;
+  delete x;
+  delete vec_r;
+  delete vec_x;
+  delete matrix_handler;
+  delete vector_handler;
 
   return 0;
 }

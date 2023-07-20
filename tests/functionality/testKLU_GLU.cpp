@@ -8,8 +8,9 @@
 #include <resolve/MatrixHandler.hpp>
 #include <resolve/VectorHandler.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
+#include <resolve/LinSolverDirectCuSolverGLU.hpp>
 //author: KS
-//functionality test to check whether KLU works correctly.
+//functionality test to check whether cuSolverGLU works correctly.
 
 int main(int argc, char *argv[])
 {
@@ -34,7 +35,8 @@ int main(int argc, char *argv[])
   
   ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
   KLU->setupParameters(1, 0.1, false);
-
+  
+  ReSolve::LinSolverDirectCuSolverGLU* GLU = new ReSolve::LinSolverDirectCuSolverGLU(workspace_CUDA);
   // Input to this code is location of `data` directory where matrix files are stored
   const std::string data_path = (argc == 2) ? argv[1] : "./";
 
@@ -67,6 +69,8 @@ int main(int argc, char *argv[])
   real_type* x = new real_type[A->getNumRows()];
   ReSolve::Vector* vec_rhs = new ReSolve::Vector(A->getNumRows());
   ReSolve::Vector* vec_x   = new ReSolve::Vector(A->getNumRows());
+  vec_x->allocate("cpu");//for KLU
+  vec_x->allocate("cuda");
   ReSolve::Vector* vec_r   = new ReSolve::Vector(A->getNumRows());
   rhs1_file.close();
 
@@ -85,8 +89,22 @@ int main(int argc, char *argv[])
   status = KLU->factorize();
   error_sum += status;
 
-  status = KLU->solve(vec_rhs, vec_x);
+// but DO NOT SOLVE with KLU!
+
+
+  ReSolve::Matrix* L = KLU->getLFactor();
+  ReSolve::Matrix* U = KLU->getUFactor();
+  if (L == nullptr) {printf("ERROR");}
+  index_type* P = KLU->getPOrdering();
+  index_type* Q = KLU->getQOrdering();
+  status = GLU->setup(A, L, U, P, Q); 
   error_sum += status;
+  std::cout<<"GLU setup status: "<<status<<std::endl;      
+  vec_rhs->update(rhs, "cpu", "cuda");
+  status = GLU->solve(vec_rhs, vec_x);
+  error_sum += status;
+  std::cout<<"GLU solve status: "<<status<<std::endl;      
+
 
 
   ReSolve::Vector* vec_test;
@@ -121,7 +139,7 @@ int main(int argc, char *argv[])
   real_type normDiffMatrix1 = sqrt(vector_handler->dot(vec_diff, vec_diff, "cuda"));
  
   //compute the residual using exact solution
-  vec_r->update(rhs, "cpu", "cuda");
+  vec_x->update(vec_x->getData("cuda"), "cuda", "cpu");
   status = matrix_handler->matvec(A, vec_test, vec_r, &one, &minusone,"csr", "cuda"); 
   error_sum += status;
   real_type exactSol_normRmatrix1 = sqrt(vector_handler->dot(vec_r, vec_r, "cuda"));
@@ -141,6 +159,7 @@ int main(int argc, char *argv[])
   std::cout<<"\t ||x-x_true||_2              : " << normDiffMatrix1       << " (solution error)"                   << std::endl;
   std::cout<<"\t ||x-x_true||_2/||x_true||_2 : " << normDiffMatrix1/normXtrue << " (scaled solution error)"        << std::endl;
   std::cout<<"\t ||b-A*x_exact||_2           : " << exactSol_normRmatrix1 << " (control; residual norm with exact solution)\n\n";
+
 
   // Load the second matrix
   std::ifstream mat2(matrixFileName2);
@@ -165,15 +184,15 @@ int main(int argc, char *argv[])
   matrix_handler->coo2csr(A_coo, A, "cuda");
   vec_rhs->update(rhs, "cpu", "cuda");
 
-  // and solve it too
-  status =  KLU->refactorize();
+  status = GLU->refactorize();
   error_sum += status;
 
-  status = KLU->solve(vec_rhs, vec_x);
+  std::cout<<"CUSOLVER GLU refactorization status: "<<status<<std::endl;      
+  status = GLU->solve(vec_rhs, vec_x);
   error_sum += status;
 
-  vec_r->update(rhs, "cpu", "cuda");
-  matrix_handler->setValuesChanged(true);
+   vec_r->update(rhs, "cpu", "cuda");
+   matrix_handler->setValuesChanged(true);
 
   status = matrix_handler->matvec(A, vec_x, vec_r, &one, &minusone, "csr", "cuda"); 
   error_sum += status;
@@ -204,18 +223,20 @@ int main(int argc, char *argv[])
 
 
   if ((error_sum == 0) && (normRmatrix1/normB1 < 1e-16 ) && (normRmatrix2/normB2 < 1e-16)) {
-    std::cout<<"Test 1 (KLU with KLU refactorization) PASSED"<<std::endl;
+    std::cout<<"Test 3 (KLU with cuSolverGLU refactorization) PASSED"<<std::endl;
   } else {
 
-    std::cout<<"Test 1 (KLU with KLU refactorization) FAILED, error sum: "<<error_sum<<std::endl;
+    std::cout<<"Test 3 (KLU with cuSolverGLU refactorization) FAILED, error sum: "<<error_sum<<std::endl;
   }
 
   //now DELETE
   delete A;
   delete KLU;
+  delete GLU;
   delete x;
   delete vec_r;
   delete vec_x;
+  delete workspace_CUDA;
   delete matrix_handler;
   delete vector_handler;
 
