@@ -33,5 +33,5 @@ target_include_directories(resolve_matrix PUBLIC
 #         ARCHIVE DESTINATION lib
 #         LIBRARY DESTINATION lib)
 # install include headers
-install(FILES ${ReSolve_HEADER_INSTALL} DESTINATION include/resolve)
+install(FILES ${Matrix_HEADER_INSTALL} DESTINATION include/resolve/matrix)
 

@@ -24,7 +24,6 @@ namespace ReSolve
     LinAlgWorkspaceCUDA* workspaceCUDA = (LinAlgWorkspaceCUDA*) workspace_;
     //get the handle
     handle_cusolversp_ = workspaceCUDA->getCusolverSpHandle();
-
     A_ = (MatrixCSR*) A;
     index_type n = A_->getNumRows();
     index_type nnz = A_->getNnzExpanded();
@@ -93,14 +92,11 @@ namespace ReSolve
     index_type* Li = L->getRowData("cpu"); 
     index_type* Up = U->getColData("cpu"); 
     index_type* Ui = U->getRowData("cpu"); 
-
     index_type nnzM = ( L->getNnz() + U->getNnz() - n );
     M_ = new MatrixCSR(n, n, nnzM);
     M_->allocateMatrixData("cpu");
-
     index_type* mia = M_->getRowData("cpu");
     index_type* mja = M_->getColData("cpu");
-
     index_type row;
     for(index_type i = 0; i < n; ++i) {
       // go through EACH COLUMN OF L first

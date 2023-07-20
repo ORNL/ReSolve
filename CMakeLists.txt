@@ -16,6 +16,11 @@ set(CMAKE_CXX_STANDARD 11)
 set(PACKAGE_NAME  "ReSolve")
 set(PACKAGE_TARNAME "resolve")
 
+# Prohibit in-source build
+if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
+  message(FATAL_ERROR "In-source build prohibited.")
+endif()
+
 option(RESOLVE_TEST_WITH_BSUB "Use `jsrun` instead of `mpirun` commands when running tests" OFF)
 option(RESOLVE_USE_KLU "Use KLU, AMD and COLAMD libraries from SuiteSparse" ON)
 set(RESOLVE_CTEST_OUTPUT_DIR ${PROJECT_BINARY_DIR} CACHE PATH "Directory where CTest outputs are saved")

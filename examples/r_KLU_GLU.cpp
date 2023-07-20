@@ -87,8 +87,7 @@ int main(int argc, char *argv[])
       vec_x->allocate("cpu");//for KLU
       vec_x->allocate("cuda");
       vec_r = new ReSolve::Vector(A->getNumRows());
-    }
-    else {
+    } else {
       ReSolve::matrix::io::readAndUpdateMatrix(mat_file, A_coo);
       ReSolve::matrix::io::readAndUpdateRhs(rhs_file, &rhs);
     }
@@ -111,25 +110,22 @@ int main(int argc, char *argv[])
       KLU->setupParameters(1, 0.1, false);
     }
     int status;
-    if (i < 1){
+    if (i < 1) {
       KLU->setup(A);
       status = KLU->analyze();
       std::cout<<"KLU analysis status: "<<status<<std::endl;
       status = KLU->factorize();
       std::cout<<"KLU factorization status: "<<status<<std::endl;
-      if (i == 0) {
-        ReSolve::Matrix* L = KLU->getLFactor();
-        ReSolve::Matrix* U = KLU->getUFactor();
-        if (L == nullptr) {printf("ERROR");}
-        index_type* P = KLU->getPOrdering();
-        index_type* Q = KLU->getQOrdering();
-        GLU->setup(A, L, U, P, Q); 
-        status = GLU->solve(vec_rhs, vec_x);
-        std::cout<<"GLU solve status: "<<status<<std::endl;      
-      } else { 
-        status = KLU->solve(vec_rhs, vec_x);
-        std::cout<<"KLU solve status: "<<status<<std::endl;      
-      }
+      ReSolve::Matrix* L = KLU->getLFactor();
+      ReSolve::Matrix* U = KLU->getUFactor();
+      if (L == nullptr) {printf("ERROR");}
+      index_type* P = KLU->getPOrdering();
+      index_type* Q = KLU->getQOrdering();
+      GLU->setup(A, L, U, P, Q); 
+      status = GLU->solve(vec_rhs, vec_x);
+      std::cout<<"GLU solve status: "<<status<<std::endl;      
+      //      status = KLU->solve(vec_rhs, vec_x);
+      //    std::cout<<"KLU solve status: "<<status<<std::endl;      
     } else {
       //status =  KLU->refactorize();
       std::cout<<"Using CUSOLVER GLU"<<std::endl;
@@ -146,8 +142,7 @@ int main(int argc, char *argv[])
 
     printf("\t 2-Norm of the residual: %16.16e\n", sqrt(vector_handler->dot(vec_r, vec_r, "cuda")));
 
-
-  }
+  } // for (int i = 0; i < numSystems; ++i)
 
   //now DELETE
   delete A;

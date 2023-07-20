@@ -159,8 +159,11 @@ namespace ReSolve
 
     if (memspace == "cpu") {
       this->h_row_data_ = new index_type[nnz_current];
+      std::fill(h_row_data_, h_row_data_ + nnz_current, 0);  
       this->h_col_data_ = new index_type[nnz_current];
+      std::fill(h_col_data_, h_col_data_ + nnz_current, 0);  
       this->h_val_data_ = new real_type[nnz_current];
+      std::fill(h_val_data_, h_val_data_ + nnz_current, 0.0);  
       return 0;
     }
 

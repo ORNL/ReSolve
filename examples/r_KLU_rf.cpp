@@ -129,6 +129,13 @@ int main(int argc, char *argv[] )
         index_type* P = KLU->getPOrdering();
         index_type* Q = KLU->getQOrdering();
         Rf->setup(A, L, U, P, Q); 
+
+        delete [] P;
+        delete [] Q;
+        delete L;
+        delete L_csc;
+        delete U;
+        delete U_csc;
       }
     } else {
       //status =  KLU->refactorize();
@@ -150,8 +157,18 @@ int main(int argc, char *argv[] )
 
     printf("\t 2-Norm of the residual: %16.16e\n", sqrt(vector_handler->dot(vec_r, vec_r, "cuda")));
 
+  } // for (int i = 0; i < numSystems; ++i)
 
-  }
+  //now DELETE
+  delete A;
+  delete KLU;
+  delete Rf;
+  delete x;
+  delete vec_r;
+  delete vec_x;
+  delete workspace_CUDA;
+  delete matrix_handler;
+  delete vector_handler;
 
   return 0;
 }

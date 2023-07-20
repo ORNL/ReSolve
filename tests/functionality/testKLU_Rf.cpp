@@ -8,8 +8,9 @@
 #include <resolve/MatrixHandler.hpp>
 #include <resolve/VectorHandler.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
+#include <resolve/LinSolverDirectCuSolverRf.hpp>
 //author: KS
-//functionality test to check whether KLU works correctly.
+//functionality test to check whether cuSolverRf works correctly.
 
 int main(int argc, char *argv[])
 {
@@ -34,7 +35,8 @@ int main(int argc, char *argv[])
   
   ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
   KLU->setupParameters(1, 0.1, false);
-
+  
+  ReSolve::LinSolverDirectCuSolverRf* Rf = new ReSolve::LinSolverDirectCuSolverRf;
   // Input to this code is location of `data` directory where matrix files are stored
   const std::string data_path = (argc == 2) ? argv[1] : "./";
 
@@ -142,6 +144,21 @@ int main(int argc, char *argv[])
   std::cout<<"\t ||x-x_true||_2/||x_true||_2 : " << normDiffMatrix1/normXtrue << " (scaled solution error)"        << std::endl;
   std::cout<<"\t ||b-A*x_exact||_2           : " << exactSol_normRmatrix1 << " (control; residual norm with exact solution)\n\n";
 
+  // Now prepare the Rf solver
+  
+  ReSolve::MatrixCSC* L_csc = (ReSolve::MatrixCSC*) KLU->getLFactor();
+  ReSolve::MatrixCSC* U_csc = (ReSolve::MatrixCSC*) KLU->getUFactor();
+  ReSolve::MatrixCSR* L = new ReSolve::MatrixCSR(L_csc->getNumRows(), L_csc->getNumColumns(), L_csc->getNnz());
+  ReSolve::MatrixCSR* U = new ReSolve::MatrixCSR(U_csc->getNumRows(), U_csc->getNumColumns(), U_csc->getNnz());
+  error_sum += matrix_handler->csc2csr(L_csc,L, "cuda");
+  error_sum += matrix_handler->csc2csr(U_csc,U, "cuda");
+  if (L == nullptr) {
+    std::cout << "ERROR!\n";
+  }
+  index_type* P = KLU->getPOrdering();
+  index_type* Q = KLU->getQOrdering();
+  error_sum += Rf->setup(A, L, U, P, Q); 
+
   // Load the second matrix
   std::ifstream mat2(matrixFileName2);
   if(!mat2.is_open())
@@ -165,14 +182,13 @@ int main(int argc, char *argv[])
   matrix_handler->coo2csr(A_coo, A, "cuda");
   vec_rhs->update(rhs, "cpu", "cuda");
 
-  // and solve it too
-  status =  KLU->refactorize();
+  status = Rf->refactorize();
   error_sum += status;
 
-  status = KLU->solve(vec_rhs, vec_x);
+  status = Rf->solve(vec_rhs, vec_x);
   error_sum += status;
 
-  vec_r->update(rhs, "cpu", "cuda");
+   vec_r->update(rhs, "cpu", "cuda");
   matrix_handler->setValuesChanged(true);
 
   status = matrix_handler->matvec(A, vec_x, vec_r, &one, &minusone, "csr", "cuda"); 
@@ -204,18 +220,27 @@ int main(int argc, char *argv[])
 
 
   if ((error_sum == 0) && (normRmatrix1/normB1 < 1e-16 ) && (normRmatrix2/normB2 < 1e-16)) {
-    std::cout<<"Test 1 (KLU with KLU refactorization) PASSED"<<std::endl;
+    std::cout<<"Test 2 (KLU with cuSolverRf refactorization) PASSED"<<std::endl;
   } else {
 
-    std::cout<<"Test 1 (KLU with KLU refactorization) FAILED, error sum: "<<error_sum<<std::endl;
+    std::cout<<"Test 2 (KLU with cuSolverRf refactorization) FAILED, error sum: "<<error_sum<<std::endl;
   }
 
   //now DELETE
+  // delete [] P;
+  // delete [] Q;
+  // delete L;  // <- bug, cannot delete is because it does not own data, but constructor does not keep track of it!
+  // delete L_csc;
+  // delete U;
+  // delete U_csc;
+
   delete A;
   delete KLU;
+  delete Rf;
   delete x;
   delete vec_r;
   delete vec_x;
+  delete workspace_CUDA;
   delete matrix_handler;
   delete vector_handler;
 
