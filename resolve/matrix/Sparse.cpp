@@ -1,13 +1,13 @@
-#include "Matrix.hpp"
+#include "Sparse.hpp"
 #include <cuda_runtime.h>
 
-namespace ReSolve 
-{
-  Matrix::Matrix()
+namespace ReSolve { namespace matrix {
+
+  Sparse::Sparse()
   {
   }
 
-  Matrix::Matrix(index_type n, 
+  Sparse::Sparse(index_type n, 
                  index_type m, 
                  index_type nnz):
     n_{n},
@@ -30,7 +30,7 @@ namespace ReSolve
     d_val_data_ = nullptr;
   }
 
-  Matrix::Matrix(index_type n, 
+  Sparse::Sparse(index_type n, 
                  index_type m, 
                  index_type nnz,
                  bool symmetric,
@@ -58,69 +58,69 @@ namespace ReSolve
     d_val_data_ = nullptr;
   }
 
-  Matrix::~Matrix()
+  Sparse::~Sparse()
   {
     this->destroyMatrixData("cpu");
     this->destroyMatrixData("cuda");
   }
 
-  void Matrix::setNotUpdated()
+  void Sparse::setNotUpdated()
   {
     h_data_updated_ = false;
     d_data_updated_ = false; 
   }
   
-index_type Matrix::getNumRows()
+index_type Sparse::getNumRows()
   {
     return this->n_;
   }
 
-  index_type Matrix::getNumColumns()
+  index_type Sparse::getNumColumns()
   {
     return this->m_;
   }
 
-  index_type Matrix::getNnz()
+  index_type Sparse::getNnz()
   {
     return this->nnz_;
   }
 
-  index_type Matrix::getNnzExpanded()
+  index_type Sparse::getNnzExpanded()
   {
     return this->nnz_expanded_;
   }
 
-  bool Matrix::symmetric()
+  bool Sparse::symmetric()
   {
     return is_symmetric_;
   }
 
-  bool Matrix::expanded()
+  bool Sparse::expanded()
   {
     return is_expanded_;
   }
 
-  void Matrix::setSymmetric(bool symmetric)
+  void Sparse::setSymmetric(bool symmetric)
   {
     this->is_symmetric_ = symmetric;
   }
 
-  void Matrix::setExpanded(bool expanded)
+  void Sparse::setExpanded(bool expanded)
   {
     this->is_expanded_ = expanded;
   }
 
-  void Matrix::setNnzExpanded(index_type nnz_expanded_new)
+  void Sparse::setNnzExpanded(index_type nnz_expanded_new)
   {
     this->nnz_expanded_ = nnz_expanded_new;
   }
 
-  void Matrix::setNnz(index_type nnz_new)
+  void Sparse::setNnz(index_type nnz_new)
   {
     this->nnz_ = nnz_new;
   }
 
-  int Matrix::setUpdated(std::string what)
+  int Sparse::setUpdated(std::string what)
   {
     if (what == "cpu")
     {
@@ -137,7 +137,7 @@ index_type Matrix::getNumRows()
     return 0;
   }
 
-  int Matrix::setMatrixData(index_type* row_data, index_type* col_data, real_type* val_data, std::string memspace)
+  int Sparse::setMatrixData(index_type* row_data, index_type* col_data, real_type* val_data, std::string memspace)
   {
 
     setNotUpdated();
@@ -160,7 +160,7 @@ index_type Matrix::getNumRows()
     return 0;
   }
 
-  index_type Matrix::destroyMatrixData(std::string memspace)
+  index_type Sparse::destroyMatrixData(std::string memspace)
   { 
     if (memspace == "cpu"){  
       if (h_row_data_ != nullptr) delete [] h_row_data_;
@@ -177,4 +177,4 @@ index_type Matrix::getNumRows()
     }
     return 0;
   }
-}
+}} // namespace ReSolve::matrix

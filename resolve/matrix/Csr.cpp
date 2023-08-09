@@ -1,30 +1,30 @@
 #include <cstring>  // <-- includes memcpy
 #include <cuda_runtime.h>
-#include "MatrixCSR.hpp"
+#include "Csr.hpp"
 
 namespace ReSolve 
 {
-  MatrixCSR::MatrixCSR()
+  matrix::Csr::Csr()
   {
   }
 
-  MatrixCSR::MatrixCSR(index_type n, index_type m, index_type nnz) : Matrix(n, m, nnz)
+  matrix::Csr::Csr(index_type n, index_type m, index_type nnz) : Sparse(n, m, nnz)
   {
   }
   
-  MatrixCSR::MatrixCSR(index_type n, 
+  matrix::Csr::Csr(index_type n, 
                        index_type m, 
                        index_type nnz,
                        bool symmetric,
-                       bool expanded) : Matrix(n, m, nnz, symmetric, expanded)
+                       bool expanded) : Sparse(n, m, nnz, symmetric, expanded)
   {
   }
 
-  MatrixCSR::~MatrixCSR()
+  matrix::Csr::~Csr()
   {
   }
 
-  index_type* MatrixCSR::getRowData(std::string memspace)
+  index_type* matrix::Csr::getRowData(std::string memspace)
   {
     if (memspace == "cpu") {
       copyCsr("cpu");
@@ -39,7 +39,7 @@ namespace ReSolve
     }
   }
 
-  index_type* MatrixCSR::getColData(std::string memspace)
+  index_type* matrix::Csr::getColData(std::string memspace)
   {
     if (memspace == "cpu") {
       copyCsr("cpu");
@@ -54,7 +54,7 @@ namespace ReSolve
     }
   }
 
-  real_type* MatrixCSR::getValues(std::string memspace)
+  real_type* matrix::Csr::getValues(std::string memspace)
   {
     if (memspace == "cpu") {
       copyCsr("cpu");
@@ -69,7 +69,7 @@ namespace ReSolve
     }
   }
 
-  index_type MatrixCSR::updateData(index_type* row_data, index_type* col_data, real_type* val_data, std::string memspaceIn, std::string memspaceOut)
+  index_type matrix::Csr::updateData(index_type* row_data, index_type* col_data, real_type* val_data, std::string memspaceIn, std::string memspaceOut)
   {
     //four cases (for now)
     index_type nnz_current = nnz_;
@@ -139,14 +139,14 @@ namespace ReSolve
     return 0;
   } 
 
-  index_type MatrixCSR::updateData(index_type* row_data, index_type* col_data, real_type* val_data, index_type new_nnz, std::string memspaceIn, std::string memspaceOut)
+  index_type matrix::Csr::updateData(index_type* row_data, index_type* col_data, real_type* val_data, index_type new_nnz, std::string memspaceIn, std::string memspaceOut)
   {
     this->destroyMatrixData(memspaceOut);
     int i = this->updateData(row_data, col_data, val_data, memspaceIn, memspaceOut);
     return i;
   } 
 
-  index_type MatrixCSR::allocateMatrixData(std::string memspace)
+  index_type matrix::Csr::allocateMatrixData(std::string memspace)
   {
     index_type nnz_current = nnz_;
     if (is_expanded_) {nnz_current = nnz_expanded_;}
@@ -172,7 +172,7 @@ namespace ReSolve
   }
 
 
-  index_type  MatrixCSR::copyCsr(std::string memspaceOut)
+  index_type  matrix::Csr::copyCsr(std::string memspaceOut)
   {
     index_type nnz_current = nnz_;
     if (is_expanded_) {nnz_current = nnz_expanded_;}

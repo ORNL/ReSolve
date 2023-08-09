@@ -19,7 +19,7 @@ namespace ReSolve
     d_Z_ = nullptr;
   }
 
-  LinSolverIterativeFGMRES::LinSolverIterativeFGMRES(MatrixHandler* matrix_handler, VectorHandler* vector_handler)
+  LinSolverIterativeFGMRES::LinSolverIterativeFGMRES(matrix::MatrixHandler* matrix_handler, VectorHandler* vector_handler)
   {
     this->matrix_handler_ = matrix_handler;
     this->vector_handler_ = vector_handler;
@@ -34,7 +34,7 @@ namespace ReSolve
     d_Z_ = nullptr;
   }
 
-  LinSolverIterativeFGMRES::LinSolverIterativeFGMRES(index_type restart, real_type tol, index_type maxit, std::string GS_version, index_type conv_cond, MatrixHandler* matrix_handler, VectorHandler* vector_handler)
+  LinSolverIterativeFGMRES::LinSolverIterativeFGMRES(index_type restart, real_type tol, index_type maxit, std::string GS_version, index_type conv_cond, matrix::MatrixHandler* matrix_handler, VectorHandler* vector_handler)
   {
     this->matrix_handler_ = matrix_handler;
     this->vector_handler_ = vector_handler;
@@ -68,7 +68,7 @@ namespace ReSolve
     }
   }
 
-  int LinSolverIterativeFGMRES::setup(Matrix* A)
+  int LinSolverIterativeFGMRES::setup(matrix::Sparse* A)
   {
     this->A_ = A;
     n_ = A_->getNumRows();
@@ -325,7 +325,7 @@ namespace ReSolve
     this->conv_cond_ = new_conv_cond;
   }
 
-  int  LinSolverIterativeFGMRES::resetMatrix(Matrix* new_matrix)
+  int  LinSolverIterativeFGMRES::resetMatrix(matrix::Sparse* new_matrix)
   {
     A_ = new_matrix;
     matrix_handler_->setValuesChanged(true);

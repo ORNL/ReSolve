@@ -15,7 +15,7 @@ namespace ReSolve
     klu_free_numeric(&Numeric_, &Common_);
   }
 
-  int LinSolverDirectKLU::setup(Matrix* A)
+  int LinSolverDirectKLU::setup(matrix::Sparse* A)
   {
     this->A_ = A;
     return 0;
@@ -79,14 +79,14 @@ namespace ReSolve
     return 0;
   }
 
-  Matrix* LinSolverDirectKLU::getLFactor()
+  matrix::Sparse* LinSolverDirectKLU::getLFactor()
   {
     if (!factors_extracted_) {
       const int nnzL = Numeric_->lnz;
       const int nnzU = Numeric_->unz;
 
-      L_ = new MatrixCSC(A_->getNumRows(), A_->getNumColumns(), nnzL);
-      U_ = new MatrixCSC(A_->getNumRows(), A_->getNumColumns(), nnzU);
+      L_ = new matrix::Csc(A_->getNumRows(), A_->getNumColumns(), nnzL);
+      U_ = new matrix::Csc(A_->getNumRows(), A_->getNumColumns(), nnzU);
       L_->allocateMatrixData("cpu");
       U_->allocateMatrixData("cpu");
       int ok = klu_extract(Numeric_, 
@@ -114,14 +114,14 @@ namespace ReSolve
     return L_;
   }
 
-  Matrix* LinSolverDirectKLU::getUFactor()
+  matrix::Sparse* LinSolverDirectKLU::getUFactor()
   {
     if (!factors_extracted_) {
       const int nnzL = Numeric_->lnz;
       const int nnzU = Numeric_->unz;
 
-      L_ = new MatrixCSC(A_->getNumRows(), A_->getNumColumns(), nnzL);
-      U_ = new MatrixCSC(A_->getNumRows(), A_->getNumColumns(), nnzU);
+      L_ = new matrix::Csc(A_->getNumRows(), A_->getNumColumns(), nnzL);
+      U_ = new matrix::Csc(A_->getNumRows(), A_->getNumColumns(), nnzU);
       L_->allocateMatrixData("cpu");
       U_->allocateMatrixData("cpu");
       int ok = klu_extract(Numeric_, 

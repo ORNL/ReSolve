@@ -80,6 +80,8 @@ set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-extended-lambda")
 
 include(ReSolveFindCudaLibraries)
 
+include_directories(${CMAKE_SOURCE_DIR})
+
 # Enable testing
 enable_testing()
 
@@ -114,6 +116,7 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/ReSolveConfig.cmake"
     
 # Install directory with example on how to consume ReSolve
 install(DIRECTORY examples/resolve_consumer DESTINATION share/examples)
+install(FILES examples/r_KLU_rf_FGMRES.cpp DESTINATION share/examples/resolve_consumer)
 
 # Add examples
 add_subdirectory(examples)

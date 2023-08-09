@@ -1,6 +1,6 @@
 #pragma once
 #include "Common.hpp"
-#include "Matrix.hpp"
+#include <resolve/matrix/Sparse.hpp>
 #include "LinSolver.hpp"
 #include "cusolver_defs.hpp"
 
@@ -15,11 +15,11 @@ namespace ReSolve
       int refactorize();
       int solve(Vector* rhs, Vector* x);
 
-      int setup(Matrix* A, Matrix* L, Matrix* U, index_type* P, index_type* Q);
+      int setup(matrix::Sparse* A, matrix::Sparse* L, matrix::Sparse* U, index_type* P, index_type* Q);
     
     private:
-      void addFactors(Matrix* L, Matrix* U); //create L+U from sepeate L, U factors
-      Matrix* M_;//the matrix that contains added factors
+      void addFactors(matrix::Sparse* L, matrix::Sparse* U); //create L+U from sepeate L, U factors
+      matrix::Sparse* M_;//the matrix that contains added factors
       //note: we need cuSolver handle, we can copy it from the workspace to avoid double allocation
       cusparseMatDescr_t descr_M_; //this is NOT sparse matrix descriptor
       cusparseMatDescr_t descr_A_; //this is NOT sparse matrix descriptor

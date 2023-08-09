@@ -4,13 +4,13 @@
 #include <fstream>
 #include <sstream>
 
-#include <resolve/MatrixCOO.hpp>
+#include <resolve/matrix/Coo.hpp>
 #include "io.hpp"
 
 
 namespace ReSolve { namespace matrix { namespace io {
 
-  MatrixCOO* readMatrixFromFile(std::istream& file)
+  Coo* readMatrixFromFile(std::istream& file)
   {
     if(!file) {
       std::cout << "Empty input to readMatrixFromFile function ... \n" <<std::endl;
@@ -37,7 +37,7 @@ namespace ReSolve { namespace matrix { namespace io {
     ss << line;
     ss >> n >> m >> nnz;
     //create matrix object
-    MatrixCOO* A = new MatrixCOO(n, m, nnz,symmetric, expanded );  
+    Coo* A = new Coo(n, m, nnz,symmetric, expanded );  
     //create coo arrays
     index_type* coo_rows = new index_type[nnz];
     index_type* coo_cols = new index_type[nnz];
@@ -85,7 +85,7 @@ namespace ReSolve { namespace matrix { namespace io {
     return vec;
   }
 
-  void readAndUpdateMatrix(std::istream& file, MatrixCOO* A)
+  void readAndUpdateMatrix(std::istream& file, Coo* A)
   {
     if(!file) {
       std::cout << "Empty input to readMatrixFromFile function ... \n" <<std::endl;
@@ -159,7 +159,7 @@ namespace ReSolve { namespace matrix { namespace io {
     }
   }
 
-  int writeMatrixToFile(Matrix* A, std::ostream file_out)
+  int writeMatrixToFile(Sparse* A, std::ostream file_out)
   {
     std::cout << "writeMatrixToFile function not implemented!\n";
     return -1;

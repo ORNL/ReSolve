@@ -9,8 +9,6 @@
 add_subdirectory(matrix)
 
 set(ReSolve_SRC
-    Matrix.cpp
-    MatrixHandler.cpp
     VectorHandler.cpp
     LinSolver.cpp
     LinSolverDirectKLU.cpp
@@ -18,9 +16,6 @@ set(ReSolve_SRC
 
 
 set(ReSolve_SRC_CUDA
-    MatrixCOO.cpp
-    MatrixCSR.cpp
-    MatrixCSC.cpp
     Vector.cpp
     LinAlgWorkspace.cpp
     LinSolverDirectCuSolverRf.cpp
@@ -39,11 +34,6 @@ set(ReSolve_HEADER_INSTALL
     LinSolverDirectCuSolverRf.hpp
     LinSolverDirectKLU.hpp
     LinSolverIterativeFGMRES.hpp
-    Matrix.hpp
-    MatrixCOO.hpp
-    MatrixCSR.hpp
-    MatrixCSC.hpp
-    MatrixHandler.hpp
     RefactorizationSolver.hpp
     SystemSolver.hpp
     Vector.hpp
@@ -56,7 +46,7 @@ set_source_files_properties(${ReSolve_SRC_CUDA} PROPERTIES LANGUAGE CUDA)
 add_library(resolve_tpl INTERFACE)
 target_link_libraries(resolve_tpl INTERFACE resolve_cuda KLU)
 
-install(TARGETS resolve_tpl EXPORT ReSolveTargets)
+install(TARGETS resolve_matrix resolve_tpl EXPORT ReSolveTargets)
 
 add_library(ReSolve SHARED ${ReSolve_SRC} ${ReSolve_SRC_CUDA})
 
@@ -66,7 +56,7 @@ target_include_directories(ReSolve INTERFACE
 )
 
 # TODO: Make this PRIVATE dependency (requires refactoring ReSolve code)
-target_link_libraries(ReSolve PUBLIC resolve_tpl)
+target_link_libraries(ReSolve PUBLIC resolve_matrix resolve_tpl)
 
 install(TARGETS ReSolve
         EXPORT ReSolveTargets

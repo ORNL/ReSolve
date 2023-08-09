@@ -1,10 +1,10 @@
 #include <string>
 #include <iostream>
 
-#include <resolve/MatrixCOO.hpp>
+#include <resolve/matrix/Coo.hpp>
 #include <resolve/Vector.hpp>
 #include <resolve/matrix/io.hpp>
-#include <resolve/MatrixHandler.hpp>
+#include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/VectorHandler.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
 #include <resolve/LinSolverDirectCuSolverRf.hpp>
@@ -27,12 +27,12 @@ int main(int argc, char *argv[] )
   std::string matrixFileNameFull;
   std::string rhsFileNameFull;
 
-  ReSolve::MatrixCOO* A_coo;
-  ReSolve::MatrixCSR* A;
+  ReSolve::matrix::Coo* A_coo;
+  ReSolve::matrix::Csr* A;
 
   ReSolve::LinAlgWorkspaceCUDA* workspace_CUDA = new ReSolve::LinAlgWorkspaceCUDA;
   workspace_CUDA->initializeHandles();
-  ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(workspace_CUDA);
+  ReSolve::matrix::MatrixHandler* matrix_handler =  new ReSolve::matrix::MatrixHandler(workspace_CUDA);
   ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(workspace_CUDA);
   real_type* rhs;
   real_type* x;
@@ -79,7 +79,7 @@ int main(int argc, char *argv[] )
     }
     if (i == 0) {
       A_coo = ReSolve::matrix::io::readMatrixFromFile(mat_file);
-      A = new ReSolve::MatrixCSR(A_coo->getNumRows(), A_coo->getNumColumns(), A_coo->getNnz(), A_coo->expanded(), A_coo->symmetric());
+      A = new ReSolve::matrix::Csr(A_coo->getNumRows(), A_coo->getNumColumns(), A_coo->getNnz(), A_coo->expanded(), A_coo->symmetric());
 
       rhs = ReSolve::matrix::io::readRhsFromFile(rhs_file);
       x = new real_type[A->getNumRows()];
@@ -119,10 +119,10 @@ int main(int argc, char *argv[] )
       status = KLU->solve(vec_rhs, vec_x);
       std::cout<<"KLU solve status: "<<status<<std::endl;      
       if (i == 1) {
-        ReSolve::MatrixCSC* L_csc = (ReSolve::MatrixCSC*) KLU->getLFactor();
-        ReSolve::MatrixCSC* U_csc = (ReSolve::MatrixCSC*) KLU->getUFactor();
-        ReSolve::MatrixCSR* L = new ReSolve::MatrixCSR(L_csc->getNumRows(), L_csc->getNumColumns(), L_csc->getNnz());
-        ReSolve::MatrixCSR* U = new ReSolve::MatrixCSR(U_csc->getNumRows(), U_csc->getNumColumns(), U_csc->getNnz());
+        ReSolve::matrix::Csc* L_csc = (ReSolve::matrix::Csc*) KLU->getLFactor();
+        ReSolve::matrix::Csc* U_csc = (ReSolve::matrix::Csc*) KLU->getUFactor();
+        ReSolve::matrix::Csr* L = new ReSolve::matrix::Csr(L_csc->getNumRows(), L_csc->getNumColumns(), L_csc->getNnz());
+        ReSolve::matrix::Csr* U = new ReSolve::matrix::Csr(U_csc->getNumRows(), U_csc->getNumColumns(), U_csc->getNnz());
         matrix_handler->csc2csr(L_csc,L, "cuda");
         matrix_handler->csc2csr(U_csc,U, "cuda");
         if (L == nullptr) {printf("ERROR");}

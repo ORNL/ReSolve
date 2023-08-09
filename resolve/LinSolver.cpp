@@ -12,7 +12,7 @@ namespace ReSolve
     //destroy the matrix and hadlers
   }
 
-  int LinSolver::setup(Matrix* A)
+  int LinSolver::setup(matrix::Sparse* A)
   {
     this->A_ = A;
     return 0;
@@ -63,12 +63,12 @@ namespace ReSolve
     return 0;
   }
 
-  Matrix* LinSolverDirect::getLFactor()
+  matrix::Sparse* LinSolverDirect::getLFactor()
   {
     return nullptr;
   } 
   
-  Matrix* LinSolverDirect::getUFactor()
+  matrix::Sparse* LinSolverDirect::getUFactor()
   {
     return nullptr;
   } 

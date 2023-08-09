@@ -1,6 +1,6 @@
 #pragma once
 #include "Common.hpp"
-#include "Matrix.hpp"
+#include <resolve/matrix/Sparse.hpp>
 #include "LinSolver.hpp"
 #include "cusolverRf.h"
 
@@ -12,7 +12,7 @@ namespace ReSolve
       LinSolverDirectCuSolverRf();
       ~LinSolverDirectCuSolverRf();
       
-      int setup(Matrix* A, Matrix* L, Matrix* U, index_type* P, index_type* Q);
+      int setup(matrix::Sparse* A, matrix::Sparse* L, matrix::Sparse* U, index_type* P, index_type* Q);
 
       void setAlgorithms(cusolverRfFactorization_t fact_alg,  cusolverRfTriangularSolve_t solve_alg);
       

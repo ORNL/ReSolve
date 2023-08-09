@@ -1,7 +1,7 @@
 #pragma once
 #include "klu.h"
 #include "Common.hpp"
-#include "Matrix.hpp"
+#include <resolve/matrix/Sparse.hpp>
 #include "LinSolver.hpp"
 
 namespace ReSolve 
@@ -11,7 +11,7 @@ namespace ReSolve
     public:
       LinSolverDirectKLU();
       ~LinSolverDirectKLU();
-      int setup(Matrix* A);
+      int setup(matrix::Sparse* A);
      
       void setupParameters(int ordering, double KLU_threshold, bool halt_if_singular);
 
@@ -20,8 +20,8 @@ namespace ReSolve
       int refactorize();
       int solve(Vector* rhs, Vector* x); 
     
-      Matrix* getLFactor(); 
-      Matrix* getUFactor(); 
+      matrix::Sparse* getLFactor(); 
+      matrix::Sparse* getUFactor(); 
       index_type*  getPOrdering();
       index_type*  getQOrdering();
 

@@ -20,7 +20,7 @@ namespace
 
     private:
     
-    Matrix A;
+    Sparse A;
     std::string factorizationMethod;
     std::string refactorizationMethod;
     std::string solveMethod;

@@ -8,5 +8,5 @@ find_package(ReSolve CONFIG
   REQUIRED)
 
 # Build example with KLU factorization and KLU refactorization
-add_executable(klu_klu.exe r_KLU_KLU.cpp)
-target_link_libraries(klu_klu.exe PRIVATE ReSolve::ReSolve)
+add_executable(klu_rf_fgmres.exe r_KLU_rf_FGMRES.cpp)
+target_link_libraries(klu_rf_fgmres.exe PRIVATE ReSolve::ReSolve)

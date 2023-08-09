@@ -20,7 +20,7 @@ public:
 
     // Read string into istream and pass it to `readMatrixFromFile` function.
     std::istringstream file(general_coo_matrix_file_);
-    ReSolve::MatrixCOO* A = ReSolve::matrix::io::readMatrixFromFile(file);
+    ReSolve::matrix::Coo* A = ReSolve::matrix::io::readMatrixFromFile(file);
 
     // Check if the matrix data was correctly loaded
     bool pass = true;
@@ -73,7 +73,7 @@ public:
   bool cooMatrixImport2(std::ifstream& file)
   {
     bool pass = true;
-    ReSolve::MatrixCOO* A = ReSolve::matrix::io::readMatrixFromFile(file);
+    ReSolve::matrix::Coo* A = ReSolve::matrix::io::readMatrixFromFile(file);
     if (A->getNnz() != general_coo_matrix_vals_.size()) {
       std::cout << "Incorrect NNZ read from the file ...\n";
       pass = false;
@@ -103,7 +103,7 @@ public:
     // std::cout << general_coo_matrix_file_ << "\n";
 
     // Create a 5x5 COO matrix with 10 nonzeros
-    ReSolve::MatrixCOO A(5, 5, 10);
+    ReSolve::matrix::Coo A(5, 5, 10);
     A.allocateMatrixData("cpu");
 
     // Read string into istream and pass it to `readMatrixFromFile` function.
@@ -201,7 +201,7 @@ public:
   }
 
 private:
-  bool verifyAnswer(/* const */ ReSolve::MatrixCOO& answer,
+  bool verifyAnswer(/* const */ ReSolve::matrix::Coo& answer,
                     const std::vector<local_ordinal_type>& row_data,
                     const std::vector<local_ordinal_type>& col_data,
                     const std::vector<real_type>& val_data)

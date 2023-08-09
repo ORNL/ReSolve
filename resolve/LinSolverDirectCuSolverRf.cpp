@@ -15,11 +15,11 @@ namespace ReSolve
     cudaFree(d_T_);
   }
 
-  int LinSolverDirectCuSolverRf::setup(Matrix* A, Matrix* L, Matrix* U, index_type* P, index_type* Q)
+  int LinSolverDirectCuSolverRf::setup(matrix::Sparse* A, matrix::Sparse* L, matrix::Sparse* U, index_type* P, index_type* Q)
   {
     //remember - P and Q are generally CPU variables
     int error_sum = 0;
-    this->A_ = (MatrixCSR*) A;
+    this->A_ = (matrix::Csr*) A;
     index_type n = A_->getNumRows();
     cudaMalloc(&d_P_, n * sizeof(index_type)); 
     cudaMalloc(&d_Q_, n * sizeof(index_type));
