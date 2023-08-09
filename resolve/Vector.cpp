@@ -1,3 +1,5 @@
+#include <cstring>
+#include <cuda_runtime.h>
 #include "Vector.hpp"
 
 namespace ReSolve 

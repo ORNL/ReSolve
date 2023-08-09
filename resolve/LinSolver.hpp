@@ -1,9 +1,9 @@
 #pragma once
 #include <string>
 #include "Common.hpp"
-#include "Matrix.hpp"
+#include <resolve/matrix/Sparse.hpp>
 #include "Vector.hpp"
-#include "MatrixHandler.hpp"
+#include <resolve/matrix/MatrixHandler.hpp>
 #include "VectorHandler.hpp"
 
 namespace ReSolve 
@@ -14,15 +14,15 @@ namespace ReSolve
       LinSolver();
       ~LinSolver();
 
-      virtual int setup(Matrix* A);
+      virtual int setup(matrix::Sparse* A);
       real_type evaluateResidual();
         
     protected:  
-      Matrix* A_;
+      matrix::Sparse* A_;
       real_type* rhs_;
       real_type* sol_;
 
-      MatrixHandler *matrix_handler_;
+      matrix::MatrixHandler *matrix_handler_;
       VectorHandler *vector_handler_;
   };
 
@@ -37,14 +37,14 @@ namespace ReSolve
       virtual int refactorize();
       virtual int solve(Vector* rhs, Vector* x); 
      
-      virtual Matrix* getLFactor(); 
-      virtual Matrix* getUFactor(); 
+      virtual matrix::Sparse* getLFactor(); 
+      virtual matrix::Sparse* getUFactor(); 
       virtual index_type*  getPOrdering();
       virtual index_type*  getQOrdering();
     
     protected:
-      Matrix* L_;
-      Matrix* U_;
+      matrix::Sparse* L_;
+      matrix::Sparse* U_;
       index_type* P_;
       index_type* Q_;
       bool factors_extracted_;

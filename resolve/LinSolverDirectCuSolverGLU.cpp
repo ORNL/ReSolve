@@ -17,14 +17,14 @@ namespace ReSolve
     delete M_;
   }
 
-  int LinSolverDirectCuSolverGLU::setup(Matrix* A, Matrix* L, Matrix* U, index_type* P, index_type* Q)
+  int LinSolverDirectCuSolverGLU::setup(matrix::Sparse* A, matrix::Sparse* L, matrix::Sparse* U, index_type* P, index_type* Q)
   {
     int error_sum = 0;
 
     LinAlgWorkspaceCUDA* workspaceCUDA = (LinAlgWorkspaceCUDA*) workspace_;
     //get the handle
     handle_cusolversp_ = workspaceCUDA->getCusolverSpHandle();
-    A_ = (MatrixCSR*) A;
+    A_ = (matrix::Csr*) A;
     index_type n = A_->getNumRows();
     index_type nnz = A_->getNnzExpanded();
     //create combined factor
@@ -84,7 +84,7 @@ namespace ReSolve
     return error_sum;
   }
 
-  void LinSolverDirectCuSolverGLU::addFactors(Matrix* L, Matrix* U)
+  void LinSolverDirectCuSolverGLU::addFactors(matrix::Sparse* L, matrix::Sparse* U)
   {
 // L and U need to be in CSC format
     index_type n = L->getNumRows();
@@ -93,7 +93,7 @@ namespace ReSolve
     index_type* Up = U->getColData("cpu"); 
     index_type* Ui = U->getRowData("cpu"); 
     index_type nnzM = ( L->getNnz() + U->getNnz() - n );
-    M_ = new MatrixCSR(n, n, nnzM);
+    M_ = new matrix::Csr(n, n, nnzM);
     M_->allocateMatrixData("cpu");
     index_type* mia = M_->getRowData("cpu");
     index_type* mja = M_->getColData("cpu");

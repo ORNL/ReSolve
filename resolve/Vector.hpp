@@ -1,8 +1,6 @@
 #pragma once
 #include <string>
-#include <cuda_runtime.h>
 #include "Common.hpp"
-#include<cstring>
 
 namespace ReSolve 
 {

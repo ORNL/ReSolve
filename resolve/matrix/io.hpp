@@ -1,13 +1,23 @@
 #include <fstream>
 #include <resolve/Vector.hpp>
 
-namespace ReSolve { namespace matrix { namespace io {
+// #include <resolve/matrix/Sparse.hpp>
+// #include <resolve/matrix/Coo.hpp>
 
-  MatrixCOO* readMatrixFromFile(std::istream& file);
-  void readAndUpdateMatrix(std::istream& file, MatrixCOO* A);
+namespace ReSolve { namespace matrix { 
+class Sparse;
+class Coo;
+
+namespace io {
+
+  Coo* readMatrixFromFile(std::istream& file);
+  void readAndUpdateMatrix(std::istream& file, Coo* A);
   real_type* readRhsFromFile(std::istream& file); 
   void readAndUpdateRhs(std::istream& file, real_type** rhs); 
 
-  int writeMatrixToFile(Matrix* A, std::ostream file_out);
+  int writeMatrixToFile(Sparse* A, std::ostream file_out);
   int writeVectorToFile(Vector* vec_x, std::ostream file_out);
-}}} // ReSolve::matrix::io
+
+} // namespace io
+
+}} // namespace ReSolve::matrix

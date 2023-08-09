@@ -2,10 +2,10 @@
 #include <iostream>
 #include <iomanip>
 
-#include <resolve/MatrixCOO.hpp>
 #include <resolve/Vector.hpp>
 #include <resolve/matrix/io.hpp>
-#include <resolve/MatrixHandler.hpp>
+#include <resolve/matrix/Coo.hpp>
+#include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/VectorHandler.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
 #include <resolve/LinSolverDirectCuSolverGLU.hpp>
@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
 
   ReSolve::LinAlgWorkspaceCUDA* workspace_CUDA = new ReSolve::LinAlgWorkspaceCUDA;
   workspace_CUDA->initializeHandles();
-  ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(workspace_CUDA);
+  ReSolve::matrix::MatrixHandler* matrix_handler =  new ReSolve::matrix::MatrixHandler(workspace_CUDA);
   ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(workspace_CUDA);
 
   real_type one = 1.0;
@@ -54,8 +54,8 @@ int main(int argc, char *argv[])
     std::cout << "Failed to open file " << matrixFileName1 << "\n";
     return -1;
   }
-  ReSolve::MatrixCOO* A_coo = ReSolve::matrix::io::readMatrixFromFile(mat1);
-  ReSolve::MatrixCSR* A = new ReSolve::MatrixCSR(A_coo->getNumRows(), A_coo->getNumColumns(), A_coo->getNnz(), A_coo->expanded(), A_coo->symmetric());
+  ReSolve::matrix::Coo* A_coo = ReSolve::matrix::io::readMatrixFromFile(mat1);
+  ReSolve::matrix::Csr* A = new ReSolve::matrix::Csr(A_coo->getNumRows(), A_coo->getNumColumns(), A_coo->getNnz(), A_coo->expanded(), A_coo->symmetric());
   mat1.close();
 
   // Read first rhs vector
@@ -92,8 +92,8 @@ int main(int argc, char *argv[])
 // but DO NOT SOLVE with KLU!
 
 
-  ReSolve::Matrix* L = KLU->getLFactor();
-  ReSolve::Matrix* U = KLU->getUFactor();
+  ReSolve::matrix::Sparse* L = KLU->getLFactor();
+  ReSolve::matrix::Sparse* U = KLU->getUFactor();
   if (L == nullptr) {printf("ERROR");}
   index_type* P = KLU->getPOrdering();
   index_type* Q = KLU->getQOrdering();

@@ -1,6 +1,6 @@
 #pragma once
 #include "Common.hpp"
-#include "Matrix.hpp"
+#include <resolve/matrix/Sparse.hpp>
 #include "Vector.hpp"
 #include "LinSolver.hpp"
 
@@ -15,13 +15,13 @@ namespace ReSolve
   {
     public:
       LinSolverIterativeFGMRES();
-      LinSolverIterativeFGMRES( MatrixHandler* matrix_handler, VectorHandler* vector_handler);
-      LinSolverIterativeFGMRES(index_type restart, real_type tol, index_type maxit, std::string GS_version, index_type conv_cond, MatrixHandler* matrix_handler, VectorHandler* vector_handler);
+      LinSolverIterativeFGMRES( matrix::MatrixHandler* matrix_handler, VectorHandler* vector_handler);
+      LinSolverIterativeFGMRES(index_type restart, real_type tol, index_type maxit, std::string GS_version, index_type conv_cond, matrix::MatrixHandler* matrix_handler, VectorHandler* vector_handler);
       ~LinSolverIterativeFGMRES();
 
       int solve(Vector* rhs, Vector* x);
-      int setup(Matrix* A);
-      int resetMatrix(Matrix* new_A); 
+      int setup(matrix::Sparse* A);
+      int resetMatrix(matrix::Sparse* new_A); 
       int setupPreconditioner(std::string name, LinSolverDirect* LU_solver);
 
       real_type getTol();

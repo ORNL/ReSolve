@@ -1,10 +1,10 @@
 #include <string>
 #include <iostream>
 
-#include <resolve/MatrixCOO.hpp>
+#include <resolve/matrix/Coo.hpp>
 #include <resolve/Vector.hpp>
 #include <resolve/matrix/io.hpp>
-#include <resolve/MatrixHandler.hpp>
+#include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/VectorHandler.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
 #include <resolve/LinSolverDirectCuSolverGLU.hpp>
@@ -27,11 +27,11 @@ int main(int argc, char *argv[])
   std::string matrixFileNameFull;
   std::string rhsFileNameFull;
 
-  ReSolve::MatrixCOO* A_coo;
-  ReSolve::MatrixCSR* A;
+  ReSolve::matrix::Coo* A_coo;
+  ReSolve::matrix::Csr* A;
   ReSolve::LinAlgWorkspaceCUDA* workspace_CUDA = new ReSolve::LinAlgWorkspaceCUDA;
   workspace_CUDA->initializeHandles();
-  ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(workspace_CUDA);
+  ReSolve::matrix::MatrixHandler* matrix_handler =  new ReSolve::matrix::MatrixHandler(workspace_CUDA);
   ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(workspace_CUDA);
   real_type* rhs;
   real_type* x;
@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
     }
     if (i == 0) {
       A_coo = ReSolve::matrix::io::readMatrixFromFile(mat_file);
-      A = new ReSolve::MatrixCSR(A_coo->getNumRows(), A_coo->getNumColumns(), A_coo->getNnz(), A_coo->expanded(), A_coo->symmetric());
+      A = new ReSolve::matrix::Csr(A_coo->getNumRows(), A_coo->getNumColumns(), A_coo->getNnz(), A_coo->expanded(), A_coo->symmetric());
 
       rhs = ReSolve::matrix::io::readRhsFromFile(rhs_file);
       x = new real_type[A->getNumRows()];
@@ -116,8 +116,8 @@ int main(int argc, char *argv[])
       std::cout<<"KLU analysis status: "<<status<<std::endl;
       status = KLU->factorize();
       std::cout<<"KLU factorization status: "<<status<<std::endl;
-      ReSolve::Matrix* L = KLU->getLFactor();
-      ReSolve::Matrix* U = KLU->getUFactor();
+      ReSolve::matrix::Sparse* L = KLU->getLFactor();
+      ReSolve::matrix::Sparse* U = KLU->getUFactor();
       if (L == nullptr) {printf("ERROR");}
       index_type* P = KLU->getPOrdering();
       index_type* Q = KLU->getQOrdering();

@@ -2,22 +2,21 @@
 // Mirroring memory approach 
 #pragma once
 #include <string>
-#include "Common.hpp"
+#include <resolve/Common.hpp>
 
-namespace ReSolve 
-{
-  class Matrix 
+namespace ReSolve { namespace matrix {
+  class Sparse 
   {
     public:
       //basic constructor
-      Matrix();
-      Matrix(index_type n, index_type m, index_type nnz);
-      Matrix(index_type n, 
+      Sparse();
+      Sparse(index_type n, index_type m, index_type nnz);
+      Sparse(index_type n, 
              index_type m, 
              index_type nnz,
              bool symmetric,
              bool expanded);
-      virtual ~Matrix();
+      virtual ~Sparse();
 
       // accessors
       index_type getNumRows();
@@ -72,4 +71,4 @@ namespace ReSolve
       void setNotUpdated();
 
   };
-}
+}} // namespace ReSolve::matrix

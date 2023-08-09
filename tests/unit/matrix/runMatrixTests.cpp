@@ -1,7 +1,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
-#include <resolve/MatrixCOO.hpp>
+#include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/io.hpp>
 #include "MatrixTests.hpp"
 

@@ -1,5 +1,5 @@
 #pragma once
-#include "Matrix.hpp"
+#include <resolve/matrix/Sparse.hpp>
 #include "Vector.hpp"
 
 namespace ReSolve
@@ -15,7 +15,7 @@ namespace ReSolve
 
       int setup_ir(real_type ir_tol, index_type ir_maxit, index_type ir_gs_);
       
-      int solve(Matrix* A, Vector* vec_rhs, Vector* vec_x);
+      int solve(matrix::Sparse* A, Vector* vec_rhs, Vector* vec_x);
     
     private:
       std::string first_solver_name_;

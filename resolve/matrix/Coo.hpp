@@ -1,19 +1,19 @@
 #pragma once
-#include "Matrix.hpp"
+#include "Sparse.hpp"
 
-namespace ReSolve
-{
-  class MatrixCOO : public Matrix
+namespace ReSolve { namespace matrix {
+
+  class Coo : public Sparse
   {
     public:
-      MatrixCOO();
-      MatrixCOO(index_type n, index_type m, index_type nnz);
-      MatrixCOO(index_type n, 
+      Coo();
+      Coo(index_type n, index_type m, index_type nnz);
+      Coo(index_type n, 
                 index_type m, 
                 index_type nnz,
                 bool symmetric,
                 bool expanded);
-      ~MatrixCOO();
+      ~Coo();
 
       virtual index_type* getRowData(std::string memspace);
       virtual index_type* getColData(std::string memspace);
@@ -30,4 +30,5 @@ namespace ReSolve
 
       index_type copyCoo(std::string memspaceOut);
   };
-}
+
+}} // namespace ReSolve::matrix

@@ -4,32 +4,32 @@
 
 #include <cuda_runtime.h>
 
-#include "MatrixCOO.hpp"
+#include "Coo.hpp"
 
 
 namespace ReSolve 
 {
-  MatrixCOO::MatrixCOO()
+  matrix::Coo::Coo()
   {
   }
 
-  MatrixCOO::MatrixCOO(index_type n, index_type m, index_type nnz) : Matrix(n, m, nnz)
+  matrix::Coo::Coo(index_type n, index_type m, index_type nnz) : Sparse(n, m, nnz)
   {
   }
   
-  MatrixCOO::MatrixCOO(index_type n, 
+  matrix::Coo::Coo(index_type n, 
                        index_type m, 
                        index_type nnz,
                        bool symmetric,
-                       bool expanded) : Matrix(n, m, nnz, symmetric, expanded)
+                       bool expanded) : Sparse(n, m, nnz, symmetric, expanded)
   {
   }
   
-  MatrixCOO::~MatrixCOO()
+  matrix::Coo::~Coo()
   {
   }
 
-  index_type* MatrixCOO::getRowData(std::string memspace)
+  index_type* matrix::Coo::getRowData(std::string memspace)
   {
     if (memspace == "cpu") {
       copyCoo("cpu");
@@ -44,7 +44,7 @@ namespace ReSolve
     }
   }
 
-  index_type* MatrixCOO::getColData(std::string memspace)
+  index_type* matrix::Coo::getColData(std::string memspace)
   {
     if (memspace == "cpu") {
       copyCoo("cpu");
@@ -59,7 +59,7 @@ namespace ReSolve
     }
   }
 
-  real_type* MatrixCOO::getValues(std::string memspace)
+  real_type* matrix::Coo::getValues(std::string memspace)
   {
     if (memspace == "cpu") {
       copyCoo("cpu");
@@ -74,7 +74,7 @@ namespace ReSolve
     }
   }
 
-  index_type MatrixCOO::updateData(index_type* row_data, index_type* col_data, real_type* val_data, std::string memspaceIn, std::string memspaceOut)
+  index_type matrix::Coo::updateData(index_type* row_data, index_type* col_data, real_type* val_data, std::string memspaceIn, std::string memspaceOut)
   {
 
     //four cases (for now)
@@ -144,14 +144,14 @@ namespace ReSolve
     return 0;
   } 
 
-  index_type MatrixCOO::updateData(index_type* row_data, index_type* col_data, real_type* val_data, index_type new_nnz, std::string memspaceIn, std::string memspaceOut)
+  index_type matrix::Coo::updateData(index_type* row_data, index_type* col_data, real_type* val_data, index_type new_nnz, std::string memspaceIn, std::string memspaceOut)
   {
     this->destroyMatrixData(memspaceOut);
     int i = this->updateData(row_data, col_data, val_data, memspaceIn, memspaceOut);
     return i;
   } 
 
-  index_type MatrixCOO::allocateMatrixData(std::string memspace)
+  index_type matrix::Coo::allocateMatrixData(std::string memspace)
   {
     index_type nnz_current = nnz_;
     if (is_expanded_) {nnz_current = nnz_expanded_;}
@@ -176,7 +176,7 @@ namespace ReSolve
     return -1;
   }
 
-  index_type MatrixCOO::copyCoo(std::string memspaceOut)
+  index_type matrix::Coo::copyCoo(std::string memspaceOut)
   {
 
     index_type nnz_current = nnz_;
@@ -223,7 +223,7 @@ namespace ReSolve
     return -1;
   }
 
-  void MatrixCOO::print()
+  void matrix::Coo::print()
   {
     std::cout << "  Row:        Column:           Value:\n";
     for(int i = 0; i < nnz_; ++i) {

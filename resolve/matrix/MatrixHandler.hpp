@@ -4,15 +4,15 @@
 // (2) Matrix vector product (SpMV)
 // (3) Matrix 1-norm
 #pragma once
-#include "MatrixCSR.hpp"
-#include "MatrixCSC.hpp"
-#include "MatrixCOO.hpp"
-#include "Vector.hpp"
-#include "LinAlgWorkspace.hpp"
+#include "Csr.hpp"
+#include "Csc.hpp"
+#include "Coo.hpp"
+#include <resolve/Vector.hpp>
+#include <resolve/LinAlgWorkspace.hpp>
 #include <algorithm>
 
-namespace ReSolve
-{
+namespace ReSolve { namespace matrix {
+
   //helper class
   class indexPlusValue
   {
@@ -42,11 +42,11 @@ namespace ReSolve
       MatrixHandler(LinAlgWorkspace* workspace);
       ~MatrixHandler();
 
-      index_type csc2csr(MatrixCSC* A_csr, MatrixCSR* A_csc, std::string memspace);//memspace decides on what is returned (cpu or cuda pointer)
-      void coo2csr(MatrixCOO* A_coo, MatrixCSR* A_csr, std::string memspace);
+      index_type csc2csr(Csc* A_csr, Csr* A_csc, std::string memspace);//memspace decides on what is returned (cpu or cuda pointer)
+      void coo2csr(Coo* A_coo, Csr* A_csr, std::string memspace);
 
-      int matvec(Matrix* A, Vector* vec_x, Vector* vec_result, real_type* alpha, real_type* beta,std::string matrix_type, std::string memspace);
-      void Matrix1Norm(Matrix *A, real_type* norm);
+      int matvec(Sparse* A, Vector* vec_x, Vector* vec_result, real_type* alpha, real_type* beta,std::string matrix_type, std::string memspace);
+      void Matrix1Norm(Sparse *A, real_type* norm);
      bool getValuesChanged();
      void setValuesChanged(bool toWhat); 
     
@@ -55,5 +55,6 @@ namespace ReSolve
       bool new_matrix_; //if the structure changed, you need a new handler.
       bool values_changed_; // needed for matvec
   };
-}
+
+}} // namespace ReSolve::matrix
 
