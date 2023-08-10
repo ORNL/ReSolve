@@ -18,8 +18,8 @@ namespace ReSolve
       
       int refactorize();
       int solve(Vector* rhs, Vector* x);
-      int solve(Vector* rhs); ///< The solutuon is returned IN RHS (the rhs is overwritten)
-
+      int solve(Vector* rhs);// the solutuon is returned IN RHS (rhs is overwritten)
+      int setNumericalProperties(double nzero, double nboost);//these two NEED TO BE DOUBLE
     private:
       cusolverRfHandle_t handle_cusolverrf_;
       cusolverStatus_t status_cusolverrf_;

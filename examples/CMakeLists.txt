@@ -26,7 +26,11 @@ target_link_libraries(klu_rf_fgmres.exe PRIVATE ReSolve)
 add_executable(klu_rf_fgmres_reuse_refactorization.exe r_KLU_rf_FGMRES_reuse_factorization.cpp)
 target_link_libraries(klu_rf_fgmres_reuse_refactorization.exe PRIVATE ReSolve)
 
+# Build example where matrix data is updated 
+add_executable(klu_glu_values_update.exe r_KLU_GLU_matrix_values_update.cpp)
+target_link_libraries(klu_glu_values_update.exe PRIVATE ReSolve)
+
 # Install all examples in bin directory
-set(installable_executables klu_klu.exe klu_glu.exe klu_rf.exe klu_rf_fgmres.exe)
+set(installable_executables klu_klu.exe klu_glu.exe klu_rf.exe klu_rf_fgmres.exe klu_glu_values_update.exe)
 install(TARGETS ${installable_executables} 
         RUNTIME DESTINATION bin)

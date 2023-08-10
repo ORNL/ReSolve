@@ -1,3 +1,4 @@
+#include <cstring>  // <-- includes memcpy
 #include "Sparse.hpp"
 #include <cuda_runtime.h>
 
@@ -177,4 +178,74 @@ index_type Sparse::getNumRows()
     }
     return 0;
   }
+
+  int Sparse::updateValues(real_type* new_vals, std::string memspaceIn, std::string memspaceOut)
+  {
+ 
+    index_type nnz_current = nnz_;
+    if (is_expanded_) {nnz_current = nnz_expanded_;}
+    //four cases (for now)
+    setNotUpdated();
+    int control=-1;
+    if ((memspaceIn == "cpu") && (memspaceOut == "cpu")){ control = 0;}
+    if ((memspaceIn == "cpu") && (memspaceOut == "cuda")){ control = 1;}
+    if ((memspaceIn == "cuda") && (memspaceOut == "cpu")){ control = 2;}
+    if ((memspaceIn == "cuda") && (memspaceOut == "cuda")){ control = 3;}
+   
+    if (memspaceOut == "cpu") {
+      //check if cpu data allocated
+      if (h_val_data_ == nullptr) {
+        this->h_val_data_ = new real_type[nnz_current];
+      }
+    }
+
+    if (memspaceOut == "cuda") {
+      //check if cuda data allocated
+      if (d_val_data_ == nullptr) {
+        cudaMalloc(&d_val_data_, nnz_current * sizeof(real_type)); 
+      }
+    }
+
+    switch(control)  {
+      case 0: //cpu->cpu
+        std::memcpy(h_val_data_, new_vals, (nnz_current) * sizeof(real_type));
+        h_data_updated_ = true;
+        break;
+      case 2://cuda->cpu
+        cudaMemcpy(h_val_data_, new_vals, (nnz_current) * sizeof(real_type), cudaMemcpyDeviceToHost);
+        h_data_updated_ = true;
+        break;
+      case 1://cpu->cuda
+        cudaMemcpy(d_val_data_, new_vals, (nnz_current) * sizeof(real_type), cudaMemcpyHostToDevice);
+        d_data_updated_ = true;
+        break;
+      case 3://cuda->cuda
+        cudaMemcpy(d_val_data_, new_vals, (nnz_current) * sizeof(real_type), cudaMemcpyDeviceToDevice);
+        d_data_updated_ = true;
+        break;
+      default:
+        return -1;
+    }
+    return 0;
+  }
+
+  int Sparse::setNewValues(real_type* new_vals, std::string memspace)
+  {
+
+    setNotUpdated();
+
+    if (memspace == "cpu"){
+      this->h_val_data_ = new_vals;	
+      h_data_updated_ = true;
+    } else {
+      if (memspace == "cuda"){ 
+        this->d_val_data_ = new_vals;	
+        d_data_updated_ = true;
+      } else {
+        return -1;
+      }
+    }
+    return 0;
+  }
+
 }} // namespace ReSolve::matrix

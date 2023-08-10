@@ -117,4 +117,10 @@ namespace ReSolve
                                           A_->getNumRows());
     return status_cusolverrf_;
   }
-} // namespace ReSolve 
+
+  int LinSolverDirectCuSolverRf::setNumericalProperties(double nzero, double nboost)
+  {
+    status_cusolverrf_ = cusolverRfSetNumericProperties(handle_cusolverrf_, nzero, nboost);
+      return status_cusolverrf_;
+  }
+}// namespace resolve

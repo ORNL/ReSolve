@@ -45,6 +45,14 @@ namespace ReSolve { namespace matrix {
       index_type destroyMatrixData(std::string memspace);
 
       virtual void print() = 0;
+
+
+      //update Values just updates values; it allocates if necessary.
+      //values have the same dimensions between different formats 
+      virtual int updateValues(real_type* new_vals, std::string memspaceIn, std::string memspaceOut);
+      
+      //set new values just sets the pointer, use caution.   
+      virtual int setNewValues(real_type* new_vals, std::string memspace);
     
     protected:
       //size

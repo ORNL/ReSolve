@@ -136,7 +136,7 @@ namespace ReSolve
       // check if maybe residual is already small enough?
       if(it == 0) {
         tolrel = tol_ * rnorm;
-        if(fabs(tolrel) < 1e-16) {
+ if(fabs(tolrel) < 1e-16) {
           tolrel = 1e-16;
         }
       }
