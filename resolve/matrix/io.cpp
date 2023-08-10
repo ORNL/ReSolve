@@ -159,13 +159,13 @@ namespace ReSolve { namespace matrix { namespace io {
     }
   }
 
-  int writeMatrixToFile(Sparse* A, std::ostream file_out)
+  int writeMatrixToFile(Sparse* A, std::ostream& file_out)
   {
     std::cout << "writeMatrixToFile function not implemented!\n";
     return -1;
   }
 
-  int writeVectorToFile(Vector* vec_x, std::ostream file_out)
+  int writeVectorToFile(Vector* vec_x, std::ostream& file_out)
   {
     real_type* x_data = vec_x->getData("cpu");
     // std::ofstream file_out (filename, std::ofstream::out);

@@ -15,9 +15,6 @@ namespace io {
   real_type* readRhsFromFile(std::istream& file); 
   void readAndUpdateRhs(std::istream& file, real_type** rhs); 
 
-  int writeMatrixToFile(Sparse* A, std::ostream file_out);
-  int writeVectorToFile(Vector* vec_x, std::ostream file_out);
-
-} // namespace io
-
-}} // namespace ReSolve::matrix
+  int writeMatrixToFile(Sparse* A, std::ostream& file_out);
+  int writeVectorToFile(Vector* vec_x, std::ostream &file_out);
+}}} // ReSolve::matrix::io

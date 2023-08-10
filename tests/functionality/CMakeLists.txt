@@ -14,6 +14,12 @@ target_link_libraries(klu_klu_test.exe PRIVATE ReSolve)
 add_executable(klu_rf_test.exe testKLU_Rf.cpp)
 target_link_libraries(klu_rf_test.exe PRIVATE ReSolve)
 
+# Build KLU+Rf+fgmres test
+add_executable(klu_rf_fgmres_test.exe testKLU_Rf_FGMRES.cpp)
+target_link_libraries(klu_rf_fgmres_test.exe PRIVATE ReSolve)
+
+
+
 # Build KLU+GLU test
 add_executable(klu_glu_test.exe testKLU_GLU.cpp)
 target_link_libraries(klu_glu_test.exe PRIVATE ReSolve)
@@ -22,6 +28,7 @@ target_link_libraries(klu_glu_test.exe PRIVATE ReSolve)
 set(installable_tests 
         klu_klu_test.exe
         klu_rf_test.exe
+        klu_rf_fgmres_test.exe
         klu_glu_test.exe)
 
 install(TARGETS ${installable_tests} 
@@ -34,4 +41,5 @@ set(test_data_dir ${CMAKE_SOURCE_DIR}/tests/functionality/)
 
 add_test(NAME klu_klu_test COMMAND $<TARGET_FILE:klu_klu_test.exe> "${test_data_dir}")
 add_test(NAME klu_rf_test  COMMAND $<TARGET_FILE:klu_rf_test.exe>  "${test_data_dir}")
+add_test(NAME klu_rf_fgmres_test COMMAND $<TARGET_FILE:klu_rf_fgmres_test.exe> "${test_data_dir}")
 add_test(NAME klu_glu_test COMMAND $<TARGET_FILE:klu_glu_test.exe> "${test_data_dir}")
