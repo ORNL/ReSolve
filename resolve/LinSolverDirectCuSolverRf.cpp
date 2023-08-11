@@ -90,7 +90,7 @@ namespace ReSolve
   }
 
   // solution is returned in RHS
-  int LinSolverDirectCuSolverRf::solve(Vector* rhs)
+  int LinSolverDirectCuSolverRf::solve(vector_type* rhs)
   {
     status_cusolverrf_ =  cusolverRfSolve(handle_cusolverrf_,
                                           d_P_,
@@ -103,7 +103,7 @@ namespace ReSolve
     return status_cusolverrf_;
   }
 
-  int LinSolverDirectCuSolverRf::solve(Vector* rhs, Vector* x)
+  int LinSolverDirectCuSolverRf::solve(vector_type* rhs, vector_type* x)
   {
     x->update(rhs->getData("cuda"), "cuda", "cuda");
     x->setDataUpdated("cuda");

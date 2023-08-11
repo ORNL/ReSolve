@@ -1,7 +1,7 @@
 #pragma once
 #include "Common.hpp"
 #include <resolve/matrix/Sparse.hpp>
-#include "Vector.hpp"
+#include <resolve/vector/Vector.hpp>
 #include "LinSolver.hpp"
 
 namespace ReSolve 
@@ -13,13 +13,15 @@ namespace ReSolve
 
   class LinSolverIterativeFGMRES : public LinSolverIterative
   {
+    using vector_type = vector::Vector;
+    
     public:
       LinSolverIterativeFGMRES();
-      LinSolverIterativeFGMRES( matrix::MatrixHandler* matrix_handler, VectorHandler* vector_handler);
-      LinSolverIterativeFGMRES(index_type restart, real_type tol, index_type maxit, std::string GS_version, index_type conv_cond, matrix::MatrixHandler* matrix_handler, VectorHandler* vector_handler);
+      LinSolverIterativeFGMRES( MatrixHandler* matrix_handler, VectorHandler* vector_handler);
+      LinSolverIterativeFGMRES(index_type restart, real_type tol, index_type maxit, std::string GS_version, index_type conv_cond, MatrixHandler* matrix_handler, VectorHandler* vector_handler);
       ~LinSolverIterativeFGMRES();
 
-      int solve(Vector* rhs, Vector* x);
+      int solve(vector_type* rhs, vector_type* x);
       int setup(matrix::Sparse* A);
       int resetMatrix(matrix::Sparse* new_A); 
       int setupPreconditioner(std::string name, LinSolverDirect* LU_solver);
@@ -64,7 +66,7 @@ namespace ReSolve
 
 
       int GramSchmidt(index_type i);
-      void precV(Vector* rhs, Vector* x); //multiply the vector by preconditioner
+      void precV(vector_type* rhs, vector_type* x); //multiply the vector by preconditioner
       LinSolverDirect* LU_solver_;
       index_type n_;// for simplicity
       real_type one_ = 1.0;

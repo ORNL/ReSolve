@@ -1,9 +1,9 @@
 #include <cstring>
 #include <cuda_runtime.h>
-#include "Vector.hpp"
+#include <resolve/vector/Vector.hpp>
 
-namespace ReSolve 
-{
+namespace ReSolve { namespace vector {
+
   Vector::Vector(index_type n):
     n_{n}
   {
@@ -186,4 +186,4 @@ namespace ReSolve
       }
     }
   }
-}
+}} // namespace ReSolve::vector

@@ -8,6 +8,8 @@ namespace ReSolve
 {
   class LinSolverDirectCuSolverRf : public LinSolverDirect 
   {
+    using vector_type = vector::Vector;
+    
     public: 
       LinSolverDirectCuSolverRf();
       ~LinSolverDirectCuSolverRf();
@@ -17,8 +19,8 @@ namespace ReSolve
       void setAlgorithms(cusolverRfFactorization_t fact_alg,  cusolverRfTriangularSolve_t solve_alg);
       
       int refactorize();
-      int solve(Vector* rhs, Vector* x);
-      int solve(Vector* rhs);// the solutuon is returned IN RHS (rhs is overwritten)
+      int solve(vector_type* rhs, vector_type* x);
+      int solve(vector_type* rhs);// the solutuon is returned IN RHS (rhs is overwritten)
       int setNumericalProperties(double nzero, double nboost);//these two NEED TO BE DOUBLE
     private:
       cusolverRfHandle_t handle_cusolverrf_;

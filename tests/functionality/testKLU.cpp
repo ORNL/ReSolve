@@ -2,11 +2,11 @@
 #include <iostream>
 #include <iomanip>
 
-#include <resolve/Vector.hpp>
+#include <resolve/vector/Vector.hpp>
 #include <resolve/matrix/io.hpp>
 #include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
-#include <resolve/VectorHandler.hpp>
+#include <resolve/vector/VectorHandler.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
 //author: KS
 //functionality test to check whether KLU works correctly.
@@ -16,6 +16,7 @@ int main(int argc, char *argv[])
   // Use ReSolve data types.
   using index_type = ReSolve::index_type;
   using real_type  = ReSolve::real_type;
+  using vector_type = ReSolve::vector::Vector;
 
   //we want error sum to be 0 at the end
   //that means PASS.
@@ -25,7 +26,7 @@ int main(int argc, char *argv[])
 
   ReSolve::LinAlgWorkspaceCUDA* workspace_CUDA = new ReSolve::LinAlgWorkspaceCUDA;
   workspace_CUDA->initializeHandles();
-  ReSolve::matrix::MatrixHandler* matrix_handler =  new ReSolve::matrix::MatrixHandler(workspace_CUDA);
+  ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(workspace_CUDA);
   ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(workspace_CUDA);
 
   real_type one = 1.0;
@@ -52,7 +53,7 @@ int main(int argc, char *argv[])
     std::cout << "Failed to open file " << matrixFileName1 << "\n";
     return -1;
   }
-  ReSolve::matrix::Coo* A_coo = ReSolve::matrix::io::readMatrixFromFile(mat1);
+  ReSolve::matrix::Coo* A_coo = ReSolve::io::readMatrixFromFile(mat1);
   ReSolve::matrix::Csr* A = new ReSolve::matrix::Csr(A_coo->getNumRows(), A_coo->getNumColumns(), A_coo->getNnz(), A_coo->expanded(), A_coo->symmetric());
   mat1.close();
 
@@ -63,11 +64,11 @@ int main(int argc, char *argv[])
     std::cout << "Failed to open file " << rhsFileName1 << "\n";
     return -1;
   }
-  real_type* rhs = ReSolve::matrix::io::readRhsFromFile(rhs1_file);
+  real_type* rhs = ReSolve::io::readRhsFromFile(rhs1_file);
   real_type* x = new real_type[A->getNumRows()];
-  ReSolve::Vector* vec_rhs = new ReSolve::Vector(A->getNumRows());
-  ReSolve::Vector* vec_x   = new ReSolve::Vector(A->getNumRows());
-  ReSolve::Vector* vec_r   = new ReSolve::Vector(A->getNumRows());
+  vector_type* vec_rhs = new vector_type(A->getNumRows());
+  vector_type* vec_x   = new vector_type(A->getNumRows());
+  vector_type* vec_r   = new vector_type(A->getNumRows());
   rhs1_file.close();
 
   // Convert first matrix to CSR format
@@ -89,10 +90,10 @@ int main(int argc, char *argv[])
   error_sum += status;
 
 
-  ReSolve::Vector* vec_test;
-  ReSolve::Vector* vec_diff;
-  vec_test  = new ReSolve::Vector(A->getNumRows());
-  vec_diff  = new ReSolve::Vector(A->getNumRows());
+  vector_type* vec_test;
+  vector_type* vec_diff;
+  vec_test  = new vector_type(A->getNumRows());
+  vec_diff  = new vector_type(A->getNumRows());
   real_type* x_data = new real_type[A->getNumRows()];
   for (int i=0; i<A->getNumRows(); ++i){
     x_data[i] = 1.0;
@@ -149,7 +150,7 @@ int main(int argc, char *argv[])
     std::cout << "Failed to open file " << matrixFileName2 << "\n";
     return -1;
   }
-  ReSolve::matrix::io::readAndUpdateMatrix(mat2, A_coo);
+  ReSolve::io::readAndUpdateMatrix(mat2, A_coo);
   mat2.close();
 
   // Load the second rhs vector
@@ -159,7 +160,7 @@ int main(int argc, char *argv[])
     std::cout << "Failed to open file " << rhsFileName2 << "\n";
     return -1;
   }
-  ReSolve::matrix::io::readAndUpdateRhs(rhs2_file, &rhs);
+  ReSolve::io::readAndUpdateRhs(rhs2_file, &rhs);
   rhs2_file.close();
 
   matrix_handler->coo2csr(A_coo, A, "cuda");

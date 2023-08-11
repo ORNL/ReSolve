@@ -160,7 +160,7 @@ namespace ReSolve
     return error_sum;
   }
 
-  int LinSolverDirectCuSolverGLU::solve(Vector* rhs, Vector* x)
+  int LinSolverDirectCuSolverGLU::solve(vector_type* rhs, vector_type* x)
   {
 
     status_cusolver_ =  cusolverSpDgluSolve(handle_cusolversp_,

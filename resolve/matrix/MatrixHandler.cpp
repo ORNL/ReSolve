@@ -1,7 +1,9 @@
-#include "MatrixHandler.hpp"
 #include <iostream>
+#include <resolve/vector/Vector.hpp>
 
-namespace ReSolve { namespace matrix {
+#include "MatrixHandler.hpp"
+
+namespace ReSolve {
 
   //helper class
   indexPlusValue::indexPlusValue()
@@ -61,7 +63,7 @@ namespace ReSolve { namespace matrix {
     this->values_changed_ = toWhat;
   }
 
-  void MatrixHandler::coo2csr(Coo* A_coo, Csr* A_csr, std::string memspace)
+  int MatrixHandler::coo2csr(matrix::Coo* A_coo, matrix::Csr* A_csr, std::string memspace)
   {
     //this happens on the CPU not on the GPU
     //but will return whatever memspace requested.
@@ -217,11 +219,13 @@ namespace ReSolve { namespace matrix {
     delete [] csr_ja;
     delete [] csr_a;
     delete [] diag_control; 
+
+    return 0;
   }
 
-  int MatrixHandler::matvec(Sparse* Ageneric, 
-                            Vector* vec_x, 
-                            Vector* vec_result, 
+  int MatrixHandler::matvec(matrix::Sparse* Ageneric, 
+                            vector_type* vec_x, 
+                            vector_type* vec_result, 
                             real_type* alpha, 
                             real_type* beta,
                             std::string matrixFormat, 
@@ -229,7 +233,7 @@ namespace ReSolve { namespace matrix {
   {
     int error_sum = 0;
     if (matrixFormat == "csr"){
-      Csr* A = (Csr*) Ageneric;
+      matrix::Csr* A = (matrix::Csr*) Ageneric;
       cusparseStatus_t status;
       //result = alpha *A*x + beta * result
       if (memspace == "cuda" ){
@@ -346,7 +350,7 @@ namespace ReSolve { namespace matrix {
   }
 
 
-  index_type MatrixHandler::csc2csr(Csc* A_csc, Csr* A_csr, std::string memspace)
+  int MatrixHandler::csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr, std::string memspace)
   {
     //it ONLY WORKS WITH CUDA
    index_type error_sum = 0;
@@ -402,4 +406,4 @@ namespace ReSolve { namespace matrix {
 
   }
 
-}} // namespace ReSolve::matrix
+} // namespace ReSolve
