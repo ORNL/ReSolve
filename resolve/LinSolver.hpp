@@ -2,14 +2,17 @@
 #include <string>
 #include "Common.hpp"
 #include <resolve/matrix/Sparse.hpp>
-#include "Vector.hpp"
+#include <resolve/vector/Vector.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
-#include "VectorHandler.hpp"
+#include <resolve/vector/VectorHandler.hpp>
 
 namespace ReSolve 
 {
   class LinSolver 
   {
+    protected:
+      using vector_type = vector::Vector;
+
     public:
       LinSolver();
       ~LinSolver();
@@ -22,7 +25,7 @@ namespace ReSolve
       real_type* rhs_;
       real_type* sol_;
 
-      matrix::MatrixHandler *matrix_handler_;
+      MatrixHandler *matrix_handler_;
       VectorHandler *vector_handler_;
   };
 
@@ -35,7 +38,7 @@ namespace ReSolve
       virtual int analyze(); //the same as symbolic factorization
       virtual int factorize();
       virtual int refactorize();
-      virtual int solve(Vector* rhs, Vector* x); 
+      virtual int solve(vector_type* rhs, vector_type* x); 
      
       virtual matrix::Sparse* getLFactor(); 
       virtual matrix::Sparse* getUFactor(); 
@@ -56,7 +59,7 @@ namespace ReSolve
       LinSolverIterative();
       ~LinSolverIterative();
 
-      virtual int  solve(Vector* rhs, Vector* init_guess);
+      virtual int  solve(vector_type* rhs, vector_type* init_guess);
 
   };
 }

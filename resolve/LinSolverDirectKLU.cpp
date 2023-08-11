@@ -62,7 +62,7 @@ namespace ReSolve
     return 0;
   }
 
-  int LinSolverDirectKLU::solve(Vector* rhs, Vector* x) 
+  int LinSolverDirectKLU::solve(vector_type* rhs, vector_type* x) 
   {
     //copy the vector
 

@@ -4,13 +4,14 @@
 #include <fstream>
 #include <sstream>
 
+#include <resolve/vector/Vector.hpp>
 #include <resolve/matrix/Coo.hpp>
 #include "io.hpp"
 
 
-namespace ReSolve { namespace matrix { namespace io {
+namespace ReSolve { namespace io {
 
-  Coo* readMatrixFromFile(std::istream& file)
+  matrix::Coo* readMatrixFromFile(std::istream& file)
   {
     if(!file) {
       std::cout << "Empty input to readMatrixFromFile function ... \n" <<std::endl;
@@ -37,7 +38,7 @@ namespace ReSolve { namespace matrix { namespace io {
     ss << line;
     ss >> n >> m >> nnz;
     //create matrix object
-    Coo* A = new Coo(n, m, nnz,symmetric, expanded );  
+    matrix::Coo* A = new matrix::Coo(n, m, nnz,symmetric, expanded );  
     //create coo arrays
     index_type* coo_rows = new index_type[nnz];
     index_type* coo_cols = new index_type[nnz];
@@ -85,7 +86,7 @@ namespace ReSolve { namespace matrix { namespace io {
     return vec;
   }
 
-  void readAndUpdateMatrix(std::istream& file, Coo* A)
+  void readAndUpdateMatrix(std::istream& file, matrix::Coo* A)
   {
     if(!file) {
       std::cout << "Empty input to readMatrixFromFile function ... \n" <<std::endl;
@@ -159,13 +160,13 @@ namespace ReSolve { namespace matrix { namespace io {
     }
   }
 
-  int writeMatrixToFile(Sparse* A, std::ostream& file_out)
+  int writeMatrixToFile(matrix::Sparse* A, std::ostream& file_out)
   {
     std::cout << "writeMatrixToFile function not implemented!\n";
     return -1;
   }
 
-  int writeVectorToFile(Vector* vec_x, std::ostream& file_out)
+  int writeVectorToFile(vector_type* vec_x, std::ostream& file_out)
   {
     real_type* x_data = vec_x->getData("cpu");
     // std::ofstream file_out (filename, std::ofstream::out);
@@ -179,4 +180,4 @@ namespace ReSolve { namespace matrix { namespace io {
     return 0;
   }
 
-}}} // ReSolve::matrix::io
+}} // ReSolve::io

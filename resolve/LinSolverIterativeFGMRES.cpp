@@ -19,7 +19,7 @@ namespace ReSolve
     d_Z_ = nullptr;
   }
 
-  LinSolverIterativeFGMRES::LinSolverIterativeFGMRES(matrix::MatrixHandler* matrix_handler, VectorHandler* vector_handler)
+  LinSolverIterativeFGMRES::LinSolverIterativeFGMRES(MatrixHandler* matrix_handler, VectorHandler* vector_handler)
   {
     this->matrix_handler_ = matrix_handler;
     this->vector_handler_ = vector_handler;
@@ -34,7 +34,7 @@ namespace ReSolve
     d_Z_ = nullptr;
   }
 
-  LinSolverIterativeFGMRES::LinSolverIterativeFGMRES(index_type restart, real_type tol, index_type maxit, std::string GS_version, index_type conv_cond, matrix::MatrixHandler* matrix_handler, VectorHandler* vector_handler)
+  LinSolverIterativeFGMRES::LinSolverIterativeFGMRES(index_type restart, real_type tol, index_type maxit, std::string GS_version, index_type conv_cond, MatrixHandler* matrix_handler, VectorHandler* vector_handler)
   {
     this->matrix_handler_ = matrix_handler;
     this->vector_handler_ = vector_handler;
@@ -99,7 +99,7 @@ namespace ReSolve
     return 0;
   }
 
-  int  LinSolverIterativeFGMRES::solve(Vector* rhs, Vector* x)
+  int  LinSolverIterativeFGMRES::solve(vector_type* rhs, vector_type* x)
   {
     int outer_flag = 1;
     int notconv = 1; 
@@ -114,8 +114,8 @@ namespace ReSolve
     real_type bnorm;
     // real_type rnorm_aux;
     real_type tolrel;
-    Vector* vec_v = new Vector(n_);
-    Vector* vec_z = new Vector(n_);
+    vector_type* vec_v = new vector_type(n_);
+    vector_type* vec_z = new vector_type(n_);
     //V[0] = b-A*x_0
     cudaMemcpy(&(d_V_[0]), rhs->getData("cuda"), sizeof(real_type) * n_, cudaMemcpyDeviceToDevice);
     //cudaMatvec(d_x, d_V_, "residual");
@@ -360,8 +360,8 @@ namespace ReSolve
       }
     }
 
-    Vector* vec_w = new Vector(n_);
-    Vector* vec_v = new Vector(n_);
+    vector_type* vec_w = new vector_type(n_);
+    vector_type* vec_v = new vector_type(n_);
     switch (sw){
       case 0: //mgs
 
@@ -711,7 +711,7 @@ namespace ReSolve
   } // GramSchmidt
 
 
-  void  LinSolverIterativeFGMRES::precV(Vector* rhs, Vector* x)
+  void  LinSolverIterativeFGMRES::precV(vector_type* rhs, vector_type* x)
   { 
     LU_solver_->solve(rhs, x);
   //  x->update(rhs->getData("cuda"), "cuda", "cuda");

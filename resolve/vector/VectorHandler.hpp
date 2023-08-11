@@ -1,9 +1,11 @@
 #pragma once
-#include "LinAlgWorkspace.hpp"
-#include "Vector.hpp"
+#include <resolve/LinAlgWorkspace.hpp>
 
-namespace ReSolve
-{
+namespace ReSolve { namespace vector {
+  class Vector;
+}}
+
+namespace ReSolve { //namespace vector {
   class VectorHandler { 
     public:
       VectorHandler();
@@ -11,13 +13,13 @@ namespace ReSolve
       ~VectorHandler();
 
       //y = alpha x + y
-      void axpy( real_type* alpha, Vector* x, Vector* y, std::string memspace );
+      void axpy( real_type* alpha, vector::Vector* x, vector::Vector* y, std::string memspace );
 
       //dot: x \cdot y
-      real_type dot(Vector* x, Vector* y, std::string memspace );
+      real_type dot(vector::Vector* x, vector::Vector* y, std::string memspace );
 
       //scal = alpha * x
-      void scal(real_type* alpha, Vector* x, std::string memspace);
+      void scal(real_type* alpha, vector::Vector* x, std::string memspace);
 
       //mass axpy: x*alpha + y where x is [n x k] and alpha is [k x 1]; x is stored columnwise
       void massAxpy(index_type size, real_type* alpha, real_type k, real_type* x, real_type* y,  std::string memspace);
@@ -39,4 +41,4 @@ namespace ReSolve
       real_type zero_ = 0.0;
   };
 
-}
+} //} // namespace ReSolve::vector

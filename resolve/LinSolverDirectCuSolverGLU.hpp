@@ -8,12 +8,14 @@ namespace ReSolve
 {
   class LinSolverDirectCuSolverGLU : public LinSolverDirect 
   {
+    using vector_type = vector::Vector;
+    
     public:
       LinSolverDirectCuSolverGLU(LinAlgWorkspace* workspace);
       ~LinSolverDirectCuSolverGLU();
 
       int refactorize();
-      int solve(Vector* rhs, Vector* x);
+      int solve(vector_type* rhs, vector_type* x);
 
       int setup(matrix::Sparse* A, matrix::Sparse* L, matrix::Sparse* U, index_type* P, index_type* Q);
     

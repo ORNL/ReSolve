@@ -1,9 +1,8 @@
 #pragma once
 #include <string>
-#include "Common.hpp"
+#include <resolve/Common.hpp>
 
-namespace ReSolve 
-{
+namespace ReSolve { namespace vector {
   class Vector 
   {
     public:
@@ -27,4 +26,4 @@ namespace ReSolve
       bool cpu_updated_;
       int copyData(std::string memspaceIn, std::string memspaceOut); 
   };
-}
+}} // namespace ReSolve::vector

@@ -8,6 +8,8 @@ namespace ReSolve
 {
   class LinSolverDirectKLU : public LinSolverDirect 
   {
+    using vector_type = vector::Vector;
+    
     public:
       LinSolverDirectKLU();
       ~LinSolverDirectKLU();
@@ -18,7 +20,7 @@ namespace ReSolve
       int analyze(); //the same as symbolic factorization
       int factorize();
       int refactorize();
-      int solve(Vector* rhs, Vector* x); 
+      int solve(vector_type* rhs, vector_type* x); 
     
       matrix::Sparse* getLFactor(); 
       matrix::Sparse* getUFactor(); 

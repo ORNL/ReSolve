@@ -1,9 +1,11 @@
-#include "VectorHandler.hpp"
 #include <iostream>
-#include "cudaKernels.h"
+#include <resolve/cudaKernels.h>
+#include <resolve/vector/Vector.hpp>
 
-namespace ReSolve
-{
+#include "VectorHandler.hpp"
+
+namespace ReSolve {
+
   VectorHandler::VectorHandler()
   {
   }
@@ -18,7 +20,7 @@ namespace ReSolve
     //delete the workspace TODO
   }
 
-  real_type VectorHandler::dot(Vector* x, Vector* y, std::string memspace)
+  real_type VectorHandler::dot(vector::Vector* x, vector::Vector* y, std::string memspace)
   { 
     if (memspace == "cuda" ){ 
       LinAlgWorkspaceCUDA* workspaceCUDA = (LinAlgWorkspaceCUDA*) workspace_;
@@ -39,7 +41,7 @@ namespace ReSolve
           t = sum + y;
           c = (t - sum) - y;
           sum = t;        
-//   sum += (x_data[i] * y_data[i]);
+          //   sum += (x_data[i] * y_data[i]);
          } 
         return sum;
       } else {
@@ -49,7 +51,7 @@ namespace ReSolve
     }
   }
 
-  void VectorHandler::scal(real_type* alpha, Vector* x, std::string memspace)
+  void VectorHandler::scal(real_type* alpha, vector::Vector* x, std::string memspace)
   {
     if (memspace == "cuda" ) { 
       LinAlgWorkspaceCUDA* workspaceCUDA = (LinAlgWorkspaceCUDA*) workspace_;
@@ -61,7 +63,7 @@ namespace ReSolve
       std::cout<<"Not implemented (yet)"<<std::endl;
     }
   }
-  void VectorHandler::axpy( real_type* alpha, Vector* x, Vector* y, std::string memspace )
+  void VectorHandler::axpy( real_type* alpha, vector::Vector* x, vector::Vector* y, std::string memspace )
   {
 
     if (memspace == "cuda" ) { 
@@ -137,17 +139,17 @@ namespace ReSolve
         cublasDgemm(handle_cublas,
                     CUBLAS_OP_N,
                     CUBLAS_OP_N,
-                    size,//m
-                    1,//n
-                    k + 1,//k
-                    &minusone_,//alpha
-                    x,//A
-                    size,//lda
-                    alpha,//B
-                    k + 1,//ldb
+                    size,       // m
+                    1,          // n
+                    k + 1,      // k
+                    &minusone_, // alpha
+                    x,          // A
+                    size,       // lda
+                    alpha,      // B
+                    k + 1,      // ldb
                     &one_,
-                    y,//c
-                    size);//ldc     
+                    y,          // c
+                    size);      // ldc     
       }
     } else {
       std::cout<<"Not implemented (yet)"<<std::endl;
@@ -184,4 +186,4 @@ namespace ReSolve
     }
   }
 
-}
+} // namespace ReSolve

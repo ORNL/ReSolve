@@ -1,11 +1,13 @@
 #pragma once
 #include <resolve/matrix/Sparse.hpp>
-#include "Vector.hpp"
+#include <resolve/vector/Vector.hpp>
 
 namespace ReSolve
 {
   RefactorizationSolver
   {
+    using vector_type = vector::Vector;
+    
     public:
       RefactorizationSolver();
       ~RefactorizationSolver();
@@ -15,7 +17,7 @@ namespace ReSolve
 
       int setup_ir(real_type ir_tol, index_type ir_maxit, index_type ir_gs_);
       
-      int solve(matrix::Sparse* A, Vector* vec_rhs, Vector* vec_x);
+      int solve(matrix::Sparse* A, vector_type* vec_rhs, vector_type* vec_x);
     
     private:
       std::string first_solver_name_;

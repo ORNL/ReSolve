@@ -20,7 +20,7 @@ public:
 
     // Read string into istream and pass it to `readMatrixFromFile` function.
     std::istringstream file(general_coo_matrix_file_);
-    ReSolve::matrix::Coo* A = ReSolve::matrix::io::readMatrixFromFile(file);
+    ReSolve::matrix::Coo* A = ReSolve::io::readMatrixFromFile(file);
 
     // Check if the matrix data was correctly loaded
     bool pass = true;
@@ -47,7 +47,7 @@ public:
     A = nullptr;
 
     std::istringstream file2(symmetric_coo_matrix_file_);
-    A = ReSolve::matrix::io::readMatrixFromFile(file2);
+    A = ReSolve::io::readMatrixFromFile(file2);
 
     if(A->getNnz() != symmetric_coo_matrix_vals_.size()) {
       std::cout << "Incorrect NNZ read from the file ...\n";
@@ -73,7 +73,7 @@ public:
   bool cooMatrixImport2(std::ifstream& file)
   {
     bool pass = true;
-    ReSolve::matrix::Coo* A = ReSolve::matrix::io::readMatrixFromFile(file);
+    ReSolve::matrix::Coo* A = ReSolve::io::readMatrixFromFile(file);
     if (A->getNnz() != general_coo_matrix_vals_.size()) {
       std::cout << "Incorrect NNZ read from the file ...\n";
       pass = false;
@@ -110,7 +110,7 @@ public:
     std::istringstream file2(symmetric_coo_matrix_file_);
 
     // Update matrix A with data from the matrix market file
-    ReSolve::matrix::io::readAndUpdateMatrix(file2, &A);
+    ReSolve::io::readAndUpdateMatrix(file2, &A);
 
     // Check if the matrix data was correctly loaded
     bool pass = true;
@@ -126,7 +126,7 @@ public:
     std::istringstream file(general_coo_matrix_file_);
 
     // Update matrix A with data from the matrix market file
-    ReSolve::matrix::io::readAndUpdateMatrix(file, &A);
+    ReSolve::io::readAndUpdateMatrix(file, &A);
 
     if(A.getNnz() != general_coo_matrix_vals_.size()) {
       std::cout << "Incorrect NNZ read from the file ...\n";
@@ -149,7 +149,7 @@ public:
     std::istringstream file(general_vector_file_);
 
     // Create rhs vector and load its data from the input file
-    real_type* rhs = ReSolve::matrix::io::readRhsFromFile(file);
+    real_type* rhs = ReSolve::io::readRhsFromFile(file);
 
     // Check if the matrix data was correctly loaded
     bool pass = true;
@@ -180,7 +180,7 @@ public:
     real_type* rhs = new real_type[5]; //nullptr;
 
     // Update matrix A with data from the matrix market file
-    ReSolve::matrix::io::readAndUpdateRhs(file, &rhs);
+    ReSolve::io::readAndUpdateRhs(file, &rhs);
 
     // Check if the matrix data was correctly loaded
     bool pass = true;
