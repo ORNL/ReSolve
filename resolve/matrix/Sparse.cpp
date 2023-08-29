@@ -71,7 +71,7 @@ namespace ReSolve { namespace matrix {
     d_data_updated_ = false; 
   }
   
-index_type Sparse::getNumRows()
+  index_type Sparse::getNumRows()
   {
     return this->n_;
   }

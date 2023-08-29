@@ -23,14 +23,14 @@ namespace ReSolve
 
   LinAlgWorkspaceCUDA::~LinAlgWorkspaceCUDA()
   {
-    cudaFree(buffer_spmv_);
-    cudaFree(buffer_1norm_);
+    if (buffer_spmv_ != nullptr) cudaFree(buffer_spmv_);
+    if (buffer_1norm_ != nullptr) cudaFree(buffer_1norm_);
     cusparseDestroy(handle_cusparse_);
     cusolverSpDestroy(handle_cusolversp_);
     cublasDestroy(handle_cublas_);
     cusparseDestroySpMat(mat_A_);
-    cusparseDestroyDnVec(vec_x_);
-    cusparseDestroyDnVec(vec_y_);
+    // cusparseDestroyDnVec(vec_x_);
+    // cusparseDestroyDnVec(vec_y_);
   }
 
   void* LinAlgWorkspaceCUDA::getSpmvBuffer()

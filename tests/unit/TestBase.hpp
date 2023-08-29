@@ -15,17 +15,122 @@
 
 namespace ReSolve { namespace tests {
 
-struct Result
+// must be const pointer and const dest for
+// const string declarations to pass -Wwrite-strings
+static const char * const  RED       = "\033[1;31m";
+static const char * const  GREEN     = "\033[1;32m";
+static const char * const  YELLOW    = "\033[33;1m";
+static const char * const  BLUE      = "\033[34;1m";
+static const char * const  ORANGE    = "\u001b[38;5;208m";
+static const char * const  CLEAR     = "\033[0m";
+
+enum TestOutcome {PASS=0, FAIL, SKIP, EXPECTED_FAIL, UNEXPECTED_PASS};
+
+class TestStatus
 {
-  Result(){}
-  ~Result(){}
-  Result(const Result& r)
+public:
+  TestStatus()
+  : outcome_(TestOutcome::PASS)
+  {}
+  TestStatus(const char* funcname) 
+  : outcome_(TestOutcome::PASS),
+    funcname_(funcname)
+  {}
+  ~TestStatus()
+  {}
+
+  TestStatus& operator=(const bool isPass)
   {
-    this->success += r.success;    
-    this->failure += r.failure;
-    this->skip    += r.skip;
-    this->expected_failure   += r.expected_failure;
-    this->unexpected_success += r.unexpected_success;
+    if(isPass)
+      outcome_ = TestOutcome::PASS;
+    else
+      outcome_ = TestOutcome::FAIL;   
+    return *this;
+  }
+
+  TestStatus& operator*=(const bool isPass)
+  {
+    if(!isPass)
+      outcome_ = TestOutcome::FAIL;   
+    return *this;
+  }
+
+  void skipTest()
+  {
+    outcome_ = TestOutcome::SKIP;   
+  }
+
+  void expectFailure()
+  {
+    expectFailure_ = true;
+  }
+
+  TestOutcome report()
+  {
+    return report(funcname_);
+  }
+
+  TestOutcome report(const char* funcname)
+  {
+    if (expectFailure_)
+    {
+      if ((outcome_ == FAIL) || (outcome_ == EXPECTED_FAIL))
+        outcome_ = EXPECTED_FAIL;
+      else if ((outcome_ == PASS) || (outcome_ == UNEXPECTED_PASS))
+        outcome_ = UNEXPECTED_PASS;
+      else
+        outcome_ = SKIP;
+    }
+
+    switch(outcome_)
+    {
+      case PASS:
+        std::cout << "--- " << GREEN << "PASS" << CLEAR << ": Test " << funcname << "\n";
+        break;
+      case FAIL:
+        std::cout << "--- " << RED << "FAIL" << CLEAR << ": Test " << funcname << "\n";
+        break;
+      case SKIP:
+        std::cout << "--- " << YELLOW << "SKIP" << CLEAR << ": Test " << funcname << CLEAR << "\n";
+        break;
+      case EXPECTED_FAIL:
+        std::cout << "--- " << ORANGE << "FAIL" << CLEAR << " (EXPECTED)" << ": Test " << funcname << "\n";
+        break;
+      case UNEXPECTED_PASS:
+        std::cout << "--- " << YELLOW << "PASS" << CLEAR << "(UNEXPECTED)" << ": Test " << funcname << "\n";
+        break;
+      default:
+        std::cout << "--- " << RED << "FAIL" << CLEAR << "Unrecognized test result " << outcome_ 
+                  << " for test " << funcname << "\n";
+    }
+    return outcome_;
+  }
+
+private:
+  TestOutcome outcome_;
+  const char* funcname_;
+  bool expectFailure_ = false;
+};
+
+
+
+struct TestingResults
+{
+  int success = 0;
+  int failure = 0;
+  int skip = 0;
+  int expected_failure = 0;
+  int unexpected_success = 0;
+
+  TestingResults(){}
+  ~TestingResults(){}
+  TestingResults(const TestingResults& r)
+  {
+    this->success = r.success;    
+    this->failure = r.failure;
+    this->skip    = r.skip;
+    this->expected_failure   = r.expected_failure;
+    this->unexpected_success = r.unexpected_success;
   }
 
   void init()
@@ -37,22 +142,7 @@ struct Result
     this->unexpected_success = 0;
   }
 
-  void pass(bool isPass)
-  {
-    this->init();
-    if(isPass)
-      this->success = 1;
-    else
-      this->failure = 1;
-  }
-
-  int success = 0;
-  int failure = 0;
-  int skip = 0;
-  int expected_failure = 0;
-  int unexpected_success = 0;
-
-  Result& operator+=(const Result& rhs)
+  TestingResults& operator+=(const TestingResults& rhs)
   {
     this->success += rhs.success;    
     this->failure += rhs.failure;
@@ -63,51 +153,62 @@ struct Result
     return *this;
   }
 
+  TestingResults& operator+=(const TestOutcome outcome)
+  {
+    switch(outcome)
+    {
+      case PASS:
+        this->success++;
+        break;
+      case FAIL:
+        this->failure++;
+        break;
+      case SKIP:
+        this->skip++;
+        break;
+      case EXPECTED_FAIL:
+        this->expected_failure++;
+        break;
+      case UNEXPECTED_PASS:
+        this->unexpected_success++;
+        break;
+      default:
+        std::cout << "Warning: Unrecognized test outcome code " << outcome << ". Assuming failure ...\n";
+        this->failure++;
+    }
+    return *this;
+  }
+
+  int summary()
+  {
+    std::cout << "\nTest Summary\n";
+    // std::cout << "----------------------------\n";
+    std::cout << "\tSuccessful tests:     " << success            << "\n"; 
+    std::cout << "\tFailed test:          " << failure            << "\n";
+    std::cout << "\tSkipped tests:        " << skip               << "\n";
+    std::cout << "\tExpected failures:    " << expected_failure   << "\n";
+    std::cout << "\tUnexpected successes: " << unexpected_success << "\n";
+    std::cout << "\n";
+
+    return failure;
+  }
 };
 
-Result operator+(const Result& lhs, const Result& rhs)
+TestingResults operator+(const TestingResults& lhs, const TestingResults& rhs)
 {
-  return Result(lhs) += rhs;
+  return TestingResults(lhs) += rhs;
 }
 
-Result& skipTest(Result& r)
+TestingResults operator+(const TestingResults& lhs, const TestOutcome outcome)
 {
-  r.success = 0;
-  r.failure = 0;
-  r.skip = 1;
-  r.expected_failure = 0;
-  r.unexpected_success = 0;
-  return r;
+  return TestingResults(lhs) += outcome;
 }
 
-Result& expectTestFailure(Result& r)
+TestingResults operator+(const TestOutcome outcome, const TestingResults& rhs)
 {
-  if(r.failure == 1)
-  {
-    r.expected_failure = 1;
-    r.failure = 0;
-  }
-  else if(r.success == 1)
-  {
-    r.unexpected_success = 1;
-    r.success = 0;
-  }
-  else
-  {
-    std::cout << "WARNING: Miscounted test sucesses/failures ...\n";
-    r.success = 0;
-    r.failure = 0;
-    r.skip = 0;
-    r.expected_failure = 0;
-    r.unexpected_success = 0;
-  }
-  return r;
+  return TestingResults(rhs) += outcome;
 }
 
-
-using real_type             = double;
-using local_ordinal_type    = int;
-using global_ordinal_type   = int;
 
 static const real_type zero = 0.0;
 static const real_type quarter = 0.25;
@@ -116,16 +217,7 @@ static const real_type one = 1.0;
 static const real_type two = 2.0;
 static const real_type three = 3.0;
 static const real_type eps = 10*std::numeric_limits<real_type>::epsilon();
-static const int SKIP_TEST = -1;
 
-// must be const pointer and const dest for
-// const string declarations to pass
-// -Wwrite-strings
-static const char * const  RED       = "\033[1;31m";
-static const char * const  GREEN     = "\033[1;32m";
-static const char * const  YELLOW    = "\033[1;33m";
-static const char * const  ORANGE    = "\033[31;1m";
-static const char * const  CLEAR     = "\033[0m";
 
 class TestBase
 {
@@ -150,32 +242,6 @@ protected:
     return (std::abs(a - b)/(1.0 + std::abs(b)) < eps);
   }
 
-  /// Prints error output for each rank
-  static void printMessage(const bool pass, const char* funcname, const int rank=0)
-  {
-    if(pass)
-    {
-      if(rank == 0)
-      {
-        std::cout << "--- " << GREEN << "PASS" << CLEAR << ": Test " << funcname << "\n";
-      }
-    }
-    // else if (fail == SKIP_TEST)
-    // {
-    //   if(rank == 0)
-    //   {
-    //     std::cout << YELLOW << "--- SKIP: Test " << funcname << CLEAR << "\n";
-    //   }
-    // }
-    else
-    {
-      if(rank == 0)
-      {
-        std::cout << "--- " << RED << "FAIL" << CLEAR << ": Test " << funcname << "\n";
-        // std::cout << RED << "--- FAIL: Test " << funcname << " on rank " << rank << CLEAR << "\n";
-      }
-    }
-  }
 protected:
   std::string mem_space_;
 };

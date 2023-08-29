@@ -7,6 +7,7 @@ set(Vector_SRC
 
 set(Vector_SRC_CUDA
     Vector.cpp
+    cudaVectorKernels.cu
 )
 
 set(Vector_HEADER_INSTALL

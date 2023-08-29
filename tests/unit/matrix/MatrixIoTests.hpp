@@ -7,40 +7,40 @@
 
 namespace ReSolve { namespace tests {
 
-class MatrixTests : TestBase
+class MatrixIoTests : TestBase
 {
 public:
-  MatrixTests(){}
-  virtual ~MatrixTests(){}
+  MatrixIoTests(){}
+  virtual ~MatrixIoTests(){}
 
 
-  bool cooMatrixImport()
+  TestOutcome cooMatrixImport()
   {
-    // std::cout << general_coo_matrix_file_ << "\n";
+    TestStatus status;
 
-    // Read string into istream and pass it to `readMatrixFromFile` function.
+    // Read string into istream and status it to `readMatrixFromFile` function.
     std::istringstream file(general_coo_matrix_file_);
     ReSolve::matrix::Coo* A = ReSolve::io::readMatrixFromFile(file);
 
     // Check if the matrix data was correctly loaded
-    bool pass = true;
+    status = true;
 
     if(A->getNnz() != general_coo_matrix_vals_.size()) {
       std::cout << "Incorrect NNZ read from the file ...\n";
-      pass = false;
+      status = false;
     }
 
     if(A->symmetric()) {
       std::cout << "Incorrect matrix type, matrix not symmetric ...\n";
-      pass = false;
+      status = false;
     }
 
     if(!A->expanded()) {
       std::cout << "Incorrect matrix type, matrix is general (expanded) ...\n";
-      pass = false;
+      status = false;
     }
 
-    pass *= verifyAnswer(*A, general_coo_matrix_rows_, general_coo_matrix_cols_, general_coo_matrix_vals_);
+    status *= verifyAnswer(*A, general_coo_matrix_rows_, general_coo_matrix_cols_, general_coo_matrix_vals_);
 
     // A->print();
     delete A;
@@ -51,78 +51,63 @@ public:
 
     if(A->getNnz() != symmetric_coo_matrix_vals_.size()) {
       std::cout << "Incorrect NNZ read from the file ...\n";
-      pass = false;
+      status = false;
     }
 
     if(!A->symmetric()) {
       std::cout << "Incorrect matrix type, matrix is symmetric ...\n";
-      pass = false;
+      status = false;
     }
 
     if(A->expanded()) {
       std::cout << "Incorrect matrix type, matrix not expanded ...\n";
-      pass = false;
+      status = false;
     }
 
-    pass *= verifyAnswer(*A, symmetric_coo_matrix_rows_, symmetric_coo_matrix_cols_, symmetric_coo_matrix_vals_);
+    status *= verifyAnswer(*A, symmetric_coo_matrix_rows_, symmetric_coo_matrix_cols_, symmetric_coo_matrix_vals_);
 
-    printMessage(pass,__func__);
-    return pass;
+    return status.report(__func__);
   }
 
-  bool cooMatrixImport2(std::ifstream& file)
+  TestOutcome cooMatrixImport2(std::ifstream& file)
   {
-    bool pass = true;
+    TestStatus status;
     ReSolve::matrix::Coo* A = ReSolve::io::readMatrixFromFile(file);
     if (A->getNnz() != general_coo_matrix_vals_.size()) {
       std::cout << "Incorrect NNZ read from the file ...\n";
-      pass = false;
+      status = false;
     }
 
-    pass *= verifyAnswer(*A, general_coo_matrix_rows_, general_coo_matrix_cols_, general_coo_matrix_vals_);
+    status *= verifyAnswer(*A, general_coo_matrix_rows_, general_coo_matrix_cols_, general_coo_matrix_vals_);
 
-    // for (local_ordinal_type i = 0; i < A->getNnz(); ++i) {
-    //   if ((A->getRowData("cpu")[i] != general_coo_matrix_rows_[i]) ||
-    //       (A->getColData("cpu")[i] != general_coo_matrix_cols_[i]) ||
-    //       (!isEqual(A->getValues("cpu")[i], general_coo_matrix_vals_[i])))
-    //   {
-    //     std::cout << "Incorrect matrix value at storage element " << i << ".\n";
-    //     pass = false;
-    //     break;
-    //   }
-    // }
-
-    // A->print();
-
-    printMessage(pass,__func__);
-    return pass;
+    return status.report(__func__);
   }
 
-  bool cooMatrixReadAndUpdate()
+  TestOutcome cooMatrixReadAndUpdate()
   {
-    // std::cout << general_coo_matrix_file_ << "\n";
+    TestStatus status;
 
     // Create a 5x5 COO matrix with 10 nonzeros
     ReSolve::matrix::Coo A(5, 5, 10);
     A.allocateMatrixData("cpu");
 
-    // Read string into istream and pass it to `readMatrixFromFile` function.
+    // Read string into istream and status it to `readMatrixFromFile` function.
     std::istringstream file2(symmetric_coo_matrix_file_);
 
     // Update matrix A with data from the matrix market file
     ReSolve::io::readAndUpdateMatrix(file2, &A);
 
     // Check if the matrix data was correctly loaded
-    bool pass = true;
+    status = true;
 
     if(A.getNnz() != symmetric_coo_matrix_vals_.size()) {
       std::cout << "Incorrect NNZ read from the file ...\n";
-      pass = false;
+      status = false;
     }
 
-    pass *= verifyAnswer(A, symmetric_coo_matrix_rows_, symmetric_coo_matrix_cols_, symmetric_coo_matrix_vals_);
+    status *= verifyAnswer(A, symmetric_coo_matrix_rows_, symmetric_coo_matrix_cols_, symmetric_coo_matrix_vals_);
 
-    // Read string into istream and pass it to `readMatrixFromFile` function.
+    // Read string into istream and status it to `readMatrixFromFile` function.
     std::istringstream file(general_coo_matrix_file_);
 
     // Update matrix A with data from the matrix market file
@@ -130,50 +115,45 @@ public:
 
     if(A.getNnz() != general_coo_matrix_vals_.size()) {
       std::cout << "Incorrect NNZ read from the file ...\n";
-      pass = false;
+      status = false;
     }
 
-    pass *= verifyAnswer(A, general_coo_matrix_rows_, general_coo_matrix_cols_, general_coo_matrix_vals_);
+    status *= verifyAnswer(A, general_coo_matrix_rows_, general_coo_matrix_cols_, general_coo_matrix_vals_);
 
-    // A.print();
-
-    printMessage(pass,__func__);
-    return pass;
+    return status.report(__func__);
   }
 
-  bool rhsVectorReadFromFile()
+  TestOutcome rhsVectorReadFromFile()
   {
-    // std::cout << general_vector_file_ << "\n";
+    TestStatus status;
 
-    // Read string into istream and pass it to `readMatrixFromFile` function.
+    // Read string into istream and status it to `readMatrixFromFile` function.
     std::istringstream file(general_vector_file_);
 
     // Create rhs vector and load its data from the input file
     real_type* rhs = ReSolve::io::readRhsFromFile(file);
 
     // Check if the matrix data was correctly loaded
-    bool pass = true;
+    status = true;
 
-
-    for(local_ordinal_type i = 0; i < general_vector_vals_.size(); ++i) {
+    for(index_type i = 0; i < general_vector_vals_.size(); ++i) {
       if(!isEqual(rhs[i], general_vector_vals_[i]))
       {
         std::cout << "Incorrect vector value at storage element " << i << ".\n";
-        pass = false;
+        status = false;
         break;
       }
       // std::cout << i << ": " << rhs[i] << "\n";
     }
 
-    printMessage(pass,__func__);
-    return pass;
+    return status.report(__func__);
   }
 
-  bool rhsVectorReadAndUpdate()
+  TestOutcome rhsVectorReadAndUpdate()
   {
-    // std::cout << general_vector_file_ << "\n";
+    TestStatus status;
 
-    // Read string into istream and pass it to `readMatrixFromFile` function.
+    // Read string into istream and status it to `readMatrixFromFile` function.
     std::istringstream file(general_vector_file_);
 
     // For now let's test only the case when `readAndUpdateRhs` does not allocate rhs
@@ -183,30 +163,28 @@ public:
     ReSolve::io::readAndUpdateRhs(file, &rhs);
 
     // Check if the matrix data was correctly loaded
-    bool pass = true;
+    status = true;
 
-
-    for(local_ordinal_type i = 0; i < general_vector_vals_.size(); ++i) {
+    for(index_type i = 0; i < general_vector_vals_.size(); ++i) {
       if(!isEqual(rhs[i], general_vector_vals_[i]))
       {
         std::cout << "Incorrect vector value at storage element " << i << ".\n";
-        pass = false;
+        status = false;
         break;
       }
       // std::cout << i << ": " << rhs[i] << "\n";
     }
 
-    printMessage(pass,__func__);
-    return pass;
+    return status.report(__func__);
   }
 
 private:
   bool verifyAnswer(/* const */ ReSolve::matrix::Coo& answer,
-                    const std::vector<local_ordinal_type>& row_data,
-                    const std::vector<local_ordinal_type>& col_data,
+                    const std::vector<index_type>& row_data,
+                    const std::vector<index_type>& col_data,
                     const std::vector<real_type>& val_data)
   {
-    for(local_ordinal_type i = 0; i < val_data.size(); ++i) {
+    for(index_type i = 0; i < val_data.size(); ++i) {
       if((answer.getRowData("cpu")[i] != row_data[i]) ||
          (answer.getColData("cpu")[i] != col_data[i]) ||
          (!isEqual(answer.getValues("cpu")[i], val_data[i])))
@@ -257,8 +235,8 @@ R"(% This ASCII file represents a sparse MxN matrix with L
 )";
 
   /// Matching COO matrix data as it is supposed to be read from the file
-  const std::vector<local_ordinal_type> general_coo_matrix_rows_ = {0,1,2,0,3,3,3,4};
-  const std::vector<local_ordinal_type> general_coo_matrix_cols_ = {0,1,2,3,1,3,4,4};
+  const std::vector<index_type> general_coo_matrix_rows_ = {0,1,2,0,3,3,3,4};
+  const std::vector<index_type> general_coo_matrix_cols_ = {0,1,2,3,1,3,4,4};
   const std::vector<real_type> general_coo_matrix_vals_ = { 1.000e+00,
                                                             1.050e+01,
                                                             1.500e-02,
@@ -285,8 +263,8 @@ R"(%%MatrixMarket matrix coordinate real symmetric
 
 
   /// Matching COO matrix data as it is supposed to be read from the file
-  const std::vector<local_ordinal_type> symmetric_coo_matrix_rows_ = {0,0,1,1,1,2,2,3,4};
-  const std::vector<local_ordinal_type> symmetric_coo_matrix_cols_ = {0,4,1,2,3,2,4,3,4};
+  const std::vector<index_type> symmetric_coo_matrix_rows_ = {0,0,1,1,1,2,2,3,4};
+  const std::vector<index_type> symmetric_coo_matrix_cols_ = {0,4,1,2,3,2,4,3,4};
   const std::vector<real_type> symmetric_coo_matrix_vals_ = { 11.0,
                                                               15.0,
                                                               22.0,
@@ -320,6 +298,6 @@ R"(% This ASCII file represents a sparse MxN matrix with L
 
   /// Location of other test data
   std::string datafiles_folder_;
-}; // class MatrixTests
+}; // class MatrixIoTests
 
 }} // namespace ReSolve::tests

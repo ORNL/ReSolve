@@ -1,6 +1,7 @@
 #include <cstring>
 #include <cuda_runtime.h>
 #include <resolve/vector/Vector.hpp>
+#include <resolve/vector/VectorKernels.hpp>
 
 namespace ReSolve { namespace vector {
 
@@ -183,6 +184,25 @@ namespace ReSolve { namespace vector {
           cudaMalloc(&d_data_, (n_) * sizeof(real_type)); 
         }
         cudaMemset(d_data_, 0.0, n_ * sizeof(real_type));
+      }
+    }
+  }
+
+  void Vector::setToConst(real_type C, std::string memspace) 
+  {
+    if (memspace == "cpu") {
+      if (h_data_ == nullptr) {
+        h_data_ = new real_type[n_]; 
+      }
+      for (int i = 0; i < n_; ++i){
+        h_data_[i] = C;
+      }
+    } else {
+      if (memspace == "cuda") {
+        if (d_data_ == nullptr) {
+          cudaMalloc(&d_data_, (n_) * sizeof(real_type)); 
+        }
+        set_array_const(n_, C, d_data_);
       }
     }
   }

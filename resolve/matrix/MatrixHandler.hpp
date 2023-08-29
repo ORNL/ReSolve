@@ -51,15 +51,22 @@ namespace ReSolve {
       int csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr, std::string memspace); //memspace decides on what is returned (cpu or cuda pointer)
       int coo2csr(matrix::Coo* A_coo, matrix::Csr* A_csr, std::string memspace);
 
-      int matvec(matrix::Sparse* A, vector_type* vec_x, vector_type* vec_result, real_type* alpha, real_type* beta,std::string matrix_type, std::string memspace);
+      /// Should compute vec_result := alpha*A*vec_x + beta*vec_result, but at least on cpu alpha and beta are flipped
+      int matvec(matrix::Sparse* A,
+                 vector_type* vec_x,
+                 vector_type* vec_result,
+                 real_type* alpha,
+                 real_type* beta,
+                 std::string matrix_type,
+                 std::string memspace);
       void Matrix1Norm(matrix::Sparse *A, real_type* norm);
       bool getValuesChanged();
       void setValuesChanged(bool toWhat); 
     
     private: 
-      LinAlgWorkspace* workspace_;
-      bool new_matrix_; //if the structure changed, you need a new handler.
-      bool values_changed_; // needed for matvec
+      LinAlgWorkspace* workspace_{nullptr};
+      bool new_matrix_{true};     ///< if the structure changed, you need a new handler.
+      bool values_changed_{true}; ///< needed for matvec
   };
 
 } // namespace ReSolve
