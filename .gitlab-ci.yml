@@ -34,7 +34,7 @@
       chmod -R +X ./build
       source buildsystem/ascent-env.sh
       cd build
-      make test
+      ctest -VV
 
 cleanup:
  stage: .pre

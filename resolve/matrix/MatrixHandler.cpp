@@ -237,6 +237,7 @@ namespace ReSolve {
       cusparseStatus_t status;
       //result = alpha *A*x + beta * result
       if (memspace == "cuda" ){
+        // std::cout << "Matvec on NVIDIA GPU ...\n";
         LinAlgWorkspaceCUDA* workspaceCUDA = (LinAlgWorkspaceCUDA*) workspace_;
         cusparseDnVecDescr_t vecx = workspaceCUDA->getVecX();
         //printf("is vec_x NULL? %d\n", vec_x->getData("cuda") == nullptr);
@@ -331,8 +332,8 @@ namespace ReSolve {
               sum = t;
               //  sum += ( a[j] * x_data[ja[j]]);
             }
-            sum *= (*beta);
-            result_data[i] = result_data[i]*(*alpha) + sum;
+            sum *= (*alpha);
+            result_data[i] = result_data[i]*(*beta) + sum;
           } 
           vec_result->setDataUpdated("cpu");
           return 0;

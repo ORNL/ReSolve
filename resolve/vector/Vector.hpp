@@ -18,12 +18,13 @@ namespace ReSolve { namespace vector {
       void setData(real_type* data, std::string memspace);
       void allocate(std::string memspace);   
       void setToZero(std::string memspace);
+      void setToConst(real_type C, std::string memspace);
+      int copyData(std::string memspaceIn, std::string memspaceOut); 
     private:
       index_type n_; //size
       real_type* d_data_;
       real_type* h_data_;
       bool gpu_updated_;
       bool cpu_updated_;
-      int copyData(std::string memspaceIn, std::string memspaceOut); 
   };
 }} // namespace ReSolve::vector

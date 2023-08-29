@@ -30,8 +30,8 @@ namespace ReSolve { namespace matrix {
 
       virtual void print() {return;}
 
-    private:
       index_type copyCsr(std::string memspaceOut);
+    private:
   };
 
 }} // namespace ReSolve::matrix

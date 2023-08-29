@@ -3,11 +3,11 @@
 #include <fstream>
 #include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/io.hpp>
-#include "MatrixTests.hpp"
+#include "MatrixIoTests.hpp"
 
 int main(int argc, char* argv[])
 {
-  ReSolve::tests::MatrixTests test;
+  ReSolve::tests::MatrixIoTests test;
 
   // Input to this code is location of `data` directory where matrix files are stored
   const std::string data_path = (argc == 2) ? argv[1] : "./";
@@ -20,13 +20,15 @@ int main(int argc, char* argv[])
     std::cout << "Failed to open file ...\n";
     return -1;
   }
-  test.cooMatrixImport();
-  test.cooMatrixImport2(file);
-  test.cooMatrixReadAndUpdate();
-  test.rhsVectorReadFromFile();
-  test.rhsVectorReadAndUpdate();
+
+  ReSolve::tests::TestingResults result;
+  result += test.cooMatrixImport();
+  result += test.cooMatrixImport2(file);
+  result += test.cooMatrixReadAndUpdate();
+  result += test.rhsVectorReadFromFile();
+  result += test.rhsVectorReadAndUpdate();
 
   file.close();
 
-  return 0;
+  return result.summary();
 }
