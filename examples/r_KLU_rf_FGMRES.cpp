@@ -45,9 +45,10 @@ int main(int argc, char *argv[])
   real_type one = 1.0;
   real_type minusone = -1.0;
 
+  ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::cgs2);
   ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
   ReSolve::LinSolverDirectCuSolverRf* Rf = new ReSolve::LinSolverDirectCuSolverRf;
-  ReSolve::LinSolverIterativeFGMRES* FGMRES = new ReSolve::LinSolverIterativeFGMRES(matrix_handler, vector_handler);
+  ReSolve::LinSolverIterativeFGMRES* FGMRES = new ReSolve::LinSolverIterativeFGMRES(matrix_handler, vector_handler, GS);
 
   for (int i = 0; i < numSystems; ++i)
   {
@@ -142,6 +143,7 @@ int main(int argc, char *argv[])
         index_type* Q = KLU->getQOrdering();
         Rf->setup(A, L, U, P, Q);
         std::cout<<"about to set FGMRES" <<std::endl;
+        GS->setup(FGMRES->getRestart()); 
         FGMRES->setup(A); 
       }
     } else {

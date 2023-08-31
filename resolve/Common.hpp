@@ -2,7 +2,11 @@
 
 namespace ReSolve {
 
-using real_type = double;
-using index_type = int;
+  constexpr double ZERO = 0.0;
+  constexpr double EPSILON = 1.0e-18;
+  constexpr double EPSMAC  = 1.0e-16;
+  
+  using real_type = double;
+  using index_type = int;
 
 } // namespace ReSolve

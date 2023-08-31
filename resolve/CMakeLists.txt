@@ -23,6 +23,7 @@ set(ReSolve_SRC_CUDA
     LinSolverDirectCuSolverGLU.cpp
     LinSolverIterativeFGMRES.cpp
     cudaKernels.cu
+    GramSchmidt.cpp
 )
 
 set(ReSolve_HEADER_INSTALL
@@ -37,8 +38,7 @@ set(ReSolve_HEADER_INSTALL
     LinSolverIterativeFGMRES.hpp
     RefactorizationSolver.hpp
     SystemSolver.hpp
-    # Vector.hpp
-    # VectorHandler.hpp
+    GramSchmidt.hpp
 )
 
 set_source_files_properties(${ReSolve_SRC_CUDA} PROPERTIES LANGUAGE CUDA)
