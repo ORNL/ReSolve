@@ -1,6 +1,7 @@
 #pragma once
-#include <resolve/LinAlgWorkspace.hpp>
+#include <string>
 
+#include <resolve/LinAlgWorkspace.hpp>
 namespace ReSolve { namespace vector {
   class Vector;
 }}
