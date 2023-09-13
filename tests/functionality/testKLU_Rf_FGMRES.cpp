@@ -61,7 +61,11 @@ int main(int argc, char *argv[])
     return -1;
   }
   ReSolve::matrix::Coo* A_coo = ReSolve::io::readMatrixFromFile(mat1);
-  ReSolve::matrix::Csr* A = new ReSolve::matrix::Csr(A_coo->getNumRows(), A_coo->getNumColumns(), A_coo->getNnz(), A_coo->expanded(), A_coo->symmetric());
+  ReSolve::matrix::Csr* A = new ReSolve::matrix::Csr(A_coo->getNumRows(),
+                                                     A_coo->getNumColumns(),
+                                                     A_coo->getNnz(),
+                                                     A_coo->symmetric(),
+                                                     A_coo->expanded());
   mat1.close();
 
   // Read first rhs vector
