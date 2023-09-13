@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
         index_type* Q = KLU->getQOrdering();
         Rf->setup(A, L, U, P, Q);
         std::cout<<"about to set FGMRES" <<std::endl;
-        GS->setup(FGMRES->getRestart()); 
+        GS->setup(A->getNumRows(), FGMRES->getRestart()); 
         FGMRES->setup(A); 
       }
     } else {

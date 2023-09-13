@@ -109,7 +109,6 @@ namespace ReSolve {
         diag_control[coo_rows[i]]++;
       }
     }
-
     A_csr->setExpanded(true);
     A_csr->setNnzExpanded(nnz_unpacked_no_duplicates);
     index_type* csr_ia = new index_type[n+1];
@@ -136,7 +135,7 @@ namespace ReSolve {
       start = csr_ia[r];
 
       if ((start + nnz_shifts[r]) > nnz_unpacked) {
-        printf("index out of bounds 1: start %d nnz_shifts[%d] = %d \n", start, r, nnz_shifts[r]);
+        std::cout << "index out of bounds (case 1) start: " << start << "nnz_shifts[" << r << "] = " << nnz_shifts[r] << std::endl;
       }
       if ((r == coo_cols[i]) && (diag_control[r] > 1)) {//diagonal, and there are duplicates
         bool already_there = false;  
@@ -148,7 +147,7 @@ namespace ReSolve {
             val += coo_vals[i];
             tmp[j].setValue(val);
             already_there = true;
-            //printf("duplicate found, row %d, adding in place %d current value_ %f \n", c, j, val);
+            std::cout << " duplicate found, row " << c << " adding in place " << j << " current value: " << val << std::endl;
           }  
         }  
         if (!already_there){ // first time this duplicates appears
@@ -169,7 +168,7 @@ namespace ReSolve {
           start = csr_ia[r];
 
           if ((start + nnz_shifts[r]) > nnz_unpacked)
-            printf("index out of bounds 2\n");
+            std::cout << "index out of bounds (case 2) start: " << start << "nnz_shifts[" << r << "] = " << nnz_shifts[r] << std::endl;
           tmp[start + nnz_shifts[r]].setIdx(coo_rows[i]);
           tmp[start + nnz_shifts[r]].setValue(coo_vals[i]);
           nnz_shifts[r]++;
@@ -226,8 +225,8 @@ namespace ReSolve {
   int MatrixHandler::matvec(matrix::Sparse* Ageneric, 
                             vector_type* vec_x, 
                             vector_type* vec_result, 
-                            real_type* alpha, 
-                            real_type* beta,
+                            const real_type* alpha, 
+                            const real_type* beta,
                             std::string matrixFormat, 
                             std::string memspace) 
   {
@@ -270,8 +269,6 @@ namespace ReSolve {
         if (!workspaceCUDA->matvecSetup()){
           //setup first, allocate, etc.
           size_t bufferSize = 0;
-          real_type minusone = -1.0;
-          real_type one = 1.0;
 
           status = cusparseSpMV_bufferSize(handle_cusparse, 
                                            CUSPARSE_OPERATION_NON_TRANSPOSE,
@@ -304,7 +301,8 @@ namespace ReSolve {
                               buffer_spmv);
         error_sum += status;
         cudaDeviceSynchronize();
-        if (status) printf("Matvec status: %d Last ERROR %d \n", status,  	cudaGetLastError() );
+        if (status)
+          std::cout << "Matvec status: " << status << "Last ERROR code: " << cudaGetLastError() << std::endl;
         vec_result->setDataUpdated("cuda");
 
         cusparseDestroyDnVec(vecx);
@@ -354,7 +352,7 @@ namespace ReSolve {
   int MatrixHandler::csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr, std::string memspace)
   {
     //it ONLY WORKS WITH CUDA
-   index_type error_sum = 0;
+    index_type error_sum = 0;
     if (memspace == "cuda") { 
       LinAlgWorkspaceCUDA* workspaceCUDA = (LinAlgWorkspaceCUDA*) workspace_;
 
@@ -396,8 +394,8 @@ namespace ReSolve {
                                   CUSPARSE_INDEX_BASE_ZERO,
                                   CUSPARSE_CSR2CSC_ALG1,
                                   d_work);
-     error_sum += status;
-     return error_sum;
+      error_sum += status;
+      return error_sum;
       cudaFree(d_work);
     } else { 
       std::cout<<"Not implemented (yet)"<<std::endl;

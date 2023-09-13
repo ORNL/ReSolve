@@ -10,6 +10,10 @@
 add_executable(klu_klu.exe r_KLU_KLU.cpp)
 target_link_libraries(klu_klu.exe PRIVATE ReSolve)
 
+# Read ONE matrix,solve with KLU
+add_executable(klu_klu_standalone.exe r_KLU_KLU_standalone.cpp)
+target_link_libraries(klu_klu_standalone.exe PRIVATE ReSolve)
+
 # Build example with KLU factorization and GLU refactorization
 add_executable(klu_glu.exe r_KLU_GLU.cpp)
 target_link_libraries(klu_glu.exe PRIVATE ReSolve)
@@ -31,6 +35,6 @@ add_executable(klu_glu_values_update.exe r_KLU_GLU_matrix_values_update.cpp)
 target_link_libraries(klu_glu_values_update.exe PRIVATE ReSolve)
 
 # Install all examples in bin directory
-set(installable_executables klu_klu.exe klu_glu.exe klu_rf.exe klu_rf_fgmres.exe klu_glu_values_update.exe)
+set(installable_executables klu_klu.exe klu_klu_standalone.exe klu_glu.exe klu_rf.exe klu_rf_fgmres.exe klu_glu_values_update.exe)
 install(TARGETS ${installable_executables} 
         RUNTIME DESTINATION bin)

@@ -54,8 +54,8 @@ namespace ReSolve
     std::string orth_option_;
     index_type conv_cond_;
 
-    real_type* d_V_{nullptr};
-    real_type* d_Z_{nullptr};
+    vector_type* d_V_{nullptr};
+    vector_type* d_Z_{nullptr};
 
     real_type* h_H_{nullptr};
     real_type* h_c_{nullptr};
@@ -67,9 +67,6 @@ namespace ReSolve
     void precV(vector_type* rhs, vector_type* x); //multiply the vector by preconditioner
     LinSolverDirect* LU_solver_;
     index_type n_;// for simplicity
-    real_type one_ = 1.0;
-    real_type minusone_ = -1.0;
-    real_type zero_ = 0.0;
     real_type final_residual_norm_;
     real_type initial_residual_norm_;
     index_type fgmres_iters_;
