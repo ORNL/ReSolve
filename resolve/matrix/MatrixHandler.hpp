@@ -55,8 +55,8 @@ namespace ReSolve {
       int matvec(matrix::Sparse* A,
                  vector_type* vec_x,
                  vector_type* vec_result,
-                 real_type* alpha,
-                 real_type* beta,
+                 const real_type* alpha,
+                 const real_type* beta,
                  std::string matrix_type,
                  std::string memspace);
       void Matrix1Norm(matrix::Sparse *A, real_type* norm);

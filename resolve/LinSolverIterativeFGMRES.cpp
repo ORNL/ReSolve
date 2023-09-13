@@ -17,7 +17,7 @@ namespace ReSolve
     d_V_ = nullptr;
     d_Z_ = nullptr;
   }
-  
+
   LinSolverIterativeFGMRES::LinSolverIterativeFGMRES(MatrixHandler* matrix_handler,
                                                      VectorHandler* vector_handler,
                                                      GramSchmidt*   gs)
@@ -60,11 +60,13 @@ namespace ReSolve
   LinSolverIterativeFGMRES::~LinSolverIterativeFGMRES()
   {
     if (d_V_ != nullptr) {
-      cudaFree(d_V_);
+      // cudaFree(d_V_);
+      delete [] d_V_;   
     }
 
     if (d_Z_ != nullptr) {
-      cudaFree(d_Z_);
+      //      cudaFree(d_Z_);
+      delete [] d_Z_;   
     }
 
   }
@@ -73,9 +75,11 @@ namespace ReSolve
   {
     this->A_ = A;
     n_ = A_->getNumRows();
-    cudaMalloc(&(d_V_),      n_ * (restart_ + 1) * sizeof(real_type));
-    cudaMalloc(&(d_Z_),      n_ * (restart_ + 1) * sizeof(real_type));
 
+    d_V_ = new vector_type(n_, restart_ + 1);
+    d_V_->allocate("cuda");      
+    d_Z_ = new vector_type(n_, restart_ + 1);
+    d_Z_->allocate("cuda");      
     h_H_  = new real_type[restart_ * (restart_ + 1)];
     h_c_  = new real_type[restart_];      // needed for givens
     h_s_  = new real_type[restart_];      // same
@@ -102,19 +106,16 @@ namespace ReSolve
     vector_type* vec_v = new vector_type(n_);
     vector_type* vec_z = new vector_type(n_);
     //V[0] = b-A*x_0
-    cudaMemcpy(&(d_V_[0]), rhs->getData("cuda"), sizeof(real_type) * n_, cudaMemcpyDeviceToDevice);
-    //cudaMatvec(d_x, d_V_, "residual");
-    vec_v->setData(d_V_, "cuda");
 
-    matrix_handler_->matvec(A_, x, vec_v, &minusone_, &one_,"csr", "cuda"); 
+    rhs->deepCopyVectorData(d_V_->getData("cuda"), 0, "cuda");  
+    matrix_handler_->matvec(A_, x, d_V_, &minusone, &one, "csr", "cuda"); 
     rnorm = 0.0;
     bnorm = vector_handler_->dot(rhs, rhs, "cuda");
-    rnorm = vector_handler_->dot(vec_v, vec_v, "cuda");
-    
+    rnorm = vector_handler_->dot(d_V_, d_V_, "cuda");
+
     //rnorm = ||V_1||
     rnorm = sqrt(rnorm);
     bnorm = sqrt(bnorm);
-    
     initial_residual_norm_ = rnorm;
     while(outer_flag) {
       // check if maybe residual is already small enough?
@@ -126,13 +127,13 @@ namespace ReSolve
       }
       int exit_cond = 0;
       if (conv_cond_ == 0){
-        exit_cond =  ((fabs(rnorm - ZERO) <= EPSILON));
+        exit_cond =  ((fabs(rnorm - zero) <= EPSILON));
       } else {
         if (conv_cond_ == 1){
-          exit_cond =  ((fabs(rnorm - ZERO) <= EPSILON) || (rnorm < tol_));
+          exit_cond =  ((fabs(rnorm - zero) <= EPSILON) || (rnorm < tol_));
         } else {
           if (conv_cond_ == 2){
-            exit_cond =  ((fabs(rnorm - ZERO) <= EPSILON) || (rnorm < (tol_*bnorm)));
+            exit_cond =  ((fabs(rnorm - zero) <= EPSILON) || (rnorm < (tol_*bnorm)));
           }
         }
       }
@@ -146,7 +147,7 @@ namespace ReSolve
 
       // normalize first vector
       t = 1.0 / rnorm;
-      vector_handler_->scal(&t, vec_v, "cuda");
+      vector_handler_->scal(&t, d_V_, "cuda");
       // initialize norm history
       h_rs_[0] = rnorm;
       i = -1;
@@ -155,21 +156,21 @@ namespace ReSolve
       while((notconv) && (it < maxit_)) {
         i++;
         it++;
-        
+
         // Z_i = (LU)^{-1}*V_i
 
-        vec_v->setData(&d_V_[i * n_], "cuda");
-        vec_z->setData(&d_Z_[i * n_], "cuda");
+        vec_v->setData( d_V_->getVectorData(i, "cuda"), "cuda");
+        vec_z->setData( d_Z_->getVectorData(i, "cuda"), "cuda");
         this->precV(vec_v, vec_z);
         cudaDeviceSynchronize();
-        
+
         // V_{i+1}=A*Z_i
 
-        vec_v->setData(&d_V_[(i + 1) * n_], "cuda");
+        vec_v->setData( d_V_->getVectorData(i + 1, "cuda"), "cuda");
 
-        matrix_handler_->matvec(A_, vec_z, vec_v, &one_, &zero_,"csr", "cuda"); 
-        
-       // orthogonalize V[i+1], form a column of h_H_
+        matrix_handler_->matvec(A_, vec_z, vec_v, &one, &zero,"csr", "cuda"); 
+
+        // orthogonalize V[i+1], form a column of h_H_
 
         GS_->orthogonalize(n_, d_V_, h_H_, i, "cuda");  ;
         if(i != 0) {
@@ -185,7 +186,7 @@ namespace ReSolve
         double Hii1 = h_H_[(i) * (restart_ + 1) + i + 1];
         double gam = sqrt(Hii * Hii + Hii1 * Hii1);
 
-        if(fabs(gam - ZERO) <= EPSILON) {
+        if(fabs(gam - zero) <= EPSILON) {
           gam = EPSMAC;
         }
 
@@ -219,10 +220,8 @@ namespace ReSolve
       }
 
       // get solution
-      // vec_v->setData(x, "cuda");
       for(j = 0; j <= i; j++) {
-        vec_z->setData(&d_Z_[j * n_], "cuda");
-
+        vec_z->setData( d_Z_->getVectorData(j, "cuda"), "cuda");
         vector_handler_->axpy(&h_rs_[j], vec_z, x, "cuda");
       }
 
@@ -233,10 +232,9 @@ namespace ReSolve
         outer_flag = 0;
       }
 
-      cudaMemcpy(&d_V_[0], rhs->getData("cuda"), sizeof(double)*n_, cudaMemcpyDeviceToDevice);
-      vec_v->setData(d_V_, "cuda");
-      matrix_handler_->matvec(A_, x, vec_v, &minusone_, &one_,"csr", "cuda"); 
-      rnorm = vector_handler_->dot(vec_v, vec_v, "cuda");
+      rhs->deepCopyVectorData(d_V_->getData("cuda"), 0, "cuda");  
+      matrix_handler_->matvec(A_, x, d_V_, &minusone, &one,"csr", "cuda"); 
+      rnorm = vector_handler_->dot(d_V_, d_V_, "cuda");
       // rnorm = ||V_1||
       rnorm = sqrt(rnorm);
 
