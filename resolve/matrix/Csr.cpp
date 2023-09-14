@@ -13,10 +13,10 @@ namespace ReSolve
   }
   
   matrix::Csr::Csr(index_type n, 
-                       index_type m, 
-                       index_type nnz,
-                       bool symmetric,
-                       bool expanded) : Sparse(n, m, nnz, symmetric, expanded)
+                   index_type m, 
+                   index_type nnz,
+                   bool symmetric,
+                   bool expanded) : Sparse(n, m, nnz, symmetric, expanded)
   {
   }
 
@@ -69,7 +69,7 @@ namespace ReSolve
     }
   }
 
-  index_type matrix::Csr::updateData(index_type* row_data, index_type* col_data, real_type* val_data, std::string memspaceIn, std::string memspaceOut)
+  int matrix::Csr::updateData(index_type* row_data, index_type* col_data, real_type* val_data, std::string memspaceIn, std::string memspaceOut)
   {
     //four cases (for now)
     index_type nnz_current = nnz_;
@@ -139,14 +139,14 @@ namespace ReSolve
     return 0;
   } 
 
-  index_type matrix::Csr::updateData(index_type* row_data, index_type* col_data, real_type* val_data, index_type new_nnz, std::string memspaceIn, std::string memspaceOut)
+  int matrix::Csr::updateData(index_type* row_data, index_type* col_data, real_type* val_data, index_type new_nnz, std::string memspaceIn, std::string memspaceOut)
   {
     this->destroyMatrixData(memspaceOut);
     int i = this->updateData(row_data, col_data, val_data, memspaceIn, memspaceOut);
     return i;
   } 
 
-  index_type matrix::Csr::allocateMatrixData(std::string memspace)
+  int matrix::Csr::allocateMatrixData(std::string memspace)
   {
     index_type nnz_current = nnz_;
     if (is_expanded_) {nnz_current = nnz_expanded_;}
@@ -172,7 +172,7 @@ namespace ReSolve
   }
 
 
-  index_type  matrix::Csr::copyCsr(std::string memspaceOut)
+  int matrix::Csr::copyCsr(std::string memspaceOut)
   {
     index_type nnz_current = nnz_;
     if (is_expanded_) {nnz_current = nnz_expanded_;}

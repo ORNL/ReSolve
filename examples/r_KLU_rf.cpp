@@ -80,7 +80,11 @@ int main(int argc, char *argv[] )
     }
     if (i == 0) {
       A_coo = ReSolve::io::readMatrixFromFile(mat_file);
-      A = new ReSolve::matrix::Csr(A_coo->getNumRows(), A_coo->getNumColumns(), A_coo->getNnz(), A_coo->expanded(), A_coo->symmetric());
+      A = new ReSolve::matrix::Csr(A_coo->getNumRows(),
+                                   A_coo->getNumColumns(),
+                                   A_coo->getNnz(),
+                                   A_coo->symmetric(),
+                                   A_coo->expanded());
 
       rhs = ReSolve::io::readRhsFromFile(rhs_file);
       x = new real_type[A->getNumRows()];
