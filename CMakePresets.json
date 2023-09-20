@@ -1,17 +1,35 @@
 {
-  "version": 3,
-  "cmakeMinimumRequired": {
-    "major": 3,
-    "minor": 22
-  },
-  "configurePresets": [
-    {
-      "name": "cluster",
-      "binaryDir": "${sourceDir}/build",
-      "installDir": "${sourceDir}/install",
-      "generator": "Unix Makefiles",
-      "displayName": "cluster configuration",
-      "description": "This build is used for cluster like deception"
-      }
+    "version": 3,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 22,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "cuda",
+            "displayName": "CUDA Build",
+            "description": "Base config to build with CUDA",
+            "binaryDir": "${sourceDir}/build",
+            "installDir": "${sourceDir}/install",
+            "generator": "Unix Makefiles"
+        },
+	{
+	      "name": "ascent",
+	      "inherits": "cuda",
+	      "displayName": "Ascent Build",
+	      "description": "Custom changes specific for Ascent",
+	      "cacheVariables": {
+	            "CMAKE_C_COMPILER": "$env{OLCF_GCC_ROOT}/bin/gcc",
+	            "CMAKE_CXX_COMPILER": "$env{OLCF_GCC_ROOT}/bin/g++"
+	      }
+	},
+	{
+	      "name": "deception",
+	      "inherits": "cuda",
+	      "displayName": "Deception Build",
+	      "description": "Custom changes specific for Deception"
+	}
+
     ]
 }

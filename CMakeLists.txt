@@ -6,7 +6,7 @@
 
 ]]
 
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.22)
 
 # Adds version settings and set variable CMAKE_PROJECT_VERSION
 project(ReSolve VERSION "0.1.0")

@@ -8,14 +8,11 @@ fi
 export SRCDIR=${SRCDIR:-$PWD}
 export BUILDDIR=${BUILDDIR:-$PWD/build}
 export INSTALLDIR=${INSTALLDIR:-$PWD/install}
+export MAKEARGS=${MAKEARGS:-"-j"}
+export CTESTARGS=${CTESTARGS:-"--output-on-failure"}
 export BUILD_VERBOSE=0
-
-echo "Paths:"
-echo "Source dir: $SRCDIR"
-echo "Build dir: $BUILDDIR"
-echo "Install dir: $INSTALLDIR"
-echo "Path to buildsystem script: $SRCDIR/buildsystem/build.sh"
-cd $SRCDIR
+export BUILD=${BUILD:-1}
+export TEST=${TEST:-1}
 
 usage() {
   echo "Usage: ./buildsystem/build.sh [options]
@@ -29,13 +26,34 @@ Long Description:
 
 Clusters:
 
-  By default, this script will run on Ascent. 
+  Each cluster has tcl modules that need to be loaded before invoking CMake. These
+  are configured through an environment variable \"MY_CLUSTER\". Current available
+  clusters for configuration are:
+
+    - deception
+    - ascent 
+
+  Run \`export MY_CLUSTER=deception\` or invoke the build script with:
+
+    \`MY_CLUSTER=ascent ./buildsystem/build.sh\`
 
 --------------------------------------------------------------------------------
 
 Options:
 
-  Not Applicable at the moment.
+  --build-only      Only run the build stage of the script. This is useful for
+                    local development.
+
+  --test-only       Only run the test stage of the script. This should be ran
+                    before every push to the repository or pull/merge request.
+                    This run takes a significant amound of time. If you omit
+                    the --*-only options and just run a particular job, tests
+                    will also be ran.
+
+  --verbose        Print all executed commands to the terminal. This is useful 
+                   for debugging, but it will be disabled in CI by default to 
+                   prevent hitting the job log limit.
+
 --------------------------------------------------------------------------------
 
 See Resolve's latest developer guidelines for more information on developing
@@ -46,36 +64,100 @@ Resolve: https://code.ornl.gov/ecpcitest/exasgd/resolve/-/blob/develop/CONTRIBUT
 "
 }
 
+while [[ $# -gt 0 ]]; do
+  case $1 in
+  --build-only)
+    export TEST=0 BUILD=1
+    shift
+    ;;
+  --test-only)
+    export TEST=1 BUILD=0
+    shift
+    ;;
+  --help|-h)
+    usage
+    exit 0
+    ;;
+  --verbose|-v)
+    export BUILD_VERBOSE=1
+    shift
+    ;;
+  *)
+    echo "Argument $1 not recognized."
+    usage
+    exit 1
+    ;;
+  esac
+done
+
 if [ $BUILD_VERBOSE == 1 ]
 then
   # verbose mode: print out all shell functions
   set -xv
-else
-  # don't print out all shell functions 
-  set +x
 fi
 
 module purge
 
-varfile="$SRCDIR/buildsystem/ascent-env.sh"
+varfile="${SRCDIR}/buildsystem/${MY_CLUSTER}-env.sh"
+
+if [[ ! -v MY_CLUSTER ]]
+then
+  echo "MY_CLUSTER" unset && exit 1
+fi
 
 if [[ -f "$varfile" ]]; then
-  source "$varfile"
-  echo Sourced system-specific variables for ascent
+  source $varfile || { echo "Could not source $varfile"; exit 1; }
+else
+  echo "No cluster variable file configured for ${MY_CLUSTER}. Try one of:\n"
+  echo "deception, ascent." && exit 1
 fi
+
+echo "Paths:"
+echo "Source dir: $SRCDIR"
+echo "Build dir: $BUILDDIR"
+echo "Install dir: $INSTALLDIR"
+echo "Path to buildsystem script: $SRCDIR/buildsystem/build.sh"
 
 module list
 
-mkdir -p build
+if [[ $BUILD -eq 1 ]]; then
+  [ -d $BUILDDIR ] && rm -rf $BUILDDIR
+  mkdir -p $BUILDDIR
 
-rm -rf build/*
+  [ -d $INSTALLDIR ] && rm -rf $INSTALLDIR
+  mkdir -p $INSTALLDIR
 
-# Utlizes CMakePresets.json file to set cmake variables such as CMAKE_INSTALL_PREFIX
-# preset cluster = CMAKE_INSTALL_PREFIX = /install
-cmake -B build --preset cluster && \
+  pushd $BUILDDIR
 
-cmake --build build
+  echo
+  echo Configuring
+  echo
+  eval "cmake -S .. --preset ${MY_CLUSTER}" || exit 1
 
-exit $?
+  echo
+  echo Building
+  echo
+  make $MAKEARGS || exit 1
 
+  echo
+  echo Installing
+  echo
+  make install || exit 1
+  popd
+fi
 
+if [[ $TEST -eq 1 ]]; then
+  pushd $BUILDDIR
+  echo
+  echo Testing
+  echo
+  ctest $CTESTARGS || exit 1
+  popd
+fi
+
+if [ $BUILD_VERBOSE == 1 ]
+then
+  set +xv
+fi
+
+exit 0

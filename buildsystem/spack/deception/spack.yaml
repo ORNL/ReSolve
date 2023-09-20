@@ -1,0 +1,60 @@
+spack:
+  specs:
+    - resolve+cuda cuda_arch=60,70,75,80
+  view: false
+  concretizer:
+    unify: when_possible
+    reuse: true
+  config:
+    concretizer: clingo
+    install_tree:
+      root: $SPACK_INSTALL
+    source_cache: $SPACK_CACHE/source
+    misc_cache: $SPACK_CACHE/misc
+    build_stage: $SPACK_CACHE/build
+  modules:
+    default:
+      roots:
+        tcl: $SPACK_INSTALL/modules
+  packages:
+    all:
+      permissions:
+        write: group
+        read: world
+        group: exasgd
+    cmake:
+      externals:
+      - spec: cmake@3.26.3
+        modules:
+        - cmake/3.26.3 
+      buildable: false
+    git:
+      externals:
+      - spec: git@2.37.3
+        modules:
+        - git/2.37.3 
+        prefix: /share/apps/git/2.37.3
+      buildable: false
+    perl:
+      externals:
+      - spec: perl@5.26.0
+        modules:
+        - perl/5.26.0
+      buildable: false
+    cuda:
+      externals:
+      - spec: cuda@11.4
+        modules:
+        - cuda/11.4
+      buildable: false
+  compilers:
+  - compiler:
+      spec: gcc@9.1.0
+      paths:
+        cc: /share/apps/gcc/9.1.0/bin/gcc
+        cxx: /share/apps/gcc/9.1.0/bin/g++
+        f77: /share/apps/gcc/9.1.0/bin/gfortran
+        fc: /share/apps/gcc/9.1.0/bin/gfortran
+      operating_system: centos7
+      target: x86_64
+      modules: [gcc/9.1.0]

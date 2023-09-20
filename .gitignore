@@ -6,5 +6,7 @@ install/*
 .ubuild.json
 *__pycache__*
 *nvblas.conf
-spack-env/
-
+spack-env-*/
+spack-build-*
+spack_install.*
+spack-configure-*
