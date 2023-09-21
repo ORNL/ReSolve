@@ -102,7 +102,7 @@ namespace ReSolve {
       }
       if (coo_rows[i] == coo_cols[i]){
         if (diag_control[coo_rows[i]] > 0) {
-          //duplicate
+         //duplicate
           nnz_unpacked_no_duplicates--;
           nnz_no_duplicates--;
         }
@@ -230,6 +230,7 @@ namespace ReSolve {
                             std::string matrixFormat, 
                             std::string memspace) 
   {
+    using namespace constants;
     int error_sum = 0;
     if (matrixFormat == "csr"){
       matrix::Csr* A = (matrix::Csr*) Ageneric;
@@ -272,10 +273,10 @@ namespace ReSolve {
 
           status = cusparseSpMV_bufferSize(handle_cusparse, 
                                            CUSPARSE_OPERATION_NON_TRANSPOSE,
-                                           &minusone,
+                                           &MINUSONE,
                                            matA,
                                            vecx,
-                                           &one,
+                                           &ONE,
                                            vecAx,
                                            CUDA_R_64F,
                                            CUSPARSE_SPMV_CSR_ALG2, 

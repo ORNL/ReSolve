@@ -5,16 +5,20 @@
 #include <cassert>
 namespace ReSolve 
 {
-  enum GS_variant { mgs, cgs2, mgs_two_synch, mgs_pm, cgs};
+  enum GSVariant { mgs = 0, 
+                   cgs2 = 1,
+                   mgs_two_synch = 2, 
+                   mgs_pm = 3, 
+                   cgs1 = 4 };
   class GramSchmidt
   {
     using vector_type = vector::Vector;
     public:
     GramSchmidt();
-    GramSchmidt(VectorHandler* vh, GS_variant variant);
+    GramSchmidt(VectorHandler* vh, GSVariant variant);
     ~GramSchmidt();
-    int setVariant(GS_variant variant);
-    GS_variant  getVariant();
+    int setVariant(GSVariant variant);
+    GSVariant  getVariant();
     real_type* getL(); //only for low synch, returns null ptr otherwise 
 
     int setup(index_type n, index_type restart);
@@ -22,7 +26,7 @@ namespace ReSolve
 
     private:
     
-    GS_variant variant_;
+    GSVariant variant_;
     bool setup_complete_; //to avoid double allocations and stuff
 
     index_type num_vecs_; //the same as restart  
