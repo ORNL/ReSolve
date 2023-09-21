@@ -90,6 +90,8 @@ namespace ReSolve
 
   int  LinSolverIterativeFGMRES::solve(vector_type* rhs, vector_type* x)
   {
+    using namespace constants;
+
     int outer_flag = 1;
     int notconv = 1; 
     int i = 0;
@@ -108,7 +110,7 @@ namespace ReSolve
     //V[0] = b-A*x_0
 
     rhs->deepCopyVectorData(d_V_->getData("cuda"), 0, "cuda");  
-    matrix_handler_->matvec(A_, x, d_V_, &minusone, &one, "csr", "cuda"); 
+    matrix_handler_->matvec(A_, x, d_V_, &MINUSONE, &ONE, "csr", "cuda"); 
     rnorm = 0.0;
     bnorm = vector_handler_->dot(rhs, rhs, "cuda");
     rnorm = vector_handler_->dot(d_V_, d_V_, "cuda");
@@ -127,13 +129,13 @@ namespace ReSolve
       }
       int exit_cond = 0;
       if (conv_cond_ == 0){
-        exit_cond =  ((fabs(rnorm - zero) <= EPSILON));
+        exit_cond =  ((fabs(rnorm - ZERO) <= EPSILON));
       } else {
         if (conv_cond_ == 1){
-          exit_cond =  ((fabs(rnorm - zero) <= EPSILON) || (rnorm < tol_));
+          exit_cond =  ((fabs(rnorm - ZERO) <= EPSILON) || (rnorm < tol_));
         } else {
           if (conv_cond_ == 2){
-            exit_cond =  ((fabs(rnorm - zero) <= EPSILON) || (rnorm < (tol_*bnorm)));
+            exit_cond =  ((fabs(rnorm - ZERO) <= EPSILON) || (rnorm < (tol_*bnorm)));
           }
         }
       }
@@ -168,7 +170,7 @@ namespace ReSolve
 
         vec_v->setData( d_V_->getVectorData(i + 1, "cuda"), "cuda");
 
-        matrix_handler_->matvec(A_, vec_z, vec_v, &one, &zero,"csr", "cuda"); 
+        matrix_handler_->matvec(A_, vec_z, vec_v, &ONE, &ZERO,"csr", "cuda"); 
 
         // orthogonalize V[i+1], form a column of h_H_
 
@@ -186,7 +188,7 @@ namespace ReSolve
         double Hii1 = h_H_[(i) * (restart_ + 1) + i + 1];
         double gam = sqrt(Hii * Hii + Hii1 * Hii1);
 
-        if(fabs(gam - zero) <= EPSILON) {
+        if(fabs(gam - ZERO) <= EPSILON) {
           gam = EPSMAC;
         }
 
@@ -233,7 +235,7 @@ namespace ReSolve
       }
 
       rhs->deepCopyVectorData(d_V_->getData("cuda"), 0, "cuda");  
-      matrix_handler_->matvec(A_, x, d_V_, &minusone, &one,"csr", "cuda"); 
+      matrix_handler_->matvec(A_, x, d_V_, &MINUSONE, &ONE,"csr", "cuda"); 
       rnorm = vector_handler_->dot(d_V_, d_V_, "cuda");
       // rnorm = ||V_1||
       rnorm = sqrt(rnorm);
