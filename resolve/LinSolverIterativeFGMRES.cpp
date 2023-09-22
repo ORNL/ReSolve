@@ -1,9 +1,12 @@
-#include "LinSolverIterativeFGMRES.hpp"
 #include <iostream>
 #include <cassert>
 
-namespace ReSolve 
+#include <resolve/utilities/logger/Logger.hpp>
+#include "LinSolverIterativeFGMRES.hpp"
+
+namespace ReSolve
 {
+  using out = io::Logger;
 
   LinSolverIterativeFGMRES::LinSolverIterativeFGMRES()
   {
@@ -251,7 +254,7 @@ namespace ReSolve
   int  LinSolverIterativeFGMRES::setupPreconditioner(std::string name, LinSolverDirect* LU_solver)
   {
     if (name != "CuSolverRf") {
-      std::cout<<"Only cusolverRf tri solve can be used as a preconditioner at thistime"<<std::endl;
+      out::warning() << "Only cusolverRf tri solve can be used as a preconditioner at this time." << std::endl;
       return 1;
     } else {
       LU_solver_ = LU_solver;  

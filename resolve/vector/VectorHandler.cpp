@@ -1,10 +1,12 @@
 #include <iostream>
+
+#include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/cudaKernels.h>
 #include <resolve/vector/Vector.hpp>
-
 #include "VectorHandler.hpp"
 
 namespace ReSolve {
+  using out = io::Logger;
 
   /** 
    * @brief empty constructor that does absolutely nothing        
@@ -66,7 +68,7 @@ namespace ReSolve {
         } 
         return sum;
       } else {
-        std::cout<<"Not implemented (yet)"<<std::endl;
+        out::error() << "Not implemented (yet)" << std::endl;
         return NAN;
       }
     }
@@ -96,7 +98,7 @@ namespace ReSolve {
           x_data[i] *= (*alpha);
         }
       } else {      
-        std::cout<<"Not implemented (yet)"<<std::endl;
+        out::error() << "Not implemented (yet)" << std::endl;
       }  
     }
   }
@@ -131,8 +133,7 @@ namespace ReSolve {
           y_data[i] = (*alpha) * x_data[i] + y_data[i];
         }
       } else {
-        std::cout << "Not implemented (yet)" << std::endl;
-
+        out::error() <<"Not implemented (yet)" << std::endl;
       }
     }
   }
@@ -190,8 +191,7 @@ namespace ReSolve {
       }
 
     } else {
-
-      std::cout<<"Not implemented (yet)"<<std::endl;
+      out::error() << "Not implemented (yet)" << std::endl;
     }
   }
 
@@ -232,7 +232,7 @@ namespace ReSolve {
                     size);      // ldc     
       }
     } else {
-      std::cout<<"Not implemented (yet)"<<std::endl;
+      out::error() << "Not implemented (yet)" << std::endl;
     }
   }
 
@@ -276,7 +276,7 @@ namespace ReSolve {
                     k + 1);  //ldc 
       }
     } else {
-      std::cout<<"Not implemented (yet)"<<std::endl;
+      out::error() << "Not implemented (yet)" << std::endl;
     }
   }
 

@@ -4,6 +4,7 @@
 #include <fstream>
 #include <sstream>
 
+#include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/matrix/Coo.hpp>
 #include "io.hpp"
@@ -14,7 +15,7 @@ namespace ReSolve { namespace io {
   matrix::Coo* readMatrixFromFile(std::istream& file)
   {
     if(!file) {
-      std::cout << "Empty input to readMatrixFromFile function ... \n" <<std::endl;
+      Logger::error() << "Empty input to readMatrixFromFile function ... \n" << std::endl;
       return nullptr;
     }
 
@@ -60,7 +61,7 @@ namespace ReSolve { namespace io {
   real_type* readRhsFromFile(std::istream& file)
   {
     if(!file) {
-      std::cout << "Empty input to " << __func__ << " function ... \n" << std::endl;
+      Logger::error() << "Empty input to " << __func__ << " function ... \n" << std::endl;
       return nullptr;
     }
 
@@ -89,7 +90,7 @@ namespace ReSolve { namespace io {
   void readAndUpdateMatrix(std::istream& file, matrix::Coo* A)
   {
     if(!file) {
-      std::cout << "Empty input to readMatrixFromFile function ... \n" <<std::endl;
+      Logger::error() << "Empty input to readMatrixFromFile function ..." << std::endl;
       return;
     }
 
@@ -107,9 +108,11 @@ namespace ReSolve { namespace io {
     ss << line;
     ss >> n >> m >> nnz;
     if ((A->getNumRows() != n) || (A->getNumColumns() != m) || (A->getNnz() < nnz)) {      
-      std::cout << "Wrong matrix size: " << A->getNumRows() << "x" << A->getNumColumns() 
-                << ", NNZ: " << A->getNnz() << " Cannot update! \n ";
-      exit(0);
+      Logger::error() << "Wrong matrix size: " << A->getNumRows()
+                      << "x" << A->getNumColumns() 
+                      << ", NNZ: " << A->getNnz()
+                      << " Cannot update! \n ";
+      return;
     }
     A->setNnz(nnz);
     //create coo arrays
@@ -130,7 +133,7 @@ namespace ReSolve { namespace io {
   void readAndUpdateRhs(std::istream& file, real_type** p_rhs) 
   {
     if (!file) {
-      std::cout << "Empty input to readAndUpdateRhs function ... \n" <<std::endl;
+      Logger::error() << "Empty input to readAndUpdateRhs function ..." << std::endl;
       return;
     }
 
@@ -162,7 +165,7 @@ namespace ReSolve { namespace io {
 
   int writeMatrixToFile(matrix::Sparse* A, std::ostream& file_out)
   {
-    std::cout << "writeMatrixToFile function not implemented!\n";
+    Logger::error() << "writeMatrixToFile function not implemented!\n";
     return -1;
   }
 
