@@ -8,6 +8,7 @@
 
 add_subdirectory(vector)
 add_subdirectory(matrix)
+add_subdirectory(utilities)
 
 set(ReSolve_SRC
     # VectorHandler.cpp
@@ -47,7 +48,7 @@ set_source_files_properties(${ReSolve_SRC_CUDA} PROPERTIES LANGUAGE CUDA)
 add_library(resolve_tpl INTERFACE)
 target_link_libraries(resolve_tpl INTERFACE resolve_cuda KLU)
 
-install(TARGETS resolve_matrix resolve_vector resolve_tpl EXPORT ReSolveTargets)
+install(TARGETS resolve_matrix resolve_vector resolve_logger resolve_tpl EXPORT ReSolveTargets)
 
 add_library(ReSolve SHARED ${ReSolve_SRC} ${ReSolve_SRC_CUDA})
 
@@ -57,7 +58,7 @@ target_include_directories(ReSolve INTERFACE
 )
 
 # TODO: Make this PRIVATE dependency (requires refactoring ReSolve code)
-target_link_libraries(ReSolve PUBLIC resolve_matrix resolve_vector resolve_tpl)
+target_link_libraries(ReSolve PUBLIC resolve_matrix resolve_vector resolve_logger resolve_tpl)
 
 install(TARGETS ReSolve
         EXPORT ReSolveTargets

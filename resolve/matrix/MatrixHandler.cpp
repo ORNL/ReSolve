@@ -1,9 +1,11 @@
 #include <iostream>
-#include <resolve/vector/Vector.hpp>
 
+#include <resolve/utilities/logger/Logger.hpp>
+#include <resolve/vector/Vector.hpp>
 #include "MatrixHandler.hpp"
 
 namespace ReSolve {
+  using out = io::Logger;
 
   //helper class
   indexPlusValue::indexPlusValue()
@@ -337,14 +339,14 @@ namespace ReSolve {
           vec_result->setDataUpdated("cpu");
           return 0;
         } else {
-          std::cout<<"Not implemented (yet)"<<std::endl;
+          out::error() << "Not implemented (yet)" << std::endl;
 
           return 1;
         }
       }
     } else {
 
-      std::cout<<"Not implemented (yet), only csr matvec is implemented"<<std::endl;
+      out::error() << "Not implemented (yet), only csr matvec is implemented" << std::endl;
       return 1;
     }
   }
@@ -399,7 +401,7 @@ namespace ReSolve {
       return error_sum;
       cudaFree(d_work);
     } else { 
-      std::cout<<"Not implemented (yet)"<<std::endl;
+      out::error() << "Not implemented (yet)" << std::endl;
       return -1;
     } 
 

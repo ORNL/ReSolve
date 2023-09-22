@@ -1,11 +1,14 @@
 #include <iostream>
 #include <cassert>
 
+#include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/vector/Vector.hpp>
 #include "GramSchmidt.hpp"
 
 namespace ReSolve
 {
+  using out = io::Logger;
+
   int idxmap(index_type i, index_type j, index_type col_lenght) {
     return  i * (col_lenght) + j;
   }
@@ -309,7 +312,9 @@ namespace ReSolve
 
       }//switch
     } else {
-      std::cout<<"Not implemented (yet)"<<std::endl;
+      out::error() << "Not implemented (yet)" << std::endl;
+      return -1;
     }
+    return 0;
   }//orthogonalize
 }
