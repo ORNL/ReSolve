@@ -217,7 +217,7 @@ namespace ReSolve { namespace vector {
     }
   }
 
-  void Vector::setToZero(int j, std::string memspace) 
+  void Vector::setToZero(index_type j, std::string memspace) 
   {
     if (memspace == "cpu") {
       if (h_data_ == nullptr) {
@@ -251,6 +251,26 @@ namespace ReSolve { namespace vector {
           cudaMalloc(&d_data_, (n_ * k_) * sizeof(real_type)); 
         }
         set_array_const(n_ * k_, C, d_data_);
+      }
+    }
+  }
+
+  void Vector::setToConst(index_type j, real_type C, std::string memspace) 
+  {
+    if (memspace == "cpu") {
+      if (h_data_ == nullptr) {
+        h_data_ = new real_type[n_ * k_]; 
+      }
+      for (int i = j * n_current_; i < (j + 1 ) * n_current_ * k_; ++i){
+        h_data_[i] = C;
+      }
+    } else {
+      if (memspace == "cuda") {
+        if (d_data_ == nullptr) {
+          cudaMalloc(&d_data_, (n_ * k_) * sizeof(real_type)); 
+        }
+//printf("setting to %f, starting at %d, lenght %d \n",C,  n_current_ * j, n_current_);
+        set_array_const(n_current_ * 1, C, &d_data_[n_current_ * j]);
       }
     }
   }

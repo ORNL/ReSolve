@@ -24,6 +24,7 @@ namespace ReSolve { namespace vector {
       void setToZero(std::string memspace);
       void setToZero(index_type i, std::string memspace); // set i-th ivector to 0
       void setToConst(real_type C, std::string memspace);
+      void setToConst(index_type i, real_type C, std::string memspace); // set i-th vector to C  - needed for unit tests, Gram Schmidt tests
       int copyData(std::string memspaceIn, std::string memspaceOut); 
       int setCurrentSize(index_type new_n_current);
       real_type* getVectorData(index_type i, std::string memspace); // get ith vector data out of multivector   
