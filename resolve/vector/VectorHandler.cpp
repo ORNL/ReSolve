@@ -57,7 +57,7 @@ namespace ReSolve {
         real_type* x_data = x->getData("cpu");
         real_type* y_data = y->getData("cpu");
         real_type sum = 0.0;
-        real_type c;
+        real_type c = 0.0;
         real_type t, y;
         for (int i = 0; i < x->getSize(); ++i){
           y = (x_data[i] * y_data[i]) - c;
@@ -196,11 +196,11 @@ namespace ReSolve {
   }
 
   /** 
-   * @brief mass (bulk) axpy i.e, y = alpha*x where  alpha is a vector
+   * @brief mass (bulk) axpy i.e, y = y - x*alpha where  alpha is a vector
    * 
    * @param[in] size number of elements in y
    * @param[in] alpha vector size k x 1
-   * @param[in] x vector size size x 1
+   * @param[in] x (multi)vector size size x k
    * @param[in,out] y vector size size x 1 (this is where the result is stored)
    * @param[in] memspace string containg memspace (cpu or cuda)
    *
