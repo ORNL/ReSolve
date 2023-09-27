@@ -15,8 +15,8 @@ namespace ReSolve {
     {
       public:       
         GramSchmidtTests(std::string memspace) : memspace_(memspace) 
-        {
-        }
+      {
+      }
 
         virtual ~GramSchmidtTests()
         {
@@ -29,7 +29,7 @@ namespace ReSolve {
 
           return status.report(__func__);
         }
- 
+
         TestOutcome orthogonalize(index_type N, GSVariant var)
         {
           TestStatus status;
@@ -46,16 +46,11 @@ namespace ReSolve {
             V->allocate("cpu");
           }
 
-         //set the first vector to all 1s, normalize 
-          V->setToConst(0, 1.0, memspace_);
-          real_type nrm = handler->dot(V, V, memspace_);
-          nrm = sqrt(nrm);
-          nrm = 1.0 / nrm;
-          handler->scal(&nrm, V, memspace_);
-                 
+
           ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(handler, var);
           GS->setup(N, 3);
-                    
+          
+          //fill 2nd and 3rd vector with values
           aux_data = V->getVectorData(1, "cpu");
           for (int i = 0; i < N; ++i) {
             if ( i % 2 == 0) {         
@@ -72,22 +67,30 @@ namespace ReSolve {
               aux_data[i] = 2.0;
             }
           }
-
           V->setDataUpdated("cpu"); 
           V->copyData("cpu", memspace_);
-         
+
+          //set the first vector to all 1s, normalize 
+          V->setToConst(0, 1.0, memspace_);
+          real_type nrm = handler->dot(V, V, memspace_);
+          nrm = sqrt(nrm);
+          nrm = 1.0 / nrm;
+          handler->scal(&nrm, V, memspace_);
+
           GS->orthogonalize(N, V, H, 0, memspace_ ); 
           GS->orthogonalize(N, V, H, 1, memspace_ ); 
-          
+
           status *= verifyAnswer(V, 3, handler, memspace_);
-          
+
           delete workspace;
           delete [] H;
           delete V; 
           delete GS;
+          
           return status.report(__func__);
         }    
-private:
+
+      private:
         std::string memspace_{"cuda"};
 
         /** @brief Slaven's "factory" method - it would use correct constructor to create cuda (or other) workspace
@@ -102,23 +105,23 @@ private:
           // If not CUDA, return default
           return (new LinAlgWorkspace());
         }
-        
+
         // x is a multivector containing K vectors 
         bool verifyAnswer(vector::Vector* x, index_type K,  ReSolve::VectorHandler* handler, std::string memspace)
         {
           vector::Vector* a = new vector::Vector(x->getSize()); 
           vector::Vector* b = new vector::Vector(x->getSize());
-          
+
           real_type ip; 
           bool status = true;
-          
+
           for (index_type i = 0; i < K; ++i) {
             for (index_type j = 0; j < K; ++j) {
 
               a->setData(x->getVectorData(i, memspace), memspace);
               b->setData(x->getVectorData(j, memspace), memspace);
               ip = handler->dot(a, b, memspace_);
-                
+              
               if ( (i != j) && (abs(ip) > 1e-14)) {
                 status = false;
                 std::cout << "Vectors" << i << " and " << j << "are not orthogonal, inner product: " << ip << " expected: "<< 0.0 <<"\n";
@@ -131,6 +134,8 @@ private:
               }
             }
           }
+          delete a;
+          delete b;
           return status;
         }
     }; // class
