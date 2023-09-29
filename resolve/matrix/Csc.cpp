@@ -27,11 +27,11 @@ namespace ReSolve
   index_type* matrix::Csc::getRowData(std::string memspace)
   {
     if (memspace == "cpu") {
-      copyCsc("cpu");
+      copyData("cpu");
       return this->h_row_data_;
     } else {
       if (memspace == "cuda") {
-        copyCsc("cuda");
+        copyData("cuda");
         return this->d_row_data_;
       } else {
         return nullptr;
@@ -42,11 +42,11 @@ namespace ReSolve
   index_type* matrix::Csc::getColData(std::string memspace)
   {
     if (memspace == "cpu") {
-      copyCsc("cpu");
+      copyData("cpu");
       return this->h_col_data_;
     } else {
       if (memspace == "cuda") {
-        copyCsc("cuda");
+        copyData("cuda");
         return this->d_col_data_;
       } else {
         return nullptr;
@@ -57,11 +57,11 @@ namespace ReSolve
   real_type* matrix::Csc::getValues(std::string memspace)
   {
     if (memspace == "cpu") {
-      copyCsc("cpu");
+      copyData("cpu");
       return this->h_val_data_;
     } else {
       if (memspace == "cuda") {
-        copyCsc("cuda");
+        copyData("cuda");
         return this->d_val_data_;
       } else {
         return nullptr;
@@ -69,7 +69,7 @@ namespace ReSolve
     }
   }
 
-  index_type matrix::Csc::updateData(index_type* row_data, index_type* col_data, real_type* val_data, std::string memspaceIn, std::string memspaceOut)
+  int matrix::Csc::updateData(index_type* row_data, index_type* col_data, real_type* val_data, std::string memspaceIn, std::string memspaceOut)
   {
     index_type nnz_current = nnz_;
     if (is_expanded_) {nnz_current = nnz_expanded_;}
@@ -139,14 +139,14 @@ namespace ReSolve
 
   } 
 
-  index_type matrix::Csc::updateData(index_type* row_data, index_type* col_data, real_type* val_data, index_type new_nnz, std::string memspaceIn, std::string memspaceOut)
+  int matrix::Csc::updateData(index_type* row_data, index_type* col_data, real_type* val_data, index_type new_nnz, std::string memspaceIn, std::string memspaceOut)
   {
     this->destroyMatrixData(memspaceOut);
     int i = this->updateData(col_data, row_data, val_data, memspaceIn, memspaceOut);
     return i;
-  } 
+  }
 
-  index_type matrix::Csc::allocateMatrixData(std::string memspace)
+  int matrix::Csc::allocateMatrixData(std::string memspace)
   {
     index_type nnz_current = nnz_;
     if (is_expanded_) {nnz_current = nnz_expanded_;}
@@ -171,7 +171,7 @@ namespace ReSolve
     return -1;
   }
 
-  index_type  matrix::Csc::copyCsc(std::string memspaceOut)
+  int matrix::Csc::copyData(std::string memspaceOut)
   {
 
     index_type nnz_current = nnz_;

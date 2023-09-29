@@ -136,7 +136,7 @@ private:
     // std::cout << rowptr[i] << "\n";
 
     if (memspace == "cuda") {
-      A->copyCsr(memspace);
+      A->copyData(memspace);
     }
 
     return A;

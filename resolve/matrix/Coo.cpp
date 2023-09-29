@@ -32,11 +32,11 @@ namespace ReSolve
   index_type* matrix::Coo::getRowData(std::string memspace)
   {
     if (memspace == "cpu") {
-      copyCoo("cpu");
+      copyData("cpu");
       return this->h_row_data_;
     } else {
       if (memspace == "cuda") {
-        copyCoo("cuda");
+        copyData("cuda");
         return this->d_row_data_;
       } else {
         return nullptr;
@@ -47,11 +47,11 @@ namespace ReSolve
   index_type* matrix::Coo::getColData(std::string memspace)
   {
     if (memspace == "cpu") {
-      copyCoo("cpu");
+      copyData("cpu");
       return this->h_col_data_;
     } else {
       if (memspace == "cuda") {
-        copyCoo("cuda");
+        copyData("cuda");
         return this->d_col_data_;
       } else {
         return nullptr;
@@ -62,11 +62,11 @@ namespace ReSolve
   real_type* matrix::Coo::getValues(std::string memspace)
   {
     if (memspace == "cpu") {
-      copyCoo("cpu");
+      copyData("cpu");
       return this->h_val_data_;
     } else {
       if (memspace == "cuda") {
-        copyCoo("cuda");
+        copyData("cuda");
         return this->d_val_data_;
       } else {
         return nullptr;
@@ -176,7 +176,7 @@ namespace ReSolve
     return -1;
   }
 
-  index_type matrix::Coo::copyCoo(std::string memspaceOut)
+  int matrix::Coo::copyData(std::string memspaceOut)
   {
 
     index_type nnz_current = nnz_;
