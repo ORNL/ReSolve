@@ -34,17 +34,19 @@ namespace ReSolve { namespace matrix {
 
       virtual index_type* getRowData(std::string memspace) = 0;
       virtual index_type* getColData(std::string memspace) = 0;
-      virtual real_type* getValues(std::string memspace) = 0;
+      virtual real_type*  getValues(std::string memspace)  = 0;
 
-      virtual index_type updateData(index_type* row_data, index_type* col_data, real_type* val_data, std::string memspaceIn, std::string memspaceOut) = 0;
-      virtual index_type updateData(index_type* row_data, index_type* col_data, real_type* val_data, index_type new_nnz, std::string memspaceIn, std::string memspaceOut) = 0;
+      virtual int updateData(index_type* row_data, index_type* col_data, real_type* val_data, std::string memspaceIn, std::string memspaceOut) = 0;
+      virtual int updateData(index_type* row_data, index_type* col_data, real_type* val_data, index_type new_nnz, std::string memspaceIn, std::string memspaceOut) = 0;
 
-      virtual index_type allocateMatrixData(std::string memspace) = 0;
-      index_type setMatrixData(index_type* row_data, index_type* col_data, real_type* val_data, std::string memspace);
+      virtual int allocateMatrixData(std::string memspace) = 0;
+      int setMatrixData(index_type* row_data, index_type* col_data, real_type* val_data, std::string memspace);
 
-      index_type destroyMatrixData(std::string memspace);
+      int destroyMatrixData(std::string memspace);
 
       virtual void print() = 0;
+
+      virtual int copyData(std::string memspaceOut) = 0;
 
 
       //update Values just updates values; it allocates if necessary.

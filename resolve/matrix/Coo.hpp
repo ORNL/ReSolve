@@ -26,9 +26,7 @@ namespace ReSolve { namespace matrix {
 
       virtual void print();
 
-    private:
-
-      index_type copyCoo(std::string memspaceOut);
+      virtual int copyData(std::string memspaceOut);
   };
 
 }} // namespace ReSolve::matrix

@@ -161,7 +161,7 @@ namespace ReSolve { namespace matrix {
     return 0;
   }
 
-  index_type Sparse::destroyMatrixData(std::string memspace)
+  int Sparse::destroyMatrixData(std::string memspace)
   { 
     if (memspace == "cpu"){  
       if (h_row_data_ != nullptr) delete [] h_row_data_;
