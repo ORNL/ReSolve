@@ -14,7 +14,5 @@ target_link_libraries(runVectorHandlerTests.exe PRIVATE ReSolve resolve_vector)
 set(installable_tests runVectorHandlerTests.exe)
 install(TARGETS ${installable_tests} 
         RUNTIME DESTINATION bin/resolve/tests/unit)
-# Install directory with data files
-install(DIRECTORY data DESTINATION bin/resolve/tests/unit)
 
 add_test(NAME vector_handler_test COMMAND $<TARGET_FILE:runVectorHandlerTests.exe>)

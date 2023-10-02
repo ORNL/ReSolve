@@ -14,8 +14,5 @@ target_link_libraries(runLoggerTests.exe PRIVATE ReSolve resolve_logger)
 set(installable_logger_tests runLoggerTests.exe)
 install(TARGETS ${installable_tests} 
         RUNTIME DESTINATION bin/resolve/tests/unit)
-# Install directory with data files
-install(DIRECTORY data DESTINATION bin/resolve/tests/unit)
-
 
 add_test(NAME logger_test COMMAND $<TARGET_FILE:runLoggerTests.exe>)

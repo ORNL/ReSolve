@@ -69,19 +69,6 @@ public:
     return status.report(__func__);
   }
 
-  TestOutcome cooMatrixImport2(std::ifstream& file)
-  {
-    TestStatus status;
-    ReSolve::matrix::Coo* A = ReSolve::io::readMatrixFromFile(file);
-    if (A->getNnz() != general_coo_matrix_vals_.size()) {
-      std::cout << "Incorrect NNZ read from the file ...\n";
-      status = false;
-    }
-
-    status *= verifyAnswer(*A, general_coo_matrix_rows_, general_coo_matrix_cols_, general_coo_matrix_vals_);
-
-    return status.report(__func__);
-  }
 
   TestOutcome cooMatrixReadAndUpdate()
   {
