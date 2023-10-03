@@ -88,8 +88,9 @@ namespace ReSolve {
       LinAlgWorkspaceCUDA* workspaceCUDA = (LinAlgWorkspaceCUDA*) workspace_;
       cublasHandle_t handle_cublas =  workspaceCUDA->getCublasHandle();
       cublasStatus_t st = cublasDscal(handle_cublas, x->getSize(), alpha, x->getData("cuda"), 1);
-      if (st!=0) {printf("scal crashed with code %d \n", st);}
-
+      if (st!=0) {
+        ReSolve::io::Logger::error() << "scal crashed with code " << st << "\n";
+      }
     } else {
       if (memspace == "cpu") {
         real_type* x_data = x->getData("cpu");

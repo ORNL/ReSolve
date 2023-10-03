@@ -55,10 +55,12 @@ namespace ReSolve { namespace vector {
     if (memspace == "cpu") {
       h_data_ = data;
       cpu_updated_ = true;
+      gpu_updated_ = false;
     } else {
       if (memspace == "cuda") { 
         d_data_ = data;
         gpu_updated_ = true;
+        cpu_updated_ = false;
       } else {
         //error
       } 
