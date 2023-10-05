@@ -8,7 +8,7 @@ fi
 export SRCDIR=${SRCDIR:-$PWD}
 export BUILDDIR=${BUILDDIR:-$PWD/build}
 export INSTALLDIR=${INSTALLDIR:-$PWD/install}
-export BUILD_VERBOSE=1
+export BUILD_VERBOSE=0
 
 echo "Paths:"
 echo "Source dir: $SRCDIR"
@@ -70,7 +70,9 @@ mkdir -p build
 
 rm -rf build/*
 
-cmake -B build -S . && 
+# Utlizes CMakePresets.json file to set cmake variables such as CMAKE_INSTALL_PREFIX
+# preset cluster = CMAKE_INSTALL_PREFIX = /install
+cmake -B build --preset cluster && \
 
 cmake --build build
 

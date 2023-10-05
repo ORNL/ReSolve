@@ -1,0 +1,17 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 22
+  },
+  "configurePresets": [
+    {
+      "name": "cluster",
+      "binaryDir": "${sourceDir}/build",
+      "installDir": "${sourceDir}/install",
+      "generator": "Unix Makefiles",
+      "displayName": "cluster configuration",
+      "description": "This build is used for cluster like deception"
+      }
+    ]
+}

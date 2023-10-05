@@ -23,7 +23,6 @@
   script:
     # Do _not_ clean up WORKDIR as files are needed for testing
     - |
-      set -xv
       mkdir -p "$WORKDIR"
       cp -r . "$WORKDIR"
       cd "$WORKDIR"
@@ -34,7 +33,9 @@
       chmod -R +X ./build
       source buildsystem/ascent-env.sh
       cd build
-      ctest -VV
+      ctest -vv
+      make install
+      make test_install
 
 cleanup:
  stage: .pre
