@@ -114,10 +114,6 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/ReSolveConfig.cmake"
         "${CMAKE_CURRENT_BINARY_DIR}/ReSolveConfigVersion.cmake"
         DESTINATION share/resolve/cmake)
     
-# Install directory with example on how to consume ReSolve
-install(DIRECTORY examples/resolve_consumer DESTINATION share/examples)
-install(FILES examples/r_KLU_rf_FGMRES.cpp DESTINATION share/examples/resolve_consumer)
-
 # Add examples
 add_subdirectory(examples)
 
