@@ -9,6 +9,7 @@
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
+#include <resolve/LinAlgWorkspace.hpp>
 
 
 int main(int argc, char *argv[])

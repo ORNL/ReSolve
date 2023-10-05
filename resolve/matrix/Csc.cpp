@@ -1,5 +1,6 @@
 #include <cstring>  // <-- includes memcpy
-#include <cuda_runtime.h>
+
+#include <resolve/memoryUtils.hpp>
 #include "Csc.hpp"
 
 namespace ReSolve 
@@ -97,13 +98,13 @@ namespace ReSolve
     if (memspaceOut == "cuda") {
       //check if cuda data allocated
       if (d_col_data_ == nullptr) {
-        cudaMalloc(&d_col_data_, (n_ + 1) * sizeof(index_type)); 
+        allocateArrayOnDevice(&d_col_data_, n_ + 1); 
       }
       if (d_row_data_ == nullptr) {
-        cudaMalloc(&d_row_data_, nnz_current * sizeof(index_type)); 
+        allocateArrayOnDevice(&d_row_data_, nnz_current);
       }
       if (d_val_data_ == nullptr) {
-        cudaMalloc(&d_val_data_, nnz_current * sizeof(real_type)); 
+        allocateArrayOnDevice(&d_val_data_, nnz_current); 
       }
     }
 
@@ -115,21 +116,21 @@ namespace ReSolve
         h_data_updated_ = true;
         break;
       case 2://cuda->cpu
-        cudaMemcpy(h_col_data_, col_data, (n_ + 1) * sizeof(index_type), cudaMemcpyDeviceToHost);
-        cudaMemcpy(h_row_data_, row_data, (nnz_current) * sizeof(index_type), cudaMemcpyDeviceToHost);
-        cudaMemcpy(h_val_data_, val_data, (nnz_current) * sizeof(real_type), cudaMemcpyDeviceToHost);
+        copyArrayDeviceToHost(h_col_data_, col_data,      n_ + 1);
+        copyArrayDeviceToHost(h_row_data_, row_data, nnz_current);
+        copyArrayDeviceToHost(h_val_data_, val_data, nnz_current);
         h_data_updated_ = true;
         break;
       case 1://cpu->cuda
-        cudaMemcpy(d_col_data_, col_data, (n_ + 1) * sizeof(index_type), cudaMemcpyHostToDevice);
-        cudaMemcpy(d_row_data_, row_data, (nnz_current) * sizeof(index_type), cudaMemcpyHostToDevice);
-        cudaMemcpy(d_val_data_, val_data, (nnz_current) * sizeof(real_type), cudaMemcpyHostToDevice);
+        copyArrayHostToDevice(d_col_data_, col_data,      n_ + 1);
+        copyArrayHostToDevice(d_row_data_, row_data, nnz_current);
+        copyArrayHostToDevice(d_val_data_, val_data, nnz_current);
         d_data_updated_ = true;
         break;
       case 3://cuda->cuda
-        cudaMemcpy(d_col_data_, col_data, (n_ + 1) * sizeof(index_type), cudaMemcpyDeviceToDevice);
-        cudaMemcpy(d_row_data_, row_data, (nnz_current) * sizeof(index_type), cudaMemcpyDeviceToDevice);
-        cudaMemcpy(d_val_data_, val_data, (nnz_current) * sizeof(real_type), cudaMemcpyDeviceToDevice);
+        copyArrayDeviceToDevice(d_col_data_, col_data,      n_ + 1);
+        copyArrayDeviceToDevice(d_row_data_, row_data, nnz_current);
+        copyArrayDeviceToDevice(d_val_data_, val_data, nnz_current);
         d_data_updated_ = true;
         break;
       default:
@@ -163,9 +164,9 @@ namespace ReSolve
     }
 
     if (memspace == "cuda") {
-      cudaMalloc(&d_col_data_, (n_ + 1) * sizeof(index_type)); 
-      cudaMalloc(&d_row_data_, nnz_current * sizeof(index_type)); 
-      cudaMalloc(&d_val_data_, nnz_current * sizeof(real_type)); 
+      allocateArrayOnDevice(&d_col_data_,      n_ + 1); 
+      allocateArrayOnDevice(&d_row_data_, nnz_current); 
+      allocateArrayOnDevice(&d_val_data_, nnz_current); 
       return 0;   
     }
     return -1;
@@ -189,9 +190,9 @@ namespace ReSolve
         if (h_val_data_ == nullptr) {
           h_val_data_ = new real_type[nnz_current];      
         }
-        cudaMemcpy(h_col_data_, d_col_data_, (n_ + 1) * sizeof(index_type), cudaMemcpyDeviceToHost);
-        cudaMemcpy(h_row_data_, d_row_data_, nnz_current * sizeof(index_type), cudaMemcpyDeviceToHost);
-        cudaMemcpy(h_val_data_, d_val_data_, nnz_current * sizeof(real_type), cudaMemcpyDeviceToHost);
+        copyArrayDeviceToHost(h_col_data_, d_col_data_,      n_ + 1);
+        copyArrayDeviceToHost(h_row_data_, d_row_data_, nnz_current);
+        copyArrayDeviceToHost(h_val_data_, d_val_data_, nnz_current);
         h_data_updated_ = true;
       }
       return 0;   
@@ -200,17 +201,17 @@ namespace ReSolve
     if (memspaceOut == "cuda") {
       if ((d_data_updated_ == false) && (h_data_updated_ == true)) {
         if (d_col_data_ == nullptr) {
-          cudaMalloc(&d_col_data_, (n_ + 1) * sizeof(index_type)); 
+          allocateArrayOnDevice(&d_col_data_, n_ + 1); 
         }
         if (d_row_data_ == nullptr) {
-          cudaMalloc(&d_row_data_, nnz_current * sizeof(index_type)); 
+          allocateArrayOnDevice(&d_row_data_, nnz_current); 
         }
         if (d_val_data_ == nullptr) {
-          cudaMalloc(&d_val_data_, nnz_current * sizeof(real_type)); 
+          allocateArrayOnDevice(&d_val_data_, nnz_current); 
         }
-        cudaMemcpy(d_col_data_, h_col_data_, (n_ + 1) * sizeof(index_type), cudaMemcpyHostToDevice);
-        cudaMemcpy(d_row_data_, h_row_data_, nnz_current * sizeof(index_type), cudaMemcpyHostToDevice);
-        cudaMemcpy(d_val_data_, h_val_data_, nnz_current * sizeof(real_type), cudaMemcpyHostToDevice);
+        copyArrayHostToDevice(d_col_data_, h_col_data_,      n_ + 1);
+        copyArrayHostToDevice(d_row_data_, h_row_data_, nnz_current);
+        copyArrayHostToDevice(d_val_data_, h_val_data_, nnz_current);
         d_data_updated_ = true;
       }
       return 0; 

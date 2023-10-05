@@ -2,16 +2,12 @@
 set(Matrix_SRC 
     io.cpp
     Sparse.cpp
+    Csr.cpp
+    Csc.cpp
+    Coo.cpp
     MatrixHandler.cpp
 )
 
-
-
-set(Matrix_SRC_CUDA
-    Coo.cpp
-    Csr.cpp
-    Csc.cpp
-)
 
 set(Matrix_HEADER_INSTALL
     io.hpp
@@ -22,11 +18,9 @@ set(Matrix_HEADER_INSTALL
     MatrixHandler.hpp
 )
 
-set_source_files_properties(${Matrix_SRC_CUDA} PROPERTIES LANGUAGE CUDA)
-
-# Build shared library ReSolve
-add_library(resolve_matrix SHARED ${Matrix_SRC} ${Matrix_SRC_CUDA})
-target_link_libraries(resolve_matrix PUBLIC resolve_cuda)
+# Build shared library ReSolve::matrix
+add_library(resolve_matrix SHARED ${Matrix_SRC})
+target_link_libraries(resolve_matrix PUBLIC resolve_backend_cuda)
 
 #install(TARGETS resolve_matrix EXPORT ReSolveTargets)
 

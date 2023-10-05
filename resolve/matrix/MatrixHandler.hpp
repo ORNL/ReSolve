@@ -4,15 +4,23 @@
 // (2) Matrix vector product (SpMV)
 // (3) Matrix 1-norm
 #pragma once
-#include "Csr.hpp"
-#include "Csc.hpp"
-#include "Coo.hpp"
-#include <resolve/LinAlgWorkspace.hpp>
-#include <algorithm>
+#include <resolve/Common.hpp>
 
-namespace ReSolve { namespace vector {
-  class Vector;
-}}
+namespace ReSolve
+{ 
+  namespace vector
+  {
+    class Vector;
+  }
+  namespace matrix
+  {
+    class Sparse;
+    class Coo;
+    class Csc;
+    class Csr;
+  }
+  class LinAlgWorkspace;
+}
 
 
 namespace ReSolve {

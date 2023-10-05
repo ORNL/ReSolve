@@ -1,3 +1,4 @@
+#include <resolve/memoryUtils.hpp>
 #include "LinAlgWorkspace.hpp"
 
 namespace ReSolve
@@ -13,18 +14,18 @@ namespace ReSolve
   LinAlgWorkspaceCUDA::LinAlgWorkspaceCUDA()
   {
     handle_cusolversp_ = nullptr;
-    handle_cusparse_ = nullptr;
-    handle_cublas_ = nullptr;
-    buffer_spmv_ = nullptr;
-    buffer_1norm_ = nullptr;    
+    handle_cusparse_   = nullptr;
+    handle_cublas_     = nullptr;
+    buffer_spmv_       = nullptr;
+    buffer_1norm_      = nullptr;    
 
     matvec_setup_done_ = false;
   }
 
   LinAlgWorkspaceCUDA::~LinAlgWorkspaceCUDA()
   {
-    if (buffer_spmv_ != nullptr) cudaFree(buffer_spmv_);
-    if (buffer_1norm_ != nullptr) cudaFree(buffer_1norm_);
+    if (buffer_spmv_ != nullptr)  deleteOnDevice(buffer_spmv_);
+    if (buffer_1norm_ != nullptr) deleteOnDevice(buffer_1norm_);
     cusparseDestroy(handle_cusparse_);
     cusolverSpDestroy(handle_cusolversp_);
     cublasDestroy(handle_cublas_);
