@@ -2,6 +2,8 @@
 #include <iostream>
 #include <resolve/GramSchmidt.hpp>
 #include <resolve/matrix/Coo.hpp>
+#include <resolve/matrix/Csr.hpp>
+#include <resolve/matrix/Csc.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/matrix/io.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
@@ -9,6 +11,7 @@
 #include <resolve/LinSolverDirectKLU.hpp>
 #include <resolve/LinSolverDirectCuSolverRf.hpp>
 #include <resolve/LinSolverIterativeFGMRES.hpp>
+#include <resolve/LinAlgWorkspace.hpp>
 
 int main(int argc, char *argv[])
 {

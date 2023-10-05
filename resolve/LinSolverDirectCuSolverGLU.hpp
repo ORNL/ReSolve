@@ -1,11 +1,23 @@
 #pragma once
 #include "Common.hpp"
-#include <resolve/matrix/Sparse.hpp>
+#include <resolve/LinAlgWorkspace.hpp>
 #include "LinSolver.hpp"
 #include "cusolver_defs.hpp"
 
 namespace ReSolve 
 {
+  // Forward declaration of vector::Vector class
+  namespace vector
+  {
+    class Vector;
+  }
+
+  // Forward declaration of matrix::Sparse class
+  namespace matrix
+  {
+    class Sparse;
+  }
+
   class LinSolverDirectCuSolverGLU : public LinSolverDirect 
   {
     using vector_type = vector::Vector;

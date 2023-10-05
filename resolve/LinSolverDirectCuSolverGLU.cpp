@@ -1,5 +1,9 @@
-#include "LinSolverDirectCuSolverGLU.hpp"
+#include <cstring> // includes memcpy
 #include <vector>
+#include <resolve/memoryUtils.hpp>
+#include <resolve/vector/Vector.hpp>
+#include <resolve/matrix/Csr.hpp>
+#include "LinSolverDirectCuSolverGLU.hpp"
 
 namespace ReSolve
 {
@@ -10,7 +14,7 @@ namespace ReSolve
 
   LinSolverDirectCuSolverGLU::~LinSolverDirectCuSolverGLU()
   {
-    cudaFree(glu_buffer_);
+    deleteOnDevice(glu_buffer_);
     cusparseDestroyMatDescr(descr_M_);
     cusparseDestroyMatDescr(descr_A_);
     cusolverSpDestroyGluInfo(info_M_);
@@ -60,7 +64,7 @@ namespace ReSolve
     status_cusolver_ = cusolverSpDgluBufferSize(handle_cusolversp_, info_M_, &buffer_size);
     error_sum += status_cusolver_; 
 
-    cudaMalloc((void**)&glu_buffer_, buffer_size);
+    allocateBufferOnDevice(&glu_buffer_, buffer_size);
 
     status_cusolver_ = cusolverSpDgluAnalysis(handle_cusolversp_, info_M_, glu_buffer_);
     error_sum += status_cusolver_; 

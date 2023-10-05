@@ -2,12 +2,14 @@
 #include <iostream>
 
 #include <resolve/matrix/Coo.hpp>
+#include <resolve/matrix/Csr.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/matrix/io.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
 #include <resolve/LinSolverDirectCuSolverGLU.hpp>
+#include <resolve/LinAlgWorkspace.hpp>
 
 int main(int argc, char *argv[])
 {

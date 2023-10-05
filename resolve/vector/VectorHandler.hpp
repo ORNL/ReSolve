@@ -1,10 +1,15 @@
 #pragma once
 #include <string>
 
-#include <resolve/LinAlgWorkspace.hpp>
-namespace ReSolve { namespace vector {
-  class Vector;
-}}
+namespace ReSolve
+{ 
+  namespace vector
+  {
+    class Vector;
+  }
+  class LinAlgWorkspace;
+}
+
 
 namespace ReSolve { //namespace vector {
   class VectorHandler { 

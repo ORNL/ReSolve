@@ -1,3 +1,6 @@
+#include <resolve/memoryUtils.hpp>
+#include <resolve/vector/Vector.hpp>
+#include <resolve/matrix/Csr.hpp>
 #include "LinSolverDirectCuSolverRf.hpp"
 
 namespace ReSolve 
@@ -10,9 +13,9 @@ namespace ReSolve
   LinSolverDirectCuSolverRf::~LinSolverDirectCuSolverRf()
   {
     cusolverRfDestroy(handle_cusolverrf_);
-    cudaFree(d_P_);
-    cudaFree(d_Q_);
-    cudaFree(d_T_);
+    deleteOnDevice(d_P_);
+    deleteOnDevice(d_Q_);
+    deleteOnDevice(d_T_);
   }
 
   int LinSolverDirectCuSolverRf::setup(matrix::Sparse* A, matrix::Sparse* L, matrix::Sparse* U, index_type* P, index_type* Q)
@@ -21,12 +24,12 @@ namespace ReSolve
     int error_sum = 0;
     this->A_ = (matrix::Csr*) A;
     index_type n = A_->getNumRows();
-    cudaMalloc(&d_P_, n * sizeof(index_type)); 
-    cudaMalloc(&d_Q_, n * sizeof(index_type));
-    cudaMalloc(&d_T_, n * sizeof(real_type));
+    allocateArrayOnDevice(&d_P_, n); 
+    allocateArrayOnDevice(&d_Q_, n);
+    allocateArrayOnDevice(&d_T_, n);
 
-    cudaMemcpy(d_P_, P, n  * sizeof(index_type), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_Q_, Q, n  * sizeof(index_type), cudaMemcpyHostToDevice);
+    copyArrayHostToDevice(d_P_, P, n);
+    copyArrayHostToDevice(d_Q_, Q, n);
 
 
     status_cusolverrf_ = cusolverRfSetResetValuesFastMode(handle_cusolverrf_, CUSOLVERRF_RESET_VALUES_FAST_MODE_ON);
@@ -49,7 +52,7 @@ namespace ReSolve
                                                handle_cusolverrf_);
     error_sum += status_cusolverrf_;
 
-    cudaDeviceSynchronize();
+    deviceSynchronize();
     status_cusolverrf_ = cusolverRfAnalyze(handle_cusolverrf_);
     error_sum += status_cusolverrf_;
 
@@ -82,7 +85,7 @@ namespace ReSolve
                                                handle_cusolverrf_);
     error_sum += status_cusolverrf_;
 
-    cudaDeviceSynchronize();
+    deviceSynchronize();
     status_cusolverrf_ =  cusolverRfRefactor(handle_cusolverrf_);
     error_sum += status_cusolverrf_;
 

@@ -1,12 +1,12 @@
 
 set(Vector_SRC 
+    Vector.cpp
     VectorHandler.cpp
 )
 
 
 
 set(Vector_SRC_CUDA
-    Vector.cpp
     cudaVectorKernels.cu
 )
 
@@ -17,9 +17,9 @@ set(Vector_HEADER_INSTALL
 
 set_source_files_properties(${Vector_SRC_CUDA} PROPERTIES LANGUAGE CUDA)
 
-# Build shared library ReSolve
+# Build shared library ReSolve::vector
 add_library(resolve_vector SHARED ${Vector_SRC} ${Vector_SRC_CUDA})
-target_link_libraries(resolve_vector PUBLIC resolve_cuda)
+target_link_libraries(resolve_vector PUBLIC resolve_backend_cuda)
 
 #install(TARGETS resolve_vector EXPORT ReSolveTargets)
 

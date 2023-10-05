@@ -5,10 +5,12 @@
 #include <resolve/vector/Vector.hpp>
 #include <resolve/matrix/io.hpp>
 #include <resolve/matrix/Coo.hpp>
+#include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
 #include <resolve/LinSolverDirectCuSolverGLU.hpp>
+#include <resolve/LinAlgWorkspace.hpp>
 //author: KS
 //functionality test to check whether cuSolverGLU works correctly.
 

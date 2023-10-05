@@ -1,13 +1,27 @@
 #pragma once
 #include <string>
 #include "Common.hpp"
-#include <resolve/matrix/Sparse.hpp>
-#include <resolve/vector/Vector.hpp>
-#include <resolve/matrix/MatrixHandler.hpp>
-#include <resolve/vector/VectorHandler.hpp>
 
 namespace ReSolve 
 {
+  // Forward declaration of vector::Vector class
+  namespace vector
+  {
+    class Vector;
+  }
+
+  // Forward declaration of VectorHandler class
+  class VectorHandler;
+
+  // Forward declaration of matrix::Sparse class
+  namespace matrix
+  {
+    class Sparse;
+  }
+
+  // Forward declaration of MatrixHandler class
+  class MatrixHandler;
+
   class LinSolver 
   {
     protected:
@@ -25,8 +39,8 @@ namespace ReSolve
       real_type* rhs_;
       real_type* sol_;
 
-      MatrixHandler *matrix_handler_;
-      VectorHandler *vector_handler_;
+      MatrixHandler* matrix_handler_;
+      VectorHandler* vector_handler_;
   };
 
   class LinSolverDirect : public LinSolver 
@@ -60,6 +74,5 @@ namespace ReSolve
       ~LinSolverIterative();
 
       virtual int  solve(vector_type* rhs, vector_type* init_guess);
-
   };
 }

@@ -1,8 +1,8 @@
-#include <cuda_runtime.h>
+#pragma once
+
 #include "cublas_v2.h"
 #include "cusparse.h"
 #include "cusolverSp.h"
-#pragma once
 
 namespace ReSolve
 {
@@ -63,4 +63,19 @@ namespace ReSolve
 
       bool matvec_setup_done_; //check if setup is done for matvec i.e. if buffer is allocated, csr structure is set etc.
   };
+
+  /// @brief  Workspace factory
+  /// @param[in] memspace memory space ID 
+  /// @return pointer to the linear algebra workspace
+  inline LinAlgWorkspace* createLinAlgWorkspace(std::string memspace)
+  {
+    if (memspace == "cuda") {
+      LinAlgWorkspaceCUDA* workspace = new LinAlgWorkspaceCUDA();
+      workspace->initializeHandles();
+      return workspace;
+    } 
+    // If not CUDA, return default
+    return (new LinAlgWorkspace());
+  }
+
 }

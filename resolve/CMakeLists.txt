@@ -6,25 +6,22 @@
 
 ]]
 
-add_subdirectory(vector)
-add_subdirectory(matrix)
 add_subdirectory(utilities)
 
 set(ReSolve_SRC
-    # VectorHandler.cpp
     LinSolver.cpp
     LinSolverDirectKLU.cpp
+    LinAlgWorkspace.cpp
+    LinSolverIterativeFGMRES.cpp
+    GramSchmidt.cpp
+    LinSolverDirectCuSolverGLU.cpp
+    LinSolverDirectCuSolverRf.cpp
 )
 
 
 set(ReSolve_SRC_CUDA
-    # Vector.cpp
-    LinAlgWorkspace.cpp
-    LinSolverDirectCuSolverRf.cpp
-    LinSolverDirectCuSolverGLU.cpp
-    LinSolverIterativeFGMRES.cpp
     cudaKernels.cu
-    GramSchmidt.cpp
+    memoryUtils.cu
 )
 
 set(ReSolve_HEADER_INSTALL
@@ -40,17 +37,31 @@ set(ReSolve_HEADER_INSTALL
     RefactorizationSolver.hpp
     SystemSolver.hpp
     GramSchmidt.hpp
+    memoryUtils.hpp
 )
 
 set_source_files_properties(${ReSolve_SRC_CUDA} PROPERTIES LANGUAGE CUDA)
+
+# First create CUDA backend (this should really be CUDA _API_ backend, separate backend will be needed for CUDA SDK)
+add_library(resolve_backend_cuda SHARED ${ReSolve_SRC_CUDA})
+target_link_libraries(resolve_backend_cuda PUBLIC resolve_cuda)
+target_include_directories(resolve_backend_cuda INTERFACE
+    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
+    $<INSTALL_INTERFACE:include>
+)
+
+# Next build vector and matrix objects that may use this backend.
+add_subdirectory(vector)
+add_subdirectory(matrix)
+
 
 # Build shared library ReSolve
 add_library(resolve_tpl INTERFACE)
 target_link_libraries(resolve_tpl INTERFACE resolve_cuda KLU)
 
-install(TARGETS resolve_matrix resolve_vector resolve_logger resolve_tpl EXPORT ReSolveTargets)
+install(TARGETS resolve_matrix resolve_vector resolve_backend_cuda resolve_logger resolve_tpl EXPORT ReSolveTargets)
 
-add_library(ReSolve SHARED ${ReSolve_SRC} ${ReSolve_SRC_CUDA})
+add_library(ReSolve SHARED ${ReSolve_SRC})
 
 target_include_directories(ReSolve INTERFACE 
     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
@@ -58,7 +69,7 @@ target_include_directories(ReSolve INTERFACE
 )
 
 # TODO: Make this PRIVATE dependency (requires refactoring ReSolve code)
-target_link_libraries(ReSolve PUBLIC resolve_matrix resolve_vector resolve_logger resolve_tpl)
+target_link_libraries(ReSolve PUBLIC resolve_matrix resolve_vector resolve_backend_cuda resolve_logger resolve_tpl)
 
 install(TARGETS ReSolve
         EXPORT ReSolveTargets

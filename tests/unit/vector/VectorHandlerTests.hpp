@@ -7,10 +7,12 @@
 #include <resolve/vector/Vector.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <tests/unit/TestBase.hpp>
+#include <resolve/LinAlgWorkspace.hpp>
 
 namespace ReSolve { 
   namespace tests {
-    /** @class Tests for vector handler
+    /**
+     * @class Tests for vector handler
      *
      */
     class VectorHandlerTests : TestBase
@@ -223,18 +225,6 @@ namespace ReSolve {
       private:
         std::string memspace_{"cpu"};
 
-        /** @brief Slaven's "factory" method - it would use correct constructor to create cuda (or other) workspace
-        */ 
-        LinAlgWorkspace* createLinAlgWorkspace(std::string memspace)
-        {
-          if (memspace == "cuda") {
-            LinAlgWorkspaceCUDA* workspace = new LinAlgWorkspaceCUDA();
-            workspace->initializeHandles();
-            return workspace;
-          } 
-          // If not CUDA, return default
-          return (new LinAlgWorkspace());
-        }
         // we can verify through norm but that would defeat the purpose of testing vector handler...
         bool verifyAnswer(vector::Vector* x, real_type answer, std::string memspace)
         {

@@ -1,5 +1,5 @@
 #include <cstring>
-#include <cuda_runtime.h>
+#include <resolve/memoryUtils.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/vector/VectorKernels.hpp>
 
@@ -30,7 +30,7 @@ namespace ReSolve { namespace vector {
   Vector::~Vector()
   {
     if (h_data_ != nullptr) delete [] h_data_;
-    if (d_data_ != nullptr) cudaFree(d_data_);
+    if (d_data_ != nullptr) deleteOnDevice(d_data_);
   }
 
 
@@ -96,7 +96,7 @@ namespace ReSolve { namespace vector {
     }
     if ((memspaceOut == "cuda") && (d_data_ == nullptr)){
       //allocate first
-      cudaMalloc(&d_data_, (n_ * k_) * sizeof(real_type)); 
+      allocateArrayOnDevice(&d_data_, n_ * k_);
     } 
 
     switch(control)  {
@@ -106,17 +106,17 @@ namespace ReSolve { namespace vector {
         gpu_updated_ = false;
         break;
       case 2: //cuda->cpu
-        cudaMemcpy(h_data_, data, (n_current_ * k_) * sizeof(real_type), cudaMemcpyDeviceToHost);
+        copyArrayDeviceToHost(h_data_, data, n_current_ * k_);
         cpu_updated_ = true;
         gpu_updated_ = false;
         break;
       case 1: //cpu->cuda
-        cudaMemcpy(d_data_, data, (n_current_ * k_) * sizeof(real_type), cudaMemcpyHostToDevice);
+        copyArrayHostToDevice(d_data_, data, n_current_ * k_);
         gpu_updated_ = true;
         cpu_updated_ = false;
         break;
       case 3: //cuda->cuda
-        cudaMemcpy(d_data_, data, (n_current_ * k_) * sizeof(real_type), cudaMemcpyDeviceToDevice);
+        copyArrayDeviceToDevice(d_data_, data, n_current_ * k_);
         gpu_updated_ = true;
         cpu_updated_ = false;
         break;
@@ -164,15 +164,15 @@ namespace ReSolve { namespace vector {
     }
     if ((memspaceOut == "cuda") && (d_data_ == nullptr)){
       //allocate first
-      cudaMalloc(&d_data_, (n_ * k_) * sizeof(real_type)); 
+      allocateArrayOnDevice(&d_data_, n_ * k_);
     } 
 
     switch(control)  {
       case 0: //cpu->cuda
-        cudaMemcpy(d_data_, h_data_, (n_current_ * k_) * sizeof(real_type), cudaMemcpyHostToDevice);
+        copyArrayHostToDevice(d_data_, h_data_, n_current_ * k_);
         break;
       case 1: //cuda->cpu
-        cudaMemcpy(h_data_, d_data_, (n_current_ * k_) * sizeof(real_type), cudaMemcpyDeviceToHost);
+        copyArrayDeviceToHost(h_data_, d_data_, n_current_ * k_);
         break;
       default:
         return -1;
@@ -192,9 +192,9 @@ namespace ReSolve { namespace vector {
     } else {
       if (memspace == "cuda") {
         if (d_data_ != nullptr) {
-          cudaFree(d_data_);
+          deleteOnDevice(d_data_);
         }
-        cudaMalloc(&d_data_, (n_ * k_) * sizeof(real_type)); 
+        allocateArrayOnDevice(&d_data_, n_ * k_);
       }
     }
   }
@@ -212,9 +212,9 @@ namespace ReSolve { namespace vector {
     } else {
       if (memspace == "cuda") {
         if (d_data_ == nullptr) {
-          cudaMalloc(&d_data_, (n_ * k_) * sizeof(real_type)); 
+          allocateArrayOnDevice(&d_data_, n_ * k_);
         }
-        cudaMemset(d_data_, 0.0, n_ * k_ * sizeof(real_type));
+        setZeroArrayOnDevice(d_data_, n_ * k_);
       }
     }
   }
@@ -231,9 +231,10 @@ namespace ReSolve { namespace vector {
     } else {
       if (memspace == "cuda") {
         if (d_data_ == nullptr) {
-          cudaMalloc(&d_data_, (n_ * k_) * sizeof(real_type)); 
+          allocateArrayOnDevice(&d_data_, n_ * k_);
         }
-        cudaMemset(&d_data_[j * n_current_], 0.0, n_current_ * sizeof(real_type));
+        // TODO: We should not need to access raw data in this class
+        setZeroArrayOnDevice(&d_data_[j * n_current_], n_current_);
       }
     }
   }
@@ -250,7 +251,7 @@ namespace ReSolve { namespace vector {
     } else {
       if (memspace == "cuda") {
         if (d_data_ == nullptr) {
-          cudaMalloc(&d_data_, (n_ * k_) * sizeof(real_type)); 
+          allocateArrayOnDevice(&d_data_, n_ * k_);
         }
         set_array_const(n_ * k_, C, d_data_);
       }
@@ -269,9 +270,8 @@ namespace ReSolve { namespace vector {
     } else {
       if (memspace == "cuda") {
         if (d_data_ == nullptr) {
-          cudaMalloc(&d_data_, (n_ * k_) * sizeof(real_type)); 
+          allocateArrayOnDevice(&d_data_, n_ * k_);
         }
-//printf("setting to %f, starting at %d, lenght %d \n",C,  n_current_ * j, n_current_);
         set_array_const(n_current_ * 1, C, &d_data_[n_current_ * j]);
       }
     }
@@ -303,10 +303,10 @@ namespace ReSolve { namespace vector {
     } else {
       real_type* data = this->getData(i, memspaceOut);
       if (memspaceOut == "cpu") {
-        std::memcpy(dest, data, (n_current_) * sizeof(real_type));
+        std::memcpy(dest, data, n_current_ * sizeof(real_type));
       } else {
         if (memspaceOut == "cuda") { 
-          cudaMemcpy(dest, data, (n_current_) * sizeof(real_type), cudaMemcpyDeviceToDevice);
+          copyArrayDeviceToDevice(dest, data, n_current_);
         } else {
           //error
         } 
@@ -319,10 +319,10 @@ namespace ReSolve { namespace vector {
   {
     real_type* data = this->getData(memspaceOut);
     if (memspaceOut == "cpu") {
-      std::memcpy(dest, data, (n_current_) * k_ * sizeof(real_type));
+      std::memcpy(dest, data, n_current_ * k_ * sizeof(real_type));
     } else {
       if (memspaceOut == "cuda") { 
-        cudaMemcpy(dest, data, (n_current_) * k_ * sizeof(real_type), cudaMemcpyDeviceToDevice);
+        copyArrayDeviceToDevice(dest, data, n_current_ * k_);
       } else {
         //error
       } 

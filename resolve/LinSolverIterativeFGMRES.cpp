@@ -1,7 +1,10 @@
 #include <iostream>
 #include <cassert>
+#include <cmath>
 
 #include <resolve/utilities/logger/Logger.hpp>
+#include <resolve/memoryUtils.hpp>
+#include <resolve/matrix/MatrixHandler.hpp>
 #include "LinSolverIterativeFGMRES.hpp"
 
 namespace ReSolve
@@ -167,7 +170,7 @@ namespace ReSolve
         vec_v->setData( d_V_->getVectorData(i, "cuda"), "cuda");
         vec_z->setData( d_Z_->getVectorData(i, "cuda"), "cuda");
         this->precV(vec_v, vec_z);
-        cudaDeviceSynchronize();
+        deviceSynchronize();
 
         // V_{i+1}=A*Z_i
 

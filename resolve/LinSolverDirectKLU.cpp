@@ -1,3 +1,6 @@
+#include <cstring> // includes memcpy
+#include <resolve/vector/Vector.hpp>
+#include <resolve/matrix/Csc.hpp>
 #include "LinSolverDirectKLU.hpp"
 
 namespace ReSolve 

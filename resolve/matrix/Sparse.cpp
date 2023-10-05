@@ -1,6 +1,6 @@
 #include <cstring>  // <-- includes memcpy
 #include "Sparse.hpp"
-#include <cuda_runtime.h>
+#include <resolve/memoryUtils.hpp>
 
 namespace ReSolve { namespace matrix {
 
@@ -16,7 +16,7 @@ namespace ReSolve { namespace matrix {
     nnz_{nnz}
   {
     this->is_symmetric_ = false;
-    this->is_expanded_ = true;//defaults is a normal non-symmetric fully expanded matrix
+    this->is_expanded_ = true; //default is a normal non-symmetric fully expanded matrix
     this->nnz_expanded_ = nnz;
 
     setNotUpdated();
@@ -169,9 +169,9 @@ namespace ReSolve { namespace matrix {
       if (h_val_data_ != nullptr) delete [] h_val_data_;
     } else {
       if (memspace == "cuda"){ 
-        if (d_row_data_ != nullptr) cudaFree(d_row_data_);
-        if (d_col_data_ != nullptr) cudaFree(d_col_data_);
-        if (d_val_data_ != nullptr) cudaFree(d_val_data_);
+        if (d_row_data_ != nullptr) deleteOnDevice(d_row_data_);
+        if (d_col_data_ != nullptr) deleteOnDevice(d_col_data_);
+        if (d_val_data_ != nullptr) deleteOnDevice(d_val_data_);
       } else {
         return -1;
       }
@@ -202,7 +202,7 @@ namespace ReSolve { namespace matrix {
     if (memspaceOut == "cuda") {
       //check if cuda data allocated
       if (d_val_data_ == nullptr) {
-        cudaMalloc(&d_val_data_, nnz_current * sizeof(real_type)); 
+        allocateArrayOnDevice(&d_val_data_, nnz_current); 
       }
     }
 
@@ -212,15 +212,15 @@ namespace ReSolve { namespace matrix {
         h_data_updated_ = true;
         break;
       case 2://cuda->cpu
-        cudaMemcpy(h_val_data_, new_vals, (nnz_current) * sizeof(real_type), cudaMemcpyDeviceToHost);
+        copyArrayDeviceToHost(h_val_data_, new_vals, nnz_current);
         h_data_updated_ = true;
         break;
       case 1://cpu->cuda
-        cudaMemcpy(d_val_data_, new_vals, (nnz_current) * sizeof(real_type), cudaMemcpyHostToDevice);
+        copyArrayHostToDevice(d_val_data_, new_vals, nnz_current);
         d_data_updated_ = true;
         break;
       case 3://cuda->cuda
-        cudaMemcpy(d_val_data_, new_vals, (nnz_current) * sizeof(real_type), cudaMemcpyDeviceToDevice);
+        copyArrayDeviceToDevice(d_val_data_, new_vals, nnz_current);
         d_data_updated_ = true;
         break;
       default:

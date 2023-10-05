@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include <resolve/utilities/logger/Logger.hpp>
+#include <resolve/LinAlgWorkspace.hpp>
 #include <resolve/cudaKernels.h>
 #include <resolve/vector/Vector.hpp>
 #include "VectorHandler.hpp"

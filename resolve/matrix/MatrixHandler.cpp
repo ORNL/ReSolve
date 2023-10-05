@@ -1,10 +1,16 @@
-#include <iostream>
+#include <algorithm>
 
 #include <resolve/utilities/logger/Logger.hpp>
+#include <resolve/memoryUtils.hpp>
+#include <resolve/LinAlgWorkspace.hpp>
 #include <resolve/vector/Vector.hpp>
+#include <resolve/matrix/Coo.hpp>
+#include <resolve/matrix/Csc.hpp>
+#include <resolve/matrix/Csr.hpp>
 #include "MatrixHandler.hpp"
 
 namespace ReSolve {
+  // Create a shortcut name for Logger static class
   using out = io::Logger;
 
   //helper class
@@ -137,7 +143,7 @@ namespace ReSolve {
       start = csr_ia[r];
 
       if ((start + nnz_shifts[r]) > nnz_unpacked) {
-        std::cout << "index out of bounds (case 1) start: " << start << "nnz_shifts[" << r << "] = " << nnz_shifts[r] << std::endl;
+        out::warning() << "index out of bounds (case 1) start: " << start << "nnz_shifts[" << r << "] = " << nnz_shifts[r] << std::endl;
       }
       if ((r == coo_cols[i]) && (diag_control[r] > 1)) {//diagonal, and there are duplicates
         bool already_there = false;  
@@ -149,7 +155,7 @@ namespace ReSolve {
             val += coo_vals[i];
             tmp[j].setValue(val);
             already_there = true;
-            std::cout << " duplicate found, row " << c << " adding in place " << j << " current value: " << val << std::endl;
+            out::warning() << " duplicate found, row " << c << " adding in place " << j << " current value: " << val << std::endl;
           }  
         }  
         if (!already_there){ // first time this duplicates appears
@@ -170,7 +176,7 @@ namespace ReSolve {
           start = csr_ia[r];
 
           if ((start + nnz_shifts[r]) > nnz_unpacked)
-            std::cout << "index out of bounds (case 2) start: " << start << "nnz_shifts[" << r << "] = " << nnz_shifts[r] << std::endl;
+            out::warning() << "index out of bounds (case 2) start: " << start << "nnz_shifts[" << r << "] = " << nnz_shifts[r] << std::endl;
           tmp[start + nnz_shifts[r]].setIdx(coo_rows[i]);
           tmp[start + nnz_shifts[r]].setValue(coo_vals[i]);
           nnz_shifts[r]++;
@@ -284,8 +290,8 @@ namespace ReSolve {
                                            CUSPARSE_SPMV_CSR_ALG2, 
                                            &bufferSize);
           error_sum += status;
-          cudaDeviceSynchronize();
-          cudaMalloc(&buffer_spmv, bufferSize);
+          deviceSynchronize();
+          allocateBufferOnDevice(&buffer_spmv, bufferSize);
           workspaceCUDA->setSpmvMatrixDescriptor(matA);
           workspaceCUDA->setSpmvBuffer(buffer_spmv);
 
@@ -303,9 +309,10 @@ namespace ReSolve {
                               CUSPARSE_SPMV_CSR_ALG2, 
                               buffer_spmv);
         error_sum += status;
-        cudaDeviceSynchronize();
+        deviceSynchronize();
         if (status)
-          std::cout << "Matvec status: " << status << "Last ERROR code: " << cudaGetLastError() << std::endl;
+          out::error() << "Matvec status: " << status 
+                       << "Last error code: " << getLastDeviceError() << std::endl;
         vec_result->setDataUpdated("cuda");
 
         cusparseDestroyDnVec(vecx);
@@ -381,7 +388,7 @@ namespace ReSolve {
                                                               CUSPARSE_CSR2CSC_ALG1, 
                                                               &bufferSize);
       error_sum += status;
-      cudaMalloc((void**)&d_work, bufferSize);
+      allocateBufferOnDevice(&d_work, bufferSize);
       status = cusparseCsr2cscEx2(workspaceCUDA->getCusparseHandle(),
                                   n, 
                                   m, 
@@ -399,7 +406,7 @@ namespace ReSolve {
                                   d_work);
       error_sum += status;
       return error_sum;
-      cudaFree(d_work);
+      deleteOnDevice(d_work);
     } else { 
       out::error() << "Not implemented (yet)" << std::endl;
       return -1;

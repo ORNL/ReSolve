@@ -5,6 +5,7 @@
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <tests/unit/TestBase.hpp>
+#include <resolve/LinAlgWorkspace.hpp>
 
 namespace ReSolve { 
   namespace tests {
@@ -80,7 +81,7 @@ namespace ReSolve {
           GS->orthogonalize(N, V, H, 1, memspace_ ); 
 
           status *= verifyAnswer(V, 3, handler, memspace_);
-
+          
           delete workspace;
           delete [] H;
           delete V; 
@@ -91,19 +92,6 @@ namespace ReSolve {
 
       private:
         std::string memspace_{"cuda"};
-
-        /** @brief Slaven's "factory" method - it would use correct constructor to create cuda (or other) workspace
-        */ 
-        LinAlgWorkspace* createLinAlgWorkspace(std::string memspace)
-        {
-          if (memspace == "cuda") {
-            LinAlgWorkspaceCUDA* workspace = new LinAlgWorkspaceCUDA();
-            workspace->initializeHandles();
-            return workspace;
-          } 
-          // If not CUDA, return default
-          return (new LinAlgWorkspace());
-        }
 
         // x is a multivector containing K vectors 
         bool verifyAnswer(vector::Vector* x, index_type K,  ReSolve::VectorHandler* handler, std::string memspace)
@@ -116,8 +104,8 @@ namespace ReSolve {
 
           for (index_type i = 0; i < K; ++i) {
             for (index_type j = 0; j < K; ++j) {
-              a->setData(x->getVectorData(i, memspace), memspace);
-              b->setData(x->getVectorData(j, memspace), memspace);
+              a->update(x->getVectorData(i, memspace), memspace, "cpu");
+              b->update(x->getVectorData(j, memspace), memspace, "cpu");
               ip = handler->dot(a, b, "cpu");
               
               if ( (i != j) && (abs(ip) > 1e-14)) {

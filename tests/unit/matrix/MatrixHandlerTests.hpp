@@ -5,6 +5,7 @@
 #include <iterator>
 #include <algorithm>
 #include <resolve/matrix/Csr.hpp>
+#include <resolve/LinAlgWorkspace.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <tests/unit/TestBase.hpp>
@@ -141,21 +142,6 @@ private:
 
     return A;
   }
-
-  /// @brief  Workspace factory
-  /// @param[in] memspace memory space ID 
-  /// @return pointer to the linear algebra workspace
-  LinAlgWorkspace* createLinAlgWorkspace(std::string memspace)
-  {
-    if (memspace == "cuda") {
-      LinAlgWorkspaceCUDA* workspace = new LinAlgWorkspaceCUDA();
-      workspace->initializeHandles();
-      return workspace;
-    } 
-    // If not CUDA, return default
-    return (new LinAlgWorkspace());
-  }
-
 }; // class MatrixHandlerTests
 
 }} // namespace ReSolve::tests

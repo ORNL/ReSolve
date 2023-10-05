@@ -1,3 +1,4 @@
+#include <resolve/matrix/Sparse.hpp>
 #include "LinSolver.hpp"
 
 
