@@ -11,10 +11,11 @@ int main(int argc, char* argv[])
     std::cout << "Running tests with CUDA backend:\n";
     ReSolve::tests::GramSchmidtTests test("cuda");
 
-    result += test.orthogonalize(5000, ReSolve::mgs);
-    result += test.orthogonalize(5000, ReSolve::cgs2);
-    result += test.orthogonalize(5000, ReSolve::mgs_two_synch);
-    result += test.orthogonalize(5000, ReSolve::mgs_pm);
+    result += test.GramSchmidtConstructor();
+    result += test.orthogonalize(5000, ReSolve::GramSchmidt::mgs);
+    result += test.orthogonalize(5000, ReSolve::GramSchmidt::cgs2);
+    result += test.orthogonalize(5000, ReSolve::GramSchmidt::mgs_two_synch);
+    result += test.orthogonalize(5000, ReSolve::GramSchmidt::mgs_pm);
     std::cout << "\n";
   }
 

@@ -25,14 +25,45 @@ namespace ReSolve {
         TestOutcome GramSchmidtConstructor()
         {
           TestStatus status;
-          status.skipTest();
+          // status.skipTest();
+
+          GramSchmidt gs1;
+          status *= (gs1.getVariant() == GramSchmidt::mgs);
+          status *= (gs1.getL() == nullptr);
+          status *= !gs1.isSetupComplete();
+
+          VectorHandler vh;
+          GramSchmidt gs2(&vh, GramSchmidt::mgs_pm);
+          status *= (gs2.getVariant() == GramSchmidt::mgs_pm);
+          status *= (gs1.getL() == nullptr);
+          status *= !gs1.isSetupComplete();
 
           return status.report(__func__);
         }
 
-        TestOutcome orthogonalize(index_type N, GSVariant var)
+        TestOutcome orthogonalize(index_type N, GramSchmidt::GSVariant var)
         {
           TestStatus status;
+
+          std::string testname(__func__);
+          switch(var)
+          {
+            case GramSchmidt::mgs:
+              testname += " (Modified Gram-Schmidt)";
+              break;
+            case GramSchmidt::mgs_two_synch:
+              testname += " (Modified Gram-Schmidt 2-Sync)";
+              break;
+            case GramSchmidt::mgs_pm:
+              testname += " (Post-Modern Modified Gram-Schmidt)";
+              break;
+            case GramSchmidt::cgs1:
+              testname += " (Classical Gram-Schmidt)";
+              break;
+            case GramSchmidt::cgs2:
+              testname += " (Reorthogonalized Classical Gram-Schmidt)";
+              break;
+          }
 
           ReSolve::LinAlgWorkspace* workspace = createLinAlgWorkspace(memspace_);
           ReSolve::VectorHandler* handler = new ReSolve::VectorHandler(workspace);
@@ -42,7 +73,7 @@ namespace ReSolve {
           real_type* aux_data; // needed for setup
 
           V->allocate(memspace_);
-          if (memspace_ != "cpu") {          
+          if (memspace_ != "cpu") {
             V->allocate("cpu");
           }
 
@@ -87,7 +118,7 @@ namespace ReSolve {
           delete V; 
           delete GS;
           
-          return status.report(__func__);
+          return status.report(testname.c_str());
         }    
 
       private:

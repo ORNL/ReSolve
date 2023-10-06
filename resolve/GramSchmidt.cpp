@@ -13,6 +13,7 @@ namespace ReSolve
   int idxmap(index_type i, index_type j, index_type col_lenght) {
     return  i * (col_lenght) + j;
   }
+
   GramSchmidt::GramSchmidt()
   {
     variant_ = mgs; //variant is enum now
@@ -74,7 +75,7 @@ namespace ReSolve
     return 0;  
   }
 
-  GSVariant GramSchmidt::getVariant()
+  GramSchmidt::GSVariant GramSchmidt::getVariant()
   {
     return variant_;  
   }
@@ -82,6 +83,11 @@ namespace ReSolve
   real_type* GramSchmidt::getL()
   {
     return h_L_;  
+  }
+
+  bool GramSchmidt::isSetupComplete()
+  {
+    return setup_complete_;
   }
 
   int GramSchmidt::setup(index_type n, index_type restart)
@@ -115,6 +121,7 @@ namespace ReSolve
 
     return 0;
   }
+
   //this always happen on the GPU
   int GramSchmidt::orthogonalize(index_type n, vector::Vector* V, real_type* H, index_type i, std::string memspace)
   {
