@@ -111,7 +111,7 @@ namespace ReSolve
 
       L_->setUpdated("cpu");
       U_->setUpdated("cpu");
-
+      (void) ok; // TODO: Check status in ok before setting `factors_extracted_`
       factors_extracted_ = true;
     }
     return L_;
@@ -146,6 +146,8 @@ namespace ReSolve
 
       L_->setUpdated("cpu");
       U_->setUpdated("cpu");
+
+      (void) ok; // TODO: Check status in ok before setting `factors_extracted_`
       factors_extracted_ = true;
     }
     return U_;

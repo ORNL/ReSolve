@@ -29,6 +29,12 @@ namespace ReSolve { namespace matrix {
     d_row_data_ = nullptr;
     d_col_data_ = nullptr;
     d_val_data_ = nullptr;
+    
+    owns_cpu_data_ = false;
+    owns_cpu_vals_ = false;
+    
+    owns_gpu_data_ = false;
+    owns_gpu_vals_ = false;
   }
 
   Sparse::Sparse(index_type n, 
@@ -57,6 +63,12 @@ namespace ReSolve { namespace matrix {
     d_row_data_ = nullptr;
     d_col_data_ = nullptr;
     d_val_data_ = nullptr;
+
+    owns_cpu_data_ = false;
+    owns_cpu_vals_ = false;
+    
+    owns_gpu_data_ = false;
+    owns_gpu_vals_ = false;
   }
 
   Sparse::~Sparse()
@@ -164,14 +176,22 @@ namespace ReSolve { namespace matrix {
   int Sparse::destroyMatrixData(std::string memspace)
   { 
     if (memspace == "cpu"){  
-      if (h_row_data_ != nullptr) delete [] h_row_data_;
-      if (h_col_data_ != nullptr) delete [] h_col_data_;
-      if (h_val_data_ != nullptr) delete [] h_val_data_;
+      if (owns_cpu_data_) {
+        delete [] h_row_data_;
+        delete [] h_col_data_;
+      }
+      if (owns_cpu_vals_) {
+        delete [] h_val_data_;
+      }
     } else {
       if (memspace == "cuda"){ 
-        if (d_row_data_ != nullptr) deleteOnDevice(d_row_data_);
-        if (d_col_data_ != nullptr) deleteOnDevice(d_col_data_);
-        if (d_val_data_ != nullptr) deleteOnDevice(d_val_data_);
+        if (owns_gpu_data_) {
+          deleteOnDevice(d_row_data_);
+          deleteOnDevice(d_col_data_);
+        }
+        if (owns_gpu_vals_) {
+          deleteOnDevice(d_val_data_);
+        }
       } else {
         return -1;
       }
@@ -210,18 +230,22 @@ namespace ReSolve { namespace matrix {
       case 0: //cpu->cpu
         std::memcpy(h_val_data_, new_vals, (nnz_current) * sizeof(real_type));
         h_data_updated_ = true;
+        owns_cpu_vals_ = true;
         break;
       case 2://cuda->cpu
         copyArrayDeviceToHost(h_val_data_, new_vals, nnz_current);
         h_data_updated_ = true;
+        owns_cpu_vals_ = true;
         break;
       case 1://cpu->cuda
         copyArrayHostToDevice(d_val_data_, new_vals, nnz_current);
         d_data_updated_ = true;
+        owns_gpu_vals_ = true;
         break;
       case 3://cuda->cuda
         copyArrayDeviceToDevice(d_val_data_, new_vals, nnz_current);
         d_data_updated_ = true;
+        owns_gpu_vals_ = true;
         break;
       default:
         return -1;

@@ -163,7 +163,7 @@ namespace ReSolve { namespace io {
     }
   }
 
-  int writeMatrixToFile(matrix::Sparse* A, std::ostream& file_out)
+  int writeMatrixToFile(matrix::Sparse* /* A */, std::ostream& /* file_out */)
   {
     Logger::error() << "writeMatrixToFile function not implemented!\n";
     return -1;

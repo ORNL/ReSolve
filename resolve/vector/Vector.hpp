@@ -39,5 +39,8 @@ namespace ReSolve { namespace vector {
       real_type* h_data_{nullptr};
       bool gpu_updated_;
       bool cpu_updated_;
+
+      bool owns_gpu_data_{false};
+      bool owns_cpu_data_{false};
   };
 }} // namespace ReSolve::vector

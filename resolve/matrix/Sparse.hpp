@@ -79,6 +79,12 @@ namespace ReSolve { namespace matrix {
       bool d_data_updated_{false};
 
       void setNotUpdated();
+      
+      // Data ownership flags
+      bool owns_cpu_data_{false}; ///< for row/col data
+      bool owns_cpu_vals_{false}; ///< for values
 
+      bool owns_gpu_data_{false}; ///< for row/col data
+      bool owns_gpu_vals_{false}; ///< for values
   };
 }} // namespace ReSolve::matrix

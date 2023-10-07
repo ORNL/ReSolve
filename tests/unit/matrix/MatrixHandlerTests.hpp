@@ -105,7 +105,7 @@ private:
     index_type NNZ = 0;
     for (index_type i = 0; i < N; ++i)
     {
-      NNZ += data[i%5].size();
+      NNZ += static_cast<index_type>(data[i%5].size());
     }
     // std::cout << NNZ << "\n";
 
@@ -121,7 +121,7 @@ private:
     for (i=0; i < N; ++i)
     {
       const std::vector<real_type>& row_sample = data[i%5];
-      index_type nnz_per_row = row_sample.size();
+      index_type nnz_per_row = static_cast<index_type>(row_sample.size());
       // std::cout << nnz_per_row << "\n";
 
       rowptr[i+1] = rowptr[i] + nnz_per_row;

@@ -6,31 +6,35 @@
 namespace ReSolve { namespace vector {
 
   Vector::Vector(index_type n):
-    n_{n}
+    n_(n),
+    k_(1),
+    n_current_(n_),
+    d_data_(nullptr),
+    h_data_(nullptr),
+    gpu_updated_(false),
+    cpu_updated_(false),
+    owns_gpu_data_(false),
+    owns_cpu_data_(false)
   {
-    d_data_ = nullptr;
-    h_data_ = nullptr;
-    gpu_updated_ = false;
-    cpu_updated_ = false;
-    k_ = 1;
-    n_current_ = n_;
   }
 
   Vector::Vector(index_type n, index_type k)
-    : n_{n},
-      k_{k},
-      n_current_{n_}
+    : n_(n),
+      k_(k),
+      n_current_(n_),
+      d_data_(nullptr),
+      h_data_(nullptr),
+      gpu_updated_(false),
+      cpu_updated_(false),
+      owns_gpu_data_(false),
+      owns_cpu_data_(false)
   {
-    d_data_ = nullptr;
-    h_data_ = nullptr;
-    gpu_updated_ = false;
-    cpu_updated_ = false;
   }
 
   Vector::~Vector()
   {
-    if (h_data_ != nullptr) delete [] h_data_;
-    if (d_data_ != nullptr) deleteOnDevice(d_data_);
+    if (owns_cpu_data_) delete [] h_data_;
+    if (owns_gpu_data_) deleteOnDevice(d_data_);
   }
 
 
@@ -102,21 +106,25 @@ namespace ReSolve { namespace vector {
     switch(control)  {
       case 0: //cpu->cpu
         std::memcpy(h_data_, data, (n_current_ * k_) * sizeof(real_type));
+        owns_cpu_data_ = true;
         cpu_updated_ = true;
         gpu_updated_ = false;
         break;
       case 2: //cuda->cpu
         copyArrayDeviceToHost(h_data_, data, n_current_ * k_);
+        owns_gpu_data_ = true;
         cpu_updated_ = true;
         gpu_updated_ = false;
         break;
       case 1: //cpu->cuda
         copyArrayHostToDevice(d_data_, data, n_current_ * k_);
+        owns_gpu_data_ = true;
         gpu_updated_ = true;
         cpu_updated_ = false;
         break;
       case 3: //cuda->cuda
         copyArrayDeviceToDevice(d_data_, data, n_current_ * k_);
+        owns_gpu_data_ = true;
         gpu_updated_ = true;
         cpu_updated_ = false;
         break;
@@ -135,10 +143,12 @@ namespace ReSolve { namespace vector {
   {
     if ((memspace == "cpu") && (cpu_updated_ == false) && (gpu_updated_ == true )) {
       copyData("cuda", "cpu");
+      owns_cpu_data_ = true;
     } 
 
     if ((memspace == "cuda") && (gpu_updated_ == false) && (cpu_updated_ == true )) {
       copyData("cpu", "cuda");
+      owns_gpu_data_ = true;
     }
     if (memspace == "cpu") {
       return &h_data_[i * n_current_];
@@ -170,9 +180,11 @@ namespace ReSolve { namespace vector {
     switch(control)  {
       case 0: //cpu->cuda
         copyArrayHostToDevice(d_data_, h_data_, n_current_ * k_);
+        owns_gpu_data_ = true;
         break;
       case 1: //cuda->cpu
         copyArrayDeviceToHost(h_data_, d_data_, n_current_ * k_);
+        owns_cpu_data_ = true;
         break;
       default:
         return -1;
@@ -185,16 +197,14 @@ namespace ReSolve { namespace vector {
   void Vector::allocate(std::string memspace) 
   {
     if (memspace == "cpu") {
-      if (h_data_ != nullptr) {
-        delete [] h_data_;
-      }
+      delete [] h_data_;
       h_data_ = new real_type[n_ * k_]; 
+      owns_cpu_data_ = true;
     } else {
       if (memspace == "cuda") {
-        if (d_data_ != nullptr) {
-          deleteOnDevice(d_data_);
-        }
+        deleteOnDevice(d_data_);
         allocateArrayOnDevice(&d_data_, n_ * k_);
+        owns_gpu_data_ = true;
       }
     }
   }
@@ -205,6 +215,7 @@ namespace ReSolve { namespace vector {
     if (memspace == "cpu") {
       if (h_data_ == nullptr) {
         h_data_ = new real_type[n_ * k_]; 
+        owns_cpu_data_ = true;
       }
       for (int i = 0; i < n_ * k_; ++i){
         h_data_[i] = 0.0;
@@ -213,6 +224,7 @@ namespace ReSolve { namespace vector {
       if (memspace == "cuda") {
         if (d_data_ == nullptr) {
           allocateArrayOnDevice(&d_data_, n_ * k_);
+          owns_gpu_data_ = true;
         }
         setZeroArrayOnDevice(d_data_, n_ * k_);
       }
@@ -224,6 +236,7 @@ namespace ReSolve { namespace vector {
     if (memspace == "cpu") {
       if (h_data_ == nullptr) {
         h_data_ = new real_type[n_ * k_]; 
+        owns_cpu_data_ = true;
       }
       for (int i = (n_current_) * j; i < n_current_ * (j + 1); ++i) {
         h_data_[i] = 0.0;
@@ -232,6 +245,7 @@ namespace ReSolve { namespace vector {
       if (memspace == "cuda") {
         if (d_data_ == nullptr) {
           allocateArrayOnDevice(&d_data_, n_ * k_);
+          owns_gpu_data_ = true;
         }
         // TODO: We should not need to access raw data in this class
         setZeroArrayOnDevice(&d_data_[j * n_current_], n_current_);
@@ -244,6 +258,7 @@ namespace ReSolve { namespace vector {
     if (memspace == "cpu") {
       if (h_data_ == nullptr) {
         h_data_ = new real_type[n_ * k_]; 
+        owns_cpu_data_ = true;
       }
       for (int i = 0; i < n_ * k_; ++i){
         h_data_[i] = C;
@@ -252,6 +267,7 @@ namespace ReSolve { namespace vector {
       if (memspace == "cuda") {
         if (d_data_ == nullptr) {
           allocateArrayOnDevice(&d_data_, n_ * k_);
+          owns_gpu_data_ = true;
         }
         set_array_const(n_ * k_, C, d_data_);
       }
@@ -263,6 +279,7 @@ namespace ReSolve { namespace vector {
     if (memspace == "cpu") {
       if (h_data_ == nullptr) {
         h_data_ = new real_type[n_ * k_]; 
+        owns_cpu_data_ = true;
       }
       for (int i = j * n_current_; i < (j + 1 ) * n_current_ * k_; ++i){
         h_data_[i] = C;
@@ -271,6 +288,7 @@ namespace ReSolve { namespace vector {
       if (memspace == "cuda") {
         if (d_data_ == nullptr) {
           allocateArrayOnDevice(&d_data_, n_ * k_);
+          owns_gpu_data_ = true;
         }
         set_array_const(n_current_ * 1, C, &d_data_[n_current_ * j]);
       }

@@ -11,14 +11,15 @@
 #include <resolve/LinSolverDirectKLU.hpp>
 #include <resolve/LinAlgWorkspace.hpp>
 
+using namespace ReSolve::constants;
 
 int main(int argc, char *argv[])
 {
   // Use the same data types as those you specified in ReSolve build.
-  using index_type = ReSolve::index_type;
   using real_type  = ReSolve::real_type;
   using vector_type = ReSolve::vector::Vector;
 
+  (void) argc; // TODO: Check if the number of input parameters is correct.
   std::string  matrixFileName = argv[1];
   std::string  rhsFileName = argv[2];
 
@@ -41,70 +42,68 @@ int main(int argc, char *argv[])
   vector_type* vec_x;
   vector_type* vec_r;
 
-  real_type one = 1.0;
-  real_type minusone = -1.0;
-
   ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
 
 
 
-    // Read matrix first
-    std::cout << "========================================================================================================================"<<std::endl;
-    std::cout << "Reading: " << matrixFileName << std::endl;
-    std::cout << "========================================================================================================================"<<std::endl;
-    std::cout << std::endl;
-    // Read first matrix
-    std::ifstream mat_file(matrixFileName);
-    if(!mat_file.is_open())
-    {
-      std::cout << "Failed to open file " << matrixFileName << "\n";
-      return -1;
-    }
-    std::ifstream rhs_file(rhsFileName);
-    if(!rhs_file.is_open())
-    {
-      std::cout << "Failed to open file " << rhsFileName << "\n";
-      return -1;
-    }
-      A_coo = ReSolve::io::readMatrixFromFile(mat_file);
-      A = new ReSolve::matrix::Csr(A_coo->getNumRows(),
-                                   A_coo->getNumColumns(),
-                                   A_coo->getNnz(),
-                                   A_coo->symmetric(),
-                                   A_coo->expanded());
+  // Read matrix first
+  std::cout << "========================================================================================================================"<<std::endl;
+  std::cout << "Reading: " << matrixFileName << std::endl;
+  std::cout << "========================================================================================================================"<<std::endl;
+  std::cout << std::endl;
+  // Read first matrix
+  std::ifstream mat_file(matrixFileName);
+  if(!mat_file.is_open())
+  {
+    std::cout << "Failed to open file " << matrixFileName << "\n";
+    return -1;
+  }
+  std::ifstream rhs_file(rhsFileName);
+  if(!rhs_file.is_open())
+  {
+    std::cout << "Failed to open file " << rhsFileName << "\n";
+    return -1;
+  }
+  A_coo = ReSolve::io::readMatrixFromFile(mat_file);
+  A = new ReSolve::matrix::Csr(A_coo->getNumRows(),
+                               A_coo->getNumColumns(),
+                               A_coo->getNnz(),
+                               A_coo->symmetric(),
+                               A_coo->expanded());
 
-      rhs = ReSolve::io::readRhsFromFile(rhs_file);
-      x = new real_type[A->getNumRows()];
-      vec_rhs = new vector_type(A->getNumRows());
-      vec_x = new vector_type(A->getNumRows());
-      vec_r = new vector_type(A->getNumRows());
-    std::cout<<"Finished reading the matrix and rhs, size: "<<A->getNumRows()<<" x "<<A->getNumColumns()<< ", nnz: "<< A->getNnz()<< ", symmetric? "<<A->symmetric()<< ", Expanded? "<<A->expanded()<<std::endl;
-    mat_file.close();
-    rhs_file.close();
+  rhs = ReSolve::io::readRhsFromFile(rhs_file);
+  x = new real_type[A->getNumRows()];
+  vec_rhs = new vector_type(A->getNumRows());
+  vec_x = new vector_type(A->getNumRows());
+  vec_r = new vector_type(A->getNumRows());
+  std::cout<<"Finished reading the matrix and rhs, size: "<<A->getNumRows()<<" x "<<A->getNumColumns()<< ", nnz: "<< A->getNnz()<< ", symmetric? "<<A->symmetric()<< ", Expanded? "<<A->expanded()<<std::endl;
+  mat_file.close();
+  rhs_file.close();
 
-    //Now convert to CSR.
-    matrix_handler->coo2csr(A_coo, A, "cpu");
-    vec_rhs->update(rhs, "cpu", "cpu");
-    vec_rhs->setDataUpdated("cpu");
-    std::cout << "COO to CSR completed. Expanded NNZ: " << A->getNnzExpanded() << std::endl;
-    //Now call direct solver
-    KLU->setupParameters(1, 0.1, false);
-    int status;
-    KLU->setup(A);
-    status = KLU->analyze();
-    std::cout<<"KLU analysis status: "<<status<<std::endl;
-    status = KLU->factorize();
-    std::cout << "KLU factorization status: " << status << std::endl;
-    status = KLU->solve(vec_rhs, vec_x);
-    std::cout << "KLU solve status: " << status << std::endl;      
-    vec_r->update(rhs, "cpu", "cuda");
+  //Now convert to CSR.
+  matrix_handler->coo2csr(A_coo, A, "cpu");
+  vec_rhs->update(rhs, "cpu", "cpu");
+  vec_rhs->setDataUpdated("cpu");
+  std::cout << "COO to CSR completed. Expanded NNZ: " << A->getNnzExpanded() << std::endl;
+  //Now call direct solver
+  KLU->setupParameters(1, 0.1, false);
+  int status;
+  KLU->setup(A);
+  status = KLU->analyze();
+  std::cout<<"KLU analysis status: "<<status<<std::endl;
+  status = KLU->factorize();
+  std::cout << "KLU factorization status: " << status << std::endl;
+  status = KLU->solve(vec_rhs, vec_x);
+  std::cout << "KLU solve status: " << status << std::endl;      
+  vec_r->update(rhs, "cpu", "cuda");
 
-    matrix_handler->setValuesChanged(true);
+  matrix_handler->setValuesChanged(true);
 
-    matrix_handler->matvec(A, vec_x, vec_r, &one, &minusone, "csr", "cuda"); 
-    real_type* test = vec_r->getData("cpu");
+  matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, "csr", "cuda"); 
+  real_type* test = vec_r->getData("cpu");
+  (void) test; // TODO: Do we need `test` variable in this example?
 
-    printf("\t 2-Norm of the residual: %16.16e\n", sqrt(vector_handler->dot(vec_r, vec_r, "cuda")));
+  printf("\t 2-Norm of the residual: %16.16e\n", sqrt(vector_handler->dot(vec_r, vec_r, "cuda")));
 
 
 

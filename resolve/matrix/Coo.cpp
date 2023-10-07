@@ -118,24 +118,32 @@ namespace ReSolve
         std::memcpy(h_col_data_, col_data, (nnz_current) * sizeof(index_type));
         std::memcpy(h_val_data_, val_data, (nnz_current) * sizeof(real_type));
         h_data_updated_ = true;
+        owns_cpu_data_ = true;
+        owns_cpu_vals_ = true;
         break;
       case 2://cuda->cpu
         copyArrayDeviceToHost(h_row_data_, row_data, nnz_current);
         copyArrayDeviceToHost(h_col_data_, col_data, nnz_current);
         copyArrayDeviceToHost(h_val_data_, val_data, nnz_current);
         h_data_updated_ = true;
+        owns_cpu_data_ = true;
+        owns_cpu_vals_ = true;
         break;
       case 1://cpu->cuda
         copyArrayHostToDevice(d_row_data_, row_data, nnz_current);
         copyArrayHostToDevice(d_col_data_, col_data, nnz_current);
         copyArrayHostToDevice(d_val_data_, val_data, nnz_current);
         d_data_updated_ = true;
+        owns_gpu_data_ = true;
+        owns_gpu_vals_ = true;
         break;
       case 3://cuda->cuda
         copyArrayDeviceToDevice(d_row_data_, row_data, nnz_current);
         copyArrayDeviceToDevice(d_col_data_, col_data, nnz_current);
         copyArrayDeviceToDevice(d_val_data_, val_data, nnz_current);
         d_data_updated_ = true;
+        owns_gpu_data_ = true;
+        owns_gpu_vals_ = true;
         break;
       default:
         return -1;
@@ -146,6 +154,7 @@ namespace ReSolve
   index_type matrix::Coo::updateData(index_type* row_data, index_type* col_data, real_type* val_data, index_type new_nnz, std::string memspaceIn, std::string memspaceOut)
   {
     this->destroyMatrixData(memspaceOut);
+    this->nnz_ = new_nnz;
     int i = this->updateData(row_data, col_data, val_data, memspaceIn, memspaceOut);
     return i;
   } 
@@ -163,6 +172,8 @@ namespace ReSolve
       std::fill(h_col_data_, h_col_data_ + nnz_current, 0);  
       this->h_val_data_ = new real_type[nnz_current];
       std::fill(h_val_data_, h_val_data_ + nnz_current, 0.0);  
+      owns_cpu_data_ = true;
+      owns_cpu_vals_ = true;
       return 0;
     }
 
@@ -170,6 +181,8 @@ namespace ReSolve
       allocateArrayOnDevice(&d_row_data_, nnz_current); 
       allocateArrayOnDevice(&d_col_data_, nnz_current); 
       allocateArrayOnDevice(&d_val_data_, nnz_current); 
+      owns_gpu_data_ = true;
+      owns_gpu_vals_ = true;
       return 0;
     }
     return -1;
@@ -197,6 +210,8 @@ namespace ReSolve
         copyArrayDeviceToHost(h_col_data_, d_col_data_, nnz_current);
         copyArrayDeviceToHost(h_val_data_, d_val_data_, nnz_current);
         h_data_updated_ = true;
+        owns_cpu_data_ = true;
+        owns_cpu_vals_ = true;
       }
       return 0;
     }
@@ -216,6 +231,8 @@ namespace ReSolve
         copyArrayHostToDevice(d_col_data_, h_col_data_, nnz_current);
         copyArrayHostToDevice(d_val_data_, h_val_data_, nnz_current);
         d_data_updated_ = true;
+        owns_gpu_data_ = true;
+        owns_gpu_vals_ = true;
       }
       return 0;
     }

@@ -3,7 +3,7 @@
 #include <fstream>
 #include "GramSchmidtTests.hpp"
 
-int main(int argc, char* argv[])
+int main(int, char**)
 {
   ReSolve::tests::TestingResults result; 
 
