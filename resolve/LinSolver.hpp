@@ -29,7 +29,7 @@ namespace ReSolve
 
     public:
       LinSolver();
-      ~LinSolver();
+      virtual ~LinSolver();
 
       virtual int setup(matrix::Sparse* A);
       real_type evaluateResidual();
@@ -47,7 +47,7 @@ namespace ReSolve
   {
     public:
       LinSolverDirect();
-      ~LinSolverDirect();
+      virtual ~LinSolverDirect();
       //return 0 if successful!
       virtual int analyze(); //the same as symbolic factorization
       virtual int factorize();

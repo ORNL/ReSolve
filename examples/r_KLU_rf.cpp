@@ -12,6 +12,8 @@
 #include <resolve/LinSolverDirectCuSolverRf.hpp>
 #include <resolve/LinAlgWorkspace.hpp>
 
+using namespace ReSolve::constants;
+
 int main(int argc, char *argv[] )
 {
   // Use the same data types as those you specified in ReSolve build.
@@ -19,6 +21,7 @@ int main(int argc, char *argv[] )
   using real_type  = ReSolve::real_type;
   using vector_type = ReSolve::vector::Vector;
 
+  (void) argc; // TODO: Check if the number of input parameters is correct.
   std::string  matrixFileName = argv[1];
   std::string  rhsFileName = argv[2];
 
@@ -44,9 +47,6 @@ int main(int argc, char *argv[] )
   vector_type* vec_rhs;
   vector_type* vec_x;
   vector_type* vec_r;
-
-  real_type one = 1.0;
-  real_type minusone = -1.0;
 
   ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
   ReSolve::LinSolverDirectCuSolverRf* Rf = new ReSolve::LinSolverDirectCuSolverRf;
@@ -160,8 +160,7 @@ int main(int argc, char *argv[] )
 
     matrix_handler->setValuesChanged(true);
 
-    matrix_handler->matvec(A, vec_x, vec_r, &one, &minusone,"csr", "cuda"); 
-    real_type* test = vec_r->getData("cpu");
+    matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "cuda"); 
 
     printf("\t 2-Norm of the residual: %16.16e\n", sqrt(vector_handler->dot(vec_r, vec_r, "cuda")));
 

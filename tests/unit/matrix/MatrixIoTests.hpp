@@ -25,17 +25,18 @@ public:
     // Check if the matrix data was correctly loaded
     status = true;
 
-    if(A->getNnz() != general_coo_matrix_vals_.size()) {
+    index_type nnz_answer = static_cast<index_type>(general_coo_matrix_vals_.size());
+    if (A->getNnz() != nnz_answer) {
       std::cout << "Incorrect NNZ read from the file ...\n";
       status = false;
     }
 
-    if(A->symmetric()) {
+    if (A->symmetric()) {
       std::cout << "Incorrect matrix type, matrix not symmetric ...\n";
       status = false;
     }
 
-    if(!A->expanded()) {
+    if (!A->expanded()) {
       std::cout << "Incorrect matrix type, matrix is general (expanded) ...\n";
       status = false;
     }
@@ -49,17 +50,18 @@ public:
     std::istringstream file2(symmetric_coo_matrix_file_);
     A = ReSolve::io::readMatrixFromFile(file2);
 
-    if(A->getNnz() != symmetric_coo_matrix_vals_.size()) {
+    nnz_answer = static_cast<index_type>(symmetric_coo_matrix_vals_.size());
+    if (A->getNnz() != nnz_answer) {
       std::cout << "Incorrect NNZ read from the file ...\n";
       status = false;
     }
 
-    if(!A->symmetric()) {
+    if (!A->symmetric()) {
       std::cout << "Incorrect matrix type, matrix is symmetric ...\n";
       status = false;
     }
 
-    if(A->expanded()) {
+    if (A->expanded()) {
       std::cout << "Incorrect matrix type, matrix not expanded ...\n";
       status = false;
     }
@@ -87,7 +89,8 @@ public:
     // Check if the matrix data was correctly loaded
     status = true;
 
-    if(A.getNnz() != symmetric_coo_matrix_vals_.size()) {
+    index_type nnz_answer = static_cast<index_type>(symmetric_coo_matrix_vals_.size());
+    if (A.getNnz() != nnz_answer) {
       std::cout << "Incorrect NNZ read from the file ...\n";
       status = false;
     }
@@ -100,7 +103,8 @@ public:
     // Update matrix A with data from the matrix market file
     ReSolve::io::readAndUpdateMatrix(file, &A);
 
-    if(A.getNnz() != general_coo_matrix_vals_.size()) {
+    nnz_answer = static_cast<index_type>(general_coo_matrix_vals_.size());
+    if (A.getNnz() != nnz_answer) {
       std::cout << "Incorrect NNZ read from the file ...\n";
       status = false;
     }
@@ -123,8 +127,8 @@ public:
     // Check if the matrix data was correctly loaded
     status = true;
 
-    for(index_type i = 0; i < general_vector_vals_.size(); ++i) {
-      if(!isEqual(rhs[i], general_vector_vals_[i]))
+    for (size_t i = 0; i < general_vector_vals_.size(); ++i) {
+      if (!isEqual(rhs[i], general_vector_vals_[i]))
       {
         std::cout << "Incorrect vector value at storage element " << i << ".\n";
         status = false;
@@ -152,8 +156,8 @@ public:
     // Check if the matrix data was correctly loaded
     status = true;
 
-    for(index_type i = 0; i < general_vector_vals_.size(); ++i) {
-      if(!isEqual(rhs[i], general_vector_vals_[i]))
+    for (size_t i = 0; i < general_vector_vals_.size(); ++i) {
+      if (!isEqual(rhs[i], general_vector_vals_[i]))
       {
         std::cout << "Incorrect vector value at storage element " << i << ".\n";
         status = false;
@@ -171,10 +175,10 @@ private:
                     const std::vector<index_type>& col_data,
                     const std::vector<real_type>& val_data)
   {
-    for(index_type i = 0; i < val_data.size(); ++i) {
-      if((answer.getRowData("cpu")[i] != row_data[i]) ||
-         (answer.getColData("cpu")[i] != col_data[i]) ||
-         (!isEqual(answer.getValues("cpu")[i], val_data[i])))
+    for (size_t i = 0; i < val_data.size(); ++i) {
+      if ((answer.getRowData("cpu")[i] != row_data[i]) ||
+          (answer.getColData("cpu")[i] != col_data[i]) ||
+          (!isEqual(answer.getValues("cpu")[i], val_data[i])))
       {
         std::cout << "Incorrect matrix value at storage element " << i << ".\n";
         return false;

@@ -13,6 +13,8 @@
 #include <resolve/LinSolverIterativeFGMRES.hpp>
 #include <resolve/LinAlgWorkspace.hpp>
 
+using namespace ReSolve::constants;
+
 int main(int argc, char *argv[])
 {
   // Use the same data types as those you specified in ReSolve build.
@@ -20,6 +22,7 @@ int main(int argc, char *argv[])
   using real_type  = ReSolve::real_type;
   using vector_type = ReSolve::vector::Vector;
 
+  (void) argc; // TODO: Check if the number of input parameters is correct.
   std::string  matrixFileName = argv[1];
   std::string  rhsFileName = argv[2];
 
@@ -39,15 +42,12 @@ int main(int argc, char *argv[])
   workspace_CUDA->initializeHandles();
   ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(workspace_CUDA);
   ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(workspace_CUDA);
-  real_type* rhs;
-  real_type* x;
+  real_type* rhs = nullptr;
+  real_type* x   = nullptr;
 
   vector_type* vec_rhs;
   vector_type* vec_x;
   vector_type* vec_r;
-
-  real_type one = 1.0;
-  real_type minusone = -1.0;
 
   ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::cgs2);
   
@@ -137,7 +137,7 @@ int main(int argc, char *argv[])
       norm_b = vector_handler->dot(vec_r, vec_r, "cuda");
       norm_b = sqrt(norm_b);
       matrix_handler->setValuesChanged(true);
-      matrix_handler->matvec(A, vec_x, vec_r, &one, &minusone,"csr", "cuda"); 
+      matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "cuda"); 
       printf("\t 2-Norm of the residual : %16.16e\n", sqrt(vector_handler->dot(vec_r, vec_r, "cuda"))/norm_b);
       if (i == 1) {
         ReSolve::matrix::Csc* L_csc = (ReSolve::matrix::Csc*) KLU->getLFactor();
@@ -181,7 +181,7 @@ int main(int argc, char *argv[])
       matrix_handler->setValuesChanged(true);
       FGMRES->resetMatrix(A);
       
-      matrix_handler->matvec(A, vec_x, vec_r, &one, &minusone,"csr", "cuda"); 
+      matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "cuda"); 
 
       printf("\t 2-Norm of the residual (before IR): %16.16e\n", sqrt(vector_handler->dot(vec_r, vec_r, "cuda"))/norm_b);
       printf("\t 2-Norm of the RIGHT HAND SIDE: %16.16e\n", norm_b);

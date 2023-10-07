@@ -59,7 +59,7 @@ namespace ReSolve
     return 0;
   }
 
-  int LinSolverDirect::solve(vector_type* rhs, vector_type* x) 
+  int LinSolverDirect::solve(vector_type* /* rhs */, vector_type* /* x */) 
   {
     return 0;
   }
@@ -93,7 +93,7 @@ namespace ReSolve
   }
 
 
-  int LinSolverIterative::solve(vector_type* rhs, vector_type* init_guess)
+  int LinSolverIterative::solve(vector_type* /* rhs */, vector_type* /* init_guess */)
   {
     return 0;
   }
