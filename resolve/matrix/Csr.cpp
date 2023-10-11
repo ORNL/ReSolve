@@ -4,14 +4,33 @@
 
 namespace ReSolve 
 {
+  /** 
+   * @brief empty constructor that does absolutely nothing        
+   */
   matrix::Csr::Csr()
   {
   }
 
+  /** 
+   * @brief basic constructor that sets matrix dimensions and nnz. Note: it does not allocate any storage. 
+   *
+   * @param n number of rows
+   * @param m number of columns
+   * @param nnz number of non-zeroes      
+   */
   matrix::Csr::Csr(index_type n, index_type m, index_type nnz) : Sparse(n, m, nnz)
   {
   }
   
+  /** 
+   * @brief constructor that sets matrix dimensions, nnz, informs if the matrix is symmetric and expanded. Note: it does not allocate any storage. 
+   *
+   * @param n number of rows
+   * @param m number of columns
+   * @param nnz number of non-zeroes      
+   * @param symmetric boolean variable - 1 if the matrix is symmetric, 0 otherwise. 
+   * @param expanded boolean variable - 1 if the matrix is expanded, 0 otherwise. Note: non-symmetric matries are always considered to be expanded
+   */
   matrix::Csr::Csr(index_type n, 
                    index_type m, 
                    index_type nnz,
@@ -20,10 +39,20 @@ namespace ReSolve
   {
   }
 
+  /** 
+   * @brief destructor. If the matrix owns its own data, the data is deleted. Simply clears the object otherwise. 
+   */
   matrix::Csr::~Csr()
   {
   }
 
+  /** 
+   * @brief get CSR row pointers. Note: if the data in given memory space does not exist, it will be allocated and copied first.
+   *
+   * @param memspace use "cpu" to get pointer to CPU data  and "cuda" for GPU data. 
+   *
+   * @return pointer to the data in memory space given or nullpointer if the memory space parameter is wrong.
+  */
   index_type* matrix::Csr::getRowData(std::string memspace)
   {
     if (memspace == "cpu") {
@@ -39,6 +68,13 @@ namespace ReSolve
     }
   }
 
+  /** 
+   * @brief get CSR column indices. Note: if the data in given memory space does not exist, it will be allocated and copied first.
+   *
+   * @param memspace use "cpu" to get pointer to CPU data  and "cuda" for GPU data. 
+   *
+   * @return pointer to the data in memory space given or nullpointer if the memory space parameter is wrong.
+  */
   index_type* matrix::Csr::getColData(std::string memspace)
   {
     if (memspace == "cpu") {
@@ -54,6 +90,13 @@ namespace ReSolve
     }
   }
 
+  /** 
+   * @brief get CSR values. Note: if the data in given memory space does not exist, it will be allocated and copied first.
+   *
+   * @param memspace use "cpu" to get pointer to CPU data  and "cuda" for GPU data. 
+   *
+   * @return pointer to the data in memory space given or nullpointer if the memory space parameter is wrong.
+  */
   real_type* matrix::Csr::getValues(std::string memspace)
   {
     if (memspace == "cpu") {
@@ -69,6 +112,17 @@ namespace ReSolve
     }
   }
 
+  /** 
+   * @brief updade CSR data. Note: if the data in given memory space "memspaceOut" does not exist, it will be allocated first.
+   *
+   * @param row_data CSR row pointers
+   * @param col_data CSR column indices
+   * @param val_data CSR values
+   * @param memspaceIn memory space of the input data. Use "cpu" or "cuda", as appropriate. 
+   * @param memspaceOut memory space of the matrix data to be updated. Use "cpu" or "cuda", as appropriate. 
+   *
+   * @return 0 if succesful and -1  if the memory space parameter is wrong.
+  */
   int matrix::Csr::updateData(index_type* row_data, index_type* col_data, real_type* val_data, std::string memspaceIn, std::string memspaceOut)
   {
     //four cases (for now)
@@ -148,6 +202,18 @@ namespace ReSolve
     return 0;
   } 
 
+  /** 
+   * @brief updade CSR data with new nnz. Note: all existing data is destroyed first. New data is allocated only in memory space "memspaceOut".
+   *
+   * @param row_data CSR row pointers
+   * @param col_data CSR column indices
+   * @param val_data CSR values
+   * @param new_nnz new number of non-zeros
+   * @param memspaceIn memory space of the input data. Use "cpu" or "cuda", as appropriate. 
+   * @param memspaceOut memory space of the matrix data to be updated. Use "cpu" or "cuda", as appropriate. 
+   *
+   * @return 0 if succesful and -1  if the one or both memory space parameters are wrong.
+  */
   int matrix::Csr::updateData(index_type* row_data, index_type* col_data, real_type* val_data, index_type new_nnz, std::string memspaceIn, std::string memspaceOut)
   {
     this->destroyMatrixData(memspaceOut);
@@ -156,6 +222,13 @@ namespace ReSolve
     return i;
   } 
 
+  /** 
+   * @brief allocate CSR data in memory space provided. Note: all existing data is destroyed first.
+   *
+   * @param memspace memory space of the matrix data to be allocated. Use "cpu" or "cuda", as appropriate. 
+   *
+   * @return 0 if succesful and -1  if memory space parameters is wrong.
+  */
   int matrix::Csr::allocateMatrixData(std::string memspace)
   {
     index_type nnz_current = nnz_;
@@ -185,6 +258,13 @@ namespace ReSolve
     return -1;
   }
 
+  /** 
+   * @brief (internally) copy the matrix data to memory space indicated by "memspaceOut". Note: this function allocatedthe target data if it does not exist.
+   *
+   * @param memspaceOut memory space of the matrix data to be copied to. Use "cpu" or "cuda", as appropriate. 
+   *
+   * @return 0 if succesful and -1  if memory space parameters is wrong.
+  */
   int matrix::Csr::copyData(std::string memspaceOut)
   {
     index_type nnz_current = nnz_;

@@ -4,10 +4,20 @@
 
 namespace ReSolve { namespace matrix {
 
+  /** 
+   * @brief empty constructor that does absolutely nothing        
+   */
   Sparse::Sparse()
   {
   }
 
+  /** 
+   * @brief basic constructor that sets matrix dimensions and nnz. Note: it does not allocate any storage. 
+   *
+   * @param n number of rows
+   * @param m number of columns
+   * @param nnz number of non-zeroes      
+   */
   Sparse::Sparse(index_type n, 
                  index_type m, 
                  index_type nnz):
@@ -37,6 +47,15 @@ namespace ReSolve { namespace matrix {
     owns_gpu_vals_ = false;
   }
 
+  /** 
+   * @brief constructor that sets matrix dimensions, nnz, informs if the matrix is symmetric and expanded. Note: it does not allocate any storage. 
+   *
+   * @param n number of rows
+   * @param m number of columns
+   * @param nnz number of non-zeroes      
+   * @param symmetric boolean variable - 1 if the matrix is symmetric, 0 otherwise. 
+   * @param expanded boolean variable - 1 if the matrix is expanded, 0 otherwise. Note: non-symmetric matries are always considered to be expanded
+   */
   Sparse::Sparse(index_type n, 
                  index_type m, 
                  index_type nnz,
@@ -71,68 +90,131 @@ namespace ReSolve { namespace matrix {
     owns_gpu_vals_ = false;
   }
 
+  /** 
+   * @brief destructor. If the matrix owns its own data, the data is deleted. Simply clears the object otherwise. 
+   */
   Sparse::~Sparse()
   {
     this->destroyMatrixData("cpu");
     this->destroyMatrixData("cuda");
   }
 
+  /** 
+   * @brief sets both cpu and gpu data to be "not updated". 
+   */
   void Sparse::setNotUpdated()
   {
     h_data_updated_ = false;
     d_data_updated_ = false; 
   }
   
+  /** 
+   * @brief get number of rows. 
+   *
+   * @return number of rows
+  */
   index_type Sparse::getNumRows()
   {
     return this->n_;
   }
 
+  /** 
+   * @brief get number of columns. 
+   *
+   * @return number of rows
+   */
   index_type Sparse::getNumColumns()
   {
     return this->m_;
   }
 
+  /** 
+   * @brief get number of non-zeroes. 
+   *
+   * @return number of non-zeross
+   */
   index_type Sparse::getNnz()
   {
     return this->nnz_;
   }
 
+  /** 
+   * @brief get number of non-zeroes in the expanded matrix. 
+   *
+   * @return number of non-zeros in expanded matrix
+   */
   index_type Sparse::getNnzExpanded()
   {
     return this->nnz_expanded_;
   }
 
+  /** 
+   * @bried get matrix symmetry property
+   *
+   * @return  1 if the matrix is symmtric and 0 otherwise. 
+   */
   bool Sparse::symmetric()
   {
     return is_symmetric_;
   }
 
+  /** 
+   * @brief get the info whether the matrix is expanded or not.
+   *
+   * @return returns 1 if the matrix is expanded and 0 otherwise. 
+   */
   bool Sparse::expanded()
   {
     return is_expanded_;
   }
 
+  /** 
+   * @brief set matrix symmetry property
+   *
+   * @param symmetric use 1 to set matrix to symmetric and 0 to set matrix to non-symmetric. 
+   */
   void Sparse::setSymmetric(bool symmetric)
   {
     this->is_symmetric_ = symmetric;
   }
 
+  /** 
+   * @brief set whether the matrix is expanded or not.
+   *
+   * @param expanded use 1 to set matrix to expanded and 0 to set matrix to non-expanded. 
+   */
   void Sparse::setExpanded(bool expanded)
   {
     this->is_expanded_ = expanded;
   }
 
+  /** 
+   * @brief set number of non-zeroes in expanded matrix,
+   *
+   * @param nnz_expanded_new number of non-zeroes in expanded matrix. 
+   */
   void Sparse::setNnzExpanded(index_type nnz_expanded_new)
   {
     this->nnz_expanded_ = nnz_expanded_new;
   }
 
+  /** 
+   * @brief set number of non-zeroes (in non-expanded matrix),
+   *
+   * @param nnz_new number of non-zeroes in non-expanded matrix. 
+   */
   void Sparse::setNnz(index_type nnz_new)
   {
     this->nnz_ = nnz_new;
   }
 
+  /** 
+   * @brief set the "updated" parameter for matrix data,
+   *
+   * @param what use "cpu" to set CPU data to be updated and "cuda" for GPU data. 
+   *
+   * @return 0 if succesful, -1 otherwise
+  */
   int Sparse::setUpdated(std::string what)
   {
     if (what == "cpu")
@@ -150,6 +232,16 @@ namespace ReSolve { namespace matrix {
     return 0;
   }
 
+  /** 
+   * @brief set the matrix data (without copying, just set the pointers),
+   *
+   * @param row_data pointer to row data
+   * @param col_data pointer to column data
+   * @param val_data pointer to value data.
+   * @param memspace memory space of the pointers given ("cpu" or "cuda")
+   *
+   * @return 0 if succesful, -1 otherwise
+   */
   int Sparse::setMatrixData(index_type* row_data, index_type* col_data, real_type* val_data, std::string memspace)
   {
 
@@ -173,6 +265,13 @@ namespace ReSolve { namespace matrix {
     return 0;
   }
 
+  /** 
+   * @brief destroy matrix data (if the matrix owns its data), do nothing otherwise,
+   *
+   * @param memspace memory space of data to be destroyed ("cpu" or "cuda")
+   *
+   * @return 0 if succesful, -1 otherwise
+   */
   int Sparse::destroyMatrixData(std::string memspace)
   { 
     if (memspace == "cpu"){  
@@ -199,6 +298,15 @@ namespace ReSolve { namespace matrix {
     return 0;
   }
 
+  /** 
+   * @brief update matrix values (with copying). Note: if the data in memory space of memspaceOut does not exist, if will be allocated.
+   *
+   * @param new_vals pointer to value array
+   * @param memspaceIn memory space of data arriving ("cpu" or "cuda")
+   * @param memspaceOut memory space of data to be updated ("cpu" or "cuda")
+   *
+   * @return 0 if succesful, -1 otherwise
+   */
   int Sparse::updateValues(real_type* new_vals, std::string memspaceIn, std::string memspaceOut)
   {
  
@@ -253,6 +361,14 @@ namespace ReSolve { namespace matrix {
     return 0;
   }
 
+  /** 
+   * @brief update matrix values pointer (without copying).
+   *
+   * @param new_vals pointer to value array
+   * @param memspace memory space of data ("cpu" or "cuda")
+   *
+   * @return 0 if succesful, -1 otherwise
+   */
   int Sparse::setNewValues(real_type* new_vals, std::string memspace)
   {
 
