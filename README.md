@@ -1,13 +1,13 @@
 # ReSolve
 
-ReSolve is a library of GPU-resident linear solver. It is very much work in progres. When completed, it will contain iterative and direct linear solvers designed to run on NVIDIA and AMD GPUs, as well as CPU devices.
+ReSolve is a library of GPU-resident linear solver. It contains iterative and direct linear solvers designed to run on NVIDIA and AMD GPUs, as well as on CPU devices.
 
 ## Getting started
 
 Dependencies:
 - KLU, AMD and COLAMD libraries from SuiteSparse
 - CUDA >= 11.4
-- CMake >= 3.20
+- CMake >= 3.22
 
 To build it:
 ```shell
@@ -103,10 +103,10 @@ cmake -B build --preset cluster
 ```
 
 ## Support
-For any questions or to report a bug please submit a [GitLab issue](https://code.ornl.gov/ecpcitest/exasgd/resolve/-/issues). 
+For any questions or to report a bug please submit a [GitHub issue](https://github.com/ORNL/ReSolve/issues). 
 
 ## Authors and acknowledgment
-Primary author of this project is Kasia &#346;wirydowicz <kasia.swirydowicz@pnnl.gov>.  
+Primary authors of this project are Kasia &#346;wirydowicz <kasia.swirydowicz@pnnl.gov> and Slaven Peles <peless@ornl.gov>.
 
 Development of this coede was supported by the Exascale Computing Project (ECP), Project Number: 17-SC-20-SC, a collaborative effort of two DOE organizations—the Office of Science and the National Nuclear Security Administration—responsible for the planning and preparation of a capable exascale ecosystem—including software, applications, hardware, advanced system engineering, and early testbed platforms—to support the nation's exascale computing imperative.
 
