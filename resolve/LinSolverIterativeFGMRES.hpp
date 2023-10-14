@@ -70,5 +70,7 @@ namespace ReSolve
     real_type final_residual_norm_;
     real_type initial_residual_norm_;
     index_type fgmres_iters_;
+
+    MemoryHandler mem_; ///< Device memory manager object
   };
 }

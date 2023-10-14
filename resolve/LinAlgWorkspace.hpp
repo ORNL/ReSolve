@@ -4,6 +4,8 @@
 #include "cusparse.h"
 #include "cusolverSp.h"
 
+#include <resolve/MemoryUtils.hpp>
+
 namespace ReSolve
 {
   class LinAlgWorkspace
@@ -11,7 +13,8 @@ namespace ReSolve
     public:
       LinAlgWorkspace();
       ~LinAlgWorkspace();
-    private:
+    protected:
+      MemoryHandler mem_;
   };
 
 

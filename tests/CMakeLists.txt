@@ -5,6 +5,10 @@
 @author Slaven Peles <peless@ornl.gov>
 
 ]]
-add_subdirectory(functionality)
+
+if(RESOLVE_USE_CUDA)
+  add_subdirectory(functionality) 
+endif(RESOLVE_USE_CUDA)
+
 add_subdirectory(unit)
 

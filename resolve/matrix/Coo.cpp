@@ -2,7 +2,6 @@
 #include <iostream>
 #include <iomanip> 
 
-#include <resolve/memoryUtils.hpp>
 #include "Coo.hpp"
 
 
@@ -102,13 +101,13 @@ namespace ReSolve
     if (memspaceOut == "cuda") {
       //check if cuda data allocated
       if (d_row_data_ == nullptr) {
-        allocateArrayOnDevice(&d_row_data_, nnz_current);
+        mem_.allocateArrayOnDevice(&d_row_data_, nnz_current);
       }
       if (d_col_data_ == nullptr) {
-        allocateArrayOnDevice(&d_col_data_, nnz_current);
+        mem_.allocateArrayOnDevice(&d_col_data_, nnz_current);
       }
       if (d_val_data_ == nullptr) {
-        allocateArrayOnDevice(&d_val_data_, nnz_current);
+        mem_.allocateArrayOnDevice(&d_val_data_, nnz_current);
       }
     }
 
@@ -122,25 +121,25 @@ namespace ReSolve
         owns_cpu_vals_ = true;
         break;
       case 2://cuda->cpu
-        copyArrayDeviceToHost(h_row_data_, row_data, nnz_current);
-        copyArrayDeviceToHost(h_col_data_, col_data, nnz_current);
-        copyArrayDeviceToHost(h_val_data_, val_data, nnz_current);
+        mem_.copyArrayDeviceToHost(h_row_data_, row_data, nnz_current);
+        mem_.copyArrayDeviceToHost(h_col_data_, col_data, nnz_current);
+        mem_.copyArrayDeviceToHost(h_val_data_, val_data, nnz_current);
         h_data_updated_ = true;
         owns_cpu_data_ = true;
         owns_cpu_vals_ = true;
         break;
       case 1://cpu->cuda
-        copyArrayHostToDevice(d_row_data_, row_data, nnz_current);
-        copyArrayHostToDevice(d_col_data_, col_data, nnz_current);
-        copyArrayHostToDevice(d_val_data_, val_data, nnz_current);
+        mem_.copyArrayHostToDevice(d_row_data_, row_data, nnz_current);
+        mem_.copyArrayHostToDevice(d_col_data_, col_data, nnz_current);
+        mem_.copyArrayHostToDevice(d_val_data_, val_data, nnz_current);
         d_data_updated_ = true;
         owns_gpu_data_ = true;
         owns_gpu_vals_ = true;
         break;
       case 3://cuda->cuda
-        copyArrayDeviceToDevice(d_row_data_, row_data, nnz_current);
-        copyArrayDeviceToDevice(d_col_data_, col_data, nnz_current);
-        copyArrayDeviceToDevice(d_val_data_, val_data, nnz_current);
+        mem_.copyArrayDeviceToDevice(d_row_data_, row_data, nnz_current);
+        mem_.copyArrayDeviceToDevice(d_col_data_, col_data, nnz_current);
+        mem_.copyArrayDeviceToDevice(d_val_data_, val_data, nnz_current);
         d_data_updated_ = true;
         owns_gpu_data_ = true;
         owns_gpu_vals_ = true;
@@ -178,9 +177,9 @@ namespace ReSolve
     }
 
     if (memspace == "cuda") {
-      allocateArrayOnDevice(&d_row_data_, nnz_current); 
-      allocateArrayOnDevice(&d_col_data_, nnz_current); 
-      allocateArrayOnDevice(&d_val_data_, nnz_current); 
+      mem_.allocateArrayOnDevice(&d_row_data_, nnz_current); 
+      mem_.allocateArrayOnDevice(&d_col_data_, nnz_current); 
+      mem_.allocateArrayOnDevice(&d_val_data_, nnz_current); 
       owns_gpu_data_ = true;
       owns_gpu_vals_ = true;
       return 0;
@@ -206,9 +205,9 @@ namespace ReSolve
         if (h_val_data_ == nullptr) {
           h_val_data_ = new real_type[nnz_current];      
         }
-        copyArrayDeviceToHost(h_row_data_, d_row_data_, nnz_current);
-        copyArrayDeviceToHost(h_col_data_, d_col_data_, nnz_current);
-        copyArrayDeviceToHost(h_val_data_, d_val_data_, nnz_current);
+        mem_.copyArrayDeviceToHost(h_row_data_, d_row_data_, nnz_current);
+        mem_.copyArrayDeviceToHost(h_col_data_, d_col_data_, nnz_current);
+        mem_.copyArrayDeviceToHost(h_val_data_, d_val_data_, nnz_current);
         h_data_updated_ = true;
         owns_cpu_data_ = true;
         owns_cpu_vals_ = true;
@@ -219,17 +218,17 @@ namespace ReSolve
     if (memspaceOut == "cuda") {
       if ((d_data_updated_ == false) && (h_data_updated_ == true)) {
         if (d_row_data_ == nullptr) {
-          allocateArrayOnDevice(&d_row_data_, nnz_current);
+          mem_.allocateArrayOnDevice(&d_row_data_, nnz_current);
         }
         if (d_col_data_ == nullptr) {
-          allocateArrayOnDevice(&d_col_data_, nnz_current);
+          mem_.allocateArrayOnDevice(&d_col_data_, nnz_current);
         }
         if (d_val_data_ == nullptr) {
-          allocateArrayOnDevice(&d_val_data_, nnz_current);
+          mem_.allocateArrayOnDevice(&d_val_data_, nnz_current);
         }
-        copyArrayHostToDevice(d_row_data_, h_row_data_, nnz_current);
-        copyArrayHostToDevice(d_col_data_, h_col_data_, nnz_current);
-        copyArrayHostToDevice(d_val_data_, h_val_data_, nnz_current);
+        mem_.copyArrayHostToDevice(d_row_data_, h_row_data_, nnz_current);
+        mem_.copyArrayHostToDevice(d_col_data_, h_col_data_, nnz_current);
+        mem_.copyArrayHostToDevice(d_val_data_, h_val_data_, nnz_current);
         d_data_updated_ = true;
         owns_gpu_data_ = true;
         owns_gpu_vals_ = true;

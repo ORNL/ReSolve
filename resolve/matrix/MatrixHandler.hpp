@@ -5,6 +5,7 @@
 // (3) Matrix 1-norm
 #pragma once
 #include <resolve/Common.hpp>
+#include <resolve/MemoryUtils.hpp>
 
 namespace ReSolve
 { 
@@ -75,6 +76,8 @@ namespace ReSolve {
       LinAlgWorkspace* workspace_{nullptr};
       bool new_matrix_{true};     ///< if the structure changed, you need a new handler.
       bool values_changed_{true}; ///< needed for matvec
+
+      MemoryHandler mem_; ///< Device memory manager object
   };
 
 } // namespace ReSolve

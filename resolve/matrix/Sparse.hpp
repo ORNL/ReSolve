@@ -3,6 +3,7 @@
 #pragma once
 #include <string>
 #include <resolve/Common.hpp>
+#include <resolve/MemoryUtils.hpp>
 
 namespace ReSolve { namespace matrix {
   class Sparse 
@@ -86,5 +87,8 @@ namespace ReSolve { namespace matrix {
 
       bool owns_gpu_data_{false}; ///< for row/col data
       bool owns_gpu_vals_{false}; ///< for values
+
+      MemoryHandler mem_; ///< Device memory manager object
+
   };
 }} // namespace ReSolve::matrix

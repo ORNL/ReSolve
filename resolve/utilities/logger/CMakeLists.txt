@@ -22,4 +22,4 @@ target_include_directories(resolve_logger INTERFACE
     $<INSTALL_INTERFACE:include>
 )
 
-install(FILES ${Matrix_HEADER_INSTALL} DESTINATION include/resolve/utilities/logger)
+install(FILES ${Logger_HEADER_INSTALL} DESTINATION include/resolve/utilities/logger)

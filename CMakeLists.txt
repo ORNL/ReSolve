@@ -22,7 +22,9 @@ if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
 endif()
 
 option(RESOLVE_TEST_WITH_BSUB "Use `jsrun` instead of `mpirun` commands when running tests" OFF)
-option(RESOLVE_USE_KLU "Use KLU, AMD and COLAMD libraries from SuiteSparse" ON)
+option(RESOLVE_USE_KLU  "Use KLU, AMD and COLAMD libraries from SuiteSparse" ON)
+option(RESOLVE_USE_GPU  "Use GPU device for computations" ON)
+option(RESOLVE_USE_CUDA "Use CUDA language and SDK" ON)
 set(RESOLVE_CTEST_OUTPUT_DIR ${PROJECT_BINARY_DIR} CACHE PATH "Directory where CTest outputs are saved")
 
 set(CMAKE_MACOSX_RPATH 1)
@@ -47,12 +49,6 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 # TODO: Set up clang-format
 #include(./cmake/clang-format)
 
-# Configure CUDA
-include(CheckLanguage)
-enable_language(CUDA)
-check_language(CUDA)
-
-
 if (RESOLVE_USE_KLU)
   include(FindKLU)
   if(NOT KLU_LIBRARY)
@@ -63,22 +59,42 @@ else()
   message(STATUS "Not using SuiteSparse KLU")
 endif()
 
-if(NOT DEFINED CMAKE_CUDA_STANDARD)
-  set(CMAKE_CUDA_STANDARD 11)
-  set(CMAKE_CUDA_STANDARD_REQUIRED ON)
+include(CheckLanguage)
+
+# Configure CUDA
+if(RESOLVE_USE_CUDA)
+  enable_language(CUDA)
+  check_language(CUDA)
+
+  if(NOT DEFINED CMAKE_CUDA_STANDARD)
+    set(CMAKE_CUDA_STANDARD 11)
+    set(CMAKE_CUDA_STANDARD_REQUIRED ON)
+  endif()
+
+  if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
+    set(CMAKE_CUDA_ARCHITECTURES 60 CACHE STRING "Selects CUDA architectures")
+  endif()
+
+  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-extended-lambda")
+
+  include(ReSolveFindCudaLibraries)
+else()
+  message(STATUS "Not using CUDA")
 endif()
 
-if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
-  set(CMAKE_CUDA_ARCHITECTURES 60 CACHE STRING "Selects CUDA architectures")
-endif()
+# The binary dir is already a global include directory
+configure_file(
+  ${CMAKE_SOURCE_DIR}/resolve/resolve_defs.hpp.in
+  ${CMAKE_BINARY_DIR}/resolve/resolve_defs.hpp)
 
-set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-extended-lambda")
+# include build directory for Fortran name mangling header
+include_directories(${CMAKE_BINARY_DIR})
 
+install(
+  FILES ${CMAKE_BINARY_DIR}/resolve/resolve_defs.hpp
+  DESTINATION include/resolve
+  )
 
-# Link in required cuda dependencies
-#find_package(CUDAToolkit REQUIRED)
-
-include(ReSolveFindCudaLibraries)
 
 include_directories(${CMAKE_SOURCE_DIR})
 
@@ -114,8 +130,10 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/ReSolveConfig.cmake"
         "${CMAKE_CURRENT_BINARY_DIR}/ReSolveConfigVersion.cmake"
         DESTINATION share/resolve/cmake)
     
-# Add examples
-add_subdirectory(examples)
+# Add examples (for now only CUDA examples are available)
+if(RESOLVE_USE_CUDA)
+  add_subdirectory(examples)
+endif(RESOLVE_USE_CUDA)
 
 # Add tests
 add_subdirectory(tests)
