@@ -1,4 +1,3 @@
-#include <resolve/memoryUtils.hpp>
 #include "LinAlgWorkspace.hpp"
 
 namespace ReSolve
@@ -24,8 +23,8 @@ namespace ReSolve
 
   LinAlgWorkspaceCUDA::~LinAlgWorkspaceCUDA()
   {
-    if (buffer_spmv_ != nullptr)  deleteOnDevice(buffer_spmv_);
-    if (buffer_1norm_ != nullptr) deleteOnDevice(buffer_1norm_);
+    if (buffer_spmv_ != nullptr)  mem_.deleteOnDevice(buffer_spmv_);
+    if (buffer_1norm_ != nullptr) mem_.deleteOnDevice(buffer_1norm_);
     cusparseDestroy(handle_cusparse_);
     cusolverSpDestroy(handle_cusolversp_);
     cublasDestroy(handle_cublas_);

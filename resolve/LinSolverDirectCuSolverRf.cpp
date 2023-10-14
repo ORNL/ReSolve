@@ -1,4 +1,3 @@
-#include <resolve/memoryUtils.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include "LinSolverDirectCuSolverRf.hpp"
@@ -13,9 +12,9 @@ namespace ReSolve
   LinSolverDirectCuSolverRf::~LinSolverDirectCuSolverRf()
   {
     cusolverRfDestroy(handle_cusolverrf_);
-    deleteOnDevice(d_P_);
-    deleteOnDevice(d_Q_);
-    deleteOnDevice(d_T_);
+    mem_.deleteOnDevice(d_P_);
+    mem_.deleteOnDevice(d_Q_);
+    mem_.deleteOnDevice(d_T_);
   }
 
   int LinSolverDirectCuSolverRf::setup(matrix::Sparse* A, matrix::Sparse* L, matrix::Sparse* U, index_type* P, index_type* Q)
@@ -24,12 +23,12 @@ namespace ReSolve
     int error_sum = 0;
     this->A_ = (matrix::Csr*) A;
     index_type n = A_->getNumRows();
-    allocateArrayOnDevice(&d_P_, n); 
-    allocateArrayOnDevice(&d_Q_, n);
-    allocateArrayOnDevice(&d_T_, n);
+    mem_.allocateArrayOnDevice(&d_P_, n); 
+    mem_.allocateArrayOnDevice(&d_Q_, n);
+    mem_.allocateArrayOnDevice(&d_T_, n);
 
-    copyArrayHostToDevice(d_P_, P, n);
-    copyArrayHostToDevice(d_Q_, Q, n);
+    mem_.copyArrayHostToDevice(d_P_, P, n);
+    mem_.copyArrayHostToDevice(d_Q_, Q, n);
 
 
     status_cusolverrf_ = cusolverRfSetResetValuesFastMode(handle_cusolverrf_, CUSOLVERRF_RESET_VALUES_FAST_MODE_ON);
@@ -52,7 +51,7 @@ namespace ReSolve
                                                handle_cusolverrf_);
     error_sum += status_cusolverrf_;
 
-    deviceSynchronize();
+    mem_.deviceSynchronize();
     status_cusolverrf_ = cusolverRfAnalyze(handle_cusolverrf_);
     error_sum += status_cusolverrf_;
 
@@ -85,7 +84,7 @@ namespace ReSolve
                                                handle_cusolverrf_);
     error_sum += status_cusolverrf_;
 
-    deviceSynchronize();
+    mem_.deviceSynchronize();
     status_cusolverrf_ =  cusolverRfRefactor(handle_cusolverrf_);
     error_sum += status_cusolverrf_;
 

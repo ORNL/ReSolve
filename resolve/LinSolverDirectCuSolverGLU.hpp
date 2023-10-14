@@ -3,6 +3,7 @@
 #include <resolve/LinAlgWorkspace.hpp>
 #include "LinSolver.hpp"
 #include "cusolver_defs.hpp"
+#include <resolve/MemoryUtils.hpp>
 
 namespace ReSolve 
 {
@@ -45,5 +46,7 @@ namespace ReSolve
       void* glu_buffer_;
       double r_nrminf_;
       int ite_refine_succ_; 
+
+      MemoryHandler mem_; ///< Device memory manager object
   };
 }

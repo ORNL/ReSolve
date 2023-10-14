@@ -1,7 +1,6 @@
 #include <algorithm>
 
 #include <resolve/utilities/logger/Logger.hpp>
-#include <resolve/memoryUtils.hpp>
 #include <resolve/LinAlgWorkspace.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/matrix/Coo.hpp>
@@ -290,8 +289,8 @@ namespace ReSolve {
                                            CUSPARSE_SPMV_CSR_ALG2, 
                                            &bufferSize);
           error_sum += status;
-          deviceSynchronize();
-          allocateBufferOnDevice(&buffer_spmv, bufferSize);
+          mem_.deviceSynchronize();
+          mem_.allocateBufferOnDevice(&buffer_spmv, bufferSize);
           workspaceCUDA->setSpmvMatrixDescriptor(matA);
           workspaceCUDA->setSpmvBuffer(buffer_spmv);
 
@@ -309,10 +308,10 @@ namespace ReSolve {
                               CUSPARSE_SPMV_CSR_ALG2, 
                               buffer_spmv);
         error_sum += status;
-        deviceSynchronize();
+        mem_.deviceSynchronize();
         if (status)
           out::error() << "Matvec status: " << status 
-                       << "Last error code: " << getLastDeviceError() << std::endl;
+                       << "Last error code: " << mem_.getLastDeviceError() << std::endl;
         vec_result->setDataUpdated("cuda");
 
         cusparseDestroyDnVec(vecx);
@@ -388,7 +387,7 @@ namespace ReSolve {
                                                               CUSPARSE_CSR2CSC_ALG1, 
                                                               &bufferSize);
       error_sum += status;
-      allocateBufferOnDevice(&d_work, bufferSize);
+      mem_.allocateBufferOnDevice(&d_work, bufferSize);
       status = cusparseCsr2cscEx2(workspaceCUDA->getCusparseHandle(),
                                   n, 
                                   m, 
@@ -406,7 +405,7 @@ namespace ReSolve {
                                   d_work);
       error_sum += status;
       return error_sum;
-      deleteOnDevice(d_work);
+      mem_.deleteOnDevice(d_work);
     } else { 
       out::error() << "Not implemented (yet)" << std::endl;
       return -1;

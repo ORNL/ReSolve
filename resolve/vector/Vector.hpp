@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <resolve/Common.hpp>
+#include <resolve/MemoryUtils.hpp>
 
 namespace ReSolve { namespace vector {
   class Vector 
@@ -42,5 +43,7 @@ namespace ReSolve { namespace vector {
 
       bool owns_gpu_data_{false};
       bool owns_cpu_data_{false};
+
+      MemoryHandler mem_; ///< Device memory manager object
   };
 }} // namespace ReSolve::vector

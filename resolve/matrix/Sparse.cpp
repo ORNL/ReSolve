@@ -1,6 +1,6 @@
 #include <cstring>  // <-- includes memcpy
+
 #include "Sparse.hpp"
-#include <resolve/memoryUtils.hpp>
 
 namespace ReSolve { namespace matrix {
 
@@ -186,11 +186,11 @@ namespace ReSolve { namespace matrix {
     } else {
       if (memspace == "cuda"){ 
         if (owns_gpu_data_) {
-          deleteOnDevice(d_row_data_);
-          deleteOnDevice(d_col_data_);
+          mem_.deleteOnDevice(d_row_data_);
+          mem_.deleteOnDevice(d_col_data_);
         }
         if (owns_gpu_vals_) {
-          deleteOnDevice(d_val_data_);
+          mem_.deleteOnDevice(d_val_data_);
         }
       } else {
         return -1;
@@ -222,7 +222,7 @@ namespace ReSolve { namespace matrix {
     if (memspaceOut == "cuda") {
       //check if cuda data allocated
       if (d_val_data_ == nullptr) {
-        allocateArrayOnDevice(&d_val_data_, nnz_current); 
+        mem_.allocateArrayOnDevice(&d_val_data_, nnz_current); 
       }
     }
 
@@ -233,17 +233,17 @@ namespace ReSolve { namespace matrix {
         owns_cpu_vals_ = true;
         break;
       case 2://cuda->cpu
-        copyArrayDeviceToHost(h_val_data_, new_vals, nnz_current);
+        mem_.copyArrayDeviceToHost(h_val_data_, new_vals, nnz_current);
         h_data_updated_ = true;
         owns_cpu_vals_ = true;
         break;
       case 1://cpu->cuda
-        copyArrayHostToDevice(d_val_data_, new_vals, nnz_current);
+        mem_.copyArrayHostToDevice(d_val_data_, new_vals, nnz_current);
         d_data_updated_ = true;
         owns_gpu_vals_ = true;
         break;
       case 3://cuda->cuda
-        copyArrayDeviceToDevice(d_val_data_, new_vals, nnz_current);
+        mem_.copyArrayDeviceToDevice(d_val_data_, new_vals, nnz_current);
         d_data_updated_ = true;
         owns_gpu_vals_ = true;
         break;

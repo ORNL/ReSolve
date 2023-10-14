@@ -2,6 +2,7 @@
 #include "Common.hpp"
 #include "LinSolver.hpp"
 #include "cusolverRf.h"
+#include <resolve/MemoryUtils.hpp>
 
 namespace ReSolve 
 {
@@ -40,5 +41,7 @@ namespace ReSolve
       index_type* d_P_;
       index_type* d_Q_;
       real_type* d_T_;
+
+      MemoryHandler mem_; ///< Device memory manager object
   };
 }

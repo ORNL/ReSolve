@@ -15,13 +15,17 @@ set(Vector_HEADER_INSTALL
     VectorHandler.hpp
 )
 
-set_source_files_properties(${Vector_SRC_CUDA} PROPERTIES LANGUAGE CUDA)
+if (RESOLVE_USE_CUDA)
+    set_source_files_properties(${Vector_SRC_CUDA} PROPERTIES LANGUAGE CUDA)
 
-# Build shared library ReSolve::vector
-add_library(resolve_vector SHARED ${Vector_SRC} ${Vector_SRC_CUDA})
-target_link_libraries(resolve_vector PUBLIC resolve_backend_cuda)
-
-#install(TARGETS resolve_vector EXPORT ReSolveTargets)
+    # Build shared library ReSolve::vector
+    add_library(resolve_vector SHARED ${Vector_SRC} ${Vector_SRC_CUDA})
+    target_link_libraries(resolve_vector PUBLIC resolve_backend_cuda)
+else()
+    # Build shared library ReSolve::vector
+    add_library(resolve_vector SHARED ${Vector_SRC})
+    target_link_libraries(resolve_vector PUBLIC resolve_backend_cpu)
+endif()
 
 target_include_directories(resolve_vector INTERFACE
     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>

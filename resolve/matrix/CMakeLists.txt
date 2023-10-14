@@ -20,9 +20,13 @@ set(Matrix_HEADER_INSTALL
 
 # Build shared library ReSolve::matrix
 add_library(resolve_matrix SHARED ${Matrix_SRC})
-target_link_libraries(resolve_matrix PUBLIC resolve_backend_cuda)
 
-#install(TARGETS resolve_matrix EXPORT ReSolveTargets)
+if (RESOLVE_USE_CUDA)
+    target_link_libraries(resolve_matrix PUBLIC resolve_backend_cuda)
+else()
+    target_link_libraries(resolve_matrix PUBLIC resolve_backend_cpu)
+endif()
+
 
 target_include_directories(resolve_matrix INTERFACE
     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
