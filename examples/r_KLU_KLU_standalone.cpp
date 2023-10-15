@@ -31,10 +31,9 @@ int main(int argc, char *argv[])
 
   ReSolve::matrix::Coo* A_coo;
   ReSolve::matrix::Csr* A;
-  ReSolve::LinAlgWorkspaceCUDA* workspace_CUDA = new ReSolve::LinAlgWorkspaceCUDA;
-  workspace_CUDA->initializeHandles();
-  ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(workspace_CUDA);
-  ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(workspace_CUDA);
+  ReSolve::LinAlgWorkspace* workspace = ReSolve::createLinAlgWorkspace("cpu");
+  ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(workspace);
+  ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(workspace);
   real_type* rhs;
   real_type* x;
 
@@ -95,15 +94,15 @@ int main(int argc, char *argv[])
   std::cout << "KLU factorization status: " << status << std::endl;
   status = KLU->solve(vec_rhs, vec_x);
   std::cout << "KLU solve status: " << status << std::endl;      
-  vec_r->update(rhs, "cpu", "cuda");
+  vec_r->update(rhs, "cpu", "cpu");
 
   matrix_handler->setValuesChanged(true);
 
-  matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, "csr", "cuda"); 
+  matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, "csr", "cpu"); 
   real_type* test = vec_r->getData("cpu");
   (void) test; // TODO: Do we need `test` variable in this example?
 
-  printf("\t 2-Norm of the residual: %16.16e\n", sqrt(vector_handler->dot(vec_r, vec_r, "cuda")));
+  printf("\t 2-Norm of the residual: %16.16e\n", sqrt(vector_handler->dot(vec_r, vec_r, "cpu")));
 
 
 

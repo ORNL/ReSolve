@@ -1,3 +1,11 @@
+#[[
+
+@brief Build ReSolve matrix module
+
+@author Slaven Peles <peless@ornl.gov>
+
+]]
+
 
 set(Matrix_SRC 
     io.cpp

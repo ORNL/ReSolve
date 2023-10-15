@@ -130,10 +130,8 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/ReSolveConfig.cmake"
         "${CMAKE_CURRENT_BINARY_DIR}/ReSolveConfigVersion.cmake"
         DESTINATION share/resolve/cmake)
     
-# Add examples (for now only CUDA examples are available)
-if(RESOLVE_USE_CUDA)
-  add_subdirectory(examples)
-endif(RESOLVE_USE_CUDA)
+# Add usage examples
+add_subdirectory(examples)
 
 # Add tests
 add_subdirectory(tests)

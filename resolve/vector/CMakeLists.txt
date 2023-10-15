@@ -1,3 +1,11 @@
+#[[
+
+@brief Build ReSolve (multi)vector module
+
+@author Slaven Peles <peless@ornl.gov>
+
+]]
+
 
 set(Vector_SRC 
     Vector.cpp
@@ -5,25 +13,17 @@ set(Vector_SRC
 )
 
 
-
-set(Vector_SRC_CUDA
-    cudaVectorKernels.cu
-)
-
 set(Vector_HEADER_INSTALL
     Vector.hpp
     VectorHandler.hpp
+    VectorKernels.hpp
 )
 
-if (RESOLVE_USE_CUDA)
-    set_source_files_properties(${Vector_SRC_CUDA} PROPERTIES LANGUAGE CUDA)
+add_library(resolve_vector SHARED ${Vector_SRC})
 
-    # Build shared library ReSolve::vector
-    add_library(resolve_vector SHARED ${Vector_SRC} ${Vector_SRC_CUDA})
+if (RESOLVE_USE_CUDA)
     target_link_libraries(resolve_vector PUBLIC resolve_backend_cuda)
 else()
-    # Build shared library ReSolve::vector
-    add_library(resolve_vector SHARED ${Vector_SRC})
     target_link_libraries(resolve_vector PUBLIC resolve_backend_cpu)
 endif()
 
