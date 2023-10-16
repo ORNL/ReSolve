@@ -5,7 +5,7 @@
 #include <iterator>
 #include <algorithm>
 #include <resolve/matrix/Csr.hpp>
-#include <resolve/LinAlgWorkspace.hpp>
+#include <resolve/workspace/LinAlgWorkspaceFactory.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <tests/unit/TestBase.hpp>

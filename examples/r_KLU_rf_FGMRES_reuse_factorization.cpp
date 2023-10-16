@@ -11,7 +11,7 @@
 #include <resolve/LinSolverDirectKLU.hpp>
 #include <resolve/LinSolverDirectCuSolverRf.hpp>
 #include <resolve/LinSolverIterativeFGMRES.hpp>
-#include <resolve/LinAlgWorkspace.hpp>
+#include <resolve/workspace/LinAlgWorkspaceFactory.hpp>
 
 using namespace ReSolve::constants;
 

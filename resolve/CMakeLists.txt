@@ -11,7 +11,6 @@ add_subdirectory(utilities)
 set(ReSolve_SRC
     LinSolver.cpp
     LinSolverDirectKLU.cpp
-    LinAlgWorkspace.cpp
     LinSolverIterativeFGMRES.cpp
     GramSchmidt.cpp
     LinSolverDirectCuSolverGLU.cpp
@@ -22,7 +21,6 @@ set(ReSolve_SRC
 set(ReSolve_HEADER_INSTALL
     Common.hpp
     cusolver_defs.hpp
-    LinAlgWorkspace.hpp
     LinSolver.hpp
     LinSolverDirectCuSolverGLU.hpp
     LinSolverDirectCuSolverRf.hpp
@@ -39,10 +37,14 @@ if(NOT RESOLVE_USE_GPU)
     add_subdirectory(cpu)
 endif()
 
-# First create CUDA backend (this should really be CUDA _API_ backend, separate backend will be needed for CUDA SDK)
+# If CUDA support is enabled, create CUDA backend
+# (this should really be CUDA _API_ backend, separate backend will be needed for CUDA SDK)
 if(RESOLVE_USE_CUDA)
     add_subdirectory(cuda)
 endif()
+
+# Now, build workspaces
+add_subdirectory(workspace)
 
 # Next build vector and matrix objects that may use this backend.
 add_subdirectory(vector)
@@ -66,6 +68,7 @@ set(ReSolve_Targets_List
     resolve_vector
     resolve_logger
     resolve_tpl
+    resolve_workspace
 )
 
 if(RESOLVE_USE_GPU)

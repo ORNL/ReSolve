@@ -6,7 +6,7 @@
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <tests/unit/TestBase.hpp>
-#include <resolve/LinAlgWorkspace.hpp>
+#include <resolve/workspace/LinAlgWorkspaceFactory.hpp>
 
 namespace ReSolve { 
   namespace tests {

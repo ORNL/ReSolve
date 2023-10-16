@@ -1,9 +1,9 @@
 #include <iostream>
 
 #include <resolve/utilities/logger/Logger.hpp>
-#include <resolve/LinAlgWorkspace.hpp>
 #include <resolve/cuda/cudaKernels.h>
 #include <resolve/vector/Vector.hpp>
+#include <resolve/workspace/LinAlgWorkspaceFactory.hpp>
 #include "VectorHandler.hpp"
 
 namespace ReSolve {

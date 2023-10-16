@@ -9,7 +9,7 @@
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
-#include <resolve/LinAlgWorkspace.hpp>
+#include <resolve/workspace/LinAlgWorkspaceFactory.hpp>
 //author: KS
 //functionality test to check whether KLU works correctly.
 using namespace ReSolve::constants;

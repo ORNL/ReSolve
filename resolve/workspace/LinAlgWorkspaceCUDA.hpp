@@ -4,20 +4,10 @@
 #include "cusparse.h"
 #include "cusolverSp.h"
 
-#include <resolve/MemoryUtils.hpp>
+#include <resolve/workspace/LinAlgWorkspace.hpp>
 
 namespace ReSolve
 {
-  class LinAlgWorkspace
-  {
-    public:
-      LinAlgWorkspace();
-      ~LinAlgWorkspace();
-    protected:
-      MemoryHandler mem_;
-  };
-
-
   class LinAlgWorkspaceCUDA : public LinAlgWorkspace
   {
     public:
@@ -67,18 +57,4 @@ namespace ReSolve
       bool matvec_setup_done_; //check if setup is done for matvec i.e. if buffer is allocated, csr structure is set etc.
   };
 
-  /// @brief  Workspace factory
-  /// @param[in] memspace memory space ID 
-  /// @return pointer to the linear algebra workspace
-  inline LinAlgWorkspace* createLinAlgWorkspace(std::string memspace)
-  {
-    if (memspace == "cuda") {
-      LinAlgWorkspaceCUDA* workspace = new LinAlgWorkspaceCUDA();
-      workspace->initializeHandles();
-      return workspace;
-    } 
-    // If not CUDA, return default
-    return (new LinAlgWorkspace());
-  }
-
-}
+} // namespace ReSolve

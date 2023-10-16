@@ -1,11 +1,11 @@
 #include <algorithm>
 
 #include <resolve/utilities/logger/Logger.hpp>
-#include <resolve/LinAlgWorkspace.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/Csc.hpp>
 #include <resolve/matrix/Csr.hpp>
+#include <resolve/workspace/LinAlgWorkspaceFactory.hpp>
 #include "MatrixHandler.hpp"
 
 namespace ReSolve {

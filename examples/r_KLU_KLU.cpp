@@ -9,7 +9,7 @@
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
-#include <resolve/LinAlgWorkspace.hpp>
+#include <resolve/workspace/LinAlgWorkspaceFactory.hpp>
 
 using namespace ReSolve::constants;
 

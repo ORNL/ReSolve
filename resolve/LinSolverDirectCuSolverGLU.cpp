@@ -3,6 +3,7 @@
 
 #include <resolve/vector/Vector.hpp>
 #include <resolve/matrix/Csr.hpp>
+#include <resolve/workspace/LinAlgWorkspaceFactory.hpp>
 #include "LinSolverDirectCuSolverGLU.hpp"
 
 namespace ReSolve

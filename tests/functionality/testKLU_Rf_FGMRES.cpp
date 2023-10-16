@@ -12,7 +12,7 @@
 #include <resolve/LinSolverDirectKLU.hpp>
 #include <resolve/LinSolverDirectCuSolverRf.hpp>
 #include <resolve/LinSolverIterativeFGMRES.hpp>
-#include <resolve/LinAlgWorkspace.hpp>
+#include <resolve/workspace/LinAlgWorkspaceFactory.hpp>
 //author: KS
 //functionality test to check whether cuSolverRf/FGMRES works correctly.
 

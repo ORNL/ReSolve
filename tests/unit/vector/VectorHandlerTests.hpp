@@ -7,7 +7,7 @@
 #include <resolve/vector/Vector.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <tests/unit/TestBase.hpp>
-#include <resolve/LinAlgWorkspace.hpp>
+#include <resolve/workspace/LinAlgWorkspaceFactory.hpp>
 
 namespace ReSolve { 
   namespace tests {

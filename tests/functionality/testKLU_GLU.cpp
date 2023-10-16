@@ -10,7 +10,7 @@
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
 #include <resolve/LinSolverDirectCuSolverGLU.hpp>
-#include <resolve/LinAlgWorkspace.hpp>
+#include <resolve/workspace/LinAlgWorkspaceFactory.hpp>
 //author: KS
 //functionality test to check whether cuSolverGLU works correctly.
 
