@@ -7,6 +7,8 @@
 #include <resolve/Common.hpp>
 #include <resolve/MemoryUtils.hpp>
 
+#include <resolve/matrix/MatrixHandlerImpl.hpp>
+
 namespace ReSolve
 { 
   namespace vector
@@ -68,7 +70,7 @@ namespace ReSolve {
                  const real_type* beta,
                  std::string matrix_type,
                  std::string memspace);
-      void Matrix1Norm(matrix::Sparse *A, real_type* norm);
+      int Matrix1Norm(matrix::Sparse *A, real_type* norm);
       bool getValuesChanged();
       void setValuesChanged(bool toWhat); 
     
@@ -78,6 +80,8 @@ namespace ReSolve {
       bool values_changed_{true}; ///< needed for matvec
 
       MemoryHandler mem_; ///< Device memory manager object
+      MatrixHandlerImpl* cpuImpl_{nullptr};
+      MatrixHandlerImpl* cudaImpl_{nullptr};
   };
 
 } // namespace ReSolve
