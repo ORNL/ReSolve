@@ -48,14 +48,16 @@ namespace ReSolve
 
 } // namespace ReSolve
 
-// Check if GPU support is enabled in Re::Solve and set appropriate device memory manager.
 #ifdef RESOLVE_USE_GPU
 
+// Check if GPU support is enabled in Re::Solve and set appropriate device memory manager.
 #if defined RESOLVE_USE_CUDA
 #include <resolve/cuda/CudaMemory.hpp>
 using MemoryHandler = ReSolve::MemoryUtils<ReSolve::memory::Cuda>;
 #elif defined RESOLVE_USE_HIP
 #error HIP support requested, but not available! Probably a bug in CMake configuration.
+#else
+#error Unrecognized device, probably bug in CMake configuration
 #endif
 
 #else

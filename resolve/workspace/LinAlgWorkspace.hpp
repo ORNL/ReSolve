@@ -10,6 +10,7 @@ namespace ReSolve
     public:
       LinAlgWorkspace();
       ~LinAlgWorkspace();
+      void initializeHandles();
     protected:
       MemoryHandler mem_;
   };

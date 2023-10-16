@@ -71,13 +71,13 @@ set(ReSolve_Targets_List
     resolve_workspace
 )
 
-if(RESOLVE_USE_GPU)
-    if(RESOLVE_USE_CUDA)
-        set(ReSolve_Targets_List ${ReSolve_Targets_List} resolve_backend_cuda)
-    endif()
-else(RESOLVE_USE_GPU)
+if(RESOLVE_USE_CUDA)
+  set(ReSolve_Targets_List ${ReSolve_Targets_List} resolve_backend_cuda)
+endif()
+
+if(NOT RESOLVE_USE_GPU)
     set(ReSolve_Targets_List ${ReSolve_Targets_List} resolve_backend_cpu)
-endif(RESOLVE_USE_GPU)
+endif()
 
 
 install(TARGETS ${ReSolve_Targets_List} EXPORT ReSolveTargets)

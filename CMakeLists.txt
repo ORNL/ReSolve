@@ -27,6 +27,13 @@ option(RESOLVE_USE_GPU  "Use GPU device for computations" ON)
 option(RESOLVE_USE_CUDA "Use CUDA language and SDK" ON)
 set(RESOLVE_CTEST_OUTPUT_DIR ${PROJECT_BINARY_DIR} CACHE PATH "Directory where CTest outputs are saved")
 
+if(RESOLVE_USE_CUDA)
+  set(RESOLVE_USE_GPU On CACHE BOOL "Using GPU!" FORCE)
+else()
+  set(RESOLVE_USE_GPU Off CACHE BOOL "Using GPU!" FORCE)
+endif()
+
+
 set(CMAKE_MACOSX_RPATH 1)
 # set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 # https://gitlab.kitware.com/cmake/community/-/wikis/doc/cmake/RPATH-handling#always-full-rpath

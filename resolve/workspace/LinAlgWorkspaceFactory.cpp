@@ -1,5 +1,3 @@
-#pragma once
-
 #include "LinAlgWorkspaceFactory.hpp"
 
 namespace ReSolve

@@ -10,4 +10,7 @@ namespace ReSolve
   {
   }
 
+  void LinAlgWorkspace::initializeHandles()
+  {
+  }
 }
