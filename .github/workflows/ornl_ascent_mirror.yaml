@@ -1,0 +1,38 @@
+name: ORNL Ascent Mirror
+
+# triggers a github action everytime there is a push or mr
+on:
+  push:
+  
+jobs:
+  # To test on HPC resources we must first mirror the repo and then trigger a pipeline
+  push:
+     # Latest Ubuntu as of Feb 2023 is 20.04
+     runs-on: ubuntu-22.04
+     steps:
+       # Action checks-out your repository under $GITHUB_WORKSPACE, so your workflow can access it.
+       - uses: actions/checkout@v1
+
+       # Necessary to get branch name independent of PR/push
+       - name: Extract branch name
+         shell: bash
+         run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+         id: extract_branch
+
+       - name: git checkout
+         run: git switch ${{ steps.extract_branch.outputs.branch }}
+
+       #  Action for mirroring your commits to a different remote repository
+       - uses: yesolutions/mirror-action@master
+       # Give actions access to some secrets
+         with:
+            PUSH_ALL_REFS: "false"
+            GIT_REF: ${{ steps.extract_branch.outputs.branch }}
+            GIT_PUSH_ARGS: '--tags --force --push-option=ci.skip'
+            REMOTE: 'https://code.ornl.gov/ecpcitest/exasgd/resolve'
+            GIT_USERNAME:  ${{ secrets.GIT_USER }}
+            GIT_PASSWORD:  ${{ secrets.ORNL_ASCENT_GIT_PASSWORD }}
+
+      #  Trigger CI pipeline since it was skipped in the above push
+       - name: Trigger Pipeline
+         run: curl -X POST -F token=${{ secrets.ORNL_ASCENT_PIPELINE_TRIGGER }} -F ref=${{ steps.extract_branch.outputs.branch }} https://code.ornl.gov/api/v4/projects/13292/trigger/pipeline
