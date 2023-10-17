@@ -26,7 +26,6 @@ set(Matrix_HEADER_INSTALL
     Csr.hpp
     Csc.hpp
     MatrixHandler.hpp
-    MatrixHandlerImpl.hpp
 )
 
 # Build shared library ReSolve::matrix

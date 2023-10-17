@@ -66,12 +66,6 @@ namespace ReSolve {
     cudaImpl_ = new MatrixHandlerCuda(new_workspace);
   }
 
-  bool MatrixHandler::getValuesChanged()
-  {
-    values_changed_ = cpuImpl_->isValuesChanged();
-    return this->values_changed_;
-  }
-
   void MatrixHandler::setValuesChanged(bool toWhat)
   {
     this->values_changed_ = toWhat;
@@ -269,58 +263,16 @@ namespace ReSolve {
 
   int MatrixHandler::csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr, std::string memspace)
   {
-    //it ONLY WORKS WITH CUDA
     index_type error_sum = 0;
     if (memspace == "cuda") { 
-      LinAlgWorkspaceCUDA* workspaceCUDA = (LinAlgWorkspaceCUDA*) workspace_;
-
-      A_csr->allocateMatrixData("cuda");
-      index_type n = A_csc->getNumRows();
-      index_type m = A_csc->getNumRows();
-      index_type nnz = A_csc->getNnz();
-      size_t bufferSize;
-      void* d_work;
-      cusparseStatus_t status = cusparseCsr2cscEx2_bufferSize(workspaceCUDA->getCusparseHandle(),
-                                                              n, 
-                                                              m, 
-                                                              nnz, 
-                                                              A_csc->getValues("cuda"), 
-                                                              A_csc->getColData("cuda"), 
-                                                              A_csc->getRowData("cuda"), 
-                                                              A_csr->getValues("cuda"), 
-                                                              A_csr->getRowData("cuda"),
-                                                              A_csr->getColData("cuda"), 
-                                                              CUDA_R_64F, 
-                                                              CUSPARSE_ACTION_NUMERIC,
-                                                              CUSPARSE_INDEX_BASE_ZERO, 
-                                                              CUSPARSE_CSR2CSC_ALG1, 
-                                                              &bufferSize);
-      error_sum += status;
-      mem_.allocateBufferOnDevice(&d_work, bufferSize);
-      status = cusparseCsr2cscEx2(workspaceCUDA->getCusparseHandle(),
-                                  n, 
-                                  m, 
-                                  nnz, 
-                                  A_csc->getValues("cuda"), 
-                                  A_csc->getColData("cuda"), 
-                                  A_csc->getRowData("cuda"), 
-                                  A_csr->getValues("cuda"), 
-                                  A_csr->getRowData("cuda"),
-                                  A_csr->getColData("cuda"), 
-                                  CUDA_R_64F,
-                                  CUSPARSE_ACTION_NUMERIC,
-                                  CUSPARSE_INDEX_BASE_ZERO,
-                                  CUSPARSE_CSR2CSC_ALG1,
-                                  d_work);
-      error_sum += status;
-      return error_sum;
-      mem_.deleteOnDevice(d_work);
-    } else { 
-      out::error() << "Not implemented (yet)" << std::endl;
+      return cudaImpl_->csc2csr(A_csc, A_csr);
+    } else if (memspace == "cpu") { 
+      out::warning() << "Using untested csc2csr on CPU ..." << std::endl;
+      return cpuImpl_->csc2csr(A_csc, A_csr);
+    } else {
+      out::error() << "csc2csr not implemented for " << memspace << " device." << std::endl;
       return -1;
-    } 
-
-
+    }
   }
 
 } // namespace ReSolve

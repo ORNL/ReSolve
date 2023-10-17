@@ -241,7 +241,6 @@ namespace ReSolve {
     if (matrixFormat == "csr") {
       matrix::Csr* A = dynamic_cast<matrix::Csr*>(Ageneric);
       //result = alpha *A*x + beta * result
-      // if (memspace == "cuda" ) {
       cusparseStatus_t status;
       // std::cout << "Matvec on NVIDIA GPU ...\n";
       LinAlgWorkspaceCUDA* workspaceCUDA = (LinAlgWorkspaceCUDA*) workspace_;
@@ -260,16 +259,16 @@ namespace ReSolve {
       cusparseHandle_t handle_cusparse = workspaceCUDA->getCusparseHandle();
       if (values_changed_) { 
         status = cusparseCreateCsr(&matA, 
-                                    A->getNumRows(),
-                                    A->getNumColumns(),
-                                    A->getNnzExpanded(),
-                                    A->getRowData("cuda"),
-                                    A->getColData("cuda"),
-                                    A->getValues("cuda"), 
-                                    CUSPARSE_INDEX_32I, 
-                                    CUSPARSE_INDEX_32I,
-                                    CUSPARSE_INDEX_BASE_ZERO,
-                                    CUDA_R_64F);
+                                   A->getNumRows(),
+                                   A->getNumColumns(),
+                                   A->getNnzExpanded(),
+                                   A->getRowData("cuda"),
+                                   A->getColData("cuda"),
+                                   A->getValues("cuda"), 
+                                   CUSPARSE_INDEX_32I, 
+                                   CUSPARSE_INDEX_32I,
+                                   CUSPARSE_INDEX_BASE_ZERO,
+                                   CUDA_R_64F);
         error_sum += status;
         values_changed_ = false;
       }
@@ -328,60 +327,52 @@ namespace ReSolve {
     return -1;
   }
 
-  // int MatrixHandlerCuda::csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr, std::string memspace)
-  // {
-  //   //it ONLY WORKS WITH CUDA
-  //   index_type error_sum = 0;
-  //   if (memspace == "cuda") { 
-  //     LinAlgWorkspaceCUDA* workspaceCUDA = (LinAlgWorkspaceCUDA*) workspace_;
+  int MatrixHandlerCuda::csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr)
+  {
+    index_type error_sum = 0;
+    LinAlgWorkspaceCUDA* workspaceCUDA = (LinAlgWorkspaceCUDA*) workspace_;
 
-  //     A_csr->allocateMatrixData("cuda");
-  //     index_type n = A_csc->getNumRows();
-  //     index_type m = A_csc->getNumRows();
-  //     index_type nnz = A_csc->getNnz();
-  //     size_t bufferSize;
-  //     void* d_work;
-  //     cusparseStatus_t status = cusparseCsr2cscEx2_bufferSize(workspaceCUDA->getCusparseHandle(),
-  //                                                             n, 
-  //                                                             m, 
-  //                                                             nnz, 
-  //                                                             A_csc->getValues("cuda"), 
-  //                                                             A_csc->getColData("cuda"), 
-  //                                                             A_csc->getRowData("cuda"), 
-  //                                                             A_csr->getValues("cuda"), 
-  //                                                             A_csr->getRowData("cuda"),
-  //                                                             A_csr->getColData("cuda"), 
-  //                                                             CUDA_R_64F, 
-  //                                                             CUSPARSE_ACTION_NUMERIC,
-  //                                                             CUSPARSE_INDEX_BASE_ZERO, 
-  //                                                             CUSPARSE_CSR2CSC_ALG1, 
-  //                                                             &bufferSize);
-  //     error_sum += status;
-  //     mem_.allocateBufferOnDevice(&d_work, bufferSize);
-  //     status = cusparseCsr2cscEx2(workspaceCUDA->getCusparseHandle(),
-  //                                 n, 
-  //                                 m, 
-  //                                 nnz, 
-  //                                 A_csc->getValues("cuda"), 
-  //                                 A_csc->getColData("cuda"), 
-  //                                 A_csc->getRowData("cuda"), 
-  //                                 A_csr->getValues("cuda"), 
-  //                                 A_csr->getRowData("cuda"),
-  //                                 A_csr->getColData("cuda"), 
-  //                                 CUDA_R_64F,
-  //                                 CUSPARSE_ACTION_NUMERIC,
-  //                                 CUSPARSE_INDEX_BASE_ZERO,
-  //                                 CUSPARSE_CSR2CSC_ALG1,
-  //                                 d_work);
-  //     error_sum += status;
-  //     return error_sum;
-  //     mem_.deleteOnDevice(d_work);
-  //   } else { 
-  //     out::error() << "Not implemented (yet)" << std::endl;
-  //     return -1;
-  //   } 
-
-
-  // }
+    A_csr->allocateMatrixData("cuda");
+    index_type n = A_csc->getNumRows();
+    index_type m = A_csc->getNumRows();
+    index_type nnz = A_csc->getNnz();
+    size_t bufferSize;
+    void* d_work;
+    cusparseStatus_t status = cusparseCsr2cscEx2_bufferSize(workspaceCUDA->getCusparseHandle(),
+                                                            n, 
+                                                            m, 
+                                                            nnz, 
+                                                            A_csc->getValues("cuda"), 
+                                                            A_csc->getColData("cuda"), 
+                                                            A_csc->getRowData("cuda"), 
+                                                            A_csr->getValues("cuda"), 
+                                                            A_csr->getRowData("cuda"),
+                                                            A_csr->getColData("cuda"), 
+                                                            CUDA_R_64F, 
+                                                            CUSPARSE_ACTION_NUMERIC,
+                                                            CUSPARSE_INDEX_BASE_ZERO, 
+                                                            CUSPARSE_CSR2CSC_ALG1, 
+                                                            &bufferSize);
+    error_sum += status;
+    mem_.allocateBufferOnDevice(&d_work, bufferSize);
+    status = cusparseCsr2cscEx2(workspaceCUDA->getCusparseHandle(),
+                                n, 
+                                m, 
+                                nnz, 
+                                A_csc->getValues("cuda"), 
+                                A_csc->getColData("cuda"), 
+                                A_csc->getRowData("cuda"), 
+                                A_csr->getValues("cuda"), 
+                                A_csr->getRowData("cuda"),
+                                A_csr->getColData("cuda"), 
+                                CUDA_R_64F,
+                                CUSPARSE_ACTION_NUMERIC,
+                                CUSPARSE_INDEX_BASE_ZERO,
+                                CUSPARSE_CSR2CSC_ALG1,
+                                d_work);
+    error_sum += status;
+    return error_sum;
+    mem_.deleteOnDevice(d_work);
+  }
 
 } // namespace ReSolve

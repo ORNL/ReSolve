@@ -7,7 +7,6 @@
 #include <resolve/Common.hpp>
 #include <resolve/MemoryUtils.hpp>
 
-#include <resolve/matrix/MatrixHandlerImpl.hpp>
 
 namespace ReSolve
 { 
@@ -23,6 +22,7 @@ namespace ReSolve
     class Csr;
   }
   class LinAlgWorkspace;
+  class MatrixHandlerImpl;
 }
 
 
@@ -71,7 +71,6 @@ namespace ReSolve {
                  std::string matrix_type,
                  std::string memspace);
       int Matrix1Norm(matrix::Sparse *A, real_type* norm);
-      bool getValuesChanged();
       void setValuesChanged(bool toWhat); 
     
     private: 

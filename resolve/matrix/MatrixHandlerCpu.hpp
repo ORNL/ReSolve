@@ -40,7 +40,7 @@ namespace ReSolve {
       MatrixHandlerCpu(LinAlgWorkspace* workspace);
       virtual ~MatrixHandlerCpu();
 
-      // int csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr, std::string memspace); //memspace decides on what is returned (cpu or cuda pointer)
+      int csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr); //memspace decides on what is returned (cpu or cuda pointer)
       // int coo2csr(matrix::Coo* A_coo, matrix::Csr* A_csr, std::string memspace);
 
       /// Should compute vec_result := alpha*A*vec_x + beta*vec_result, but at least on cpu alpha and beta are flipped
@@ -51,7 +51,6 @@ namespace ReSolve {
                  const real_type* beta,
                  std::string matrix_type);
       virtual int Matrix1Norm(matrix::Sparse *A, real_type* norm);
-      // bool getValuesChanged();
       // void setValuesChanged(bool toWhat); 
     
     private: 

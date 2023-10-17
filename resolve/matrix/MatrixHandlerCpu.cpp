@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cassert>
 
 #include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/vector/Vector.hpp>
@@ -279,60 +280,83 @@ namespace ReSolve {
     return -1;
   }
 
-  // int MatrixHandlerCpu::csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr, std::string memspace)
-  // {
-  //   //it ONLY WORKS WITH CUDA
-  //   index_type error_sum = 0;
-  //   if (memspace == "cuda") { 
-  //     LinAlgWorkspaceCUDA* workspaceCUDA = (LinAlgWorkspaceCUDA*) workspace_;
+  /**
+   * @authors Slaven Peles <peless@ornl.gov>, Daniel Reynolds (SMU), and
+   * David Gardner and Carol Woodward (LLNL)
+   */
+  int MatrixHandlerCpu::csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr)
+  {
+    int error_sum = 0;
+    assert(A_csc->getNnz() == A_csr->getNnz());
+    assert(A_csc->getNumRows() == A_csr->getNumColumns());
+    assert(A_csr->getNumRows() == A_csc->getNumColumns());
 
-  //     A_csr->allocateMatrixData("cuda");
-  //     index_type n = A_csc->getNumRows();
-  //     index_type m = A_csc->getNumRows();
-  //     index_type nnz = A_csc->getNnz();
-  //     size_t bufferSize;
-  //     void* d_work;
-  //     cusparseStatus_t status = cusparseCsr2cscEx2_bufferSize(workspaceCUDA->getCusparseHandle(),
-  //                                                             n, 
-  //                                                             m, 
-  //                                                             nnz, 
-  //                                                             A_csc->getValues("cuda"), 
-  //                                                             A_csc->getColData("cuda"), 
-  //                                                             A_csc->getRowData("cuda"), 
-  //                                                             A_csr->getValues("cuda"), 
-  //                                                             A_csr->getRowData("cuda"),
-  //                                                             A_csr->getColData("cuda"), 
-  //                                                             CUDA_R_64F, 
-  //                                                             CUSPARSE_ACTION_NUMERIC,
-  //                                                             CUSPARSE_INDEX_BASE_ZERO, 
-  //                                                             CUSPARSE_CSR2CSC_ALG1, 
-  //                                                             &bufferSize);
-  //     error_sum += status;
-  //     mem_.allocateBufferOnDevice(&d_work, bufferSize);
-  //     status = cusparseCsr2cscEx2(workspaceCUDA->getCusparseHandle(),
-  //                                 n, 
-  //                                 m, 
-  //                                 nnz, 
-  //                                 A_csc->getValues("cuda"), 
-  //                                 A_csc->getColData("cuda"), 
-  //                                 A_csc->getRowData("cuda"), 
-  //                                 A_csr->getValues("cuda"), 
-  //                                 A_csr->getRowData("cuda"),
-  //                                 A_csr->getColData("cuda"), 
-  //                                 CUDA_R_64F,
-  //                                 CUSPARSE_ACTION_NUMERIC,
-  //                                 CUSPARSE_INDEX_BASE_ZERO,
-  //                                 CUSPARSE_CSR2CSC_ALG1,
-  //                                 d_work);
-  //     error_sum += status;
-  //     return error_sum;
-  //     mem_.deleteOnDevice(d_work);
-  //   } else { 
-  //     out::error() << "Not implemented (yet)" << std::endl;
-  //     return -1;
-  //   } 
+    index_type nnz = A_csc->getNnz();
+    index_type n   = A_csc->getNumColumns();
 
+    index_type* rowIdxCsc = A_csc->getRowData("cpu");
+    index_type* colPtrCsc = A_csc->getColData("cpu");
+    real_type*  valuesCsc = A_csc->getValues("cpu");
 
-  // }
+    index_type* rowPtrCsr = A_csr->getRowData("cpu");
+    index_type* colIdxCsr = A_csr->getColData("cpu");
+    real_type*  valuesCsr = A_csr->getValues("cpu");
+
+    // Set all CSR row pointers to zero
+    for (index_type i = 0; i <= n; ++i) {
+      rowPtrCsr[i] = 0;
+    }
+
+    // Set all CSR values and column indices to zero
+    for (index_type i = 0; i < nnz; ++i) {
+      colIdxCsr[i] = 0;
+      valuesCsr[i] = 0.0;
+    }
+
+    // Compute number of entries per row
+    for (index_type i = 0; i < nnz; ++i) {
+      rowPtrCsr[rowIdxCsc[i]]++;
+    }
+
+    // Compute cumualtive sum of nnz per row
+    for (index_type row = 0, rowsum = 0; row < n; ++row)
+    {
+      // Store value in row pointer to temp
+      index_type temp  = rowPtrCsr[row];
+
+      // Copy cumulative sum to the row pointer
+      rowPtrCsr[row] = rowsum;
+
+      // Update row sum
+      rowsum += temp;
+    }
+    rowPtrCsr[n] = nnz;
+
+    for (index_type col = 0; col < n; ++col)
+    {
+      // Compute positions of column indices and values in CSR matrix and store them there
+      // Overwrites CSR row pointers in the process
+      for (index_type jj = colPtrCsc[col]; jj < colPtrCsc[col+1]; jj++)
+      {
+          index_type row  = rowIdxCsc[jj];
+          index_type dest = rowPtrCsr[row];
+
+          colIdxCsr[dest] = col;
+          valuesCsr[dest] = valuesCsc[jj];
+
+          rowPtrCsr[row]++;
+      }
+    }
+
+    // Restore CSR row pointer values
+    for (index_type row = 0, last = 0; row <= n; row++)
+    {
+        index_type temp  = rowPtrCsr[row];
+        rowPtrCsr[row] = last;
+        last    = temp;
+    }
+
+    return 0;
+  }
 
 } // namespace ReSolve

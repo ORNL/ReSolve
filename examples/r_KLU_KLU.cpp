@@ -132,7 +132,7 @@ int main(int argc, char *argv[])
       status = KLU->solve(vec_rhs, vec_x);
       std::cout<<"KLU solve status: "<<status<<std::endl;      
     }
-    // vec_r->update(rhs, "cpu", "cuda");
+    vec_r->update(rhs, "cpu", "cpu");
 
     matrix_handler->setValuesChanged(true);
 

@@ -41,7 +41,7 @@ namespace ReSolve {
       virtual ~MatrixHandlerImpl()
       {}
 
-      // int csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr, std::string memspace); //memspace decides on what is returned (cpu or cuda pointer)
+      virtual int csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr) = 0;
       // int coo2csr(matrix::Coo* A_coo, matrix::Csr* A_csr, std::string memspace);
 
       /// Should compute vec_result := alpha*A*vec_x + beta*vec_result, but at least on cpu alpha and beta are flipped
