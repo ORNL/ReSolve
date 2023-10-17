@@ -65,10 +65,10 @@ namespace ReSolve {
   //   return this->values_changed_;
   // }
 
-  // void MatrixHandlerCuda::setValuesChanged(bool toWhat)
-  // {
-  //   this->values_changed_ = toWhat;
-  // }
+  void MatrixHandlerCuda::setValuesChanged(bool values_changed)
+  {
+    values_changed_ = values_changed;
+  }
 
 //   int MatrixHandlerCuda::coo2csr(matrix::Coo* A_coo, matrix::Csr* A_csr, std::string memspace)
 //   {

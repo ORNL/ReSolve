@@ -308,7 +308,7 @@ namespace ReSolve
   int  LinSolverIterativeFGMRES::resetMatrix(matrix::Sparse* new_matrix)
   {
     A_ = new_matrix;
-    matrix_handler_->setValuesChanged(true);
+    matrix_handler_->setValuesChanged(true, "cuda");
     return 0;
   }
 

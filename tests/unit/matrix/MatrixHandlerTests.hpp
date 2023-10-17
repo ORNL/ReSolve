@@ -57,7 +57,7 @@ public:
 
     real_type alpha = 2.0/30.0;
     real_type beta  = 2.0;
-    handler.setValuesChanged(true);
+    handler.setValuesChanged(true, memspace_);
     handler.matvec(A, &x, &y, &alpha, &beta, "csr", memspace_);
 
     status *= verifyAnswer(y, 4.0, memspace_);

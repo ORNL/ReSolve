@@ -155,7 +155,7 @@ int main(int argc, char *argv[])
       vec_r->update(rhs, "cpu", "cuda");
 
 
-      matrix_handler->setValuesChanged(true);
+      matrix_handler->setValuesChanged(true, "cuda");
       matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "cuda"); 
 
       printf("\t 2-Norm of the residual: %16.16e\n", sqrt(vector_handler->dot(vec_r, vec_r, "cuda")));

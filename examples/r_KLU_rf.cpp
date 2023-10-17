@@ -158,7 +158,7 @@ int main(int argc, char *argv[] )
     }
     vec_r->update(rhs, "cpu", "cuda");
 
-    matrix_handler->setValuesChanged(true);
+    matrix_handler->setValuesChanged(true, "cuda");
 
     matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "cuda"); 
 

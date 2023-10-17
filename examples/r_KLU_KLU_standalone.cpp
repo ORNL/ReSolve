@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
   std::cout << "KLU solve status: " << status << std::endl;      
   vec_r->update(rhs, "cpu", "cpu");
 
-  matrix_handler->setValuesChanged(true);
+  matrix_handler->setValuesChanged(true, "cpu");
 
   matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, "csr", "cpu"); 
   real_type* test = vec_r->getData("cpu");

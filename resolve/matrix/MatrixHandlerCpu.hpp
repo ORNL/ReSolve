@@ -51,12 +51,12 @@ namespace ReSolve {
                  const real_type* beta,
                  std::string matrix_type);
       virtual int Matrix1Norm(matrix::Sparse *A, real_type* norm);
-      // void setValuesChanged(bool toWhat); 
+      void setValuesChanged(bool isValuesChanged); 
     
     private: 
       LinAlgWorkspace* workspace_{nullptr};
       // bool new_matrix_{true};     ///< if the structure changed, you need a new handler.
-      // bool values_changed_{true}; ///< needed for matvec
+      bool values_changed_{true}; ///< needed for matvec
 
       MemoryHandler mem_; ///< Device memory manager object
   };

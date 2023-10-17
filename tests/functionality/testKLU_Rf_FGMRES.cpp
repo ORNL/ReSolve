@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
   vec_diff->update(x_data, "cpu", "cuda");
 
   // real_type normXmatrix1 = sqrt(vector_handler->dot(vec_test, vec_test, "cuda"));
-  matrix_handler->setValuesChanged(true);
+  matrix_handler->setValuesChanged(true, "cuda");
   //evaluate the residual ||b-Ax||
   status = matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr","cuda"); 
   error_sum += status;
@@ -221,7 +221,7 @@ int main(int argc, char *argv[])
   error_sum += status;
 
   vec_r->update(rhs, "cpu", "cuda");
-  matrix_handler->setValuesChanged(true);
+  matrix_handler->setValuesChanged(true, "cuda");
 
   //evaluate final residual
   status = matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, "csr", "cuda"); 

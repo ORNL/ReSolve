@@ -50,7 +50,6 @@ namespace ReSolve {
   MatrixHandler::MatrixHandler()
   {
     this->new_matrix_ = true;
-    this->values_changed_ = true;
     cpuImpl_  = new MatrixHandlerCpu();
     cudaImpl_ = new MatrixHandlerCuda();
   }
@@ -66,10 +65,15 @@ namespace ReSolve {
     cudaImpl_ = new MatrixHandlerCuda(new_workspace);
   }
 
-  void MatrixHandler::setValuesChanged(bool toWhat)
+  void MatrixHandler::setValuesChanged(bool isValuesChanged, std::string memspace)
   {
-    this->values_changed_ = toWhat;
-    cpuImpl_->setValuesChanged(values_changed_);
+    if (memspace == "cpu") {
+      cpuImpl_->setValuesChanged(isValuesChanged);
+    } else if (memspace == "cuda") {
+      cudaImpl_->setValuesChanged(isValuesChanged);
+    } else {
+      out::error() << "Unsupported device " << memspace << "\n";
+    }
   }
 
   int MatrixHandler::coo2csr(matrix::Coo* A_coo, matrix::Csr* A_csr, std::string memspace)

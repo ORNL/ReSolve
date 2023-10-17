@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
   vec_diff->update(x_data, "cpu", "cpu");
 
   // real_type normXmatrix1 = sqrt(vector_handler->dot(vec_test, vec_test, "cpu"));
-  matrix_handler->setValuesChanged(true);
+  matrix_handler->setValuesChanged(true, "cpu");
   status = matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr","cpu"); 
   error_sum += status;
   
@@ -174,7 +174,7 @@ int main(int argc, char *argv[])
   error_sum += status;
 
   vec_r->update(rhs, "cpu", "cpu");
-  matrix_handler->setValuesChanged(true);
+  matrix_handler->setValuesChanged(true, "cpu");
 
   status = matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, "csr", "cpu"); 
   error_sum += status;

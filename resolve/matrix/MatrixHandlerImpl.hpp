@@ -46,27 +46,19 @@ namespace ReSolve {
 
       /// Should compute vec_result := alpha*A*vec_x + beta*vec_result, but at least on cpu alpha and beta are flipped
       virtual int matvec(matrix::Sparse* A,
-                 vector_type* vec_x,
-                 vector_type* vec_result,
-                 const real_type* alpha,
-                 const real_type* beta,
-                 std::string matrix_type) = 0;
+                         vector_type* vec_x,
+                         vector_type* vec_result,
+                         const real_type* alpha,
+                         const real_type* beta,
+                         std::string matrix_type) = 0;
       virtual int Matrix1Norm(matrix::Sparse* A, real_type* norm) = 0;
 
-      bool isValuesChanged()
-      {
-        return values_changed_;
-      }
-
-      void setValuesChanged(bool isValuesChanged)
-      {
-        values_changed_ = isValuesChanged;
-      } 
+      virtual void setValuesChanged(bool isValuesChanged) = 0;
     
     protected: 
       // LinAlgWorkspace* workspace_{nullptr};
       // bool new_matrix_{true};     ///< if the structure changed, you need a new handler.
-      bool values_changed_{true}; ///< needed for matvec
+      // bool values_changed_{true}; ///< needed for matvec
 
       // MemoryHandler mem_; ///< Device memory manager object
   };
