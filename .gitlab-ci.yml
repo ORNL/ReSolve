@@ -89,7 +89,7 @@ Ascent-Module-Build:
     # Maybe ssh tokens would be easier here?
     - git config http.sslverify false
     - git commit -m "Update Ascent spack built tcl modules"
-    - git remote set-url origin https://gitlab-ci-token:${SPACK_GIT_TOKEN}@code.ornl.gov/ecpcitest/exasgd/resolve.git
+    - git remote set-url origin https://gitlab-ci-token:${SPACK_GIT_TOKEN}@github.com/ORNL/ReSolve.git
     - git pull --rebase origin ${CI_COMMIT_REF_NAME}
     - git push origin ${CI_COMMIT_REF_NAME}
   after_script:
