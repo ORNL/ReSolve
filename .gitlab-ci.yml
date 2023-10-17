@@ -85,9 +85,6 @@ Ascent-Module-Build:
     - git add ./buildsystem/spack/ascent/modules/*
     - git config user.name "spack-auto-module"
     - git config user.email "spack.bot@no-reply.com"
-    # This is necessary to avoid cert issues in pushing/pulling
-    # Maybe ssh tokens would be easier here?
-    - git config http.sslverify false
     - git commit -m "Update Ascent spack built tcl modules"
     - git remote set-url origin https://gitlab-ci-token:${SPACK_GIT_TOKEN}@github.com/ORNL/ReSolve.git
     - git pull --rebase origin ${CI_COMMIT_REF_NAME}
