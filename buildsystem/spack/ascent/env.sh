@@ -10,7 +10,7 @@ module load git/2.31.1
 # Define environment variables for where spack stores key files
 # For now, SPACK_INSTALL is the path where everything spack related is installed
 # If you want to modify the module install path, edit the spack.yaml manually
-BASE=/gpfs/wolf/proj-shared/csc359/resolve/spack-ci
+BASE=/gpfs/wolf/proj-shared/csc359/resolve/github-ci
 export SPACK_INSTALL=$BASE/install
 export SPACK_CACHE=$BASE/../$(whoami)/spack-cache
 export SPACK_MIRROR=/gpfs/wolf/csc359/world-shared/spack-ci/mirror
