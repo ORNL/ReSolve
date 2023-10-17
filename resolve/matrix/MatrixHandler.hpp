@@ -28,28 +28,6 @@ namespace ReSolve
 
 namespace ReSolve {
 
-  //helper class
-  class indexPlusValue
-  {
-    public:
-      indexPlusValue();
-      ~indexPlusValue();
-      void setIdx (index_type new_idx);
-      void setValue (real_type new_value);
-
-      index_type getIdx();
-      real_type getValue();
-
-      bool operator < (const indexPlusValue& str) const
-      {
-        return (idx_ < str.idx_);
-      }  
-
-    private:
-      index_type idx_;
-      real_type value_;
-  };
-
   class MatrixHandler
   {
     using vector_type = vector::Vector;

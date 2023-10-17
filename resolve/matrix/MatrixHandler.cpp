@@ -6,6 +6,7 @@
 #include <resolve/matrix/Csc.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/workspace/LinAlgWorkspaceFactory.hpp>
+#include <resolve/utilities/misc/IndexValuePair.hpp>
 #include "MatrixHandler.hpp"
 #include "MatrixHandlerCpu.hpp"
 #include "MatrixHandlerCuda.hpp"
@@ -13,39 +14,6 @@
 namespace ReSolve {
   // Create a shortcut name for Logger static class
   using out = io::Logger;
-
-  //helper class
-  indexPlusValue::indexPlusValue()
-  {
-    idx_ = 0;
-    value_ = 0.0;
-  }
-
-
-  indexPlusValue::~indexPlusValue()
-  {
-  }
-
-  void indexPlusValue::setIdx(index_type new_idx)
-  {
-    idx_ = new_idx;
-  }
-
-  void indexPlusValue::setValue(real_type new_value)
-  {
-    value_ = new_value;
-  }
-
-  index_type indexPlusValue::getIdx()
-  {
-    return idx_;
-  }
-
-  real_type indexPlusValue::getValue()
-  {
-    return value_;
-  }
-  //end of helper class
 
   MatrixHandler::MatrixHandler()
   {
@@ -131,7 +99,7 @@ namespace ReSolve {
     index_type* nnz_shifts = new index_type[n];
     std::fill_n(nnz_shifts, n , 0);
 
-    indexPlusValue* tmp = new indexPlusValue[nnz_unpacked]; 
+    IndexValuePair* tmp = new IndexValuePair[nnz_unpacked]; 
 
     csr_ia[0] = 0;
 
