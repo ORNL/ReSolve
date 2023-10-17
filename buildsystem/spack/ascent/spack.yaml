@@ -1,0 +1,68 @@
+spack:
+  specs:
+    - resolve+cuda cuda_arch=70
+  view: false
+  concretizer:
+    unify: when_possible
+    reuse: true
+  config:
+    concretizer: clingo
+    install_tree:
+      root: $SPACK_INSTALL
+    source_cache: $SPACK_CACHE/source
+    misc_cache: $SPACK_CACHE/misc
+    build_stage: $SPACK_CACHE/build
+    url_fetch_method: curl
+  modules:
+    default:
+      roots:
+        tcl: $SPACK_INSTALL/modules
+  packages:
+    all:
+      permissions:
+        write: group
+        read: world
+        group: csc359
+    cmake:
+      externals:
+      - spec: cmake@3.22.2
+        modules:
+        - cmake/3.22.2
+      buildable: false
+    git:
+      externals:
+      - spec: git@2.31.1
+        modules:
+        - git/2.31.1 
+        prefix: /sw/ascent/spack-envs/base/opt/linux-rhel8-ppc64le/gcc-10.2.0/git-2.31.1-jgzkpcyjybumkmnw2k3g2rc2ctai6d67
+      buildable: false
+    perl:
+      externals:
+      - spec: perl@5.30.1
+        modules:
+        - perl/5.30.1
+      buildable: false
+    cuda:
+      externals:
+      - spec: cuda@11.4.2
+        modules:
+        - cuda/11.4.2
+      buildable: false
+    suite-sparse:
+      externals: 
+        - spec: suite-sparse@5.10.1
+          modules:
+          -  suite-sparse/5.10.1
+      buildable: false
+  compilers:
+  - compiler:
+      spec: gcc@10.2
+      paths:
+        cc: /sw/ascent/gcc/10.2.0-3/bin/gcc
+        cxx: /sw/ascent/gcc/10.2.0-3/bin/g++
+        f77: /sw/ascent/gcc/10.2.0-3/bin/gfortran
+        fc: /sw/ascent/gcc/10.2.0-3/bin/gfortran
+      modules: [gcc/10.2]
+      operating_system: rhel8
+      target: ppc64le
+

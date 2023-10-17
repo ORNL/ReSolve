@@ -1,3 +1,26 @@
+stages:
+  - pre-build
+  - build
+
+.rules:
+  rules:
+      # --
+      # Rule to fall back on...
+    - &default
+      when: always
+      # -- 
+      # Only run when the commit **DOES NOT** contains "[ascent-rebuild]" 
+    - &rule_no_ascent_rebuild
+      if: '$CI_COMMIT_TITLE =~ /\[ascent-rebuild\]/'
+      when: never 
+    # Only run when the commit **DOES NOT** contains "[ascent-test]"
+    - &rule_no_ascent_test
+      if: '$CI_COMMIT_TITLE =~ /\[ascent-test\]/'
+      when: never
+    # Only run when the commit **DOES** contains "[ascent-test]"
+    - &rule_yes_ascent_test
+      if: '$CI_COMMIT_TITLE =~ /\[ascent-test\]/'
+      when: always
 
 # Ascent Variables
 .ornl_environment_template:
@@ -5,50 +28,70 @@
     SCHEDULER_PARAMETERS: "-P CSC359 -nnodes 1 -W 120"
     WORKDIR: /gpfs/wolf/proj-shared/csc359/ci/${CI_PIPELINE_ID}
 
-.SVC-Account-Cleanup:
-  stage: .pre
-  tags:
-    - batch 
-  variables:
-    SCHEDULER_PARAMETERS: "-P CSC359 -nnodes 1 -W 120"
-  script:
-    - export WORKDIR="/gpfs/wolf/proj-shared/csc359/ci/"
-    # clears directory of files more than 1 hour/60 minutes old
-    - find $WORKDIR -D -type d -mindepth 1 -mmin +60 -prune -print -exec rm -rf {} \; || true
-    - ls -hal $WORKDIR    
-  allow_failure: true
-  resource_group: cleanup
-
-.resolve_build_script:
-  script:
-    # Do _not_ clean up WORKDIR as files are needed for testing
-    - |
-      mkdir -p "$WORKDIR"
-      cp -r . "$WORKDIR"
-      cd "$WORKDIR"
-      export srcdir=$WORKDIR builddir=$WORKDIR/build installdir=$WORKDIR/install
-      mkdir build
-      ls
-      ./buildsystem/build.sh 
-      chmod -R +X ./build
-      source buildsystem/ascent-env.sh
-      cd build
-      ctest -vv
-      make install
-      make test_install
-
-cleanup:
- stage: .pre
- extends: .SVC-Account-Cleanup
-
- # For Ascent CI
 Ascent-Build-Test:
+  stage: build
+  rules:
+    - *rule_no_ascent_rebuild
+    - *rule_yes_ascent_test
+    - *default
+  tags:
+    - batch
+  extends: .ornl_environment_template
+  script:
+    - set -xv
+    - mkdir -p "$WORKDIR"
+    - cp -r . "$WORKDIR"
+    - cd "$WORKDIR"
+    - export srcdir=$WORKDIR builddir=$WORKDIR/build installdir=$WORKDIR/install
+    - MY_CLUSTER=ascent ./buildsystem/build.sh 
+    - res=$?
+    - exit $res
+  after_script:
+    - cd "$WORKDIR/.."
+    - rm -rf "$WORKDIR"
+
+Ascent-Module-Init:
+  extends: .ornl_environment_template
+  variables:
+    GIT_SUBMODULE_STRATEGY: recursive
+  rules:
+    - if: '$CI_COMMIT_TITLE =~ /\[ascent-rebuild\]/'
+      when: always
+  stage: pre-build
+  tags:
+    - nobatch
+  script:
+    - set -xv
+    - mkdir -p "$WORKDIR"
+    - cp -r . "$WORKDIR"
+    - cd "$WORKDIR"
+    - MY_CLUSTER=ascent ./buildsystem/init-mirror.sh
+    - res=$?
+    - exit $res
+
+Ascent-Module-Build:
+  needs: ["Ascent-Module-Init"]
+  rules:
+    - if: '$CI_COMMIT_TITLE =~ /\[ascent-rebuild\]/'
+      when: always
+  extends: .ornl_environment_template
   stage: build
   tags:
     - batch
-  extends:
-    - .resolve_build_script
-    - .ornl_environment_template
+  script:
+    - cd "$WORKDIR"
+    - git checkout -b ${CI_COMMIT_REF_NAME}
+    - ./buildsystem/spack/ascent/install.sh
+    - git add ./buildsystem/spack/ascent/modules/*
+    - git config user.name "spack-auto-module"
+    - git config user.email "spack.bot@no-reply.com"
+    - git commit -m "Update Ascent spack built tcl modules"
+    - git remote set-url origin https://gitlab-ci-token:${SPACK_GIT_TOKEN}@github.com/ORNL/ReSolve.git
+    - git pull --rebase origin ${CI_COMMIT_REF_NAME}
+    - git push origin ${CI_COMMIT_REF_NAME}
+  after_script:
+    - cd "$WORKDIR/.."
+    - rm -rf "$WORKDIR"
 
 .report-status:
   variables:
