@@ -1,8 +1,3 @@
-// this class encapsulates various matrix manipulation operations, commonly required by linear solvers:
-// this includes 
-// (1) Matrix format conversion: coo2csr, csr2csc
-// (2) Matrix vector product (SpMV)
-// (3) Matrix 1-norm
 #pragma once
 #include <resolve/Common.hpp>
 #include <resolve/MemoryUtils.hpp>
@@ -22,12 +17,25 @@ namespace ReSolve
     class Csr;
   }
   class LinAlgWorkspace;
+  class LinAlgWorkspaceCUDA;
   class MatrixHandlerImpl;
 }
 
 
 namespace ReSolve {
 
+  /**
+   * @brief this class encapsulates various matrix manipulation operations, 
+   * commonly required by linear solvers. 
+   * 
+   * This includes:
+   *  - Matrix format conversion: coo2csr, csr2csc
+   *  - Matrix vector product (SpMV)
+   *  - Matrix 1-norm
+   * 
+   * @author Kasia Swirydowicz <kasia.swirydowicz@pnnl.gov>
+   * @author Slaven Peles <peless@ornl.gov>
+   */
   class MatrixHandler
   {
     using vector_type = vector::Vector;
@@ -35,6 +43,7 @@ namespace ReSolve {
     public:
       MatrixHandler();
       MatrixHandler(LinAlgWorkspace* workspace);
+      MatrixHandler(LinAlgWorkspaceCUDA* workspace);
       ~MatrixHandler();
 
       int csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr, std::string memspace); //memspace decides on what is returned (cpu or cuda pointer)
@@ -52,12 +61,14 @@ namespace ReSolve {
       void setValuesChanged(bool toWhat, std::string memspace); 
     
     private: 
-      LinAlgWorkspace* workspace_{nullptr};
       bool new_matrix_{true};     ///< if the structure changed, you need a new handler.
 
       MemoryHandler mem_; ///< Device memory manager object
       MatrixHandlerImpl*  cpuImpl_{nullptr};
       MatrixHandlerImpl* cudaImpl_{nullptr};
+
+      bool isCpuEnabled_{false};
+      bool isCudaEnabled_{false};
   };
 
 } // namespace ReSolve

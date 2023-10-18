@@ -66,12 +66,12 @@ namespace ReSolve
   {
     if (d_V_ != nullptr) {
       // cudaFree(d_V_);
-      delete [] d_V_;   
+      delete d_V_;   
     }
 
     if (d_Z_ != nullptr) {
       //      cudaFree(d_Z_);
-      delete [] d_Z_;   
+      delete d_Z_;   
     }
 
   }

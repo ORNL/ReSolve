@@ -1,6 +1,7 @@
 #include <string>
 #include <iostream>
 #include <iomanip>
+#include <cmath>
 
 #include <resolve/vector/Vector.hpp>
 #include <resolve/matrix/io.hpp>
@@ -9,7 +10,7 @@
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
-#include <resolve/workspace/LinAlgWorkspaceFactory.hpp>
+#include <resolve/workspace/LinAlgWorkspace.hpp>
 //author: KS
 //functionality test to check whether KLU works correctly.
 using namespace ReSolve::constants;
@@ -26,9 +27,9 @@ int main(int argc, char *argv[])
   int error_sum = 0;
   int status = 0;
 
-  ReSolve::LinAlgWorkspace* workspace = ReSolve::createLinAlgWorkspace("cpu");
-  ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(workspace);
-  ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(workspace);
+  ReSolve::LinAlgWorkspace* workspace =    new ReSolve::LinAlgWorkspace();
+  ReSolve::MatrixHandler* matrix_handler = new ReSolve::MatrixHandler(workspace);
+  ReSolve::VectorHandler* vector_handler = new ReSolve::VectorHandler(workspace);
   ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
   KLU->setupParameters(1, 0.1, false);
 

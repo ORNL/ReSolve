@@ -31,9 +31,9 @@ int main(int argc, char *argv[])
 
   ReSolve::matrix::Coo* A_coo;
   ReSolve::matrix::Csr* A;
-  ReSolve::LinAlgWorkspace* workspace = ReSolve::createLinAlgWorkspace("cpu");
-  ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(workspace);
-  ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(workspace);
+  ReSolve::LinAlgWorkspace* workspace    = new ReSolve::LinAlgWorkspace();
+  ReSolve::MatrixHandler* matrix_handler = new ReSolve::MatrixHandler(workspace);
+  ReSolve::VectorHandler* vector_handler = new ReSolve::VectorHandler(workspace);
   real_type* rhs;
   real_type* x;
 

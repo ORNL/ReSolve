@@ -15,6 +15,15 @@ namespace ReSolve {
   // Create a shortcut name for Logger static class
   using out = io::Logger;
 
+  /**
+   * @brief Default constructor
+   * 
+   * @post Instantiates CPU and CUDA matrix handlers, but does not 
+   * create a workspace.
+   * 
+   * @todo There is little utility for the default constructor. Rethink its purpose.
+   * Consider making it private method.
+   */
   MatrixHandler::MatrixHandler()
   {
     this->new_matrix_ = true;
@@ -22,15 +31,43 @@ namespace ReSolve {
     cudaImpl_ = new MatrixHandlerCuda();
   }
 
+  /**
+   * @brief Destructor
+   * 
+   */
   MatrixHandler::~MatrixHandler()
   {
+    if (isCpuEnabled_)  delete cpuImpl_;
+    if (isCudaEnabled_) delete cudaImpl_;
   }
 
+  /**
+   * @brief Constructor taking pointer to the workspace as its parameter.
+   * 
+   * @note The CPU implementation currently does not require a workspace.
+   * The workspace pointer parameter is provided for forward compatibility.
+   */
   MatrixHandler::MatrixHandler(LinAlgWorkspace* new_workspace)
   {
-    workspace_ = new_workspace;
     cpuImpl_  = new MatrixHandlerCpu(new_workspace);
+    isCpuEnabled_  = true;
+    isCudaEnabled_ = false;
+  }
+
+  /**
+   * @brief Constructor taking pointer to the CUDA workspace as its parameter.
+   * 
+   * @post A CPU implementation instance is created because it is cheap and
+   * it does not require a workspace.
+   * 
+   * @post A CUDA implementation instance is created with supplied workspace.
+   */
+  MatrixHandler::MatrixHandler(LinAlgWorkspaceCUDA* new_workspace)
+  {
+    cpuImpl_  = new MatrixHandlerCpu();
     cudaImpl_ = new MatrixHandlerCuda(new_workspace);
+    isCpuEnabled_  = true;
+    isCudaEnabled_ = true;
   }
 
   void MatrixHandler::setValuesChanged(bool isValuesChanged, std::string memspace)

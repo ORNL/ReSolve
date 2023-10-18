@@ -38,6 +38,7 @@ namespace ReSolve {
     public:
       MatrixHandlerCuda();
       MatrixHandlerCuda(LinAlgWorkspace* workspace);
+      MatrixHandlerCuda(LinAlgWorkspaceCUDA* workspace);
       virtual ~MatrixHandlerCuda();
 
       int csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr); //memspace decides on what is returned (cpu or cuda pointer)
@@ -54,7 +55,7 @@ namespace ReSolve {
       void setValuesChanged(bool isValuesChanged); 
     
     private: 
-      LinAlgWorkspace* workspace_{nullptr};
+      LinAlgWorkspaceCUDA* workspace_{nullptr};
       // bool new_matrix_{true};     ///< if the structure changed, you need a new handler.
       bool values_changed_{true}; ///< needed for matvec
 
