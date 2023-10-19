@@ -8,7 +8,7 @@ namespace ReSolve
     class Vector;
   }
   class VectorHandlerImpl;
-  class LinAlgWorkspace;
+  class LinAlgWorkspaceCpu;
   class LinAlgWorkspaceCUDA;
 }
 
@@ -17,7 +17,7 @@ namespace ReSolve { //namespace vector {
   class VectorHandler { 
     public:
       VectorHandler();
-      VectorHandler(LinAlgWorkspace* new_workspace);
+      VectorHandler(LinAlgWorkspaceCpu* new_workspace);
       VectorHandler(LinAlgWorkspaceCUDA* new_workspace);
       ~VectorHandler();
 

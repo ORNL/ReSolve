@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
   int error_sum = 0;
   int status = 0;
 
-  ReSolve::LinAlgWorkspace* workspace =    new ReSolve::LinAlgWorkspace();
+  ReSolve::LinAlgWorkspaceCpu* workspace = new ReSolve::LinAlgWorkspaceCpu();
   ReSolve::MatrixHandler* matrix_handler = new ReSolve::MatrixHandler(workspace);
   ReSolve::VectorHandler* vector_handler = new ReSolve::VectorHandler(workspace);
   ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;

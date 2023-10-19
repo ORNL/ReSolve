@@ -4,11 +4,11 @@
 #include "cusparse.h"
 #include "cusolverSp.h"
 
-#include <resolve/workspace/LinAlgWorkspace.hpp>
+#include <resolve/MemoryUtils.hpp>
 
 namespace ReSolve
 {
-  class LinAlgWorkspaceCUDA : public LinAlgWorkspace
+  class LinAlgWorkspaceCUDA
   {
     public:
       LinAlgWorkspaceCUDA();
@@ -55,6 +55,8 @@ namespace ReSolve
       void* buffer_1norm_;
 
       bool matvec_setup_done_; //check if setup is done for matvec i.e. if buffer is allocated, csr structure is set etc.
+
+      MemoryHandler mem_;
   };
 
 } // namespace ReSolve

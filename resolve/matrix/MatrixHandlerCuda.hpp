@@ -37,7 +37,6 @@ namespace ReSolve {
     
     public:
       MatrixHandlerCuda();
-      MatrixHandlerCuda(LinAlgWorkspace* workspace);
       MatrixHandlerCuda(LinAlgWorkspaceCUDA* workspace);
       virtual ~MatrixHandlerCuda();
 

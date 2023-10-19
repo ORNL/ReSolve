@@ -1,18 +1,8 @@
 #pragma once
 
+#include <resolve/workspace/LinAlgWorkspaceCpu.hpp>
 
-#include <resolve/MemoryUtils.hpp>
+#ifdef RESOLVE_USE_CUDA
+#include <resolve/workspace/LinAlgWorkspaceCUDA.hpp>
+#endif
 
-namespace ReSolve
-{
-  class LinAlgWorkspace
-  {
-    public:
-      LinAlgWorkspace();
-      ~LinAlgWorkspace();
-      void initializeHandles();
-    protected:
-      MemoryHandler mem_;
-  };
-
-}

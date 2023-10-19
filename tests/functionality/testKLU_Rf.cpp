@@ -11,7 +11,7 @@
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
 #include <resolve/LinSolverDirectCuSolverRf.hpp>
-#include <resolve/workspace/LinAlgWorkspaceFactory.hpp>
+#include <resolve/workspace/LinAlgWorkspace.hpp>
 //author: KS
 //functionality test to check whether cuSolverRf works correctly.
 

@@ -7,8 +7,7 @@
 ]]
 
 set(ReSolve_Workspace_SRC
-  LinAlgWorkspace.cpp
-  LinAlgWorkspaceFactory.cpp
+  LinAlgWorkspaceCpu.cpp
 )
 
 set(ReSolve_Workspace_CUDA_SRC # consider adding a separate dir for cuda-sdk dependent code
@@ -17,7 +16,7 @@ set(ReSolve_Workspace_CUDA_SRC # consider adding a separate dir for cuda-sdk dep
 
 set(ReSolve_Workspace_HEADER_INSTALL
   LinAlgWorkspace.hpp
-  LinAlgWorkspaceFactory.hpp
+  LinAlgWorkspaceCpu.hpp
   LinAlgWorkspaceCUDA.hpp
 )
 

@@ -7,7 +7,7 @@
 #include <resolve/vector/Vector.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <tests/unit/TestBase.hpp>
-#include <resolve/workspace/LinAlgWorkspaceFactory.hpp>
+#include <resolve/workspace/LinAlgWorkspace.hpp>
 
 namespace ReSolve { 
   namespace tests {
@@ -185,7 +185,6 @@ namespace ReSolve {
         TestOutcome gemv(index_type N,  index_type K)
         {
           TestStatus status;
-          // ReSolve::LinAlgWorkspace* workspace = createLinAlgWorkspace(memspace_);
           ReSolve::VectorHandler* handler = createVectorHandler();
           vector::Vector* V = new vector::Vector(N, K);
           // for the test with NO TRANSPOSE
@@ -223,7 +222,7 @@ namespace ReSolve {
         ReSolve::VectorHandler* createVectorHandler()
         {
           if (memspace_ == "cpu") {
-            LinAlgWorkspace* workpsace = new LinAlgWorkspace();
+            LinAlgWorkspaceCpu* workpsace = new LinAlgWorkspaceCpu();
             return new VectorHandler(workpsace);
           } else if (memspace_ == "cuda") {
             LinAlgWorkspaceCUDA* workspace = new LinAlgWorkspaceCUDA();

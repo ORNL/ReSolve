@@ -55,12 +55,6 @@ namespace ReSolve {
 
       virtual void setValuesChanged(bool isValuesChanged) = 0;
     
-    protected: 
-      // LinAlgWorkspace* workspace_{nullptr};
-      // bool new_matrix_{true};     ///< if the structure changed, you need a new handler.
-      // bool values_changed_{true}; ///< needed for matvec
-
-      // MemoryHandler mem_; ///< Device memory manager object
   };
 
 } // namespace ReSolve

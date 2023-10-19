@@ -3,7 +3,7 @@
 #include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/cuda/cudaKernels.h>
 #include <resolve/vector/Vector.hpp>
-#include <resolve/workspace/LinAlgWorkspaceFactory.hpp>
+#include <resolve/workspace/LinAlgWorkspace.hpp>
 #include <resolve/vector/VectorHandlerImpl.hpp>
 #include "VectorHandlerCuda.hpp"
 

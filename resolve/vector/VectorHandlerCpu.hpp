@@ -7,7 +7,7 @@ namespace ReSolve
   {
     class Vector;
   }
-  class LinAlgWorkspace;
+  class LinAlgWorkspaceCpu;
   class VectorHandlerImpl;
 }
 
@@ -17,7 +17,7 @@ namespace ReSolve { //namespace vector {
   { 
     public:
       VectorHandlerCpu();
-      VectorHandlerCpu(LinAlgWorkspace* workspace);
+      VectorHandlerCpu(LinAlgWorkspaceCpu* workspace);
       virtual ~VectorHandlerCpu();
 
       //y = alpha x + y
@@ -51,7 +51,7 @@ namespace ReSolve { //namespace vector {
                         vector::Vector* y,
                         vector::Vector* x);
     private:
-      LinAlgWorkspace* workspace_;
+      LinAlgWorkspaceCpu* workspace_;
   };
 
 } //} // namespace ReSolve::vector

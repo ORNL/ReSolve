@@ -3,7 +3,7 @@
 #include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/cuda/cudaKernels.h>
 #include <resolve/vector/Vector.hpp>
-#include <resolve/workspace/LinAlgWorkspaceFactory.hpp>
+#include <resolve/workspace/LinAlgWorkspace.hpp>
 #include <resolve/vector/VectorHandlerImpl.hpp>
 #include <resolve/vector/VectorHandlerCpu.hpp>
 #include <resolve/vector/VectorHandlerCuda.hpp>
@@ -26,7 +26,7 @@ namespace ReSolve {
    * 
    * @param new_workspace - workspace to be set     
    */
-  VectorHandler::VectorHandler(LinAlgWorkspace* new_workspace)
+  VectorHandler::VectorHandler(LinAlgWorkspaceCpu* new_workspace)
   {
     cpuImpl_ = new VectorHandlerCpu(new_workspace);
     isCpuEnabled_ = true;

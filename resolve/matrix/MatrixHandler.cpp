@@ -5,7 +5,7 @@
 #include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/Csc.hpp>
 #include <resolve/matrix/Csr.hpp>
-#include <resolve/workspace/LinAlgWorkspaceFactory.hpp>
+#include <resolve/workspace/LinAlgWorkspace.hpp>
 #include <resolve/utilities/misc/IndexValuePair.hpp>
 #include "MatrixHandler.hpp"
 #include "MatrixHandlerCpu.hpp"
@@ -47,7 +47,7 @@ namespace ReSolve {
    * @note The CPU implementation currently does not require a workspace.
    * The workspace pointer parameter is provided for forward compatibility.
    */
-  MatrixHandler::MatrixHandler(LinAlgWorkspace* new_workspace)
+  MatrixHandler::MatrixHandler(LinAlgWorkspaceCpu* new_workspace)
   {
     cpuImpl_  = new MatrixHandlerCpu(new_workspace);
     isCpuEnabled_  = true;
@@ -272,7 +272,6 @@ namespace ReSolve {
 
   int MatrixHandler::csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr, std::string memspace)
   {
-    index_type error_sum = 0;
     if (memspace == "cuda") { 
       return cudaImpl_->csc2csr(A_csc, A_csr);
     } else if (memspace == "cpu") { 

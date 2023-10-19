@@ -6,7 +6,7 @@
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <tests/unit/TestBase.hpp>
-#include <resolve/workspace/LinAlgWorkspaceFactory.hpp>
+#include <resolve/workspace/LinAlgWorkspace.hpp>
 
 namespace ReSolve { 
   namespace tests {
@@ -127,7 +127,7 @@ namespace ReSolve {
         ReSolve::VectorHandler* createVectorHandler()
         {
           if (memspace_ == "cpu") { // TODO: Fix memory leak here
-            LinAlgWorkspace* workpsace = new LinAlgWorkspace();
+            LinAlgWorkspaceCpu* workpsace = new LinAlgWorkspaceCpu();
             return new VectorHandler(workpsace);
           } else if (memspace_ == "cuda") {
             LinAlgWorkspaceCUDA* workspace = new LinAlgWorkspaceCUDA();

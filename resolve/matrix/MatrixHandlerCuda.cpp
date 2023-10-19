@@ -26,11 +26,6 @@ namespace ReSolve {
     workspace_ = new_workspace;
   }
 
-  MatrixHandlerCuda::MatrixHandlerCuda(LinAlgWorkspace* new_workspace)
-  {
-    workspace_ = (LinAlgWorkspaceCUDA*) new_workspace;
-  }
-
   void MatrixHandlerCuda::setValuesChanged(bool values_changed)
   {
     values_changed_ = values_changed;

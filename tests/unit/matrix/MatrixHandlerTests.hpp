@@ -5,7 +5,7 @@
 #include <iterator>
 #include <algorithm>
 #include <resolve/matrix/Csr.hpp>
-#include <resolve/workspace/LinAlgWorkspaceFactory.hpp>
+#include <resolve/workspace/LinAlgWorkspace.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <tests/unit/TestBase.hpp>
@@ -73,7 +73,7 @@ private:
   ReSolve::MatrixHandler* createMatrixHandler()
   {
     if (memspace_ == "cpu") {
-      LinAlgWorkspace* workpsace = new LinAlgWorkspace();
+      LinAlgWorkspaceCpu* workpsace = new LinAlgWorkspaceCpu();
       return new MatrixHandler(workpsace);
     } else if (memspace_ == "cuda") {
       LinAlgWorkspaceCUDA* workspace = new LinAlgWorkspaceCUDA();

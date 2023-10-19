@@ -26,7 +26,7 @@ namespace ReSolve
     using vector_type = vector::Vector;
     
     public:
-      LinSolverDirectCuSolverGLU(LinAlgWorkspace* workspace);
+      LinSolverDirectCuSolverGLU(LinAlgWorkspaceCUDA* workspace);
       ~LinSolverDirectCuSolverGLU();
 
       int refactorize();
@@ -40,7 +40,7 @@ namespace ReSolve
       //note: we need cuSolver handle, we can copy it from the workspace to avoid double allocation
       cusparseMatDescr_t descr_M_; //this is NOT sparse matrix descriptor
       cusparseMatDescr_t descr_A_; //this is NOT sparse matrix descriptor
-      LinAlgWorkspace* workspace_;// so we can copy cusparse handle
+      LinAlgWorkspaceCUDA* workspace_;// so we can copy cusparse handle
       cusolverSpHandle_t handle_cusolversp_; 
       cusolverStatus_t status_cusolver_;
       cusparseStatus_t status_cusparse_;

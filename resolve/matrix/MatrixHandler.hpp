@@ -16,7 +16,7 @@ namespace ReSolve
     class Csc;
     class Csr;
   }
-  class LinAlgWorkspace;
+  class LinAlgWorkspaceCpu;
   class LinAlgWorkspaceCUDA;
   class MatrixHandlerImpl;
 }
@@ -42,7 +42,7 @@ namespace ReSolve {
     
     public:
       MatrixHandler();
-      MatrixHandler(LinAlgWorkspace* workspace);
+      MatrixHandler(LinAlgWorkspaceCpu* workspace);
       MatrixHandler(LinAlgWorkspaceCUDA* workspace);
       ~MatrixHandler();
 

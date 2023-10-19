@@ -3,12 +3,12 @@
 
 #include <resolve/vector/Vector.hpp>
 #include <resolve/matrix/Csr.hpp>
-#include <resolve/workspace/LinAlgWorkspaceFactory.hpp>
+#include <resolve/workspace/LinAlgWorkspace.hpp>
 #include "LinSolverDirectCuSolverGLU.hpp"
 
 namespace ReSolve
 {
-  LinSolverDirectCuSolverGLU::LinSolverDirectCuSolverGLU(LinAlgWorkspace* workspace)
+  LinSolverDirectCuSolverGLU::LinSolverDirectCuSolverGLU(LinAlgWorkspaceCUDA* workspace)
   {
     this->workspace_ = workspace;
   }
@@ -26,7 +26,7 @@ namespace ReSolve
   {
     int error_sum = 0;
 
-    LinAlgWorkspaceCUDA* workspaceCUDA = (LinAlgWorkspaceCUDA*) workspace_;
+    LinAlgWorkspaceCUDA* workspaceCUDA = workspace_;
     //get the handle
     handle_cusolversp_ = workspaceCUDA->getCusolverSpHandle();
     A_ = (matrix::Csr*) A;

@@ -3,7 +3,7 @@
 #include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/cuda/cudaKernels.h>
 #include <resolve/vector/Vector.hpp>
-#include <resolve/workspace/LinAlgWorkspaceFactory.hpp>
+#include <resolve/workspace/LinAlgWorkspace.hpp>
 #include <resolve/vector/VectorHandlerImpl.hpp>
 #include "VectorHandlerCpu.hpp"
 
@@ -22,7 +22,7 @@ namespace ReSolve {
    * 
    * @param new_workspace - workspace to be set     
    */
-  VectorHandlerCpu:: VectorHandlerCpu(LinAlgWorkspace* new_workspace)
+  VectorHandlerCpu:: VectorHandlerCpu(LinAlgWorkspaceCpu* new_workspace)
   {
     workspace_ = new_workspace;
   }
@@ -115,7 +115,14 @@ namespace ReSolve {
    * @pre   V is stored colum-wise, _n_ > 0, _k_ > 0
    * 
    */  
-  void VectorHandlerCpu::gemv(std::string transpose, index_type n, index_type k, const real_type* alpha, const real_type* beta, vector::Vector* V, vector::Vector* y, vector::Vector* x)
+  void VectorHandlerCpu::gemv(std::string /* transpose */,
+                              index_type /* n */,
+                              index_type /* k */,
+                              const real_type* /* alpha */,
+                              const real_type* /* beta */,
+                              vector::Vector* /* V */,
+                              vector::Vector* /* y */,
+                              vector::Vector* /* x */)
   {
     out::error() << "Not implemented (yet)" << std::endl;
   }
@@ -132,7 +139,7 @@ namespace ReSolve {
    * @pre   _k_ > 0, _size_ > 0, _size_ = x->getSize()
    *
    */
-  void VectorHandlerCpu::massAxpy(index_type size, vector::Vector* alpha, index_type k, vector::Vector* x, vector::Vector* y)
+  void VectorHandlerCpu::massAxpy(index_type /* size */, vector::Vector* /* alpha */, index_type /* k */, vector::Vector* /* x */, vector::Vector* /* y */)
   {
     out::error() << "Not implemented (yet)" << std::endl;
   }
@@ -151,7 +158,7 @@ namespace ReSolve {
    * @pre   _size_ > 0, _k_ > 0, size = x->getSize(), _res_ needs to be allocated
    *
    */
-  void VectorHandlerCpu::massDot2Vec(index_type size, vector::Vector* V, index_type k, vector::Vector* x, vector::Vector* res)
+  void VectorHandlerCpu::massDot2Vec(index_type /* size */, vector::Vector* /* V */, index_type /* k */, vector::Vector* /* x */, vector::Vector* /* res */)
   {
     out::error() << "Not implemented (yet)" << std::endl;
   }
