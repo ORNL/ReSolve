@@ -5,9 +5,7 @@
 #include <resolve/vector/Vector.hpp>
 #include <resolve/workspace/LinAlgWorkspaceFactory.hpp>
 #include <resolve/vector/VectorHandlerImpl.hpp>
-#include <resolve/vector/VectorHandlerCpu.hpp>
-#include <resolve/vector/VectorHandlerCuda.hpp>
-#include "VectorHandler.hpp"
+#include "VectorHandlerCpu.hpp"
 
 namespace ReSolve {
   using out = io::Logger;
@@ -15,10 +13,8 @@ namespace ReSolve {
   /** 
    * @brief empty constructor that does absolutely nothing        
    */
-  VectorHandler::VectorHandler()
+  VectorHandlerCpu::VectorHandlerCpu()
   {
-    cpuImpl_ = new VectorHandlerCpu();
-    isCpuEnabled_ = true;
   }
 
   /** 
@@ -26,30 +22,15 @@ namespace ReSolve {
    * 
    * @param new_workspace - workspace to be set     
    */
-  VectorHandler::VectorHandler(LinAlgWorkspace* new_workspace)
+  VectorHandlerCpu:: VectorHandlerCpu(LinAlgWorkspace* new_workspace)
   {
-    cpuImpl_ = new VectorHandlerCpu(new_workspace);
-    isCpuEnabled_ = true;
-  }
-
-  /** 
-   * @brief constructor
-   * 
-   * @param new_workspace - workspace to be set     
-   */
-  VectorHandler::VectorHandler(LinAlgWorkspaceCUDA* new_workspace)
-  {
-    cudaImpl_ = new VectorHandlerCuda(new_workspace);
-    cpuImpl_  = new  VectorHandlerCpu();
-
-    isCudaEnabled_ = true;
-    isCpuEnabled_  = true;
+    workspace_ = new_workspace;
   }
 
   /** 
    * @brief destructor     
    */
-  VectorHandler::~VectorHandler()
+  VectorHandlerCpu::~VectorHandlerCpu()
   {
     //delete the workspace TODO
   }
@@ -64,18 +45,21 @@ namespace ReSolve {
    * @return dot product (real number) of _x_ and _y_
    */
 
-  real_type VectorHandler::dot(vector::Vector* x, vector::Vector* y, std::string memspace)
+  real_type VectorHandlerCpu::dot(vector::Vector* x, vector::Vector* y)
   { 
-    if (memspace == "cuda" ) {
-      return cudaImpl_->dot(x, y);
-    } else {
-      if (memspace == "cpu") {
-        return cpuImpl_->dot(x, y);
-      } else {
-        out::error() << "Not implemented (yet)" << std::endl;
-        return NAN;
-      }
-    }
+    real_type* x_data = x->getData("cpu");
+    real_type* y_data = y->getData("cpu");
+    real_type sum = 0.0;
+    real_type c = 0.0;
+    // real_type t, y;
+    for (int i = 0; i < x->getSize(); ++i) {
+      real_type y = (x_data[i] * y_data[i]) - c;
+      real_type t = sum + y;
+      c = (t - sum) - y;
+      sum = t;        
+      //   sum += (x_data[i] * y_data[i]);
+    } 
+    return sum;
   }
 
   /** 
@@ -86,16 +70,12 @@ namespace ReSolve {
    * @param memspace string containg memspace (cpu or cuda)
    * 
    */
-  void VectorHandler::scal(const real_type* alpha, vector::Vector* x, std::string memspace)
+  void VectorHandlerCpu::scal(const real_type* alpha, vector::Vector* x)
   {
-    if (memspace == "cuda" ) {
-      cudaImpl_->scal(alpha, x);
-    } else {
-      if (memspace == "cpu") {
-        cpuImpl_->scal(alpha, x);
-      } else {      
-        out::error() << "Not implemented (yet)" << std::endl;
-      }  
+    real_type* x_data = x->getData("cpu");
+
+    for (int i = 0; i < x->getSize(); ++i){
+      x_data[i] *= (*alpha);
     }
   }
 
@@ -108,17 +88,13 @@ namespace ReSolve {
    * @param[in]  memspace String containg memspace (cpu or cuda)
    * 
    */
-  void VectorHandler::axpy(const  real_type* alpha, vector::Vector* x, vector::Vector* y, std::string memspace)
+  void VectorHandlerCpu::axpy(const  real_type* alpha, vector::Vector* x, vector::Vector* y)
   {
     //AXPY:  y = alpha * x + y
-    if (memspace == "cuda" ) {
-      cudaImpl_->axpy(alpha, x, y);
-    } else {
-      if (memspace == "cpu") {
-        cpuImpl_->axpy(alpha, x, y);
-      } else {
-        out::error() <<"Not implemented (yet)" << std::endl;
-      }
+    real_type* x_data = x->getData("cpu");
+    real_type* y_data = y->getData("cpu");
+    for (int i = 0; i < x->getSize(); ++i) {
+      y_data[i] = (*alpha) * x_data[i] + y_data[i];
     }
   }
 
@@ -139,15 +115,9 @@ namespace ReSolve {
    * @pre   V is stored colum-wise, _n_ > 0, _k_ > 0
    * 
    */  
-  void VectorHandler::gemv(std::string transpose, index_type n, index_type k, const real_type* alpha, const real_type* beta, vector::Vector* V, vector::Vector* y, vector::Vector* x, std::string memspace)
+  void VectorHandlerCpu::gemv(std::string transpose, index_type n, index_type k, const real_type* alpha, const real_type* beta, vector::Vector* V, vector::Vector* y, vector::Vector* x)
   {
-    if (memspace == "cuda") {
-      cudaImpl_->gemv(transpose, n, k, alpha, beta, V, y, x);
-    } else if (memspace == "cpu") {
-      cpuImpl_->gemv(transpose, n, k, alpha, beta, V, y, x);
-    } else {
-      out::error() << "Not implemented (yet)" << std::endl;
-    }
+    out::error() << "Not implemented (yet)" << std::endl;
   }
 
   /** 
@@ -162,16 +132,9 @@ namespace ReSolve {
    * @pre   _k_ > 0, _size_ > 0, _size_ = x->getSize()
    *
    */
-  void VectorHandler::massAxpy(index_type size, vector::Vector* alpha, index_type k, vector::Vector* x, vector::Vector* y, std::string memspace)
+  void VectorHandlerCpu::massAxpy(index_type size, vector::Vector* alpha, index_type k, vector::Vector* x, vector::Vector* y)
   {
-    using namespace constants;
-    if (memspace == "cuda") {
-      cudaImpl_->massAxpy(size, alpha, k, x, y);
-    } else if (memspace == "cpu") {
-      cpuImpl_->massAxpy(size, alpha, k, x, y);
-    } else {
-      out::error() << "Not implemented (yet)" << std::endl;
-    }
+    out::error() << "Not implemented (yet)" << std::endl;
   }
 
   /** 
@@ -188,15 +151,9 @@ namespace ReSolve {
    * @pre   _size_ > 0, _k_ > 0, size = x->getSize(), _res_ needs to be allocated
    *
    */
-  void VectorHandler::massDot2Vec(index_type size, vector::Vector* V, index_type k, vector::Vector* x, vector::Vector* res, std::string memspace)
+  void VectorHandlerCpu::massDot2Vec(index_type size, vector::Vector* V, index_type k, vector::Vector* x, vector::Vector* res)
   {
-    if (memspace == "cuda") {
-      cudaImpl_->massDot2Vec(size, V, k, x, res);
-    } else if (memspace == "cpu") {
-      cpuImpl_->massDot2Vec(size, V, k, x, res);
-    } else {
-      out::error() << "Not implemented (yet)" << std::endl;
-    }
+    out::error() << "Not implemented (yet)" << std::endl;
   }
 
 } // namespace ReSolve

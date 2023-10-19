@@ -10,6 +10,8 @@
 set(Vector_SRC 
     Vector.cpp
     VectorHandler.cpp
+    VectorHandlerCpu.cpp
+    VectorHandlerCuda.cpp
 )
 
 
