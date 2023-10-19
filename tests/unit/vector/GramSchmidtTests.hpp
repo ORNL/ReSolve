@@ -129,12 +129,14 @@ namespace ReSolve {
           if (memspace_ == "cpu") { // TODO: Fix memory leak here
             LinAlgWorkspaceCpu* workpsace = new LinAlgWorkspaceCpu();
             return new VectorHandler(workpsace);
+#ifdef RESOLVE_USE_CUDA
           } else if (memspace_ == "cuda") {
             LinAlgWorkspaceCUDA* workspace = new LinAlgWorkspaceCUDA();
             workspace->initializeHandles();
             return new VectorHandler(workspace);
+#endif
           } else {
-            std::cout << "Invalid memory space " << memspace_ << "\n";
+            std::cout << "ReSolve not built with support for memory space " << memspace_ << "\n";
           }
           return nullptr;
         }

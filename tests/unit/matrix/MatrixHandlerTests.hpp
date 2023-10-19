@@ -75,12 +75,14 @@ private:
     if (memspace_ == "cpu") {
       LinAlgWorkspaceCpu* workpsace = new LinAlgWorkspaceCpu();
       return new MatrixHandler(workpsace);
+#ifdef RESOLVE_USE_CUDA
     } else if (memspace_ == "cuda") {
       LinAlgWorkspaceCUDA* workspace = new LinAlgWorkspaceCUDA();
       workspace->initializeHandles();
       return new MatrixHandler(workspace);
+#endif
     } else {
-      std::cout << "Invalid memory space " << memspace_ << "\n";
+      std::cout << "ReSolve not built with support for memory space " << memspace_ << "\n";
     }
     return nullptr;
   }
