@@ -1,5 +1,6 @@
 #include <string>
 #include <iostream>
+#include <cmath>
 
 #include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/Csr.hpp>

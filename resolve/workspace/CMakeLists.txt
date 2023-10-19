@@ -6,11 +6,13 @@
 
 ]]
 
+# C++ code
 set(ReSolve_Workspace_SRC
   LinAlgWorkspaceCpu.cpp
 )
 
-set(ReSolve_Workspace_CUDA_SRC # consider adding a separate dir for cuda-sdk dependent code
+# C++ code that depends on CUDA SDK libraries
+set(ReSolve_Workspace_CUDASDK_SRC
     LinAlgWorkspaceCUDA.cpp
 )
 
@@ -20,12 +22,17 @@ set(ReSolve_Workspace_HEADER_INSTALL
   LinAlgWorkspaceCUDA.hpp
 )
 
+# If cuda is enabled, add CUDA SDK workspace files
 if(RESOLVE_USE_CUDA)
-  add_library(resolve_workspace SHARED ${ReSolve_Workspace_SRC} ${ReSolve_Workspace_CUDA_SRC})
+  set(ReSolve_Workspace_SRC ${ReSolve_Workspace_SRC} ${ReSolve_Workspace_CUDASDK_SRC})
+endif()
+
+add_library(resolve_workspace SHARED ${ReSolve_Workspace_SRC})
+
+# If CUDA is enabled, link to ReSolve CUDA backend
+if(RESOLVE_USE_CUDA)
   target_link_libraries(resolve_workspace PUBLIC resolve_backend_cuda)
-else(RESOLVE_USE_CUDA)  
-  add_library(resolve_workspace SHARED ${ReSolve_Workspace_SRC})
-endif(RESOLVE_USE_CUDA)
+endif(RESOLVE_USE_CUDA)  
 
 target_include_directories(resolve_workspace INTERFACE
     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>

@@ -14,6 +14,7 @@ target_link_libraries(klu_klu.exe PRIVATE ReSolve)
 add_executable(klu_klu_standalone.exe r_KLU_KLU_standalone.cpp)
 target_link_libraries(klu_klu_standalone.exe PRIVATE ReSolve)
 
+# Create CUDA examples
 if(RESOLVE_USE_CUDA)
         
   # Build example with KLU factorization and GLU refactorization

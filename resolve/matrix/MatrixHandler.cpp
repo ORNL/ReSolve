@@ -9,7 +9,10 @@
 #include <resolve/utilities/misc/IndexValuePair.hpp>
 #include "MatrixHandler.hpp"
 #include "MatrixHandlerCpu.hpp"
+
+#ifdef RESOLVE_USE_CUDA
 #include "MatrixHandlerCuda.hpp"
+#endif
 
 namespace ReSolve {
   // Create a shortcut name for Logger static class
@@ -28,7 +31,9 @@ namespace ReSolve {
   {
     this->new_matrix_ = true;
     cpuImpl_  = new MatrixHandlerCpu();
+#ifdef RESOLVE_USE_CUDA
     cudaImpl_ = new MatrixHandlerCuda();
+#endif
   }
 
   /**
@@ -62,6 +67,7 @@ namespace ReSolve {
    * 
    * @post A CUDA implementation instance is created with supplied workspace.
    */
+#ifdef RESOLVE_USE_CUDA
   MatrixHandler::MatrixHandler(LinAlgWorkspaceCUDA* new_workspace)
   {
     cpuImpl_  = new MatrixHandlerCpu();
@@ -69,6 +75,7 @@ namespace ReSolve {
     isCpuEnabled_  = true;
     isCudaEnabled_ = true;
   }
+#endif
 
   void MatrixHandler::setValuesChanged(bool isValuesChanged, std::string memspace)
   {

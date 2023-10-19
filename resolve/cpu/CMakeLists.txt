@@ -8,6 +8,7 @@
 
 set(ReSolve_CPU_SRC
     MemoryUtils.cpp
+    cpuVectorKernels.cpp
 )
 
 set(ReSolve_CPU_HEADER_INSTALL

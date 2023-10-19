@@ -1,13 +1,16 @@
 #include <iostream>
+#include <cmath>
 
 #include <resolve/utilities/logger/Logger.hpp>
-#include <resolve/cuda/cudaKernels.h>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 #include <resolve/vector/VectorHandlerImpl.hpp>
 #include <resolve/vector/VectorHandlerCpu.hpp>
-#include <resolve/vector/VectorHandlerCuda.hpp>
 #include "VectorHandler.hpp"
+
+#ifdef RESOLVE_USE_CUDA
+#include <resolve/vector/VectorHandlerCuda.hpp>
+#endif
 
 namespace ReSolve {
   using out = io::Logger;
@@ -32,6 +35,7 @@ namespace ReSolve {
     isCpuEnabled_ = true;
   }
 
+#ifdef RESOLVE_USE_CUDA
   /** 
    * @brief constructor
    * 
@@ -45,6 +49,7 @@ namespace ReSolve {
     isCudaEnabled_ = true;
     isCpuEnabled_  = true;
   }
+#endif
 
   /** 
    * @brief destructor     

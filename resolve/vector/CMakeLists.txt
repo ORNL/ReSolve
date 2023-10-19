@@ -6,28 +6,42 @@
 
 ]]
 
-
+# C++ code
 set(Vector_SRC 
     Vector.cpp
     VectorHandler.cpp
     VectorHandlerCpu.cpp
+)
+
+# C++ code that depends on CUDA SDK libraries
+set(Vector_CUDASDK_SRC 
     VectorHandlerCuda.cpp
 )
 
-
+# Header files to be installed
 set(Vector_HEADER_INSTALL
     Vector.hpp
     VectorHandler.hpp
     VectorKernels.hpp
 )
 
+# Add CUDA vector handler if CUDA support is enabled
+if(RESOLVE_USE_CUDA)
+  set(Vector_SRC ${Vector_SRC} ${Vector_CUDASDK_SRC})
+endif()
+
 add_library(resolve_vector SHARED ${Vector_SRC})
 
+# Link to ReSolve CUDA backend if CUDA is enabled
 if (RESOLVE_USE_CUDA)
-    target_link_libraries(resolve_vector PUBLIC resolve_backend_cuda)
-else()
-    target_link_libraries(resolve_vector PUBLIC resolve_backend_cpu)
+  target_link_libraries(resolve_vector PUBLIC resolve_backend_cuda)
 endif()
+
+# If no GPU is enabled link to dummy device backend
+if(NOT RESOLVE_USE_GPU)
+  target_link_libraries(resolve_vector PUBLIC resolve_backend_cpu)
+endif(NOT RESOLVE_USE_GPU)
+
 
 target_include_directories(resolve_vector INTERFACE
     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>

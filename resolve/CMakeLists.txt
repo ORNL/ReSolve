@@ -8,16 +8,21 @@
 
 add_subdirectory(utilities)
 
+# C++ files
 set(ReSolve_SRC
     LinSolver.cpp
     LinSolverDirectKLU.cpp
+)
+
+# C++ code that links to CUDA SDK libraries
+set(ReSolve_CUDASDK_SRC
     LinSolverIterativeFGMRES.cpp
     GramSchmidt.cpp
     LinSolverDirectCuSolverGLU.cpp
     LinSolverDirectCuSolverRf.cpp
 )
 
-
+# Header files to be installed
 set(ReSolve_HEADER_INSTALL
     Common.hpp
     cusolver_defs.hpp
@@ -71,17 +76,21 @@ set(ReSolve_Targets_List
     resolve_workspace
 )
 
+# If CUDA support is enabled add CUDA SDK specific code and dependencies
 if(RESOLVE_USE_CUDA)
+  set(ReSolve_SRC ${ReSolve_SRC} ${ReSolve_CUDASDK_SRC})
   set(ReSolve_Targets_List ${ReSolve_Targets_List} resolve_backend_cuda)
 endif()
 
+# If no GPU support is enabled, link to dummy device backend
 if(NOT RESOLVE_USE_GPU)
     set(ReSolve_Targets_List ${ReSolve_Targets_List} resolve_backend_cpu)
 endif()
 
-
+# Set installable targets
 install(TARGETS ${ReSolve_Targets_List} EXPORT ReSolveTargets)
 
+# Create ReSolve library
 add_library(ReSolve SHARED ${ReSolve_SRC})
 
 target_include_directories(ReSolve INTERFACE 
@@ -92,10 +101,12 @@ target_include_directories(ReSolve INTERFACE
 # TODO: Make this PRIVATE dependency (requires refactoring ReSolve code)
 target_link_libraries(ReSolve PUBLIC ${ReSolve_Targets_List})
 
+# Install targets
 install(TARGETS ReSolve
         EXPORT ReSolveTargets
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib)
+
 # install include headers
 install(FILES ${ReSolve_HEADER_INSTALL} DESTINATION include/resolve)
 
