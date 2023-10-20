@@ -6,8 +6,6 @@
 
 ]]
 
-if(RESOLVE_USE_CUDA)
-  add_subdirectory(matrix)
-  add_subdirectory(vector)
-  add_subdirectory(utilities)
-endif(RESOLVE_USE_CUDA)
+add_subdirectory(matrix)
+add_subdirectory(vector)
+add_subdirectory(utilities)

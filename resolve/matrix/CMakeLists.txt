@@ -40,6 +40,7 @@ endif()
 
 # Build shared library ReSolve::matrix
 add_library(resolve_matrix SHARED ${Matrix_SRC})
+target_link_libraries(resolve_matrix PRIVATE resolve_logger resolve_vector)
 
 # Link to CUDA ReSolve backend if CUDA is support enabled
 if (RESOLVE_USE_CUDA)

@@ -31,6 +31,7 @@ if(RESOLVE_USE_CUDA)
 endif()
 
 add_library(resolve_vector SHARED ${Vector_SRC})
+target_link_libraries(resolve_vector PRIVATE resolve_logger)
 
 # Link to ReSolve CUDA backend if CUDA is enabled
 if (RESOLVE_USE_CUDA)
