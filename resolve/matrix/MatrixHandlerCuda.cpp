@@ -12,11 +12,6 @@ namespace ReSolve {
   // Create a shortcut name for Logger static class
   using out = io::Logger;
 
-  MatrixHandlerCuda::MatrixHandlerCuda()
-  {
-    values_changed_ = true;
-  }
-
   MatrixHandlerCuda::~MatrixHandlerCuda()
   {
   }

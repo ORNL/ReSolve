@@ -14,8 +14,6 @@ namespace ReSolve {
 
   MatrixHandlerCpu::MatrixHandlerCpu()
   {
-    // new_matrix_ = true;
-    // values_changed_ = true;
   }
 
   MatrixHandlerCpu::~MatrixHandlerCpu()
@@ -27,17 +25,15 @@ namespace ReSolve {
     workspace_ = new_workspace;
   }
 
-  // bool MatrixHandlerCpu::getValuesChanged()
-  // {
-  //   return this->values_changed_;
-  // }
-
   void MatrixHandlerCpu::setValuesChanged(bool values_changed)
   {
     values_changed_ = values_changed;
   }
 
 
+  /**
+   * @brief result := alpha * A * x + beta * result
+   */
   int MatrixHandlerCpu::matvec(matrix::Sparse* Ageneric, 
                                vector_type* vec_x, 
                                vector_type* vec_result, 
@@ -49,7 +45,6 @@ namespace ReSolve {
     // int error_sum = 0;
     if (matrixFormat == "csr") {
       matrix::Csr* A = (matrix::Csr*) Ageneric;
-      //result = alpha *A*x + beta * result
       index_type* ia = A->getRowData("cpu");
       index_type* ja = A->getColData("cpu");
       real_type*   a = A->getValues("cpu");
@@ -90,6 +85,8 @@ namespace ReSolve {
   }
 
   /**
+   * @brief Convert CSC to CSR matrix on the host
+   * 
    * @authors Slaven Peles <peless@ornl.gov>, Daniel Reynolds (SMU), and
    * David Gardner and Carol Woodward (LLNL)
    */

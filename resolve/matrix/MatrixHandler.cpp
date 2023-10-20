@@ -29,11 +29,8 @@ namespace ReSolve {
    */
   MatrixHandler::MatrixHandler()
   {
-    this->new_matrix_ = true;
-    cpuImpl_  = new MatrixHandlerCpu();
-#ifdef RESOLVE_USE_CUDA
-    cudaImpl_ = new MatrixHandlerCuda();
-#endif
+    new_matrix_ = true;
+    cpuImpl_    = new MatrixHandlerCpu();
   }
 
   /**
@@ -59,6 +56,7 @@ namespace ReSolve {
     isCudaEnabled_ = false;
   }
 
+#ifdef RESOLVE_USE_CUDA
   /**
    * @brief Constructor taking pointer to the CUDA workspace as its parameter.
    * 
@@ -67,7 +65,6 @@ namespace ReSolve {
    * 
    * @post A CUDA implementation instance is created with supplied workspace.
    */
-#ifdef RESOLVE_USE_CUDA
   MatrixHandler::MatrixHandler(LinAlgWorkspaceCUDA* new_workspace)
   {
     cpuImpl_  = new MatrixHandlerCpu();
@@ -88,13 +85,14 @@ namespace ReSolve {
     }
   }
 
+  /**
+   * @brief Converts COO to CSR matrix format.
+   * 
+   * Conversion takes place on CPU, and then CSR matrix is copied to `memspace`.
+   */
   int MatrixHandler::coo2csr(matrix::Coo* A_coo, matrix::Csr* A_csr, std::string memspace)
   {
-    //this happens on the CPU not on the GPU
-    //but will return whatever memspace requested.
-
     //count nnzs first
-
     index_type nnz_unpacked = 0;
     index_type nnz = A_coo->getNnz();
     index_type n = A_coo->getNumRows();
@@ -248,14 +246,15 @@ namespace ReSolve {
   }
 
   /**
-   * @brief Matrix vector product method  result = alpha *A*x + beta * result
-   * @param A 
-   * @param vec_x 
-   * @param vec_result 
-   * @param[in] alpha 
-   * @param[in] beta 
-   * @param[in] matrixFormat 
-   * @param[in] memspace 
+   * @brief Matrix vector product: result = alpha * A * x + beta * result
+   * 
+   * @param[in]  A - Sparse matrix
+   * @param[in]  vec_x - Vector multiplied by the matrix
+   * @param[out] vec_result - Vector where the result is stored
+   * @param[in]  alpha - scalar parameter
+   * @param[in]  beta  - scalar parameter
+   * @param[in]  matrixFormat - Only CSR format is supported at this time
+   * @param[in]  memspace     - Device where the product is computed
    * @return result := alpha * A * x + beta * result
    */
   int MatrixHandler::matvec(matrix::Sparse* A, 

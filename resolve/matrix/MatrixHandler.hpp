@@ -33,6 +33,10 @@ namespace ReSolve {
    *  - Matrix vector product (SpMV)
    *  - Matrix 1-norm
    * 
+   * The class uses pointer to implementation (PIMPL) idiom to create
+   * multiple matrix operation implementations running on CUDA and HIP devices
+   * as well as on CPU.
+   * 
    * @author Kasia Swirydowicz <kasia.swirydowicz@pnnl.gov>
    * @author Slaven Peles <peless@ornl.gov>
    */
@@ -46,7 +50,7 @@ namespace ReSolve {
       MatrixHandler(LinAlgWorkspaceCUDA* workspace);
       ~MatrixHandler();
 
-      int csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr, std::string memspace); //memspace decides on what is returned (cpu or cuda pointer)
+      int csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr, std::string memspace);
       int coo2csr(matrix::Coo* A_coo, matrix::Csr* A_csr, std::string memspace);
 
       /// Should compute vec_result := alpha*A*vec_x + beta*vec_result, but at least on cpu alpha and beta are flipped
@@ -61,14 +65,14 @@ namespace ReSolve {
       void setValuesChanged(bool toWhat, std::string memspace); 
     
     private: 
-      bool new_matrix_{true};     ///< if the structure changed, you need a new handler.
+      bool new_matrix_{true};  ///< if the structure changed, you need a new handler.
 
-      MemoryHandler mem_; ///< Device memory manager object
-      MatrixHandlerImpl*  cpuImpl_{nullptr};
-      MatrixHandlerImpl* cudaImpl_{nullptr};
+      MemoryHandler mem_;      ///< Device memory manager object
+      MatrixHandlerImpl*  cpuImpl_{nullptr}; ///< Pointer to CPU implementation
+      MatrixHandlerImpl* cudaImpl_{nullptr}; ///< Pointer to CUDA implementation
 
-      bool isCpuEnabled_{false};
-      bool isCudaEnabled_{false};
+      bool isCpuEnabled_{false};  ///< true if CPU  implementation is instantiated
+      bool isCudaEnabled_{false}; ///< true if CUDA implementation is instantiated
   };
 
 } // namespace ReSolve

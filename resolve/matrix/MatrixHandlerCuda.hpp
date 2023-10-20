@@ -1,8 +1,3 @@
-// this class encapsulates various matrix manipulation operations, commonly required by linear solvers:
-// this includes 
-// (1) Matrix format conversion: coo2csr, csr2csc
-// (2) Matrix vector product (SpMV)
-// (3) Matrix 1-norm
 #pragma once
 #include <resolve/Common.hpp>
 #include <resolve/MemoryUtils.hpp>
@@ -29,21 +24,17 @@ namespace ReSolve {
   /**
    * @class MatrixHandlerCuda
    * 
-   * @brief CPU implementation of the matrix handler.
+   * @brief CUDA implementation of the matrix handler.
    */
   class MatrixHandlerCuda : public MatrixHandlerImpl
   {
     using vector_type = vector::Vector;
     
     public:
-      MatrixHandlerCuda();
       MatrixHandlerCuda(LinAlgWorkspaceCUDA* workspace);
       virtual ~MatrixHandlerCuda();
 
-      int csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr); //memspace decides on what is returned (cpu or cuda pointer)
-      // int coo2csr(matrix::Coo* A_coo, matrix::Csr* A_csr, std::string memspace);
-
-      /// Should compute vec_result := alpha*A*vec_x + beta*vec_result, but at least on cpu alpha and beta are flipped
+      int csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr);
       virtual int matvec(matrix::Sparse* A,
                  vector_type* vec_x,
                  vector_type* vec_result,
@@ -55,7 +46,6 @@ namespace ReSolve {
     
     private: 
       LinAlgWorkspaceCUDA* workspace_{nullptr};
-      // bool new_matrix_{true};     ///< if the structure changed, you need a new handler.
       bool values_changed_{true}; ///< needed for matvec
 
       MemoryHandler mem_; ///< Device memory manager object

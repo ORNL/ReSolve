@@ -73,8 +73,8 @@ private:
   ReSolve::MatrixHandler* createMatrixHandler()
   {
     if (memspace_ == "cpu") {
-      LinAlgWorkspaceCpu* workpsace = new LinAlgWorkspaceCpu();
-      return new MatrixHandler(workpsace);
+      LinAlgWorkspaceCpu* workspace = new LinAlgWorkspaceCpu();
+      return new MatrixHandler(workspace);
 #ifdef RESOLVE_USE_CUDA
     } else if (memspace_ == "cuda") {
       LinAlgWorkspaceCUDA* workspace = new LinAlgWorkspaceCUDA();
