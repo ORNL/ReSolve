@@ -1,5 +1,6 @@
 #include <string>
 #include <iostream>
+#include <iomanip>
 #include <cmath>
 
 #include <resolve/matrix/Coo.hpp>
@@ -100,10 +101,10 @@ int main(int argc, char *argv[])
   matrix_handler->setValuesChanged(true, "cpu");
 
   matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, "csr", "cpu"); 
-  real_type* test = vec_r->getData("cpu");
-  (void) test; // TODO: Do we need `test` variable in this example?
 
-  printf("\t 2-Norm of the residual: %16.16e\n", sqrt(vector_handler->dot(vec_r, vec_r, "cpu")));
+  std::cout << "\t 2-Norm of the residual: " 
+            << std::scientific << std::setprecision(16) 
+            << sqrt(vector_handler->dot(vec_r, vec_r, "cpu")) << "\n";
 
 
 

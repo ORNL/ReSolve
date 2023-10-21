@@ -1,5 +1,6 @@
 #include <string>
 #include <iostream>
+#include <iomanip>
 
 #include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/Csr.hpp>
@@ -171,12 +172,19 @@ int main(int argc, char *argv[])
       
       matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "cuda"); 
 
-      printf("\t 2-Norm of the residual (before IR): %16.16e\n", sqrt(vector_handler->dot(vec_r, vec_r, "cuda"))/norm_b);
+      std::cout << "\t 2-Norm of the residual (before IR): " 
+                << std::scientific << std::setprecision(16) 
+                << sqrt(vector_handler->dot(vec_r, vec_r, "cuda"))/norm_b << "\n";
 
       vec_rhs->update(rhs, "cpu", "cuda");
       FGMRES->solve(vec_rhs, vec_x);
 
-      printf("FGMRES: init nrm: %16.16e final nrm: %16.16e iter: %d \n", FGMRES->getInitResidualNorm()/norm_b, FGMRES->getFinalResidualNorm()/norm_b, FGMRES->getNumIter());
+      std::cout << "FGMRES: init nrm: " 
+                << std::scientific << std::setprecision(16) 
+                << FGMRES->getInitResidualNorm()/norm_b
+                << " final nrm: "
+                << FGMRES->getFinalResidualNorm()/norm_b
+                << " iter: " << FGMRES->getNumIter() << "\n";
     }
 
   } // for (int i = 0; i < numSystems; ++i)

@@ -1,5 +1,6 @@
 #include <string>
 #include <iostream>
+#include <iomanip>
 
 #include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/Csr.hpp>
@@ -148,7 +149,9 @@ int main(int argc, char *argv[])
     matrix_handler->setValuesChanged(true, "cuda");
     matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "cuda"); 
 
-    printf("\t 2-Norm of the residual: %16.16e\n", sqrt(vector_handler->dot(vec_r, vec_r, "cuda")));
+    std::cout << "\t 2-Norm of the residual: " 
+              << std::scientific << std::setprecision(16) 
+              << sqrt(vector_handler->dot(vec_r, vec_r, "cuda")) << "\n";
 
   } // for (int i = 0; i < numSystems; ++i)
 

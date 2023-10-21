@@ -1,5 +1,7 @@
 #include <string>
 #include <iostream>
+#include <iomanip>
+
 #include <resolve/GramSchmidt.hpp>
 #include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/Csr.hpp>
@@ -138,7 +140,9 @@ int main(int argc, char *argv[])
       norm_b = sqrt(norm_b);
       matrix_handler->setValuesChanged(true, "cuda");
       matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "cuda"); 
-      printf("\t 2-Norm of the residual : %16.16e\n", sqrt(vector_handler->dot(vec_r, vec_r, "cuda"))/norm_b);
+      std::cout << "\t 2-Norm of the residual : " 
+                << std::scientific << std::setprecision(16) 
+                << sqrt(vector_handler->dot(vec_r, vec_r, "cuda"))/norm_b << "\n";
       if (i == 1) {
         ReSolve::matrix::Csc* L_csc = (ReSolve::matrix::Csc*) KLU->getLFactor();
         ReSolve::matrix::Csc* U_csc = (ReSolve::matrix::Csc*) KLU->getUFactor();
@@ -147,7 +151,9 @@ int main(int argc, char *argv[])
 
         matrix_handler->csc2csr(L_csc,L, "cuda");
         matrix_handler->csc2csr(U_csc,U, "cuda");
-        if (L == nullptr) {printf("ERROR");}
+        if (L == nullptr) {
+          std::cout << "ERROR\n";
+        }
         index_type* P = KLU->getPOrdering();
         index_type* Q = KLU->getQOrdering();
         Rf->setup(A, L, U, P, Q);
@@ -163,14 +169,17 @@ int main(int argc, char *argv[])
       if ((i % 2 == 0))
       {
         status = Rf->refactorize();
-        std::cout<<"CUSOLVER RF, using REAL refactorization, refactorization status: "<<status<<std::endl;      
+        std::cout << "CUSOLVER RF, using REAL refactorization, refactorization status: "
+                  << status << std::endl;    
         vec_rhs->update(rhs, "cpu", "cuda");
         status = Rf->solve(vec_rhs, vec_x);
         FGMRES->setupPreconditioner("CuSolverRf", Rf);
       }
-     //if (i%2!=0)  vec_x->setToZero("cuda");
+      //if (i%2!=0)  vec_x->setToZero("cuda");
       real_type norm_x =  vector_handler->dot(vec_x, vec_x, "cuda");
-      printf("Norm of x(before solve): %16.16e \n", sqrt(norm_x));
+      std::cout << "Norm of x (before solve): " 
+                << std::scientific << std::setprecision(16) 
+                << sqrt(norm_x) << "\n";
       std::cout<<"CUSOLVER RF solve status: "<<status<<std::endl;      
       
       vec_rhs->update(rhs, "cpu", "cuda");
@@ -183,15 +192,26 @@ int main(int argc, char *argv[])
       
       matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "cuda"); 
 
-      printf("\t 2-Norm of the residual (before IR): %16.16e\n", sqrt(vector_handler->dot(vec_r, vec_r, "cuda"))/norm_b);
-      printf("\t 2-Norm of the RIGHT HAND SIDE: %16.16e\n", norm_b);
+      std::cout << "\t 2-Norm of the residual (before IR): " 
+                << std::scientific << std::setprecision(16) 
+                << sqrt(vector_handler->dot(vec_r, vec_r, "cuda"))/norm_b << "\n";
+      std::cout << "\t 2-Norm of the RIGHT HAND SIDE: " 
+                << std::scientific << std::setprecision(16) 
+                << norm_b << "\n";
 
       vec_rhs->update(rhs, "cpu", "cuda");
       FGMRES->solve(vec_rhs, vec_x);
 
-      printf("FGMRES: init nrm: %16.16e final nrm: %16.16e iter: %d \n", FGMRES->getInitResidualNorm()/norm_b, FGMRES->getFinalResidualNorm()/norm_b, FGMRES->getNumIter());
+      std::cout << "FGMRES: init nrm: " 
+                << std::scientific << std::setprecision(16) 
+                << FGMRES->getInitResidualNorm()/norm_b
+                << " final nrm: "
+                << FGMRES->getFinalResidualNorm()/norm_b
+                << " iter: " << FGMRES->getNumIter() << "\n";
       norm_x = vector_handler->dot(vec_x, vec_x, "cuda");
-      printf("Norm of x (after IR): %16.16e \n", sqrt(norm_x));
+      std::cout << "Norm of x (after IR): " 
+                << std::scientific << std::setprecision(16) 
+                << sqrt(norm_x) << "\n";
     }
 
 
