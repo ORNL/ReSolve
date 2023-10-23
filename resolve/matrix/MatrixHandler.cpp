@@ -1,82 +1,98 @@
 #include <algorithm>
 
 #include <resolve/utilities/logger/Logger.hpp>
-#include <resolve/LinAlgWorkspace.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/Csc.hpp>
 #include <resolve/matrix/Csr.hpp>
+#include <resolve/workspace/LinAlgWorkspace.hpp>
+#include <resolve/utilities/misc/IndexValuePair.hpp>
 #include "MatrixHandler.hpp"
+#include "MatrixHandlerCpu.hpp"
+
+#ifdef RESOLVE_USE_CUDA
+#include "MatrixHandlerCuda.hpp"
+#endif
 
 namespace ReSolve {
   // Create a shortcut name for Logger static class
   using out = io::Logger;
 
-  //helper class
-  indexPlusValue::indexPlusValue()
-  {
-    idx_ = 0;
-    value_ = 0.0;
-  }
-
-
-  indexPlusValue::~indexPlusValue()
-  {
-  }
-
-  void indexPlusValue::setIdx(index_type new_idx)
-  {
-    idx_ = new_idx;
-  }
-
-  void indexPlusValue::setValue(real_type new_value)
-  {
-    value_ = new_value;
-  }
-
-  index_type indexPlusValue::getIdx()
-  {
-    return idx_;
-  }
-
-  real_type indexPlusValue::getValue()
-  {
-    return value_;
-  }
-  //end of helper class
-
+  /**
+   * @brief Default constructor
+   * 
+   * @post Instantiates CPU and CUDA matrix handlers, but does not 
+   * create a workspace.
+   * 
+   * @todo There is little utility for the default constructor. Rethink its purpose.
+   * Consider making it private method.
+   */
   MatrixHandler::MatrixHandler()
   {
-    this->new_matrix_ = true;
-    this->values_changed_ = true;
+    new_matrix_ = true;
+    cpuImpl_    = new MatrixHandlerCpu();
   }
 
+  /**
+   * @brief Destructor
+   * 
+   */
   MatrixHandler::~MatrixHandler()
   {
+    if (isCpuEnabled_)  delete cpuImpl_;
+    if (isCudaEnabled_) delete cudaImpl_;
   }
 
-  MatrixHandler::MatrixHandler(LinAlgWorkspace* new_workspace)
+  /**
+   * @brief Constructor taking pointer to the workspace as its parameter.
+   * 
+   * @note The CPU implementation currently does not require a workspace.
+   * The workspace pointer parameter is provided for forward compatibility.
+   */
+  MatrixHandler::MatrixHandler(LinAlgWorkspaceCpu* new_workspace)
   {
-    workspace_ = new_workspace;
+    cpuImpl_  = new MatrixHandlerCpu(new_workspace);
+    isCpuEnabled_  = true;
+    isCudaEnabled_ = false;
   }
 
-  bool MatrixHandler::getValuesChanged()
+#ifdef RESOLVE_USE_CUDA
+  /**
+   * @brief Constructor taking pointer to the CUDA workspace as its parameter.
+   * 
+   * @post A CPU implementation instance is created because it is cheap and
+   * it does not require a workspace.
+   * 
+   * @post A CUDA implementation instance is created with supplied workspace.
+   */
+  MatrixHandler::MatrixHandler(LinAlgWorkspaceCUDA* new_workspace)
   {
-    return this->values_changed_;
+    cpuImpl_  = new MatrixHandlerCpu();
+    cudaImpl_ = new MatrixHandlerCuda(new_workspace);
+    isCpuEnabled_  = true;
+    isCudaEnabled_ = true;
   }
+#endif
 
-  void MatrixHandler::setValuesChanged(bool toWhat)
+  void MatrixHandler::setValuesChanged(bool isValuesChanged, std::string memspace)
   {
-    this->values_changed_ = toWhat;
+    if (memspace == "cpu") {
+      cpuImpl_->setValuesChanged(isValuesChanged);
+    } else if (memspace == "cuda") {
+      cudaImpl_->setValuesChanged(isValuesChanged);
+    } else {
+      out::error() << "Unsupported device " << memspace << "\n";
+    }
   }
 
+  /**
+   * @brief Converts COO to CSR matrix format.
+   * 
+   * Conversion takes place on CPU, and then CSR matrix is copied to `memspace`.
+   */
   int MatrixHandler::coo2csr(matrix::Coo* A_coo, matrix::Csr* A_csr, std::string memspace)
   {
-    //this happens on the CPU not on the GPU
-    //but will return whatever memspace requested.
-
     //count nnzs first
-
     index_type nnz_unpacked = 0;
     index_type nnz = A_coo->getNnz();
     index_type n = A_coo->getNumRows();
@@ -125,7 +141,7 @@ namespace ReSolve {
     index_type* nnz_shifts = new index_type[n];
     std::fill_n(nnz_shifts, n , 0);
 
-    indexPlusValue* tmp = new indexPlusValue[nnz_unpacked]; 
+    IndexValuePair* tmp = new IndexValuePair[nnz_unpacked]; 
 
     csr_ia[0] = 0;
 
@@ -229,189 +245,48 @@ namespace ReSolve {
     return 0;
   }
 
-  int MatrixHandler::matvec(matrix::Sparse* Ageneric, 
+  /**
+   * @brief Matrix vector product: result = alpha * A * x + beta * result
+   * 
+   * @param[in]  A - Sparse matrix
+   * @param[in]  vec_x - Vector multiplied by the matrix
+   * @param[out] vec_result - Vector where the result is stored
+   * @param[in]  alpha - scalar parameter
+   * @param[in]  beta  - scalar parameter
+   * @param[in]  matrixFormat - Only CSR format is supported at this time
+   * @param[in]  memspace     - Device where the product is computed
+   * @return result := alpha * A * x + beta * result
+   */
+  int MatrixHandler::matvec(matrix::Sparse* A, 
                             vector_type* vec_x, 
                             vector_type* vec_result, 
                             const real_type* alpha, 
                             const real_type* beta,
                             std::string matrixFormat, 
-                            std::string memspace) 
+                            std::string memspace)
   {
-    using namespace constants;
-    int error_sum = 0;
-    if (matrixFormat == "csr"){
-      matrix::Csr* A = (matrix::Csr*) Ageneric;
-      cusparseStatus_t status;
-      //result = alpha *A*x + beta * result
-      if (memspace == "cuda" ){
-        // std::cout << "Matvec on NVIDIA GPU ...\n";
-        LinAlgWorkspaceCUDA* workspaceCUDA = (LinAlgWorkspaceCUDA*) workspace_;
-        cusparseDnVecDescr_t vecx = workspaceCUDA->getVecX();
-        //printf("is vec_x NULL? %d\n", vec_x->getData("cuda") == nullptr);
-        //printf("is vec_result NULL? %d\n", vec_result->getData("cuda") == nullptr);
-        cusparseCreateDnVec(&vecx, A->getNumRows(), vec_x->getData("cuda"), CUDA_R_64F);
-
-
-        cusparseDnVecDescr_t vecAx = workspaceCUDA->getVecY();
-        cusparseCreateDnVec(&vecAx, A->getNumRows(), vec_result->getData("cuda"), CUDA_R_64F);
-
-        cusparseSpMatDescr_t matA = workspaceCUDA->getSpmvMatrixDescriptor();
-
-        void* buffer_spmv = workspaceCUDA->getSpmvBuffer();
-        cusparseHandle_t handle_cusparse = workspaceCUDA->getCusparseHandle();
-        if (values_changed_){ 
-          status = cusparseCreateCsr(&matA, 
-                                     A->getNumRows(),
-                                     A->getNumColumns(),
-                                     A->getNnzExpanded(),
-                                     A->getRowData("cuda"),
-                                     A->getColData("cuda"),
-                                     A->getValues("cuda"), 
-                                     CUSPARSE_INDEX_32I, 
-                                     CUSPARSE_INDEX_32I,
-                                     CUSPARSE_INDEX_BASE_ZERO,
-                                     CUDA_R_64F);
-          error_sum += status;
-          values_changed_ = false;
-        }
-        if (!workspaceCUDA->matvecSetup()){
-          //setup first, allocate, etc.
-          size_t bufferSize = 0;
-
-          status = cusparseSpMV_bufferSize(handle_cusparse, 
-                                           CUSPARSE_OPERATION_NON_TRANSPOSE,
-                                           &MINUSONE,
-                                           matA,
-                                           vecx,
-                                           &ONE,
-                                           vecAx,
-                                           CUDA_R_64F,
-                                           CUSPARSE_SPMV_CSR_ALG2, 
-                                           &bufferSize);
-          error_sum += status;
-          mem_.deviceSynchronize();
-          mem_.allocateBufferOnDevice(&buffer_spmv, bufferSize);
-          workspaceCUDA->setSpmvMatrixDescriptor(matA);
-          workspaceCUDA->setSpmvBuffer(buffer_spmv);
-
-          workspaceCUDA->matvecSetupDone();
-        } 
-
-        status = cusparseSpMV(handle_cusparse,
-                              CUSPARSE_OPERATION_NON_TRANSPOSE,       
-                              alpha, 
-                              matA, 
-                              vecx, 
-                              beta, 
-                              vecAx, 
-                              CUDA_R_64F,
-                              CUSPARSE_SPMV_CSR_ALG2, 
-                              buffer_spmv);
-        error_sum += status;
-        mem_.deviceSynchronize();
-        if (status)
-          out::error() << "Matvec status: " << status 
-                       << "Last error code: " << mem_.getLastDeviceError() << std::endl;
-        vec_result->setDataUpdated("cuda");
-
-        cusparseDestroyDnVec(vecx);
-        cusparseDestroyDnVec(vecAx);
-        return error_sum;
-      } else {
-        if (memspace == "cpu"){
-          //cpu csr matvec
-          index_type* ia = A->getRowData("cpu");
-          index_type* ja = A->getColData("cpu");
-          real_type* a = A->getValues("cpu");
-
-          real_type* x_data = vec_x->getData("cpu");
-          real_type* result_data = vec_result->getData("cpu");
-          real_type sum;
-          real_type y, t, c;
-          //Kahan algorithm for stability; Kahan-Babushka version didnt make a difference   
-          for (int i = 0; i < A->getNumRows(); ++i) {
-            sum = 0.0;
-            c = 0.0;
-            for (int j = ia[i]; j < ia[i+1]; ++j) { 
-              y =  ( a[j] * x_data[ja[j]]) - c;
-              t = sum + y;
-              c = (t - sum) - y;
-              sum = t;
-              //  sum += ( a[j] * x_data[ja[j]]);
-            }
-            sum *= (*alpha);
-            result_data[i] = result_data[i]*(*beta) + sum;
-          } 
-          vec_result->setDataUpdated("cpu");
-          return 0;
-        } else {
-          out::error() << "Not implemented (yet)" << std::endl;
-
-          return 1;
-        }
-      }
+    if (memspace == "cuda" ) {
+      return cudaImpl_->matvec(A, vec_x, vec_result, alpha, beta, matrixFormat);
+    } else if (memspace == "cpu") {
+        return cpuImpl_->matvec(A, vec_x, vec_result, alpha, beta, matrixFormat);
     } else {
-
-      out::error() << "Not implemented (yet), only csr matvec is implemented" << std::endl;
-      return 1;
+        out::error() << "Support for device " << memspace << " not implemented (yet)" << std::endl;
+        return 1;
     }
   }
 
 
   int MatrixHandler::csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr, std::string memspace)
   {
-    //it ONLY WORKS WITH CUDA
-    index_type error_sum = 0;
     if (memspace == "cuda") { 
-      LinAlgWorkspaceCUDA* workspaceCUDA = (LinAlgWorkspaceCUDA*) workspace_;
-
-      A_csr->allocateMatrixData("cuda");
-      index_type n = A_csc->getNumRows();
-      index_type m = A_csc->getNumRows();
-      index_type nnz = A_csc->getNnz();
-      size_t bufferSize;
-      void* d_work;
-      cusparseStatus_t status = cusparseCsr2cscEx2_bufferSize(workspaceCUDA->getCusparseHandle(),
-                                                              n, 
-                                                              m, 
-                                                              nnz, 
-                                                              A_csc->getValues("cuda"), 
-                                                              A_csc->getColData("cuda"), 
-                                                              A_csc->getRowData("cuda"), 
-                                                              A_csr->getValues("cuda"), 
-                                                              A_csr->getRowData("cuda"),
-                                                              A_csr->getColData("cuda"), 
-                                                              CUDA_R_64F, 
-                                                              CUSPARSE_ACTION_NUMERIC,
-                                                              CUSPARSE_INDEX_BASE_ZERO, 
-                                                              CUSPARSE_CSR2CSC_ALG1, 
-                                                              &bufferSize);
-      error_sum += status;
-      mem_.allocateBufferOnDevice(&d_work, bufferSize);
-      status = cusparseCsr2cscEx2(workspaceCUDA->getCusparseHandle(),
-                                  n, 
-                                  m, 
-                                  nnz, 
-                                  A_csc->getValues("cuda"), 
-                                  A_csc->getColData("cuda"), 
-                                  A_csc->getRowData("cuda"), 
-                                  A_csr->getValues("cuda"), 
-                                  A_csr->getRowData("cuda"),
-                                  A_csr->getColData("cuda"), 
-                                  CUDA_R_64F,
-                                  CUSPARSE_ACTION_NUMERIC,
-                                  CUSPARSE_INDEX_BASE_ZERO,
-                                  CUSPARSE_CSR2CSC_ALG1,
-                                  d_work);
-      error_sum += status;
-      return error_sum;
-      mem_.deleteOnDevice(d_work);
-    } else { 
-      out::error() << "Not implemented (yet)" << std::endl;
+      return cudaImpl_->csc2csr(A_csc, A_csr);
+    } else if (memspace == "cpu") { 
+      out::warning() << "Using untested csc2csr on CPU ..." << std::endl;
+      return cpuImpl_->csc2csr(A_csc, A_csr);
+    } else {
+      out::error() << "csc2csr not implemented for " << memspace << " device." << std::endl;
       return -1;
-    } 
-
-
+    }
   }
 
 } // namespace ReSolve

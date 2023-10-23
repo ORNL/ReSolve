@@ -6,7 +6,7 @@
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <tests/unit/TestBase.hpp>
-#include <resolve/LinAlgWorkspace.hpp>
+#include <resolve/workspace/LinAlgWorkspace.hpp>
 
 namespace ReSolve { 
   namespace tests {
@@ -66,8 +66,7 @@ namespace ReSolve {
               break;
           }
 
-          ReSolve::LinAlgWorkspace* workspace = createLinAlgWorkspace(memspace_);
-          ReSolve::VectorHandler* handler = new ReSolve::VectorHandler(workspace);
+          ReSolve::VectorHandler* handler = createVectorHandler();
 
           vector::Vector* V = new vector::Vector(N, 3); // we will be using a space of 3 vectors
           real_type* H = new real_type[6]; //in this case, Hessenberg matrix is 3 x 2
@@ -114,7 +113,7 @@ namespace ReSolve {
 
           status *= verifyAnswer(V, 3, handler, memspace_);
           
-          delete workspace;
+          delete handler;
           delete [] H;
           delete V; 
           delete GS;
@@ -124,6 +123,23 @@ namespace ReSolve {
 
       private:
         std::string memspace_{"cuda"};
+
+        ReSolve::VectorHandler* createVectorHandler()
+        {
+          if (memspace_ == "cpu") { // TODO: Fix memory leak here
+            LinAlgWorkspaceCpu* workpsace = new LinAlgWorkspaceCpu();
+            return new VectorHandler(workpsace);
+#ifdef RESOLVE_USE_CUDA
+          } else if (memspace_ == "cuda") {
+            LinAlgWorkspaceCUDA* workspace = new LinAlgWorkspaceCUDA();
+            workspace->initializeHandles();
+            return new VectorHandler(workspace);
+#endif
+          } else {
+            std::cout << "ReSolve not built with support for memory space " << memspace_ << "\n";
+          }
+          return nullptr;
+        }
 
         // x is a multivector containing K vectors 
         bool verifyAnswer(vector::Vector* x, index_type K,  ReSolve::VectorHandler* handler, std::string memspace)

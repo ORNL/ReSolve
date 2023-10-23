@@ -6,9 +6,6 @@
 
 ]]
 
-if(RESOLVE_USE_CUDA)
-  add_subdirectory(functionality) 
-endif(RESOLVE_USE_CUDA)
-
+add_subdirectory(functionality) 
 add_subdirectory(unit)
 

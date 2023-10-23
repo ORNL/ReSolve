@@ -1,5 +1,6 @@
 #include <string>
 #include <iostream>
+#include <iomanip>
 
 #include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/Csr.hpp>
@@ -11,7 +12,7 @@
 #include <resolve/LinSolverDirectKLU.hpp>
 #include <resolve/LinSolverDirectCuSolverRf.hpp>
 #include <resolve/LinSolverIterativeFGMRES.hpp>
-#include <resolve/LinAlgWorkspace.hpp>
+#include <resolve/workspace/LinAlgWorkspace.hpp>
 
 using namespace ReSolve::constants;
 
@@ -125,7 +126,7 @@ int main(int argc, char *argv[])
     real_type norm_b;
     if (i < 2){
       KLU->setup(A);
-      matrix_handler->setValuesChanged(true);
+      matrix_handler->setValuesChanged(true, "cuda");
       status = KLU->analyze();
       std::cout<<"KLU analysis status: "<<status<<std::endl;
       status = KLU->factorize();
@@ -135,7 +136,7 @@ int main(int argc, char *argv[])
       vec_r->update(rhs, "cpu", "cuda");
       norm_b = vector_handler->dot(vec_r, vec_r, "cuda");
       norm_b = sqrt(norm_b);
-      matrix_handler->setValuesChanged(true);
+      matrix_handler->setValuesChanged(true, "cuda");
       matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "cuda"); 
       printf("\t 2-Norm of the residual : %16.16e\n", sqrt(vector_handler->dot(vec_r, vec_r, "cuda"))/norm_b);
       if (i == 1) {
@@ -165,18 +166,25 @@ int main(int argc, char *argv[])
        norm_b = vector_handler->dot(vec_r, vec_r, "cuda");
       norm_b = sqrt(norm_b);
 
-      //matrix_handler->setValuesChanged(true);
+      //matrix_handler->setValuesChanged(true, "cuda");
       FGMRES->resetMatrix(A);
       FGMRES->setupPreconditioner("CuSolverRf", Rf);
       
       matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "cuda"); 
 
-      printf("\t 2-Norm of the residual (before IR): %16.16e\n", sqrt(vector_handler->dot(vec_r, vec_r, "cuda"))/norm_b);
+      std::cout << "\t 2-Norm of the residual (before IR): " 
+                << std::scientific << std::setprecision(16) 
+                << sqrt(vector_handler->dot(vec_r, vec_r, "cuda"))/norm_b << "\n";
 
       vec_rhs->update(rhs, "cpu", "cuda");
       FGMRES->solve(vec_rhs, vec_x);
 
-      printf("FGMRES: init nrm: %16.16e final nrm: %16.16e iter: %d \n", FGMRES->getInitResidualNorm()/norm_b, FGMRES->getFinalResidualNorm()/norm_b, FGMRES->getNumIter());
+      std::cout << "FGMRES: init nrm: " 
+                << std::scientific << std::setprecision(16) 
+                << FGMRES->getInitResidualNorm()/norm_b
+                << " final nrm: "
+                << FGMRES->getFinalResidualNorm()/norm_b
+                << " iter: " << FGMRES->getNumIter() << "\n";
     }
 
   } // for (int i = 0; i < numSystems; ++i)

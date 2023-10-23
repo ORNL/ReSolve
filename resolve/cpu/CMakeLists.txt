@@ -8,6 +8,7 @@
 
 set(ReSolve_CPU_SRC
     MemoryUtils.cpp
+    cpuVectorKernels.cpp
 )
 
 set(ReSolve_CPU_HEADER_INSTALL
@@ -16,6 +17,8 @@ set(ReSolve_CPU_HEADER_INSTALL
 
 # First create dummy backend
 add_library(resolve_backend_cpu SHARED ${ReSolve_CPU_SRC})
+target_link_libraries(resolve_backend_cpu PRIVATE resolve_logger)
+
 target_include_directories(resolve_backend_cpu INTERFACE
     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
     $<INSTALL_INTERFACE:include>

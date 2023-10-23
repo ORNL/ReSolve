@@ -7,7 +7,7 @@
 #include <resolve/vector/Vector.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <tests/unit/TestBase.hpp>
-#include <resolve/LinAlgWorkspace.hpp>
+#include <resolve/workspace/LinAlgWorkspace.hpp>
 
 namespace ReSolve { 
   namespace tests {
@@ -38,8 +38,7 @@ namespace ReSolve {
         {
           TestStatus status;
 
-          ReSolve::LinAlgWorkspace* workspace = createLinAlgWorkspace(memspace_);
-          ReSolve::VectorHandler handler(workspace);
+          ReSolve::VectorHandler* handler = createVectorHandler();
 
           vector::Vector* x = new vector::Vector(N);
           vector::Vector* y = new vector::Vector(N);
@@ -52,10 +51,10 @@ namespace ReSolve {
 
           real_type alpha = 0.5;
           //the result is a vector with y[i] = 2.5;          
-          handler.axpy(&alpha, x, y, memspace_);
+          handler->axpy(&alpha, x, y, memspace_);
           status *= verifyAnswer(y, 2.5, memspace_);
 
-          delete workspace;
+          delete handler;
           delete x;
           delete y; 
 
@@ -66,8 +65,7 @@ namespace ReSolve {
         {
           TestStatus status;
 
-          ReSolve::LinAlgWorkspace* workspace = createLinAlgWorkspace(memspace_);
-          ReSolve::VectorHandler handler(workspace);
+          ReSolve::VectorHandler* handler = createVectorHandler();
 
           vector::Vector* x = new vector::Vector(N);
           vector::Vector* y = new vector::Vector(N);
@@ -79,7 +77,7 @@ namespace ReSolve {
           y->setToConst(4.0, memspace_);
           real_type ans;
           //the result is N
-          ans = handler.dot(x, y, memspace_);
+          ans = handler->dot(x, y, memspace_);
 
           bool st = true;;
           if (ans != (real_type) N) {
@@ -88,7 +86,7 @@ namespace ReSolve {
           } 
           status *= st;
 
-          delete workspace;
+          delete handler;
           delete x;
           delete y; 
 
@@ -99,8 +97,7 @@ namespace ReSolve {
         {
           TestStatus status;
 
-          ReSolve::LinAlgWorkspace* workspace = createLinAlgWorkspace(memspace_);
-          ReSolve::VectorHandler handler(workspace);
+          ReSolve::VectorHandler* handler = createVectorHandler();
 
           vector::Vector* x =  new vector::Vector(N);
 
@@ -111,10 +108,10 @@ namespace ReSolve {
           real_type alpha = 3.5;
 
           //the answer is x[i] = 4.375;         
-          handler.scal(&alpha, x, memspace_);
+          handler->scal(&alpha, x, memspace_);
           status *= verifyAnswer(x, 4.375, memspace_);
 
-          delete workspace;
+          delete handler;
           delete x;
 
           return status.report(__func__);
@@ -124,8 +121,7 @@ namespace ReSolve {
         {
           TestStatus status;
 
-          ReSolve::LinAlgWorkspace* workspace = createLinAlgWorkspace(memspace_);
-          ReSolve::VectorHandler handler(workspace);
+          ReSolve::VectorHandler* handler = createVectorHandler();
           
           vector::Vector* x =  new vector::Vector(N, K);
           vector::Vector* y =  new vector::Vector(N);
@@ -148,11 +144,11 @@ namespace ReSolve {
           index_type r = K % 2;
           real_type res = (real_type) ((floor((real_type) K / 2.0) + r) * 1.0 + floor((real_type) K / 2.0) * (-0.5));
 
-          handler.massAxpy(N, alpha, K, x, y, memspace_);
+          handler->massAxpy(N, alpha, K, x, y, memspace_);
           status *= verifyAnswer(y, 2.0 - res, memspace_);
 
 
-          delete workspace;
+          delete handler;
           delete x;
           delete y;
           delete alpha;
@@ -164,8 +160,7 @@ namespace ReSolve {
         {
           TestStatus status;
 
-          ReSolve::LinAlgWorkspace* workspace = createLinAlgWorkspace(memspace_);
-          ReSolve::VectorHandler handler(workspace);
+          ReSolve::VectorHandler* handler = createVectorHandler();
           
           vector::Vector* x =  new vector::Vector(N, K);
           vector::Vector* y =  new vector::Vector(N, 2);
@@ -176,11 +171,11 @@ namespace ReSolve {
           
           x->setToConst(1.0, memspace_);
           y->setToConst(-1.0, memspace_);
-          handler.massDot2Vec(N, x, K, y, res, memspace_);
+          handler->massDot2Vec(N, x, K, y, res, memspace_);
           
           status *= verifyAnswer(res, (-1.0) * (real_type) N, memspace_);
 
-          delete workspace;
+          delete handler;
           delete x;
           delete y;
           delete res;
@@ -190,8 +185,7 @@ namespace ReSolve {
         TestOutcome gemv(index_type N,  index_type K)
         {
           TestStatus status;
-          ReSolve::LinAlgWorkspace* workspace = createLinAlgWorkspace(memspace_);
-          ReSolve::VectorHandler handler(workspace);
+          ReSolve::VectorHandler* handler = createVectorHandler();
           vector::Vector* V = new vector::Vector(N, K);
           // for the test with NO TRANSPOSE
           vector::Vector* yN = new vector::Vector(K); 
@@ -214,9 +208,9 @@ namespace ReSolve {
           
           real_type alpha = -1.0;
           real_type beta = 1.0;
-          handler.gemv("N", N, K, &alpha, &beta, V, yN, xN, memspace_);
+          handler->gemv("N", N, K, &alpha, &beta, V, yN, xN, memspace_);
           status *= verifyAnswer(xN, (real_type) (K) + 0.5, memspace_);
-          handler.gemv("T", N, K, &alpha, &beta, V, yT, xT, memspace_);
+          handler->gemv("T", N, K, &alpha, &beta, V, yT, xT, memspace_);
           status *= verifyAnswer(xT, (real_type) (N) + 0.5, memspace_);
 
           return status.report(__func__);
@@ -225,7 +219,24 @@ namespace ReSolve {
       private:
         std::string memspace_{"cpu"};
 
-        // we can verify through norm but that would defeat the purpose of testing vector handler...
+        ReSolve::VectorHandler* createVectorHandler()
+        {
+          if (memspace_ == "cpu") {
+            LinAlgWorkspaceCpu* workpsace = new LinAlgWorkspaceCpu();
+            return new VectorHandler(workpsace);
+#ifdef RESOLVE_USE_CUDA
+          } else if (memspace_ == "cuda") {
+            LinAlgWorkspaceCUDA* workspace = new LinAlgWorkspaceCUDA();
+            workspace->initializeHandles();
+            return new VectorHandler(workspace);
+#endif
+          } else {
+            std::cout << "ReSolve not built with support for memory space " << memspace_ << "\n";
+          }
+          return nullptr;
+        }
+
+        // we can verify through norm but that would defeat the purpose of testing vector handler ...
         bool verifyAnswer(vector::Vector* x, real_type answer, std::string memspace)
         {
           bool status = true;

@@ -1,4 +1,12 @@
+#[[
 
+@brief Build ReSolve matrix module
+
+@author Slaven Peles <peless@ornl.gov>
+
+]]
+
+# C++ code
 set(Matrix_SRC 
     io.cpp
     Sparse.cpp
@@ -6,9 +14,15 @@ set(Matrix_SRC
     Csc.cpp
     Coo.cpp
     MatrixHandler.cpp
+    MatrixHandlerCpu.cpp
 )
 
+# C++ code that depends on CUDA SDK libraries
+set(Matrix_CUDASDK_SRC 
+    MatrixHandlerCuda.cpp
+)
 
+# Header files to be installed
 set(Matrix_HEADER_INSTALL
     io.hpp
     Sparse.hpp
@@ -18,13 +32,24 @@ set(Matrix_HEADER_INSTALL
     MatrixHandler.hpp
 )
 
+# Add CUDA matrix handler if CUDA support is enabled
+if(RESOLVE_USE_CUDA)
+  set(Matrix_SRC ${Matrix_SRC} ${Matrix_CUDASDK_SRC})
+endif()
+
+
 # Build shared library ReSolve::matrix
 add_library(resolve_matrix SHARED ${Matrix_SRC})
+target_link_libraries(resolve_matrix PRIVATE resolve_logger resolve_vector)
 
+# Link to CUDA ReSolve backend if CUDA is support enabled
 if (RESOLVE_USE_CUDA)
-    target_link_libraries(resolve_matrix PUBLIC resolve_backend_cuda)
-else()
-    target_link_libraries(resolve_matrix PUBLIC resolve_backend_cpu)
+  target_link_libraries(resolve_matrix PUBLIC resolve_backend_cuda)
+endif()
+
+# Link to dummy device backend if GPU support is not enabled
+if (NOT RESOLVE_USE_GPU)
+  target_link_libraries(resolve_matrix PUBLIC resolve_backend_cpu)
 endif()
 
 

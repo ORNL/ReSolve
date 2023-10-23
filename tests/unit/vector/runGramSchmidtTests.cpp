@@ -7,6 +7,7 @@ int main(int, char**)
 {
   ReSolve::tests::TestingResults result; 
 
+#ifdef RESOLVE_USE_CUDA
   {
     std::cout << "Running tests with CUDA backend:\n";
     ReSolve::tests::GramSchmidtTests test("cuda");
@@ -18,6 +19,7 @@ int main(int, char**)
     result += test.orthogonalize(5000, ReSolve::GramSchmidt::mgs_pm);
     std::cout << "\n";
   }
+#endif
 
   return result.summary();
 }

@@ -1,15 +1,7 @@
-#include "LinAlgWorkspace.hpp"
+#include <resolve/workspace/LinAlgWorkspaceCUDA.hpp>
 
 namespace ReSolve
 {
-  LinAlgWorkspace::LinAlgWorkspace()
-  {
-  }
-  
-  LinAlgWorkspace::~LinAlgWorkspace()
-  {
-  }
-
   LinAlgWorkspaceCUDA::LinAlgWorkspaceCUDA()
   {
     handle_cusolversp_ = nullptr;
@@ -29,8 +21,6 @@ namespace ReSolve
     cusolverSpDestroy(handle_cusolversp_);
     cublasDestroy(handle_cublas_);
     cusparseDestroySpMat(mat_A_);
-    // cusparseDestroyDnVec(vec_x_);
-    // cusparseDestroyDnVec(vec_y_);
   }
 
   void* LinAlgWorkspaceCUDA::getSpmvBuffer()
@@ -93,21 +83,23 @@ namespace ReSolve
     mat_A_ = mat;
   }
 
-  cusparseDnVecDescr_t   LinAlgWorkspaceCUDA::getVecX()
+  cusparseDnVecDescr_t LinAlgWorkspaceCUDA::getVecX()
   {
     return vec_x_;
   }
 
-  cusparseDnVecDescr_t   LinAlgWorkspaceCUDA::getVecY()
+  cusparseDnVecDescr_t LinAlgWorkspaceCUDA::getVecY()
   {
     return vec_y_;
   }
 
-  bool LinAlgWorkspaceCUDA::matvecSetup(){
+  bool LinAlgWorkspaceCUDA::matvecSetup()
+  {
     return matvec_setup_done_;
   }
 
-  void LinAlgWorkspaceCUDA::matvecSetupDone() {
+  void LinAlgWorkspaceCUDA::matvecSetupDone()
+  {
     matvec_setup_done_ = true;
   }
 
@@ -117,4 +109,4 @@ namespace ReSolve
     cublasCreate(&handle_cublas_);
     cusolverSpCreate(&handle_cusolversp_);
   }
-}
+} // namespace ReSolve

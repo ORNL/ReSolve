@@ -7,7 +7,9 @@ namespace ReSolve
   {
     class Vector;
   }
-  class LinAlgWorkspace;
+  class VectorHandlerImpl;
+  class LinAlgWorkspaceCpu;
+  class LinAlgWorkspaceCUDA;
 }
 
 
@@ -15,14 +17,15 @@ namespace ReSolve { //namespace vector {
   class VectorHandler { 
     public:
       VectorHandler();
-      VectorHandler(LinAlgWorkspace* new_workspace);
+      VectorHandler(LinAlgWorkspaceCpu* new_workspace);
+      VectorHandler(LinAlgWorkspaceCUDA* new_workspace);
       ~VectorHandler();
 
       //y = alpha x + y
-      void axpy(const real_type* alpha, vector::Vector* x, vector::Vector* y, std::string memspace );
+      void axpy(const real_type* alpha, vector::Vector* x, vector::Vector* y, std::string memspace);
 
       //dot: x \cdot y
-      real_type dot(vector::Vector* x, vector::Vector* y, std::string memspace );
+      real_type dot(vector::Vector* x, vector::Vector* y, std::string memspace);
 
       //scal = alpha * x
       void scal(const real_type* alpha, vector::Vector* x, std::string memspace);
@@ -40,9 +43,21 @@ namespace ReSolve { //namespace vector {
        * if `transpose = T` (yes), `x = beta*x + alpha*V^T*y`,
        * where `x` is `[k x 1]`, `V` is `[n x k]` and `y` is `[n x 1]`.
        */ 
-      void gemv(std::string transpose, index_type n, index_type k, const real_type* alpha, const real_type* beta, vector::Vector* V, vector::Vector* y, vector::Vector* x, std::string memspace);
+      void gemv(std::string transpose,
+                index_type n,
+                index_type k,
+                const real_type* alpha,
+                const real_type* beta,
+                vector::Vector* V,
+                vector::Vector* y,
+                vector::Vector* x,
+                std::string memspace);
     private:
-      LinAlgWorkspace* workspace_;
+      VectorHandlerImpl*  cpuImpl_{nullptr};
+      VectorHandlerImpl* cudaImpl_{nullptr};
+
+      bool isCpuEnabled_{false};
+      bool isCudaEnabled_{false};
   };
 
 } //} // namespace ReSolve::vector

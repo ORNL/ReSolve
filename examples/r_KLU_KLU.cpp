@@ -1,5 +1,7 @@
 #include <string>
 #include <iostream>
+#include <iomanip>
+#include <cmath>
 
 #include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/Csr.hpp>
@@ -9,7 +11,7 @@
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
-#include <resolve/LinAlgWorkspace.hpp>
+#include <resolve/workspace/LinAlgWorkspace.hpp>
 
 using namespace ReSolve::constants;
 
@@ -35,10 +37,9 @@ int main(int argc, char *argv[])
 
   ReSolve::matrix::Coo* A_coo;
   ReSolve::matrix::Csr* A;
-  ReSolve::LinAlgWorkspaceCUDA* workspace_CUDA = new ReSolve::LinAlgWorkspaceCUDA;
-  workspace_CUDA->initializeHandles();
-  ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(workspace_CUDA);
-  ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(workspace_CUDA);
+  ReSolve::LinAlgWorkspaceCpu* workspace = new ReSolve::LinAlgWorkspaceCpu();
+  ReSolve::MatrixHandler* matrix_handler = new ReSolve::MatrixHandler(workspace);
+  ReSolve::VectorHandler* vector_handler = new ReSolve::VectorHandler(workspace);
   real_type* rhs;
   real_type* x;
 
@@ -96,7 +97,11 @@ int main(int argc, char *argv[])
       ReSolve::io::readAndUpdateMatrix(mat_file, A_coo);
       ReSolve::io::readAndUpdateRhs(rhs_file, &rhs);
     }
-    std::cout<<"Finished reading the matrix and rhs, size: "<<A->getNumRows()<<" x "<<A->getNumColumns()<< ", nnz: "<< A->getNnz()<< ", symmetric? "<<A->symmetric()<< ", Expanded? "<<A->expanded()<<std::endl;
+    std::cout << "Finished reading the matrix and rhs, size: " << A->getNumRows()
+              << " x "           << A->getNumColumns()
+              << ", nnz: "       << A->getNnz()
+              << ", symmetric? " << A->symmetric()
+              << ", Expanded? "  << A->expanded() << std::endl;
     mat_file.close();
     rhs_file.close();
 
@@ -106,8 +111,8 @@ int main(int argc, char *argv[])
       vec_rhs->update(rhs, "cpu", "cpu");
       vec_rhs->setDataUpdated("cpu");
     } else { 
-      matrix_handler->coo2csr(A_coo, A, "cuda");
-      vec_rhs->update(rhs, "cpu", "cuda");
+      matrix_handler->coo2csr(A_coo, A, "cpu");
+      vec_rhs->update(rhs, "cpu", "cpu");
     }
     std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnzExpanded()<<std::endl;
     //Now call direct solver
@@ -129,17 +134,15 @@ int main(int argc, char *argv[])
       status = KLU->solve(vec_rhs, vec_x);
       std::cout<<"KLU solve status: "<<status<<std::endl;      
     }
-    vec_r->update(rhs, "cpu", "cuda");
+    vec_r->update(rhs, "cpu", "cpu");
 
-    matrix_handler->setValuesChanged(true);
+    matrix_handler->setValuesChanged(true, "cpu");
 
-    matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, "csr", "cuda"); 
-    real_type* test = vec_r->getData("cpu");
-    (void) test; // TODO: Do we need `test` variable in this example?
+    matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, "csr", "cpu"); 
 
-    printf("\t 2-Norm of the residual: %16.16e\n", sqrt(vector_handler->dot(vec_r, vec_r, "cuda")));
-
-
+    std::cout << "\t 2-Norm of the residual: " 
+              << std::scientific << std::setprecision(16) 
+              << sqrt(vector_handler->dot(vec_r, vec_r, "cpu")) << "\n";
   }
 
   //now DELETE

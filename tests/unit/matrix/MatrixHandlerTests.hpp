@@ -5,7 +5,7 @@
 #include <iterator>
 #include <algorithm>
 #include <resolve/matrix/Csr.hpp>
-#include <resolve/LinAlgWorkspace.hpp>
+#include <resolve/workspace/LinAlgWorkspace.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <tests/unit/TestBase.hpp>
@@ -43,8 +43,7 @@ public:
   {
     TestStatus status;
 
-    ReSolve::LinAlgWorkspace* workspace = createLinAlgWorkspace(memspace_);
-    ReSolve::MatrixHandler handler(workspace);
+    ReSolve::MatrixHandler* handler = createMatrixHandler();
 
     matrix::Csr* A = createCsrMatrix(N, memspace_);
     vector::Vector x(N);
@@ -57,12 +56,12 @@ public:
 
     real_type alpha = 2.0/30.0;
     real_type beta  = 2.0;
-    handler.setValuesChanged(true);
-    handler.matvec(A, &x, &y, &alpha, &beta, "csr", memspace_);
+    handler->setValuesChanged(true, memspace_);
+    handler->matvec(A, &x, &y, &alpha, &beta, "csr", memspace_);
 
     status *= verifyAnswer(y, 4.0, memspace_);
 
-    delete workspace;
+    delete handler;
     delete A;
 
     return status.report(__func__);
@@ -70,6 +69,23 @@ public:
 
 private:
   std::string memspace_{"cpu"};
+
+  ReSolve::MatrixHandler* createMatrixHandler()
+  {
+    if (memspace_ == "cpu") {
+      LinAlgWorkspaceCpu* workspace = new LinAlgWorkspaceCpu();
+      return new MatrixHandler(workspace);
+#ifdef RESOLVE_USE_CUDA
+    } else if (memspace_ == "cuda") {
+      LinAlgWorkspaceCUDA* workspace = new LinAlgWorkspaceCUDA();
+      workspace->initializeHandles();
+      return new MatrixHandler(workspace);
+#endif
+    } else {
+      std::cout << "ReSolve not built with support for memory space " << memspace_ << "\n";
+    }
+    return nullptr;
+  }
 
   bool verifyAnswer(vector::Vector& x, real_type answer, std::string memspace)
   {

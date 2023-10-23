@@ -8,17 +8,7 @@
 
 namespace ReSolve
 {
-  class LinAlgWorkspace
-  {
-    public:
-      LinAlgWorkspace();
-      ~LinAlgWorkspace();
-    protected:
-      MemoryHandler mem_;
-  };
-
-
-  class LinAlgWorkspaceCUDA : public LinAlgWorkspace
+  class LinAlgWorkspaceCUDA
   {
     public:
       LinAlgWorkspaceCUDA();
@@ -65,20 +55,8 @@ namespace ReSolve
       void* buffer_1norm_;
 
       bool matvec_setup_done_; //check if setup is done for matvec i.e. if buffer is allocated, csr structure is set etc.
+
+      MemoryHandler mem_;
   };
 
-  /// @brief  Workspace factory
-  /// @param[in] memspace memory space ID 
-  /// @return pointer to the linear algebra workspace
-  inline LinAlgWorkspace* createLinAlgWorkspace(std::string memspace)
-  {
-    if (memspace == "cuda") {
-      LinAlgWorkspaceCUDA* workspace = new LinAlgWorkspaceCUDA();
-      workspace->initializeHandles();
-      return workspace;
-    } 
-    // If not CUDA, return default
-    return (new LinAlgWorkspace());
-  }
-
-}
+} // namespace ReSolve

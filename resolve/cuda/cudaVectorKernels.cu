@@ -1,5 +1,5 @@
 #include "cudaVectorKernels.h"
-#include "VectorKernels.hpp"
+#include <resolve/vector/VectorKernels.hpp>
 
 
 namespace ReSolve { namespace vector {

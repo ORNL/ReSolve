@@ -19,6 +19,7 @@ int main(int, char**)
     std::cout << "\n";
   }
 
+#ifdef RESOLVE_USE_CUDA
   {
     std::cout << "Running tests with CUDA backend:\n";
     ReSolve::tests::VectorHandlerTests test("cuda");
@@ -34,6 +35,7 @@ int main(int, char**)
 
     std::cout << "\n";
   }
+#endif
 
   return result.summary();
 }

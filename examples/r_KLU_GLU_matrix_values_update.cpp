@@ -1,5 +1,6 @@
 #include <string>
 #include <iostream>
+#include <iomanip>
 
 #include <resolve/vector/Vector.hpp>
 #include <resolve/matrix/io.hpp>
@@ -9,7 +10,7 @@
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
 #include <resolve/LinSolverDirectCuSolverGLU.hpp>
-#include <resolve/LinAlgWorkspace.hpp>
+#include <resolve/workspace/LinAlgWorkspace.hpp>
 
 // this updates the matrix values to simulate what CFD/optimization software does. 
 
@@ -155,10 +156,12 @@ int main(int argc, char *argv[])
       vec_r->update(rhs, "cpu", "cuda");
 
 
-      matrix_handler->setValuesChanged(true);
+      matrix_handler->setValuesChanged(true, "cuda");
       matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "cuda"); 
 
-      printf("\t 2-Norm of the residual: %16.16e\n", sqrt(vector_handler->dot(vec_r, vec_r, "cuda")));
+      std::cout << "\t 2-Norm of the residual: " 
+                << std::scientific << std::setprecision(16) 
+                << sqrt(vector_handler->dot(vec_r, vec_r, "cuda")) << "\n";
 
 
     }

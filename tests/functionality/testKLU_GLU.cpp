@@ -10,7 +10,7 @@
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
 #include <resolve/LinSolverDirectCuSolverGLU.hpp>
-#include <resolve/LinAlgWorkspace.hpp>
+#include <resolve/workspace/LinAlgWorkspace.hpp>
 //author: KS
 //functionality test to check whether cuSolverGLU works correctly.
 
@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
   int error_sum = 0;
   int status = 0;
 
-  ReSolve::LinAlgWorkspaceCUDA* workspace_CUDA = new ReSolve::LinAlgWorkspaceCUDA;
+  ReSolve::LinAlgWorkspaceCUDA* workspace_CUDA = new ReSolve::LinAlgWorkspaceCUDA();
   workspace_CUDA->initializeHandles();
   ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(workspace_CUDA);
   ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(workspace_CUDA);
@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
   vec_diff->update(x_data, "cpu", "cuda");
 
   // real_type normXmatrix1 = sqrt(vector_handler->dot(vec_test, vec_test, "cuda"));
-  matrix_handler->setValuesChanged(true);
+  matrix_handler->setValuesChanged(true, "cuda");
   status = matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr","cuda"); 
   error_sum += status;
   
@@ -198,7 +198,7 @@ int main(int argc, char *argv[])
   error_sum += status;
 
    vec_r->update(rhs, "cpu", "cuda");
-   matrix_handler->setValuesChanged(true);
+   matrix_handler->setValuesChanged(true, "cuda");
 
   status = matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, "csr", "cuda"); 
   error_sum += status;
