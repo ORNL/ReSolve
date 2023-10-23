@@ -21,6 +21,19 @@ stages:
     - &rule_yes_ascent_test
       if: '$CI_COMMIT_TITLE =~ /\[ascent-test\]/'
       when: always
+      # -- 
+      # Only run when the commit **DOES NOT** contains "[deception-rebuild]" 
+    - &rule_no_deception_rebuild
+      if: '$CI_COMMIT_TITLE =~ /\[deception-rebuild\]/'
+      when: never 
+    # Only run when the commit **DOES NOT** contains "[deception-test]"
+    - &rule_no_deception_test
+      if: '$CI_COMMIT_TITLE =~ /\[deception-test\]/'
+      when: never
+    # Only run when the commit **DOES** contains "[deception-test]"
+    - &rule_yes_deception_test
+      if: '$CI_COMMIT_TITLE =~ /\[deception-test\]/'
+      when: always
 
 # Ascent Variables
 .ornl_environment_template:

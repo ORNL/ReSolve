@@ -28,6 +28,6 @@ jobs:
        # Give actions access to some secrets
          with:
             GIT_PUSH_ARGS: '--tags --force --push-option=ci.skip'
-            REMOTE: 'https://gitlab.pnnl.gov/exasgd/frameworks/exago-github-mirror'
+            REMOTE: 'https://code.ornl.gov/ecpcitest/exasgd/resolve'
             GIT_USERNAME:  ${{ secrets.GIT_USER }}
             GIT_PASSWORD:  ${{ secrets.GIT_PASSWORD }}
