@@ -14,15 +14,6 @@ Deception Test:
     SCRIPT_ARGS: " --test-only "
   needs: ['Deception Build']
 
-Deception Module Rebuild:
-  extends: .module_rebuild
-  rules:
-    - if: '$CI_COMMIT_TITLE =~ /\[deception-rebuild\]/'
-      when: always
-  variables:
-    MY_CLUSTER: "deception"
-    WORKDIR_SUFFIX: "spack_deception"
-
 pending:
   variables:
     MY_CLUSTER: "Deception"
