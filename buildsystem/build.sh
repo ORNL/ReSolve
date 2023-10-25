@@ -190,7 +190,7 @@ if [[ $TEST -eq 1 ]]; then
   echo Testing
   echo
   ctest $CTESTARGS || exit 1
-  make test_install
+  make test_install || exit 1
   popd
 fi
 
