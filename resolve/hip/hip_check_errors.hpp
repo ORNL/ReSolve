@@ -25,5 +25,4 @@ int  check(T result,
   }
   return 0;
 }
-// #define checkCudaErrors(val) check((val), #val, __FILE__, __LINE__)
-#define checkHipErrors(val) val
+#define checkHipErrors(val) check((val), #val, __FILE__, __LINE__)
