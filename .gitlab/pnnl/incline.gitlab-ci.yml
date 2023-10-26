@@ -3,16 +3,25 @@ Incline Build:
     - .cluster_build
     - .incline
   variables:
-    SCRIPT_ARGS: " --build-only --job=clang-hip "
+    SCRIPT_ARGS: " --build-only " #--job=clang-hip "
 
 Incline Test:
   extends:
     - .cluster_test
     - .incline
   variables:
-    SCRIPT_ARGS: " --test-only --job=clang-hip "
+    SCRIPT_ARGS: " --test-only " #--job=clang-hip "
     CTESTARGS: " --timeout 240 --output-on-failure -LE incline-skip "
   needs: ['Incline Build']
+
+Incline Module Rebuild:
+  extends: .module_rebuild
+  rules:
+    - if: $CI_COMMIT_TITLE =~ /\[incline-rebuild\]/
+      when: always
+  variables:
+    MY_CLUSTER: "incline"
+    WORKDIR_SUFFIX: "spack_incline"
 
 pending:
   variables:
