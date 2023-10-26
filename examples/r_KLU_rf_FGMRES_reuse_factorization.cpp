@@ -217,5 +217,8 @@ int main(int argc, char *argv[])
 
   }
 
+  delete [] x;
+  delete [] rhs;
+
   return 0;
 }

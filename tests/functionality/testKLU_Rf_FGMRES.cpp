@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
     return -1;
   }
   real_type* rhs = ReSolve::io::readRhsFromFile(rhs1_file);
-  real_type* x = new real_type[A->getNumRows()];
+  real_type* x   = new real_type[A->getNumRows()];
   vector_type* vec_rhs = new vector_type(A->getNumRows());
   vector_type* vec_x   = new vector_type(A->getNumRows());
   vector_type* vec_r   = new vector_type(A->getNumRows());
@@ -264,7 +264,8 @@ int main(int argc, char *argv[])
   delete GS;
   delete FGMRES;
   delete Rf;
-  delete x;
+  delete [] x;
+  delete [] rhs;
   delete vec_r;
   delete vec_x;
   delete workspace_CUDA;

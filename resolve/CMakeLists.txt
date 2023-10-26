@@ -48,6 +48,10 @@ if(RESOLVE_USE_CUDA)
     add_subdirectory(cuda)
 endif()
 
+if(RESOLVE_USE_HIP)
+    add_subdirectory(hip)
+endif()
+
 # Now, build workspaces
 add_subdirectory(workspace)
 
@@ -67,6 +71,10 @@ if(RESOLVE_USE_CUDA)
     target_link_libraries(resolve_tpl INTERFACE resolve_cuda)
 endif(RESOLVE_USE_CUDA)
 
+if(RESOLVE_USE_HIP)
+    target_link_libraries(resolve_tpl INTERFACE resolve_hip)
+endif(RESOLVE_USE_HIP)
+
 
 set(ReSolve_Targets_List
     resolve_matrix
@@ -80,6 +88,11 @@ set(ReSolve_Targets_List
 if(RESOLVE_USE_CUDA)
   set(ReSolve_SRC ${ReSolve_SRC} ${ReSolve_CUDASDK_SRC})
   set(ReSolve_Targets_List ${ReSolve_Targets_List} resolve_backend_cuda)
+endif()
+
+# If HIP support is enabled add HIP SDK specific code and dependencies
+if(RESOLVE_USE_HIP)
+  set(ReSolve_Targets_List ${ReSolve_Targets_List} resolve_backend_hip)
 endif()
 
 # If no GPU support is enabled, link to dummy device backend

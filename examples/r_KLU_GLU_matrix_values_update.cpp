@@ -44,8 +44,8 @@ int main(int argc, char *argv[])
   workspace_CUDA->initializeHandles();
   ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(workspace_CUDA);
   ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(workspace_CUDA);
-  real_type* rhs;
-  real_type* x;
+  real_type* rhs = nullptr;
+  real_type* x   = nullptr;
 
   vector_type* vec_rhs;
   vector_type* vec_x;
@@ -170,7 +170,8 @@ int main(int argc, char *argv[])
     delete A;
     delete KLU;
     delete GLU;
-    delete x;
+    delete [] x;
+    delete [] rhs;
     delete vec_r;
     delete vec_x;
     delete workspace_CUDA;

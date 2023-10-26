@@ -23,14 +23,17 @@ endif()
 
 option(RESOLVE_TEST_WITH_BSUB "Use `jsrun` instead of `mpirun` commands when running tests" OFF)
 option(RESOLVE_USE_KLU  "Use KLU, AMD and COLAMD libraries from SuiteSparse" ON)
-option(RESOLVE_USE_GPU  "Use GPU device for computations" ON)
-option(RESOLVE_USE_CUDA "Use CUDA language and SDK" ON)
+option(RESOLVE_USE_GPU  "Use GPU device for computations" OFF)
+option(RESOLVE_USE_CUDA "Use CUDA language and SDK" OFF)
+option(RESOLVE_USE_HIP  "Use HIP language and ROCm library" OFF)
 set(RESOLVE_CTEST_OUTPUT_DIR ${PROJECT_BINARY_DIR} CACHE PATH "Directory where CTest outputs are saved")
 
 if(RESOLVE_USE_CUDA)
-  set(RESOLVE_USE_GPU On CACHE BOOL "Using GPU!" FORCE)
-else()
-  set(RESOLVE_USE_GPU Off CACHE BOOL "Using GPU!" FORCE)
+  set(RESOLVE_USE_GPU On CACHE BOOL "Using CUDA GPU!" FORCE)
+endif()
+
+if(RESOLVE_USE_HIP)
+  set(RESOLVE_USE_GPU On CACHE BOOL "Using HIP GPU!" FORCE)
 endif()
 
 
@@ -88,6 +91,20 @@ if(RESOLVE_USE_CUDA)
 else()
   message(STATUS "Not using CUDA")
 endif()
+
+if(RESOLVE_USE_HIP)
+  enable_language(HIP)
+  check_language(HIP)
+  include(ReSolveFindHipLibraries)
+
+  # This is just an agly hack to make HIP build work
+  get_target_property(hip_includes hip::device INTERFACE_INCLUDE_DIRECTORIES)
+  message(STATUS "HIP include directories: ${hip_includes}")
+  include_directories(${hip_includes})
+else()
+  message(STATUS "Not using HIP")
+endif(RESOLVE_USE_HIP)
+
 
 # The binary dir is already a global include directory
 configure_file(
