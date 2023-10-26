@@ -189,5 +189,8 @@ int main(int argc, char *argv[])
 
   } // for (int i = 0; i < numSystems; ++i)
 
+  delete [] x;
+  delete [] rhs;
+
   return 0;
 }

@@ -36,8 +36,8 @@ int main(int argc, char *argv[])
   ReSolve::LinAlgWorkspaceCpu* workspace = new ReSolve::LinAlgWorkspaceCpu();
   ReSolve::MatrixHandler* matrix_handler = new ReSolve::MatrixHandler(workspace);
   ReSolve::VectorHandler* vector_handler = new ReSolve::VectorHandler(workspace);
-  real_type* rhs;
-  real_type* x;
+  real_type* rhs = nullptr;
+  real_type* x   = nullptr;
 
   vector_type* vec_rhs;
   vector_type* vec_x;
@@ -111,7 +111,8 @@ int main(int argc, char *argv[])
   //now DELETE
   delete A;
   delete KLU;
-  delete x;
+  delete [] x;
+  delete [] rhs;
   delete vec_r;
   delete vec_x;
   delete matrix_handler;

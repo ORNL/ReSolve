@@ -97,8 +97,10 @@ if(RESOLVE_USE_HIP)
   check_language(HIP)
   include(ReSolveFindHipLibraries)
 
-  # set(CMAKE_HIP_FLAGS "${CMAKE_HIP_FLAGS} -D__HIP_PLATFORM_AMD__")
-  include_directories("/opt/rocm-5.6.0/include")
+  # This is just an agly hack to make HIP build work
+  get_target_property(hip_includes hip::device INTERFACE_INCLUDE_DIRECTORIES)
+  message(STATUS "HIP include directories: ${hip_includes}")
+  include_directories(${hip_includes})
 else()
   message(STATUS "Not using HIP")
 endif(RESOLVE_USE_HIP)
