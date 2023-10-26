@@ -8,7 +8,7 @@
 
 # Build memory utilities tests
 add_executable(runMemoryUtilsTests.exe runMemoryUtilsTests.cpp)
-target_link_libraries(runMemoryUtilsTests.exe PRIVATE ReSolve resolve_backend_hip)
+target_link_libraries(runMemoryUtilsTests.exe PRIVATE ReSolve)
 message(STATUS "Resolve libraries: ${resolve_backend_hip}")
 
 
