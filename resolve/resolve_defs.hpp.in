@@ -1,4 +1,7 @@
-#pragma once
+// #pragma once
+
+#ifndef __RESOLVE_DEFINITIONS_HPP__
+#define __RESOLVE_DEFINITIONS_HPP__
 
 #cmakedefine RESOLVE_USE_GPU
 #cmakedefine RESOLVE_USE_CUDA
@@ -14,3 +17,12 @@
 
 // /// Date of build with the format "%Y-%m-%d"
 // #define RESOLVE_RELEASE_DATE "@RESOLVE_RELEASE_DATE@"
+
+#ifdef RESOLVE_USE_HIP
+#ifndef __HIP_PLATFORM_AMD__
+#define __HIP_PLATFORM_AMD__
+#endif
+#endif
+
+
+#endif // __RESOLVE_DEFINITIONS_HPP__

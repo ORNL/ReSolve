@@ -55,7 +55,8 @@ namespace ReSolve
 #include <resolve/cuda/CudaMemory.hpp>
 using MemoryHandler = ReSolve::MemoryUtils<ReSolve::memory::Cuda>;
 #elif defined RESOLVE_USE_HIP
-#error HIP support requested, but not available! Probably a bug in CMake configuration.
+#include <resolve/hip/HipMemory.hpp>
+using MemoryHandler = ReSolve::MemoryUtils<ReSolve::memory::Hip>;
 #else
 #error Unrecognized device, probably bug in CMake configuration
 #endif
