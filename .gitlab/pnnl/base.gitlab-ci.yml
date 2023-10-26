@@ -20,6 +20,14 @@ include:
     - &rule_yes_deception_test
       if: '$CI_COMMIT_TITLE =~ /\[deception-test\]/'
       when: always
+    # Only run when the commit **DOES NOT** contains "[incline-test]"
+    - &rule_no_incline_test
+      if: '$CI_COMMIT_TITLE =~ /\[incline-test\]/'
+      when: never
+    # Only run when the commit **DOES** contains "[incline-test]"
+    - &rule_yes_incline_test
+      if: '$CI_COMMIT_TITLE =~ /\[incline-test\]/'
+      when: always
 
 
 variables:
@@ -246,8 +254,19 @@ stages:
 .deception:
   rules:
     - *rule_yes_deception_test
+    - *rule_no_incline_test
     - *default
   variables:
     MY_CLUSTER: "deception"
     WORKDIR_SUFFIX: "x86_64-build"
     SLURM_ARGS: " --gres=gpu:1 --ntasks=3 "
+
+.incline:
+  rules:
+    - *rule_no_deception_test
+    - *rule_yes_incline_test
+    - *default
+  variables:
+    WORKDIR_SUFFIX: "x86_64-clang-hip-build"
+    MY_CLUSTER: "incline"
+    SLURM_ARGS: " --exclusive --ntasks=3 "
