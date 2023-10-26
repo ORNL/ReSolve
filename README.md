@@ -108,8 +108,8 @@ For any questions or to report a bug please submit a [GitHub issue](https://gith
 ## Authors and acknowledgment
 Primary authors of this project are Kasia &#346;wirydowicz <kasia.swirydowicz@pnnl.gov> and Slaven Peles <peless@ornl.gov>.
 
-ReSolve also received significant contributions from (listed in alphabetic ortder):
-- Maksud Alam
+ReSolve project would not be possible without significant contributions from (in alphabetic ortder):
+- Maksudul Alam
 - Ryan Danehy
 - Nicholson Koukpaizan
 - Jaelyn Litzinger
