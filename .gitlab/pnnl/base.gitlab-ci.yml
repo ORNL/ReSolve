@@ -191,7 +191,7 @@ stages:
 
       # jobid used in pnnl_after_script_template to cancel job if cancelled or
       # timed out by gitlab through the UI
-      jobid=$(sbatch $WORKDIR/buildsystem/spack/$MY_CLUSTER/sbatch.sh)
+      jobid=$(sbatch $WORKDIR/buildsystem/spack/$MY_CLUSTER/install.sh)
       export jobid=$(echo $jobid | cut -f4 -d ' ')
 
       # Unique jobid filename for this job
