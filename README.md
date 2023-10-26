@@ -108,9 +108,12 @@ For any questions or to report a bug please submit a [GitHub issue](https://gith
 ## Authors and acknowledgment
 Primary authors of this project are Kasia &#346;wirydowicz <kasia.swirydowicz@pnnl.gov> and Slaven Peles <peless@ornl.gov>.
 
-Multiple people contributed to the code developement (listed in alphabetic ortder):
+ReSolve also received significant contributions from (listed in alphabetic ortder):
+- Maksud Alam
 - Ryan Danehy
+- Nicholson Koukpaizan
 - Jaelyn Litzinger
+- Phil Roth
 - Cameron Rutherford
 
 Development of this coede was supported by the Exascale Computing Project (ECP), Project Number: 17-SC-20-SC, a collaborative effort of two DOE organizations—the Office of Science and the National Nuclear Security Administration—responsible for the planning and preparation of a capable exascale ecosystem—including software, applications, hardware, advanced system engineering, and early testbed platforms—to support the nation's exascale computing imperative.
