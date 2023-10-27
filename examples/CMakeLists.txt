@@ -57,9 +57,16 @@ set(CONSUMER_PATH ${CMAKE_INSTALL_PREFIX}/share/examples)
 # Make the resolve consumer test script exectuable
 install(PROGRAMS test.sh DESTINATION ${CONSUMER_PATH})
 
+# Select consumer app
+if(RESOLVE_USE_CUDA)
+  set(RESOLVE_CONSUMER_APP "testKLU_Rf_FGMRES.cpp")
+else()
+  set(RESOLVE_CONSUMER_APP "testKLU.cpp")
+endif()
+
 # Install directory with example on how to consume ReSolve
 install(DIRECTORY resolve_consumer DESTINATION share/examples)
-install(FILES ${PROJECT_SOURCE_DIR}/tests/functionality/testKLU_Rf_FGMRES.cpp DESTINATION share/examples/resolve_consumer)
+install(FILES ${PROJECT_SOURCE_DIR}/tests/functionality/${RESOLVE_CONSUMER_APP} DESTINATION share/examples/resolve_consumer RENAME consumer.cpp)
 
 # Shell script argumets: 
 #    1. Path to where resolve is installed.
