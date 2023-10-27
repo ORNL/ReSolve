@@ -60,7 +60,7 @@ namespace ReSolve { namespace vector {
       cpu_updated_ = true;
       gpu_updated_ = false;
     } else {
-      if (memspace == "cuda") { 
+      if ((memspace == "cuda") || (memspace == "hip")) {
         d_data_ = data;
         gpu_updated_ = true;
         cpu_updated_ = false;
@@ -76,7 +76,7 @@ namespace ReSolve { namespace vector {
       cpu_updated_ = true;
       gpu_updated_ = false;
     } else {
-      if (memspace == "cuda") { 
+      if ((memspace == "cuda") || (memspace == "hip")) {
         gpu_updated_ = true;
         cpu_updated_ = false;
       } else {
@@ -89,15 +89,15 @@ namespace ReSolve { namespace vector {
   {
     int control=-1;
     if ((memspaceIn == "cpu") && (memspaceOut == "cpu")){ control = 0;}
-    if ((memspaceIn == "cpu") && (memspaceOut == "cuda")){ control = 1;}
-    if ((memspaceIn == "cuda") && (memspaceOut == "cpu")){ control = 2;}
-    if ((memspaceIn == "cuda") && (memspaceOut == "cuda")){ control = 3;}
+    if ((memspaceIn == "cpu") && ((memspaceOut == "cuda") || (memspaceOut == "hip"))){ control = 1;}
+    if (((memspaceIn == "cuda") || (memspaceIn == "hip")) && (memspaceOut == "cpu")){ control = 2;}
+    if (((memspaceIn == "cuda") || (memspaceIn == "hip")) && ((memspaceOut == "cuda") || (memspaceOut == "hip"))){ control = 3;}
 
     if ((memspaceOut == "cpu") && (h_data_ == nullptr)){
       //allocate first
       h_data_ = new real_type[n_ * k_]; 
     }
-    if ((memspaceOut == "cuda") && (d_data_ == nullptr)){
+    if (((memspaceOut == "cuda") || (memspaceOut == "hip")) && (d_data_ == nullptr)){
       //allocate first
       mem_.allocateArrayOnDevice(&d_data_, n_ * k_);
     } 
@@ -109,19 +109,19 @@ namespace ReSolve { namespace vector {
         cpu_updated_ = true;
         gpu_updated_ = false;
         break;
-      case 2: //cuda->cpu
+      case 2: //gpu->cpu
         mem_.copyArrayDeviceToHost(h_data_, data, n_current_ * k_);
         owns_gpu_data_ = true;
         cpu_updated_ = true;
         gpu_updated_ = false;
         break;
-      case 1: //cpu->cuda
+      case 1: //cpu->gpu
         mem_.copyArrayHostToDevice(d_data_, data, n_current_ * k_);
         owns_gpu_data_ = true;
         gpu_updated_ = true;
         cpu_updated_ = false;
         break;
-      case 3: //cuda->cuda
+      case 3: //gpu->gpu
         mem_.copyArrayDeviceToDevice(d_data_, data, n_current_ * k_);
         owns_gpu_data_ = true;
         gpu_updated_ = true;
@@ -141,18 +141,18 @@ namespace ReSolve { namespace vector {
   real_type* Vector::getData(index_type i, std::string memspace)
   {
     if ((memspace == "cpu") && (cpu_updated_ == false) && (gpu_updated_ == true )) {
-      copyData("cuda", "cpu");
+      copyData(memspace, "cpu");
       owns_cpu_data_ = true;
     } 
 
-    if ((memspace == "cuda") && (gpu_updated_ == false) && (cpu_updated_ == true )) {
-      copyData("cpu", "cuda");
+    if (((memspace == "cuda") || (memspace == "hip")) && (gpu_updated_ == false) && (cpu_updated_ == true )) {
+      copyData("cpu", memspace);
       owns_gpu_data_ = true;
     }
     if (memspace == "cpu") {
       return &h_data_[i * n_current_];
     } else {
-      if (memspace == "cuda"){
+      if ((memspace == "cuda") || (memspace == "hip")){
         return &d_data_[i * n_current_];
       } else {
         return nullptr;
@@ -164,14 +164,14 @@ namespace ReSolve { namespace vector {
   int Vector::copyData(std::string memspaceIn, std::string memspaceOut)
   {
     int control=-1;
-    if ((memspaceIn == "cpu") && (memspaceOut == "cuda")){ control = 0;}
-    if ((memspaceIn == "cuda") && (memspaceOut == "cpu")){ control = 1;}
+    if ((memspaceIn == "cpu") && ((memspaceOut == "cuda") || (memspaceOut == "hip"))){ control = 0;}
+    if (((memspaceIn == "cuda") || (memspaceIn == "hip")) && (memspaceOut == "cpu")){ control = 1;}
 
     if ((memspaceOut == "cpu") && (h_data_ == nullptr)){
       //allocate first
       h_data_ = new real_type[n_ * k_]; 
     }
-    if ((memspaceOut == "cuda") && (d_data_ == nullptr)){
+    if (((memspaceOut == "cuda") || (memspaceOut == "hip")) && (d_data_ == nullptr)){
       //allocate first
       mem_.allocateArrayOnDevice(&d_data_, n_ * k_);
     } 
@@ -200,10 +200,12 @@ namespace ReSolve { namespace vector {
       h_data_ = new real_type[n_ * k_]; 
       owns_cpu_data_ = true;
     } else {
-      if (memspace == "cuda") {
+      if ((memspace == "cuda") || (memspace == "hip")) {
         mem_.deleteOnDevice(d_data_);
         mem_.allocateArrayOnDevice(&d_data_, n_ * k_);
         owns_gpu_data_ = true;
+      } else {
+        std::cout<<"wrong memspace " <<memspace<<" "<<std::endl;
       }
     }
   }
@@ -220,7 +222,7 @@ namespace ReSolve { namespace vector {
         h_data_[i] = 0.0;
       }
     } else {
-      if (memspace == "cuda") {
+      if ((memspace == "cuda") || (memspace == "hip")) {
         if (d_data_ == nullptr) {
           mem_.allocateArrayOnDevice(&d_data_, n_ * k_);
           owns_gpu_data_ = true;
@@ -241,7 +243,7 @@ namespace ReSolve { namespace vector {
         h_data_[i] = 0.0;
       }
     } else {
-      if (memspace == "cuda") {
+      if ((memspace == "cuda") || (memspace == "hip")) {
         if (d_data_ == nullptr) {
           mem_.allocateArrayOnDevice(&d_data_, n_ * k_);
           owns_gpu_data_ = true;
@@ -263,7 +265,7 @@ namespace ReSolve { namespace vector {
         h_data_[i] = C;
       }
     } else {
-      if (memspace == "cuda") {
+      if ((memspace == "cuda") || (memspace == "hip")) {
         if (d_data_ == nullptr) {
           mem_.allocateArrayOnDevice(&d_data_, n_ * k_);
           owns_gpu_data_ = true;
@@ -284,7 +286,7 @@ namespace ReSolve { namespace vector {
         h_data_[i] = C;
       }
     } else {
-      if (memspace == "cuda") {
+      if ((memspace == "cuda") || (memspace == "hip")) {
         if (d_data_ == nullptr) {
           mem_.allocateArrayOnDevice(&d_data_, n_ * k_);
           owns_gpu_data_ = true;
@@ -322,7 +324,7 @@ namespace ReSolve { namespace vector {
       if (memspaceOut == "cpu") {
         std::memcpy(dest, data, n_current_ * sizeof(real_type));
       } else {
-        if (memspaceOut == "cuda") { 
+      if ((memspaceOut == "cuda") || (memspaceOut == "hip")) {
           mem_.copyArrayDeviceToDevice(dest, data, n_current_);
         } else {
           //error
@@ -338,7 +340,7 @@ namespace ReSolve { namespace vector {
     if (memspaceOut == "cpu") {
       std::memcpy(dest, data, n_current_ * k_ * sizeof(real_type));
     } else {
-      if (memspaceOut == "cuda") { 
+      if ((memspaceOut == "cuda") || (memspaceOut == "hip")) {
         mem_.copyArrayDeviceToDevice(dest, data, n_current_ * k_);
       } else {
         //error

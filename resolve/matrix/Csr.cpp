@@ -30,8 +30,8 @@ namespace ReSolve
       copyData("cpu");
       return this->h_row_data_;
     } else {
-      if (memspace == "cuda") {
-        copyData("cuda");
+      if ((memspace == "cuda") || (memspace == "hip")) {
+        copyData(memspace);
         return this->d_row_data_;
       } else {
         return nullptr;
@@ -45,8 +45,8 @@ namespace ReSolve
       copyData("cpu");
       return this->h_col_data_;
     } else {
-      if (memspace == "cuda") {
-        copyData("cuda");
+      if ((memspace == "cuda") || (memspace == "hip")) {
+        copyData(memspace);
         return this->d_col_data_;
       } else {
         return nullptr;
@@ -60,8 +60,8 @@ namespace ReSolve
       copyData("cpu");
       return this->h_val_data_;
     } else {
-      if (memspace == "cuda") {
-        copyData("cuda");
+      if ((memspace == "cuda") || (memspace == "hip")) {
+        copyData(memspace);
         return this->d_val_data_;
       } else {
         return nullptr;
@@ -77,9 +77,9 @@ namespace ReSolve
     setNotUpdated();
     int control = -1;
     if ((memspaceIn == "cpu") && (memspaceOut == "cpu")){ control = 0;}
-    if ((memspaceIn == "cpu") && (memspaceOut == "cuda")){ control = 1;}
-    if ((memspaceIn == "cuda") && (memspaceOut == "cpu")){ control = 2;}
-    if ((memspaceIn == "cuda") && (memspaceOut == "cuda")){ control = 3;}
+    if ((memspaceIn == "cpu") && ((memspaceOut == "cuda") || (memspaceOut == "hip"))){ control = 1;}
+    if (((memspaceIn == "cuda") || (memspaceIn == "hip")) && (memspaceOut == "cpu")){ control = 2;}
+    if (((memspaceIn == "cuda") || (memspaceIn == "hip")) && ((memspaceOut == "cuda") || (memspaceOut == "hip"))){ control = 3;}
 
     if (memspaceOut == "cpu") {
       //check if cpu data allocated
@@ -94,7 +94,7 @@ namespace ReSolve
       }
     }
 
-    if (memspaceOut == "cuda") {
+    if ((memspaceOut == "cuda") || (memspaceOut == "hip")) {
       //check if cuda data allocated
       if (d_row_data_ == nullptr) {
         mem_.allocateArrayOnDevice(&d_row_data_, n_ + 1); 
@@ -118,7 +118,7 @@ namespace ReSolve
         owns_cpu_data_ = true;
         owns_cpu_vals_ = true;
         break;
-      case 2://cuda->cpu
+      case 2://gpu->cpu
         mem_.copyArrayDeviceToHost(h_row_data_, row_data,      n_ + 1);
         mem_.copyArrayDeviceToHost(h_col_data_, col_data, nnz_current);
         mem_.copyArrayDeviceToHost(h_val_data_, val_data, nnz_current);
@@ -126,7 +126,7 @@ namespace ReSolve
         owns_cpu_data_ = true;
         owns_cpu_vals_ = true;
         break;
-      case 1://cpu->cuda
+      case 1://cpu->gpu
         mem_.copyArrayHostToDevice(d_row_data_, row_data,      n_ + 1);
         mem_.copyArrayHostToDevice(d_col_data_, col_data, nnz_current);
         mem_.copyArrayHostToDevice(d_val_data_, val_data, nnz_current);
@@ -134,7 +134,7 @@ namespace ReSolve
         owns_gpu_data_ = true;
         owns_gpu_vals_ = true;
         break;
-      case 3://cuda->cuda
+      case 3://gpu->gpu
         mem_.copyArrayDeviceToDevice(d_row_data_, row_data,      n_ + 1);
         mem_.copyArrayDeviceToDevice(d_col_data_, col_data, nnz_current);
         mem_.copyArrayDeviceToDevice(d_val_data_, val_data, nnz_current);
@@ -174,7 +174,7 @@ namespace ReSolve
       return 0;   
     }
 
-    if (memspace == "cuda") {
+    if ((memspace == "cuda") || (memspace == "hip")) {
       mem_.allocateArrayOnDevice(&d_row_data_,      n_ + 1); 
       mem_.allocateArrayOnDevice(&d_col_data_, nnz_current); 
       mem_.allocateArrayOnDevice(&d_val_data_, nnz_current); 
@@ -212,7 +212,7 @@ namespace ReSolve
       return 0;
     }
 
-    if (memspaceOut == "cuda") {
+    if ((memspaceOut == "cuda") || (memspaceOut == "hip")) {
       if ((d_data_updated_ == false) && (h_data_updated_ == true)) {
         if (d_row_data_ == nullptr) {
           mem_.allocateArrayOnDevice(&d_row_data_, n_ + 1); 

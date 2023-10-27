@@ -9,6 +9,8 @@ find_package(hipblas REQUIRED)
 target_link_libraries(resolve_hip INTERFACE
   #hip::host 
   hip::device
+  rocblas
+  rocsparse
   #roc::hipblas
 )
 

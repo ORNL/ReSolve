@@ -33,5 +33,17 @@ int main(int, char**)
   }
 #endif
 
+#ifdef RESOLVE_USE_HIP
+  {
+    std::cout << "Running tests with HIP backend:\n";
+    ReSolve::tests::MatrixHandlerTests test("hip");
+
+    result += test.matrixHandlerConstructor();
+    result += test.matrixOneNorm();
+    result += test.matVec(50);
+
+    std::cout << "\n";
+  }
+#endif
   return result.summary();
 }
