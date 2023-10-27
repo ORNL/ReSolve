@@ -14,6 +14,7 @@ int main(int, char**)
     ReSolve::tests::MemoryUtilsTests test("hip");
 
     result += test.allocateAndDelete();
+    result += test.memsetAndMemcpy();
 
     std::cout << "\n";
   }
@@ -25,6 +26,7 @@ int main(int, char**)
     ReSolve::tests::MemoryUtilsTests test("hip");
 
     result += test.allocateAndDelete();
+    result += test.memsetAndMemcpy();
 
     std::cout << "\n";
   }
