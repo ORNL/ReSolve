@@ -155,6 +155,7 @@ case $MY_CLUSTER in
     ;;
   *)
     echo "Cluster $MY_CLUSTER not identified - you'll have to set relevant variables manually."
+    exit 1
     ;;
 esac
 
