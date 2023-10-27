@@ -137,21 +137,26 @@ fi
 
 module purge
 
+if [[ ! -v MY_CLUSTER ]]
+then
+  export MY_CLUSTER=`uname -n | sed -e 's/[0-9]//g' -e 's/\..*//'`
+fi
+
 # Correctly identify clusters based on hostname
-#case $MY_CLUSTER in
-#  incline*|dmi*)
-#    export MY_CLUSTER=incline
-#    ;;
-#  dl*|deception|*fat*)
-#    export MY_CLUSTER=deception
-#    ;;
-#  ascent*)
-#    export MY_CLUSTER=ascent
-#    ;;
-#  *)
-#    echo "Cluster $MY_CLUSTER not identified - you'll have to set relevant variables manually."
-#    ;;
-#esac
+case $MY_CLUSTER in
+  incline*|dmi*)
+    export MY_CLUSTER=incline
+    ;;
+  dl*|deception|*fat*)
+    export MY_CLUSTER=deception
+    ;;
+  ascent*)
+    export MY_CLUSTER=ascent
+    ;;
+  *)
+    echo "Cluster $MY_CLUSTER not identified - you'll have to set relevant variables manually."
+    ;;
+esac
 
 varfile="${SRCDIR}/buildsystem/${MY_CLUSTER}-env.sh"
 
