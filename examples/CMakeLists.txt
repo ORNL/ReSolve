@@ -66,7 +66,7 @@ endif()
 
 # Install directory with example on how to consume ReSolve
 install(DIRECTORY resolve_consumer DESTINATION share/examples)
-install(FILES ${PROJECT_SOURCE_DIR}/tests/functionality/${RESOLVE_CONSUMER_APP} DESTINATION share/examples/resolve_consumer)
+install(FILES ${PROJECT_SOURCE_DIR}/tests/functionality/${RESOLVE_CONSUMER_APP} DESTINATION share/examples/resolve_consumer RENAME consumer.cpp)
 
 # Shell script argumets: 
 #    1. Path to where resolve is installed.

@@ -10,7 +10,7 @@ project(resolve_consumer LANGUAGES CXX)
 find_package(ReSolve REQUIRED)
 
 # Build example with KLU factorization and KLU refactorization
-add_executable(consume.exe testKLU_Rf_FGMRES.cpp)
+add_executable(consume.exe consumer.cpp)
 target_link_libraries(consume.exe PRIVATE ReSolve::ReSolve)
 
 #------------------------------------------------------------------------------------
