@@ -64,6 +64,7 @@ Clusters:
 
     - deception
     - ascent 
+    - incline
 
   Run \`export MY_CLUSTER=deception\` or invoke the build script with:
 
@@ -136,6 +137,28 @@ fi
 
 module purge
 
+if [[ ! -v MY_CLUSTER ]]
+then
+  export MY_CLUSTER=`uname -n | sed -e 's/[0-9]//g' -e 's/\..*//'`
+fi
+
+# Correctly identify clusters based on hostname
+case $MY_CLUSTER in
+  incline*|dmi*)
+    export MY_CLUSTER=incline
+    ;;
+  dl*|deception|*fat*)
+    export MY_CLUSTER=deception
+    ;;
+  ascent*)
+    export MY_CLUSTER=ascent
+    ;;
+  *)
+    echo "Cluster $MY_CLUSTER not identified - you'll have to set relevant variables manually."
+    exit 1
+    ;;
+esac
+
 varfile="${SRCDIR}/buildsystem/${MY_CLUSTER}-env.sh"
 
 if [[ ! -v MY_CLUSTER ]]
@@ -147,7 +170,7 @@ if [[ -f "$varfile" ]]; then
   source $varfile || { echo "Could not source $varfile"; exit 1; }
 else
   echo "No cluster variable file configured for ${MY_CLUSTER}. Try one of:\n"
-  echo "deception, ascent." && exit 1
+  echo "deception, incline, ascent." && exit 1
 fi
 
 echo "Paths:"

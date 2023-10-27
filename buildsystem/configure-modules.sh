@@ -19,6 +19,10 @@ spack module tcl refresh -y && \
 mkdir -p $base/modules && \
 # Note we redirect and destroy old file
 arch=$(spack arch) && \
+if [ $MY_CLUSTER == "incline" ]; then
+  # Trim the last character (see #464 on GitLab)
+  arch=${arch::-1} 
+fi && \
 echo Arch for module path being used is $arch && \
 echo module use -a $SPACK_INSTALL/modules/$arch &> $base/modules/dependencies.sh && \
 spack module tcl loads -r -x resolve resolve &>> $base/modules/dependencies.sh

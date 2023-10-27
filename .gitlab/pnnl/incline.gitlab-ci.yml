@@ -1,0 +1,39 @@
+Incline Build:
+  extends:
+    - .cluster_build
+    - .incline
+  variables:
+    SCRIPT_ARGS: " --build-only " #--job=clang-hip "
+
+Incline Test:
+  extends:
+    - .cluster_test
+    - .incline
+  variables:
+    SCRIPT_ARGS: " --test-only " #--job=clang-hip "
+    CTESTARGS: " --timeout 240 --output-on-failure -LE incline-skip "
+  needs: ['Incline Build']
+
+pending:
+  variables:
+    MY_CLUSTER: "Incline"
+  extends:
+    - .report-pending
+  stage: .pre
+
+success:
+  variables:
+    MY_CLUSTER: "Incline"
+  extends:
+    - .report-status
+  stage: .post
+       
+failure:
+  stage: .post
+  variables:
+    MY_CLUSTER: "Incline"
+  extends:
+    - .report-status
+  rules:
+    - when: on_failure
+    

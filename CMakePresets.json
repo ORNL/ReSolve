@@ -14,22 +14,40 @@
             "installDir": "${sourceDir}/install",
             "generator": "Unix Makefiles"
         },
-	{
-	      "name": "ascent",
-	      "inherits": "cuda",
-	      "displayName": "Ascent Build",
-	      "description": "Custom changes specific for Ascent",
-	      "cacheVariables": {
-	            "CMAKE_C_COMPILER": "$env{OLCF_GCC_ROOT}/bin/gcc",
-	            "CMAKE_CXX_COMPILER": "$env{OLCF_GCC_ROOT}/bin/g++"
-	      }
-	},
-	{
-	      "name": "deception",
-	      "inherits": "cuda",
-	      "displayName": "Deception Build",
-	      "description": "Custom changes specific for Deception"
-	}
+        {
+            "name": "cpu",
+            "displayName": "CPU only build",
+            "description": "Base config to build without GPUs",
+            "binaryDir": "${sourceDir}/build",
+            "installDir": "${sourceDir}/install",
+            "generator": "Unix Makefiles",
+            "cacheVariables": {
+                "RESOLVE_USE_CUDA": "OFF",
+                "RESOLVE_USE_GPU": "OFF"
+            }
+        },
+	      {
+            "name": "ascent",
+            "inherits": "cuda",
+            "displayName": "Ascent Build",
+            "description": "Custom changes specific for Ascent",
+            "cacheVariables": {
+                  "CMAKE_C_COMPILER": "$env{OLCF_GCC_ROOT}/bin/gcc",
+                  "CMAKE_CXX_COMPILER": "$env{OLCF_GCC_ROOT}/bin/g++"
+	          }
+        },
+        {
+            "name": "deception",
+            "inherits": "cuda",
+            "displayName": "Deception Build",
+            "description": "Custom changes specific for Deception"
+        },
+        {
+            "name": "incline",
+            "inherits": "cpu",
+            "displayName": "Incline CPU only Build",
+            "description": "Custom changes specific for Incline"
+        }
 
     ]
 }
