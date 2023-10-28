@@ -10,6 +10,7 @@ target_link_libraries(resolve_hip INTERFACE
   #hip::host 
   hip::device
   rocblas
+  rocsolver
   rocsparse
   #roc::hipblas
 )

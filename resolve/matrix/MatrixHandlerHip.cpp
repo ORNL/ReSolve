@@ -47,9 +47,10 @@ namespace ReSolve {
       rocsparse_mat_info infoA = workspaceHIP->getSpmvMatrixInfo();
       rocsparse_mat_descr descrA =  workspaceHIP->getSpmvMatrixDescriptor();
       
+       printf("is mat descr null?  %d \n", descrA == NULL); 
       if (!workspaceHIP->matvecSetup()) {
         //setup first, allocate, etc.
-        
+       printf("matvec producing setup \n"); 
         rocsparse_create_mat_descr(&(descrA));
         rocsparse_set_mat_index_base(descrA, rocsparse_index_base_zero);
         rocsparse_set_mat_type(descrA, rocsparse_matrix_type_general);
@@ -69,6 +70,8 @@ namespace ReSolve {
         error_sum += status;
         mem_.deviceSynchronize();
 
+        workspaceHIP->setSpmvMatrixDescriptor(descrA);
+        workspaceHIP->setSpmvMatrixInfo(infoA);
         workspaceHIP->matvecSetupDone();
       } 
       
