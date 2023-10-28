@@ -192,7 +192,7 @@ printf("ERROR in sol  %16.16f \n", normDiffMatrix1);
   status = Rf->refactorize();
   error_sum += status;
 
-#if 0
+#if 1
   std::cout<<"rocSolverRf refactorization status: "<<status<<std::endl;      
   status = Rf->solve(vec_rhs, vec_x);
   error_sum += status;

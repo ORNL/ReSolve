@@ -38,6 +38,7 @@ namespace ReSolve
     mem_.copyArrayHostToDevice(d_Q_, Q, n);
 
 
+    mem_.deviceSynchronize();
     status_rocblas_ = rocsolver_dcsrrf_analysis(workspace_->getRocblasHandle(),
                                                 n,
                                                 1,
@@ -68,6 +69,7 @@ namespace ReSolve
   int LinSolverDirectRocSolverRf::refactorize()
   {
     int error_sum = 0;
+    mem_.deviceSynchronize();
     status_rocblas_ =  rocsolver_dcsrrf_refactlu(workspace_->getRocblasHandle(),
                                                  A_->getNumRows(),
                                                  A_->getNnzExpanded(),
@@ -83,6 +85,7 @@ namespace ReSolve
                                                  infoM_);
 
 
+    mem_.deviceSynchronize();
     error_sum += status_rocblas_;
 
     return error_sum; 
@@ -92,6 +95,7 @@ namespace ReSolve
   int LinSolverDirectRocSolverRf::solve(vector_type* rhs)
   {
     if (solve_mode_ == 0) {
+      mem_.deviceSynchronize();
       status_rocblas_ =  rocsolver_dcsrrf_solve(workspace_->getRocblasHandle(),
                                                 A_->getNumRows(),
                                                 1,
@@ -104,6 +108,7 @@ namespace ReSolve
                                                 rhs->getData("hip"),
                                                 A_->getNumRows(),
                                                 infoM_);
+      mem_.deviceSynchronize();
     } else {
       // not implemented yet
     }
@@ -116,6 +121,7 @@ namespace ReSolve
     x->setDataUpdated("hip");
 
     if (solve_mode_ == 0) {
+      mem_.deviceSynchronize();
       status_rocblas_ =  rocsolver_dcsrrf_solve(workspace_->getRocblasHandle(),
                                                 A_->getNumRows(),
                                                 1,
@@ -128,6 +134,7 @@ namespace ReSolve
                                                 x->getData("hip"),
                                                 A_->getNumRows(),
                                                 infoM_);
+      mem_.deviceSynchronize();
     } else {
       // not implemented yet
     }
