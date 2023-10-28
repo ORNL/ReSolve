@@ -21,7 +21,10 @@ set(ReSolve_CUDASDK_SRC
     LinSolverDirectCuSolverGLU.cpp
     LinSolverDirectCuSolverRf.cpp
 )
-
+# HIP files
+set(ReSolve_ROCM_SRC
+  LinSolverDirectRocSolverRf.cpp
+)
 # Header files to be installed
 set(ReSolve_HEADER_INSTALL
     Common.hpp
@@ -92,6 +95,7 @@ endif()
 
 # If HIP support is enabled add HIP SDK specific code and dependencies
 if(RESOLVE_USE_HIP)
+  set(ReSolve_SRC ${ReSolve_SRC} ${ReSolve_ROCM_SRC})
   set(ReSolve_Targets_List ${ReSolve_Targets_List} resolve_backend_hip)
 endif()
 
