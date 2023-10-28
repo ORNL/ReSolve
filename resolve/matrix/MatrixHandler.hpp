@@ -18,6 +18,7 @@ namespace ReSolve
   }
   class LinAlgWorkspaceCpu;
   class LinAlgWorkspaceCUDA;
+  class LinAlgWorkspaceHIP;
   class MatrixHandlerImpl;
 }
 
@@ -48,6 +49,7 @@ namespace ReSolve {
       MatrixHandler();
       MatrixHandler(LinAlgWorkspaceCpu* workspace);
       MatrixHandler(LinAlgWorkspaceCUDA* workspace);
+      MatrixHandler(LinAlgWorkspaceHIP* workspace);
       ~MatrixHandler();
 
       int csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr, std::string memspace);
@@ -70,9 +72,11 @@ namespace ReSolve {
       MemoryHandler mem_;      ///< Device memory manager object
       MatrixHandlerImpl*  cpuImpl_{nullptr}; ///< Pointer to CPU implementation
       MatrixHandlerImpl* cudaImpl_{nullptr}; ///< Pointer to CUDA implementation
+      MatrixHandlerImpl* hipImpl_{nullptr}; ///< Pointer to HIP implementation
 
       bool isCpuEnabled_{false};  ///< true if CPU  implementation is instantiated
       bool isCudaEnabled_{false}; ///< true if CUDA implementation is instantiated
+      bool isHipEnabled_{false}; ///< true if HIP implementation is instantiated
   };
 
 } // namespace ReSolve

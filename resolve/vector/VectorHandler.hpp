@@ -10,6 +10,7 @@ namespace ReSolve
   class VectorHandlerImpl;
   class LinAlgWorkspaceCpu;
   class LinAlgWorkspaceCUDA;
+  class LinAlgWorkspaceHIP;
 }
 
 
@@ -19,6 +20,7 @@ namespace ReSolve { //namespace vector {
       VectorHandler();
       VectorHandler(LinAlgWorkspaceCpu* new_workspace);
       VectorHandler(LinAlgWorkspaceCUDA* new_workspace);
+      VectorHandler(LinAlgWorkspaceHIP* new_workspace);
       ~VectorHandler();
 
       //y = alpha x + y
@@ -55,9 +57,11 @@ namespace ReSolve { //namespace vector {
     private:
       VectorHandlerImpl*  cpuImpl_{nullptr};
       VectorHandlerImpl* cudaImpl_{nullptr};
+      VectorHandlerImpl*  hipImpl_{nullptr};
 
       bool isCpuEnabled_{false};
       bool isCudaEnabled_{false};
+      bool isHipEnabled_{false};
   };
 
 } //} // namespace ReSolve::vector

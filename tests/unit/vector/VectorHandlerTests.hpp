@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <iomanip>
 #include <sstream>
 #include <iterator>
 #include <algorithm>
@@ -141,13 +142,13 @@ namespace ReSolve {
             }
             x->setToConst(ii, c, memspace_);
           }
+
           index_type r = K % 2;
           real_type res = (real_type) ((floor((real_type) K / 2.0) + r) * 1.0 + floor((real_type) K / 2.0) * (-0.5));
 
           handler->massAxpy(N, alpha, K, x, y, memspace_);
           status *= verifyAnswer(y, 2.0 - res, memspace_);
-
-
+         
           delete handler;
           delete x;
           delete y;
@@ -230,6 +231,12 @@ namespace ReSolve {
             workspace->initializeHandles();
             return new VectorHandler(workspace);
 #endif
+#ifdef RESOLVE_USE_HIP
+          } else if (memspace_ == "hip") {
+            LinAlgWorkspaceHIP* workspace = new LinAlgWorkspaceHIP();
+            workspace->initializeHandles();
+            return new VectorHandler(workspace);
+#endif
           } else {
             std::cout << "ReSolve not built with support for memory space " << memspace_ << "\n";
           }
@@ -247,6 +254,7 @@ namespace ReSolve {
           for (index_type i = 0; i < x->getSize(); ++i) {
             // std::cout << x->getData("cpu")[i] << "\n";
             if (!isEqual(x->getData("cpu")[i], answer)) {
+              std::cout << std::setprecision(16);
               status = false;
               std::cout << "Solution vector element x[" << i << "] = " << x->getData("cpu")[i]
                 << ", expected: " << answer << "\n";

@@ -49,6 +49,7 @@ public:
     vector::Vector x(N);
     vector::Vector y(N);
     x.allocate(memspace_);
+    if (x.getData(memspace_) == NULL) printf("oups we have an issue \n");
     y.allocate(memspace_);
 
     x.setToConst(1.0, memspace_);
@@ -78,6 +79,12 @@ private:
 #ifdef RESOLVE_USE_CUDA
     } else if (memspace_ == "cuda") {
       LinAlgWorkspaceCUDA* workspace = new LinAlgWorkspaceCUDA();
+      workspace->initializeHandles();
+      return new MatrixHandler(workspace);
+#endif
+#ifdef RESOLVE_USE_HIP
+    } else if (memspace_ == "hip") {
+      LinAlgWorkspaceHIP* workspace = new LinAlgWorkspaceHIP();
       workspace->initializeHandles();
       return new MatrixHandler(workspace);
 #endif
@@ -152,7 +159,7 @@ private:
     A->setUpdated("cpu");
     // std::cout << rowptr[i] << "\n";
 
-    if (memspace == "cuda") {
+    if ((memspace == "cuda") || (memspace == "hip")) {
       A->copyData(memspace);
     }
 

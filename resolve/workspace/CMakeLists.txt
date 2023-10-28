@@ -16,15 +16,24 @@ set(ReSolve_Workspace_CUDASDK_SRC
     LinAlgWorkspaceCUDA.cpp
 )
 
+set(ReSolve_Workspace_ROCM_SRC
+  LinAlgWorkspaceHIP.cpp
+)
+
 set(ReSolve_Workspace_HEADER_INSTALL
   LinAlgWorkspace.hpp
   LinAlgWorkspaceCpu.hpp
   LinAlgWorkspaceCUDA.hpp
+  LinAlgWorkspaceHIP.hpp
 )
 
 # If cuda is enabled, add CUDA SDK workspace files
 if(RESOLVE_USE_CUDA)
   set(ReSolve_Workspace_SRC ${ReSolve_Workspace_SRC} ${ReSolve_Workspace_CUDASDK_SRC})
+endif()
+
+if(RESOLVE_USE_HIP)
+  set(ReSolve_Workspace_SRC ${ReSolve_Workspace_SRC} ${ReSolve_Workspace_ROCM_SRC})
 endif()
 
 add_library(resolve_workspace SHARED ${ReSolve_Workspace_SRC})
@@ -33,6 +42,10 @@ add_library(resolve_workspace SHARED ${ReSolve_Workspace_SRC})
 if(RESOLVE_USE_CUDA)
   target_link_libraries(resolve_workspace PUBLIC resolve_backend_cuda)
 endif(RESOLVE_USE_CUDA)  
+
+if(RESOLVE_USE_HIP)
+  target_link_libraries(resolve_workspace PUBLIC resolve_backend_hip)
+endif(RESOLVE_USE_HIP)  
 
 target_include_directories(resolve_workspace INTERFACE
     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
