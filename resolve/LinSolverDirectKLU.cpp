@@ -157,7 +157,8 @@ namespace ReSolve
   {
     if (Numeric_ != nullptr){
       P_ = new index_type[A_->getNumRows()];
-      std::memcpy(P_, Numeric_->Pnum, A_->getNumRows() * sizeof(index_type));
+      size_t nrows = static_cast<size_t>(A_->getNumRows());
+      std::memcpy(P_, Numeric_->Pnum, nrows * sizeof(index_type));
       return P_;
     } else {
       return nullptr;
@@ -169,7 +170,8 @@ namespace ReSolve
   {
     if (Numeric_ != nullptr){
       Q_ = new index_type[A_->getNumRows()];
-      std::memcpy(Q_, Symbolic_->Q, A_->getNumRows() * sizeof(index_type));
+      size_t nrows = static_cast<size_t>(A_->getNumRows());
+      std::memcpy(Q_, Symbolic_->Q, nrows * sizeof(index_type));
       return Q_;
     } else {
       return nullptr;

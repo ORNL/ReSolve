@@ -228,7 +228,7 @@ namespace ReSolve { namespace matrix {
 
     switch(control)  {
       case 0: //cpu->cpu
-        std::memcpy(h_val_data_, new_vals, (nnz_current) * sizeof(real_type));
+        mem_.copyArrayHostToHost(h_val_data_, new_vals, nnz_current);
         h_data_updated_ = true;
         owns_cpu_vals_ = true;
         break;

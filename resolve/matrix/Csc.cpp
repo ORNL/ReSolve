@@ -109,9 +109,9 @@ namespace ReSolve
 
     switch(control)  {
       case 0: //cpu->cpu
-        std::memcpy(h_col_data_, col_data, (n_ + 1) * sizeof(index_type));
-        std::memcpy(h_row_data_, row_data, (nnz_current) * sizeof(index_type));
-        std::memcpy(h_val_data_, val_data, (nnz_current) * sizeof(real_type));
+        mem_.copyArrayHostToHost(h_col_data_, col_data,      n_ + 1);
+        mem_.copyArrayHostToHost(h_row_data_, row_data, nnz_current);
+        mem_.copyArrayHostToHost(h_val_data_, val_data, nnz_current);
         h_data_updated_ = true;
         owns_cpu_data_ = true;
         owns_cpu_vals_ = true;

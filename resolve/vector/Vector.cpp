@@ -104,7 +104,7 @@ namespace ReSolve { namespace vector {
 
     switch(control)  {
       case 0: //cpu->cpu
-        std::memcpy(h_data_, data, (n_current_ * k_) * sizeof(real_type));
+        mem_.copyArrayHostToHost(h_data_, data, n_current_ * k_);
         owns_cpu_data_ = true;
         cpu_updated_ = true;
         gpu_updated_ = false;
@@ -322,7 +322,7 @@ namespace ReSolve { namespace vector {
     } else {
       real_type* data = this->getData(i, memspaceOut);
       if (memspaceOut == "cpu") {
-        std::memcpy(dest, data, n_current_ * sizeof(real_type));
+        mem_.copyArrayHostToHost(dest, data, n_current_);
       } else {
       if ((memspaceOut == "cuda") || (memspaceOut == "hip")) {
           mem_.copyArrayDeviceToDevice(dest, data, n_current_);
@@ -338,7 +338,7 @@ namespace ReSolve { namespace vector {
   {
     real_type* data = this->getData(memspaceOut);
     if (memspaceOut == "cpu") {
-      std::memcpy(dest, data, n_current_ * k_ * sizeof(real_type));
+      mem_.copyArrayHostToHost(dest, data, n_current_ * k_);
     } else {
       if ((memspaceOut == "cuda") || (memspaceOut == "hip")) {
         mem_.copyArrayDeviceToDevice(dest, data, n_current_ * k_);
