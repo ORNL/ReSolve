@@ -60,7 +60,6 @@ spack env activate -p $SPACKENV &&
 # Print relevant spack config for sanity check of environment.
 echo "spack configuration will be installed into $SPACK_INSTALL" &&
 mkdir -p $SPACK_INSTALL &&
-chmod ug+wrx $SPACK_INSTALL &&
 mkdir -p $SPACK_CACHE &&
 
 # Print config if configured successfully
