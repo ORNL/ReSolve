@@ -1,3 +1,4 @@
+#include <cstddef>
 #include "LinAlgWorkspaceCpu.hpp"
 
 namespace ReSolve
