@@ -110,6 +110,9 @@ int main(int argc, char *argv[])
   error_sum += status;
   std::cout<<"Rf setup status: "<<status<<std::endl;      
 
+  status = Rf->refactorize();
+  error_sum += status;
+  std::cout<<"Rf 1st refactorize status: "<<status<<std::endl;      
 
   vector_type* vec_test;
   vector_type* vec_diff;
@@ -189,11 +192,12 @@ printf("ERROR in sol  %16.16f \n", normDiffMatrix1);
   matrix_handler->coo2csr(A_coo, A, "hip");
   vec_rhs->update(rhs, "cpu", "hip");
 
+// this hangs up
   status = Rf->refactorize();
   error_sum += status;
 
-#if 1
   std::cout<<"rocSolverRf refactorization status: "<<status<<std::endl;      
+#if 0
   status = Rf->solve(vec_rhs, vec_x);
   error_sum += status;
 
