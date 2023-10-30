@@ -137,9 +137,9 @@ private:
     matrix::Csr* A = new matrix::Csr(N, N, NNZ);
     A->allocateMatrixData("cpu");
 
-    index_type* rowptr = A->getRowData("cpu");
-    index_type* colidx = A->getColData("cpu");
-    real_type* val     = A->getValues("cpu"); 
+    index_type* rowptr = A->getRowData(memory::HOST);
+    index_type* colidx = A->getColData(memory::HOST);
+    real_type* val     = A->getValues( memory::HOST); 
 
     // Populate CSR matrix using same row pattern as for NNZ calculation
     rowptr[0] = 0;
@@ -160,7 +160,7 @@ private:
     A->setUpdated("cpu");
 
     if ((memspace == "cuda") || (memspace == "hip")) {
-      A->copyData(memspace);
+      A->copyData(memory::DEVICE);
     }
 
     return A;

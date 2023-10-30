@@ -176,9 +176,9 @@ private:
                     const std::vector<real_type>& val_data)
   {
     for (size_t i = 0; i < val_data.size(); ++i) {
-      if ((answer.getRowData("cpu")[i] != row_data[i]) ||
-          (answer.getColData("cpu")[i] != col_data[i]) ||
-          (!isEqual(answer.getValues("cpu")[i], val_data[i])))
+      if ((answer.getRowData(memory::HOST)[i] != row_data[i]) ||
+          (answer.getColData(memory::HOST)[i] != col_data[i]) ||
+          (!isEqual(answer.getValues(memory::HOST)[i], val_data[i])))
       {
         std::cout << "Incorrect matrix value at storage element " << i << ".\n";
         return false;

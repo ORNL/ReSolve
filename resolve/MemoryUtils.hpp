@@ -2,6 +2,15 @@
 
 #include <resolve/resolve_defs.hpp>
 
+
+namespace ReSolve
+{
+  namespace memory
+  {
+    enum MemorySpace{HOST = 0, DEVICE};
+  }
+}
+
 namespace ReSolve
 {
   /**

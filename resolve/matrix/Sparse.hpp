@@ -33,9 +33,9 @@ namespace ReSolve { namespace matrix {
       void setNnz(index_type nnz_new); // for resetting when removing duplicates
       index_type setUpdated(std::string what);
 
-      virtual index_type* getRowData(std::string memspace) = 0;
-      virtual index_type* getColData(std::string memspace) = 0;
-      virtual real_type*  getValues(std::string memspace)  = 0;
+      virtual index_type* getRowData(memory::MemorySpace memspace) = 0;
+      virtual index_type* getColData(memory::MemorySpace memspace) = 0;
+      virtual real_type*  getValues( memory::MemorySpace memspace) = 0;
 
       virtual int updateData(index_type* row_data, index_type* col_data, real_type* val_data, std::string memspaceIn, std::string memspaceOut) = 0;
       virtual int updateData(index_type* row_data, index_type* col_data, real_type* val_data, index_type new_nnz, std::string memspaceIn, std::string memspaceOut) = 0;
@@ -47,7 +47,7 @@ namespace ReSolve { namespace matrix {
 
       virtual void print() = 0;
 
-      virtual int copyData(std::string memspaceOut) = 0;
+      virtual int copyData(memory::MemorySpace memspaceOut) = 0;
 
 
       //update Values just updates values; it allocates if necessary.

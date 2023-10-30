@@ -116,9 +116,9 @@ namespace ReSolve { namespace io {
     }
     A->setNnz(nnz);
     //create coo arrays
-    index_type* coo_rows = A->getRowData("cpu");
-    index_type* coo_cols = A->getColData("cpu");
-    real_type* coo_vals = A->getValues("cpu");
+    index_type* coo_rows = A->getRowData(memory::HOST);
+    index_type* coo_cols = A->getColData(memory::HOST);
+    real_type* coo_vals  = A->getValues( memory::HOST);
     i = 0;
     index_type a, b;
     real_type c;

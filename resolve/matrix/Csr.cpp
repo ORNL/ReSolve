@@ -24,48 +24,48 @@ namespace ReSolve
   {
   }
 
-  index_type* matrix::Csr::getRowData(std::string memspace)
+  index_type* matrix::Csr::getRowData(memory::MemorySpace memspace)
   {
-    if (memspace == "cpu") {
-      copyData("cpu");
-      return this->h_row_data_;
-    } else {
-      if ((memspace == "cuda") || (memspace == "hip")) {
+    using namespace ReSolve::memory;
+    switch (memspace) {
+      case HOST:
+        copyData(memspace);
+        return this->h_row_data_;
+      case DEVICE:
         copyData(memspace);
         return this->d_row_data_;
-      } else {
+      default:
         return nullptr;
-      }
     }
   }
 
-  index_type* matrix::Csr::getColData(std::string memspace)
+  index_type* matrix::Csr::getColData(memory::MemorySpace memspace)
   {
-    if (memspace == "cpu") {
-      copyData("cpu");
-      return this->h_col_data_;
-    } else {
-      if ((memspace == "cuda") || (memspace == "hip")) {
+    using namespace ReSolve::memory;
+    switch (memspace) {
+      case HOST:
+        copyData(memspace);
+        return this->h_col_data_;
+      case DEVICE:
         copyData(memspace);
         return this->d_col_data_;
-      } else {
+      default:
         return nullptr;
-      }
     }
   }
 
-  real_type* matrix::Csr::getValues(std::string memspace)
+  real_type* matrix::Csr::getValues(memory::MemorySpace memspace)
   {
-    if (memspace == "cpu") {
-      copyData("cpu");
-      return this->h_val_data_;
-    } else {
-      if ((memspace == "cuda") || (memspace == "hip")) {
+    using namespace ReSolve::memory;
+    switch (memspace) {
+      case HOST:
+        copyData(memspace);
+        return this->h_val_data_;
+      case DEVICE:
         copyData(memspace);
         return this->d_val_data_;
-      } else {
+      default:
         return nullptr;
-      }
     }
   }
 
@@ -185,54 +185,56 @@ namespace ReSolve
     return -1;
   }
 
-  int matrix::Csr::copyData(std::string memspaceOut)
+  int matrix::Csr::copyData(memory::MemorySpace memspaceOut)
   {
+    using namespace ReSolve::memory;
+
     index_type nnz_current = nnz_;
-    if (is_expanded_) {nnz_current = nnz_expanded_;}
-
-    if (memspaceOut == "cpu") {
-      //check if we need to copy or not
-      if ((d_data_updated_ == true) && (h_data_updated_ == false)) {
-        if (h_row_data_ == nullptr) {
-          h_row_data_ = new index_type[n_ + 1];      
-        }
-        if (h_col_data_ == nullptr) {
-          h_col_data_ = new index_type[nnz_current];      
-        }
-        if (h_val_data_ == nullptr) {
-          h_val_data_ = new real_type[nnz_current];      
-        }
-        mem_.copyArrayDeviceToHost(h_row_data_, d_row_data_,      n_ + 1);
-        mem_.copyArrayDeviceToHost(h_col_data_, d_col_data_, nnz_current);
-        mem_.copyArrayDeviceToHost(h_val_data_, d_val_data_, nnz_current);
-        h_data_updated_ = true;
-        owns_cpu_data_ = true;
-        owns_cpu_vals_ = true;
-      }
-      return 0;
+    if (is_expanded_) {
+      nnz_current = nnz_expanded_;
     }
 
-    if ((memspaceOut == "cuda") || (memspaceOut == "hip")) {
-      if ((d_data_updated_ == false) && (h_data_updated_ == true)) {
-        if (d_row_data_ == nullptr) {
-          mem_.allocateArrayOnDevice(&d_row_data_, n_ + 1); 
+    switch (memspaceOut) {
+      case HOST:
+        //check if we need to copy or not
+        if ((d_data_updated_ == true) && (h_data_updated_ == false)) {
+          if (h_row_data_ == nullptr) {
+            h_row_data_ = new index_type[n_ + 1];      
+          }
+          if (h_col_data_ == nullptr) {
+            h_col_data_ = new index_type[nnz_current];      
+          }
+          if (h_val_data_ == nullptr) {
+            h_val_data_ = new real_type[nnz_current];      
+          }
+          mem_.copyArrayDeviceToHost(h_row_data_, d_row_data_,      n_ + 1);
+          mem_.copyArrayDeviceToHost(h_col_data_, d_col_data_, nnz_current);
+          mem_.copyArrayDeviceToHost(h_val_data_, d_val_data_, nnz_current);
+          h_data_updated_ = true;
+          owns_cpu_data_ = true;
+          owns_cpu_vals_ = true;
         }
-        if (d_col_data_ == nullptr) {
-          mem_.allocateArrayOnDevice(&d_col_data_, nnz_current); 
+        return 0;
+      case DEVICE:
+        if ((d_data_updated_ == false) && (h_data_updated_ == true)) {
+          if (d_row_data_ == nullptr) {
+            mem_.allocateArrayOnDevice(&d_row_data_, n_ + 1); 
+          }
+          if (d_col_data_ == nullptr) {
+            mem_.allocateArrayOnDevice(&d_col_data_, nnz_current); 
+          }
+          if (d_val_data_ == nullptr) {
+            mem_.allocateArrayOnDevice(&d_val_data_, nnz_current); 
+          }
+          mem_.copyArrayHostToDevice(d_row_data_, h_row_data_,      n_ + 1);
+          mem_.copyArrayHostToDevice(d_col_data_, h_col_data_, nnz_current);
+          mem_.copyArrayHostToDevice(d_val_data_, h_val_data_, nnz_current);
+          d_data_updated_ = true;
+          owns_gpu_data_ = true;
+          owns_gpu_vals_ = true;
         }
-        if (d_val_data_ == nullptr) {
-          mem_.allocateArrayOnDevice(&d_val_data_, nnz_current); 
-        }
-        mem_.copyArrayHostToDevice(d_row_data_, h_row_data_,      n_ + 1);
-        mem_.copyArrayHostToDevice(d_col_data_, h_col_data_, nnz_current);
-        mem_.copyArrayHostToDevice(d_val_data_, h_val_data_, nnz_current);
-        d_data_updated_ = true;
-        owns_gpu_data_ = true;
-        owns_gpu_vals_ = true;
-      }
-      return 0;
-    }
-  return -1;  
+        return 0;
+    } // switch
 }
 
 } // namespace ReSolve 

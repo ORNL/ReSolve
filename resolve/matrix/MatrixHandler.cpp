@@ -124,9 +124,9 @@ namespace ReSolve {
 
     index_type* nnz_counts =  new index_type[n];
     std::fill_n(nnz_counts, n, 0);
-    index_type* coo_rows = A_coo->getRowData("cpu");
-    index_type* coo_cols = A_coo->getColData("cpu");
-    real_type* coo_vals = A_coo->getValues("cpu");
+    index_type* coo_rows = A_coo->getRowData(memory::HOST);
+    index_type* coo_cols = A_coo->getColData(memory::HOST);
+    real_type* coo_vals  = A_coo->getValues( memory::HOST);
 
     index_type* diag_control = new index_type[n]; //for DEDUPLICATION of the diagonal
     std::fill_n(diag_control, n, 0);

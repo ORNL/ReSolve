@@ -77,9 +77,9 @@ namespace ReSolve
                                            /* A is original matrix */
                                            nnz, 
                                            descr_A_, 
-                                           A_->getValues("cuda"),  //da_, 
-                                           A_->getRowData("cuda"), //kRowPtr_,
-                                           A_->getColData("cuda"), //jCol_, 
+                                           A_->getValues( memory::DEVICE), //da_, 
+                                           A_->getRowData(memory::DEVICE), //kRowPtr_,
+                                           A_->getColData(memory::DEVICE), //jCol_, 
                                            info_M_);
     error_sum += status_cusolver_; 
 
@@ -153,9 +153,9 @@ namespace ReSolve
                                             /* A is original matrix */
                                             A_->getNnzExpanded(),
                                             descr_A_,
-                                            A_->getValues("cuda"),  //da_, 
-                                            A_->getRowData("cuda"), //kRowPtr_,
-                                            A_->getColData("cuda"), //jCol_, 
+                                            A_->getValues( memory::DEVICE), //da_, 
+                                            A_->getRowData(memory::DEVICE), //kRowPtr_,
+                                            A_->getColData(memory::DEVICE), //jCol_, 
                                             info_M_);
     error_sum += status_cusolver_;
 
@@ -173,9 +173,9 @@ namespace ReSolve
                                             /* A is original matrix */
                                             A_->getNnz(),
                                             descr_A_,
-                                            A_->getValues("cuda"),  //da_, 
-                                            A_->getRowData("cuda"), //kRowPtr_,
-                                            A_->getColData("cuda"), //jCol_, 
+                                            A_->getValues( memory::DEVICE), //da_, 
+                                            A_->getRowData(memory::DEVICE), //kRowPtr_,
+                                            A_->getColData(memory::DEVICE), //jCol_, 
                                             rhs->getData("cuda"),/* right hand side */
                                             x->getData("cuda"),/* left hand side */
                                             &ite_refine_succ_,
