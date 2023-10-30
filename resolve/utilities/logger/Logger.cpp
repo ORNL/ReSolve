@@ -59,7 +59,7 @@ namespace ReSolve
      */
     void Logger::updateVerbosity(std::vector<std::ostream*>& output_streams)
     {
-      for (size_t i = NONE; i <= EVERYTHING; ++i)
+      for (std::size_t i = NONE; i <= EVERYTHING; ++i)
       {
         output_streams[i] = i > verbosity_ ? &nullstream_ : logger_;
       }
