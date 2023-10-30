@@ -29,14 +29,28 @@ namespace ReSolve
     rocsolver_create_rfinfo(&infoM_, workspace_->getRocblasHandle()); 
     //create combined factor
     addFactors(L,U);
-
+    M_->copyData("hip");
+    printf("n = %d nnz = %d \n", n, nnz);
     mem_.allocateArrayOnDevice(&d_P_, n); 
     mem_.allocateArrayOnDevice(&d_Q_, n);
     mem_.allocateArrayOnDevice(&d_T_, n);
 
     mem_.copyArrayHostToDevice(d_P_, P, n);
     mem_.copyArrayHostToDevice(d_Q_, Q, n);
-
+    mem_.copyArrayHostToDevice(P, d_P_, n);
+for (int i = 0; i<10; ++i) printf("%d \n", P[i]);
+    printf("is NULL? %d %d %d nnzM %d is null %d %d %d is Null? %d %d %d \n",
+           A_->getRowData("hip") == NULL,
+           A_->getColData("hip") == NULL,
+           A_->getValues("hip") == NULL,
+           M_->getNnz(),
+           M_->getRowData("hip") == NULL,
+           M_->getColData("hip") == NULL,
+           M_->getValues("hip") == NULL,
+          d_P_ == NULL,
+          d_Q_ == NULL,
+          rhs->getData("hip") == NULL
+           );
 
     mem_.deviceSynchronize();
     status_rocblas_ = rocsolver_dcsrrf_analysis(workspace_->getRocblasHandle(),
@@ -61,14 +75,14 @@ namespace ReSolve
 
     mem_.deviceSynchronize();
 
-    this->A_ = A;
-
     return error_sum;
   }
 
   int LinSolverDirectRocSolverRf::refactorize()
   {
     int error_sum = 0;
+    printf("starting refactorize\n");
+for (int i = 0; i<10; ++i) printf("%d \n", M_->getColData("cpu")[i]);
     mem_.deviceSynchronize();
     status_rocblas_ =  rocsolver_dcsrrf_refactlu(workspace_->getRocblasHandle(),
                                                  A_->getNumRows(),
@@ -84,8 +98,11 @@ namespace ReSolve
                                                  d_Q_,
                                                  infoM_);
 
-
+    M_->copyData("cpu");
+    printf("ending refactorize, status: %d, get last errot %d\n", status_rocblas_, mem_.getLastDeviceError());
+for (int i = 0; i<10; ++i) printf("%16.16f \n", M_->getValues("cpu")[i]);
     mem_.deviceSynchronize();
+    printf("synchronized!\n");
     error_sum += status_rocblas_;
 
     return error_sum; 
