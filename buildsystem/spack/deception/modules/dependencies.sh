@@ -55,5 +55,5 @@ module load mpfr/4.2.0-gcc-9.1.0-3jeasnm
 module load openblas/0.3.23-gcc-9.1.0-4zbtr2v
 # suite-sparse@=5.13.0%gcc@=9.1.0~cuda~graphblas~openmp+pic build_system=generic arch=linux-centos7-zen2
 module load suite-sparse/5.13.0-gcc-9.1.0-ajdnyum
-# resolve@=develop%gcc@=9.1.0+cuda~ipo+klu build_system=cmake build_type=Release cuda_arch=60,70,75,80 dev_path=/people/svcexasgd/gitlab/24128/spack_deception generator=make arch=linux-centos7-zen2
-## module load resolve/develop-gcc-9.1.0-dlqtrec
+# resolve@=develop%gcc@=9.1.0+cuda~ipo+klu build_system=cmake build_type=Release cuda_arch=60,70,75,80 dev_path=/people/svcexasgd/gitlab/24142/spack_deception generator=make arch=linux-centos7-zen2
+## module load resolve/develop-gcc-9.1.0-5de222u
