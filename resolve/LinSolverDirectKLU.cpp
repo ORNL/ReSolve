@@ -71,10 +71,10 @@ namespace ReSolve
 
     //  std::memcpy(x, rhs, A->getNumRows() * sizeof(real_type));
 
-    x->update(rhs->getData("cpu"), "cpu", "cpu");
-    x->setDataUpdated("cpu");
+    x->update(rhs->getData(memory::HOST), memory::HOST, memory::HOST);
+    x->setDataUpdated(memory::HOST);
 
-    int kluStatus = klu_solve(Symbolic_, Numeric_, A_->getNumRows(), 1, x->getData("cpu"), &Common_);
+    int kluStatus = klu_solve(Symbolic_, Numeric_, A_->getNumRows(), 1, x->getData(memory::HOST), &Common_);
 
     if (!kluStatus){
       return 1;

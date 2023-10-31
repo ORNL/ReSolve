@@ -93,8 +93,8 @@ int main(int argc, char *argv[])
       x = new real_type[A->getNumRows()];
       vec_rhs = new vector_type(A->getNumRows());
       vec_x = new vector_type(A->getNumRows());
-      vec_x->allocate("cpu");//for KLU
-      vec_x->allocate("cuda");
+      vec_x->allocate(ReSolve::memory::HOST);//for KLU
+      vec_x->allocate(ReSolve::memory::DEVICE);
       vec_r = new vector_type(A->getNumRows());
     } else {
       ReSolve::io::readAndUpdateMatrix(mat_file, A_coo);
@@ -107,11 +107,11 @@ int main(int argc, char *argv[])
     //Now convert to CSR.
     if (i < 1) { 
       matrix_handler->coo2csr(A_coo, A,  "cpu");
-      vec_rhs->update(rhs, "cpu", "cpu");
-      vec_rhs->setDataUpdated("cpu");
+      vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+      vec_rhs->setDataUpdated(ReSolve::memory::HOST);
     } else { 
       matrix_handler->coo2csr(A_coo, A, "cuda");
-      vec_rhs->update(rhs, "cpu", "cuda");
+      vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
     }
     std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnzExpanded()<<std::endl;
     //Now call direct solver
@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
       status = GLU->solve(vec_rhs, vec_x);
       std::cout<<"CUSOLVER GLU solve status: "<<status<<std::endl;      
     }
-    vec_r->update(rhs, "cpu", "cuda");
+    vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
 
 
     matrix_handler->setValuesChanged(true, "cuda");

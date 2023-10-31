@@ -82,9 +82,9 @@ namespace ReSolve
     n_ = A_->getNumRows();
 
     d_V_ = new vector_type(n_, restart_ + 1);
-    d_V_->allocate("cuda");      
+    d_V_->allocate(memory::DEVICE);      
     d_Z_ = new vector_type(n_, restart_ + 1);
-    d_Z_->allocate("cuda");      
+    d_Z_->allocate(memory::DEVICE);      
     h_H_  = new real_type[restart_ * (restart_ + 1)];
     h_c_  = new real_type[restart_];      // needed for givens
     h_s_  = new real_type[restart_];      // same
@@ -114,7 +114,7 @@ namespace ReSolve
     vector_type* vec_z = new vector_type(n_);
     //V[0] = b-A*x_0
 
-    rhs->deepCopyVectorData(d_V_->getData("cuda"), 0, "cuda");  
+    rhs->deepCopyVectorData(d_V_->getData(memory::DEVICE), 0, memory::DEVICE);  
     matrix_handler_->matvec(A_, x, d_V_, &MINUSONE, &ONE, "csr", "cuda"); 
     rnorm = 0.0;
     bnorm = vector_handler_->dot(rhs, rhs, "cuda");
@@ -166,14 +166,14 @@ namespace ReSolve
 
         // Z_i = (LU)^{-1}*V_i
 
-        vec_v->setData( d_V_->getVectorData(i, "cuda"), "cuda");
-        vec_z->setData( d_Z_->getVectorData(i, "cuda"), "cuda");
+        vec_v->setData( d_V_->getVectorData(i, memory::DEVICE), memory::DEVICE);
+        vec_z->setData( d_Z_->getVectorData(i, memory::DEVICE), memory::DEVICE);
         this->precV(vec_v, vec_z);
         mem_.deviceSynchronize();
 
         // V_{i+1}=A*Z_i
 
-        vec_v->setData( d_V_->getVectorData(i + 1, "cuda"), "cuda");
+        vec_v->setData( d_V_->getVectorData(i + 1, memory::DEVICE), memory::DEVICE);
 
         matrix_handler_->matvec(A_, vec_z, vec_v, &ONE, &ZERO,"csr", "cuda"); 
 
@@ -228,7 +228,7 @@ namespace ReSolve
 
       // get solution
       for(j = 0; j <= i; j++) {
-        vec_z->setData( d_Z_->getVectorData(j, "cuda"), "cuda");
+        vec_z->setData( d_Z_->getVectorData(j, memory::DEVICE), memory::DEVICE);
         vector_handler_->axpy(&h_rs_[j], vec_z, x, "cuda");
       }
 
@@ -239,7 +239,7 @@ namespace ReSolve
         outer_flag = 0;
       }
 
-      rhs->deepCopyVectorData(d_V_->getData("cuda"), 0, "cuda");  
+      rhs->deepCopyVectorData(d_V_->getData(memory::DEVICE), 0, memory::DEVICE);  
       matrix_handler_->matvec(A_, x, d_V_, &MINUSONE, &ONE,"csr", "cuda"); 
       rnorm = vector_handler_->dot(d_V_, d_V_, "cuda");
       // rnorm = ||V_1||
@@ -317,7 +317,7 @@ namespace ReSolve
   void  LinSolverIterativeFGMRES::precV(vector_type* rhs, vector_type* x)
   { 
     LU_solver_->solve(rhs, x);
-    //  x->update(rhs->getData("cuda"), "cuda", "cuda");
+    //  x->update(rhs->getData(memory::DEVICE), memory::DEVICE, memory::DEVICE);
   }
 
   real_type LinSolverIterativeFGMRES::getFinalResidualNorm()

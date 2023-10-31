@@ -80,8 +80,8 @@ int main(int argc, char *argv[])
 
   // Convert first matrix to CSR format
   matrix_handler->coo2csr(A_coo, A, "cpu");
-  vec_rhs->update(rhs, "cpu", "cpu");
-  vec_rhs->setDataUpdated("cpu");
+  vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_rhs->setDataUpdated(ReSolve::memory::HOST);
 
   // Solve the first system using KLU
   status = KLU->setup(A);
@@ -106,9 +106,9 @@ int main(int argc, char *argv[])
     x_data[i] = 1.0;
   }
 
-  vec_test->setData(x_data, "cpu");
-  vec_r->update(rhs, "cpu", "cuda");
-  vec_diff->update(x_data, "cpu", "cuda");
+  vec_test->setData(x_data, ReSolve::memory::HOST);
+  vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+  vec_diff->update(x_data, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
 
   // real_type normXmatrix1 = sqrt(vector_handler->dot(vec_test, vec_test, "cuda"));
   matrix_handler->setValuesChanged(true, "cuda");
@@ -129,13 +129,13 @@ int main(int argc, char *argv[])
   real_type normDiffMatrix1 = sqrt(vector_handler->dot(vec_diff, vec_diff, "cuda"));
  
   //compute the residual using exact solution
-  vec_r->update(rhs, "cpu", "cuda");
+  vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
   status = matrix_handler->matvec(A, vec_test, vec_r, &ONE, &MINUSONE,"csr", "cuda"); 
   error_sum += status;
   real_type exactSol_normRmatrix1 = sqrt(vector_handler->dot(vec_r, vec_r, "cuda"));
   //evaluate the residual ON THE CPU using COMPUTED solution
  
-  vec_r->update(rhs, "cpu", "cpu");
+  vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
 
   status = matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "cpu");
   error_sum += status;
@@ -186,7 +186,7 @@ int main(int argc, char *argv[])
   rhs2_file.close();
 
   matrix_handler->coo2csr(A_coo, A, "cuda");
-  vec_rhs->update(rhs, "cpu", "cuda");
+  vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
 
   status = Rf->refactorize();
   error_sum += status;
@@ -194,7 +194,7 @@ int main(int argc, char *argv[])
   status = Rf->solve(vec_rhs, vec_x);
   error_sum += status;
 
-  vec_r->update(rhs, "cpu", "cuda");
+  vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
   matrix_handler->setValuesChanged(true, "cuda");
 
   status = matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, "csr", "cuda"); 
@@ -205,13 +205,13 @@ int main(int argc, char *argv[])
   //for testing only - control
   real_type normB2 = sqrt(vector_handler->dot(vec_rhs, vec_rhs, "cuda"));
   //compute x-x_true
-  vec_diff->update(x_data, "cpu", "cuda");
+  vec_diff->update(x_data, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
   vector_handler->axpy(&MINUSONE, vec_x, vec_diff, "cuda");
   //evaluate its norm
   real_type normDiffMatrix2 = sqrt(vector_handler->dot(vec_diff, vec_diff, "cuda"));
  
   //compute the residual using exact solution
-  vec_r->update(rhs, "cpu", "cuda");
+  vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
   status = matrix_handler->matvec(A, vec_test, vec_r, &ONE, &MINUSONE, "csr", "cuda"); 
   error_sum += status;
   real_type exactSol_normRmatrix2 = sqrt(vector_handler->dot(vec_r, vec_r, "cuda"));

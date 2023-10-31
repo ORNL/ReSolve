@@ -39,16 +39,22 @@ namespace ReSolve {
         {
           TestStatus status;
 
+          ReSolve::memory::MemorySpace ms;
+          if (memspace_ == "cpu")
+            ms = memory::HOST;
+          else
+            ms = memory::DEVICE;
+
           ReSolve::VectorHandler* handler = createVectorHandler();
 
           vector::Vector* x = new vector::Vector(N);
           vector::Vector* y = new vector::Vector(N);
 
-          x->allocate(memspace_);
-          y->allocate(memspace_);
+          x->allocate(ms);
+          y->allocate(ms);
 
-          x->setToConst(3.0, memspace_);
-          y->setToConst(1.0, memspace_);
+          x->setToConst(3.0, ms);
+          y->setToConst(1.0, ms);
 
           real_type alpha = 0.5;
           //the result is a vector with y[i] = 2.5;          
@@ -66,16 +72,22 @@ namespace ReSolve {
         {
           TestStatus status;
 
+          ReSolve::memory::MemorySpace ms;
+          if (memspace_ == "cpu")
+            ms = memory::HOST;
+          else
+            ms = memory::DEVICE;
+
           ReSolve::VectorHandler* handler = createVectorHandler();
 
           vector::Vector* x = new vector::Vector(N);
           vector::Vector* y = new vector::Vector(N);
 
-          x->allocate(memspace_);
-          y->allocate(memspace_);
+          x->allocate(ms);
+          y->allocate(ms);
 
-          x->setToConst(0.25, memspace_);
-          y->setToConst(4.0, memspace_);
+          x->setToConst(0.25, ms);
+          y->setToConst(4.0, ms);
           real_type ans;
           //the result is N
           ans = handler->dot(x, y, memspace_);
@@ -98,13 +110,19 @@ namespace ReSolve {
         {
           TestStatus status;
 
+          ReSolve::memory::MemorySpace ms;
+          if (memspace_ == "cpu")
+            ms = memory::HOST;
+          else
+            ms = memory::DEVICE;
+
           ReSolve::VectorHandler* handler = createVectorHandler();
 
           vector::Vector* x =  new vector::Vector(N);
 
-          x->allocate(memspace_);
+          x->allocate(ms);
 
-          x->setToConst(1.25, memspace_);
+          x->setToConst(1.25, ms);
 
           real_type alpha = 3.5;
 
@@ -122,17 +140,23 @@ namespace ReSolve {
         {
           TestStatus status;
 
+          ReSolve::memory::MemorySpace ms;
+          if (memspace_ == "cpu")
+            ms = memory::HOST;
+          else
+            ms = memory::DEVICE;
+
           ReSolve::VectorHandler* handler = createVectorHandler();
           
           vector::Vector* x =  new vector::Vector(N, K);
           vector::Vector* y =  new vector::Vector(N);
           vector::Vector* alpha = new vector::Vector(K);;
-          x->allocate(memspace_);
-          y->allocate(memspace_);
-          alpha->allocate(memspace_);
+          x->allocate(ms);
+          y->allocate(ms);
+          alpha->allocate(ms);
 
-          y->setToConst(2.0, memspace_);
-          alpha->setToConst(-1.0, memspace_);
+          y->setToConst(2.0, ms);
+          alpha->setToConst(-1.0, ms);
           for (int ii = 0; ii < K; ++ii) {
             real_type c;
             if (ii % 2 == 0) {
@@ -140,7 +164,7 @@ namespace ReSolve {
             } else {
               c = 0.5;
             }
-            x->setToConst(ii, c, memspace_);
+            x->setToConst(ii, c, ms);
           }
 
           index_type r = K % 2;
@@ -161,17 +185,23 @@ namespace ReSolve {
         {
           TestStatus status;
 
+          ReSolve::memory::MemorySpace ms;
+          if (memspace_ == "cpu")
+            ms = memory::HOST;
+          else
+            ms = memory::DEVICE;
+
           ReSolve::VectorHandler* handler = createVectorHandler();
           
           vector::Vector* x =  new vector::Vector(N, K);
           vector::Vector* y =  new vector::Vector(N, 2);
           vector::Vector* res = new vector::Vector(K, 2);
-          x->allocate(memspace_);
-          y->allocate(memspace_);
-          res->allocate(memspace_);
+          x->allocate(ms);
+          y->allocate(ms);
+          res->allocate(ms);
           
-          x->setToConst(1.0, memspace_);
-          y->setToConst(-1.0, memspace_);
+          x->setToConst(1.0, ms);
+          y->setToConst(-1.0, ms);
           handler->massDot2Vec(N, x, K, y, res, memspace_);
           
           status *= verifyAnswer(res, (-1.0) * (real_type) N, memspace_);
@@ -186,6 +216,13 @@ namespace ReSolve {
         TestOutcome gemv(index_type N,  index_type K)
         {
           TestStatus status;
+
+          ReSolve::memory::MemorySpace ms;
+          if (memspace_ == "cpu")
+            ms = memory::HOST;
+          else
+            ms = memory::DEVICE;
+
           ReSolve::VectorHandler* handler = createVectorHandler();
           vector::Vector* V = new vector::Vector(N, K);
           // for the test with NO TRANSPOSE
@@ -195,17 +232,17 @@ namespace ReSolve {
           vector::Vector* yT = new vector::Vector(N);
           vector::Vector* xT = new vector::Vector(K);
           
-          V->allocate(memspace_);
-          yN->allocate(memspace_);
-          xN->allocate(memspace_);
-          yT->allocate(memspace_);
-          xT->allocate(memspace_);
+          V->allocate(ms);
+          yN->allocate(ms);
+          xN->allocate(ms);
+          yT->allocate(ms);
+          xT->allocate(ms);
 
-          V->setToConst(1.0, memspace_);
-          yN->setToConst(-1.0, memspace_);
-          xN->setToConst(.5, memspace_);
-          yT->setToConst(-1.0, memspace_);
-          xT->setToConst(.5, memspace_);
+          V->setToConst(1.0, ms);
+          yN->setToConst(-1.0, ms);
+          xN->setToConst(.5, ms);
+          yT->setToConst(-1.0, ms);
+          xT->setToConst(.5, ms);
           
           real_type alpha = -1.0;
           real_type beta = 1.0;
@@ -248,15 +285,15 @@ namespace ReSolve {
         {
           bool status = true;
           if (memspace != "cpu") {
-            x->copyData(memspace, "cpu");
+            x->copyData(memory::DEVICE, memory::HOST);
           }
 
           for (index_type i = 0; i < x->getSize(); ++i) {
             // std::cout << x->getData("cpu")[i] << "\n";
-            if (!isEqual(x->getData("cpu")[i], answer)) {
+            if (!isEqual(x->getData(memory::HOST)[i], answer)) {
               std::cout << std::setprecision(16);
               status = false;
-              std::cout << "Solution vector element x[" << i << "] = " << x->getData("cpu")[i]
+              std::cout << "Solution vector element x[" << i << "] = " << x->getData(memory::HOST)[i]
                 << ", expected: " << answer << "\n";
               break; 
             }

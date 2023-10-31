@@ -100,22 +100,22 @@ namespace ReSolve
                                           1,
                                           d_T_,
                                           A_->getNumRows(),
-                                          rhs->getData("cuda"),
+                                          rhs->getData(memory::DEVICE),
                                           A_->getNumRows());
     return status_cusolverrf_;
   }
 
   int LinSolverDirectCuSolverRf::solve(vector_type* rhs, vector_type* x)
   {
-    x->update(rhs->getData("cuda"), "cuda", "cuda");
-    x->setDataUpdated("cuda");
+    x->update(rhs->getData(memory::DEVICE), memory::DEVICE, memory::DEVICE);
+    x->setDataUpdated(memory::DEVICE);
     status_cusolverrf_ =  cusolverRfSolve(handle_cusolverrf_,
                                           d_P_,
                                           d_Q_,
                                           1,
                                           d_T_,
                                           A_->getNumRows(),
-                                          x->getData("cuda"),
+                                          x->getData(memory::DEVICE),
                                           A_->getNumRows());
     return status_cusolverrf_;
   }

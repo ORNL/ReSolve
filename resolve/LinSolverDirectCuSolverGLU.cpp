@@ -176,8 +176,8 @@ namespace ReSolve
                                             A_->getValues( memory::DEVICE), //da_, 
                                             A_->getRowData(memory::DEVICE), //kRowPtr_,
                                             A_->getColData(memory::DEVICE), //jCol_, 
-                                            rhs->getData("cuda"),/* right hand side */
-                                            x->getData("cuda"),/* left hand side */
+                                            rhs->getData(memory::DEVICE),/* right hand side */
+                                            x->getData(memory::DEVICE),/* left hand side */
                                             &ite_refine_succ_,
                                             &r_nrminf_,
                                             info_M_,

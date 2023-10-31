@@ -49,8 +49,8 @@ namespace ReSolve {
       index_type* ja = A->getColData(memory::HOST);
       real_type*   a = A->getValues( memory::HOST);
 
-      real_type* x_data      = vec_x->getData("cpu");
-      real_type* result_data = vec_result->getData("cpu");
+      real_type* x_data      = vec_x->getData(memory::HOST);
+      real_type* result_data = vec_result->getData(memory::HOST);
       real_type sum;
       real_type y;
       real_type t;
@@ -70,7 +70,7 @@ namespace ReSolve {
         sum *= (*alpha);
         result_data[i] = result_data[i]*(*beta) + sum;
       } 
-      vec_result->setDataUpdated("cpu");
+      vec_result->setDataUpdated(memory::HOST);
       return 0;
     } else {
       out::error() << "MatVec not implemented (yet) for " 

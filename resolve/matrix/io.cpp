@@ -171,7 +171,7 @@ namespace ReSolve { namespace io {
 
   int writeVectorToFile(vector_type* vec_x, std::ostream& file_out)
   {
-    real_type* x_data = vec_x->getData("cpu");
+    real_type* x_data = vec_x->getData(memory::HOST);
     // std::ofstream file_out (filename, std::ofstream::out);
     file_out << "%%MatrixMarket matrix array real general \n";
     file_out << "% ID: XXX \n";

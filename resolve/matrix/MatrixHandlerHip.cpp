@@ -83,16 +83,16 @@ namespace ReSolve {
                                 A->getRowData(memory::DEVICE),
                                 A->getColData(memory::DEVICE),
                                 infoA,
-                                vec_x->getData("cuda"),
+                                vec_x->getData(memory::DEVICE),
                                 beta,
-                                vec_result->getData("cuda"));
+                                vec_result->getData(memory::DEVICE));
 
       error_sum += status;
       mem_.deviceSynchronize();
       if (status)
         out::error() << "Matvec status: " << status 
                       << "Last error code: " << mem_.getLastDeviceError() << std::endl;
-      vec_result->setDataUpdated("cuda");
+      vec_result->setDataUpdated(memory::DEVICE);
 
       return error_sum;
     } else {

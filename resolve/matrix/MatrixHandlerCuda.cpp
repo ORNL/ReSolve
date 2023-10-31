@@ -42,11 +42,11 @@ namespace ReSolve {
       cusparseStatus_t status;
       LinAlgWorkspaceCUDA* workspaceCUDA = workspace_;
       cusparseDnVecDescr_t vecx = workspaceCUDA->getVecX();
-      cusparseCreateDnVec(&vecx, A->getNumRows(), vec_x->getData("cuda"), CUDA_R_64F);
+      cusparseCreateDnVec(&vecx, A->getNumRows(), vec_x->getData(memory::DEVICE), CUDA_R_64F);
 
 
       cusparseDnVecDescr_t vecAx = workspaceCUDA->getVecY();
-      cusparseCreateDnVec(&vecAx, A->getNumRows(), vec_result->getData("cuda"), CUDA_R_64F);
+      cusparseCreateDnVec(&vecAx, A->getNumRows(), vec_result->getData(memory::DEVICE), CUDA_R_64F);
 
       cusparseSpMatDescr_t matA = workspaceCUDA->getSpmvMatrixDescriptor();
 
@@ -105,7 +105,7 @@ namespace ReSolve {
       if (status)
         out::error() << "Matvec status: " << status 
                       << "Last error code: " << mem_.getLastDeviceError() << std::endl;
-      vec_result->setDataUpdated("cuda");
+      vec_result->setDataUpdated(memory::DEVICE);
 
       cusparseDestroyDnVec(vecx);
       cusparseDestroyDnVec(vecAx);

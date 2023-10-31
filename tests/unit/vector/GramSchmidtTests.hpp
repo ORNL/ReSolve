@@ -66,15 +66,21 @@ namespace ReSolve {
               break;
           }
 
+          ReSolve::memory::MemorySpace ms;
+          if (memspace_ == "cpu")
+            ms = memory::HOST;
+          else
+            ms = memory::DEVICE;
+
           ReSolve::VectorHandler* handler = createVectorHandler();
 
           vector::Vector* V = new vector::Vector(N, 3); // we will be using a space of 3 vectors
           real_type* H = new real_type[6]; //in this case, Hessenberg matrix is 3 x 2
           real_type* aux_data; // needed for setup
 
-          V->allocate(memspace_);
-          if (memspace_ != "cpu") {
-            V->allocate("cpu");
+          V->allocate(ms);
+          if (ms != memory::HOST) {
+            V->allocate(memory::HOST);
           }
 
 
@@ -82,7 +88,7 @@ namespace ReSolve {
           GS->setup(N, 3);
           
           //fill 2nd and 3rd vector with values
-          aux_data = V->getVectorData(1, "cpu");
+          aux_data = V->getVectorData(1, memory::HOST);
           for (int i = 0; i < N; ++i) {
             if ( i % 2 == 0) {         
               aux_data[i] = constants::ONE;
@@ -90,7 +96,7 @@ namespace ReSolve {
               aux_data[i] = var1;
             }
           }
-          aux_data = V->getVectorData(2, "cpu");
+          aux_data = V->getVectorData(2, memory::HOST);
           for (int i = 0; i < N; ++i) {
             if ( i % 3 > 0) {         
               aux_data[i] = constants::ZERO;
@@ -98,11 +104,11 @@ namespace ReSolve {
               aux_data[i] = var2;
             }
           }
-          V->setDataUpdated("cpu"); 
-          V->copyData("cpu", memspace_);
+          V->setDataUpdated(memory::HOST); 
+          V->copyData(memory::HOST, ms);
 
           //set the first vector to all 1s, normalize 
-          V->setToConst(0, 1.0, memspace_);
+          V->setToConst(0, 1.0, ms);
           real_type nrm = handler->dot(V, V, memspace_);
           nrm = sqrt(nrm);
           nrm = 1.0 / nrm;
@@ -144,6 +150,12 @@ namespace ReSolve {
         // x is a multivector containing K vectors 
         bool verifyAnswer(vector::Vector* x, index_type K,  ReSolve::VectorHandler* handler, std::string memspace)
         {
+          ReSolve::memory::MemorySpace ms;
+          if (memspace == "cpu")
+            ms = memory::HOST;
+          else
+            ms = memory::DEVICE;
+
           vector::Vector* a = new vector::Vector(x->getSize()); 
           vector::Vector* b = new vector::Vector(x->getSize());
 
@@ -152,8 +164,8 @@ namespace ReSolve {
 
           for (index_type i = 0; i < K; ++i) {
             for (index_type j = 0; j < K; ++j) {
-              a->update(x->getVectorData(i, memspace), memspace, "cpu");
-              b->update(x->getVectorData(j, memspace), memspace, "cpu");
+              a->update(x->getVectorData(i, ms), ms, memory::HOST);
+              b->update(x->getVectorData(j, ms), ms, memory::HOST);
               ip = handler->dot(a, b, "cpu");
               
               if ( (i != j) && (abs(ip) > 1e-14)) {

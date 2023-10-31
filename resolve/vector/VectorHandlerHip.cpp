@@ -50,7 +50,7 @@ namespace ReSolve {
     LinAlgWorkspaceHIP* workspaceHIP = workspace_;
     rocblas_handle  handle_rocblas =  workspaceHIP->getRocblasHandle();
     double nrm = 0.0;
-    rocblas_status st= rocblas_ddot (handle_rocblas,  x->getSize(), x->getData("hip"), 1, y->getData("hip"), 1, &nrm);
+    rocblas_status st= rocblas_ddot (handle_rocblas,  x->getSize(), x->getData(memory::DEVICE), 1, y->getData(memory::DEVICE), 1, &nrm);
     if (st!=0) {printf("dot product crashed with code %d \n", st);}
     return nrm;
   }
@@ -67,7 +67,7 @@ namespace ReSolve {
   {
     LinAlgWorkspaceHIP* workspaceHIP = workspace_;
     rocblas_handle handle_rocblas =  workspaceHIP->getRocblasHandle();
-    rocblas_status st = rocblas_dscal(handle_rocblas, x->getSize(), alpha, x->getData("hip"), 1);
+    rocblas_status st = rocblas_dscal(handle_rocblas, x->getSize(), alpha, x->getData(memory::DEVICE), 1);
     if (st!=0) {
       ReSolve::io::Logger::error() << "scal crashed with code " << st << "\n";
     }
@@ -90,9 +90,9 @@ namespace ReSolve {
     rocblas_daxpy(handle_rocblas,
                   x->getSize(),
                   alpha,
-                  x->getData("hip"),
+                  x->getData(memory::DEVICE),
                   1,
-                  y->getData("hip"),
+                  y->getData(memory::DEVICE),
                   1);
   }
 
@@ -131,12 +131,12 @@ namespace ReSolve {
                     n,
                     k,
                     alpha,
-                    V->getData("hip"),
+                    V->getData(memory::DEVICE),
                     n,
-                    y->getData("hip"),
+                    y->getData(memory::DEVICE),
                     1,
                     beta,
-                    x->getData("hip"),
+                    x->getData(memory::DEVICE),
                     1);
 
     } else {
@@ -145,12 +145,12 @@ namespace ReSolve {
                     n,
                     k,
                     alpha,
-                    V->getData("hip"),
+                    V->getData(memory::DEVICE),
                     n,
-                    y->getData("hip"),
+                    y->getData(memory::DEVICE),
                     1,
                     beta,
-                    x->getData("hip"),
+                    x->getData(memory::DEVICE),
                     1);
     }
   }
@@ -171,7 +171,7 @@ namespace ReSolve {
   {
     using namespace constants;
     if (k < 200) {
-      mass_axpy(size, k, x->getData("hip"), y->getData("hip"),alpha->getData("hip"));
+      mass_axpy(size, k, x->getData(memory::DEVICE), y->getData(memory::DEVICE),alpha->getData(memory::DEVICE));
     } else {
       LinAlgWorkspaceHIP* workspaceHIP = workspace_;
       rocblas_handle handle_rocblas =  workspaceHIP->getRocblasHandle();
@@ -182,12 +182,12 @@ namespace ReSolve {
                     1,          // n
                     k,      // k
                     &MINUSONE, // alpha
-                    x->getData("hip"), // A
+                    x->getData(memory::DEVICE), // A
                     size,       // lda
-                    alpha->getData("hip"), // B
+                    alpha->getData(memory::DEVICE), // B
                     k,      // ldb
                     &ONE,
-                    y->getData("hip"),          // c
+                    y->getData(memory::DEVICE),          // c
                     size);      // ldc     
     }
   }
@@ -212,7 +212,7 @@ namespace ReSolve {
     using namespace constants;
 
     if (k < 200) {
-      mass_inner_product_two_vectors(size, k, x->getData("hip") , x->getData(1, "hip"), V->getData("hip"), res->getData("hip"));
+      mass_inner_product_two_vectors(size, k, x->getData(memory::DEVICE) , x->getData(1, memory::DEVICE), V->getData(memory::DEVICE), res->getData(memory::DEVICE));
     } else {
       LinAlgWorkspaceHIP* workspaceHIP = workspace_;
       rocblas_handle handle_rocblas =  workspaceHIP->getRocblasHandle();
@@ -223,12 +223,12 @@ namespace ReSolve {
                     2,       //n
                     size,    //k
                     &ONE,   //alpha
-                    V->getData("hip"),       //A
+                    V->getData(memory::DEVICE),       //A
                     size,    //lda
-                    x->getData("hip"),       //B
+                    x->getData(memory::DEVICE),       //B
                     size,    //ldb
                     &ZERO,
-                    res->getData("hip"),     //c
+                    res->getData(memory::DEVICE),     //c
                     k + 1);  //ldc 
     }
   }

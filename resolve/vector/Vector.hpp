@@ -11,26 +11,26 @@ namespace ReSolve { namespace vector {
       Vector(index_type n, index_type k);
       ~Vector();
 
-      int update(real_type* data, std::string memspaceIn, std::string memspaceOut);
-      real_type* getData(std::string memspace);
-      real_type* getData(index_type i, std::string memspace); // get pointer to i-th vector in multivector
+      int update(real_type* data, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut);
+      real_type* getData(memory::MemorySpace memspace);
+      real_type* getData(index_type i, memory::MemorySpace memspace); // get pointer to i-th vector in multivector
 
       index_type getSize();
       index_type getCurrentSize();
       index_type getNumVectors();
 
-      void setDataUpdated(std::string memspace);
-      void setData(real_type* data, std::string memspace);
-      void allocate(std::string memspace);   
-      void setToZero(std::string memspace);
-      void setToZero(index_type i, std::string memspace); // set i-th ivector to 0
-      void setToConst(real_type C, std::string memspace);
-      void setToConst(index_type i, real_type C, std::string memspace); // set i-th vector to C  - needed for unit tests, Gram Schmidt tests
-      int copyData(std::string memspaceIn, std::string memspaceOut); 
+      void setDataUpdated(memory::MemorySpace memspace);
+      void setData(real_type* data, memory::MemorySpace memspace);
+      void allocate(memory::MemorySpace memspace);   
+      void setToZero(memory::MemorySpace memspace);
+      void setToZero(index_type i, memory::MemorySpace memspace); // set i-th ivector to 0
+      void setToConst(real_type C, memory::MemorySpace memspace);
+      void setToConst(index_type i, real_type C, memory::MemorySpace memspace); // set i-th vector to C  - needed for unit tests, Gram Schmidt tests
+      int copyData(memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut); 
       int setCurrentSize(index_type new_n_current);
-      real_type* getVectorData(index_type i, std::string memspace); // get ith vector data out of multivector   
-      int  deepCopyVectorData(real_type* dest, index_type i, std::string memspace);  
-      int  deepCopyVectorData(real_type* dest, std::string memspace);  //copy FULL multivector 
+      real_type* getVectorData(index_type i, memory::MemorySpace memspace); // get ith vector data out of multivector   
+      int  deepCopyVectorData(real_type* dest, index_type i, memory::MemorySpace memspace);  
+      int  deepCopyVectorData(real_type* dest, memory::MemorySpace memspace);  //copy FULL multivector 
     
     private:
       index_type n_; ///< size
