@@ -1,10 +1,11 @@
 spack:
   specs:
-    - resolve~cuda%gcc@8.4.0
+  - resolve~cuda+rocm%gcc@8.4.0 amdgpu_target=gfx908
+  - hsa-rocr-dev~image
   view: false
   concretizer:
+    reuse: false
     unify: when_possible
-    reuse: true
   config:
     concretizer: clingo
     install_tree:
@@ -12,7 +13,7 @@ spack:
     source_cache: $SPACK_CACHE/source
     misc_cache: $SPACK_CACHE/misc
     build_stage: $SPACK_CACHE/build
-    url_fetch_method: curl
+    url_fetch_method: urllib
   modules:
     default:
       roots:
@@ -23,6 +24,30 @@ spack:
         write: group
         read: world
         group: exasgd
+    curl:
+      externals:
+      - spec: curl@7.29.0
+        prefix: /usr/bin/curl
+      buildable: false
+    git:
+      externals:
+      - spec: git@2.42.0
+        prefix: /share/apps/git/2.42.0
+        modules:
+        - git/2.42.0
+      buildable: false
+    lua:
+      externals:
+      - spec: lua@5.4.2
+        modules:
+        - lua/5.4.2
+      buildable: false
+    python:
+      externals:
+      - spec: python@3.9.12
+        modules:
+        - python/miniconda4.12 
+      buildable: false
     perl:
       externals:
       - spec: perl@5.26.0
