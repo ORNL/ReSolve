@@ -15,7 +15,6 @@ namespace ReSolve
   {
     mem_.deleteOnDevice(d_P_);
     mem_.deleteOnDevice(d_Q_);
-    mem_.deleteOnDevice(d_T_);
   }
 
   int LinSolverDirectRocSolverRf::setup(matrix::Sparse* A, matrix::Sparse* L, matrix::Sparse* U, index_type* P, index_type* Q, vector_type* rhs)
@@ -33,34 +32,25 @@ namespace ReSolve
     printf("n = %d nnz = %d \n", n, nnz);
     mem_.allocateArrayOnDevice(&d_P_, n); 
     mem_.allocateArrayOnDevice(&d_Q_, n);
-    mem_.allocateArrayOnDevice(&d_T_, n);
 
-    mem_.copyArrayHostToDevice(d_P_, P, n);
-    mem_.copyArrayHostToDevice(d_Q_, Q, n);
-    mem_.copyArrayHostToDevice(P, d_P_, n);
-for (int i = 0; i<10; ++i) printf("%d \n", P[i]);
-    printf("is NULL? %d %d %d nnzM %d is null %d %d %d is Null? %d %d %d \n",
-           A_->getRowData("hip") == NULL,
-           A_->getColData("hip") == NULL,
-           A_->getValues("hip") == NULL,
-           M_->getNnz(),
-           M_->getRowData("hip") == NULL,
-           M_->getColData("hip") == NULL,
-           M_->getValues("hip") == NULL,
-          d_P_ == NULL,
-          d_Q_ == NULL,
-          rhs->getData("hip") == NULL
-           );
+    int st = mem_.copyArrayHostToDevice(d_P_, P, n);
+    printf("P copy returned %d\n", st);
+    st = mem_.copyArrayHostToDevice(d_Q_, Q, n);
+    printf("Q copy returned %d\n", st);
+// this should throw error but it does not???
+//
+ //   st = mem_.copyArrayDeviceToHost(d_P_, P, n);
+   
 
-    mem_.deviceSynchronize();
+    hipDeviceSynchronize();
     status_rocblas_ = rocsolver_dcsrrf_analysis(workspace_->getRocblasHandle(),
                                                 n,
                                                 1,
-                                                nnz,
+                                                A_->getNnzExpanded(),
                                                 A_->getRowData("hip"), //kRowPtr_,
                                                 A_->getColData("hip"), //jCol_, 
                                                 A_->getValues("hip"), //vals_, 
-                                                M_->getNnz(),
+                                                M_->getNnzExpanded(),
                                                 M_->getRowData("hip"), 
                                                 M_->getColData("hip"), 
                                                 M_->getValues("hip"), //vals_, 
@@ -70,10 +60,10 @@ for (int i = 0; i<10; ++i) printf("%d \n", P[i]);
                                                 n,
                                                 infoM_);
 
+    hipDeviceSynchronize();
     printf("ANALYSIS status is %d \n",status_rocblas_ );
     error_sum += status_rocblas_;
 
-    mem_.deviceSynchronize();
 
     return error_sum;
   }
@@ -81,16 +71,29 @@ for (int i = 0; i<10; ++i) printf("%d \n", P[i]);
   int LinSolverDirectRocSolverRf::refactorize()
   {
     int error_sum = 0;
+    printf("is NULL? %d %d %d nnzM %d is null %d %d %d is Null? %d %d infoM %d\n",
+           A_->getRowData("hip") == NULL,
+           A_->getColData("hip") == NULL,
+           A_->getValues("hip") == NULL,
+           M_->getNnzExpanded(),
+           M_->getRowData("hip") == NULL,
+           M_->getColData("hip") == NULL,
+           M_->getValues("hip") == NULL,
+           d_P_ == NULL,
+           d_Q_ == NULL,
+           infoM_ == NULL
+          );
     printf("starting refactorize\n");
-for (int i = 0; i<10; ++i) printf("%d \n", M_->getColData("cpu")[i]);
-    mem_.deviceSynchronize();
+//    for (int i = 0; i<A_->getNnzExpanded(); ++i) printf("%d \n", A_->getColData("cpu")[i]);
+  printf("nnzM %d nnzM expanded %d \n",M_->getNnz(),  M_->getNnzExpanded());
+    hipDeviceSynchronize();
     status_rocblas_ =  rocsolver_dcsrrf_refactlu(workspace_->getRocblasHandle(),
                                                  A_->getNumRows(),
                                                  A_->getNnzExpanded(),
                                                  A_->getRowData("hip"), //kRowPtr_,
                                                  A_->getColData("hip"), //jCol_, 
                                                  A_->getValues("hip"), //vals_, 
-                                                 M_->getNnz(),
+                                                 M_->getNnzExpanded(),
                                                  M_->getRowData("hip"), 
                                                  M_->getColData("hip"), 
                                                  M_->getValues("hip"), //OUTPUT, 
@@ -98,11 +101,9 @@ for (int i = 0; i<10; ++i) printf("%d \n", M_->getColData("cpu")[i]);
                                                  d_Q_,
                                                  infoM_);
 
-    M_->copyData("cpu");
-    printf("ending refactorize, status: %d, get last errot %d\n", status_rocblas_, mem_.getLastDeviceError());
-for (int i = 0; i<10; ++i) printf("%16.16f \n", M_->getValues("cpu")[i]);
-    mem_.deviceSynchronize();
+    hipDeviceSynchronize();
     printf("synchronized!\n");
+    printf("ending refactorize, status: %d, get last errot %d\n", status_rocblas_, mem_.getLastDeviceError());
     error_sum += status_rocblas_;
 
     return error_sum; 
@@ -112,7 +113,7 @@ for (int i = 0; i<10; ++i) printf("%16.16f \n", M_->getValues("cpu")[i]);
   int LinSolverDirectRocSolverRf::solve(vector_type* rhs)
   {
     if (solve_mode_ == 0) {
-      mem_.deviceSynchronize();
+      hipDeviceSynchronize();
       status_rocblas_ =  rocsolver_dcsrrf_solve(workspace_->getRocblasHandle(),
                                                 A_->getNumRows(),
                                                 1,
@@ -125,7 +126,7 @@ for (int i = 0; i<10; ++i) printf("%16.16f \n", M_->getValues("cpu")[i]);
                                                 rhs->getData("hip"),
                                                 A_->getNumRows(),
                                                 infoM_);
-      mem_.deviceSynchronize();
+      hipDeviceSynchronize();
     } else {
       // not implemented yet
     }
@@ -138,7 +139,7 @@ for (int i = 0; i<10; ++i) printf("%16.16f \n", M_->getValues("cpu")[i]);
     x->setDataUpdated("hip");
 
     if (solve_mode_ == 0) {
-      mem_.deviceSynchronize();
+      hipDeviceSynchronize();
       status_rocblas_ =  rocsolver_dcsrrf_solve(workspace_->getRocblasHandle(),
                                                 A_->getNumRows(),
                                                 1,
@@ -151,7 +152,7 @@ for (int i = 0; i<10; ++i) printf("%16.16f \n", M_->getValues("cpu")[i]);
                                                 x->getData("hip"),
                                                 A_->getNumRows(),
                                                 infoM_);
-      mem_.deviceSynchronize();
+      hipDeviceSynchronize();
     } else {
       // not implemented yet
     }
