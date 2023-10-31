@@ -50,14 +50,14 @@ namespace ReSolve
                                            n,
                                            nnz, 
                                            descr_A_, 
-                                           A_->getRowData("cpu"), //kRowPtr_,
-                                           A_->getColData("cpu"), //jCol_, 
+                                           A_->getRowData(memory::HOST), //kRowPtr_,
+                                           A_->getColData(memory::HOST), //jCol_, 
                                            P, /* base-0 */
                                            Q,   /* base-0 */
                                            M_->getNnz(),           /* nnzM */
                                            descr_M_, 
-                                           M_->getRowData("cpu"), 
-                                           M_->getColData("cpu"), 
+                                           M_->getRowData(memory::HOST), 
+                                           M_->getColData(memory::HOST), 
                                            info_M_);
     error_sum += status_cusolver_; 
     //NOW the buffer 
@@ -93,15 +93,15 @@ namespace ReSolve
   {
 // L and U need to be in CSC format
     index_type n = L->getNumRows();
-    index_type* Lp = L->getColData("cpu"); 
-    index_type* Li = L->getRowData("cpu"); 
-    index_type* Up = U->getColData("cpu"); 
-    index_type* Ui = U->getRowData("cpu"); 
+    index_type* Lp = L->getColData(memory::HOST); 
+    index_type* Li = L->getRowData(memory::HOST); 
+    index_type* Up = U->getColData(memory::HOST); 
+    index_type* Ui = U->getRowData(memory::HOST); 
     index_type nnzM = ( L->getNnz() + U->getNnz() - n );
     M_ = new matrix::Csr(n, n, nnzM);
     M_->allocateMatrixData("cpu");
-    index_type* mia = M_->getRowData("cpu");
-    index_type* mja = M_->getColData("cpu");
+    index_type* mia = M_->getRowData(memory::HOST);
+    index_type* mja = M_->getColData(memory::HOST);
     index_type row;
     for(index_type i = 0; i < n; ++i) {
       // go through EACH COLUMN OF L first

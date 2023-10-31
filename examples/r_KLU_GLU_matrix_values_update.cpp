@@ -106,7 +106,7 @@ int main(int argc, char *argv[])
         ReSolve::io::readAndUpdateMatrix(mat_file, A_exp_coo);
       }
       std::cout<<"Updating values of A_coo!"<<std::endl; 
-      A_coo->updateValues(A_exp_coo->getValues("cpu"), "cpu", "cpu");
+      A_coo->updateValues(A_exp_coo->getValues(ReSolve::memory::HOST), "cpu", "cpu");
       //ReSolve::io::readAndUpdateMatrix(mat_file, A_coo);
       ReSolve::io::readAndUpdateRhs(rhs_file, &rhs);
     }
