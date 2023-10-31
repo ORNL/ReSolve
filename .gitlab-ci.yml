@@ -21,6 +21,15 @@ stages:
     - &rule_yes_ascent_test
       if: '$CI_COMMIT_TITLE =~ /\[ascent-test\]/'
       when: always
+    # -- 
+    # Only run when the commit **DOES NOT** contains "[deception-rebuild]"
+    - &rule_no_deception_rebuild
+      if: '$CI_COMMIT_TITLE =~ /\[deception-rebuild\]/'
+      when: never
+      # Only run when the commit **DOES NOT** contains "[incline-rebuild]"
+    - &rule_no_incline_rebuild
+      if: '$CI_COMMIT_TITLE =~ /\[incline-rebuild\]/'
+      when: never
 
 # Ascent Variables
 .ornl_environment_template:
@@ -33,6 +42,10 @@ Ascent-Build-Test:
   rules:
     - *rule_no_ascent_rebuild
     - *rule_yes_ascent_test
+    - *rule_no_deception_rebuild
+    - *rule_no_deception_test
+    - *rule_no_incline_rebuild
+    - *rule_no_incline_test
     - *default
   tags:
     - batch
