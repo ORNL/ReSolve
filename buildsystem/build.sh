@@ -153,6 +153,9 @@ case $MY_CLUSTER in
   ascent*)
     export MY_CLUSTER=ascent
     ;;
+  crusher*)
+    export MY_CLUSTER=crusher
+    ;;
   *)
     echo "Cluster $MY_CLUSTER not identified - you'll have to set relevant variables manually."
     exit 1

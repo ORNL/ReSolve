@@ -25,7 +25,9 @@
             "installDir": "${sourceDir}/install",
             "generator": "Unix Makefiles",
             "cacheVariables": {
-                "RESOLVE_USE_HIP": "ON"
+                "RESOLVE_USE_HIP": "ON",
+                "RESOLVE_USE_CUDA": "OFF",
+                "RESOLVE_USE_GPU": "ON"
             }
         },
         {
@@ -66,7 +68,18 @@
                 "CXX" : "clang++",
                 "FC" : "gfortran"
             }
-        }
-
+        },
+        {
+              "name": "crusher",
+	      "inherits": "rocm",
+              "displayName": "Crusher Build",
+              "description": "Custom changes specific for Crusher",
+	      "cacheVariables": {
+                  "CMAKE_HIP_ARCHITECTURES": "gfx90a",
+                  "CMAKE_BUILD_TYPE": "Debug",
+		  "CMAKE_C_COMPILER": "/opt/rocm-5.6.0/llvm/bin/clang",
+                  "CMAKE_CXX_COMPILER": "/opt/rocm-5.6.0/llvm/bin/clang++"
+	          }  
+	}
     ]
 }

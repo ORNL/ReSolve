@@ -1,0 +1,66 @@
+# Crusher Variables
+.crusher_rules:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "web"
+    - if: $CI_PINELINE_SOURCE == "schedule"
+    - when: never
+
+.crusher_variables:
+  # Only for slurm tagged jobs...
+  variables:
+    SCHEDULER_PARAMETERS: "-N 1 --ntasks=3 --gpus=1 -A CSC359 --time=60"
+    WORKDIR: /lustre/orion/csc359/proj-shared/resolve/spack-ci-crusher/${CI_PIPELINE_ID}
+
+# Crusher Jobs
+Crusher Build/Run:
+  stage: build
+  tags: [crusher, shell]
+  script:
+    - mkdir -p "$WORKDIR"
+    - cp -r . "$WORKDIR"
+    - cd "$WORKDIR"
+    - export srcdir=$WORKDIR builddir=$WORKDIR/build installdir=$WORKDIR/install
+    - MY_CLUSTER=crusher ./buildsystem/build.sh 
+    - res=$?
+    - exit $res
+  extends:
+    - .crusher_rules
+    - .crusher_variables
+
+# -- Reporting Crusher Status to PNNL GitHub
+.report-job:
+  variables:
+    MY_CLUSTER: crusher
+    GIT_STRATEGY: none
+    STATUS_PROJECT: ornl/ReSolve
+    STATUS_NAME: rocm/5.6
+  tags: [crusher, shell]
+  extends: .crusher_variables
+  environment:
+    name: reporting-gitlab
+  resource_group: status
+  retry: 1
+
+.report-status:
+  extends: .report-job
+  script:
+    -  |
+       curl -L \
+       -X POST \
+       -H @${GITHUB_CURL_HEADER}\
+        https://api.github.com/repos/${STATUS_PROJECT}/statuses/${CI_COMMIT_SHA} \
+        -d "{\"state\":\"${CI_JOB_NAME}\",\"target_url\":\"${CI_PIPELINE_URL}\",\"description\":\"${STATUS_NAME}\",\"context\":\"${MY_CLUSTER}\"}"
+  environment:
+    name: reporting-gitlab
+
+success:
+  stage: .post
+  extends:
+    - .report-status
+  
+failure:
+  stage: .post
+  extends:
+    - .report-status
+  rules:
+    - when: on_failure  

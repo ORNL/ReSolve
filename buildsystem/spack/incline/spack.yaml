@@ -37,7 +37,7 @@ spack:
     source_cache: $SPACK_CACHE/source
     misc_cache: $SPACK_CACHE/misc
     build_stage: $SPACK_CACHE/build
-    url_fetch_method: curl
+    url_fetch_method: urllib
   modules:
     default:
       roots:
@@ -83,4 +83,3 @@ spack:
         modules:
         - perl/5.26.0
       buildable: false
-
