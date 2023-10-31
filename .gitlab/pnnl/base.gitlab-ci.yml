@@ -244,7 +244,7 @@ stages:
       git commit -m "Update ${MY_CLUSTER} spack built tcl modules - [${MY_CLUSTER}-test]"
 
       # Re-target GitHub as our remote
-      git remote set-url origin https://gitlab-ci-token:${SPACK_GIT_TOKEN}@github.com/ORNL/ReSolve.git
+      git remote set-url origin https://gitlab-ci-token:${SPACK_GIT_TOKEN}@github.com/ORNL/ReSolve.git #testing
       
       # Do a rebase incase another pipeline has pushed since build started
       git pull --rebase origin ${CI_COMMIT_REF_NAME}
