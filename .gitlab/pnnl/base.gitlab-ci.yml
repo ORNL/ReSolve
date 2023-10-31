@@ -12,6 +12,14 @@ include:
     - &default
       when: always
       # -- 
+    # Only run when the commit **DOES NOT** contains "[deception-rebuild]"
+    - &rule_no_deception_rebuild
+      if: '$CI_COMMIT_TITLE =~ /\[deception-rebuild\]/'
+      when: never
+      # Only run when the commit **DOES NOT** contains "[incline-rebuild]"
+    - &rule_no_incline_rebuild
+      if: '$CI_COMMIT_TITLE =~ /\[incline-rebuild\]/'
+      when: never
     # Only run when the commit **DOES NOT** contains "[deception-test]"
     - &rule_no_deception_test
       if: '$CI_COMMIT_TITLE =~ /\[deception-test\]/'
@@ -76,6 +84,14 @@ stages:
     when: always
     paths:
       - partition
+
+.module_rebuild:
+  needs: []
+  retry: 1
+  stage: build
+  extends:
+    - .pnnl_tags_template
+    - .pnnl_module_script_template
 
 .pnnl_after_script_template:
   after_script:
@@ -160,6 +176,82 @@ stages:
       popd
       echo "Finished batch job with exit code: $res"
       rm "$WORKDIR/jobid_${jobid}"
+      exit $res
+
+.pnnl_module_script_template:
+  script:
+    - |
+      set -x
+
+      # Configure git before making changes
+      git checkout -b ${CI_COMMIT_REF_NAME}
+
+      export WORKDIR="$HOME/gitlab/${CI_PIPELINE_ID}/${WORKDIR_SUFFIX}"
+
+      mkdir -p "$WORKDIR"
+      cp -r . "$WORKDIR"
+
+      cd "$WORKDIR"
+
+      # jobid used in pnnl_after_script_template to cancel job if cancelled or
+      # timed out by gitlab through the UI
+      jobid=$(sbatch $WORKDIR/buildsystem/spack/$MY_CLUSTER/install.sh)
+      export jobid=$(echo $jobid | cut -f4 -d ' ')
+
+      # Unique jobid filename for this job
+      echo $jobid > "$WORKDIR/jobid_${jobid}"
+
+      # This is hard coded into sbatch script
+      outfile=spack_install.$jobid.output
+
+      [ -f $outfile ] && rm $outfile
+      touch $outfile
+
+      tail -f $outfile &
+      tailpid=$!
+ 
+      res=1
+      while :;
+      do
+        if [[ "$(awk 'BEGIN{i=0}/BUILD_STATUS/{i++}END{print i}' $outfile)" != "0" ]]; then
+          kill $tailpid
+          echo 'Last tail of build $outfile:'
+          tail -n 200 $outfile
+          res=$(grep BUILD_STATUS $outfile | tail -n 1 | cut -f2 -d':')
+          break
+        fi
+        sleep 60
+      done
+
+      if [ "$res" -ne "0" ]; then
+        echo "Finished batch job with exit code: $res"
+        rm "$WORKDIR/jobid_${jobid}"
+        rm -rf $WORKDIR
+        set +x
+        # We want to exit early if the spack build didn't succeed.
+        exit $res;
+      fi
+        
+      # Modules are in /buildsystem/spack/$MY_CLUSTER/modules
+      # Assuming MY_CLUSTER is lower case
+      git add ./buildsystem/spack/${MY_CLUSTER}/modules/*
+
+      # Have to configure username to be able to add commits
+      git config user.name "spack-auto-module"
+      git config user.email "spack.bot@no-reply.com"
+
+      # Add commit to MR branch - message can be changed
+      git commit -m "Update ${MY_CLUSTER} spack built tcl modules - [${MY_CLUSTER}-test]"
+
+      # Re-target GitHub as our remote
+      git remote set-url origin https://gitlab-ci-token:${SPACK_GIT_TOKEN}@github.com/ORNL/ReSolve.git 
+      
+      # Do a rebase incase another pipeline has pushed since build started
+      git pull --rebase origin ${CI_COMMIT_REF_NAME}
+      git push origin ${CI_COMMIT_REF_NAME}
+
+      rm -rf $WORKDIR
+      set +x
       exit $res
 
 .report-job:
@@ -253,6 +345,8 @@ stages:
 
 .deception:
   rules:
+    - *rule_no_deception_rebuild
+    - *rule_no_incline_rebuild
     - *rule_yes_deception_test
     - *rule_no_incline_test
     - *default
@@ -263,6 +357,8 @@ stages:
 
 .incline:
   rules:
+    - *rule_no_deception_rebuild
+    - *rule_no_incline_rebuild
     - *rule_no_deception_test
     - *rule_yes_incline_test
     - *default
