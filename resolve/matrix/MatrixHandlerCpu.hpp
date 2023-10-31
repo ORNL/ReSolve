@@ -50,7 +50,7 @@ namespace ReSolve {
       LinAlgWorkspaceCpu* workspace_{nullptr};
       bool values_changed_{true}; ///< needed for matvec
 
-      MemoryHandler mem_; ///< Device memory manager object
+      // MemoryHandler mem_; ///< Device memory manager object not used for now
   };
 
 } // namespace ReSolve

@@ -46,7 +46,7 @@ namespace ReSolve
       //info - but we need info
       rocsparse_mat_info  info_A_;
 
-      MemoryHandler mem_;
+      // MemoryHandler mem_; ///< Memory handler not needed for now
   };
 
 } // namespace ReSolve

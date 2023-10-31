@@ -12,7 +12,7 @@ namespace ReSolve
       ~LinAlgWorkspaceCpu();
       void initializeHandles();
     private:
-      MemoryHandler mem_;
+      // MemoryHandler mem_; ///< Memory handler not needed for now
   };
 
 }

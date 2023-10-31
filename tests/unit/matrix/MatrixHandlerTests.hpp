@@ -125,13 +125,15 @@ private:
 
     // std::cout << N << "\n";
 
+    // First compute number of nonzeros
     index_type NNZ = 0;
     for (index_type i = 0; i < N; ++i)
     {
-      NNZ += static_cast<index_type>(data[i%5].size());
+      size_t reminder = static_cast<size_t>(i%5);
+      NNZ += static_cast<index_type>(data[reminder].size());
     }
-    // std::cout << NNZ << "\n";
 
+    // Allocate NxN CSR matrix with NNZ nonzeros
     matrix::Csr* A = new matrix::Csr(N, N, NNZ);
     A->allocateMatrixData("cpu");
 
@@ -139,25 +141,23 @@ private:
     index_type* colidx = A->getColData("cpu");
     real_type* val     = A->getValues("cpu"); 
 
+    // Populate CSR matrix using same row pattern as for NNZ calculation
     rowptr[0] = 0;
-    index_type i = 0;
-    for (i=0; i < N; ++i)
+    for (index_type i=0; i < N; ++i)
     {
-      const std::vector<real_type>& row_sample = data[i%5];
+      size_t reminder = static_cast<size_t>(i%5);
+      const std::vector<real_type>& row_sample = data[reminder];
       index_type nnz_per_row = static_cast<index_type>(row_sample.size());
-      // std::cout << nnz_per_row << "\n";
 
       rowptr[i+1] = rowptr[i] + nnz_per_row;
       for (index_type j = rowptr[i]; j < rowptr[i+1]; ++j)
       {
         colidx[j] = (j - rowptr[i]) * N/nnz_per_row + (N%(N/nnz_per_row));
         // evenly distribute nonzeros ^^^^             ^^^^^^^^ perturb offset
-        val[j] = row_sample[j - rowptr[i]];
-        // std::cout << i << " " << colidx[j] << "  " << val[j] << "\n";
+        val[j] = row_sample[static_cast<size_t>(j - rowptr[i])];
       }
     }
     A->setUpdated("cpu");
-    // std::cout << rowptr[i] << "\n";
 
     if ((memspace == "cuda") || (memspace == "hip")) {
       A->copyData(memspace);

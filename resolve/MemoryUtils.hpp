@@ -44,6 +44,15 @@ namespace ReSolve
       
       template <typename I, typename T>
       int copyArrayHostToDevice(T* dst, const T* src, I n);
+
+      /// Implemented here as it is always needed
+      template <typename I, typename T>
+      int copyArrayHostToHost(T* dst, const T* src, I n)
+      {
+        size_t nelements = static_cast<size_t>(n);
+        memcpy(dst, src, nelements * sizeof(T));
+        return 0;
+      }
   };
 
 } // namespace ReSolve
