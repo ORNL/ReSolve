@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
 
   ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
   KLU->setupParameters(1, 0.1, false);
-  
+
   ReSolve::LinSolverDirectRocSolverRf* Rf = new ReSolve::LinSolverDirectRocSolverRf(workspace_HIP);
   // Input to this code is location of `data` directory where matrix files are stored
   const std::string data_path = (argc == 2) ? argv[1] : "./";
@@ -106,6 +106,8 @@ int main(int argc, char *argv[])
   index_type* P = KLU->getPOrdering();
   index_type* Q = KLU->getQOrdering();
   vec_rhs->update(rhs, "cpu", "hip");
+  vec_rhs->setDataUpdated("hip");
+
   status = Rf->setup(A, L, U, P, Q, vec_rhs); 
   error_sum += status;
   std::cout<<"Rf setup status: "<<status<<std::endl;      
@@ -113,7 +115,7 @@ int main(int argc, char *argv[])
   status = Rf->refactorize();
   error_sum += status;
   std::cout<<"Rf 1st refactorize status: "<<status<<std::endl;      
-
+#if 0
   vector_type* vec_test;
   vector_type* vec_diff;
   vec_test  = new vector_type(A->getNumRows());
@@ -131,35 +133,35 @@ int main(int argc, char *argv[])
   matrix_handler->setValuesChanged(true, "hip");
   status = matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr","hip"); 
   error_sum += status;
-  
+
   real_type normRmatrix1 = sqrt(vector_handler->dot(vec_r, vec_r, "hip"));
   printf("\n res norm %16.16f \n", normRmatrix1);
 
   //for testing only - control
-  
+
   real_type normXtrue = sqrt(vector_handler->dot(vec_x, vec_x, "hip"));
   real_type normB1 = sqrt(vector_handler->dot(vec_rhs, vec_rhs, "hip"));
-  
+
   //compute x-x_true
   vector_handler->axpy(&MINUSONE, vec_x, vec_diff, "hip");
   //evaluate its norm
   real_type normDiffMatrix1 = sqrt(vector_handler->dot(vec_diff, vec_diff, "hip"));
- 
-printf("ERROR in sol  %16.16f \n", normDiffMatrix1);
+
+  printf("ERROR in sol  %16.16f \n", normDiffMatrix1);
   //compute the residual using exact solution
   vec_r->update(rhs, "cpu", "hip");
   status = matrix_handler->matvec(A, vec_test, vec_r, &ONE, &MINUSONE,"csr", "hip"); 
   error_sum += status;
   real_type exactSol_normRmatrix1 = sqrt(vector_handler->dot(vec_r, vec_r, "hip"));
   //evaluate the residual ON THE CPU using COMPUTED solution
- 
+
   vec_r->update(rhs, "cpu", "cpu");
 
   status = matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "cpu");
   error_sum += status;
- 
+
   real_type normRmatrix1CPU = sqrt(vector_handler->dot(vec_r, vec_r, "hip"));
- 
+
   std::cout<<"Results (first matrix): "<<std::endl<<std::endl;
   std::cout<<"\t ||b-A*x||_2                 : " << std::setprecision(16) << normRmatrix1    << " (residual norm)" << std::endl;
   std::cout<<"\t ||b-A*x||_2  (CPU)          : " << std::setprecision(16) << normRmatrix1CPU << " (residual norm)" << std::endl;
@@ -192,23 +194,22 @@ printf("ERROR in sol  %16.16f \n", normDiffMatrix1);
   matrix_handler->coo2csr(A_coo, A, "hip");
   vec_rhs->update(rhs, "cpu", "hip");
 
-// this hangs up
+  // this hangs up
   status = Rf->refactorize();
   error_sum += status;
 
   std::cout<<"rocSolverRf refactorization status: "<<status<<std::endl;      
-#if 0
   status = Rf->solve(vec_rhs, vec_x);
   error_sum += status;
 
-   vec_r->update(rhs, "cpu", "hip");
-   matrix_handler->setValuesChanged(true, "hip");
+  vec_r->update(rhs, "cpu", "hip");
+  matrix_handler->setValuesChanged(true, "hip");
 
   status = matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, "csr", "hip"); 
   error_sum += status;
 
   real_type normRmatrix2 = sqrt(vector_handler->dot(vec_r, vec_r, "hip"));
-  
+
   //for testing only - control
   real_type normB2 = sqrt(vector_handler->dot(vec_rhs, vec_rhs, "hip"));
   //compute x-x_true
@@ -216,13 +217,13 @@ printf("ERROR in sol  %16.16f \n", normDiffMatrix1);
   vector_handler->axpy(&MINUSONE, vec_x, vec_diff, "hip");
   //evaluate its norm
   real_type normDiffMatrix2 = sqrt(vector_handler->dot(vec_diff, vec_diff, "hip"));
- 
+
   //compute the residual using exact solution
   vec_r->update(rhs, "cpu", "hip");
   status = matrix_handler->matvec(A, vec_test, vec_r, &ONE, &MINUSONE, "csr", "hip"); 
   error_sum += status;
   real_type exactSol_normRmatrix2 = sqrt(vector_handler->dot(vec_r, vec_r, "hip"));
-  
+
   std::cout<<"Results (second matrix): "<<std::endl<<std::endl;
   std::cout<<"\t ||b-A*x||_2                 : "<<normRmatrix2<<" (residual norm)"<<std::endl;
   std::cout<<"\t ||b-A*x||_2/||b||_2         : "<<normRmatrix2/normB2<<" (scaled residual norm)"<<std::endl;

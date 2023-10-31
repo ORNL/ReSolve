@@ -23,7 +23,6 @@ namespace ReSolve
   {
     class Sparse;
   }
-
   
   class LinSolverDirectRocSolverRf : public LinSolverDirect 
   {
@@ -47,7 +46,6 @@ namespace ReSolve
       
       index_type* d_P_;
       index_type* d_Q_;
-      real_type* d_T_;
 
       MemoryHandler mem_; ///< Device memory manager object
       LinAlgWorkspaceHIP* workspace_; 
