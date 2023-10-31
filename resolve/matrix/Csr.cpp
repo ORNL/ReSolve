@@ -69,19 +69,19 @@ namespace ReSolve
     }
   }
 
-  int matrix::Csr::updateData(index_type* row_data, index_type* col_data, real_type* val_data, std::string memspaceIn, std::string memspaceOut)
+  int matrix::Csr::updateData(index_type* row_data, index_type* col_data, real_type* val_data, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut)
   {
     //four cases (for now)
     index_type nnz_current = nnz_;
     if (is_expanded_) {nnz_current = nnz_expanded_;}
     setNotUpdated();
     int control = -1;
-    if ((memspaceIn == "cpu") && (memspaceOut == "cpu")){ control = 0;}
-    if ((memspaceIn == "cpu") && ((memspaceOut == "cuda") || (memspaceOut == "hip"))){ control = 1;}
-    if (((memspaceIn == "cuda") || (memspaceIn == "hip")) && (memspaceOut == "cpu")){ control = 2;}
-    if (((memspaceIn == "cuda") || (memspaceIn == "hip")) && ((memspaceOut == "cuda") || (memspaceOut == "hip"))){ control = 3;}
+    if ((memspaceIn == memory::HOST)     && (memspaceOut == memory::HOST))    { control = 0;}
+    if ((memspaceIn == memory::HOST)     && ((memspaceOut == memory::DEVICE))){ control = 1;}
+    if (((memspaceIn == memory::DEVICE)) && (memspaceOut == memory::HOST))    { control = 2;}
+    if (((memspaceIn == memory::DEVICE)) && ((memspaceOut == memory::DEVICE))){ control = 3;}
 
-    if (memspaceOut == "cpu") {
+    if (memspaceOut == memory::HOST) {
       //check if cpu data allocated
       if (h_row_data_ == nullptr) {
         this->h_row_data_ = new index_type[n_ + 1];
@@ -94,7 +94,7 @@ namespace ReSolve
       }
     }
 
-    if ((memspaceOut == "cuda") || (memspaceOut == "hip")) {
+    if (memspaceOut == memory::DEVICE) {
       //check if cuda data allocated
       if (d_row_data_ == nullptr) {
         mem_.allocateArrayOnDevice(&d_row_data_, n_ + 1); 
@@ -148,7 +148,7 @@ namespace ReSolve
     return 0;
   } 
 
-  int matrix::Csr::updateData(index_type* row_data, index_type* col_data, real_type* val_data, index_type new_nnz, std::string memspaceIn, std::string memspaceOut)
+  int matrix::Csr::updateData(index_type* row_data, index_type* col_data, real_type* val_data, index_type new_nnz, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut)
   {
     this->destroyMatrixData(memspaceOut);
     this->nnz_ = new_nnz;
@@ -156,13 +156,13 @@ namespace ReSolve
     return i;
   } 
 
-  int matrix::Csr::allocateMatrixData(std::string memspace)
+  int matrix::Csr::allocateMatrixData(memory::MemorySpace memspace)
   {
     index_type nnz_current = nnz_;
     if (is_expanded_) {nnz_current = nnz_expanded_;}
     destroyMatrixData(memspace);//just in case
 
-    if (memspace == "cpu") {
+    if (memspace == memory::HOST) {
       this->h_row_data_ = new index_type[n_ + 1];
       std::fill(h_row_data_, h_row_data_ + n_ + 1, 0);  
       this->h_col_data_ = new index_type[nnz_current];
@@ -174,7 +174,7 @@ namespace ReSolve
       return 0;   
     }
 
-    if ((memspace == "cuda") || (memspace == "hip")) {
+    if (memspace == memory::DEVICE) {
       mem_.allocateArrayOnDevice(&d_row_data_,      n_ + 1); 
       mem_.allocateArrayOnDevice(&d_col_data_, nnz_current); 
       mem_.allocateArrayOnDevice(&d_val_data_, nnz_current); 
@@ -234,6 +234,8 @@ namespace ReSolve
           owns_gpu_vals_ = true;
         }
         return 0;
+      default:
+        return -1;
     } // switch
 }
 

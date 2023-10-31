@@ -90,8 +90,8 @@ namespace ReSolve
 
       L_ = new matrix::Csc(A_->getNumRows(), A_->getNumColumns(), nnzL);
       U_ = new matrix::Csc(A_->getNumRows(), A_->getNumColumns(), nnzU);
-      L_->allocateMatrixData("cpu");
-      U_->allocateMatrixData("cpu");
+      L_->allocateMatrixData(memory::HOST);
+      U_->allocateMatrixData(memory::HOST);
       int ok = klu_extract(Numeric_, 
                            Symbolic_, 
                            L_->getColData(memory::HOST), 
@@ -109,8 +109,8 @@ namespace ReSolve
                            nullptr,
                            &Common_);
 
-      L_->setUpdated("cpu");
-      U_->setUpdated("cpu");
+      L_->setUpdated(memory::HOST);
+      U_->setUpdated(memory::HOST);
       (void) ok; // TODO: Check status in ok before setting `factors_extracted_`
       factors_extracted_ = true;
     }
@@ -125,8 +125,8 @@ namespace ReSolve
 
       L_ = new matrix::Csc(A_->getNumRows(), A_->getNumColumns(), nnzL);
       U_ = new matrix::Csc(A_->getNumRows(), A_->getNumColumns(), nnzU);
-      L_->allocateMatrixData("cpu");
-      U_->allocateMatrixData("cpu");
+      L_->allocateMatrixData(memory::HOST);
+      U_->allocateMatrixData(memory::HOST);
       int ok = klu_extract(Numeric_, 
                            Symbolic_, 
                            L_->getColData(memory::HOST), 
@@ -144,8 +144,8 @@ namespace ReSolve
                            nullptr,
                            &Common_);
 
-      L_->setUpdated("cpu");
-      U_->setUpdated("cpu");
+      L_->setUpdated(memory::HOST);
+      U_->setUpdated(memory::HOST);
 
       (void) ok; // TODO: Check status in ok before setting `factors_extracted_`
       factors_extracted_ = true;

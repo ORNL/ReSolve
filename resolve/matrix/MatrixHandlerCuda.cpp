@@ -127,7 +127,7 @@ namespace ReSolve {
     index_type error_sum = 0;
     LinAlgWorkspaceCUDA* workspaceCUDA = (LinAlgWorkspaceCUDA*) workspace_;
 
-    A_csr->allocateMatrixData("cuda");
+    A_csr->allocateMatrixData(memory::DEVICE);
     index_type n = A_csc->getNumRows();
     index_type m = A_csc->getNumRows();
     index_type nnz = A_csc->getNnz();

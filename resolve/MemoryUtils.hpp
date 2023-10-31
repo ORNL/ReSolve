@@ -8,6 +8,7 @@ namespace ReSolve
   namespace memory
   {
     enum MemorySpace{HOST = 0, DEVICE};
+    enum MemoryDirection{HOST_TO_HOST = 0, HOST_TO_DEVICE, DEVICE_TO_HOST, DEVICE_TO_DEVICE};
   }
 }
 

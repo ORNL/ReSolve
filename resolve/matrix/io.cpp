@@ -53,7 +53,7 @@ namespace ReSolve { namespace io {
       coo_vals[i] = c;
       i++;
     }
-    A->setMatrixData(coo_rows, coo_cols, coo_vals, "cpu");
+    A->setMatrixData(coo_rows, coo_cols, coo_vals, memory::HOST);
     return A;
   }
 

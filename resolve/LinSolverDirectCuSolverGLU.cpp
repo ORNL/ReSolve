@@ -99,7 +99,7 @@ namespace ReSolve
     index_type* Ui = U->getRowData(memory::HOST); 
     index_type nnzM = ( L->getNnz() + U->getNnz() - n );
     M_ = new matrix::Csr(n, n, nnzM);
-    M_->allocateMatrixData("cpu");
+    M_->allocateMatrixData(memory::HOST);
     index_type* mia = M_->getRowData(memory::HOST);
     index_type* mja = M_->getColData(memory::HOST);
     index_type row;

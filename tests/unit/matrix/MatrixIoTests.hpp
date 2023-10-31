@@ -78,7 +78,7 @@ public:
 
     // Create a 5x5 COO matrix with 10 nonzeros
     ReSolve::matrix::Coo A(5, 5, 10);
-    A.allocateMatrixData("cpu");
+    A.allocateMatrixData(memory::HOST);
 
     // Read string into istream and status it to `readMatrixFromFile` function.
     std::istringstream file2(symmetric_coo_matrix_file_);

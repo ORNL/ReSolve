@@ -249,12 +249,12 @@ namespace ReSolve {
 #endif
     A_csr->setNnz(nnz_no_duplicates);
     if (memspace == "cpu"){
-      A_csr->updateData(csr_ia, csr_ja, csr_a, "cpu", "cpu");
+      A_csr->updateData(csr_ia, csr_ja, csr_a, memory::HOST, memory::HOST);
     } else {
       if (memspace == "cuda"){      
-        A_csr->updateData(csr_ia, csr_ja, csr_a, "cpu", "cuda");
+        A_csr->updateData(csr_ia, csr_ja, csr_a, memory::HOST, memory::DEVICE);
       } else if (memspace == "hip"){      
-        A_csr->updateData(csr_ia, csr_ja, csr_a, "cpu", "cuda");
+        A_csr->updateData(csr_ia, csr_ja, csr_a, memory::HOST, memory::DEVICE);
       } else {
         //display error
       }

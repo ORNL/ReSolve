@@ -135,7 +135,7 @@ private:
 
     // Allocate NxN CSR matrix with NNZ nonzeros
     matrix::Csr* A = new matrix::Csr(N, N, NNZ);
-    A->allocateMatrixData("cpu");
+    A->allocateMatrixData(memory::HOST);
 
     index_type* rowptr = A->getRowData(memory::HOST);
     index_type* colidx = A->getColData(memory::HOST);
@@ -157,7 +157,7 @@ private:
         val[j] = row_sample[static_cast<size_t>(j - rowptr[i])];
       }
     }
-    A->setUpdated("cpu");
+    A->setUpdated(memory::HOST);
 
     if ((memspace == "cuda") || (memspace == "hip")) {
       A->copyData(memory::DEVICE);
