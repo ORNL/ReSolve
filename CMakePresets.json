@@ -24,8 +24,8 @@
 	    "cacheVariables": {
 		"CMAKE_C_COMPILER": "/opt/rocm-5.6.0/bin/amdclang",
 		"CMAKE_CXX_COMPILER": "/opt/rocm-5.6.0/bin/amdclang++",
-		"KLU_LIBRARY": "/lustre/orion/csc359/world-shared/nkouk/SuiteSparse/_install/lib/libklu.a",
-		"KLU_INCLUDE_DIR": "/lustre/orion/csc359/world-shared/nkouk/SuiteSparse/_install/include",
+		"KLU_LIBRARY": "/lustre/orion/csc359/world-shared/SuiteSparse/lib/libklu.so",
+		"KLU_INCLUDE_DIR": "/lustre/orion/csc359/world-shared/SuiteSparse/include",
 		"RESOLVE_USE_GPU": "ON",
 		"RESOLVE_USE_HIP": "ON"
 	    }
