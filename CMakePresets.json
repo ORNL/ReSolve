@@ -15,6 +15,23 @@
             "generator": "Unix Makefiles"
         },
         {
+            "name": "debug",
+            "displayName": "ROCm Debug Build",
+            "description": "Hackathon only debug build",
+            "binaryDir": "${sourceDir}/build",
+            "installDir": "${sourceDir}/install",
+            "generator": "Unix Makefiles",
+	    "cacheVariables": {
+		"CMAKE_C_COMPILER": "/opt/rocm-5.6.0/bin/amdclang",
+		"CMAKE_CXX_COMPILER": "/opt/rocm-5.6.0/bin/amdclang++",
+		"KLU_LIBRARY": "/lustre/orion/csc359/world-shared/nkouk/SuiteSparse/_install/lib/libklu.a",
+		"KLU_INCLUDE_DIR": "/lustre/orion/csc359/world-shared/nkouk/SuiteSparse/_install/include",
+		"RESOLVE_USE_GPU": "ON",
+		"RESOLVE_USE_HIP": "ON"
+	    }
+
+        },
+        {
             "name": "cpu",
             "displayName": "CPU only build",
             "description": "Base config to build without GPUs",
