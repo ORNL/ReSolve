@@ -114,8 +114,6 @@ int main(int argc, char *argv[])
 
   status = Rf->refactorize();
   error_sum += status;
-  std::cout<<"Rf 1st refactorize status: "<<status<<std::endl;      
-#if 0
   vector_type* vec_test;
   vector_type* vec_diff;
   vec_test  = new vector_type(A->getNumRows());
@@ -135,7 +133,6 @@ int main(int argc, char *argv[])
   error_sum += status;
 
   real_type normRmatrix1 = sqrt(vector_handler->dot(vec_r, vec_r, "hip"));
-  printf("\n res norm %16.16f \n", normRmatrix1);
 
   //for testing only - control
 
@@ -147,7 +144,6 @@ int main(int argc, char *argv[])
   //evaluate its norm
   real_type normDiffMatrix1 = sqrt(vector_handler->dot(vec_diff, vec_diff, "hip"));
 
-  printf("ERROR in sol  %16.16f \n", normDiffMatrix1);
   //compute the residual using exact solution
   vec_r->update(rhs, "cpu", "hip");
   status = matrix_handler->matvec(A, vec_test, vec_r, &ONE, &MINUSONE,"csr", "hip"); 
@@ -250,7 +246,6 @@ int main(int argc, char *argv[])
   delete workspace_HIP;
   delete matrix_handler;
   delete vector_handler;
-#endif
   return error_sum;
 }
 

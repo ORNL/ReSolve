@@ -28,21 +28,15 @@ namespace ReSolve
     rocsolver_create_rfinfo(&infoM_, workspace_->getRocblasHandle()); 
     //create combined factor
     addFactors(L,U);
+    M_->setUpdated("cpu");
     M_->copyData("hip");
-    printf("n = %d nnz = %d \n", n, nnz);
     mem_.allocateArrayOnDevice(&d_P_, n); 
     mem_.allocateArrayOnDevice(&d_Q_, n);
 
-    int st = mem_.copyArrayHostToDevice(d_P_, P, n);
-    printf("P copy returned %d\n", st);
-    st = mem_.copyArrayHostToDevice(d_Q_, Q, n);
-    printf("Q copy returned %d\n", st);
-// this should throw error but it does not???
-//
- //   st = mem_.copyArrayDeviceToHost(d_P_, P, n);
-   
+    mem_.copyArrayHostToDevice(d_P_, P, n);
+    mem_.copyArrayHostToDevice(d_Q_, Q, n);
 
-    hipDeviceSynchronize();
+    mem_.deviceSynchronize();
     status_rocblas_ = rocsolver_dcsrrf_analysis(workspace_->getRocblasHandle(),
                                                 n,
                                                 1,
@@ -60,8 +54,7 @@ namespace ReSolve
                                                 n,
                                                 infoM_);
 
-    hipDeviceSynchronize();
-    printf("ANALYSIS status is %d \n",status_rocblas_ );
+    mem_.deviceSynchronize();
     error_sum += status_rocblas_;
 
 
@@ -71,22 +64,7 @@ namespace ReSolve
   int LinSolverDirectRocSolverRf::refactorize()
   {
     int error_sum = 0;
-    printf("is NULL? %d %d %d nnzM %d is null %d %d %d is Null? %d %d infoM %d\n",
-           A_->getRowData("hip") == NULL,
-           A_->getColData("hip") == NULL,
-           A_->getValues("hip") == NULL,
-           M_->getNnzExpanded(),
-           M_->getRowData("hip") == NULL,
-           M_->getColData("hip") == NULL,
-           M_->getValues("hip") == NULL,
-           d_P_ == NULL,
-           d_Q_ == NULL,
-           infoM_ == NULL
-          );
-    printf("starting refactorize\n");
-//    for (int i = 0; i<A_->getNnzExpanded(); ++i) printf("%d \n", A_->getColData("cpu")[i]);
-  printf("nnzM %d nnzM expanded %d \n",M_->getNnz(),  M_->getNnzExpanded());
-    hipDeviceSynchronize();
+    mem_.deviceSynchronize();
     status_rocblas_ =  rocsolver_dcsrrf_refactlu(workspace_->getRocblasHandle(),
                                                  A_->getNumRows(),
                                                  A_->getNnzExpanded(),
@@ -101,9 +79,7 @@ namespace ReSolve
                                                  d_Q_,
                                                  infoM_);
 
-    hipDeviceSynchronize();
-    printf("synchronized!\n");
-    printf("ending refactorize, status: %d, get last errot %d\n", status_rocblas_, mem_.getLastDeviceError());
+    mem_.deviceSynchronize();
     error_sum += status_rocblas_;
 
     return error_sum; 
@@ -113,7 +89,7 @@ namespace ReSolve
   int LinSolverDirectRocSolverRf::solve(vector_type* rhs)
   {
     if (solve_mode_ == 0) {
-      hipDeviceSynchronize();
+      mem_.deviceSynchronize();
       status_rocblas_ =  rocsolver_dcsrrf_solve(workspace_->getRocblasHandle(),
                                                 A_->getNumRows(),
                                                 1,
@@ -126,7 +102,7 @@ namespace ReSolve
                                                 rhs->getData("hip"),
                                                 A_->getNumRows(),
                                                 infoM_);
-      hipDeviceSynchronize();
+      mem_.deviceSynchronize();
     } else {
       // not implemented yet
     }
@@ -139,7 +115,7 @@ namespace ReSolve
     x->setDataUpdated("hip");
 
     if (solve_mode_ == 0) {
-      hipDeviceSynchronize();
+      mem_.deviceSynchronize();
       status_rocblas_ =  rocsolver_dcsrrf_solve(workspace_->getRocblasHandle(),
                                                 A_->getNumRows(),
                                                 1,
@@ -152,7 +128,7 @@ namespace ReSolve
                                                 x->getData("hip"),
                                                 A_->getNumRows(),
                                                 infoM_);
-      hipDeviceSynchronize();
+      mem_.deviceSynchronize();
     } else {
       // not implemented yet
     }
