@@ -23,41 +23,30 @@ endif()
 
 option(RESOLVE_TEST_WITH_BSUB "Use `jsrun` instead of `mpirun` commands when running tests" OFF)
 option(RESOLVE_USE_KLU  "Use KLU, AMD and COLAMD libraries from SuiteSparse" ON)
-option(RESOLVE_USE_GPU  "Use GPU device for computations" OFF)
 option(RESOLVE_USE_CUDA "Use CUDA language and SDK" OFF)
 option(RESOLVE_USE_HIP  "Use HIP language and ROCm library" OFF)
-set(RESOLVE_CTEST_OUTPUT_DIR ${PROJECT_BINARY_DIR} CACHE PATH "Directory where CTest outputs are saved")
+
+option(RESOLVE_USE_GPU  "Use GPU device for computations" OFF)
+mark_as_advanced(FORCE RESOLVE_USE_GPU)
 
 if(RESOLVE_USE_CUDA)
-  set(RESOLVE_USE_GPU On CACHE BOOL "Using CUDA GPU!" FORCE)
+  set(RESOLVE_USE_GPU ON CACHE BOOL "Using CUDA GPU!" FORCE)
 endif()
 
 if(RESOLVE_USE_HIP)
-  set(RESOLVE_USE_GPU On CACHE BOOL "Using HIP GPU!" FORCE)
+  set(RESOLVE_USE_GPU ON CACHE BOOL "Using HIP GPU!" FORCE)
 endif()
 
-
+# MacOS specific things
 set(CMAKE_MACOSX_RPATH 1)
-# set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
-# https://gitlab.kitware.com/cmake/community/-/wikis/doc/cmake/RPATH-handling#always-full-rpath
-# use, i.e. don't skip the full RPATH for the build tree
-#set(CMAKE_SKIP_BUILD_RPATH FALSE)
 
-# when building, don't use the install RPATH already
-# (but later on when installing)
+# Install with RPATH but do not build with it
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
-
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-
 set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib)
-#list(APPEND CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib)
 
 # Add CMake sources from `cmake` dir
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
-
-# Including clang-format cmake files to do automatic checking of formating
-# TODO: Set up clang-format
-#include(./cmake/clang-format)
 
 if (RESOLVE_USE_KLU)
   include(FindKLU)
@@ -100,6 +89,7 @@ if(RESOLVE_USE_HIP)
   # This is just an agly hack to make HIP build work
   get_target_property(hip_includes hip::device INTERFACE_INCLUDE_DIRECTORIES)
   message(STATUS "HIP include directories: ${hip_includes}")
+  # TODO - use targets properly
   include_directories(${hip_includes})
 else()
   message(STATUS "Not using HIP")
@@ -112,6 +102,7 @@ configure_file(
   ${CMAKE_BINARY_DIR}/resolve/resolve_defs.hpp)
 
 # include build directory for Fortran name mangling header
+# TODO - target based includes
 include_directories(${CMAKE_BINARY_DIR})
 
 install(
@@ -119,7 +110,7 @@ install(
   DESTINATION include/resolve
   )
 
-
+# TODO - fix this
 include_directories(${CMAKE_SOURCE_DIR})
 
 # Enable testing
@@ -158,4 +149,5 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/ReSolveConfig.cmake"
 add_subdirectory(examples)
 
 # Add tests
+set(RESOLVE_CTEST_OUTPUT_DIR ${PROJECT_BINARY_DIR} CACHE PATH "Directory where CTest outputs are saved")
 add_subdirectory(tests)
