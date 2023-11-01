@@ -169,15 +169,16 @@ int main(int argc, char *argv[])
 
       //matrix_handler->setValuesChanged(true, "hip");
       FGMRES->resetMatrix(A);
-      FGMRES->setupPreconditioner("CuSolverRf", Rf);
+      FGMRES->setupPreconditioner("LU", Rf);
       
       matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "hip"); 
-
+      real_type rnrm = sqrt(vector_handler->dot(vec_r, vec_r, "hip"));
       std::cout << "\t 2-Norm of the residual (before IR): " 
                 << std::scientific << std::setprecision(16) 
-                << sqrt(vector_handler->dot(vec_r, vec_r, "hip"))/norm_b << "\n";
+                << rnrm/norm_b << "\n";
 
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+     if(!std::isnan(rnrm) && !std::isinf(rnrm)) {
       FGMRES->solve(vec_rhs, vec_x);
 
       std::cout << "FGMRES: init nrm: " 
@@ -186,7 +187,8 @@ int main(int argc, char *argv[])
                 << " final nrm: "
                 << FGMRES->getFinalResidualNorm()/norm_b
                 << " iter: " << FGMRES->getNumIter() << "\n";
-    }
+     }
+     }
 
   } // for (int i = 0; i < numSystems; ++i)
 

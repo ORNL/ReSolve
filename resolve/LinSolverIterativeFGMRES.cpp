@@ -118,6 +118,9 @@ namespace ReSolve
     vector_type* vec_v = new vector_type(n_);
     vector_type* vec_z = new vector_type(n_);
     //V[0] = b-A*x_0
+    //debug
+    d_Z_->setToZero(memory::DEVICE);
+    d_V_->setToZero(memory::DEVICE);
 
     rhs->deepCopyVectorData(d_V_->getData(memory::DEVICE), 0, memory::DEVICE);  
     matrix_handler_->matvec(A_, x, d_V_, &MINUSONE, &ONE, "csr", memspace_); 
@@ -193,7 +196,6 @@ namespace ReSolve
             h_H_[i * (restart_ + 1) + k] = -h_s_[k1] * t + h_c_[k1] * h_H_[i * (restart_ + 1) + k];
           }
         } // if i!=0
-
         double Hii = h_H_[i * (restart_ + 1) + i];
         double Hii1 = h_H_[(i) * (restart_ + 1) + i + 1];
         double gam = sqrt(Hii * Hii + Hii1 * Hii1);
@@ -258,9 +260,9 @@ namespace ReSolve
     return 0;
   }
 
-  int  LinSolverIterativeFGMRES::setupPreconditioner(std::string name, LinSolverDirect* LU_solver)
+  int  LinSolverIterativeFGMRES::setupPreconditioner(std::string type, LinSolverDirect* LU_solver)
   {
-    if (name != "CuSolverRf") {
+    if (type != "LU") {
       out::warning() << "Only cusolverRf tri solve can be used as a preconditioner at this time." << std::endl;
       return 1;
     } else {

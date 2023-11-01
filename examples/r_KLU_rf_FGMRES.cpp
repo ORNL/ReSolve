@@ -168,7 +168,7 @@ int main(int argc, char *argv[])
 
       //matrix_handler->setValuesChanged(true, "cuda");
       FGMRES->resetMatrix(A);
-      FGMRES->setupPreconditioner("CuSolverRf", Rf);
+      FGMRES->setupPreconditioner("LU", Rf);
       
       matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "cuda"); 
 
