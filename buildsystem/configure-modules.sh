@@ -27,6 +27,8 @@ echo Arch for module path being used is $arch && \
 echo module use -a $SPACK_INSTALL/modules/$arch &> $base/modules/dependencies.sh && \
 spack module tcl loads -r -x resolve resolve &>> $base/modules/dependencies.sh
 
+exit_code=$?
+
 # This makes the module and installation location globally readable which isn't ideal.
 # Sticking to this avoids permission issues for other group members, but you
 # should make sure that the install location is in a folder that is only
@@ -34,3 +36,7 @@ spack module tcl loads -r -x resolve resolve &>> $base/modules/dependencies.sh
 # Since we use this in CI and other users will create files we cannot chmod,
 # We need to allow this command to fail
 chmod -R ugo+wrx $SPACK_INSTALL/modules > /dev/null 2>&1
+
+# Should still change permissions before exiting, but should also return the exit
+# code of spack related code
+exit $exit_code

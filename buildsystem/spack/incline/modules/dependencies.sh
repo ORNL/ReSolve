@@ -17,8 +17,8 @@ module load curl/8.4.0-gcc-8.4.0-g2rrs23
 module load ncurses/6.4-gcc-8.4.0-jt7rpqq
 # cmake@=3.27.7%gcc@=8.4.0~doc+ncurses+ownlibs build_system=generic build_type=Release arch=linux-centos7-zen
 module load cmake/3.27.7-gcc-8.4.0-tu2rruq
-# gmake@=4.4.1%gcc@=8.4.0~guile build_system=autotools arch=linux-centos7-zen
-module load gmake/4.4.1-gcc-8.4.0-f23wik2
+# gmake@=4.4.1%gcc@=8.4.0~guile build_system=generic arch=linux-centos7-zen
+module load gmake/4.4.1-gcc-8.4.0-l7nyr34
 # libiconv@=1.17%gcc@=8.4.0 build_system=autotools libs=shared,static arch=linux-centos7-zen
 module load libiconv/1.17-gcc-8.4.0-wfdnlg6
 # diffutils@=3.9%gcc@=8.4.0 build_system=autotools arch=linux-centos7-zen
@@ -35,6 +35,8 @@ module load automake/1.16.5-gcc-8.4.0-tgloywk
 module load libtool/2.4.7-gcc-8.4.0-gs6gyy3
 # gmp@=6.2.1%gcc@=8.4.0+cxx build_system=autotools libs=shared,static patches=69ad2e2 arch=linux-centos7-zen
 module load gmp/6.2.1-gcc-8.4.0-ythx4o2
+# gmake@=4.4.1%gcc@=8.4.0~guile build_system=autotools arch=linux-centos7-zen
+module load gmake/4.4.1-gcc-8.4.0-f23wik2
 # metis@=5.1.0%gcc@=8.4.0~gdb~int64~ipo~real64+shared build_system=cmake build_type=Release generator=make patches=4991da9,93a7903,b1225da arch=linux-centos7-zen
 module load metis/5.1.0-gcc-8.4.0-gsllf6a
 # autoconf-archive@=2023.02.20%gcc@=8.4.0 build_system=autotools arch=linux-centos7-zen
@@ -61,5 +63,5 @@ module load mpfr/4.2.0-gcc-8.4.0-cjhi2el
 module load openblas/0.3.24-gcc-8.4.0-4ei4hpg
 # suite-sparse@=5.13.0%gcc@=8.4.0~cuda~graphblas~openmp+pic build_system=generic arch=linux-centos7-zen
 module load suite-sparse/5.13.0-gcc-8.4.0-ivey23b
-# resolve@=develop%gcc@=8.4.0~cuda~ipo+klu build_system=cmake build_type=Release dev_path=/people/ruth521/projects/resolve generator=make arch=linux-centos7-zen
-## module load resolve/develop-gcc-8.4.0-ugoj3p3
+# resolve@=develop%gcc@=8.4.0~cuda~ipo+klu build_system=cmake build_type=Release dev_path=/people/svcexasgd/gitlab/24143/spack_incline generator=make arch=linux-centos7-zen
+## module load resolve/develop-gcc-8.4.0-l7tspub
