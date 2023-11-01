@@ -48,7 +48,7 @@ add_subdirectory(matrix)
 add_library(resolve_tpl INTERFACE)
 
 if(RESOLVE_USE_KLU)
-    target_link_libraries(resolve_tpl INTERFACE KLU)    
+  target_link_libraries(resolve_tpl INTERFACE KLU)    
 endif(RESOLVE_USE_KLU)
 
 set(ReSolve_Targets_List
