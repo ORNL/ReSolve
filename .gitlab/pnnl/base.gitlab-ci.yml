@@ -36,7 +36,9 @@ include:
     - &rule_yes_incline_test
       if: '$CI_COMMIT_TITLE =~ /\[incline-test\]/'
       when: always
-
+    - &rule_no_ascent_test
+      if: '$CI_COMMIT_TITLE =~ /\[ascent-test\]/'
+      when: never
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
@@ -347,6 +349,7 @@ stages:
   rules:
     - *rule_no_deception_rebuild
     - *rule_no_incline_rebuild
+    - *rule_no_ascent_test
     - *rule_yes_deception_test
     - *rule_no_incline_test
     - *default
@@ -359,6 +362,7 @@ stages:
   rules:
     - *rule_no_deception_rebuild
     - *rule_no_incline_rebuild
+    - *rule_no_ascent_test
     - *rule_no_deception_test
     - *rule_yes_incline_test
     - *default
