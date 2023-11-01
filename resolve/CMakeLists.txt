@@ -37,21 +37,6 @@ set(ReSolve_HEADER_INSTALL
     MemoryUtils.hpp
 )
 
-# If GPU support is not enabled, add dummy device backend
-if(NOT RESOLVE_USE_GPU)
-    add_subdirectory(cpu)
-endif()
-
-# If CUDA support is enabled, create CUDA backend
-# (this should really be CUDA _API_ backend, separate backend will be needed for CUDA SDK)
-if(RESOLVE_USE_CUDA)
-    add_subdirectory(cuda)
-endif()
-
-if(RESOLVE_USE_HIP)
-    add_subdirectory(hip)
-endif()
-
 # Now, build workspaces
 add_subdirectory(workspace)
 
@@ -59,22 +44,12 @@ add_subdirectory(workspace)
 add_subdirectory(vector)
 add_subdirectory(matrix)
 
-
 # Build shared library ReSolve
 add_library(resolve_tpl INTERFACE)
 
 if(RESOLVE_USE_KLU)
-    target_link_libraries(resolve_tpl INTERFACE KLU)    
+  target_link_libraries(resolve_tpl INTERFACE KLU)    
 endif(RESOLVE_USE_KLU)
-
-if(RESOLVE_USE_CUDA)
-    target_link_libraries(resolve_tpl INTERFACE resolve_cuda)
-endif(RESOLVE_USE_CUDA)
-
-if(RESOLVE_USE_HIP)
-    target_link_libraries(resolve_tpl INTERFACE resolve_hip)
-endif(RESOLVE_USE_HIP)
-
 
 set(ReSolve_Targets_List
     resolve_matrix
@@ -86,18 +61,23 @@ set(ReSolve_Targets_List
 
 # If CUDA support is enabled add CUDA SDK specific code and dependencies
 if(RESOLVE_USE_CUDA)
+  add_subdirectory(cuda)
+  target_link_libraries(resolve_tpl INTERFACE resolve_cuda)
   set(ReSolve_SRC ${ReSolve_SRC} ${ReSolve_CUDASDK_SRC})
   set(ReSolve_Targets_List ${ReSolve_Targets_List} resolve_backend_cuda)
 endif()
 
 # If HIP support is enabled add HIP SDK specific code and dependencies
 if(RESOLVE_USE_HIP)
+  add_subdirectory(hip)
+  target_link_libraries(resolve_tpl INTERFACE resolve_hip)
   set(ReSolve_Targets_List ${ReSolve_Targets_List} resolve_backend_hip)
 endif()
 
 # If no GPU support is enabled, link to dummy device backend
 if(NOT RESOLVE_USE_GPU)
-    set(ReSolve_Targets_List ${ReSolve_Targets_List} resolve_backend_cpu)
+  add_subdirectory(cpu)
+  set(ReSolve_Targets_List ${ReSolve_Targets_List} resolve_backend_cpu)
 endif()
 
 # Set installable targets
