@@ -18,6 +18,19 @@
             }
         },
         {
+            "name": "rocm",
+            "displayName": "ROCM  build",
+            "description": "Base config to build with ROCM",
+            "binaryDir": "${sourceDir}/build",
+            "installDir": "${sourceDir}/install",
+            "generator": "Unix Makefiles",
+            "cacheVariables": {
+                "RESOLVE_USE_HIP": "ON",
+                "RESOLVE_USE_CUDA": "OFF",
+                "RESOLVE_USE_GPU": "OFF"
+            }
+        },
+        {
             "name": "cpu",
             "displayName": "CPU only build",
             "description": "Base config to build without GPUs",
@@ -43,8 +56,8 @@
         },
         {
             "name": "incline",
-            "inherits": "cpu",
-            "displayName": "Incline CPU only Build",
+            "inherits": "rocm",
+            "displayName": "Incline Build with rocm",
             "description": "Custom changes specific for Incline"
         }
 
