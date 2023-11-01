@@ -140,27 +140,28 @@ int main(int argc, char *argv[])
       matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "hip"); 
       printf("\t 2-Norm of the residual : %16.16e\n", sqrt(vector_handler->dot(vec_r, vec_r, "hip"))/norm_b);
       if (i == 1) {
-        ReSolve::matrix::Csc* L_csc = (ReSolve::matrix::Csc*) KLU->getLFactor();
-        ReSolve::matrix::Csc* U_csc = (ReSolve::matrix::Csc*) KLU->getUFactor();
-        ReSolve::matrix::Csr* L = new ReSolve::matrix::Csr(L_csc->getNumRows(), L_csc->getNumColumns(), L_csc->getNnz());
-        ReSolve::matrix::Csr* U = new ReSolve::matrix::Csr(U_csc->getNumRows(), U_csc->getNumColumns(), U_csc->getNnz());
-        matrix_handler->csc2csr(L_csc,L, "hip");
-        matrix_handler->csc2csr(U_csc,U, "hip");
+        ReSolve::matrix::Csc* L /* _csc */ = (ReSolve::matrix::Csc*) KLU->getLFactor();
+        ReSolve::matrix::Csc* U /* _csc */ = (ReSolve::matrix::Csc*) KLU->getUFactor();
+        // ReSolve::matrix::Csr* L = new ReSolve::matrix::Csr(L_csc->getNumRows(), L_csc->getNumColumns(), L_csc->getNnz());
+        // ReSolve::matrix::Csr* U = new ReSolve::matrix::Csr(U_csc->getNumRows(), U_csc->getNumColumns(), U_csc->getNnz());
+        // matrix_handler->csc2csr(L_csc,L, "hip");
+        // matrix_handler->csc2csr(U_csc,U, "hip");
         if (L == nullptr) {printf("ERROR");}
         index_type* P = KLU->getPOrdering();
         index_type* Q = KLU->getQOrdering();
         Rf->setup(A, L, U, P, Q, vec_rhs);
+        Rf->refactorize();
         std::cout<<"about to set FGMRES" <<std::endl;
         GS->setup(A->getNumRows(), FGMRES->getRestart()); 
         FGMRES->setup(A); 
       }
     } else {
       //status =  KLU->refactorize();
-      std::cout<<"Using CUSOLVER RF"<<std::endl;
+      std::cout<<"Using ROCSOLVER RF"<<std::endl;
       status = Rf->refactorize();
-      std::cout<<"CUSOLVER RF refactorization status: "<<status<<std::endl;      
+      std::cout<<"ROCSOLVER RF refactorization status: "<<status<<std::endl;      
       status = Rf->solve(vec_rhs, vec_x);
-      std::cout<<"CUSOLVER RF solve status: "<<status<<std::endl;      
+      std::cout<<"ROCSOLVER RF solve status: "<<status<<std::endl;      
 
       vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
       norm_b = vector_handler->dot(vec_r, vec_r, "hip");
