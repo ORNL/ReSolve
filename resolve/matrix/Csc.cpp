@@ -27,12 +27,11 @@ namespace ReSolve
   index_type* matrix::Csc::getRowData(memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
+    copyData(memspace);
     switch (memspace) {
       case HOST:
-        copyData(memspace);
         return this->h_row_data_;
       case DEVICE:
-        copyData(memspace);
         return this->d_row_data_;
       default:
         return nullptr;
@@ -42,12 +41,11 @@ namespace ReSolve
   index_type* matrix::Csc::getColData(memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
+    copyData(memspace);
     switch (memspace) {
       case HOST:
-        copyData(memspace);
         return this->h_col_data_;
       case DEVICE:
-        copyData(memspace);
         return this->d_col_data_;
       default:
         return nullptr;
