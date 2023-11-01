@@ -58,7 +58,11 @@
             "name": "incline",
             "inherits": "rocm",
             "displayName": "Incline Build with rocm",
-            "description": "Custom changes specific for Incline"
+            "description": "Custom changes specific for Incline",
+            "cacheVariables": {
+                "CMAKE_HIP_ARCHITECTURES" : "gfx908",
+                "CMAKE_BUILD_TYPE" : "Debug"
+            }
         }
 
     ]

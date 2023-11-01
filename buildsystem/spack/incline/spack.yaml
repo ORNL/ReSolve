@@ -5,7 +5,7 @@ spack:
   - hsa-rocr-dev~image
   view: false
   concretizer:
-    reuse: true
+    reuse: false
     unify: when_possible
   config:
     concretizer: clingo
