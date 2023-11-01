@@ -23,7 +23,6 @@ namespace ReSolve
     int error_sum = 0;
     this->A_ = (matrix::Csr*) A;
     index_type n = A_->getNumRows();
-    index_type nnz = A_->getNnzExpanded();  
     //set matrix info
     rocsolver_create_rfinfo(&infoM_, workspace_->getRocblasHandle()); 
     //create combined factor

@@ -135,11 +135,9 @@ int main(int argc, char *argv[] )
         vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
         Rf->setup(A, L, U, P, Q, vec_rhs); 
         Rf->refactorize();
-        
-        delete [] P;
-        delete [] Q;
-        delete L;
-        delete U;
+       //dont do it here 
+      //  delete [] P;
+      //  delete [] Q;
       }
     } else {
       //status =  KLU->refactorize();
@@ -167,7 +165,6 @@ int main(int argc, char *argv[] )
   //now DELETE
   delete A;
   delete KLU;
-#if 0
   delete Rf;
   delete [] x;
   delete [] rhs;
@@ -176,6 +173,5 @@ int main(int argc, char *argv[] )
   delete workspace_HIP;
   delete matrix_handler;
   delete vector_handler;
-#endif
   return 0;
 }
