@@ -62,9 +62,9 @@ namespace ReSolve {
                                            A->getNumColumns(),
                                            A->getNnzExpanded(), 
                                            descrA,
-                                           A->getValues("cuda"), 
-                                           A->getRowData("cuda"),
-                                           A->getColData("cuda"), // cuda is used as "device"
+                                           A->getValues( memory::DEVICE), 
+                                           A->getRowData(memory::DEVICE),
+                                           A->getColData(memory::DEVICE), // cuda is used as "device"
                                            infoA);
         error_sum += status;
         mem_.deviceSynchronize();
@@ -79,20 +79,20 @@ namespace ReSolve {
                                 A->getNnzExpanded(),
                                 alpha, 
                                 descrA,
-                                A->getValues("cuda"), 
-                                A->getRowData("cuda"),
-                                A->getColData("cuda"),
+                                A->getValues( memory::DEVICE), 
+                                A->getRowData(memory::DEVICE),
+                                A->getColData(memory::DEVICE),
                                 infoA,
-                                vec_x->getData("cuda"),
+                                vec_x->getData(memory::DEVICE),
                                 beta,
-                                vec_result->getData("cuda"));
+                                vec_result->getData(memory::DEVICE));
 
       error_sum += status;
       mem_.deviceSynchronize();
       if (status)
         out::error() << "Matvec status: " << status 
                       << "Last error code: " << mem_.getLastDeviceError() << std::endl;
-      vec_result->setDataUpdated("cuda");
+      vec_result->setDataUpdated(memory::DEVICE);
 
       return error_sum;
     } else {
@@ -114,7 +114,7 @@ namespace ReSolve {
 
     rocsparse_status status;
     
-    A_csr->allocateMatrixData("cuda");
+    A_csr->allocateMatrixData(memory::DEVICE);
     index_type n = A_csc->getNumRows();
     index_type m = A_csc->getNumRows();
     index_type nnz = A_csc->getNnz();
@@ -125,8 +125,8 @@ namespace ReSolve {
                                            n,
                                            m,
                                            nnz,
-                                           A_csc->getColData("cuda"), 
-                                           A_csc->getRowData("cuda"), 
+                                           A_csc->getColData(memory::DEVICE), 
+                                           A_csc->getRowData(memory::DEVICE), 
                                            rocsparse_action_numeric,
                                            &bufferSize);
 
@@ -137,12 +137,12 @@ namespace ReSolve {
                                 n,
                                 m,
                                 nnz,
-                                A_csc->getValues("cuda"), 
-                                A_csc->getColData("cuda"), 
-                                A_csc->getRowData("cuda"), 
-                                A_csr->getValues("cuda"), 
-                                A_csr->getRowData("cuda"),
-                                A_csr->getColData("cuda"), 
+                                A_csc->getValues( memory::DEVICE), 
+                                A_csc->getColData(memory::DEVICE), 
+                                A_csc->getRowData(memory::DEVICE), 
+                                A_csr->getValues( memory::DEVICE), 
+                                A_csr->getRowData(memory::DEVICE),
+                                A_csr->getColData(memory::DEVICE), 
                                 rocsparse_action_numeric,
                                 rocsparse_index_base_zero,
                                 d_work);

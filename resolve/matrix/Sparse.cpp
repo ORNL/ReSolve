@@ -73,8 +73,8 @@ namespace ReSolve { namespace matrix {
 
   Sparse::~Sparse()
   {
-    this->destroyMatrixData("cpu");
-    this->destroyMatrixData("cuda");
+    this->destroyMatrixData(memory::HOST);
+    this->destroyMatrixData(memory::DEVICE);
   }
 
   void Sparse::setNotUpdated()
@@ -133,58 +133,59 @@ namespace ReSolve { namespace matrix {
     this->nnz_ = nnz_new;
   }
 
-  int Sparse::setUpdated(std::string what)
+  int Sparse::setUpdated(memory::MemorySpace memspace)
   {
-    if (what == "cpu")
-    {
-      h_data_updated_ = true;
-      d_data_updated_ = false;
-    } else {
-      if (what == "cuda"){
+    using namespace ReSolve::memory;
+    switch (memspace) {
+      case HOST:
+        h_data_updated_ = true;
+        d_data_updated_ = false;
+        break;
+      case DEVICE:
         d_data_updated_ = true;
         h_data_updated_ = false;
-      } else {
-        return -1;
-      }
+        break;
     }
     return 0;
   }
 
-  int Sparse::setMatrixData(index_type* row_data, index_type* col_data, real_type* val_data, std::string memspace)
+  int Sparse::setMatrixData(index_type* row_data, index_type* col_data, real_type* val_data, memory::MemorySpace memspace)
   {
+    using namespace ReSolve::memory;
 
     setNotUpdated();
 
-    if (memspace == "cpu"){
-      this->h_row_data_ = row_data;
-      this->h_col_data_ = col_data;
-      this->h_val_data_ = val_data;	
-      h_data_updated_ = true;
-    } else {
-      if (memspace == "cuda"){ 
+    switch (memspace) {
+      case HOST:
+        this->h_row_data_ = row_data;
+        this->h_col_data_ = col_data;
+        this->h_val_data_ = val_data;	
+        h_data_updated_ = true;
+        break;
+      case DEVICE:
         this->d_row_data_ = row_data;
         this->d_col_data_ = col_data;
         this->d_val_data_ = val_data;	
         d_data_updated_ = true;
-      } else {
-        return -1;
-      }
+        break;
     }
     return 0;
   }
 
-  int Sparse::destroyMatrixData(std::string memspace)
-  { 
-    if (memspace == "cpu"){  
-      if (owns_cpu_data_) {
-        delete [] h_row_data_;
-        delete [] h_col_data_;
-      }
-      if (owns_cpu_vals_) {
-        delete [] h_val_data_;
-      }
-    } else {
-      if (memspace == "cuda"){ 
+  int Sparse::destroyMatrixData(memory::MemorySpace memspace)
+  {
+    using namespace ReSolve::memory;
+    switch (memspace) {
+      case HOST:
+        if (owns_cpu_data_) {
+          delete [] h_row_data_;
+          delete [] h_col_data_;
+        }
+        if (owns_cpu_vals_) {
+          delete [] h_val_data_;
+        }
+        return 0;
+      case DEVICE:
         if (owns_gpu_data_) {
           mem_.deleteOnDevice(d_row_data_);
           mem_.deleteOnDevice(d_col_data_);
@@ -192,14 +193,13 @@ namespace ReSolve { namespace matrix {
         if (owns_gpu_vals_) {
           mem_.deleteOnDevice(d_val_data_);
         }
-      } else {
+        return 0;
+      default:
         return -1;
-      }
     }
-    return 0;
   }
 
-  int Sparse::updateValues(real_type* new_vals, std::string memspaceIn, std::string memspaceOut)
+  int Sparse::updateValues(real_type* new_vals, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut)
   {
  
     index_type nnz_current = nnz_;
@@ -207,19 +207,19 @@ namespace ReSolve { namespace matrix {
     //four cases (for now)
     setNotUpdated();
     int control=-1;
-    if ((memspaceIn == "cpu") && (memspaceOut == "cpu")){ control = 0;}
-    if ((memspaceIn == "cpu") && (memspaceOut == "cuda")){ control = 1;}
-    if ((memspaceIn == "cuda") && (memspaceOut == "cpu")){ control = 2;}
-    if ((memspaceIn == "cuda") && (memspaceOut == "cuda")){ control = 3;}
+    if ((memspaceIn == memory::HOST)   && (memspaceOut == memory::HOST))  { control = 0;}
+    if ((memspaceIn == memory::HOST)   && (memspaceOut == memory::DEVICE)){ control = 1;}
+    if ((memspaceIn == memory::DEVICE) && (memspaceOut == memory::HOST))  { control = 2;}
+    if ((memspaceIn == memory::DEVICE) && (memspaceOut == memory::DEVICE)){ control = 3;}
    
-    if (memspaceOut == "cpu") {
+    if (memspaceOut == memory::HOST) {
       //check if cpu data allocated
       if (h_val_data_ == nullptr) {
         this->h_val_data_ = new real_type[nnz_current];
       }
     }
 
-    if (memspaceOut == "cuda") {
+    if (memspaceOut == memory::DEVICE) {
       //check if cuda data allocated
       if (d_val_data_ == nullptr) {
         mem_.allocateArrayOnDevice(&d_val_data_, nnz_current); 
@@ -253,21 +253,22 @@ namespace ReSolve { namespace matrix {
     return 0;
   }
 
-  int Sparse::setNewValues(real_type* new_vals, std::string memspace)
+  int Sparse::setNewValues(real_type* new_vals, memory::MemorySpace memspace)
   {
-
+    using namespace ReSolve::memory;
     setNotUpdated();
 
-    if (memspace == "cpu"){
-      this->h_val_data_ = new_vals;	
-      h_data_updated_ = true;
-    } else {
-      if (memspace == "cuda"){ 
+    switch (memspace) {
+      case HOST:
+        this->h_val_data_ = new_vals;	
+        h_data_updated_ = true;
+        break;
+      case DEVICE:
         this->d_val_data_ = new_vals;	
         d_data_updated_ = true;
-      } else {
+        break;
+      default:
         return -1;
-      }
     }
     return 0;
   }

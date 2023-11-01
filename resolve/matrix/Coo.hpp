@@ -15,18 +15,18 @@ namespace ReSolve { namespace matrix {
                 bool expanded);
       ~Coo();
 
-      virtual index_type* getRowData(std::string memspace);
-      virtual index_type* getColData(std::string memspace);
-      virtual real_type* getValues(std::string memspace); 
+      virtual index_type* getRowData(memory::MemorySpace memspace);
+      virtual index_type* getColData(memory::MemorySpace memspace);
+      virtual real_type*  getValues( memory::MemorySpace memspace); 
 
-      virtual index_type updateData(index_type* row_data, index_type* col_data, real_type* val_data, std::string memspaceIn, std::string memspaceOut); 
-      virtual index_type updateData(index_type* row_data, index_type* col_data, real_type* val_data, index_type new_nnz, std::string memspaceIn, std::string memspaceOut); 
+      virtual index_type updateData(index_type* row_data, index_type* col_data, real_type* val_data, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut); 
+      virtual index_type updateData(index_type* row_data, index_type* col_data, real_type* val_data, index_type new_nnz, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut); 
 
-      virtual index_type allocateMatrixData(std::string memspace);
+      virtual index_type allocateMatrixData(memory::MemorySpace memspace);
 
       virtual void print();
 
-      virtual int copyData(std::string memspaceOut);
+      virtual int copyData(memory::MemorySpace memspaceOut);
   };
 
 }} // namespace ReSolve::matrix

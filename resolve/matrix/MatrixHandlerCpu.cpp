@@ -45,12 +45,12 @@ namespace ReSolve {
     // int error_sum = 0;
     if (matrixFormat == "csr") {
       matrix::Csr* A = (matrix::Csr*) Ageneric;
-      index_type* ia = A->getRowData("cpu");
-      index_type* ja = A->getColData("cpu");
-      real_type*   a = A->getValues("cpu");
+      index_type* ia = A->getRowData(memory::HOST);
+      index_type* ja = A->getColData(memory::HOST);
+      real_type*   a = A->getValues( memory::HOST);
 
-      real_type* x_data      = vec_x->getData("cpu");
-      real_type* result_data = vec_result->getData("cpu");
+      real_type* x_data      = vec_x->getData(memory::HOST);
+      real_type* result_data = vec_result->getData(memory::HOST);
       real_type sum;
       real_type y;
       real_type t;
@@ -70,7 +70,7 @@ namespace ReSolve {
         sum *= (*alpha);
         result_data[i] = result_data[i]*(*beta) + sum;
       } 
-      vec_result->setDataUpdated("cpu");
+      vec_result->setDataUpdated(memory::HOST);
       return 0;
     } else {
       out::error() << "MatVec not implemented (yet) for " 
@@ -100,13 +100,13 @@ namespace ReSolve {
     index_type nnz = A_csc->getNnz();
     index_type n   = A_csc->getNumColumns();
 
-    index_type* rowIdxCsc = A_csc->getRowData("cpu");
-    index_type* colPtrCsc = A_csc->getColData("cpu");
-    real_type*  valuesCsc = A_csc->getValues("cpu");
+    index_type* rowIdxCsc = A_csc->getRowData(memory::HOST);
+    index_type* colPtrCsc = A_csc->getColData(memory::HOST);
+    real_type*  valuesCsc = A_csc->getValues( memory::HOST);
 
-    index_type* rowPtrCsr = A_csr->getRowData("cpu");
-    index_type* colIdxCsr = A_csr->getColData("cpu");
-    real_type*  valuesCsr = A_csr->getValues("cpu");
+    index_type* rowPtrCsr = A_csr->getRowData(memory::HOST);
+    index_type* colIdxCsr = A_csr->getColData(memory::HOST);
+    real_type*  valuesCsr = A_csr->getValues( memory::HOST);
 
     // Set all CSR row pointers to zero
     for (index_type i = 0; i <= n; ++i) {

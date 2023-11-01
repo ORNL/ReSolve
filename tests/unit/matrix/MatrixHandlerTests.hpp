@@ -42,18 +42,23 @@ public:
   TestOutcome matVec(index_type N)
   {
     TestStatus status;
+    ReSolve::memory::MemorySpace ms;
+    if (memspace_ == "cpu")
+      ms = memory::HOST;
+    else
+      ms = memory::DEVICE;
 
     ReSolve::MatrixHandler* handler = createMatrixHandler();
 
     matrix::Csr* A = createCsrMatrix(N, memspace_);
     vector::Vector x(N);
     vector::Vector y(N);
-    x.allocate(memspace_);
-    if (x.getData(memspace_) == NULL) printf("oups we have an issue \n");
-    y.allocate(memspace_);
+    x.allocate(ms);
+    if (x.getData(ms) == NULL) printf("oups we have an issue \n");
+    y.allocate(ms);
 
-    x.setToConst(1.0, memspace_);
-    y.setToConst(1.0, memspace_);
+    x.setToConst(1.0, ms);
+    y.setToConst(1.0, ms);
 
     real_type alpha = 2.0/30.0;
     real_type beta  = 2.0;
@@ -98,14 +103,14 @@ private:
   {
     bool status = true;
     if (memspace != "cpu") {
-      x.copyData(memspace, "cpu");
+      x.copyData(memory::DEVICE, memory::HOST);
     }
 
     for (index_type i = 0; i < x.getSize(); ++i) {
-      // std::cout << x.getData("cpu")[i] << "\n";
-      if (!isEqual(x.getData("cpu")[i], answer)) {
+      // std::cout << x.getData(memory::HOST)[i] << "\n";
+      if (!isEqual(x.getData(memory::HOST)[i], answer)) {
         status = false;
-        std::cout << "Solution vector element x[" << i << "] = " << x.getData("cpu")[i]
+        std::cout << "Solution vector element x[" << i << "] = " << x.getData(memory::HOST)[i]
                   << ", expected: " << answer << "\n";
         break; 
       }
@@ -135,11 +140,11 @@ private:
 
     // Allocate NxN CSR matrix with NNZ nonzeros
     matrix::Csr* A = new matrix::Csr(N, N, NNZ);
-    A->allocateMatrixData("cpu");
+    A->allocateMatrixData(memory::HOST);
 
-    index_type* rowptr = A->getRowData("cpu");
-    index_type* colidx = A->getColData("cpu");
-    real_type* val     = A->getValues("cpu"); 
+    index_type* rowptr = A->getRowData(memory::HOST);
+    index_type* colidx = A->getColData(memory::HOST);
+    real_type* val     = A->getValues( memory::HOST); 
 
     // Populate CSR matrix using same row pattern as for NNZ calculation
     rowptr[0] = 0;
@@ -157,10 +162,10 @@ private:
         val[j] = row_sample[static_cast<size_t>(j - rowptr[i])];
       }
     }
-    A->setUpdated("cpu");
+    A->setUpdated(memory::HOST);
 
     if ((memspace == "cuda") || (memspace == "hip")) {
-      A->copyData(memspace);
+      A->copyData(memory::DEVICE);
     }
 
     return A;

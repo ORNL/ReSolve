@@ -35,17 +35,17 @@ namespace ReSolve
     error_sum += status_cusolverrf_;
     status_cusolverrf_ = cusolverRfSetupDevice(n, 
                                                A_->getNnzExpanded(),
-                                               A_->getRowData("cuda"), //dia_,
-                                               A_->getColData("cuda"), //dja_,
-                                               A_->getValues("cuda"),  //da_,
+                                               A_->getRowData(memory::DEVICE), //dia_,
+                                               A_->getColData(memory::DEVICE), //dja_,
+                                               A_->getValues( memory::DEVICE), //da_,
                                                L->getNnz(),
-                                               L->getRowData("cuda"),
-                                               L->getColData("cuda"),
-                                               L->getValues("cuda"),
+                                               L->getRowData(memory::DEVICE),
+                                               L->getColData(memory::DEVICE),
+                                               L->getValues( memory::DEVICE),
                                                U->getNnz(),
-                                               U->getRowData("cuda"),
-                                               U->getColData("cuda"),
-                                               U->getValues("cuda"),
+                                               U->getRowData(memory::DEVICE),
+                                               U->getColData(memory::DEVICE),
+                                               U->getValues( memory::DEVICE),
                                                d_P_,
                                                d_Q_,
                                                handle_cusolverrf_);
@@ -76,9 +76,9 @@ namespace ReSolve
     int error_sum = 0;
     status_cusolverrf_ = cusolverRfResetValues(A_->getNumRows(), 
                                                A_->getNnzExpanded(), 
-                                               A_->getRowData("cuda"), //dia_,
-                                               A_->getColData("cuda"), //dja_,
-                                               A_->getValues("cuda"),  //da_,
+                                               A_->getRowData(memory::DEVICE), //dia_,
+                                               A_->getColData(memory::DEVICE), //dja_,
+                                               A_->getValues( memory::DEVICE), //da_,
                                                d_P_,
                                                d_Q_,
                                                handle_cusolverrf_);
@@ -100,22 +100,22 @@ namespace ReSolve
                                           1,
                                           d_T_,
                                           A_->getNumRows(),
-                                          rhs->getData("cuda"),
+                                          rhs->getData(memory::DEVICE),
                                           A_->getNumRows());
     return status_cusolverrf_;
   }
 
   int LinSolverDirectCuSolverRf::solve(vector_type* rhs, vector_type* x)
   {
-    x->update(rhs->getData("cuda"), "cuda", "cuda");
-    x->setDataUpdated("cuda");
+    x->update(rhs->getData(memory::DEVICE), memory::DEVICE, memory::DEVICE);
+    x->setDataUpdated(memory::DEVICE);
     status_cusolverrf_ =  cusolverRfSolve(handle_cusolverrf_,
                                           d_P_,
                                           d_Q_,
                                           1,
                                           d_T_,
                                           A_->getNumRows(),
-                                          x->getData("cuda"),
+                                          x->getData(memory::DEVICE),
                                           A_->getNumRows());
     return status_cusolverrf_;
   }

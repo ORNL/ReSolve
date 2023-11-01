@@ -98,8 +98,8 @@ int main(int argc, char *argv[])
       x = new real_type[A->getNumRows()];
       vec_rhs = new vector_type(A->getNumRows());
       vec_x = new vector_type(A->getNumRows());
-      vec_x->allocate("cpu");//for KLU
-      vec_x->allocate("cuda");
+      vec_x->allocate(ReSolve::memory::HOST);//for KLU
+      vec_x->allocate(ReSolve::memory::DEVICE);
       vec_r = new vector_type(A->getNumRows());
     }
     else {
@@ -113,11 +113,11 @@ int main(int argc, char *argv[])
     //Now convert to CSR.
     if (i < 2) { 
       matrix_handler->coo2csr(A_coo,A, "cpu");
-      vec_rhs->update(rhs, "cpu", "cpu");
-      vec_rhs->setDataUpdated("cpu");
+      vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+      vec_rhs->setDataUpdated(ReSolve::memory::HOST);
     } else { 
       matrix_handler->coo2csr(A_coo, A, "cuda");
-      vec_rhs->update(rhs, "cpu", "cuda");
+      vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
     }
     std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnzExpanded()<<std::endl;
     //Now call direct solver
@@ -135,7 +135,7 @@ int main(int argc, char *argv[])
       std::cout<<"KLU factorization status: "<<status<<std::endl;
       status = KLU->solve(vec_rhs, vec_x);
       std::cout<<"KLU solve status: "<<status<<std::endl;      
-      vec_r->update(rhs, "cpu", "cuda");
+      vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
       norm_b = vector_handler->dot(vec_r, vec_r, "cuda");
       norm_b = sqrt(norm_b);
       matrix_handler->setValuesChanged(true, "cuda");
@@ -171,20 +171,20 @@ int main(int argc, char *argv[])
         status = Rf->refactorize();
         std::cout << "CUSOLVER RF, using REAL refactorization, refactorization status: "
                   << status << std::endl;    
-        vec_rhs->update(rhs, "cpu", "cuda");
+        vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
         status = Rf->solve(vec_rhs, vec_x);
         FGMRES->setupPreconditioner("CuSolverRf", Rf);
       }
-      //if (i%2!=0)  vec_x->setToZero("cuda");
+      //if (i%2!=0)  vec_x->setToZero(ReSolve::memory::DEVICE);
       real_type norm_x =  vector_handler->dot(vec_x, vec_x, "cuda");
       std::cout << "Norm of x (before solve): " 
                 << std::scientific << std::setprecision(16) 
                 << sqrt(norm_x) << "\n";
       std::cout<<"CUSOLVER RF solve status: "<<status<<std::endl;      
       
-      vec_rhs->update(rhs, "cpu", "cuda");
-      vec_r->update(rhs, "cpu", "cuda");
-       norm_b = vector_handler->dot(vec_r, vec_r, "cuda");
+      vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+      vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+      norm_b = vector_handler->dot(vec_r, vec_r, "cuda");
       norm_b = sqrt(norm_b);
 
       matrix_handler->setValuesChanged(true, "cuda");
@@ -199,7 +199,7 @@ int main(int argc, char *argv[])
                 << std::scientific << std::setprecision(16) 
                 << norm_b << "\n";
 
-      vec_rhs->update(rhs, "cpu", "cuda");
+      vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
       FGMRES->solve(vec_rhs, vec_x);
 
       std::cout << "FGMRES: init nrm: " 
