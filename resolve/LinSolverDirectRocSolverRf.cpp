@@ -28,8 +28,8 @@ namespace ReSolve
     rocsolver_create_rfinfo(&infoM_, workspace_->getRocblasHandle()); 
     //create combined factor
     addFactors(L,U);
-    M_->setUpdated("cpu");
-    M_->copyData("hip");
+    M_->setUpdated(ReSolve::memory::HOST);
+    M_->copyData(ReSolve::memory::DEVICE);
     mem_.allocateArrayOnDevice(&d_P_, n); 
     mem_.allocateArrayOnDevice(&d_Q_, n);
 
@@ -41,16 +41,16 @@ namespace ReSolve
                                                 n,
                                                 1,
                                                 A_->getNnzExpanded(),
-                                                A_->getRowData("hip"), //kRowPtr_,
-                                                A_->getColData("hip"), //jCol_, 
-                                                A_->getValues("hip"), //vals_, 
+                                                A_->getRowData(ReSolve::memory::DEVICE), //kRowPtr_,
+                                                A_->getColData(ReSolve::memory::DEVICE), //jCol_, 
+                                                A_->getValues(ReSolve::memory::DEVICE), //vals_, 
                                                 M_->getNnzExpanded(),
-                                                M_->getRowData("hip"), 
-                                                M_->getColData("hip"), 
-                                                M_->getValues("hip"), //vals_, 
+                                                M_->getRowData(ReSolve::memory::DEVICE), 
+                                                M_->getColData(ReSolve::memory::DEVICE), 
+                                                M_->getValues(ReSolve::memory::DEVICE), //vals_, 
                                                 d_P_,
                                                 d_Q_,
-                                                rhs->getData("hip"), 
+                                                rhs->getData(ReSolve::memory::DEVICE), 
                                                 n,
                                                 infoM_);
 
@@ -68,13 +68,13 @@ namespace ReSolve
     status_rocblas_ =  rocsolver_dcsrrf_refactlu(workspace_->getRocblasHandle(),
                                                  A_->getNumRows(),
                                                  A_->getNnzExpanded(),
-                                                 A_->getRowData("hip"), //kRowPtr_,
-                                                 A_->getColData("hip"), //jCol_, 
-                                                 A_->getValues("hip"), //vals_, 
+                                                 A_->getRowData(ReSolve::memory::DEVICE), //kRowPtr_,
+                                                 A_->getColData(ReSolve::memory::DEVICE), //jCol_, 
+                                                 A_->getValues(ReSolve::memory::DEVICE), //vals_, 
                                                  M_->getNnzExpanded(),
-                                                 M_->getRowData("hip"), 
-                                                 M_->getColData("hip"), 
-                                                 M_->getValues("hip"), //OUTPUT, 
+                                                 M_->getRowData(ReSolve::memory::DEVICE), 
+                                                 M_->getColData(ReSolve::memory::DEVICE), 
+                                                 M_->getValues(ReSolve::memory::DEVICE), //OUTPUT, 
                                                  d_P_,
                                                  d_Q_,
                                                  infoM_);
@@ -94,12 +94,12 @@ namespace ReSolve
                                                 A_->getNumRows(),
                                                 1,
                                                 M_->getNnz(),
-                                                M_->getRowData("hip"), 
-                                                M_->getColData("hip"), 
-                                                M_->getValues("hip"), 
+                                                M_->getRowData(ReSolve::memory::DEVICE), 
+                                                M_->getColData(ReSolve::memory::DEVICE), 
+                                                M_->getValues(ReSolve::memory::DEVICE), 
                                                 d_P_,
                                                 d_Q_,
-                                                rhs->getData("hip"),
+                                                rhs->getData(ReSolve::memory::DEVICE),
                                                 A_->getNumRows(),
                                                 infoM_);
       mem_.deviceSynchronize();
@@ -111,8 +111,8 @@ namespace ReSolve
 
   int LinSolverDirectRocSolverRf::solve(vector_type* rhs, vector_type* x)
   {
-    x->update(rhs->getData("hip"), "hip", "hip");
-    x->setDataUpdated("hip");
+    x->update(rhs->getData(ReSolve::memory::DEVICE), ReSolve::memory::DEVICE, ReSolve::memory::DEVICE);
+    x->setDataUpdated(ReSolve::memory::DEVICE);
 
     if (solve_mode_ == 0) {
       mem_.deviceSynchronize();
@@ -120,12 +120,12 @@ namespace ReSolve
                                                 A_->getNumRows(),
                                                 1,
                                                 M_->getNnz(),
-                                                M_->getRowData("hip"), 
-                                                M_->getColData("hip"),  
-                                                M_->getValues("hip"), 
+                                                M_->getRowData(ReSolve::memory::DEVICE), 
+                                                M_->getColData(ReSolve::memory::DEVICE),  
+                                                M_->getValues(ReSolve::memory::DEVICE), 
                                                 d_P_,
                                                 d_Q_,
-                                                x->getData("hip"),
+                                                x->getData(ReSolve::memory::DEVICE),
                                                 A_->getNumRows(),
                                                 infoM_);
       mem_.deviceSynchronize();
@@ -150,17 +150,17 @@ namespace ReSolve
   {
     // L and U need to be in CSC format
     index_type n = L->getNumRows();
-    index_type* Lp = L->getColData("cpu"); 
-    index_type* Li = L->getRowData("cpu"); 
-    index_type* Up = U->getColData("cpu"); 
-    index_type* Ui = U->getRowData("cpu"); 
+    index_type* Lp = L->getColData(ReSolve::memory::HOST); 
+    index_type* Li = L->getRowData(ReSolve::memory::HOST); 
+    index_type* Up = U->getColData(ReSolve::memory::HOST); 
+    index_type* Ui = U->getRowData(ReSolve::memory::HOST); 
 
     index_type nnzM = ( L->getNnz() + U->getNnz() - n );
     M_ = new matrix::Csr(n, n, nnzM);
-    M_->allocateMatrixData("cpu");
-    M_->allocateMatrixData("hip");
-    index_type* mia = M_->getRowData("cpu");
-    index_type* mja = M_->getColData("cpu");
+    M_->allocateMatrixData(ReSolve::memory::DEVICE);
+    M_->allocateMatrixData(ReSolve::memory::HOST);
+    index_type* mia = M_->getRowData(ReSolve::memory::HOST);
+    index_type* mja = M_->getColData(ReSolve::memory::HOST);
     index_type row;
     for(index_type i = 0; i < n; ++i) {
       // go through EACH COLUMN OF L first
