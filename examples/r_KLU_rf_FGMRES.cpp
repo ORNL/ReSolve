@@ -189,8 +189,16 @@ int main(int argc, char *argv[])
 
   } // for (int i = 0; i < numSystems; ++i)
 
+  delete A;
+  delete KLU;
+  delete Rf;
   delete [] x;
   delete [] rhs;
+  delete vec_r;
+  delete vec_x;
+  delete workspace_CUDA;
+  delete matrix_handler;
+  delete vector_handler;
 
   return 0;
 }
