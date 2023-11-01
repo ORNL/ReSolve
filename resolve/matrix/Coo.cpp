@@ -58,12 +58,11 @@ namespace ReSolve
   real_type* matrix::Coo::getValues(memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
+    copyData(memspace);
     switch (memspace) {
       case HOST:
-        copyData(memspace);
         return this->h_val_data_;
       case DEVICE:
-        copyData(memspace);
         return this->d_val_data_;
       default:
         return nullptr;
