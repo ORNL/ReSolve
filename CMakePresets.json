@@ -15,7 +15,6 @@
             "generator": "Unix Makefiles",
             "cacheVariables": {
                 "RESOLVE_USE_CUDA": "ON",
-                "RESOLVE_USE_GPU": "ON"
             }
         },
         {
