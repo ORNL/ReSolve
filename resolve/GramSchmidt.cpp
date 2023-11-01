@@ -127,7 +127,7 @@ namespace ReSolve
   {
     using namespace constants;
 
-    if (memspace == "cuda") { // or hip
+    if ((memspace == "cuda") || (memspace == "hip")) { // or hip
 
       double t;
       double s;
@@ -139,19 +139,19 @@ namespace ReSolve
           for(int j = 0; j <= i; ++j) {
             t = 0.0;
             vec_v_->setData( V->getVectorData(j, memory::DEVICE), memory::DEVICE);
-            t = vector_handler_->dot(vec_v_, vec_w_, "cuda");  
+            t = vector_handler_->dot(vec_v_, vec_w_, memspace);  
             H[ idxmap(i, j, num_vecs_ + 1) ] = t; 
             t *= -1.0;
-            vector_handler_->axpy(&t, vec_v_, vec_w_, "cuda");  
+            vector_handler_->axpy(&t, vec_v_, vec_w_, memspace);  
           }
           t = 0.0;
-          t = vector_handler_->dot(vec_w_, vec_w_, "cuda");  
+          t = vector_handler_->dot(vec_w_, vec_w_, memspace);
           //set the last entry in Hessenberg matrix
           t = sqrt(t);
           H[ idxmap(i, i + 1, num_vecs_ + 1) ] = t; 
           if(fabs(t) > EPSILON) {
             t = 1.0/t;
-            vector_handler_->scal(&t, vec_w_, "cuda");  
+            vector_handler_->scal(&t, vec_w_, memspace);  
           } else {
             assert(0 && "Gram-Schmidt failed, vector with ZERO norm\n");
             return -1;
@@ -160,10 +160,10 @@ namespace ReSolve
         case cgs2:
 
           vec_v_->setData(V->getVectorData(i + 1, memory::DEVICE), memory::DEVICE);
-          vector_handler_->gemv("T", n, i + 1, &ONE, &ZERO, V,  vec_v_, vec_Hcolumn_, "cuda");
+          vector_handler_->gemv("T", n, i + 1, &ONE, &ZERO, V,  vec_v_, vec_Hcolumn_, memspace);
 
           // V(:,i+1) = V(:, i+1) -  V(:,1:i)*Hcol
-          vector_handler_->gemv("N", n, i + 1, &ONE, &MINUSONE, V, vec_Hcolumn_, vec_v_, "cuda" );  
+          vector_handler_->gemv("N", n, i + 1, &ONE, &MINUSONE, V, vec_Hcolumn_, vec_v_, memspace );  
 
           // copy H_col to aux, we will need it later
           vec_Hcolumn_->setDataUpdated(memory::DEVICE);
@@ -171,10 +171,10 @@ namespace ReSolve
           vec_Hcolumn_->deepCopyVectorData(h_aux_, 0, memory::HOST);
 
           //Hcol = V(:,1:i)^T*V(:,i+1);
-          vector_handler_->gemv("T", n, i + 1, &ONE, &ZERO, V,  vec_v_, vec_Hcolumn_, "cuda");
+          vector_handler_->gemv("T", n, i + 1, &ONE, &ZERO, V,  vec_v_, vec_Hcolumn_, memspace);
 
           // V(:,i+1) = V(:, i+1) -  V(:,1:i)*Hcol
-          vector_handler_->gemv("N", n, i + 1, &ONE, &MINUSONE, V, vec_Hcolumn_, vec_v_, "cuda" );  
+          vector_handler_->gemv("N", n, i + 1, &ONE, &MINUSONE, V, vec_Hcolumn_, vec_v_, memspace );  
 
           // copy H_col to H
           vec_Hcolumn_->setDataUpdated(memory::DEVICE);
@@ -186,13 +186,13 @@ namespace ReSolve
             H[ idxmap(i, j, num_vecs_ + 1)] += h_aux_[j]; 
           }
 
-          t = vector_handler_->dot(vec_v_, vec_v_, "cuda");  
+          t = vector_handler_->dot(vec_v_, vec_v_, memspace);  
           //set the last entry in Hessenberg matrix
           t = sqrt(t);
           H[ idxmap(i, i + 1, num_vecs_ + 1) ] = t; 
           if(fabs(t) > EPSILON) {
             t = 1.0/t;
-            vector_handler_->scal(&t, vec_v_, "cuda");  
+            vector_handler_->scal(&t, vec_v_, memspace);  
           } else {
             assert(0 && "Gram-Schmidt failed, vector with ZERO norm\n");
             return -1;
@@ -205,7 +205,7 @@ namespace ReSolve
           vec_w_->setData(V->getVectorData(i + 1, memory::DEVICE), memory::DEVICE);
           vec_rv_->setCurrentSize(i + 1);
 
-          vector_handler_->massDot2Vec(n, V, i, vec_v_, vec_rv_, "cuda");
+          vector_handler_->massDot2Vec(n, V, i, vec_v_, vec_rv_, memspace);
           vec_rv_->setDataUpdated(memory::DEVICE);
           vec_rv_->copyData(memory::DEVICE, memory::HOST);
 
@@ -226,16 +226,16 @@ namespace ReSolve
           }   // for j
           vec_Hcolumn_->setCurrentSize(i + 1);
           vec_Hcolumn_->update(&H[ idxmap(i, 0, num_vecs_ + 1)], memory::HOST, memory::DEVICE); 
-          vector_handler_->massAxpy(n, vec_Hcolumn_, i, V, vec_w_, "cuda");
+          vector_handler_->massAxpy(n, vec_Hcolumn_, i, V, vec_w_, memspace);
 
           // normalize (second synch)
-          t = vector_handler_->dot(vec_w_, vec_w_, "cuda");  
+          t = vector_handler_->dot(vec_w_, vec_w_, memspace);  
           //set the last entry in Hessenberg matrix
           t = sqrt(t);
           H[ idxmap(i, i + 1, num_vecs_ + 1)] = t;    
           if(fabs(t) > EPSILON) {
             t = 1.0 / t;
-            vector_handler_->scal(&t, vec_w_, "cuda");  
+            vector_handler_->scal(&t, vec_w_, memspace);  
           } else {
             assert(0 && "Iterative refinement failed, Krylov vector with ZERO norm\n");
             return -1;
@@ -247,7 +247,7 @@ namespace ReSolve
           vec_w_->setData(V->getVectorData(i + 1, memory::DEVICE), memory::DEVICE);
           vec_rv_->setCurrentSize(i + 1);
 
-          vector_handler_->massDot2Vec(n, V, i, vec_v_, vec_rv_, "cuda");
+          vector_handler_->massDot2Vec(n, V, i, vec_v_, vec_rv_, memspace);
           vec_rv_->setDataUpdated(memory::DEVICE);
           vec_rv_->copyData(memory::DEVICE, memory::HOST);
 
@@ -297,15 +297,15 @@ namespace ReSolve
           vec_Hcolumn_->setCurrentSize(i + 1);
           vec_Hcolumn_->update(&H[ idxmap(i, 0, num_vecs_ + 1)], memory::HOST, memory::DEVICE); 
 
-          vector_handler_->massAxpy(n, vec_Hcolumn_, i, V,  vec_w_, "cuda");
+          vector_handler_->massAxpy(n, vec_Hcolumn_, i, V,  vec_w_, memspace);
           // normalize (second synch)
-          t = vector_handler_->dot(vec_w_, vec_w_, "cuda");  
+          t = vector_handler_->dot(vec_w_, vec_w_, memspace);  
           //set the last entry in Hessenberg matrix
           t = sqrt(t);
           H[ idxmap(i, i + 1, num_vecs_ + 1) ] = t;    
           if(fabs(t) > EPSILON) {
             t = 1.0 / t;
-            vector_handler_->scal(&t, vec_w_, "cuda");  
+            vector_handler_->scal(&t, vec_w_, memspace);  
           } else {
             assert(0 && "Iterative refinement failed, Krylov vector with ZERO norm\n");
             return -1;

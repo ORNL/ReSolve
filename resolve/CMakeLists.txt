@@ -12,12 +12,12 @@ add_subdirectory(utilities)
 set(ReSolve_SRC
     LinSolver.cpp
     LinSolverDirectKLU.cpp
+    GramSchmidt.cpp
+    LinSolverIterativeFGMRES.cpp
 )
 
 # C++ code that links to CUDA SDK libraries
 set(ReSolve_CUDASDK_SRC
-    LinSolverIterativeFGMRES.cpp
-    GramSchmidt.cpp
     LinSolverDirectCuSolverGLU.cpp
     LinSolverDirectCuSolverRf.cpp
 )

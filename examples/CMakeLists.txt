@@ -39,11 +39,15 @@ if(RESOLVE_USE_CUDA)
 
 endif(RESOLVE_USE_CUDA)
 
-# Create CUDA examples
+# Create HIP examples
 if(RESOLVE_USE_HIP)
   # Build example with KLU factorization and rocsolver Rf refactorization
   add_executable(klu_rocsolverrf.exe r_KLU_rocsolverrf.cpp)
   target_link_libraries(klu_rocsolverrf.exe PRIVATE ReSolve)
+
+  # Build example with KLU factorization, rocsolver Rf refactorization, and FGMRES iterative refinement
+  add_executable(klu_rocsolverrf_fgmres.exe r_KLU_rocSolverRf_FGMRES.cpp)
+  target_link_libraries(klu_rocsolverrf_fgmres.exe PRIVATE ReSolve)
 endif(RESOLVE_USE_HIP)
 
 # Install all examples in bin directory
