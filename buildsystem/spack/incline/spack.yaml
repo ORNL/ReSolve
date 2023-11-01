@@ -1,10 +1,11 @@
 spack:
   specs:
-  - resolve~cuda+rocm%gcc@8.4.0 amdgpu_target=gfx908
+  - llvm-amdgpu%gcc
+  - resolve~cuda+rocm%clang@16.0.0-rocm5.6.0 amdgpu_target=gfx908
   - hsa-rocr-dev~image
   view: false
   concretizer:
-    reuse: false
+    reuse: true
     unify: when_possible
   config:
     concretizer: clingo
@@ -65,3 +66,15 @@ spack:
       operating_system: centos7
       target: x86_64
       modules: [gcc/8.4.0]
+  - compiler:
+      spec: clang@16.0.0-rocm5.6.0
+      paths:
+        cc: amdclang
+        cxx: amdclang++
+        f77: /share/apps/gcc/8.4.0/bin/gfortran
+        fc: /share/apps/gcc/8.4.0/bin/gfortran
+      flags:
+        cxxflags: --gcc-toolchain=/share/apps/gcc/8.4.0/
+      operating_system: centos7
+      target: x86_64
+      modules: []

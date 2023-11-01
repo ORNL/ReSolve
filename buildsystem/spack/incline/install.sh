@@ -12,5 +12,8 @@
 export MY_CLUSTER=incline
 . buildsystem/load-spack.sh &&
 spack develop --no-clone --path=$(pwd) resolve@develop &&
+spack concretize -f &&
+spack install -j 64 llvm-amdgpu &&
+spack load llvm-amdgpu &&
 ./buildsystem/configure-modules.sh 64
 
