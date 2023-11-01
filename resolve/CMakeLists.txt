@@ -77,7 +77,7 @@ endif()
 # If no GPU support is enabled, link to dummy device backend
 if(NOT RESOLVE_USE_GPU)
   add_subdirectory(cpu)
-    set(ReSolve_Targets_List ${ReSolve_Targets_List} resolve_backend_cpu)
+  set(ReSolve_Targets_List ${ReSolve_Targets_List} resolve_backend_cpu)
 endif()
 
 # Set installable targets
