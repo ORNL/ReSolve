@@ -47,9 +47,10 @@ if(RESOLVE_USE_HIP)
   target_link_libraries(resolve_workspace PUBLIC resolve_backend_hip)
 endif(RESOLVE_USE_HIP)  
 
-target_include_directories(resolve_workspace INTERFACE
-    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
-    $<INSTALL_INTERFACE:include>
+target_include_directories(resolve_workspace PUBLIC
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
+  $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
+  $<INSTALL_INTERFACE:include>
 )
 
 # install include headers
