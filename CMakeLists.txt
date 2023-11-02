@@ -100,18 +100,11 @@ endif(RESOLVE_USE_HIP)
 configure_file(
   ${CMAKE_SOURCE_DIR}/resolve/resolve_defs.hpp.in
   ${CMAKE_BINARY_DIR}/resolve/resolve_defs.hpp)
-
-# include build directory for Fortran name mangling header
-# TODO - target based includes
-include_directories(${CMAKE_BINARY_DIR})
-
 install(
   FILES ${CMAKE_BINARY_DIR}/resolve/resolve_defs.hpp
   DESTINATION include/resolve
   )
 
-# TODO - fix this
-include_directories(${CMAKE_SOURCE_DIR})
 
 # Enable testing
 enable_testing()
