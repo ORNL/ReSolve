@@ -25,4 +25,5 @@ void set_array_const(index_type  n, real_type val, real_type* arr)
    hipLaunchKernelGGL( kernels::set_const, dim3(num_blocks), dim3(block_size), 0, 0, n, val, arr);
 }
 
+
 }} // namespace ReSolve::vector

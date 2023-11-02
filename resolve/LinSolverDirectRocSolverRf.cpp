@@ -1,6 +1,7 @@
 #include <resolve/vector/Vector.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include "LinSolverDirectRocSolverRf.hpp"
+#include <resolve/hip/hipKernels.h>
 
 namespace ReSolve 
 {
@@ -15,6 +16,12 @@ namespace ReSolve
   {
     mem_.deleteOnDevice(d_P_);
     mem_.deleteOnDevice(d_Q_);
+
+    mem_.deleteOnDevice(d_aux1_);
+    mem_.deleteOnDevice(d_aux2_);
+
+    delete L_csr_;
+    delete U_csr_;
   }
 
   int LinSolverDirectRocSolverRf::setup(matrix::Sparse* A, matrix::Sparse* L, matrix::Sparse* U, index_type* P, index_type* Q, vector_type* rhs)
@@ -56,7 +63,109 @@ namespace ReSolve
     mem_.deviceSynchronize();
     error_sum += status_rocblas_;
 
+    // tri solve setup
+    if (solve_mode_ == 1) { // fast mode
+      L_csr_ = new ReSolve::matrix::Csr(L->getNumRows(), L->getNumColumns(), L->getNnz());
+      U_csr_ = new ReSolve::matrix::Csr(U->getNumRows(), U->getNumColumns(), U->getNnz());
 
+      L_csr_->allocateMatrixData(ReSolve::memory::DEVICE); 
+      U_csr_->allocateMatrixData(ReSolve::memory::DEVICE); 
+
+      rocsparse_create_mat_descr(&(descr_L_));
+      rocsparse_set_mat_fill_mode(descr_L_, rocsparse_fill_mode_lower);
+      rocsparse_set_mat_index_base(descr_L_, rocsparse_index_base_zero);
+
+      rocsparse_create_mat_descr(&(descr_U_));
+      rocsparse_set_mat_index_base(descr_U_, rocsparse_index_base_zero);
+      rocsparse_set_mat_fill_mode(descr_U_, rocsparse_fill_mode_upper);
+
+      rocsparse_create_mat_info(&info_L_);
+      rocsparse_create_mat_info(&info_U_);
+
+      // local variables
+      size_t L_buffer_size;  
+      size_t U_buffer_size;  
+
+      status_rocblas_ = rocsolver_dcsrrf_splitlu(workspace_->getRocblasHandle(),
+                                                 n,
+                                                 M_->getNnzExpanded(),
+                                                 M_->getRowData(ReSolve::memory::DEVICE), 
+                                                 M_->getColData(ReSolve::memory::DEVICE), 
+                                                 M_->getValues(ReSolve::memory::DEVICE), //vals_, 
+                                                 L_csr_->getRowData(ReSolve::memory::DEVICE), 
+                                                 L_csr_->getColData(ReSolve::memory::DEVICE), 
+                                                 L_csr_->getValues(ReSolve::memory::DEVICE), //vals_, 
+                                                 U_csr_->getRowData(ReSolve::memory::DEVICE), 
+                                                 U_csr_->getColData(ReSolve::memory::DEVICE), 
+                                                 U_csr_->getValues(ReSolve::memory::DEVICE));
+
+      error_sum += status_rocblas_;
+
+      status_rocsparse_ = rocsparse_dcsrsv_buffer_size(workspace_->getRocsparseHandle(), 
+                                                       rocsparse_operation_none, 
+                                                       n, 
+                                                       L_csr_->getNnz(), 
+                                                       descr_L_,
+                                                       L_csr_->getValues(ReSolve::memory::DEVICE), //vals_, 
+                                                       L_csr_->getRowData(ReSolve::memory::DEVICE), 
+                                                       L_csr_->getColData(ReSolve::memory::DEVICE), 
+                                                       info_L_, 
+                                                       &L_buffer_size);
+      error_sum += status_rocsparse_;
+
+      printf("buffer size for L %d status %d \n", L_buffer_size, status_rocsparse_);
+      // hipMalloc((void**)&(L_buffer), L_buffer_size);
+
+      mem_.allocateBufferOnDevice(&L_buffer_, L_buffer_size);
+      status_rocsparse_ = rocsparse_dcsrsv_buffer_size(workspace_->getRocsparseHandle(), 
+                                                       rocsparse_operation_none, 
+                                                       n, 
+                                                       U_csr_->getNnz(), 
+                                                       descr_U_,
+                                                       U_csr_->getValues(ReSolve::memory::DEVICE), //vals_, 
+                                                       U_csr_->getRowData(ReSolve::memory::DEVICE), 
+                                                       U_csr_->getColData(ReSolve::memory::DEVICE), 
+                                                       info_U_,
+                                                       &U_buffer_size);
+      error_sum += status_rocsparse_;
+      //      hipMalloc((void**)&(U_buffer), U_buffer_size);
+      mem_.allocateBufferOnDevice(&U_buffer_, U_buffer_size);
+      printf("buffer size for U %d status %d \n", U_buffer_size, status_rocsparse_);
+
+      status_rocsparse_ = rocsparse_dcsrsv_analysis(workspace_->getRocsparseHandle(), 
+                                                    rocsparse_operation_none, 
+                                                    n, 
+                                                    L_csr_->getNnz(), 
+                                                    descr_L_,
+                                                    L_csr_->getValues(ReSolve::memory::DEVICE), //vals_, 
+                                                    L_csr_->getRowData(ReSolve::memory::DEVICE), 
+                                                    L_csr_->getColData(ReSolve::memory::DEVICE), 
+                                                    info_L_,   
+                                                    rocsparse_analysis_policy_force,
+                                                    rocsparse_solve_policy_auto,
+                                                    L_buffer_);
+      error_sum += status_rocsparse_;
+      if (status_rocsparse_!=0)printf("status after analysis 1 %d \n", status_rocsparse_);
+      status_rocsparse_ = rocsparse_dcsrsv_analysis(workspace_->getRocsparseHandle(), 
+                                                    rocsparse_operation_none, 
+                                                    n, 
+                                                    U_csr_->getNnz(), 
+                                                    descr_U_,
+                                                    U_csr_->getValues(ReSolve::memory::DEVICE), //vals_, 
+                                                    U_csr_->getRowData(ReSolve::memory::DEVICE), 
+                                                    U_csr_->getColData(ReSolve::memory::DEVICE), 
+                                                    info_U_,
+                                                    rocsparse_analysis_policy_force,
+                                                    rocsparse_solve_policy_auto,
+                                                    U_buffer_);
+      error_sum += status_rocsparse_;
+      if (status_rocsparse_!=0)printf("status after analysis 2 %d \n", status_rocsparse_);
+      //allocate aux data
+
+      mem_.allocateArrayOnDevice(&d_aux1_,n); 
+      mem_.allocateArrayOnDevice(&d_aux2_,n); 
+
+    }
     return error_sum;
   }
 
@@ -78,8 +187,30 @@ namespace ReSolve
                                                  d_Q_,
                                                  infoM_);
 
+
     mem_.deviceSynchronize();
     error_sum += status_rocblas_;
+
+    if (solve_mode_ == 1) {
+      //split M, fill L and U with correct values
+printf("solve mode 1, splitting the factors again \n");
+      status_rocblas_ = rocsolver_dcsrrf_splitlu(workspace_->getRocblasHandle(),
+                                                 A_->getNumRows(),
+                                                 M_->getNnzExpanded(),
+                                                 M_->getRowData(ReSolve::memory::DEVICE), 
+                                                 M_->getColData(ReSolve::memory::DEVICE), 
+                                                 M_->getValues(ReSolve::memory::DEVICE), //vals_, 
+                                                 L_csr_->getRowData(ReSolve::memory::DEVICE), 
+                                                 L_csr_->getColData(ReSolve::memory::DEVICE), 
+                                                 L_csr_->getValues(ReSolve::memory::DEVICE), //vals_, 
+                                                 U_csr_->getRowData(ReSolve::memory::DEVICE), 
+                                                 U_csr_->getColData(ReSolve::memory::DEVICE), 
+                                                 U_csr_->getValues(ReSolve::memory::DEVICE));
+
+      mem_.deviceSynchronize();
+      error_sum += status_rocblas_;
+
+    }
 
     return error_sum; 
   }
@@ -87,6 +218,7 @@ namespace ReSolve
   // solution is returned in RHS
   int LinSolverDirectRocSolverRf::solve(vector_type* rhs)
   {
+    int error_sum = 0;
     if (solve_mode_ == 0) {
       mem_.deviceSynchronize();
       status_rocblas_ =  rocsolver_dcsrrf_solve(workspace_->getRocblasHandle(),
@@ -104,15 +236,51 @@ namespace ReSolve
       mem_.deviceSynchronize();
     } else {
       // not implemented yet
+      permuteVectorP(A_->getNumRows(), d_P_, rhs->getData(ReSolve::memory::DEVICE), d_aux1_);
+      mem_.deviceSynchronize();
+      rocsparse_dcsrsv_solve(workspace_->getRocsparseHandle(), 
+                             rocsparse_operation_none,
+                             A_->getNumRows(),
+                             L_csr_->getNnz(), 
+                             &(constants::ONE), 
+                             descr_L_,
+                             L_csr_->getValues(ReSolve::memory::DEVICE), //vals_, 
+                             L_csr_->getRowData(ReSolve::memory::DEVICE), 
+                             L_csr_->getColData(ReSolve::memory::DEVICE), 
+                             info_L_,
+                             d_aux1_,
+                             d_aux2_, //result
+                             rocsparse_solve_policy_auto,
+                             L_buffer_);
+      error_sum += status_rocsparse_;
+
+      rocsparse_dcsrsv_solve(workspace_->getRocsparseHandle(), 
+                             rocsparse_operation_none,
+                             A_->getNumRows(),
+                             U_csr_->getNnz(), 
+                             &(constants::ONE), 
+                             descr_L_,
+                             U_csr_->getValues(ReSolve::memory::DEVICE), //vals_, 
+                             U_csr_->getRowData(ReSolve::memory::DEVICE), 
+                             U_csr_->getColData(ReSolve::memory::DEVICE), 
+                             info_U_,
+                             d_aux2_, //input
+                             d_aux1_,//result
+                             rocsparse_solve_policy_auto,
+                             U_buffer_);
+      error_sum += status_rocsparse_;
+
+      permuteVectorQ(A_->getNumRows(), d_Q_,d_aux1_,rhs->getData(ReSolve::memory::DEVICE));
+      mem_.deviceSynchronize();
     }
-    return status_rocblas_;
+    return error_sum;
   }
 
   int LinSolverDirectRocSolverRf::solve(vector_type* rhs, vector_type* x)
   {
     x->update(rhs->getData(ReSolve::memory::DEVICE), ReSolve::memory::DEVICE, ReSolve::memory::DEVICE);
     x->setDataUpdated(ReSolve::memory::DEVICE);
-
+    int error_sum = 0;
     if (solve_mode_ == 0) {
       mem_.deviceSynchronize();
       status_rocblas_ =  rocsolver_dcsrrf_solve(workspace_->getRocblasHandle(),
@@ -127,11 +295,50 @@ namespace ReSolve
                                                 x->getData(ReSolve::memory::DEVICE),
                                                 A_->getNumRows(),
                                                 infoM_);
+      error_sum += status_rocblas_;
       mem_.deviceSynchronize();
     } else {
       // not implemented yet
+
+      permuteVectorP(A_->getNumRows(), d_P_, rhs->getData(ReSolve::memory::DEVICE), d_aux1_);
+      mem_.deviceSynchronize();
+
+      rocsparse_dcsrsv_solve(workspace_->getRocsparseHandle(), 
+                             rocsparse_operation_none,
+                             A_->getNumRows(),
+                             L_csr_->getNnz(), 
+                             &(constants::ONE), 
+                             descr_L_,
+                             L_csr_->getValues(ReSolve::memory::DEVICE), //vals_, 
+                             L_csr_->getRowData(ReSolve::memory::DEVICE), 
+                             L_csr_->getColData(ReSolve::memory::DEVICE), 
+                             info_L_,
+                             d_aux1_,
+                             d_aux2_, //result
+                             rocsparse_solve_policy_auto,
+                             L_buffer_);
+      error_sum += status_rocsparse_;
+
+      rocsparse_dcsrsv_solve(workspace_->getRocsparseHandle(), 
+                             rocsparse_operation_none,
+                             A_->getNumRows(),
+                             U_csr_->getNnz(), 
+                             &(constants::ONE), 
+                             descr_U_,
+                             U_csr_->getValues(ReSolve::memory::DEVICE), //vals_, 
+                             U_csr_->getRowData(ReSolve::memory::DEVICE), 
+                             U_csr_->getColData(ReSolve::memory::DEVICE), 
+                             info_U_,
+                             d_aux2_, //input
+                             d_aux1_,//result
+                             rocsparse_solve_policy_auto,
+                             U_buffer_);
+      error_sum += status_rocsparse_;
+
+      permuteVectorQ(A_->getNumRows(), d_Q_,d_aux1_,x->getData(ReSolve::memory::DEVICE));
+      mem_.deviceSynchronize();
     }
-    return status_rocblas_;
+    return error_sum;
   }
 
   int LinSolverDirectRocSolverRf::setSolveMode(int mode)
