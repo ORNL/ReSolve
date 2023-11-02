@@ -71,8 +71,11 @@ set(CONSUMER_PATH ${CMAKE_INSTALL_PREFIX}/share/examples)
 install(PROGRAMS test.sh DESTINATION ${CONSUMER_PATH})
 
 # Select consumer app
+# TODO - have an outer loop that adds a unique consumer test for each backend supproted
 if(RESOLVE_USE_CUDA)
   set(RESOLVE_CONSUMER_APP "testKLU_Rf_FGMRES.cpp")
+elseif(RESOLVE_USE_HIP)
+  set(RESOLVE_CONSUMER_APP "testKLU_RocSolver.cpp")
 else()
   set(RESOLVE_CONSUMER_APP "testKLU.cpp")
 endif()

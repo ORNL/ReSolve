@@ -25,7 +25,7 @@
             "installDir": "${sourceDir}/install",
             "generator": "Unix Makefiles"
         },
-	      {
+	    {
             "name": "ascent",
             "inherits": "cuda",
             "displayName": "Ascent Build",
