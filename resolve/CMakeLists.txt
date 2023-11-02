@@ -12,6 +12,10 @@ add_subdirectory(utilities)
 set(ReSolve_SRC
     LinSolver.cpp
     LinSolverDirectKLU.cpp
+)
+
+# Temporary until there is CPU-only option for FGMRES
+set(ReSolve_GPU_SRC
     GramSchmidt.cpp
     LinSolverIterativeFGMRES.cpp
 )
@@ -86,6 +90,11 @@ set(ReSolve_Targets_List
     resolve_tpl
     resolve_workspace
 )
+
+# Temporary until there is CPU-only option for FGMRES
+if(RESOLVE_USE_GPU)
+  set(ReSolve_SRC ${ReSolve_SRC} ${ReSolve_GPU_SRC})
+endif()
 
 # If CUDA support is enabled add CUDA SDK specific code and dependencies
 if(RESOLVE_USE_CUDA)
