@@ -2,6 +2,7 @@
 #include <resolve/matrix/Csr.hpp>
 #include "LinSolverDirectRocSolverRf.hpp"
 #include <resolve/hip/hipKernels.h>
+#include <roctracer/roctx.h>
 
 namespace ReSolve 
 {
@@ -26,6 +27,7 @@ namespace ReSolve
 
   int LinSolverDirectRocSolverRf::setup(matrix::Sparse* A, matrix::Sparse* L, matrix::Sparse* U, index_type* P, index_type* Q, vector_type* rhs)
   {
+	  roctxRangePush(__FUNCTION__);
     //remember - P and Q are generally CPU variables
     int error_sum = 0;
     this->A_ = (matrix::Csr*) A;
@@ -166,11 +168,14 @@ namespace ReSolve
       mem_.allocateArrayOnDevice(&d_aux2_,n); 
 
     }
-    return error_sum;
+	 roctxRangePop();
+       return error_sum;
   }
 
   int LinSolverDirectRocSolverRf::refactorize()
   {
+	  roctxRangePush(__FUNCTION__);
+		  
     int error_sum = 0;
     mem_.deviceSynchronize();
     status_rocblas_ =  rocsolver_dcsrrf_refactlu(workspace_->getRocblasHandle(),
@@ -211,14 +216,16 @@ printf("solve mode 1, splitting the factors again \n");
       error_sum += status_rocblas_;
 
     }
-
+	  roctxRangePop();
+   
     return error_sum; 
   }
 
   // solution is returned in RHS
   int LinSolverDirectRocSolverRf::solve(vector_type* rhs)
   {
-    int error_sum = 0;
+	  roctxRangePush(__FUNCTION__);
+       int error_sum = 0;
     if (solve_mode_ == 0) {
       mem_.deviceSynchronize();
       status_rocblas_ =  rocsolver_dcsrrf_solve(workspace_->getRocblasHandle(),
@@ -237,7 +244,6 @@ printf("solve mode 1, splitting the factors again \n");
     } else {
       // not implemented yet
       permuteVectorP(A_->getNumRows(), d_P_, rhs->getData(ReSolve::memory::DEVICE), d_aux1_);
-      mem_.deviceSynchronize();
       rocsparse_dcsrsv_solve(workspace_->getRocsparseHandle(), 
                              rocsparse_operation_none,
                              A_->getNumRows(),
@@ -271,13 +277,15 @@ printf("solve mode 1, splitting the factors again \n");
       error_sum += status_rocsparse_;
 
       permuteVectorQ(A_->getNumRows(), d_Q_,d_aux1_,rhs->getData(ReSolve::memory::DEVICE));
-      mem_.deviceSynchronize();
     }
-    return error_sum;
+	  roctxRangePop();
+       return error_sum;
   }
 
   int LinSolverDirectRocSolverRf::solve(vector_type* rhs, vector_type* x)
   {
+	  roctxRangePush(__FUNCTION__);
+   
     x->update(rhs->getData(ReSolve::memory::DEVICE), ReSolve::memory::DEVICE, ReSolve::memory::DEVICE);
     x->setDataUpdated(ReSolve::memory::DEVICE);
     int error_sum = 0;
@@ -338,7 +346,8 @@ printf("solve mode 1, splitting the factors again \n");
       permuteVectorQ(A_->getNumRows(), d_Q_,d_aux1_,x->getData(ReSolve::memory::DEVICE));
       mem_.deviceSynchronize();
     }
-    return error_sum;
+	  roctxRangePop();
+       return error_sum;
   }
 
   int LinSolverDirectRocSolverRf::setSolveMode(int mode)
