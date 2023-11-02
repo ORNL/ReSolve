@@ -11,8 +11,8 @@ module load ncurses/6.4-gcc-8.4.0-gwo76of
 module load zlib-ng/2.1.4-gcc-8.4.0-feah6zt
 # cmake@=3.27.7%gcc@=8.4.0~doc+ncurses+ownlibs build_system=generic build_type=Release arch=linux-centos7-zen
 module load cmake/3.27.7-gcc-8.4.0-rmou7zf
-# gmake@=4.4.1%clang@=16.0.0-rocm5.6.0 cxxflags="--gcc-toolchain=/share/apps/gcc/8.4.0/" ~guile build_system=generic arch=linux-centos7-zen
-module load gmake/4.4.1-clang-16.0.0-rocm5.6.0-ku7zmdn
+# gmake@=4.4.1%clang@=16.0.0-rocm5.6.0 cxxflags="--gcc-toolchain=/share/apps/gcc/8.4.0" ~guile build_system=generic arch=linux-centos7-zen
+module load gmake/4.4.1-clang-16.0.0-rocm5.6.0-6c7b35p
 # python@=3.9.12%gcc@=8.4.0+bz2+crypt+ctypes+dbm~debug+libxml2+lzma~nis~optimizations+pic+pyexpat+pythoncmd+readline+shared+sqlite3+ssl~tkinter+uuid+zlib build_system=generic patches=0d98e93,4c24573,ebdca64,f2fd060 arch=linux-centos7-zen
 module load python/3.9.12-gcc-8.4.0-ob2n5zs
 # re2c@=2.2%gcc@=8.4.0 build_system=generic arch=linux-centos7-zen
@@ -29,6 +29,12 @@ module load rocm-core/5.6.1-gcc-8.4.0-llv2yv4
 module load rocm-cmake/5.6.1-gcc-8.4.0-klwq5kk
 # comgr@=5.6.1%gcc@=8.4.0~ipo build_system=cmake build_type=Release generator=make arch=linux-centos7-zen
 module load comgr/5.6.1-gcc-8.4.0-yl7z2re
+# mesa@=23.0.2%gcc@=8.4.0+glx+llvm+opengl~opengles+osmesa~strip build_system=meson buildtype=release default_library=shared arch=linux-centos7-zen
+module load mesa/23.0.2-gcc-8.4.0-xffioaq
+# glx@=1.4%gcc@=8.4.0 build_system=bundle arch=linux-centos7-zen
+module load glx/1.4-gcc-8.4.0-vh5g6sx
+# hipify-clang@=5.6.1%gcc@=8.4.0~ipo build_system=cmake build_type=Release generator=make patches=54b8b39 arch=linux-centos7-zen
+module load hipify-clang/5.6.1-gcc-8.4.0-e3jea5v
 # libiconv@=1.17%gcc@=8.4.0 build_system=autotools libs=shared,static arch=linux-centos7-zen
 module load libiconv/1.17-gcc-8.4.0-o2hwfiz
 # diffutils@=3.9%gcc@=8.4.0 build_system=autotools arch=linux-centos7-zen
@@ -51,58 +57,16 @@ module load gettext/0.22.3-gcc-8.4.0-m33ujza
 module load libsigsegv/2.14-gcc-8.4.0-gzna4n3
 # m4@=1.4.19%gcc@=8.4.0+sigsegv build_system=autotools patches=9dc5fbd,bfdffa7 arch=linux-centos7-zen
 module load m4/1.4.19-gcc-8.4.0-bwzchwl
-# perl@=5.26.0%gcc@=8.4.0+cpanm+opcode+open+shared+threads build_system=generic patches=0eac10e,8cf4302 arch=linux-centos7-zen
-module load perl/5.26.0-gcc-8.4.0-6tdzqfd
-# bison@=3.8.2%gcc@=8.4.0 build_system=autotools arch=linux-centos7-zen
-module load bison/3.8.2-gcc-8.4.0-etuka2a
-# libmd@=1.0.4%gcc@=8.4.0 build_system=autotools arch=linux-centos7-zen
-module load libmd/1.0.4-gcc-8.4.0-tbwjjiv
-# libbsd@=0.11.7%gcc@=8.4.0 build_system=autotools arch=linux-centos7-zen
-module load libbsd/0.11.7-gcc-8.4.0-tqu43be
-# expat@=2.5.0%gcc@=8.4.0+libbsd build_system=autotools arch=linux-centos7-zen
-module load expat/2.5.0-gcc-8.4.0-7rfhc6v
-# findutils@=4.9.0%gcc@=8.4.0 build_system=autotools patches=440b954 arch=linux-centos7-zen
-module load findutils/4.9.0-gcc-8.4.0-yjpuc44
-# flex@=2.6.3%gcc@=8.4.0+lex~nls build_system=autotools arch=linux-centos7-zen
-module load flex/2.6.3-gcc-8.4.0-egfp6z5
+# elfutils@=0.189%gcc@=8.4.0~debuginfod+exeprefix+nls build_system=autotools arch=linux-centos7-zen
+module load elfutils/0.189-gcc-8.4.0-23kjwto
+# libtool@=2.4.7%gcc@=8.4.0 build_system=autotools arch=linux-centos7-zen
+module load libtool/2.4.7-gcc-8.4.0-2bmpsy4
 # util-macros@=1.19.3%gcc@=8.4.0 build_system=autotools arch=linux-centos7-zen
 module load util-macros/1.19.3-gcc-8.4.0-64inrmm
-# glproto@=1.4.17%gcc@=8.4.0 build_system=autotools arch=linux-centos7-zen
-module load glproto/1.4.17-gcc-8.4.0-d2xwssq
-# libunwind@=1.6.2%gcc@=8.4.0~block_signals~conservative_checks~cxx_exceptions~debug~debug_frame+docs~pic+tests+weak_backtrace~xz~zlib build_system=autotools components=none libs=shared,static arch=linux-centos7-zen
-module load libunwind/1.6.2-gcc-8.4.0-rgu2xlp
-# inputproto@=2.3.2%gcc@=8.4.0 build_system=autotools arch=linux-centos7-zen
-module load inputproto/2.3.2-gcc-8.4.0-cmbqp4h
-# kbproto@=1.0.7%gcc@=8.4.0 build_system=autotools arch=linux-centos7-zen
-module load kbproto/1.0.7-gcc-8.4.0-pq6oac7
+# libpciaccess@=0.17%gcc@=8.4.0 build_system=autotools arch=linux-centos7-zen
+module load libpciaccess/0.17-gcc-8.4.0-sh2c4la
 # libpthread-stubs@=0.4%gcc@=8.4.0 build_system=autotools arch=linux-centos7-zen
 module load libpthread-stubs/0.4-gcc-8.4.0-kcav646
-# xproto@=7.0.31%gcc@=8.4.0 build_system=autotools arch=linux-centos7-zen
-module load xproto/7.0.31-gcc-8.4.0-2xcokuh
-# libxau@=1.0.8%gcc@=8.4.0 build_system=autotools arch=linux-centos7-zen
-module load libxau/1.0.8-gcc-8.4.0-7r3byub
-# libxdmcp@=1.1.4%gcc@=8.4.0 build_system=autotools arch=linux-centos7-zen
-module load libxdmcp/1.1.4-gcc-8.4.0-ewgybb6
-# xcb-proto@=1.15.2%gcc@=8.4.0 build_system=autotools arch=linux-centos7-zen
-module load xcb-proto/1.15.2-gcc-8.4.0-kj2ch5l
-# libxcb@=1.14%gcc@=8.4.0 build_system=autotools arch=linux-centos7-zen
-module load libxcb/1.14-gcc-8.4.0-5c2iblj
-# xextproto@=7.3.0%gcc@=8.4.0 build_system=autotools arch=linux-centos7-zen
-module load xextproto/7.3.0-gcc-8.4.0-l75zwpb
-# xtrans@=1.4.0%gcc@=8.4.0 build_system=autotools arch=linux-centos7-zen
-module load xtrans/1.4.0-gcc-8.4.0-cbfrdws
-# libx11@=1.8.4%gcc@=8.4.0 build_system=autotools arch=linux-centos7-zen
-module load libx11/1.8.4-gcc-8.4.0-n5i25lg
-# libxext@=1.3.3%gcc@=8.4.0 build_system=autotools arch=linux-centos7-zen
-module load libxext/1.3.3-gcc-8.4.0-zr45mr7
-# libice@=1.0.9%gcc@=8.4.0 build_system=autotools arch=linux-centos7-zen
-module load libice/1.0.9-gcc-8.4.0-miq4xhk
-# util-linux-uuid@=2.38.1%gcc@=8.4.0 build_system=autotools arch=linux-centos7-zen
-module load util-linux-uuid/2.38.1-gcc-8.4.0-c2ehpex
-# libsm@=1.2.3%gcc@=8.4.0 build_system=autotools arch=linux-centos7-zen
-module load libsm/1.2.3-gcc-8.4.0-4zhneq6
-# libxt@=1.1.5%gcc@=8.4.0 build_system=autotools arch=linux-centos7-zen
-module load libxt/1.1.5-gcc-8.4.0-wxqofrn
 # py-pip@=23.1.2%gcc@=8.4.0 build_system=generic arch=linux-centos7-zen
 module load py-pip/23.1.2-gcc-8.4.0-yajovh7
 # py-wheel@=0.41.2%gcc@=8.4.0 build_system=generic arch=linux-centos7-zen
@@ -111,34 +75,10 @@ module load py-wheel/0.41.2-gcc-8.4.0-dkkw2va
 module load py-setuptools/68.0.0-gcc-8.4.0-ihu4sfq
 # meson@=1.2.2%gcc@=8.4.0 build_system=python_pip patches=0f0b1bd,ae59765 arch=linux-centos7-zen
 module load meson/1.2.2-gcc-8.4.0-vcdwjmb
-# py-markupsafe@=2.1.3%gcc@=8.4.0 build_system=python_pip arch=linux-centos7-zen
-module load py-markupsafe/2.1.3-gcc-8.4.0-ckndn5h
-# py-mako@=1.2.4%gcc@=8.4.0 build_system=python_pip arch=linux-centos7-zen
-module load py-mako/1.2.4-gcc-8.4.0-djk4toh
-# renderproto@=0.11.1%gcc@=8.4.0 build_system=autotools arch=linux-centos7-zen
-module load renderproto/0.11.1-gcc-8.4.0-wf73fb4
-# libxrender@=0.9.10%gcc@=8.4.0 build_system=autotools arch=linux-centos7-zen
-module load libxrender/0.9.10-gcc-8.4.0-3rqjeli
-# randrproto@=1.5.0%gcc@=8.4.0 build_system=autotools arch=linux-centos7-zen
-module load randrproto/1.5.0-gcc-8.4.0-3ytqi3w
-# libxrandr@=1.5.3%gcc@=8.4.0 build_system=autotools arch=linux-centos7-zen
-module load libxrandr/1.5.3-gcc-8.4.0-7ns64x7
-# xrandr@=1.5.0%gcc@=8.4.0 build_system=autotools arch=linux-centos7-zen
-module load xrandr/1.5.0-gcc-8.4.0-3whusyt
-# mesa@=23.0.3%gcc@=8.4.0+glx+llvm+opengl~opengles+osmesa~strip build_system=meson buildtype=release default_library=shared arch=linux-centos7-zen
-module load mesa/23.0.3-gcc-8.4.0-lbefc2e
-# glx@=1.4%gcc@=8.4.0 build_system=bundle arch=linux-centos7-zen
-module load glx/1.4-gcc-8.4.0-ly5ulwt
-# hipify-clang@=5.6.1%gcc@=8.4.0~ipo build_system=cmake build_type=Release generator=make patches=54b8b39 arch=linux-centos7-zen
-module load hipify-clang/5.6.1-gcc-8.4.0-e3jea5v
-# elfutils@=0.189%gcc@=8.4.0~debuginfod+exeprefix+nls build_system=autotools arch=linux-centos7-zen
-module load elfutils/0.189-gcc-8.4.0-23kjwto
-# libtool@=2.4.7%gcc@=8.4.0 build_system=autotools arch=linux-centos7-zen
-module load libtool/2.4.7-gcc-8.4.0-2bmpsy4
-# libpciaccess@=0.17%gcc@=8.4.0 build_system=autotools arch=linux-centos7-zen
-module load libpciaccess/0.17-gcc-8.4.0-sh2c4la
 # libdrm@=2.4.115%gcc@=8.4.0~docs build_system=generic arch=linux-centos7-zen
 module load libdrm/2.4.115-gcc-8.4.0-6h77lxh
+# perl@=5.26.0%gcc@=8.4.0+cpanm+opcode+open+shared+threads build_system=generic patches=0eac10e,8cf4302 arch=linux-centos7-zen
+module load perl/5.26.0-gcc-8.4.0-6tdzqfd
 # autoconf@=2.69%gcc@=8.4.0 build_system=autotools patches=35c4492,7793209,a49dd5b arch=linux-centos7-zen
 module load autoconf/2.69-gcc-8.4.0-dcrbb7h
 # automake@=1.16.5%gcc@=8.4.0 build_system=autotools arch=linux-centos7-zen
@@ -164,7 +104,7 @@ module load rocminfo/5.6.1-gcc-8.4.0-5shaxxj
 # roctracer-dev-api@=5.6.1%gcc@=8.4.0 build_system=generic arch=linux-centos7-zen
 module load roctracer-dev-api/5.6.1-gcc-8.4.0-gbaoh25
 # hip@=5.6.1%gcc@=8.4.0~cuda~ipo+rocm build_system=cmake build_type=Release generator=make patches=aee7249,c2ee21c,e73e91b arch=linux-centos7-zen
-module load hip/5.6.1-gcc-8.4.0-6agncv5
+module load hip/5.6.1-gcc-8.4.0-zpa2j7f
 # msgpack-c@=3.1.1%gcc@=8.4.0~ipo build_system=cmake build_type=Release generator=make arch=linux-centos7-zen
 module load msgpack-c/3.1.1-gcc-8.4.0-buxbznu
 # procps@=4.0.4%gcc@=8.4.0+nls build_system=autotools arch=linux-centos7-zen
@@ -214,24 +154,78 @@ module load py-platformdirs/3.10.0-gcc-8.4.0-6hnyp7h
 # py-virtualenv@=20.24.5%gcc@=8.4.0 build_system=python_pip arch=linux-centos7-zen
 module load py-virtualenv/20.24.5-gcc-8.4.0-h4mzkzl
 # rocblas@=5.6.1%gcc@=8.4.0~ipo+tensile amdgpu_target=auto build_system=cmake build_type=Release generator=make arch=linux-centos7-zen
-module load rocblas/5.6.1-gcc-8.4.0-6xcnn6z
+module load rocblas/5.6.1-gcc-8.4.0-arsno2b
+# fmt@=10.1.1%gcc@=8.4.0~ipo+pic~shared build_system=cmake build_type=Release cxxstd=11 generator=make arch=linux-centos7-zen
+module load fmt/10.1.1-gcc-8.4.0-4d5ehr5
 # rocprim@=5.6.1%gcc@=8.4.0~ipo amdgpu_target=auto build_system=cmake build_type=Release generator=make arch=linux-centos7-zen
-module load rocprim/5.6.1-gcc-8.4.0-uypvsdi
+module load rocprim/5.6.1-gcc-8.4.0-nu465tt
 # rocsparse@=5.6.1%gcc@=8.4.0~ipo~test amdgpu_target=auto build_system=cmake build_type=Release generator=make arch=linux-centos7-zen
-module load rocsparse/5.6.1-gcc-8.4.0-irtacbe
+module load rocsparse/5.6.1-gcc-8.4.0-wtmfgyn
+# rocsolver@=5.6.1%gcc@=8.4.0~ipo+optimal amdgpu_target=auto build_system=cmake build_type=Release generator=make arch=linux-centos7-zen
+module load rocsolver/5.6.1-gcc-8.4.0-wlgpkqj
+# roctracer-dev@=5.6.1%gcc@=8.4.0~ipo~rocm build_system=cmake build_type=Release generator=make arch=linux-centos7-zen
+module load roctracer-dev/5.6.1-gcc-8.4.0-lilld4h
+# libiconv@=1.17%gcc@=8.4.0 build_system=autotools libs=shared,static arch=linux-centos7-zen
+module load libiconv/1.17-gcc-8.4.0-wfdnlg6
+# diffutils@=3.9%gcc@=8.4.0 build_system=autotools arch=linux-centos7-zen
+module load diffutils/3.9-gcc-8.4.0-qh566r6
+# libsigsegv@=2.14%gcc@=8.4.0 build_system=autotools arch=linux-centos7-zen
+module load libsigsegv/2.14-gcc-8.4.0-iutj4de
+# m4@=1.4.19%gcc@=8.4.0+sigsegv build_system=autotools patches=9dc5fbd,bfdffa7 arch=linux-centos7-zen
+module load m4/1.4.19-gcc-8.4.0-x7ktvaf
+# perl@=5.26.0%gcc@=8.4.0+cpanm+opcode+open+shared+threads build_system=generic patches=0eac10e,8cf4302 arch=linux-centos7-zen
+module load perl/5.26.0-gcc-8.4.0-h324qox
+# autoconf@=2.69%gcc@=8.4.0 build_system=autotools patches=35c4492,7793209,a49dd5b arch=linux-centos7-zen
+module load autoconf/2.69-gcc-8.4.0-npluk5j
+# automake@=1.16.5%gcc@=8.4.0 build_system=autotools arch=linux-centos7-zen
+module load automake/1.16.5-gcc-8.4.0-tgloywk
+# libtool@=2.4.7%gcc@=8.4.0 build_system=autotools arch=linux-centos7-zen
+module load libtool/2.4.7-gcc-8.4.0-gs6gyy3
 # gmp@=6.2.1%gcc@=8.4.0+cxx build_system=autotools libs=shared,static patches=69ad2e2 arch=linux-centos7-zen
-module load gmp/6.2.1-gcc-8.4.0-jbyetgm
+module load gmp/6.2.1-gcc-8.4.0-ythx4o2
+# pkgconf@=1.9.5%gcc@=8.4.0 build_system=autotools arch=linux-centos7-zen
+module load pkgconf/1.9.5-gcc-8.4.0-kl4sdjo
+# nghttp2@=1.52.0%gcc@=8.4.0 build_system=autotools arch=linux-centos7-zen
+module load nghttp2/1.52.0-gcc-8.4.0-pqmjl5g
+# ca-certificates-mozilla@=2023-05-30%gcc@=8.4.0 build_system=generic arch=linux-centos7-zen
+module load ca-certificates-mozilla/2023-05-30-gcc-8.4.0-txgcsig
+# zlib-ng@=2.1.3%gcc@=8.4.0+compat+opt build_system=autotools patches=299b958,ae9077a,b692621 arch=linux-centos7-zen
+module load zlib-ng/2.1.3-gcc-8.4.0-44tydhr
+# openssl@=3.1.3%gcc@=8.4.0~docs+shared build_system=generic certs=mozilla arch=linux-centos7-zen
+module load openssl/3.1.3-gcc-8.4.0-46yttzm
+# curl@=8.4.0%gcc@=8.4.0~gssapi~ldap~libidn2~librtmp~libssh~libssh2+nghttp2 build_system=autotools libs=shared,static tls=openssl arch=linux-centos7-zen
+module load curl/8.4.0-gcc-8.4.0-g2rrs23
+# ncurses@=6.4%gcc@=8.4.0~symlinks+termlib abi=none build_system=autotools arch=linux-centos7-zen
+module load ncurses/6.4-gcc-8.4.0-jt7rpqq
+# cmake@=3.27.7%gcc@=8.4.0~doc+ncurses+ownlibs build_system=generic build_type=Release arch=linux-centos7-zen
+module load cmake/3.27.7-gcc-8.4.0-tu2rruq
+# gmake@=4.4.1%gcc@=8.4.0~guile build_system=autotools arch=linux-centos7-zen
+module load gmake/4.4.1-gcc-8.4.0-f23wik2
 # metis@=5.1.0%gcc@=8.4.0~gdb~int64~ipo~real64+shared build_system=cmake build_type=Release generator=make patches=4991da9,93a7903,b1225da arch=linux-centos7-zen
-module load metis/5.1.0-gcc-8.4.0-arxpx4m
+module load metis/5.1.0-gcc-8.4.0-gsllf6a
 # autoconf-archive@=2023.02.20%gcc@=8.4.0 build_system=autotools arch=linux-centos7-zen
-module load autoconf-archive/2023.02.20-gcc-8.4.0-peuq4u2
+module load autoconf-archive/2023.02.20-gcc-8.4.0-ox4hxoe
+# bzip2@=1.0.8%gcc@=8.4.0~debug~pic+shared build_system=generic arch=linux-centos7-zen
+module load bzip2/1.0.8-gcc-8.4.0-3uzyl47
+# xz@=5.4.1%gcc@=8.4.0~pic build_system=autotools libs=shared,static arch=linux-centos7-zen
+module load xz/5.4.1-gcc-8.4.0-dwmuagy
+# libxml2@=2.10.3%gcc@=8.4.0+pic~python+shared build_system=autotools arch=linux-centos7-zen
+module load libxml2/2.10.3-gcc-8.4.0-2hu4ayt
+# pigz@=2.7%gcc@=8.4.0 build_system=makefile arch=linux-centos7-zen
+module load pigz/2.7-gcc-8.4.0-lu7bjb6
+# zstd@=1.5.5%gcc@=8.4.0+programs build_system=makefile compression=none libs=shared,static arch=linux-centos7-zen
+module load zstd/1.5.5-gcc-8.4.0-z7jmyvw
+# tar@=1.34%gcc@=8.4.0 build_system=autotools zip=pigz arch=linux-centos7-zen
+module load tar/1.34-gcc-8.4.0-wcgempy
+# gettext@=0.22.3%gcc@=8.4.0+bzip2+curses+git~libunistring+libxml2+pic+shared+tar+xz build_system=autotools arch=linux-centos7-zen
+module load gettext/0.22.3-gcc-8.4.0-f7dl6un
 # texinfo@=7.0.3%gcc@=8.4.0 build_system=autotools arch=linux-centos7-zen
-module load texinfo/7.0.3-gcc-8.4.0-eja2su5
+module load texinfo/7.0.3-gcc-8.4.0-jma4obj
 # mpfr@=4.2.0%gcc@=8.4.0 build_system=autotools libs=shared,static arch=linux-centos7-zen
-module load mpfr/4.2.0-gcc-8.4.0-pf2mr55
+module load mpfr/4.2.0-gcc-8.4.0-cjhi2el
 # openblas@=0.3.24%gcc@=8.4.0~bignuma~consistent_fpcsr+fortran~ilp64+locking+pic+shared build_system=makefile symbol_suffix=none threads=none arch=linux-centos7-zen
-module load openblas/0.3.24-gcc-8.4.0-lnpxyrn
+module load openblas/0.3.24-gcc-8.4.0-4ei4hpg
 # suite-sparse@=5.13.0%gcc@=8.4.0~cuda~graphblas~openmp+pic build_system=generic arch=linux-centos7-zen
-module load suite-sparse/5.13.0-gcc-8.4.0-cy34eno
-# resolve@=develop%clang@=16.0.0-rocm5.6.0 cxxflags="--gcc-toolchain=/share/apps/gcc/8.4.0/" ~cuda~ipo+klu+rocm amdgpu_target=gfx908 build_system=cmake build_type=Release dev_path=/people/ruth521/projects/resolve generator=make arch=linux-centos7-zen
-## module load resolve/develop-clang-16.0.0-rocm5.6.0-xrj2j6q
+module load suite-sparse/5.13.0-gcc-8.4.0-ivey23b
+# resolve@=develop%clang@=16.0.0-rocm5.6.0 cxxflags="--gcc-toolchain=/share/apps/gcc/8.4.0" ~cuda~ipo+klu+rocm amdgpu_target=gfx908 build_system=cmake build_type=Release dev_path=/people/ruth521/projects/resolve generator=make arch=linux-centos7-zen
+## module load resolve/develop-clang-16.0.0-rocm5.6.0-6kaaut4

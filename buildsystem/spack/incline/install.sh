@@ -9,6 +9,8 @@
 #SBATCH -e spack_install.%J.output
 #SBTACH -t 240
 
+export HTTPS_PROXY=http://proxy01.pnl.gov:3128
+export https_proxy=http://proxy01.pnl.gov:3128
 export MY_CLUSTER=incline
 . buildsystem/load-spack.sh &&
 spack develop --no-clone --path=$(pwd) resolve@develop &&

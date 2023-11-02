@@ -62,9 +62,9 @@
                 "CMAKE_BUILD_TYPE" : "Debug"
             },
             "environment": {
-                "CC" : "$(which clang)",
-                "CXX" : "$(which clang++)",
-                "FC" : "$(which gfortran)"
+                "CC" : "clang",
+                "CXX" : "clang++",
+                "FC" : "gfortran"
             }
         }
 

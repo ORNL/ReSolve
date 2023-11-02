@@ -15,6 +15,10 @@ if(@RESOLVE_USE_CUDA@)
    add_library(ReSolve::CUDA ALIAS ReSolve::resolve_backend_cuda)
 endif()
 if(@RESOLVE_USE_HIP@)
+  # TODO - FIX
+  set(CMAKE_C_COMPILER @CMAKE_C_COMPILER@)
+  set(CMAKE_CXX_COMPILER @CMAKE_CXX_COMPILER@)
+  # TODO - FIX ^
   enable_language(HIP)
   check_language(HIP)
   find_package(hip REQUIRED)

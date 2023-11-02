@@ -3,12 +3,10 @@
 source /etc/profile.d/modules.sh
 module purge
 
-# Load system python
+# Load system python and gcc
 module load python/miniconda4.12
 source /share/apps/python/miniconda4.12/etc/profile.d/conda.sh
-
-export HTTPS_PROXY=http://proxy01.pnl.gov:3128
-export https_proxy=http://proxy01.pnl.gov:3128
+module load gcc/8.4.0
 
 # Define environment variables for where spack stores key files
 # For now, SPACK_INSTALL is the path where everything spack related is installed
@@ -23,3 +21,4 @@ export SPACK_PYTHON=$(which python3)
 export tempdir=$SPACK_CACHE
 export TMP=$SPACK_CACHE
 export TMPDIR=$SPACK_CACHE
+
