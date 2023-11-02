@@ -12,7 +12,10 @@
             "description": "Base config to build with CUDA",
             "binaryDir": "${sourceDir}/build",
             "installDir": "${sourceDir}/install",
-            "generator": "Unix Makefiles"
+            "generator": "Unix Makefiles",
+            "cacheVariables": {
+                "RESOLVE_USE_CUDA": "ON"
+            }
         },
         {
             "name": "cpu",
@@ -20,11 +23,7 @@
             "description": "Base config to build without GPUs",
             "binaryDir": "${sourceDir}/build",
             "installDir": "${sourceDir}/install",
-            "generator": "Unix Makefiles",
-            "cacheVariables": {
-                "RESOLVE_USE_CUDA": "OFF",
-                "RESOLVE_USE_GPU": "OFF"
-            }
+            "generator": "Unix Makefiles"
         },
 	      {
             "name": "ascent",
