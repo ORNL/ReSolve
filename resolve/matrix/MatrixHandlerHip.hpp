@@ -38,11 +38,11 @@ namespace ReSolve {
       int csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr);
       
       virtual int matvec(matrix::Sparse* A,
-                 vector_type* vec_x,
-                 vector_type* vec_result,
-                 const real_type* alpha,
-                 const real_type* beta,
-                 std::string matrix_type);
+                         vector_type* vec_x,
+                         vector_type* vec_result,
+                         const real_type* alpha,
+                         const real_type* beta,
+                         std::string matrix_type);
       
       virtual int Matrix1Norm(matrix::Sparse *A, real_type* norm);
       

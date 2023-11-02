@@ -14,14 +14,21 @@ set(ReSolve_SRC
     LinSolverDirectKLU.cpp
 )
 
+# Temporary until there is CPU-only option for FGMRES
+set(ReSolve_GPU_SRC
+    GramSchmidt.cpp
+    LinSolverIterativeFGMRES.cpp
+)
+
 # C++ code that links to CUDA SDK libraries
 set(ReSolve_CUDASDK_SRC
-    LinSolverIterativeFGMRES.cpp
-    GramSchmidt.cpp
     LinSolverDirectCuSolverGLU.cpp
     LinSolverDirectCuSolverRf.cpp
 )
-
+# HIP files
+set(ReSolve_ROCM_SRC
+  LinSolverDirectRocSolverRf.cpp
+)
 # Header files to be installed
 set(ReSolve_HEADER_INSTALL
     Common.hpp
@@ -59,6 +66,11 @@ set(ReSolve_Targets_List
     resolve_workspace
 )
 
+# Temporary until there is CPU-only option for FGMRES
+if(RESOLVE_USE_GPU)
+  set(ReSolve_SRC ${ReSolve_SRC} ${ReSolve_GPU_SRC})
+endif()
+
 # If CUDA support is enabled add CUDA SDK specific code and dependencies
 if(RESOLVE_USE_CUDA)
   add_subdirectory(cuda)
@@ -71,6 +83,7 @@ endif()
 if(RESOLVE_USE_HIP)
   add_subdirectory(hip)
   target_link_libraries(resolve_tpl INTERFACE resolve_hip)
+  set(ReSolve_SRC ${ReSolve_SRC} ${ReSolve_ROCM_SRC})
   set(ReSolve_Targets_List ${ReSolve_Targets_List} resolve_backend_hip)
 endif()
 

@@ -295,7 +295,6 @@ namespace ReSolve {
     } else if (memspace == "cpu") {
         return cpuImpl_->matvec(A, vec_x, vec_result, alpha, beta, matrixFormat);
     } else if (memspace == "hip") {
-      printf("about to run mv");
         return hipImpl_->matvec(A, vec_x, vec_result, alpha, beta, matrixFormat);
     } else {
         out::error() << "Support for device " << memspace << " not implemented (yet)" << std::endl;

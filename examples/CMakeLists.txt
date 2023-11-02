@@ -39,7 +39,16 @@ if(RESOLVE_USE_CUDA)
 
 endif(RESOLVE_USE_CUDA)
 
+# Create HIP examples
+if(RESOLVE_USE_HIP)
+  # Build example with KLU factorization and rocsolver Rf refactorization
+  add_executable(klu_rocsolverrf.exe r_KLU_rocsolverrf.cpp)
+  target_link_libraries(klu_rocsolverrf.exe PRIVATE ReSolve)
 
+  # Build example with KLU factorization, rocsolver Rf refactorization, and FGMRES iterative refinement
+  add_executable(klu_rocsolverrf_fgmres.exe r_KLU_rocSolverRf_FGMRES.cpp)
+  target_link_libraries(klu_rocsolverrf_fgmres.exe PRIVATE ReSolve)
+endif(RESOLVE_USE_HIP)
 
 # Install all examples in bin directory
 set(installable_executables klu_klu.exe klu_klu_standalone.exe)
@@ -47,6 +56,10 @@ set(installable_executables klu_klu.exe klu_klu_standalone.exe)
 if(RESOLVE_USE_CUDA)
   set(installable_executables ${installable_executables} klu_glu.exe klu_rf.exe klu_rf_fgmres.exe klu_glu_values_update.exe)        
 endif(RESOLVE_USE_CUDA)
+
+if(RESOLVE_USE_HIP)
+  set(installable_executables ${installable_executables} klu_rocsolverrf.exe)        
+endif(RESOLVE_USE_HIP)
 
 install(TARGETS ${installable_executables} 
         RUNTIME DESTINATION bin)

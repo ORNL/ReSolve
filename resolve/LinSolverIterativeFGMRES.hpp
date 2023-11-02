@@ -13,17 +13,19 @@ namespace ReSolve
     using vector_type = vector::Vector;
 
     public:
-    LinSolverIterativeFGMRES();
+    LinSolverIterativeFGMRES(std::string memspace = "cuda");
     LinSolverIterativeFGMRES( MatrixHandler* matrix_handler,
                               VectorHandler* vector_handler,
-                              GramSchmidt*   gs);
+                              GramSchmidt*   gs,
+                              std::string memspace = "cuda");
     LinSolverIterativeFGMRES(index_type restart,
                              real_type  tol,
                              index_type maxit,
                              index_type conv_cond,
                              MatrixHandler* matrix_handler,
                              VectorHandler* vector_handler,
-                             GramSchmidt*   gs);
+                             GramSchmidt*   gs,
+                             std::string memspace = "cuda");
     ~LinSolverIterativeFGMRES();
 
     int solve(vector_type* rhs, vector_type* x);
@@ -47,6 +49,8 @@ namespace ReSolve
 
     private:
     //remember matrix handler and vector handler are inherited.
+
+    std::string memspace_;
 
     real_type tol_;
     index_type maxit_;
