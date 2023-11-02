@@ -33,6 +33,10 @@ if(RESOLVE_USE_HIP)
   add_executable(rocsolver_rf_test.exe testKLU_RocSolver.cpp)
   target_link_libraries(rocsolver_rf_test.exe PRIVATE ReSolve)
 
+  # And another one to test FGMRES version
+  add_executable(rocsolver_rf_fgmres_test.exe testKLU_RocSolver_FGMRES.cpp)
+  target_link_libraries(rocsolver_rf_fgmres_test.exe PRIVATE ReSolve)
+
 endif(RESOLVE_USE_HIP)
 
 # Install tests
@@ -47,7 +51,8 @@ endif(RESOLVE_USE_CUDA)
 
 if(RESOLVE_USE_HIP)
   set(installable_tests ${installable_tests}
-                        rocsolver_rf_test.exe)
+                        rocsolver_rf_test.exe
+                        rocsolver_rf_fgmres_test.exe)
 endif(RESOLVE_USE_HIP)
 
 install(TARGETS ${installable_tests} 
@@ -67,4 +72,5 @@ endif(RESOLVE_USE_CUDA)
 
 if(RESOLVE_USE_HIP)
   add_test(NAME rocsolver_rf_test  COMMAND $<TARGET_FILE:rocsolver_rf_test.exe>  "${test_data_dir}")
+  add_test(NAME rocsolver_rf_fgmres_test  COMMAND $<TARGET_FILE:rocsolver_rf_fgmres_test.exe>  "${test_data_dir}")
 endif(RESOLVE_USE_HIP)
