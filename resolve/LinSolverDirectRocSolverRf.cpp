@@ -237,6 +237,7 @@ printf("solve mode 1, splitting the factors again \n");
     } else {
       // not implemented yet
       permuteVectorP(A_->getNumRows(), d_P_, rhs->getData(ReSolve::memory::DEVICE), d_aux1_);
+      mem_.deviceSynchronize();
       rocsparse_dcsrsv_solve(workspace_->getRocsparseHandle(), 
                              rocsparse_operation_none,
                              A_->getNumRows(),
@@ -270,6 +271,7 @@ printf("solve mode 1, splitting the factors again \n");
       error_sum += status_rocsparse_;
 
       permuteVectorQ(A_->getNumRows(), d_Q_,d_aux1_,rhs->getData(ReSolve::memory::DEVICE));
+      mem_.deviceSynchronize();
     }
     return error_sum;
   }
