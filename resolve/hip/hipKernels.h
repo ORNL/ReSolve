@@ -12,3 +12,14 @@ void matrix_row_sums(int n,
                      int* a_ia,
                      double* a_val, 
                      double* result);
+
+// needed for triangular solve
+
+void permuteVectorP(int n, 
+                    int* perm_vector,
+                    double* vec_in, 
+                    double* vec_out);
+void permuteVectorQ(int n, 
+                    int* perm_vector,
+                    double* vec_in, 
+                    double* vec_out);
