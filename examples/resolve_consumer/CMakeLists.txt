@@ -11,7 +11,7 @@ find_package(ReSolve REQUIRED)
 
 # Build example with KLU factorization and KLU refactorization
 add_executable(consume.exe consumer.cpp)
-target_link_libraries(consume.exe PUBLIC ReSolve::ReSolve)
+target_link_libraries(consume.exe PRIVATE ReSolve::ReSolve)
 
 #------------------------------------------------------------------------------------
 # Testing of exported Resolve Configurations
