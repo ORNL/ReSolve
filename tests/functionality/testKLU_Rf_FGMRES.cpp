@@ -213,7 +213,7 @@ int main(int argc, char *argv[])
   error_sum += status;
   
   FGMRES->resetMatrix(A);
-  status = FGMRES->setupPreconditioner("CuSolverRf", Rf);
+  status = FGMRES->setupPreconditioner("LU", Rf);
   error_sum += status;
 
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);

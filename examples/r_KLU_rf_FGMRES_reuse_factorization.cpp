@@ -173,7 +173,7 @@ int main(int argc, char *argv[])
                   << status << std::endl;    
         vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
         status = Rf->solve(vec_rhs, vec_x);
-        FGMRES->setupPreconditioner("CuSolverRf", Rf);
+        FGMRES->setupPreconditioner("LU", Rf);
       }
       //if (i%2!=0)  vec_x->setToZero(ReSolve::memory::DEVICE);
       real_type norm_x =  vector_handler->dot(vec_x, vec_x, "cuda");

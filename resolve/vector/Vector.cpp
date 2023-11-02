@@ -140,7 +140,8 @@ namespace ReSolve { namespace vector {
   real_type* Vector::getData(index_type i, memory::MemorySpace memspace)
   {
     if ((memspace == memory::HOST) && (cpu_updated_ == false) && (gpu_updated_ == true )) {
-      copyData(memspace, memory::HOST);
+      // remember IN FIRST OUT SECOND!!!
+      copyData(memory::DEVICE, memspace);  
       owns_cpu_data_ = true;
     } 
 
@@ -174,7 +175,6 @@ namespace ReSolve { namespace vector {
       //allocate first
       mem_.allocateArrayOnDevice(&d_data_, n_ * k_);
     } 
-
     switch(control)  {
       case 0: //cpu->cuda
         mem_.copyArrayHostToDevice(d_data_, h_data_, n_current_ * k_);

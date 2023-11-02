@@ -38,10 +38,10 @@ int main(int argc, char *argv[])
 
   ReSolve::matrix::Coo* A_coo;
   ReSolve::matrix::Csr* A;
-  ReSolve::LinAlgWorkspaceCUDA* workspace_CUDA = new ReSolve::LinAlgWorkspaceCUDA;
-  workspace_CUDA->initializeHandles();
-  ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(workspace_CUDA);
-  ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(workspace_CUDA);
+  ReSolve::LinAlgWorkspaceHIP* workspace_HIP = new ReSolve::LinAlgWorkspaceHIP();
+  workspace_HIP->initializeHandles();
+  ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(workspace_HIP);
+  ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(workspace_HIP);
   real_type* rhs = nullptr;
   real_type* x   = nullptr;
 
@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
   ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::cgs2);
   ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
   ReSolve::LinSolverDirectRocSolverRf* Rf = new ReSolve::LinSolverDirectRocSolverRf(workspace_HIP);
-  ReSolve::LinSolverIterativeFGMRES* FGMRES = new ReSolve::LinSolverIterativeFGMRES(matrix_handler, vector_handler, GS);
+  ReSolve::LinSolverIterativeFGMRES* FGMRES = new ReSolve::LinSolverIterativeFGMRES(matrix_handler, vector_handler, GS, "hip");
 
   for (int i = 0; i < numSystems; ++i)
   {
@@ -96,8 +96,8 @@ int main(int argc, char *argv[])
       x = new real_type[A->getNumRows()];
       vec_rhs = new vector_type(A->getNumRows());
       vec_x = new vector_type(A->getNumRows());
-      vec_x->allocate("cpu");//for KLU
-      vec_x->allocate("hip");
+      vec_x->allocate(ReSolve::memory::HOST);//for KLU
+      vec_x->allocate(ReSolve::memory::DEVICE);
       vec_r = new vector_type(A->getNumRows());
     }
     else {
@@ -111,11 +111,11 @@ int main(int argc, char *argv[])
     //Now convert to CSR.
     if (i < 2) { 
       matrix_handler->coo2csr(A_coo, A, "cpu");
-      vec_rhs->update(rhs, "cpu", "cpu");
-      vec_rhs->setDataUpdated("cpu");
+      vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+      vec_rhs->setDataUpdated(ReSolve::memory::HOST);
     } else { 
       matrix_handler->coo2csr(A_coo,A, "hip");
-      vec_rhs->update(rhs, "cpu", "hip");
+      vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
     }
     std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnzExpanded()<<std::endl;
     //Now call direct solver
@@ -133,50 +133,52 @@ int main(int argc, char *argv[])
       std::cout<<"KLU factorization status: "<<status<<std::endl;
       status = KLU->solve(vec_rhs, vec_x);
       std::cout<<"KLU solve status: "<<status<<std::endl;      
-      vec_r->update(rhs, "cpu", "hip");
+      vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
       norm_b = vector_handler->dot(vec_r, vec_r, "hip");
       norm_b = sqrt(norm_b);
       matrix_handler->setValuesChanged(true, "hip");
       matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "hip"); 
       printf("\t 2-Norm of the residual : %16.16e\n", sqrt(vector_handler->dot(vec_r, vec_r, "hip"))/norm_b);
       if (i == 1) {
-        ReSolve::matrix::Csc* L_csc = (ReSolve::matrix::Csc*) KLU->getLFactor();
-        ReSolve::matrix::Csc* U_csc = (ReSolve::matrix::Csc*) KLU->getUFactor();
-        ReSolve::matrix::Csr* L = new ReSolve::matrix::Csr(L_csc->getNumRows(), L_csc->getNumColumns(), L_csc->getNnz());
-        ReSolve::matrix::Csr* U = new ReSolve::matrix::Csr(U_csc->getNumRows(), U_csc->getNumColumns(), U_csc->getNnz());
-        matrix_handler->csc2csr(L_csc,L, "hip");
-        matrix_handler->csc2csr(U_csc,U, "hip");
+        ReSolve::matrix::Csc* L /* _csc */ = (ReSolve::matrix::Csc*) KLU->getLFactor();
+        ReSolve::matrix::Csc* U /* _csc */ = (ReSolve::matrix::Csc*) KLU->getUFactor();
+        // ReSolve::matrix::Csr* L = new ReSolve::matrix::Csr(L_csc->getNumRows(), L_csc->getNumColumns(), L_csc->getNnz());
+        // ReSolve::matrix::Csr* U = new ReSolve::matrix::Csr(U_csc->getNumRows(), U_csc->getNumColumns(), U_csc->getNnz());
+        // matrix_handler->csc2csr(L_csc,L, "hip");
+        // matrix_handler->csc2csr(U_csc,U, "hip");
         if (L == nullptr) {printf("ERROR");}
         index_type* P = KLU->getPOrdering();
         index_type* Q = KLU->getQOrdering();
-        Rf->setup(A, L, U, P, Q);
+        Rf->setup(A, L, U, P, Q, vec_rhs);
+        Rf->refactorize();
         std::cout<<"about to set FGMRES" <<std::endl;
         GS->setup(A->getNumRows(), FGMRES->getRestart()); 
         FGMRES->setup(A); 
       }
     } else {
       //status =  KLU->refactorize();
-      std::cout<<"Using CUSOLVER RF"<<std::endl;
+      std::cout<<"Using ROCSOLVER RF"<<std::endl;
       status = Rf->refactorize();
-      std::cout<<"CUSOLVER RF refactorization status: "<<status<<std::endl;      
+      std::cout<<"ROCSOLVER RF refactorization status: "<<status<<std::endl;      
       status = Rf->solve(vec_rhs, vec_x);
-      std::cout<<"CUSOLVER RF solve status: "<<status<<std::endl;      
+      std::cout<<"ROCSOLVER RF solve status: "<<status<<std::endl;      
 
-      vec_r->update(rhs, "cpu", "hip");
-       norm_b = vector_handler->dot(vec_r, vec_r, "hip");
+      vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+      norm_b = vector_handler->dot(vec_r, vec_r, "hip");
       norm_b = sqrt(norm_b);
 
       //matrix_handler->setValuesChanged(true, "hip");
       FGMRES->resetMatrix(A);
-      FGMRES->setupPreconditioner("CuSolverRf", Rf);
+      FGMRES->setupPreconditioner("LU", Rf);
       
       matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "hip"); 
-
+      real_type rnrm = sqrt(vector_handler->dot(vec_r, vec_r, "hip"));
       std::cout << "\t 2-Norm of the residual (before IR): " 
                 << std::scientific << std::setprecision(16) 
-                << sqrt(vector_handler->dot(vec_r, vec_r, "hip"))/norm_b << "\n";
+                << rnrm/norm_b << "\n";
 
-      vec_rhs->update(rhs, "cpu", "hip");
+      vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+     if(!std::isnan(rnrm) && !std::isinf(rnrm)) {
       FGMRES->solve(vec_rhs, vec_x);
 
       std::cout << "FGMRES: init nrm: " 
@@ -185,7 +187,8 @@ int main(int argc, char *argv[])
                 << " final nrm: "
                 << FGMRES->getFinalResidualNorm()/norm_b
                 << " iter: " << FGMRES->getNumIter() << "\n";
-    }
+     }
+     }
 
   } // for (int i = 0; i < numSystems; ++i)
 
