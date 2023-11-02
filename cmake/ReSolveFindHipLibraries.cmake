@@ -12,6 +12,7 @@ target_link_libraries(resolve_hip INTERFACE
   hip::device
   roc::rocblas
   roc::rocsparse
+  rocsolver
 )
 
 install(TARGETS resolve_hip EXPORT ReSolveTargets)
