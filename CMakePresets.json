@@ -60,6 +60,11 @@
             "cacheVariables": {
                 "CMAKE_HIP_ARCHITECTURES" : "gfx908",
                 "CMAKE_BUILD_TYPE" : "Debug"
+            },
+            "environment": {
+                "CC" : "$(which clang)",
+                "CXX" : "$(which clang++)",
+                "FC" : "$(which gfortran)"
             }
         }
 

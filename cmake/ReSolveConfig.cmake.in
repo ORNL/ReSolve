@@ -20,6 +20,7 @@ if(@RESOLVE_USE_HIP@)
   find_package(hip REQUIRED)
   find_package(rocblas REQUIRED)
   find_package(rocsparse REQUIRED)
+  find_package(rocsolver REQUIRED)
   # This is just an agly hack to make HIP build work
   get_target_property(hip_includes hip::device INTERFACE_INCLUDE_DIRECTORIES)
   message(STATUS "HIP include directories: ${hip_includes}")
