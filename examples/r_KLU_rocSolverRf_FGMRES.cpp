@@ -131,6 +131,7 @@ int main(int argc, char *argv[])
       std::cout<<"KLU analysis status: "<<status<<std::endl;
       status = KLU->factorize();
       std::cout<<"KLU factorization status: "<<status<<std::endl;
+     
       status = KLU->solve(vec_rhs, vec_x);
       std::cout<<"KLU solve status: "<<status<<std::endl;      
       vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
@@ -149,6 +150,7 @@ int main(int argc, char *argv[])
         if (L == nullptr) {printf("ERROR");}
         index_type* P = KLU->getPOrdering();
         index_type* Q = KLU->getQOrdering();
+        Rf->setSolveMode(1);
         Rf->setup(A, L, U, P, Q, vec_rhs);
         Rf->refactorize();
         std::cout<<"about to set FGMRES" <<std::endl;
@@ -162,7 +164,6 @@ int main(int argc, char *argv[])
       std::cout<<"ROCSOLVER RF refactorization status: "<<status<<std::endl;      
       status = Rf->solve(vec_rhs, vec_x);
       std::cout<<"ROCSOLVER RF solve status: "<<status<<std::endl;      
-
       vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
       norm_b = vector_handler->dot(vec_r, vec_r, "hip");
       norm_b = sqrt(norm_b);

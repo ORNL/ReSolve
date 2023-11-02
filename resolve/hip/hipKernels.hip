@@ -143,6 +143,34 @@ __global__ void matrixInfNormPart1(const int n,
 }
 
 
+__global__ void permuteVectorP_kernel(const int n, 
+                                      const int* perm_vector,
+                                      const double* vec_in, 
+                                      double* vec_out){
+
+  //one thread per vector entry, pass through rows
+
+  int idx = blockIdx.x*blockDim.x + threadIdx.x;
+  while (idx<n){
+    vec_out[idx] = vec_in[perm_vector[idx]];
+    idx+= (blockDim.x*gridDim.x);
+  }
+}
+
+__global__ void permuteVectorQ_kernel(const int n, 
+                                      const int* perm_vector,
+                                      const double* vec_in, 
+                                      double* vec_out){
+
+  //one thread per vector entry, pass through rows
+
+  int idx = blockIdx.x*blockDim.x + threadIdx.x;
+  while (idx<n){
+    vec_out[perm_vector[idx]] = vec_in[idx];
+    idx+= (blockDim.x*gridDim.x);
+  }
+}
+
 void mass_inner_product_two_vectors(int n, 
                                     int i, 
                                     double* vec1, 
@@ -164,4 +192,20 @@ void matrix_row_sums(int n,
                      double* result)
 {
   hipLaunchKernelGGL(matrixInfNormPart1,dim3(1000),dim3(1024), 0, 0, n, nnz, a_ia, a_val, result);
+}
+
+void permuteVectorP(int n, 
+                    int* perm_vector,
+                    double* vec_in, 
+                    double* vec_out)
+{
+  hipLaunchKernelGGL(permuteVectorP_kernel,dim3(1000), dim3(1024), 0, 0,n, perm_vector,vec_in, vec_out);
+}
+
+void permuteVectorQ(int n, 
+                    int* perm_vector,
+                    double* vec_in, 
+                    double* vec_out)
+{
+  hipLaunchKernelGGL(permuteVectorQ_kernel,dim3(1000), dim3(1024), 0, 0,n, perm_vector,vec_in, vec_out);
 }
