@@ -4,6 +4,10 @@
 
 include("${CMAKE_CURRENT_LIST_DIR}/ReSolveTargets.cmake")
 
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD @CMAKE_CXX_STANDARD@)
+endif()
+
 include(CheckLanguage)
 # This must come before enable_language(CUDA)
 if(@RESOLVE_USE_CUDA@)
