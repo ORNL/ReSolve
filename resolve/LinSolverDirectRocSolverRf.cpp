@@ -169,6 +169,7 @@ namespace ReSolve
 
     }
 	 roctxRangePop();
+	 roctxMarkA(__FUNCTION__);
        return error_sum;
   }
 
@@ -217,6 +218,8 @@ printf("solve mode 1, splitting the factors again \n");
 
     }
 	  roctxRangePop();
+	  roctxMarkA(__FUNCTION__);
+
    
     return error_sum; 
   }
@@ -279,6 +282,8 @@ printf("solve mode 1, splitting the factors again \n");
       permuteVectorQ(A_->getNumRows(), d_Q_,d_aux1_,rhs->getData(ReSolve::memory::DEVICE));
     }
 	  roctxRangePop();
+	  	 roctxMarkA(__FUNCTION__);
+
        return error_sum;
   }
 
@@ -347,6 +352,8 @@ printf("solve mode 1, splitting the factors again \n");
       mem_.deviceSynchronize();
     }
 	  roctxRangePop();
+	  roctxMarkA(__FUNCTION__);
+
        return error_sum;
   }
 
@@ -363,6 +370,7 @@ printf("solve mode 1, splitting the factors again \n");
 
   void LinSolverDirectRocSolverRf::addFactors(matrix::Sparse* L, matrix::Sparse* U)
   {
+	  roctxRangePush(__FUNCTION__);
     // L and U need to be in CSC format
     index_type n = L->getNumRows();
     index_type* Lp = L->getColData(ReSolve::memory::HOST); 
@@ -417,5 +425,7 @@ printf("solve mode 1, splitting the factors again \n");
       }
     }
     //Mshifts.~vector(); 
+	  roctxRangePop();
+	  roctxMarkA(__FUNCTION__);
   }
 }// namespace resolve

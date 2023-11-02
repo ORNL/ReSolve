@@ -12,7 +12,7 @@
 #include <resolve/LinSolverDirectKLU.hpp>
 #include <resolve/LinSolverDirectRocSolverRf.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
-
+#include <roctracer/roctx.h>
 using namespace ReSolve::constants;
 
 int main(int argc, char *argv[] )
@@ -52,8 +52,10 @@ int main(int argc, char *argv[] )
   ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
   ReSolve::LinSolverDirectRocSolverRf* Rf = new ReSolve::LinSolverDirectRocSolverRf(workspace_HIP);
 
+  roctxRangePush(__FUNCTION__);
   for (int i = 0; i < numSystems; ++i)
   {
+    roctxRangePush("Matrix Read");
     index_type j = 4 + i * 2;
     fileId = argv[j];
     rhsId = argv[j + 1];
@@ -103,8 +105,11 @@ int main(int argc, char *argv[] )
     std::cout<<"Finished reading the matrix and rhs, size: "<<A->getNumRows()<<" x "<<A->getNumColumns()<< ", nnz: "<< A->getNnz()<< ", symmetric? "<<A->symmetric()<< ", Expanded? "<<A->expanded()<<std::endl;
     mat_file.close();
     rhs_file.close();
+	 roctxRangePop();
+	 roctxMarkA("Matrix Read");
 
     //Now convert to CSR.
+    roctxRangePush("Convert to CSR");
     if (i < 2) { 
       matrix_handler->coo2csr(A_coo, A, "cpu");
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
@@ -114,12 +119,16 @@ int main(int argc, char *argv[] )
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
     }
     std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnzExpanded()<<std::endl;
+	 roctxRangePop();
+	 roctxMarkA("Convert to CSR");
+
     //Now call direct solver
     if (i == 0) {
       KLU->setupParameters(1, 0.1, false);
     }
     int status;
     if (i < 2){
+		 roctxRangePush("KLU");
       KLU->setup(A);
       status = KLU->analyze();
       std::cout<<"KLU analysis status: "<<status<<std::endl;
@@ -139,7 +148,10 @@ int main(int argc, char *argv[] )
       //  delete [] P;
       //  delete [] Q;
       }
+		roctxRangePop();
+		roctxMarkA("KLU");
     } else {
+		 roctxRangePush("RocSolver");
       //status =  KLU->refactorize();
       std::cout<<"Using rocsolver rf"<<std::endl;
       status = Rf->refactorize();
@@ -149,7 +161,10 @@ int main(int argc, char *argv[] )
       //std::cout<<"KLU re-factorization status: "<<status<<std::endl;
       //status = KLU->solve(vec_rhs, vec_x);
       //std::cout<<"KLU solve status: "<<status<<std::endl;      
+		roctxRangePop();
+		roctxMarkA("RocSolver");
     }
+	 roctxRangePush("Cleanup");
     vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
 
     matrix_handler->setValuesChanged(true, "hip");
@@ -159,8 +174,11 @@ int main(int argc, char *argv[] )
     std::cout << "\t 2-Norm of the residual: " 
               << std::scientific << std::setprecision(16) 
               << sqrt(vector_handler->dot(vec_r, vec_r, "hip")) << "\n";
-
+	 roctxRangePop();
+	 roctxMarkA("Cleanup");
   } // for (int i = 0; i < numSystems; ++i)
+  roctxRangePop();
+  roctxMarkA(__FUNCTION__);
 
   //now DELETE
   delete A;
