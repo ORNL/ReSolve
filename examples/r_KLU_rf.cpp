@@ -139,12 +139,8 @@ int main(int argc, char *argv[] )
         index_type* Q = KLU->getQOrdering();
         Rf->setup(A, L, U, P, Q); 
 
-        delete [] P;
-        delete [] Q;
         delete L;
-        delete L_csc;
         delete U;
-        delete U_csc;
       }
     } else {
       //status =  KLU->refactorize();
