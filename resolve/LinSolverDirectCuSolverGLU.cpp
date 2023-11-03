@@ -8,6 +8,8 @@
 
 namespace ReSolve
 {
+  using vector_type = vector::Vector;
+
   LinSolverDirectCuSolverGLU::LinSolverDirectCuSolverGLU(LinAlgWorkspaceCUDA* workspace)
   {
     this->workspace_ = workspace;
@@ -22,7 +24,12 @@ namespace ReSolve
     delete M_;
   }
 
-  int LinSolverDirectCuSolverGLU::setup(matrix::Sparse* A, matrix::Sparse* L, matrix::Sparse* U, index_type* P, index_type* Q)
+  int LinSolverDirectCuSolverGLU::setup(matrix::Sparse* A,
+                                        matrix::Sparse* L,
+                                        matrix::Sparse* U,
+                                        index_type* P,
+                                        index_type* Q,
+                                        vector_type* /* rhs */)
   {
     int error_sum = 0;
 

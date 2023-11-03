@@ -32,7 +32,12 @@ namespace ReSolve
       LinSolverDirectRocSolverRf(LinAlgWorkspaceHIP* workspace);
       ~LinSolverDirectRocSolverRf();
       
-      int setup(matrix::Sparse* A, matrix::Sparse* L, matrix::Sparse* U, index_type* P, index_type* Q, vector_type* rhs);
+      int setup(matrix::Sparse* A,
+                matrix::Sparse* L,
+                matrix::Sparse* U,
+                index_type*     P,
+                index_type*     Q,
+                vector_type*  rhs);
        
       int refactorize();
       int solve(vector_type* rhs, vector_type* x);

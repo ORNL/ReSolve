@@ -31,7 +31,6 @@ namespace ReSolve
       LinSolver();
       virtual ~LinSolver();
 
-      virtual int setup(matrix::Sparse* A);
       real_type evaluateResidual();
         
     protected:  
@@ -49,6 +48,13 @@ namespace ReSolve
       LinSolverDirect();
       virtual ~LinSolverDirect();
       //return 0 if successful!
+      virtual int setup(matrix::Sparse* A,
+                        matrix::Sparse* L,
+                        matrix::Sparse* U,
+                        index_type*     P,
+                        index_type*     Q,
+                        vector_type*  rhs);
+                        
       virtual int analyze(); //the same as symbolic factorization
       virtual int factorize();
       virtual int refactorize();
@@ -72,6 +78,7 @@ namespace ReSolve
     public:
       LinSolverIterative();
       ~LinSolverIterative();
+      virtual int setup(matrix::Sparse* A);
 
       virtual int  solve(vector_type* rhs, vector_type* init_guess);
   };

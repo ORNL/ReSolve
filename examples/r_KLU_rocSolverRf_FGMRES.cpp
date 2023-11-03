@@ -141,12 +141,8 @@ int main(int argc, char *argv[])
       matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "hip"); 
       printf("\t 2-Norm of the residual : %16.16e\n", sqrt(vector_handler->dot(vec_r, vec_r, "hip"))/norm_b);
       if (i == 1) {
-        ReSolve::matrix::Csc* L /* _csc */ = (ReSolve::matrix::Csc*) KLU->getLFactor();
-        ReSolve::matrix::Csc* U /* _csc */ = (ReSolve::matrix::Csc*) KLU->getUFactor();
-        // ReSolve::matrix::Csr* L = new ReSolve::matrix::Csr(L_csc->getNumRows(), L_csc->getNumColumns(), L_csc->getNnz());
-        // ReSolve::matrix::Csr* U = new ReSolve::matrix::Csr(U_csc->getNumRows(), U_csc->getNumColumns(), U_csc->getNnz());
-        // matrix_handler->csc2csr(L_csc,L, "hip");
-        // matrix_handler->csc2csr(U_csc,U, "hip");
+        ReSolve::matrix::Csc* L = (ReSolve::matrix::Csc*) KLU->getLFactor();
+        ReSolve::matrix::Csc* U = (ReSolve::matrix::Csc*) KLU->getUFactor();
         if (L == nullptr) {printf("ERROR");}
         index_type* P = KLU->getPOrdering();
         index_type* Q = KLU->getQOrdering();
@@ -193,8 +189,17 @@ int main(int argc, char *argv[])
 
   } // for (int i = 0; i < numSystems; ++i)
 
+  delete A;
+  delete A_coo;
+  delete KLU;
+  delete Rf;
   delete [] x;
   delete [] rhs;
+  delete vec_r;
+  delete vec_x;
+  delete workspace_HIP;
+  delete matrix_handler;
+  delete vector_handler;
 
   return 0;
 }

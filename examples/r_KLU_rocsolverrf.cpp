@@ -135,20 +135,13 @@ int main(int argc, char *argv[] )
         vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
         Rf->setup(A, L, U, P, Q, vec_rhs); 
         Rf->refactorize();
-       //dont do it here 
-      //  delete [] P;
-      //  delete [] Q;
       }
     } else {
-      //status =  KLU->refactorize();
       std::cout<<"Using rocsolver rf"<<std::endl;
       status = Rf->refactorize();
       std::cout<<"rocsolver rf refactorization status: "<<status<<std::endl;      
       status = Rf->solve(vec_rhs, vec_x);
       std::cout<<"rocsolver rf solve status: "<<status<<std::endl;      
-      //std::cout<<"KLU re-factorization status: "<<status<<std::endl;
-      //status = KLU->solve(vec_rhs, vec_x);
-      //std::cout<<"KLU solve status: "<<status<<std::endl;      
     }
     vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
 
@@ -164,6 +157,7 @@ int main(int argc, char *argv[] )
 
   //now DELETE
   delete A;
+  delete A_coo;
   delete KLU;
   delete Rf;
   delete [] x;

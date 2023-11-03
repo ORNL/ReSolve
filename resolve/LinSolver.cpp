@@ -13,12 +13,6 @@ namespace ReSolve
     //destroy the matrix and hadlers
   }
 
-  int LinSolver::setup(matrix::Sparse* A)
-  {
-    this->A_ = A;
-    return 0;
-  }
-
   real_type LinSolver::evaluateResidual()
   {
     //to be implemented
@@ -40,6 +34,17 @@ namespace ReSolve
     delete U_;
     delete [] P_;
     delete [] Q_;
+  }
+
+  int LinSolverDirect::setup(matrix::Sparse* A,
+                             matrix::Sparse* /* L */,
+                             matrix::Sparse* /* U */,
+                             index_type*     /* P */,
+                             index_type*     /* Q */,
+                             vector_type*  /* rhs */)
+  {
+    this->A_ = A;
+    return 0;
   }
 
   int LinSolverDirect::analyze()
@@ -92,6 +97,11 @@ namespace ReSolve
   {
   }
 
+  int LinSolverIterative::setup(matrix::Sparse* A)
+  {
+    this->A_ = A;
+    return 0;
+  }
 
   int LinSolverIterative::solve(vector_type* /* rhs */, vector_type* /* init_guess */)
   {
