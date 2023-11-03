@@ -24,7 +24,12 @@ namespace ReSolve
     delete U_csr_;
   }
 
-  int LinSolverDirectRocSolverRf::setup(matrix::Sparse* A, matrix::Sparse* L, matrix::Sparse* U, index_type* P, index_type* Q, vector_type* rhs)
+  int LinSolverDirectRocSolverRf::setup(matrix::Sparse* A,
+                                        matrix::Sparse* L,
+                                        matrix::Sparse* U,
+                                        index_type* P,
+                                        index_type* Q,
+                                        vector_type* rhs)
   {
     //remember - P and Q are generally CPU variables
     int error_sum = 0;
@@ -113,9 +118,6 @@ namespace ReSolve
                                                        &L_buffer_size);
       error_sum += status_rocsparse_;
 
-      printf("buffer size for L %d status %d \n", L_buffer_size, status_rocsparse_);
-      // hipMalloc((void**)&(L_buffer), L_buffer_size);
-
       mem_.allocateBufferOnDevice(&L_buffer_, L_buffer_size);
       status_rocsparse_ = rocsparse_dcsrsv_buffer_size(workspace_->getRocsparseHandle(), 
                                                        rocsparse_operation_none, 
@@ -128,9 +130,7 @@ namespace ReSolve
                                                        info_U_,
                                                        &U_buffer_size);
       error_sum += status_rocsparse_;
-      //      hipMalloc((void**)&(U_buffer), U_buffer_size);
       mem_.allocateBufferOnDevice(&U_buffer_, U_buffer_size);
-      printf("buffer size for U %d status %d \n", U_buffer_size, status_rocsparse_);
 
       status_rocsparse_ = rocsparse_dcsrsv_analysis(workspace_->getRocsparseHandle(), 
                                                     rocsparse_operation_none, 
@@ -389,22 +389,22 @@ printf("solve mode 1, splitting the factors again \n");
       mia[i] += mia[i - 1];
     }
 
-    std::vector<int> Mshifts(n, 0);
+    std::vector<int> Mshifts(static_cast<size_t>(n), 0);
     for(index_type i = 0; i < n; ++i) {
       // go through EACH COLUMN OF L first
       for(int j = Lp[i]; j < Lp[i + 1]; ++j) {
         row = Li[j];
         if(row != i) {
           // place (row, i) where it belongs!
-          mja[mia[row] + Mshifts[row]] = i;
-          Mshifts[row]++;
+          mja[mia[row] + Mshifts[static_cast<size_t>(row)]] = i;
+          Mshifts[static_cast<size_t>(row)]++;
         }
       }
       // each column of U next
       for(index_type j = Up[i]; j < Up[i + 1]; ++j) {
         row = Ui[j];
-        mja[mia[row] + Mshifts[row]] = i;
-        Mshifts[row]++;
+        mja[mia[row] + Mshifts[static_cast<size_t>(row)]] = i;
+        Mshifts[static_cast<size_t>(row)]++;
       }
     }
     //Mshifts.~vector(); 

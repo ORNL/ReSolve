@@ -17,7 +17,12 @@ namespace ReSolve
     mem_.deleteOnDevice(d_T_);
   }
 
-  int LinSolverDirectCuSolverRf::setup(matrix::Sparse* A, matrix::Sparse* L, matrix::Sparse* U, index_type* P, index_type* Q)
+  int LinSolverDirectCuSolverRf::setup(matrix::Sparse* A,
+                                       matrix::Sparse* L,
+                                       matrix::Sparse* U,
+                                       index_type* P,
+                                       index_type* Q,
+                                       vector_type* /* rhs */)
   {
     //remember - P and Q are generally CPU variables
     int error_sum = 0;

@@ -18,7 +18,12 @@ namespace ReSolve
     klu_free_numeric(&Numeric_, &Common_);
   }
 
-  int LinSolverDirectKLU::setup(matrix::Sparse* A)
+  int LinSolverDirectKLU::setup(matrix::Sparse* A,
+                                matrix::Sparse* /* L */,
+                                matrix::Sparse* /* U */,
+                                index_type*     /* P */,
+                                index_type*     /* Q */,    
+                                vector_type*  /* rhs */)
   {
     this->A_ = A;
     return 0;
