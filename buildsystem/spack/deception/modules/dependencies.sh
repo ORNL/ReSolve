@@ -53,7 +53,7 @@ module load texinfo/7.0.3-gcc-9.1.0-oygvjgv
 module load mpfr/4.2.0-gcc-9.1.0-3jeasnm
 # openblas@=0.3.23%gcc@=9.1.0~bignuma~consistent_fpcsr+fortran~ilp64+locking+pic+shared build_system=makefile symbol_suffix=none threads=none arch=linux-centos7-zen2
 module load openblas/0.3.23-gcc-9.1.0-4zbtr2v
-# suite-sparse@=5.13.0%gcc@=9.1.0+cuda~graphblas~openmp+pic build_system=generic arch=linux-centos7-zen2
-module load suite-sparse/5.13.0-gcc-9.1.0-pszalbf
-# resolve@=develop%gcc@=9.1.0+cuda~ipo+klu build_system=cmake build_type=Release cuda_arch=60,70,75,80 dev_path=/people/ruth521/projects/resolve generator=make arch=linux-centos7-zen2
-## module load resolve/develop-gcc-9.1.0-x6mhz5t
+# suite-sparse@=5.13.0%gcc@=9.1.0~cuda~graphblas~openmp+pic build_system=generic arch=linux-centos7-zen2
+module load suite-sparse/5.13.0-gcc-9.1.0-ajdnyum
+# resolve@=develop%gcc@=9.1.0+cuda~ipo+klu build_system=cmake build_type=Release cuda_arch=60,70,75,80 dev_path=/people/svcexasgd/gitlab/24142/spack_deception generator=make arch=linux-centos7-zen2
+## module load resolve/develop-gcc-9.1.0-5de222u
