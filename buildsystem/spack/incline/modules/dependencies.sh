@@ -199,6 +199,33 @@ module load curl/8.4.0-gcc-8.4.0-g2rrs23
 module load ncurses/6.4-gcc-8.4.0-jt7rpqq
 # cmake@=3.27.7%gcc@=8.4.0~doc+ncurses+ownlibs build_system=generic build_type=Release arch=linux-centos7-zen
 module load cmake/3.27.7-gcc-8.4.0-tu2rruq
+# gmake@=4.4.1%gcc@=8.4.0~guile build_system=autotools arch=linux-centos7-zen
+module load gmake/4.4.1-gcc-8.4.0-f23wik2
+# metis@=5.1.0%gcc@=8.4.0~gdb~int64~ipo~real64+shared build_system=cmake build_type=Release generator=make patches=4991da9,93a7903,b1225da arch=linux-centos7-zen
+module load metis/5.1.0-gcc-8.4.0-gsllf6a
+# autoconf-archive@=2023.02.20%gcc@=8.4.0 build_system=autotools arch=linux-centos7-zen
+module load autoconf-archive/2023.02.20-gcc-8.4.0-ox4hxoe
+# bzip2@=1.0.8%gcc@=8.4.0~debug~pic+shared build_system=generic arch=linux-centos7-zen
+module load bzip2/1.0.8-gcc-8.4.0-3uzyl47
+# xz@=5.4.1%gcc@=8.4.0~pic build_system=autotools libs=shared,static arch=linux-centos7-zen
+module load xz/5.4.1-gcc-8.4.0-dwmuagy
+# libxml2@=2.10.3%gcc@=8.4.0+pic~python+shared build_system=autotools arch=linux-centos7-zen
+module load libxml2/2.10.3-gcc-8.4.0-2hu4ayt
+# pigz@=2.7%gcc@=8.4.0 build_system=makefile arch=linux-centos7-zen
+module load pigz/2.7-gcc-8.4.0-lu7bjb6
+# zstd@=1.5.5%gcc@=8.4.0+programs build_system=makefile compression=none libs=shared,static arch=linux-centos7-zen
+module load zstd/1.5.5-gcc-8.4.0-z7jmyvw
+# tar@=1.34%gcc@=8.4.0 build_system=autotools zip=pigz arch=linux-centos7-zen
+module load tar/1.34-gcc-8.4.0-wcgempy
+# gettext@=0.22.3%gcc@=8.4.0+bzip2+curses+git~libunistring+libxml2+pic+shared+tar+xz build_system=autotools arch=linux-centos7-zen
+module load gettext/0.22.3-gcc-8.4.0-f7dl6un
+# texinfo@=7.0.3%gcc@=8.4.0 build_system=autotools arch=linux-centos7-zen
+module load texinfo/7.0.3-gcc-8.4.0-jma4obj
+# mpfr@=4.2.0%gcc@=8.4.0 build_system=autotools libs=shared,static arch=linux-centos7-zen
+module load mpfr/4.2.0-gcc-8.4.0-cjhi2el
+# openblas@=0.3.24%gcc@=8.4.0~bignuma~consistent_fpcsr+fortran~ilp64+locking+pic+shared build_system=makefile symbol_suffix=none threads=none arch=linux-centos7-zen
+module load openblas/0.3.24-gcc-8.4.0-4ei4hpg
+# suite-sparse@=5.13.0%gcc@=8.4.0~cuda~graphblas~openmp+pic build_system=generic arch=linux-centos7-zen
+module load suite-sparse/5.13.0-gcc-8.4.0-ivey23b
 # resolve@=develop%clang@=16.0.0-rocm5.6.0 cxxflags="--gcc-toolchain=/share/apps/gcc/8.4.0" ~cuda~ipo+klu+rocm amdgpu_target=gfx908 build_system=cmake build_type=Release dev_path=/people/ruth521/projects/resolve generator=make arch=linux-centos7-zen
 ## module load resolve/develop-clang-16.0.0-rocm5.6.0-6kaaut4
-
