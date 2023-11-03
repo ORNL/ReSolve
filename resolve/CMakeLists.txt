@@ -36,6 +36,7 @@ set(ReSolve_HEADER_INSTALL
     LinSolver.hpp
     LinSolverDirectCuSolverGLU.hpp
     LinSolverDirectCuSolverRf.hpp
+    LinSolverDirectRocSolverRf.hpp
     LinSolverDirectKLU.hpp
     LinSolverIterativeFGMRES.hpp
     RefactorizationSolver.hpp

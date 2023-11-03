@@ -19,10 +19,10 @@ if(@RESOLVE_USE_CUDA@)
    add_library(ReSolve::CUDA ALIAS ReSolve::resolve_backend_cuda)
 endif()
 if(@RESOLVE_USE_HIP@)
-  # TODO - FIX
+  # TODO - This is a bit heavy-handed, but otherwise you get gcc which is not ideal
+  #      - if(NOT CMAKE_C_COMPILER) wasn't working at top of file...
   set(CMAKE_C_COMPILER @CMAKE_C_COMPILER@)
   set(CMAKE_CXX_COMPILER @CMAKE_CXX_COMPILER@)
-  # TODO - FIX ^
   enable_language(HIP)
   check_language(HIP)
   find_package(hip REQUIRED)
@@ -31,8 +31,7 @@ if(@RESOLVE_USE_HIP@)
   find_package(rocsolver REQUIRED)
   # This is just an agly hack to make HIP build work
   get_target_property(hip_includes hip::device INTERFACE_INCLUDE_DIRECTORIES)
-  message(STATUS "HIP include directories: ${hip_includes}")
-  include_directories(${hip_includes})
+  target_include_directories(ReSolve::resolve_hip INTERFACE $<BUILD_INTERFACE:${hip_includes}>)
   add_library(ReSolve::HIP ALIAS ReSolve::resolve_backend_hip)
 endif()
 

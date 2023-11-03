@@ -85,12 +85,6 @@ if(RESOLVE_USE_HIP)
   enable_language(HIP)
   check_language(HIP)
   include(ReSolveFindHipLibraries)
-
-  # This is just an agly hack to make HIP build work
-  get_target_property(hip_includes hip::device INTERFACE_INCLUDE_DIRECTORIES)
-  message(STATUS "HIP include directories: ${hip_includes}")
-  # TODO - use targets properly
-  include_directories(${hip_includes})
 else()
   message(STATUS "Not using HIP")
 endif(RESOLVE_USE_HIP)
