@@ -13,7 +13,7 @@ target_link_libraries(resolve_hip INTERFACE
   hip::device
   roc::rocblas
   roc::rocsparse
-  roc::rocsolver
+  rocsolver
 )
 
 get_target_property(hip_includes hip::device INTERFACE_INCLUDE_DIRECTORIES)
