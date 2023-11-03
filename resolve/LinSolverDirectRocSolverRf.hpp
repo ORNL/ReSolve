@@ -66,6 +66,7 @@ namespace ReSolve
 
       rocsparse_mat_info  info_L_{nullptr};
       rocsparse_mat_info  info_U_{nullptr};
+      rocsparse_mat_info infoLU_;
 
       void* L_buffer_{nullptr};
       void* U_buffer_{nullptr};
