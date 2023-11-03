@@ -18,6 +18,17 @@
             }
         },
         {
+            "name": "rocm",
+            "displayName": "ROCM  build",
+            "description": "Base config to build with ROCM",
+            "binaryDir": "${sourceDir}/build",
+            "installDir": "${sourceDir}/install",
+            "generator": "Unix Makefiles",
+            "cacheVariables": {
+                "RESOLVE_USE_HIP": "ON"
+            }
+        },
+        {
             "name": "cpu",
             "displayName": "CPU only build",
             "description": "Base config to build without GPUs",
@@ -25,7 +36,7 @@
             "installDir": "${sourceDir}/install",
             "generator": "Unix Makefiles"
         },
-	      {
+	    {
             "name": "ascent",
             "inherits": "cuda",
             "displayName": "Ascent Build",
@@ -43,9 +54,18 @@
         },
         {
             "name": "incline",
-            "inherits": "cpu",
-            "displayName": "Incline CPU only Build",
-            "description": "Custom changes specific for Incline"
+            "inherits": "rocm",
+            "displayName": "Incline Build with rocm",
+            "description": "Custom changes specific for Incline",
+            "cacheVariables": {
+                "CMAKE_HIP_ARCHITECTURES" : "gfx908",
+                "CMAKE_BUILD_TYPE" : "Debug"
+            },
+            "environment": {
+                "CC" : "clang",
+                "CXX" : "clang++",
+                "FC" : "gfortran"
+            }
         }
 
     ]

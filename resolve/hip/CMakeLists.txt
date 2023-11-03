@@ -13,10 +13,10 @@ set(ReSolve_HIP_SRC
 )
 
 set(ReSolve_HIP_HEADER_INSTALL
-    # hipKernels.h
+    hipKernels.h
     hipVectorKernels.h
     HipMemory.hpp
-    # hip_check_errors.hpp
+    hip_check_errors.hpp
 )
 
 set_source_files_properties(${ReSolve_HIP_SRC} PROPERTIES LANGUAGE HIP)
@@ -27,11 +27,7 @@ set_source_files_properties(${ReSolve_HIP_SRC} PROPERTIES LANGUAGE HIP)
 add_library(resolve_backend_hip SHARED ${ReSolve_HIP_SRC})
 target_link_libraries(resolve_backend_hip PRIVATE resolve_logger)
 target_link_libraries(resolve_backend_hip PUBLIC resolve_hip)
-#target_include_directories(resolve_backend_hip PUBLIC ${hip_includes})
-target_include_directories(resolve_backend_hip INTERFACE
-    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
-    $<INSTALL_INTERFACE:include>
-)
 
 # install include headers
 install(FILES ${ReSolve_HIP_HEADER_INSTALL} DESTINATION include/resolve/hip)
+

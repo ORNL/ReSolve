@@ -17,8 +17,9 @@ set(Logger_HEADER_INSTALL
 # Build shared library ReSolve
 add_library(resolve_logger SHARED ${Logger_SRC})
 
-target_include_directories(resolve_logger INTERFACE
-    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
+target_include_directories(resolve_logger PUBLIC
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
+    $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
     $<INSTALL_INTERFACE:include>
 )
 
