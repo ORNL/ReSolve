@@ -13,6 +13,7 @@
 #include <resolve/LinSolverDirectRocSolverRf.hpp>
 #include <resolve/LinSolverIterativeFGMRES.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
+#include <roctracer/roctx.h>
 
 using namespace ReSolve::constants;
 
@@ -54,8 +55,10 @@ int main(int argc, char *argv[])
   ReSolve::LinSolverDirectRocSolverRf* Rf = new ReSolve::LinSolverDirectRocSolverRf(workspace_HIP);
   ReSolve::LinSolverIterativeFGMRES* FGMRES = new ReSolve::LinSolverIterativeFGMRES(matrix_handler, vector_handler, GS, "hip");
 
+  roctxRangePush(__FUNCTION__);
   for (int i = 0; i < numSystems; ++i)
   {
+    roctxRangePush("Matrix Read");
     index_type j = 4 + i * 2;
     fileId = argv[j];
     rhsId = argv[j + 1];
@@ -107,8 +110,11 @@ int main(int argc, char *argv[])
     std::cout<<"Finished reading the matrix and rhs, size: "<<A->getNumRows()<<" x "<<A->getNumColumns()<< ", nnz: "<< A->getNnz()<< ", symmetric? "<<A->symmetric()<< ", Expanded? "<<A->expanded()<<std::endl;
     mat_file.close();
     rhs_file.close();
+	 roctxRangePop();
+	 roctxMarkA("Matrix Read");
 
     //Now convert to CSR.
+    roctxRangePush("Convert to CSR");
     if (i < 2) { 
       matrix_handler->coo2csr(A_coo, A, "cpu");
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
@@ -117,6 +123,8 @@ int main(int argc, char *argv[])
       matrix_handler->coo2csr(A_coo,A, "hip");
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
     }
+	 roctxRangePop();
+	 roctxMarkA("Convert to CSR");
     std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnzExpanded()<<std::endl;
     //Now call direct solver
     if (i == 0) {
@@ -125,6 +133,7 @@ int main(int argc, char *argv[])
     int status;
     real_type norm_b;
     if (i < 2){
+		 roctxRangePush("KLU");
       KLU->setup(A);
       matrix_handler->setValuesChanged(true, "hip");
       status = KLU->analyze();
@@ -153,7 +162,10 @@ int main(int argc, char *argv[])
         GS->setup(A->getNumRows(), FGMRES->getRestart()); 
         FGMRES->setup(A); 
       }
+		roctxRangePop();
+		roctxMarkA("KLU");
     } else {
+		 roctxRangePush("RocSolver");
       //status =  KLU->refactorize();
       std::cout<<"Using ROCSOLVER RF"<<std::endl;
       status = Rf->refactorize();
@@ -185,9 +197,13 @@ int main(int argc, char *argv[])
                 << FGMRES->getFinalResidualNorm()/norm_b
                 << " iter: " << FGMRES->getNumIter() << "\n";
      }
+	  roctxRangePop();
+	  roctxMarkA("RocSolver");
      }
 
   } // for (int i = 0; i < numSystems; ++i)
+  roctxRangePop();
+  roctxMarkA(__FUNCTION__);
 
   delete A;
   delete A_coo;
