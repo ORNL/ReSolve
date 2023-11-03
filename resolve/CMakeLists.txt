@@ -136,6 +136,8 @@ target_include_directories(ReSolve INTERFACE
 )
 
 # TODO: Make this PRIVATE dependency (requires refactoring ReSolve code)
+target_include_directories(ReSolve SYSTEM PUBLIC ${HIP_PATH}/roctracer/include ${HIP_PATH}/include )
+target_link_libraries(ReSolve PUBLIC "-L${HIP_PATH}/roctracer/lib -lroctracer64" "-L${HIP_PATH}/roctracer/lib -lroctx64" )
 target_link_libraries(ReSolve PUBLIC ${ReSolve_Targets_List})
 target_link_libraries(ReSolve PRIVATE resolve_version)
 
