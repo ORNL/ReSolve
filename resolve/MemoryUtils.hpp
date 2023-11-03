@@ -2,6 +2,16 @@
 
 #include <resolve/resolve_defs.hpp>
 
+
+namespace ReSolve
+{
+  namespace memory
+  {
+    enum MemorySpace{HOST = 0, DEVICE};
+    enum MemoryDirection{HOST_TO_HOST = 0, HOST_TO_DEVICE, DEVICE_TO_HOST, DEVICE_TO_DEVICE};
+  }
+}
+
 namespace ReSolve
 {
   /**
@@ -44,6 +54,15 @@ namespace ReSolve
       
       template <typename I, typename T>
       int copyArrayHostToDevice(T* dst, const T* src, I n);
+
+      /// Implemented here as it is always needed
+      template <typename I, typename T>
+      int copyArrayHostToHost(T* dst, const T* src, I n)
+      {
+        size_t nelements = static_cast<size_t>(n);
+        memcpy(dst, src, nelements * sizeof(T));
+        return 0;
+      }
   };
 
 } // namespace ReSolve
@@ -55,7 +74,8 @@ namespace ReSolve
 #include <resolve/cuda/CudaMemory.hpp>
 using MemoryHandler = ReSolve::MemoryUtils<ReSolve::memory::Cuda>;
 #elif defined RESOLVE_USE_HIP
-#error HIP support requested, but not available! Probably a bug in CMake configuration.
+#include <resolve/hip/HipMemory.hpp>
+using MemoryHandler = ReSolve::MemoryUtils<ReSolve::memory::Hip>;
 #else
 #error Unrecognized device, probably bug in CMake configuration
 #endif

@@ -18,7 +18,12 @@ namespace ReSolve
     klu_free_numeric(&Numeric_, &Common_);
   }
 
-  int LinSolverDirectKLU::setup(matrix::Sparse* A)
+  int LinSolverDirectKLU::setup(matrix::Sparse* A,
+                                matrix::Sparse* /* L */,
+                                matrix::Sparse* /* U */,
+                                index_type*     /* P */,
+                                index_type*     /* Q */,    
+                                vector_type*  /* rhs */)
   {
     this->A_ = A;
     return 0;
@@ -35,7 +40,7 @@ namespace ReSolve
 
   int LinSolverDirectKLU::analyze() 
   {
-    Symbolic_ = klu_analyze(A_->getNumRows(), A_->getRowData("cpu"), A_->getColData("cpu"), &Common_) ;
+    Symbolic_ = klu_analyze(A_->getNumRows(), A_->getRowData(memory::HOST), A_->getColData(memory::HOST), &Common_) ;
 
     if (Symbolic_ == nullptr){
       printf("Symbolic_ factorization crashed withCommon_.status = %d \n", Common_.status);
@@ -46,7 +51,7 @@ namespace ReSolve
 
   int LinSolverDirectKLU::factorize() 
   {
-    Numeric_ = klu_factor(A_->getRowData("cpu"), A_->getColData("cpu"),A_->getValues("cpu"), Symbolic_, &Common_);
+    Numeric_ = klu_factor(A_->getRowData(memory::HOST), A_->getColData(memory::HOST), A_->getValues(memory::HOST), Symbolic_, &Common_);
 
     if (Numeric_ == nullptr){
       return 1;
@@ -56,7 +61,7 @@ namespace ReSolve
 
   int  LinSolverDirectKLU::refactorize() 
   {
-    int kluStatus = klu_refactor (A_->getRowData("cpu"), A_->getColData("cpu"), A_->getValues("cpu"), Symbolic_, Numeric_, &Common_);
+    int kluStatus = klu_refactor (A_->getRowData(memory::HOST), A_->getColData(memory::HOST), A_->getValues(memory::HOST), Symbolic_, Numeric_, &Common_);
 
     if (!kluStatus){
       //display error
@@ -71,10 +76,10 @@ namespace ReSolve
 
     //  std::memcpy(x, rhs, A->getNumRows() * sizeof(real_type));
 
-    x->update(rhs->getData("cpu"), "cpu", "cpu");
-    x->setDataUpdated("cpu");
+    x->update(rhs->getData(memory::HOST), memory::HOST, memory::HOST);
+    x->setDataUpdated(memory::HOST);
 
-    int kluStatus = klu_solve(Symbolic_, Numeric_, A_->getNumRows(), 1, x->getData("cpu"), &Common_);
+    int kluStatus = klu_solve(Symbolic_, Numeric_, A_->getNumRows(), 1, x->getData(memory::HOST), &Common_);
 
     if (!kluStatus){
       return 1;
@@ -90,16 +95,16 @@ namespace ReSolve
 
       L_ = new matrix::Csc(A_->getNumRows(), A_->getNumColumns(), nnzL);
       U_ = new matrix::Csc(A_->getNumRows(), A_->getNumColumns(), nnzU);
-      L_->allocateMatrixData("cpu");
-      U_->allocateMatrixData("cpu");
+      L_->allocateMatrixData(memory::HOST);
+      U_->allocateMatrixData(memory::HOST);
       int ok = klu_extract(Numeric_, 
                            Symbolic_, 
-                           L_->getColData("cpu"), 
-                           L_->getRowData("cpu"), 
-                           L_->getValues("cpu"), 
-                           U_->getColData("cpu"), 
-                           U_->getRowData("cpu"), 
-                           U_->getValues("cpu"), 
+                           L_->getColData(memory::HOST), 
+                           L_->getRowData(memory::HOST), 
+                           L_->getValues( memory::HOST), 
+                           U_->getColData(memory::HOST), 
+                           U_->getRowData(memory::HOST), 
+                           U_->getValues( memory::HOST), 
                            nullptr, 
                            nullptr, 
                            nullptr, 
@@ -109,8 +114,8 @@ namespace ReSolve
                            nullptr,
                            &Common_);
 
-      L_->setUpdated("cpu");
-      U_->setUpdated("cpu");
+      L_->setUpdated(memory::HOST);
+      U_->setUpdated(memory::HOST);
       (void) ok; // TODO: Check status in ok before setting `factors_extracted_`
       factors_extracted_ = true;
     }
@@ -125,16 +130,16 @@ namespace ReSolve
 
       L_ = new matrix::Csc(A_->getNumRows(), A_->getNumColumns(), nnzL);
       U_ = new matrix::Csc(A_->getNumRows(), A_->getNumColumns(), nnzU);
-      L_->allocateMatrixData("cpu");
-      U_->allocateMatrixData("cpu");
+      L_->allocateMatrixData(memory::HOST);
+      U_->allocateMatrixData(memory::HOST);
       int ok = klu_extract(Numeric_, 
                            Symbolic_, 
-                           L_->getColData("cpu"), 
-                           L_->getRowData("cpu"), 
-                           L_->getValues("cpu"), 
-                           U_->getColData("cpu"), 
-                           U_->getRowData("cpu"), 
-                           U_->getValues("cpu"), 
+                           L_->getColData(memory::HOST), 
+                           L_->getRowData(memory::HOST), 
+                           L_->getValues( memory::HOST), 
+                           U_->getColData(memory::HOST), 
+                           U_->getRowData(memory::HOST), 
+                           U_->getValues( memory::HOST), 
                            nullptr, 
                            nullptr, 
                            nullptr, 
@@ -144,8 +149,8 @@ namespace ReSolve
                            nullptr,
                            &Common_);
 
-      L_->setUpdated("cpu");
-      U_->setUpdated("cpu");
+      L_->setUpdated(memory::HOST);
+      U_->setUpdated(memory::HOST);
 
       (void) ok; // TODO: Check status in ok before setting `factors_extracted_`
       factors_extracted_ = true;
@@ -157,7 +162,8 @@ namespace ReSolve
   {
     if (Numeric_ != nullptr){
       P_ = new index_type[A_->getNumRows()];
-      std::memcpy(P_, Numeric_->Pnum, A_->getNumRows() * sizeof(index_type));
+      size_t nrows = static_cast<size_t>(A_->getNumRows());
+      std::memcpy(P_, Numeric_->Pnum, nrows * sizeof(index_type));
       return P_;
     } else {
       return nullptr;
@@ -169,7 +175,8 @@ namespace ReSolve
   {
     if (Numeric_ != nullptr){
       Q_ = new index_type[A_->getNumRows()];
-      std::memcpy(Q_, Symbolic_->Q, A_->getNumRows() * sizeof(index_type));
+      size_t nrows = static_cast<size_t>(A_->getNumRows());
+      std::memcpy(Q_, Symbolic_->Q, nrows * sizeof(index_type));
       return Q_;
     } else {
       return nullptr;

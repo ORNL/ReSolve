@@ -26,7 +26,12 @@ namespace ReSolve
       LinSolverDirectCuSolverRf();
       ~LinSolverDirectCuSolverRf();
       
-      int setup(matrix::Sparse* A, matrix::Sparse* L, matrix::Sparse* U, index_type* P, index_type* Q);
+      int setup(matrix::Sparse* A,
+                matrix::Sparse* L,
+                matrix::Sparse* U,
+                index_type*     P,
+                index_type*     Q,
+                vector_type* rhs = nullptr);
 
       void setAlgorithms(cusolverRfFactorization_t fact_alg,  cusolverRfTriangularSolve_t solve_alg);
       

@@ -42,11 +42,11 @@ namespace ReSolve {
       cusparseStatus_t status;
       LinAlgWorkspaceCUDA* workspaceCUDA = workspace_;
       cusparseDnVecDescr_t vecx = workspaceCUDA->getVecX();
-      cusparseCreateDnVec(&vecx, A->getNumRows(), vec_x->getData("cuda"), CUDA_R_64F);
+      cusparseCreateDnVec(&vecx, A->getNumRows(), vec_x->getData(memory::DEVICE), CUDA_R_64F);
 
 
       cusparseDnVecDescr_t vecAx = workspaceCUDA->getVecY();
-      cusparseCreateDnVec(&vecAx, A->getNumRows(), vec_result->getData("cuda"), CUDA_R_64F);
+      cusparseCreateDnVec(&vecAx, A->getNumRows(), vec_result->getData(memory::DEVICE), CUDA_R_64F);
 
       cusparseSpMatDescr_t matA = workspaceCUDA->getSpmvMatrixDescriptor();
 
@@ -57,9 +57,9 @@ namespace ReSolve {
                                    A->getNumRows(),
                                    A->getNumColumns(),
                                    A->getNnzExpanded(),
-                                   A->getRowData("cuda"),
-                                   A->getColData("cuda"),
-                                   A->getValues("cuda"), 
+                                   A->getRowData(memory::DEVICE),
+                                   A->getColData(memory::DEVICE),
+                                   A->getValues( memory::DEVICE), 
                                    CUSPARSE_INDEX_32I, 
                                    CUSPARSE_INDEX_32I,
                                    CUSPARSE_INDEX_BASE_ZERO,
@@ -105,7 +105,7 @@ namespace ReSolve {
       if (status)
         out::error() << "Matvec status: " << status 
                       << "Last error code: " << mem_.getLastDeviceError() << std::endl;
-      vec_result->setDataUpdated("cuda");
+      vec_result->setDataUpdated(memory::DEVICE);
 
       cusparseDestroyDnVec(vecx);
       cusparseDestroyDnVec(vecAx);
@@ -127,7 +127,7 @@ namespace ReSolve {
     index_type error_sum = 0;
     LinAlgWorkspaceCUDA* workspaceCUDA = (LinAlgWorkspaceCUDA*) workspace_;
 
-    A_csr->allocateMatrixData("cuda");
+    A_csr->allocateMatrixData(memory::DEVICE);
     index_type n = A_csc->getNumRows();
     index_type m = A_csc->getNumRows();
     index_type nnz = A_csc->getNnz();
@@ -137,12 +137,12 @@ namespace ReSolve {
                                                             n, 
                                                             m, 
                                                             nnz, 
-                                                            A_csc->getValues("cuda"), 
-                                                            A_csc->getColData("cuda"), 
-                                                            A_csc->getRowData("cuda"), 
-                                                            A_csr->getValues("cuda"), 
-                                                            A_csr->getRowData("cuda"),
-                                                            A_csr->getColData("cuda"), 
+                                                            A_csc->getValues( memory::DEVICE), 
+                                                            A_csc->getColData(memory::DEVICE), 
+                                                            A_csc->getRowData(memory::DEVICE), 
+                                                            A_csr->getValues( memory::DEVICE), 
+                                                            A_csr->getRowData(memory::DEVICE),
+                                                            A_csr->getColData(memory::DEVICE), 
                                                             CUDA_R_64F, 
                                                             CUSPARSE_ACTION_NUMERIC,
                                                             CUSPARSE_INDEX_BASE_ZERO, 
@@ -154,12 +154,12 @@ namespace ReSolve {
                                 n, 
                                 m, 
                                 nnz, 
-                                A_csc->getValues("cuda"), 
-                                A_csc->getColData("cuda"), 
-                                A_csc->getRowData("cuda"), 
-                                A_csr->getValues("cuda"), 
-                                A_csr->getRowData("cuda"),
-                                A_csr->getColData("cuda"), 
+                                A_csc->getValues( memory::DEVICE), 
+                                A_csc->getColData(memory::DEVICE), 
+                                A_csc->getRowData(memory::DEVICE), 
+                                A_csr->getValues( memory::DEVICE), 
+                                A_csr->getRowData(memory::DEVICE),
+                                A_csr->getColData(memory::DEVICE), 
                                 CUDA_R_64F,
                                 CUSPARSE_ACTION_NUMERIC,
                                 CUSPARSE_INDEX_BASE_ZERO,

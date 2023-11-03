@@ -47,8 +47,8 @@ namespace ReSolve {
 
   real_type VectorHandlerCpu::dot(vector::Vector* x, vector::Vector* y)
   { 
-    real_type* x_data = x->getData("cpu");
-    real_type* y_data = y->getData("cpu");
+    real_type* x_data = x->getData(memory::HOST);
+    real_type* y_data = y->getData(memory::HOST);
     real_type sum = 0.0;
     real_type c = 0.0;
     // real_type t, y;
@@ -72,7 +72,7 @@ namespace ReSolve {
    */
   void VectorHandlerCpu::scal(const real_type* alpha, vector::Vector* x)
   {
-    real_type* x_data = x->getData("cpu");
+    real_type* x_data = x->getData(memory::HOST);
 
     for (int i = 0; i < x->getSize(); ++i){
       x_data[i] *= (*alpha);
@@ -91,8 +91,8 @@ namespace ReSolve {
   void VectorHandlerCpu::axpy(const  real_type* alpha, vector::Vector* x, vector::Vector* y)
   {
     //AXPY:  y = alpha * x + y
-    real_type* x_data = x->getData("cpu");
-    real_type* y_data = y->getData("cpu");
+    real_type* x_data = x->getData(memory::HOST);
+    real_type* y_data = y->getData(memory::HOST);
     for (int i = 0; i < x->getSize(); ++i) {
       y_data[i] = (*alpha) * x_data[i] + y_data[i];
     }

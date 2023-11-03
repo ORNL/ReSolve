@@ -12,7 +12,21 @@
             "description": "Base config to build with CUDA",
             "binaryDir": "${sourceDir}/build",
             "installDir": "${sourceDir}/install",
-            "generator": "Unix Makefiles"
+            "generator": "Unix Makefiles",
+            "cacheVariables": {
+                "RESOLVE_USE_CUDA": "ON"
+            }
+        },
+        {
+            "name": "rocm",
+            "displayName": "ROCM  build",
+            "description": "Base config to build with ROCM",
+            "binaryDir": "${sourceDir}/build",
+            "installDir": "${sourceDir}/install",
+            "generator": "Unix Makefiles",
+            "cacheVariables": {
+                "RESOLVE_USE_HIP": "ON"
+            }
         },
         {
             "name": "cpu",
@@ -20,13 +34,9 @@
             "description": "Base config to build without GPUs",
             "binaryDir": "${sourceDir}/build",
             "installDir": "${sourceDir}/install",
-            "generator": "Unix Makefiles",
-            "cacheVariables": {
-                "RESOLVE_USE_CUDA": "OFF",
-                "RESOLVE_USE_GPU": "OFF"
-            }
+            "generator": "Unix Makefiles"
         },
-	      {
+	    {
             "name": "ascent",
             "inherits": "cuda",
             "displayName": "Ascent Build",
@@ -44,9 +54,18 @@
         },
         {
             "name": "incline",
-            "inherits": "cpu",
-            "displayName": "Incline CPU only Build",
-            "description": "Custom changes specific for Incline"
+            "inherits": "rocm",
+            "displayName": "Incline Build with rocm",
+            "description": "Custom changes specific for Incline",
+            "cacheVariables": {
+                "CMAKE_HIP_ARCHITECTURES" : "gfx908",
+                "CMAKE_BUILD_TYPE" : "Debug"
+            },
+            "environment": {
+                "CC" : "clang",
+                "CXX" : "clang++",
+                "FC" : "gfortran"
+            }
         }
 
     ]

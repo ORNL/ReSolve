@@ -22,6 +22,11 @@ set(Matrix_CUDASDK_SRC
     MatrixHandlerCuda.cpp
 )
 
+# and on HIP
+set(Matrix_ROCM_SRC 
+  MatrixHandlerHip.cpp
+)
+
 # Header files to be installed
 set(Matrix_HEADER_INSTALL
     io.hpp
@@ -37,6 +42,10 @@ if(RESOLVE_USE_CUDA)
   set(Matrix_SRC ${Matrix_SRC} ${Matrix_CUDASDK_SRC})
 endif()
 
+if(RESOLVE_USE_HIP)
+  set(Matrix_SRC ${Matrix_SRC} ${Matrix_ROCM_SRC})
+endif()
+
 
 # Build shared library ReSolve::matrix
 add_library(resolve_matrix SHARED ${Matrix_SRC})
@@ -45,6 +54,10 @@ target_link_libraries(resolve_matrix PRIVATE resolve_logger resolve_vector)
 # Link to CUDA ReSolve backend if CUDA is support enabled
 if (RESOLVE_USE_CUDA)
   target_link_libraries(resolve_matrix PUBLIC resolve_backend_cuda)
+endif()
+
+if (RESOLVE_USE_HIP)
+  target_link_libraries(resolve_matrix PUBLIC resolve_backend_hip)
 endif()
 
 # Link to dummy device backend if GPU support is not enabled

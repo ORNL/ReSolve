@@ -31,31 +31,31 @@ namespace ReSolve { namespace matrix {
       void setExpanded(bool expanded);
       void setNnzExpanded(index_type nnz_expanded_new);
       void setNnz(index_type nnz_new); // for resetting when removing duplicates
-      index_type setUpdated(std::string what);
+      index_type setUpdated(memory::MemorySpace what);
 
-      virtual index_type* getRowData(std::string memspace) = 0;
-      virtual index_type* getColData(std::string memspace) = 0;
-      virtual real_type*  getValues(std::string memspace)  = 0;
+      virtual index_type* getRowData(memory::MemorySpace memspace) = 0;
+      virtual index_type* getColData(memory::MemorySpace memspace) = 0;
+      virtual real_type*  getValues( memory::MemorySpace memspace) = 0;
 
-      virtual int updateData(index_type* row_data, index_type* col_data, real_type* val_data, std::string memspaceIn, std::string memspaceOut) = 0;
-      virtual int updateData(index_type* row_data, index_type* col_data, real_type* val_data, index_type new_nnz, std::string memspaceIn, std::string memspaceOut) = 0;
+      virtual int updateData(index_type* row_data, index_type* col_data, real_type* val_data, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut) = 0;
+      virtual int updateData(index_type* row_data, index_type* col_data, real_type* val_data, index_type new_nnz, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut) = 0;
 
-      virtual int allocateMatrixData(std::string memspace) = 0;
-      int setMatrixData(index_type* row_data, index_type* col_data, real_type* val_data, std::string memspace);
+      virtual int allocateMatrixData(memory::MemorySpace memspace) = 0;
+      int setMatrixData(index_type* row_data, index_type* col_data, real_type* val_data, memory::MemorySpace memspace);
 
-      int destroyMatrixData(std::string memspace);
+      int destroyMatrixData(memory::MemorySpace memspace);
 
       virtual void print() = 0;
 
-      virtual int copyData(std::string memspaceOut) = 0;
+      virtual int copyData(memory::MemorySpace memspaceOut) = 0;
 
 
       //update Values just updates values; it allocates if necessary.
       //values have the same dimensions between different formats 
-      virtual int updateValues(real_type* new_vals, std::string memspaceIn, std::string memspaceOut);
+      virtual int updateValues(real_type* new_vals, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut);
       
       //set new values just sets the pointer, use caution.   
-      virtual int setNewValues(real_type* new_vals, std::string memspace);
+      virtual int setNewValues(real_type* new_vals, memory::MemorySpace memspace);
     
     protected:
       //size

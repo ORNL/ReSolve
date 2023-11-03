@@ -32,7 +32,12 @@ namespace ReSolve
       int refactorize();
       int solve(vector_type* rhs, vector_type* x);
 
-      int setup(matrix::Sparse* A, matrix::Sparse* L, matrix::Sparse* U, index_type* P, index_type* Q);
+      int setup(matrix::Sparse* A,
+                matrix::Sparse* L,
+                matrix::Sparse* U,
+                index_type*     P,
+                index_type*     Q,
+                vector_type* rhs = nullptr);
     
     private:
       void addFactors(matrix::Sparse* L, matrix::Sparse* U); //create L+U from sepeate L, U factors

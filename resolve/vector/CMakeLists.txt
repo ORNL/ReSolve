@@ -18,6 +18,13 @@ set(Vector_CUDASDK_SRC
     VectorHandlerCuda.cpp
 )
 
+#and hip
+
+set(Vector_ROCM_SRC 
+  VectorHandlerHip.cpp
+)
+
+
 # Header files to be installed
 set(Vector_HEADER_INSTALL
     Vector.hpp
@@ -30,12 +37,21 @@ if(RESOLVE_USE_CUDA)
   set(Vector_SRC ${Vector_SRC} ${Vector_CUDASDK_SRC})
 endif()
 
+# and hip
+if(RESOLVE_USE_HIP)
+  set(Vector_SRC ${Vector_SRC} ${Vector_ROCM_SRC})
+endif()
+
 add_library(resolve_vector SHARED ${Vector_SRC})
 target_link_libraries(resolve_vector PRIVATE resolve_logger)
 
 # Link to ReSolve CUDA backend if CUDA is enabled
 if (RESOLVE_USE_CUDA)
   target_link_libraries(resolve_vector PUBLIC resolve_backend_cuda)
+endif()
+
+if (RESOLVE_USE_HIP)
+  target_link_libraries(resolve_vector PUBLIC resolve_backend_hip)
 endif()
 
 # If no GPU is enabled link to dummy device backend

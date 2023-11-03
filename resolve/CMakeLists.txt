@@ -14,14 +14,21 @@ set(ReSolve_SRC
     LinSolverDirectKLU.cpp
 )
 
+# Temporary until there is CPU-only option for FGMRES
+set(ReSolve_GPU_SRC
+    GramSchmidt.cpp
+    LinSolverIterativeFGMRES.cpp
+)
+
 # C++ code that links to CUDA SDK libraries
 set(ReSolve_CUDASDK_SRC
-    LinSolverIterativeFGMRES.cpp
-    GramSchmidt.cpp
     LinSolverDirectCuSolverGLU.cpp
     LinSolverDirectCuSolverRf.cpp
 )
-
+# HIP files
+set(ReSolve_ROCM_SRC
+  LinSolverDirectRocSolverRf.cpp
+)
 # Header files to be installed
 set(ReSolve_HEADER_INSTALL
     Common.hpp
@@ -29,6 +36,7 @@ set(ReSolve_HEADER_INSTALL
     LinSolver.hpp
     LinSolverDirectCuSolverGLU.hpp
     LinSolverDirectCuSolverRf.hpp
+    LinSolverDirectRocSolverRf.hpp
     LinSolverDirectKLU.hpp
     LinSolverIterativeFGMRES.hpp
     RefactorizationSolver.hpp
@@ -37,17 +45,6 @@ set(ReSolve_HEADER_INSTALL
     MemoryUtils.hpp
 )
 
-# If GPU support is not enabled, add dummy device backend
-if(NOT RESOLVE_USE_GPU)
-    add_subdirectory(cpu)
-endif()
-
-# If CUDA support is enabled, create CUDA backend
-# (this should really be CUDA _API_ backend, separate backend will be needed for CUDA SDK)
-if(RESOLVE_USE_CUDA)
-    add_subdirectory(cuda)
-endif()
-
 # Now, build workspaces
 add_subdirectory(workspace)
 
@@ -55,18 +52,12 @@ add_subdirectory(workspace)
 add_subdirectory(vector)
 add_subdirectory(matrix)
 
-
 # Build shared library ReSolve
 add_library(resolve_tpl INTERFACE)
 
 if(RESOLVE_USE_KLU)
-    target_link_libraries(resolve_tpl INTERFACE KLU)    
+  target_link_libraries(resolve_tpl INTERFACE KLU)    
 endif(RESOLVE_USE_KLU)
-
-if(RESOLVE_USE_CUDA)
-    target_link_libraries(resolve_tpl INTERFACE resolve_cuda)
-endif(RESOLVE_USE_CUDA)
-
 
 set(ReSolve_Targets_List
     resolve_matrix
@@ -76,15 +67,31 @@ set(ReSolve_Targets_List
     resolve_workspace
 )
 
+# Temporary until there is CPU-only option for FGMRES
+if(RESOLVE_USE_GPU)
+  set(ReSolve_SRC ${ReSolve_SRC} ${ReSolve_GPU_SRC})
+endif()
+
 # If CUDA support is enabled add CUDA SDK specific code and dependencies
 if(RESOLVE_USE_CUDA)
+  add_subdirectory(cuda)
+  target_link_libraries(resolve_tpl INTERFACE resolve_cuda)
   set(ReSolve_SRC ${ReSolve_SRC} ${ReSolve_CUDASDK_SRC})
   set(ReSolve_Targets_List ${ReSolve_Targets_List} resolve_backend_cuda)
 endif()
 
+# If HIP support is enabled add HIP SDK specific code and dependencies
+if(RESOLVE_USE_HIP)
+  add_subdirectory(hip)
+  target_link_libraries(resolve_tpl INTERFACE resolve_hip)
+  set(ReSolve_SRC ${ReSolve_SRC} ${ReSolve_ROCM_SRC})
+  set(ReSolve_Targets_List ${ReSolve_Targets_List} resolve_backend_hip)
+endif()
+
 # If no GPU support is enabled, link to dummy device backend
 if(NOT RESOLVE_USE_GPU)
-    set(ReSolve_Targets_List ${ReSolve_Targets_List} resolve_backend_cpu)
+  add_subdirectory(cpu)
+  set(ReSolve_Targets_List ${ReSolve_Targets_List} resolve_backend_cpu)
 endif()
 
 # Set installable targets

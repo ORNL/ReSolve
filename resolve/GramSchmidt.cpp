@@ -36,10 +36,10 @@ namespace ReSolve
         delete h_L_;    
         delete h_rv_;    
 
-        vec_rv_->setData(nullptr, "cuda");
-        vec_rv_->setData(nullptr, "cpu");
-        vec_Hcolumn_->setData(nullptr, "cuda");
-        vec_Hcolumn_->setData(nullptr, "cpu");
+        vec_rv_->setData(nullptr, memory::DEVICE);
+        vec_rv_->setData(nullptr, memory::HOST);
+        vec_Hcolumn_->setData(nullptr, memory::DEVICE);
+        vec_Hcolumn_->setData(nullptr, memory::HOST);
 
         delete [] vec_rv_;    
         delete [] vec_Hcolumn_;;    
@@ -47,18 +47,18 @@ namespace ReSolve
 
       if(variant_ == cgs2) {
         delete h_aux_;
-        vec_Hcolumn_->setData(nullptr, "cuda");
-        //        vec_Hcolumn_->setData(nullptr, "cpu");
+        vec_Hcolumn_->setData(nullptr, memory::DEVICE);
+        //        vec_Hcolumn_->setData(nullptr, memory::HOST);
         delete [] vec_Hcolumn_;    
       }    
       if(variant_ == mgs_pm) {
         delete h_aux_;
       }
 
-      vec_v_->setData(nullptr, "cuda");
-      vec_v_->setData(nullptr, "cpu");
-      vec_w_->setData(nullptr, "cuda");
-      vec_w_->setData(nullptr, "cpu");
+      vec_v_->setData(nullptr, memory::DEVICE);
+      vec_v_->setData(nullptr, memory::HOST);
+      vec_w_->setData(nullptr, memory::DEVICE);
+      vec_w_->setData(nullptr, memory::HOST);
 
       delete [] vec_w_;
       delete [] vec_v_;   
@@ -103,15 +103,15 @@ namespace ReSolve
         h_rv_ = new real_type[num_vecs_ + 1];
 
         vec_rv_ = new vector_type(num_vecs_ + 1, 2);
-        vec_rv_->allocate("cuda");      
+        vec_rv_->allocate(memory::DEVICE);      
 
         vec_Hcolumn_ = new vector_type(num_vecs_ + 1);
-        vec_Hcolumn_->allocate("cuda");      
+        vec_Hcolumn_->allocate(memory::DEVICE);      
       }
       if(variant_ == cgs2) {
         h_aux_ = new real_type[num_vecs_ + 1];
         vec_Hcolumn_ = new vector_type(num_vecs_ + 1);
-        vec_Hcolumn_->allocate("cuda");      
+        vec_Hcolumn_->allocate(memory::DEVICE);      
       }
 
       if(variant_ == mgs_pm) {
@@ -127,7 +127,7 @@ namespace ReSolve
   {
     using namespace constants;
 
-    if (memspace == "cuda") { // or hip
+    if ((memspace == "cuda") || (memspace == "hip")) { // or hip
 
       double t;
       double s;
@@ -135,23 +135,23 @@ namespace ReSolve
       switch (variant_){
         case mgs: 
 
-          vec_w_->setData(V->getVectorData(i + 1, "cuda"), "cuda");
+          vec_w_->setData(V->getVectorData(i + 1, memory::DEVICE), memory::DEVICE);
           for(int j = 0; j <= i; ++j) {
             t = 0.0;
-            vec_v_->setData( V->getVectorData(j, "cuda"), "cuda");
-            t = vector_handler_->dot(vec_v_, vec_w_, "cuda");  
+            vec_v_->setData( V->getVectorData(j, memory::DEVICE), memory::DEVICE);
+            t = vector_handler_->dot(vec_v_, vec_w_, memspace);  
             H[ idxmap(i, j, num_vecs_ + 1) ] = t; 
             t *= -1.0;
-            vector_handler_->axpy(&t, vec_v_, vec_w_, "cuda");  
+            vector_handler_->axpy(&t, vec_v_, vec_w_, memspace);  
           }
           t = 0.0;
-          t = vector_handler_->dot(vec_w_, vec_w_, "cuda");  
+          t = vector_handler_->dot(vec_w_, vec_w_, memspace);
           //set the last entry in Hessenberg matrix
           t = sqrt(t);
           H[ idxmap(i, i + 1, num_vecs_ + 1) ] = t; 
           if(fabs(t) > EPSILON) {
             t = 1.0/t;
-            vector_handler_->scal(&t, vec_w_, "cuda");  
+            vector_handler_->scal(&t, vec_w_, memspace);  
           } else {
             assert(0 && "Gram-Schmidt failed, vector with ZERO norm\n");
             return -1;
@@ -159,26 +159,25 @@ namespace ReSolve
           break;
         case cgs2:
 
-          vec_v_->setData(V->getVectorData(i + 1, "cuda"), "cuda");
-          vector_handler_->gemv("T", n, i + 1, &ONE, &ZERO, V,  vec_v_, vec_Hcolumn_,"cuda");
-
+          vec_v_->setData(V->getVectorData(i + 1, memory::DEVICE), memory::DEVICE);
+          vector_handler_->gemv("T", n, i + 1, &ONE, &ZERO, V,  vec_v_, vec_Hcolumn_, memspace);
           // V(:,i+1) = V(:, i+1) -  V(:,1:i)*Hcol
-          vector_handler_->gemv("N", n, i + 1, &ONE, &MINUSONE, V, vec_Hcolumn_, vec_v_, "cuda" );  
+          vector_handler_->gemv("N", n, i + 1, &ONE, &MINUSONE, V, vec_Hcolumn_, vec_v_, memspace );  
 
           // copy H_col to aux, we will need it later
-          vec_Hcolumn_->setDataUpdated("cuda");
+          vec_Hcolumn_->setDataUpdated(memory::DEVICE);
           vec_Hcolumn_->setCurrentSize(i + 1);
-          vec_Hcolumn_->deepCopyVectorData(h_aux_, 0, "cpu");
+          vec_Hcolumn_->deepCopyVectorData(h_aux_, 0, memory::HOST);
 
           //Hcol = V(:,1:i)^T*V(:,i+1);
-          vector_handler_->gemv("T", n, i + 1, &ONE, &ZERO, V,  vec_v_, vec_Hcolumn_,"cuda");
+          vector_handler_->gemv("T", n, i + 1, &ONE, &ZERO, V,  vec_v_, vec_Hcolumn_, memspace);
 
           // V(:,i+1) = V(:, i+1) -  V(:,1:i)*Hcol
-          vector_handler_->gemv("N", n, i + 1, &ONE, &MINUSONE, V, vec_Hcolumn_, vec_v_, "cuda" );  
+          vector_handler_->gemv("N", n, i + 1, &ONE, &MINUSONE, V, vec_Hcolumn_, vec_v_, memspace );  
 
           // copy H_col to H
-          vec_Hcolumn_->setDataUpdated("cuda");
-          vec_Hcolumn_->deepCopyVectorData(&H[ idxmap(i, 0, num_vecs_ + 1)], 0, "cpu");
+          vec_Hcolumn_->setDataUpdated(memory::DEVICE);
+          vec_Hcolumn_->deepCopyVectorData(&H[ idxmap(i, 0, num_vecs_ + 1)], 0, memory::HOST);
 
           // add both pieces together (unstable otherwise, careful here!!)
           t = 0.0;
@@ -186,13 +185,13 @@ namespace ReSolve
             H[ idxmap(i, j, num_vecs_ + 1)] += h_aux_[j]; 
           }
 
-          t = vector_handler_->dot(vec_v_, vec_v_, "cuda");  
+          t = vector_handler_->dot(vec_v_, vec_v_, memspace);  
           //set the last entry in Hessenberg matrix
           t = sqrt(t);
           H[ idxmap(i, i + 1, num_vecs_ + 1) ] = t; 
           if(fabs(t) > EPSILON) {
             t = 1.0/t;
-            vector_handler_->scal(&t, vec_v_, "cuda");  
+            vector_handler_->scal(&t, vec_v_, memspace);  
           } else {
             assert(0 && "Gram-Schmidt failed, vector with ZERO norm\n");
             return -1;
@@ -201,16 +200,16 @@ namespace ReSolve
           break;
         case mgs_two_synch:
           // V[1:i]^T[V[i] w]
-          vec_v_->setData(V->getVectorData(i, "cuda"), "cuda");
-          vec_w_->setData(V->getVectorData(i + 1, "cuda"), "cuda");
+          vec_v_->setData(V->getVectorData(i, memory::DEVICE), memory::DEVICE);
+          vec_w_->setData(V->getVectorData(i + 1, memory::DEVICE), memory::DEVICE);
           vec_rv_->setCurrentSize(i + 1);
 
-          vector_handler_->massDot2Vec(n, V, i, vec_v_, vec_rv_, "cuda");
-          vec_rv_->setDataUpdated("cuda");
-          vec_rv_->copyData("cuda", "cpu");
+          vector_handler_->massDot2Vec(n, V, i, vec_v_, vec_rv_, memspace);
+          vec_rv_->setDataUpdated(memory::DEVICE);
+          vec_rv_->copyData(memory::DEVICE, memory::HOST);
 
-          vec_rv_->deepCopyVectorData(&h_L_[idxmap(i, 0, num_vecs_ + 1)], 0, "cpu");
-          h_rv_ = vec_rv_->getVectorData(1, "cpu");
+          vec_rv_->deepCopyVectorData(&h_L_[idxmap(i, 0, num_vecs_ + 1)], 0, memory::HOST);
+          h_rv_ = vec_rv_->getVectorData(1, memory::HOST);
 
           for(int j=0; j<=i; ++j) {
             H[ idxmap(i, j, num_vecs_ + 1) ] = 0.0;
@@ -225,17 +224,17 @@ namespace ReSolve
             H[ idxmap(i, j, num_vecs_ + 1) ] -= s; 
           }   // for j
           vec_Hcolumn_->setCurrentSize(i + 1);
-          vec_Hcolumn_->update(&H[ idxmap(i, 0, num_vecs_ + 1)], "cpu", "cuda"); 
-          vector_handler_->massAxpy(n, vec_Hcolumn_, i, V, vec_w_, "cuda");
+          vec_Hcolumn_->update(&H[ idxmap(i, 0, num_vecs_ + 1)], memory::HOST, memory::DEVICE); 
+          vector_handler_->massAxpy(n, vec_Hcolumn_, i, V, vec_w_, memspace);
 
           // normalize (second synch)
-          t = vector_handler_->dot(vec_w_, vec_w_, "cuda");  
+          t = vector_handler_->dot(vec_w_, vec_w_, memspace);  
           //set the last entry in Hessenberg matrix
           t = sqrt(t);
           H[ idxmap(i, i + 1, num_vecs_ + 1)] = t;    
           if(fabs(t) > EPSILON) {
             t = 1.0 / t;
-            vector_handler_->scal(&t, vec_w_, "cuda");  
+            vector_handler_->scal(&t, vec_w_, memspace);  
           } else {
             assert(0 && "Iterative refinement failed, Krylov vector with ZERO norm\n");
             return -1;
@@ -243,16 +242,16 @@ namespace ReSolve
           return 0;
           break;
         case mgs_pm:
-          vec_v_->setData(V->getVectorData(i, "cuda"), "cuda");
-          vec_w_->setData(V->getVectorData(i + 1, "cuda"), "cuda");
+          vec_v_->setData(V->getVectorData(i, memory::DEVICE), memory::DEVICE);
+          vec_w_->setData(V->getVectorData(i + 1, memory::DEVICE), memory::DEVICE);
           vec_rv_->setCurrentSize(i + 1);
 
-          vector_handler_->massDot2Vec(n, V, i, vec_v_, vec_rv_, "cuda");
-          vec_rv_->setDataUpdated("cuda");
-          vec_rv_->copyData("cuda", "cpu");
+          vector_handler_->massDot2Vec(n, V, i, vec_v_, vec_rv_, memspace);
+          vec_rv_->setDataUpdated(memory::DEVICE);
+          vec_rv_->copyData(memory::DEVICE, memory::HOST);
 
-          vec_rv_->deepCopyVectorData(&h_L_[idxmap(i, 0, num_vecs_ + 1)], 0, "cpu");
-          h_rv_ = vec_rv_->getVectorData(1, "cpu");
+          vec_rv_->deepCopyVectorData(&h_L_[idxmap(i, 0, num_vecs_ + 1)], 0, memory::HOST);
+          h_rv_ = vec_rv_->getVectorData(1, memory::HOST);
 
           for(int j = 0; j <= i; ++j) {
             H[ idxmap(i, j, num_vecs_ + 1) ] = 0.0;
@@ -295,17 +294,17 @@ namespace ReSolve
           }
 
           vec_Hcolumn_->setCurrentSize(i + 1);
-          vec_Hcolumn_->update(&H[ idxmap(i, 0, num_vecs_ + 1)], "cpu", "cuda"); 
+          vec_Hcolumn_->update(&H[ idxmap(i, 0, num_vecs_ + 1)], memory::HOST, memory::DEVICE); 
 
-          vector_handler_->massAxpy(n, vec_Hcolumn_, i, V,  vec_w_, "cuda");
+          vector_handler_->massAxpy(n, vec_Hcolumn_, i, V,  vec_w_, memspace);
           // normalize (second synch)
-          t = vector_handler_->dot(vec_w_, vec_w_, "cuda");  
+          t = vector_handler_->dot(vec_w_, vec_w_, memspace);  
           //set the last entry in Hessenberg matrix
           t = sqrt(t);
           H[ idxmap(i, i + 1, num_vecs_ + 1) ] = t;    
           if(fabs(t) > EPSILON) {
             t = 1.0 / t;
-            vector_handler_->scal(&t, vec_w_, "cuda");  
+            vector_handler_->scal(&t, vec_w_, memspace);  
           } else {
             assert(0 && "Iterative refinement failed, Krylov vector with ZERO norm\n");
             return -1;

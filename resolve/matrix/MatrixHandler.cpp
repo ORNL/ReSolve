@@ -13,6 +13,9 @@
 #ifdef RESOLVE_USE_CUDA
 #include "MatrixHandlerCuda.hpp"
 #endif
+#ifdef RESOLVE_USE_HIP
+#include "MatrixHandlerHip.hpp"
+#endif
 
 namespace ReSolve {
   // Create a shortcut name for Logger static class
@@ -41,6 +44,7 @@ namespace ReSolve {
   {
     if (isCpuEnabled_)  delete cpuImpl_;
     if (isCudaEnabled_) delete cudaImpl_;
+    if (isHipEnabled_) delete hipImpl_;
   }
 
   /**
@@ -74,12 +78,31 @@ namespace ReSolve {
   }
 #endif
 
+#ifdef RESOLVE_USE_HIP
+  /**
+   * @brief Constructor taking pointer to the CUDA workspace as its parameter.
+   * 
+   * @post A CPU implementation instance is created because it is cheap and
+   * it does not require a workspace.
+   * 
+   * @post A HIP implementation instance is created with supplied workspace.
+   */
+  MatrixHandler::MatrixHandler(LinAlgWorkspaceHIP* new_workspace)
+  {
+    cpuImpl_  = new MatrixHandlerCpu();
+    hipImpl_ = new MatrixHandlerHip(new_workspace);
+    isCpuEnabled_  = true;
+    isHipEnabled_ = true;
+  }
+#endif
   void MatrixHandler::setValuesChanged(bool isValuesChanged, std::string memspace)
   {
     if (memspace == "cpu") {
       cpuImpl_->setValuesChanged(isValuesChanged);
     } else if (memspace == "cuda") {
       cudaImpl_->setValuesChanged(isValuesChanged);
+    } else if (memspace == "hip") {
+      hipImpl_->setValuesChanged(isValuesChanged);
     } else {
       out::error() << "Unsupported device " << memspace << "\n";
     }
@@ -101,9 +124,9 @@ namespace ReSolve {
 
     index_type* nnz_counts =  new index_type[n];
     std::fill_n(nnz_counts, n, 0);
-    index_type* coo_rows = A_coo->getRowData("cpu");
-    index_type* coo_cols = A_coo->getColData("cpu");
-    real_type* coo_vals = A_coo->getValues("cpu");
+    index_type* coo_rows = A_coo->getRowData(memory::HOST);
+    index_type* coo_cols = A_coo->getColData(memory::HOST);
+    real_type* coo_vals  = A_coo->getValues( memory::HOST);
 
     index_type* diag_control = new index_type[n]; //for DEDUPLICATION of the diagonal
     std::fill_n(diag_control, n, 0);
@@ -226,10 +249,12 @@ namespace ReSolve {
 #endif
     A_csr->setNnz(nnz_no_duplicates);
     if (memspace == "cpu"){
-      A_csr->updateData(csr_ia, csr_ja, csr_a, "cpu", "cpu");
+      A_csr->updateData(csr_ia, csr_ja, csr_a, memory::HOST, memory::HOST);
     } else {
       if (memspace == "cuda"){      
-        A_csr->updateData(csr_ia, csr_ja, csr_a, "cpu", "cuda");
+        A_csr->updateData(csr_ia, csr_ja, csr_a, memory::HOST, memory::DEVICE);
+      } else if (memspace == "hip"){      
+        A_csr->updateData(csr_ia, csr_ja, csr_a, memory::HOST, memory::DEVICE);
       } else {
         //display error
       }
@@ -269,6 +294,8 @@ namespace ReSolve {
       return cudaImpl_->matvec(A, vec_x, vec_result, alpha, beta, matrixFormat);
     } else if (memspace == "cpu") {
         return cpuImpl_->matvec(A, vec_x, vec_result, alpha, beta, matrixFormat);
+    } else if (memspace == "hip") {
+        return hipImpl_->matvec(A, vec_x, vec_result, alpha, beta, matrixFormat);
     } else {
         out::error() << "Support for device " << memspace << " not implemented (yet)" << std::endl;
         return 1;
@@ -280,6 +307,8 @@ namespace ReSolve {
   {
     if (memspace == "cuda") { 
       return cudaImpl_->csc2csr(A_csc, A_csr);
+    } else if (memspace == "hip") {
+      return hipImpl_->csc2csr(A_csc, A_csr);
     } else if (memspace == "cpu") { 
       out::warning() << "Using untested csc2csr on CPU ..." << std::endl;
       return cpuImpl_->csc2csr(A_csc, A_csr);

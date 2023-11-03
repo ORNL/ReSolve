@@ -19,10 +19,5 @@ set(ReSolve_CPU_HEADER_INSTALL
 add_library(resolve_backend_cpu SHARED ${ReSolve_CPU_SRC})
 target_link_libraries(resolve_backend_cpu PRIVATE resolve_logger)
 
-target_include_directories(resolve_backend_cpu INTERFACE
-    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
-    $<INSTALL_INTERFACE:include>
-)
-
 # install include headers
 install(FILES ${ReSolve_CPU_HEADER_INSTALL} DESTINATION include/resolve/cpu)

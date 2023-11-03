@@ -53,7 +53,7 @@ namespace ReSolve { namespace io {
       coo_vals[i] = c;
       i++;
     }
-    A->setMatrixData(coo_rows, coo_cols, coo_vals, "cpu");
+    A->setMatrixData(coo_rows, coo_cols, coo_vals, memory::HOST);
     return A;
   }
 
@@ -116,9 +116,9 @@ namespace ReSolve { namespace io {
     }
     A->setNnz(nnz);
     //create coo arrays
-    index_type* coo_rows = A->getRowData("cpu");
-    index_type* coo_cols = A->getColData("cpu");
-    real_type* coo_vals = A->getValues("cpu");
+    index_type* coo_rows = A->getRowData(memory::HOST);
+    index_type* coo_cols = A->getColData(memory::HOST);
+    real_type* coo_vals  = A->getValues( memory::HOST);
     i = 0;
     index_type a, b;
     real_type c;
@@ -171,7 +171,7 @@ namespace ReSolve { namespace io {
 
   int writeVectorToFile(vector_type* vec_x, std::ostream& file_out)
   {
-    real_type* x_data = vec_x->getData("cpu");
+    real_type* x_data = vec_x->getData(memory::HOST);
     // std::ofstream file_out (filename, std::ofstream::out);
     file_out << "%%MatrixMarket matrix array real general \n";
     file_out << "% ID: XXX \n";

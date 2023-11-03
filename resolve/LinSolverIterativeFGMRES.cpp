@@ -10,8 +10,9 @@ namespace ReSolve
 {
   using out = io::Logger;
 
-  LinSolverIterativeFGMRES::LinSolverIterativeFGMRES()
+  LinSolverIterativeFGMRES::LinSolverIterativeFGMRES(std::string memspace)
   {
+    memspace_ = memspace;
     this->matrix_handler_ = nullptr;
     this->vector_handler_ = nullptr;
     tol_ = 1e-14; //default
@@ -25,8 +26,10 @@ namespace ReSolve
 
   LinSolverIterativeFGMRES::LinSolverIterativeFGMRES(MatrixHandler* matrix_handler,
                                                      VectorHandler* vector_handler,
-                                                     GramSchmidt*   gs)
+                                                     GramSchmidt*   gs,
+                                                     std::string memspace)
   {
+    memspace_ = memspace;
     this->matrix_handler_ = matrix_handler;
     this->vector_handler_ = vector_handler;
     this->GS_ = gs;
@@ -46,8 +49,10 @@ namespace ReSolve
                                                      index_type conv_cond,
                                                      MatrixHandler* matrix_handler,
                                                      VectorHandler* vector_handler,
-                                                     GramSchmidt*   gs)
+                                                     GramSchmidt*   gs,
+                                                     std::string memspace)
   {
+    memspace_ = memspace;
     this->matrix_handler_ = matrix_handler;
     this->vector_handler_ = vector_handler;
     this->GS_ = gs;
@@ -82,9 +87,9 @@ namespace ReSolve
     n_ = A_->getNumRows();
 
     d_V_ = new vector_type(n_, restart_ + 1);
-    d_V_->allocate("cuda");      
+    d_V_->allocate(memory::DEVICE);      
     d_Z_ = new vector_type(n_, restart_ + 1);
-    d_Z_->allocate("cuda");      
+    d_Z_->allocate(memory::DEVICE);      
     h_H_  = new real_type[restart_ * (restart_ + 1)];
     h_c_  = new real_type[restart_];      // needed for givens
     h_s_  = new real_type[restart_];      // same
@@ -113,12 +118,15 @@ namespace ReSolve
     vector_type* vec_v = new vector_type(n_);
     vector_type* vec_z = new vector_type(n_);
     //V[0] = b-A*x_0
+    //debug
+    d_Z_->setToZero(memory::DEVICE);
+    d_V_->setToZero(memory::DEVICE);
 
-    rhs->deepCopyVectorData(d_V_->getData("cuda"), 0, "cuda");  
-    matrix_handler_->matvec(A_, x, d_V_, &MINUSONE, &ONE, "csr", "cuda"); 
+    rhs->deepCopyVectorData(d_V_->getData(memory::DEVICE), 0, memory::DEVICE);  
+    matrix_handler_->matvec(A_, x, d_V_, &MINUSONE, &ONE, "csr", memspace_); 
     rnorm = 0.0;
-    bnorm = vector_handler_->dot(rhs, rhs, "cuda");
-    rnorm = vector_handler_->dot(d_V_, d_V_, "cuda");
+    bnorm = vector_handler_->dot(rhs, rhs, memspace_);
+    rnorm = vector_handler_->dot(d_V_, d_V_, memspace_);
 
     //rnorm = ||V_1||
     rnorm = sqrt(rnorm);
@@ -154,7 +162,7 @@ namespace ReSolve
 
       // normalize first vector
       t = 1.0 / rnorm;
-      vector_handler_->scal(&t, d_V_, "cuda");
+      vector_handler_->scal(&t, d_V_, memspace_);
       // initialize norm history
       h_rs_[0] = rnorm;
       i = -1;
@@ -166,20 +174,20 @@ namespace ReSolve
 
         // Z_i = (LU)^{-1}*V_i
 
-        vec_v->setData( d_V_->getVectorData(i, "cuda"), "cuda");
-        vec_z->setData( d_Z_->getVectorData(i, "cuda"), "cuda");
+        vec_v->setData( d_V_->getVectorData(i, memory::DEVICE), memory::DEVICE);
+        vec_z->setData( d_Z_->getVectorData(i, memory::DEVICE), memory::DEVICE);
         this->precV(vec_v, vec_z);
         mem_.deviceSynchronize();
 
         // V_{i+1}=A*Z_i
 
-        vec_v->setData( d_V_->getVectorData(i + 1, "cuda"), "cuda");
+        vec_v->setData( d_V_->getVectorData(i + 1, memory::DEVICE), memory::DEVICE);
 
-        matrix_handler_->matvec(A_, vec_z, vec_v, &ONE, &ZERO,"csr", "cuda"); 
+        matrix_handler_->matvec(A_, vec_z, vec_v, &ONE, &ZERO,"csr", memspace_); 
 
         // orthogonalize V[i+1], form a column of h_H_
 
-        GS_->orthogonalize(n_, d_V_, h_H_, i, "cuda");  ;
+        GS_->orthogonalize(n_, d_V_, h_H_, i, memspace_);  ;
         if(i != 0) {
           for(int k = 1; k <= i; k++) {
             k1 = k - 1;
@@ -188,7 +196,6 @@ namespace ReSolve
             h_H_[i * (restart_ + 1) + k] = -h_s_[k1] * t + h_c_[k1] * h_H_[i * (restart_ + 1) + k];
           }
         } // if i!=0
-
         double Hii = h_H_[i * (restart_ + 1) + i];
         double Hii1 = h_H_[(i) * (restart_ + 1) + i + 1];
         double gam = sqrt(Hii * Hii + Hii1 * Hii1);
@@ -228,8 +235,8 @@ namespace ReSolve
 
       // get solution
       for(j = 0; j <= i; j++) {
-        vec_z->setData( d_Z_->getVectorData(j, "cuda"), "cuda");
-        vector_handler_->axpy(&h_rs_[j], vec_z, x, "cuda");
+        vec_z->setData( d_Z_->getVectorData(j, memory::DEVICE), memory::DEVICE);
+        vector_handler_->axpy(&h_rs_[j], vec_z, x, memspace_);
       }
 
       /* test solution */
@@ -239,9 +246,9 @@ namespace ReSolve
         outer_flag = 0;
       }
 
-      rhs->deepCopyVectorData(d_V_->getData("cuda"), 0, "cuda");  
-      matrix_handler_->matvec(A_, x, d_V_, &MINUSONE, &ONE,"csr", "cuda"); 
-      rnorm = vector_handler_->dot(d_V_, d_V_, "cuda");
+      rhs->deepCopyVectorData(d_V_->getData(memory::DEVICE), 0, memory::DEVICE);  
+      matrix_handler_->matvec(A_, x, d_V_, &MINUSONE, &ONE,"csr", memspace_); 
+      rnorm = vector_handler_->dot(d_V_, d_V_, memspace_);
       // rnorm = ||V_1||
       rnorm = sqrt(rnorm);
 
@@ -253,9 +260,9 @@ namespace ReSolve
     return 0;
   }
 
-  int  LinSolverIterativeFGMRES::setupPreconditioner(std::string name, LinSolverDirect* LU_solver)
+  int  LinSolverIterativeFGMRES::setupPreconditioner(std::string type, LinSolverDirect* LU_solver)
   {
-    if (name != "CuSolverRf") {
+    if (type != "LU") {
       out::warning() << "Only cusolverRf tri solve can be used as a preconditioner at this time." << std::endl;
       return 1;
     } else {
@@ -308,7 +315,7 @@ namespace ReSolve
   int  LinSolverIterativeFGMRES::resetMatrix(matrix::Sparse* new_matrix)
   {
     A_ = new_matrix;
-    matrix_handler_->setValuesChanged(true, "cuda");
+    matrix_handler_->setValuesChanged(true, memspace_);
     return 0;
   }
 
@@ -317,7 +324,7 @@ namespace ReSolve
   void  LinSolverIterativeFGMRES::precV(vector_type* rhs, vector_type* x)
   { 
     LU_solver_->solve(rhs, x);
-    //  x->update(rhs->getData("cuda"), "cuda", "cuda");
+    //  x->update(rhs->getData(memory::DEVICE), memory::DEVICE, memory::DEVICE);
   }
 
   real_type LinSolverIterativeFGMRES::getFinalResidualNorm()

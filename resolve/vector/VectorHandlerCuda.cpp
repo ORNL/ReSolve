@@ -50,7 +50,7 @@ namespace ReSolve {
     LinAlgWorkspaceCUDA* workspaceCUDA = workspace_;
     cublasHandle_t handle_cublas =  workspaceCUDA->getCublasHandle();
     double nrm = 0.0;
-    cublasStatus_t st= cublasDdot (handle_cublas,  x->getSize(), x->getData("cuda"), 1, y->getData("cuda"), 1, &nrm);
+    cublasStatus_t st= cublasDdot (handle_cublas,  x->getSize(), x->getData(memory::DEVICE), 1, y->getData(memory::DEVICE), 1, &nrm);
     if (st!=0) {printf("dot product crashed with code %d \n", st);}
     return nrm;
   }
@@ -67,7 +67,7 @@ namespace ReSolve {
   {
     LinAlgWorkspaceCUDA* workspaceCUDA = workspace_;
     cublasHandle_t handle_cublas =  workspaceCUDA->getCublasHandle();
-    cublasStatus_t st = cublasDscal(handle_cublas, x->getSize(), alpha, x->getData("cuda"), 1);
+    cublasStatus_t st = cublasDscal(handle_cublas, x->getSize(), alpha, x->getData(memory::DEVICE), 1);
     if (st!=0) {
       ReSolve::io::Logger::error() << "scal crashed with code " << st << "\n";
     }
@@ -90,9 +90,9 @@ namespace ReSolve {
     cublasDaxpy(handle_cublas,
                 x->getSize(),
                 alpha,
-                x->getData("cuda"),
+                x->getData(memory::DEVICE),
                 1,
-                y->getData("cuda"),
+                y->getData(memory::DEVICE),
                 1);
   }
 
@@ -131,12 +131,12 @@ namespace ReSolve {
                   n,
                   k,
                   alpha,
-                  V->getData("cuda"),
+                  V->getData(memory::DEVICE),
                   n,
-                  y->getData("cuda"),
+                  y->getData(memory::DEVICE),
                   1,
                   beta,
-                  x->getData("cuda"),
+                  x->getData(memory::DEVICE),
                   1);
 
     } else {
@@ -145,12 +145,12 @@ namespace ReSolve {
                   n,
                   k,
                   alpha,
-                  V->getData("cuda"),
+                  V->getData(memory::DEVICE),
                   n,
-                  y->getData("cuda"),
+                  y->getData(memory::DEVICE),
                   1,
                   beta,
-                  x->getData("cuda"),
+                  x->getData(memory::DEVICE),
                   1);
     }
   }
@@ -171,7 +171,7 @@ namespace ReSolve {
   {
     using namespace constants;
     if (k < 200) {
-      mass_axpy(size, k, x->getData("cuda"), y->getData("cuda"),alpha->getData("cuda"));
+      mass_axpy(size, k, x->getData(memory::DEVICE), y->getData(memory::DEVICE),alpha->getData(memory::DEVICE));
     } else {
       LinAlgWorkspaceCUDA* workspaceCUDA = workspace_;
       cublasHandle_t handle_cublas =  workspaceCUDA->getCublasHandle();
@@ -182,12 +182,12 @@ namespace ReSolve {
                   1,          // n
                   k + 1,      // k
                   &MINUSONE, // alpha
-                  x->getData("cuda"), // A
+                  x->getData(memory::DEVICE), // A
                   size,       // lda
-                  alpha->getData("cuda"), // B
+                  alpha->getData(memory::DEVICE), // B
                   k + 1,      // ldb
                   &ONE,
-                  y->getData("cuda"),          // c
+                  y->getData(memory::DEVICE),          // c
                   size);      // ldc     
     }
   }
@@ -212,7 +212,7 @@ namespace ReSolve {
     using namespace constants;
 
     if (k < 200) {
-      mass_inner_product_two_vectors(size, k, x->getData("cuda") , x->getData(1, "cuda"), V->getData("cuda"), res->getData("cuda"));
+      mass_inner_product_two_vectors(size, k, x->getData(memory::DEVICE) , x->getData(1, memory::DEVICE), V->getData(memory::DEVICE), res->getData(memory::DEVICE));
     } else {
       LinAlgWorkspaceCUDA* workspaceCUDA = workspace_;
       cublasHandle_t handle_cublas =  workspaceCUDA->getCublasHandle();
@@ -223,12 +223,12 @@ namespace ReSolve {
                   2,       //n
                   size,    //k
                   &ONE,   //alpha
-                  V->getData("cuda"),       //A
+                  V->getData(memory::DEVICE),       //A
                   size,    //lda
-                  x->getData("cuda"),       //B
+                  x->getData(memory::DEVICE),       //B
                   size,    //ldb
                   &ZERO,
-                  res->getData("cuda"),     //c
+                  res->getData(memory::DEVICE),     //c
                   k + 1);  //ldc 
     }
   }

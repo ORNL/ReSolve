@@ -36,8 +36,8 @@ int main(int argc, char *argv[])
   ReSolve::LinAlgWorkspaceCpu* workspace = new ReSolve::LinAlgWorkspaceCpu();
   ReSolve::MatrixHandler* matrix_handler = new ReSolve::MatrixHandler(workspace);
   ReSolve::VectorHandler* vector_handler = new ReSolve::VectorHandler(workspace);
-  real_type* rhs;
-  real_type* x;
+  real_type* rhs = nullptr;
+  real_type* x   = nullptr;
 
   vector_type* vec_rhs;
   vector_type* vec_x;
@@ -83,8 +83,8 @@ int main(int argc, char *argv[])
 
   //Now convert to CSR.
   matrix_handler->coo2csr(A_coo, A, "cpu");
-  vec_rhs->update(rhs, "cpu", "cpu");
-  vec_rhs->setDataUpdated("cpu");
+  vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_rhs->setDataUpdated(ReSolve::memory::HOST);
   std::cout << "COO to CSR completed. Expanded NNZ: " << A->getNnzExpanded() << std::endl;
   //Now call direct solver
   KLU->setupParameters(1, 0.1, false);
@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
   std::cout << "KLU factorization status: " << status << std::endl;
   status = KLU->solve(vec_rhs, vec_x);
   std::cout << "KLU solve status: " << status << std::endl;      
-  vec_r->update(rhs, "cpu", "cpu");
+  vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
 
   matrix_handler->setValuesChanged(true, "cpu");
 
@@ -111,7 +111,8 @@ int main(int argc, char *argv[])
   //now DELETE
   delete A;
   delete KLU;
-  delete x;
+  delete [] x;
+  delete [] rhs;
   delete vec_r;
   delete vec_x;
   delete matrix_handler;

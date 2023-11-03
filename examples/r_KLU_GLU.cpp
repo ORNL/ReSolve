@@ -41,8 +41,8 @@ int main(int argc, char *argv[])
   workspace_CUDA->initializeHandles();
   ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(workspace_CUDA);
   ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(workspace_CUDA);
-  real_type* rhs;
-  real_type* x;
+  real_type* rhs = nullptr;
+  real_type* x   = nullptr;
 
   vector_type* vec_rhs;
   vector_type* vec_x;
@@ -93,8 +93,8 @@ int main(int argc, char *argv[])
       x = new real_type[A->getNumRows()];
       vec_rhs = new vector_type(A->getNumRows());
       vec_x = new vector_type(A->getNumRows());
-      vec_x->allocate("cpu");//for KLU
-      vec_x->allocate("cuda");
+      vec_x->allocate(ReSolve::memory::HOST);//for KLU
+      vec_x->allocate(ReSolve::memory::DEVICE);
       vec_r = new vector_type(A->getNumRows());
     } else {
       ReSolve::io::readAndUpdateMatrix(mat_file, A_coo);
@@ -107,11 +107,11 @@ int main(int argc, char *argv[])
     //Now convert to CSR.
     if (i < 1) { 
       matrix_handler->coo2csr(A_coo, A,  "cpu");
-      vec_rhs->update(rhs, "cpu", "cpu");
-      vec_rhs->setDataUpdated("cpu");
+      vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+      vec_rhs->setDataUpdated(ReSolve::memory::HOST);
     } else { 
       matrix_handler->coo2csr(A_coo, A, "cuda");
-      vec_rhs->update(rhs, "cpu", "cuda");
+      vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
     }
     std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnzExpanded()<<std::endl;
     //Now call direct solver
@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
       status = GLU->solve(vec_rhs, vec_x);
       std::cout<<"CUSOLVER GLU solve status: "<<status<<std::endl;      
     }
-    vec_r->update(rhs, "cpu", "cuda");
+    vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
 
 
     matrix_handler->setValuesChanged(true, "cuda");
@@ -159,7 +159,8 @@ int main(int argc, char *argv[])
   delete A;
   delete KLU;
   delete GLU;
-  delete x;
+  delete [] x;
+  delete [] rhs;
   delete vec_r;
   delete vec_x;
   delete workspace_CUDA;

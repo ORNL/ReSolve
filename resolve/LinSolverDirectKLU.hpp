@@ -24,7 +24,13 @@ namespace ReSolve
     public:
       LinSolverDirectKLU();
       ~LinSolverDirectKLU();
-      int setup(matrix::Sparse* A);
+
+      int setup(matrix::Sparse* A,
+                matrix::Sparse* L = nullptr,
+                matrix::Sparse* U = nullptr,
+                index_type*     P = nullptr,
+                index_type*     Q = nullptr,
+                vector_type*  rhs = nullptr);
      
       void setupParameters(int ordering, double KLU_threshold, bool halt_if_singular);
 

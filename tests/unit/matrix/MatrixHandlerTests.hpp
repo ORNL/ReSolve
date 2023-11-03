@@ -42,17 +42,23 @@ public:
   TestOutcome matVec(index_type N)
   {
     TestStatus status;
+    ReSolve::memory::MemorySpace ms;
+    if (memspace_ == "cpu")
+      ms = memory::HOST;
+    else
+      ms = memory::DEVICE;
 
     ReSolve::MatrixHandler* handler = createMatrixHandler();
 
     matrix::Csr* A = createCsrMatrix(N, memspace_);
     vector::Vector x(N);
     vector::Vector y(N);
-    x.allocate(memspace_);
-    y.allocate(memspace_);
+    x.allocate(ms);
+    if (x.getData(ms) == NULL) printf("oups we have an issue \n");
+    y.allocate(ms);
 
-    x.setToConst(1.0, memspace_);
-    y.setToConst(1.0, memspace_);
+    x.setToConst(1.0, ms);
+    y.setToConst(1.0, ms);
 
     real_type alpha = 2.0/30.0;
     real_type beta  = 2.0;
@@ -81,6 +87,12 @@ private:
       workspace->initializeHandles();
       return new MatrixHandler(workspace);
 #endif
+#ifdef RESOLVE_USE_HIP
+    } else if (memspace_ == "hip") {
+      LinAlgWorkspaceHIP* workspace = new LinAlgWorkspaceHIP();
+      workspace->initializeHandles();
+      return new MatrixHandler(workspace);
+#endif
     } else {
       std::cout << "ReSolve not built with support for memory space " << memspace_ << "\n";
     }
@@ -91,14 +103,14 @@ private:
   {
     bool status = true;
     if (memspace != "cpu") {
-      x.copyData(memspace, "cpu");
+      x.copyData(memory::DEVICE, memory::HOST);
     }
 
     for (index_type i = 0; i < x.getSize(); ++i) {
-      // std::cout << x.getData("cpu")[i] << "\n";
-      if (!isEqual(x.getData("cpu")[i], answer)) {
+      // std::cout << x.getData(memory::HOST)[i] << "\n";
+      if (!isEqual(x.getData(memory::HOST)[i], answer)) {
         status = false;
-        std::cout << "Solution vector element x[" << i << "] = " << x.getData("cpu")[i]
+        std::cout << "Solution vector element x[" << i << "] = " << x.getData(memory::HOST)[i]
                   << ", expected: " << answer << "\n";
         break; 
       }
@@ -118,42 +130,42 @@ private:
 
     // std::cout << N << "\n";
 
+    // First compute number of nonzeros
     index_type NNZ = 0;
     for (index_type i = 0; i < N; ++i)
     {
-      NNZ += static_cast<index_type>(data[i%5].size());
+      size_t reminder = static_cast<size_t>(i%5);
+      NNZ += static_cast<index_type>(data[reminder].size());
     }
-    // std::cout << NNZ << "\n";
 
+    // Allocate NxN CSR matrix with NNZ nonzeros
     matrix::Csr* A = new matrix::Csr(N, N, NNZ);
-    A->allocateMatrixData("cpu");
+    A->allocateMatrixData(memory::HOST);
 
-    index_type* rowptr = A->getRowData("cpu");
-    index_type* colidx = A->getColData("cpu");
-    real_type* val     = A->getValues("cpu"); 
+    index_type* rowptr = A->getRowData(memory::HOST);
+    index_type* colidx = A->getColData(memory::HOST);
+    real_type* val     = A->getValues( memory::HOST); 
 
+    // Populate CSR matrix using same row pattern as for NNZ calculation
     rowptr[0] = 0;
-    index_type i = 0;
-    for (i=0; i < N; ++i)
+    for (index_type i=0; i < N; ++i)
     {
-      const std::vector<real_type>& row_sample = data[i%5];
+      size_t reminder = static_cast<size_t>(i%5);
+      const std::vector<real_type>& row_sample = data[reminder];
       index_type nnz_per_row = static_cast<index_type>(row_sample.size());
-      // std::cout << nnz_per_row << "\n";
 
       rowptr[i+1] = rowptr[i] + nnz_per_row;
       for (index_type j = rowptr[i]; j < rowptr[i+1]; ++j)
       {
         colidx[j] = (j - rowptr[i]) * N/nnz_per_row + (N%(N/nnz_per_row));
         // evenly distribute nonzeros ^^^^             ^^^^^^^^ perturb offset
-        val[j] = row_sample[j - rowptr[i]];
-        // std::cout << i << " " << colidx[j] << "  " << val[j] << "\n";
+        val[j] = row_sample[static_cast<size_t>(j - rowptr[i])];
       }
     }
-    A->setUpdated("cpu");
-    // std::cout << rowptr[i] << "\n";
+    A->setUpdated(memory::HOST);
 
-    if (memspace == "cuda") {
-      A->copyData(memspace);
+    if ((memspace == "cuda") || (memspace == "hip")) {
+      A->copyData(memory::DEVICE);
     }
 
     return A;

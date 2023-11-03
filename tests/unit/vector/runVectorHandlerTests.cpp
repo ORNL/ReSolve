@@ -37,5 +37,22 @@ int main(int, char**)
   }
 #endif
 
+#ifdef RESOLVE_USE_HIP
+  {
+    std::cout << "Running tests with HIP backend:\n";
+    ReSolve::tests::VectorHandlerTests test("hip");
+
+    result += test.dot(5000);
+    result += test.axpy(5000);
+    result += test.scal(5000);
+    result += test.gemv(5000, 10);
+    result += test.massAxpy(100, 10);
+    result += test.massAxpy(1000, 300);
+    result += test.massDot(100, 10);
+    result += test.massDot(1000, 30);
+
+    std::cout << "\n";
+  }
+#endif
   return result.summary();
 }
