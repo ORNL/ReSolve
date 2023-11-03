@@ -28,6 +28,7 @@ set(ReSolve_CUDASDK_SRC
 # HIP files
 set(ReSolve_ROCM_SRC
   LinSolverDirectRocSolverRf.cpp
+  LinSolverDirectRocSparseILU0.cpp
 )
 # Header files to be installed
 set(ReSolve_HEADER_INSTALL
