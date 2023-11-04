@@ -48,6 +48,10 @@ if(RESOLVE_USE_HIP)
   # Build example with KLU factorization, rocsolver Rf refactorization, and FGMRES iterative refinement
   add_executable(klu_rocsolverrf_fgmres.exe r_KLU_rocSolverRf_FGMRES.cpp)
   target_link_libraries(klu_rocsolverrf_fgmres.exe PRIVATE ReSolve)
+
+  # Rand GMRES test with rocsparse
+  add_executable(gmres_rocsparse_rand.exe r_randGMRES.cpp)
+  target_link_libraries(gmres_rocsparse_rand.exe PRIVATE ReSolve)
 endif(RESOLVE_USE_HIP)
 
 # Install all examples in bin directory
@@ -58,7 +62,7 @@ if(RESOLVE_USE_CUDA)
 endif(RESOLVE_USE_CUDA)
 
 if(RESOLVE_USE_HIP)
-  set(installable_executables ${installable_executables} klu_rocsolverrf.exe)        
+  set(installable_executables ${installable_executables} klu_rocsolverrf.exe gmres_rocsparse_rand.exe)        
 endif(RESOLVE_USE_HIP)
 
 install(TARGETS ${installable_executables} 

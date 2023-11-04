@@ -163,7 +163,6 @@ namespace ReSolve
           vector_handler_->gemv("T", n, i + 1, &ONE, &ZERO, V,  vec_v_, vec_Hcolumn_, memspace);
           // V(:,i+1) = V(:, i+1) -  V(:,1:i)*Hcol
           vector_handler_->gemv("N", n, i + 1, &ONE, &MINUSONE, V, vec_Hcolumn_, vec_v_, memspace );  
-
           // copy H_col to aux, we will need it later
           vec_Hcolumn_->setDataUpdated(memory::DEVICE);
           vec_Hcolumn_->setCurrentSize(i + 1);
