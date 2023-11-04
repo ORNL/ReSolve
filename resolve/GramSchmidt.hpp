@@ -1,6 +1,7 @@
 #pragma once
 #include "Common.hpp"
 #include <resolve/vector/VectorHandler.hpp>
+#include <resolve/MemoryUtils.hpp>
 #include <iostream>
 #include <cassert>
 namespace ReSolve 
@@ -42,6 +43,8 @@ namespace ReSolve
 
       vector_type* vec_v_{nullptr}; // aux variable
       vector_type* vec_w_{nullptr}; // aux variable
+    
+      MemoryHandler mem_; ///< Device memory manager object
   };
 
 }//namespace

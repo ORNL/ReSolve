@@ -151,32 +151,38 @@ namespace ReSolve
           vector_handler_->gemv("T", n, i + 1, &ONE, &ZERO, V,  vec_v_, vec_Hcolumn_, memspace);
           // V(:,i+1) = V(:, i+1) -  V(:,1:i)*Hcol
           vector_handler_->gemv("N", n, i + 1, &ONE, &MINUSONE, V, vec_Hcolumn_, vec_v_, memspace );  
-
+          mem_.deviceSynchronize();
+          
           // copy H_col to aux, we will need it later
           vec_Hcolumn_->setDataUpdated(memory::DEVICE);
           vec_Hcolumn_->setCurrentSize(i + 1);
           vec_Hcolumn_->deepCopyVectorData(h_aux_, 0, memory::HOST);
+          mem_.deviceSynchronize();
 
           //Hcol = V(:,1:i)^T*V(:,i+1);
           vector_handler_->gemv("T", n, i + 1, &ONE, &ZERO, V,  vec_v_, vec_Hcolumn_, memspace);
+          mem_.deviceSynchronize();
 
           // V(:,i+1) = V(:, i+1) -  V(:,1:i)*Hcol
           vector_handler_->gemv("N", n, i + 1, &ONE, &MINUSONE, V, vec_Hcolumn_, vec_v_, memspace );  
+          mem_.deviceSynchronize();
 
           // copy H_col to H
           vec_Hcolumn_->setDataUpdated(memory::DEVICE);
           vec_Hcolumn_->deepCopyVectorData(&H[ idxmap(i, 0, num_vecs_ + 1)], 0, memory::HOST);
+          mem_.deviceSynchronize();
 
           // add both pieces together (unstable otherwise, careful here!!)
           t = 0.0;
           for(int j = 0; j <= i; ++j) {
-            H[ idxmap(i, j, num_vecs_ + 1)] += h_aux_[j]; 
+            H[ idxmap(i, j, num_vecs_ + 1)] += h_aux_[j];
           }
 
           t = vector_handler_->dot(vec_v_, vec_v_, memspace);  
           //set the last entry in Hessenberg matrix
           t = sqrt(t);
           H[ idxmap(i, i + 1, num_vecs_ + 1) ] = t; 
+
           if(fabs(t) > EPSILON) {
             t = 1.0/t;
             vector_handler_->scal(&t, vec_v_, memspace);  
