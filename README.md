@@ -5,15 +5,16 @@ ReSolve is a library of GPU-resident linear solver. It contains iterative and di
 ## Getting started
 
 Dependencies:
-- KLU, AMD and COLAMD libraries from SuiteSparse
-- CUDA >= 11.4
+- KLU, AMD and COLAMD libraries from SuiteSparse >= 5.0
 - CMake >= 3.22
+- CUDA >= 11.4 (optional)
+- HIP/ROCm >= 5.6 (optional)
 
 To build it:
 ```shell
-$ git clone https://code.ornl.gov/peles/resolve.git
+$ git clone https://github.com/ORNL/ReSolve.git
 $ mkdir build && cd build
-$ cmake ../resolve
+$ cmake ../ReSolve
 $ make
 ```
 
@@ -56,41 +57,16 @@ For all contributions to ReSolve please follow the [developer guidelines](CONTRI
 
 ReSolve as a library is tested every merge request via Gitlab pipelines that execute various library tests including a test of ReSolve being consumed as package within an external project as mentioned in [Using ReSolve in your own Project](#to-use-the-resolve-library-in-your-own-project)
 
-To test your own install of ReSolve simply cd into your ReSolve build directory and run 
-
+To test your own install of ReSolve simply run from your ReSolve build directory 
 ```shell
 $ make test
 ```
-
-or
-
+After you `make install` you can test your installation by running
 ```shell
-$ ctest
+$ make test_install
 ```
+from your build directory.
 
-Below is an example of what a functional ReSolve build will ouput on Passing tests
-
-```text
-Test project /people/dane678/resolve/build
-    Start 1: resolve_consume
-1/9 Test #1: resolve_consume ..................   Passed   16.51 sec
-    Start 2: klu_klu_test
-2/9 Test #2: klu_klu_test .....................   Passed    1.04 sec
-    Start 3: klu_rf_test
-3/9 Test #3: klu_rf_test ......................   Passed    1.04 sec
-    Start 4: klu_rf_fgmres_test
-4/9 Test #4: klu_rf_fgmres_test ...............   Passed    3.14 sec
-    Start 5: klu_glu_test
-5/9 Test #5: klu_glu_test .....................   Passed    1.06 sec
-    Start 6: matrix_test
-6/9 Test #6: matrix_test ......................   Passed    0.03 sec
-    Start 7: matrix_handler_test
-7/9 Test #7: matrix_handler_test ..............   Passed    0.97 sec
-    Start 8: vector_handler_test
-8/9 Test #8: vector_handler_test ..............   Passed    0.98 sec
-    Start 9: logger_test
-9/9 Test #9: logger_test ......................   Passed    0.03 sec
-```
 
 ### Important Notes
 
@@ -103,12 +79,13 @@ cmake -B build --preset cluster
 ```
 
 ## Support
-For any questions or to report a bug please submit a [GitHub issue](https://github.com/ORNL/ReSolve/issues). 
+For technical questions or to report a bug please submit a [GitHub issue](https://github.com/ORNL/ReSolve/issues).
+For non-technical issues please contact Kasia &#346;wirydowicz <kasia.swirydowicz@pnnl.gov> or Slaven Peles <peless@ornl.gov>.
 
 ## Authors and acknowledgment
-Primary authors of this project are Kasia &#346;wirydowicz <kasia.swirydowicz@pnnl.gov> and Slaven Peles <peless@ornl.gov>.
+Primary authors of this project are Kasia &#346;wirydowicz and Slaven Peles.
 
-ReSolve project would not be possible without significant contributions from (in alphabetic ortder):
+ReSolve project would not be possible without significant contributions from (in alphabetic order):
 - Maksudul Alam
 - Ryan Danehy
 - Nicholson Koukpaizan
@@ -116,9 +93,20 @@ ReSolve project would not be possible without significant contributions from (in
 - Phil Roth
 - Cameron Rutherford
 
-Development of this coede was supported by the Exascale Computing Project (ECP), Project Number: 17-SC-20-SC, a collaborative effort of two DOE organizations—the Office of Science and the National Nuclear Security Administration—responsible for the planning and preparation of a capable exascale ecosystem—including software, applications, hardware, advanced system engineering, and early testbed platforms—to support the nation's exascale computing imperative.
+Development of this code was supported by the Exascale Computing Project (ECP), Project Number: 17-SC-20-SC,
+a collaborative effort of two DOE organizations—the Office of Science and the National Nuclear Security
+Administration—responsible for the planning and preparation of a capable exascale ecosystem—including software,
+applications, hardware, advanced system engineering, and early testbed platforms—to support the nation's exascale
+computing imperative.
 
 ## License
 Copyright &copy; 2023, UT-Battelle, LLC, and Battelle Memorial Institute.
 
-ReSolve is a free software distributed under a BSD-style license. See the [LICENSE](LICENSE) and [NOTICE](NOTICE) files for details. All new contributions to ReSolve must be made under the smae licensing terms.
+ReSolve is a free software distributed under a BSD-style license. See the
+[LICENSE](LICENSE) and [NOTICE](NOTICE) files for details. All new
+contributions to ReSolve must be made under the smae licensing terms.
+
+**Please Note** If you are using ReSolve with any third party libraries linked
+in (e.g., KLU), be sure to review the respective license of the package as that
+license may have more restrictive terms than the ReSolve license.
+
