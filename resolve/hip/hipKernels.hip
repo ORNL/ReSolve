@@ -382,20 +382,20 @@ void permuteVectorQ(int n,
 }
 
 void  count_sketch_theta(int n,
-												 int k,
-												 int* labels,
-												 int* flip,
-												 double* input,
-												 double* output)
+                         int k,
+                         int* labels,
+                         int* flip,
+                         double* input,
+                         double* output)
 {
 
   hipLaunchKernelGGL(count_sketch_kernel, dim3(1000), dim3(1024), 0, 0, n, k, labels, flip, input, output);
 }
 
 void FWHT_select(int k,
-								 int* perm,
-								 double* input,
-								 double* output)
+                 int* perm,
+                 double* input,
+                 double* output)
 {
   hipLaunchKernelGGL(select_kernel, dim3(1000), dim3(1024), 0, 0,k, perm, input, output);
 }
@@ -409,14 +409,14 @@ void FWHT_scaleByD(int n,
 }
 
 void FWHT(int M, int log2N, double* d_Data) {
- 
- const int THREAD_N = 1024;
+
+  const int THREAD_N = 1024;
   int N = 1 << log2N;
   dim3 grid((1 << log2N) / (4 * THREAD_N), M, 1);
 
   for (; log2N > ELEMENTARY_LOG2SIZE; log2N -= 2, N >>= 2, M <<= 2) {
-hipLaunchKernelGGL(fwtBatch2Kernel, grid, dim3(THREAD_N), 0, 0,  d_Data, d_Data, N / 4);
+    hipLaunchKernelGGL(fwtBatch2Kernel, grid, dim3(THREAD_N), 0, 0,  d_Data, d_Data, N / 4);
   }
 
- hipLaunchKernelGGL(fwtBatch1Kernel, dim3(M), dim3(N / 4), N * sizeof(double), 0, d_Data, d_Data, log2N);
+  hipLaunchKernelGGL(fwtBatch1Kernel, dim3(M), dim3(N / 4), N * sizeof(double), 0, d_Data, d_Data, log2N);
 }
