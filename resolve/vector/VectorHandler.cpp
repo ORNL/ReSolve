@@ -61,11 +61,11 @@ namespace ReSolve {
    */
   VectorHandler::VectorHandler(LinAlgWorkspaceHIP* new_workspace)
   {
-    hipImpl_ = new VectorHandlerHip(new_workspace);
-    cpuImpl_  = new  VectorHandlerCpu();
+    hipImpl_  = new VectorHandlerHip(new_workspace);
+    cpuImpl_  = new VectorHandlerCpu();
 
     isHipEnabled_ = true;
-    isCpuEnabled_  = true;
+    isCpuEnabled_ = true;
   }
 #endif
 
@@ -74,6 +74,9 @@ namespace ReSolve {
    */
   VectorHandler::~VectorHandler()
   {
+    delete cpuImpl_;
+    if (isCudaEnabled_) delete cudaImpl_;
+    if (isHipEnabled_)  delete hipImpl_;
     //delete the workspace TODO
   }
 

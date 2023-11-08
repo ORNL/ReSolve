@@ -36,32 +36,20 @@ namespace ReSolve
         delete h_L_;    
         delete h_rv_;    
 
-        vec_rv_->setData(nullptr, memory::DEVICE);
-        vec_rv_->setData(nullptr, memory::HOST);
-        vec_Hcolumn_->setData(nullptr, memory::DEVICE);
-        vec_Hcolumn_->setData(nullptr, memory::HOST);
-
-        delete [] vec_rv_;    
-        delete [] vec_Hcolumn_;;    
+        delete vec_rv_;    
+        delete vec_Hcolumn_;;    
       }
 
       if(variant_ == cgs2) {
         delete h_aux_;
-        vec_Hcolumn_->setData(nullptr, memory::DEVICE);
-        //        vec_Hcolumn_->setData(nullptr, memory::HOST);
-        delete [] vec_Hcolumn_;    
+        delete vec_Hcolumn_;    
       }    
       if(variant_ == mgs_pm) {
         delete h_aux_;
       }
 
-      vec_v_->setData(nullptr, memory::DEVICE);
-      vec_v_->setData(nullptr, memory::HOST);
-      vec_w_->setData(nullptr, memory::DEVICE);
-      vec_w_->setData(nullptr, memory::HOST);
-
-      delete [] vec_w_;
-      delete [] vec_v_;   
+      delete vec_w_;
+      delete vec_v_;   
     }
   }
 

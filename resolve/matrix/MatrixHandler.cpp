@@ -42,7 +42,7 @@ namespace ReSolve {
    */
   MatrixHandler::~MatrixHandler()
   {
-    if (isCpuEnabled_)  delete cpuImpl_;
+    delete cpuImpl_;
     if (isCudaEnabled_) delete cudaImpl_;
     if (isHipEnabled_) delete hipImpl_;
   }
