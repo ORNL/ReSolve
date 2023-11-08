@@ -6,8 +6,9 @@ ReSolve is a library of GPU-resident linear solver. It contains iterative and di
 
 Dependencies:
 - KLU, AMD and COLAMD libraries from SuiteSparse >= 5.0
-- CUDA >= 11.4
 - CMake >= 3.22
+- CUDA >= 11.4 (optional)
+- HIP/ROCm >= 5.6 (optional)
 
 To build it:
 ```shell
