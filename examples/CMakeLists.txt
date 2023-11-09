@@ -14,6 +14,10 @@ target_link_libraries(klu_klu.exe PRIVATE ReSolve)
 add_executable(klu_klu_standalone.exe r_KLU_KLU_standalone.cpp)
 target_link_libraries(klu_klu_standalone.exe PRIVATE ReSolve)
 
+# Build example with a configurable system solver
+add_executable(system.exe r_SysSolver.cpp)
+target_link_libraries(system.exe PRIVATE ReSolve)
+
 # Create CUDA examples
 if(RESOLVE_USE_CUDA)
         
@@ -51,7 +55,7 @@ if(RESOLVE_USE_HIP)
 endif(RESOLVE_USE_HIP)
 
 # Install all examples in bin directory
-set(installable_executables klu_klu.exe klu_klu_standalone.exe)
+set(installable_executables klu_klu.exe klu_klu_standalone.exe system.exe)
 
 if(RESOLVE_USE_CUDA)
   set(installable_executables ${installable_executables} klu_glu.exe klu_rf.exe klu_rf_fgmres.exe klu_glu_values_update.exe)        
