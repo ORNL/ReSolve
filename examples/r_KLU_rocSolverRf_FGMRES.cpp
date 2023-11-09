@@ -175,17 +175,17 @@ int main(int argc, char *argv[])
                 << rnrm/norm_b << "\n";
 
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-     if(!std::isnan(rnrm) && !std::isinf(rnrm)) {
-      FGMRES->solve(vec_rhs, vec_x);
+      if(!std::isnan(rnrm) && !std::isinf(rnrm)) {
+        FGMRES->solve(vec_rhs, vec_x);
 
-      std::cout << "FGMRES: init nrm: " 
-                << std::scientific << std::setprecision(16) 
-                << FGMRES->getInitResidualNorm()/norm_b
-                << " final nrm: "
-                << FGMRES->getFinalResidualNorm()/norm_b
-                << " iter: " << FGMRES->getNumIter() << "\n";
-     }
-     }
+        std::cout << "FGMRES: init nrm: " 
+                  << std::scientific << std::setprecision(16) 
+                  << FGMRES->getInitResidualNorm()/norm_b
+                  << " final nrm: "
+                  << FGMRES->getFinalResidualNorm()/norm_b
+                  << " iter: " << FGMRES->getNumIter() << "\n";
+      }
+    }
 
   } // for (int i = 0; i < numSystems; ++i)
 

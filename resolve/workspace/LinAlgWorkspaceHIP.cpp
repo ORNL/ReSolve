@@ -70,6 +70,6 @@ namespace ReSolve
   void LinAlgWorkspaceHIP::initializeHandles()
   {
     rocsparse_create_handle(&handle_rocsparse_);
-                            rocblas_create_handle(&handle_rocblas_);
-                            }
-                            } // namespace ReSolve
+    rocblas_create_handle(&handle_rocblas_);
+  }
+} // namespace ReSolve

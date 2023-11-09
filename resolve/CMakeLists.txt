@@ -12,6 +12,7 @@ add_subdirectory(utilities)
 set(ReSolve_SRC
     LinSolver.cpp
     LinSolverDirectKLU.cpp
+    SystemSolver.cpp
 )
 
 # Temporary until there is CPU-only option for FGMRES

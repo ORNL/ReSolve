@@ -13,6 +13,7 @@
 #include <resolve/LinSolverDirectRocSolverRf.hpp>
 #include <resolve/LinSolverIterativeFGMRES.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
+#include <resolve/SystemSolver.hpp>
 //author: KS
 //functionality test to check whether cuSolverRf/FGMRES works correctly.
 
@@ -21,7 +22,6 @@ using namespace ReSolve::constants;
 int main(int argc, char *argv[])
 {
   // Use ReSolve data types.
-  using index_type = ReSolve::index_type;
   using real_type  = ReSolve::real_type;
   using vector_type = ReSolve::vector::Vector;
 
@@ -36,12 +36,8 @@ int main(int argc, char *argv[])
   ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(workspace_HIP);
   ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(workspace_HIP);
 
-  ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
-  KLU->setupParameters(1, 0.1, false);
+  ReSolve::SystemSolver* solver = new ReSolve::SystemSolver(workspace_HIP, "fgmres");
 
-  ReSolve::LinSolverDirectRocSolverRf* Rf = new ReSolve::LinSolverDirectRocSolverRf(workspace_HIP);
-  ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::cgs2);
-  ReSolve::LinSolverIterativeFGMRES* FGMRES = new ReSolve::LinSolverIterativeFGMRES(matrix_handler, vector_handler, GS, "hip");
   // Input to this code is location of `data` directory where matrix files are stored
   const std::string data_path = (argc == 2) ? argv[1] : "./";
 
@@ -51,7 +47,6 @@ int main(int argc, char *argv[])
 
   std::string rhsFileName1 = data_path + "data/rhs_ACTIVSg2000_AC_00.mtx.ones";
   std::string rhsFileName2 = data_path + "data/rhs_ACTIVSg2000_AC_02.mtx.ones";
-
 
 
   // Read first matrix
@@ -88,17 +83,17 @@ int main(int argc, char *argv[])
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   vec_rhs->setDataUpdated(ReSolve::memory::HOST);
 
+  status = solver->setMatrix(A);
+  error_sum += status;
+
   // Solve the first system using KLU
-  status = KLU->setup(A);
+  status = solver->analyze();
   error_sum += status;
 
-  status = KLU->analyze();
+  status = solver->factorize();
   error_sum += status;
 
-  status = KLU->factorize();
-  error_sum += status;
-
-  status = KLU->solve(vec_rhs, vec_x);
+  status = solver->solve(vec_rhs, vec_x);
   error_sum += status;
 
   vector_type* vec_test;
@@ -159,23 +154,7 @@ int main(int argc, char *argv[])
 
 
   // Now prepare the Rf solver
-
-  ReSolve::matrix::Csc* L = (ReSolve::matrix::Csc*) KLU->getLFactor();
-  ReSolve::matrix::Csc* U = (ReSolve::matrix::Csc*) KLU->getUFactor();
-
-  if (L == nullptr) {
-    printf("ERROR");
-  }
-  index_type* P = KLU->getPOrdering();
-  index_type* Q = KLU->getQOrdering();
-  Rf->setSolveMode(1);
-  vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-  error_sum += Rf->setup(A, L, U, P, Q, vec_rhs); 
-  FGMRES->setMaxit(200); 
-  FGMRES->setRestart(100); 
-
-  GS->setup(A->getNumRows(), FGMRES->getRestart()); 
-  status =  FGMRES->setup(A); 
+  status = solver->refactorize_setup();
   error_sum += status;
 
   // Load the second matrix
@@ -201,20 +180,15 @@ int main(int argc, char *argv[])
   matrix_handler->coo2csr(A_coo, A, "hip");
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
 
-  status = Rf->refactorize();
+  status = solver->refactorize();
   error_sum += status;
   
   vec_x->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-  // TODO: Investigate why results are different when using Rf->solve(vec_x) !!
-  status = Rf->solve(vec_rhs, vec_x);
+  status = solver->solve(vec_rhs, vec_x);
   error_sum += status;
   
-  FGMRES->resetMatrix(A);
-  status = FGMRES->setupPreconditioner("LU", Rf);
-  error_sum += status;
-
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-  status = FGMRES->solve(vec_rhs, vec_x);
+  status = solver->refine(vec_rhs, vec_x);
   error_sum += status;
 
   vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
@@ -246,10 +220,9 @@ int main(int argc, char *argv[])
   std::cout<<"\t ||x-x_true||_2              : "<<normDiffMatrix2<<" (solution error)"<<std::endl;
   std::cout<<"\t ||x-x_true||_2/||x_true||_2 : "<<normDiffMatrix2/normXtrue<<" (scaled solution error)"<<std::endl;
   std::cout<<"\t ||b-A*x_exact||_2           : "<<exactSol_normRmatrix2<<" (control; residual norm with exact solution)"<<std::endl;
-  std::cout<<"\t IR iterations               : "<<FGMRES->getNumIter()<<" (max 200, restart 100)"<<std::endl;
-  std::cout<<"\t IR starting res. norm       : "<<FGMRES->getInitResidualNorm()<<" "<<std::endl;
-  std::cout<<"\t IR final res. norm          : "<<FGMRES->getFinalResidualNorm()<<" (tol 1e-14)"<<std::endl<<std::endl;
-  // TODO: 1e-9 is too lose acuracy!
+  std::cout<<"\t IR iterations               : "<<solver->getNumIter()<<" (max 200, restart 100)"<<std::endl;
+  std::cout<<"\t IR starting res. norm       : "<<solver->getInitResidualNorm()<<" "<<std::endl;
+  std::cout<<"\t IR final res. norm          : "<<solver->getFinalResidualNorm()<<" (tol 1e-14)"<<std::endl<<std::endl;
   if ((normRmatrix1/normB1 > 1e-12 ) || (normRmatrix2/normB2 > 1e-9)) {
     std::cout << "Result inaccurate!\n";
     error_sum++;
@@ -261,10 +234,7 @@ int main(int argc, char *argv[])
   }
 
   delete A;
-  delete KLU;
-  delete GS;
-  delete FGMRES;
-  delete Rf;
+  delete solver;
   delete [] x;
   delete [] rhs;
   delete vec_r;

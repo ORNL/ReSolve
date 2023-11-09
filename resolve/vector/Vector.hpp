@@ -12,10 +12,11 @@ namespace ReSolve { namespace vector {
       ~Vector();
 
       int update(real_type* data, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut);
+      int update(Vector* v, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut);
       real_type* getData(memory::MemorySpace memspace);
       real_type* getData(index_type i, memory::MemorySpace memspace); // get pointer to i-th vector in multivector
 
-      index_type getSize();
+      index_type getSize() const;
       index_type getCurrentSize();
       index_type getNumVectors();
 
@@ -29,8 +30,8 @@ namespace ReSolve { namespace vector {
       int copyData(memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut); 
       int setCurrentSize(index_type new_n_current);
       real_type* getVectorData(index_type i, memory::MemorySpace memspace); // get ith vector data out of multivector   
-      int  deepCopyVectorData(real_type* dest, index_type i, memory::MemorySpace memspace);  
-      int  deepCopyVectorData(real_type* dest, memory::MemorySpace memspace);  //copy FULL multivector 
+      int deepCopyVectorData(real_type* dest, index_type i, memory::MemorySpace memspace);  
+      int deepCopyVectorData(real_type* dest, memory::MemorySpace memspace);  //copy FULL multivector 
     
     private:
       index_type n_; ///< size

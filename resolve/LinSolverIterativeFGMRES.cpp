@@ -297,56 +297,6 @@ namespace ReSolve
 
   }
 
-  real_type  LinSolverIterativeFGMRES::getTol()
-  {
-    return tol_;
-  }
-
-  index_type  LinSolverIterativeFGMRES::getMaxit()
-  {
-    return maxit_;
-  }
-
-  index_type  LinSolverIterativeFGMRES::getRestart()
-  {
-    return restart_;
-  }
-
-  index_type  LinSolverIterativeFGMRES::getConvCond()
-  {
-    return conv_cond_;
-  }
-
-  bool  LinSolverIterativeFGMRES::getFlexible()
-  {
-    return flexible_;
-  }
-
-  void  LinSolverIterativeFGMRES::setTol(real_type new_tol)
-  {
-    this->tol_ = new_tol;
-  }
-
-  void  LinSolverIterativeFGMRES::setMaxit(index_type new_maxit)
-  {
-    this->maxit_ = new_maxit;
-  }
-
-  void  LinSolverIterativeFGMRES::setRestart(index_type new_restart)
-  {
-    this->restart_ = new_restart;
-  }
-
-  void  LinSolverIterativeFGMRES::setConvCond(index_type new_conv_cond)
-  {
-    this->conv_cond_ = new_conv_cond;
-  }
-  
-  void  LinSolverIterativeFGMRES::setFlexible(bool new_flex)
-  {
-    this->flexible_ = new_flex;
-  }
-
   int  LinSolverIterativeFGMRES::resetMatrix(matrix::Sparse* new_matrix)
   {
     A_ = new_matrix;

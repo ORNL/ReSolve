@@ -33,6 +33,7 @@ namespace ReSolve
                 vector_type*  rhs = nullptr);
      
       void setupParameters(int ordering, double KLU_threshold, bool halt_if_singular);
+      int setParameters();
 
       int analyze(); //the same as symbolic factorization
       int factorize();

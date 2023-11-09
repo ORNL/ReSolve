@@ -226,12 +226,13 @@ int main(int argc, char *argv[])
   std::cout<<"\t ||x-x_true||_2/||x_true||_2 : "<<normDiffMatrix2/normXtrue<<" (scaled solution error)"<<std::endl;
   std::cout<<"\t ||b-A*x_exact||_2           : "<<exactSol_normRmatrix2<<" (control; residual norm with exact solution)"<<std::endl<<std::endl;
 
-
-
-  if ((error_sum == 0) && (normRmatrix1/normB1 < 1e-16 ) && (normRmatrix2/normB2 < 1e-16)) {
+  if ((normRmatrix1/normB1 > 1e-16 ) || (normRmatrix2/normB2 > 1e-16)) {
+    std::cout << "Result inaccurate!\n";
+    error_sum++;
+  }
+  if (error_sum == 0) {
     std::cout<<"Test 3 (KLU with cuSolverGLU refactorization) PASSED"<<std::endl;
   } else {
-
     std::cout<<"Test 3 (KLU with cuSolverGLU refactorization) FAILED, error sum: "<<error_sum<<std::endl;
   }
 

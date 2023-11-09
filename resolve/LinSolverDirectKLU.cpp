@@ -1,10 +1,13 @@
 #include <cstring> // includes memcpy
 #include <resolve/vector/Vector.hpp>
 #include <resolve/matrix/Csc.hpp>
+#include <resolve/utilities/logger/Logger.hpp>
 #include "LinSolverDirectKLU.hpp"
 
 namespace ReSolve 
 {
+  using out = io::Logger;
+
   LinSolverDirectKLU::LinSolverDirectKLU()
   {
     Symbolic_ = nullptr;
@@ -40,6 +43,23 @@ namespace ReSolve
     Common_.tol = KLU_threshold;
     Common_.scale = -1;
     Common_.halt_if_singular = halt_if_singular;
+  }
+
+  int LinSolverDirectKLU::setParameters() 
+  {
+    Common_.btf  = 0;
+    Common_.ordering = ordering_;
+    Common_.tol = pivotThreshold_;
+    Common_.scale = -1;
+    Common_.halt_if_singular = haltIfSingular_;
+
+    out::summary() << "KLU parameters set:\n"
+                   << "\tbtf              = " << Common_.btf              << "\n"
+                   << "\tordering         = " << Common_.ordering         << "\n"
+                   << "\tpivot threshold  = " << Common_.tol              << "\n"
+                   << "\tscale            = " << Common_.scale            << "\n"
+                   << "\thalt if singular = " << Common_.halt_if_singular << "\n";
+    return 0;
   }
 
   int LinSolverDirectKLU::analyze() 
@@ -145,6 +165,7 @@ namespace ReSolve
       U_ = new matrix::Csc(A_->getNumRows(), A_->getNumColumns(), nnzU);
       L_->allocateMatrixData(memory::HOST);
       U_->allocateMatrixData(memory::HOST);
+    
       int ok = klu_extract(Numeric_, 
                            Symbolic_, 
                            L_->getColData(memory::HOST), 

@@ -9,7 +9,7 @@ namespace ReSolve
   {
     workspace_ = workspace;
     infoM_ = nullptr;
-    solve_mode_ = 0; //solve mode - slow mode is default
+    solve_mode_ = 1; //solve mode - fast mode is default
   }
 
   LinSolverDirectRocSolverRf::~LinSolverDirectRocSolverRf()
@@ -74,7 +74,6 @@ namespace ReSolve
 
     mem_.deviceSynchronize();
     error_sum += status_rocblas_;
-
     // tri solve setup
     if (solve_mode_ == 1) { // fast mode
 
@@ -207,13 +206,11 @@ namespace ReSolve
                                                  d_Q_,
                                                  infoM_);
 
-
     mem_.deviceSynchronize();
     error_sum += status_rocblas_;
 
     if (solve_mode_ == 1) {
       //split M, fill L and U with correct values
-      printf("solve mode 1, splitting the factors again \n");
       status_rocblas_ = rocsolver_dcsrrf_splitlu(workspace_->getRocblasHandle(),
                                                  A_->getNumRows(),
                                                  M_->getNnzExpanded(),
@@ -274,6 +271,7 @@ namespace ReSolve
                              L_buffer_);
       error_sum += status_rocsparse_;
 
+      //mem_.deviceSynchronize();
       rocsparse_dcsrsv_solve(workspace_->getRocsparseHandle(), 
                              rocsparse_operation_none,
                              A_->getNumRows(),
@@ -290,6 +288,7 @@ namespace ReSolve
                              U_buffer_);
       error_sum += status_rocsparse_;
 
+      //mem_.deviceSynchronize();
       permuteVectorQ(A_->getNumRows(), d_Q_,d_aux1_,rhs->getData(ReSolve::memory::DEVICE));
       mem_.deviceSynchronize();
     }

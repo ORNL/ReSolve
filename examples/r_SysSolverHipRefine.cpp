@@ -4,13 +4,16 @@
 
 #include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/Csr.hpp>
+#include <resolve/matrix/Csc.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/matrix/io.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
-#include <resolve/LinSolverDirectCuSolverGLU.hpp>
+#include <resolve/LinSolverDirectRocSolverRf.hpp>
+#include <resolve/LinSolverIterativeFGMRES.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
+#include <resolve/SystemSolver.hpp>
 
 using namespace ReSolve::constants;
 
@@ -20,7 +23,6 @@ int main(int argc, char *argv[])
   using index_type = ReSolve::index_type;
   using real_type  = ReSolve::real_type;
   using vector_type = ReSolve::vector::Vector;
-  using matrix_type = ReSolve::matrix::Sparse;
 
   (void) argc; // TODO: Check if the number of input parameters is correct.
   std::string  matrixFileName = argv[1];
@@ -37,19 +39,16 @@ int main(int argc, char *argv[])
 
   ReSolve::matrix::Coo* A_coo;
   ReSolve::matrix::Csr* A;
-  ReSolve::LinAlgWorkspaceCUDA* workspace_CUDA = new ReSolve::LinAlgWorkspaceCUDA;
-  workspace_CUDA->initializeHandles();
-  ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(workspace_CUDA);
-  ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(workspace_CUDA);
+  ReSolve::LinAlgWorkspaceHIP* workspace_HIP = new ReSolve::LinAlgWorkspaceHIP();
+  workspace_HIP->initializeHandles();
+  ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(workspace_HIP);
   real_type* rhs = nullptr;
   real_type* x   = nullptr;
 
-  vector_type* vec_rhs;
-  vector_type* vec_x;
-  vector_type* vec_r;
+  vector_type* vec_rhs = nullptr;
+  vector_type* vec_x   = nullptr;
 
-  ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
-  ReSolve::LinSolverDirectCuSolverGLU* GLU = new ReSolve::LinSolverDirectCuSolverGLU(workspace_CUDA);
+  ReSolve::SystemSolver* solver = new ReSolve::SystemSolver(workspace_HIP, "fgmres");
 
   for (int i = 0; i < numSystems; ++i)
   {
@@ -92,78 +91,85 @@ int main(int argc, char *argv[])
       rhs = ReSolve::io::readRhsFromFile(rhs_file);
       x = new real_type[A->getNumRows()];
       vec_rhs = new vector_type(A->getNumRows());
-      vec_x = new vector_type(A->getNumRows());
+      vec_x =   new vector_type(A->getNumRows());
       vec_x->allocate(ReSolve::memory::HOST);//for KLU
       vec_x->allocate(ReSolve::memory::DEVICE);
-      vec_r = new vector_type(A->getNumRows());
     } else {
       ReSolve::io::readAndUpdateMatrix(mat_file, A_coo);
       ReSolve::io::readAndUpdateRhs(rhs_file, &rhs);
     }
-    std::cout<<"Finished reading the matrix and rhs, size: "<<A->getNumRows()<<" x "<<A->getNumColumns()<< ", nnz: "<< A->getNnz()<< ", symmetric? "<<A->symmetric()<< ", Expanded? "<<A->expanded()<<std::endl;
+    std::cout << "Finished reading the matrix and rhs, size: " << A->getNumRows()
+              << " x " << A->getNumColumns()
+              << ", nnz: " << A->getNnz()
+              << ", symmetric? "<< A->symmetric()
+              << ", Expanded? " << A->expanded() << std::endl;
     mat_file.close();
     rhs_file.close();
 
     //Now convert to CSR.
-    if (i < 1) { 
-      matrix_handler->coo2csr(A_coo, A,  "cpu");
+    if (i < 2) { 
+      matrix_handler->coo2csr(A_coo, A, "cpu");
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
       vec_rhs->setDataUpdated(ReSolve::memory::HOST);
     } else { 
-      matrix_handler->coo2csr(A_coo, A, "cuda");
+      matrix_handler->coo2csr(A_coo, A, "hip");
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
     }
     std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnzExpanded()<<std::endl;
-    //Now call direct solver
-    if (i == 0) {
-      KLU->setupParameters(1, 0.1, false);
-    }
+    solver->setMatrix(A);
     int status;
-    if (i < 1) {
-      KLU->setup(A);
-      status = KLU->analyze();
-      std::cout<<"KLU analysis status: "<<status<<std::endl;
-      status = KLU->factorize();
-      std::cout<<"KLU factorization status: "<<status<<std::endl;
-      matrix_type* L = KLU->getLFactor();
-      matrix_type* U = KLU->getUFactor();
-      if (L == nullptr) {printf("ERROR");}
-      index_type* P = KLU->getPOrdering();
-      index_type* Q = KLU->getQOrdering();
-      GLU->setup(A, L, U, P, Q); 
-      status = GLU->solve(vec_rhs, vec_x);
-      std::cout<<"GLU solve status: "<<status<<std::endl;      
+    if (i < 2) {
+      status = solver->analyze();
+      std::cout << "KLU analysis status: " << status << std::endl;
+      status = solver->factorize();
+      std::cout << "KLU factorization status: " << status << std::endl;
+     
+      status = solver->solve(vec_rhs, vec_x);
+      std::cout << "KLU solve status: " << status << std::endl;      
+      std::cout << "\t 2-Norm of the residual: " 
+                << std::scientific << std::setprecision(16) 
+                << solver->getResidualNorm(vec_rhs, vec_x) << "\n";
+      if (i == 1) {
+        solver->refactorize_setup();
+        std::cout << "rocsolver rf refactorization setup status: " << status << std::endl;
+      }
     } else {
-      std::cout<<"Using CUSOLVER GLU"<<std::endl;
-      status = GLU->refactorize();
-      std::cout<<"CUSOLVER GLU refactorization status: "<<status<<std::endl;      
-      status = GLU->solve(vec_rhs, vec_x);
-      std::cout<<"CUSOLVER GLU solve status: "<<status<<std::endl;      
+      std::cout << "Using ROCSOLVER RF" << std::endl;
+      status = solver->refactorize();
+      std::cout << "ROCSOLVER RF refactorization status: " << status << std::endl;      
+      status = solver->solve(vec_rhs, vec_x);
+      std::cout << "ROCSOLVER RF solve status: " << status << std::endl;
+      real_type rnrm = solver->getResidualNorm(vec_rhs, vec_x);
+      std::cout << "\t 2-Norm of the residual (before IR): " 
+                << std::scientific << std::setprecision(16) 
+                << rnrm << "\n";
+
+      vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+      if (!std::isnan(rnrm) && !std::isinf(rnrm)) {
+        status = solver->refine(vec_rhs, vec_x);
+        std::cout << "FGMRES solve status: " << status << std::endl;      
+
+        std::cout << "FGMRES: init nrm: " 
+                  << std::scientific << std::setprecision(16) 
+                  << rnrm
+                  << " final nrm: "
+                  << solver->getResidualNorm(vec_rhs, vec_x)
+                  << " iter: " << solver->getNumIter() 
+                  << "\n";
+      }
     }
-
-    // Estimate solution error
-    vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-    real_type bnorm = sqrt(vector_handler->dot(vec_r, vec_r, "cuda"));
-    matrix_handler->setValuesChanged(true, "cuda");
-    matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "cuda"); 
-
-    std::cout << "\t 2-Norm of the residual: " 
-              << std::scientific << std::setprecision(16) 
-              << sqrt(vector_handler->dot(vec_r, vec_r, "cuda"))/bnorm << "\n";
 
   } // for (int i = 0; i < numSystems; ++i)
 
-  //now DELETE
   delete A;
-  delete KLU;
-  delete GLU;
+  delete A_coo;
+  delete solver;
   delete [] x;
   delete [] rhs;
-  delete vec_r;
+  delete vec_rhs;
   delete vec_x;
-  delete workspace_CUDA;
+  delete workspace_HIP;
   delete matrix_handler;
-  delete vector_handler;
 
   return 0;
 }

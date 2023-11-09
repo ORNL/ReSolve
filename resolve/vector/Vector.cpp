@@ -37,7 +37,7 @@ namespace ReSolve { namespace vector {
   }
 
 
-  index_type Vector::getSize()
+  index_type Vector::getSize() const
   {
     return n_;
   }
@@ -82,6 +82,12 @@ namespace ReSolve { namespace vector {
         cpu_updated_ = false;
         break;
     }
+  }
+
+  int Vector::update(Vector* v, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut)
+  {
+    real_type* data = v->getData(memspaceIn);
+    return update(data, memspaceIn, memspaceOut);
   }
 
   int Vector::update(real_type* data, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut)
