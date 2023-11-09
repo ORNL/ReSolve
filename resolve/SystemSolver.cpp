@@ -51,38 +51,38 @@ namespace ReSolve
 
     if (factorizationMethod == "klu") {
       KLU_->setup(A_);
-      int status = KLU_->analyze();
+      return KLU_->analyze();
     } 
-    return 0;  
+    return 1;  
   }
 
   int SystemSolver::factorize()
   {
     if (factorizationMethod == "klu") {
-      int status = KLU_->factorize();
+      return KLU_->factorize();
     } 
-    return 0;
+    return 1;
   }
 
   int SystemSolver::refactorize()
   {
     if (factorizationMethod == "klu") {
-      int status = KLU_->refactorize();
+      return KLU_->refactorize();
     } 
-    return 0;
+    return 1;
   }
 
   int SystemSolver::solve(vector_type* x, vector_type* rhs)
   {
     if (factorizationMethod == "klu") {
-      int status = KLU_->solve(x, rhs);
+      return KLU_->solve(x, rhs);
     } 
-    return 0;
+    return 1;
   }
 
   int SystemSolver::refine(vector_type* x, vector_type* rhs)
   {
-    return 0;
+    return 1;
   }
 
 } // namespace ReSolve
