@@ -18,7 +18,11 @@ set(ReSolve_SRC
 set(ReSolve_GPU_SRC
     GramSchmidt.cpp
     LinSolverIterativeFGMRES.cpp
-)
+    LinSolverIterativeRandFGMRES.cpp
+    RandSketchingManager.cpp
+    RandSketchingCountSketch.cpp
+    RandSketchingFWHT.cpp
+    )
 
 # C++ code that links to CUDA SDK libraries
 set(ReSolve_CUDASDK_SRC
@@ -45,7 +49,8 @@ set(ReSolve_HEADER_INSTALL
     SystemSolver.hpp
     GramSchmidt.hpp
     MemoryUtils.hpp
-)
+    RandSketchingManager.hpp
+    )
 
 # Now, build workspaces
 add_subdirectory(workspace)

@@ -3,17 +3,17 @@
 #include <resolve/vector/Vector.hpp>
 #include <resolve/RandSketchingManager.hpp>
 namespace ReSolve {
-  class RandSketchingCountSketch : public RandSketchingManager
+  class RandSketchingFWHT : public RandSketchingManager
   {
 
     using vector_type = vector::Vector;
     public: 
       // constructor
 
-      RandSketchingCountSketch();
+      RandSketchingFWHT();
 
       // destructor
-      virtual ~RandSketchingCountSketch();
+      virtual ~RandSketchingFWHT();
 
       // Actual sketching process
       virtual int Theta(vector_type* input, vector_type* output);
@@ -23,10 +23,16 @@ namespace ReSolve {
       virtual int reset(); // if needed can be reset (like when Krylov method restarts)
 
     private:
-      index_type* h_labels_;
-      index_type* h_flip_;
+      index_type* h_seq_;
+      index_type* h_D_;
+      index_type* h_perm_;
 
-      index_type* d_labels_;
-      index_type* d_flip_;
+      index_type* d_D_;
+      index_type* d_perm_;
+      real_type* d_aux_;
+      
+      index_type N_;
+      index_type log2N_;
+      real_type one_over_k_;
   };
 }

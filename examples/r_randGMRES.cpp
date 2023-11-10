@@ -11,7 +11,7 @@
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
 #include <resolve/LinSolverDirectRocSparseILU0.hpp>
-#include <resolve/LinSolverIterativeFGMRES.hpp>
+#include <resolve/LinSolverIterativeRandFGMRES.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 
 using namespace ReSolve::constants;
@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
   ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::cgs2);
   ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
   ReSolve::LinSolverDirectRocSparseILU0* Rf = new ReSolve::LinSolverDirectRocSparseILU0(workspace_HIP);
-  ReSolve::LinSolverIterativeFGMRES* FGMRES = new ReSolve::LinSolverIterativeFGMRES(matrix_handler, vector_handler, GS, "hip");
+  ReSolve::LinSolverIterativeRandFGMRES* FGMRES = new ReSolve::LinSolverIterativeRandFGMRES(matrix_handler, vector_handler,ReSolve::LinSolverIterativeRandFGMRES::fwht, GS, "hip");
 
   for (int i = 0; i < numSystems; ++i)
   {
@@ -148,9 +148,10 @@ int main(int argc, char *argv[])
         index_type* Q = KLU->getQOrdering();
         Rf->setup(A);
         std::cout<<"about to set FGMRES" <<std::endl;
-      FGMRES->setRestart(20);
-        GS->setup(A->getNumRows(), FGMRES->getRestart()); 
-        FGMRES->setup(A); 
+        FGMRES->setRestart(20);
+        FGMRES->setup(A);
+        GS->setup(FGMRES->getKrand(), FGMRES->getRestart()); 
+       printf("FGMRES setup complete \n"); 
       }
     } else {
       //status =  KLU->refactorize();
@@ -164,7 +165,7 @@ int main(int argc, char *argv[])
       //matrix_handler->setValuesChanged(true, "hip");
       FGMRES->resetMatrix(A);
       FGMRES->setupPreconditioner("LU", Rf);
-     FGMRES->setFlexible(0); 
+     FGMRES->setFlexible(1); 
       matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "hip"); 
       real_type rnrm = sqrt(vector_handler->dot(vec_r, vec_r, "hip"));
       std::cout << "\t 2-Norm of the residual (before IR): " 
