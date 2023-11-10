@@ -39,12 +39,15 @@ namespace ReSolve
                   input->getData(ReSolve::memory::DEVICE), 
                   d_aux_);  
 
+    mem_.deviceSynchronize();
     FWHT(1, log2N_, d_aux_);
 
+    mem_.deviceSynchronize();
     FWHT_select(k_rand_, 
                 d_perm_, 
                 d_aux_, 
                 output->getData(ReSolve::memory::DEVICE)); 
+    mem_.deviceSynchronize();
     // remember - scaling is the solver's problem 
     return 0;
   }

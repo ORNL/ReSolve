@@ -371,13 +371,15 @@ namespace ReSolve
         rnorm = vector_handler_->dot(d_S_, d_S_, memspace_);
         // rnorm = ||S_0||
         rnorm = sqrt(rnorm);
- printf("end of cycle, true norm %16.16e \n", rnorm);
+        printf("end of cycle, true norm %16.16e \n", rnorm);
       }
 
       if(!outer_flag) {
         rnorm = vector_handler_->dot(d_V_, d_V_, memspace_);
         // rnorm = ||V_0||
+ printf("end of cycle, true norm %16.16e \n", rnorm);
         rnorm = sqrt(rnorm);
+ printf("end of cycle, true norm (after sqrt) %16.16e \n", rnorm);
         final_residual_norm_ = rnorm;
         fgmres_iters_ = it;
       }
