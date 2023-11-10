@@ -8,6 +8,7 @@
 #include <rocblas/rocblas.h>
 #include <rocsolver/rocsolver.h>
 #include <hip/hip_runtime.h>
+#include <resolve/matrix/Csr.hpp>
 
 namespace ReSolve 
 {

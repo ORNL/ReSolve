@@ -3,6 +3,7 @@
 #include "LinSolver.hpp"
 #include "cusolver_defs.hpp"
 #include <resolve/MemoryUtils.hpp>
+#include <resolve/workspace/LinAlgWorkspace.hpp>
 
 namespace ReSolve 
 {
