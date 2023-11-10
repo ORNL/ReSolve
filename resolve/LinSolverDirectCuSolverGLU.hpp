@@ -3,7 +3,6 @@
 #include "LinSolver.hpp"
 #include "cusolver_defs.hpp"
 #include <resolve/MemoryUtils.hpp>
-
 namespace ReSolve 
 {
   // Forward declaration of vector::Vector class
@@ -19,7 +18,7 @@ namespace ReSolve
   }
 
   // Forward declaration of ReSolve handlers workspace
-  class LinAlgWorkspace;
+  class LinAlgWorkspaceCUDA;
 
   class LinSolverDirectCuSolverGLU : public LinSolverDirect 
   {

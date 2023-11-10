@@ -8,7 +8,6 @@
 #include <rocblas/rocblas.h>
 #include <rocsolver/rocsolver.h>
 #include <hip/hip_runtime.h>
-
 namespace ReSolve 
 {
   // Forward declaration of vector::Vector class
@@ -17,10 +16,11 @@ namespace ReSolve
     class Vector;
   }
 
-  // Forward declaration of matrix::Sparse class
+  // Forward declaration of matrix::Sparse and matrix::Csr classes
   namespace matrix
   {
     class Sparse;
+    class Csr;
   }
   
   class LinSolverDirectRocSolverRf : public LinSolverDirect 
