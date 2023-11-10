@@ -16,10 +16,11 @@ namespace ReSolve
     class Vector;
   }
 
-  // Forward declaration of matrix::Sparse class
+  // Forward declaration of matrix::Sparse and matrix::Csr classes
   namespace matrix
   {
     class Sparse;
+    class Csr;
   }
   
   class LinSolverDirectRocSolverRf : public LinSolverDirect 
