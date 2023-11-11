@@ -1,14 +1,13 @@
 #include <resolve/matrix/Sparse.hpp>
 #include <resolve/vector/Vector.hpp>
 
-// Available solvers
-// #include <resolve/LinSolverDirect.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
+
+#ifdef RESOLVE_USE_CUDA
+#include <resolve/workspace/LinAlgWorkspaceCUDA.hpp>
 #include <resolve/LinSolverDirectCuSolverGLU.hpp>
 #include <resolve/LinSolverDirectCuSolverRf.hpp>
-
-// Available workspaces
-#include <resolve/workspace/LinAlgWorkspaceCUDA.hpp>
+#endif
 
 // Handlers
 #include <resolve/matrix/MatrixHandler.hpp>
@@ -36,6 +35,7 @@ namespace ReSolve
     initialize();
   }
 
+#ifdef RESOLVE_USE_CUDA
   SystemSolver::SystemSolver(LinAlgWorkspaceCUDA* workspace) : workspaceCuda_(workspace)
   {
     // Instantiate handlers
@@ -50,6 +50,7 @@ namespace ReSolve
     
     initialize();
   }
+#endif
 
   SystemSolver::~SystemSolver()
   {
@@ -62,11 +63,13 @@ namespace ReSolve
     return 0;
   }
 
+#ifdef RESOLVE_USE_CUDA
   int SystemSolver::setCudaWorkspace(LinAlgWorkspaceCUDA* workspace)
   {
     workspaceCuda_ = workspace;
     return 0;
   }
+#endif
 
   /**
    * @brief Sets up the system solver
@@ -91,12 +94,15 @@ namespace ReSolve
     // Create refactorization solver
     if (refactorizationMethod_ == "klu") {
       // do nothing for now
+#ifdef RESOLVE_USE_CUDA
     } else if (refactorizationMethod_ == "glu") {
       refactorSolver_ = new ReSolve::LinSolverDirectCuSolverGLU(workspaceCuda_);
     } else if (refactorizationMethod_ == "cusolverrf") {
       refactorSolver_ = new ReSolve::LinSolverDirectCuSolverRf();
+#endif
     } else {
-      out::error() << "Refactorization method not recognized ...\n";
+      out::error() << "Refactorization method " << refactorizationMethod_ 
+                   << " not recognized ...\n";
       return 1;
     }
 
@@ -148,20 +154,23 @@ namespace ReSolve
       return KLU_->refactorize();
     }
 
+#ifdef RESOLVE_USE_CUDA
     if (refactorizationMethod_ == "glu") {
       // std::cout << "Refactorization using GLU ...\n";
       return refactorSolver_->refactorize();
     }
-
+#endif
     return 1;
   }
 
   int SystemSolver::refactorize_setup()
   {
+#ifdef RESOLVE_USE_CUDA
     if (refactorizationMethod_ == "glu") {
       // std::cout << "Refactorization setup using GLU ...\n";
       return refactorSolver_->setup(A_, L_, U_, P_, Q_);
-    } 
+    }
+#endif
     return 1;
   }
 
@@ -172,10 +181,12 @@ namespace ReSolve
       return KLU_->solve(x, rhs);
     } 
 
+#ifdef RESOLVE_USE_CUDA
     if (solveMethod_ == "glu") {
       // std::cout << "Solving with GLU ...\n";
       return refactorSolver_->solve(x, rhs);
     } 
+#endif
 
     return 1;
   }
