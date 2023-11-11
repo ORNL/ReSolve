@@ -41,6 +41,10 @@ if(RESOLVE_USE_CUDA)
   add_executable(klu_glu_values_update.exe r_KLU_GLU_matrix_values_update.cpp)
   target_link_libraries(klu_glu_values_update.exe PRIVATE ReSolve)
 
+  # Build example with a configurable system solver
+  add_executable(system_cuda.exe r_SysSolverCuda.cpp)
+  target_link_libraries(system_cuda.exe PRIVATE ReSolve)
+
 endif(RESOLVE_USE_CUDA)
 
 # Create HIP examples

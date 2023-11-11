@@ -48,12 +48,12 @@ namespace ReSolve
       LinSolverDirect();
       virtual ~LinSolverDirect();
       //return 0 if successful!
-      virtual int setup(matrix::Sparse* A,
-                        matrix::Sparse* L,
-                        matrix::Sparse* U,
-                        index_type*     P,
-                        index_type*     Q,
-                        vector_type*  rhs);
+      virtual int setup(matrix::Sparse* A = nullptr,
+                        matrix::Sparse* L = nullptr,
+                        matrix::Sparse* U = nullptr,
+                        index_type*     P = nullptr,
+                        index_type*     Q = nullptr,
+                        vector_type*  rhs = nullptr);
                         
       virtual int analyze(); //the same as symbolic factorization
       virtual int factorize();

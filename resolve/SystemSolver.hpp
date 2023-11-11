@@ -2,6 +2,11 @@
 namespace ReSolve
 {
   class LinSolverDirectKLU;
+  class LinSolverDirect;
+  class LinAlgWorkspaceCUDA;
+  class LinAlgWorkspaceHIP;
+  class MatrixHandler;
+  class VectorHandler;
 
   namespace vector
   {
@@ -17,35 +22,58 @@ namespace ReSolve
   {
     public:
       using vector_type = vector::Vector;
+      using matrix_type = matrix::Sparse;
 
       SystemSolver();
+      SystemSolver(LinAlgWorkspaceCUDA* workspaceCuda);
       SystemSolver(std::string factorizationMethod, std::string refactorizationMethod, std::string solveMethod, std::string IRMethod);
 
       ~SystemSolver();
 
+      int initialize();
       int setMatrix(matrix::Sparse* A);
       int analyze(); //    symbolic part
       int factorize(); //  numeric part
+      int factorize_setup(); //  numeric part
       int refactorize();
+      int refactorize_setup();
       int solve(vector_type* x, vector_type* rhs); // for triangular solve
       int refine(vector_type* x, vector_type* rhs); // for iterative refinement
+
+      int setCudaWorkspace(LinAlgWorkspaceCUDA* workspaceCuda);
 
       // we update the matrix once it changed
       int updateMatrix(std::string format, int * ia, int *ja, double *a);
 
+      void setFactorizationMethod(std::string method);
+      void setRefactorizationMethod(std::string method);
+      void setSolveMethod(std::string method);
+      void setIterativeRefinement(std::string method);
+
     private:
     
       matrix::Sparse* A_{nullptr};
-      std::string factorizationMethod;
-      std::string refactorizationMethod;
-      std::string solveMethod;
-      std::string IRMethod;
+      std::string factorizationMethod_;
+      std::string refactorizationMethod_;
+      std::string solveMethod_;
+      std::string irMethod_;
 
-      int setup();
       //internal function to setup the different solvers. IT IS RUN ONCE THROUGH CONSTRUCTOR.
 
       // add factorizationSolver, iterativeSolver, triangularSolver
-      ReSolve::LinSolverDirectKLU* KLU_{nullptr};
+      LinSolverDirectKLU* KLU_{nullptr};
+      LinSolverDirect* refactorSolver_{nullptr};
 
+      LinAlgWorkspaceCUDA* workspaceCuda_{nullptr};
+      LinAlgWorkspaceHIP*  workspaceHip_{nullptr};
+
+      MatrixHandler* matrixHandler_{nullptr};
+      VectorHandler* vectorHandler_{nullptr};
+
+      matrix_type* L_{nullptr};
+      matrix_type* U_{nullptr};
+
+      index_type* P_{nullptr};
+      index_type* Q_{nullptr};
   };
 } // namespace ReSolve
