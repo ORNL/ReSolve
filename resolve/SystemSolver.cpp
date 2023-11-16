@@ -9,6 +9,11 @@
 #include <resolve/LinSolverDirectCuSolverRf.hpp>
 #endif
 
+#ifdef RESOLVE_USE_HIP
+#include <resolve/workspace/LinAlgWorkspaceHIP.hpp>
+#include <resolve/LinSolverDirectRocSolverRf.hpp>
+#endif
+
 // Handlers
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/VectorHandler.hpp>
@@ -52,14 +57,33 @@ namespace ReSolve
   }
 #endif
 
+#ifdef RESOLVE_USE_HIP
+  SystemSolver::SystemSolver(LinAlgWorkspaceHIP* workspace) : workspaceHip_(workspace)
+  {
+    // Instantiate handlers
+    matrixHandler_ = new MatrixHandler(workspaceHip_);
+    vectorHandler_ = new VectorHandler(workspaceHip_);
+
+    //set defaults:
+    factorizationMethod_ = "klu";
+    refactorizationMethod_ = "rocsolverrf";
+    solveMethod_ = "rocsolverrf";
+    irMethod_ = "none";
+    
+    initialize();
+  }
+#endif
+
   SystemSolver::~SystemSolver()
   {
+    delete dummy_;
     //delete the matrix and all the solvers and all their workspace
   }
 
   int SystemSolver::setMatrix(matrix::Sparse* A)
   {
     A_ = A;
+    dummy_ = new vector_type(A->getNumRows());
     return 0;
   }
 
@@ -99,6 +123,10 @@ namespace ReSolve
       refactorSolver_ = new ReSolve::LinSolverDirectCuSolverGLU(workspaceCuda_);
     } else if (refactorizationMethod_ == "cusolverrf") {
       refactorSolver_ = new ReSolve::LinSolverDirectCuSolverRf();
+#endif
+#ifdef RESOLVE_USE_HIP
+    } else if (refactorizationMethod_ == "rocsolverrf") {
+      refactorSolver_ = new ReSolve::LinSolverDirectRocSolverRf(workspaceHip_);
 #endif
     } else {
       out::error() << "Refactorization method " << refactorizationMethod_ 
@@ -160,15 +188,35 @@ namespace ReSolve
       return refactorSolver_->refactorize();
     }
 #endif
+
+#ifdef RESOLVE_USE_HIP
+    if (refactorizationMethod_ == "rocsolverrf") {
+      std::cout << "Refactorization using RocSolver ...\n";
+      return refactorSolver_->refactorize();
+    }
+#endif
+
     return 1;
   }
 
-  int SystemSolver::refactorize_setup()
+  int SystemSolver::refactorize_setup(vector_type* rhs)
   {
 #ifdef RESOLVE_USE_CUDA
     if (refactorizationMethod_ == "glu") {
       // std::cout << "Refactorization setup using GLU ...\n";
+      isSolveOnDevice_ = true;
       return refactorSolver_->setup(A_, L_, U_, P_, Q_);
+    }
+#endif
+
+#ifdef RESOLVE_USE_HIP
+    if (refactorizationMethod_ == "rocsolverrf") {
+      std::cout << "Refactorization setup using rocsolverRf ...\n";
+      isSolveOnDevice_ = true;
+      auto* Rf = dynamic_cast<LinSolverDirectRocSolverRf*>(refactorSolver_);
+      Rf->setSolveMode(1);
+
+     return refactorSolver_->setup(A_, L_, U_, P_, Q_, rhs);
     }
 #endif
     return 1;
@@ -185,6 +233,19 @@ namespace ReSolve
     if (solveMethod_ == "glu") {
       // std::cout << "Solving with GLU ...\n";
       return refactorSolver_->solve(x, rhs);
+    } 
+#endif
+
+#ifdef RESOLVE_USE_HIP
+    if (solveMethod_ == "rocsolverrf") {
+      if (isSolveOnDevice_) {
+        std::cout << "Solving with RocSolver ...\n";
+        return refactorSolver_->solve(x, rhs);
+      } else {
+        std::cout << "Solving with KLU ...\n";
+        return KLU_->solve(x, rhs);
+      }
+      
     } 
 #endif
 

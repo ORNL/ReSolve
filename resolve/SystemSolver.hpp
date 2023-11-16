@@ -26,6 +26,7 @@ namespace ReSolve
 
       SystemSolver();
       SystemSolver(LinAlgWorkspaceCUDA* workspaceCuda);
+      SystemSolver(LinAlgWorkspaceHIP*  workspaceHip);
       SystemSolver(std::string factorizationMethod, std::string refactorizationMethod, std::string solveMethod, std::string IRMethod);
 
       ~SystemSolver();
@@ -36,7 +37,7 @@ namespace ReSolve
       int factorize(); //  numeric part
       int factorize_setup(); //  numeric part
       int refactorize();
-      int refactorize_setup();
+      int refactorize_setup(vector_type* rhs = nullptr);
       int solve(vector_type* x, vector_type* rhs); // for triangular solve
       int refine(vector_type* x, vector_type* rhs); // for iterative refinement
 
@@ -70,10 +71,14 @@ namespace ReSolve
       MatrixHandler* matrixHandler_{nullptr};
       VectorHandler* vectorHandler_{nullptr};
 
+      bool isSolveOnDevice_{false};
+
       matrix_type* L_{nullptr};
       matrix_type* U_{nullptr};
 
       index_type* P_{nullptr};
       index_type* Q_{nullptr};
+
+      vector_type* dummy_{nullptr};
   };
 } // namespace ReSolve

@@ -56,6 +56,10 @@ if(RESOLVE_USE_HIP)
   # Build example with KLU factorization, rocsolver Rf refactorization, and FGMRES iterative refinement
   add_executable(klu_rocsolverrf_fgmres.exe r_KLU_rocSolverRf_FGMRES.cpp)
   target_link_libraries(klu_rocsolverrf_fgmres.exe PRIVATE ReSolve)
+
+  # Build example with a configurable system solver
+  add_executable(system_hip.exe r_SysSolverHip.cpp)
+  target_link_libraries(system_hip.exe PRIVATE ReSolve)
 endif(RESOLVE_USE_HIP)
 
 # Install all examples in bin directory

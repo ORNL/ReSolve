@@ -21,6 +21,7 @@ namespace ReSolve
   namespace matrix
   {
     class Sparse;
+    class Csr;
   }
   
   class LinSolverDirectRocSolverRf : public LinSolverDirect 
