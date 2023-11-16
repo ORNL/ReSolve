@@ -19,8 +19,8 @@ namespace ReSolve
     this->matrix_handler_ = nullptr;
     this->vector_handler_ = nullptr;
     this->rand_method_ = cs; 
-    
-    tol_ = 1e-14; //default
+
+    tol_ = 1e-12; //default
     maxit_= 100; //default
     restart_ = 10;
     conv_cond_ = 0;//default
@@ -31,10 +31,10 @@ namespace ReSolve
   }
 
   LinSolverIterativeRandFGMRES::LinSolverIterativeRandFGMRES(MatrixHandler* matrix_handler,
-                                                     VectorHandler* vector_handler, 
-                                                     SketchingMethod rand_method, 
-                                                     GramSchmidt*   gs,
-                                                     std::string memspace)
+                                                             VectorHandler* vector_handler, 
+                                                             SketchingMethod rand_method, 
+                                                             GramSchmidt*   gs,
+                                                             std::string memspace)
   {
     memspace_ = memspace;
     this->matrix_handler_ = matrix_handler;
@@ -53,14 +53,14 @@ namespace ReSolve
   }
 
   LinSolverIterativeRandFGMRES::LinSolverIterativeRandFGMRES(index_type restart, 
-                                                     real_type  tol,
-                                                     index_type maxit,
-                                                     index_type conv_cond,
-                                                     MatrixHandler* matrix_handler,
-                                                     VectorHandler* vector_handler,
-                                                     SketchingMethod rand_method, 
-                                                     GramSchmidt*   gs,
-                                                     std::string memspace)
+                                                             real_type  tol,
+                                                             index_type maxit,
+                                                             index_type conv_cond,
+                                                             MatrixHandler* matrix_handler,
+                                                             VectorHandler* vector_handler,
+                                                             SketchingMethod rand_method, 
+                                                             GramSchmidt*   gs,
+                                                             std::string memspace)
   {
     memspace_ = memspace;
     this->matrix_handler_ = matrix_handler;
@@ -118,10 +118,11 @@ namespace ReSolve
     switch(rand_method_) {
       case cs:
         if(ceil(restart_ * log(n_)) < k_rand_) {
-          k_rand_ = ceil(restart_ * log(n_));
+          //k_rand_ = ceil(restart_ * log(n_));
+          k_rand_ = ceil(2.0 * restart_ * log(n_) / log(restart_));
         }
         rand_manager_ = new RandSketchingCountSketch();
-       //set k and n 
+        //set k and n 
         break;
       case fwht:
         if ( ceil(2.0 * restart_ * log(n_) / log(restart_)) < k_rand_) {
@@ -138,12 +139,11 @@ namespace ReSolve
         rand_manager_ = new RandSketchingCountSketch();
         break;
     }
-    
-    printf("FGMRES setup inside, k_rand_ = %d \n", k_rand_); 
+
+       printf("k rand = %d \n", k_rand_);
     rand_manager_->setup(n_, k_rand_); 
 
-    one_over_k_ = 1.0 / (real_type) k_rand_;
-    printf("FGMRES setup inside, 1 over k_rand_ = %f \n", one_over_k_); 
+    one_over_k_ = 1.0 / sqrt((real_type) k_rand_);
 
     d_S_ = new vector_type(k_rand_, restart_ + 1);
     d_S_->allocate(memory::DEVICE);      
@@ -182,17 +182,19 @@ namespace ReSolve
     vec_s->setData( d_S_->getVectorData(0, memory::DEVICE), memory::DEVICE);
     rand_manager_->Theta(vec_v, vec_s);
     if (rand_method_ == fwht){
-    //  cublasDscal(cublas_handle, k_rand, &oneOverK, d_S, 1); 
+      //  cublasDscal(cublas_handle, k_rand, &oneOverK, d_S, 1); 
       vector_handler_->scal(&one_over_k_, vec_s, memspace_);
+printf("scaling!\n");
     }
- //for (int i = 0; i< k_rand_; ++i) printf("output[%d] = %f \n ", i, vec_s->getData(ReSolve::memory::DEVICE)[i]);  
-    
+    printf("rand_method %d\n", rand_method_);
+      mem_.deviceSynchronize();
+
     rnorm = 0.0;
     bnorm = vector_handler_->dot(rhs, rhs, memspace_);
     rnorm = vector_handler_->dot(vec_s, vec_s, memspace_);
     //rnorm = ||V_1||
+
     rnorm = sqrt(rnorm);
-    printf("FGMRES solve: norm of S[0] = %16.16f \n", rnorm); 
     bnorm = sqrt(bnorm);
     printf("it 0: norm %16.16e \n", rnorm);
     initial_residual_norm_ = rnorm;
@@ -228,6 +230,7 @@ namespace ReSolve
       t = 1.0 / rnorm;
       vector_handler_->scal(&t, d_V_, memspace_);
       vector_handler_->scal(&t, d_S_, memspace_);
+      mem_.deviceSynchronize();
       // initialize norm history
       h_rs_[0] = rnorm;
       i = -1;
@@ -261,17 +264,24 @@ namespace ReSolve
           //  cublasDscal(cublas_handle, k_rand, &oneOverK, d_S, 1); 
           vector_handler_->scal(&one_over_k_, vec_s, memspace_);
         }
+          mem_.deviceSynchronize();
         GS_->orthogonalize(k_rand_, d_S_, h_H_, i, memspace_);  
         // now post-process
         //checkCudaErrors(cudaMemcpy(d_Hcolumn, &h_H[i * (restart + 1)], sizeof(double) * (i + 1), cudaMemcpyHostToDevice));
-        mem_.copyArrayHostToDevice(d_aux_, &h_H_[i * (restart_ + 1)], i + 1);
+        mem_.copyArrayHostToDevice(d_aux_, &h_H_[i * (restart_ + 1)], i + 2);
         vec_z->setData(d_aux_, memory::DEVICE);
+        vec_z->setCurrentSize(i + 1);
         //V(:, i+1) =w-V(:, 1:i)*d_H_col = V(:, i+1)-d_H_col * V(:,1:i); 
         //checkCudaErrors( cublasDgemv(cublas_handle, CUBLAS_OP_N, n, i + 1, &minusone, d_V, n, d_Hcolumn, 1,&one , &d_V[n * (i + 1)], 1));
-        vector_handler_->gemv("N", n_, i + 1, &ONE, &MINUSONE, d_V_, vec_z, vec_v, memspace_ );  
-       
-        t = 1.0 / h_H_[i * (restart_ + 1) + i + 1]; 
+
+        vector_handler_->gemv("N", n_, i + 1, &MINUSONE, &ONE, d_V_, vec_z, vec_v, memspace_ );  
+
+        vec_z->setCurrentSize(n_);
+        t = 1.0 / h_H_[i * (restart_ + 1) + i + 1];
         vector_handler_->scal(&t, vec_v, memspace_);  
+        mem_.deviceSynchronize();
+        vec_s->setData( d_S_->getVectorData(i + 1, memory::DEVICE), memory::DEVICE);
+
         if(i != 0) {
           for(int k = 1; k <= i; k++) {
             k1 = k - 1;
@@ -306,7 +316,7 @@ namespace ReSolve
         }
       } // inner while
 
- printf("end of cycle, estimated norm %16.16e, flexible?%d \n", rnorm, flexible_);
+      printf("end of cycle, estimated norm %16.16e, flexible?%d \n", rnorm, flexible_);
       // solve tri system
       h_rs_[i] = h_rs_[i] / h_H_[i * (restart_ + 1) + i];
       for(int ii = 2; ii <= i + 1; ii++) {
@@ -330,22 +340,18 @@ namespace ReSolve
         vec_z->setData( d_Z_->getVectorData(0, memory::DEVICE), memory::DEVICE);
         for(j = 0; j <= i; j++) {
           vec_v->setData( d_V_->getVectorData(j, memory::DEVICE), memory::DEVICE);
-        //  printf("scaling V[%d] by %18.18f \n", j, h_rs_[j]);
           vector_handler_->axpy(&h_rs_[j], vec_v, vec_z, memspace_);
-       
+
         }
         // now multiply d_Z by precon
 
         vec_v->setData( d_V_->getData(memory::DEVICE), memory::DEVICE);
-        printf("about to apply precon\n");
         this->precV(vec_z, vec_v);
-        printf("applied precon\n");
         // and add to x 
         vector_handler_->axpy(&ONE, vec_v, x, memspace_);
       }
 
       /* test solution */
- printf("end of cycle, estimated norm %16.16e \n", rnorm);
       if(rnorm <= tolrel || it >= maxit_) {
         // rnorm_aux = rnorm;
         outer_flag = 0;
@@ -355,31 +361,26 @@ namespace ReSolve
       matrix_handler_->matvec(A_, x, d_V_, &MINUSONE, &ONE,"csr", memspace_); 
       if (outer_flag) {
 
- printf("before Theta reset \n");
         rand_manager_->reset();
- printf("after Theta reset \n");
 
         vec_v->setData( d_V_->getVectorData(0, memory::DEVICE), memory::DEVICE);
         vec_s->setData( d_S_->getVectorData(0, memory::DEVICE), memory::DEVICE);
- printf("before Theta \n");
         rand_manager_->Theta(vec_v, vec_s);
- printf("after Theta \n");
         if (rand_method_ == fwht){
           //  cublasDscal(cublas_handle, k_rand, &oneOverK, d_S, 1); 
           vector_handler_->scal(&one_over_k_, vec_s, memspace_);
         }
+          mem_.deviceSynchronize();
         rnorm = vector_handler_->dot(d_S_, d_S_, memspace_);
         // rnorm = ||S_0||
         rnorm = sqrt(rnorm);
-        printf("end of cycle, true norm %16.16e \n", rnorm);
       }
 
       if(!outer_flag) {
         rnorm = vector_handler_->dot(d_V_, d_V_, memspace_);
         // rnorm = ||V_0||
- printf("end of cycle, true norm %16.16e \n", rnorm);
         rnorm = sqrt(rnorm);
- printf("end of cycle, true norm (after sqrt) %16.16e \n", rnorm);
+        printf("end of cycle, true norm (after sqrt) %16.16e \n", rnorm);
         final_residual_norm_ = rnorm;
         fgmres_iters_ = it;
       }
@@ -423,7 +424,7 @@ namespace ReSolve
   {
     return flexible_;
   }
-  
+
   index_type  LinSolverIterativeRandFGMRES::getKrand()
   {
     return k_rand_;
@@ -448,7 +449,7 @@ namespace ReSolve
   {
     this->conv_cond_ = new_conv_cond;
   }
-  
+
   void  LinSolverIterativeRandFGMRES::setFlexible(bool new_flex)
   {
     this->flexible_ = new_flex;

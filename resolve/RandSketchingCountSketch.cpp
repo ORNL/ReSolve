@@ -28,6 +28,8 @@ namespace ReSolve
   int RandSketchingCountSketch::Theta(vector_type* input, vector_type* output)
   {
 //  printf("before Theta, k_rand_ = %d n_ = %d \n", k_rand_, n_);
+    mem_.deviceSynchronize();
+    printf("k_rand: %d \n", k_rand_);
     count_sketch_theta(n_,
                        k_rand_,
                        d_labels_,
@@ -49,6 +51,7 @@ namespace ReSolve
     n_ = n;
     // printf("Setting up theta2: k_rand = %d \n", k_rand_rand);
     srand(time(NULL)); 
+    srand(1234); 
     //allocate labeling scheme vector and move to GPU
 
     h_labels_ = new int[n_];
@@ -76,6 +79,7 @@ namespace ReSolve
     mem_.copyArrayHostToDevice(d_labels_, h_labels_, n_);
     mem_.copyArrayHostToDevice(d_flip_, h_flip_, n_);
     
+    mem_.deviceSynchronize();
     return 0;
   }
 
@@ -95,6 +99,7 @@ namespace ReSolve
     mem_.copyArrayHostToDevice(d_labels_, h_labels_, n_);
     mem_.copyArrayHostToDevice(d_flip_, h_flip_, n_);
 
+    mem_.deviceSynchronize();
     return 0;
   }
 }

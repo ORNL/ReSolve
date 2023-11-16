@@ -76,6 +76,7 @@ int main(int argc, char *argv[])
   vec_x = new vector_type(A->getNumRows());
   vec_x->allocate(ReSolve::memory::HOST);//for KLU
   vec_x->allocate(ReSolve::memory::DEVICE);
+  vec_x->setToZero(ReSolve::memory::DEVICE);
   vec_r = new vector_type(A->getNumRows());
   std::cout<<"Finished reading the matrix and rhs, size: "<<A->getNumRows()<<" x "<<A->getNumColumns()<< ", nnz: "<< A->getNnz()<< ", symmetric? "<<A->symmetric()<< ", Expanded? "<<A->expanded()<<std::endl;
   mat_file.close();
@@ -91,7 +92,7 @@ int main(int argc, char *argv[])
   Rf->setup(A);
   std::cout<<"about to set FGMRES" <<std::endl;
   FGMRES->setRestart(800);
-  FGMRES->setMaxit(1000);
+  FGMRES->setMaxit(754);
   FGMRES->setup(A);
   GS->setup(FGMRES->getKrand(), FGMRES->getRestart()); 
   printf("FGMRES setup complete \n"); 
@@ -102,8 +103,10 @@ int main(int argc, char *argv[])
   FGMRES->setFlexible(1); 
 
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+ printf("before FGMRES solve\n"); 
   FGMRES->solve(vec_rhs, vec_x);
 
+  norm_b = vector_handler->dot(vec_rhs, vec_rhs, "hip");
   std::cout << "FGMRES: init nrm: " 
     << std::scientific << std::setprecision(16) 
     << FGMRES->getInitResidualNorm()/norm_b

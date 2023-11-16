@@ -389,7 +389,7 @@ void  count_sketch_theta(int n,
                          double* output)
 {
 
-  hipLaunchKernelGGL(count_sketch_kernel, dim3(1000), dim3(1024), 0, 0, n, k, labels, flip, input, output);
+  hipLaunchKernelGGL(count_sketch_kernel, dim3(10000), dim3(1024), 0, 0, n, k, labels, flip, input, output);
 }
 
 void FWHT_select(int k,
