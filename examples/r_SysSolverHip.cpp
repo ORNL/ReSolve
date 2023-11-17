@@ -136,14 +136,17 @@ int main(int argc, char *argv[] )
         // index_type* P = KLU->getPOrdering();
         // index_type* Q = KLU->getQOrdering();
         vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-        solver->refactorize_setup(vec_rhs);
+        status =solver->refactorize_setup(vec_rhs);
         std::cout << "rocsolver rf refactorization setup status: " << status << std::endl;
       }
     } else {
       std::cout<<"Using rocsolver rf"<<std::endl;
       status = solver->refactorize();
       std::cout<<"rocsolver rf refactorization status: "<<status<<std::endl;      
-      status = solver->solve(vec_rhs, vec_x);
+    vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+    //  vec_rhs->setDataUpdated(ReSolve::memory::DEVICE);
+    status = solver->solve(vec_rhs, vec_x);
+     // vec_x->setDataUpdated(ReSolve::memory::DEVICE);
       std::cout<<"rocsolver rf solve status: "<<status<<std::endl;      
     }
     vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
@@ -151,7 +154,6 @@ int main(int argc, char *argv[] )
     matrix_handler->setValuesChanged(true, "hip");
 
     matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "hip"); 
-
     std::cout << "\t 2-Norm of the residual: " 
               << std::scientific << std::setprecision(16) 
               << sqrt(vector_handler->dot(vec_r, vec_r, "hip")) << "\n";

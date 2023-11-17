@@ -97,6 +97,7 @@ namespace ReSolve
       U_ = new matrix::Csc(A_->getNumRows(), A_->getNumColumns(), nnzU);
       L_->allocateMatrixData(memory::HOST);
       U_->allocateMatrixData(memory::HOST);
+    
       int ok = klu_extract(Numeric_, 
                            Symbolic_, 
                            L_->getColData(memory::HOST), 
