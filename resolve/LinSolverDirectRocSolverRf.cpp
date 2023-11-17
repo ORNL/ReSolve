@@ -9,7 +9,7 @@ namespace ReSolve
   {
     workspace_ = workspace;
     infoM_ = nullptr;
-    solve_mode_ = 1; //solve mode - slow mode is default
+    solve_mode_ = 1; //solve mode - fast mode is default
   }
 
   LinSolverDirectRocSolverRf::~LinSolverDirectRocSolverRf()

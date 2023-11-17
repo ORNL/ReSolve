@@ -136,17 +136,14 @@ int main(int argc, char *argv[] )
         // index_type* P = KLU->getPOrdering();
         // index_type* Q = KLU->getQOrdering();
         vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-        status =solver->refactorize_setup(vec_rhs);
+        status = solver->refactorize_setup(vec_rhs);
         std::cout << "rocsolver rf refactorization setup status: " << status << std::endl;
       }
     } else {
       std::cout<<"Using rocsolver rf"<<std::endl;
       status = solver->refactorize();
       std::cout<<"rocsolver rf refactorization status: "<<status<<std::endl;      
-    vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-    //  vec_rhs->setDataUpdated(ReSolve::memory::DEVICE);
-    status = solver->solve(vec_rhs, vec_x);
-     // vec_x->setDataUpdated(ReSolve::memory::DEVICE);
+      status = solver->solve(vec_rhs, vec_x);
       std::cout<<"rocsolver rf solve status: "<<status<<std::endl;      
     }
     vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
