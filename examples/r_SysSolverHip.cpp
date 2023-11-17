@@ -136,7 +136,7 @@ int main(int argc, char *argv[] )
         // index_type* P = KLU->getPOrdering();
         // index_type* Q = KLU->getQOrdering();
         vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-        solver->refactorize_setup(vec_rhs);
+        status = solver->refactorize_setup(vec_rhs);
         std::cout << "rocsolver rf refactorization setup status: " << status << std::endl;
       }
     } else {

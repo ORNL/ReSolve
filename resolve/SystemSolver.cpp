@@ -162,15 +162,6 @@ namespace ReSolve
 
       int status = KLU_->factorize();
 
-      // Get factors and permutation vectors
-      L_ = KLU_->getLFactor();
-      U_ = KLU_->getUFactor();
-      P_ = KLU_->getPOrdering();
-      Q_ = KLU_->getQOrdering();
-
-      if (L_ == nullptr) {
-        out::warning() << "Factorization failed ...\n";
-      }
       return 0;
     } 
     return 1;
@@ -201,6 +192,16 @@ namespace ReSolve
 
   int SystemSolver::refactorize_setup(vector_type* rhs)
   {
+    // Get factors and permutation vectors
+    L_ = KLU_->getLFactor();
+    U_ = KLU_->getUFactor();
+    P_ = KLU_->getPOrdering();
+    Q_ = KLU_->getQOrdering();
+
+    if (L_ == nullptr) {
+      out::warning() << "Factorization failed ...\n";
+    }
+
 #ifdef RESOLVE_USE_CUDA
     if (refactorizationMethod_ == "glu") {
       // std::cout << "Refactorization setup using GLU ...\n";
