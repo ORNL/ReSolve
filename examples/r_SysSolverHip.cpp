@@ -127,8 +127,7 @@ int main(int argc, char *argv[] )
       status = solver->solve(vec_rhs, vec_x);
       std::cout<<"KLU solve status: "<<status<<std::endl;      
       if (i == 1) {
-        vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-        status = solver->refactorize_setup(vec_rhs);
+        status = solver->refactorize_setup();
         std::cout << "rocsolver rf refactorization setup status: " << status << std::endl;
       }
     } else {

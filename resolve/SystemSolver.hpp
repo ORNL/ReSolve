@@ -37,14 +37,14 @@ namespace ReSolve
       int factorize(); //  numeric part
       int factorize_setup(); //  numeric part
       int refactorize();
-      int refactorize_setup(vector_type* rhs = nullptr);
+      int refactorize_setup();
       int solve(vector_type* x, vector_type* rhs); // for triangular solve
       int refine(vector_type* x, vector_type* rhs); // for iterative refinement
 
       int setCudaWorkspace(LinAlgWorkspaceCUDA* workspaceCuda);
 
       // we update the matrix once it changed
-      int updateMatrix(std::string format, int * ia, int *ja, double *a);
+      int updateMatrix(std::string format, int* ia, int* ja, double* a);
 
       void setFactorizationMethod(std::string method);
       void setRefactorizationMethod(std::string method);
@@ -58,6 +58,7 @@ namespace ReSolve
       std::string refactorizationMethod_;
       std::string solveMethod_;
       std::string irMethod_;
+      std::string gsMethod_;
 
       //internal function to setup the different solvers. IT IS RUN ONCE THROUGH CONSTRUCTOR.
 

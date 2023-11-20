@@ -52,6 +52,7 @@ namespace ReSolve
     refactorizationMethod_ = "glu";
     solveMethod_ = "glu";
     irMethod_ = "none";
+    gsMethod_ = "cgs2";
     
     initialize();
   }
@@ -69,6 +70,7 @@ namespace ReSolve
     refactorizationMethod_ = "rocsolverrf";
     solveMethod_ = "rocsolverrf";
     irMethod_ = "none";
+    gsMethod_ = "cgs2";
     
     initialize();
   }
@@ -84,6 +86,8 @@ namespace ReSolve
   {
     A_ = A;
     dummy_ = new vector_type(A->getNumRows());
+    dummy_->allocate(memory::DEVICE);
+    // dummy_->setToZero(memory::DEVICE);
     return 0;
   }
 
@@ -185,7 +189,7 @@ namespace ReSolve
     return 1;
   }
 
-  int SystemSolver::refactorize_setup(vector_type* rhs)
+  int SystemSolver::refactorize_setup()
   {
     // Get factors and permutation vectors
     L_ = KLU_->getLFactor();
@@ -210,7 +214,7 @@ namespace ReSolve
       isSolveOnDevice_ = true;
       auto* Rf = dynamic_cast<LinSolverDirectRocSolverRf*>(refactorSolver_);
       Rf->setSolveMode(1);
-     return refactorSolver_->setup(A_, L_, U_, P_, Q_, rhs);
+     return refactorSolver_->setup(A_, L_, U_, P_, Q_, dummy_);
     }
 #endif
     return 1;
