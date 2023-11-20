@@ -148,7 +148,6 @@ namespace ReSolve
     }
 
     if (factorizationMethod_ == "klu") {
-      // std::cout << "Analysis using KLU ...\n";
       KLU_->setup(A_);
       return KLU_->analyze();
     } 
@@ -158,10 +157,7 @@ namespace ReSolve
   int SystemSolver::factorize()
   {
     if (factorizationMethod_ == "klu") {
-      // std::cout << "Factorization using KLU ...\n";
-
       int status = KLU_->factorize();
-
       return 0;
     } 
     return 1;
@@ -175,7 +171,6 @@ namespace ReSolve
 
 #ifdef RESOLVE_USE_CUDA
     if (refactorizationMethod_ == "glu") {
-      // std::cout << "Refactorization using GLU ...\n";
       return refactorSolver_->refactorize();
     }
 #endif
@@ -204,7 +199,6 @@ namespace ReSolve
 
 #ifdef RESOLVE_USE_CUDA
     if (refactorizationMethod_ == "glu") {
-      // std::cout << "Refactorization setup using GLU ...\n";
       isSolveOnDevice_ = true;
       return refactorSolver_->setup(A_, L_, U_, P_, Q_);
     }
@@ -216,7 +210,6 @@ namespace ReSolve
       isSolveOnDevice_ = true;
       auto* Rf = dynamic_cast<LinSolverDirectRocSolverRf*>(refactorSolver_);
       Rf->setSolveMode(1);
-//rhs->copyData(memory::HOST, memory::DEVICE);
      return refactorSolver_->setup(A_, L_, U_, P_, Q_, rhs);
     }
 #endif
@@ -226,13 +219,11 @@ namespace ReSolve
   int SystemSolver::solve(vector_type* x, vector_type* rhs)
   {
     if (solveMethod_ == "klu") {
-      // std::cout << "Solving with KLU ...\n";
       return KLU_->solve(x, rhs);
     } 
 
 #ifdef RESOLVE_USE_CUDA
     if (solveMethod_ == "glu") {
-      // std::cout << "Solving with GLU ...\n";
       return refactorSolver_->solve(x, rhs);
     } 
 #endif

@@ -51,8 +51,6 @@ int main(int argc, char *argv[] )
   vector_type* vec_r;
 
   ReSolve::SystemSolver* solver = new ReSolve::SystemSolver(workspace_HIP);
-  // ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
-  // ReSolve::LinSolverDirectRocSolverRf* Rf = new ReSolve::LinSolverDirectRocSolverRf(workspace_HIP);
 
   for (int i = 0; i < numSystems; ++i)
   {
@@ -97,12 +95,14 @@ int main(int argc, char *argv[] )
       vec_rhs = new vector_type(A->getNumRows());
       vec_x = new vector_type(A->getNumRows());
       vec_r = new vector_type(A->getNumRows());
-    }
-    else {
+    } else {
       ReSolve::io::readAndUpdateMatrix(mat_file, A_coo);
       ReSolve::io::readAndUpdateRhs(rhs_file, &rhs);
     }
-    std::cout<<"Finished reading the matrix and rhs, size: "<<A->getNumRows()<<" x "<<A->getNumColumns()<< ", nnz: "<< A->getNnz()<< ", symmetric? "<<A->symmetric()<< ", Expanded? "<<A->expanded()<<std::endl;
+    std::cout << "Finished reading the matrix and rhs, size: "
+              << A->getNumRows() << " x "<<A->getNumColumns()
+              << ", nnz: " << A->getNnz() << ", symmetric? "
+              << A->symmetric() << ", Expanded? " << A->expanded() << std::endl;
     mat_file.close();
     rhs_file.close();
 
@@ -118,12 +118,8 @@ int main(int argc, char *argv[] )
     std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnzExpanded()<<std::endl;
     //Now call direct solver
     solver->setMatrix(A);
-    // if (i == 0) {
-    //   KLU->setupParameters(1, 0.1, false);
-    // }
-    int status;
+    int status = -1;
     if (i < 2) {
-      // KLU->setup(A);
       status = solver->analyze();
       std::cout<<"KLU analysis status: "<<status<<std::endl;
       status = solver->factorize();
@@ -131,10 +127,6 @@ int main(int argc, char *argv[] )
       status = solver->solve(vec_rhs, vec_x);
       std::cout<<"KLU solve status: "<<status<<std::endl;      
       if (i == 1) {
-        // ReSolve::matrix::Csc* L = (ReSolve::matrix::Csc*) KLU->getLFactor();
-        // ReSolve::matrix::Csc* U = (ReSolve::matrix::Csc*) KLU->getUFactor();
-        // index_type* P = KLU->getPOrdering();
-        // index_type* Q = KLU->getQOrdering();
         vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
         status = solver->refactorize_setup(vec_rhs);
         std::cout << "rocsolver rf refactorization setup status: " << status << std::endl;
@@ -160,8 +152,6 @@ int main(int argc, char *argv[] )
   //now DELETE
   delete A;
   delete A_coo;
-  // delete KLU;
-  // delete Rf;
   delete [] x;
   delete [] rhs;
   delete vec_r;

@@ -51,9 +51,6 @@ int main(int argc, char *argv[])
 
   ReSolve::SystemSolver* solver = new ReSolve::SystemSolver(workspace_CUDA);
 
-  // ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
-  // ReSolve::LinSolverDirectCuSolverGLU* GLU = new ReSolve::LinSolverDirectCuSolverGLU(workspace_CUDA);
-
   for (int i = 0; i < numSystems; ++i)
   {
     index_type j = 4 + i * 2;
@@ -103,7 +100,10 @@ int main(int argc, char *argv[])
       ReSolve::io::readAndUpdateMatrix(mat_file, A_coo);
       ReSolve::io::readAndUpdateRhs(rhs_file, &rhs);
     }
-    std::cout<<"Finished reading the matrix and rhs, size: "<<A->getNumRows()<<" x "<<A->getNumColumns()<< ", nnz: "<< A->getNnz()<< ", symmetric? "<<A->symmetric()<< ", Expanded? "<<A->expanded()<<std::endl;
+    std::cout << "Finished reading the matrix and rhs, size: "
+              << A->getNumRows() << " x "<<A->getNumColumns()
+              << ", nnz: " << A->getNnz() << ", symmetric? "
+              << A->symmetric() << ", Expanded? " << A->expanded() << std::endl;
     mat_file.close();
     rhs_file.close();
 
@@ -119,30 +119,17 @@ int main(int argc, char *argv[])
     std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnzExpanded()<<std::endl;
     //Now call direct solver
     solver->setMatrix(A);
-    // if (i == 0) {
-    //   KLU->setupParameters(1, 0.1, false);
-    // }
-    int status;
+    int status = -1;
     if (i < 1) {
-      // KLU->setup(A);
       status = solver->analyze();
       std::cout<<"KLU analysis status: "<<status<<std::endl;
       status = solver->factorize();
       std::cout<<"KLU factorization status: "<<status<<std::endl;
-      // matrix_type* L = KLU->getLFactor();
-      // matrix_type* U = KLU->getUFactor();
-      // if (L == nullptr) {printf("ERROR");}
-      // index_type* P = KLU->getPOrdering();
-      // index_type* Q = KLU->getQOrdering();
-      // GLU->setup(A, L, U, P, Q);
       status = solver->refactorize_setup();
       std::cout<<"GLU refactorization setup status: "<<status<<std::endl;
       status = solver->solve(vec_rhs, vec_x);
       std::cout<<"GLU solve status: "<<status<<std::endl;      
-      //      status = KLU->solve(vec_rhs, vec_x);
-      //    std::cout<<"KLU solve status: "<<status<<std::endl;      
     } else {
-      //status =  KLU->refactorize();
       std::cout<<"Using CUSOLVER GLU"<<std::endl;
       status = solver->refactorize();
       std::cout<<"CUSOLVER GLU refactorization status: "<<status<<std::endl;      
