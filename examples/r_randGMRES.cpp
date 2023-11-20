@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
   ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::cgs2);
 
   ReSolve::LinSolverDirectRocSparseILU0* Rf = new ReSolve::LinSolverDirectRocSparseILU0(workspace_HIP);
-  ReSolve::LinSolverIterativeRandFGMRES* FGMRES = new ReSolve::LinSolverIterativeRandFGMRES(matrix_handler, vector_handler,ReSolve::LinSolverIterativeRandFGMRES::cs, GS, "hip");
+  ReSolve::LinSolverIterativeRandFGMRES* FGMRES = new ReSolve::LinSolverIterativeRandFGMRES(matrix_handler, vector_handler,ReSolve::LinSolverIterativeRandFGMRES::fwht, GS, "hip");
 
   std::cout << std::endl << std::endl << std::endl;
   std::cout << "========================================================================================================================"<<std::endl;
@@ -74,7 +74,8 @@ int main(int argc, char *argv[])
   x = new real_type[A->getNumRows()];
   vec_rhs = new vector_type(A->getNumRows());
   vec_x = new vector_type(A->getNumRows());
-  vec_x->allocate(ReSolve::memory::HOST);//for KLU
+  vec_x->allocate(ReSolve::memory::HOST);
+  //iinit guess is 0U
   vec_x->allocate(ReSolve::memory::DEVICE);
   vec_x->setToZero(ReSolve::memory::DEVICE);
   vec_r = new vector_type(A->getNumRows());
@@ -84,18 +85,16 @@ int main(int argc, char *argv[])
 
   matrix_handler->coo2csr(A_coo,A, "hip");
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-  std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnzExpanded()<<std::endl;
   //Now call direct solver
   real_type norm_b;
   matrix_handler->setValuesChanged(true, "hip");
 
   Rf->setup(A);
-  std::cout<<"about to set FGMRES" <<std::endl;
   FGMRES->setRestart(800);
-  FGMRES->setMaxit(754);
+  FGMRES->setMaxit(800);
+  FGMRES->setTol(1e-12);
   FGMRES->setup(A);
   GS->setup(FGMRES->getKrand(), FGMRES->getRestart()); 
-  printf("FGMRES setup complete \n"); 
 
   //matrix_handler->setValuesChanged(true, "hip");
   FGMRES->resetMatrix(A);
@@ -103,10 +102,10 @@ int main(int argc, char *argv[])
   FGMRES->setFlexible(1); 
 
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
- printf("before FGMRES solve\n"); 
   FGMRES->solve(vec_rhs, vec_x);
 
   norm_b = vector_handler->dot(vec_rhs, vec_rhs, "hip");
+  norm_b = sqrt(norm_b);
   std::cout << "FGMRES: init nrm: " 
     << std::scientific << std::setprecision(16) 
     << FGMRES->getInitResidualNorm()/norm_b

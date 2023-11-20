@@ -1,0 +1,12 @@
+#!/bin/bash
+
+
+loc=/ccs/home/kswirydo/matrices
+
+matfile="$loc/vas_stokes_1M.mtx"
+
+rhsfile="$loc/vas_stokes_1M_rhs.mtx"
+echo $matfile
+echo $rhsfile
+./$1 $matfile $rhsfile
+rm -f core

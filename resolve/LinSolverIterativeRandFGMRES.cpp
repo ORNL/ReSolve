@@ -119,7 +119,7 @@ namespace ReSolve
       case cs:
         if(ceil(restart_ * log(n_)) < k_rand_) {
           //k_rand_ = ceil(restart_ * log(n_));
-          k_rand_ = ceil(2.0 * restart_ * log(n_) / log(restart_));
+          k_rand_ = ceil(restart_ * log(n_));
         }
         rand_manager_ = new RandSketchingCountSketch();
         //set k and n 
@@ -140,13 +140,15 @@ namespace ReSolve
         break;
     }
 
-       printf("k rand = %d \n", k_rand_);
     rand_manager_->setup(n_, k_rand_); 
 
     one_over_k_ = 1.0 / sqrt((real_type) k_rand_);
 
     d_S_ = new vector_type(k_rand_, restart_ + 1);
     d_S_->allocate(memory::DEVICE);      
+    if (rand_method_ == cs) {
+      d_S_->setToZero(memory::DEVICE);
+    }
     return 0;
   }
 
@@ -184,19 +186,17 @@ namespace ReSolve
     if (rand_method_ == fwht){
       //  cublasDscal(cublas_handle, k_rand, &oneOverK, d_S, 1); 
       vector_handler_->scal(&one_over_k_, vec_s, memspace_);
-printf("scaling!\n");
     }
-    printf("rand_method %d\n", rand_method_);
-      mem_.deviceSynchronize();
+    mem_.deviceSynchronize();
 
     rnorm = 0.0;
     bnorm = vector_handler_->dot(rhs, rhs, memspace_);
     rnorm = vector_handler_->dot(vec_s, vec_s, memspace_);
+    double rnorm_true = vector_handler_->dot(vec_v, vec_v, memspace_);
     //rnorm = ||V_1||
-
     rnorm = sqrt(rnorm);
     bnorm = sqrt(bnorm);
-    printf("it 0: norm %16.16e \n", rnorm);
+    printf("it 0: norm %16.16e bnorm  %16.16e \n", rnorm, bnorm);
     initial_residual_norm_ = rnorm;
     while(outer_flag) {
       // check if maybe residual is already small enough?
@@ -264,7 +264,7 @@ printf("scaling!\n");
           //  cublasDscal(cublas_handle, k_rand, &oneOverK, d_S, 1); 
           vector_handler_->scal(&one_over_k_, vec_s, memspace_);
         }
-          mem_.deviceSynchronize();
+        mem_.deviceSynchronize();
         GS_->orthogonalize(k_rand_, d_S_, h_H_, i, memspace_);  
         // now post-process
         //checkCudaErrors(cudaMemcpy(d_Hcolumn, &h_H[i * (restart + 1)], sizeof(double) * (i + 1), cudaMemcpyHostToDevice));
@@ -370,7 +370,7 @@ printf("scaling!\n");
           //  cublasDscal(cublas_handle, k_rand, &oneOverK, d_S, 1); 
           vector_handler_->scal(&one_over_k_, vec_s, memspace_);
         }
-          mem_.deviceSynchronize();
+        mem_.deviceSynchronize();
         rnorm = vector_handler_->dot(d_S_, d_S_, memspace_);
         // rnorm = ||S_0||
         rnorm = sqrt(rnorm);

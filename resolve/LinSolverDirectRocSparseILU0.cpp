@@ -28,7 +28,6 @@ namespace ReSolve
     index_type n = A_->getNumRows();
 
     index_type nnz = A_->getNnzExpanded();
-    printf("allocating %d size \n", nnz);
     mem_.allocateArrayOnDevice(&d_ILU_vals_,nnz); 
     //copy A values to a buffer first
     mem_.copyArrayDeviceToDevice(d_ILU_vals_, A_->getValues(ReSolve::memory::DEVICE), nnz);

@@ -27,9 +27,7 @@ namespace ReSolve
   // Actual sketching process
   int RandSketchingCountSketch::Theta(vector_type* input, vector_type* output)
   {
-//  printf("before Theta, k_rand_ = %d n_ = %d \n", k_rand_, n_);
     mem_.deviceSynchronize();
-    printf("k_rand: %d \n", k_rand_);
     count_sketch_theta(n_,
                        k_rand_,
                        d_labels_,
@@ -37,11 +35,9 @@ namespace ReSolve
                        input->getData(ReSolve::memory::DEVICE), 
                        output->getData(ReSolve::memory::DEVICE));
     mem_.deviceSynchronize();
- // printf("after Theta, k_rand_ = %d n_ = %d \n", k_rand_, n_);
- //for (int i = 0; i< k_rand_; ++i) printf("output[%d] = %f \n ", i, output->getData(ReSolve::memory::DEVICE)[i]);  
 
- 
-  return 0;
+
+    return 0;
   }
 
   // Setup the parameters, sampling matrices, permuations, etc
@@ -49,9 +45,8 @@ namespace ReSolve
   {
     k_rand_ = k;
     n_ = n;
-    // printf("Setting up theta2: k_rand = %d \n", k_rand_rand);
     srand(time(NULL)); 
-    srand(1234); 
+   // srand(1234); 
     //allocate labeling scheme vector and move to GPU
 
     h_labels_ = new int[n_];
@@ -62,7 +57,6 @@ namespace ReSolve
     //to be fixed, this can be done on the GPU
     for (int i=0; i<n; ++i) {
       h_labels_[i] = rand() % k_rand_;
-      //printf("Label[%d] = %d \n", i, h_labels[i]);
       int r = rand()%100;
       if (r < 50){
         h_flip_[i] = -1;
@@ -78,12 +72,12 @@ namespace ReSolve
 
     mem_.copyArrayHostToDevice(d_labels_, h_labels_, n_);
     mem_.copyArrayHostToDevice(d_flip_, h_flip_, n_);
-    
+
     mem_.deviceSynchronize();
     return 0;
   }
 
-//to be fixed, this can be done on the GPU
+  //to be fixed, this can be done on the GPU
   int RandSketchingCountSketch::reset() // if needed can be reset (like when Krylov method restarts)
   {
     for (int i = 0; i < n_; ++i) {
