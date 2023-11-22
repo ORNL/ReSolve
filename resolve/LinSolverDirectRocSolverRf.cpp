@@ -38,12 +38,19 @@ namespace ReSolve
     //set matrix info
     rocsolver_create_rfinfo(&infoM_, workspace_->getRocblasHandle()); 
     //create combined factor
-    addFactors(L,U);
+
+    addFactors(L, U);
+
     M_->setUpdated(ReSolve::memory::HOST);
     M_->copyData(ReSolve::memory::DEVICE);
-    mem_.allocateArrayOnDevice(&d_P_, n); 
-    mem_.allocateArrayOnDevice(&d_Q_, n);
 
+    if (d_P_ == nullptr) {
+      mem_.allocateArrayOnDevice(&d_P_, n); 
+    }
+
+    if (d_Q_ == nullptr) {
+      mem_.allocateArrayOnDevice(&d_Q_, n);
+    }
     mem_.copyArrayHostToDevice(d_P_, P, n);
     mem_.copyArrayHostToDevice(d_Q_, Q, n);
 
@@ -70,11 +77,21 @@ namespace ReSolve
 
     // tri solve setup
     if (solve_mode_ == 1) { // fast mode
-      L_csr_ = new ReSolve::matrix::Csr(L->getNumRows(), L->getNumColumns(), L->getNnz());
-      U_csr_ = new ReSolve::matrix::Csr(U->getNumRows(), U->getNumColumns(), U->getNnz());
 
+      if (L_csr_ != nullptr) {
+        delete L_csr_;
+      }
+
+      L_csr_ = new ReSolve::matrix::Csr(L->getNumRows(), L->getNumColumns(), L->getNnz());
       L_csr_->allocateMatrixData(ReSolve::memory::DEVICE); 
+
+      if (U_csr_ != nullptr) {
+        delete U_csr_;
+      }
+
+      U_csr_ = new ReSolve::matrix::Csr(U->getNumRows(), U->getNumColumns(), U->getNnz());
       U_csr_->allocateMatrixData(ReSolve::memory::DEVICE); 
+
 
       rocsparse_create_mat_descr(&(descr_L_));
       rocsparse_set_mat_fill_mode(descr_L_, rocsparse_fill_mode_lower);
@@ -161,9 +178,12 @@ namespace ReSolve
       error_sum += status_rocsparse_;
       if (status_rocsparse_!=0)printf("status after analysis 2 %d \n", status_rocsparse_);
       //allocate aux data
-
-      mem_.allocateArrayOnDevice(&d_aux1_,n); 
-      mem_.allocateArrayOnDevice(&d_aux2_,n); 
+      if (d_aux1_ == nullptr) {
+        mem_.allocateArrayOnDevice(&d_aux1_,n); 
+      }
+      if (d_aux2_ == nullptr) { 
+        mem_.allocateArrayOnDevice(&d_aux2_,n); 
+      }
 
     }
     return error_sum;
@@ -193,7 +213,7 @@ namespace ReSolve
 
     if (solve_mode_ == 1) {
       //split M, fill L and U with correct values
-printf("solve mode 1, splitting the factors again \n");
+      printf("solve mode 1, splitting the factors again \n");
       status_rocblas_ = rocsolver_dcsrrf_splitlu(workspace_->getRocblasHandle(),
                                                  A_->getNumRows(),
                                                  M_->getNnzExpanded(),
@@ -360,6 +380,9 @@ printf("solve mode 1, splitting the factors again \n");
     index_type* Li = L->getRowData(ReSolve::memory::HOST); 
     index_type* Up = U->getColData(ReSolve::memory::HOST); 
     index_type* Ui = U->getRowData(ReSolve::memory::HOST); 
+    if (M_ != nullptr) {
+      delete M_;
+    }
 
     index_type nnzM = ( L->getNnz() + U->getNnz() - n );
     M_ = new matrix::Csr(n, n, nnzM);
