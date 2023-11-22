@@ -9,6 +9,10 @@ namespace ReSolve
   {
     Symbolic_ = nullptr;
     Numeric_ = nullptr;
+
+    L_ = nullptr;
+    U_ = nullptr;
+
     klu_defaults(&Common_) ;
   } 
 
@@ -40,7 +44,23 @@ namespace ReSolve
 
   int LinSolverDirectKLU::analyze() 
   {
+    // in case we called this function AGAIN 
+    if (Symbolic_ != nullptr) {
+      klu_free_symbolic(&Symbolic_, &Common_);
+    }
+
     Symbolic_ = klu_analyze(A_->getNumRows(), A_->getRowData(memory::HOST), A_->getColData(memory::HOST), &Common_) ;
+
+    factors_extracted_ = false;
+    if (L_ != nullptr) {
+      delete L_; 
+      L_ = nullptr;
+    }
+   
+    if (U_ != nullptr) {
+      delete U_; 
+      U_ = nullptr;
+    }
 
     if (Symbolic_ == nullptr){
       printf("Symbolic_ factorization crashed withCommon_.status = %d \n", Common_.status);
@@ -51,7 +71,23 @@ namespace ReSolve
 
   int LinSolverDirectKLU::factorize() 
   {
+    if (Numeric_ != nullptr) {
+      klu_free_numeric(&Numeric_, &Common_);
+    }
+
     Numeric_ = klu_factor(A_->getRowData(memory::HOST), A_->getColData(memory::HOST), A_->getValues(memory::HOST), Symbolic_, &Common_);
+
+    factors_extracted_ = false;
+
+    if (L_ != nullptr) {
+      delete L_; 
+      L_ = nullptr;
+    }
+    
+    if (U_ != nullptr) {
+      delete U_; 
+      U_ = nullptr;
+    }
 
     if (Numeric_ == nullptr){
       return 1;
@@ -62,6 +98,18 @@ namespace ReSolve
   int  LinSolverDirectKLU::refactorize() 
   {
     int kluStatus = klu_refactor (A_->getRowData(memory::HOST), A_->getColData(memory::HOST), A_->getValues(memory::HOST), Symbolic_, Numeric_, &Common_);
+
+    factors_extracted_ = false;
+
+    if (L_ != nullptr) {
+      delete L_; 
+      L_ = nullptr;
+    }
+   
+    if (U_ != nullptr) {
+      delete U_; 
+      U_ = nullptr;
+    }
 
     if (!kluStatus){
       //display error

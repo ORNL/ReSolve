@@ -48,6 +48,11 @@ if(RESOLVE_USE_HIP)
   # Build example with KLU factorization, rocsolver Rf refactorization, and FGMRES iterative refinement
   add_executable(klu_rocsolverrf_fgmres.exe r_KLU_rocSolverRf_FGMRES.cpp)
   target_link_libraries(klu_rocsolverrf_fgmres.exe PRIVATE ReSolve)
+  
+  # Example in which factorization is redone if solution is bad
+  add_executable(klu_rocsolverrf_check_redo.exe r_KLU_rocsolverrf_redo_factorization.cpp)
+  target_link_libraries(klu_rocsolverrf_check_redo.exe PRIVATE ReSolve)
+
 endif(RESOLVE_USE_HIP)
 
 # Install all examples in bin directory
@@ -58,7 +63,7 @@ if(RESOLVE_USE_CUDA)
 endif(RESOLVE_USE_CUDA)
 
 if(RESOLVE_USE_HIP)
-  set(installable_executables ${installable_executables} klu_rocsolverrf.exe)        
+  set(installable_executables ${installable_executables} klu_rocsolverrf.exe klu_rocsolverrf_fgmres.exe klu_rocsolverrf_check_redo.exe)        
 endif(RESOLVE_USE_HIP)
 
 install(TARGETS ${installable_executables} 
