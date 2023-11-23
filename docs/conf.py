@@ -75,7 +75,7 @@ source_suffix = ['.rst', '.html']
 #source_encoding = 'utf-8-sig'
 
 project = 'ReSolve'
-copyright = '2023, Kasia Świrydowicz, Slaven Peles'
+copyright = '2023, UT-Battelle, LLC, and Battelle Memorial Institute'
 author = 'Kasia Świrydowicz, Slaven Peles'
 release = '1.0.0'
 
