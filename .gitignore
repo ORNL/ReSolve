@@ -1,5 +1,6 @@
 .vscode/
 build/*
+_build
 install/*
 *~
 *.swp

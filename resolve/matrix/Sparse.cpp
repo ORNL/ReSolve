@@ -274,3 +274,4 @@ namespace ReSolve { namespace matrix {
   }
 
 }} // namespace ReSolve::matrix
+

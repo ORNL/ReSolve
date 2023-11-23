@@ -1,0 +1,27 @@
+name: documentation
+
+on: [pull_request]
+
+permissions:
+  contents: write
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Doxygen Build
+        uses: ryandanehy/sphinx-doxygen@v1
+        with:
+           sphinx-path: './sphinx/_build'
+           working-directory: 'docs'
+           doxyfile-path: './doxygen/Doxyfile.in'
+      - uses: actions/setup-python@v3
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        if: ${{ github.event_name == 'pull_request' }}
+        with:
+          publish_branch: gh-pages
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs/sphinx/_build/
+          force_orphan: true

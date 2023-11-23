@@ -2,6 +2,8 @@
 
 ReSolve is a library of GPU-resident linear solver. It contains iterative and direct linear solvers designed to run on NVIDIA and AMD GPUs, as well as on CPU devices.
 
+ReadTheDocs Documentation lives here https://ornl.github.io/ReSolve/
+
 ## Getting started
 
 Dependencies:
