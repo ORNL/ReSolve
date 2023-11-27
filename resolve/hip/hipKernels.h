@@ -26,8 +26,6 @@ void permuteVectorQ(int n,
                     double* vec_out);
 
 // needed for rand solver
-
-
 void  count_sketch_theta(int n,
                          int k,
                          int* labels,

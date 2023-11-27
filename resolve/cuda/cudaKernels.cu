@@ -1,4 +1,5 @@
 #include "cudaKernels.h"
+#include <cooperative_groups.h>
 #define maxk 1024
 #define Tv5 1024
 //computes V^T[u1 u2] where v is n x k and u1 and u2 are nx1
@@ -138,6 +139,173 @@ __global__ void matrixInfNormPart1(const int n,
   }
 }
 
+// for count sketch sketching random method
+__global__ void  count_sketch_kernel(const int n,
+                                     const int k, 
+                                     const int* labels,
+                                     const int* flip,
+                                     const double* input,
+                                     double* output){
+
+  int idx = blockIdx.x * blockDim.x + threadIdx.x; 
+  while (idx < n){
+    //printf("in place %d, I am putting input[perm[%d]] = input[%d] = %f \n", idx,idx, perm[idx], input[perm[idx]] );
+    double val = input[idx];
+    if (flip[idx] != 1){
+      val *= -1.0;
+    }    
+    atomicAdd(&output[labels[idx]], val);
+    idx += blockDim.x * gridDim.x;
+  }
+}
+
+// for Walsh-Hadamard transform
+
+//kernel 1
+__global__ void select_kernel(const int k, 
+                              const int* perm,
+                              const double* input,
+                              double* output){
+
+  int idx = blockIdx.x * blockDim.x + threadIdx.x; 
+  while (idx < k){
+    //printf("in place %d, I am putting input[perm[%d]] = input[%d] = %f \n", idx,idx, perm[idx], input[perm[idx]] );
+    output[idx] = input[perm[idx]];
+    idx += blockDim.x * gridDim.x;
+  }
+}
+
+//kernel 2
+__global__ void scaleByD_kernel(const int n,
+                                const int* D,
+                                const double* x,
+                                double* y){
+  int idx = blockIdx.x * blockDim.x + threadIdx.x; 
+
+  while (idx < n){
+
+    if (D[idx] == 1) y[idx]=x[idx];
+    else y[idx]= (-1.0)*x[idx];
+
+    idx += blockDim.x * gridDim.x;
+  }
+}
+
+//kernels 3 and 4
+
+
+#define ELEMENTARY_LOG2SIZE 11
+namespace cg = cooperative_groups;
+////////////////////////////////////////////////////////////////////////////////
+// Single in-global memory radix-4 Fast Walsh Transform pass
+// (for strides exceeding elementary vector size)
+////////////////////////////////////////////////////////////////////////////////
+
+__global__ void fwtBatch2Kernel(double* d_Output, double* d_Input, int stride) 
+{
+  const int pos = blockIdx.x * blockDim.x + threadIdx.x;
+  const int N = blockDim.x * gridDim.x * 4;
+
+  double* d_Src = d_Input + blockIdx.y * N;
+  double* d_Dst = d_Output + blockIdx.y * N;
+
+  int lo = pos & (stride - 1);
+  int i0 = ((pos - lo) << 2) + lo;
+  int i1 = i0 + stride;
+  int i2 = i1 + stride;
+  int i3 = i2 + stride;
+
+  double D0 = d_Src[i0];
+  double D1 = d_Src[i1];
+  double D2 = d_Src[i2];
+  double D3 = d_Src[i3];
+
+  double T;
+  T = D0;
+  D0 = D0 + D2;
+  D2 = T - D2;
+  T = D1;
+  D1 = D1 + D3;
+  D3 = T - D3;
+  T = D0;
+  d_Dst[i0] = D0 + D1;
+  d_Dst[i1] = T - D1;
+  T = D2;
+  d_Dst[i2] = D2 + D3;
+  d_Dst[i3] = T - D3;
+}
+
+
+__global__ void fwtBatch1Kernel(double* d_Output, double* d_Input, int log2N) 
+{
+  // Handle to thread block group
+
+  cg::thread_block cta = cg::this_thread_block();
+  const int N = 1 << log2N;
+  const int base = blockIdx.x << log2N;
+
+  //(2 ** 11) * 4 bytes == 8KB -- maximum s_data[] size for G80
+  extern __shared__ double s_data[];
+  double* d_Src = d_Input + base;
+  double* d_Dst = d_Output + base;
+
+  for (int pos = threadIdx.x; pos < N; pos += blockDim.x) {
+    s_data[pos] = d_Src[pos];
+  }
+
+  // Main radix-4 stages
+  const int pos = threadIdx.x;
+
+  for (int stride = N >> 2; stride > 0; stride >>= 2) {
+    int lo = pos & (stride - 1);
+    int i0 = ((pos - lo) << 2) + lo;
+    int i1 = i0 + stride;
+    int i2 = i1 + stride;
+    int i3 = i2 + stride;
+
+    cg::sync(cta);
+    double D0 = s_data[i0];
+    double D1 = s_data[i1];
+    double D2 = s_data[i2];
+    double D3 = s_data[i3];
+
+    double T;
+    T = D0;
+    D0 = D0 + D2;
+    D2 = T - D2;
+    T = D1;
+    D1 = D1 + D3;
+    D3 = T - D3;
+    T = D0;
+    s_data[i0] = D0 + D1;
+    s_data[i1] = T - D1;
+    T = D2;
+    s_data[i2] = D2 + D3;
+    s_data[i3] = T - D3;
+  }
+
+  // Do single radix-2 stage for odd power of two
+  if (log2N & 1) {
+
+    cg::sync(cta);
+
+    for (int pos = threadIdx.x; pos < N / 2; pos += blockDim.x) {
+      int i0 = pos << 1;
+      int i1 = i0 + 1;
+
+      double D0 = s_data[i0];
+      double D1 = s_data[i1];
+      s_data[i0] = D0 + D1;
+      s_data[i1] = D0 - D1;
+    }
+  }
+
+  cg::sync(cta);
+
+  for (int pos = threadIdx.x; pos < N; pos += blockDim.x) {
+    d_Dst[pos] = s_data[pos];
+  }
+}
 
 void mass_inner_product_two_vectors(int n, 
                                     int i, 
@@ -148,6 +316,7 @@ void mass_inner_product_two_vectors(int n,
 {
   MassIPTwoVec_kernel<<<i + 1, 1024>>>(vec1, vec2, mvec, result, i + 1, n);
 }
+
 void mass_axpy(int n, int i, double* x, double* y, double* alpha)
 {
   massAxpy3_kernel<<<(n + 384 - 1) / 384, 384>>>(n, i + 1, x, y, alpha);
@@ -160,4 +329,44 @@ void matrix_row_sums(int n,
                      double* result)
 {
   matrixInfNormPart1<<<1000,1024>>>(n, nnz, a_ia, a_val, result);
+}
+
+void  count_sketch_theta(int n,
+                         int k,
+                         int* labels,
+                         int* flip,
+                         double* input,
+                         double* output)
+{
+
+  count_sketch_kernel<<<10000, 1024>>>(n, k, labels, flip, input, output);
+}
+
+void FWHT_select(int k,
+                 int* perm,
+                 double* input,
+                 double* output)
+{
+  select_kernel<<<1000,1024>>>(k, perm, input, output);
+}
+
+void FWHT_scaleByD(int n,
+                   int* D,
+                   double* x,
+                   double* y)
+{
+  scaleByD_kernel<<<1000,1024>>>(n, D, x, y);
+}
+
+void FWHT(int M, int log2N, double* d_Data) {
+
+  const int THREAD_N = 1024;
+  int N = 1 << log2N;
+  dim3 grid((1 << log2N) / (4 * THREAD_N), M, 1);
+
+  for (; log2N > ELEMENTARY_LOG2SIZE; log2N -= 2, N >>= 2, M <<= 2) {
+    fwtBatch2Kernel<<<grid, THREAD_N>>>(d_Data, d_Data, N / 4);
+  }
+
+  fwtBatch1Kernel<<<M, N / 4, N * sizeof(double)>>>(d_Data, d_Data, log2N);
 }

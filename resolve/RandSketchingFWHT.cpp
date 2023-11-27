@@ -1,8 +1,12 @@
 #include "RandSketchingFWHT.hpp"
 #include <resolve/MemoryUtils.hpp>
 #include <resolve/vector/VectorHandler.hpp>
+#include <math.h>
 #ifdef RESOLVE_USE_HIP
 #include <resolve/hip/hipKernels.h>
+#endif
+#ifdef RESOLVE_USE_CUDA
+#include <resolve/cuda/cudaKernels.h>
 #endif
 #include <resolve/RandSketchingFWHT.hpp> 
 namespace ReSolve 

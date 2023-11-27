@@ -28,6 +28,7 @@ set(ReSolve_GPU_SRC
 set(ReSolve_CUDASDK_SRC
     LinSolverDirectCuSolverGLU.cpp
     LinSolverDirectCuSolverRf.cpp
+    LinSolverDirectCuSparseILU0.cpp
 )
 # HIP files
 set(ReSolve_ROCM_SRC
