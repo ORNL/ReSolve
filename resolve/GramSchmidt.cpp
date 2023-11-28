@@ -198,12 +198,6 @@ namespace ReSolve
           if(fabs(t) > EPSILON) {
             t = 1.0/t;
             vector_handler_->scal(&t, vec_v_, memspace);  
-#if 0
-            for (int jj=0; jj < i+1; ++jj)  {
-
-              vec_w_->setData(V->getVectorData(jj, memory::DEVICE), memory::DEVICE);
-            }
-#endif
           } else {
             assert(0 && "Gram-Schmidt failed, vector with ZERO norm\n");
             return -1;
