@@ -50,8 +50,7 @@ set(ReSolve_HEADER_INSTALL
     SystemSolver.hpp
     GramSchmidt.hpp
     MemoryUtils.hpp
-    RandSketchingManager.hpp
-    )
+    RandSketchingManager.hpp)
 
 # Now, build workspaces
 add_subdirectory(workspace)
