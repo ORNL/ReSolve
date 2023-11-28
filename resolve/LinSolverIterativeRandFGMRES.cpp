@@ -182,7 +182,9 @@ namespace ReSolve
 
     vec_v->setData( d_V_->getVectorData(0, memory::DEVICE), memory::DEVICE);
     vec_s->setData( d_S_->getVectorData(0, memory::DEVICE), memory::DEVICE);
+
     rand_manager_->Theta(vec_v, vec_s);
+
     if (rand_method_ == fwht){
       //  cublasDscal(cublas_handle, k_rand, &oneOverK, d_S, 1); 
       vector_handler_->scal(&one_over_k_, vec_s, memspace_);
@@ -248,6 +250,7 @@ namespace ReSolve
           vec_z->setData( d_Z_->getVectorData(0, memory::DEVICE), memory::DEVICE);
         }
         this->precV(vec_v, vec_z);
+
         mem_.deviceSynchronize();
 
         // V_{i+1}=A*Z_i

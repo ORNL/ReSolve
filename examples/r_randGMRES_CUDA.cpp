@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
   ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::cgs2);
 
   ReSolve::LinSolverDirectCuSparseILU0* Rf = new ReSolve::LinSolverDirectCuSparseILU0(workspace_CUDA);
-  ReSolve::LinSolverIterativeRandFGMRES* FGMRES = new ReSolve::LinSolverIterativeRandFGMRES(matrix_handler, vector_handler,ReSolve::LinSolverIterativeRandFGMRES::cs, GS, "cuda");
+  ReSolve::LinSolverIterativeRandFGMRES* FGMRES = new ReSolve::LinSolverIterativeRandFGMRES(matrix_handler, vector_handler,ReSolve::LinSolverIterativeRandFGMRES::fwht, GS, "cuda");
 
   std::cout << std::endl << std::endl << std::endl;
   std::cout << "========================================================================================================================"<<std::endl;
@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
   real_type norm_b;
   matrix_handler->setValuesChanged(true, "cuda");
 
-  Rf->setup(A);
+  Rf->setup(A, nullptr, nullptr, nullptr, nullptr, vec_rhs);
   FGMRES->setRestart(800);
   FGMRES->setMaxit(800);
   FGMRES->setTol(1e-12);
