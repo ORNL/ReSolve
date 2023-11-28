@@ -58,7 +58,8 @@ namespace ReSolve
       csrilu02Info_t  info_A_{nullptr};
       
       void* buffer_; 
-      void* buffer_LU_; 
+      void* buffer_L_; 
+      void* buffer_U_; 
       
       real_type* d_aux1_;
       real_type* d_aux2_;
