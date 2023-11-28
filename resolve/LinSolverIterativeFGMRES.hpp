@@ -59,8 +59,7 @@ namespace ReSolve
     index_type restart_;
     std::string orth_option_;
     index_type conv_cond_;
-    bool flexible_{1}; // if can be run as "normal" GMRES if needed, set flexible_ to 0. Default is 1 of course.
-
+    bool flexible_{true}; // if can be run as "normal" GMRES if needed, set flexible_ to false. Default is true of course.
     vector_type* d_V_{nullptr};
     vector_type* d_Z_{nullptr};
 
