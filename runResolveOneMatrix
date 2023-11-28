@@ -1,12 +1,18 @@
 #!/bin/bash
 
-
+# this is the folder where you keep your matrix files and rhs files
 loc=/ccs/home/kswirydo/matrices
 
+# matrix and rhs file name, change accordingly
 matfile="$loc/vas_stokes_1M.mtx"
-
 rhsfile="$loc/vas_stokes_1M_rhs.mtx"
+
 echo $matfile
 echo $rhsfile
+
+# call with ./runResolveOneMatrix <path/to/exacutable>
+# example: ./runResolveOneMatrix ./build/examples/gmres_cusparse_rand.exe
 ./$1 $matfile $rhsfile
-rm -f core
+
+# uncomment if debugging on OLCF systems
+#rm -f core
