@@ -209,16 +209,12 @@ namespace ReSolve
         }
       }
       int exit_cond = 0;
-      if (conv_cond_ == 0){
+      if (conv_cond_ == 0) {
         exit_cond =  ((fabs(rnorm - ZERO) <= EPSILON));
-      } else {
-        if (conv_cond_ == 1){
-          exit_cond =  ((fabs(rnorm - ZERO) <= EPSILON) || (rnorm < tol_));
-        } else {
-          if (conv_cond_ == 2){
-            exit_cond =  ((fabs(rnorm - ZERO) <= EPSILON) || (rnorm < (tol_*bnorm)));
-          }
-        }
+      } else if (conv_cond_ == 1) {
+        exit_cond =  ((fabs(rnorm - ZERO) <= EPSILON) || (rnorm < tol_));
+      } else if (conv_cond_ == 2) {
+        exit_cond =  ((fabs(rnorm - ZERO) <= EPSILON) || (rnorm < (tol_*bnorm)));
       }
       if (exit_cond) {
         outer_flag = 0;
