@@ -281,8 +281,8 @@ namespace ReSolve
         mem_.deviceSynchronize();
         vec_s->setData( d_S_->getVectorData(i + 1, memory::DEVICE), memory::DEVICE);
 
-        if(i != 0) {
-          for(int k = 1; k <= i; k++) {
+        if (i != 0) {
+          for (int k = 1; k <= i; k++) {
             k1 = k - 1;
             t = h_H_[i * (restart_ + 1) + k1];
             h_H_[i * (restart_ + 1) + k1] = h_c_[k1] * t + h_s_[k1] * h_H_[i * (restart_ + 1) + k];
