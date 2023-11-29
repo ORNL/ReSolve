@@ -89,8 +89,7 @@ namespace ReSolve
                                                      &buffer_size_U);
     error_sum += status_rocsparse_;
 
-    size_t buffer_size = static_cast<size_t>(max(static_cast<int>(buffer_size_A),static_cast<int>(max(static_cast<int>(buffer_size_L),static_cast<int>(buffer_size_U)))));
-    mem_.allocateBufferOnDevice(&buffer_, buffer_size);
+    size_t buffer_size = std::max(buffer_size_A, std::max(buffer_size_L, buffer_size_U));
 
     // Now analysis
     status_rocsparse_ = rocsparse_dcsrilu0_analysis(workspace_->getRocsparseHandle(), 
