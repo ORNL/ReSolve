@@ -49,6 +49,8 @@ int main(int argc, char *argv[] )
   vector_type* vec_x;
   vector_type* vec_r;
 
+  real_type norm_A, norm_x, norm_r;//used for INF norm
+  
   ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
   ReSolve::LinSolverDirectRocSolverRf* Rf = new ReSolve::LinSolverDirectRocSolverRf(workspace_HIP);
 
@@ -147,6 +149,14 @@ int main(int argc, char *argv[] )
     std::cout << "\t 2-Norm of the residual: " 
               << std::scientific << std::setprecision(16) 
               << sqrt(vector_handler->dot(vec_r, vec_r, "hip"))/bnorm << "\n";
+    
+    matrix_handler->matrixInfNorm(A, &norm_A, "hip"); 
+    norm_x = vector_handler->infNorm(vec_x, "hip");
+    norm_r = vector_handler->infNorm(vec_r, "hip");
+    std::cout << "\t Matrix inf  norm:  " << std::scientific << std::setprecision(16) << norm_A <<"\n"
+              << "\t Residual inf norm: " << norm_r <<"\n"  
+              << "\t Solution inf norm: " << norm_x <<"\n"  
+              << "\t Norm of scaled residuals: "<< norm_r / (norm_A * norm_x) << "\n";
 
   } // for (int i = 0; i < numSystems; ++i)
 

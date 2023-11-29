@@ -6,6 +6,7 @@
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 #include <resolve/vector/VectorHandlerImpl.hpp>
 #include "VectorHandlerCuda.hpp"
+#include <resolve/cusolver_defs.hpp> // needed for inf nrm
 
 namespace ReSolve {
   using out = io::Logger;
@@ -40,7 +41,6 @@ namespace ReSolve {
    * 
    * @param[in] x The first vector
    * @param[in] y The second vector
-   * @param[in] memspace String containg memspace (cpu or cuda)
    * 
    * @return dot product (real number) of _x_ and _y_
    */
@@ -60,7 +60,6 @@ namespace ReSolve {
    * 
    * @param[in] alpha The constant
    * @param[in,out] x The vector
-   * @param memspace string containg memspace (cpu or cuda)
    * 
    */
   void VectorHandlerCuda::scal(const real_type* alpha, vector::Vector* x)
@@ -74,12 +73,37 @@ namespace ReSolve {
   }
 
   /** 
+   * @brief compute infinity norm of a vector (i.e., find an entry with largest absolute value)
+   * 
+   * @param[in] The vector
+   *
+   * @return infinity norm (real number) of _x_
+   * 
+   */
+  real_type VectorHandlerCuda::infNorm(vector::Vector* x)
+  {
+
+    if (workspace_->getNormBufferState() == false) { // not allocated  
+      real_type* buffer;
+      mem_.allocateArrayOnDevice(&buffer, 1024);
+      workspace_->setNormBuffer(buffer);
+      workspace_->setNormBufferState(true);
+    }
+    real_type norm;
+    int status = cusolverSpDnrminf(workspace_->getCusolverSpHandle(),
+                                   x->getSize(),
+                                   x->getData(memory::DEVICE),
+                                   &norm,
+                                   workspace_->getNormBuffer()  /* at least 8192 bytes */);
+    return norm;
+  }
+  
+  /** 
    * @brief axpy i.e, y = alpha*x+y where alpha is a constant
    * 
    * @param[in] alpha The constant
    * @param[in] x The first vector
    * @param[in,out] y The second vector (result is return in y)
-   * @param[in]  memspace String containg memspace (cpu or cuda)
    * 
    */
   void VectorHandlerCuda::axpy(const  real_type* alpha, vector::Vector* x, vector::Vector* y)
@@ -108,7 +132,6 @@ namespace ReSolve {
    * @param[in] V Multivector containing the matrix, organized columnwise
    * @param[in] y Vector, k x 1 if N and n x 1 if T
    * @param[in,out] x Vector, n x 1 if N and k x 1 if T
-   * @param[in] memspace  cpu or cuda (for now)
    *
    * @pre   V is stored colum-wise, _n_ > 0, _k_ > 0
    * 
@@ -162,7 +185,6 @@ namespace ReSolve {
    * @param[in] alpha vector size k x 1
    * @param[in] x (multi)vector size size x k
    * @param[in,out] y vector size size x 1 (this is where the result is stored)
-   * @param[in] memspace string containg memspace (cpu or cuda)
    *
    * @pre   _k_ > 0, _size_ > 0, _size_ = x->getSize()
    *
@@ -202,7 +224,6 @@ namespace ReSolve {
    * @param[in] k Number of vectors in V
    * @param[in] x Multivector; 2 vectors size n x 1 each
    * @param[out] res Multivector; 2 vectors size k x 1 each (result is returned in res)
-   * @param[in] memspace String containg memspace (cpu or cuda)
    *
    * @pre   _size_ > 0, _k_ > 0, size = x->getSize(), _res_ needs to be allocated
    *

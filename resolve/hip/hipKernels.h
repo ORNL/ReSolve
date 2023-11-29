@@ -44,3 +44,8 @@ void FWHT_scaleByD(int n,
                    double* y);
 
 void FWHT(int M, int log2N, double* d_Data); 
+
+void vector_inf_norm(int n,  
+                     double* input,
+                     double * buffer, 
+                     double* result);

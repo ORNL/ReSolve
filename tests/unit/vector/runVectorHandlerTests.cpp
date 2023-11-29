@@ -15,6 +15,7 @@ int main(int, char**)
     result += test.dot(50);
     result += test.axpy(50);
     result += test.scal(50);
+    result += test.infNorm(50);
 
     std::cout << "\n";
   }
@@ -32,6 +33,7 @@ int main(int, char**)
     result += test.massAxpy(1000, 30);
     result += test.massDot(100, 10);
     result += test.massDot(1000, 30);
+    result += test.infNorm(1000);
 
     std::cout << "\n";
   }
@@ -50,6 +52,7 @@ int main(int, char**)
     result += test.massAxpy(1000, 300);
     result += test.massDot(100, 10);
     result += test.massDot(1000, 30);
+    result += test.infNorm(1000);
 
     std::cout << "\n";
   }

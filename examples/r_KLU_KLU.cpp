@@ -46,7 +46,8 @@ int main(int argc, char *argv[])
   vector_type* vec_rhs;
   vector_type* vec_x;
   vector_type* vec_r;
-
+  real_type norm_A, norm_x, norm_r;//used for INF norm
+  
   ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
 
   for (int i = 0; i < numSystems; ++i)
@@ -116,6 +117,7 @@ int main(int argc, char *argv[])
     std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnzExpanded()<<std::endl;
     //Now call direct solver
     int status;
+
     if (i < 2){
       KLU->setup(A);
       status = KLU->analyze();
@@ -135,10 +137,17 @@ int main(int argc, char *argv[])
     matrix_handler->setValuesChanged(true, "cpu");
 
     matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, "csr", "cpu"); 
+    norm_r = vector_handler->infNorm(vec_r, "cpu");
 
-    std::cout << "\t 2-Norm of the residual: " 
+    std::cout << "\t2-Norm of the residual: " 
               << std::scientific << std::setprecision(16) 
               << sqrt(vector_handler->dot(vec_r, vec_r, "cpu")) << "\n";
+    matrix_handler->matrixInfNorm(A, &norm_A, "cpu"); 
+    norm_x = vector_handler->infNorm(vec_x, "cpu");
+    std::cout << "\tMatrix inf  norm: " << std::scientific << std::setprecision(16) << norm_A<<"\n"
+              << "\tResidual inf norm: " << norm_r <<"\n"  
+              << "\tSolution inf norm: " << norm_x <<"\n"  
+              << "\tNorm of scaled residuals: "<< norm_r / (norm_A * norm_x) << "\n";
   }
 
   //now DELETE

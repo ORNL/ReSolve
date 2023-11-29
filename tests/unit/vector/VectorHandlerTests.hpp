@@ -20,8 +20,8 @@ namespace ReSolve {
     {
       public:       
         VectorHandlerTests(std::string memspace) : memspace_(memspace) 
-        {
-        }
+      {
+      }
 
         virtual ~VectorHandlerTests()
         {
@@ -31,6 +31,40 @@ namespace ReSolve {
         {
           TestStatus status;
           status.skipTest();
+
+          return status.report(__func__);
+        }
+
+        TestOutcome infNorm(index_type N)
+        {
+          TestStatus status;
+          ReSolve::memory::MemorySpace ms;
+
+          if (memspace_ == "cpu")
+            ms = memory::HOST;
+          else
+            ms = memory::DEVICE;
+
+          ReSolve::VectorHandler* handler = createVectorHandler();
+
+          vector::Vector* x = new vector::Vector(N);
+
+          real_type* data = new real_type[N];
+          for (int i = 0; i < N; ++i) {
+            data[i] = 0.1 * (real_type) i;
+          }
+          x->update(data, memory::HOST, ms);
+
+          real_type ans = handler->infNorm(x, memspace_);
+          bool st = true;
+          if (ans != (real_type) (N - 1) * 0.1) {
+            st = false;
+            printf("the wrong answer is %f expecting %f \n", ans, (real_type) N);
+          } 
+          status *= st;
+
+          delete handler;
+          delete x;
 
           return status.report(__func__);
         }
@@ -147,7 +181,7 @@ namespace ReSolve {
             ms = memory::DEVICE;
 
           ReSolve::VectorHandler* handler = createVectorHandler();
-          
+
           vector::Vector* x =  new vector::Vector(N, K);
           vector::Vector* y =  new vector::Vector(N);
           vector::Vector* alpha = new vector::Vector(K);;
@@ -172,7 +206,7 @@ namespace ReSolve {
 
           handler->massAxpy(N, alpha, K, x, y, memspace_);
           status *= verifyAnswer(y, 2.0 - res, memspace_);
-         
+
           delete handler;
           delete x;
           delete y;
@@ -192,18 +226,18 @@ namespace ReSolve {
             ms = memory::DEVICE;
 
           ReSolve::VectorHandler* handler = createVectorHandler();
-          
+
           vector::Vector* x =  new vector::Vector(N, K);
           vector::Vector* y =  new vector::Vector(N, 2);
           vector::Vector* res = new vector::Vector(K, 2);
           x->allocate(ms);
           y->allocate(ms);
           res->allocate(ms);
-          
+
           x->setToConst(1.0, ms);
           y->setToConst(-1.0, ms);
           handler->massDot2Vec(N, x, K, y, res, memspace_);
-          
+
           status *= verifyAnswer(res, (-1.0) * (real_type) N, memspace_);
 
           delete handler;
@@ -231,7 +265,7 @@ namespace ReSolve {
           // for the test with TRANSPOSE
           vector::Vector* yT = new vector::Vector(N);
           vector::Vector* xT = new vector::Vector(K);
-          
+
           V->allocate(ms);
           yN->allocate(ms);
           xN->allocate(ms);
@@ -243,7 +277,7 @@ namespace ReSolve {
           xN->setToConst(.5, ms);
           yT->setToConst(-1.0, ms);
           xT->setToConst(.5, ms);
-          
+
           real_type alpha = -1.0;
           real_type beta = 1.0;
           handler->gemv("N", N, K, &alpha, &beta, V, yN, xN, memspace_);

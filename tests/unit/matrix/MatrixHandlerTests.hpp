@@ -31,11 +31,19 @@ public:
     return status.report(__func__);
   }
 
-  TestOutcome matrixOneNorm()
+  TestOutcome matrixInfNorm(index_type N)
   {
     TestStatus status;
-    status.skipTest();
+
+    ReSolve::MatrixHandler* handler = createMatrixHandler();
+
+    matrix::Csr* A = createCsrMatrix(N, memspace_);
+    real_type norm;
+    handler->matrixInfNorm(A, &norm, memspace_);
+    status *= (norm == 30.0); 
     
+    delete handler;
+    delete A;
     return status.report(__func__);
   }
 

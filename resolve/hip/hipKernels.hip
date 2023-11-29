@@ -121,6 +121,7 @@ __global__ void massAxpy3_kernel(int N,
     i += (blockDim.x*gridDim.x);
   }
 }
+
 __global__ void matrixInfNormPart1(const int n, 
                                    const int nnz, 
                                    const int* a_ia,
@@ -130,7 +131,7 @@ __global__ void matrixInfNormPart1(const int n,
   // one thread per row, pass through rows
   // and sum
   // can be done through atomics
-  //\sum_{j=1}^m abs(a_{ij})
+  //\sum_{j=1}^m fabs(a_{ij})
 
   int idx = blockIdx.x*blockDim.x + threadIdx.x;
   while (idx < n) {
@@ -140,6 +141,76 @@ __global__ void matrixInfNormPart1(const int n,
     }
     result[idx] = sum;
     idx += (blockDim.x*gridDim.x);
+  }
+}
+
+__global__ void vectorInfNorm(const int n, 
+                              const double* input, 
+                              double* result)
+{
+
+  int idx = blockIdx.x * blockDim.x + threadIdx.x;
+
+  volatile __shared__ double s_max[1024];
+  int t = threadIdx.x;
+  int bsize = blockDim.x;
+  double local_max = 0.0;
+  if (idx < n) {
+    local_max = fabs(input[idx]);
+  }
+
+  idx += (blockDim.x*gridDim.x);
+  
+  while (idx < n) {
+    local_max = fmax(fabs(input[idx]), local_max);
+    idx += (blockDim.x*gridDim.x);
+  }
+  s_max[t] = local_max;
+  __syncthreads();
+
+  // reduction
+
+  if (bsize >= 1024) {
+    if(t < 512) {
+      s_max[t] = fmax(s_max[t], s_max[t + 512]);
+    }
+    __syncthreads();
+  }
+  if (bsize >= 512) {
+    if(t < 256) {
+      s_max[t] = fmax(s_max[t], s_max[t + 256]);
+    }
+    __syncthreads();
+  }
+
+  if (bsize >= 256) {
+    if(t < 128) {
+      s_max[t] = fmax(s_max[t], s_max[t + 128]);
+    }
+    __syncthreads();
+  }
+
+  if (bsize >= 128) {
+    if(t < 64) {
+      s_max[t] = fmax(s_max[t], s_max[t + 64]);
+    }
+    __syncthreads();
+  }
+  //unroll for last warp
+  if (t < 64) {
+    s_max[t] = fmax(s_max[t], s_max[t + 64]);
+    s_max[t] = fmax(s_max[t], s_max[t + 32]);
+    s_max[t] = fmax(s_max[t], s_max[t + 16]);
+    s_max[t] = fmax(s_max[t], s_max[t + 8]);
+    s_max[t] = fmax(s_max[t], s_max[t + 4]);
+    s_max[t] = fmax(s_max[t], s_max[t + 2]);
+    s_max[t] = fmax(s_max[t], s_max[t + 1]);
+
+  }
+  if (t == 0) {
+    int bid = blockIdx.x;
+    int gid = gridDim.x;
+    result[blockIdx.x] = s_max[0];
   }
 }
 
@@ -362,6 +433,18 @@ void matrix_row_sums(int n,
                      double* result)
 {
   hipLaunchKernelGGL(matrixInfNormPart1, dim3(1000), dim3(1024), 0, 0, n, nnz, a_ia, a_val, result);
+}
+
+
+void vector_inf_norm(int n,  
+                     double* input,
+                     double* buffer, 
+                     double* result)
+{
+  hipLaunchKernelGGL(vectorInfNorm, dim3(1024), dim3(1024), 0, 0, n, input, buffer);
+  hipDeviceSynchronize();
+  hipLaunchKernelGGL(vectorInfNorm, dim3(1), dim3(1024), 0, 0, 1024, buffer, buffer);
+  hipMemcpy(result, buffer, sizeof(double) * 1, hipMemcpyDeviceToHost);
 }
 
 void permuteVectorP(int n, 
