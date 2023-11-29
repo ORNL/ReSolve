@@ -208,7 +208,6 @@ namespace ReSolve
     error_sum += status_cusparse_;
     cusparseDestroyDnVec(vec_X_);
     cusparseDestroyDnVec(vec_Y_);
-    printf("this is setup, error sum is %d \n", error_sum);
     return error_sum;
   }
 

@@ -1,13 +1,13 @@
 #include <iostream>
 #include <cassert>
 #include <cmath>
+#include <iomanip>
 
 #include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include "LinSolverIterativeRandFGMRES.hpp"
 #include <resolve/RandSketchingCountSketch.hpp> 
 #include <resolve/RandSketchingFWHT.hpp> 
-
 
 namespace ReSolve
 {
@@ -198,7 +198,9 @@ namespace ReSolve
     //rnorm = ||V_1||
     rnorm = sqrt(rnorm);
     bnorm = sqrt(bnorm);
-    printf("it 0: norm %16.16e bnorm  %16.16e \n", rnorm, bnorm);
+    io::Logger::misc() << "it 0: norm of residual "
+                       << std::scientific << std::setprecision(16) 
+                       << rnorm << " Norm of rhs: " << bnorm << "\n";
     initial_residual_norm_ = rnorm;
     while(outer_flag) {
       // check if maybe residual is already small enough?
@@ -308,14 +310,19 @@ namespace ReSolve
 
         // residual norm estimate
         rnorm = fabs(h_rs_[i + 1]);
-        printf("it %d: norm %16.16e \n",it, rnorm);
+        
+        io::Logger::misc() << "it: "<<it<< "norm of residual "
+                           << std::scientific << std::setprecision(16)
+                           << rnorm << "\n";
         // check convergence
         if (i + 1 >= restart_ || rnorm <= tolrel || it >= maxit_) {
           notconv = 0;
         }
       } // inner while
 
-      printf("end of cycle, estimated norm %16.16e, flexible?%d \n", rnorm, flexible_);
+      io::Logger::misc() << "End of cycle, ESTIMATED norm of residual "
+                         << std::scientific << std::setprecision(16)
+                         << rnorm << "\n";
       // solve tri system
       h_rs_[i] = h_rs_[i] / h_H_[i * (restart_ + 1) + i];
       for (int ii = 2; ii <= i + 1; ii++) {
@@ -379,7 +386,11 @@ namespace ReSolve
         rnorm = vector_handler_->dot(d_V_, d_V_, memspace_);
         // rnorm = ||V_0||
         rnorm = sqrt(rnorm);
-        printf("end of cycle, true norm (after sqrt) %16.16e \n", rnorm);
+        
+        io::Logger::misc() << "End of cycle, COMPUTER norm of residual "
+                          << std::scientific << std::setprecision(16)
+                          << rnorm << "\n";
+        
         final_residual_norm_ = rnorm;
         fgmres_iters_ = it;
       }
