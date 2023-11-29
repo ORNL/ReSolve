@@ -48,10 +48,10 @@ namespace ReSolve
     if (Symbolic_ != nullptr) {
       klu_free_symbolic(&Symbolic_, &Common_);
     }
-
     Symbolic_ = klu_analyze(A_->getNumRows(), A_->getRowData(memory::HOST), A_->getColData(memory::HOST), &Common_) ;
 
     factors_extracted_ = false;
+    
     if (L_ != nullptr) {
       delete L_; 
       L_ = nullptr;
