@@ -1,6 +1,6 @@
 #include "RandSketchingFWHT.hpp"
 #include <resolve/MemoryUtils.hpp>
-#include <resolve/vector/VectorHandler.hpp>
+#include <resolve/vector/Vector.hpp>
 #include <math.h>
 #ifdef RESOLVE_USE_HIP
 #include <resolve/hip/hipKernels.h>

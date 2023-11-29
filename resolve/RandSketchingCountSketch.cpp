@@ -1,5 +1,7 @@
 #include "RandSketchingCountSketch.hpp"
 #include <resolve/MemoryUtils.hpp>
+#include <resolve/vector/Vector.hpp>
+
 #ifdef RESOLVE_USE_HIP
 #include <resolve/hip/hipKernels.h>
 #endif
@@ -7,6 +9,7 @@
 #include <resolve/cuda/cudaKernels.h>
 #endif
 #include <resolve/RandSketchingCountSketch.hpp> 
+
 namespace ReSolve 
 {
   RandSketchingCountSketch::RandSketchingCountSketch()

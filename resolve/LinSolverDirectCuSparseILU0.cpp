@@ -2,6 +2,7 @@
 #include <resolve/matrix/Csr.hpp>
 #include "LinSolverDirectCuSparseILU0.hpp"
 #include <algorithm>
+
 namespace ReSolve 
 {
   LinSolverDirectCuSparseILU0::LinSolverDirectCuSparseILU0(LinAlgWorkspaceCUDA* workspace)
@@ -147,12 +148,12 @@ namespace ReSolve
                               CUSPARSE_SPMAT_DIAG_TYPE,
                               &diagtypeL, 
                               sizeof(diagtypeL));  
- 
+
     cusparseSpMatSetAttribute(mat_U_, 
                               CUSPARSE_SPMAT_DIAG_TYPE,
                               &diagtypeU, 
                               sizeof(diagtypeU));  
- 
+
     status_cusparse_ = cusparseSpSV_bufferSize(workspace_->getCusparseHandle(), 
                                                CUSPARSE_OPERATION_NON_TRANSPOSE, 
                                                &(constants::ONE), 
@@ -237,10 +238,11 @@ namespace ReSolve
   // solution is returned in RHS
   int LinSolverDirectCuSparseILU0::solve(vector_type* rhs)
   {
-
     int error_sum = 0;
+   
     cusparseCreateDnVec(&vec_X_, A_->getNumRows(), rhs->getData(ReSolve::memory::DEVICE), CUDA_R_64F);
     cusparseCreateDnVec(&vec_Y_, A_->getNumRows(), d_aux1_, CUDA_R_64F);
+   
     status_cusparse_ = cusparseSpSV_solve(workspace_->getCusparseHandle(), 
                                           CUSPARSE_OPERATION_NON_TRANSPOSE,
                                           &(constants::ONE), 
@@ -262,7 +264,9 @@ namespace ReSolve
                                           CUSPARSE_SPSV_ALG_DEFAULT,
                                           descr_spsv_U_);
     error_sum += status_cusparse_;
+   
     rhs->setDataUpdated(ReSolve::memory::DEVICE);
+   
     cusparseDestroyDnVec(vec_X_);
     cusparseDestroyDnVec(vec_Y_);
 
@@ -272,9 +276,10 @@ namespace ReSolve
   int LinSolverDirectCuSparseILU0::solve(vector_type* rhs, vector_type* x)
   {
     int error_sum = 0;
+    
     cusparseCreateDnVec(&vec_X_, A_->getNumRows(), rhs->getData(ReSolve::memory::DEVICE), CUDA_R_64F);
     cusparseCreateDnVec(&vec_Y_, A_->getNumRows(), d_aux1_, CUDA_R_64F);
-    cudaMemset(d_aux1_, 0, A_->getNumRows()*sizeof(double));
+    
     status_cusparse_ = cusparseSpSV_solve(workspace_->getCusparseHandle(), 
                                           CUSPARSE_OPERATION_NON_TRANSPOSE,
                                           &(constants::ONE), 
@@ -297,7 +302,9 @@ namespace ReSolve
                                           CUSPARSE_SPSV_ALG_DEFAULT,
                                           descr_spsv_U_);
     error_sum += status_cusparse_;
+   
     x->setDataUpdated(ReSolve::memory::DEVICE);
+   
     cusparseDestroyDnVec(vec_X_);
     cusparseDestroyDnVec(vec_Y_);
 
