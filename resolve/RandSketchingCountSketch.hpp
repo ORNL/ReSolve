@@ -1,15 +1,22 @@
 #pragma once
 #include <resolve/Common.hpp>
-#include <resolve/vector/Vector.hpp>
 #include <resolve/RandSketchingManager.hpp>
+
 namespace ReSolve {
+
+  // Forward declaration of vector::Vector class
+  namespace vector
+  {
+    class Vector;
+  }
+
   class RandSketchingCountSketch : public RandSketchingManager
   {
 
     using vector_type = vector::Vector;
     public: 
-      // constructor
 
+      // constructor
       RandSketchingCountSketch();
 
       // destructor

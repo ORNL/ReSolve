@@ -1,5 +1,7 @@
 #include "RandSketchingCountSketch.hpp"
 #include <resolve/MemoryUtils.hpp>
+#include <resolve/vector/Vector.hpp>
+
 #ifdef RESOLVE_USE_HIP
 #include <resolve/hip/hipKernels.h>
 #endif
@@ -7,6 +9,7 @@
 #include <resolve/cuda/cudaKernels.h>
 #endif
 #include <resolve/RandSketchingCountSketch.hpp> 
+
 namespace ReSolve 
 {
   RandSketchingCountSketch::RandSketchingCountSketch()
@@ -49,7 +52,7 @@ namespace ReSolve
     k_rand_ = k;
     n_ = n;
     srand(time(NULL)); 
-   //srand(1234); 
+   // srand(1234); 
     //allocate labeling scheme vector and move to GPU
 
     h_labels_ = new int[n_];

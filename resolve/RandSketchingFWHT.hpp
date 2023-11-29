@@ -1,8 +1,14 @@
 #pragma once
 #include <resolve/Common.hpp>
-#include <resolve/vector/Vector.hpp>
 #include <resolve/RandSketchingManager.hpp>
+
 namespace ReSolve {
+  // Forward declaration of vector::Vector class
+  namespace vector
+  {
+    class Vector;
+  }
+  
   class RandSketchingFWHT : public RandSketchingManager
   {
 
