@@ -1,7 +1,10 @@
+#include <cmath>
+#include <limits>
+
 #include "RandSketchingFWHT.hpp"
 #include <resolve/MemoryUtils.hpp>
 #include <resolve/vector/Vector.hpp>
-#include <math.h>
+#include <resolve/utilities/logger/Logger.hpp>
 #ifdef RESOLVE_USE_HIP
 #include <resolve/hip/hipKernels.h>
 #endif
@@ -11,6 +14,8 @@
 #include <resolve/RandSketchingFWHT.hpp> 
 namespace ReSolve 
 {
+  using out = io::Logger;
+
   RandSketchingFWHT::RandSketchingFWHT()
   {
     h_seq_ = nullptr;
@@ -62,11 +67,16 @@ namespace ReSolve
     k_rand_ = k;
     n_ = n;
     // pad to the nearest power of 2
-    N_ = pow(2, ceil(log(n_)/log(2)));
-    log2N_ = log2(N_);
-    one_over_k_ = 1.0/sqrt((real_type) k_rand_);
+    real_type N_real = std::pow(2.0, std::ceil(std::log(n_)/std::log(2.0)));
+    if (N_real > static_cast<real_type>(std::numeric_limits<index_type>::max())) {
+      out::error() << "Exceeded numerical limits of index_type ...\n";
+      return 1;
+    }
+    N_ = static_cast<index_type>(N_real);
+    log2N_ = static_cast<index_type>(std::log2(N_real));
+    one_over_k_ = 1.0/std::sqrt(static_cast<real_type>(k_rand_));
 
-    srand(time(NULL)); 
+    srand(static_cast<unsigned>(time(nullptr)));
 
     h_seq_  = new int[N_];
     h_perm_  = new int[k_rand_];
@@ -114,7 +124,7 @@ namespace ReSolve
   //to be fixed, this can be done on the GPU
   int RandSketchingFWHT::reset() // if needed can be reset (like when Krylov method restarts)
   {
-    srand(time(NULL)); 
+    srand(static_cast<unsigned>(time(nullptr)));
 
     int r;
     int temp;

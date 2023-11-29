@@ -51,8 +51,7 @@ namespace ReSolve
   {
     k_rand_ = k;
     n_ = n;
-    srand(time(NULL)); 
-   // srand(1234); 
+    srand(static_cast<unsigned>(time(nullptr)));
     //allocate labeling scheme vector and move to GPU
 
     h_labels_ = new int[n_];
