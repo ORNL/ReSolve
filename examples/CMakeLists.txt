@@ -37,6 +37,9 @@ if(RESOLVE_USE_CUDA)
   add_executable(klu_glu_values_update.exe r_KLU_GLU_matrix_values_update.cpp)
   target_link_libraries(klu_glu_values_update.exe PRIVATE ReSolve)
 
+  # Example in which factorization is redone if solution is bad
+  add_executable(klu_cusolverrf_check_redo.exe r_KLU_cusolverrf_redo_factorization.cpp)
+  target_link_libraries(klu_cusolverrf_check_redo.exe PRIVATE ReSolve)
 endif(RESOLVE_USE_CUDA)
 
 # Create HIP examples
@@ -59,7 +62,7 @@ endif(RESOLVE_USE_HIP)
 set(installable_executables klu_klu.exe klu_klu_standalone.exe)
 
 if(RESOLVE_USE_CUDA)
-  set(installable_executables ${installable_executables} klu_glu.exe klu_rf.exe klu_rf_fgmres.exe klu_glu_values_update.exe)        
+  set(installable_executables ${installable_executables} klu_glu.exe klu_rf.exe klu_rf_fgmres.exe klu_glu_values_update.exe klu_cusolverrf_check_redo.exe)        
 endif(RESOLVE_USE_CUDA)
 
 if(RESOLVE_USE_HIP)

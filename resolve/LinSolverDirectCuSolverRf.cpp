@@ -7,6 +7,7 @@ namespace ReSolve
   LinSolverDirectCuSolverRf::LinSolverDirectCuSolverRf()
   {
     cusolverRfCreate(&handle_cusolverrf_);
+    setup_completed_ = false;
   }
 
   LinSolverDirectCuSolverRf::~LinSolverDirectCuSolverRf()
@@ -25,11 +26,28 @@ namespace ReSolve
                                        vector_type* /* rhs */)
   {
     //remember - P and Q are generally CPU variables
+    // factorization data is stored in the handle. If function is called again, destroy the old handle to get rid of old data. 
+    if (setup_completed_) {
+      cusolverRfDestroy(handle_cusolverrf_);
+      cusolverRfCreate(&handle_cusolverrf_);
+    }
+
     int error_sum = 0;
     this->A_ = (matrix::Csr*) A;
     index_type n = A_->getNumRows();
-    mem_.allocateArrayOnDevice(&d_P_, n); 
-    mem_.allocateArrayOnDevice(&d_Q_, n);
+
+    if (d_P_ == nullptr){
+      mem_.allocateArrayOnDevice(&d_P_, n);
+    } 
+
+    if (d_Q_ == nullptr){
+      mem_.allocateArrayOnDevice(&d_Q_, n);
+    }
+
+    if (d_T_ != nullptr){
+      mem_.deleteOnDevice(d_T_);
+    }
+    
     mem_.allocateArrayOnDevice(&d_T_, n);
 
     mem_.copyArrayHostToDevice(d_P_, P, n);
@@ -68,6 +86,9 @@ namespace ReSolve
     const cusolverRfTriangularSolve_t solve_alg =
       CUSOLVERRF_TRIANGULAR_SOLVE_ALG1;  //  1- default, 2 or 3 // 1 causes error
     this->setAlgorithms(fact_alg, solve_alg);
+    
+    setup_completed_ = true;
+    
     return error_sum;
   }
 
@@ -128,6 +149,6 @@ namespace ReSolve
   int LinSolverDirectCuSolverRf::setNumericalProperties(double nzero, double nboost)
   {
     status_cusolverrf_ = cusolverRfSetNumericProperties(handle_cusolverrf_, nzero, nboost);
-      return status_cusolverrf_;
+    return status_cusolverrf_;
   }
 }// namespace resolve
