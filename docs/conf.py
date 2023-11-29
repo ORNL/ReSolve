@@ -16,21 +16,29 @@ import sys
 import os
 import shlex
 
-# Call doxygen in ReadtheDocs
-# read_the_docs_build = os.environ.get('READTHEDOCS', None) == 'True'
-# if read_the_docs_build:
+read_the_docs_build = os.environ.get('READTHEDOCS', None) == 'True'
+if read_the_docs_build:
 
+    # Modify Doxyfile for ReadTheDocs compatibility
+    with open('./docs/doxygen/Doxyfile.in', 'r') as f:
+        fdata = f.read()
+    fdata = fdata.replace('@PROJECT_SOURCE_DIR@', '.')
+    with open('./docs/doxygen/Doxyfile.in', 'w') as f:
+        f.write(fdata)
+    with open('./docs/doxygen/Doxyfile.in', 'a') as f:
+        f.write("\nOUTPUT_DIRECTORY=../_readthedocs/html/doxygen")
+
+        # Call doxygen
+    from subprocess import call
+    call(['doxygen', "./docs/doxygen/Doxyfile.in"])
+        
 # Modify Doxyfile for ReadTheDocs compatibility
-with open('./doxygen/Doxyfile.in', 'r') as f:
-    fdata = f.read()
-fdata = fdata.replace('@PROJECT_SOURCE_DIR@', '.')
-with open('./doxygen/Doxyfile.in', 'w') as f:
-    f.write(fdata)
+#with open('./doxygen/Doxyfile.in', 'r') as f:
+#    fdata = f.read()
+#fdata = fdata.replace('@PROJECT_SOURCE_DIR@', '.')
+#with open('./doxygen/Doxyfile.in', 'w') as f:
+#    f.write(fdata)
     
-# Call doxygen
-from subprocess import call
-call(['doxygen', "./doxygen/Doxyfile.in"])
-
 
 # Get current directory
 conf_directory = os.path.dirname(os.path.realpath(__file__))
@@ -263,7 +271,7 @@ htmlhelp_basename = 'ReSolve'
 # override wide tables in RTD theme
 # (Thanks to https://rackerlabs.github.io/docs-rackspace/tools/rtd-tables.html)
 # These folders are copied to the documentation's HTML output
-html_static_path = ['sphinx/_static/theme_overrides.css']
+# html_static_path = ['sphinx/_static']
 
 # These paths are either relative to html_static_path
 # or fully qualified paths (eg. https://...)
