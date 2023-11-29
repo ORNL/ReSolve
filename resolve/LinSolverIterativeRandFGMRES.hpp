@@ -32,7 +32,7 @@ namespace ReSolve
                                  index_type conv_cond,
                                  MatrixHandler* matrix_handler,
                                  VectorHandler* vector_handler, 
-                                  SketchingMethod rand_method, 
+                                 SketchingMethod rand_method, 
                                  GramSchmidt*   gs,
                                  std::string memspace = "cuda");
     ~LinSolverIterativeRandFGMRES();
