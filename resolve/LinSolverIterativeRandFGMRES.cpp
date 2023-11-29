@@ -310,7 +310,7 @@ namespace ReSolve
         rnorm = fabs(h_rs_[i + 1]);
         printf("it %d: norm %16.16e \n",it, rnorm);
         // check convergence
-        if(i + 1 >= restart_ || rnorm <= tolrel || it >= maxit_) {
+        if (i + 1 >= restart_ || rnorm <= tolrel || it >= maxit_) {
           notconv = 0;
         }
       } // inner while
