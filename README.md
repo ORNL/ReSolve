@@ -53,7 +53,42 @@ target_link_libraries(my_app PRIVATE ReSolve::ReSolve)
 
 For all contributions to ReSolve please follow the [developer guidelines](CONTRIBUTING.md)
 
+### Pre-commit
+Precommit is a framework for mmangaing and maintain multi-lanagueg pre-commit hooks. https://pre-commit.com/ 
 
+Precommit is auto applied through CI to every pull request and every commit to the said pull request. Precommit checks for valid yaml files, end of file spaces, Syntax of C codeand etc. To see specifically what formating precommit looks for please check out our .clang-format and .cmake-format filed as well as our .pre-commit-config.yaml which show the specific precommit hooks being applied. 
+
+### Running Pre-commit locally
+To run pre-commit locally you first must install pre-commit and there are a couple ways to do this.
+
+#### Prerequiste to installing pre-commit
+It is recommended that you install pre-commit through python. Here we assume Python is aleadly installed if that is not the case please check out these [docs](https://wiki.python.org/moin/BeginnersGuide/Download) for how to install python. 
+
+Next create a virtual environment with the following:
+```shell
+python -m venv /path/to/new/virtual/environment
+```
+
+Activate the new environment:
+```shell
+source /path/to/new/virtual/environment/bin/activate
+```
+
+ Now that we are within a virtual environment we can install pre-commit via;
+```shell
+pip install pre-commit
+```
+
+To install the hooks and have pre-commit run automatically before every commit run
+```shell
+pre-commit install --install-hooks
+```
+
+If you want to manually run all pre-commit hooks on a repository, run 
+```shell
+pre-commit run --all-files
+```
+To learn more about pre-commit usuage check out https://pre-commit.com/#usage.
 
 ## Test and Deploy
 
@@ -111,4 +146,3 @@ contributions to ReSolve must be made under the smae licensing terms.
 **Please Note** If you are using ReSolve with any third party libraries linked
 in (e.g., KLU), be sure to review the respective license of the package as that
 license may have more restrictive terms than the ReSolve license.
-
