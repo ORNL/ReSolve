@@ -318,7 +318,7 @@ namespace ReSolve
       printf("end of cycle, estimated norm %16.16e, flexible?%d \n", rnorm, flexible_);
       // solve tri system
       h_rs_[i] = h_rs_[i] / h_H_[i * (restart_ + 1) + i];
-      for(int ii = 2; ii <= i + 1; ii++) {
+      for (int ii = 2; ii <= i + 1; ii++) {
         k = i - ii + 1;
         k1 = k + 1;
         t = h_rs_[k];
