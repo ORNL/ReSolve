@@ -375,7 +375,7 @@ namespace ReSolve
         rnorm = sqrt(rnorm);
       }
 
-      if(!outer_flag) {
+      if (!outer_flag) {
         rnorm = vector_handler_->dot(d_V_, d_V_, memspace_);
         // rnorm = ||V_0||
         rnorm = sqrt(rnorm);
