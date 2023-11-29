@@ -33,4 +33,4 @@ namespace ReSolve {
     
       MemoryHandler mem_; ///< Device memory manager object
   };
-}
+} // namespace ReSolve
