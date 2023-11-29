@@ -330,7 +330,7 @@ namespace ReSolve
 
       // get solution
       if (flexible_) {
-        for(j = 0; j <= i; j++) {
+        for (j = 0; j <= i; j++) {
           vec_z->setData( d_Z_->getVectorData(j, memory::DEVICE), memory::DEVICE);
           vector_handler_->axpy(&h_rs_[j], vec_z, x, memspace_);
         }
