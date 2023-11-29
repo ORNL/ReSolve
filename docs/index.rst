@@ -197,3 +197,4 @@ terms.
    doxygen/index
    sphinx/licenses
    sphinx/notice 
+   sphinx/developer_guide/index

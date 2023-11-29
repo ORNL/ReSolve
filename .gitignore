@@ -11,3 +11,5 @@ spack-env-*/
 spack-build-*
 spack_install.*
 spack-configure-*
+docs/dox.warnings
+docs/@dox_output_dir@axom.tag
