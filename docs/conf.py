@@ -31,14 +31,7 @@ if read_the_docs_build:
         # Call doxygen
     from subprocess import call
     call(['doxygen', "./doxygen/Doxyfile.in"])
-        
-# Modify Doxyfile for ReadTheDocs compatibility
-#with open('./doxygen/Doxyfile.in', 'r') as f:
-#    fdata = f.read()
-#fdata = fdata.replace('@PROJECT_SOURCE_DIR@', '.')
-#with open('./doxygen/Doxyfile.in', 'w') as f:
-#    f.write(fdata)
-    
+
 
 # Get current directory
 conf_directory = os.path.dirname(os.path.realpath(__file__))
