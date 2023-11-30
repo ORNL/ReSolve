@@ -5,7 +5,7 @@ Source Documentation
 API Documentation
 -----------------
 
-Doxygen generated API documentation can be found here: `API documentation <../../doxygen/html/index.html>`_
+Doxygen generated API documentation can be found here: `API documentation <html/index.html>`_
 
 Doxygen generated API documentation can be found here: `API 1 <../../../doxygen/html/index.html>`_
 Doxygen generated API documentation can be found here: `API 2 <../doxygen/html/index.html>`_
