@@ -191,7 +191,7 @@ else:
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = [os.path.join(conf_directory, 'sphinx/_build/_static')]
 
-html_static_path = ['docs/sphinx/_build/_static/theme_overrides.css']
+#html_static_path = ['docs/sphinx/_build/_static/theme_overrides.css']
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied
