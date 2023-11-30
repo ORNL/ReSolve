@@ -22,13 +22,22 @@ int main(int argc, char *argv[])
   using real_type  = ReSolve::real_type;
   using vector_type = ReSolve::vector::Vector;
 
-  (void) argc; // TODO: Check if the number of input parameters is correct.
-  std::string  matrixFileName = argv[1];
-  std::string  rhsFileName = argv[2];
+
+  //we want error sum to be 0 at the end
+  //that means PASS.
+  //otheriwse it is a FAIL.
+  int error_sum = 0;
+  int status;
+  const std::string data_path = (argc == 2) ? argv[1] : "./";
+
+
+  std::string matrixFileName = data_path + "data/SiO2.mtx";
+  std::string rhsFileName = data_path + "data/SiO2_rhs.mtx";
 
 
   ReSolve::matrix::Coo* A_coo;
   ReSolve::matrix::Csr* A;
+  
   ReSolve::LinAlgWorkspaceHIP* workspace_HIP = new ReSolve::LinAlgWorkspaceHIP();
   workspace_HIP->initializeHandles();
   ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(workspace_HIP);
@@ -38,24 +47,19 @@ int main(int argc, char *argv[])
 
   vector_type* vec_rhs;
   vector_type* vec_x;
-  vector_type* vec_r;
 
   ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::cgs2);
 
   ReSolve::LinSolverDirectRocSparseILU0* Rf = new ReSolve::LinSolverDirectRocSparseILU0(workspace_HIP);
   ReSolve::LinSolverIterativeRandFGMRES* FGMRES = new ReSolve::LinSolverIterativeRandFGMRES(matrix_handler, vector_handler,ReSolve::LinSolverIterativeRandFGMRES::cs, GS, "hip");
 
-  std::cout << std::endl << std::endl << std::endl;
-  std::cout << "========================================================================================================================"<<std::endl;
-  std::cout << "Reading: " << matrixFileName<< std::endl;
-  std::cout << "========================================================================================================================"<<std::endl;
-  std::cout << std::endl;
   std::ifstream mat_file(matrixFileName);
   if(!mat_file.is_open())
   {
     std::cout << "Failed to open file " << matrixFileName << "\n";
     return -1;
   }
+  
   std::ifstream rhs_file(rhsFileName);
   if(!rhs_file.is_open())
   {
@@ -70,59 +74,112 @@ int main(int argc, char *argv[])
                                A_coo->expanded());
 
   rhs = ReSolve::io::readRhsFromFile(rhs_file);
+ 
   x = new real_type[A->getNumRows()];
   vec_rhs = new vector_type(A->getNumRows());
   vec_x = new vector_type(A->getNumRows());
   vec_x->allocate(ReSolve::memory::HOST);
-  //iinit guess is 0U
+ 
+  //iinit guess is 0
   vec_x->allocate(ReSolve::memory::DEVICE);
   vec_x->setToZero(ReSolve::memory::DEVICE);
-  vec_r = new vector_type(A->getNumRows());
-  std::cout<<"Finished reading the matrix and rhs, size: "<<A->getNumRows()<<" x "<<A->getNumColumns()<< ", nnz: "<< A->getNnz()<< ", symmetric? "<<A->symmetric()<< ", Expanded? "<<A->expanded()<<std::endl;
+
   mat_file.close();
   rhs_file.close();
 
   matrix_handler->coo2csr(A_coo,A, "hip");
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-  //Now call direct solver
+  
   real_type norm_b;
   matrix_handler->setValuesChanged(true, "hip");
 
-  Rf->setup(A);
+  status = Rf->setup(A);
+  error_sum += status;
+  
   FGMRES->setRestart(150);
   FGMRES->setMaxit(2500);
   FGMRES->setTol(1e-12);
   FGMRES->setup(A);
-  GS->setup(FGMRES->getKrand(), FGMRES->getRestart()); 
+  
+  status = GS->setup(FGMRES->getKrand(), FGMRES->getRestart()); 
+  error_sum += status;
 
   //matrix_handler->setValuesChanged(true, "hip");
-  FGMRES->resetMatrix(A);
-  FGMRES->setupPreconditioner("LU", Rf);
+  status = FGMRES->resetMatrix(A);
+  error_sum += status;
+  
+  status = FGMRES->setupPreconditioner("LU", Rf);
+  error_sum += status;
+  
   FGMRES->setFlexible(1); 
 
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
   FGMRES->solve(vec_rhs, vec_x);
 
   norm_b = vector_handler->dot(vec_rhs, vec_rhs, "hip");
-  norm_b = sqrt(norm_b);
-  std::cout << "FGMRES: init nrm: " 
+  norm_b = std::sqrt(norm_b);
+  real_type final_norm_first =  FGMRES->getFinalResidualNorm();
+  std::cout << "Randomized FGMRES results (first run): \n"
+    << "\t Sketching method:                                    : CountSketch\n" 
+    << "\t Initial residual norm:          ||b-Ax_0||_2         : " 
     << std::scientific << std::setprecision(16) 
-    << FGMRES->getInitResidualNorm()/norm_b
-    << " final nrm: "
-    << FGMRES->getFinalResidualNorm()/norm_b
-    << " iter: " << FGMRES->getNumIter() << "\n";
+    << FGMRES->getInitResidualNorm()<<" \n"
+    << "\t Initial relative residual norm: ||b-Ax_0||_2/||b||_2 : "
+    << FGMRES->getInitResidualNorm()/norm_b<<" \n"
+    << "\t Final residual norm:            ||b-Ax||_2           : " 
+    << FGMRES->getFinalResidualNorm() <<" \n"
+    << "\t Final relative residual norm:   ||b-Ax||_2/||b||_2   : " 
+    << FGMRES->getFinalResidualNorm()/norm_b <<" \n"
+    << "\t Number of iterations                                 : " << FGMRES->getNumIter() << "\n";
+  
+  delete FGMRES;
+  delete GS;
+  GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::cgs2);
+  FGMRES = new ReSolve::LinSolverIterativeRandFGMRES(matrix_handler, vector_handler,ReSolve::LinSolverIterativeRandFGMRES::fwht, GS, "hip");
+  
+  
+  FGMRES->setRestart(150);
+  FGMRES->setMaxit(2500);
+  FGMRES->setTol(1e-12);
+  FGMRES->setup(A);
+  
+  status = GS->setup(FGMRES->getKrand(), FGMRES->getRestart()); 
+  error_sum += status;
+  
+  status = FGMRES->setupPreconditioner("LU", Rf);
+  error_sum += status;
+  
+  vec_x->setToZero(ReSolve::memory::DEVICE);
+  FGMRES->solve(vec_rhs, vec_x);
 
 
+  std::cout << "Randomized FGMRES results (second run): \n"
+    << "\t Sketching method:                                    : FWHT\n" 
+    << "\t Initial residual norm:          ||b-Ax_0||_2         : " 
+    << std::scientific << std::setprecision(16) 
+    << FGMRES->getInitResidualNorm()<<" \n"
+    << "\t Initial relative residual norm: ||b-Ax_0||_2/||b||_2 : "
+    << FGMRES->getInitResidualNorm()/norm_b<<" \n"
+    << "\t Final residual norm:            ||b-Ax||_2           : " 
+    << FGMRES->getFinalResidualNorm() <<" \n"
+    << "\t Final relative residual norm:   ||b-Ax||_2/||b||_2   : " 
+    << FGMRES->getFinalResidualNorm()/norm_b <<" \n"
+    << "\t Number of iterations                                 : " << FGMRES->getNumIter() << "\n";
+
+  if ((error_sum == 0) && (final_norm_first/norm_b < 1e-11) && (FGMRES->getFinalResidualNorm()/norm_b < 1e-11 )) {
+    std::cout<<"Test 5 (randomized GMRES) PASSED"<<std::endl<<std::endl;;
+  } else {
+    std::cout<<"Test 5 (randomized GMRES) FAILED, error sum: "<<error_sum<<std::endl<<std::endl;;
+  }
   delete A;
   delete A_coo;
   delete Rf;
   delete [] x;
   delete [] rhs;
-  delete vec_r;
   delete vec_x;
   delete workspace_HIP;
   delete matrix_handler;
   delete vector_handler;
 
-  return 0;
+  return error_sum;
 }

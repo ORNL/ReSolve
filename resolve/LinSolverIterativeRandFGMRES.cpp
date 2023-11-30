@@ -313,7 +313,7 @@ namespace ReSolve
         // residual norm estimate
         rnorm = fabs(h_rs_[i + 1]);
         
-        io::Logger::misc() << "it: "<<it<< "norm of residual "
+        io::Logger::misc() << "it: "<<it<< " --> norm of the residual "
                            << std::scientific << std::setprecision(16)
                            << rnorm << "\n";
         // check convergence
@@ -371,6 +371,9 @@ namespace ReSolve
 
         rand_manager_->reset();
 
+        if (rand_method_ == cs) {
+          mem_.setZeroArrayOnDevice(d_S_->getData(memory::DEVICE), d_S_->getSize() * d_S_->getNumVectors());
+        }
         vec_v->setData( d_V_->getVectorData(0, memory::DEVICE), memory::DEVICE);
         vec_s->setData( d_S_->getVectorData(0, memory::DEVICE), memory::DEVICE);
         rand_manager_->Theta(vec_v, vec_s);
@@ -389,7 +392,7 @@ namespace ReSolve
         // rnorm = ||V_0||
         rnorm = sqrt(rnorm);
         
-        io::Logger::misc() << "End of cycle, COMPUTER norm of residual "
+        io::Logger::misc() << "End of cycle, COMPUTED norm of residual "
                           << std::scientific << std::setprecision(16)
                           << rnorm << "\n";
         
@@ -496,4 +499,4 @@ namespace ReSolve
   {
     return fgmres_iters_;
   }
-}//namespace
+} // namespace ReSolve
