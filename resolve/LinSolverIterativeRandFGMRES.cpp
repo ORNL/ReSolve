@@ -118,15 +118,14 @@ namespace ReSolve
     switch(rand_method_) {
       case cs:
         if(ceil(restart_ * log(n_)) < k_rand_) {
-          //k_rand_ = ceil(restart_ * log(n_));
-          k_rand_ = ceil(restart_ * log(n_));
+          k_rand_ = static_cast<index_type>(std::ceil(restart_ * std::log(static_cast<real_type>(n_))));
         }
         rand_manager_ = new RandSketchingCountSketch();
         //set k and n 
         break;
       case fwht:
         if ( ceil(2.0 * restart_ * log(n_) / log(restart_)) < k_rand_) {
-          k_rand_ = ceil(2.0 * restart_ * log(n_) / log(restart_));
+          k_rand_ = static_cast<index_type>(std::ceil(2.0 * restart_ * std::log(n_) / std::log(restart_)));
         }
         rand_manager_ = new RandSketchingFWHT();
         break;
@@ -134,7 +133,7 @@ namespace ReSolve
         io::Logger::warning() << "Wrong sketching method, setting to default (CountSketch)\n"; 
         rand_method_ = cs;
         if(ceil(restart_ * log(n_)) < k_rand_) {
-          k_rand_ = ceil(restart_ * log(n_));
+          k_rand_ = static_cast<index_type>(std::ceil(restart_ * std::log(n_)));
         }
         rand_manager_ = new RandSketchingCountSketch();
         break;
@@ -194,7 +193,7 @@ namespace ReSolve
     rnorm = 0.0;
     bnorm = vector_handler_->dot(rhs, rhs, memspace_);
     rnorm = vector_handler_->dot(vec_s, vec_s, memspace_);
-    double rnorm_true = vector_handler_->dot(vec_v, vec_v, memspace_);
+    // double rnorm_true = vector_handler_->dot(vec_v, vec_v, memspace_);
     //rnorm = ||V_1||
     rnorm = sqrt(rnorm);
     bnorm = sqrt(bnorm);

@@ -19,7 +19,6 @@ using namespace ReSolve::constants;
 int main(int argc, char *argv[])
 {
   // Use the same data types as those you specified in ReSolve build.
-  using index_type = ReSolve::index_type;
   using real_type  = ReSolve::real_type;
   using vector_type = ReSolve::vector::Vector;
 
