@@ -12,7 +12,7 @@
 namespace ReSolve
 {
   using out = io::Logger;
-
+ 
   LinSolverIterativeRandFGMRES::LinSolverIterativeRandFGMRES(std::string memspace)
   {
     memspace_ = memspace;
@@ -155,6 +155,8 @@ namespace ReSolve
   {
     using namespace constants;
 
+    //io::Logger::setVerbosity(io::Logger::EVERYTHING);
+    
     int outer_flag = 1;
     int notconv = 1; 
     int i = 0;
@@ -229,6 +231,7 @@ namespace ReSolve
       t = 1.0 / rnorm;
       vector_handler_->scal(&t, d_V_, memspace_);
       vector_handler_->scal(&t, d_S_, memspace_);
+
       mem_.deviceSynchronize();
       // initialize norm history
       h_rs_[0] = rnorm;

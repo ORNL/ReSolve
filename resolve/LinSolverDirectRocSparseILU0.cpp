@@ -2,6 +2,8 @@
 #include <resolve/matrix/Csr.hpp>
 #include "LinSolverDirectRocSparseILU0.hpp"
 
+#include <resolve/utilities/logger/Logger.hpp>
+
 namespace ReSolve 
 {
   LinSolverDirectRocSparseILU0::LinSolverDirectRocSparseILU0(LinAlgWorkspaceHIP* workspace)
@@ -63,6 +65,10 @@ namespace ReSolve
                                                        A_->getColData(ReSolve::memory::DEVICE), 
                                                        info_A_, 
                                                        &buffer_size_A);
+    if (status_rocsparse_ != 0) { 
+        io::Logger::warning() << "Buffer size estimate for ILU0 failed with code: " <<status_rocsparse_<<" \n"; 
+    } 
+
 
     error_sum += status_rocsparse_;
     status_rocsparse_ = rocsparse_dcsrsv_buffer_size(workspace_->getRocsparseHandle(), 
@@ -75,6 +81,10 @@ namespace ReSolve
                                                      A_->getColData(ReSolve::memory::DEVICE), 
                                                      info_A_, 
                                                      &buffer_size_L);
+    if (status_rocsparse_ != 0) { 
+        io::Logger::warning() << "Buffer size estimate for L solve failed with code: " <<status_rocsparse_<<" \n"; 
+    } 
+
     error_sum += status_rocsparse_;
 
     status_rocsparse_ = rocsparse_dcsrsv_buffer_size(workspace_->getRocsparseHandle(), 
@@ -87,8 +97,15 @@ namespace ReSolve
                                                      A_->getColData(ReSolve::memory::DEVICE), 
                                                      info_A_,
                                                      &buffer_size_U);
+    if (status_rocsparse_ != 0) { 
+        io::Logger::warning() << "Buffer size estimate for U solve failed with code: " <<status_rocsparse_<<" \n"; 
+    } 
     error_sum += status_rocsparse_;
 
+    size_t buffer_size = std::max(buffer_size_A, std::max(buffer_size_L, buffer_size_U));
+
+    mem_.allocateBufferOnDevice(&buffer_, buffer_size);
+    
     // Now analysis
     status_rocsparse_ = rocsparse_dcsrilu0_analysis(workspace_->getRocsparseHandle(), 
                                                     n, 
@@ -102,6 +119,9 @@ namespace ReSolve
                                                     rocsparse_solve_policy_auto,
                                                     buffer_);
 
+    if (status_rocsparse_ != 0) { 
+        io::Logger::warning() << "ILU0 decomposition analysis failed with code: " <<status_rocsparse_<<" \n"; 
+    } 
     error_sum += status_rocsparse_;
 
     status_rocsparse_ = rocsparse_dcsrsv_analysis(workspace_->getRocsparseHandle(), 
@@ -116,6 +136,9 @@ namespace ReSolve
                                                   rocsparse_analysis_policy_reuse,
                                                   rocsparse_solve_policy_auto,
                                                   buffer_);
+    if (status_rocsparse_ != 0) { 
+        io::Logger::warning() << "Solve analysis for L solve failed with code: " <<status_rocsparse_<<" \n"; 
+    } 
     error_sum += status_rocsparse_;
 
 
@@ -131,6 +154,9 @@ namespace ReSolve
                                                    rocsparse_analysis_policy_reuse,
                                                   rocsparse_solve_policy_auto,
                                                   buffer_);
+    if (status_rocsparse_ != 0) { 
+        io::Logger::warning() << "Solve analysis for U solve failed with code: " <<status_rocsparse_<<" \n"; 
+    } 
 
     error_sum += status_rocsparse_;
     //allocate aux data
@@ -149,11 +175,13 @@ namespace ReSolve
                                            info_A_,
                                            rocsparse_solve_policy_auto,
                                            buffer_);
+    if (status_rocsparse_ != 0) { 
+        io::Logger::warning() << "ILU0 decomposition failed with code: " <<status_rocsparse_<<" \n"; 
+    } 
 
     error_sum += status_rocsparse_;
 
     mem_.allocateArrayOnDevice(&d_aux1_,n); 
-
     return error_sum;
   }
 
