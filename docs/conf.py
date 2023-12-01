@@ -16,21 +16,20 @@ import sys
 import os
 import shlex
 
-read_the_docs_build = os.environ.get('READTHEDOCS', None) == 'True'
-if read_the_docs_build:
 
-    # Modify Doxyfile for ReadTheDocs compatibility
-    with open('./doxygen/Doxyfile.in', 'r') as f:
-        fdata = f.read()
-    fdata = fdata.replace('@PROJECT_SOURCE_DIR@', '.')
-    with open('./doxygen/Doxyfile.in', 'w') as f:
-        f.write(fdata)
-    with open('./doxygen/Doxyfile.in', 'a') as f:
-        f.write("\nOUTPUT_DIRECTORY= sphinx/_build/doxygen")
+
+# Modify Doxyfile for ReadTheDocs compatibility
+with open('./doxygen/Doxyfile.in', 'r') as f:
+    fdata = f.read()
+fdata = fdata.replace('@PROJECT_SOURCE_DIR@', '.')
+with open('./doxygen/Doxyfile.in', 'w') as f:
+    f.write(fdata)
+with open('./doxygen/Doxyfile.in', 'a') as f:
+    f.write("\nOUTPUT_DIRECTORY=../_readthedocs/html/doxygen")
 
         # Call doxygen
-    from subprocess import call
-    call(['doxygen', "./doxygen/Doxyfile.in"])
+    # from subprocess import call
+    # call(['doxygen', "./doxygen/Doxyfile.in"])
 
 
 # Get current directory
