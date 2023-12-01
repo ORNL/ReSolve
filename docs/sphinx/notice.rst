@@ -1,0 +1,4 @@
+Notice
+*******
+
+.. mdinclude:: ../../NOTICE
