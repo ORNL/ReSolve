@@ -95,7 +95,7 @@ namespace ReSolve
     return 0;
   }
 
-  int  LinSolverDirectKLU::refactorize() 
+  int LinSolverDirectKLU::refactorize() 
   {
     int kluStatus = klu_refactor (A_->getRowData(memory::HOST), A_->getColData(memory::HOST), A_->getValues(memory::HOST), Symbolic_, Numeric_, &Common_);
 
@@ -134,6 +134,12 @@ namespace ReSolve
     }
     return 0;
   }
+
+  double LinSolverDirectKLU::rcond()
+  {
+    klu_rcond(Symbolic_, Numeric_, &Common_);
+    return Common_.rcond;
+  } 
 
   matrix::Sparse* LinSolverDirectKLU::getLFactor()
   {
