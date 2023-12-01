@@ -38,7 +38,6 @@ namespace ReSolve
       int factorize();
       int refactorize();
       int solve(vector_type* rhs, vector_type* x); 
-      double rcond(); //returns the value of rcond using klu_rcond
     
       matrix::Sparse* getLFactor(); 
       matrix::Sparse* getUFactor(); 
