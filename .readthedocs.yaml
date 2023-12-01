@@ -19,9 +19,9 @@ build:
     - graphviz
     - texlive-full
   jobs:
-    post_install:
+    post_build:
     - echo $(ls)
-    - doxygen ./docs/doxygen/Doxyfile.in 
+    - cd docs && doxygen ./doxygen/Doxyfile.in 
     - echo $(ls ./_readthedocs)
 
 # Build documentation in the "docs/" directory with Sphinx
