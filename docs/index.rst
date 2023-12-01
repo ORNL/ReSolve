@@ -69,7 +69,7 @@ Documentation
 
 User guides and source code documentation are always linked on this site.
 `ReSolve Github Project <https://github.com/ORNL/ReSolve>`_.
-`Source documentation <doxygen/html/index.html>`_
+`Source documentation <html/index.html>`_
 
 .. list-table::
    :align: center
@@ -84,7 +84,7 @@ Contributing
 ------------
 
 For all contributions to ReSolve please follow the `developer
-guidelines <CONTRIBUTING.md>`__
+guidelines <sphinx/coding_guide/index.html>`__
 
 Test and Deploy
 ---------------
@@ -183,8 +183,8 @@ License
 Copyright © 2023, UT-Battelle, LLC, and Battelle Memorial Institute.
 
 ReSolve is a free software distributed under a BSD-style license. See
-the `LICENSE <LICENSE>`__ and `NOTICE <NOTICE>`__ files for details. All
-new contributions to ReSolve must be made under the smae licensing
+the `LICENSE <sphinx/license.rst>`__ and `NOTICE <sphinx/notice.rst>`__ files for details. All
+new contributions to ReSolve must be made under the same licensing
 terms.
 
 
@@ -194,5 +194,6 @@ terms.
    :caption: Developer Resources
 
    sphinx/coding_guide/index
-   sphinx/licenses
    doxygen/index
+   sphinx/licenses
+   sphinx/notice 
