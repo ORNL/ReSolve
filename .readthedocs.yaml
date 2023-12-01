@@ -19,7 +19,7 @@ build:
     - graphviz
     - texlive-full
   jobs:
-    pre_build:
+    post_build:
     - cd docs && doxygen ./doxygen/Doxyfile.in 
 # checks for broken links sometimes it gives false negatives
 #    - python -m sphinx -b linkcheck -D linkcheck_timeout=1 docs/ $READTHEDOCS_OUTPUT/linkcheck
