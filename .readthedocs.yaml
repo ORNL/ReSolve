@@ -19,10 +19,9 @@ build:
     - graphviz
     - texlive-full
   jobs:
-    post_build:
-    - echo $(ls)
+    pre_build:
     - cd docs && doxygen ./doxygen/Doxyfile.in 
-    - echo $(ls ./_readthedocs)
+    - python -m sphinx -b linkcheck -D linkcheck_timeout=1 docs/ $READTHEDOCS_OUTPUT/linkcheck
 
 # Build documentation in the "docs/" directory with Sphinx
 sphinx:
