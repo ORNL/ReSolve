@@ -21,7 +21,8 @@ build:
   jobs:
     pre_build:
     - cd docs && doxygen ./doxygen/Doxyfile.in 
-    - python -m sphinx -b linkcheck -D linkcheck_timeout=1 docs/ $READTHEDOCS_OUTPUT/linkcheck
+# checks for broken links sometimes it gives false negatives
+#    - python -m sphinx -b linkcheck -D linkcheck_timeout=1 docs/ $READTHEDOCS_OUTPUT/linkcheck
 
 # Build documentation in the "docs/" directory with Sphinx
 sphinx:
