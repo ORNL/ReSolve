@@ -41,7 +41,7 @@ if(RESOLVE_USE_HIP)
   target_link_libraries(rocsolver_rf_fgmres_test.exe PRIVATE ReSolve)
 
   # Build randSolver test
-  add_executable(rand_gmres_hip_test.exe testRandGMRES_Hip.cpp)
+  add_executable(rand_gmres_hip_test.exe testRandGMRES_Rocm.cpp)
   target_link_libraries(rand_gmres_hip_test.exe PRIVATE ReSolve)
 endif(RESOLVE_USE_HIP)
 
