@@ -138,7 +138,6 @@ namespace ReSolve
     //rnorm = ||V_1||
     rnorm = sqrt(rnorm);
     bnorm = sqrt(bnorm);
-    printf("it 0: norm %16.16e \n", rnorm);
     initial_residual_norm_ = rnorm;
     while(outer_flag) {
       // check if maybe residual is already small enough?
@@ -226,7 +225,6 @@ namespace ReSolve
 
         // residual norm estimate
         rnorm = fabs(h_rs_[i + 1]);
-        printf("it %d: norm %16.16e \n",it, rnorm);
         // check convergence
         if(i + 1 >= restart_ || rnorm <= tolrel || it >= maxit_) {
           notconv = 0;
