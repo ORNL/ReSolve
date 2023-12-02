@@ -23,7 +23,10 @@ if(RESOLVE_USE_CUDA)
   # Build KLU+GLU test
   add_executable(klu_glu_test.exe testKLU_GLU.cpp)
   target_link_libraries(klu_glu_test.exe PRIVATE ReSolve)
-
+  
+  # Build randSolver test
+  add_executable(rand_gmres_cuda_test.exe testRandGMRES_Cuda.cpp)
+  target_link_libraries(rand_gmres_cuda_test.exe PRIVATE ReSolve)
 endif(RESOLVE_USE_CUDA)
 
 
@@ -37,6 +40,9 @@ if(RESOLVE_USE_HIP)
   add_executable(rocsolver_rf_fgmres_test.exe testKLU_RocSolver_FGMRES.cpp)
   target_link_libraries(rocsolver_rf_fgmres_test.exe PRIVATE ReSolve)
 
+  # Build randSolver test
+  add_executable(rand_gmres_hip_test.exe testRandGMRES_Hip.cpp)
+  target_link_libraries(rand_gmres_hip_test.exe PRIVATE ReSolve)
 endif(RESOLVE_USE_HIP)
 
 # Install tests
@@ -46,13 +52,15 @@ if(RESOLVE_USE_CUDA)
   set(installable_tests ${installable_tests}
                         klu_rf_test.exe
                         klu_rf_fgmres_test.exe
-                        klu_glu_test.exe)
+                        klu_glu_test.exe
+                        rand_gmres_cuda_test.exe)
 endif(RESOLVE_USE_CUDA)
 
 if(RESOLVE_USE_HIP)
   set(installable_tests ${installable_tests}
                         rocsolver_rf_test.exe
-                        rocsolver_rf_fgmres_test.exe)
+                        rocsolver_rf_fgmres_test.exe
+                        rand_gmres_hip_test.exe)
 endif(RESOLVE_USE_HIP)
 
 install(TARGETS ${installable_tests} 
@@ -68,9 +76,11 @@ if(RESOLVE_USE_CUDA)
   add_test(NAME klu_rf_test  COMMAND $<TARGET_FILE:klu_rf_test.exe>  "${test_data_dir}")
   add_test(NAME klu_rf_fgmres_test COMMAND $<TARGET_FILE:klu_rf_fgmres_test.exe> "${test_data_dir}")
   add_test(NAME klu_glu_test COMMAND $<TARGET_FILE:klu_glu_test.exe> "${test_data_dir}")
+  add_test(NAME rand_gmres_cuda_test COMMAND $<TARGET_FILE:rand_gmres_cuda_test.exe> "${test_data_dir}")
 endif(RESOLVE_USE_CUDA)
 
 if(RESOLVE_USE_HIP)
   add_test(NAME rocsolver_rf_test  COMMAND $<TARGET_FILE:rocsolver_rf_test.exe>  "${test_data_dir}")
   add_test(NAME rocsolver_rf_fgmres_test  COMMAND $<TARGET_FILE:rocsolver_rf_fgmres_test.exe>  "${test_data_dir}")
+  add_test(NAME rand_gmres_hip_test COMMAND $<TARGET_FILE:rand_gmres_hip_test.exe> "${test_data_dir}")
 endif(RESOLVE_USE_HIP)
