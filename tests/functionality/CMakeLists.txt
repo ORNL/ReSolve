@@ -23,18 +23,15 @@ if(RESOLVE_USE_CUDA)
   # Build KLU+GLU test
   add_executable(klu_glu_test.exe testKLU_GLU.cpp)
   target_link_libraries(klu_glu_test.exe PRIVATE ReSolve)
-<<<<<<< HEAD
   
   # Build randSolver test
   add_executable(rand_gmres_cuda_test.exe testRandGMRES_Cuda.cpp)
   target_link_libraries(rand_gmres_cuda_test.exe PRIVATE ReSolve)
-=======
 
   # System solver test with GLU
   add_executable(sys_cuda_test.exe testSysCuda.cpp)
   target_link_libraries(sys_cuda_test.exe PRIVATE ReSolve)
 
->>>>>>> e627c59 (First stab at system solver.)
 endif(RESOLVE_USE_CUDA)
 
 

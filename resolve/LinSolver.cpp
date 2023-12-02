@@ -173,7 +173,7 @@ namespace ReSolve
     return conv_cond_;
   }
 
-  bool  LinSolverIterativeFGMRES::getFlexible()
+  bool  LinSolverIterative::getFlexible()
   {
     return flexible_;
   }
@@ -198,7 +198,7 @@ namespace ReSolve
     this->conv_cond_ = new_conv_cond;
   }
 
-  void  LinSolverIterativeFGMRES::setFlexible(bool new_flex)
+  void  LinSolverIterative::setFlexible(bool new_flex)
   {
     this->flexible_ = new_flex;
   }
