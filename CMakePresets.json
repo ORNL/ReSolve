@@ -14,7 +14,8 @@
             "installDir": "${sourceDir}/install",
             "generator": "Unix Makefiles",
             "cacheVariables": {
-                "RESOLVE_USE_CUDA": "ON"
+                "RESOLVE_USE_CUDA": "ON",
+		"CMAKE_CUDA_ARCHITECTURES": "60"
             }
         },
         {
@@ -45,7 +46,8 @@
             "description": "Custom changes specific for Ascent",
             "cacheVariables": {
                   "CMAKE_C_COMPILER": "$env{OLCF_GCC_ROOT}/bin/gcc",
-                  "CMAKE_CXX_COMPILER": "$env{OLCF_GCC_ROOT}/bin/g++"
+                  "CMAKE_CXX_COMPILER": "$env{OLCF_GCC_ROOT}/bin/g++",
+		  "CMAKE_CUDA_ARCHITECTURES": "70"
 	          }
         },
         {

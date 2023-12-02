@@ -51,6 +51,7 @@ namespace ReSolve {
     rocblas_handle  handle_rocblas =  workspaceHIP->getRocblasHandle();
     double nrm = 0.0;
     rocblas_status st= rocblas_ddot (handle_rocblas,  x->getSize(), x->getData(memory::DEVICE), 1, y->getData(memory::DEVICE), 1, &nrm);
+    
     if (st!=0) {printf("dot product crashed with code %d \n", st);}
     return nrm;
   }
@@ -68,6 +69,7 @@ namespace ReSolve {
     LinAlgWorkspaceHIP* workspaceHIP = workspace_;
     rocblas_handle handle_rocblas =  workspaceHIP->getRocblasHandle();
     rocblas_status st = rocblas_dscal(handle_rocblas, x->getSize(), alpha, x->getData(memory::DEVICE), 1);
+    
     if (st!=0) {
       ReSolve::io::Logger::error() << "scal crashed with code " << st << "\n";
     }
@@ -94,6 +96,7 @@ namespace ReSolve {
                   1,
                   y->getData(memory::DEVICE),
                   1);
+    
   }
 
   /** 
@@ -153,6 +156,7 @@ namespace ReSolve {
                     x->getData(memory::DEVICE),
                     1);
     }
+    
   }
 
   /** 
@@ -172,6 +176,7 @@ namespace ReSolve {
     using namespace constants;
     if (k < 200) {
       mass_axpy(size, k, x->getData(memory::DEVICE), y->getData(memory::DEVICE),alpha->getData(memory::DEVICE));
+    
     } else {
       LinAlgWorkspaceHIP* workspaceHIP = workspace_;
       rocblas_handle handle_rocblas =  workspaceHIP->getRocblasHandle();
@@ -189,6 +194,7 @@ namespace ReSolve {
                     &ONE,
                     y->getData(memory::DEVICE),          // c
                     size);      // ldc     
+    
     }
   }
 
@@ -213,6 +219,7 @@ namespace ReSolve {
 
     if (k < 200) {
       mass_inner_product_two_vectors(size, k, x->getData(memory::DEVICE) , x->getData(1, memory::DEVICE), V->getData(memory::DEVICE), res->getData(memory::DEVICE));
+    
     } else {
       LinAlgWorkspaceHIP* workspaceHIP = workspace_;
       rocblas_handle handle_rocblas =  workspaceHIP->getRocblasHandle();
@@ -230,6 +237,7 @@ namespace ReSolve {
                     &ZERO,
                     res->getData(memory::DEVICE),     //c
                     k + 1);  //ldc 
+    
     }
   }
 

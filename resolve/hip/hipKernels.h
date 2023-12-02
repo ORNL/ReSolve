@@ -19,7 +19,28 @@ void permuteVectorP(int n,
                     int* perm_vector,
                     double* vec_in, 
                     double* vec_out);
+
 void permuteVectorQ(int n, 
                     int* perm_vector,
                     double* vec_in, 
                     double* vec_out);
+
+// needed for rand solver
+void  count_sketch_theta(int n,
+                         int k,
+                         int* labels,
+                         int* flip,
+                         double* input,
+                         double* output);
+
+void FWHT_select(int k,
+                 int* perm,
+                 double* input,
+                 double* output);
+
+void FWHT_scaleByD(int n,
+                   int* D,
+                   double* x,
+                   double* y);
+
+void FWHT(int M, int log2N, double* d_Data); 

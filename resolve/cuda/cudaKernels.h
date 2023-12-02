@@ -12,3 +12,23 @@ void matrix_row_sums(int n,
                      int* a_ia,
                      double* a_val, 
                      double* result);
+
+// needed for rand solver
+void  count_sketch_theta(int n,
+                         int k,
+                         int* labels,
+                         int* flip,
+                         double* input,
+                         double* output);
+
+void FWHT_select(int k,
+                 int* perm,
+                 double* input,
+                 double* output);
+
+void FWHT_scaleByD(int n,
+                   int* D,
+                   double* x,
+                   double* y);
+
+void FWHT(int M, int log2N, double* d_Data); 

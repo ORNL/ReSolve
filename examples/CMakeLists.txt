@@ -36,7 +36,10 @@ if(RESOLVE_USE_CUDA)
   # Build example where matrix data is updated 
   add_executable(klu_glu_values_update.exe r_KLU_GLU_matrix_values_update.cpp)
   target_link_libraries(klu_glu_values_update.exe PRIVATE ReSolve)
-
+  
+  #rand solver
+  add_executable(gmres_cusparse_rand.exe r_randGMRES_CUDA.cpp)
+  target_link_libraries(gmres_cusparse_rand.exe PRIVATE ReSolve)
 endif(RESOLVE_USE_CUDA)
 
 # Create HIP examples
@@ -53,17 +56,21 @@ if(RESOLVE_USE_HIP)
   add_executable(klu_rocsolverrf_check_redo.exe r_KLU_rocsolverrf_redo_factorization.cpp)
   target_link_libraries(klu_rocsolverrf_check_redo.exe PRIVATE ReSolve)
 
+
+  # Rand GMRES test with rocsparse
+  add_executable(gmres_rocsparse_rand.exe r_randGMRES.cpp)
+  target_link_libraries(gmres_rocsparse_rand.exe PRIVATE ReSolve)
 endif(RESOLVE_USE_HIP)
 
 # Install all examples in bin directory
 set(installable_executables klu_klu.exe klu_klu_standalone.exe)
 
 if(RESOLVE_USE_CUDA)
-  set(installable_executables ${installable_executables} klu_glu.exe klu_rf.exe klu_rf_fgmres.exe klu_glu_values_update.exe)        
+  set(installable_executables ${installable_executables} klu_glu.exe klu_rf.exe klu_rf_fgmres.exe klu_glu_values_update.exe gmres_cusparse_rand.exe)        
 endif(RESOLVE_USE_CUDA)
 
 if(RESOLVE_USE_HIP)
-  set(installable_executables ${installable_executables} klu_rocsolverrf.exe klu_rocsolverrf_fgmres.exe klu_rocsolverrf_check_redo.exe)        
+  set(installable_executables ${installable_executables} klu_rocsolverrf.exe klu_rocsolverrf_fgmres.exe klu_rocsolverrf_check_redo.exe gmres_rocsparse_rand.exe)        
 endif(RESOLVE_USE_HIP)
 
 install(TARGETS ${installable_executables} 

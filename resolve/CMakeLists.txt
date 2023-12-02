@@ -18,16 +18,22 @@ set(ReSolve_SRC
 set(ReSolve_GPU_SRC
     GramSchmidt.cpp
     LinSolverIterativeFGMRES.cpp
-)
+    LinSolverIterativeRandFGMRES.cpp
+    RandSketchingManager.cpp
+    RandSketchingCountSketch.cpp
+    RandSketchingFWHT.cpp
+    )
 
 # C++ code that links to CUDA SDK libraries
 set(ReSolve_CUDASDK_SRC
     LinSolverDirectCuSolverGLU.cpp
     LinSolverDirectCuSolverRf.cpp
+    LinSolverDirectCuSparseILU0.cpp
 )
 # HIP files
 set(ReSolve_ROCM_SRC
   LinSolverDirectRocSolverRf.cpp
+  LinSolverDirectRocSparseILU0.cpp
 )
 # Header files to be installed
 set(ReSolve_HEADER_INSTALL
@@ -37,13 +43,15 @@ set(ReSolve_HEADER_INSTALL
     LinSolverDirectCuSolverGLU.hpp
     LinSolverDirectCuSolverRf.hpp
     LinSolverDirectRocSolverRf.hpp
+    LinSolverDirectRocSparseILU0.hpp
+    LinSolverDirectCuSparseILU0.hpp
     LinSolverDirectKLU.hpp
     LinSolverIterativeFGMRES.hpp
     RefactorizationSolver.hpp
     SystemSolver.hpp
     GramSchmidt.hpp
     MemoryUtils.hpp
-)
+    RandSketchingManager.hpp)
 
 # Now, build workspaces
 add_subdirectory(workspace)

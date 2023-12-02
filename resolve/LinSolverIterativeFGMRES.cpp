@@ -19,6 +19,7 @@ namespace ReSolve
     maxit_= 100; //default
     restart_ = 10;
     conv_cond_ = 0;//default
+    flexible_ = 1;
 
     d_V_ = nullptr;
     d_Z_ = nullptr;
@@ -38,6 +39,7 @@ namespace ReSolve
     maxit_= 100; //default
     restart_ = 10;
     conv_cond_ = 0;//default
+    flexible_ = 1;
 
     d_V_ = nullptr;
     d_Z_ = nullptr;
@@ -61,6 +63,7 @@ namespace ReSolve
     maxit_= maxit; 
     restart_ = restart;
     conv_cond_ = conv_cond;
+    flexible_ = 1;
 
     d_V_ = nullptr;
     d_Z_ = nullptr;
@@ -88,7 +91,12 @@ namespace ReSolve
 
     d_V_ = new vector_type(n_, restart_ + 1);
     d_V_->allocate(memory::DEVICE);      
-    d_Z_ = new vector_type(n_, restart_ + 1);
+    if (flexible_) {
+      d_Z_ = new vector_type(n_, restart_ + 1);
+    } else {
+      // otherwise Z is just a one vector, not multivector and we dont keep it
+      d_Z_ = new vector_type(n_);
+    }
     d_Z_->allocate(memory::DEVICE);      
     h_H_  = new real_type[restart_ * (restart_ + 1)];
     h_c_  = new real_type[restart_];      // needed for givens
@@ -127,7 +135,6 @@ namespace ReSolve
     rnorm = 0.0;
     bnorm = vector_handler_->dot(rhs, rhs, memspace_);
     rnorm = vector_handler_->dot(d_V_, d_V_, memspace_);
-
     //rnorm = ||V_1||
     rnorm = sqrt(rnorm);
     bnorm = sqrt(bnorm);
@@ -173,9 +180,12 @@ namespace ReSolve
         it++;
 
         // Z_i = (LU)^{-1}*V_i
-
         vec_v->setData( d_V_->getVectorData(i, memory::DEVICE), memory::DEVICE);
-        vec_z->setData( d_Z_->getVectorData(i, memory::DEVICE), memory::DEVICE);
+        if (flexible_) {
+          vec_z->setData( d_Z_->getVectorData(i, memory::DEVICE), memory::DEVICE);
+        } else {
+          vec_z->setData( d_Z_->getVectorData(0, memory::DEVICE), memory::DEVICE);
+        }
         this->precV(vec_v, vec_z);
         mem_.deviceSynchronize();
 
@@ -234,9 +244,24 @@ namespace ReSolve
       }
 
       // get solution
-      for(j = 0; j <= i; j++) {
-        vec_z->setData( d_Z_->getVectorData(j, memory::DEVICE), memory::DEVICE);
-        vector_handler_->axpy(&h_rs_[j], vec_z, x, memspace_);
+      if (flexible_) {
+        for(j = 0; j <= i; j++) {
+          vec_z->setData( d_Z_->getVectorData(j, memory::DEVICE), memory::DEVICE);
+          vector_handler_->axpy(&h_rs_[j], vec_z, x, memspace_);
+        }
+      } else {
+        mem_.setZeroArrayOnDevice(d_Z_->getData(memory::DEVICE), d_Z_->getSize());
+        vec_z->setData( d_Z_->getVectorData(0, memory::DEVICE), memory::DEVICE);
+        for(j = 0; j <= i; j++) {
+          vec_v->setData( d_V_->getVectorData(j, memory::DEVICE), memory::DEVICE);
+          vector_handler_->axpy(&h_rs_[j], vec_v, vec_z, memspace_);
+        }
+        // now multiply d_Z by precon
+
+        vec_v->setData( d_V_->getData(memory::DEVICE), memory::DEVICE);
+        this->precV(vec_z, vec_v);
+        // and add to x 
+        vector_handler_->axpy(&ONE, vec_v, x, memspace_);
       }
 
       /* test solution */
@@ -292,6 +317,11 @@ namespace ReSolve
     return conv_cond_;
   }
 
+  bool  LinSolverIterativeFGMRES::getFlexible()
+  {
+    return flexible_;
+  }
+
   void  LinSolverIterativeFGMRES::setTol(real_type new_tol)
   {
     this->tol_ = new_tol;
@@ -310,6 +340,11 @@ namespace ReSolve
   void  LinSolverIterativeFGMRES::setConvCond(index_type new_conv_cond)
   {
     this->conv_cond_ = new_conv_cond;
+  }
+  
+  void  LinSolverIterativeFGMRES::setFlexible(bool new_flex)
+  {
+    this->flexible_ = new_flex;
   }
 
   int  LinSolverIterativeFGMRES::resetMatrix(matrix::Sparse* new_matrix)

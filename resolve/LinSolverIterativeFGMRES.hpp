@@ -37,11 +37,13 @@ namespace ReSolve
     index_type getMaxit();
     index_type getRestart();
     index_type getConvCond();
+    bool getFlexible();
 
     void setTol(real_type new_tol);
     void setMaxit(index_type new_maxit);
     void setRestart(index_type new_restart);
     void setConvCond(index_type new_conv_cond);
+    void setFlexible(bool new_flexible);
 
     real_type getFinalResidualNorm();
     real_type getInitResidualNorm();
@@ -57,7 +59,7 @@ namespace ReSolve
     index_type restart_;
     std::string orth_option_;
     index_type conv_cond_;
-
+    bool flexible_{true}; // if can be run as "normal" GMRES if needed, set flexible_ to false. Default is true of course.
     vector_type* d_V_{nullptr};
     vector_type* d_Z_{nullptr};
 
