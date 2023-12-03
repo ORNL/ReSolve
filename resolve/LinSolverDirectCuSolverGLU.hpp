@@ -30,6 +30,7 @@ namespace ReSolve
 
       int refactorize();
       int solve(vector_type* rhs, vector_type* x);
+      int solve(vector_type* x);
 
       int setup(matrix::Sparse* A,
                 matrix::Sparse* L,

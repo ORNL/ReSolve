@@ -34,10 +34,6 @@ namespace ReSolve
     int setupPreconditioner(std::string name, LinSolverDirect* LU_solver);
 
 
-    real_type getFinalResidualNorm();
-    real_type getInitResidualNorm();
-    index_type getNumIter();
-
     private:
     //remember matrix handler and vector handler are inherited.
 
@@ -57,9 +53,6 @@ namespace ReSolve
     void precV(vector_type* rhs, vector_type* x); //multiply the vector by preconditioner
     LinSolverDirect* LU_solver_;
     index_type n_;// for simplicity
-    real_type final_residual_norm_;
-    real_type initial_residual_norm_;
-    index_type fgmres_iters_;
 
     MemoryHandler mem_; ///< Device memory manager object
   };

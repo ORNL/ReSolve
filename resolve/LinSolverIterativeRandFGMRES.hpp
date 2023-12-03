@@ -57,10 +57,6 @@ namespace ReSolve
     void setFlexible(bool new_flexible);
     void getRandSketchingMethod(std::string rand_method);
 
-    real_type getFinalResidualNorm();
-    real_type getInitResidualNorm();
-    index_type getNumIter();
-
     private:
     //remember matrix handler and vector handler are inherited.
 
@@ -89,9 +85,6 @@ namespace ReSolve
     void precV(vector_type* rhs, vector_type* x); //multiply the vector by preconditioner
     LinSolverDirect* LU_solver_;
     index_type n_;// for simplicity
-    real_type final_residual_norm_;
-    real_type initial_residual_norm_;
-    index_type fgmres_iters_;
     real_type one_over_k_{1.0};
 
     index_type k_rand_{0}; // size of sketch space, we need to know it so we can allocate S!

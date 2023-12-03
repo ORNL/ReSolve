@@ -312,18 +312,4 @@ namespace ReSolve
     //  x->update(rhs->getData(memory::DEVICE), memory::DEVICE, memory::DEVICE);
   }
 
-  real_type LinSolverIterativeFGMRES::getFinalResidualNorm()
-  {
-    return final_residual_norm_;
-  }
-
-  real_type LinSolverIterativeFGMRES::getInitResidualNorm()
-  {
-    return initial_residual_norm_;
-  }
-
-  index_type LinSolverIterativeFGMRES::getNumIter()
-  {
-    return fgmres_iters_;
-  }
 }//namespace

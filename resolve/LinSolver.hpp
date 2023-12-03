@@ -55,11 +55,12 @@ namespace ReSolve
                         index_type*     P = nullptr,
                         index_type*     Q = nullptr,
                         vector_type*  rhs = nullptr);
-                        
+
       virtual int analyze(); //the same as symbolic factorization
       virtual int factorize();
       virtual int refactorize();
-      virtual int solve(vector_type* rhs, vector_type* x); 
+      virtual int solve(vector_type* rhs, vector_type* x) = 0;
+      virtual int solve(vector_type* x) = 0;
      
       virtual matrix::Sparse* getLFactor(); 
       virtual matrix::Sparse* getUFactor(); 
@@ -69,6 +70,8 @@ namespace ReSolve
       void setPivotThreshold(real_type tol);
       void setOrdering(int ordering);
       void setHaltIfSingular(bool isHalt);
+
+      virtual real_type getMatrixConditionNumber();
     
     protected:
       matrix::Sparse* L_;
@@ -88,14 +91,14 @@ namespace ReSolve
       LinSolverIterative();
       virtual ~LinSolverIterative();
       virtual int setup(matrix::Sparse* A);
-      virtual int resetMatrix(matrix::Sparse* A);
-      virtual int setupPreconditioner(std::string type, LinSolverDirect* LU_solver);
+      virtual int resetMatrix(matrix::Sparse* A) = 0;
+      virtual int setupPreconditioner(std::string type, LinSolverDirect* LU_solver) = 0;
 
-      virtual int  solve(vector_type* rhs, vector_type* init_guess);
+      virtual int  solve(vector_type* rhs, vector_type* init_guess) = 0;
 
-      virtual real_type getFinalResidualNorm() {return -1.0;}
-      virtual real_type getInitResidualNorm() {return -1.0;}
-      virtual index_type getNumIter() {return 0;}
+      virtual real_type getFinalResidualNorm() const;
+      virtual real_type getInitResidualNorm() const;
+      virtual index_type getNumIter() const;
 
 
       real_type getTol();
@@ -111,6 +114,10 @@ namespace ReSolve
       void setFlexible(bool new_flexible);
 
     protected:
+      real_type initial_residual_norm_;
+      real_type final_residual_norm_;
+      index_type fgmres_iters_;
+
       real_type tol_{1e-14};
       index_type maxit_{100};
       index_type restart_{10};

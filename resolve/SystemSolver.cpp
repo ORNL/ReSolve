@@ -259,8 +259,6 @@ namespace ReSolve
 
 #if defined(RESOLVE_USE_HIP) || defined(RESOLVE_USE_CUDA)
     if (irMethod_ == "fgmres") {
-      iterativeSolver_->setMaxit(200); 
-      iterativeSolver_->setRestart(100); 
       std::cout << "Setting up FGMRES ...\n";
       gs_->setup(A_->getNumRows(), iterativeSolver_->getRestart()); 
       status += iterativeSolver_->setup(A_); 
@@ -401,6 +399,16 @@ namespace ReSolve
   const std::string SystemSolver::getFactorizationMethod() const
   {
     return factorizationMethod_;
+  }
+
+  void SystemSolver::setMaxIterations(int maxIter)
+  {
+    iterativeSolver_->setMaxit(maxIter);
+  }
+
+  void SystemSolver::setIterationsRestart(int restart)
+  {
+    iterativeSolver_->setRestart(restart);
   }
 
 } // namespace ReSolve

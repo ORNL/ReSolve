@@ -155,6 +155,13 @@ namespace ReSolve
     return 0;
   }
 
+  int LinSolverDirectKLU::solve(vector_type* )
+  {
+    out::error() << "Function solve(Vector* x) not implemented in LinSolverDirectKLU!\n"
+                 << "Consider using solve(Vector* rhs, Vector* x) instead.\n";
+    return 1;
+  }
+
   matrix::Sparse* LinSolverDirectKLU::getLFactor()
   {
     if (!factors_extracted_) {
@@ -250,5 +257,11 @@ namespace ReSolve
     } else {
       return nullptr;
     }
+  }
+
+  real_type LinSolverDirectKLU::getMatrixConditionNumber()
+  {
+    klu_rcond(Symbolic_, Numeric_, &Common_);
+    return Common_.rcond;
   }
 }

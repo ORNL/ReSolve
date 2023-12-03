@@ -63,6 +63,9 @@ namespace ReSolve
       void setSolveMethod(std::string method);
       void setIterativeRefinement(std::string method);
 
+      void setMaxIterations(int maxIter);
+      void setIterationsRestart(int restart);
+
     private:
       LinSolverDirect* factorizationSolver_{nullptr};
       LinSolverDirect* refactorSolver_{nullptr};

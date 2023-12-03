@@ -38,12 +38,15 @@ namespace ReSolve
       int analyze(); //the same as symbolic factorization
       int factorize();
       int refactorize();
-      int solve(vector_type* rhs, vector_type* x); 
+      int solve(vector_type* rhs, vector_type* x);
+      int solve(vector_type* x);
     
       matrix::Sparse* getLFactor(); 
       matrix::Sparse* getUFactor(); 
       index_type*  getPOrdering();
       index_type*  getQOrdering();
+
+      real_type getMatrixConditionNumber();
 
     private:
       klu_common Common_; //settings

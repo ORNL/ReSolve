@@ -37,6 +37,8 @@ int main(int argc, char *argv[])
   ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(workspace_HIP);
 
   ReSolve::SystemSolver* solver = new ReSolve::SystemSolver(workspace_HIP, "fgmres");
+  solver->setIterationsRestart(100);
+  solver->setMaxIterations(200);
 
   // Input to this code is location of `data` directory where matrix files are stored
   const std::string data_path = (argc == 2) ? argv[1] : "./";

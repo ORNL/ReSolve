@@ -1,9 +1,13 @@
 #include <resolve/matrix/Sparse.hpp>
+#include <resolve/utilities/logger/Logger.hpp>
+
 #include "LinSolver.hpp"
 
 
 namespace ReSolve 
 {
+  using out = io::Logger;
+
   LinSolver::LinSolver()
   {
   }
@@ -76,11 +80,6 @@ namespace ReSolve
     return 1;
   }
 
-  int LinSolverDirect::solve(vector_type* /* rhs */, vector_type* /* x */) 
-  {
-    return 1;
-  }
-
   matrix::Sparse* LinSolverDirect::getLFactor()
   {
     return nullptr;
@@ -116,6 +115,12 @@ namespace ReSolve
     haltIfSingular_ = isHalt;
   }
 
+  real_type LinSolverDirect::getMatrixConditionNumber()
+  {
+    out::error() << "Solver does not implement returning system matrix condition number.\n";
+    return -1.0;
+  }
+
   //
   // Iterative solver methods implementations
   //
@@ -137,21 +142,21 @@ namespace ReSolve
     return 0;
   }
 
-  int LinSolverIterative::resetMatrix(matrix::Sparse* /* A */)
+  real_type LinSolverIterative::getFinalResidualNorm() const
   {
-    A_ = nullptr;
-    return -1;
+    return final_residual_norm_;
   }
 
-  int LinSolverIterative::setupPreconditioner(std::string /* type */, LinSolverDirect* /* solver */)
+  real_type LinSolverIterative::getInitResidualNorm() const
   {
-    return -1;
+    return initial_residual_norm_;
   }
 
-  int LinSolverIterative::solve(vector_type* /* rhs */, vector_type* /* init_guess */)
+  index_type LinSolverIterative::getNumIter() const
   {
-    return 0;
+    return fgmres_iters_;
   }
+
 
   real_type  LinSolverIterative::getTol()
   {
