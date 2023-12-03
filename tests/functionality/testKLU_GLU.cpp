@@ -36,7 +36,6 @@ int main(int argc, char *argv[])
   ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(workspace_CUDA);
 
   ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
-  KLU->setupParameters(1, 0.1, false);
   
   ReSolve::LinSolverDirectCuSolverGLU* GLU = new ReSolve::LinSolverDirectCuSolverGLU(workspace_CUDA);
   // Input to this code is location of `data` directory where matrix files are stored

@@ -225,6 +225,7 @@ int main(int argc, char *argv[])
   std::cout<<"\t IR iterations               : "<<solver->getNumIter()<<" (max 200, restart 100)"<<std::endl;
   std::cout<<"\t IR starting res. norm       : "<<solver->getInitResidualNorm()<<" "<<std::endl;
   std::cout<<"\t IR final res. norm          : "<<solver->getFinalResidualNorm()<<" (tol 1e-14)"<<std::endl<<std::endl;
+
   if ((normRmatrix1/normB1 > 1e-12 ) || (normRmatrix2/normB2 > 1e-9)) {
     std::cout << "Result inaccurate!\n";
     error_sum++;

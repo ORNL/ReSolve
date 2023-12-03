@@ -16,7 +16,25 @@ namespace ReSolve
     L_ = nullptr;
     U_ = nullptr;
 
-    klu_defaults(&Common_) ;
+    // Set default parameters for KLU solver
+    ordering_ = 1;
+    pivotThreshold_ = 0.1;
+    haltIfSingular_ = false;
+
+    // Populate KLU data structure holding solver parameters
+    klu_defaults(&Common_);
+    Common_.btf  = 0;
+    Common_.ordering = ordering_;
+    Common_.tol = pivotThreshold_;
+    Common_.scale = -1;
+    Common_.halt_if_singular = haltIfSingular_;
+
+  //   out::summary() << "KLU solver set with parameters:\n"
+  //                  << "\tbtf              = " << Common_.btf              << "\n"
+  //                  << "\tordering         = " << Common_.ordering         << "\n"
+  //                  << "\tpivot threshold  = " << Common_.tol              << "\n"
+  //                  << "\tscale            = " << Common_.scale            << "\n"
+  //                  << "\thalt if singular = " << Common_.halt_if_singular << "\n";
   } 
 
   LinSolverDirectKLU::~LinSolverDirectKLU()
@@ -33,32 +51,6 @@ namespace ReSolve
                                 vector_type*  /* rhs */)
   {
     this->A_ = A;
-    return 0;
-  }
-
-  void LinSolverDirectKLU::setupParameters(int ordering, double KLU_threshold, bool halt_if_singular) 
-  {
-    Common_.btf  = 0;
-    Common_.ordering = ordering;
-    Common_.tol = KLU_threshold;
-    Common_.scale = -1;
-    Common_.halt_if_singular = halt_if_singular;
-  }
-
-  int LinSolverDirectKLU::setParameters() 
-  {
-    Common_.btf  = 0;
-    Common_.ordering = ordering_;
-    Common_.tol = pivotThreshold_;
-    Common_.scale = -1;
-    Common_.halt_if_singular = haltIfSingular_;
-
-    out::summary() << "KLU parameters set:\n"
-                   << "\tbtf              = " << Common_.btf              << "\n"
-                   << "\tordering         = " << Common_.ordering         << "\n"
-                   << "\tpivot threshold  = " << Common_.tol              << "\n"
-                   << "\tscale            = " << Common_.scale            << "\n"
-                   << "\thalt if singular = " << Common_.halt_if_singular << "\n";
     return 0;
   }
 
@@ -257,6 +249,24 @@ namespace ReSolve
     } else {
       return nullptr;
     }
+  }
+
+  void LinSolverDirectKLU::setPivotThreshold(real_type tol)
+  {
+    pivotThreshold_ = tol;
+    Common_.tol = tol;    
+  }
+
+  void LinSolverDirectKLU::setOrdering(int ordering)
+  {
+    ordering_ = ordering;
+    Common_.ordering = ordering;
+  }
+
+  void LinSolverDirectKLU::setHaltIfSingular(bool isHalt)
+  {
+    haltIfSingular_ = isHalt;
+    Common_.halt_if_singular = isHalt;
   }
 
   real_type LinSolverDirectKLU::getMatrixConditionNumber()

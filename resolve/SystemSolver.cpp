@@ -126,7 +126,6 @@ namespace ReSolve
     // Create factorization solver
     if (factorizationMethod_ == "klu") {
       factorizationSolver_ = new ReSolve::LinSolverDirectKLU();
-      factorizationSolver_->setParameters();
     } else {
       out::error() << "Unrecognized factorization " << factorizationMethod_ << "\n";
       return 1;

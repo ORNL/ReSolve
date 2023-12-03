@@ -44,11 +44,6 @@ namespace ReSolve
     delete [] Q_;
   }
 
-  int LinSolverDirect::setParameters()
-  {
-    return 1;
-  }
-
   int LinSolverDirect::setup(matrix::Sparse* A,
                              matrix::Sparse* /* L */,
                              matrix::Sparse* /* U */,

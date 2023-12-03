@@ -37,7 +37,6 @@ int main(int argc, char *argv[])
   ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(workspace_CUDA);
 
   ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
-  KLU->setupParameters(1, 0.1, false);
 
   ReSolve::LinSolverDirectCuSolverRf* Rf = new ReSolve::LinSolverDirectCuSolverRf;
   ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::mgs_pm);
@@ -253,10 +252,14 @@ int main(int argc, char *argv[])
   std::cout<<"\t IR starting res. norm       : "<<FGMRES->getInitResidualNorm()<<" "<<std::endl;
   std::cout<<"\t IR final res. norm          : "<<FGMRES->getFinalResidualNorm()<<" (tol 1e-14)"<<std::endl<<std::endl;
 
-  if ((error_sum == 0) && (normRmatrix1/normB1 < 1e-12 ) && (normRmatrix2/normB2 < 1e-15)) {
-    std::cout<<"Test 4 (KLU with cuSolverRf refactorization + IR) PASSED"<<std::endl<<std::endl;;
+  if ((normRmatrix1/normB1 > 1e-12 ) || (normRmatrix2/normB2 > 1e-15)) {
+    std::cout << "Result inaccurate!\n";
+    error_sum++;
+  }
+  if (error_sum == 0) {
+    std::cout<<"Test 4 (KLU with cuSolverRf refactorization + IR) PASSED"<<std::endl;
   } else {
-    std::cout<<"Test 4 (KLU with cuSolverRf refactorization + IR) FAILED, error sum: "<<error_sum<<std::endl<<std::endl;;
+    std::cout<<"Test 4 (KLU with cuSolverRf refactorization + IR) FAILED, error sum: "<<error_sum<<std::endl;
   }
 
   delete A;

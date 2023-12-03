@@ -115,9 +115,9 @@ int main(int argc, char *argv[] )
     }
     std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnzExpanded()<<std::endl;
     //Now call direct solver
-    if (i == 0) {
-      KLU->setupParameters(1, 0.1, false);
-    }
+    // if (i == 0) {
+    //   KLU->setupParameters(1, 0.1, false);
+    // }
     int status;
     if (i < 2){
       KLU->setup(A);

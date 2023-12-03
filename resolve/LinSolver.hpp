@@ -47,8 +47,6 @@ namespace ReSolve
     public:
       LinSolverDirect();
       virtual ~LinSolverDirect();
-      //return 0 if successful!
-      virtual int setParameters();
       virtual int setup(matrix::Sparse* A = nullptr,
                         matrix::Sparse* L = nullptr,
                         matrix::Sparse* U = nullptr,
@@ -67,9 +65,9 @@ namespace ReSolve
       virtual index_type*  getPOrdering();
       virtual index_type*  getQOrdering();
 
-      void setPivotThreshold(real_type tol);
-      void setOrdering(int ordering);
-      void setHaltIfSingular(bool isHalt);
+      virtual void setPivotThreshold(real_type tol);
+      virtual void setOrdering(int ordering);
+      virtual void setHaltIfSingular(bool isHalt);
 
       virtual real_type getMatrixConditionNumber();
     

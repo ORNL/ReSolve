@@ -36,7 +36,6 @@ int main(int argc, char *argv[])
   ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(workspace_CUDA);
 
   ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
-  KLU->setupParameters(1, 0.1, false);
   
   ReSolve::LinSolverDirectCuSolverRf* Rf = new ReSolve::LinSolverDirectCuSolverRf;
   // Input to this code is location of `data` directory where matrix files are stored
@@ -223,23 +222,17 @@ int main(int argc, char *argv[])
   std::cout<<"\t ||x-x_true||_2/||x_true||_2 : "<<normDiffMatrix2/normXtrue<<" (scaled solution error)"<<std::endl;
   std::cout<<"\t ||b-A*x_exact||_2           : "<<exactSol_normRmatrix2<<" (control; residual norm with exact solution)"<<std::endl<<std::endl;
 
-
-
-  if ((error_sum == 0) && (normRmatrix1/normB1 < 1e-16 ) && (normRmatrix2/normB2 < 1e-16)) {
+  if ((normRmatrix1/normB1 > 1e-16 ) || (normRmatrix2/normB2 > 1e-16)) {
+    std::cout << "Result inaccurate!\n";
+    error_sum++;
+  }
+  if (error_sum == 0) {
     std::cout<<"Test 2 (KLU with cuSolverRf refactorization) PASSED"<<std::endl;
   } else {
-
     std::cout<<"Test 2 (KLU with cuSolverRf refactorization) FAILED, error sum: "<<error_sum<<std::endl;
   }
 
   //now DELETE
-  // delete [] P;
-  // delete [] Q;
-  // delete L;  // <- bug, cannot delete is because it does not own data, but constructor does not keep track of it!
-  // delete L_csc;
-  // delete U;
-  // delete U_csc;
-
   delete A;
   delete KLU;
   delete Rf;

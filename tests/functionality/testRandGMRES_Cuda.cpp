@@ -132,7 +132,11 @@ int main(int argc, char *argv[])
     << FGMRES->getFinalResidualNorm()/norm_b <<" \n"
     << "\t Number of iterations                                 : " << FGMRES->getNumIter() << "\n";
 
-  if ((error_sum == 0) && (final_norm_first/norm_b < 1e-11) && (FGMRES->getFinalResidualNorm()/norm_b < 1e-11 )) {
+  if ((final_norm_first/norm_b > 1e-11) || (FGMRES->getFinalResidualNorm()/norm_b > 1e-11 )) {
+    std::cout << "Result inaccurate!\n";
+    error_sum++;
+  }
+  if (error_sum == 0) {
     std::cout<<"Test 5 (randomized GMRES) PASSED"<<std::endl<<std::endl;;
   } else {
     std::cout<<"Test 5 (randomized GMRES) FAILED, error sum: "<<error_sum<<std::endl<<std::endl;;
