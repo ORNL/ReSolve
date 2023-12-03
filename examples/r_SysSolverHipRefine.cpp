@@ -130,7 +130,7 @@ int main(int argc, char *argv[])
                 << std::scientific << std::setprecision(16) 
                 << solver->getResidualNorm(vec_rhs, vec_x) << "\n";
       if (i == 1) {
-        solver->refactorize_setup();
+        solver->refactorizationSetup();
         std::cout << "rocsolver rf refactorization setup status: " << status << std::endl;
       }
     } else {

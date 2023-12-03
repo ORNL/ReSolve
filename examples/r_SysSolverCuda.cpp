@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
       std::cout << "KLU analysis status: " << status << std::endl;
       status = solver->factorize();
       std::cout << "KLU factorization status: " << status << std::endl;
-      status = solver->refactorize_setup();
+      status = solver->refactorizationSetup();
       std::cout << "GLU refactorization setup status: " << status << std::endl;
       status = solver->solve(vec_rhs, vec_x);
       std::cout << "GLU solve status: " << status << std::endl;

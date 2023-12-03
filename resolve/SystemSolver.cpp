@@ -87,7 +87,7 @@ namespace ReSolve
   {
     delete resVector_;
     delete factorizationSolver_;
-    delete refactorSolver_;
+    delete refactorizationSolver_;
     if (irMethod_ != "none") {
       delete iterativeSolver_;
       delete gs_;
@@ -120,8 +120,8 @@ namespace ReSolve
     // First delete old objects
     if (factorizationSolver_)
       delete factorizationSolver_;
-    if (refactorSolver_)
-      delete refactorSolver_;
+    if (refactorizationSolver_)
+      delete refactorizationSolver_;
     
     // Create factorization solver
     if (factorizationMethod_ == "klu") {
@@ -136,13 +136,13 @@ namespace ReSolve
       // do nothing for now
 #ifdef RESOLVE_USE_CUDA
     } else if (refactorizationMethod_ == "glu") {
-      refactorSolver_ = new ReSolve::LinSolverDirectCuSolverGLU(workspaceCuda_);
+      refactorizationSolver_ = new ReSolve::LinSolverDirectCuSolverGLU(workspaceCuda_);
     } else if (refactorizationMethod_ == "cusolverrf") {
-      refactorSolver_ = new ReSolve::LinSolverDirectCuSolverRf();
+      refactorizationSolver_ = new ReSolve::LinSolverDirectCuSolverRf();
 #endif
 #ifdef RESOLVE_USE_HIP
     } else if (refactorizationMethod_ == "rocsolverrf") {
-      refactorSolver_ = new ReSolve::LinSolverDirectRocSolverRf(workspaceHip_);
+      refactorizationSolver_ = new ReSolve::LinSolverDirectRocSolverRf(workspaceHip_);
 #endif
     } else {
       out::error() << "Refactorization method " << refactorizationMethod_ 
@@ -212,20 +212,20 @@ namespace ReSolve
 
 #ifdef RESOLVE_USE_CUDA
     if (refactorizationMethod_ == "glu") {
-      return refactorSolver_->refactorize();
+      return refactorizationSolver_->refactorize();
     }
 #endif
 
 #ifdef RESOLVE_USE_HIP
     if (refactorizationMethod_ == "rocsolverrf") {
-      return refactorSolver_->refactorize();
+      return refactorizationSolver_->refactorize();
     }
 #endif
 
     return 1;
   }
 
-  int SystemSolver::refactorize_setup()
+  int SystemSolver::refactorizationSetup()
   {
     int status = 0;
     // Get factors and permutation vectors
@@ -242,7 +242,7 @@ namespace ReSolve
 #ifdef RESOLVE_USE_CUDA
     if (refactorizationMethod_ == "glu") {
       isSolveOnDevice_ = true;
-      status += refactorSolver_->setup(A_, L_, U_, P_, Q_);
+      status += refactorizationSolver_->setup(A_, L_, U_, P_, Q_);
     }
 #endif
 
@@ -250,9 +250,9 @@ namespace ReSolve
     if (refactorizationMethod_ == "rocsolverrf") {
       std::cout << "Refactorization setup using rocsolverRf ...\n";
       isSolveOnDevice_ = true;
-      auto* Rf = dynamic_cast<LinSolverDirectRocSolverRf*>(refactorSolver_);
+      auto* Rf = dynamic_cast<LinSolverDirectRocSolverRf*>(refactorizationSolver_);
       Rf->setSolveMode(1);
-      status += refactorSolver_->setup(A_, L_, U_, P_, Q_, resVector_);
+      status += refactorizationSolver_->setup(A_, L_, U_, P_, Q_, resVector_);
     }
 #endif
 
@@ -279,7 +279,7 @@ namespace ReSolve
     if (solveMethod_ == "glu") {
       if (isSolveOnDevice_) {
         // std::cout << "Solving with GLU ...\n";
-        status = refactorSolver_->solve(rhs, x);
+        status = refactorizationSolver_->solve(rhs, x);
       } else {
         // std::cout << "Solving with KLU ...\n";
         status = factorizationSolver_->solve(rhs, x);
@@ -291,7 +291,7 @@ namespace ReSolve
     if (solveMethod_ == "rocsolverrf") {
       if (isSolveOnDevice_) {
         // std::cout << "Solving with RocSolver ...\n";
-        status = refactorSolver_->solve(rhs, x);
+        status = refactorizationSolver_->solve(rhs, x);
       } else {
         // std::cout << "Solving with KLU ...\n";
         status = factorizationSolver_->solve(rhs, x);
@@ -302,15 +302,42 @@ namespace ReSolve
     return status;
   }
 
+  int SystemSolver::precondition()
+  {
+    // Not implemented yet
+    return 1;
+  }
+
+  int SystemSolver::preconditionerSetup()
+  {
+    // Not implemented yet
+    return 1;
+  }
+
   int SystemSolver::refine(vector_type* rhs, vector_type* x)
   {
     int status = 0;
 #if defined(RESOLVE_USE_HIP) || defined(RESOLVE_USE_CUDA)
     status += iterativeSolver_->resetMatrix(A_);
-    status += iterativeSolver_->setupPreconditioner("LU", refactorSolver_);
+    status += iterativeSolver_->setupPreconditioner("LU", refactorizationSolver_);
     status += iterativeSolver_->solve(rhs, x);
 #endif
     return status;
+  }
+
+  LinSolverDirect& SystemSolver::getFactorizationSolver()
+  {
+    return *factorizationSolver_;
+  }
+
+  LinSolverDirect& SystemSolver::getRefactorizationSolver()
+  {
+    return *refactorizationSolver_;
+  }
+
+  LinSolverIterative& SystemSolver::getIterativeSolver()
+  {
+    return *iterativeSolver_;
   }
 
   void SystemSolver::setFactorizationMethod(std::string method)
@@ -331,7 +358,7 @@ namespace ReSolve
     // initialize();
   }
 
-  void SystemSolver::setIterativeRefinement(std::string method)
+  void SystemSolver::setRefinementMethod(std::string method)
   {
     irMethod_ = method;
     // initialize();

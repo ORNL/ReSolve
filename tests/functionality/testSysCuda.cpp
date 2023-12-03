@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
 
   // but DO NOT SOLVE with KLU!
 
-  status = solver->refactorize_setup();
+  status = solver->refactorizationSetup();
   error_sum += status;
   std::cout << "GLU setup status: " << status << std::endl;      
 

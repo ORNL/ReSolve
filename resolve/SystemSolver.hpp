@@ -38,12 +38,18 @@ namespace ReSolve
       int analyze(); //    symbolic part
       int factorize(); //  numeric part
       int refactorize();
-      int refactorize_setup();
+      int refactorizationSetup();
+      int precondition();
+      int preconditionerSetup();
       int solve(vector_type*  rhs, vector_type* x); // for triangular solve
       int refine(vector_type* rhs, vector_type* x); // for iterative refinement
 
       // we update the matrix once it changed
       int updateMatrix(std::string format, int* ia, int* ja, double* a);
+
+      LinSolverDirect& getFactorizationSolver();
+      LinSolverDirect& getRefactorizationSolver();
+      LinSolverIterative& getIterativeSolver();
 
       real_type getResidualNorm(vector_type* rhs, vector_type* x);
 
@@ -61,14 +67,14 @@ namespace ReSolve
       void setFactorizationMethod(std::string method);
       void setRefactorizationMethod(std::string method);
       void setSolveMethod(std::string method);
-      void setIterativeRefinement(std::string method);
+      void setRefinementMethod(std::string method);
 
       void setMaxIterations(int maxIter);
       void setIterationsRestart(int restart);
 
     private:
       LinSolverDirect* factorizationSolver_{nullptr};
-      LinSolverDirect* refactorSolver_{nullptr};
+      LinSolverDirect* refactorizationSolver_{nullptr};
       LinSolverIterative* iterativeSolver_{nullptr};
       GramSchmidt* gs_{nullptr};
 
