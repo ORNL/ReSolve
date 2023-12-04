@@ -16,25 +16,20 @@ namespace ReSolve
     L_ = nullptr;
     U_ = nullptr;
 
-    // Set default parameters for KLU solver
-    ordering_ = 1;
-    pivotThreshold_ = 0.1;
-    haltIfSingular_ = false;
-
     // Populate KLU data structure holding solver parameters
     klu_defaults(&Common_);
     Common_.btf  = 0;
-    Common_.ordering = ordering_;
-    Common_.tol = pivotThreshold_;
     Common_.scale = -1;
-    Common_.halt_if_singular = haltIfSingular_;
+    Common_.ordering = ordering_;
+    Common_.tol = pivot_threshold_tol_;
+    Common_.halt_if_singular = halt_if_singular_;
 
-  //   out::summary() << "KLU solver set with parameters:\n"
-  //                  << "\tbtf              = " << Common_.btf              << "\n"
-  //                  << "\tordering         = " << Common_.ordering         << "\n"
-  //                  << "\tpivot threshold  = " << Common_.tol              << "\n"
-  //                  << "\tscale            = " << Common_.scale            << "\n"
-  //                  << "\thalt if singular = " << Common_.halt_if_singular << "\n";
+    out::summary() << "KLU solver set with parameters:\n"
+                   << "\tbtf              = " << Common_.btf              << "\n"
+                   << "\tscale            = " << Common_.scale            << "\n"
+                   << "\tordering         = " << Common_.ordering         << "\n"
+                   << "\tpivot threshold  = " << Common_.tol              << "\n"
+                   << "\thalt if singular = " << Common_.halt_if_singular << "\n";
   } 
 
   LinSolverDirectKLU::~LinSolverDirectKLU()
@@ -253,7 +248,7 @@ namespace ReSolve
 
   void LinSolverDirectKLU::setPivotThreshold(real_type tol)
   {
-    pivotThreshold_ = tol;
+    pivot_threshold_tol_ = tol;
     Common_.tol = tol;    
   }
 
@@ -265,7 +260,7 @@ namespace ReSolve
 
   void LinSolverDirectKLU::setHaltIfSingular(bool isHalt)
   {
-    haltIfSingular_ = isHalt;
+    halt_if_singular_ = isHalt;
     Common_.halt_if_singular = isHalt;
   }
 

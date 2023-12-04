@@ -97,7 +97,7 @@ namespace ReSolve
 
   void LinSolverDirect::setPivotThreshold(real_type tol)
   {
-    pivotThreshold_ = tol;
+    pivot_threshold_tol_ = tol;
   }
 
   void LinSolverDirect::setOrdering(int ordering)
@@ -105,9 +105,9 @@ namespace ReSolve
     ordering_ = ordering;
   }
 
-  void LinSolverDirect::setHaltIfSingular(bool isHalt)
+  void LinSolverDirect::setHaltIfSingular(bool is_halt)
   {
-    haltIfSingular_ = isHalt;
+    halt_if_singular_ = is_halt;
   }
 
   real_type LinSolverDirect::getMatrixConditionNumber()

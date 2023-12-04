@@ -67,7 +67,7 @@ namespace ReSolve
 
       virtual void setPivotThreshold(real_type tol);
       virtual void setOrdering(int ordering);
-      virtual void setHaltIfSingular(bool isHalt);
+      virtual void setHaltIfSingular(bool is_halt);
 
       virtual real_type getMatrixConditionNumber();
     
@@ -79,8 +79,8 @@ namespace ReSolve
       bool factors_extracted_;
 
       int ordering_{1}; // 0 = AMD, 1 = COLAMD, 2 = user provided P, Q
-      real_type pivotThreshold_{0.1};
-      bool haltIfSingular_{false};
+      real_type pivot_threshold_tol_{0.1};
+      bool halt_if_singular_{false};
   };
 
   class LinSolverIterative : public LinSolver 
