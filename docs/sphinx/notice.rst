@@ -1,4 +1,4 @@
 Notice
 *******
 
-.. mdinclude:: ../../NOTICE
+.. mdinclude:: licenses
