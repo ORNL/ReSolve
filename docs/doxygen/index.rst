@@ -7,7 +7,7 @@ Doxygen generated API documentation can be found here: `Doxygen Docs <html/index
 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :hidden:
    :caption: Source Documentation
 
