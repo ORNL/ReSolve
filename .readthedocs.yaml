@@ -17,7 +17,7 @@ build:
   apt_packages:
     - ghostscript
     - graphviz
-    - texlive-full
+    - ttf-freefont
   jobs:
     post_build:
     - cd docs && doxygen ./doxygen/Doxyfile.in 

@@ -24,6 +24,9 @@ with open('./doxygen/Doxyfile.in', 'r') as f:
 fdata = fdata.replace('@PROJECT_SOURCE_DIR@', '.')
 with open('./doxygen/Doxyfile.in', 'w') as f:
     f.write(fdata)
+# The output directory needs to point to a directory within ../_readthedocs/ 
+# by default readthedocs checks for html files within ../_readthedocs/ folder
+# ../readthedocs folder does not exist locally only on the readthedocs server.
 with open('./doxygen/Doxyfile.in', 'a') as f:
     f.write("\nOUTPUT_DIRECTORY=../_readthedocs/html/doxygen")
 
@@ -181,6 +184,9 @@ else:
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
+
+# all static files should be in the _build/_static directory
+# readthedocs server checks out the github repo and paths remain the same
 html_static_path = [os.path.join(conf_directory, 'sphinx/_build/_static')]
 
 #html_static_path = ['docs/sphinx/_build/_static/theme_overrides.css']
