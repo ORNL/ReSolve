@@ -168,11 +168,7 @@ namespace ReSolve
         gs_ = nullptr;
       }
 
-      iterativeSolver_ = new LinSolverIterativeFGMRES(irRestart_,
-                                                      irTol_,
-                                                      irMaxit_,
-                                                      irConvCond_,
-                                                      matrixHandler_,
+      iterativeSolver_ = new LinSolverIterativeFGMRES(matrixHandler_,
                                                       vectorHandler_,
                                                       gs_,
                                                       memspace_);
@@ -401,40 +397,9 @@ namespace ReSolve
     return resnorm/norm_b;
   }
 
-  real_type SystemSolver::getInitResidualNorm()
-  {
-#if defined(RESOLVE_USE_HIP) || defined(RESOLVE_USE_CUDA)
-    return iterativeSolver_->getInitResidualNorm();
-#endif
-  }
-
-  real_type SystemSolver::getFinalResidualNorm()
-  {
-#if defined(RESOLVE_USE_HIP) || defined(RESOLVE_USE_CUDA)
-    return iterativeSolver_->getFinalResidualNorm();
-#endif
-  }
-
-  int SystemSolver::getNumIter()
-  {
-#if defined(RESOLVE_USE_HIP) || defined(RESOLVE_USE_CUDA)
-    return iterativeSolver_->getNumIter();
-#endif
-  }
-
   const std::string SystemSolver::getFactorizationMethod() const
   {
     return factorizationMethod_;
-  }
-
-  void SystemSolver::setMaxIterations(int maxIter)
-  {
-    iterativeSolver_->setMaxit(maxIter);
-  }
-
-  void SystemSolver::setIterationsRestart(int restart)
-  {
-    iterativeSolver_->setRestart(restart);
   }
 
 } // namespace ReSolve

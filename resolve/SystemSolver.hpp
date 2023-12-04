@@ -53,10 +53,6 @@ namespace ReSolve
 
       real_type getResidualNorm(vector_type* rhs, vector_type* x);
 
-      real_type getInitResidualNorm();
-      real_type getFinalResidualNorm();
-      int getNumIter();
-
       // Get solver parameters
       const std::string getFactorizationMethod() const;
       const std::string getRefactorizationMethod() const;
@@ -68,9 +64,6 @@ namespace ReSolve
       void setRefactorizationMethod(std::string method);
       void setSolveMethod(std::string method);
       void setRefinementMethod(std::string method);
-
-      void setMaxIterations(int maxIter);
-      void setIterationsRestart(int restart);
 
     private:
       LinSolverDirect* factorizationSolver_{nullptr};
@@ -104,10 +97,5 @@ namespace ReSolve
       std::string gsMethod_;
 
       std::string memspace_;
-
-      real_type irTol_{1e-14};
-      int irMaxit_{100};
-      int irRestart_{10};
-      int irConvCond_{0};
   };
 } // namespace ReSolve

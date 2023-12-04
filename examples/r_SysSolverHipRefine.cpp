@@ -154,7 +154,7 @@ int main(int argc, char *argv[])
                   << rnrm
                   << " final nrm: "
                   << solver->getResidualNorm(vec_rhs, vec_x)
-                  << " iter: " << solver->getNumIter() 
+                  << " iter: " << solver->getIterativeSolver().getNumIter()
                   << "\n";
       }
     }

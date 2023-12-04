@@ -222,9 +222,9 @@ int main(int argc, char *argv[])
   std::cout<<"\t ||x-x_true||_2              : "<<normDiffMatrix2<<" (solution error)"<<std::endl;
   std::cout<<"\t ||x-x_true||_2/||x_true||_2 : "<<normDiffMatrix2/normXtrue<<" (scaled solution error)"<<std::endl;
   std::cout<<"\t ||b-A*x_exact||_2           : "<<exactSol_normRmatrix2<<" (control; residual norm with exact solution)"<<std::endl;
-  std::cout<<"\t IR iterations               : "<<solver->getNumIter()<<" (max 200, restart 100)"<<std::endl;
-  std::cout<<"\t IR starting res. norm       : "<<solver->getInitResidualNorm()<<" "<<std::endl;
-  std::cout<<"\t IR final res. norm          : "<<solver->getFinalResidualNorm()<<" (tol 1e-14)"<<std::endl<<std::endl;
+  std::cout<<"\t IR iterations               : "<<solver->getIterativeSolver().getNumIter()<<" (max 200, restart 100)"<<std::endl;
+  std::cout<<"\t IR starting res. norm       : "<<solver->getIterativeSolver().getInitResidualNorm() <<" "<<std::endl;
+  std::cout<<"\t IR final res. norm          : "<<solver->getIterativeSolver().getFinalResidualNorm() <<" (tol 1e-14)"<<std::endl<<std::endl;
 
   if ((normRmatrix1/normB1 > 1e-12 ) || (normRmatrix2/normB2 > 1e-9)) {
     std::cout << "Result inaccurate!\n";
