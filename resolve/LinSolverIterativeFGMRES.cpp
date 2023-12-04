@@ -15,11 +15,12 @@ namespace ReSolve
     memspace_ = memspace;
     this->matrix_handler_ = nullptr;
     this->vector_handler_ = nullptr;
-    tol_ = 1e-14; //default
-    maxit_= 100; //default
-    restart_ = 10;
-    conv_cond_ = 0;//default
-    flexible_ = 1;
+    // Defaults:
+    // tol_ = 1e-14;
+    // maxit_= 100;
+    // restart_ = 10;
+    // conv_cond_ = 0;
+    // flexible_ = true;
 
     d_V_ = nullptr;
     d_Z_ = nullptr;
@@ -35,11 +36,12 @@ namespace ReSolve
     this->vector_handler_ = vector_handler;
     this->GS_ = gs;
 
-    tol_ = 1e-14; //default
-    maxit_= 100; //default
-    restart_ = 10;
-    conv_cond_ = 0;//default
-    flexible_ = 1;
+    // Defaults:
+    // tol_ = 1e-14;
+    // maxit_= 100;
+    // restart_ = 10;
+    // conv_cond_ = 0;
+    // flexible_ = true;
 
     d_V_ = nullptr;
     d_Z_ = nullptr;
@@ -63,7 +65,7 @@ namespace ReSolve
     maxit_= maxit; 
     restart_ = restart;
     conv_cond_ = conv_cond;
-    flexible_ = 1;
+    flexible_ = true;
 
     d_V_ = nullptr;
     d_Z_ = nullptr;

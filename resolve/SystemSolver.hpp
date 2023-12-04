@@ -27,9 +27,16 @@ namespace ReSolve
       using matrix_type = matrix::Sparse;
 
       SystemSolver();
-      SystemSolver(LinAlgWorkspaceCUDA* workspaceCuda, std::string ir = "none");
-      SystemSolver(LinAlgWorkspaceHIP*  workspaceHip, std::string ir = "none");
-      SystemSolver(std::string factorizationMethod, std::string refactorizationMethod, std::string solveMethod, std::string IRMethod);
+      SystemSolver(LinAlgWorkspaceCUDA* workspaceCuda, 
+                   std::string factor = "klu",
+                   std::string refactor = "glu",
+                   std::string solve = "glu",
+                   std::string ir = "none");
+      SystemSolver(LinAlgWorkspaceHIP*  workspaceHip, 
+                   std::string factor = "klu",
+                   std::string refactor = "rocsolverrf",
+                   std::string solve = "rocsolverrf",
+                   std::string ir = "none");
 
       ~SystemSolver();
 
@@ -58,12 +65,13 @@ namespace ReSolve
       const std::string getRefactorizationMethod() const;
       const std::string getSolveMethod() const;
       const std::string getRefinementMethod() const;
+      const std::string getOrthogonalizationMethod() const;
 
       // Set solver parameters
       void setFactorizationMethod(std::string method);
       void setRefactorizationMethod(std::string method);
       void setSolveMethod(std::string method);
-      void setRefinementMethod(std::string method);
+      void setRefinementMethod(std::string method, std::string gs = "cgs2");
 
     private:
       LinSolverDirect* factorizationSolver_{nullptr};

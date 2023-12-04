@@ -22,7 +22,7 @@ using namespace ReSolve::constants;
 int main(int argc, char *argv[])
 {
   // Use ReSolve data types.
-  using real_type  = ReSolve::real_type;
+  using real_type   = ReSolve::real_type;
   using vector_type = ReSolve::vector::Vector;
 
   //we want error sum to be 0 at the end
@@ -31,14 +31,15 @@ int main(int argc, char *argv[])
   int error_sum = 0;
   int status = 0;
 
-  ReSolve::LinAlgWorkspaceHIP* workspace_HIP = new ReSolve::LinAlgWorkspaceHIP();
-  workspace_HIP->initializeHandles();
-  ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(workspace_HIP);
-  ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(workspace_HIP);
+  ReSolve::LinAlgWorkspaceHIP workspace_HIP;
+  workspace_HIP.initializeHandles();
+  ReSolve::MatrixHandler matrix_handler(&workspace_HIP);
+  ReSolve::VectorHandler vector_handler(&workspace_HIP);
 
-  ReSolve::SystemSolver* solver = new ReSolve::SystemSolver(workspace_HIP, "fgmres");
-  solver->getIterativeSolver().setRestart(100);
-  solver->getIterativeSolver().setMaxit(200);
+  ReSolve::SystemSolver solver(&workspace_HIP);
+  solver.setRefinementMethod("fgmres", "cgs2");
+  solver.getIterativeSolver().setRestart(100);
+  solver.getIterativeSolver().setMaxit(200);
 
   // Input to this code is location of `data` directory where matrix files are stored
   const std::string data_path = (argc == 2) ? argv[1] : "./";
@@ -81,21 +82,21 @@ int main(int argc, char *argv[])
   rhs1_file.close();
 
   // Convert first matrix to CSR format
-  matrix_handler->coo2csr(A_coo, A, "cpu");
+  matrix_handler.coo2csr(A_coo, A, "cpu");
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   vec_rhs->setDataUpdated(ReSolve::memory::HOST);
 
-  status = solver->setMatrix(A);
+  status = solver.setMatrix(A);
   error_sum += status;
 
   // Solve the first system using KLU
-  status = solver->analyze();
+  status = solver.analyze();
   error_sum += status;
 
-  status = solver->factorize();
+  status = solver.factorize();
   error_sum += status;
 
-  status = solver->solve(vec_rhs, vec_x);
+  status = solver.solve(vec_rhs, vec_x);
   error_sum += status;
 
   vector_type* vec_test;
@@ -113,38 +114,38 @@ int main(int argc, char *argv[])
   vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
   vec_diff->update(x_data, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
 
-  // real_type normXmatrix1 = sqrt(vector_handler->dot(vec_test, vec_test, ReSolve::memory::DEVICE));
-  matrix_handler->setValuesChanged(true, "hip");
+  // real_type normXmatrix1 = sqrt(vector_handler.dot(vec_test, vec_test, ReSolve::memory::DEVICE));
+  matrix_handler.setValuesChanged(true, "hip");
   //evaluate the residual ||b-Ax||
-  status = matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr","hip"); 
+  status = matrix_handler.matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr","hip"); 
   error_sum += status;
 
-  real_type normRmatrix1 = sqrt(vector_handler->dot(vec_r, vec_r, "hip"));
+  real_type normRmatrix1 = sqrt(vector_handler.dot(vec_r, vec_r, "hip"));
 
 
   //for testing only - control
 
-  real_type normXtrue = sqrt(vector_handler->dot(vec_x, vec_x, "hip"));
-  real_type normB1 = sqrt(vector_handler->dot(vec_rhs, vec_rhs, "hip"));
+  real_type normXtrue = sqrt(vector_handler.dot(vec_x, vec_x, "hip"));
+  real_type normB1 = sqrt(vector_handler.dot(vec_rhs, vec_rhs, "hip"));
 
   //compute x-x_true
-  vector_handler->axpy(&MINUSONE, vec_x, vec_diff, "hip");
+  vector_handler.axpy(&MINUSONE, vec_x, vec_diff, "hip");
   //evaluate its norm
-  real_type normDiffMatrix1 = sqrt(vector_handler->dot(vec_diff, vec_diff, "hip"));
+  real_type normDiffMatrix1 = sqrt(vector_handler.dot(vec_diff, vec_diff, "hip"));
 
   //compute the residual using exact solution
   vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-  status = matrix_handler->matvec(A, vec_test, vec_r, &ONE, &MINUSONE,"csr", "hip"); 
+  status = matrix_handler.matvec(A, vec_test, vec_r, &ONE, &MINUSONE,"csr", "hip"); 
   error_sum += status;
-  real_type exactSol_normRmatrix1 = sqrt(vector_handler->dot(vec_r, vec_r, "hip"));
+  real_type exactSol_normRmatrix1 = sqrt(vector_handler.dot(vec_r, vec_r, "hip"));
   //evaluate the residual ON THE CPU using COMPUTED solution
 
   vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
 
-  status = matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "cpu");
+  status = matrix_handler.matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "cpu");
   error_sum += status;
 
-  real_type normRmatrix1CPU = sqrt(vector_handler->dot(vec_r, vec_r, "hip"));
+  real_type normRmatrix1CPU = sqrt(vector_handler.dot(vec_r, vec_r, "hip"));
 
   std::cout<<"Results (first matrix): "<<std::endl<<std::endl;
   std::cout<<"\t ||b-A*x||_2                 : " << std::setprecision(16) << normRmatrix1    << " (residual norm)" << std::endl;
@@ -156,7 +157,7 @@ int main(int argc, char *argv[])
 
 
   // Now prepare the Rf solver
-  status = solver->refactorizationSetup();
+  status = solver.refactorizationSetup();
   error_sum += status;
 
   // Load the second matrix
@@ -179,52 +180,52 @@ int main(int argc, char *argv[])
   ReSolve::io::readAndUpdateRhs(rhs2_file, &rhs);
   rhs2_file.close();
 
-  matrix_handler->coo2csr(A_coo, A, "hip");
+  matrix_handler.coo2csr(A_coo, A, "hip");
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
 
-  status = solver->refactorize();
+  status = solver.refactorize();
   error_sum += status;
   
   vec_x->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-  status = solver->solve(vec_rhs, vec_x);
+  status = solver.solve(vec_rhs, vec_x);
   error_sum += status;
   
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-  status = solver->refine(vec_rhs, vec_x);
+  status = solver.refine(vec_rhs, vec_x);
   error_sum += status;
 
   vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-  matrix_handler->setValuesChanged(true, "hip");
+  matrix_handler.setValuesChanged(true, "hip");
 
   //evaluate final residual
-  status = matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, "csr", "hip"); 
+  status = matrix_handler.matvec(A, vec_x, vec_r, &ONE, &MINUSONE, "csr", "hip"); 
   error_sum += status;
 
-  real_type normRmatrix2 = sqrt(vector_handler->dot(vec_r, vec_r, "hip"));
+  real_type normRmatrix2 = sqrt(vector_handler.dot(vec_r, vec_r, "hip"));
 
 
   //for testing only - control
-  real_type normB2 = sqrt(vector_handler->dot(vec_rhs, vec_rhs, "hip"));
+  real_type normB2 = sqrt(vector_handler.dot(vec_rhs, vec_rhs, "hip"));
   //compute x-x_true
   vec_diff->update(x_data, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-  vector_handler->axpy(&MINUSONE, vec_x, vec_diff, "hip");
+  vector_handler.axpy(&MINUSONE, vec_x, vec_diff, "hip");
   //evaluate its norm
-  real_type normDiffMatrix2 = sqrt(vector_handler->dot(vec_diff, vec_diff, "hip"));
+  real_type normDiffMatrix2 = sqrt(vector_handler.dot(vec_diff, vec_diff, "hip"));
 
   //compute the residual using exact solution
   vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-  status = matrix_handler->matvec(A, vec_test, vec_r, &ONE, &MINUSONE, "csr", "hip"); 
+  status = matrix_handler.matvec(A, vec_test, vec_r, &ONE, &MINUSONE, "csr", "hip"); 
   error_sum += status;
-  real_type exactSol_normRmatrix2 = sqrt(vector_handler->dot(vec_r, vec_r, "hip"));
+  real_type exactSol_normRmatrix2 = sqrt(vector_handler.dot(vec_r, vec_r, "hip"));
   std::cout<<"Results (second matrix): "<<std::endl<<std::endl;
   std::cout<<"\t ||b-A*x||_2                 : "<<normRmatrix2<<" (residual norm)"<<std::endl;
   std::cout<<"\t ||b-A*x||_2/||b||_2         : "<<normRmatrix2/normB2<<" (scaled residual norm)"<<std::endl;
   std::cout<<"\t ||x-x_true||_2              : "<<normDiffMatrix2<<" (solution error)"<<std::endl;
   std::cout<<"\t ||x-x_true||_2/||x_true||_2 : "<<normDiffMatrix2/normXtrue<<" (scaled solution error)"<<std::endl;
   std::cout<<"\t ||b-A*x_exact||_2           : "<<exactSol_normRmatrix2<<" (control; residual norm with exact solution)"<<std::endl;
-  std::cout<<"\t IR iterations               : "<<solver->getIterativeSolver().getNumIter()<<" (max 200, restart 100)"<<std::endl;
-  std::cout<<"\t IR starting res. norm       : "<<solver->getIterativeSolver().getInitResidualNorm() <<" "<<std::endl;
-  std::cout<<"\t IR final res. norm          : "<<solver->getIterativeSolver().getFinalResidualNorm() <<" (tol 1e-14)"<<std::endl<<std::endl;
+  std::cout<<"\t IR iterations               : "<<solver.getIterativeSolver().getNumIter()<<" (max 200, restart 100)"<<std::endl;
+  std::cout<<"\t IR starting res. norm       : "<<solver.getIterativeSolver().getInitResidualNorm() <<" "<<std::endl;
+  std::cout<<"\t IR final res. norm          : "<<solver.getIterativeSolver().getFinalResidualNorm() <<" (tol 1e-14)"<<std::endl<<std::endl;
 
   if ((normRmatrix1/normB1 > 1e-12 ) || (normRmatrix2/normB2 > 1e-9)) {
     std::cout << "Result inaccurate!\n";
@@ -237,14 +238,10 @@ int main(int argc, char *argv[])
   }
 
   delete A;
-  delete solver;
   delete [] x;
   delete [] rhs;
   delete vec_r;
   delete vec_x;
-  delete workspace_HIP;
-  delete matrix_handler;
-  delete vector_handler;
 
   return error_sum;
 }
