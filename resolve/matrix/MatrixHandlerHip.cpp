@@ -103,7 +103,7 @@ namespace ReSolve {
     }
   }
 
-  int MatrixHandlerHip::Matrix1Norm(matrix::Sparse* /* A */, real_type* /* norm */)
+  int MatrixHandlerHip::MatrixInfNorm(matrix::Sparse* /* A */, real_type* /* norm */)
   {
     return -1;
   }
