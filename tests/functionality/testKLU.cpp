@@ -164,7 +164,7 @@ int main(int argc, char *argv[])
   ReSolve::io::readAndUpdateRhs(rhs2_file, &rhs);
   rhs2_file.close();
 
-  matrix_handler->coo2csr(A_coo, A, "cpu");
+  A->updateFromCoo(A_coo, ReSolve::memory::HOST);
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
 
   // and solve it too

@@ -57,11 +57,6 @@ int main(int argc, char *argv[])
   }
   ReSolve::matrix::Coo* A_coo = ReSolve::io::readMatrixFromFile(mat1);
   ReSolve::matrix::Csr* A = new ReSolve::matrix::Csr(A_coo, ReSolve::memory::HOST);
-  // ReSolve::matrix::Csr* A = new ReSolve::matrix::Csr(A_coo->getNumRows(),
-  //                                                    A_coo->getNumColumns(),
-  //                                                    A_coo->getNnz(),
-  //                                                    A_coo->symmetric(),
-  //                                                    A_coo->expanded());
   mat1.close();
 
   // Read first rhs vector
@@ -81,7 +76,6 @@ int main(int argc, char *argv[])
   rhs1_file.close();
 
   // Convert first matrix to CSR format
-  // matrix_handler->coo2csr(A_coo, A, "cpu");
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   vec_rhs->setDataUpdated(ReSolve::memory::HOST);
 
@@ -95,8 +89,7 @@ int main(int argc, char *argv[])
   status = KLU->factorize();
   error_sum += status;
 
-// but DO NOT SOLVE with KLU!
-
+  // but DO NOT SOLVE the rest with KLU!
 
   matrix_type* L = KLU->getLFactor();
   matrix_type* U = KLU->getUFactor();
@@ -111,8 +104,6 @@ int main(int argc, char *argv[])
   error_sum += status;
   std::cout<<"GLU solve status: "<<status<<std::endl;      
 
-
-
   vector_type* vec_test;
   vector_type* vec_diff;
   vec_test  = new vector_type(A->getNumRows());
@@ -126,16 +117,13 @@ int main(int argc, char *argv[])
   vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
   vec_diff->update(x_data, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
 
-  // real_type normXmatrix1 = sqrt(vector_handler->dot(vec_test, vec_test, "cuda"));
   matrix_handler->setValuesChanged(true, "cuda");
   status = matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr","cuda"); 
   error_sum += status;
   
   real_type normRmatrix1 = sqrt(vector_handler->dot(vec_r, vec_r, "cuda"));
 
-
   //for testing only - control
-  
   real_type normXtrue = sqrt(vector_handler->dot(vec_x, vec_x, "cuda"));
   real_type normB1 = sqrt(vector_handler->dot(vec_rhs, vec_rhs, "cuda"));
   
@@ -149,11 +137,10 @@ int main(int argc, char *argv[])
   status = matrix_handler->matvec(A, vec_test, vec_r, &ONE, &MINUSONE, "csr", "cuda"); 
 
   vec_x->update(vec_x->getData(ReSolve::memory::DEVICE), ReSolve::memory::DEVICE, ReSolve::memory::HOST);
-  //status = matrix_handler->matvec(A, vec_test, vec_r, &ONE, &MINUSONE,"csr", "cuda"); 
   error_sum += status;
   real_type exactSol_normRmatrix1 = sqrt(vector_handler->dot(vec_r, vec_r, "cuda"));
+
   //evaluate the residual ON THE CPU using COMPUTED solution
- 
   vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
 
   status = matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "cpu");
@@ -190,7 +177,7 @@ int main(int argc, char *argv[])
   ReSolve::io::readAndUpdateRhs(rhs2_file, &rhs);
   rhs2_file.close();
 
-  matrix_handler->coo2csr(A_coo, A, "cuda");
+  A->updateFromCoo(A_coo, ReSolve::memory::DEVICE);
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
 
   status = GLU->refactorize();

@@ -62,11 +62,6 @@ int main(int argc, char *argv[])
   }
   ReSolve::matrix::Coo* A_coo = ReSolve::io::readMatrixFromFile(mat1);
   ReSolve::matrix::Csr* A = new ReSolve::matrix::Csr(A_coo, ReSolve::memory::HOST);
-  // ReSolve::matrix::Csr* A = new ReSolve::matrix::Csr(A_coo->getNumRows(),
-  //                                                    A_coo->getNumColumns(),
-  //                                                    A_coo->getNnz(),
-  //                                                    A_coo->symmetric(),
-  //                                                    A_coo->expanded());
   mat1.close();
 
   // Read first rhs vector
@@ -84,7 +79,6 @@ int main(int argc, char *argv[])
   rhs1_file.close();
 
   // Convert first matrix to CSR format
-  // matrix_handler->coo2csr(A_coo, A, "cpu");
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   vec_rhs->setDataUpdated(ReSolve::memory::HOST);
 
@@ -116,7 +110,6 @@ int main(int argc, char *argv[])
   vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
   vec_diff->update(x_data, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
 
-  // real_type normXmatrix1 = sqrt(vector_handler->dot(vec_test, vec_test, ReSolve::memory::DEVICE));
   matrix_handler->setValuesChanged(true, "hip");
   //evaluate the residual ||b-Ax||
   status = matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr","hip"); 
@@ -126,7 +119,6 @@ int main(int argc, char *argv[])
 
 
   //for testing only - control
-
   real_type normXtrue = sqrt(vector_handler->dot(vec_x, vec_x, "hip"));
   real_type normB1 = sqrt(vector_handler->dot(vec_rhs, vec_rhs, "hip"));
 
@@ -140,8 +132,8 @@ int main(int argc, char *argv[])
   status = matrix_handler->matvec(A, vec_test, vec_r, &ONE, &MINUSONE,"csr", "hip"); 
   error_sum += status;
   real_type exactSol_normRmatrix1 = sqrt(vector_handler->dot(vec_r, vec_r, "hip"));
-  //evaluate the residual ON THE CPU using COMPUTED solution
 
+  //evaluate the residual ON THE CPU using COMPUTED solution
   vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
 
   status = matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "cpu");
@@ -198,7 +190,7 @@ int main(int argc, char *argv[])
   ReSolve::io::readAndUpdateRhs(rhs2_file, &rhs);
   rhs2_file.close();
 
-  matrix_handler->coo2csr(A_coo, A, "hip");
+  A->updateFromCoo(A_coo, ReSolve::memory::DEVICE);
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
 
   status = Rf->refactorize();

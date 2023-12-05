@@ -117,7 +117,6 @@ int main(int argc, char *argv[])
   vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
   vec_diff->update(x_data, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
 
-  // real_type normXmatrix1 = sqrt(vector_handler->dot(vec_test, vec_test, "cuda"));
   matrix_handler->setValuesChanged(true, "cuda");
   status = matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr","cuda"); 
   error_sum += status;
@@ -180,7 +179,7 @@ int main(int argc, char *argv[])
   ReSolve::io::readAndUpdateRhs(rhs2_file, &rhs);
   rhs2_file.close();
 
-  matrix_handler->coo2csr(A_coo, A, "cuda");
+  A->updateFromCoo(A_coo, ReSolve::memory::DEVICE);
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
 
   status = solver->refactorize();
