@@ -136,6 +136,8 @@ int main(int argc, char *argv[])
  
   //compute the residual using exact solution
   vec_x->update(vec_x->getData(ReSolve::memory::DEVICE), ReSolve::memory::DEVICE, ReSolve::memory::HOST);
+  
+  vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   status = matrix_handler->matvec(A, vec_test, vec_r, &ONE, &MINUSONE,"csr", "cuda"); 
   error_sum += status;
   real_type exactSol_normRmatrix1 = sqrt(vector_handler->dot(vec_r, vec_r, "cuda"));
