@@ -114,7 +114,7 @@ namespace ReSolve
     protected:
       real_type initial_residual_norm_;
       real_type final_residual_norm_;
-      index_type fgmres_iters_;
+      index_type total_iters_;
 
       real_type tol_{1e-14};
       index_type maxit_{100};

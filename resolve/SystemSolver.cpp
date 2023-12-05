@@ -239,7 +239,7 @@ namespace ReSolve
     Q_ = factorizationSolver_->getQOrdering();
 
     if (L_ == nullptr) {
-      out::warning() << "Factorization failed ...\n";
+      out::warning() << "Factorization failed, cannot extract factors ...\n";
       status = 1;
     }
 

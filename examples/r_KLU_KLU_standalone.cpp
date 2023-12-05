@@ -87,7 +87,6 @@ int main(int argc, char *argv[])
   vec_rhs->setDataUpdated(ReSolve::memory::HOST);
   std::cout << "COO to CSR completed. Expanded NNZ: " << A->getNnzExpanded() << std::endl;
   //Now call direct solver
-  // KLU->setupParameters(1, 0.1, false);
   int status;
   KLU->setup(A);
   status = KLU->analyze();
