@@ -165,7 +165,7 @@ namespace ReSolve
         outer_flag = 0;
         final_residual_norm_ = rnorm;
         initial_residual_norm_ = rnorm;
-        fgmres_iters_ = 0;
+        total_iters_ = 0;
         break;
       }
 
@@ -281,7 +281,7 @@ namespace ReSolve
 
       if(!outer_flag) {
         final_residual_norm_ = rnorm;
-        fgmres_iters_ = it;
+        total_iters_ = it;
       }
     } // outer while
     return 0;

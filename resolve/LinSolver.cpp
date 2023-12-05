@@ -149,7 +149,7 @@ namespace ReSolve
 
   index_type LinSolverIterative::getNumIter() const
   {
-    return fgmres_iters_;
+    return total_iters_;
   }
 
 
