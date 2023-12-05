@@ -124,6 +124,7 @@ int main(int argc, char *argv[])
     }
     int status;
     real_type norm_b;
+    real_type norm_A;
     if (i < 2){
       KLU->setup(A);
       matrix_handler->setValuesChanged(true, "cuda");
@@ -138,6 +139,9 @@ int main(int argc, char *argv[])
       norm_b = sqrt(norm_b);
       matrix_handler->setValuesChanged(true, "cuda");
       matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "cuda"); 
+    
+      matrix_handler->MatrixInfNorm(A, &norm_A, "cuda"); 
+      printf("Matrix norm: %16.16e \n", norm_A);
       printf("\t 2-Norm of the residual : %16.16e\n", sqrt(vector_handler->dot(vec_r, vec_r, "cuda"))/norm_b);
       if (i == 1) {
         ReSolve::matrix::Csc* L_csc = (ReSolve::matrix::Csc*) KLU->getLFactor();
@@ -162,6 +166,8 @@ int main(int argc, char *argv[])
       status = Rf->solve(vec_rhs, vec_x);
       std::cout<<"CUSOLVER RF solve status: "<<status<<std::endl;      
 
+      matrix_handler->MatrixInfNorm(A, &norm_A, "cuda"); 
+      printf("Matrix norm: %16.16e \n", norm_A);
       vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
       norm_b = vector_handler->dot(vec_r, vec_r, "cuda");
       norm_b = sqrt(norm_b);
