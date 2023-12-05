@@ -172,7 +172,7 @@ int main(int argc, char *argv[])
   ReSolve::io::readAndUpdateRhs(rhs2_file, &rhs);
   rhs2_file.close();
 
-  A->updateFromCoo(A_coo, A, ReSolve::memory::DEVICE);
+  A->updateFromCoo(A_coo, ReSolve::memory::DEVICE);
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
 
   status = solver.refactorize();
