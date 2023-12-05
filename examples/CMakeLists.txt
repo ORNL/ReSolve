@@ -14,6 +14,10 @@ target_link_libraries(klu_klu.exe PRIVATE ReSolve)
 add_executable(klu_klu_standalone.exe r_KLU_KLU_standalone.cpp)
 target_link_libraries(klu_klu_standalone.exe PRIVATE ReSolve)
 
+# Build example with a configurable system solver
+add_executable(system.exe r_SysSolver.cpp)
+target_link_libraries(system.exe PRIVATE ReSolve)
+
 # Create CUDA examples
 if(RESOLVE_USE_CUDA)
         
@@ -40,6 +44,11 @@ if(RESOLVE_USE_CUDA)
   #rand solver
   add_executable(gmres_cusparse_rand.exe r_randGMRES_CUDA.cpp)
   target_link_libraries(gmres_cusparse_rand.exe PRIVATE ReSolve)
+
+  # Build example with a configurable system solver
+  add_executable(system_cuda.exe r_SysSolverCuda.cpp)
+  target_link_libraries(system_cuda.exe PRIVATE ReSolve)
+
 endif(RESOLVE_USE_CUDA)
 
 # Create HIP examples
@@ -60,10 +69,17 @@ if(RESOLVE_USE_HIP)
   # Rand GMRES test with rocsparse
   add_executable(gmres_rocsparse_rand.exe r_randGMRES.cpp)
   target_link_libraries(gmres_rocsparse_rand.exe PRIVATE ReSolve)
+  # Build example with a configurable system solver
+  add_executable(system_hip.exe r_SysSolverHip.cpp)
+  target_link_libraries(system_hip.exe PRIVATE ReSolve)
+
+  # Build example with a configurable system solver
+  add_executable(system_hip_fgmres.exe r_SysSolverHipRefine.cpp)
+  target_link_libraries(system_hip_fgmres.exe PRIVATE ReSolve)
 endif(RESOLVE_USE_HIP)
 
 # Install all examples in bin directory
-set(installable_executables klu_klu.exe klu_klu_standalone.exe)
+set(installable_executables klu_klu.exe klu_klu_standalone.exe system.exe)
 
 if(RESOLVE_USE_CUDA)
   set(installable_executables ${installable_executables} klu_glu.exe klu_rf.exe klu_rf_fgmres.exe klu_glu_values_update.exe gmres_cusparse_rand.exe)        

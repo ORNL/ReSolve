@@ -4,11 +4,13 @@
 #include <resolve/vector/Vector.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
+#include <resolve/utilities/logger/Logger.hpp>
 #include "LinSolverDirectCuSolverGLU.hpp"
 
 namespace ReSolve
 {
   using vector_type = vector::Vector;
+  using out = io::Logger;
 
   LinSolverDirectCuSolverGLU::LinSolverDirectCuSolverGLU(LinAlgWorkspaceCUDA* workspace)
   {
@@ -174,7 +176,6 @@ namespace ReSolve
 
   int LinSolverDirectCuSolverGLU::solve(vector_type* rhs, vector_type* x)
   {
-
     status_cusolver_ =  cusolverSpDgluSolve(handle_cusolversp_,
                                             A_->getNumRows(),
                                             /* A is original matrix */
@@ -192,4 +193,10 @@ namespace ReSolve
     return status_cusolver_; 
   }
 
+  int LinSolverDirectCuSolverGLU::solve(vector_type* )
+  {
+    out::error() << "Function solve(Vector* x) not implemented in CuSolverGLU!\n"
+                 << "Consider using solve(Vector* rhs, Vector* x) instead.\n";
+    return 1;
+  }
 }

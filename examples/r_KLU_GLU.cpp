@@ -115,9 +115,6 @@ int main(int argc, char *argv[])
     }
     std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnzExpanded()<<std::endl;
     //Now call direct solver
-    if (i == 0) {
-      KLU->setupParameters(1, 0.1, false);
-    }
     int status;
     if (i < 1) {
       KLU->setup(A);
@@ -133,25 +130,23 @@ int main(int argc, char *argv[])
       GLU->setup(A, L, U, P, Q); 
       status = GLU->solve(vec_rhs, vec_x);
       std::cout<<"GLU solve status: "<<status<<std::endl;      
-      //      status = KLU->solve(vec_rhs, vec_x);
-      //    std::cout<<"KLU solve status: "<<status<<std::endl;      
     } else {
-      //status =  KLU->refactorize();
       std::cout<<"Using CUSOLVER GLU"<<std::endl;
       status = GLU->refactorize();
       std::cout<<"CUSOLVER GLU refactorization status: "<<status<<std::endl;      
       status = GLU->solve(vec_rhs, vec_x);
       std::cout<<"CUSOLVER GLU solve status: "<<status<<std::endl;      
     }
+
+    // Estimate solution error
     vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-
-
+    real_type bnorm = sqrt(vector_handler->dot(vec_r, vec_r, "cuda"));
     matrix_handler->setValuesChanged(true, "cuda");
     matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "cuda"); 
 
     std::cout << "\t 2-Norm of the residual: " 
               << std::scientific << std::setprecision(16) 
-              << sqrt(vector_handler->dot(vec_r, vec_r, "cuda")) << "\n";
+              << sqrt(vector_handler->dot(vec_r, vec_r, "cuda"))/bnorm << "\n";
 
   } // for (int i = 0; i < numSystems; ++i)
 

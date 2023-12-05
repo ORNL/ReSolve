@@ -103,8 +103,8 @@ namespace ReSolve {
       error_sum += status;
       mem_.deviceSynchronize();
       if (status)
-        out::error() << "Matvec status: " << status 
-                      << "Last error code: " << mem_.getLastDeviceError() << std::endl;
+        out::error() << "Matvec status: "   << status                    << ". "
+                     << "Last error code: " << mem_.getLastDeviceError() << ".\n";
       vec_result->setDataUpdated(memory::DEVICE);
 
       cusparseDestroyDnVec(vecx);

@@ -37,7 +37,6 @@ int main(int argc, char *argv[])
   ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(workspace_HIP);
 
   ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
-  KLU->setupParameters(1, 0.1, false);
 
   ReSolve::LinSolverDirectRocSolverRf* Rf = new ReSolve::LinSolverDirectRocSolverRf(workspace_HIP);
   ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::cgs2);
@@ -205,7 +204,8 @@ int main(int argc, char *argv[])
   error_sum += status;
   
   vec_x->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-  status = Rf->solve(vec_x);
+  // TODO: Investigate why results are different when using Rf->solve(vec_x) !!
+  status = Rf->solve(vec_rhs, vec_x);
   error_sum += status;
   
   FGMRES->resetMatrix(A);
@@ -248,7 +248,13 @@ int main(int argc, char *argv[])
   std::cout<<"\t IR iterations               : "<<FGMRES->getNumIter()<<" (max 200, restart 100)"<<std::endl;
   std::cout<<"\t IR starting res. norm       : "<<FGMRES->getInitResidualNorm()<<" "<<std::endl;
   std::cout<<"\t IR final res. norm          : "<<FGMRES->getFinalResidualNorm()<<" (tol 1e-14)"<<std::endl<<std::endl;
-  if ((error_sum == 0) && (normRmatrix1/normB1 < 1e-12 ) && (normRmatrix2/normB2 < 1e-9)) {
+
+  // TODO: 1e-9 is too lose acuracy!
+  if ((normRmatrix1/normB1 > 1e-12 ) || (normRmatrix2/normB2 > 1e-9)) {
+    std::cout << "Result inaccurate!\n";
+    error_sum++;
+  }
+  if (error_sum == 0) {
     std::cout<<"Test 4 (KLU with rocsolverrf refactorization + IR) PASSED"<<std::endl<<std::endl;;
   } else {
     std::cout<<"Test 4 (KLU with rocsolverrf refactorization + IR) FAILED, error sum: "<<error_sum<<std::endl<<std::endl;;

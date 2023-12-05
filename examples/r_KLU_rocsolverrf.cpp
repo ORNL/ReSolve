@@ -115,11 +115,8 @@ int main(int argc, char *argv[] )
     }
     std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnzExpanded()<<std::endl;
     //Now call direct solver
-    if (i == 0) {
-      KLU->setupParameters(1, 0.1, false);
-    }
     int status;
-    if (i < 2){
+    if (i < 2) {
       KLU->setup(A);
       status = KLU->analyze();
       std::cout<<"KLU analysis status: "<<status<<std::endl;
@@ -134,7 +131,6 @@ int main(int argc, char *argv[] )
         index_type* Q = KLU->getQOrdering();
         vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
         Rf->setup(A, L, U, P, Q, vec_rhs); 
-        Rf->refactorize();
       }
     } else {
       std::cout<<"Using rocsolver rf"<<std::endl;
@@ -143,15 +139,15 @@ int main(int argc, char *argv[] )
       status = Rf->solve(vec_rhs, vec_x);
       std::cout<<"rocsolver rf solve status: "<<status<<std::endl;      
     }
+
     vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-
+    real_type bnorm = sqrt(vector_handler->dot(vec_r, vec_r, "hip"));
     matrix_handler->setValuesChanged(true, "hip");
-
     matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "hip"); 
 
     std::cout << "\t 2-Norm of the residual: " 
               << std::scientific << std::setprecision(16) 
-              << sqrt(vector_handler->dot(vec_r, vec_r, "hip")) << "\n";
+              << sqrt(vector_handler->dot(vec_r, vec_r, "hip"))/bnorm << "\n";
 
   } // for (int i = 0; i < numSystems; ++i)
 

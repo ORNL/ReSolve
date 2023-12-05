@@ -30,23 +30,28 @@ namespace ReSolve
                 matrix::Sparse* U = nullptr,
                 index_type*     P = nullptr,
                 index_type*     Q = nullptr,
-                vector_type*  rhs = nullptr);
+                vector_type*  rhs = nullptr) override;
      
-      void setupParameters(int ordering, double KLU_threshold, bool halt_if_singular);
-
-      int analyze(); //the same as symbolic factorization
-      int factorize();
-      int refactorize();
-      int solve(vector_type* rhs, vector_type* x); 
+      int analyze() override; //the same as symbolic factorization
+      int factorize() override;
+      int refactorize() override;
+      int solve(vector_type* rhs, vector_type* x) override;
+      int solve(vector_type* x) override;
     
-      matrix::Sparse* getLFactor(); 
-      matrix::Sparse* getUFactor(); 
-      index_type*  getPOrdering();
-      index_type*  getQOrdering();
+      matrix::Sparse* getLFactor() override; 
+      matrix::Sparse* getUFactor() override; 
+      index_type*  getPOrdering() override;
+      index_type*  getQOrdering() override;
+
+      virtual void setPivotThreshold(real_type tol) override;
+      virtual void setOrdering(int ordering) override;
+      virtual void setHaltIfSingular(bool isHalt) override;
+
+      virtual real_type getMatrixConditionNumber() override;
 
     private:
       klu_common Common_; //settings
-      klu_symbolic* Symbolic_;
-      klu_numeric* Numeric_; 
+      klu_symbolic* Symbolic_{nullptr};
+      klu_numeric* Numeric_{nullptr}; 
   };
 }

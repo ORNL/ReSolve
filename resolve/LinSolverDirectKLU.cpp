@@ -1,10 +1,13 @@
 #include <cstring> // includes memcpy
 #include <resolve/vector/Vector.hpp>
 #include <resolve/matrix/Csc.hpp>
+#include <resolve/utilities/logger/Logger.hpp>
 #include "LinSolverDirectKLU.hpp"
 
 namespace ReSolve 
 {
+  using out = io::Logger;
+
   LinSolverDirectKLU::LinSolverDirectKLU()
   {
     Symbolic_ = nullptr;
@@ -13,7 +16,20 @@ namespace ReSolve
     L_ = nullptr;
     U_ = nullptr;
 
-    klu_defaults(&Common_) ;
+    // Populate KLU data structure holding solver parameters
+    klu_defaults(&Common_);
+    Common_.btf  = 0;
+    Common_.scale = -1;
+    Common_.ordering = ordering_;
+    Common_.tol = pivot_threshold_tol_;
+    Common_.halt_if_singular = halt_if_singular_;
+
+    out::summary() << "KLU solver set with parameters:\n"
+                   << "\tbtf              = " << Common_.btf              << "\n"
+                   << "\tscale            = " << Common_.scale            << "\n"
+                   << "\tordering         = " << Common_.ordering         << "\n"
+                   << "\tpivot threshold  = " << Common_.tol              << "\n"
+                   << "\thalt if singular = " << Common_.halt_if_singular << "\n";
   } 
 
   LinSolverDirectKLU::~LinSolverDirectKLU()
@@ -31,15 +47,6 @@ namespace ReSolve
   {
     this->A_ = A;
     return 0;
-  }
-
-  void LinSolverDirectKLU::setupParameters(int ordering, double KLU_threshold, bool halt_if_singular) 
-  {
-    Common_.btf  = 0;
-    Common_.ordering = ordering;
-    Common_.tol = KLU_threshold;
-    Common_.scale = -1;
-    Common_.halt_if_singular = halt_if_singular;
   }
 
   int LinSolverDirectKLU::analyze() 
@@ -135,6 +142,13 @@ namespace ReSolve
     return 0;
   }
 
+  int LinSolverDirectKLU::solve(vector_type* )
+  {
+    out::error() << "Function solve(Vector* x) not implemented in LinSolverDirectKLU!\n"
+                 << "Consider using solve(Vector* rhs, Vector* x) instead.\n";
+    return 1;
+  }
+
   matrix::Sparse* LinSolverDirectKLU::getLFactor()
   {
     if (!factors_extracted_) {
@@ -145,6 +159,7 @@ namespace ReSolve
       U_ = new matrix::Csc(A_->getNumRows(), A_->getNumColumns(), nnzU);
       L_->allocateMatrixData(memory::HOST);
       U_->allocateMatrixData(memory::HOST);
+    
       int ok = klu_extract(Numeric_, 
                            Symbolic_, 
                            L_->getColData(memory::HOST), 
@@ -229,5 +244,29 @@ namespace ReSolve
     } else {
       return nullptr;
     }
+  }
+
+  void LinSolverDirectKLU::setPivotThreshold(real_type tol)
+  {
+    pivot_threshold_tol_ = tol;
+    Common_.tol = tol;    
+  }
+
+  void LinSolverDirectKLU::setOrdering(int ordering)
+  {
+    ordering_ = ordering;
+    Common_.ordering = ordering;
+  }
+
+  void LinSolverDirectKLU::setHaltIfSingular(bool isHalt)
+  {
+    halt_if_singular_ = isHalt;
+    Common_.halt_if_singular = isHalt;
+  }
+
+  real_type LinSolverDirectKLU::getMatrixConditionNumber()
+  {
+    klu_rcond(Symbolic_, Numeric_, &Common_);
+    return Common_.rcond;
   }
 }

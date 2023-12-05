@@ -223,7 +223,7 @@ namespace ReSolve
         outer_flag = 0;
         final_residual_norm_ = rnorm;
         initial_residual_norm_ = rnorm;
-        fgmres_iters_ = 0;
+        total_iters_ = 0;
         break;
       }
 
@@ -397,7 +397,7 @@ namespace ReSolve
                           << rnorm << "\n";
         
         final_residual_norm_ = rnorm;
-        fgmres_iters_ = it;
+        total_iters_ = it;
       }
     } // outer while
     return 0;
@@ -485,18 +485,4 @@ namespace ReSolve
     //  x->update(rhs->getData(memory::DEVICE), memory::DEVICE, memory::DEVICE);
   }
 
-  real_type LinSolverIterativeRandFGMRES::getFinalResidualNorm()
-  {
-    return final_residual_norm_;
-  }
-
-  real_type LinSolverIterativeRandFGMRES::getInitResidualNorm()
-  {
-    return initial_residual_norm_;
-  }
-
-  index_type LinSolverIterativeRandFGMRES::getNumIter()
-  {
-    return fgmres_iters_;
-  }
 } // namespace ReSolve

@@ -15,11 +15,12 @@ namespace ReSolve
     memspace_ = memspace;
     this->matrix_handler_ = nullptr;
     this->vector_handler_ = nullptr;
-    tol_ = 1e-14; //default
-    maxit_= 100; //default
-    restart_ = 10;
-    conv_cond_ = 0;//default
-    flexible_ = 1;
+    // Defaults:
+    // tol_ = 1e-14;
+    // maxit_= 100;
+    // restart_ = 10;
+    // conv_cond_ = 0;
+    // flexible_ = true;
 
     d_V_ = nullptr;
     d_Z_ = nullptr;
@@ -35,11 +36,12 @@ namespace ReSolve
     this->vector_handler_ = vector_handler;
     this->GS_ = gs;
 
-    tol_ = 1e-14; //default
-    maxit_= 100; //default
-    restart_ = 10;
-    conv_cond_ = 0;//default
-    flexible_ = 1;
+    // Defaults:
+    // tol_ = 1e-14;
+    // maxit_= 100;
+    // restart_ = 10;
+    // conv_cond_ = 0;
+    // flexible_ = true;
 
     d_V_ = nullptr;
     d_Z_ = nullptr;
@@ -63,7 +65,7 @@ namespace ReSolve
     maxit_= maxit; 
     restart_ = restart;
     conv_cond_ = conv_cond;
-    flexible_ = 1;
+    flexible_ = true;
 
     d_V_ = nullptr;
     d_Z_ = nullptr;
@@ -163,7 +165,7 @@ namespace ReSolve
         outer_flag = 0;
         final_residual_norm_ = rnorm;
         initial_residual_norm_ = rnorm;
-        fgmres_iters_ = 0;
+        total_iters_ = 0;
         break;
       }
 
@@ -279,7 +281,7 @@ namespace ReSolve
 
       if(!outer_flag) {
         final_residual_norm_ = rnorm;
-        fgmres_iters_ = it;
+        total_iters_ = it;
       }
     } // outer while
     return 0;
@@ -297,56 +299,6 @@ namespace ReSolve
 
   }
 
-  real_type  LinSolverIterativeFGMRES::getTol()
-  {
-    return tol_;
-  }
-
-  index_type  LinSolverIterativeFGMRES::getMaxit()
-  {
-    return maxit_;
-  }
-
-  index_type  LinSolverIterativeFGMRES::getRestart()
-  {
-    return restart_;
-  }
-
-  index_type  LinSolverIterativeFGMRES::getConvCond()
-  {
-    return conv_cond_;
-  }
-
-  bool  LinSolverIterativeFGMRES::getFlexible()
-  {
-    return flexible_;
-  }
-
-  void  LinSolverIterativeFGMRES::setTol(real_type new_tol)
-  {
-    this->tol_ = new_tol;
-  }
-
-  void  LinSolverIterativeFGMRES::setMaxit(index_type new_maxit)
-  {
-    this->maxit_ = new_maxit;
-  }
-
-  void  LinSolverIterativeFGMRES::setRestart(index_type new_restart)
-  {
-    this->restart_ = new_restart;
-  }
-
-  void  LinSolverIterativeFGMRES::setConvCond(index_type new_conv_cond)
-  {
-    this->conv_cond_ = new_conv_cond;
-  }
-  
-  void  LinSolverIterativeFGMRES::setFlexible(bool new_flex)
-  {
-    this->flexible_ = new_flex;
-  }
-
   int  LinSolverIterativeFGMRES::resetMatrix(matrix::Sparse* new_matrix)
   {
     A_ = new_matrix;
@@ -362,18 +314,4 @@ namespace ReSolve
     //  x->update(rhs->getData(memory::DEVICE), memory::DEVICE, memory::DEVICE);
   }
 
-  real_type LinSolverIterativeFGMRES::getFinalResidualNorm()
-  {
-    return final_residual_norm_;
-  }
-
-  real_type LinSolverIterativeFGMRES::getInitResidualNorm()
-  {
-    return initial_residual_norm_;
-  }
-
-  index_type LinSolverIterativeFGMRES::getNumIter()
-  {
-    return fgmres_iters_;
-  }
 }//namespace

@@ -6,21 +6,20 @@
 #include <resolve/matrix/io.hpp>
 #include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/Csr.hpp>
-#include <resolve/matrix/Csc.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
-#include <resolve/LinSolverDirectCuSolverRf.hpp>
+#include <resolve/LinSolverDirectCuSolverGLU.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
+#include <resolve/SystemSolver.hpp>
 //author: KS
-//functionality test to check whether cuSolverRf works correctly.
+//functionality test to check whether cuSolverGLU works correctly.
 
 using namespace ReSolve::constants;
 
 int main(int argc, char *argv[])
 {
   // Use ReSolve data types.
-  using index_type = ReSolve::index_type;
   using real_type  = ReSolve::real_type;
   using vector_type = ReSolve::vector::Vector;
 
@@ -35,9 +34,8 @@ int main(int argc, char *argv[])
   ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(workspace_CUDA);
   ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(workspace_CUDA);
 
-  ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
-  
-  ReSolve::LinSolverDirectCuSolverRf* Rf = new ReSolve::LinSolverDirectCuSolverRf;
+  ReSolve::SystemSolver* solver = new ReSolve::SystemSolver(workspace_CUDA);
+
   // Input to this code is location of `data` directory where matrix files are stored
   const std::string data_path = (argc == 2) ? argv[1] : "./";
 
@@ -74,6 +72,8 @@ int main(int argc, char *argv[])
   real_type* x   = new real_type[A->getNumRows()];
   vector_type* vec_rhs = new vector_type(A->getNumRows());
   vector_type* vec_x   = new vector_type(A->getNumRows());
+  vec_x->allocate(ReSolve::memory::HOST);//for KLU
+  vec_x->allocate(ReSolve::memory::DEVICE);
   vector_type* vec_r   = new vector_type(A->getNumRows());
   rhs1_file.close();
 
@@ -82,19 +82,26 @@ int main(int argc, char *argv[])
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   vec_rhs->setDataUpdated(ReSolve::memory::HOST);
 
+  status = solver->setMatrix(A);
+  error_sum += status;
+
   // Solve the first system using KLU
-  status = KLU->setup(A);
+  status = solver->analyze();
   error_sum += status;
 
-  status = KLU->analyze();
+  status = solver->factorize();
   error_sum += status;
 
-  status = KLU->factorize();
-  error_sum += status;
+  // but DO NOT SOLVE with KLU!
 
-  status = KLU->solve(vec_rhs, vec_x);
+  status = solver->refactorizationSetup();
   error_sum += status;
+  std::cout << "GLU setup status: " << status << std::endl;      
 
+  vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+  status = solver->solve(vec_rhs, vec_x);
+  error_sum += status;
+  std::cout << "GLU solve status: " << status << std::endl;      
 
   vector_type* vec_test;
   vector_type* vec_diff;
@@ -118,7 +125,7 @@ int main(int argc, char *argv[])
 
 
   //for testing only - control
-  
+ 
   real_type normXtrue = sqrt(vector_handler->dot(vec_x, vec_x, "cuda"));
   real_type normB1 = sqrt(vector_handler->dot(vec_rhs, vec_rhs, "cuda"));
   
@@ -128,7 +135,9 @@ int main(int argc, char *argv[])
   real_type normDiffMatrix1 = sqrt(vector_handler->dot(vec_diff, vec_diff, "cuda"));
  
   //compute the residual using exact solution
-  vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+  vec_x->update(vec_x->getData(ReSolve::memory::DEVICE), ReSolve::memory::DEVICE, ReSolve::memory::HOST);
+  
+  vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   status = matrix_handler->matvec(A, vec_test, vec_r, &ONE, &MINUSONE,"csr", "cuda"); 
   error_sum += status;
   real_type exactSol_normRmatrix1 = sqrt(vector_handler->dot(vec_r, vec_r, "cuda"));
@@ -149,20 +158,6 @@ int main(int argc, char *argv[])
   std::cout<<"\t ||x-x_true||_2/||x_true||_2 : " << normDiffMatrix1/normXtrue << " (scaled solution error)"        << std::endl;
   std::cout<<"\t ||b-A*x_exact||_2           : " << exactSol_normRmatrix1 << " (control; residual norm with exact solution)\n\n";
 
-  // Now prepare the Rf solver
-  
-  ReSolve::matrix::Csc* L_csc = (ReSolve::matrix::Csc*) KLU->getLFactor();
-  ReSolve::matrix::Csc* U_csc = (ReSolve::matrix::Csc*) KLU->getUFactor();
-  ReSolve::matrix::Csr* L = new ReSolve::matrix::Csr(L_csc->getNumRows(), L_csc->getNumColumns(), L_csc->getNnz());
-  ReSolve::matrix::Csr* U = new ReSolve::matrix::Csr(U_csc->getNumRows(), U_csc->getNumColumns(), U_csc->getNnz());
-  error_sum += matrix_handler->csc2csr(L_csc,L, "cuda");
-  error_sum += matrix_handler->csc2csr(U_csc,U, "cuda");
-  if (L == nullptr) {
-    std::cout << "ERROR!\n";
-  }
-  index_type* P = KLU->getPOrdering();
-  index_type* Q = KLU->getQOrdering();
-  error_sum += Rf->setup(A, L, U, P, Q); 
 
   // Load the second matrix
   std::ifstream mat2(matrixFileName2);
@@ -187,14 +182,15 @@ int main(int argc, char *argv[])
   matrix_handler->coo2csr(A_coo, A, "cuda");
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
 
-  status = Rf->refactorize();
+  status = solver->refactorize();
   error_sum += status;
 
-  status = Rf->solve(vec_rhs, vec_x);
+  std::cout<<"CUSOLVER GLU refactorization status: "<<status<<std::endl;      
+  status = solver->solve(vec_rhs, vec_x);
   error_sum += status;
 
-  vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-  matrix_handler->setValuesChanged(true, "cuda");
+   vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+   matrix_handler->setValuesChanged(true, "cuda");
 
   status = matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, "csr", "cuda"); 
   error_sum += status;
@@ -227,15 +223,14 @@ int main(int argc, char *argv[])
     error_sum++;
   }
   if (error_sum == 0) {
-    std::cout<<"Test 2 (KLU with cuSolverRf refactorization) PASSED"<<std::endl;
+    std::cout<<"Test 3 (KLU with cuSolverGLU refactorization) PASSED"<<std::endl;
   } else {
-    std::cout<<"Test 2 (KLU with cuSolverRf refactorization) FAILED, error sum: "<<error_sum<<std::endl;
+    std::cout<<"Test 3 (KLU with cuSolverGLU refactorization) FAILED, error sum: "<<error_sum<<std::endl;
   }
 
   //now DELETE
   delete A;
-  delete KLU;
-  delete Rf;
+  delete solver;
   delete [] x;
   delete [] rhs;
   delete vec_r;

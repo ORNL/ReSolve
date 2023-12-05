@@ -4,18 +4,18 @@
 
 #include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/Csr.hpp>
-#include <resolve/matrix/Csc.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/matrix/io.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
-#include <resolve/LinSolverDirectCuSolverRf.hpp>
+#include <resolve/LinSolverDirectCuSolverGLU.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
+#include <resolve/SystemSolver.hpp>
 
 using namespace ReSolve::constants;
 
-int main(int argc, char *argv[] )
+int main(int argc, char *argv[])
 {
   // Use the same data types as those you specified in ReSolve build.
   using index_type = ReSolve::index_type;
@@ -37,20 +37,16 @@ int main(int argc, char *argv[] )
 
   ReSolve::matrix::Coo* A_coo;
   ReSolve::matrix::Csr* A;
-
   ReSolve::LinAlgWorkspaceCUDA* workspace_CUDA = new ReSolve::LinAlgWorkspaceCUDA;
   workspace_CUDA->initializeHandles();
   ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(workspace_CUDA);
-  ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(workspace_CUDA);
   real_type* rhs = nullptr;
   real_type* x   = nullptr;
 
   vector_type* vec_rhs;
   vector_type* vec_x;
-  vector_type* vec_r;
 
-  ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
-  ReSolve::LinSolverDirectCuSolverRf* Rf = new ReSolve::LinSolverDirectCuSolverRf;
+  ReSolve::SystemSolver* solver = new ReSolve::SystemSolver(workspace_CUDA);
 
   for (int i = 0; i < numSystems; ++i)
   {
@@ -94,19 +90,23 @@ int main(int argc, char *argv[] )
       x = new real_type[A->getNumRows()];
       vec_rhs = new vector_type(A->getNumRows());
       vec_x = new vector_type(A->getNumRows());
-      vec_r = new vector_type(A->getNumRows());
-    }
-    else {
+      vec_x->allocate(ReSolve::memory::HOST);//for KLU
+      vec_x->allocate(ReSolve::memory::DEVICE);
+    } else {
       ReSolve::io::readAndUpdateMatrix(mat_file, A_coo);
       ReSolve::io::readAndUpdateRhs(rhs_file, &rhs);
     }
-    std::cout<<"Finished reading the matrix and rhs, size: "<<A->getNumRows()<<" x "<<A->getNumColumns()<< ", nnz: "<< A->getNnz()<< ", symmetric? "<<A->symmetric()<< ", Expanded? "<<A->expanded()<<std::endl;
+    std::cout << "Finished reading the matrix and rhs, size: " << A->getNumRows()
+              << " x " << A->getNumColumns()
+              << ", nnz: " << A->getNnz()
+              << ", symmetric? "<< A->symmetric()
+              << ", Expanded? " << A->expanded() << std::endl;
     mat_file.close();
     rhs_file.close();
 
     //Now convert to CSR.
-    if (i < 2) { 
-      matrix_handler->coo2csr(A_coo, A, "cpu");
+    if (i < 1) { 
+      matrix_handler->coo2csr(A_coo, A,  "cpu");
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
       vec_rhs->setDataUpdated(ReSolve::memory::HOST);
     } else { 
@@ -115,64 +115,40 @@ int main(int argc, char *argv[] )
     }
     std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnzExpanded()<<std::endl;
     //Now call direct solver
-    int status;
-    if (i < 2){
-      KLU->setup(A);
-      status = KLU->analyze();
-      std::cout<<"KLU analysis status: "<<status<<std::endl;
-      status = KLU->factorize();
-      std::cout<<"KLU factorization status: "<<status<<std::endl;
-      status = KLU->solve(vec_rhs, vec_x);
-      std::cout<<"KLU solve status: "<<status<<std::endl;      
-      if (i == 1) {
-        ReSolve::matrix::Csc* L_csc = (ReSolve::matrix::Csc*) KLU->getLFactor();
-        ReSolve::matrix::Csc* U_csc = (ReSolve::matrix::Csc*) KLU->getUFactor();
-        ReSolve::matrix::Csr* L = new ReSolve::matrix::Csr(L_csc->getNumRows(), L_csc->getNumColumns(), L_csc->getNnz());
-        ReSolve::matrix::Csr* U = new ReSolve::matrix::Csr(U_csc->getNumRows(), U_csc->getNumColumns(), U_csc->getNnz());
-        matrix_handler->csc2csr(L_csc,L, "cuda");
-        matrix_handler->csc2csr(U_csc,U, "cuda");
-        if (L == nullptr) {printf("ERROR");}
-        index_type* P = KLU->getPOrdering();
-        index_type* Q = KLU->getQOrdering();
-        Rf->setup(A, L, U, P, Q); 
-
-        delete L;
-        delete U;
-      }
+    solver->setMatrix(A);
+    int status = -1;
+    if (i < 1) {
+      status = solver->analyze();
+      std::cout << "KLU analysis status: " << status << std::endl;
+      status = solver->factorize();
+      std::cout << "KLU factorization status: " << status << std::endl;
+      status = solver->refactorizationSetup();
+      std::cout << "GLU refactorization setup status: " << status << std::endl;
+      status = solver->solve(vec_rhs, vec_x);
+      std::cout << "GLU solve status: " << status << std::endl;
     } else {
-      //status =  KLU->refactorize();
-      std::cout<<"Using CUSOLVER RF"<<std::endl;
-      status = Rf->refactorize();
-      std::cout<<"CUSOLVER RF refactorization status: "<<status<<std::endl;      
-      status = Rf->solve(vec_rhs, vec_x);
-      std::cout<<"CUSOLVER RF solve status: "<<status<<std::endl;      
-      //std::cout<<"KLU re-factorization status: "<<status<<std::endl;
-      //status = KLU->solve(vec_rhs, vec_x);
-      //std::cout<<"KLU solve status: "<<status<<std::endl;      
+      std::cout << "Using CUSOLVER GLU" << std::endl;
+      status = solver->refactorize();
+      std::cout << "CUSOLVER GLU refactorization status: " << status << std::endl;
+      status = solver->solve(vec_rhs, vec_x);
+      std::cout << "CUSOLVER GLU solve status: " << status << std::endl;
     }
-    vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-
-    matrix_handler->setValuesChanged(true, "cuda");
-
-    matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "cuda"); 
 
     std::cout << "\t 2-Norm of the residual: " 
               << std::scientific << std::setprecision(16) 
-              << sqrt(vector_handler->dot(vec_r, vec_r, "cuda")) << "\n";
+              << solver->getResidualNorm(vec_rhs, vec_x) << "\n";
 
   } // for (int i = 0; i < numSystems; ++i)
 
   //now DELETE
   delete A;
-  delete KLU;
-  delete Rf;
+  delete solver;
   delete [] x;
   delete [] rhs;
-  delete vec_r;
+  delete vec_rhs;
   delete vec_x;
   delete workspace_CUDA;
   delete matrix_handler;
-  delete vector_handler;
 
   return 0;
 }

@@ -36,7 +36,6 @@ int main(int argc, char *argv[])
   ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(workspace_CUDA);
 
   ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
-  KLU->setupParameters(1, 0.1, false);
   
   ReSolve::LinSolverDirectCuSolverGLU* GLU = new ReSolve::LinSolverDirectCuSolverGLU(workspace_CUDA);
   // Input to this code is location of `data` directory where matrix files are stored
@@ -145,8 +144,11 @@ int main(int argc, char *argv[])
   real_type normDiffMatrix1 = sqrt(vector_handler->dot(vec_diff, vec_diff, "cuda"));
  
   //compute the residual using exact solution
+  vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+  status = matrix_handler->matvec(A, vec_test, vec_r, &ONE, &MINUSONE, "csr", "cuda"); 
+
   vec_x->update(vec_x->getData(ReSolve::memory::DEVICE), ReSolve::memory::DEVICE, ReSolve::memory::HOST);
-  status = matrix_handler->matvec(A, vec_test, vec_r, &ONE, &MINUSONE,"csr", "cuda"); 
+  //status = matrix_handler->matvec(A, vec_test, vec_r, &ONE, &MINUSONE,"csr", "cuda"); 
   error_sum += status;
   real_type exactSol_normRmatrix1 = sqrt(vector_handler->dot(vec_r, vec_r, "cuda"));
   //evaluate the residual ON THE CPU using COMPUTED solution
@@ -226,12 +228,13 @@ int main(int argc, char *argv[])
   std::cout<<"\t ||x-x_true||_2/||x_true||_2 : "<<normDiffMatrix2/normXtrue<<" (scaled solution error)"<<std::endl;
   std::cout<<"\t ||b-A*x_exact||_2           : "<<exactSol_normRmatrix2<<" (control; residual norm with exact solution)"<<std::endl<<std::endl;
 
-
-
-  if ((error_sum == 0) && (normRmatrix1/normB1 < 1e-16 ) && (normRmatrix2/normB2 < 1e-16)) {
+  if ((normRmatrix1/normB1 > 1e-16 ) || (normRmatrix2/normB2 > 1e-16)) {
+    std::cout << "Result inaccurate!\n";
+    error_sum++;
+  }
+  if (error_sum == 0) {
     std::cout<<"Test 3 (KLU with cuSolverGLU refactorization) PASSED"<<std::endl;
   } else {
-
     std::cout<<"Test 3 (KLU with cuSolverGLU refactorization) FAILED, error sum: "<<error_sum<<std::endl;
   }
 
