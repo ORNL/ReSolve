@@ -99,8 +99,7 @@ int main(int argc, char *argv[])
       vec_x->allocate(ReSolve::memory::HOST);//for KLU
       vec_x->allocate(ReSolve::memory::DEVICE);
       vec_r = new vector_type(A->getNumRows());
-    }
-    else {
+    } else {
       ReSolve::io::readAndUpdateMatrix(mat_file, A_coo);
       ReSolve::io::readAndUpdateRhs(rhs_file, &rhs);
     }
@@ -110,11 +109,11 @@ int main(int argc, char *argv[])
 
     //Now convert to CSR.
     if (i < 2) { 
-      matrix_handler->coo2csr(A_coo, A, "cpu");
+      A->updateFromCoo(A_coo, ReSolve::memory::HOST);
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
       vec_rhs->setDataUpdated(ReSolve::memory::HOST);
     } else { 
-      matrix_handler->coo2csr(A_coo,A, "hip");
+      A->updateFromCoo(A_coo, ReSolve::memory::DEVICE);
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
     }
     std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnzExpanded()<<std::endl;

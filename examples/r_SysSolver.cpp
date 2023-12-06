@@ -107,19 +107,16 @@ int main(int argc, char *argv[])
 
     //Now convert to CSR.
     if (i < 2) { 
-      matrix_handler->coo2csr(A_coo, A, "cpu");
+      A->updateFromCoo(A_coo, ReSolve::memory::HOST);
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
       vec_rhs->setDataUpdated(ReSolve::memory::HOST);
     } else { 
-      matrix_handler->coo2csr(A_coo, A, "cpu");
+      A->updateFromCoo(A_coo, ReSolve::memory::HOST);
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
     }
     std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnzExpanded()<<std::endl;
     //Now call direct solver
     solver->setMatrix(A);
-    // if (i == 0) {
-    //   solver->setupParameters(1, 0.1, false);
-    // }
     int status;
     if (i < 2){
       // solver->setup(A);

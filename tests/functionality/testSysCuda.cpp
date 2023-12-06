@@ -54,11 +54,7 @@ int main(int argc, char *argv[])
     return -1;
   }
   ReSolve::matrix::Coo* A_coo = ReSolve::io::readMatrixFromFile(mat1);
-  ReSolve::matrix::Csr* A = new ReSolve::matrix::Csr(A_coo->getNumRows(),
-                                                     A_coo->getNumColumns(),
-                                                     A_coo->getNnz(),
-                                                     A_coo->symmetric(),
-                                                     A_coo->expanded());
+  ReSolve::matrix::Csr* A = new ReSolve::matrix::Csr(A_coo, ReSolve::memory::HOST);
   mat1.close();
 
   // Read first rhs vector
@@ -78,7 +74,6 @@ int main(int argc, char *argv[])
   rhs1_file.close();
 
   // Convert first matrix to CSR format
-  matrix_handler->coo2csr(A_coo, A, "cpu");
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   vec_rhs->setDataUpdated(ReSolve::memory::HOST);
 
@@ -116,7 +111,6 @@ int main(int argc, char *argv[])
   vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
   vec_diff->update(x_data, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
 
-  // real_type normXmatrix1 = sqrt(vector_handler->dot(vec_test, vec_test, "cuda"));
   matrix_handler->setValuesChanged(true, "cuda");
   status = matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr","cuda"); 
   error_sum += status;
@@ -179,7 +173,7 @@ int main(int argc, char *argv[])
   ReSolve::io::readAndUpdateRhs(rhs2_file, &rhs);
   rhs2_file.close();
 
-  matrix_handler->coo2csr(A_coo, A, "cuda");
+  A->updateFromCoo(A_coo, ReSolve::memory::DEVICE);
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
 
   status = solver->refactorize();

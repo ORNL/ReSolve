@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
   mat_file.close();
   rhs_file.close();
 
-  matrix_handler->coo2csr(A_coo,A, "hip");
+  A->updateFromCoo(A_coo, ReSolve::memory::DEVICE);
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
   //Now call direct solver
   real_type norm_b;

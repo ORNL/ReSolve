@@ -56,11 +56,7 @@ int main(int argc, char *argv[])
     return -1;
   }
   ReSolve::matrix::Coo* A_coo = ReSolve::io::readMatrixFromFile(mat1);
-  ReSolve::matrix::Csr* A = new ReSolve::matrix::Csr(A_coo->getNumRows(),
-                                                     A_coo->getNumColumns(),
-                                                     A_coo->getNnz(),
-                                                     A_coo->symmetric(),
-                                                     A_coo->expanded());
+  ReSolve::matrix::Csr* A = new ReSolve::matrix::Csr(A_coo, ReSolve::memory::HOST);
   mat1.close();
 
   // Read first rhs vector
@@ -80,7 +76,6 @@ int main(int argc, char *argv[])
   rhs1_file.close();
 
   // Convert first matrix to CSR format
-  matrix_handler->coo2csr(A_coo, A, "cpu");
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   vec_rhs->setDataUpdated(ReSolve::memory::HOST);
 
@@ -186,7 +181,7 @@ int main(int argc, char *argv[])
   ReSolve::io::readAndUpdateRhs(rhs2_file, &rhs);
   rhs2_file.close();
 
-  matrix_handler->coo2csr(A_coo, A, "hip");
+  A->updateFromCoo(A_coo, ReSolve::memory::DEVICE);
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
 
   // this hangs up
