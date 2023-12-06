@@ -28,24 +28,24 @@ namespace ReSolve
       LinSolverDirectCuSolverGLU(LinAlgWorkspaceCUDA* workspace);
       ~LinSolverDirectCuSolverGLU();
 
-      int refactorize();
-      int solve(vector_type* rhs, vector_type* x);
-      int solve(vector_type* x);
+      int refactorize() override;
+      int solve(vector_type* rhs, vector_type* x) override;
+      int solve(vector_type* x) override;
 
       int setup(matrix::Sparse* A,
                 matrix::Sparse* L,
                 matrix::Sparse* U,
                 index_type*     P,
                 index_type*     Q,
-                vector_type* rhs = nullptr);
+                vector_type* rhs = nullptr) override;
     
     private:
-      void addFactors(matrix::Sparse* L, matrix::Sparse* U); //create L+U from sepeate L, U factors
-      matrix::Sparse* M_;//the matrix that contains added factors
+      void addFactors(matrix::Sparse* L, matrix::Sparse* U);  ///< creates L+U from sepeate L, U factors
+      matrix::Sparse* M_; ///< the matrix that contains added factors
       //note: we need cuSolver handle, we can copy it from the workspace to avoid double allocation
       cusparseMatDescr_t descr_M_; //this is NOT sparse matrix descriptor
       cusparseMatDescr_t descr_A_; //this is NOT sparse matrix descriptor
-      LinAlgWorkspaceCUDA* workspace_;// so we can copy cusparse handle
+      LinAlgWorkspaceCUDA* workspace_; ///< Workspace access so we can copy cusparse handle
       cusolverSpHandle_t handle_cusolversp_; 
       cusolverStatus_t status_cusolver_;
       cusparseStatus_t status_cusparse_;

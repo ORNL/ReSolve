@@ -31,13 +31,13 @@ namespace ReSolve
                 matrix::Sparse* U,
                 index_type*     P,
                 index_type*     Q,
-                vector_type* rhs = nullptr);
+                vector_type* rhs = nullptr) override;
+      
+      int refactorize() override;
+      int solve(vector_type* rhs, vector_type* x) override;
+      int solve(vector_type* rhs) override; // rhs overwritten by solution
 
       void setAlgorithms(cusolverRfFactorization_t fact_alg,  cusolverRfTriangularSolve_t solve_alg);
-      
-      int refactorize();
-      int solve(vector_type* rhs, vector_type* x);
-      int solve(vector_type* rhs);// the solutuon is returned IN RHS (rhs is overwritten)
       int setNumericalProperties(double nzero, double nboost);//these two NEED TO BE DOUBLE
     private:
       cusolverRfHandle_t handle_cusolverrf_;

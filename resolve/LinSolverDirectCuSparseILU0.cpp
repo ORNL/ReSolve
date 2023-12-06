@@ -234,6 +234,7 @@ namespace ReSolve
 
     return error_sum;
   }
+
   // solution is returned in RHS
   int LinSolverDirectCuSparseILU0::solve(vector_type* rhs)
   {
@@ -309,4 +310,5 @@ namespace ReSolve
 
     return error_sum;
   }
-}// namespace resolve
+
+} // namespace resolve
