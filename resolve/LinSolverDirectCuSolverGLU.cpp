@@ -59,11 +59,11 @@ namespace ReSolve
                                            n,
                                            nnz, 
                                            descr_A_, 
-                                           A_->getRowData(memory::HOST), //kRowPtr_,
-                                           A_->getColData(memory::HOST), //jCol_, 
-                                           P, /* base-0 */
+                                           A_->getRowData(memory::HOST),
+                                           A_->getColData(memory::HOST),
+                                           P,   /* base-0 */
                                            Q,   /* base-0 */
-                                           M_->getNnz(),           /* nnzM */
+                                           M_->getNnz(),    /* nnzM */
                                            descr_M_, 
                                            M_->getRowData(memory::HOST), 
                                            M_->getColData(memory::HOST), 
@@ -86,9 +86,9 @@ namespace ReSolve
                                            /* A is original matrix */
                                            nnz, 
                                            descr_A_, 
-                                           A_->getValues( memory::DEVICE), //da_, 
-                                           A_->getRowData(memory::DEVICE), //kRowPtr_,
-                                           A_->getColData(memory::DEVICE), //jCol_, 
+                                           A_->getValues( memory::DEVICE),
+                                           A_->getRowData(memory::DEVICE),
+                                           A_->getColData(memory::DEVICE),
                                            info_M_);
     error_sum += status_cusolver_; 
 
@@ -100,7 +100,7 @@ namespace ReSolve
 
   void LinSolverDirectCuSolverGLU::addFactors(matrix::Sparse* L, matrix::Sparse* U)
   {
-// L and U need to be in CSC format
+    // L and U need to be in CSC format
     index_type n = L->getNumRows();
     index_type* Lp = L->getColData(memory::HOST); 
     index_type* Li = L->getRowData(memory::HOST); 
@@ -162,9 +162,9 @@ namespace ReSolve
                                             /* A is original matrix */
                                             A_->getNnzExpanded(),
                                             descr_A_,
-                                            A_->getValues( memory::DEVICE), //da_, 
-                                            A_->getRowData(memory::DEVICE), //kRowPtr_,
-                                            A_->getColData(memory::DEVICE), //jCol_, 
+                                            A_->getValues( memory::DEVICE),
+                                            A_->getRowData(memory::DEVICE),
+                                            A_->getColData(memory::DEVICE),
                                             info_M_);
     error_sum += status_cusolver_;
 
@@ -181,11 +181,11 @@ namespace ReSolve
                                             /* A is original matrix */
                                             A_->getNnz(),
                                             descr_A_,
-                                            A_->getValues( memory::DEVICE), //da_, 
-                                            A_->getRowData(memory::DEVICE), //kRowPtr_,
-                                            A_->getColData(memory::DEVICE), //jCol_, 
+                                            A_->getValues( memory::DEVICE),
+                                            A_->getRowData(memory::DEVICE),
+                                            A_->getColData(memory::DEVICE),
                                             rhs->getData(memory::DEVICE),/* right hand side */
-                                            x->getData(memory::DEVICE),/* left hand side */
+                                            x->getData(memory::DEVICE),  /* left hand side */
                                             &ite_refine_succ_,
                                             &r_nrminf_,
                                             info_M_,

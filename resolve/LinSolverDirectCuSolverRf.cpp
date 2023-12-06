@@ -40,9 +40,9 @@ namespace ReSolve
     error_sum += status_cusolverrf_;
     status_cusolverrf_ = cusolverRfSetupDevice(n, 
                                                A_->getNnzExpanded(),
-                                               A_->getRowData(memory::DEVICE), //dia_,
-                                               A_->getColData(memory::DEVICE), //dja_,
-                                               A_->getValues( memory::DEVICE), //da_,
+                                               A_->getRowData(memory::DEVICE),
+                                               A_->getColData(memory::DEVICE),
+                                               A_->getValues( memory::DEVICE),
                                                L->getNnz(),
                                                L->getRowData(memory::DEVICE),
                                                L->getColData(memory::DEVICE),
@@ -81,9 +81,9 @@ namespace ReSolve
     int error_sum = 0;
     status_cusolverrf_ = cusolverRfResetValues(A_->getNumRows(), 
                                                A_->getNnzExpanded(), 
-                                               A_->getRowData(memory::DEVICE), //dia_,
-                                               A_->getColData(memory::DEVICE), //dja_,
-                                               A_->getValues( memory::DEVICE), //da_,
+                                               A_->getRowData(memory::DEVICE),
+                                               A_->getColData(memory::DEVICE),
+                                               A_->getValues( memory::DEVICE),
                                                d_P_,
                                                d_Q_,
                                                handle_cusolverrf_);
@@ -128,6 +128,6 @@ namespace ReSolve
   int LinSolverDirectCuSolverRf::setNumericalProperties(double nzero, double nboost)
   {
     status_cusolverrf_ = cusolverRfSetNumericProperties(handle_cusolverrf_, nzero, nboost);
-      return status_cusolverrf_;
+    return status_cusolverrf_;
   }
 }// namespace resolve
