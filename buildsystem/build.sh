@@ -150,6 +150,9 @@ case $MY_CLUSTER in
   dl*|deception|*fat*)
     export MY_CLUSTER=deception
     ;;
+  ascent-clang*)
+    export MY_CLUSTER=ascent-clang
+    ;;
   ascent*)
     export MY_CLUSTER=ascent
     ;;
