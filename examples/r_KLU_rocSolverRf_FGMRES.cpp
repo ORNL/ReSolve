@@ -48,6 +48,7 @@ int main(int argc, char *argv[])
   vector_type* vec_rhs;
   vector_type* vec_x;
   vector_type* vec_r;
+  real_type norm_A;
 
   ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::cgs2);
   ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
@@ -187,6 +188,8 @@ int main(int argc, char *argv[])
      }
      }
 
+    matrix_handler->MatrixInfNorm(A, &norm_A, "hip"); 
+    printf("Matrix norm: %16.16e \n", norm_A);
   } // for (int i = 0; i < numSystems; ++i)
 
   delete A;

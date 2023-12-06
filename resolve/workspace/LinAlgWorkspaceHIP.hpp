@@ -1,5 +1,7 @@
 #pragma once
 
+#include <resolve/Common.hpp>
+
 #include <rocsparse/rocsparse.h>
 #include <rocblas/rocblas.h>
 #include <hip/hip_runtime.h>
@@ -18,6 +20,9 @@ namespace ReSolve
       rocsparse_handle getRocsparseHandle();      
       rocsparse_mat_descr getSpmvMatrixDescriptor();
       rocsparse_mat_info getSpmvMatrixInfo();
+      index_type getDrSize();
+      real_type* getDr();
+      real_type* getNormBuffer();
 
       void setRocblasHandle(rocblas_handle handle);
       void setRocsparseHandle(rocsparse_handle handle);
@@ -28,6 +33,10 @@ namespace ReSolve
 
       bool matvecSetup();
       void matvecSetupDone();
+      
+      void setDrSize(index_type new_sz);
+      void setDr(real_type* new_dr);
+      void setNormBuffer(real_type* nb);
 
     private:
       //handles
@@ -45,8 +54,12 @@ namespace ReSolve
 
       //info - but we need info
       rocsparse_mat_info  info_A_;
-
-      // MemoryHandler mem_; ///< Memory handler not needed for now
+      
+      real_type* d_r_{nullptr}; // needed for inf-norm
+      real_type* norm_buffer_{nullptr}; // needed for inf-norm
+      index_type d_r_size_;
+      
+      MemoryHandler mem_; ///< Memory handler not needed for now
   };
 
 } // namespace ReSolve
