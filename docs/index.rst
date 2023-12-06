@@ -153,8 +153,30 @@ call the preset flag in the cmake build step.
 
    cmake -B build --preset cluster
 
-Support
+Developing Documentation Using Dev Container
 -------
+
+ Prerequisites
+
+1. install Docker Desktop and launch the app
+2. install the "Remote Development" extension in VSCode
+3. open your local clone of resolve in VSCode
+
+Build Container
+
+The build info for this container is in `.devcontainer/`. There is a Dockerfile and json file associated with the configuration.
+
+1. if connected, disconnect from the PNNL VPN
+2. launch the container build  
+    * `cmd shift p` to open the command pallette in vscode
+    * click `> Dev Container: rebuild and reopen container`
+    * this will start building the container, taking about 40 minutes
+    * click on the pop up with `(show log)` to view the progress
+
+3. Open new terminal within VSCODe and run the renderDocs.sh (note this takes a minute)
+4. Open the link that was served to you after step 3
+
+Note - pushing/pulling from git is not supported in a devcontainer, and should be done independently.
 
 For any questions or to report a bug please submit a `GitHub
 issue <https://github.com/ORNL/ReSolve/issues>`__.
