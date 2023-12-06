@@ -23,3 +23,7 @@ void permuteVectorQ(int n,
                     int* perm_vector,
                     double* vec_in, 
                     double* vec_out);
+void vector_inf_norm(int n,  
+                     double* input,
+                     double * buffer, 
+                     double* result);
