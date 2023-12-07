@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="English" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ReSolve &mdash; ReSolve 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=eafc0fe6" />
+      <link rel="stylesheet" type="text/css" href="_static/theme_overrides.css?v=5e8a55bf" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=80cc54d1"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Developer Guidelines" href="sphinx/coding_guide/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="#" class="icon icon-home">
+            ReSolve
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Developer Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="sphinx/coding_guide/index.html">Developer Guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="doxygen/index.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sphinx/licenses.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sphinx/notice.html">Notice</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">ReSolve</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">ReSolve</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="resolve">
+<h1>ReSolve<a class="headerlink" href="#resolve" title="Link to this heading">¶</a></h1>
+<p>ReSolve is a library of GPU-resident linear solver. It contains
+iterative and direct linear solvers designed to run on NVIDIA and AMD
+GPUs, as well as on CPU devices.</p>
+<section id="getting-started">
+<h2>Getting started<a class="headerlink" href="#getting-started" title="Link to this heading">¶</a></h2>
+<p>ReSolve is maintained and developed on the
+<a class="reference external" href="https://github.com/ORNL/ReSolve">ReSolve Github Project</a>.</p>
+<p>Dependencies: - KLU, AMD and COLAMD libraries from SuiteSparse - CUDA &gt;=
+11.4 - CMake &gt;= 3.22</p>
+<p>To build it:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>https://code.ornl.gov/peles/resolve.git
+$<span class="w"> </span>mkdir<span class="w"> </span>build<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>build
+$<span class="w"> </span>cmake<span class="w"> </span>../resolve
+$<span class="w"> </span>make
+</pre></div>
+</div>
+</section>
+<section id="to-install-the-library">
+<h2>To install the library<a class="headerlink" href="#to-install-the-library" title="Link to this heading">¶</a></h2>
+<p>In the directory where you built the library run</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>make<span class="w"> </span>install
+</pre></div>
+</div>
+<p>To change the install location please use the CMAkePresets.json file as
+mentioned in <a class="reference external" href="#test-and-deploy">test and deploy</a></p>
+<p>To run it, download <a class="reference external" href="https://github.com/NREL/opf_matrices/tree/master/acopf/activsg10k">test linear
+systems</a>
+and then edit script <code class="docutils literal notranslate"><span class="pre">`runResolve</span></code> &lt;runResolve&gt;`__ to match locations
+of your linear systems and binary installation. The script will emulate
+nonlinear solver calling the linear solver repeatedly.</p>
+</section>
+<section id="to-use-the-resolve-library-in-your-own-project">
+<h2>To use the ReSolve library in your own project<a class="headerlink" href="#to-use-the-resolve-library-in-your-own-project" title="Link to this heading">¶</a></h2>
+<p>Make sure Resolve library is installed (see above)</p>
+<p>Below is an example CMakeList.txt file to use ReSolve library in your
+project</p>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">cmake_minimum_required</span><span class="p">(</span><span class="s">VERSION</span><span class="w"> </span><span class="s">3.20</span><span class="p">)</span>
+<span class="nb">project</span><span class="p">(</span><span class="s">my_app</span><span class="w"> </span><span class="s">LANGUAGES</span><span class="w"> </span><span class="s">CXX</span><span class="p">)</span>
+
+<span class="nb">find_package</span><span class="p">(</span><span class="s">ReSolve</span><span class="w"> </span><span class="s">CONFIG</span>
+<span class="w">  </span><span class="s">PATHS</span><span class="w"> </span><span class="o">${</span><span class="nv">ReSolve_DIR</span><span class="o">}</span><span class="w"> </span><span class="o">${</span><span class="nv">ReSolve_DIR</span><span class="o">}</span><span class="s">/share/resolve/cmake</span>
+<span class="w">  </span><span class="s">ENV</span><span class="w"> </span><span class="s">LD_LIBRARY_PATH</span><span class="w"> </span><span class="s">ENV</span><span class="w"> </span><span class="s">DYLD_LIBRARY_PATH</span>
+<span class="w">  </span><span class="s">REQUIRED</span><span class="p">)</span>
+
+<span class="c"># Build your executable</span>
+<span class="nb">add_executable</span><span class="p">(</span><span class="s">my_app</span><span class="w"> </span><span class="s">my_app.cpp</span><span class="p">)</span>
+<span class="nb">target_link_libraries</span><span class="p">(</span><span class="s">my_app</span><span class="w"> </span><span class="s">PRIVATE</span><span class="w"> </span><span class="s">ReSolve::ReSolve</span><span class="p">)</span>
+</pre></div>
+</div>
+<section id="documentation">
+<h3>Documentation<a class="headerlink" href="#documentation" title="Link to this heading">¶</a></h3>
+<p>User guides and source code documentation are always linked on this site.
+<a class="reference external" href="https://github.com/ORNL/ReSolve">ReSolve Github Project</a>.
+<a class="reference external" href="html/index.html">Source documentation</a></p>
+<table class="docutils align-center">
+<tbody>
+<tr class="row-odd"><td><p>Functions</p></td>
+<td><p><a class="reference external" href="doxygen/html/functions.html">Source</a></p></td>
+</tr>
+<tr class="row-even"><td><p>Namespaces</p></td>
+<td><p><a class="reference external" href="doxygen/html/namespaces.html">Source Documentation</a></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="contributing">
+<h2>Contributing<a class="headerlink" href="#contributing" title="Link to this heading">¶</a></h2>
+<p>For all contributions to ReSolve please follow the <a class="reference external" href="sphinx/coding_guide/index.html">developer
+guidelines</a></p>
+</section>
+<section id="test-and-deploy">
+<h2>Test and Deploy<a class="headerlink" href="#test-and-deploy" title="Link to this heading">¶</a></h2>
+<p>ReSolve as a library is tested every merge request via Gitlab pipelines
+that execute various library tests including a test of ReSolve being
+consumed as package within an external project as mentioned in <a class="reference external" href="#to-use-the-resolve-library-in-your-own-project">Using
+ReSolve in your own
+Project</a></p>
+<p>To test your own install of ReSolve simply cd into your ReSolve build
+directory and run</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>make<span class="w"> </span><span class="nb">test</span>
+</pre></div>
+</div>
+<p>or</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>ctest
+</pre></div>
+</div>
+<p>Below is an example of what a functional ReSolve build will ouput on
+Passing tests</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Test project /people/dane678/resolve/build
+    Start 1: resolve_consume
+1/9 Test #1: resolve_consume ..................   Passed   16.51 sec
+    Start 2: klu_klu_test
+2/9 Test #2: klu_klu_test .....................   Passed    1.04 sec
+    Start 3: klu_rf_test
+3/9 Test #3: klu_rf_test ......................   Passed    1.04 sec
+    Start 4: klu_rf_fgmres_test
+4/9 Test #4: klu_rf_fgmres_test ...............   Passed    3.14 sec
+    Start 5: klu_glu_test
+5/9 Test #5: klu_glu_test .....................   Passed    1.06 sec
+    Start 6: matrix_test
+6/9 Test #6: matrix_test ......................   Passed    0.03 sec
+    Start 7: matrix_handler_test
+7/9 Test #7: matrix_handler_test ..............   Passed    0.97 sec
+    Start 8: vector_handler_test
+8/9 Test #8: vector_handler_test ..............   Passed    0.98 sec
+    Start 9: logger_test
+9/9 Test #9: logger_test ......................   Passed    0.03 sec
+</pre></div>
+</div>
+</section>
+<section id="important-notes">
+<h2>Important Notes<a class="headerlink" href="#important-notes" title="Link to this heading">¶</a></h2>
+<p>You can find default Cmake Configurations in the CMakePresets.json file,
+which allows for easy switching between different CMake Configs. To
+create your own CMake Configuration we encourage you to utlize a
+CmakeUserPresets.json file. To learn more about cmake-presets please
+checkout the cmake
+<a class="reference external" href="https://cmake.org/cmake/help/latest/manual/cmake-presets.7.html">docs</a></p>
+<p>For example if you wanted to build and install ReSolve on a High
+Performance Computing Cluster such as PNNL’s Deception or ORNL’s Ascent
+we encourage you to utilize our cluster preset. Using this preset will
+set CMAKE_INSTALL_PREFIX to an install folder. To use this preset simply
+call the preset flag in the cmake build step.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>cmake<span class="w"> </span>-B<span class="w"> </span>build<span class="w"> </span>--preset<span class="w"> </span>cluster
+</pre></div>
+</div>
+</section>
+<section id="support">
+<h2>Support<a class="headerlink" href="#support" title="Link to this heading">¶</a></h2>
+<p>For any questions or to report a bug please submit a <a class="reference external" href="https://github.com/ORNL/ReSolve/issues">GitHub
+issue</a>.</p>
+</section>
+<section id="authors-and-acknowledgment">
+<h2>Authors and acknowledgment<a class="headerlink" href="#authors-and-acknowledgment" title="Link to this heading">¶</a></h2>
+<p>Primary authors of this project are Kasia Świrydowicz
+<a class="reference external" href="mailto:kasia&#46;swirydowicz&#37;&#52;&#48;pnnl&#46;gov">kasia<span>&#46;</span>swirydowicz<span>&#64;</span>pnnl<span>&#46;</span>gov</a> and Slaven Peles <a class="reference external" href="mailto:peless&#37;&#52;&#48;ornl&#46;gov">peless<span>&#64;</span>ornl<span>&#46;</span>gov</a>.</p>
+<p>ReSolve project would not be possible without significant contributions
+from (in alphabetic ortder): - Maksudul Alam - Ryan Danehy - Nicholson
+Koukpaizan - Jaelyn Litzinger - Phil Roth - Cameron Rutherford</p>
+<p>Development of this coede was supported by the Exascale Computing
+Project (ECP), Project Number: 17-SC-20-SC, a collaborative effort of
+two DOE organizations—the Office of Science and the National Nuclear
+Security Administration—responsible for the planning and preparation of
+a capable exascale ecosystem—including software, applications, hardware,
+advanced system engineering, and early testbed platforms—to support the
+nation’s exascale computing imperative.</p>
+</section>
+<section id="license">
+<h2>License<a class="headerlink" href="#license" title="Link to this heading">¶</a></h2>
+<p>Copyright © 2023, UT-Battelle, LLC, and Battelle Memorial Institute.</p>
+<p>ReSolve is a free software distributed under a BSD-style license. See
+the <a class="reference external" href="sphinx/license.rst">LICENSE</a> and <a class="reference external" href="sphinx/notice.rst">NOTICE</a> files for details. All
+new contributions to ReSolve must be made under the same licensing
+terms.</p>
+<div class="toctree-wrapper compound">
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="sphinx/coding_guide/index.html" class="btn btn-neutral float-right" title="Developer Guidelines" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, UT-Battelle, LLC, and Battelle Memorial Institute.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
