@@ -31,6 +31,7 @@ namespace ReSolve
       cusparseDnVecDescr_t  getVecY();
       index_type getDrSize();
       real_type* getDr();
+      bool getNormBufferState();
 
 
       void setCublasHandle(cublasHandle_t handle);
@@ -39,6 +40,7 @@ namespace ReSolve
       void setSpmvMatrixDescriptor(cusparseSpMatDescr_t mat);
       void setDrSize(index_type new_sz);
       void setDr(real_type* new_dr);
+      void setNormBufferState(bool r);
 
       void initializeHandles();
 
@@ -66,7 +68,8 @@ namespace ReSolve
       
       real_type* d_r_{nullptr}; // needed for one-norm
       index_type d_r_size_{0};
-
+      bool norm_buffer_ready_{false};// to track if allocated 
+    
       MemoryHandler mem_;
   };
 

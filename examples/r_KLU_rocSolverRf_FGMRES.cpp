@@ -186,7 +186,9 @@ int main(int argc, char *argv[])
         << "\t Residual inf norm: " << norm_r <<"\n"  
         << "\t Solution inf norm: " << norm_x <<"\n"  
         << "\t Norm of scaled residuals: "<< norm_r / (norm_A * norm_x) << "\n";
+
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+
       if(!std::isnan(rnrm) && !std::isinf(rnrm)) {
         FGMRES->solve(vec_rhs, vec_x);
 

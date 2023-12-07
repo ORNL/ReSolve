@@ -54,6 +54,7 @@ namespace ReSolve { //namespace vector {
                         vector::Vector* y,
                         vector::Vector* x);
     private:
+      MemoryHandler mem_; ///< Device memory manager object
       LinAlgWorkspaceCUDA* workspace_;
   };
 

@@ -121,10 +121,11 @@ namespace ReSolve {
 
   int MatrixHandlerCuda::matrixInfNorm(matrix::Sparse* A, real_type* norm)
   {
-    if (workspace_->getNormBuffer() == nullptr) {
-      void* buffer;
-      mem_.allocateBufferOnDevice(&buffer, (size_t) 8192);
+    if (workspace_->getNormBufferState() == false) { // not allocated  
+      real_type* buffer;
+      mem_.allocateArrayOnDevice(&buffer, 1024);
       workspace_->setNormBuffer(buffer);
+      workspace_->setNormBufferState(true);
     }
 
     real_type* d_r = workspace_->getDr();
