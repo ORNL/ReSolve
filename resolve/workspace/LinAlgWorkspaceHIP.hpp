@@ -50,10 +50,10 @@ namespace ReSolve
 
       //buffers
       // there is no buffer needed in matvec
-      bool matvec_setup_done_; //check if setup is done for matvec (note: no buffer but there is analysis)
+      bool matvec_setup_done_{false}; //check if setup is done for matvec (note: no buffer but there is analysis)
 
       //info - but we need info
-      rocsparse_mat_info  info_A_;
+      rocsparse_mat_info info_A_;
       
       real_type* d_r_{nullptr}; // needed for inf-norm
       real_type* norm_buffer_{nullptr}; // needed for inf-norm

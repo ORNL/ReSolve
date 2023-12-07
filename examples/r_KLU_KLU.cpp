@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
     int status;
 
     matrix_handler->MatrixInfNorm(A, &norm_A, "cpu"); 
-    printf("Matrix norm: %16.16e \n", norm_A);
+    std::cout << "\tMatrix norm: " << std::scientific << std::setprecision(16) << norm_A << "\n";
     if (i < 2){
       KLU->setup(A);
       status = KLU->analyze();

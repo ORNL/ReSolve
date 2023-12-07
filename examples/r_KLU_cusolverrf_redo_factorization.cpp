@@ -106,8 +106,7 @@ int main(int argc, char *argv[] )
       vec_rhs = new vector_type(A->getNumRows());
       vec_x = new vector_type(A->getNumRows());
       vec_r = new vector_type(A->getNumRows());
-    }
-    else {
+    } else {
       ReSolve::io::readAndUpdateMatrix(mat_file, A_coo);
       ReSolve::io::readAndUpdateRhs(rhs_file, &rhs);
     }
@@ -129,7 +128,7 @@ int main(int argc, char *argv[] )
     if (i == 0) {
       KLU->setupParameters(1, 0.1, false);
     }
-    if (i < 2){
+    if (i < 2) {
       KLU->setup(A);
       status = KLU->analyze();
       std::cout<<"KLU analysis status: "<<status<<std::endl;
@@ -144,9 +143,9 @@ int main(int argc, char *argv[] )
         ReSolve::matrix::Csr* U = new ReSolve::matrix::Csr(U_csc->getNumRows(), U_csc->getNumColumns(), U_csc->getNnz());
         matrix_handler->csc2csr(L_csc,L, "cuda");
         matrix_handler->csc2csr(U_csc,U, "cuda");
-
-
-        if (L == nullptr) {printf("ERROR");}
+        if (L == nullptr) {
+          std::cout << "ERROR\n";
+        }
         P = KLU->getPOrdering();
         Q = KLU->getQOrdering();
         Rf->setup(A, L, U, P, Q); 
@@ -167,10 +166,10 @@ int main(int argc, char *argv[] )
 
     matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "cuda"); 
     res_nrm = sqrt(vector_handler->dot(vec_r, vec_r, "cuda"));
-    b_nrm = sqrt(vector_handler->dot(vec_rhs, vec_rhs, "cuda"));
-    std::cout << "\t 2-Norm of the residual: " 
-      << std::scientific << std::setprecision(16) 
-      << res_nrm/b_nrm << "\n";
+    b_nrm   = sqrt(vector_handler->dot(vec_rhs, vec_rhs, "cuda"));
+    std::cout << "\t2-Norm of the residual: " 
+              << std::scientific << std::setprecision(16) 
+              << res_nrm/b_nrm << "\n";
     if (((res_nrm/b_nrm > 1e-7 ) && (!std::isnan(res_nrm))) || (status_refactor != 0 )) {
       if ((res_nrm/b_nrm > 1e-7 )) {
         std::cout << "\n \t !!! ALERT !!! Residual norm is too large; redoing KLU symbolic and numeric factorization. !!! ALERT !!! \n \n";
@@ -193,9 +192,9 @@ int main(int argc, char *argv[] )
       matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "cuda"); 
       res_nrm = sqrt(vector_handler->dot(vec_r, vec_r, "cuda"));
 
-      std::cout<<"\t New residual norm: "
-        << std::scientific << std::setprecision(16)
-        << res_nrm/b_nrm << "\n";
+      std::cout <<"\t New residual norm: "
+                << std::scientific << std::setprecision(16)
+                << res_nrm/b_nrm << "\n";
 
 
       L_csc = (ReSolve::matrix::Csc*) KLU->getLFactor();
@@ -215,9 +214,6 @@ int main(int argc, char *argv[] )
       delete L;
       delete U;
     }
-
-
-
   } // for (int i = 0; i < numSystems; ++i)
 
   //now DELETE

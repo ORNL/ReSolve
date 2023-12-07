@@ -46,7 +46,7 @@ namespace ReSolve
       index_type* d_P_{nullptr};
       index_type* d_Q_{nullptr};
       real_type* d_T_{nullptr};
-      bool setup_completed_;
+      bool setup_completed_{false};
       
       MemoryHandler mem_; ///< Device memory manager object
   };

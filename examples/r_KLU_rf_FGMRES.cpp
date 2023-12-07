@@ -141,8 +141,12 @@ int main(int argc, char *argv[])
       matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "cuda"); 
     
       matrix_handler->MatrixInfNorm(A, &norm_A, "cuda"); 
-      printf("Matrix norm: %16.16e \n", norm_A);
-      printf("\t 2-Norm of the residual : %16.16e\n", sqrt(vector_handler->dot(vec_r, vec_r, "cuda"))/norm_b);
+      std::cout << "\tMatrix norm:            "
+                << std::scientific << std::setprecision(16)
+                << norm_A << "\n";
+      std::cout << "\t2-Norm of the residual: "
+                << std::scientific << std::setprecision(16) 
+                << sqrt(vector_handler->dot(vec_r, vec_r, "cuda"))/norm_b << "\n";
       if (i == 1) {
         ReSolve::matrix::Csc* L_csc = (ReSolve::matrix::Csc*) KLU->getLFactor();
         ReSolve::matrix::Csc* U_csc = (ReSolve::matrix::Csc*) KLU->getUFactor();
@@ -150,7 +154,9 @@ int main(int argc, char *argv[])
         ReSolve::matrix::Csr* U = new ReSolve::matrix::Csr(U_csc->getNumRows(), U_csc->getNumColumns(), U_csc->getNnz());
         matrix_handler->csc2csr(L_csc,L, "cuda");
         matrix_handler->csc2csr(U_csc,U, "cuda");
-        if (L == nullptr) {printf("ERROR");}
+        if (L == nullptr) {
+          std::cout << "ERROR\n";
+        }
         index_type* P = KLU->getPOrdering();
         index_type* Q = KLU->getQOrdering();
         Rf->setup(A, L, U, P, Q);
@@ -167,7 +173,7 @@ int main(int argc, char *argv[])
       std::cout<<"CUSOLVER RF solve status: "<<status<<std::endl;      
 
       matrix_handler->MatrixInfNorm(A, &norm_A, "cuda"); 
-      printf("Matrix norm: %16.16e \n", norm_A);
+      std::cout << "\tMatrix norm: " << std::scientific << std::setprecision(16) << norm_A << "\n";
       vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
       norm_b = vector_handler->dot(vec_r, vec_r, "cuda");
       norm_b = sqrt(norm_b);

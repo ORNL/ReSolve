@@ -55,16 +55,17 @@ namespace ReSolve
       cusparseSpMatDescr_t mat_A_; 
 
       //vector descriptors
-      cusparseDnVecDescr_t vec_x_, vec_y_;
+      cusparseDnVecDescr_t vec_x_;
+      cusparseDnVecDescr_t vec_y_;
 
       //buffers
-      void* buffer_spmv_;
+      void* buffer_spmv_{nullptr};
       void* buffer_1norm_{nullptr};
 
-      bool matvec_setup_done_; //check if setup is done for matvec i.e. if buffer is allocated, csr structure is set etc.
+      bool matvec_setup_done_{false}; //check if setup is done for matvec i.e. if buffer is allocated, csr structure is set etc.
       
-      real_type* d_r_; // needed for one-norm
-      index_type d_r_size_;
+      real_type* d_r_{nullptr}; // needed for one-norm
+      index_type d_r_size_{0};
 
       MemoryHandler mem_;
   };

@@ -140,11 +140,15 @@ int main(int argc, char *argv[])
       norm_b = sqrt(norm_b);
       matrix_handler->setValuesChanged(true, "hip");
       matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "hip"); 
-      printf("\t 2-Norm of the residual : %16.16e\n", sqrt(vector_handler->dot(vec_r, vec_r, "hip"))/norm_b);
+      std::cout << "\t2-Norm of the residual: "
+                << std::scientific << std::setprecision(16) 
+                << sqrt(vector_handler->dot(vec_r, vec_r, "hip"))/norm_b << "\n";
       if (i == 1) {
         ReSolve::matrix::Csc* L = (ReSolve::matrix::Csc*) KLU->getLFactor();
         ReSolve::matrix::Csc* U = (ReSolve::matrix::Csc*) KLU->getUFactor();
-        if (L == nullptr) {printf("ERROR");}
+        if (L == nullptr) {
+          std::cout << "ERROR\n";
+        }
         index_type* P = KLU->getPOrdering();
         index_type* Q = KLU->getQOrdering();
         Rf->setSolveMode(1);
@@ -189,7 +193,7 @@ int main(int argc, char *argv[])
      }
 
     matrix_handler->MatrixInfNorm(A, &norm_A, "hip"); 
-    printf("Matrix norm: %16.16e \n", norm_A);
+    std::cout << "\tMatrix norm: " << std::scientific << std::setprecision(16) << norm_A << "\n";
   } // for (int i = 0; i < numSystems; ++i)
 
   delete A;

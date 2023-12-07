@@ -108,7 +108,6 @@ namespace ReSolve {
   {
     // we assume A is in CSR format
     real_type* d_r = workspace_->getDr();
-    printf("d_r size %d \n", workspace_->getDrSize());
     if (workspace_->getDrSize() != A->getNumRows()) {
       if (d_r != nullptr) {
         mem_.deleteOnDevice(d_r);

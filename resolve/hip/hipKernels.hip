@@ -3,7 +3,7 @@
 #include <hip/hip_runtime.h>
 
 //computes V^T[u1 u2] where v is n x k and u1 and u2 are nx1
-  template <size_t Tv5 = 1024>
+template <size_t Tv5 = 1024>
 __global__ void MassIPTwoVec_kernel(const double* __restrict__ u1, 
                                     const double* __restrict__ u2, 
                                     const double* __restrict__ v, 
@@ -94,7 +94,7 @@ __global__ void MassIPTwoVec_kernel(const double* __restrict__ u1,
 
 
 /// mass AXPY i.e y = y - x*alpha where alpha is [k x 1], needed in 1 and 2 synch GMRES
-  template <size_t Tmaxk = 1024>
+template <size_t Tmaxk = 1024>
 __global__ void massAxpy3_kernel(int N,
                                  int k,
                                  const double* x_data,
@@ -166,7 +166,6 @@ __global__ void vectorInfNorm(const int n,
   }
   s_max[t] = local_max;
   __syncthreads();
-  __syncthreads();
 
   // reduction
 
@@ -210,7 +209,6 @@ __global__ void vectorInfNorm(const int n,
   if (t == 0) {
     int bid = blockIdx.x;
     int gid = gridDim.x;
-    //printf("putting %15.16e in place %d, GridDim %d \n", s_max[0], bid, gid);
     result[blockIdx.x] = s_max[0];
   }
 }
