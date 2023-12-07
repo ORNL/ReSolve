@@ -1,5 +1,5 @@
-Developer Guidelines
-====================
+Code Style Guidelines
+======================
 
 Code Style
 ----------
@@ -219,12 +219,27 @@ Using namespaces
 ~~~~~~~~~~~~~~~~
 
 All classes should be in namespace ``ReSolve``. If needed, define
-additional namespaces inside ``ReSolve``. \```c++ namespace ReSolve {
-class Solver // Yes, class defined inside ReSolve namespace { // some
-code; };
+additional namespaces inside ``ReSolve``.
 
-namespace LinearAlgebra { class Vector // Yes, class defined inside
-ReSolve namespace { // vector code }; } }
+.. code:: cpp
+   
+   namespace ReSolve 
+   {
+      class Solver // Yes, class defined inside ReSolve namespace 
+      { 
+         // some code; 
+      };
 
-class Matrix // No, class is outside ReSolve namespace { // matrix code
-};
+      namespace LinearAlgebra 
+      { 
+         class Vector // Yes, class defined inside ReSolve namespace 
+         { 
+            // vector code 
+         }; 
+      } 
+   }
+
+   class Matrix // No, class is outside ReSolve namespace 
+   { 
+      // matrix code
+   };
