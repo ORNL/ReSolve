@@ -9,13 +9,15 @@ namespace ReSolve
     handle_cublas_     = nullptr;
     buffer_spmv_       = nullptr;
     buffer_1norm_      = nullptr;    
-
+    d_r_               = nullptr;
+    d_r_size_          = 0; 
     matvec_setup_done_ = false;
   }
 
   LinAlgWorkspaceCUDA::~LinAlgWorkspaceCUDA()
   {
     if (buffer_spmv_ != nullptr)  mem_.deleteOnDevice(buffer_spmv_);
+    if (d_r_size_ != 0)  mem_.deleteOnDevice(d_r_);
     if (buffer_1norm_ != nullptr) mem_.deleteOnDevice(buffer_1norm_);
     cusparseDestroy(handle_cusparse_);
     cusolverSpDestroy(handle_cusolversp_);
@@ -51,6 +53,16 @@ namespace ReSolve
   void LinAlgWorkspaceCUDA::setCusparseHandle(cusparseHandle_t handle)
   {
     handle_cusparse_ = handle;
+  }
+
+  void LinAlgWorkspaceCUDA::setDrSize(index_type new_sz)
+  {
+    d_r_size_ = new_sz;
+  }
+  
+  void LinAlgWorkspaceCUDA::setDr(double* new_dr)
+  {
+    d_r_ = new_dr;
   }
 
   cublasHandle_t LinAlgWorkspaceCUDA::getCublasHandle()
@@ -93,6 +105,15 @@ namespace ReSolve
     return vec_y_;
   }
 
+  index_type  LinAlgWorkspaceCUDA::getDrSize()
+  {
+    return d_r_size_;
+  }
+
+  real_type*  LinAlgWorkspaceCUDA::getDr()
+  {
+    return d_r_;
+  }
   bool LinAlgWorkspaceCUDA::matvecSetup()
   {
     return matvec_setup_done_;

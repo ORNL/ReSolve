@@ -46,7 +46,8 @@ int main(int argc, char *argv[])
   vector_type* vec_rhs;
   vector_type* vec_x;
   vector_type* vec_r;
-
+  real_type norm_A;
+  
   ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
 
   for (int i = 0; i < numSystems; ++i)
@@ -120,6 +121,9 @@ int main(int argc, char *argv[])
       KLU->setupParameters(1, 0.1, false);
     }
     int status;
+
+    matrix_handler->MatrixInfNorm(A, &norm_A, "cpu"); 
+    printf("Matrix norm: %16.16e \n", norm_A);
     if (i < 2){
       KLU->setup(A);
       status = KLU->analyze();
