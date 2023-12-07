@@ -104,24 +104,28 @@ namespace ReSolve {
     }
   }
 
-  int MatrixHandlerHip::MatrixInfNorm(matrix::Sparse* A, real_type* norm)
+  int MatrixHandlerHip::matrixInfNorm(matrix::Sparse* A, real_type* norm)
   {
     // we assume A is in CSR format
     real_type* d_r = workspace_->getDr();
-    if (workspace_->getDrSize() != A->getNumRows()) {
-      if (d_r != nullptr) {
+    index_type d_r_size = workspace_->getDrSize();
+    
+    if (d_r_size != A->getNumRows()) {
+      if (d_r_size != 0) {
         mem_.deleteOnDevice(d_r);
       }
       mem_.allocateArrayOnDevice(&d_r, A->getNumRows());
       workspace_->setDrSize(A->getNumRows());
       workspace_->setDr(d_r);
     }
-    if (workspace_->getNormBuffer() == nullptr) {
+    
+    if (workspace_->getNormBufferState() == false) { // not allocated  
       real_type* buffer;
       mem_.allocateArrayOnDevice(&buffer, 1024);
       workspace_->setNormBuffer(buffer);
+      workspace_->setNormBufferState(true);
     }
-    
+
     mem_.deviceSynchronize();
     matrix_row_sums(A->getNumRows(),
                     A->getNnzExpanded(),
@@ -129,12 +133,11 @@ namespace ReSolve {
                     A->getValues(memory::DEVICE),
                     d_r);
     mem_.deviceSynchronize();
-    
+
     vector_inf_norm(A->getNumRows(),  
                     d_r, 
                     workspace_->getNormBuffer(),
                     norm);
-    //*norm = 1.0;
     return 0;
   }
 

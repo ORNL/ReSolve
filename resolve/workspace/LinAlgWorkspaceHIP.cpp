@@ -11,6 +11,7 @@ namespace ReSolve
     d_r_               = nullptr;
     d_r_size_          = 0; 
     norm_buffer_       = nullptr;
+    norm_buffer_ready_ = false;
   }
 
   LinAlgWorkspaceHIP::~LinAlgWorkspaceHIP()
@@ -19,7 +20,7 @@ namespace ReSolve
     rocblas_destroy_handle(handle_rocblas_);
     rocsparse_destroy_mat_descr(mat_A_);
     if (d_r_size_ != 0)  mem_.deleteOnDevice(d_r_);
-    if (norm_buffer_ != nullptr)  mem_.deleteOnDevice(d_r_);
+    if (norm_buffer_ready_ == true)  mem_.deleteOnDevice(norm_buffer_);
   }
 
   rocsparse_handle LinAlgWorkspaceHIP::getRocsparseHandle()
@@ -77,6 +78,11 @@ namespace ReSolve
     norm_buffer_ = nb;
   }
   
+  void LinAlgWorkspaceHIP::setNormBufferState(bool r)
+  {
+    norm_buffer_ready_ = r;;
+  }
+  
   bool LinAlgWorkspaceHIP::matvecSetup()
   {
     return matvec_setup_done_;
@@ -101,6 +107,11 @@ namespace ReSolve
   real_type*  LinAlgWorkspaceHIP::getDr()
   {
     return d_r_;
+  }
+  
+  bool  LinAlgWorkspaceHIP::getNormBufferState()
+  {
+    return norm_buffer_ready_;
   }
   
   real_type*  LinAlgWorkspaceHIP::getNormBuffer()

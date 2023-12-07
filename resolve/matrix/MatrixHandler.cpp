@@ -302,14 +302,14 @@ namespace ReSolve {
     }
   }
 
-  int MatrixHandler::MatrixInfNorm(matrix::Sparse *A, real_type* norm, std::string memspace) {
+  int MatrixHandler::matrixInfNorm(matrix::Sparse *A, real_type* norm, std::string memspace) {
 
     if (memspace == "cuda" ) {
-      return cudaImpl_->MatrixInfNorm(A, norm);
+      return cudaImpl_->matrixInfNorm(A, norm);
     } else if (memspace == "cpu") {
-      return cpuImpl_->MatrixInfNorm(A, norm);
+      return cpuImpl_->matrixInfNorm(A, norm);
     } else if (memspace == "hip") {
-      return hipImpl_->MatrixInfNorm(A, norm);
+      return hipImpl_->matrixInfNorm(A, norm);
     } else {
         out::error() << "Support for device " << memspace << " not implemented (yet)" << std::endl;
         return 1;

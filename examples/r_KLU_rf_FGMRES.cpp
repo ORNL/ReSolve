@@ -140,7 +140,7 @@ int main(int argc, char *argv[])
       matrix_handler->setValuesChanged(true, "cuda");
       matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "cuda"); 
     
-      matrix_handler->MatrixInfNorm(A, &norm_A, "cuda"); 
+      matrix_handler->matrixInfNorm(A, &norm_A, "cuda"); 
       std::cout << "\tMatrix norm:            "
                 << std::scientific << std::setprecision(16)
                 << norm_A << "\n";
@@ -172,7 +172,7 @@ int main(int argc, char *argv[])
       status = Rf->solve(vec_rhs, vec_x);
       std::cout<<"CUSOLVER RF solve status: "<<status<<std::endl;      
 
-      matrix_handler->MatrixInfNorm(A, &norm_A, "cuda"); 
+      matrix_handler->matrixInfNorm(A, &norm_A, "cuda"); 
       std::cout << "\tMatrix norm: " << std::scientific << std::setprecision(16) << norm_A << "\n";
       vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
       norm_b = vector_handler->dot(vec_r, vec_r, "cuda");

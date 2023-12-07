@@ -63,7 +63,7 @@ namespace ReSolve {
                  const real_type* beta,
                  std::string matrix_type,
                  std::string memspace);
-      int MatrixInfNorm(matrix::Sparse *A, real_type* norm, std::string memspace);
+      int matrixInfNorm(matrix::Sparse *A, real_type* norm, std::string memspace);
       void setValuesChanged(bool toWhat, std::string memspace); 
     
     private: 

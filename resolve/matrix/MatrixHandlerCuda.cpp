@@ -119,7 +119,7 @@ namespace ReSolve {
     }
   }
 
-  int MatrixHandlerCuda::MatrixInfNorm(matrix::Sparse* A, real_type* norm)
+  int MatrixHandlerCuda::matrixInfNorm(matrix::Sparse* A, real_type* norm)
   {
     if (workspace_->getNormBuffer() == nullptr) {
       void* buffer;

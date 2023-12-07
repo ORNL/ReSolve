@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
   vector_type* vec_rhs;
   vector_type* vec_x;
   vector_type* vec_r;
-  real_type norm_A;
+  real_type norm_A, norm_x, norm_r;//used for INF norm
 
   ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::cgs2);
   ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
@@ -132,7 +132,7 @@ int main(int argc, char *argv[])
       std::cout<<"KLU analysis status: "<<status<<std::endl;
       status = KLU->factorize();
       std::cout<<"KLU factorization status: "<<status<<std::endl;
-     
+
       status = KLU->solve(vec_rhs, vec_x);
       std::cout<<"KLU solve status: "<<status<<std::endl;      
       vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
@@ -141,8 +141,8 @@ int main(int argc, char *argv[])
       matrix_handler->setValuesChanged(true, "hip");
       matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "hip"); 
       std::cout << "\t2-Norm of the residual: "
-                << std::scientific << std::setprecision(16) 
-                << sqrt(vector_handler->dot(vec_r, vec_r, "hip"))/norm_b << "\n";
+        << std::scientific << std::setprecision(16) 
+        << sqrt(vector_handler->dot(vec_r, vec_r, "hip"))/norm_b << "\n";
       if (i == 1) {
         ReSolve::matrix::Csc* L = (ReSolve::matrix::Csc*) KLU->getLFactor();
         ReSolve::matrix::Csc* U = (ReSolve::matrix::Csc*) KLU->getUFactor();
@@ -172,28 +172,34 @@ int main(int argc, char *argv[])
       //matrix_handler->setValuesChanged(true, "hip");
       FGMRES->resetMatrix(A);
       FGMRES->setupPreconditioner("LU", Rf);
-      
+
       matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "hip"); 
       real_type rnrm = sqrt(vector_handler->dot(vec_r, vec_r, "hip"));
       std::cout << "\t 2-Norm of the residual (before IR): " 
-                << std::scientific << std::setprecision(16) 
-                << rnrm/norm_b << "\n";
+        << std::scientific << std::setprecision(16) 
+        << rnrm/norm_b << "\n";
 
+      matrix_handler->matrixInfNorm(A, &norm_A, "hip"); 
+      norm_x = vector_handler->infNorm(vec_x, "hip");
+      norm_r = vector_handler->infNorm(vec_r, "hip");
+      std::cout << "\t Matrix inf  norm: " << std::scientific << std::setprecision(16) << norm_A<<"\n"
+        << "\t Residual inf norm: " << norm_r <<"\n"  
+        << "\t Solution inf norm: " << norm_x <<"\n"  
+        << "\t Norm of scaled residuals: "<< norm_r / (norm_A * norm_x) << "\n";
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-     if(!std::isnan(rnrm) && !std::isinf(rnrm)) {
-      FGMRES->solve(vec_rhs, vec_x);
+      if(!std::isnan(rnrm) && !std::isinf(rnrm)) {
+        FGMRES->solve(vec_rhs, vec_x);
 
-      std::cout << "FGMRES: init nrm: " 
-                << std::scientific << std::setprecision(16) 
-                << FGMRES->getInitResidualNorm()/norm_b
-                << " final nrm: "
-                << FGMRES->getFinalResidualNorm()/norm_b
-                << " iter: " << FGMRES->getNumIter() << "\n";
-     }
-     }
+        std::cout << "FGMRES: init nrm: " 
+          << std::scientific << std::setprecision(16) 
+          << FGMRES->getInitResidualNorm()/norm_b
+          << " final nrm: "
+          << FGMRES->getFinalResidualNorm()/norm_b
+          << " iter: " << FGMRES->getNumIter() << "\n";
+      }
 
-    matrix_handler->MatrixInfNorm(A, &norm_A, "hip"); 
-    std::cout << "\tMatrix norm: " << std::scientific << std::setprecision(16) << norm_A << "\n";
+    }
+
   } // for (int i = 0; i < numSystems; ++i)
 
   delete A;

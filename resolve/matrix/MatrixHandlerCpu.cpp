@@ -79,7 +79,7 @@ namespace ReSolve {
     }
   }
 
-  int MatrixHandlerCpu::MatrixInfNorm(matrix::Sparse* A, real_type* norm)
+  int MatrixHandlerCpu::matrixInfNorm(matrix::Sparse* A, real_type* norm)
   {
     real_type sum, nrm;
     index_type i, j;

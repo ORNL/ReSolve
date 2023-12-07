@@ -14,7 +14,7 @@ int main(int, char**)
     ReSolve::tests::MatrixHandlerTests test("cpu");
       
     result += test.matrixHandlerConstructor();
-    result += test.matrixOneNorm();
+    result += test.matrixInfNorm(10000);
     result += test.matVec(50);
 
     std::cout << "\n";
@@ -26,7 +26,7 @@ int main(int, char**)
     ReSolve::tests::MatrixHandlerTests test("cuda");
 
     result += test.matrixHandlerConstructor();
-    result += test.matrixOneNorm();
+    result += test.matrixInfNorm(1000000);
     result += test.matVec(50);
 
     std::cout << "\n";
@@ -39,7 +39,7 @@ int main(int, char**)
     ReSolve::tests::MatrixHandlerTests test("hip");
 
     result += test.matrixHandlerConstructor();
-    result += test.matrixOneNorm();
+    result += test.matrixInfNorm(1000000);
     result += test.matVec(50);
 
     std::cout << "\n";

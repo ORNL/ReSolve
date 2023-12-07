@@ -130,7 +130,7 @@ __global__ void matrixInfNormPart1(const int n,
   // one thread per row, pass through rows
   // and sum
   // can be done through atomics
-  //\sum_{j=1}^m abs(a_{ij})
+  //\sum_{j=1}^m fabs(a_{ij})
 
   int idx = blockIdx.x*blockDim.x + threadIdx.x;
   while (idx < n) {
@@ -155,13 +155,13 @@ __global__ void vectorInfNorm(const int n,
   int bsize = blockDim.x;
   double local_max = 0.0;
   if (idx < n) {
-    local_max = abs(input[idx]);
+    local_max = fabs(input[idx]);
   }
 
   idx += (blockDim.x*gridDim.x);
   
   while (idx < n) {
-    local_max = max(abs(input[idx]), local_max);
+    local_max = fmax(fabs(input[idx]), local_max);
     idx += (blockDim.x*gridDim.x);
   }
   s_max[t] = local_max;
@@ -171,39 +171,39 @@ __global__ void vectorInfNorm(const int n,
 
   if (bsize >= 1024) {
     if(t < 512) {
-      s_max[t] = max(s_max[t], s_max[t + 512]);
+      s_max[t] = fmax(s_max[t], s_max[t + 512]);
     }
     __syncthreads();
   }
   if (bsize >= 512) {
     if(t < 256) {
-      s_max[t] = max(s_max[t], s_max[t + 256]);
+      s_max[t] = fmax(s_max[t], s_max[t + 256]);
     }
     __syncthreads();
   }
 
   if (bsize >= 256) {
     if(t < 128) {
-      s_max[t] = max(s_max[t], s_max[t + 128]);
+      s_max[t] = fmax(s_max[t], s_max[t + 128]);
     }
     __syncthreads();
   }
 
   if (bsize >= 128) {
     if(t < 64) {
-      s_max[t] = max(s_max[t], s_max[t + 64]);
+      s_max[t] = fmax(s_max[t], s_max[t + 64]);
     }
     __syncthreads();
   }
   //unroll for last warp
   if (t < 64) {
-    s_max[t] = max(s_max[t], s_max[t + 64]);
-    s_max[t] = max(s_max[t], s_max[t + 32]);
-    s_max[t] = max(s_max[t], s_max[t + 16]);
-    s_max[t] = max(s_max[t], s_max[t + 8]);
-    s_max[t] = max(s_max[t], s_max[t + 4]);
-    s_max[t] = max(s_max[t], s_max[t + 2]);
-    s_max[t] = max(s_max[t], s_max[t + 1]);
+    s_max[t] = fmax(s_max[t], s_max[t + 64]);
+    s_max[t] = fmax(s_max[t], s_max[t + 32]);
+    s_max[t] = fmax(s_max[t], s_max[t + 16]);
+    s_max[t] = fmax(s_max[t], s_max[t + 8]);
+    s_max[t] = fmax(s_max[t], s_max[t + 4]);
+    s_max[t] = fmax(s_max[t], s_max[t + 2]);
+    s_max[t] = fmax(s_max[t], s_max[t + 1]);
 
   }
   if (t == 0) {
