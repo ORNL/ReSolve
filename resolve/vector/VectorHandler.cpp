@@ -133,7 +133,7 @@ namespace ReSolve {
    * @brief compute infinity norm of a vector (i.e., find an entry with largest absolute value)
    * 
    * @param[in] The vector
-   * @param memspace[in] string containg memspace (cpu or cuda or hip)
+   * @param[in] memspace string containg memspace (cpu or cuda or hip)
    *
    * @return infinity norm (real number) of _x_
    * 
