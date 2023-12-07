@@ -7,6 +7,8 @@
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/workspace/LinAlgWorkspaceCUDA.hpp>
 #include "MatrixHandlerCuda.hpp"
+#include <resolve/cuda/cudaKernels.h>
+#include <resolve/cusolver_defs.hpp> // needed for inf nrm
 
 namespace ReSolve {
   // Create a shortcut name for Logger static class
@@ -112,14 +114,46 @@ namespace ReSolve {
       return error_sum;
     } else {
       out::error() << "MatVec not implemented (yet) for " 
-                   << matrixFormat << " matrix format." << std::endl;
+        << matrixFormat << " matrix format." << std::endl;
       return 1;
     }
   }
 
-  int MatrixHandlerCuda::Matrix1Norm(matrix::Sparse* /* A */, real_type* /* norm */)
+  int MatrixHandlerCuda::matrixInfNorm(matrix::Sparse* A, real_type* norm)
   {
-    return -1;
+    if (workspace_->getNormBufferState() == false) { // not allocated  
+      real_type* buffer;
+      mem_.allocateArrayOnDevice(&buffer, 1024);
+      workspace_->setNormBuffer(buffer);
+      workspace_->setNormBufferState(true);
+    }
+
+    real_type* d_r = workspace_->getDr();
+    if (workspace_->getDrSize() != A->getNumRows()) {
+      if (d_r != nullptr) {
+        mem_.deleteOnDevice(d_r);
+      }
+      mem_.allocateArrayOnDevice(&d_r, A->getNumRows());
+      workspace_->setDrSize(A->getNumRows());
+      workspace_->setDr(d_r);
+    }
+
+    matrix_row_sums(A->getNumRows(),
+                    A->getNnzExpanded(),
+                    A->getRowData(memory::DEVICE),
+                    A->getValues(memory::DEVICE),
+                    d_r);
+
+    int status = cusolverSpDnrminf(workspace_->getCusolverSpHandle(),
+                                   A->getNumRows(),
+                                   d_r,
+                                   norm,
+                                   workspace_->getNormBuffer()  /* at least 8192 bytes */);
+
+    if (status != 0) {
+      io::Logger::warning() << "Vector inf nrm returned "<<status<<"\n"; 
+    }
+    return status;
   }
 
   int MatrixHandlerCuda::csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr)

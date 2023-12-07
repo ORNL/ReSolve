@@ -6,6 +6,7 @@
 #include <resolve/matrix/Csc.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/workspace/LinAlgWorkspaceHIP.hpp>
+#include <resolve/hip/hipKernels.h>
 #include "MatrixHandlerHip.hpp"
 
 namespace ReSolve {
@@ -103,9 +104,41 @@ namespace ReSolve {
     }
   }
 
-  int MatrixHandlerHip::Matrix1Norm(matrix::Sparse* /* A */, real_type* /* norm */)
+  int MatrixHandlerHip::matrixInfNorm(matrix::Sparse* A, real_type* norm)
   {
-    return -1;
+    // we assume A is in CSR format
+    real_type* d_r = workspace_->getDr();
+    index_type d_r_size = workspace_->getDrSize();
+    
+    if (d_r_size != A->getNumRows()) {
+      if (d_r_size != 0) {
+        mem_.deleteOnDevice(d_r);
+      }
+      mem_.allocateArrayOnDevice(&d_r, A->getNumRows());
+      workspace_->setDrSize(A->getNumRows());
+      workspace_->setDr(d_r);
+    }
+    
+    if (workspace_->getNormBufferState() == false) { // not allocated  
+      real_type* buffer;
+      mem_.allocateArrayOnDevice(&buffer, 1024);
+      workspace_->setNormBuffer(buffer);
+      workspace_->setNormBufferState(true);
+    }
+
+    mem_.deviceSynchronize();
+    matrix_row_sums(A->getNumRows(),
+                    A->getNnzExpanded(),
+                    A->getRowData(memory::DEVICE),
+                    A->getValues(memory::DEVICE),
+                    d_r);
+    mem_.deviceSynchronize();
+
+    vector_inf_norm(A->getNumRows(),  
+                    d_r, 
+                    workspace_->getNormBuffer(),
+                    norm);
+    return 0;
   }
 
   int MatrixHandlerHip::csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr)

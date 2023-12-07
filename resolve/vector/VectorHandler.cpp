@@ -111,7 +111,7 @@ namespace ReSolve {
    * 
    * @param[in] alpha The constant
    * @param[in,out] x The vector
-   * @param memspace string containg memspace (cpu or cuda or hip)
+   * @param memspace[in] string containg memspace (cpu or cuda or hip)
    * 
    */
   void VectorHandler::scal(const real_type* alpha, vector::Vector* x, std::string memspace)
@@ -129,6 +129,30 @@ namespace ReSolve {
     }
   }
 
+  /** 
+   * @brief compute infinity norm of a vector (i.e., find an entry with largest absolute value)
+   * 
+   * @param[in] The vector
+   * @param[in] memspace string containg memspace (cpu or cuda or hip)
+   *
+   * @return infinity norm (real number) of _x_
+   * 
+   */
+  real_type VectorHandler::infNorm(vector::Vector* x, std::string memspace)
+  {
+    if (memspace == "cuda" ) {
+      return cudaImpl_->infNorm(x);
+    } else if (memspace == "hip") { 
+      return hipImpl_->infNorm(x);
+    } else {
+      if (memspace == "cpu") {
+        return cpuImpl_->infNorm(x);
+      } else {      
+        out::error() << "Not implemented (yet)" << std::endl;
+        return -1.0; // note inf norm cannot be negative!
+      }  
+    }
+  }
   /** 
    * @brief axpy i.e, y = alpha*x+y where alpha is a constant
    * 

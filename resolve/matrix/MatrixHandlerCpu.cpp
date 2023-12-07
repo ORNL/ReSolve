@@ -79,9 +79,27 @@ namespace ReSolve {
     }
   }
 
-  int MatrixHandlerCpu::Matrix1Norm(matrix::Sparse* /* A */, real_type* /* norm */)
+  int MatrixHandlerCpu::matrixInfNorm(matrix::Sparse* A, real_type* norm)
   {
-    return -1;
+    real_type sum, nrm;
+    index_type i, j;
+
+    for (i = 0; i < A->getNumRows(); ++i) {
+      sum = 0.0; 
+      for (j  = A->getRowData(memory::HOST)[i]; j < A->getRowData(memory::HOST)[i+1]; ++j) {
+        sum += std::abs(A->getValues(memory::HOST)[j]);
+      }
+      if (i == 0) {
+        nrm = sum;
+      } else {
+        if (sum > nrm)
+        {
+          nrm = sum;
+        } 
+      }
+    }
+    *norm = nrm;
+    return 0;
   }
 
   /**

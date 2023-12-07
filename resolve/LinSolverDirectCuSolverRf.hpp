@@ -43,10 +43,11 @@ namespace ReSolve
       cusolverRfHandle_t handle_cusolverrf_;
       cusolverStatus_t status_cusolverrf_;
       
-      index_type* d_P_;
-      index_type* d_Q_;
-      real_type* d_T_;
-
+      index_type* d_P_{nullptr};
+      index_type* d_Q_{nullptr};
+      real_type* d_T_{nullptr};
+      bool setup_completed_{false};
+      
       MemoryHandler mem_; ///< Device memory manager object
   };
 }
