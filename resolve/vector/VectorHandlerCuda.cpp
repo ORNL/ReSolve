@@ -90,11 +90,15 @@ namespace ReSolve {
       workspace_->setNormBufferState(true);
     }
     real_type norm;
+    // TODO: Shouldn't the return type be cusolverStatus_t ?
     int status = cusolverSpDnrminf(workspace_->getCusolverSpHandle(),
                                    x->getSize(),
                                    x->getData(memory::DEVICE),
                                    &norm,
                                    workspace_->getNormBuffer()  /* at least 8192 bytes */);
+    if (status) {
+      out::error() << "cusolverSpDnrminf failed with error code " << status << "\n";
+    }
     return norm;
   }
   
