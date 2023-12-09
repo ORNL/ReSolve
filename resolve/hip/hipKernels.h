@@ -1,51 +1,68 @@
-void mass_inner_product_two_vectors(int n, 
-                                    int i, 
-                                    double* vec1, 
-                                    double* vec2, 
-                                    double* mvec, 
-                                    double* result);
-void mass_axpy(int n, int i, double* x, double* y, double* alpha);
+/**
+ * @file hipKernels.h
+ * @author Kasia Swirydowicz (kasia.swirydowicz@pnnl.gov)
+ * @brief Contains prototypes of HIP kernels.
+ * @date 2023-12-08
+ * 
+ * @note These kernels will be used in HIP specific code, only.
+ * 
+ */
 
-//needed for matrix inf nrm
-void matrix_row_sums(int n, 
-                     int nnz, 
-                     int* a_ia,
-                     double* a_val, 
-                     double* result);
+#pragma once
 
-// needed for triangular solve
+#include <resolve/Common.hpp>
 
-void permuteVectorP(int n, 
-                    int* perm_vector,
-                    double* vec_in, 
-                    double* vec_out);
+namespace ReSolve {
 
-void permuteVectorQ(int n, 
-                    int* perm_vector,
-                    double* vec_in, 
-                    double* vec_out);
+  void mass_inner_product_two_vectors(index_type n, 
+                                      index_type i, 
+                                      real_type* vec1, 
+                                      real_type* vec2, 
+                                      real_type* mvec, 
+                                      real_type* result);
+  void mass_axpy(index_type n, index_type i, real_type* x, real_type* y, real_type* alpha);
 
-// needed for rand solver
-void  count_sketch_theta(int n,
-                         int k,
-                         int* labels,
-                         int* flip,
-                         double* input,
-                         double* output);
+  //needed for matrix inf nrm
+  void matrix_row_sums(index_type n, 
+                       index_type nnz, 
+                       index_type* a_ia,
+                       real_type* a_val, 
+                       real_type* result);
 
-void FWHT_select(int k,
-                 int* perm,
-                 double* input,
-                 double* output);
+  // needed for triangular solve
 
-void FWHT_scaleByD(int n,
-                   int* D,
-                   double* x,
-                   double* y);
+  void permuteVectorP(index_type n, 
+                      index_type* perm_vector,
+                      real_type* vec_in, 
+                      real_type* vec_out);
 
-void FWHT(int M, int log2N, double* d_Data); 
+  void permuteVectorQ(index_type n, 
+                      index_type* perm_vector,
+                      real_type* vec_in, 
+                      real_type* vec_out);
 
-void vector_inf_norm(int n,  
-                     double* input,
-                     double * buffer, 
-                     double* result);
+  // needed for rand solver
+  void  count_sketch_theta(index_type n,
+                           index_type k,
+                           index_type* labels,
+                           index_type* flip,
+                           real_type* input,
+                           real_type* output);
+
+  void FWHT_select(index_type k,
+                   index_type* perm,
+                   real_type* input,
+                   real_type* output);
+
+  void FWHT_scaleByD(index_type n,
+                     index_type* D,
+                     real_type* x,
+                     real_type* y);
+
+  void FWHT(index_type M, index_type log2N, real_type* d_Data); 
+
+  void vector_inf_norm(index_type n,  
+                       real_type* input,
+                       real_type * buffer, 
+                       real_type* result);
+} // namespace ReSolve
