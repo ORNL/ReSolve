@@ -158,7 +158,7 @@ namespace ReSolve {
      * 
      * @param[in]  n      - number of rows in the matrix.
      * @param[in]  nnz    - number of non-zero values in the matrix
-     * @param[in]  a_ia   -
+     * @param[in]  a_ia   - row pointers (CSR storage)
      * @param[in]  a_val  -
      * @param[out] result -
      */
