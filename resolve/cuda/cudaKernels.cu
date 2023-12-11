@@ -247,7 +247,7 @@ namespace ReSolve {
         if (D[idx] == 1) {
           y[idx] = x[idx];
         } else {
-          y[idx] = (-1.0)*x[idx];
+          y[idx] = (-1.0) * x[idx];
         }
 
         idx += blockDim.x * gridDim.x;
