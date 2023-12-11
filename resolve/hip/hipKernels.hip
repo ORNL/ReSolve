@@ -296,7 +296,7 @@ namespace ReSolve {
       index_type idx = blockIdx.x*blockDim.x + threadIdx.x;
       while (idx<n) {
         vec_out[perm_vector[idx]] = vec_in[idx];
-        idx += (blockDim.x*gridDim.x);
+        idx += (blockDim.x * gridDim.x);
       }
     }
 
