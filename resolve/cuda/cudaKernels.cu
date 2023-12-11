@@ -171,7 +171,7 @@ namespace ReSolve {
       index_type idx = blockIdx.x * blockDim.x + threadIdx.x;
       while (idx < n) {
         real_type sum = 0.0;
-        for (index_type i = a_ia[idx]; i < a_ia[idx+1]; ++i) {
+        for (index_type i = a_ia[idx]; i < a_ia[idx + 1]; ++i) {
           sum = sum + fabs(a_val[i]);
         }
         result[idx] = sum;
