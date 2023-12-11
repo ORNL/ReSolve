@@ -481,7 +481,7 @@ namespace ReSolve {
                    const real_type* input,
                    real_type* output)
   {
-    kernels::select<<<1000,1024>>>(k, perm, input, output);
+    kernels::select<<<1000, 1024>>>(k, perm, input, output);
   }
 
   /**
@@ -499,7 +499,7 @@ namespace ReSolve {
                      const real_type* x,
                      real_type* y)
   {
-    kernels::scaleByD<<<1000,1024>>>(n, D, x, y);
+    kernels::scaleByD<<<1000, 1024>>>(n, D, x, y);
   }
 
   /**

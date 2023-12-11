@@ -318,8 +318,7 @@ namespace ReSolve {
                                          real_type* output){
 
       index_type idx = blockIdx.x * blockDim.x + threadIdx.x; 
-      while (idx < n){
-        //prindex_typef("in place %d, I am putting input[perm[%d]] = input[%d] = %f \n", idx,idx, perm[idx], input[perm[idx]] );
+      while (idx < n) {
         real_type val = input[idx];
         if (flip[idx] != 1){
           val *= -1.0;
