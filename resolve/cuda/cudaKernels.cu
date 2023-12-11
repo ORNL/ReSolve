@@ -168,7 +168,7 @@ namespace ReSolve {
                                        const real_type* a_val, 
                                        real_type* result)
     {
-      index_type idx = blockIdx.x*blockDim.x + threadIdx.x;
+      index_type idx = blockIdx.x * blockDim.x + threadIdx.x;
       while (idx < n) {
         real_type sum = 0.0;
         for (index_type i = a_ia[idx]; i < a_ia[idx+1]; ++i) {
