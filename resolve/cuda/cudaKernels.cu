@@ -157,7 +157,7 @@ namespace ReSolve {
      * @brief Pass through matrix rows and sum each as \sum_{j=1}^m abs(a_{ij})
      * 
      * @param[in]  n      - number of rows in the matrix.
-     * @param[in]  nnz    -
+     * @param[in]  nnz    - number of non-zero values in the matrix
      * @param[in]  a_ia   -
      * @param[in]  a_val  -
      * @param[out] result -
