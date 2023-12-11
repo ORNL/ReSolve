@@ -182,7 +182,7 @@ namespace ReSolve {
     /**
      * @brief For count sketch in sketching random method
      * 
-     * @param[in]  n      -
+     * @param[in]  n      - number of entries in input vector
      * @param[in]  k      -
      * @param[in]  labels -
      * @param[in]  flip   -
