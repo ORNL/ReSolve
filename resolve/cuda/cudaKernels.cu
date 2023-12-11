@@ -118,7 +118,7 @@ namespace ReSolve {
 
 
     /**
-     * @brief AXPY y = y - x*alpha where alpha is [k x 1], needed in 1 and 2 synch GMRES
+     * @brief AXPY y = y - x*alpha where alpha is [k x 1], and x is [N x k] needed in 1 and 2 synch GMRES
      * 
      * @tparam Tmaxk 
      * 
