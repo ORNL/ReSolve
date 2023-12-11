@@ -126,7 +126,7 @@ namespace ReSolve {
      * @param[in]  k      - number of columns in x
      * @param[in]  x_data - double array, size [N x k]
      * @param[out] y_data - double array, size [N x 1]
-     * @param[in]  alpha  -
+     * @param[in]  alpha  - doble array, size [k x 1]
      */
     template <size_t Tmaxk = 1024> 
     __global__ void massAxpy3(index_type N,
