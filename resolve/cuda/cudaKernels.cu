@@ -184,7 +184,7 @@ namespace ReSolve {
      * 
      * @param[in]  n      - number of entries in input vector
      * @param[in]  k      - number of entries in output vector (k < n)
-     * @param[in]  labels -
+     * @param[in]  labels - array size [n x 1] containing integers from 0 to k-1, assigned randomly.
      * @param[in]  flip   -
      * @param[in]  input  - 
      * @param[out] output -
