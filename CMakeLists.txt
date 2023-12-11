@@ -55,41 +55,12 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 # TODO: Set up clang-format
 #include(./cmake/clang-format)
 
+# This will create target `doxygen` for building documentation locally.
+# For now, this target is intended only for developers who want to test
+# different documentation configurations. To have Doxygen configuration
+# changed at readthedocs, update `docs/doxygen/Doxyfile.in` accordingly.
 if (RESOLVE_USE_DOXYGEN)
-  find_package(Doxygen)
-endif()
-
-if ( DOXYGEN_FOUND )
-  set( DOXYGEN_OUTPUT_DIRECTORY ./sphinx/_build/doxygen )
-  set( DOXYGEN_COLLABORATION_GRAPH YES )
-  set( DOXYGEN_EXTRACT_ALL YES )
-  set( DOXYGEN_CLASS_DIAGRAMS YES )
-  set( DOXYGEN_HIDE_UNDOC_RELATIONS NO )
-  set( DOXYGEN_HAVE_DOT YES )
-  set( DOXYGEN_CLASS_GRAPH YES )
-  set( DOXYGEN_CALL_GRAPH YES )
-  set( DOXYGEN_CALLER_GRAPH YES )
-  set( DOXYGEN_COLLABORATION_GRAPH YES )
-  set( DOXYGEN_BUILTIN_STL_SUPPORT YES )
-  set( DOXYGEN_EXTRACT_PRIVATE YES )
-  set( DOXYGEN_EXTRACT_PACKAGE YES )
-  set( DOXYGEN_EXTRACT_STATIC YES )
-  set( DOXYGEN_EXTRACT_LOCALMETHODS YES )
-  set( DOXYGEN_UML_LOOK YES )
-  set( DOXYGEN_UML_LIMIT_NUM_FIELDS 50 )
-  set( DOXYGEN_TEMPLATE_RELATIONS YES )
-  set( DOXYGEN_DOT_GRAPH_MAX_NODES 100 )
-  set( DOXYGEN_MAX_DOT_GRAPH_DEPTH 0 )
-  set( DOXYGEN_DOT_TRANSPARENT YES )
-  set(DOXYGEN_DISABLE_INDEX NO)
-  set(DOXYGEN_FULL_SIDEBAR NO)
-  set(DOXYGEN_GENERATE_TREEVIEW YES)
-  set(DOXYGEN_HTML_EXTRA_STYLESHEET "./docs/doxygen/doxygen-awesome-css/doxygen-awesome.css")
-  set(DOXYGEN_HTML_COLORSTYLE LIGHT)
-  doxygen_add_docs( doxygen ${RPP_PROJECT_SOURCE_DIR} )
-
-else()
-  message( "Doxygen need to be installed to generate the doxygen documentation" )
+  include(ReSolveFindDoxygen)
 endif()
 
 
