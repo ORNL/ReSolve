@@ -206,7 +206,7 @@ namespace ReSolve {
       
       while (idx < n) {
         local_max = fmax(fabs(input[idx]), local_max);
-        idx += (blockDim.x*gridDim.x);
+        idx += (blockDim.x * gridDim.x);
       }
       s_max[t] = local_max;
       __syncthreads();
