@@ -123,7 +123,7 @@ namespace ReSolve {
      * @tparam Tmaxk 
      * 
      * @param[in]  N      - number of rows in x
-     * @param[in]  k      -
+     * @param[in]  k      - number of columns in x
      * @param[in]  x_data -
      * @param[out] y_data -
      * @param[in]  alpha  -
