@@ -175,7 +175,7 @@ namespace ReSolve {
           sum = sum + fabs(a_val[i]);
         }
         result[idx] = sum;
-        idx += (blockDim.x*gridDim.x);
+        idx += (blockDim.x * gridDim.x);
       }
     }
 
