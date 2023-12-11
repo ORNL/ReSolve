@@ -441,7 +441,7 @@ namespace ReSolve {
                        const real_type* a_val, 
                        real_type* result)
   {
-    kernels::matrixInfNormPart1<<<1000,1024>>>(n, nnz, a_ia, a_val, result);
+    kernels::matrixInfNormPart1<<<1000, 1024>>>(n, nnz, a_ia, a_val, result);
   }
 
   /**
