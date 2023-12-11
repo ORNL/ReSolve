@@ -1,24 +1,33 @@
 /**
  * @file Doxygen.hpp
- * @author your name (you@domain.com)
+ * @author Slaven Peles (peless@ornl.gov)
  * @brief 
- * @version 0.1
- * @date 2023-12-07
- * 
- * @copyright Copyright (c) 2023
  * 
  * @mainpage ReSolve Source Code Documentation
  * 
  * ReSolve is a library of GPU-resident linear solvers. It contains iterative
  * and direct linear solvers designed to run on NVIDIA and AMD GPUs, as well as
- * on CPU devices.
+ * on CPU devices. This is the main page of source code documentation intended
+ * for developers who want to contribute to ReSolve code. General documentation
+ * is available at <a href=https://resolve.readthedocs.io>readthedocs</a>.
  * 
- * @section Name
  * 
- * @section History
+ * @section name_sec Name
+ * 
+ * Linear solvers are typically used within an application where a series of
+ * systems with same sparsity pattern is solved one after another, such as in
+ * the case of dynamic simulations or optimization. An efficient linear solver
+ * design will _re-solve_ systems with the same sparsity pattern while reusing
+ * symbolic operations and memory allocations from the prior systems, therefore
+ * the name ReSolve.
+ * 
+ * @section history_sec History
  * 
  * The development of Re::Solve sparse linear solver library started as a part
- * of Stochastic Grid Dynamics at Exascale (ExaSGD) project. The overarching
+ * of Stochastic Grid Dynamics at Exascale 
+ * (<a href="https://www.exascaleproject.org/research-project/exasgd/">ExaSGD</a>)
+ * subproject of the Exascale Computing Project
+ * (<a href="https://www.exascaleproject.org/">ECP</a>). The overarching
  * goal was to address project’s major technology gap at the time. The project
  * required a fast sparse direct solver that is (natively) GPU-resident and at
  * the same time, highly optimized, without unnecessary memory traffic nor
@@ -39,6 +48,18 @@
  * integrate with applications, and capable of running on both AMD and NVIDIA
  * GPUs.
  * 
- * @section Code Design and Organization
+ * @section design_sec Code Design and Organization
+ * 
+ * @subsection solvers_subsec Solvers
+ * 
+ * @subsection matvecs_subsec Matrix and Vector Classes
+ * 
+ * @subsection handlers_subsec Matrix and Vector Handlers
+ * 
+ * @subsection workspaces_subsec Workspaces
+ * 
+ * @subsection backends_subsec Hardware Backends
+ * 
+ * @subsection utils_subsec Utilities
  * 
  */
