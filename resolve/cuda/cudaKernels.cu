@@ -160,7 +160,7 @@ namespace ReSolve {
      * @param[in]  nnz    - number of non-zero values in the matrix
      * @param[in]  a_ia   - row pointers (CSR storage)
      * @param[in]  a_val  - values (CSR storage)
-     * @param[out] result -
+     * @param[out] result - array size [n x 1] containing sums of values in each row.
      */
     __global__ void matrixInfNormPart1(const index_type n, 
                                        const index_type nnz, 
