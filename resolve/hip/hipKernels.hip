@@ -273,7 +273,7 @@ namespace ReSolve {
     {
       //one thread per vector entry, pass through rows
       index_type idx = blockIdx.x*blockDim.x + threadIdx.x;
-      while (idx<n) {
+      while (idx < n) {
         vec_out[idx] = vec_in[perm_vector[idx]];
         idx += (blockDim.x*gridDim.x);
       }
