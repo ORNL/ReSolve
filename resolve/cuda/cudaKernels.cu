@@ -125,7 +125,7 @@ namespace ReSolve {
      * @param[in]  N      - number of rows in x
      * @param[in]  k      - number of columns in x
      * @param[in]  x_data - double array, size [N x k]
-     * @param[out] y_data -
+     * @param[out] y_data - double array, size [N x 1]
      * @param[in]  alpha  -
      */
     template <size_t Tmaxk = 1024> 
