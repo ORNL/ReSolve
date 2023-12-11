@@ -187,7 +187,7 @@ namespace ReSolve {
      * @param[in]  labels - array size [n x 1] containing integers from 0 to k-1, assigned randomly.
      * @param[in]  flip   -
      * @param[in]  input  - 
-     * @param[out] output -
+     * @param[out] output - output vector, size [k x 1] (this vector must be allocated and initialized with `0`s prior to calling the kernel).
      */
     __global__ void  count_sketch(const index_type n,
                                   const index_type k, 
