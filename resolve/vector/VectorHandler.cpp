@@ -188,7 +188,7 @@ namespace ReSolve {
    * @pre   V is stored colum-wise, _n_ > 0, _k_ > 0
    * 
    */  
-  void VectorHandler::gemv(std::string transpose,
+  void VectorHandler::gemv(char transpose,
                            index_type n,
                            index_type k,
                            const real_type* alpha,

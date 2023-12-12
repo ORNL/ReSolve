@@ -1,5 +1,4 @@
 #pragma once
-#include <string>
 #include <resolve/MemoryUtils.hpp>
 
 namespace ReSolve
@@ -46,7 +45,7 @@ namespace ReSolve { //namespace vector {
        * if `transpose = T` (yes), `x = beta*x + alpha*V^T*y`,
        * where `x` is `[k x 1]`, `V` is `[n x k]` and `y` is `[n x 1]`.
        */ 
-      void gemv(std::string transpose,
+      void gemv(char transpose,
                 index_type n,
                 index_type k,
                 const real_type* alpha,

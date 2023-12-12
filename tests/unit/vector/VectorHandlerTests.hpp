@@ -280,9 +280,9 @@ namespace ReSolve {
 
           real_type alpha = -1.0;
           real_type beta = 1.0;
-          handler->gemv("N", N, K, &alpha, &beta, V, yN, xN, ms);
+          handler->gemv('N', N, K, &alpha, &beta, V, yN, xN, ms);
           status *= verifyAnswer(xN, (real_type) (K) + 0.5, memspace_);
-          handler->gemv("T", N, K, &alpha, &beta, V, yT, xT, ms);
+          handler->gemv('T', N, K, &alpha, &beta, V, yT, xT, ms);
           status *= verifyAnswer(xT, (real_type) (N) + 0.5, memspace_);
 
           return status.report(__func__);

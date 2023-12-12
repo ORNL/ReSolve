@@ -119,7 +119,7 @@ namespace ReSolve {
    * @brief gemv computes matrix-vector product where both matrix and vectors are dense.
    *        i.e., x = beta*x +  alpha*V*y
    *
-   * @param[in] Transpose - yes (T) or no (N)
+   * @param[in] Transpose - transposed = 'T' or not 'N'
    * @param[in] n Number of rows in (non-transposed) matrix
    * @param[in] k Number of columns in (non-transposed)   
    * @param[in] alpha Constant real number
@@ -131,7 +131,7 @@ namespace ReSolve {
    * @pre   V is stored colum-wise, _n_ > 0, _k_ > 0
    * 
    */  
-  void VectorHandlerCpu::gemv(std::string /* transpose */,
+  void VectorHandlerCpu::gemv(char /* transpose */,
                               index_type /* n */,
                               index_type /* k */,
                               const real_type* /* alpha */,

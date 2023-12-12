@@ -148,9 +148,9 @@ namespace ReSolve
         case cgs2:
 
           vec_v_->setData(V->getVectorData(i + 1, memory::DEVICE), memory::DEVICE);
-          vector_handler_->gemv("T", n, i + 1, &ONE, &ZERO, V,  vec_v_, vec_Hcolumn_, memspace);
+          vector_handler_->gemv('T', n, i + 1, &ONE, &ZERO, V,  vec_v_, vec_Hcolumn_, memspace);
           // V(:,i+1) = V(:, i+1) -  V(:,1:i)*Hcol
-          vector_handler_->gemv("N", n, i + 1, &ONE, &MINUSONE, V, vec_Hcolumn_, vec_v_, memspace );  
+          vector_handler_->gemv('N', n, i + 1, &ONE, &MINUSONE, V, vec_Hcolumn_, vec_v_, memspace );  
           mem_.deviceSynchronize();
           
           // copy H_col to aux, we will need it later
@@ -160,11 +160,11 @@ namespace ReSolve
           mem_.deviceSynchronize();
 
           //Hcol = V(:,1:i)^T*V(:,i+1);
-          vector_handler_->gemv("T", n, i + 1, &ONE, &ZERO, V,  vec_v_, vec_Hcolumn_, memspace);
+          vector_handler_->gemv('T', n, i + 1, &ONE, &ZERO, V,  vec_v_, vec_Hcolumn_, memspace);
           mem_.deviceSynchronize();
 
           // V(:,i+1) = V(:, i+1) -  V(:,1:i)*Hcol
-          vector_handler_->gemv("N", n, i + 1, &ONE, &MINUSONE, V, vec_Hcolumn_, vec_v_, memspace );  
+          vector_handler_->gemv('N', n, i + 1, &ONE, &MINUSONE, V, vec_Hcolumn_, vec_v_, memspace );  
           mem_.deviceSynchronize();
 
           // copy H_col to H

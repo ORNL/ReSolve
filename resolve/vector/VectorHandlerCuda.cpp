@@ -140,7 +140,7 @@ namespace ReSolve {
    * @pre   V is stored colum-wise, _n_ > 0, _k_ > 0
    * 
    */  
-  void VectorHandlerCuda::gemv(std::string transpose,
+  void VectorHandlerCuda::gemv(char transpose,
                                index_type n,
                                index_type k,
                                const real_type* alpha,
@@ -151,34 +151,38 @@ namespace ReSolve {
   {
     LinAlgWorkspaceCUDA* workspaceCUDA = workspace_;
     cublasHandle_t handle_cublas =  workspaceCUDA->getCublasHandle();
-    if (transpose == "T") {
-
-      cublasDgemv(handle_cublas,
-                  CUBLAS_OP_T,
-                  n,
-                  k,
-                  alpha,
-                  V->getData(memory::DEVICE),
-                  n,
-                  y->getData(memory::DEVICE),
-                  1,
-                  beta,
-                  x->getData(memory::DEVICE),
-                  1);
-
-    } else {
-      cublasDgemv(handle_cublas,
-                  CUBLAS_OP_N,
-                  n,
-                  k,
-                  alpha,
-                  V->getData(memory::DEVICE),
-                  n,
-                  y->getData(memory::DEVICE),
-                  1,
-                  beta,
-                  x->getData(memory::DEVICE),
-                  1);
+    switch (transpose) {
+      case 'T':
+        cublasDgemv(handle_cublas,
+                    CUBLAS_OP_T,
+                    n,
+                    k,
+                    alpha,
+                    V->getData(memory::DEVICE),
+                    n,
+                    y->getData(memory::DEVICE),
+                    1,
+                    beta,
+                    x->getData(memory::DEVICE),
+                    1);
+        return;
+      default:
+        cublasDgemv(handle_cublas,
+                    CUBLAS_OP_N,
+                    n,
+                    k,
+                    alpha,
+                    V->getData(memory::DEVICE),
+                    n,
+                    y->getData(memory::DEVICE),
+                    1,
+                    beta,
+                    x->getData(memory::DEVICE),
+                    1);
+        if (transpose != 'N') {
+          out::warning() << "Unrecognized transpose option " << transpose
+                         << " in gemv. Using non-transposed multivector.\n";
+        }
     }
   }
 
