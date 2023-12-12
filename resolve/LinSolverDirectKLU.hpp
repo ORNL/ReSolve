@@ -37,6 +37,7 @@ namespace ReSolve
       int refactorize() override;
       int solve(vector_type* rhs, vector_type* x) override;
       int solve(vector_type* x) override;
+      double rcond(); //returns the value of rcond using klu_rcond
     
       matrix::Sparse* getLFactor() override; 
       matrix::Sparse* getUFactor() override; 

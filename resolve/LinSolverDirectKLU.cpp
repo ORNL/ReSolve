@@ -149,6 +149,12 @@ namespace ReSolve
     return 1;
   }
 
+  double LinSolverDirectKLU::rcond()
+  {
+    klu_rcond(Symbolic_, Numeric_, &Common_);
+    return Common_.rcond;
+  } 
+
   matrix::Sparse* LinSolverDirectKLU::getLFactor()
   {
     if (!factors_extracted_) {
