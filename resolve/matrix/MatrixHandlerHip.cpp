@@ -41,14 +41,13 @@ namespace ReSolve {
       matrix::Csr* A = dynamic_cast<matrix::Csr*>(Ageneric);
       //result = alpha *A*x + beta * result
       rocsparse_status status;
-      LinAlgWorkspaceHIP* workspaceHIP = workspace_;
 
-      rocsparse_handle handle_rocsparse = workspaceHIP->getRocsparseHandle();
+      rocsparse_handle handle_rocsparse = workspace_->getRocsparseHandle();
       
-      rocsparse_mat_info infoA = workspaceHIP->getSpmvMatrixInfo();
-      rocsparse_mat_descr descrA =  workspaceHIP->getSpmvMatrixDescriptor();
+      rocsparse_mat_info infoA = workspace_->getSpmvMatrixInfo();
+      rocsparse_mat_descr descrA =  workspace_->getSpmvMatrixDescriptor();
       
-      if (!workspaceHIP->matvecSetup()) {
+      if (!workspace_->matvecSetup()) {
         //setup first, allocate, etc.
         rocsparse_create_mat_descr(&(descrA));
         rocsparse_set_mat_index_base(descrA, rocsparse_index_base_zero);
@@ -69,9 +68,9 @@ namespace ReSolve {
         error_sum += status;
         mem_.deviceSynchronize();
 
-        workspaceHIP->setSpmvMatrixDescriptor(descrA);
-        workspaceHIP->setSpmvMatrixInfo(infoA);
-        workspaceHIP->matvecSetupDone();
+        workspace_->setSpmvMatrixDescriptor(descrA);
+        workspace_->setSpmvMatrixInfo(infoA);
+        workspace_->matvecSetupDone();
       } 
       
       status = rocsparse_dcsrmv(handle_rocsparse,
@@ -144,7 +143,6 @@ namespace ReSolve {
   int MatrixHandlerHip::csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr)
   {
     index_type error_sum = 0;
-    LinAlgWorkspaceHIP* workspaceHIP = (LinAlgWorkspaceHIP*) workspace_;
 
     rocsparse_status status;
     
@@ -155,7 +153,7 @@ namespace ReSolve {
     size_t bufferSize;
     void* d_work;
 
-    status = rocsparse_csr2csc_buffer_size(workspaceHIP->getRocsparseHandle(),
+    status = rocsparse_csr2csc_buffer_size(workspace_->getRocsparseHandle(),
                                            n,
                                            m,
                                            nnz,
@@ -167,7 +165,7 @@ namespace ReSolve {
     error_sum += status;
     mem_.allocateBufferOnDevice(&d_work, bufferSize);
     
-    status = rocsparse_dcsr2csc(workspaceHIP->getRocsparseHandle(),
+    status = rocsparse_dcsr2csc(workspace_->getRocsparseHandle(),
                                 n,
                                 m,
                                 nnz,
