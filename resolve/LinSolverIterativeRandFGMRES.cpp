@@ -60,7 +60,7 @@ namespace ReSolve
     maxit_= 100; //default
     restart_ = 10;
     conv_cond_ = 0;//default
-    flexible_ = 1;
+    flexible_ = true;
 
     d_V_ = nullptr;
     d_Z_ = nullptr;
@@ -93,7 +93,7 @@ namespace ReSolve
     maxit_= maxit; 
     restart_ = restart;
     conv_cond_ = conv_cond;
-    flexible_ = 1;
+    flexible_ = true;
 
     d_V_ = nullptr;
     d_Z_ = nullptr;
@@ -503,7 +503,6 @@ namespace ReSolve
   void  LinSolverIterativeRandFGMRES::precV(vector_type* rhs, vector_type* x)
   { 
     LU_solver_->solve(rhs, x);
-    //  x->update(rhs->getData(memory::DEVICE), memory::DEVICE, memory::DEVICE);
   }
 
 } // namespace ReSolve
