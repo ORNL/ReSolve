@@ -295,8 +295,8 @@ namespace ReSolve
         final_residual_norm_ = rnorm;
         total_iters_ = it;
         io::Logger::misc() << "End of cycle, COMPUTED norm of residual "
-                          << std::scientific << std::setprecision(16)
-                          << rnorm << "\n";
+                           << std::scientific << std::setprecision(16)
+                           << rnorm << "\n";
       }
     } // outer while
     return 0;
