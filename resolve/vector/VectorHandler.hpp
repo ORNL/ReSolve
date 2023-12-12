@@ -62,9 +62,8 @@ namespace ReSolve { //namespace vector {
    
     private:
       
-      VectorHandlerImpl*  cpuImpl_{nullptr};
-      VectorHandlerImpl* cudaImpl_{nullptr};
-      VectorHandlerImpl*  hipImpl_{nullptr};
+      VectorHandlerImpl* cpuImpl_{nullptr};
+      VectorHandlerImpl* devImpl_{nullptr}; ///< Pointer to device implementation
 
       bool isCpuEnabled_{false};
       bool isCudaEnabled_{false};

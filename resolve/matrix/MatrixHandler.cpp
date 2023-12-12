@@ -43,8 +43,9 @@ namespace ReSolve {
   MatrixHandler::~MatrixHandler()
   {
     delete cpuImpl_;
-    if (isCudaEnabled_) delete cudaImpl_;
-    if (isHipEnabled_) delete hipImpl_;
+    if (isCudaEnabled_ || isHipEnabled_) {
+      delete devImpl_;
+    }
   }
 
   /**
@@ -71,8 +72,8 @@ namespace ReSolve {
    */
   MatrixHandler::MatrixHandler(LinAlgWorkspaceCUDA* new_workspace)
   {
-    cpuImpl_  = new MatrixHandlerCpu();
-    cudaImpl_ = new MatrixHandlerCuda(new_workspace);
+    cpuImpl_ = new MatrixHandlerCpu();
+    devImpl_ = new MatrixHandlerCuda(new_workspace);
     isCpuEnabled_  = true;
     isCudaEnabled_ = true;
   }
@@ -89,8 +90,8 @@ namespace ReSolve {
    */
   MatrixHandler::MatrixHandler(LinAlgWorkspaceHIP* new_workspace)
   {
-    cpuImpl_  = new MatrixHandlerCpu();
-    hipImpl_ = new MatrixHandlerHip(new_workspace);
+    cpuImpl_ = new MatrixHandlerCpu();
+    devImpl_ = new MatrixHandlerHip(new_workspace);
     isCpuEnabled_  = true;
     isHipEnabled_ = true;
   }
@@ -100,9 +101,9 @@ namespace ReSolve {
     if (memspace == "cpu") {
       cpuImpl_->setValuesChanged(isValuesChanged);
     } else if (memspace == "cuda") {
-      cudaImpl_->setValuesChanged(isValuesChanged);
+      devImpl_->setValuesChanged(isValuesChanged);
     } else if (memspace == "hip") {
-      hipImpl_->setValuesChanged(isValuesChanged);
+      devImpl_->setValuesChanged(isValuesChanged);
     } else {
       out::error() << "Unsupported device " << memspace << "\n";
     }
@@ -291,11 +292,11 @@ namespace ReSolve {
                             std::string memspace)
   {
     if (memspace == "cuda" ) {
-      return cudaImpl_->matvec(A, vec_x, vec_result, alpha, beta, matrixFormat);
+      return devImpl_->matvec(A, vec_x, vec_result, alpha, beta, matrixFormat);
     } else if (memspace == "cpu") {
         return cpuImpl_->matvec(A, vec_x, vec_result, alpha, beta, matrixFormat);
     } else if (memspace == "hip") {
-        return hipImpl_->matvec(A, vec_x, vec_result, alpha, beta, matrixFormat);
+        return devImpl_->matvec(A, vec_x, vec_result, alpha, beta, matrixFormat);
     } else {
         out::error() << "Support for device " << memspace << " not implemented (yet)" << std::endl;
         return 1;
@@ -305,11 +306,11 @@ namespace ReSolve {
   int MatrixHandler::matrixInfNorm(matrix::Sparse *A, real_type* norm, std::string memspace) {
 
     if (memspace == "cuda" ) {
-      return cudaImpl_->matrixInfNorm(A, norm);
+      return devImpl_->matrixInfNorm(A, norm);
     } else if (memspace == "cpu") {
       return cpuImpl_->matrixInfNorm(A, norm);
     } else if (memspace == "hip") {
-      return hipImpl_->matrixInfNorm(A, norm);
+      return devImpl_->matrixInfNorm(A, norm);
     } else {
         out::error() << "Support for device " << memspace << " not implemented (yet)" << std::endl;
         return 1;
@@ -320,9 +321,9 @@ namespace ReSolve {
   int MatrixHandler::csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr, std::string memspace)
   {
     if (memspace == "cuda") { 
-      return cudaImpl_->csc2csr(A_csc, A_csr);
+      return devImpl_->csc2csr(A_csc, A_csr);
     } else if (memspace == "hip") {
-      return hipImpl_->csc2csr(A_csc, A_csr);
+      return devImpl_->csc2csr(A_csc, A_csr);
     } else if (memspace == "cpu") { 
       out::warning() << "Using untested csc2csr on CPU ..." << std::endl;
       return cpuImpl_->csc2csr(A_csc, A_csr);

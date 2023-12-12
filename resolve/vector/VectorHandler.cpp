@@ -46,7 +46,7 @@ namespace ReSolve {
    */
   VectorHandler::VectorHandler(LinAlgWorkspaceCUDA* new_workspace)
   {
-    cudaImpl_ = new VectorHandlerCuda(new_workspace);
+    devImpl_ = new VectorHandlerCuda(new_workspace);
     cpuImpl_  = new  VectorHandlerCpu();
 
     isCudaEnabled_ = true;
@@ -61,7 +61,7 @@ namespace ReSolve {
    */
   VectorHandler::VectorHandler(LinAlgWorkspaceHIP* new_workspace)
   {
-    hipImpl_  = new VectorHandlerHip(new_workspace);
+    devImpl_  = new VectorHandlerHip(new_workspace);
     cpuImpl_  = new VectorHandlerCpu();
 
     isHipEnabled_ = true;
@@ -75,9 +75,9 @@ namespace ReSolve {
   VectorHandler::~VectorHandler()
   {
     delete cpuImpl_;
-    if (isCudaEnabled_) delete cudaImpl_;
-    if (isHipEnabled_)  delete hipImpl_;
-    //delete the workspace TODO
+    if (isCudaEnabled_ || isHipEnabled_) {
+      delete devImpl_;
+    }
   }
 
   /** 
@@ -93,10 +93,10 @@ namespace ReSolve {
   real_type VectorHandler::dot(vector::Vector* x, vector::Vector* y, std::string memspace)
   { 
     if (memspace == "cuda" ) {
-      return cudaImpl_->dot(x, y);
+      return devImpl_->dot(x, y);
     } else {
       if (memspace == "hip") { 
-        return hipImpl_->dot(x, y);
+        return devImpl_->dot(x, y);
       } else if (memspace == "cpu") {
         return cpuImpl_->dot(x, y);
       } else {
@@ -117,9 +117,9 @@ namespace ReSolve {
   void VectorHandler::scal(const real_type* alpha, vector::Vector* x, std::string memspace)
   {
     if (memspace == "cuda" ) {
-      cudaImpl_->scal(alpha, x);
+      devImpl_->scal(alpha, x);
     } else if (memspace == "hip") { 
-      hipImpl_->scal(alpha, x);
+      devImpl_->scal(alpha, x);
     } else {
       if (memspace == "cpu") {
         cpuImpl_->scal(alpha, x);
@@ -141,9 +141,9 @@ namespace ReSolve {
   real_type VectorHandler::infNorm(vector::Vector* x, std::string memspace)
   {
     if (memspace == "cuda" ) {
-      return cudaImpl_->infNorm(x);
+      return devImpl_->infNorm(x);
     } else if (memspace == "hip") { 
-      return hipImpl_->infNorm(x);
+      return devImpl_->infNorm(x);
     } else {
       if (memspace == "cpu") {
         return cpuImpl_->infNorm(x);
@@ -166,10 +166,10 @@ namespace ReSolve {
   {
     //AXPY:  y = alpha * x + y
     if (memspace == "cuda" ) {
-      cudaImpl_->axpy(alpha, x, y);
+      devImpl_->axpy(alpha, x, y);
     } else {
       if (memspace == "hip" ) {
-        hipImpl_->axpy(alpha, x, y);      
+        devImpl_->axpy(alpha, x, y);      
       } else {
         if (memspace == "cpu") {
           cpuImpl_->axpy(alpha, x, y);
@@ -200,9 +200,9 @@ namespace ReSolve {
   void VectorHandler::gemv(std::string transpose, index_type n, index_type k, const real_type* alpha, const real_type* beta, vector::Vector* V, vector::Vector* y, vector::Vector* x, std::string memspace)
   {
     if (memspace == "cuda") {
-      cudaImpl_->gemv(transpose, n, k, alpha, beta, V, y, x);
+      devImpl_->gemv(transpose, n, k, alpha, beta, V, y, x);
     } else if (memspace == "hip") {
-      hipImpl_->gemv(transpose, n, k, alpha, beta, V, y, x);
+      devImpl_->gemv(transpose, n, k, alpha, beta, V, y, x);
     } else if (memspace == "cpu") {
       cpuImpl_->gemv(transpose, n, k, alpha, beta, V, y, x);
     } else {
@@ -226,9 +226,9 @@ namespace ReSolve {
   {
     using namespace constants;
     if (memspace == "cuda") {
-      cudaImpl_->massAxpy(size, alpha, k, x, y);
+      devImpl_->massAxpy(size, alpha, k, x, y);
     } else if (memspace == "hip") {
-      hipImpl_->massAxpy(size, alpha, k, x, y);
+      devImpl_->massAxpy(size, alpha, k, x, y);
     } else if (memspace == "cpu") {
       cpuImpl_->massAxpy(size, alpha, k, x, y);
     } else {
@@ -253,9 +253,9 @@ namespace ReSolve {
   void VectorHandler::massDot2Vec(index_type size, vector::Vector* V, index_type k, vector::Vector* x, vector::Vector* res, std::string memspace)
   {
     if (memspace == "cuda") {
-      cudaImpl_->massDot2Vec(size, V, k, x, res);
+      devImpl_->massDot2Vec(size, V, k, x, res);
     } else if (memspace == "hip") {
-      hipImpl_->massDot2Vec(size, V, k, x, res);
+      devImpl_->massDot2Vec(size, V, k, x, res);
     } else if (memspace == "cpu") {
       cpuImpl_->massDot2Vec(size, V, k, x, res);
     } else {
