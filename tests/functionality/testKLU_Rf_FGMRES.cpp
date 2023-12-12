@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
   ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
 
   ReSolve::LinSolverDirectCuSolverRf* Rf = new ReSolve::LinSolverDirectCuSolverRf;
-  ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::mgs_pm);
+  ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::cgs2);
   ReSolve::LinSolverIterativeFGMRES* FGMRES = new ReSolve::LinSolverIterativeFGMRES(matrix_handler, vector_handler, GS);
   // Input to this code is location of `data` directory where matrix files are stored
   const std::string data_path = (argc == 2) ? argv[1] : "./";
@@ -167,8 +167,10 @@ int main(int argc, char *argv[])
   index_type* Q = KLU->getQOrdering();
   error_sum += Rf->setup(A, L, U, P, Q); 
 
-  FGMRES->setMaxit(200); 
+  FGMRES->setMaxit(400); 
   FGMRES->setRestart(100); 
+  FGMRES->setFlexible(1); 
+  FGMRES->setTol(1e-17); 
 
   GS->setup(A->getNumRows(), FGMRES->getRestart()); 
   status =  FGMRES->setup(A); 
@@ -196,7 +198,7 @@ int main(int argc, char *argv[])
 
   A->updateFromCoo(A_coo, ReSolve::memory::DEVICE);
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-  Rf->setNumericalProperties(1e-12, 1e-1);
+  Rf->setNumericalProperties(1e-14, 1e-1);
 
   status = Rf->refactorize();
   error_sum += status;
@@ -242,9 +244,9 @@ int main(int argc, char *argv[])
   std::cout<<"\t ||x-x_true||_2              : "<<normDiffMatrix2<<" (solution error)"<<std::endl;
   std::cout<<"\t ||x-x_true||_2/||x_true||_2 : "<<normDiffMatrix2/normXtrue<<" (scaled solution error)"<<std::endl;
   std::cout<<"\t ||b-A*x_exact||_2           : "<<exactSol_normRmatrix2<<" (control; residual norm with exact solution)"<<std::endl;
-  std::cout<<"\t IR iterations               : "<<FGMRES->getNumIter()<<" (max 200, restart 100)"<<std::endl;
+  std::cout<<"\t IR iterations               : "<<FGMRES->getNumIter()<<" (max 400, restart 100)"<<std::endl;
   std::cout<<"\t IR starting res. norm       : "<<FGMRES->getInitResidualNorm()<<" "<<std::endl;
-  std::cout<<"\t IR final res. norm          : "<<FGMRES->getFinalResidualNorm()<<" (tol 1e-14)"<<std::endl<<std::endl;
+  std::cout<<"\t IR final res. norm          : "<<FGMRES->getFinalResidualNorm()<<" "<<std::endl<<std::endl;
 
   if ((normRmatrix1/normB1 > 1e-12 ) || (normRmatrix2/normB2 > 1e-15)) {
     std::cout << "Result inaccurate!\n";
