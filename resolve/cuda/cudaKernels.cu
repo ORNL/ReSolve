@@ -1,372 +1,528 @@
+/**
+ * @file cudaKernels.cu
+ * @author Kasia Swirydowicz (kasia.swirydowicz@pnnl.gov)
+ * @brief 
+ * @date 2023-12-08
+ * 
+ * 
+ */
+
 #include "cudaKernels.h"
 #include <cooperative_groups.h>
-#define maxk 1024
-#define Tv5 1024
-//computes V^T[u1 u2] where v is n x k and u1 and u2 are nx1
-__global__ void MassIPTwoVec_kernel(const double* __restrict__ u1, 
-                                    const double* __restrict__ u2, 
-                                    const double* __restrict__ v, 
-                                    double* result,
-                                    const int k, 
-                                    const int N)
-{
-  int t = threadIdx.x;
-  int bsize = blockDim.x;
 
-  // assume T threads per thread block (and k reductions to be performed)
-  volatile __shared__ double s_tmp1[Tv5];
 
-  volatile __shared__ double s_tmp2[Tv5];
-  // map between thread index space and the problem index space
-  int j = blockIdx.x;
-  s_tmp1[t] = 0.0f;
-  s_tmp2[t] = 0.0f;
-  int nn = t;
-  double can1, can2, cbn;
+namespace ReSolve {
+  namespace kernels {
 
-  while(nn < N) {
-    can1 = u1[nn];
-    can2 = u2[nn];
+    /**
+     * @brief Computes v^T * [u1 u2] where v is n x k multivector
+     * and u1 and u2 are n x 1 vectors.
+     * 
+     * @tparam Tv5 - Size of shared memory
+     *  
+     * @param[in] u1      - (n x 1) vector
+     * @param[in] u2      - (n x 1) vector
+     * @param[in] v       - (n x k) multivector
+     * @param[out] result - (k x 2) multivector
+     * @param[in] k       - dimension of the subspace
+     * @param[in] N       - size of vectors u1, u2
+     */
+    template <size_t Tv5 = 1024> 
+    __global__ void MassIPTwoVec(const real_type* __restrict__ u1, 
+                                 const real_type* __restrict__ u2, 
+                                 const real_type* __restrict__ v, 
+                                 real_type* result,
+                                 const index_type k, 
+                                 const index_type N)
+    {
+      index_type t = threadIdx.x;
+      index_type bsize = blockDim.x;
 
-    cbn = v[N * j + nn];
-    s_tmp1[t] += can1 * cbn;
-    s_tmp2[t] += can2 * cbn;
+      // assume T threads per thread block (and k reductions to be performed)
+      volatile __shared__ real_type s_tmp1[Tv5];
+      volatile __shared__ real_type s_tmp2[Tv5];
 
-    nn += bsize;
-  }
+      // map between thread index space and the problem index space
+      index_type j = blockIdx.x;
+      s_tmp1[t] = 0.0;
+      s_tmp2[t] = 0.0;
+      index_type nn = t;
+      real_type can1, can2, cbn;
 
-  __syncthreads();
+      while(nn < N) {
+        can1 = u1[nn];
+        can2 = u2[nn];
 
-  if(Tv5 >= 1024) {
-    if(t < 512) {
-      s_tmp1[t] += s_tmp1[t + 512];
-      s_tmp2[t] += s_tmp2[t + 512];
+        cbn = v[N * j + nn];
+        s_tmp1[t] += can1 * cbn;
+        s_tmp2[t] += can2 * cbn;
+
+        nn += bsize;
+      }
+
+      __syncthreads();
+
+      if(Tv5 >= 1024) {
+        if(t < 512) {
+          s_tmp1[t] += s_tmp1[t + 512];
+          s_tmp2[t] += s_tmp2[t + 512];
+        }
+        __syncthreads();
+      }
+      if(Tv5 >= 512) {
+        if(t < 256) {
+          s_tmp1[t] += s_tmp1[t + 256];
+          s_tmp2[t] += s_tmp2[t + 256];
+        }
+        __syncthreads();
+      }
+      {
+        if(t < 128) {
+          s_tmp1[t] += s_tmp1[t + 128];
+          s_tmp2[t] += s_tmp2[t + 128];
+        }
+        __syncthreads();
+      }
+      {
+        if(t < 64) {
+          s_tmp1[t] += s_tmp1[t + 64];
+          s_tmp2[t] += s_tmp2[t + 64];
+        }
+        __syncthreads();
+      }
+
+      if(t < 32) {
+        s_tmp1[t] += s_tmp1[t + 32];
+        s_tmp2[t] += s_tmp2[t + 32];
+
+        s_tmp1[t] += s_tmp1[t + 16];
+        s_tmp2[t] += s_tmp2[t + 16];
+
+        s_tmp1[t] += s_tmp1[t + 8];
+        s_tmp2[t] += s_tmp2[t + 8];
+
+        s_tmp1[t] += s_tmp1[t + 4];
+        s_tmp2[t] += s_tmp2[t + 4];
+
+        s_tmp1[t] += s_tmp1[t + 2];
+        s_tmp2[t] += s_tmp2[t + 2];
+
+        s_tmp1[t] += s_tmp1[t + 1];
+        s_tmp2[t] += s_tmp2[t + 1];
+      }
+      if(t == 0) {
+        result[blockIdx.x] = s_tmp1[0];
+        result[blockIdx.x + k] = s_tmp2[0];
+      }
     }
-    __syncthreads();
-  }
-  if(Tv5 >= 512) {
-    if(t < 256) {
-      s_tmp1[t] += s_tmp1[t + 256];
-      s_tmp2[t] += s_tmp2[t + 256];
+
+
+    /**
+     * @brief AXPY y = y - x*alpha where alpha is [k x 1], and x is [N x k] needed in 1 and 2 synch GMRES
+     * 
+     * @tparam Tmaxk 
+     * 
+     * @param[in]  N      - number of rows in x
+     * @param[in]  k      - number of columns in x
+     * @param[in]  x_data - double array, size [N x k]
+     * @param[out] y_data - double array, size [N x 1]
+     * @param[in]  alpha  - doble array, size [k x 1]
+     */
+    template <size_t Tmaxk = 1024> 
+    __global__ void massAxpy3(index_type N,
+                              index_type k,
+                              const real_type* x_data,
+                              real_type* y_data,
+                              const real_type* alpha)
+    {
+      index_type i = blockIdx.x * blockDim.x + threadIdx.x;
+      index_type t = threadIdx.x;
+      __shared__ real_type s_alpha[Tmaxk];
+
+      if(t < k) {
+        s_alpha[t] = alpha[t];
+      }
+      __syncthreads();
+
+      if(i < N) {
+        real_type temp = 0.0;
+        for(index_type j = 0; j < k; ++j) {
+          temp += x_data[j * N + i] * s_alpha[j];
+        }
+        y_data[i] -= temp;
+      }
     }
-    __syncthreads();
-  }
+
+    /**
+     * @brief Pass through matrix rows and sum each as \sum_{j=1}^m abs(a_{ij})
+     * 
+     * @param[in]  n      - number of rows in the matrix.
+     * @param[in]  nnz    - number of non-zero values in the matrix
+     * @param[in]  a_ia   - row pointers (CSR storage)
+     * @param[in]  a_val  - values (CSR storage)
+     * @param[out] result - array size [n x 1] containing sums of values in each row.
+     */
+    __global__ void matrixInfNormPart1(const index_type n, 
+                                       const index_type nnz, 
+                                       const index_type* a_ia,
+                                       const real_type* a_val, 
+                                       real_type* result)
+    {
+      index_type idx = blockIdx.x * blockDim.x + threadIdx.x;
+      while (idx < n) {
+        real_type sum = 0.0;
+        for (index_type i = a_ia[idx]; i < a_ia[idx + 1]; ++i) {
+          sum = sum + fabs(a_val[i]);
+        }
+        result[idx] = sum;
+        idx += (blockDim.x * gridDim.x);
+      }
+    }
+
+    /**
+     * @brief For count sketch in sketching random method
+     * 
+     * @param[in]  n      - number of entries in input vector
+     * @param[in]  k      - number of entries in output vector (k < n)
+     * @param[in]  labels - array size [n x 1] containing integers from 0 to k-1, assigned randomly.
+     * @param[in]  flip   - array size [n x 1] containing values `1` and `-1`
+     * @param[in]  input  - input vector, size [n x 1] 
+     * @param[out] output - output vector, size [k x 1] (this vector must be allocated and initialized with `0`s prior to calling the kernel).
+     */
+    __global__ void  count_sketch(const index_type n,
+                                  const index_type k, 
+                                  const index_type* labels,
+                                  const index_type* flip,
+                                  const real_type* input,
+                                  real_type* output)
+    {
+      index_type idx = blockIdx.x * blockDim.x + threadIdx.x; 
+      while (idx < n) {
+        real_type val = input[idx];
+        if (flip[idx] != 1) {
+          val *= -1.0;
+        }
+        atomicAdd(&output[labels[idx]], val);
+        idx += blockDim.x * gridDim.x;
+      }
+    }
+
+    /**
+     * @brief Walsh-Hadamard transform (select)
+     * 
+     * @param[in]  k      -
+     * @param[in]  perm   -
+     * @param[in]  input  -
+     * @param[out] output - 
+     */
+    __global__ void select(const index_type k, 
+                           const index_type* perm,
+                           const real_type* input,
+                           real_type* output){
+
+      index_type idx = blockIdx.x * blockDim.x + threadIdx.x; 
+      while (idx < k) {
+        output[idx] = input[perm[idx]];
+        idx += blockDim.x * gridDim.x;
+      }
+    }
+
+    /**
+     * @brief Walsh-Hadamard transform (scale)
+     * 
+     * @param[in]  n -
+     * @param[in]  D -
+     * @param[in]  x -
+     * @param[out] y -
+     */
+    __global__ void scaleByD(const index_type n,
+                             const index_type* D,
+                             const real_type* x,
+                             real_type* y)
+    {
+      index_type idx = blockIdx.x * blockDim.x + threadIdx.x; 
+
+      while (idx < n) {
+
+        if (D[idx] == 1) {
+          y[idx] = x[idx];
+        } else {
+          y[idx] = (-1.0) * x[idx];
+        }
+
+        idx += blockDim.x * gridDim.x;
+      }
+    }
+
+    /**
+     * @brief Single in-global memory radix-4 Fast Walsh Transform pass
+     * (for strides exceeding elementary vector size).
+     * 
+     * @param d_Output - 
+     * @param d_Input  -
+     * @param stride   -
+     */
+    __global__ void fwtBatch2Kernel(real_type* d_Output, real_type* d_Input, index_type stride) 
+    {
+      const index_type pos = blockIdx.x * blockDim.x + threadIdx.x;
+      const index_type N = blockDim.x * gridDim.x * 4;
+
+      real_type* d_Src = d_Input + blockIdx.y * N;
+      real_type* d_Dst = d_Output + blockIdx.y * N;
+
+      index_type lo = pos & (stride - 1);
+      index_type i0 = ((pos - lo) << 2) + lo;
+      index_type i1 = i0 + stride;
+      index_type i2 = i1 + stride;
+      index_type i3 = i2 + stride;
+
+      real_type D0 = d_Src[i0];
+      real_type D1 = d_Src[i1];
+      real_type D2 = d_Src[i2];
+      real_type D3 = d_Src[i3];
+
+      real_type T;
+      T = D0;
+      D0 = D0 + D2;
+      D2 = T - D2;
+      T = D1;
+      D1 = D1 + D3;
+      D3 = T - D3;
+      T = D0;
+      d_Dst[i0] = D0 + D1;
+      d_Dst[i1] = T - D1;
+      T = D2;
+      d_Dst[i2] = D2 + D3;
+      d_Dst[i3] = T - D3;
+    }
+
+
+    /**
+     * @brief 
+     * 
+     * @param d_Output -
+     * @param d_Input  -
+     * @param log2N    -
+     * 
+     * @todo `d_Input` should be `const` parameter.
+     * 
+     */
+    __global__ void fwtBatch1Kernel(real_type* d_Output, real_type* d_Input, index_type log2N) 
+    {
+      // Handle to thread block group
+
+      cooperative_groups::thread_block cta = cooperative_groups::this_thread_block();
+      const index_type N = 1 << log2N;
+      const index_type base = blockIdx.x << log2N;
+
+      //(2 ** 11) * 4 bytes == 8KB -- maximum s_data[] size for G80
+      extern __shared__ real_type s_data[];
+      real_type* d_Src = d_Input + base;
+      real_type* d_Dst = d_Output + base;
+
+      for (index_type pos = threadIdx.x; pos < N; pos += blockDim.x) {
+        s_data[pos] = d_Src[pos];
+      }
+
+      // Main radix-4 stages
+      const index_type pos = threadIdx.x;
+
+      for (index_type stride = N >> 2; stride > 0; stride >>= 2) {
+        index_type lo = pos & (stride - 1);
+        index_type i0 = ((pos - lo) << 2) + lo;
+        index_type i1 = i0 + stride;
+        index_type i2 = i1 + stride;
+        index_type i3 = i2 + stride;
+
+        cooperative_groups::sync(cta);
+        real_type D0 = s_data[i0];
+        real_type D1 = s_data[i1];
+        real_type D2 = s_data[i2];
+        real_type D3 = s_data[i3];
+
+        real_type T;
+        T = D0;
+        D0 = D0 + D2;
+        D2 = T - D2;
+        T = D1;
+        D1 = D1 + D3;
+        D3 = T - D3;
+        T = D0;
+        s_data[i0] = D0 + D1;
+        s_data[i1] = T - D1;
+        T = D2;
+        s_data[i2] = D2 + D3;
+        s_data[i3] = T - D3;
+      }
+
+      // Do single radix-2 stage for odd power of two
+      if (log2N & 1) {
+
+        cooperative_groups::sync(cta);
+
+        for (index_type pos = threadIdx.x; pos < N / 2; pos += blockDim.x) {
+          index_type i0 = pos << 1;
+          index_type i1 = i0 + 1;
+
+          real_type D0 = s_data[i0];
+          real_type D1 = s_data[i1];
+          s_data[i0] = D0 + D1;
+          s_data[i1] = D0 - D1;
+        }
+      }
+
+      cooperative_groups::sync(cta);
+
+      for (index_type pos = threadIdx.x; pos < N; pos += blockDim.x) {
+        d_Dst[pos] = s_data[pos];
+      }
+    }
+
+  } // namespace kernels
+
+
+  //
+  // Kernel wrappers
+  //
+
+  /**
+   * @brief Computes result = mvec^T * [vec1 vec2]
+   * 
+   * @param n      - size of vectors vec1, vec2
+   * @param i      - 
+   * @param vec1   - (n x 1) vector 
+   * @param vec2   - (n x 1) vector
+   * @param mvec   - (n x (i+1)) multivector
+   * @param result - ((i+1) x 2) multivector
+   * 
+   * @todo Input data should be `const`.
+   * @todo Is it coincidence that the block size is equal to the default
+   * value of Tv5?
+   * @todo Should we use dynamic shared memory here instead?
+   */
+  void mass_inner_product_two_vectors(index_type n, 
+                                      index_type i, 
+                                      const real_type* vec1, 
+                                      const real_type* vec2, 
+                                      const real_type* mvec, 
+                                      real_type* result)
   {
-    if(t < 128) {
-      s_tmp1[t] += s_tmp1[t + 128];
-      s_tmp2[t] += s_tmp2[t + 128];
-    }
-    __syncthreads();
+    kernels::MassIPTwoVec<<<i + 1, 1024>>>(vec1, vec2, mvec, result, i + 1, n);
   }
+
+  /**
+   * @brief Computes y := y - x*alpha
+   * 
+   * @param[in]  n     - vector size
+   * @param[in]  i     - number of vectors in the multivector
+   * @param[in]  x     - (n x (i+1)) multivector 
+   * @param[out] y     - (n x (i+1)) multivector
+   * @param[in]  alpha - ((i+1) x 1) vector
+   */
+  void mass_axpy(index_type n, index_type i, const real_type* x, real_type* y, const real_type* alpha)
   {
-    if(t < 64) {
-      s_tmp1[t] += s_tmp1[t + 64];
-      s_tmp2[t] += s_tmp2[t + 64];
+    kernels::massAxpy3<<<(n + 384 - 1) / 384, 384>>>(n, i + 1, x, y, alpha);
+  }
+
+  /**
+   * @brief 
+   * 
+   * @param[in]  n      -
+   * @param[in]  nnz    -
+   * @param[in]  a_ia   - 
+   * @param[in]  a_val  -
+   * @param[out] result -
+   * 
+   * @todo Decide how to allow user to configure grid and block sizes.
+   */
+  void matrix_row_sums(index_type n, 
+                       index_type nnz, 
+                       const index_type* a_ia,
+                       const real_type* a_val, 
+                       real_type* result)
+  {
+    kernels::matrixInfNormPart1<<<1000, 1024>>>(n, nnz, a_ia, a_val, result);
+  }
+
+  /**
+   * @brief Kernel wrapper for 
+   * 
+   * @param[in]  n      - 
+   * @param[in]  k      - 
+   * @param[in]  labels - 
+   * @param[in]  flip   -
+   * @param[in]  input  - 
+   * @param[out] output - 
+   * 
+   * @todo Decide how to allow user to configure grid and block sizes.
+   */
+  void count_sketch_theta(index_type n,
+                          index_type k,
+                          const index_type* labels,
+                          const index_type* flip,
+                          const real_type* input,
+                          real_type* output)
+  {
+    kernels::count_sketch<<<10000, 1024>>>(n, k, labels, flip, input, output);
+  }
+
+  /**
+   * @brief Wrapper for `select` kernel, part of Walsh-Hadamard transform
+   * 
+   * @param[in]  k      -
+   * @param[in]  perm   - 
+   * @param[in]  input  -
+   * @param[out] output - 
+   * 
+   * @todo Decide how to allow user to configure grid and block sizes.
+   */
+  void FWHT_select(index_type k,
+                   const index_type* perm,
+                   const real_type* input,
+                   real_type* output)
+  {
+    kernels::select<<<1000, 1024>>>(k, perm, input, output);
+  }
+
+  /**
+   * @brief Wrapper for `scale` kernel, part of Walsh-Hadamard transform
+   * 
+   * @param[in]  n -
+   * @param[in]  D -
+   * @param[in]  x -
+   * @param[out] y -
+   * 
+   * @todo Decide how to allow user to configure grid and block sizes.
+   */
+  void FWHT_scaleByD(index_type n,
+                     const index_type* D,
+                     const real_type* x,
+                     real_type* y)
+  {
+    kernels::scaleByD<<<1000, 1024>>>(n, D, x, y);
+  }
+
+  /**
+   * @brief 
+   * 
+   * @param[in] M       -
+   * @param[in] log2N   - 
+   * @param[out] d_Data - 
+   * 
+   * @todo Decide if and how user should configure log2size, thread_n, etc.
+   */
+  void FWHT(index_type M, index_type log2N, real_type* d_Data)
+  {
+    const index_type ELEMENTARY_LOG2SIZE = 11;
+    const index_type THREAD_N = 1024;
+    index_type N = 1 << log2N;
+    dim3 grid((1 << log2N) / (4 * THREAD_N), M, 1);
+
+    for (; log2N > ELEMENTARY_LOG2SIZE; log2N -= 2, N >>= 2, M <<= 2) {
+      kernels::fwtBatch2Kernel<<<grid, THREAD_N>>>(d_Data, d_Data, N / 4);
     }
-    __syncthreads();
+
+    kernels::fwtBatch1Kernel<<<M, N / 4, N * sizeof(real_type)>>>(d_Data, d_Data, log2N);
   }
 
-  if(t < 32) {
-    s_tmp1[t] += s_tmp1[t + 32];
-    s_tmp2[t] += s_tmp2[t + 32];
-
-    s_tmp1[t] += s_tmp1[t + 16];
-    s_tmp2[t] += s_tmp2[t + 16];
-
-    s_tmp1[t] += s_tmp1[t + 8];
-    s_tmp2[t] += s_tmp2[t + 8];
-
-    s_tmp1[t] += s_tmp1[t + 4];
-    s_tmp2[t] += s_tmp2[t + 4];
-
-    s_tmp1[t] += s_tmp1[t + 2];
-    s_tmp2[t] += s_tmp2[t + 2];
-
-    s_tmp1[t] += s_tmp1[t + 1];
-    s_tmp2[t] += s_tmp2[t + 1];
-  }
-  if(t == 0) {
-    result[blockIdx.x] = s_tmp1[0];
-    result[blockIdx.x + k] = s_tmp2[0];
-  }
-}
-
-
-//mass AXPY i.e y = y - x*alpha where alpha is [k x 1], needed in 1 and 2 synch GMRES
-
-__global__ void massAxpy3_kernel(int N,
-                                 int k,
-                                 const double* x_data,
-                                 double* y_data,
-                                 const double* alpha) {
-
-  unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
-  unsigned int t = threadIdx.x;
-  __shared__ double s_alpha[maxk];
-  if(t < k) {
-    s_alpha[t] = alpha[t];
-  }
-  __syncthreads();
-
-  if(i < N) {
-    double temp = 0.0f;
-    for(int j = 0; j < k; ++j) {
-      temp += x_data[j * N + i] * s_alpha[j];
-    }
-    y_data[i] -= temp;
-  }
-}
-
-__global__ void matrixInfNormPart1(const int n, 
-                                   const int nnz, 
-                                   const int* a_ia,
-                                   const double* a_val, 
-                                   double* result) {
-
-  // one thread per row, pass through rows
-  // and sum
-  // can be done through atomics
-  //\sum_{j=1}^m abs(a_{ij})
-
-  int idx = blockIdx.x*blockDim.x + threadIdx.x;
-  while (idx < n){
-    double sum = 0.0f;
-    for (int i = a_ia[idx]; i < a_ia[idx+1]; ++i) {
-      sum = sum + fabs(a_val[i]);
-    }
-    result[idx] = sum;
-    idx += (blockDim.x*gridDim.x);
-  }
-}
-
-// for count sketch sketching random method
-__global__ void  count_sketch_kernel(const int n,
-                                     const int k, 
-                                     const int* labels,
-                                     const int* flip,
-                                     const double* input,
-                                     double* output){
-
-  int idx = blockIdx.x * blockDim.x + threadIdx.x; 
-  while (idx < n){
-    //printf("in place %d, I am putting input[perm[%d]] = input[%d] = %f \n", idx,idx, perm[idx], input[perm[idx]] );
-    double val = input[idx];
-    if (flip[idx] != 1){
-      val *= -1.0;
-    }    
-    atomicAdd(&output[labels[idx]], val);
-    idx += blockDim.x * gridDim.x;
-  }
-}
-
-// for Walsh-Hadamard transform
-
-//kernel 1
-__global__ void select_kernel(const int k, 
-                              const int* perm,
-                              const double* input,
-                              double* output){
-
-  int idx = blockIdx.x * blockDim.x + threadIdx.x; 
-  while (idx < k){
-    //printf("in place %d, I am putting input[perm[%d]] = input[%d] = %f \n", idx,idx, perm[idx], input[perm[idx]] );
-    output[idx] = input[perm[idx]];
-    idx += blockDim.x * gridDim.x;
-  }
-}
-
-//kernel 2
-__global__ void scaleByD_kernel(const int n,
-                                const int* D,
-                                const double* x,
-                                double* y){
-  int idx = blockIdx.x * blockDim.x + threadIdx.x; 
-
-  while (idx < n){
-
-    if (D[idx] == 1) y[idx]=x[idx];
-    else y[idx]= (-1.0)*x[idx];
-
-    idx += blockDim.x * gridDim.x;
-  }
-}
-
-//kernels 3 and 4
-
-
-#define ELEMENTARY_LOG2SIZE 11
-namespace cg = cooperative_groups;
-////////////////////////////////////////////////////////////////////////////////
-// Single in-global memory radix-4 Fast Walsh Transform pass
-// (for strides exceeding elementary vector size)
-////////////////////////////////////////////////////////////////////////////////
-
-__global__ void fwtBatch2Kernel(double* d_Output, double* d_Input, int stride) 
-{
-  const int pos = blockIdx.x * blockDim.x + threadIdx.x;
-  const int N = blockDim.x * gridDim.x * 4;
-
-  double* d_Src = d_Input + blockIdx.y * N;
-  double* d_Dst = d_Output + blockIdx.y * N;
-
-  int lo = pos & (stride - 1);
-  int i0 = ((pos - lo) << 2) + lo;
-  int i1 = i0 + stride;
-  int i2 = i1 + stride;
-  int i3 = i2 + stride;
-
-  double D0 = d_Src[i0];
-  double D1 = d_Src[i1];
-  double D2 = d_Src[i2];
-  double D3 = d_Src[i3];
-
-  double T;
-  T = D0;
-  D0 = D0 + D2;
-  D2 = T - D2;
-  T = D1;
-  D1 = D1 + D3;
-  D3 = T - D3;
-  T = D0;
-  d_Dst[i0] = D0 + D1;
-  d_Dst[i1] = T - D1;
-  T = D2;
-  d_Dst[i2] = D2 + D3;
-  d_Dst[i3] = T - D3;
-}
-
-
-__global__ void fwtBatch1Kernel(double* d_Output, double* d_Input, int log2N) 
-{
-  // Handle to thread block group
-
-  cg::thread_block cta = cg::this_thread_block();
-  const int N = 1 << log2N;
-  const int base = blockIdx.x << log2N;
-
-  //(2 ** 11) * 4 bytes == 8KB -- maximum s_data[] size for G80
-  extern __shared__ double s_data[];
-  double* d_Src = d_Input + base;
-  double* d_Dst = d_Output + base;
-
-  for (int pos = threadIdx.x; pos < N; pos += blockDim.x) {
-    s_data[pos] = d_Src[pos];
-  }
-
-  // Main radix-4 stages
-  const int pos = threadIdx.x;
-
-  for (int stride = N >> 2; stride > 0; stride >>= 2) {
-    int lo = pos & (stride - 1);
-    int i0 = ((pos - lo) << 2) + lo;
-    int i1 = i0 + stride;
-    int i2 = i1 + stride;
-    int i3 = i2 + stride;
-
-    cg::sync(cta);
-    double D0 = s_data[i0];
-    double D1 = s_data[i1];
-    double D2 = s_data[i2];
-    double D3 = s_data[i3];
-
-    double T;
-    T = D0;
-    D0 = D0 + D2;
-    D2 = T - D2;
-    T = D1;
-    D1 = D1 + D3;
-    D3 = T - D3;
-    T = D0;
-    s_data[i0] = D0 + D1;
-    s_data[i1] = T - D1;
-    T = D2;
-    s_data[i2] = D2 + D3;
-    s_data[i3] = T - D3;
-  }
-
-  // Do single radix-2 stage for odd power of two
-  if (log2N & 1) {
-
-    cg::sync(cta);
-
-    for (int pos = threadIdx.x; pos < N / 2; pos += blockDim.x) {
-      int i0 = pos << 1;
-      int i1 = i0 + 1;
-
-      double D0 = s_data[i0];
-      double D1 = s_data[i1];
-      s_data[i0] = D0 + D1;
-      s_data[i1] = D0 - D1;
-    }
-  }
-
-  cg::sync(cta);
-
-  for (int pos = threadIdx.x; pos < N; pos += blockDim.x) {
-    d_Dst[pos] = s_data[pos];
-  }
-}
-
-void mass_inner_product_two_vectors(int n, 
-                                    int i, 
-                                    double* vec1, 
-                                    double* vec2, 
-                                    double* mvec, 
-                                    double* result)
-{
-  MassIPTwoVec_kernel<<<i + 1, 1024>>>(vec1, vec2, mvec, result, i + 1, n);
-}
-
-void mass_axpy(int n, int i, double* x, double* y, double* alpha)
-{
-  massAxpy3_kernel<<<(n + 384 - 1) / 384, 384>>>(n, i + 1, x, y, alpha);
-}
-
-void matrix_row_sums(int n, 
-                     int nnz, 
-                     int* a_ia,
-                     double* a_val, 
-                     double* result)
-{
-  matrixInfNormPart1<<<1000,1024>>>(n, nnz, a_ia, a_val, result);
-}
-
-void  count_sketch_theta(int n,
-                         int k,
-                         int* labels,
-                         int* flip,
-                         double* input,
-                         double* output)
-{
-
-  count_sketch_kernel<<<10000, 1024>>>(n, k, labels, flip, input, output);
-}
-
-void FWHT_select(int k,
-                 int* perm,
-                 double* input,
-                 double* output)
-{
-  select_kernel<<<1000,1024>>>(k, perm, input, output);
-}
-
-void FWHT_scaleByD(int n,
-                   int* D,
-                   double* x,
-                   double* y)
-{
-  scaleByD_kernel<<<1000,1024>>>(n, D, x, y);
-}
-
-void FWHT(int M, int log2N, double* d_Data) {
-
-  const int THREAD_N = 1024;
-  int N = 1 << log2N;
-  dim3 grid((1 << log2N) / (4 * THREAD_N), M, 1);
-
-  for (; log2N > ELEMENTARY_LOG2SIZE; log2N -= 2, N >>= 2, M <<= 2) {
-    fwtBatch2Kernel<<<grid, THREAD_N>>>(d_Data, d_Data, N / 4);
-  }
-
-  fwtBatch1Kernel<<<M, N / 4, N * sizeof(double)>>>(d_Data, d_Data, log2N);
-}
+} // namespace ReSolve

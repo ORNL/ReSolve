@@ -1,4 +1,14 @@
+/**
+ * @file VectorKernels.hpp
+ * @author Slaven Peles (peless@ornl.gov)
+ * @brief Hardware agnostic prototypes of GPU vector kernels
+ * @date 2023-12-08
+ * 
+ * 
+ */
+
 #pragma once
+#include <resolve/Common.hpp>
 
 namespace ReSolve { namespace vector {
 

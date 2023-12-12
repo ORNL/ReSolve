@@ -1,3 +1,13 @@
+/**
+ * @file hipVectorKernels.hip
+ * @author Slaven Peles (peless@ornl.gov)
+ * @brief Contains implementation of CUDA vector kernels and their wrappers.
+ * @date 2023-12-08
+ * 
+ * @note Kernel wrappers implemented here are intended for use in hardware
+ * agnostic code.
+ */
+
 #include <resolve/Common.hpp>
 #include <resolve/vector/VectorKernels.hpp>
 #include <hip/hip_runtime.h>
