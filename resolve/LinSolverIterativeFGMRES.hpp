@@ -37,7 +37,7 @@ namespace ReSolve
     private:
     //remember matrix handler and vector handler are inherited.
 
-    std::string memspace_;
+    memory::MemorySpace memspace_;
 
     std::string orth_option_;
     vector_type* d_V_{nullptr};

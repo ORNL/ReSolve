@@ -129,8 +129,8 @@ int main(int argc, char *argv[] )
         ReSolve::matrix::Csc* U_csc = (ReSolve::matrix::Csc*) KLU->getUFactor();
         ReSolve::matrix::Csr* L = new ReSolve::matrix::Csr(L_csc->getNumRows(), L_csc->getNumColumns(), L_csc->getNnz());
         ReSolve::matrix::Csr* U = new ReSolve::matrix::Csr(U_csc->getNumRows(), U_csc->getNumColumns(), U_csc->getNnz());
-        matrix_handler->csc2csr(L_csc,L, "cuda");
-        matrix_handler->csc2csr(U_csc,U, "cuda");
+        matrix_handler->csc2csr(L_csc,L, ReSolve::memory::DEVICE);
+        matrix_handler->csc2csr(U_csc,U, ReSolve::memory::DEVICE);
         if (L == nullptr) {printf("ERROR");}
         index_type* P = KLU->getPOrdering();
         index_type* Q = KLU->getQOrdering();
@@ -152,13 +152,13 @@ int main(int argc, char *argv[] )
     }
     vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
 
-    matrix_handler->setValuesChanged(true, "cuda");
+    matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
 
-    matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "cuda"); 
+    matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", ReSolve::memory::DEVICE); 
 
     std::cout << "\t 2-Norm of the residual: " 
               << std::scientific << std::setprecision(16) 
-              << sqrt(vector_handler->dot(vec_r, vec_r, "cuda")) << "\n";
+              << sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE)) << "\n";
 
   } // for (int i = 0; i < numSystems; ++i)
 

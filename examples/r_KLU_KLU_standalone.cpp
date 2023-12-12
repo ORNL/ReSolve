@@ -97,13 +97,13 @@ int main(int argc, char *argv[])
   std::cout << "KLU solve status: " << status << std::endl;      
   vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
 
-  matrix_handler->setValuesChanged(true, "cpu");
+  matrix_handler->setValuesChanged(true, ReSolve::memory::HOST);
 
-  matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, "csr", "cpu"); 
+  matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, "csr", ReSolve::memory::HOST); 
 
   std::cout << "\t 2-Norm of the residual: " 
             << std::scientific << std::setprecision(16) 
-            << sqrt(vector_handler->dot(vec_r, vec_r, "cpu")) << "\n";
+            << sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::HOST)) << "\n";
 
 
 

@@ -116,11 +116,11 @@ int main(int argc, char *argv[] )
 
     //Now convert to CSR.
     if (i < 2) { 
-      matrix_handler->coo2csr(A_coo, A, "cpu");
+      matrix_handler->coo2csr(A_coo, A, ReSolve::memory::HOST);
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
       vec_rhs->setDataUpdated(ReSolve::memory::HOST);
     } else { 
-      matrix_handler->coo2csr(A_coo, A, "cuda");
+      matrix_handler->coo2csr(A_coo, A, ReSolve::memory::DEVICE);
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
     }
     std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnzExpanded()<<std::endl;
@@ -138,8 +138,8 @@ int main(int argc, char *argv[] )
         U_csc = (ReSolve::matrix::Csc*) KLU->getUFactor();
         ReSolve::matrix::Csr* L = new ReSolve::matrix::Csr(L_csc->getNumRows(), L_csc->getNumColumns(), L_csc->getNnz());
         ReSolve::matrix::Csr* U = new ReSolve::matrix::Csr(U_csc->getNumRows(), U_csc->getNumColumns(), U_csc->getNnz());
-        matrix_handler->csc2csr(L_csc,L, "cuda");
-        matrix_handler->csc2csr(U_csc,U, "cuda");
+        matrix_handler->csc2csr(L_csc,L, ReSolve::memory::DEVICE);
+        matrix_handler->csc2csr(U_csc,U, ReSolve::memory::DEVICE);
         if (L == nullptr) {
           std::cout << "ERROR\n";
         }
@@ -159,11 +159,11 @@ int main(int argc, char *argv[] )
     }
     vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
 
-    matrix_handler->setValuesChanged(true, "cuda");
+    matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
 
-    matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "cuda"); 
-    res_nrm = sqrt(vector_handler->dot(vec_r, vec_r, "cuda"));
-    b_nrm   = sqrt(vector_handler->dot(vec_rhs, vec_rhs, "cuda"));
+    matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", ReSolve::memory::DEVICE); 
+    res_nrm = sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE));
+    b_nrm   = sqrt(vector_handler->dot(vec_rhs, vec_rhs, ReSolve::memory::DEVICE));
     std::cout << "\t2-Norm of the residual: " 
               << std::scientific << std::setprecision(16) 
               << res_nrm/b_nrm << "\n";
@@ -184,10 +184,10 @@ int main(int argc, char *argv[] )
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
       vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
 
-      matrix_handler->setValuesChanged(true, "cuda");
+      matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
 
-      matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "cuda"); 
-      res_nrm = sqrt(vector_handler->dot(vec_r, vec_r, "cuda"));
+      matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", ReSolve::memory::DEVICE); 
+      res_nrm = sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE));
 
       std::cout <<"\t New residual norm: "
                 << std::scientific << std::setprecision(16)
@@ -199,8 +199,8 @@ int main(int argc, char *argv[] )
 
       ReSolve::matrix::Csr* L = new ReSolve::matrix::Csr(L_csc->getNumRows(), L_csc->getNumColumns(), L_csc->getNnz());
       ReSolve::matrix::Csr* U = new ReSolve::matrix::Csr(U_csc->getNumRows(), U_csc->getNumColumns(), U_csc->getNnz());
-      matrix_handler->csc2csr(L_csc, L, "cuda");
-      matrix_handler->csc2csr(U_csc, U, "cuda");
+      matrix_handler->csc2csr(L_csc, L, ReSolve::memory::DEVICE);
+      matrix_handler->csc2csr(U_csc, U, ReSolve::memory::DEVICE);
 
       P = KLU->getPOrdering();
       Q = KLU->getQOrdering();

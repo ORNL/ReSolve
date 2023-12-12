@@ -111,11 +111,11 @@ namespace ReSolve
   }
 
   //this always happen on the GPU
-  int GramSchmidt::orthogonalize(index_type n, vector::Vector* V, real_type* H, index_type i, std::string memspace)
+  int GramSchmidt::orthogonalize(index_type n, vector::Vector* V, real_type* H, index_type i, memory::MemorySpace memspace)
   {
     using namespace constants;
 
-    if ((memspace == "cuda") || (memspace == "hip")) { // or hip
+    if (memspace == memory::DEVICE) {
 
       double t;
       double s;

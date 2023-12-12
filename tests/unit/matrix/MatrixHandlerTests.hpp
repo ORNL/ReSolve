@@ -34,12 +34,17 @@ public:
   TestOutcome matrixInfNorm(index_type N)
   {
     TestStatus status;
+    ReSolve::memory::MemorySpace ms;
+    if (memspace_ == "cpu")
+      ms = memory::HOST;
+    else
+      ms = memory::DEVICE;
 
     ReSolve::MatrixHandler* handler = createMatrixHandler();
 
     matrix::Csr* A = createCsrMatrix(N, memspace_);
     real_type norm;
-    handler->matrixInfNorm(A, &norm, memspace_);
+    handler->matrixInfNorm(A, &norm, ms);
     status *= (norm == 30.0); 
     
     delete handler;
@@ -70,8 +75,8 @@ public:
 
     real_type alpha = 2.0/30.0;
     real_type beta  = 2.0;
-    handler->setValuesChanged(true, memspace_);
-    handler->matvec(A, &x, &y, &alpha, &beta, "csr", memspace_);
+    handler->setValuesChanged(true, ms);
+    handler->matvec(A, &x, &y, &alpha, &beta, "csr", ms);
 
     status *= verifyAnswer(y, 4.0, memspace_);
 

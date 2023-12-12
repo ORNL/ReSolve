@@ -124,7 +124,7 @@ int main(int argc, char *argv[])
     real_type norm_b;
     if (i < 2){
       KLU->setup(A);
-      matrix_handler->setValuesChanged(true, "cuda");
+      matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
       status = KLU->analyze();
       std::cout<<"KLU analysis status: "<<status<<std::endl;
       status = KLU->factorize();
@@ -132,14 +132,14 @@ int main(int argc, char *argv[])
       status = KLU->solve(vec_rhs, vec_x);
       std::cout<<"KLU solve status: "<<status<<std::endl;      
       vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-      norm_b = vector_handler->dot(vec_r, vec_r, "cuda");
+      norm_b = vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE);
       norm_b = sqrt(norm_b);
-      matrix_handler->setValuesChanged(true, "cuda");
-      matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "cuda"); 
+      matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
+      matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", ReSolve::memory::DEVICE); 
     
-      matrix_handler->matrixInfNorm(A, &norm_A, "cuda"); 
-      norm_x = vector_handler->infNorm(vec_x, "cuda");
-      norm_r = vector_handler->infNorm(vec_r, "cuda");
+      matrix_handler->matrixInfNorm(A, &norm_A, ReSolve::memory::DEVICE); 
+      norm_x = vector_handler->infNorm(vec_x, ReSolve::memory::DEVICE);
+      norm_r = vector_handler->infNorm(vec_r, ReSolve::memory::DEVICE);
       std::cout << "\t Matrix inf  norm: " << std::scientific << std::setprecision(16) << norm_A<<"\n"
         << "\t Residual inf norm: " << norm_r <<"\n"  
         << "\t Solution inf norm: " << norm_x <<"\n"  
@@ -147,14 +147,14 @@ int main(int argc, char *argv[])
       
       std::cout << "\t2-Norm of the residual: "
                 << std::scientific << std::setprecision(16) 
-                << sqrt(vector_handler->dot(vec_r, vec_r, "cuda"))/norm_b << "\n";
+                << sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE))/norm_b << "\n";
       if (i == 1) {
         ReSolve::matrix::Csc* L_csc = (ReSolve::matrix::Csc*) KLU->getLFactor();
         ReSolve::matrix::Csc* U_csc = (ReSolve::matrix::Csc*) KLU->getUFactor();
         ReSolve::matrix::Csr* L = new ReSolve::matrix::Csr(L_csc->getNumRows(), L_csc->getNumColumns(), L_csc->getNnz());
         ReSolve::matrix::Csr* U = new ReSolve::matrix::Csr(U_csc->getNumRows(), U_csc->getNumColumns(), U_csc->getNnz());
-        matrix_handler->csc2csr(L_csc,L, "cuda");
-        matrix_handler->csc2csr(U_csc,U, "cuda");
+        matrix_handler->csc2csr(L_csc,L, ReSolve::memory::DEVICE);
+        matrix_handler->csc2csr(U_csc,U, ReSolve::memory::DEVICE);
         if (L == nullptr) {
           std::cout << "ERROR\n";
         }
@@ -174,18 +174,18 @@ int main(int argc, char *argv[])
       std::cout<<"CUSOLVER RF solve status: "<<status<<std::endl;      
 
       vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-      norm_b = vector_handler->dot(vec_r, vec_r, "cuda");
+      norm_b = vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE);
       norm_b = sqrt(norm_b);
 
-      //matrix_handler->setValuesChanged(true, "cuda");
+      //matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
       FGMRES->resetMatrix(A);
       FGMRES->setupPreconditioner("LU", Rf);
       
-      matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "cuda"); 
+      matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", ReSolve::memory::DEVICE); 
 
-      matrix_handler->matrixInfNorm(A, &norm_A, "cuda"); 
-      norm_x = vector_handler->infNorm(vec_x, "cuda");
-      norm_r = vector_handler->infNorm(vec_r, "cuda");
+      matrix_handler->matrixInfNorm(A, &norm_A, ReSolve::memory::DEVICE); 
+      norm_x = vector_handler->infNorm(vec_x, ReSolve::memory::DEVICE);
+      norm_r = vector_handler->infNorm(vec_r, ReSolve::memory::DEVICE);
       std::cout << "\t Matrix inf  norm: " << std::scientific << std::setprecision(16) << norm_A<<"\n"
         << "\t Residual inf norm: " << norm_r <<"\n"  
         << "\t Solution inf norm: " << norm_x <<"\n"  
@@ -193,9 +193,9 @@ int main(int argc, char *argv[])
       
       std::cout << "\t 2-Norm of the residual (before IR): " 
                 << std::scientific << std::setprecision(16) 
-                << sqrt(vector_handler->dot(vec_r, vec_r, "cuda"))/norm_b << "\n";
+                << sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE))/norm_b << "\n";
 
-      matrix_handler->matrixInfNorm(A, &norm_A, "cuda"); 
+      matrix_handler->matrixInfNorm(A, &norm_A, ReSolve::memory::DEVICE); 
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
       
       if(!std::isnan(norm_r) && !std::isinf(norm_r)) {

@@ -60,7 +60,7 @@ namespace ReSolve
     private:
     //remember matrix handler and vector handler are inherited.
 
-    std::string memspace_;
+    memory::MemorySpace memspace_;
 
     real_type tol_;
     index_type maxit_;

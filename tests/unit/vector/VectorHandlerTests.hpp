@@ -55,7 +55,7 @@ namespace ReSolve {
           }
           x->update(data, memory::HOST, ms);
 
-          real_type ans = handler->infNorm(x, memspace_);
+          real_type ans = handler->infNorm(x, ms);
           bool st = true;
           if (ans != (real_type) (N - 1) * 0.1) {
             st = false;
@@ -92,7 +92,7 @@ namespace ReSolve {
 
           real_type alpha = 0.5;
           //the result is a vector with y[i] = 2.5;          
-          handler->axpy(&alpha, x, y, memspace_);
+          handler->axpy(&alpha, x, y, ms);
           status *= verifyAnswer(y, 2.5, memspace_);
 
           delete handler;
@@ -124,7 +124,7 @@ namespace ReSolve {
           y->setToConst(4.0, ms);
           real_type ans;
           //the result is N
-          ans = handler->dot(x, y, memspace_);
+          ans = handler->dot(x, y, ms);
 
           bool st = true;;
           if (ans != (real_type) N) {
@@ -161,7 +161,7 @@ namespace ReSolve {
           real_type alpha = 3.5;
 
           //the answer is x[i] = 4.375;         
-          handler->scal(&alpha, x, memspace_);
+          handler->scal(&alpha, x, ms);
           status *= verifyAnswer(x, 4.375, memspace_);
 
           delete handler;
@@ -204,7 +204,7 @@ namespace ReSolve {
           index_type r = K % 2;
           real_type res = (real_type) ((floor((real_type) K / 2.0) + r) * 1.0 + floor((real_type) K / 2.0) * (-0.5));
 
-          handler->massAxpy(N, alpha, K, x, y, memspace_);
+          handler->massAxpy(N, alpha, K, x, y, ms);
           status *= verifyAnswer(y, 2.0 - res, memspace_);
 
           delete handler;
@@ -236,7 +236,7 @@ namespace ReSolve {
 
           x->setToConst(1.0, ms);
           y->setToConst(-1.0, ms);
-          handler->massDot2Vec(N, x, K, y, res, memspace_);
+          handler->massDot2Vec(N, x, K, y, res, ms);
 
           status *= verifyAnswer(res, (-1.0) * (real_type) N, memspace_);
 
@@ -280,9 +280,9 @@ namespace ReSolve {
 
           real_type alpha = -1.0;
           real_type beta = 1.0;
-          handler->gemv("N", N, K, &alpha, &beta, V, yN, xN, memspace_);
+          handler->gemv("N", N, K, &alpha, &beta, V, yN, xN, ms);
           status *= verifyAnswer(xN, (real_type) (K) + 0.5, memspace_);
-          handler->gemv("T", N, K, &alpha, &beta, V, yT, xT, memspace_);
+          handler->gemv("T", N, K, &alpha, &beta, V, yT, xT, ms);
           status *= verifyAnswer(xT, (real_type) (N) + 0.5, memspace_);
 
           return status.report(__func__);

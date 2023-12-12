@@ -134,16 +134,16 @@ int main(int argc, char *argv[])
     }
     vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
 
-    matrix_handler->setValuesChanged(true, "cpu");
+    matrix_handler->setValuesChanged(true, ReSolve::memory::HOST);
 
-    matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, "csr", "cpu"); 
-    norm_r = vector_handler->infNorm(vec_r, "cpu");
+    matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, "csr", ReSolve::memory::HOST); 
+    norm_r = vector_handler->infNorm(vec_r, ReSolve::memory::HOST);
 
     std::cout << "\t2-Norm of the residual: " 
               << std::scientific << std::setprecision(16) 
-              << sqrt(vector_handler->dot(vec_r, vec_r, "cpu")) << "\n";
-    matrix_handler->matrixInfNorm(A, &norm_A, "cpu"); 
-    norm_x = vector_handler->infNorm(vec_x, "cpu");
+              << sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::HOST)) << "\n";
+    matrix_handler->matrixInfNorm(A, &norm_A, ReSolve::memory::HOST); 
+    norm_x = vector_handler->infNorm(vec_x, ReSolve::memory::HOST);
     std::cout << "\tMatrix inf  norm: " << std::scientific << std::setprecision(16) << norm_A<<"\n"
               << "\tResidual inf norm: " << norm_r <<"\n"  
               << "\tSolution inf norm: " << norm_x <<"\n"  

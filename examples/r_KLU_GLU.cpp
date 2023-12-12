@@ -141,14 +141,14 @@ int main(int argc, char *argv[])
 
     // Estimate solution error
     vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-    real_type bnorm = sqrt(vector_handler->dot(vec_r, vec_r, "cuda"));
-    matrix_handler->setValuesChanged(true, "cuda");
-    matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "cuda"); 
+    real_type bnorm = sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE));
+    matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
+    matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", ReSolve::memory::DEVICE); 
 
     
-    matrix_handler->matrixInfNorm(A, &norm_A, "cuda"); 
-    norm_x = vector_handler->infNorm(vec_x, "cuda");
-    norm_r = vector_handler->infNorm(vec_r, "cuda");
+    matrix_handler->matrixInfNorm(A, &norm_A, ReSolve::memory::DEVICE); 
+    norm_x = vector_handler->infNorm(vec_x, ReSolve::memory::DEVICE);
+    norm_r = vector_handler->infNorm(vec_r, ReSolve::memory::DEVICE);
     std::cout << "\t Matrix inf  norm: " << std::scientific << std::setprecision(16) << norm_A<<"\n"
       << "\t Residual inf norm: " << norm_r <<"\n"  
       << "\t Solution inf norm: " << norm_x <<"\n"  
@@ -156,7 +156,7 @@ int main(int argc, char *argv[])
     
     std::cout << "\t 2-Norm of the residual: " 
               << std::scientific << std::setprecision(16) 
-              << sqrt(vector_handler->dot(vec_r, vec_r, "cuda"))/bnorm << "\n";
+              << sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE))/bnorm << "\n";
 
   } // for (int i = 0; i < numSystems; ++i)
 

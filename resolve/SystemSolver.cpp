@@ -69,10 +69,10 @@ namespace ReSolve
 
 #ifdef RESOLVE_USE_HIP
   SystemSolver::SystemSolver(LinAlgWorkspaceHIP*  workspaceHip, 
-                   std::string factor,
-                   std::string refactor,
-                   std::string solve,
-                   std::string ir) 
+                             std::string factor,
+                             std::string refactor,
+                             std::string solve,
+                             std::string ir) 
     : workspaceHip_(workspaceHip),
       factorizationMethod_(factor),
       refactorizationMethod_(refactor),
@@ -409,11 +409,15 @@ namespace ReSolve
   {
     using namespace ReSolve::constants;
     assert(rhs->getSize() == resVector_->getSize());
-    real_type norm_b = 0.0;
+    real_type norm_b  = 0.0;
+    real_type resnorm = 0.0;
 
     if (memspace_ == "cpu") {
       resVector_->update(rhs, memory::HOST, memory::HOST);
-      matrixHandler_->setValuesChanged(true, "cpu");
+      matrixHandler_->setValuesChanged(true, memory::HOST);
+      norm_b = std::sqrt(vectorHandler_->dot(resVector_, resVector_, memory::HOST));
+      matrixHandler_->matvec(A_, x, resVector_, &ONE, &MINUSONE, "csr", memory::HOST);
+      resnorm = std::sqrt(vectorHandler_->dot(resVector_, resVector_, memory::HOST));
 #ifdef RESOLVE_USE_CUDA
     } else if (memspace_ == "cuda") {
       if (isSolveOnDevice_) {
@@ -421,7 +425,10 @@ namespace ReSolve
       } else {
         resVector_->update(rhs, memory::HOST, memory::DEVICE);
       }
-      matrixHandler_->setValuesChanged(true, "cuda");
+      matrixHandler_->setValuesChanged(true, memory::DEVICE);
+      norm_b = std::sqrt(vectorHandler_->dot(resVector_, resVector_, memory::DEVICE));
+      matrixHandler_->matvec(A_, x, resVector_, &ONE, &MINUSONE, "csr", memory::DEVICE);
+      resnorm = std::sqrt(vectorHandler_->dot(resVector_, resVector_, memory::DEVICE));
 #endif
 #ifdef RESOLVE_USE_HIP
     } else if (memspace_ == "hip") {
@@ -430,15 +437,15 @@ namespace ReSolve
       } else {
         resVector_->update(rhs, memory::HOST, memory::DEVICE);
       }
-      matrixHandler_->setValuesChanged(true, "hip");
+      matrixHandler_->setValuesChanged(true, memory::DEVICE);
+      norm_b = std::sqrt(vectorHandler_->dot(resVector_, resVector_, memory::DEVICE));
+      matrixHandler_->matvec(A_, x, resVector_, &ONE, &MINUSONE, "csr", memory::DEVICE);
+      resnorm = std::sqrt(vectorHandler_->dot(resVector_, resVector_, memory::DEVICE));
 #endif
     } else {
       out::error() << "Unrecognized device " << memspace_ << "\n";
       return -1.0;
     }
-    norm_b = std::sqrt(vectorHandler_->dot(resVector_, resVector_, memspace_));
-    matrixHandler_->matvec(A_, x, resVector_, &ONE, &MINUSONE, "csr", memspace_);
-    real_type resnorm = std::sqrt(vectorHandler_->dot(resVector_, resVector_, memspace_));
     return resnorm/norm_b;
   }
 

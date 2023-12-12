@@ -92,20 +92,20 @@ namespace ReSolve {
   {
     cpuImpl_ = new MatrixHandlerCpu();
     devImpl_ = new MatrixHandlerHip(new_workspace);
-    isCpuEnabled_  = true;
+    isCpuEnabled_ = true;
     isHipEnabled_ = true;
   }
 #endif
-  void MatrixHandler::setValuesChanged(bool isValuesChanged, std::string memspace)
+  void MatrixHandler::setValuesChanged(bool isValuesChanged, memory::MemorySpace memspace)
   {
-    if (memspace == "cpu") {
-      cpuImpl_->setValuesChanged(isValuesChanged);
-    } else if (memspace == "cuda") {
-      devImpl_->setValuesChanged(isValuesChanged);
-    } else if (memspace == "hip") {
-      devImpl_->setValuesChanged(isValuesChanged);
-    } else {
-      out::error() << "Unsupported device " << memspace << "\n";
+    using namespace ReSolve::memory;
+    switch (memspace) {
+      case HOST:
+        cpuImpl_->setValuesChanged(isValuesChanged);
+        break;
+      case DEVICE:
+        devImpl_->setValuesChanged(isValuesChanged);
+        break;
     }
   }
 
@@ -114,7 +114,7 @@ namespace ReSolve {
    * 
    * Conversion takes place on CPU, and then CSR matrix is copied to `memspace`.
    */
-  int MatrixHandler::coo2csr(matrix::Coo* A_coo, matrix::Csr* A_csr, std::string memspace)
+  int MatrixHandler::coo2csr(matrix::Coo* A_coo, matrix::Csr* A_csr, memory::MemorySpace memspace)
   {
     //count nnzs first
     index_type nnz_unpacked = 0;
@@ -249,17 +249,8 @@ namespace ReSolve {
     }
 #endif
     A_csr->setNnz(nnz_no_duplicates);
-    if (memspace == "cpu"){
-      A_csr->updateData(csr_ia, csr_ja, csr_a, memory::HOST, memory::HOST);
-    } else {
-      if (memspace == "cuda"){      
-        A_csr->updateData(csr_ia, csr_ja, csr_a, memory::HOST, memory::DEVICE);
-      } else if (memspace == "hip"){      
-        A_csr->updateData(csr_ia, csr_ja, csr_a, memory::HOST, memory::DEVICE);
-      } else {
-        //display error
-      }
-    }
+    A_csr->updateData(csr_ia, csr_ja, csr_a, memory::HOST, memspace);
+
     delete [] nnz_counts;
     delete [] tmp;
     delete [] nnz_shifts;
@@ -289,48 +280,46 @@ namespace ReSolve {
                             const real_type* alpha, 
                             const real_type* beta,
                             std::string matrixFormat, 
-                            std::string memspace)
+                            memory::MemorySpace memspace)
   {
-    if (memspace == "cuda" ) {
-      return devImpl_->matvec(A, vec_x, vec_result, alpha, beta, matrixFormat);
-    } else if (memspace == "cpu") {
+    using namespace ReSolve::memory;
+    switch (memspace) {
+      case HOST:
         return cpuImpl_->matvec(A, vec_x, vec_result, alpha, beta, matrixFormat);
-    } else if (memspace == "hip") {
+        break;
+      case DEVICE:
         return devImpl_->matvec(A, vec_x, vec_result, alpha, beta, matrixFormat);
-    } else {
-        out::error() << "Support for device " << memspace << " not implemented (yet)" << std::endl;
-        return 1;
+        break;
     }
+    return 1;
   }
 
-  int MatrixHandler::matrixInfNorm(matrix::Sparse *A, real_type* norm, std::string memspace) {
-
-    if (memspace == "cuda" ) {
-      return devImpl_->matrixInfNorm(A, norm);
-    } else if (memspace == "cpu") {
-      return cpuImpl_->matrixInfNorm(A, norm);
-    } else if (memspace == "hip") {
-      return devImpl_->matrixInfNorm(A, norm);
-    } else {
-        out::error() << "Support for device " << memspace << " not implemented (yet)" << std::endl;
-        return 1;
-    }
-
-  }
-
-  int MatrixHandler::csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr, std::string memspace)
+  int MatrixHandler::matrixInfNorm(matrix::Sparse *A, real_type* norm, memory::MemorySpace memspace)
   {
-    if (memspace == "cuda") { 
-      return devImpl_->csc2csr(A_csc, A_csr);
-    } else if (memspace == "hip") {
-      return devImpl_->csc2csr(A_csc, A_csr);
-    } else if (memspace == "cpu") { 
-      out::warning() << "Using untested csc2csr on CPU ..." << std::endl;
-      return cpuImpl_->csc2csr(A_csc, A_csr);
-    } else {
-      out::error() << "csc2csr not implemented for " << memspace << " device." << std::endl;
-      return -1;
+    using namespace ReSolve::memory;
+    switch (memspace) {
+      case HOST:
+        return cpuImpl_->matrixInfNorm(A, norm);
+        break;
+      case DEVICE:
+        return devImpl_->matrixInfNorm(A, norm);
+        break;
     }
+    return 1;
+  }
+
+  int MatrixHandler::csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr, memory::MemorySpace memspace)
+  {
+    using namespace ReSolve::memory;
+    switch (memspace) {
+      case HOST:
+        return cpuImpl_->csc2csr(A_csc, A_csr);
+        break;
+      case DEVICE:
+        return devImpl_->csc2csr(A_csc, A_csr);
+        break;
+    }
+    return 1;
   }
 
 } // namespace ReSolve

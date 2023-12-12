@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
     real_type norm_b;
     if (i < 2){
       KLU->setup(A);
-      matrix_handler->setValuesChanged(true, "cuda");
+      matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
       status = KLU->analyze();
       std::cout<<"KLU analysis status: "<<status<<std::endl;
       status = KLU->factorize();
@@ -133,21 +133,21 @@ int main(int argc, char *argv[])
       status = KLU->solve(vec_rhs, vec_x);
       std::cout<<"KLU solve status: "<<status<<std::endl;      
       vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-      norm_b = vector_handler->dot(vec_r, vec_r, "cuda");
+      norm_b = vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE);
       norm_b = sqrt(norm_b);
-      matrix_handler->setValuesChanged(true, "cuda");
-      matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "cuda"); 
+      matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
+      matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", ReSolve::memory::DEVICE); 
       std::cout << "\t 2-Norm of the residual : " 
                 << std::scientific << std::setprecision(16) 
-                << sqrt(vector_handler->dot(vec_r, vec_r, "cuda"))/norm_b << "\n";
+                << sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE))/norm_b << "\n";
       if (i == 1) {
         ReSolve::matrix::Csc* L_csc = (ReSolve::matrix::Csc*) KLU->getLFactor();
         ReSolve::matrix::Csc* U_csc = (ReSolve::matrix::Csc*) KLU->getUFactor();
         ReSolve::matrix::Csr* L = new ReSolve::matrix::Csr(L_csc->getNumRows(), L_csc->getNumColumns(), L_csc->getNnz());
         ReSolve::matrix::Csr* U = new ReSolve::matrix::Csr(U_csc->getNumRows(), U_csc->getNumColumns(), U_csc->getNnz());
 
-        matrix_handler->csc2csr(L_csc,L, "cuda");
-        matrix_handler->csc2csr(U_csc,U, "cuda");
+        matrix_handler->csc2csr(L_csc,L, ReSolve::memory::DEVICE);
+        matrix_handler->csc2csr(U_csc,U, ReSolve::memory::DEVICE);
         if (L == nullptr) {
           std::cout << "ERROR\n";
         }
@@ -173,7 +173,7 @@ int main(int argc, char *argv[])
         FGMRES->setupPreconditioner("LU", Rf);
       }
       //if (i%2!=0)  vec_x->setToZero(ReSolve::memory::DEVICE);
-      real_type norm_x =  vector_handler->dot(vec_x, vec_x, "cuda");
+      real_type norm_x =  vector_handler->dot(vec_x, vec_x, ReSolve::memory::DEVICE);
       std::cout << "Norm of x (before solve): " 
                 << std::scientific << std::setprecision(16) 
                 << sqrt(norm_x) << "\n";
@@ -181,17 +181,17 @@ int main(int argc, char *argv[])
       
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
       vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-      norm_b = vector_handler->dot(vec_r, vec_r, "cuda");
+      norm_b = vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE);
       norm_b = sqrt(norm_b);
 
-      matrix_handler->setValuesChanged(true, "cuda");
+      matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
       FGMRES->resetMatrix(A);
       
-      matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", "cuda"); 
+      matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", ReSolve::memory::DEVICE); 
 
       std::cout << "\t 2-Norm of the residual (before IR): " 
                 << std::scientific << std::setprecision(16) 
-                << sqrt(vector_handler->dot(vec_r, vec_r, "cuda"))/norm_b << "\n";
+                << sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE))/norm_b << "\n";
       std::cout << "\t 2-Norm of the RIGHT HAND SIDE: " 
                 << std::scientific << std::setprecision(16) 
                 << norm_b << "\n";
@@ -205,7 +205,7 @@ int main(int argc, char *argv[])
                 << " final nrm: "
                 << FGMRES->getFinalResidualNorm()/norm_b
                 << " iter: " << FGMRES->getNumIter() << "\n";
-      norm_x = vector_handler->dot(vec_x, vec_x, "cuda");
+      norm_x = vector_handler->dot(vec_x, vec_x, ReSolve::memory::DEVICE);
       std::cout << "Norm of x (after IR): " 
                 << std::scientific << std::setprecision(16) 
                 << sqrt(norm_x) << "\n";
