@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
 
   real_type normRmatrix1CPU = sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE));
 
-  std::cout<<"Results (first matrix): "<<std::endl<<std::endl;
+  std::cout<<"Results (first matrix): " << std::scientific <<std::endl<<std::endl;
   std::cout<<"\t ||b-A*x||_2                 : " << std::setprecision(16) << normRmatrix1    << " (residual norm)" << std::endl;
   std::cout<<"\t ||b-A*x||_2  (CPU)          : " << std::setprecision(16) << normRmatrix1CPU << " (residual norm)" << std::endl;
   std::cout<<"\t ||b-A*x||_2/||b||_2         : " << normRmatrix1/normB1   << " (scaled residual norm)"             << std::endl;

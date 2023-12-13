@@ -26,6 +26,8 @@ namespace ReSolve
       using vector_type = vector::Vector;
       using matrix_type = matrix::Sparse;
 
+      // enum ResidualNormType {RR = 0, NSR};
+
       SystemSolver();
       SystemSolver(LinAlgWorkspaceCUDA* workspaceCuda, 
                    std::string factor = "klu",
@@ -58,7 +60,8 @@ namespace ReSolve
       LinSolverDirect& getRefactorizationSolver();
       LinSolverIterative& getIterativeSolver();
 
-      real_type getResidualNorm(vector_type* rhs, vector_type* x);
+      real_type getResidualNorm(vector_type* rhs, vector_type* x);//, ResidualNormType = RR);
+      real_type getNormOfScaledResiduals(vector_type* rhs, vector_type* x);//, ResidualNormType = RR);
 
       // Get solver parameters
       const std::string getFactorizationMethod() const;

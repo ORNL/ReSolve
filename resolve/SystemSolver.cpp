@@ -52,10 +52,10 @@ namespace ReSolve
 
 #ifdef RESOLVE_USE_CUDA
   SystemSolver::SystemSolver(LinAlgWorkspaceCUDA*  workspaceCuda, 
-                   std::string factor,
-                   std::string refactor,
-                   std::string solve,
-                   std::string ir) 
+                             std::string factor,
+                             std::string refactor,
+                             std::string solve,
+                             std::string ir) 
     : workspaceCuda_(workspaceCuda),
       factorizationMethod_(factor),
       refactorizationMethod_(refactor),
@@ -164,7 +164,6 @@ namespace ReSolve
       return 1;
     }
 
-#if defined(RESOLVE_USE_HIP) || defined(RESOLVE_USE_CUDA)
     if (irMethod_ == "fgmres") {
       // GramSchmidt::GSVariant variant;
       if (gsMethod_ == "cgs2") {
@@ -189,7 +188,6 @@ namespace ReSolve
                                                       gs_,
                                                       memspace_);
     }
-#endif
 
     return 0;
   }
@@ -260,7 +258,7 @@ namespace ReSolve
 
 #ifdef RESOLVE_USE_HIP
     if (refactorizationMethod_ == "rocsolverrf") {
-      std::cout << "Refactorization setup using rocsolverRf ...\n";
+      // std::cout << "Refactorization setup using rocsolverRf ...\n";
       isSolveOnDevice_ = true;
       auto* Rf = dynamic_cast<LinSolverDirectRocSolverRf*>(refactorizationSolver_);
       Rf->setSolveMode(1);
@@ -268,33 +266,39 @@ namespace ReSolve
     }
 #endif
 
-#if defined(RESOLVE_USE_HIP) || defined(RESOLVE_USE_CUDA)
     if (irMethod_ == "fgmres") {
       std::cout << "Setting up FGMRES ...\n";
       gs_->setup(A_->getNumRows(), iterativeSolver_->getRestart()); 
       status += iterativeSolver_->setup(A_); 
     }
-#endif
 
     return status;
   }
 
-  // TODO: First argument in solve function is rhs (const vector) and second is the solution (overwritten)
+  /**
+   * @brief Calls triangular solver
+   * 
+   * @param[in]  rhs - Right-hand-side vector of the system
+   * @param[out] x   - Solution vector (will be overwritten)
+   * @return int status of factorization
+   * 
+   * @todo Make `rhs` a constant vector
+   */
   int SystemSolver::solve(vector_type* rhs, vector_type* x)
   {
-    int status = 1;
+    int status = 0;
     if (solveMethod_ == "klu") {
-      status = factorizationSolver_->solve(rhs, x);
+      status += factorizationSolver_->solve(rhs, x);
     } 
 
 #ifdef RESOLVE_USE_CUDA
     if (solveMethod_ == "glu") {
       if (isSolveOnDevice_) {
         // std::cout << "Solving with GLU ...\n";
-        status = refactorizationSolver_->solve(rhs, x);
+        status += refactorizationSolver_->solve(rhs, x);
       } else {
         // std::cout << "Solving with KLU ...\n";
-        status = factorizationSolver_->solve(rhs, x);
+        status += factorizationSolver_->solve(rhs, x);
       }
     } 
 #endif
@@ -303,14 +307,20 @@ namespace ReSolve
     if (solveMethod_ == "rocsolverrf") {
       if (isSolveOnDevice_) {
         // std::cout << "Solving with RocSolver ...\n";
-        status = refactorizationSolver_->solve(rhs, x);
+        status += refactorizationSolver_->solve(rhs, x);
       } else {
         // std::cout << "Solving with KLU ...\n";
-        status = factorizationSolver_->solve(rhs, x);
+        status += factorizationSolver_->solve(rhs, x);
       }     
     } 
 #endif
 
+    if (irMethod_ == "fgmres") {
+      if (isSolveOnDevice_) {
+        std::cout << "Performing iterative refinement ...\n";
+        status += refine(rhs, x);
+      }
+    }
     return status;
   }
 
@@ -370,17 +380,32 @@ namespace ReSolve
     // initialize();
   }
 
+  /**
+   * @brief Sets iterative refinement method and related orthogonalization. 
+   * 
+   * @param[in] method   - string ID for the iterative refinement method
+   * @param[in] gsMethod - string ID for the orthogonalization method to be used
+   * 
+   * @todo Iterative refinement temporarily disabled on CPU. Need to fix that.
+   */
   void SystemSolver::setRefinementMethod(std::string method, std::string gsMethod)
   {
 #if defined(RESOLVE_USE_HIP) || defined(RESOLVE_USE_CUDA)
     if (iterativeSolver_ != nullptr)
       delete iterativeSolver_;
 
-    if(gs_ != nullptr)
+    if (gs_ != nullptr)
       delete gs_;
     
-    if(method == "none")
+    if (method == "none")
       return;
+
+    if (memspace_ == "cpu") {
+      method = "none";
+      out::warning() << "Iterative refinement not supported on CPU. "
+                     << "Turning off ...\n";
+      return;
+    }
 
     gsMethod_ = gsMethod;
 
@@ -410,7 +435,6 @@ namespace ReSolve
     } else {
       out::error() << "Iterative refinement method " << method << " not recognized.\n";
     }
-#endif
   }
 
   real_type SystemSolver::getResidualNorm(vector_type* rhs, vector_type* x)
@@ -419,42 +443,61 @@ namespace ReSolve
     assert(rhs->getSize() == resVector_->getSize());
     real_type norm_b  = 0.0;
     real_type resnorm = 0.0;
-
+    memory::MemorySpace ms = memory::HOST;
     if (memspace_ == "cpu") {
       resVector_->update(rhs, memory::HOST, memory::HOST);
-      matrixHandler_->setValuesChanged(true, memory::HOST);
       norm_b = std::sqrt(vectorHandler_->dot(resVector_, resVector_, memory::HOST));
-      matrixHandler_->matvec(A_, x, resVector_, &ONE, &MINUSONE, "csr", memory::HOST);
-      resnorm = std::sqrt(vectorHandler_->dot(resVector_, resVector_, memory::HOST));
-#ifdef RESOLVE_USE_CUDA
-    } else if (memspace_ == "cuda") {
+#if defined(RESOLVE_USE_HIP) || defined(RESOLVE_USE_CUDA)
+    } else if (memspace_ == "cuda" || memspace_ == "hip") {
       if (isSolveOnDevice_) {
         resVector_->update(rhs, memory::DEVICE, memory::DEVICE);
+        norm_b = std::sqrt(vectorHandler_->dot(resVector_, resVector_, memory::DEVICE));
       } else {
         resVector_->update(rhs, memory::HOST, memory::DEVICE);
+        norm_b = std::sqrt(vectorHandler_->dot(resVector_, resVector_, memory::HOST));
+        // ms = memory::HOST;
       }
-      matrixHandler_->setValuesChanged(true, memory::DEVICE);
-      norm_b = std::sqrt(vectorHandler_->dot(resVector_, resVector_, memory::DEVICE));
-      matrixHandler_->matvec(A_, x, resVector_, &ONE, &MINUSONE, "csr", memory::DEVICE);
-      resnorm = std::sqrt(vectorHandler_->dot(resVector_, resVector_, memory::DEVICE));
-#endif
-#ifdef RESOLVE_USE_HIP
-    } else if (memspace_ == "hip") {
-      if (isSolveOnDevice_) {
-        resVector_->update(rhs, memory::DEVICE, memory::DEVICE);
-      } else {
-        resVector_->update(rhs, memory::HOST, memory::DEVICE);
-      }
-      matrixHandler_->setValuesChanged(true, memory::DEVICE);
-      norm_b = std::sqrt(vectorHandler_->dot(resVector_, resVector_, memory::DEVICE));
-      matrixHandler_->matvec(A_, x, resVector_, &ONE, &MINUSONE, "csr", memory::DEVICE);
-      resnorm = std::sqrt(vectorHandler_->dot(resVector_, resVector_, memory::DEVICE));
+      ms = memory::DEVICE;
 #endif
     } else {
       out::error() << "Unrecognized device " << memspace_ << "\n";
       return -1.0;
     }
+    matrixHandler_->setValuesChanged(true, ms);
+    matrixHandler_->matvec(A_, x, resVector_, &ONE, &MINUSONE, "csr", ms);
+    resnorm = std::sqrt(vectorHandler_->dot(resVector_, resVector_, ms));
     return resnorm/norm_b;
+  }
+
+  real_type SystemSolver::getNormOfScaledResiduals(vector_type* rhs, vector_type* x)
+  {
+    using namespace ReSolve::constants;
+    assert(rhs->getSize() == resVector_->getSize());
+    real_type norm_x  = 0.0;
+    real_type norm_A  = 0.0;
+    real_type resnorm = 0.0;
+    memory::MemorySpace ms = memory::HOST;
+    if (memspace_ == "cpu") {
+      resVector_->update(rhs, memory::HOST, memory::HOST);
+#if defined(RESOLVE_USE_HIP) || defined(RESOLVE_USE_CUDA)
+    } else if (memspace_ == "cuda" || memspace_ == "hip") {
+      if (isSolveOnDevice_) {
+        resVector_->update(rhs, memory::DEVICE, memory::DEVICE);
+      } else {
+        resVector_->update(rhs, memory::HOST, memory::DEVICE);
+      }
+      ms = memory::DEVICE;
+#endif
+    } else {
+      out::error() << "Unrecognized device " << memspace_ << "\n";
+      return -1.0;
+    }
+    matrixHandler_->setValuesChanged(true, ms);
+    matrixHandler_->matvec(A_, x, resVector_, &ONE, &MINUSONE, "csr", ms);
+    resnorm = vectorHandler_->infNorm(resVector_, ms);
+    norm_x  = vectorHandler_->infNorm(x, ms);
+    matrixHandler_->matrixInfNorm(A_, &norm_A, ms);
+    return resnorm / (norm_x * norm_A);
   }
 
   const std::string SystemSolver::getFactorizationMethod() const
