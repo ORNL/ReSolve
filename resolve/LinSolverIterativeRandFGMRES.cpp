@@ -15,7 +15,14 @@ namespace ReSolve
  
   LinSolverIterativeRandFGMRES::LinSolverIterativeRandFGMRES(std::string memspace)
   {
-    memspace_ = memspace;
+    if (memspace == "cpu") {
+      memspace_ = memory::HOST;
+    } else if ((memspace == "cuda") || (memspace == "hip")) {
+      memspace_ = memory::DEVICE;
+    } else {
+      out::error() << "Unrecognized device " << memspace << "\n";
+    }
+
     this->matrix_handler_ = nullptr;
     this->vector_handler_ = nullptr;
     this->rand_method_ = cs; 
@@ -36,7 +43,14 @@ namespace ReSolve
                                                              GramSchmidt*   gs,
                                                              std::string memspace)
   {
-    memspace_ = memspace;
+    if (memspace == "cpu") {
+      memspace_ = memory::HOST;
+    } else if ((memspace == "cuda") || (memspace == "hip")) {
+      memspace_ = memory::DEVICE;
+    } else {
+      out::error() << "Unrecognized device " << memspace << "\n";
+    }
+
     this->matrix_handler_ = matrix_handler;
     this->vector_handler_ = vector_handler;
     this->rand_method_ = rand_method;
@@ -46,7 +60,7 @@ namespace ReSolve
     maxit_= 100; //default
     restart_ = 10;
     conv_cond_ = 0;//default
-    flexible_ = 1;
+    flexible_ = true;
 
     d_V_ = nullptr;
     d_Z_ = nullptr;
@@ -62,7 +76,14 @@ namespace ReSolve
                                                              GramSchmidt*   gs,
                                                              std::string memspace)
   {
-    memspace_ = memspace;
+    if (memspace == "cpu") {
+      memspace_ = memory::HOST;
+    } else if ((memspace == "cuda") || (memspace == "hip")) {
+      memspace_ = memory::DEVICE;
+    } else {
+      out::error() << "Unrecognized device " << memspace << "\n";
+    }
+
     this->matrix_handler_ = matrix_handler;
     this->vector_handler_ = vector_handler;
     this->rand_method_ = rand_method;
@@ -72,7 +93,7 @@ namespace ReSolve
     maxit_= maxit; 
     restart_ = restart;
     conv_cond_ = conv_cond;
-    flexible_ = 1;
+    flexible_ = true;
 
     d_V_ = nullptr;
     d_Z_ = nullptr;
@@ -277,7 +298,7 @@ namespace ReSolve
         //V(:, i+1) =w-V(:, 1:i)*d_H_col = V(:, i+1)-d_H_col * V(:,1:i); 
         //checkCudaErrors( cublasDgemv(cublas_handle, CUBLAS_OP_N, n, i + 1, &minusone, d_V, n, d_Hcolumn, 1,&one , &d_V[n * (i + 1)], 1));
 
-        vector_handler_->gemv("N", n_, i + 1, &MINUSONE, &ONE, d_V_, vec_z, vec_v, memspace_ );  
+        vector_handler_->gemv('N', n_, i + 1, &MINUSONE, &ONE, d_V_, vec_z, vec_v, memspace_ );  
 
         vec_z->setCurrentSize(n_);
         t = 1.0 / h_H_[i * (restart_ + 1) + i + 1];
@@ -482,7 +503,6 @@ namespace ReSolve
   void  LinSolverIterativeRandFGMRES::precV(vector_type* rhs, vector_type* x)
   { 
     LU_solver_->solve(rhs, x);
-    //  x->update(rhs->getData(memory::DEVICE), memory::DEVICE, memory::DEVICE);
   }
 
 } // namespace ReSolve

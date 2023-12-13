@@ -52,8 +52,8 @@ namespace ReSolve {
       MatrixHandler(LinAlgWorkspaceHIP* workspace);
       ~MatrixHandler();
 
-      int csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr, std::string memspace);
-      int coo2csr(matrix::Coo* A_coo, matrix::Csr* A_csr, std::string memspace);
+      int csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr, memory::MemorySpace memspace);
+      int coo2csr(matrix::Coo* A_coo, matrix::Csr* A_csr, memory::MemorySpace memspace);
 
       /// Should compute vec_result := alpha*A*vec_x + beta*vec_result, but at least on cpu alpha and beta are flipped
       int matvec(matrix::Sparse* A,
@@ -62,21 +62,19 @@ namespace ReSolve {
                  const real_type* alpha,
                  const real_type* beta,
                  std::string matrix_type,
-                 std::string memspace);
-      int matrixInfNorm(matrix::Sparse *A, real_type* norm, std::string memspace);
-      void setValuesChanged(bool toWhat, std::string memspace); 
+                 memory::MemorySpace memspace);
+      int matrixInfNorm(matrix::Sparse *A, real_type* norm, memory::MemorySpace memspace);
+      void setValuesChanged(bool toWhat, memory::MemorySpace memspace); 
     
     private: 
       bool new_matrix_{true};  ///< if the structure changed, you need a new handler.
 
-      MemoryHandler mem_;      ///< Device memory manager object
-      MatrixHandlerImpl*  cpuImpl_{nullptr}; ///< Pointer to CPU implementation
-      MatrixHandlerImpl* cudaImpl_{nullptr}; ///< Pointer to CUDA implementation
-      MatrixHandlerImpl* hipImpl_{nullptr}; ///< Pointer to HIP implementation
+      MatrixHandlerImpl* cpuImpl_{nullptr}; ///< Pointer to host implementation
+      MatrixHandlerImpl* devImpl_{nullptr}; ///< Pointer to device implementation
 
       bool isCpuEnabled_{false};  ///< true if CPU  implementation is instantiated
       bool isCudaEnabled_{false}; ///< true if CUDA implementation is instantiated
-      bool isHipEnabled_{false}; ///< true if HIP implementation is instantiated
+      bool isHipEnabled_{false};  ///< true if HIP  implementation is instantiated
   };
 
 } // namespace ReSolve

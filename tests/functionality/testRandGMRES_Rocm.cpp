@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
   vec_x->setToZero(ReSolve::memory::DEVICE);
 
   real_type norm_b;
-  matrix_handler->setValuesChanged(true, "hip");
+  matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
 
   status = Rf->setup(A);
   error_sum += status;
@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
   status = GS->setup(FGMRES->getKrand(), FGMRES->getRestart()); 
   error_sum += status;
 
-  //matrix_handler->setValuesChanged(true, "hip");
+  //matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
   status = FGMRES->resetMatrix(A);
   error_sum += status;
 
@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
 
   FGMRES->solve(vec_rhs, vec_x);
 
-  norm_b = vector_handler->dot(vec_rhs, vec_rhs, "hip");
+  norm_b = vector_handler->dot(vec_rhs, vec_rhs, ReSolve::memory::DEVICE);
   norm_b = std::sqrt(norm_b);
   real_type final_norm_first =  FGMRES->getFinalResidualNorm();
   std::cout << "Randomized FGMRES results (first run): \n"

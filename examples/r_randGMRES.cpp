@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
   //Now call direct solver
   real_type norm_b;
-  matrix_handler->setValuesChanged(true, "hip");
+  matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
 
   Rf->setup(A);
   FGMRES->setRestart(150);
@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
   FGMRES->setup(A);
   GS->setup(FGMRES->getKrand(), FGMRES->getRestart()); 
 
-  //matrix_handler->setValuesChanged(true, "hip");
+  //matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
   FGMRES->resetMatrix(A);
   FGMRES->setupPreconditioner("LU", Rf);
   FGMRES->setFlexible(1); 
@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
   FGMRES->solve(vec_rhs, vec_x);
 
-  norm_b = vector_handler->dot(vec_rhs, vec_rhs, "hip");
+  norm_b = vector_handler->dot(vec_rhs, vec_rhs, ReSolve::memory::DEVICE);
   norm_b = sqrt(norm_b);
   std::cout << "FGMRES: init nrm: " 
     << std::scientific << std::setprecision(16) 

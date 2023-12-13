@@ -46,7 +46,7 @@ namespace ReSolve {
    */
   VectorHandler::VectorHandler(LinAlgWorkspaceCUDA* new_workspace)
   {
-    cudaImpl_ = new VectorHandlerCuda(new_workspace);
+    devImpl_ = new VectorHandlerCuda(new_workspace);
     cpuImpl_  = new  VectorHandlerCpu();
 
     isCudaEnabled_ = true;
@@ -61,7 +61,7 @@ namespace ReSolve {
    */
   VectorHandler::VectorHandler(LinAlgWorkspaceHIP* new_workspace)
   {
-    hipImpl_  = new VectorHandlerHip(new_workspace);
+    devImpl_  = new VectorHandlerHip(new_workspace);
     cpuImpl_  = new VectorHandlerCpu();
 
     isHipEnabled_ = true;
@@ -75,9 +75,9 @@ namespace ReSolve {
   VectorHandler::~VectorHandler()
   {
     delete cpuImpl_;
-    if (isCudaEnabled_) delete cudaImpl_;
-    if (isHipEnabled_)  delete hipImpl_;
-    //delete the workspace TODO
+    if (isCudaEnabled_ || isHipEnabled_) {
+      delete devImpl_;
+    }
   }
 
   /** 
@@ -90,20 +90,18 @@ namespace ReSolve {
    * @return dot product (real number) of _x_ and _y_
    */
 
-  real_type VectorHandler::dot(vector::Vector* x, vector::Vector* y, std::string memspace)
+  real_type VectorHandler::dot(vector::Vector* x, vector::Vector* y, memory::MemorySpace memspace)
   { 
-    if (memspace == "cuda" ) {
-      return cudaImpl_->dot(x, y);
-    } else {
-      if (memspace == "hip") { 
-        return hipImpl_->dot(x, y);
-      } else if (memspace == "cpu") {
+    using namespace ReSolve::memory;
+    switch (memspace) {
+      case HOST:
         return cpuImpl_->dot(x, y);
-      } else {
-        out::error() << "Not implemented (yet)" << std::endl;
-        return NAN;
-      }
+        break;
+      case DEVICE:
+        return devImpl_->dot(x, y);
+        break;
     }
+    return NAN;
   }
 
   /** 
@@ -114,18 +112,16 @@ namespace ReSolve {
    * @param memspace[in] string containg memspace (cpu or cuda or hip)
    * 
    */
-  void VectorHandler::scal(const real_type* alpha, vector::Vector* x, std::string memspace)
+  void VectorHandler::scal(const real_type* alpha, vector::Vector* x, memory::MemorySpace memspace)
   {
-    if (memspace == "cuda" ) {
-      cudaImpl_->scal(alpha, x);
-    } else if (memspace == "hip") { 
-      hipImpl_->scal(alpha, x);
-    } else {
-      if (memspace == "cpu") {
+    using namespace ReSolve::memory;
+    switch (memspace) {
+      case HOST:
         cpuImpl_->scal(alpha, x);
-      } else {      
-        out::error() << "Not implemented (yet)" << std::endl;
-      }  
+        break;
+      case DEVICE:
+        devImpl_->scal(alpha, x);
+        break;
     }
   }
 
@@ -138,21 +134,20 @@ namespace ReSolve {
    * @return infinity norm (real number) of _x_
    * 
    */
-  real_type VectorHandler::infNorm(vector::Vector* x, std::string memspace)
+  real_type VectorHandler::infNorm(vector::Vector* x, memory::MemorySpace memspace)
   {
-    if (memspace == "cuda" ) {
-      return cudaImpl_->infNorm(x);
-    } else if (memspace == "hip") { 
-      return hipImpl_->infNorm(x);
-    } else {
-      if (memspace == "cpu") {
+    using namespace ReSolve::memory;
+    switch (memspace) {
+      case HOST:
         return cpuImpl_->infNorm(x);
-      } else {      
-        out::error() << "Not implemented (yet)" << std::endl;
-        return -1.0; // note inf norm cannot be negative!
-      }  
+        break;
+      case DEVICE:
+        return devImpl_->infNorm(x);
+        break;
     }
+    return -1.0;
   }
+
   /** 
    * @brief axpy i.e, y = alpha*x+y where alpha is a constant
    * 
@@ -162,21 +157,17 @@ namespace ReSolve {
    * @param[in]  memspace String containg memspace (cpu or cuda or hip)
    * 
    */
-  void VectorHandler::axpy(const  real_type* alpha, vector::Vector* x, vector::Vector* y, std::string memspace)
+  void VectorHandler::axpy(const  real_type* alpha, vector::Vector* x, vector::Vector* y, memory::MemorySpace memspace)
   {
     //AXPY:  y = alpha * x + y
-    if (memspace == "cuda" ) {
-      cudaImpl_->axpy(alpha, x, y);
-    } else {
-      if (memspace == "hip" ) {
-        hipImpl_->axpy(alpha, x, y);      
-      } else {
-        if (memspace == "cpu") {
-          cpuImpl_->axpy(alpha, x, y);
-        } else {
-          out::error() <<"Not implemented (yet)" << std::endl;
-        }
-      }
+    using namespace ReSolve::memory;
+    switch (memspace) {
+      case HOST:
+        cpuImpl_->axpy(alpha, x, y);
+        break;
+      case DEVICE:
+        devImpl_->axpy(alpha, x, y);      
+        break;
     }
   }
 
@@ -185,28 +176,36 @@ namespace ReSolve {
    *        i.e., x = beta*x +  alpha*V*y
    *
    * @param[in] Transpose - yes (T) or no (N)
-   * @param[in] n Number of rows in (non-transposed) matrix
-   * @param[in] k Number of columns in (non-transposed)   
-   * @param[in] alpha Constant real number
-   * @param[in] beta Constant real number
-   * @param[in] V Multivector containing the matrix, organized columnwise
-   * @param[in] y Vector, k x 1 if N and n x 1 if T
-   * @param[in,out] x Vector, n x 1 if N and k x 1 if T
-   * @param[in] memspace  cpu or cuda or hip (for now)
+   * @param[in] n         - Number of rows in (non-transposed) matrix
+   * @param[in] k         - Number of columns in (non-transposed)   
+   * @param[in] alpha     - Constant real number
+   * @param[in] beta      - Constant real number
+   * @param[in] V         - Multivector containing the matrix, organized columnwise
+   * @param[in] y         - Vector, k x 1 if N and n x 1 if T
+   * @param[in,out] x     - Vector, n x 1 if N and k x 1 if T
+   * @param[in] memspace  - cpu or cuda or hip (for now)
    *
    * @pre   V is stored colum-wise, _n_ > 0, _k_ > 0
    * 
    */  
-  void VectorHandler::gemv(std::string transpose, index_type n, index_type k, const real_type* alpha, const real_type* beta, vector::Vector* V, vector::Vector* y, vector::Vector* x, std::string memspace)
+  void VectorHandler::gemv(char transpose,
+                           index_type n,
+                           index_type k,
+                           const real_type* alpha,
+                           const real_type* beta,
+                           vector::Vector* V,
+                           vector::Vector* y,
+                           vector::Vector* x,
+                           memory::MemorySpace memspace)
   {
-    if (memspace == "cuda") {
-      cudaImpl_->gemv(transpose, n, k, alpha, beta, V, y, x);
-    } else if (memspace == "hip") {
-      hipImpl_->gemv(transpose, n, k, alpha, beta, V, y, x);
-    } else if (memspace == "cpu") {
-      cpuImpl_->gemv(transpose, n, k, alpha, beta, V, y, x);
-    } else {
-      out::error() << "Not implemented (yet)" << std::endl;
+    using namespace ReSolve::memory;
+    switch (memspace) {
+      case HOST:
+        cpuImpl_->gemv(transpose, n, k, alpha, beta, V, y, x);
+        break;
+      case DEVICE:
+        devImpl_->gemv(transpose, n, k, alpha, beta, V, y, x);
+        break;
     }
   }
 
@@ -222,17 +221,16 @@ namespace ReSolve {
    * @pre   _k_ > 0, _size_ > 0, _size_ = x->getSize()
    *
    */
-  void VectorHandler::massAxpy(index_type size, vector::Vector* alpha, index_type k, vector::Vector* x, vector::Vector* y, std::string memspace)
+  void VectorHandler::massAxpy(index_type size, vector::Vector* alpha, index_type k, vector::Vector* x, vector::Vector* y, memory::MemorySpace memspace)
   {
-    using namespace constants;
-    if (memspace == "cuda") {
-      cudaImpl_->massAxpy(size, alpha, k, x, y);
-    } else if (memspace == "hip") {
-      hipImpl_->massAxpy(size, alpha, k, x, y);
-    } else if (memspace == "cpu") {
-      cpuImpl_->massAxpy(size, alpha, k, x, y);
-    } else {
-      out::error() << "Not implemented (yet)" << std::endl;
+    using namespace ReSolve::memory;
+    switch (memspace) {
+      case HOST:
+        cpuImpl_->massAxpy(size, alpha, k, x, y);
+        break;
+      case DEVICE:
+        devImpl_->massAxpy(size, alpha, k, x, y);
+        break;
     }
   }
 
@@ -240,26 +238,26 @@ namespace ReSolve {
    * @brief mass (bulk) dot product i.e,  V^T x, where V is n x k dense multivector (a dense multivector consisting of k vectors size n)  
    *        and x is k x 2 dense multivector (a multivector consisiting of two vectors size n each)
    * 
-   * @param[in] size Number of elements in a single vector in V
-   * @param[in] V Multivector; k vectors size n x 1 each
-   * @param[in] k Number of vectors in V
-   * @param[in] x Multivector; 2 vectors size n x 1 each
-   * @param[out] res Multivector; 2 vectors size k x 1 each (result is returned in res)
-   * @param[in] memspace String containg memspace (cpu or cuda or hip)
+   * @param[in] size     - Number of elements in a single vector in V
+   * @param[in] V        - Multivector; k vectors size n x 1 each
+   * @param[in] k        - Number of vectors in V
+   * @param[in] x        - Multivector; 2 vectors size n x 1 each
+   * @param[out] res     - Multivector; 2 vectors size k x 1 each (result is returned in res)
+   * @param[in] memspace - String containg memspace (cpu or cuda or hip)
    *
    * @pre   _size_ > 0, _k_ > 0, size = x->getSize(), _res_ needs to be allocated
    *
    */
-  void VectorHandler::massDot2Vec(index_type size, vector::Vector* V, index_type k, vector::Vector* x, vector::Vector* res, std::string memspace)
+  void VectorHandler::massDot2Vec(index_type size, vector::Vector* V, index_type k, vector::Vector* x, vector::Vector* res, memory::MemorySpace memspace)
   {
-    if (memspace == "cuda") {
-      cudaImpl_->massDot2Vec(size, V, k, x, res);
-    } else if (memspace == "hip") {
-      hipImpl_->massDot2Vec(size, V, k, x, res);
-    } else if (memspace == "cpu") {
-      cpuImpl_->massDot2Vec(size, V, k, x, res);
-    } else {
-      out::error() << "Not implemented (yet)" << std::endl;
+    using namespace ReSolve::memory;
+    switch (memspace) {
+      case HOST:
+        cpuImpl_->massDot2Vec(size, V, k, x, res);
+        break;
+      case DEVICE:
+        devImpl_->massDot2Vec(size, V, k, x, res);
+        break;
     }
   }
 

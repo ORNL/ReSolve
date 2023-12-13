@@ -109,13 +109,13 @@ namespace ReSolve {
 
           //set the first vector to all 1s, normalize 
           V->setToConst(0, 1.0, ms);
-          real_type nrm = handler->dot(V, V, memspace_);
+          real_type nrm = handler->dot(V, V, ms);
           nrm = sqrt(nrm);
           nrm = 1.0 / nrm;
-          handler->scal(&nrm, V, memspace_);
+          handler->scal(&nrm, V, ms);
 
-          GS->orthogonalize(N, V, H, 0, memspace_ ); 
-          GS->orthogonalize(N, V, H, 1, memspace_ ); 
+          GS->orthogonalize(N, V, H, 0, ms ); 
+          GS->orthogonalize(N, V, H, 1, ms ); 
 
           status *= verifyAnswer(V, 3, handler, memspace_);
           
@@ -166,7 +166,7 @@ namespace ReSolve {
             for (index_type j = 0; j < K; ++j) {
               a->update(x->getVectorData(i, ms), ms, memory::HOST);
               b->update(x->getVectorData(j, ms), ms, memory::HOST);
-              ip = handler->dot(a, b, "cpu");
+              ip = handler->dot(a, b, memory::HOST);
               
               if ( (i != j) && (abs(ip) > 1e-14)) {
                 status = false;

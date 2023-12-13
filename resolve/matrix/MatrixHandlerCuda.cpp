@@ -42,18 +42,17 @@ namespace ReSolve {
       matrix::Csr* A = dynamic_cast<matrix::Csr*>(Ageneric);
       //result = alpha *A*x + beta * result
       cusparseStatus_t status;
-      LinAlgWorkspaceCUDA* workspaceCUDA = workspace_;
-      cusparseDnVecDescr_t vecx = workspaceCUDA->getVecX();
+      cusparseDnVecDescr_t vecx = workspace_->getVecX();
       cusparseCreateDnVec(&vecx, A->getNumRows(), vec_x->getData(memory::DEVICE), CUDA_R_64F);
 
 
-      cusparseDnVecDescr_t vecAx = workspaceCUDA->getVecY();
+      cusparseDnVecDescr_t vecAx = workspace_->getVecY();
       cusparseCreateDnVec(&vecAx, A->getNumRows(), vec_result->getData(memory::DEVICE), CUDA_R_64F);
 
-      cusparseSpMatDescr_t matA = workspaceCUDA->getSpmvMatrixDescriptor();
+      cusparseSpMatDescr_t matA = workspace_->getSpmvMatrixDescriptor();
 
-      void* buffer_spmv = workspaceCUDA->getSpmvBuffer();
-      cusparseHandle_t handle_cusparse = workspaceCUDA->getCusparseHandle();
+      void* buffer_spmv = workspace_->getSpmvBuffer();
+      cusparseHandle_t handle_cusparse = workspace_->getCusparseHandle();
       if (values_changed_) {
         status = cusparseCreateCsr(&matA, 
                                    A->getNumRows(),
@@ -69,7 +68,7 @@ namespace ReSolve {
         error_sum += status;
         values_changed_ = false;
       }
-      if (!workspaceCUDA->matvecSetup()) {
+      if (!workspace_->matvecSetup()) {
         //setup first, allocate, etc.
         size_t bufferSize = 0;
 
@@ -86,10 +85,10 @@ namespace ReSolve {
         error_sum += status;
         mem_.deviceSynchronize();
         mem_.allocateBufferOnDevice(&buffer_spmv, bufferSize);
-        workspaceCUDA->setSpmvMatrixDescriptor(matA);
-        workspaceCUDA->setSpmvBuffer(buffer_spmv);
+        workspace_->setSpmvMatrixDescriptor(matA);
+        workspace_->setSpmvBuffer(buffer_spmv);
 
-        workspaceCUDA->matvecSetupDone();
+        workspace_->matvecSetupDone();
       } 
 
       status = cusparseSpMV(handle_cusparse,
@@ -159,7 +158,6 @@ namespace ReSolve {
   int MatrixHandlerCuda::csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr)
   {
     index_type error_sum = 0;
-    LinAlgWorkspaceCUDA* workspaceCUDA = (LinAlgWorkspaceCUDA*) workspace_;
 
     A_csr->allocateMatrixData(memory::DEVICE);
     index_type n = A_csc->getNumRows();
@@ -167,7 +165,7 @@ namespace ReSolve {
     index_type nnz = A_csc->getNnz();
     size_t bufferSize;
     void* d_work;
-    cusparseStatus_t status = cusparseCsr2cscEx2_bufferSize(workspaceCUDA->getCusparseHandle(),
+    cusparseStatus_t status = cusparseCsr2cscEx2_bufferSize(workspace_->getCusparseHandle(),
                                                             n, 
                                                             m, 
                                                             nnz, 
@@ -184,7 +182,7 @@ namespace ReSolve {
                                                             &bufferSize);
     error_sum += status;
     mem_.allocateBufferOnDevice(&d_work, bufferSize);
-    status = cusparseCsr2cscEx2(workspaceCUDA->getCusparseHandle(),
+    status = cusparseCsr2cscEx2(workspace_->getCusparseHandle(),
                                 n, 
                                 m, 
                                 nnz, 

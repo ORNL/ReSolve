@@ -47,8 +47,7 @@ namespace ReSolve {
 
   real_type VectorHandlerCuda::dot(vector::Vector* x, vector::Vector* y)
   { 
-    LinAlgWorkspaceCUDA* workspaceCUDA = workspace_;
-    cublasHandle_t handle_cublas =  workspaceCUDA->getCublasHandle();
+    cublasHandle_t handle_cublas =  workspace_->getCublasHandle();
     double nrm = 0.0;
     cublasStatus_t st= cublasDdot (handle_cublas,  x->getSize(), x->getData(memory::DEVICE), 1, y->getData(memory::DEVICE), 1, &nrm);
     if (st!=0) {printf("dot product crashed with code %d \n", st);}
@@ -64,8 +63,7 @@ namespace ReSolve {
    */
   void VectorHandlerCuda::scal(const real_type* alpha, vector::Vector* x)
   {
-    LinAlgWorkspaceCUDA* workspaceCUDA = workspace_;
-    cublasHandle_t handle_cublas =  workspaceCUDA->getCublasHandle();
+    cublasHandle_t handle_cublas =  workspace_->getCublasHandle();
     cublasStatus_t st = cublasDscal(handle_cublas, x->getSize(), alpha, x->getData(memory::DEVICE), 1);
     if (st!=0) {
       ReSolve::io::Logger::error() << "scal crashed with code " << st << "\n";
@@ -103,7 +101,7 @@ namespace ReSolve {
   }
   
   /** 
-   * @brief axpy i.e, y = alpha*x+y where alpha is a constant
+   * @brief axpy i.e, y = alpha*x + y where alpha is a constant
    * 
    * @param[in] alpha The constant
    * @param[in] x The first vector
@@ -112,9 +110,7 @@ namespace ReSolve {
    */
   void VectorHandlerCuda::axpy(const  real_type* alpha, vector::Vector* x, vector::Vector* y)
   {
-    //AXPY:  y = alpha * x + y
-    LinAlgWorkspaceCUDA* workspaceCUDA = workspace_;
-    cublasHandle_t handle_cublas =  workspaceCUDA->getCublasHandle();
+    cublasHandle_t handle_cublas =  workspace_->getCublasHandle();
     cublasDaxpy(handle_cublas,
                 x->getSize(),
                 alpha,
@@ -140,7 +136,7 @@ namespace ReSolve {
    * @pre   V is stored colum-wise, _n_ > 0, _k_ > 0
    * 
    */  
-  void VectorHandlerCuda::gemv(std::string transpose,
+  void VectorHandlerCuda::gemv(char transpose,
                                index_type n,
                                index_type k,
                                const real_type* alpha,
@@ -149,36 +145,39 @@ namespace ReSolve {
                                vector::Vector* y,
                                vector::Vector* x)
   {
-    LinAlgWorkspaceCUDA* workspaceCUDA = workspace_;
-    cublasHandle_t handle_cublas =  workspaceCUDA->getCublasHandle();
-    if (transpose == "T") {
-
-      cublasDgemv(handle_cublas,
-                  CUBLAS_OP_T,
-                  n,
-                  k,
-                  alpha,
-                  V->getData(memory::DEVICE),
-                  n,
-                  y->getData(memory::DEVICE),
-                  1,
-                  beta,
-                  x->getData(memory::DEVICE),
-                  1);
-
-    } else {
-      cublasDgemv(handle_cublas,
-                  CUBLAS_OP_N,
-                  n,
-                  k,
-                  alpha,
-                  V->getData(memory::DEVICE),
-                  n,
-                  y->getData(memory::DEVICE),
-                  1,
-                  beta,
-                  x->getData(memory::DEVICE),
-                  1);
+    cublasHandle_t handle_cublas =  workspace_->getCublasHandle();
+    switch (transpose) {
+      case 'T':
+        cublasDgemv(handle_cublas,
+                    CUBLAS_OP_T,
+                    n,
+                    k,
+                    alpha,
+                    V->getData(memory::DEVICE),
+                    n,
+                    y->getData(memory::DEVICE),
+                    1,
+                    beta,
+                    x->getData(memory::DEVICE),
+                    1);
+        return;
+      default:
+        cublasDgemv(handle_cublas,
+                    CUBLAS_OP_N,
+                    n,
+                    k,
+                    alpha,
+                    V->getData(memory::DEVICE),
+                    n,
+                    y->getData(memory::DEVICE),
+                    1,
+                    beta,
+                    x->getData(memory::DEVICE),
+                    1);
+        if (transpose != 'N') {
+          out::warning() << "Unrecognized transpose option " << transpose
+                         << " in gemv. Using non-transposed multivector.\n";
+        }
     }
   }
 
@@ -199,8 +198,7 @@ namespace ReSolve {
     if (k < 200) {
       mass_axpy(size, k, x->getData(memory::DEVICE), y->getData(memory::DEVICE),alpha->getData(memory::DEVICE));
     } else {
-      LinAlgWorkspaceCUDA* workspaceCUDA = workspace_;
-      cublasHandle_t handle_cublas =  workspaceCUDA->getCublasHandle();
+      cublasHandle_t handle_cublas =  workspace_->getCublasHandle();
       cublasDgemm(handle_cublas,
                   CUBLAS_OP_N,
                   CUBLAS_OP_N,
@@ -239,8 +237,7 @@ namespace ReSolve {
     if (k < 200) {
       mass_inner_product_two_vectors(size, k, x->getData(memory::DEVICE) , x->getData(1, memory::DEVICE), V->getData(memory::DEVICE), res->getData(memory::DEVICE));
     } else {
-      LinAlgWorkspaceCUDA* workspaceCUDA = workspace_;
-      cublasHandle_t handle_cublas =  workspaceCUDA->getCublasHandle();
+      cublasHandle_t handle_cublas =  workspace_->getCublasHandle();
       cublasDgemm(handle_cublas,
                   CUBLAS_OP_T,
                   CUBLAS_OP_N,

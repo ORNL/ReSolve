@@ -1,5 +1,4 @@
 #pragma once
-#include <string>
 
 namespace ReSolve
 { 
@@ -47,7 +46,7 @@ namespace ReSolve
        * if `transpose = T` (yes), `x = beta*x + alpha*V^T*y`,
        * where `x` is `[k x 1]`, `V` is `[n x k]` and `y` is `[n x 1]`.
        */ 
-      virtual void gemv(std::string transpose,
+      virtual void gemv(char transpose,
                         index_type n,
                         index_type k,
                         const real_type* alpha,
