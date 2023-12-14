@@ -199,7 +199,6 @@ namespace ReSolve {
     for (i = 0; i < size; ++i) {
       sum = 0.0;
       for (j = 0; j < k; ++j) {
-     // if(i == 2)  printf("size x %d size alpha %d multiplying x[%d] = %16.16e by alpha[%d] = %16.16e \n",size *k, k, j * size + i, x_data[j * size + i], j, alpha_data[j] );
         sum += x_data[j * size + i] * alpha_data[j];
       }
       y_data[i] = y_data[i] - sum;
