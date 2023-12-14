@@ -131,16 +131,45 @@ namespace ReSolve {
    * @pre   V is stored colum-wise, _n_ > 0, _k_ > 0
    * 
    */  
-  void VectorHandlerCpu::gemv(char /* transpose */,
-                              index_type /* n */,
-                              index_type /* k */,
-                              const real_type* /* alpha */,
-                              const real_type* /* beta */,
-                              vector::Vector* /* V */,
-                              vector::Vector* /* y */,
-                              vector::Vector* /* x */)
+  void VectorHandlerCpu::gemv(char transpose,
+                              index_type n,
+                              index_type k,
+                              const real_type* alpha,
+                              const real_type* beta,
+                              vector::Vector* V,
+                              vector::Vector* y,
+                              vector::Vector* x)
   {
-    out::error() << "Not implemented (yet)" << std::endl;
+    // x = beta*x +  alpha*V*y OR x = beta*x + alpha*V^Ty
+    real_type* V_data = V->getData(memory::HOST);
+    real_type* y_data = y->getData(memory::HOST);
+    real_type* x_data = x->getData(memory::HOST);
+    index_type i, j;
+    real_type sum;
+    switch (transpose) {
+      case 'T':
+        for (i = 0; i < k; ++i) {
+          sum = 0; 
+          for (j = 0; j < n; ++j) {
+            sum += V_data[i * n + j] * y_data[j]; 
+          }
+          x_data[i] = (*beta) * x_data[i] + (*alpha) * sum;
+        }
+        break;
+      default:
+        for (i = 0; i < n; ++i) {
+          sum = 0.0; 
+          for (j = 0; j < k; ++j) {
+            sum += V_data[n * j + i] * y_data[j]; 
+          }
+          x_data[i] = (*beta) * x_data[i] + (*alpha) * sum;
+        }
+        break;
+        if (transpose != 'N') {
+          out::warning() << "Unrecognized transpose option " << transpose
+                         << " in gemv. Using non-transposed multivector.\n";
+        }
+    } // switch
   }
 
   /** 
@@ -154,9 +183,27 @@ namespace ReSolve {
    * @pre   _k_ > 0, _size_ > 0, _size_ = x->getSize()
    *
    */
-  void VectorHandlerCpu::massAxpy(index_type /* size */, vector::Vector* /* alpha */, index_type /* k */, vector::Vector* /* x */, vector::Vector* /* y */)
+  void VectorHandlerCpu::massAxpy(index_type size, 
+                                  vector::Vector* alpha, 
+                                  index_type k, 
+                                  vector::Vector* x, 
+                                  vector::Vector* y)
   {
-    out::error() << "Not implemented (yet)" << std::endl;
+  
+    real_type* alpha_data = alpha->getData(memory::HOST);
+    real_type* y_data = y->getData(memory::HOST);
+    real_type* x_data = x->getData(memory::HOST);
+    index_type i, j;
+    real_type sum;
+    
+    for (i = 0; i < size; ++i) {
+      sum = 0.0;
+      for (j = 0; j < k; ++j) {
+     // if(i == 2)  printf("size x %d size alpha %d multiplying x[%d] = %16.16e by alpha[%d] = %16.16e \n",size *k, k, j * size + i, x_data[j * size + i], j, alpha_data[j] );
+        sum += x_data[j * size + i] * alpha_data[j];
+      }
+      y_data[i] = y_data[i] - sum;
+    }
   }
 
   /** 
@@ -172,9 +219,25 @@ namespace ReSolve {
    * @pre   _size_ > 0, _k_ > 0, size = x->getSize(), _res_ needs to be allocated
    *
    */
-  void VectorHandlerCpu::massDot2Vec(index_type /* size */, vector::Vector* /* V */, index_type /* k */, vector::Vector* /* x */, vector::Vector* /* res */)
+  void VectorHandlerCpu::massDot2Vec(index_type size, 
+                                     vector::Vector* V, 
+                                     index_type k, 
+                                     vector::Vector* x, 
+                                     vector::Vector* res)
   {
-    out::error() << "Not implemented (yet)" << std::endl;
+    real_type* res_data = res->getData(memory::HOST);
+    real_type* x_data = x->getData(memory::HOST);
+    real_type* V_data = V->getData(memory::HOST);
+    index_type i, j;
+
+    for (i = 0; i < k; ++i) {
+      res_data[i] = 0.0; 
+      res_data[i + k] = 0.0; 
+      for (j = 0; j < size; ++j) {
+        res_data[i] += V_data[i * size + j] * x_data[j];
+        res_data[i + k] += V_data[i * size + j] * x_data[j + size];
+      }
+    }
   }
 
 } // namespace ReSolve

@@ -16,6 +16,9 @@ int main(int, char**)
     result += test.axpy(50);
     result += test.scal(50);
     result += test.infNorm(50);
+    result += test.gemv(5000, 10);
+    result += test.massAxpy(100, 10);
+    result += test.massDot(100, 10);
 
     std::cout << "\n";
   }
