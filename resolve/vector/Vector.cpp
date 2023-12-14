@@ -295,7 +295,7 @@ namespace ReSolve { namespace vector {
           h_data_ = new real_type[n_ * k_]; 
           owns_cpu_data_ = true;
         }
-        for (int i = j * n_current_; i < (j + 1 ) * n_current_ * k_; ++i){
+        for (int i = j * n_current_; i < (j + 1 ) * n_current_ ; ++i) {
           h_data_[i] = C;
         }
         break;

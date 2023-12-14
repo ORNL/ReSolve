@@ -185,12 +185,14 @@ namespace ReSolve {
           vector::Vector* x =  new vector::Vector(N, K);
           vector::Vector* y =  new vector::Vector(N);
           vector::Vector* alpha = new vector::Vector(K);;
+          
           x->allocate(ms);
           y->allocate(ms);
           alpha->allocate(ms);
 
-          y->setToConst(2.0, ms);
           alpha->setToConst(-1.0, ms);
+          y->setToConst(2.0, ms);
+
           for (int ii = 0; ii < K; ++ii) {
             real_type c;
             if (ii % 2 == 0) {
