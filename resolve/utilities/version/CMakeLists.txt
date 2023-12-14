@@ -1,6 +1,6 @@
 #[[
 
-@brief Build ReSolve output log system
+@brief Build ReSolve function that returns version at runtime
 
 @author Slaven Peles <peless@ornl.gov>
 
