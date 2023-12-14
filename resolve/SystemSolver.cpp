@@ -1,3 +1,5 @@
+#include <cassert>
+
 #include <resolve/matrix/Sparse.hpp>
 #include <resolve/vector/Vector.hpp>
 
@@ -94,10 +96,13 @@ namespace ReSolve
     delete resVector_;
     delete factorizationSolver_;
     delete refactorizationSolver_;
+
+#if defined(RESOLVE_USE_HIP) || defined(RESOLVE_USE_CUDA)
     if (irMethod_ != "none") {
       delete iterativeSolver_;
       delete gs_;
     }
+#endif
 
     delete matrixHandler_;
     delete vectorHandler_;
@@ -364,6 +369,7 @@ namespace ReSolve
 
   void SystemSolver::setRefinementMethod(std::string method, std::string gsMethod)
   {
+#if defined(RESOLVE_USE_HIP) || defined(RESOLVE_USE_CUDA)
     if (iterativeSolver_ != nullptr)
       delete iterativeSolver_;
 
@@ -375,7 +381,6 @@ namespace ReSolve
 
     gsMethod_ = gsMethod;
 
-#if defined(RESOLVE_USE_HIP) || defined(RESOLVE_USE_CUDA)
     if (method == "fgmres") {
       if (gsMethod == "cgs2") {
         gs_ = new GramSchmidt(vectorHandler_, GramSchmidt::cgs2);

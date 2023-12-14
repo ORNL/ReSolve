@@ -7,7 +7,7 @@
 ]]
 
 # Build basic version test
-add_executable(version.exe testversion.cpp) 
+add_executable(version.exe testVersion.cpp) 
 target_link_libraries(version.exe PRIVATE ReSolve)
 
 # Build KLU+KLU test

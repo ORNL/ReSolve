@@ -74,6 +74,7 @@ set(ReSolve_Targets_List
     resolve_logger
     resolve_tpl
     resolve_workspace
+    resolve_version
 )
 
 # Temporary until there is CPU-only option for FGMRES
