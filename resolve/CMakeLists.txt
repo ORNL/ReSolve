@@ -116,6 +116,7 @@ target_include_directories(ReSolve INTERFACE
 
 # TODO: Make this PRIVATE dependency (requires refactoring ReSolve code)
 target_link_libraries(ReSolve PUBLIC ${ReSolve_Targets_List})
+target_link_libraries(ReSolve PRIVATE resolve_version)
 
 # Install targets
 install(TARGETS ReSolve
