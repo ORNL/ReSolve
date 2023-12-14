@@ -74,7 +74,6 @@ set(ReSolve_Targets_List
     resolve_logger
     resolve_tpl
     resolve_workspace
-    resolve_version
 )
 
 # Temporary until there is CPU-only option for FGMRES
@@ -117,6 +116,7 @@ target_include_directories(ReSolve INTERFACE
 
 # TODO: Make this PRIVATE dependency (requires refactoring ReSolve code)
 target_link_libraries(ReSolve PUBLIC ${ReSolve_Targets_List})
+target_link_libraries(ReSolve PRIVATE resolve_version)
 
 # Install targets
 install(TARGETS ReSolve

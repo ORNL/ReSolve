@@ -60,7 +60,7 @@ if(RESOLVE_USE_HIP)
 endif(RESOLVE_USE_HIP)
 
 # Install tests
-set(installable_tests klu_klu_test.exe)
+set(installable_tests klu_klu_test.exe version.exe)
 
 if(RESOLVE_USE_CUDA)
   set(installable_tests ${installable_tests}
