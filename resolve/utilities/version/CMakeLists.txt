@@ -16,6 +16,7 @@ set(Logger_HEADER_INSTALL
 
 # Build shared library ReSolve
 add_library(resolve_version OBJECT ${Logger_SRC})
+set_property(TARGET resolve_version PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 target_include_directories(resolve_version PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
