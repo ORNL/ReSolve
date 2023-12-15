@@ -11,19 +11,22 @@ add_subdirectory(utilities)
 # C++ files
 set(ReSolve_SRC
     LinSolver.cpp
-    LinSolverDirectKLU.cpp
-    SystemSolver.cpp
+    GramSchmidt.cpp
+    LinSolverIterativeFGMRES.cpp
 )
 
 # Temporary until there is CPU-only option for FGMRES
 set(ReSolve_GPU_SRC
-    GramSchmidt.cpp
-    LinSolverIterativeFGMRES.cpp
     LinSolverIterativeRandFGMRES.cpp
     RandSketchingManager.cpp
     RandSketchingCountSketch.cpp
     RandSketchingFWHT.cpp
-    )
+)
+
+set(ReSolve_KLU_SRC
+  LinSolverDirectKLU.cpp
+  SystemSolver.cpp
+)
 
 # C++ code that links to CUDA SDK libraries
 set(ReSolve_CUDASDK_SRC
@@ -31,6 +34,7 @@ set(ReSolve_CUDASDK_SRC
     LinSolverDirectCuSolverRf.cpp
     LinSolverDirectCuSparseILU0.cpp
 )
+
 # HIP files
 set(ReSolve_ROCM_SRC
   LinSolverDirectRocSolverRf.cpp
@@ -41,18 +45,30 @@ set(ReSolve_HEADER_INSTALL
     Common.hpp
     cusolver_defs.hpp
     LinSolver.hpp
-    LinSolverDirectCuSolverGLU.hpp
-    LinSolverDirectCuSolverRf.hpp
-    LinSolverDirectRocSolverRf.hpp
-    LinSolverDirectRocSparseILU0.hpp
-    LinSolverDirectCuSparseILU0.hpp
-    LinSolverDirectKLU.hpp
     LinSolverIterativeFGMRES.hpp
     RefactorizationSolver.hpp
     SystemSolver.hpp
     GramSchmidt.hpp
-    MemoryUtils.hpp
-    RandSketchingManager.hpp)
+    MemoryUtils.hpp)
+
+set(ReSolve_KLU_HEADER_INSTALL
+  LinSolverDirectKLU.hpp
+)
+
+set(ReSolve_GPU_HEADER_INSTALL
+    RandSketchingManager.hpp
+)
+
+set(ReSolve_CUDA_HEADER_INSTALL
+    LinSolverDirectCuSolverGLU.hpp
+    LinSolverDirectCuSolverRf.hpp
+    LinSolverDirectCuSparseILU0.hpp
+)
+
+set(ReSolve_ROCM_HEADER_INSTALL
+  LinSolverDirectRocSolverRf.hpp
+  LinSolverDirectRocSparseILU0.hpp
+)
 
 # Now, build workspaces
 add_subdirectory(workspace)
@@ -65,8 +81,10 @@ add_subdirectory(matrix)
 add_library(resolve_tpl INTERFACE)
 
 if(RESOLVE_USE_KLU)
-  target_link_libraries(resolve_tpl INTERFACE KLU)    
-endif(RESOLVE_USE_KLU)
+  target_link_libraries(resolve_tpl INTERFACE KLU)
+  list(APPEND ReSolve_SRC ${ReSolve_KLU_SRC})
+  list(APPEND ReSolve_HEADER_INSTALL ${ReSolve_KLU_HEADER_INSTALL})
+endif()
 
 set(ReSolve_Targets_List
     resolve_matrix
@@ -78,29 +96,32 @@ set(ReSolve_Targets_List
 
 # Temporary until there is CPU-only option for FGMRES
 if(RESOLVE_USE_GPU)
-  set(ReSolve_SRC ${ReSolve_SRC} ${ReSolve_GPU_SRC})
+  list(APPEND ReSolve_SRC ${ReSolve_GPU_SRC})
+  list(APPEND ReSolve_HEADER_INSTALL ${ReSolve_GPU_HEADER_INSTALL})
 endif()
 
 # If CUDA support is enabled add CUDA SDK specific code and dependencies
 if(RESOLVE_USE_CUDA)
   add_subdirectory(cuda)
   target_link_libraries(resolve_tpl INTERFACE resolve_cuda)
-  set(ReSolve_SRC ${ReSolve_SRC} ${ReSolve_CUDASDK_SRC})
-  set(ReSolve_Targets_List ${ReSolve_Targets_List} resolve_backend_cuda)
+  list(APPEND ReSolve_SRC ${ReSolve_CUDASDK_SRC})
+  list(APPEND ReSolve_Targets_List resolve_backend_cuda)
+  list(APPEND ReSolve_HEADER_INSTALL ${ReSolve_CUDA_HEADER_INSTALL})
 endif()
 
 # If HIP support is enabled add HIP SDK specific code and dependencies
 if(RESOLVE_USE_HIP)
   add_subdirectory(hip)
   target_link_libraries(resolve_tpl INTERFACE resolve_hip)
-  set(ReSolve_SRC ${ReSolve_SRC} ${ReSolve_ROCM_SRC})
-  set(ReSolve_Targets_List ${ReSolve_Targets_List} resolve_backend_hip)
+  list(APPEND ReSolve_SRC ${ReSolve_ROCM_SRC})
+  list(APPEND ReSolve_Targets_List resolve_backend_hip)
+  list(APPEND ReSolve_HEADER_INSTALL ${ReSolve_ROCM_HEADER_INSTALL})
 endif()
 
 # If no GPU support is enabled, link to dummy device backend
 if(NOT RESOLVE_USE_GPU)
   add_subdirectory(cpu)
-  set(ReSolve_Targets_List ${ReSolve_Targets_List} resolve_backend_cpu)
+  list(APPEND ReSolve_Targets_List resolve_backend_cpu)
 endif()
 
 # Set installable targets
