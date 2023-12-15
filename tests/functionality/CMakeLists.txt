@@ -61,24 +61,24 @@ if(RESOLVE_USE_HIP)
   
 endif(RESOLVE_USE_HIP)
 
+set(installable_tests "")
+
 # Install tests
 if(RESOLVE_USE_KLU)
-  set(installable_tests klu_klu_test.exe version.exe)
+  list(APPEND installable_tests klu_klu_test.exe version.exe)
 endif()
 
 if(RESOLVE_USE_CUDA)
-  set(installable_tests ${installable_tests}
-                        klu_rf_test.exe
-                        klu_rf_fgmres_test.exe
-                        klu_glu_test.exe
-                        rand_gmres_cuda_test.exe)
+  list(APPEND installable_tests klu_rf_test.exe
+                                klu_rf_fgmres_test.exe
+                                klu_glu_test.exe
+                                rand_gmres_cuda_test.exe)
 endif(RESOLVE_USE_CUDA)
 
 if(RESOLVE_USE_HIP)
-  set(installable_tests ${installable_tests}
-                        rocsolver_rf_test.exe
-                        rocsolver_rf_fgmres_test.exe
-                        rand_gmres_hip_test.exe)
+  list(APPEND installable_tests rocsolver_rf_test.exe
+                                rocsolver_rf_fgmres_test.exe
+                                rand_gmres_hip_test.exe)
 endif(RESOLVE_USE_HIP)
 
 install(TARGETS ${installable_tests} 

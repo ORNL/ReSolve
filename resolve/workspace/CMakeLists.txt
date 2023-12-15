@@ -27,25 +27,18 @@ set(ReSolve_Workspace_HEADER_INSTALL
   LinAlgWorkspaceHIP.hpp
 )
 
-# If cuda is enabled, add CUDA SDK workspace files
-if(RESOLVE_USE_CUDA)
-  set(ReSolve_Workspace_SRC ${ReSolve_Workspace_SRC} ${ReSolve_Workspace_CUDASDK_SRC})
-endif()
-
-if(RESOLVE_USE_HIP)
-  set(ReSolve_Workspace_SRC ${ReSolve_Workspace_SRC} ${ReSolve_Workspace_ROCM_SRC})
-endif()
-
 add_library(resolve_workspace SHARED ${ReSolve_Workspace_SRC})
 
-# If CUDA is enabled, link to ReSolve CUDA backend
+# If cuda is enabled, add CUDA SDK workspace files
 if(RESOLVE_USE_CUDA)
+  target_sources(resolve_workspace PRIVATE ${ReSolve_Workspace_CUDASDK_SRC})
   target_link_libraries(resolve_workspace PUBLIC resolve_backend_cuda)
-endif(RESOLVE_USE_CUDA)  
+endif()
 
 if(RESOLVE_USE_HIP)
+  target_sources(resolve_workspace PRIVATE ${ReSolve_Workspace_ROCM_SRC})
   target_link_libraries(resolve_workspace PUBLIC resolve_backend_hip)
-endif(RESOLVE_USE_HIP)  
+endif()
 
 target_include_directories(resolve_workspace PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>

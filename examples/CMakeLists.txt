@@ -83,17 +83,19 @@ if(RESOLVE_USE_HIP)
   target_link_libraries(system_hip_fgmres.exe PRIVATE ReSolve)
 endif(RESOLVE_USE_HIP)
 
+set(installable_executables "")
+
 # Install all examples in bin directory
 if(RESOLVE_USE_KLU)
-  set(installable_executables klu_klu.exe klu_klu_standalone.exe system.exe)
+  list(APPEND installable_executables klu_klu.exe klu_klu_standalone.exe system.exe)
 endif()
 
 if(RESOLVE_USE_CUDA)
-  set(installable_executables ${installable_executables} klu_glu.exe klu_rf.exe klu_rf_fgmres.exe klu_glu_values_update.exe gmres_cusparse_rand.exe klu_cusolverrf_check_redo.exe)        
+  list(APPEND installable_executables klu_glu.exe klu_rf.exe klu_rf_fgmres.exe  klu_glu_values_update.exe gmres_cusparse_rand.exe klu_cusolverrf_check_redo.exe)      
 endif(RESOLVE_USE_CUDA)
 
 if(RESOLVE_USE_HIP)
-  set(installable_executables ${installable_executables} klu_rocsolverrf.exe klu_rocsolverrf_fgmres.exe klu_rocsolverrf_check_redo.exe gmres_rocsparse_rand.exe)        
+  list(APPEND installable_executables klu_rocsolverrf.exe klu_rocsolverrf_fgmres.exe klu_rocsolverrf_check_redo.exe gmres_rocsparse_rand.exe)     
 endif(RESOLVE_USE_HIP)
 
 install(TARGETS ${installable_executables} 
@@ -106,15 +108,14 @@ set(CONSUMER_PATH ${CMAKE_INSTALL_PREFIX}/share/examples)
 install(PROGRAMS test.sh DESTINATION ${CONSUMER_PATH})
 
 # Select consumer app
-# TODO - have an outer loop that adds a unique consumer test for each backend supproted
-if(RESOLVE_USE_KLU)
-
 if(RESOLVE_USE_CUDA)
   set(RESOLVE_CONSUMER_APP "testKLU_Rf_FGMRES.cpp")
 elseif(RESOLVE_USE_HIP)
   set(RESOLVE_CONSUMER_APP "testKLU_RocSolver.cpp")
-else()
+elseif(RESOLVE_USE_KLU)
   set(RESOLVE_CONSUMER_APP "testKLU.cpp")
+else()
+  set(RESOLVE_CONSUMER_APP "testVersion.cpp")
 endif()
 
 # Install directory with example on how to consume ReSolve
@@ -125,5 +126,3 @@ install(FILES ${PROJECT_SOURCE_DIR}/tests/functionality/${RESOLVE_CONSUMER_APP} 
 #    1. Path to where resolve is installed.
 #    2. Path to data directory
 add_custom_target(test_install COMMAND ${CONSUMER_PATH}/test.sh  ${CMAKE_INSTALL_PREFIX} ${PROJECT_SOURCE_DIR}/tests/functionality/)
-
-endif(RESOLVE_USE_KLU)
