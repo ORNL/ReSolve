@@ -130,6 +130,9 @@ jobs:
       - name: Install
         run: spack -e . install --no-check-signature
       
+      - name: Test Installation
+        run: spack -e . load cmake && cd `ls | grep spack-build | grep -v txt` && ctest -VV
+      
       # Push with force to override existing binaries...
       - name: Push to binaries to buildcache
         run: |
