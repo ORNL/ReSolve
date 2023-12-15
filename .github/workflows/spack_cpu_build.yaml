@@ -84,7 +84,7 @@ jobs:
           - resolve@develop+klu
           - resolve@develop~klu 
 
-    name: Build ExaGO with Spack
+    name: Build ReSolve with Spack
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -121,7 +121,7 @@ jobs:
       - name: Find external packages
         run: spack -e . external find --all
       
-      - name: Spack develop exago
+      - name: Spack develop ReSolve
         run: spack -e . develop --path=$(pwd) resolve@develop
 
       - name: Concretize
