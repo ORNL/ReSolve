@@ -197,8 +197,7 @@ int main(int argc, char *argv[])
   error_sum += status;
   
   vec_x->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-  // TODO: Investigate why results are different when using Rf->solve(vec_x) !!
-  status = Rf->solve(vec_rhs, vec_x);
+  status = Rf->solve(vec_x);
   error_sum += status;
   
   FGMRES->resetMatrix(A);
