@@ -131,7 +131,7 @@ jobs:
         run: spack -e . install --no-check-signature
       
       - name: Test Installation
-        run: . buildsystem/spack/spack/share/spack/setup-env.sh && spack -e . load cmake && cd `ls | grep spack-build | grep -v txt` && ctest -VV
+        run: eval `spack load --sh cmake` && cd `ls | grep spack-build | grep -v txt` && ctest -VV
       
       # Push with force to override existing binaries...
       - name: Push to binaries to buildcache
