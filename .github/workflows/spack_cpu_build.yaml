@@ -82,7 +82,7 @@ jobs:
         # Minimal Build(s) - GHCR mirror speeds these up a lot!
         spack_spec:
           - resolve@develop+klu
-        # - resolve@develop~klu 
+          - resolve@develop~klu 
 
     name: Build ExaGO with Spack
     steps:
