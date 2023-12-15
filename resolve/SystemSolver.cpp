@@ -1,4 +1,5 @@
 #include <cassert>
+#include <cmath>
 
 #include <resolve/matrix/Sparse.hpp>
 #include <resolve/vector/Vector.hpp>
