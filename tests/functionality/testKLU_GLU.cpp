@@ -146,9 +146,9 @@ int main(int argc, char *argv[])
   status = matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", ReSolve::memory::HOST);
   error_sum += status;
  
-  real_type normRmatrix1CPU = sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE));
+  real_type normRmatrix1CPU = sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::HOST));
  
-  std::cout<<"Results (first matrix): "<<std::endl<<std::endl;
+  std::cout<<"Results (first matrix): "<<std::endl<<std::endl << std::scientific;
   std::cout<<"\t ||b-A*x||_2                 : " << std::setprecision(16) << normRmatrix1    << " (residual norm)" << std::endl;
   std::cout<<"\t ||b-A*x||_2  (CPU)          : " << std::setprecision(16) << normRmatrix1CPU << " (residual norm)" << std::endl;
   std::cout<<"\t ||b-A*x||_2/||b||_2         : " << normRmatrix1/normB1   << " (scaled residual norm)"             << std::endl;

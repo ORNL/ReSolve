@@ -1,3 +1,12 @@
+/**
+ * @file testSysHipRefine.cpp
+ * @author Kasia Swirydowicz (kasia.swirydowicz@pnnl.gov)
+ * @author Slaven Peles (peless@ornl.gov)
+ * @brief Functionality test for SystemSolver class
+ * @date 2023-12-14
+ * 
+ * 
+ */
 #include <string>
 #include <iostream>
 #include <iomanip>
@@ -77,10 +86,11 @@ int main(int argc, char *argv[])
   vector_type* vec_r   = new vector_type(A->getNumRows());
   rhs1_file.close();
 
-  // Convert first matrix to CSR format
+  // Set vector data on host
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   vec_rhs->setDataUpdated(ReSolve::memory::HOST);
 
+  // Add system matrix to the solver
   status = solver.setMatrix(A);
   error_sum += status;
 
@@ -143,6 +153,7 @@ int main(int argc, char *argv[])
   std::cout<<"\t ||b-A*x||_2                 : " << std::setprecision(16) << normRmatrix1    << " (residual norm)" << std::endl;
   std::cout<<"\t ||b-A*x||_2  (CPU)          : " << std::setprecision(16) << normRmatrix1CPU << " (residual norm)" << std::endl;
   std::cout<<"\t ||b-A*x||_2/||b||_2         : " << normRmatrix1/normB1   << " (scaled residual norm)"             << std::endl;
+  std::cout<<"\t ||b-A*x||_2/||b||_2         : " << solver.getResidualNorm(vec_rhs, vec_x)   << " (scaled residual norm, solver)" << std::endl;
   std::cout<<"\t ||x-x_true||_2              : " << normDiffMatrix1       << " (solution error)"                   << std::endl;
   std::cout<<"\t ||x-x_true||_2/||x_true||_2 : " << normDiffMatrix1/normXtrue << " (scaled solution error)"        << std::endl;
   std::cout<<"\t ||b-A*x_exact||_2           : " << exactSol_normRmatrix1 << " (control; residual norm with exact solution)\n\n";
@@ -212,6 +223,7 @@ int main(int argc, char *argv[])
   std::cout<<"Results (second matrix): "<<std::endl<<std::endl;
   std::cout<<"\t ||b-A*x||_2                 : "<<normRmatrix2<<" (residual norm)"<<std::endl;
   std::cout<<"\t ||b-A*x||_2/||b||_2         : "<<normRmatrix2/normB2<<" (scaled residual norm)"<<std::endl;
+  std::cout<<"\t ||b-A*x||_2/||b||_2         : " << solver.getResidualNorm(vec_rhs, vec_x)   << " (scaled residual norm, solver)" << std::endl;
   std::cout<<"\t ||x-x_true||_2              : "<<normDiffMatrix2<<" (solution error)"<<std::endl;
   std::cout<<"\t ||x-x_true||_2/||x_true||_2 : "<<normDiffMatrix2/normXtrue<<" (scaled solution error)"<<std::endl;
   std::cout<<"\t ||b-A*x_exact||_2           : "<<exactSol_normRmatrix2<<" (control; residual norm with exact solution)"<<std::endl;

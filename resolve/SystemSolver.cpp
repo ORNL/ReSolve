@@ -405,11 +405,44 @@ namespace ReSolve
 #endif
   }
 
-  real_type SystemSolver::getResidualNorm(vector_type* rhs, vector_type* x, ResidualNormType)
+  real_type SystemSolver::getResidualNorm(vector_type* rhs, vector_type* x)
   {
     using namespace ReSolve::constants;
     assert(rhs->getSize() == resVector_->getSize());
     real_type norm_b  = 0.0;
+    real_type resnorm = 0.0;
+    memory::MemorySpace ms = memory::HOST;
+    if (memspace_ == "cpu") {
+      resVector_->update(rhs, memory::HOST, memory::HOST);
+      norm_b = std::sqrt(vectorHandler_->dot(resVector_, resVector_, memory::HOST));
+#if defined(RESOLVE_USE_HIP) || defined(RESOLVE_USE_CUDA)
+    } else if (memspace_ == "cuda" || memspace_ == "hip") {
+      if (isSolveOnDevice_) {
+        resVector_->update(rhs, memory::DEVICE, memory::DEVICE);
+        norm_b = std::sqrt(vectorHandler_->dot(resVector_, resVector_, memory::DEVICE));
+      } else {
+        resVector_->update(rhs, memory::HOST, memory::DEVICE);
+        norm_b = std::sqrt(vectorHandler_->dot(resVector_, resVector_, memory::HOST));
+        // ms = memory::HOST;
+      }
+      ms = memory::DEVICE;
+#endif
+    } else {
+      out::error() << "Unrecognized device " << memspace_ << "\n";
+      return -1.0;
+    }
+    matrixHandler_->setValuesChanged(true, ms);
+    matrixHandler_->matvec(A_, x, resVector_, &ONE, &MINUSONE, "csr", ms);
+    resnorm = std::sqrt(vectorHandler_->dot(resVector_, resVector_, ms));
+    return resnorm/norm_b;
+  }
+
+  real_type SystemSolver::getNormOfScaledResiduals(vector_type* rhs, vector_type* x)
+  {
+    using namespace ReSolve::constants;
+    assert(rhs->getSize() == resVector_->getSize());
+    real_type norm_x  = 0.0;
+    real_type norm_A  = 0.0;
     real_type resnorm = 0.0;
     memory::MemorySpace ms = memory::HOST;
     if (memspace_ == "cpu") {
@@ -428,10 +461,11 @@ namespace ReSolve
       return -1.0;
     }
     matrixHandler_->setValuesChanged(true, ms);
-    norm_b = std::sqrt(vectorHandler_->dot(resVector_, resVector_, ms));
     matrixHandler_->matvec(A_, x, resVector_, &ONE, &MINUSONE, "csr", ms);
-    resnorm = std::sqrt(vectorHandler_->dot(resVector_, resVector_, ms));
-    return resnorm/norm_b;
+    resnorm = vectorHandler_->infNorm(resVector_, ms);
+    norm_x  = vectorHandler_->infNorm(x, ms);
+    matrixHandler_->matrixInfNorm(A_, &norm_A, ms);
+    return resnorm / (norm_x * norm_A);
   }
 
   const std::string SystemSolver::getFactorizationMethod() const
