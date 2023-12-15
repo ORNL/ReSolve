@@ -271,13 +271,13 @@ namespace ReSolve
                              L_buffer_);
       error_sum += status_rocsparse_;
 
-      //mem_.deviceSynchronize();
+    //  mem_.deviceSynchronize();
       rocsparse_dcsrsv_solve(workspace_->getRocsparseHandle(), 
                              rocsparse_operation_none,
                              A_->getNumRows(),
                              U_csr_->getNnz(), 
                              &(constants::ONE), 
-                             descr_L_,
+                             descr_U_,
                              U_csr_->getValues(ReSolve::memory::DEVICE), //vals_, 
                              U_csr_->getRowData(ReSolve::memory::DEVICE), 
                              U_csr_->getColData(ReSolve::memory::DEVICE), 
