@@ -4,7 +4,9 @@
 #include <resolve/matrix/Sparse.hpp>
 #include <resolve/vector/Vector.hpp>
 
+#ifdef RESOLVE_USE_KLU
 #include <resolve/LinSolverDirectKLU.hpp>
+#endif
 
 #ifdef RESOLVE_USE_CUDA
 #include <resolve/workspace/LinAlgWorkspaceCUDA.hpp>

@@ -6,17 +6,19 @@
 
 ]]
 
-# Build example with KLU factorization and KLU refactorization
-add_executable(klu_klu.exe r_KLU_KLU.cpp)
-target_link_libraries(klu_klu.exe PRIVATE ReSolve)
+if(RESOLVE_USE_KLU)
+  # Build example with KLU factorization and KLU refactorization
+  add_executable(klu_klu.exe r_KLU_KLU.cpp)
+  target_link_libraries(klu_klu.exe PRIVATE ReSolve)
 
-# Read ONE matrix,solve with KLU
-add_executable(klu_klu_standalone.exe r_KLU_KLU_standalone.cpp)
-target_link_libraries(klu_klu_standalone.exe PRIVATE ReSolve)
+  # Read ONE matrix,solve with KLU
+  add_executable(klu_klu_standalone.exe r_KLU_KLU_standalone.cpp)
+  target_link_libraries(klu_klu_standalone.exe PRIVATE ReSolve)
 
-# Build example with a configurable system solver
-add_executable(system.exe r_SysSolver.cpp)
-target_link_libraries(system.exe PRIVATE ReSolve)
+  # Build example with a configurable system solver
+  add_executable(system.exe r_SysSolver.cpp)
+  target_link_libraries(system.exe PRIVATE ReSolve)
+endif(RESOLVE_USE_KLU)
 
 # Create CUDA examples
 if(RESOLVE_USE_CUDA)
@@ -82,7 +84,9 @@ if(RESOLVE_USE_HIP)
 endif(RESOLVE_USE_HIP)
 
 # Install all examples in bin directory
-set(installable_executables klu_klu.exe klu_klu_standalone.exe system.exe)
+if(RESOLVE_USE_KLU)
+  set(installable_executables klu_klu.exe klu_klu_standalone.exe system.exe)
+endif()
 
 if(RESOLVE_USE_CUDA)
   set(installable_executables ${installable_executables} klu_glu.exe klu_rf.exe klu_rf_fgmres.exe klu_glu_values_update.exe gmres_cusparse_rand.exe klu_cusolverrf_check_redo.exe)        
@@ -103,6 +107,8 @@ install(PROGRAMS test.sh DESTINATION ${CONSUMER_PATH})
 
 # Select consumer app
 # TODO - have an outer loop that adds a unique consumer test for each backend supproted
+if(RESOLVE_USE_KLU)
+
 if(RESOLVE_USE_CUDA)
   set(RESOLVE_CONSUMER_APP "testKLU_Rf_FGMRES.cpp")
 elseif(RESOLVE_USE_HIP)
@@ -119,3 +125,5 @@ install(FILES ${PROJECT_SOURCE_DIR}/tests/functionality/${RESOLVE_CONSUMER_APP} 
 #    1. Path to where resolve is installed.
 #    2. Path to data directory
 add_custom_target(test_install COMMAND ${CONSUMER_PATH}/test.sh  ${CMAKE_INSTALL_PREFIX} ${PROJECT_SOURCE_DIR}/tests/functionality/)
+
+endif(RESOLVE_USE_KLU)

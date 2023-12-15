@@ -10,9 +10,11 @@
 add_executable(version.exe testVersion.cpp) 
 target_link_libraries(version.exe PRIVATE ReSolve)
 
-# Build KLU+KLU test
-add_executable(klu_klu_test.exe testKLU.cpp)
-target_link_libraries(klu_klu_test.exe PRIVATE ReSolve)
+if(RESOLVE_USE_KLU)
+  # Build KLU+KLU test
+  add_executable(klu_klu_test.exe testKLU.cpp)
+  target_link_libraries(klu_klu_test.exe PRIVATE ReSolve)
+endif(RESOLVE_USE_KLU)
 
 if(RESOLVE_USE_CUDA)
         
@@ -60,7 +62,9 @@ if(RESOLVE_USE_HIP)
 endif(RESOLVE_USE_HIP)
 
 # Install tests
-set(installable_tests klu_klu_test.exe version.exe)
+if(RESOLVE_USE_KLU)
+  set(installable_tests klu_klu_test.exe version.exe)
+endif()
 
 if(RESOLVE_USE_CUDA)
   set(installable_tests ${installable_tests}
@@ -86,7 +90,11 @@ install(DIRECTORY data DESTINATION bin/resolve/tests/functionality)
 set(test_data_dir ${CMAKE_SOURCE_DIR}/tests/functionality/)
 
 add_test(NAME version COMMAND $<TARGET_FILE:version.exe> "${test_data_dir}")
-add_test(NAME klu_klu_test COMMAND $<TARGET_FILE:klu_klu_test.exe> "${test_data_dir}")
+
+if(RESOLVE_USE_KLU)
+  add_test(NAME klu_klu_test COMMAND $<TARGET_FILE:klu_klu_test.exe> "${test_data_dir}")
+endif()
+
 if(RESOLVE_USE_CUDA)
   add_test(NAME klu_rf_test  COMMAND $<TARGET_FILE:klu_rf_test.exe>  "${test_data_dir}")
   add_test(NAME klu_rf_fgmres_test COMMAND $<TARGET_FILE:klu_rf_fgmres_test.exe> "${test_data_dir}")

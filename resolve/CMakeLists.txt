@@ -11,19 +11,22 @@ add_subdirectory(utilities)
 # C++ files
 set(ReSolve_SRC
     LinSolver.cpp
-    LinSolverDirectKLU.cpp
-    SystemSolver.cpp
+    GramSchmidt.cpp
+    LinSolverIterativeFGMRES.cpp
 )
 
 # Temporary until there is CPU-only option for FGMRES
 set(ReSolve_GPU_SRC
-    GramSchmidt.cpp
-    LinSolverIterativeFGMRES.cpp
     LinSolverIterativeRandFGMRES.cpp
     RandSketchingManager.cpp
     RandSketchingCountSketch.cpp
     RandSketchingFWHT.cpp
-    )
+)
+
+set(ReSolve_KLU_SRC
+  LinSolverDirectKLU.cpp
+  SystemSolver.cpp
+)
 
 # C++ code that links to CUDA SDK libraries
 set(ReSolve_CUDASDK_SRC
@@ -31,6 +34,7 @@ set(ReSolve_CUDASDK_SRC
     LinSolverDirectCuSolverRf.cpp
     LinSolverDirectCuSparseILU0.cpp
 )
+
 # HIP files
 set(ReSolve_ROCM_SRC
   LinSolverDirectRocSolverRf.cpp
@@ -66,6 +70,7 @@ add_library(resolve_tpl INTERFACE)
 
 if(RESOLVE_USE_KLU)
   target_link_libraries(resolve_tpl INTERFACE KLU)    
+  set(ReSolve_SRC ${ReSolve_SRC} ${ReSolve_KLU_SRC})
 endif(RESOLVE_USE_KLU)
 
 set(ReSolve_Targets_List
