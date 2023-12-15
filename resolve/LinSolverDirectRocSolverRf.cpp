@@ -261,7 +261,7 @@ namespace ReSolve
                              L_csr_->getNnz(), 
                              &(constants::ONE), 
                              descr_L_,
-                             L_csr_->getValues(ReSolve::memory::DEVICE), //vals_, 
+                             L_csr_->getValues(ReSolve::memory::DEVICE),
                              L_csr_->getRowData(ReSolve::memory::DEVICE), 
                              L_csr_->getColData(ReSolve::memory::DEVICE), 
                              info_L_,
@@ -271,24 +271,22 @@ namespace ReSolve
                              L_buffer_);
       error_sum += status_rocsparse_;
 
-    //  mem_.deviceSynchronize();
       rocsparse_dcsrsv_solve(workspace_->getRocsparseHandle(), 
                              rocsparse_operation_none,
                              A_->getNumRows(),
                              U_csr_->getNnz(), 
                              &(constants::ONE), 
                              descr_U_,
-                             U_csr_->getValues(ReSolve::memory::DEVICE), //vals_, 
+                             U_csr_->getValues(ReSolve::memory::DEVICE),
                              U_csr_->getRowData(ReSolve::memory::DEVICE), 
                              U_csr_->getColData(ReSolve::memory::DEVICE), 
                              info_U_,
                              d_aux2_, //input
-                             d_aux1_,//result
+                             d_aux1_, //result
                              rocsparse_solve_policy_auto,
                              U_buffer_);
       error_sum += status_rocsparse_;
 
-      //mem_.deviceSynchronize();
       permuteVectorQ(A_->getNumRows(), d_Q_,d_aux1_,rhs->getData(ReSolve::memory::DEVICE));
       mem_.deviceSynchronize();
     }
