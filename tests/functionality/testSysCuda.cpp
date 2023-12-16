@@ -78,10 +78,11 @@ int main(int argc, char *argv[])
   real_type* x   = new real_type[A->getNumRows()];
   vector_type* vec_rhs = new vector_type(A->getNumRows());
   vector_type* vec_x   = new vector_type(A->getNumRows());
-  vec_x->allocate(ReSolve::memory::HOST);  //for KLU
-  vec_x->allocate(ReSolve::memory::DEVICE);
   vector_type* vec_r   = new vector_type(A->getNumRows());
   rhs1_file.close();
+
+  vec_x->allocate(ReSolve::memory::HOST);  //for KLU
+  vec_x->allocate(ReSolve::memory::DEVICE);
 
   // Set RHS vector on CPU
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
