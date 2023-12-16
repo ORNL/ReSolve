@@ -101,34 +101,32 @@ namespace ReSolve { namespace vector {
     if ((memspaceOut == memory::HOST) && (h_data_ == nullptr)) {
       //allocate first
       h_data_ = new real_type[n_ * k_]; 
+      owns_cpu_data_ = true;
     }
     if ((memspaceOut == memory::DEVICE) && (d_data_ == nullptr)) {
       //allocate first
       mem_.allocateArrayOnDevice(&d_data_, n_ * k_);
+      owns_gpu_data_ = true;
     } 
 
     switch(control)  {
       case 0: //cpu->cpu
         mem_.copyArrayHostToHost(h_data_, data, n_current_ * k_);
-        owns_cpu_data_ = true;
         cpu_updated_ = true;
         gpu_updated_ = false;
         break;
       case 2: //gpu->cpu
         mem_.copyArrayDeviceToHost(h_data_, data, n_current_ * k_);
-        owns_gpu_data_ = true;
         cpu_updated_ = true;
         gpu_updated_ = false;
         break;
       case 1: //cpu->gpu
         mem_.copyArrayHostToDevice(d_data_, data, n_current_ * k_);
-        owns_gpu_data_ = true;
         gpu_updated_ = true;
         cpu_updated_ = false;
         break;
       case 3: //gpu->gpu
         mem_.copyArrayDeviceToDevice(d_data_, data, n_current_ * k_);
-        owns_gpu_data_ = true;
         gpu_updated_ = true;
         cpu_updated_ = false;
         break;
@@ -175,20 +173,20 @@ namespace ReSolve { namespace vector {
 
     if ((memspaceOut == memory::HOST) && (h_data_ == nullptr)) {
       //allocate first
-      h_data_ = new real_type[n_ * k_]; 
+      h_data_ = new real_type[n_ * k_];
+      owns_cpu_data_ = true;
     }
     if ((memspaceOut == memory::DEVICE) && (d_data_ == nullptr)) {
       //allocate first
       mem_.allocateArrayOnDevice(&d_data_, n_ * k_);
+      owns_gpu_data_ = true;
     } 
     switch(control)  {
       case 0: //cpu->cuda
         mem_.copyArrayHostToDevice(d_data_, h_data_, n_current_ * k_);
-        owns_gpu_data_ = true;
         break;
       case 1: //cuda->cpu
         mem_.copyArrayDeviceToHost(h_data_, d_data_, n_current_ * k_);
-        owns_cpu_data_ = true;
         break;
       default:
         return -1;
@@ -311,7 +309,7 @@ namespace ReSolve { namespace vector {
 
   real_type* Vector::getVectorData(index_type i, memory::MemorySpace memspace)
   {
-    if (this->k_ < i){
+    if (this->k_ < i) {
       return nullptr;
     } else {
       return this->getData(i, memspace);

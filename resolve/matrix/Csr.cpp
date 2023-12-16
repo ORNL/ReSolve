@@ -97,27 +97,27 @@ namespace ReSolve
 
     if (memspaceOut == memory::HOST) {
       //check if cpu data allocated
-      if (h_row_data_ == nullptr) {
+      if ((h_row_data_ == nullptr) && (h_col_data_ == nullptr)) {
         this->h_row_data_ = new index_type[n_ + 1];
-      }
-      if (h_col_data_ == nullptr) {
         this->h_col_data_ = new index_type[nnz_current];
+        owns_cpu_data_ = true;
       } 
       if (h_val_data_ == nullptr) {
         this->h_val_data_ = new real_type[nnz_current];
+        owns_cpu_vals_ = true;
       }
     }
 
     if (memspaceOut == memory::DEVICE) {
       //check if cuda data allocated
-      if (d_row_data_ == nullptr) {
+      if ((d_row_data_ == nullptr) && (d_col_data_ == nullptr)) {
         mem_.allocateArrayOnDevice(&d_row_data_, n_ + 1); 
-      }
-      if (d_col_data_ == nullptr) {
         mem_.allocateArrayOnDevice(&d_col_data_, nnz_current);
+        owns_gpu_vals_ = true;
       }
       if (d_val_data_ == nullptr) {
         mem_.allocateArrayOnDevice(&d_val_data_, nnz_current); 
+        owns_gpu_data_ = true;
       }
     }
 
@@ -129,32 +129,24 @@ namespace ReSolve
         mem_.copyArrayHostToHost(h_col_data_, col_data, nnz_current);
         mem_.copyArrayHostToHost(h_val_data_, val_data, nnz_current);
         h_data_updated_ = true;
-        owns_cpu_data_ = true;
-        owns_cpu_vals_ = true;
         break;
       case 2://gpu->cpu
         mem_.copyArrayDeviceToHost(h_row_data_, row_data,      n_ + 1);
         mem_.copyArrayDeviceToHost(h_col_data_, col_data, nnz_current);
         mem_.copyArrayDeviceToHost(h_val_data_, val_data, nnz_current);
         h_data_updated_ = true;
-        owns_cpu_data_ = true;
-        owns_cpu_vals_ = true;
         break;
       case 1://cpu->gpu
         mem_.copyArrayHostToDevice(d_row_data_, row_data,      n_ + 1);
         mem_.copyArrayHostToDevice(d_col_data_, col_data, nnz_current);
         mem_.copyArrayHostToDevice(d_val_data_, val_data, nnz_current);
         d_data_updated_ = true;
-        owns_gpu_data_ = true;
-        owns_gpu_vals_ = true;
         break;
       case 3://gpu->gpu
         mem_.copyArrayDeviceToDevice(d_row_data_, row_data,      n_ + 1);
         mem_.copyArrayDeviceToDevice(d_col_data_, col_data, nnz_current);
         mem_.copyArrayDeviceToDevice(d_val_data_, val_data, nnz_current);
         d_data_updated_ = true;
-        owns_gpu_data_ = true;
-        owns_gpu_vals_ = true;
         break;
       default:
         return -1;
@@ -212,40 +204,36 @@ namespace ReSolve
       case HOST:
         //check if we need to copy or not
         if ((d_data_updated_ == true) && (h_data_updated_ == false)) {
-          if (h_row_data_ == nullptr) {
-            h_row_data_ = new index_type[n_ + 1];      
-          }
-          if (h_col_data_ == nullptr) {
+          if ((h_row_data_ == nullptr) && (h_col_data_ == nullptr)) {
+            h_row_data_ = new index_type[n_ + 1];
             h_col_data_ = new index_type[nnz_current];      
+            owns_cpu_data_ = true;
           }
           if (h_val_data_ == nullptr) {
             h_val_data_ = new real_type[nnz_current];      
+            owns_cpu_vals_ = true;
           }
           mem_.copyArrayDeviceToHost(h_row_data_, d_row_data_,      n_ + 1);
           mem_.copyArrayDeviceToHost(h_col_data_, d_col_data_, nnz_current);
           mem_.copyArrayDeviceToHost(h_val_data_, d_val_data_, nnz_current);
           h_data_updated_ = true;
-          owns_cpu_data_ = true;
-          owns_cpu_vals_ = true;
         }
         return 0;
       case DEVICE:
         if ((d_data_updated_ == false) && (h_data_updated_ == true)) {
-          if (d_row_data_ == nullptr) {
+          if ((d_row_data_ == nullptr) && (d_col_data_ == nullptr)) {
             mem_.allocateArrayOnDevice(&d_row_data_, n_ + 1); 
-          }
-          if (d_col_data_ == nullptr) {
             mem_.allocateArrayOnDevice(&d_col_data_, nnz_current); 
+            owns_gpu_data_ = true;
           }
           if (d_val_data_ == nullptr) {
             mem_.allocateArrayOnDevice(&d_val_data_, nnz_current); 
+            owns_gpu_vals_ = true;
           }
           mem_.copyArrayHostToDevice(d_row_data_, h_row_data_,      n_ + 1);
           mem_.copyArrayHostToDevice(d_col_data_, h_col_data_, nnz_current);
           mem_.copyArrayHostToDevice(d_val_data_, h_val_data_, nnz_current);
           d_data_updated_ = true;
-          owns_gpu_data_ = true;
-          owns_gpu_vals_ = true;
         }
         return 0;
       default:
@@ -376,7 +364,6 @@ namespace ReSolve
 
     for (int i = 0; i < n; ++i)
     {
-
       //now sorting (and adding 1)
       int colStart = csr_ia[i];
       int colEnd = csr_ia[i + 1];
@@ -387,30 +374,12 @@ namespace ReSolve
     for (index_type i = 0; i < nnz_unpacked; ++i)
     {
       csr_ja[i] = tmp[i].getIdx();
-      csr_a[i] = tmp[i].getValue();
+      csr_a[i]  = tmp[i].getValue();
     }
-#if 0
-    for (int i = 0; i<n; ++i){
-      printf("Row: %d \n", i);
-      for (int j = csr_ia[i]; j<csr_ia[i+1]; ++j){
-        printf("(%d %16.16f) ", csr_ja[j], csr_a[j]);
-      }
-      printf("\n");
-    }
-#endif
+
     this->setNnz(nnz_no_duplicates);
     this->updateData(csr_ia, csr_ja, csr_a, memory::HOST, memspace);
-    // if (memspace == "cpu"){
-    //   this->updateData(csr_ia, csr_ja, csr_a, memory::HOST, memory::HOST);
-    // } else {
-    //   if (memspace == "cuda"){      
-    //     this->updateData(csr_ia, csr_ja, csr_a, memory::HOST, memory::DEVICE);
-    //   } else if (memspace == "hip"){      
-    //     this->updateData(csr_ia, csr_ja, csr_a, memory::HOST, memory::DEVICE);
-    //   } else {
-    //     //display error
-    //   }
-    // }
+
     delete [] nnz_counts;
     delete [] tmp;
     delete [] nnz_shifts;

@@ -216,6 +216,7 @@ namespace ReSolve { namespace matrix {
       //check if cpu data allocated
       if (h_val_data_ == nullptr) {
         this->h_val_data_ = new real_type[nnz_current];
+        owns_cpu_vals_ = true;
       }
     }
 
@@ -223,6 +224,7 @@ namespace ReSolve { namespace matrix {
       //check if cuda data allocated
       if (d_val_data_ == nullptr) {
         mem_.allocateArrayOnDevice(&d_val_data_, nnz_current); 
+        owns_gpu_vals_ = true;
       }
     }
 
@@ -230,22 +232,18 @@ namespace ReSolve { namespace matrix {
       case 0: //cpu->cpu
         mem_.copyArrayHostToHost(h_val_data_, new_vals, nnz_current);
         h_data_updated_ = true;
-        owns_cpu_vals_ = true;
         break;
       case 2://cuda->cpu
         mem_.copyArrayDeviceToHost(h_val_data_, new_vals, nnz_current);
         h_data_updated_ = true;
-        owns_cpu_vals_ = true;
         break;
       case 1://cpu->cuda
         mem_.copyArrayHostToDevice(d_val_data_, new_vals, nnz_current);
         d_data_updated_ = true;
-        owns_gpu_vals_ = true;
         break;
       case 3://cuda->cuda
         mem_.copyArrayDeviceToDevice(d_val_data_, new_vals, nnz_current);
         d_data_updated_ = true;
-        owns_gpu_vals_ = true;
         break;
       default:
         return -1;
