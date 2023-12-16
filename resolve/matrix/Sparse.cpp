@@ -14,9 +14,9 @@ namespace ReSolve { namespace matrix {
   /** 
    * @brief basic constructor. It DOES NOT allocate any memory!
    *
-   * param[in] n   - number of rows
-   * param[in] m   - number of columns
-   * param[in] nnz - number of non-zeros        
+   * @param[in] n   - number of rows
+   * @param[in] m   - number of columns
+   * @param[in] nnz - number of non-zeros        
    */
   Sparse::Sparse(index_type n, 
                  index_type m, 
@@ -50,11 +50,11 @@ namespace ReSolve { namespace matrix {
   /** 
    * @brief another basic constructor. It DOES NOT allocate any memory!
    *
-   * param[in] n         - number of rows
-   * param[in] m         - number of columns
-   * param[in] nnz       - number of non-zeros        
-   * param[in] symmetric - true if symmetric, false if non-symmetric       
-   * param[in] expanded  - true if expanded, false if not       
+   * @param[in] n         - number of rows
+   * @param[in] m         - number of columns
+   * @param[in] nnz       - number of non-zeros        
+   * @param[in] symmetric - true if symmetric, false if non-symmetric       
+   * @param[in] expanded  - true if expanded, false if not       
    */
   Sparse::Sparse(index_type n, 
                  index_type m, 
