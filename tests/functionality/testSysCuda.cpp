@@ -169,7 +169,8 @@ int main(int argc, char *argv[])
   real_type exactSol_normRmatrix1 = sqrt(vector_handler.dot(vec_r, vec_r, ReSolve::memory::DEVICE));
 
   // Compute residual norm ON THE CPU using COMPUTED solution
-  vec_x->update(vec_x->getData(ReSolve::memory::DEVICE), ReSolve::memory::DEVICE, ReSolve::memory::HOST);
+  // vec_x->update(vec_x->getData(ReSolve::memory::DEVICE), ReSolve::memory::DEVICE, ReSolve::memory::HOST);
+  vec_x->copyData(ReSolve::memory::DEVICE, ReSolve::memory::HOST);
   vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   status = matrix_handler.matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", ReSolve::memory::HOST);
   error_sum += status;
