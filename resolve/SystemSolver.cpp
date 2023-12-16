@@ -390,7 +390,6 @@ namespace ReSolve
    */
   void SystemSolver::setRefinementMethod(std::string method, std::string gsMethod)
   {
-#if defined(RESOLVE_USE_HIP) || defined(RESOLVE_USE_CUDA)
     if (iterativeSolver_ != nullptr)
       delete iterativeSolver_;
 
