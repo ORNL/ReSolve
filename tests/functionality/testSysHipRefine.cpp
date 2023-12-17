@@ -19,17 +19,25 @@
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
-#include <resolve/LinSolverDirectRocSolverRf.hpp>
+// #include <resolve/LinSolverDirectRocSolverRf.hpp>
 #include <resolve/LinSolverIterativeFGMRES.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 #include <resolve/SystemSolver.hpp>
 
 #if defined (RESOLVE_USE_CUDA)
+#include <resolve/LinSolverDirectCuSolverRf.hpp>
   using workspace_type = ReSolve::LinAlgWorkspaceCUDA;
+  using solver_type    = ReSolve::LinSolverDirectCuSolverRf;
+  std::string memory_space("cuda");
 #elif defined (RESOLVE_USE_HIP)
+#include <resolve/LinSolverDirectRocSolverRf.hpp>
   using workspace_type = ReSolve::LinAlgWorkspaceHIP;
+  using solver_type    = ReSolve::LinSolverDirectRocSolverRf;
+  std::string memory_space("hip");
 #else
   using workspace_type = ReSolve::LinAlgWorkspaceCpu;
+  // using solver_type    = ReSolve::LinSolverDirectKLU;
+  std::string memory_space("cpu");
 #endif
 
 using namespace ReSolve::constants;
@@ -54,8 +62,14 @@ int main(int argc, char *argv[])
   ReSolve::SystemSolver solver(&workspace);
   solver.setRefinementMethod("fgmres", "cgs2");
   solver.getIterativeSolver().setRestart(100);
-  solver.getIterativeSolver().setMaxit(200);
-
+  if (memory_space == "hip") {
+    solver.getIterativeSolver().setMaxit(200);
+  }
+  if (memory_space == "cuda") {
+    solver.getIterativeSolver().setMaxit(400);
+    solver.getIterativeSolver().setTol(1e-17);
+  }
+  
   // Input to this code is location of `data` directory where matrix files are stored
   const std::string data_path = (argc == 2) ? argv[1] : "./";
 
@@ -285,7 +299,7 @@ int main(int argc, char *argv[])
   std::cout << "\t IR starting res. norm       : " << solver.getIterativeSolver().getInitResidualNorm()  << "\n";
   std::cout << "\t IR final res. norm          : " << solver.getIterativeSolver().getFinalResidualNorm() << " (tol 1e-14)\n\n";
 
-  if ((normRmatrix1/normB1 > 1e-12 ) || (normRmatrix2/normB2 > 1e-9)) {
+  if ((normRmatrix1/normB1 > 1e-12 ) || (normRmatrix2/normB2 > 1e-15)) {
     std::cout << "Result inaccurate!\n";
     error_sum++;
   }

@@ -10,11 +10,26 @@
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
-#include <resolve/LinSolverDirectRocSolverRf.hpp>
 #include <resolve/LinSolverIterativeFGMRES.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 //author: KS
 //functionality test to check whether cuSolverRf/FGMRES works correctly.
+
+#if defined (RESOLVE_USE_CUDA)
+#include <resolve/LinSolverDirectCuSolverRf.hpp>
+  using workspace_type = ReSolve::LinAlgWorkspaceCUDA;
+  using solver_type    = ReSolve::LinSolverDirectCuSolverRf;
+  std::string memory_space("cuda");
+#elif defined (RESOLVE_USE_HIP)
+#include <resolve/LinSolverDirectRocSolverRf.hpp>
+  using workspace_type = ReSolve::LinAlgWorkspaceHIP;
+  using solver_type    = ReSolve::LinSolverDirectRocSolverRf;
+  std::string memory_space("hip");
+#else
+  using workspace_type = ReSolve::LinAlgWorkspaceCpu;
+  using solver_type    = ReSolve::LinSolverDirectKLU;
+  std::string memory_space("cpu");
+#endif
 
 using namespace ReSolve::constants;
 
@@ -31,16 +46,16 @@ int main(int argc, char *argv[])
   int error_sum = 0;
   int status = 0;
 
-  ReSolve::LinAlgWorkspaceHIP* workspace_HIP = new ReSolve::LinAlgWorkspaceHIP();
-  workspace_HIP->initializeHandles();
-  ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(workspace_HIP);
-  ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(workspace_HIP);
+  workspace_type workspace;
+  workspace.initializeHandles();
+  ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(&workspace);
+  ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(&workspace);
 
   ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
 
-  ReSolve::LinSolverDirectRocSolverRf* Rf = new ReSolve::LinSolverDirectRocSolverRf(workspace_HIP);
+  solver_type* Rf = new solver_type(&workspace);
   ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::cgs2);
-  ReSolve::LinSolverIterativeFGMRES* FGMRES = new ReSolve::LinSolverIterativeFGMRES(matrix_handler, vector_handler, GS, "hip");
+  ReSolve::LinSolverIterativeFGMRES* FGMRES = new ReSolve::LinSolverIterativeFGMRES(matrix_handler, vector_handler, GS, memory_space);
   // Input to this code is location of `data` directory where matrix files are stored
   const std::string data_path = (argc == 2) ? argv[1] : "./";
 
@@ -261,7 +276,7 @@ int main(int argc, char *argv[])
   delete [] rhs;
   delete vec_r;
   delete vec_x;
-  delete workspace_HIP;
+  // delete workspace_HIP;
   delete matrix_handler;
   delete vector_handler;
 

@@ -1,7 +1,8 @@
 #include <cassert>
 #include <cmath>
 
-#include <resolve/matrix/Sparse.hpp>
+#include <resolve/matrix/Csr.hpp>
+#include <resolve/matrix/Csc.hpp>
 #include <resolve/vector/Vector.hpp>
 
 #ifdef RESOLVE_USE_KLU
@@ -221,7 +222,7 @@ namespace ReSolve
     }
 
 #ifdef RESOLVE_USE_CUDA
-    if (refactorizationMethod_ == "glu") {
+    if (refactorizationMethod_ == "glu" || refactorizationMethod_ == "cusolverrf") {
       return refactorizationSolver_->refactorize();
     }
 #endif
@@ -246,13 +247,24 @@ namespace ReSolve
 
     if (L_ == nullptr) {
       out::warning() << "Factorization failed, cannot extract factors ...\n";
-      status = 1;
+      status += 1;
     }
 
 #ifdef RESOLVE_USE_CUDA
     if (refactorizationMethod_ == "glu") {
       isSolveOnDevice_ = true;
       status += refactorizationSolver_->setup(A_, L_, U_, P_, Q_);
+    }
+    if (refactorizationMethod_ == "cusolverrf") {
+      matrix::Csc* L_csc = dynamic_cast<matrix::Csc*>(L_);
+      matrix::Csc* U_csc = dynamic_cast<matrix::Csc*>(U_);       
+      matrix::Csr* L_csr = new matrix::Csr(L_csc->getNumRows(), L_csc->getNumColumns(), L_csc->getNnz());
+      matrix::Csr* U_csr = new matrix::Csr(U_csc->getNumRows(), U_csc->getNumColumns(), U_csc->getNnz());
+      matrixHandler_->csc2csr(L_csc, L_csr, memory::DEVICE);
+      matrixHandler_->csc2csr(U_csc, U_csr, memory::DEVICE);
+      status += refactorizationSolver_->setup(A_, L_csr, U_csr, P_, Q_);
+      delete L_csr;
+      delete U_csr;
     }
 #endif
 
@@ -300,6 +312,15 @@ namespace ReSolve
         // std::cout << "Solving with KLU ...\n";
         status += factorizationSolver_->solve(rhs, x);
       }
+    } 
+    if (solveMethod_ == "cusolverrf") {
+      if (isSolveOnDevice_) {
+        // std::cout << "Solving with cuSolver ...\n";
+        status += refactorizationSolver_->solve(rhs, x);
+      } else {
+        // std::cout << "Solving with KLU ...\n";
+        status += factorizationSolver_->solve(rhs, x);
+      }     
     } 
 #endif
 
@@ -370,8 +391,32 @@ namespace ReSolve
 
   void SystemSolver::setRefactorizationMethod(std::string method)
   {
+    if (refactorizationMethod_ == method)
+      return;
+
     refactorizationMethod_ = method;
-    // initialize();
+    if (refactorizationSolver_) {
+      delete refactorizationSolver_;
+      refactorizationSolver_ = nullptr;
+    }
+
+    // Create refactorization solver
+    if (refactorizationMethod_ == "klu") {
+      // do nothing for now
+#ifdef RESOLVE_USE_CUDA
+    } else if (refactorizationMethod_ == "glu") {
+      refactorizationSolver_ = new ReSolve::LinSolverDirectCuSolverGLU(workspaceCuda_);
+    } else if (refactorizationMethod_ == "cusolverrf") {
+      refactorizationSolver_ = new ReSolve::LinSolverDirectCuSolverRf();
+#endif
+#ifdef RESOLVE_USE_HIP
+    } else if (refactorizationMethod_ == "rocsolverrf") {
+      refactorizationSolver_ = new ReSolve::LinSolverDirectRocSolverRf(workspaceHip_);
+#endif
+    } else {
+      out::error() << "Refactorization method " << refactorizationMethod_ 
+                   << " not recognized ...\n";
+    }
   }
 
   void SystemSolver::setSolveMethod(std::string method)
