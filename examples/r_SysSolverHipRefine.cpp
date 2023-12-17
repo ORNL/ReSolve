@@ -144,20 +144,23 @@ int main(int argc, char *argv[])
       std::cout << "ROCSOLVER RF solve status: " << status << std::endl;
 
       real_type rnrm = solver->getResidualNorm(vec_rhs, vec_x);
-      std::cout << "\t 2-Norm of the residual (before IR): " 
-                << std::scientific << std::setprecision(16) 
-                << rnrm << "\n";
+      std::cout << std::scientific << std::setprecision(16) 
+                << "\t 2-Norm of the residual (after IR): " 
+                << rnrm 
+                << "\t 2-Norm of scaled residuals (after IR): "
+                << solver->getNormOfScaledResiduals(vec_rhs, vec_x)
+                << "\n";
 
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+      real_type norm_b = solver->getVectorNorm(vec_rhs);
       if (!std::isnan(rnrm) && !std::isinf(rnrm)) {
-        status = solver->refine(vec_rhs, vec_x);
         std::cout << "FGMRES solve status: " << status << std::endl;      
 
         std::cout << "FGMRES: init nrm: " 
                   << std::scientific << std::setprecision(16) 
-                  << rnrm
+                  << solver->getIterativeSolver().getInitResidualNorm()/norm_b
                   << " final nrm: "
-                  << solver->getResidualNorm(vec_rhs, vec_x)
+                  << solver->getIterativeSolver().getFinalResidualNorm()/norm_b
                   << " iter: " << solver->getIterativeSolver().getNumIter()
                   << "\n";
       }

@@ -479,6 +479,27 @@ namespace ReSolve
     }
   }
 
+  real_type SystemSolver::getVectorNorm(vector_type* rhs)
+  {
+    using namespace ReSolve::constants;
+    real_type norm_b  = 0.0;
+    if (memspace_ == "cpu") {
+      norm_b = std::sqrt(vectorHandler_->dot(rhs, rhs, memory::HOST));
+#if defined(RESOLVE_USE_HIP) || defined(RESOLVE_USE_CUDA)
+    } else if (memspace_ == "cuda" || memspace_ == "hip") {
+      if (isSolveOnDevice_) {
+        norm_b = std::sqrt(vectorHandler_->dot(rhs, rhs, memory::DEVICE));
+      } else {
+        norm_b = std::sqrt(vectorHandler_->dot(rhs, rhs, memory::HOST));
+      }
+#endif
+    } else {
+      out::error() << "Unrecognized device " << memspace_ << "\n";
+      return -1.0;
+    }
+    return norm_b;
+  }
+
   real_type SystemSolver::getResidualNorm(vector_type* rhs, vector_type* x)
   {
     using namespace ReSolve::constants;
