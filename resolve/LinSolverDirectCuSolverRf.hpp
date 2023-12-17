@@ -18,12 +18,15 @@ namespace ReSolve
     class Sparse;
   }
 
+  // Forward declaration of ReSolve handlers workspace
+  class LinAlgWorkspaceCUDA;
+
   class LinSolverDirectCuSolverRf : public LinSolverDirect 
   {
     using vector_type = vector::Vector;
     
     public: 
-      LinSolverDirectCuSolverRf();
+      LinSolverDirectCuSolverRf(LinAlgWorkspaceCUDA* workspace = nullptr);
       ~LinSolverDirectCuSolverRf();
       
       int setup(matrix::Sparse* A,
