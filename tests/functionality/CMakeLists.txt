@@ -65,11 +65,11 @@ if(RESOLVE_USE_HIP)
   
 endif(RESOLVE_USE_HIP)
 
-set(installable_tests "")
+set(installable_tests version.exe)
 
 # Install tests
 if(RESOLVE_USE_KLU)
-  list(APPEND installable_tests klu_klu_test.exe version.exe)
+  list(APPEND installable_tests klu_klu_test.exe)
 endif()
 
 if(RESOLVE_USE_CUDA)
