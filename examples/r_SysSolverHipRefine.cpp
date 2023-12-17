@@ -42,10 +42,6 @@ int main(int argc, char *argv[])
   ReSolve::LinAlgWorkspaceHIP* workspace_HIP = new ReSolve::LinAlgWorkspaceHIP();
   workspace_HIP->initializeHandles();
   ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(workspace_HIP);
-  ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(workspace_HIP);
-
-  vector_type* vec_r;
-  real_type norm_A, norm_x, norm_r, norm_b;
 
   real_type* rhs = nullptr;
   real_type* x   = nullptr;
@@ -98,7 +94,6 @@ int main(int argc, char *argv[])
       x = new real_type[A->getNumRows()];
       vec_rhs = new vector_type(A->getNumRows());
       vec_x =   new vector_type(A->getNumRows());
-      vec_r =   new vector_type(A->getNumRows());
       vec_x->allocate(ReSolve::memory::HOST);//for KLU
       vec_x->allocate(ReSolve::memory::DEVICE);
     } else {
@@ -134,17 +129,6 @@ int main(int argc, char *argv[])
       status = solver->solve(vec_rhs, vec_x);
       std::cout << "KLU solve status: " << status << std::endl;      
 
-      // Code to verify norm calculation
-      vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-      norm_b = vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE);
-      norm_b = sqrt(norm_b);
-      matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
-      matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", ReSolve::memory::DEVICE); 
-      std::cout << "\t 2-Norm of the residual (ref): " 
-                << std::scientific << std::setprecision(16)
-                << sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE))/norm_b << "\n";
-      // end of code to verify norm calculation
-
       std::cout << "\t 2-Norm of the residual      : " 
                 << std::scientific << std::setprecision(16)
                 << solver->getResidualNorm(vec_rhs, vec_x) << "\n";
@@ -159,18 +143,7 @@ int main(int argc, char *argv[])
       status = solver->solve(vec_rhs, vec_x);
       std::cout << "ROCSOLVER RF solve status: " << status << std::endl;
 
-      // Code to verify norm calculation
-      vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-      norm_b = vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE);
-      norm_b = sqrt(norm_b);
-      matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", ReSolve::memory::DEVICE); 
-      real_type rnrm = sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE));
-      std::cout << "\t 2-Norm of the residual (before IR): " 
-        << std::scientific << std::setprecision(16) 
-        << rnrm/norm_b << "\n";
-      // end of code for verifying norm calvulation
-
-      /* real_type */ rnrm = solver->getResidualNorm(vec_rhs, vec_x);
+      real_type rnrm = solver->getResidualNorm(vec_rhs, vec_x);
       std::cout << "\t 2-Norm of the residual (before IR): " 
                 << std::scientific << std::setprecision(16) 
                 << rnrm << "\n";
