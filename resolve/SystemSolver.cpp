@@ -4,6 +4,8 @@
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/Csc.hpp>
 #include <resolve/vector/Vector.hpp>
+#include <resolve/LinSolverIterativeFGMRES.hpp>
+#include <resolve/GramSchmidt.hpp>
 
 #ifdef RESOLVE_USE_KLU
 #include <resolve/LinSolverDirectKLU.hpp>
@@ -13,15 +15,11 @@
 #include <resolve/workspace/LinAlgWorkspaceCUDA.hpp>
 #include <resolve/LinSolverDirectCuSolverGLU.hpp>
 #include <resolve/LinSolverDirectCuSolverRf.hpp>
-#include <resolve/LinSolverIterativeFGMRES.hpp>
-#include <resolve/GramSchmidt.hpp>
 #endif
 
 #ifdef RESOLVE_USE_HIP
 #include <resolve/workspace/LinAlgWorkspaceHIP.hpp>
 #include <resolve/LinSolverDirectRocSolverRf.hpp>
-#include <resolve/LinSolverIterativeFGMRES.hpp>
-#include <resolve/GramSchmidt.hpp>
 #endif
 
 // Handlers
