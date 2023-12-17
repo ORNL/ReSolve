@@ -60,8 +60,9 @@ namespace ReSolve
       LinSolverDirect& getRefactorizationSolver();
       LinSolverIterative& getIterativeSolver();
 
-      real_type getResidualNorm(vector_type* rhs, vector_type* x);//, ResidualNormType = RR);
-      real_type getNormOfScaledResiduals(vector_type* rhs, vector_type* x);//, ResidualNormType = RR);
+      real_type getVectorNorm(vector_type* rhs);
+      real_type getResidualNorm(vector_type* rhs, vector_type* x);
+      real_type getNormOfScaledResiduals(vector_type* rhs, vector_type* x);
 
       // Get solver parameters
       const std::string getFactorizationMethod() const;
