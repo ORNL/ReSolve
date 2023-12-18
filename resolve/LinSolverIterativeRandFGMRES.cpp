@@ -120,14 +120,14 @@ namespace ReSolve
     n_ = A_->getNumRows();
 
     d_V_ = new vector_type(n_, restart_ + 1);
-    d_V_->allocate(memory::DEVICE);      
+    d_V_->allocate(memspace_);      
     if (flexible_) {
       d_Z_ = new vector_type(n_, restart_ + 1);
     } else {
       // otherwise Z is just a one vector, not multivector and we dont keep it
       d_Z_ = new vector_type(n_);
     }
-    d_Z_->allocate(memory::DEVICE);      
+    d_Z_->allocate(memspace_);      
     h_H_  = new real_type[restart_ * (restart_ + 1)];
     h_c_  = new real_type[restart_];      // needed for givens
     h_s_  = new real_type[restart_];      // same
@@ -165,9 +165,9 @@ namespace ReSolve
     one_over_k_ = 1.0 / sqrt((real_type) k_rand_);
 
     d_S_ = new vector_type(k_rand_, restart_ + 1);
-    d_S_->allocate(memory::DEVICE);      
+    d_S_->allocate(memspace_);      
     if (rand_method_ == cs) {
-      d_S_->setToZero(memory::DEVICE);
+      d_S_->setToZero(memspace_);
     }
     return 0;
   }
@@ -196,14 +196,14 @@ namespace ReSolve
     vector_type* vec_s = new vector_type(k_rand_);
     //V[0] = b-A*x_0
     //debug
-    d_Z_->setToZero(memory::DEVICE);
-    d_V_->setToZero(memory::DEVICE);
+    d_Z_->setToZero(memspace_);
+    d_V_->setToZero(memspace_);
 
-    rhs->deepCopyVectorData(d_V_->getData(memory::DEVICE), 0, memory::DEVICE);  
+    rhs->deepCopyVectorData(d_V_->getData(memspace_), 0, memspace_);  
     matrix_handler_->matvec(A_, x, d_V_, &MINUSONE, &ONE, "csr", memspace_); 
 
-    vec_v->setData( d_V_->getVectorData(0, memory::DEVICE), memory::DEVICE);
-    vec_s->setData( d_S_->getVectorData(0, memory::DEVICE), memory::DEVICE);
+    vec_v->setData( d_V_->getVectorData(0, memspace_), memspace_);
+    vec_s->setData( d_S_->getVectorData(0, memspace_), memspace_);
 
     rand_manager_->Theta(vec_v, vec_s);
 
@@ -264,11 +264,11 @@ namespace ReSolve
         it++;
 
         // Z_i = (LU)^{-1}*V_i
-        vec_v->setData( d_V_->getVectorData(i, memory::DEVICE), memory::DEVICE);
+        vec_v->setData( d_V_->getVectorData(i, memspace_), memspace_);
         if (flexible_) {
-          vec_z->setData( d_Z_->getVectorData(i, memory::DEVICE), memory::DEVICE);
+          vec_z->setData( d_Z_->getVectorData(i, memspace_), memspace_);
         } else {
-          vec_z->setData( d_Z_->getVectorData(0, memory::DEVICE), memory::DEVICE);
+          vec_z->setData( d_Z_->getVectorData(0, memspace_), memspace_);
         }
         this->precV(vec_v, vec_z);
 
@@ -276,13 +276,13 @@ namespace ReSolve
 
         // V_{i+1}=A*Z_i
 
-        vec_v->setData( d_V_->getVectorData(i + 1, memory::DEVICE), memory::DEVICE);
+        vec_v->setData( d_V_->getVectorData(i + 1, memspace_), memspace_);
 
         matrix_handler_->matvec(A_, vec_z, vec_v, &ONE, &ZERO,"csr", memspace_); 
 
         // orthogonalize V[i+1], form a column of h_H_
         // this is where it differs from normal solver GS
-        vec_s->setData( d_S_->getVectorData(i + 1, memory::DEVICE), memory::DEVICE);
+        vec_s->setData( d_S_->getVectorData(i + 1, memspace_), memspace_);
         rand_manager_->Theta(vec_v, vec_s); 
         if (rand_method_ == fwht){
           //  cublasDscal(cublas_handle, k_rand, &oneOverK, d_S, 1); 
@@ -293,7 +293,7 @@ namespace ReSolve
         // now post-process
         //checkCudaErrors(cudaMemcpy(d_Hcolumn, &h_H[i * (restart + 1)], sizeof(double) * (i + 1), cudaMemcpyHostToDevice));
         mem_.copyArrayHostToDevice(d_aux_, &h_H_[i * (restart_ + 1)], i + 2);
-        vec_z->setData(d_aux_, memory::DEVICE);
+        vec_z->setData(d_aux_, memspace_);
         vec_z->setCurrentSize(i + 1);
         //V(:, i+1) =w-V(:, 1:i)*d_H_col = V(:, i+1)-d_H_col * V(:,1:i); 
         //checkCudaErrors( cublasDgemv(cublas_handle, CUBLAS_OP_N, n, i + 1, &minusone, d_V, n, d_Hcolumn, 1,&one , &d_V[n * (i + 1)], 1));
@@ -304,7 +304,7 @@ namespace ReSolve
         t = 1.0 / h_H_[i * (restart_ + 1) + i + 1];
         vector_handler_->scal(&t, vec_v, memspace_);  
         mem_.deviceSynchronize();
-        vec_s->setData( d_S_->getVectorData(i + 1, memory::DEVICE), memory::DEVICE);
+        vec_s->setData( d_S_->getVectorData(i + 1, memspace_), memspace_);
 
         if (i != 0) {
           for (int k = 1; k <= i; k++) {
@@ -361,20 +361,20 @@ namespace ReSolve
       // get solution
       if (flexible_) {
         for (j = 0; j <= i; j++) {
-          vec_z->setData( d_Z_->getVectorData(j, memory::DEVICE), memory::DEVICE);
+          vec_z->setData( d_Z_->getVectorData(j, memspace_), memspace_);
           vector_handler_->axpy(&h_rs_[j], vec_z, x, memspace_);
         }
       } else {
-        mem_.setZeroArrayOnDevice(d_Z_->getData(memory::DEVICE), d_Z_->getSize());
-        vec_z->setData( d_Z_->getVectorData(0, memory::DEVICE), memory::DEVICE);
+        mem_.setZeroArrayOnDevice(d_Z_->getData(memspace_), d_Z_->getSize());
+        vec_z->setData( d_Z_->getVectorData(0, memspace_), memspace_);
         for(j = 0; j <= i; j++) {
-          vec_v->setData( d_V_->getVectorData(j, memory::DEVICE), memory::DEVICE);
+          vec_v->setData( d_V_->getVectorData(j, memspace_), memspace_);
           vector_handler_->axpy(&h_rs_[j], vec_v, vec_z, memspace_);
 
         }
         // now multiply d_Z by precon
 
-        vec_v->setData( d_V_->getData(memory::DEVICE), memory::DEVICE);
+        vec_v->setData( d_V_->getData(memspace_), memspace_);
         this->precV(vec_z, vec_v);
         // and add to x 
         vector_handler_->axpy(&ONE, vec_v, x, memspace_);
@@ -386,17 +386,17 @@ namespace ReSolve
         outer_flag = 0;
       }
 
-      rhs->deepCopyVectorData(d_V_->getData(memory::DEVICE), 0, memory::DEVICE);  
+      rhs->deepCopyVectorData(d_V_->getData(memspace_), 0, memspace_);  
       matrix_handler_->matvec(A_, x, d_V_, &MINUSONE, &ONE,"csr", memspace_); 
       if (outer_flag) {
 
         rand_manager_->reset();
 
         if (rand_method_ == cs) {
-          mem_.setZeroArrayOnDevice(d_S_->getData(memory::DEVICE), d_S_->getSize() * d_S_->getNumVectors());
+          mem_.setZeroArrayOnDevice(d_S_->getData(memspace_), d_S_->getSize() * d_S_->getNumVectors());
         }
-        vec_v->setData( d_V_->getVectorData(0, memory::DEVICE), memory::DEVICE);
-        vec_s->setData( d_S_->getVectorData(0, memory::DEVICE), memory::DEVICE);
+        vec_v->setData( d_V_->getVectorData(0, memspace_), memspace_);
+        vec_s->setData( d_S_->getVectorData(0, memspace_), memspace_);
         rand_manager_->Theta(vec_v, vec_s);
         if (rand_method_ == fwht){
           //  cublasDscal(cublas_handle, k_rand, &oneOverK, d_S, 1); 
@@ -436,59 +436,9 @@ namespace ReSolve
 
   }
 
-  real_type  LinSolverIterativeRandFGMRES::getTol()
-  {
-    return tol_;
-  }
-
-  index_type  LinSolverIterativeRandFGMRES::getMaxit()
-  {
-    return maxit_;
-  }
-
-  index_type  LinSolverIterativeRandFGMRES::getRestart()
-  {
-    return restart_;
-  }
-
-  index_type  LinSolverIterativeRandFGMRES::getConvCond()
-  {
-    return conv_cond_;
-  }
-
-  bool  LinSolverIterativeRandFGMRES::getFlexible()
-  {
-    return flexible_;
-  }
-
   index_type  LinSolverIterativeRandFGMRES::getKrand()
   {
     return k_rand_;
-  }
-
-  void  LinSolverIterativeRandFGMRES::setTol(real_type new_tol)
-  {
-    this->tol_ = new_tol;
-  }
-
-  void  LinSolverIterativeRandFGMRES::setMaxit(index_type new_maxit)
-  {
-    this->maxit_ = new_maxit;
-  }
-
-  void  LinSolverIterativeRandFGMRES::setRestart(index_type new_restart)
-  {
-    this->restart_ = new_restart;
-  }
-
-  void  LinSolverIterativeRandFGMRES::setConvCond(index_type new_conv_cond)
-  {
-    this->conv_cond_ = new_conv_cond;
-  }
-
-  void  LinSolverIterativeRandFGMRES::setFlexible(bool new_flex)
-  {
-    this->flexible_ = new_flex;
   }
 
   int  LinSolverIterativeRandFGMRES::resetMatrix(matrix::Sparse* new_matrix)
