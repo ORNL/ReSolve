@@ -67,7 +67,7 @@ namespace ReSolve {
   {
     cublasHandle_t handle_cublas =  workspace_->getCublasHandle();
     cublasStatus_t st = cublasDscal(handle_cublas, x->getSize(), alpha, x->getData(memory::DEVICE), 1);
-    if (st! = 0) {
+    if (st != 0) {
       out::error() << "scal crashed with code " << st << "\n";
     }
   }
