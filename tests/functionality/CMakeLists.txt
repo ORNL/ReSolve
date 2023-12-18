@@ -35,8 +35,8 @@ if(RESOLVE_USE_CUDA)
   target_link_libraries(klu_glu_test.exe PRIVATE ReSolve)
   
   # System solver test with GLU
-  # add_executable(sys_cuda_test.exe testSysCuda.cpp)
-  add_executable(sys_cuda_test.exe testSysGLU.cpp)
+  add_executable(sys_cuda_test.exe testSysCuda.cpp)
+  # add_executable(sys_cuda_test.exe testSysGLU.cpp)
   target_link_libraries(sys_cuda_test.exe PRIVATE ReSolve)
 
   # Build randSolver test
