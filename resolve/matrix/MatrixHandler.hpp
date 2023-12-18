@@ -66,6 +66,9 @@ namespace ReSolve {
       int matrixInfNorm(matrix::Sparse *A, real_type* norm, memory::MemorySpace memspace);
       void setValuesChanged(bool toWhat, memory::MemorySpace memspace); 
     
+      bool getIsCudaEnabled() const;
+      bool getIsHipEnabled()  const;
+
     private: 
       bool new_matrix_{true};  ///< if the structure changed, you need a new handler.
 

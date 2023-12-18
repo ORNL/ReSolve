@@ -59,7 +59,10 @@ namespace ReSolve { //namespace vector {
        * Returns infinity norm of a vector (i.e., entry with max abs value)
        */ 
       real_type infNorm(vector::Vector* x, memory::MemorySpace memspace);
-   
+
+      bool getIsCudaEnabled() const;
+      bool getIsHipEnabled()  const;
+
     private:
       
       VectorHandlerImpl* cpuImpl_{nullptr};

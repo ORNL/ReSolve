@@ -10,23 +10,31 @@ namespace ReSolve
 {
   using out = io::Logger;
 
-  int idxmap(index_type i, index_type j, index_type col_lenght) {
+  int idxmap(index_type i, index_type j, index_type col_lenght)
+  {
     return  i * (col_lenght) + j;
   }
 
-  GramSchmidt::GramSchmidt()
-  {
-    variant_ = mgs; //variant is enum now
-    h_L_ = nullptr; 
-    this->setup_complete_ = false;  
-  }
+  // GramSchmidt::GramSchmidt()
+  // {
+  //   variant_ = mgs; //variant is enum now
+  //   h_L_ = nullptr; 
+  //   this->setup_complete_ = false;  
+  // }
 
   GramSchmidt::GramSchmidt(VectorHandler* vh,  GSVariant variant)
   {
     this->setVariant(variant);
     this->vector_handler_ = vh;  
-    h_L_ = nullptr; 
-    this->setup_complete_ = false;  
+    h_L_ = nullptr;
+
+    if (vector_handler_->getIsCudaEnabled() || vector_handler_->getIsHipEnabled()) {
+      memspace_ = memory::DEVICE;
+    } else {
+      memspace_ = memory::HOST;
+    }
+
+    this->setup_complete_ = false;
   }
 
   GramSchmidt::~GramSchmidt()
@@ -55,10 +63,10 @@ namespace ReSolve
 
   int GramSchmidt::setVariant(GSVariant  variant)
   {
-    if ((variant != mgs) && (variant != cgs2) && (variant != mgs_two_synch) && (variant != mgs_pm) && (variant != cgs1)) { 
-      this->variant_ = mgs;
-      return 2;   
-    }
+    // if ((variant != mgs) && (variant != cgs2) && (variant != mgs_two_synch) && (variant != mgs_pm) && (variant != cgs1)) { 
+    //   this->variant_ = mgs;
+    //   return 2;   
+    // }
     variant_ = variant;
     return 0;  
   }
@@ -91,15 +99,15 @@ namespace ReSolve
         h_rv_ = new real_type[num_vecs_ + 1];
 
         vec_rv_ = new vector_type(num_vecs_ + 1, 2);
-        vec_rv_->allocate(memory::DEVICE);      
+        vec_rv_->allocate(memspace_);      
 
         vec_Hcolumn_ = new vector_type(num_vecs_ + 1);
-        vec_Hcolumn_->allocate(memory::DEVICE);      
+        vec_Hcolumn_->allocate(memspace_);      
       }
       if(variant_ == cgs2) {
         h_aux_ = new real_type[num_vecs_ + 1];
         vec_Hcolumn_ = new vector_type(num_vecs_ + 1);
-        vec_Hcolumn_->allocate(memory::DEVICE);      
+        vec_Hcolumn_->allocate(memspace_);      
       }
 
       if(variant_ == mgs_pm) {
@@ -110,15 +118,11 @@ namespace ReSolve
     return 0;
   }
 
-  int GramSchmidt::orthogonalize(index_type n, vector::Vector* V, real_type* H, index_type i, memory::MemorySpace memspace)
+  int GramSchmidt::orthogonalize(index_type n, vector::Vector* V, real_type* H, index_type i) //, memory::MemorySpace memspace)
   {
     using namespace constants;
 
-    if (memspace != memory::DEVICE) {
-      out::error() << "Support for Gram-Scmidt on CPU not implemented!\n";
-      return 1;
-    }
-
+    memory::MemorySpace memspace = memspace_;
     double t;
     double s;
 
