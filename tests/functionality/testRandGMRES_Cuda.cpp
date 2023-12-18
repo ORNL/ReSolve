@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
   delete FGMRES;
   delete GS;
   GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::cgs2);
-  FGMRES = new ReSolve::LinSolverIterativeRandFGMRES(matrix_handler, vector_handler,ReSolve::LinSolverIterativeRandFGMRES::fwht, GS);//, "cuda");
+  FGMRES = new ReSolve::LinSolverIterativeRandFGMRES(matrix_handler, vector_handler,ReSolve::LinSolverIterativeRandFGMRES::fwht, GS);
 
 
   FGMRES->setRestart(150);

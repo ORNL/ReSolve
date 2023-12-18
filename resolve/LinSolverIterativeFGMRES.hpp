@@ -20,7 +20,6 @@ namespace ReSolve
     using vector_type = vector::Vector;
 
     public:
-      // LinSolverIterativeFGMRES(std::string memspace = "cuda");
       LinSolverIterativeFGMRES(MatrixHandler* matrix_handler,
                               VectorHandler* vector_handler,
                               GramSchmidt*   gs);//,
@@ -42,6 +41,8 @@ namespace ReSolve
 
     private:
       void setMemorySpace();
+      void precV(vector_type* rhs, vector_type* x); ///< Apply preconditioner
+
       memory::MemorySpace memspace_;
 
       std::string orth_option_;
@@ -53,11 +54,9 @@ namespace ReSolve
       real_type* h_s_{nullptr};
       real_type* h_rs_{nullptr};
 
-
-      GramSchmidt* GS_;     
-      void precV(vector_type* rhs, vector_type* x); //multiply the vector by preconditioner
-      LinSolverDirect* LU_solver_;
-      index_type n_;// for simplicity
+      GramSchmidt* GS_{nullptr};     
+      LinSolverDirect* LU_solver_{nullptr};
+      index_type n_{0};
 
       MemoryHandler mem_; ///< Device memory manager object
   };
