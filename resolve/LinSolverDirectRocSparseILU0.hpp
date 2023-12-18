@@ -36,19 +36,19 @@ namespace ReSolve
                 matrix::Sparse* U = nullptr,
                 index_type*     P = nullptr,
                 index_type*     Q = nullptr,
-                vector_type* rhs  = nullptr);
+                vector_type* rhs  = nullptr) override;
       // if values of A change, but the nnz pattern does not, redo the analysis only (reuse buffers though)
       int reset(matrix::Sparse* A);
        
-      int solve(vector_type* rhs, vector_type* x);
-      int solve(vector_type* rhs);// the solutuon is returned IN RHS (rhs is overwritten)
+      int solve(vector_type* rhs, vector_type* x) override;
+      int solve(vector_type* rhs) override; // the solutuon is returned IN RHS (rhs is overwritten)
     
 
     private:
       rocsparse_status status_rocsparse_;
 
       MemoryHandler mem_; ///< Device memory manager object
-      LinAlgWorkspaceHIP* workspace_; 
+      LinAlgWorkspaceHIP* workspace_{nullptr};
 
       rocsparse_mat_descr descr_A_{nullptr};
       rocsparse_mat_descr descr_L_{nullptr};
@@ -56,10 +56,10 @@ namespace ReSolve
 
       rocsparse_mat_info  info_A_{nullptr};
       
-      void* buffer_; 
+      void* buffer_{nullptr};
       
-      real_type* d_aux1_;
+      real_type* d_aux1_{nullptr};
       // since ILU OVERWRITES THE MATRIX values, we need a buffer to keep the values of ILU decomposition. 
-      real_type* d_ILU_vals_;
+      real_type* d_ILU_vals_{nullptr};
   };
 }// namespace
