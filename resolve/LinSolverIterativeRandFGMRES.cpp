@@ -13,48 +13,50 @@ namespace ReSolve
 {
   using out = io::Logger;
  
-  LinSolverIterativeRandFGMRES::LinSolverIterativeRandFGMRES(std::string memspace)
-  {
-    if (memspace == "cpu") {
-      memspace_ = memory::HOST;
-    } else if ((memspace == "cuda") || (memspace == "hip")) {
-      memspace_ = memory::DEVICE;
-    } else {
-      out::error() << "Unrecognized device " << memspace << "\n";
-    }
+  // LinSolverIterativeRandFGMRES::LinSolverIterativeRandFGMRES(std::string memspace)
+  // {
+  //   if (memspace == "cpu") {
+  //     memspace_ = memory::HOST;
+  //   } else if ((memspace == "cuda") || (memspace == "hip")) {
+  //     memspace_ = memory::DEVICE;
+  //   } else {
+  //     out::error() << "Unrecognized device " << memspace << "\n";
+  //   }
 
-    this->matrix_handler_ = nullptr;
-    this->vector_handler_ = nullptr;
-    this->rand_method_ = cs; 
+  //   this->matrix_handler_ = nullptr;
+  //   this->vector_handler_ = nullptr;
+  //   this->rand_method_ = cs; 
 
-    tol_ = 1e-12; //default
-    maxit_= 100; //default
-    restart_ = 10;
-    conv_cond_ = 0;//default
-    flexible_ = 1;
+  //   tol_ = 1e-12; //default
+  //   maxit_= 100; //default
+  //   restart_ = 10;
+  //   conv_cond_ = 0;//default
+  //   flexible_ = 1;
 
-    d_V_ = nullptr;
-    d_Z_ = nullptr;
-  }
+  //   d_V_ = nullptr;
+  //   d_Z_ = nullptr;
+  // }
 
   LinSolverIterativeRandFGMRES::LinSolverIterativeRandFGMRES(MatrixHandler* matrix_handler,
                                                              VectorHandler* vector_handler, 
                                                              SketchingMethod rand_method, 
-                                                             GramSchmidt*   gs,
-                                                             std::string memspace)
+                                                             GramSchmidt*   gs) //,
+                                                            //  std::string memspace)
   {
-    if (memspace == "cpu") {
-      memspace_ = memory::HOST;
-    } else if ((memspace == "cuda") || (memspace == "hip")) {
-      memspace_ = memory::DEVICE;
-    } else {
-      out::error() << "Unrecognized device " << memspace << "\n";
-    }
+    // if (memspace == "cpu") {
+    //   memspace_ = memory::HOST;
+    // } else if ((memspace == "cuda") || (memspace == "hip")) {
+    //   memspace_ = memory::DEVICE;
+    // } else {
+    //   out::error() << "Unrecognized device " << memspace << "\n";
+    // }
 
     this->matrix_handler_ = matrix_handler;
     this->vector_handler_ = vector_handler;
     this->rand_method_ = rand_method;
     this->GS_ = gs;
+
+    setMemorySpace();
 
     tol_ = 1e-14; //default
     maxit_= 100; //default
@@ -73,21 +75,23 @@ namespace ReSolve
                                                              MatrixHandler* matrix_handler,
                                                              VectorHandler* vector_handler,
                                                              SketchingMethod rand_method, 
-                                                             GramSchmidt*   gs,
-                                                             std::string memspace)
+                                                             GramSchmidt*   gs)//,
+                                                            //  std::string memspace)
   {
-    if (memspace == "cpu") {
-      memspace_ = memory::HOST;
-    } else if ((memspace == "cuda") || (memspace == "hip")) {
-      memspace_ = memory::DEVICE;
-    } else {
-      out::error() << "Unrecognized device " << memspace << "\n";
-    }
+    // if (memspace == "cpu") {
+    //   memspace_ = memory::HOST;
+    // } else if ((memspace == "cuda") || (memspace == "hip")) {
+    //   memspace_ = memory::DEVICE;
+    // } else {
+    //   out::error() << "Unrecognized device " << memspace << "\n";
+    // }
 
     this->matrix_handler_ = matrix_handler;
     this->vector_handler_ = vector_handler;
     this->rand_method_ = rand_method;
     this->GS_ = gs;
+
+    setMemorySpace();
 
     tol_ = tol; 
     maxit_= maxit; 
@@ -289,7 +293,7 @@ namespace ReSolve
           vector_handler_->scal(&one_over_k_, vec_s, memspace_);
         }
         mem_.deviceSynchronize();
-        GS_->orthogonalize(k_rand_, d_S_, h_H_, i, memspace_);  
+        GS_->orthogonalize(k_rand_, d_S_, h_H_, i); //, memspace_);  
         // now post-process
         //checkCudaErrors(cudaMemcpy(d_Hcolumn, &h_H[i * (restart + 1)], sizeof(double) * (i + 1), cudaMemcpyHostToDevice));
         mem_.copyArrayHostToDevice(d_aux_, &h_H_[i * (restart_ + 1)], i + 2);
@@ -453,6 +457,26 @@ namespace ReSolve
   void  LinSolverIterativeRandFGMRES::precV(vector_type* rhs, vector_type* x)
   { 
     LU_solver_->solve(rhs, x);
+  }
+
+
+  void LinSolverIterativeRandFGMRES::setMemorySpace()
+  {
+    bool is_matrix_handler_cuda = matrix_handler_->getIsCudaEnabled();
+    bool is_matrix_handler_hip  = matrix_handler_->getIsHipEnabled();
+    bool is_vector_handler_cuda = matrix_handler_->getIsCudaEnabled();
+    bool is_vector_handler_hip  = matrix_handler_->getIsHipEnabled();
+
+    if ((is_matrix_handler_cuda != is_vector_handler_cuda) || 
+        (is_matrix_handler_hip  != is_vector_handler_hip )) {
+      out::error() << "Matrix and vector handler backends are incompatible!\n";  
+    }
+
+    if (is_matrix_handler_cuda || is_matrix_handler_hip) {
+      memspace_ = memory::DEVICE;
+    } else {
+      memspace_ = memory::HOST;
+    }
   }
 
 } // namespace ReSolve

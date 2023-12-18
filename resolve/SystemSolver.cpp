@@ -185,8 +185,8 @@ namespace ReSolve
 
       iterativeSolver_ = new LinSolverIterativeFGMRES(matrixHandler_,
                                                       vectorHandler_,
-                                                      gs_,
-                                                      memspace_);
+                                                      gs_);//,
+                                                      // memspace_);
     }
 
     return 0;
@@ -480,8 +480,8 @@ namespace ReSolve
 
       iterativeSolver_ = new LinSolverIterativeFGMRES(matrixHandler_,
                                                       vectorHandler_,
-                                                      gs_,
-                                                      memspace_);
+                                                      gs_);//,
+                                                      // memspace_);
       irMethod_ = method;
     } else {
       out::error() << "Iterative refinement method " << method << " not recognized.\n";
