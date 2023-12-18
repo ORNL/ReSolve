@@ -26,8 +26,6 @@ namespace ReSolve
       enum SketchingMethod { cs = 0,    // count sketch 
                              fwht = 1}; // fast Walsh-Hadamard transform
     
-      // LinSolverIterativeRandFGMRES(std::string memspace = "cuda");
-
       LinSolverIterativeRandFGMRES(MatrixHandler* matrix_handler,
                                    VectorHandler* vector_handler,
                                    SketchingMethod rand_method, 
@@ -55,6 +53,8 @@ namespace ReSolve
 
     private:
       void setMemorySpace();
+      void precV(vector_type* rhs, vector_type* x); ///< Apply preconditioner
+
       memory::MemorySpace memspace_;
 
       vector_type* d_V_{nullptr};
@@ -69,7 +69,6 @@ namespace ReSolve
       real_type* d_aux_{nullptr};
 
       GramSchmidt* GS_;     
-      void precV(vector_type* rhs, vector_type* x); ///< multiply the vector by preconditioner
       LinSolverDirect* LU_solver_;
       index_type n_;
       real_type one_over_k_{1.0};
