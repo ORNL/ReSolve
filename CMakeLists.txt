@@ -29,6 +29,7 @@ option(RESOLVE_USE_HIP  "Use HIP language and ROCm library" OFF)
 option(RESOLVE_USE_GPU  "Use GPU device for computations" OFF)
 mark_as_advanced(FORCE RESOLVE_USE_GPU)
 
+option(RESOLVE_USE_ASAN "Use LLVM address sanitizer" OFF)
 option(RESOLVE_USE_DOXYGEN "Use Doxygen to generate Re::Solve documentation" ON)
 set(RESOLVE_CTEST_OUTPUT_DIR ${PROJECT_BINARY_DIR} CACHE PATH "Directory where CTest outputs are saved")
 
@@ -105,6 +106,10 @@ else()
   message(STATUS "Not using HIP")
 endif(RESOLVE_USE_HIP)
 
+if (RESOLVE_USE_ASAN)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
+endif()
 
 # The binary dir is already a global include directory
 configure_file(
