@@ -1,9 +1,12 @@
 #include <cstring>  // <-- includes memcpy
 
+#include <resolve/utilities/logger/Logger.hpp>
 #include "Csc.hpp"
 
 namespace ReSolve 
 {
+  using out = io::Logger;
+
   matrix::Csc::Csc()
   {
   }

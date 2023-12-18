@@ -2,11 +2,14 @@
 #include <iostream>
 #include <iomanip> 
 
+#include <resolve/utilities/logger/Logger.hpp>
 #include "Coo.hpp"
 
 
 namespace ReSolve 
 {
+  using out = io::Logger;
+
   matrix::Coo::Coo()
   {
   }
