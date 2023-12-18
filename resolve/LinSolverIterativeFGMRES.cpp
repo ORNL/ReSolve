@@ -11,40 +11,10 @@ namespace ReSolve
 {
   using out = io::Logger;
 
-  /**
-   * @brief Construct a new (F)GMRES solver
-   * 
-   * @param memspace 
-   */
-  // LinSolverIterativeFGMRES::LinSolverIterativeFGMRES(std::string memspace)
-  // {
-  //   if (memspace == "cpu") {
-  //     memspace_ = memory::HOST;
-  //   } else if ((memspace == "cuda") || (memspace == "hip")) {
-  //     memspace_ = memory::DEVICE;
-  //   } else {
-  //     out::error() << "Unrecognized device " << memspace << "\n";
-  //   }
-
-  //   this->matrix_handler_ = nullptr;
-  //   this->vector_handler_ = nullptr;
-  //   d_V_ = nullptr;
-  //   d_Z_ = nullptr;
-  // }
-
   LinSolverIterativeFGMRES::LinSolverIterativeFGMRES(MatrixHandler* matrix_handler,
                                                      VectorHandler* vector_handler,
-                                                     GramSchmidt*   gs) //,
-                                                    //  std::string memspace)
+                                                     GramSchmidt*   gs)
   {
-    // if (memspace == "cpu") {
-    //   memspace_ = memory::HOST;
-    // } else if ((memspace == "cuda") || (memspace == "hip")) {
-    //   memspace_ = memory::DEVICE;
-    // } else {
-    //   out::error() << "Unrecognized device " << memspace << "\n";
-    // }
-
     this->matrix_handler_ = matrix_handler;
     this->vector_handler_ = vector_handler;
     this->GS_ = gs;
@@ -61,22 +31,14 @@ namespace ReSolve
                                                      index_type conv_cond,
                                                      MatrixHandler* matrix_handler,
                                                      VectorHandler* vector_handler,
-                                                     GramSchmidt*   gs)//,
-                                                    //  std::string memspace)
+                                                     GramSchmidt*   gs)
   {
-    // if (memspace == "cpu") {
-    //   memspace_ = memory::HOST;
-    // } else if ((memspace == "cuda") || (memspace == "hip")) {
-    //   memspace_ = memory::DEVICE;
-    // } else {
-    //   out::error() << "Unrecognized device " << memspace << "\n";
-    // }
     this->matrix_handler_ = matrix_handler;
     this->vector_handler_ = vector_handler;
     this->GS_ = gs;
 
     setMemorySpace();
-    
+
     tol_ = tol; 
     maxit_= maxit; 
     restart_ = restart;
@@ -337,6 +299,9 @@ namespace ReSolve
   }
 
 
+  //
+  // Private methods
+  //
 
   void  LinSolverIterativeFGMRES::precV(vector_type* rhs, vector_type* x)
   { 
