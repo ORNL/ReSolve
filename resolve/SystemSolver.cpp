@@ -149,8 +149,10 @@ namespace ReSolve
       // do nothing for now
 #ifdef RESOLVE_USE_CUDA
     } else if (refactorizationMethod_ == "glu") {
+      std::cout << "Using GLU solver ...\n";
       refactorizationSolver_ = new ReSolve::LinSolverDirectCuSolverGLU(workspaceCuda_);
     } else if (refactorizationMethod_ == "cusolverrf") {
+      std::cout << "Using Rf solver ...\n";
       refactorizationSolver_ = new ReSolve::LinSolverDirectCuSolverRf();
 #endif
 #ifdef RESOLVE_USE_HIP
@@ -164,6 +166,7 @@ namespace ReSolve
     }
 
     if (irMethod_ == "fgmres") {
+      std::cout << "Initializing iterative solver ...\n";
       // GramSchmidt::GSVariant variant;
       if (gsMethod_ == "cgs2") {
         gs_ = new GramSchmidt(vectorHandler_, GramSchmidt::cgs2);
@@ -221,6 +224,7 @@ namespace ReSolve
 
 #ifdef RESOLVE_USE_CUDA
     if (refactorizationMethod_ == "glu" || refactorizationMethod_ == "cusolverrf") {
+      std::cout << "Refactorizing using " << refactorizationMethod_ << ".\n";
       return refactorizationSolver_->refactorize();
     }
 #endif
@@ -250,10 +254,12 @@ namespace ReSolve
 
 #ifdef RESOLVE_USE_CUDA
     if (refactorizationMethod_ == "glu") {
+      std::cout << "Setup refactorization on GLU ...\n";
       isSolveOnDevice_ = true;
       status += refactorizationSolver_->setup(A_, L_, U_, P_, Q_);
     }
     if (refactorizationMethod_ == "cusolverrf") {
+      std::cout << "Setting up refactorization using " << refactorizationMethod_ << ".\n";
       matrix::Csc* L_csc = dynamic_cast<matrix::Csc*>(L_);
       matrix::Csc* U_csc = dynamic_cast<matrix::Csc*>(U_);       
       matrix::Csr* L_csr = new matrix::Csr(L_csc->getNumRows(), L_csc->getNumColumns(), L_csc->getNnz());
@@ -263,6 +269,11 @@ namespace ReSolve
       status += refactorizationSolver_->setup(A_, L_csr, U_csr, P_, Q_);
       delete L_csr;
       delete U_csr;
+
+      LinSolverDirectCuSolverRf* Rf = dynamic_cast<LinSolverDirectCuSolverRf*>(refactorizationSolver_);
+      Rf->setNumericalProperties(1e-14, 1e-1);
+
+      isSolveOnDevice_ = true;
     }
 #endif
 
@@ -304,19 +315,19 @@ namespace ReSolve
 #ifdef RESOLVE_USE_CUDA
     if (solveMethod_ == "glu") {
       if (isSolveOnDevice_) {
-        // std::cout << "Solving with GLU ...\n";
+        std::cout << "Solving with GLU ...\n";
         status += refactorizationSolver_->solve(rhs, x);
       } else {
-        // std::cout << "Solving with KLU ...\n";
+        std::cout << "Solving with KLU ...\n";
         status += factorizationSolver_->solve(rhs, x);
       }
     } 
     if (solveMethod_ == "cusolverrf") {
       if (isSolveOnDevice_) {
-        // std::cout << "Solving with cuSolver ...\n";
+        std::cout << "Solving with cuSolverRf ...\n";
         status += refactorizationSolver_->solve(rhs, x);
       } else {
-        // std::cout << "Solving with KLU ...\n";
+        std::cout << "Solving with KLU ...\n";
         status += factorizationSolver_->solve(rhs, x);
       }     
     } 
@@ -336,7 +347,7 @@ namespace ReSolve
 
     if (irMethod_ == "fgmres") {
       if (isSolveOnDevice_) {
-        std::cout << "Performing iterative refinement ...\n";
+        std::cout << "Performing iterative refinement with FGMRES ...\n";
         status += refine(rhs, x);
       }
     }

@@ -31,8 +31,8 @@ namespace ReSolve
       SystemSolver();
       SystemSolver(LinAlgWorkspaceCUDA* workspaceCuda, 
                    std::string factor = "klu",
-                   std::string refactor = "glu",
-                   std::string solve = "glu",
+                   std::string refactor = "cusolverrf",
+                   std::string solve = "cusolverrf",
                    std::string ir = "none");
       SystemSolver(LinAlgWorkspaceHIP*  workspaceHip, 
                    std::string factor = "klu",
