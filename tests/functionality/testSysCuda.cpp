@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
   ReSolve::MatrixHandler matrix_handler(&workspace);
   ReSolve::VectorHandler vector_handler(&workspace);
 
-  ReSolve::SystemSolver solver(&workspace);
+  ReSolve::SystemSolver solver(&workspace, "klu", "glu", "glu", "none");
 
   // Input to this code is location of `data` directory where matrix files are stored
   const std::string data_path = (argc == 2) ? argv[1] : "./";
@@ -154,8 +154,8 @@ int main(int argc, char *argv[])
   for (int i=0; i<A->getNumRows(); ++i) {
     x_data_ref[i] = 1.0;
   }
-  vec_test->setData(x_data_ref, ReSolve::memory::HOST);
-  vec_test->setData(x_data_ref, ReSolve::memory::DEVICE);
+  vec_test->update(x_data_ref, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_test->update(x_data_ref, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
 
   //compute ||x_diff|| = ||x - x_true|| norm
   vec_diff->update(x_data_ref, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
