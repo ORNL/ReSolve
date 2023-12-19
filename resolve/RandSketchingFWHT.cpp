@@ -16,6 +16,13 @@ namespace ReSolve
 {
   using out = io::Logger;
 
+  /**
+   * @brief Default constructor
+   * 
+   * @post All class variables are set to nullptr.
+   * 
+   * @todo There is little utility for the default constructor. Maybe remove?.
+   */
   RandSketchingFWHT::RandSketchingFWHT()
   {
     h_seq_ = nullptr;
@@ -28,6 +35,11 @@ namespace ReSolve
   }
 
   // destructor
+
+  /**
+   * @brief Default de-constructor
+   * 
+   */
   RandSketchingFWHT::~RandSketchingFWHT()
   {
     delete h_seq_;
@@ -40,6 +52,18 @@ namespace ReSolve
   }
 
   // Actual sketching process
+
+  /** 
+   * @brief Sketching method - it sketches a given vector (shrinks its size)
+   *
+   * @param[in]  input   - input vector, size _n_ 
+   * @param[out] output  - output vector, size _k_ 
+   * 
+   * @pre both vectors are allocated. Setup function from this class has been called.
+   * @warning normal FWHT function requires scaling by 1/k. This function does not scale.
+   *
+   * @return 0 of successful, -1 otherwise (TODO). 
+   */
   int RandSketchingFWHT::Theta(vector_type* input, vector_type* output)
   {
     mem_.setZeroArrayOnDevice(d_aux_, N_);
@@ -62,6 +86,18 @@ namespace ReSolve
   }
 
   // Setup the parameters, sampling matrices, permuations, etc
+  /** 
+   * @brief Sketching method setup. This function allocated P(erm), D (diagonal scaling matrix) andpopulates them and  allocates a bunch of other auxiliary arrays.
+   *
+   *
+   * @param[in]  n  - size of base (non-sketched) vector
+   * @param[in]  k  - size of sketched vector. 
+   * 
+   * @post Everything is set up so you call call Theta.
+   *
+   * @return 0 of successful, -1 otherwise. 
+   */
+   
   int RandSketchingFWHT::setup(index_type n, index_type k)
   {
     k_rand_ = k;
@@ -122,6 +158,13 @@ namespace ReSolve
   }
 
   //to be fixed, this can be done on the GPU
+  /** 
+   * @brief Reset values in the arrays used for sketching. If the solver restarts, call this method between restarts.
+   *
+   * @post Everything is set up so you call call Theta.
+   *
+   * @return 0 of successful, -1 otherwise. 
+   */
   int RandSketchingFWHT::reset() // if needed can be reset (like when Krylov method restarts)
   {
     srand(static_cast<unsigned>(time(nullptr)));

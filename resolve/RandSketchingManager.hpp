@@ -20,6 +20,7 @@ namespace ReSolve {
 
       // Setup the parameters, sampling matrices, permuations, etc
       virtual int setup(index_type n, index_type k) = 0;
+      // Need to use with methods that restart
       virtual int reset() = 0;
 
       virtual index_type getVectorSize();
@@ -27,9 +28,9 @@ namespace ReSolve {
       virtual index_type getPaddedSize();
 
     protected:
-      index_type n_;// size of base vector
-      index_type k_rand_; // size of sketched vector
-      index_type N_; // padded n -- generally N_ > n_
+      index_type n_;///< size of base vector
+      index_type k_rand_; ///< size of sketched vector
+      index_type N_; ///< padded n -- generally N_ > n_
     
       MemoryHandler mem_; ///< Device memory manager object
   };
