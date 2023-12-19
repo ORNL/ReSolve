@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
   ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(workspace_CUDA);
   ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(workspace_CUDA);
 
-  ReSolve::SystemSolver* solver = new ReSolve::SystemSolver(workspace_CUDA, "klu", "glu", "glu", "none");
+  ReSolve::SystemSolver* solver = new ReSolve::SystemSolver(workspace_CUDA, "klu", "glu", "glu", "none", "none");
 
   // Input to this code is location of `data` directory where matrix files are stored
   const std::string data_path = (argc == 2) ? argv[1] : "./";

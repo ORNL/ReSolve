@@ -26,18 +26,29 @@ namespace ReSolve
       using vector_type = vector::Vector;
       using matrix_type = matrix::Sparse;
 
-      // enum ResidualNormType {RR = 0, NSR};
+      /// @brief Temporary until abstract preconditioner class is created
+      using precond_type = LinSolverDirect;
+
+      // enum PreconditionerType {NO_PRECONDITIONER = 0,
+      //                          ILU0};
+
+      // enum SolverType {NO_SOLVER = 0,
+      //                  FGMRES,
+      //                  GMRES,
+      //                  RANDGMRES};
 
       SystemSolver();
       SystemSolver(LinAlgWorkspaceCUDA* workspaceCuda, 
                    std::string factor = "klu",
                    std::string refactor = "cusolverrf",
                    std::string solve = "cusolverrf",
+                   std::string precond = "none",
                    std::string ir = "none");
       SystemSolver(LinAlgWorkspaceHIP*  workspaceHip, 
                    std::string factor = "klu",
                    std::string refactor = "rocsolverrf",
                    std::string solve = "rocsolverrf",
+                   std::string precond = "none",
                    std::string ir = "none");
 
       ~SystemSolver();
@@ -78,10 +89,15 @@ namespace ReSolve
       void setRefinementMethod(std::string method, std::string gs = "cgs2");
 
     private:
+      int setGramSchmidtMethod(std::string gs_method);
+      void setSketchingMethod(std::string sketching_method);
+
       LinSolverDirect* factorizationSolver_{nullptr};
       LinSolverDirect* refactorizationSolver_{nullptr};
       LinSolverIterative* iterativeSolver_{nullptr};
       GramSchmidt* gs_{nullptr};
+
+      precond_type* preconditioner_{nullptr};
 
       LinAlgWorkspaceCUDA* workspaceCuda_{nullptr};
       LinAlgWorkspaceHIP*  workspaceHip_{nullptr};
@@ -102,11 +118,13 @@ namespace ReSolve
       matrix::Sparse* A_{nullptr};
 
       // Configuration parameters
-      std::string factorizationMethod_;
-      std::string refactorizationMethod_;
-      std::string solveMethod_;
-      std::string irMethod_;
-      std::string gsMethod_;
+      std::string factorizationMethod_{"none"};
+      std::string refactorizationMethod_{"none"};
+      std::string solveMethod_{"none"};
+      std::string precondition_method_{"none"};
+      std::string irMethod_{"none"};
+      std::string gsMethod_{"none"};
+      std::string sketching_method_{"count"}; ///< @todo move this to LinSolverIterative class
 
       std::string memspace_;
   };

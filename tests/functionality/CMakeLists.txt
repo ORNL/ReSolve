@@ -43,6 +43,9 @@ if(RESOLVE_USE_CUDA)
   add_executable(rand_gmres_cuda_test.exe testRandGMRES_Cuda.cpp)
   target_link_libraries(rand_gmres_cuda_test.exe PRIVATE ReSolve)
 
+  add_executable(sys_rand_gmres_test.exe testSysRandGMRES.cpp)
+  target_link_libraries(sys_rand_gmres_test.exe PRIVATE ReSolve)
+
 endif(RESOLVE_USE_CUDA)
 
 
@@ -79,7 +82,8 @@ if(RESOLVE_USE_CUDA)
                                 sys_cuda_refine_test.exe
                                 klu_glu_test.exe
                                 sys_cuda_test.exe
-                                rand_gmres_cuda_test.exe)
+                                rand_gmres_cuda_test.exe
+                                sys_rand_gmres_test.exe)
 endif(RESOLVE_USE_CUDA)
 
 if(RESOLVE_USE_HIP)
@@ -110,6 +114,7 @@ if(RESOLVE_USE_CUDA)
   add_test(NAME klu_glu_test COMMAND $<TARGET_FILE:klu_glu_test.exe> "${test_data_dir}")
   add_test(NAME sys_cuda_test COMMAND $<TARGET_FILE:sys_cuda_test.exe> "${test_data_dir}")
   add_test(NAME rand_gmres_cuda_test COMMAND $<TARGET_FILE:rand_gmres_cuda_test.exe>)
+  add_test(NAME sys_rand_gmres_test COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe>)
 endif(RESOLVE_USE_CUDA)
 
 if(RESOLVE_USE_HIP)

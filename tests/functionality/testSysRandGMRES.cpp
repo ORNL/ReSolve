@@ -1,3 +1,12 @@
+/**
+ * @file testSysRandGMRES.cpp
+ * @author Kasia Swirydowicz (kasia.swirydowicz@pnnl.gov)
+ * @author Slaven Peles (peless@ornl.gov)
+ * @brief Functionality test for SystemSolver and randomized GMRES classes 
+ * @date 2023-12-18
+ * 
+ * 
+ */
 #include <string>
 #include <iostream>
 #include <iomanip>
@@ -10,9 +19,23 @@
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
-#include <resolve/LinSolverDirectCuSparseILU0.hpp>
 #include <resolve/LinSolverIterativeRandFGMRES.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
+#include <resolve/GramSchmidt.hpp>
+#include <resolve/SystemSolver.hpp>
+
+#if defined (RESOLVE_USE_CUDA)
+#include <resolve/LinSolverDirectCuSparseILU0.hpp>
+  using workspace_type = ReSolve::LinAlgWorkspaceCUDA;
+  std::string memory_space("cuda");
+#elif defined (RESOLVE_USE_HIP)
+#include <resolve/LinSolverDirectRocSparseILU0.hpp>
+  using workspace_type = ReSolve::LinAlgWorkspaceHIP;
+  std::string memory_space("hip");
+#else
+  using workspace_type = ReSolve::LinAlgWorkspaceCpu;
+  std::string memory_space("cpu");
+#endif
 
 using namespace ReSolve::constants;
 using real_type  = ReSolve::real_type;
@@ -37,17 +60,19 @@ int main(int argc, char *argv[])
 
   vector_type* vec_rhs = generateRhs(N);
 
-  ReSolve::LinAlgWorkspaceCUDA* workspace_CUDA = new ReSolve::LinAlgWorkspaceCUDA();
-  workspace_CUDA->initializeHandles();
-  ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(workspace_CUDA);
-  ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(workspace_CUDA);
+  workspace_type workspace;
+  workspace.initializeHandles();
+  ReSolve::MatrixHandler matrix_handler(&workspace);
+  ReSolve::VectorHandler vector_handler(&workspace);
 
   vector_type* vec_x;
 
-  ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::cgs2);
+  // ReSolve::SystemSolver* solver = new ReSolve::SystemSolver(&workspace, "none", "none", "none", "ilu0", "randgmres");
 
-  ReSolve::LinSolverDirectCuSparseILU0* Rf = new ReSolve::LinSolverDirectCuSparseILU0(workspace_CUDA);
-  ReSolve::LinSolverIterativeRandFGMRES* FGMRES = new ReSolve::LinSolverIterativeRandFGMRES(matrix_handler, vector_handler, ReSolve::LinSolverIterativeRandFGMRES::cs, GS);
+  ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(&vector_handler, ReSolve::GramSchmidt::cgs2);
+
+  ReSolve::LinSolverDirectCuSparseILU0* Rf = new ReSolve::LinSolverDirectCuSparseILU0(&workspace);
+  ReSolve::LinSolverIterativeRandFGMRES* FGMRES = new ReSolve::LinSolverIterativeRandFGMRES(&matrix_handler, &vector_handler,ReSolve::LinSolverIterativeRandFGMRES::cs, GS);
 
 
   vec_x = new vector_type(A->getNumRows());
@@ -58,7 +83,7 @@ int main(int argc, char *argv[])
   vec_x->setToZero(ReSolve::memory::DEVICE);
 
   real_type norm_b;
-  matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
+  matrix_handler.setValuesChanged(true, ReSolve::memory::DEVICE);
 
   status = Rf->setup(A);
   error_sum += status;
@@ -71,7 +96,7 @@ int main(int argc, char *argv[])
   status = GS->setup(FGMRES->getKrand(), FGMRES->getRestart()); 
   error_sum += status;
 
-  //matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
+  //matrix_handler.setValuesChanged(true, ReSolve::memory::DEVICE);
   status = FGMRES->resetMatrix(A);
   error_sum += status;
 
@@ -82,7 +107,7 @@ int main(int argc, char *argv[])
 
   FGMRES->solve(vec_rhs, vec_x);
 
-  norm_b = vector_handler->dot(vec_rhs, vec_rhs, ReSolve::memory::DEVICE);
+  norm_b = vector_handler.dot(vec_rhs, vec_rhs, ReSolve::memory::DEVICE);
   norm_b = std::sqrt(norm_b);
   real_type final_norm_first =  FGMRES->getFinalResidualNorm();
   std::cout << "Randomized FGMRES results (first run): \n"
@@ -100,8 +125,8 @@ int main(int argc, char *argv[])
 
   delete FGMRES;
   delete GS;
-  GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::cgs2);
-  FGMRES = new ReSolve::LinSolverIterativeRandFGMRES(matrix_handler, vector_handler,ReSolve::LinSolverIterativeRandFGMRES::fwht, GS);
+  GS = new ReSolve::GramSchmidt(&vector_handler, ReSolve::GramSchmidt::cgs2);
+  FGMRES = new ReSolve::LinSolverIterativeRandFGMRES(&matrix_handler, &vector_handler, ReSolve::LinSolverIterativeRandFGMRES::fwht, GS);
 
 
   FGMRES->setRestart(150);
@@ -144,9 +169,9 @@ int main(int argc, char *argv[])
   delete A;
   delete Rf;
   delete vec_x;
-  delete workspace_CUDA;
-  delete matrix_handler;
-  delete vector_handler;
+  // delete workspace_CUDA;
+  // delete matrix_handler;
+  // delete vector_handler;
 
   return error_sum;
 }

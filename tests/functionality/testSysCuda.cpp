@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
   ReSolve::MatrixHandler matrix_handler(&workspace);
   ReSolve::VectorHandler vector_handler(&workspace);
 
-  ReSolve::SystemSolver solver(&workspace, "klu", "glu", "glu", "none");
+  ReSolve::SystemSolver solver(&workspace, "klu", "glu", "glu", "none", "none");
 
   // Input to this code is location of `data` directory where matrix files are stored
   const std::string data_path = (argc == 2) ? argv[1] : "./";
