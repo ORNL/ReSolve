@@ -29,8 +29,7 @@ namespace ReSolve
       LinSolverIterativeRandFGMRES(MatrixHandler* matrix_handler,
                                    VectorHandler* vector_handler,
                                    SketchingMethod rand_method, 
-                                   GramSchmidt*   gs);//,
-                                  //  std::string memspace = "cuda");
+                                   GramSchmidt*   gs);
 
       LinSolverIterativeRandFGMRES(index_type restart,
                                    real_type  tol,
@@ -39,8 +38,7 @@ namespace ReSolve
                                    MatrixHandler* matrix_handler,
                                    VectorHandler* vector_handler, 
                                    SketchingMethod rand_method, 
-                                   GramSchmidt*   gs);//,
-                                  //  std::string memspace = "cuda");
+                                   GramSchmidt*   gs);
 
       ~LinSolverIterativeRandFGMRES();
 

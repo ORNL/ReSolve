@@ -204,7 +204,9 @@ namespace ReSolve
     }
 
     // Create refactorization solver
-    if (refactorizationMethod_ == "klu") {
+    if (refactorizationMethod_ == "none") {
+      // do nothing
+    } else if (refactorizationMethod_ == "klu") {
       // do nothing for now
 #ifdef RESOLVE_USE_CUDA
     } else if (refactorizationMethod_ == "glu") {
@@ -447,14 +449,16 @@ namespace ReSolve
 
   int SystemSolver::preconditionerSetup()
   {
+    int status = 0;
     if (precondition_method_ == "ilu0") {
-      return preconditioner_->setup(A_);
+      status += preconditioner_->setup(A_);
       if (memspace_ != "cpu") {
         isSolveOnDevice_ = true;
       }
+      iterativeSolver_->setupPreconditioner("LU", preconditioner_);
     }
 
-    return 1;
+    return status;
   }
 
   int SystemSolver::refine(vector_type* rhs, vector_type* x)
