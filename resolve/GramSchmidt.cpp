@@ -10,17 +10,10 @@ namespace ReSolve
 {
   using out = io::Logger;
 
-  int idxmap(index_type i, index_type j, index_type col_lenght)
+  index_type idxmap(index_type i, index_type j, index_type col_lenght)
   {
     return  i * (col_lenght) + j;
   }
-
-  // GramSchmidt::GramSchmidt()
-  // {
-  //   variant_ = mgs; //variant is enum now
-  //   h_L_ = nullptr; 
-  //   this->setup_complete_ = false;  
-  // }
 
   GramSchmidt::GramSchmidt(VectorHandler* vh,  GSVariant variant)
   {
@@ -118,7 +111,7 @@ namespace ReSolve
     return 0;
   }
 
-  int GramSchmidt::orthogonalize(index_type n, vector::Vector* V, real_type* H, index_type i) //, memory::MemorySpace memspace)
+  int GramSchmidt::orthogonalize(index_type n, vector::Vector* V, real_type* H, index_type i)
   {
     using namespace constants;
 
