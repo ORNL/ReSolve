@@ -29,14 +29,6 @@ namespace ReSolve
       /// @brief Temporary until abstract preconditioner class is created
       using precond_type = LinSolverDirect;
 
-      // enum PreconditionerType {NO_PRECONDITIONER = 0,
-      //                          ILU0};
-
-      // enum SolverType {NO_SOLVER = 0,
-      //                  FGMRES,
-      //                  GMRES,
-      //                  RANDGMRES};
-
       SystemSolver();
       SystemSolver(LinAlgWorkspaceCUDA* workspaceCuda, 
                    std::string factor = "klu",
@@ -59,9 +51,8 @@ namespace ReSolve
       int factorize(); //  numeric part
       int refactorize();
       int refactorizationSetup();
-      int precondition();
       int preconditionerSetup();
-      int solve(vector_type*  rhs, vector_type* x); // for triangular solve
+      int solve(vector_type*  rhs, vector_type* x); // for direct and iterative
       int refine(vector_type* rhs, vector_type* x); // for iterative refinement
 
       // we update the matrix once it changed

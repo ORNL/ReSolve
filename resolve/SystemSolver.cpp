@@ -128,12 +128,10 @@ namespace ReSolve
       delete refactorizationSolver_;
     }
 
-#if defined(RESOLVE_USE_HIP) || defined(RESOLVE_USE_CUDA)
     if (irMethod_ != "none") {
       delete iterativeSolver_;
       delete gs_;
     }
-#endif
 
     if (precondition_method_ != "none") {
       delete preconditioner_;
@@ -154,6 +152,7 @@ namespace ReSolve
       resVector_->allocate(memory::DEVICE);
     }
 
+    // If we use iterative solver, we can set it up here
     if (solveMethod_ == "randgmres") {
       auto* rgmres = dynamic_cast<LinSolverIterativeRandFGMRES*>(iterativeSolver_);
       status += rgmres->setup(A_);
@@ -207,13 +206,11 @@ namespace ReSolve
     if (refactorizationMethod_ == "none") {
       // do nothing
     } else if (refactorizationMethod_ == "klu") {
-      // do nothing for now
+      // do nothing for now, KLU is the only factorization solver available
 #ifdef RESOLVE_USE_CUDA
     } else if (refactorizationMethod_ == "glu") {
-      // std::cout << "Using GLU solver ...\n";
       refactorizationSolver_ = new ReSolve::LinSolverDirectCuSolverGLU(workspaceCuda_);
     } else if (refactorizationMethod_ == "cusolverrf") {
-      // std::cout << "Using Rf solver ...\n";
       refactorizationSolver_ = new ReSolve::LinSolverDirectCuSolverRf();
 #endif
 #ifdef RESOLVE_USE_HIP
@@ -301,22 +298,32 @@ namespace ReSolve
       return factorizationSolver_->refactorize();
     }
 
-#ifdef RESOLVE_USE_CUDA
-    if (refactorizationMethod_ == "glu" || refactorizationMethod_ == "cusolverrf") {
-      // std::cout << "Refactorizing using " << refactorizationMethod_ << ".\n";
+    if (refactorizationMethod_ == "glu" || 
+        refactorizationMethod_ == "cusolverrf" || 
+        refactorizationMethod_ == "rocsolverrf") {
       return refactorizationSolver_->refactorize();
     }
-#endif
-
-#ifdef RESOLVE_USE_HIP
-    if (refactorizationMethod_ == "rocsolverrf") {
-      return refactorizationSolver_->refactorize();
-    }
-#endif
 
     return 1;
   }
 
+  /**
+   * @brief Sets up refactorization.
+   * 
+   * Extracts factors and permutation vectors from the factorization solver
+   * and configures selected refactorization solver. Also configures iterative
+   * refinement, if it is enabled by the user.
+   * 
+   * Also sets flag `is_solve_on_device_` to true signaling to a triangular
+   * solver to run on GPU.
+   * 
+   * @pre Factorization solver exists and provides access to L and U factors,
+   * as well as left and right permutation vectors P and Q. Since KLU is
+   * the only factorization solver available through ReSolve, the factors are
+   * expected in CSC format.
+   * 
+   * @return int 0 if successful, 1 if it fails
+   */
   int SystemSolver::refactorizationSetup()
   {
     int status = 0;
@@ -333,12 +340,10 @@ namespace ReSolve
 
 #ifdef RESOLVE_USE_CUDA
     if (refactorizationMethod_ == "glu") {
-      // std::cout << "Setup refactorization on GLU ...\n";
       isSolveOnDevice_ = true;
       status += refactorizationSolver_->setup(A_, L_, U_, P_, Q_);
     }
     if (refactorizationMethod_ == "cusolverrf") {
-      // std::cout << "Setting up refactorization using " << refactorizationMethod_ << ".\n";
       matrix::Csc* L_csc = dynamic_cast<matrix::Csc*>(L_);
       matrix::Csc* U_csc = dynamic_cast<matrix::Csc*>(U_);       
       matrix::Csr* L_csr = new matrix::Csr(L_csc->getNumRows(), L_csc->getNumColumns(), L_csc->getNnz());
@@ -358,7 +363,6 @@ namespace ReSolve
 
 #ifdef RESOLVE_USE_HIP
     if (refactorizationMethod_ == "rocsolverrf") {
-      // std::cout << "Refactorization setup using rocsolverRf ...\n";
       isSolveOnDevice_ = true;
       auto* Rf = dynamic_cast<LinSolverDirectRocSolverRf*>(refactorizationSolver_);
       Rf->setSolveMode(1);
@@ -367,7 +371,6 @@ namespace ReSolve
 #endif
 
     if (irMethod_ == "fgmres") {
-      // std::cout << "Setting up FGMRES ...\n";
       gs_->setup(A_->getNumRows(), iterativeSolver_->getRestart()); 
       status += iterativeSolver_->setup(A_);
       status += iterativeSolver_->setupPreconditioner("LU", refactorizationSolver_);
@@ -383,12 +386,17 @@ namespace ReSolve
    * @param[out] x   - Solution vector (will be overwritten)
    * @return int status of factorization
    * 
+   * @pre Factorization or refactorization has been performed and triangular
+   * factors are available. Alternatively, a Krylov solver has been set up.
+   * 
    * @todo Make `rhs` a constant vector
+   * @todo Need to use `enum`s and `switch` statements here or implement as PIMPL
    */
   int SystemSolver::solve(vector_type* rhs, vector_type* x)
   {
     int status = 0;
 
+    // Use Krylov solver if selected
     if (solveMethod_ == "randgmres") {
       status += iterativeSolver_->resetMatrix(A_);
       status += iterativeSolver_->solve(rhs, x);
@@ -399,52 +407,20 @@ namespace ReSolve
       status += factorizationSolver_->solve(rhs, x);
     } 
 
-#ifdef RESOLVE_USE_CUDA
-    if (solveMethod_ == "glu") {
+    if (solveMethod_ == "glu" || solveMethod_ == "cusolverrf" || solveMethod_ == "rocsolverrf") {
       if (isSolveOnDevice_) {
-        // std::cout << "Solving with GLU ...\n";
         status += refactorizationSolver_->solve(rhs, x);
       } else {
-        // std::cout << "Solving with KLU ...\n";
         status += factorizationSolver_->solve(rhs, x);
       }
     } 
-    if (solveMethod_ == "cusolverrf") {
-      if (isSolveOnDevice_) {
-        // std::cout << "Solving with cuSolverRf ...\n";
-        status += refactorizationSolver_->solve(rhs, x);
-      } else {
-        // std::cout << "Solving with KLU ...\n";
-        status += factorizationSolver_->solve(rhs, x);
-      }     
-    } 
-#endif
-
-#ifdef RESOLVE_USE_HIP
-    if (solveMethod_ == "rocsolverrf") {
-      if (isSolveOnDevice_) {
-        // std::cout << "Solving with RocSolver ...\n";
-        status += refactorizationSolver_->solve(rhs, x);
-      } else {
-        // std::cout << "Solving with KLU ...\n";
-        status += factorizationSolver_->solve(rhs, x);
-      }     
-    } 
-#endif
 
     if (irMethod_ == "fgmres") {
       if (isSolveOnDevice_) {
-        // std::cout << "Performing iterative refinement with FGMRES ...\n";
         status += refine(rhs, x);
       }
     }
     return status;
-  }
-
-  int SystemSolver::precondition()
-  {
-    // Not implemented yet
-    return 1;
   }
 
   int SystemSolver::preconditionerSetup()
@@ -489,14 +465,20 @@ namespace ReSolve
   void SystemSolver::setFactorizationMethod(std::string method)
   {
     factorizationMethod_ = method;
-    // initialize();
   }
 
+  /**
+   * @brief Sets refactorization method to use
+   * 
+   * @param[in] method - ID for the refactorization method
+   * 
+   * @post Destroys whatever refactorization solver existed before
+   * and sets `refactorization_solver_` pointer to the new
+   * refactorization object. Sets refactorization method ID
+   * to the value in input parameter `method`.
+   */
   void SystemSolver::setRefactorizationMethod(std::string method)
   {
-    if (refactorizationMethod_ == method)
-      return;
-
     refactorizationMethod_ = method;
     if (refactorizationSolver_) {
       delete refactorizationSolver_;
@@ -522,6 +504,12 @@ namespace ReSolve
     }
   }
 
+  /**
+   * @brief Sets solve method
+   * 
+   * @param[in] method - ID of the solve method
+   * 
+   */
   void SystemSolver::setSolveMethod(std::string method)
   {
     solveMethod_ = method;
@@ -679,6 +667,18 @@ namespace ReSolve
     return factorizationMethod_;
   }
 
+  /**
+   * @brief Selekt sketching method for randomized solvers
+   * 
+   * This needs to be moved to LinSolverIterative class and accessed from there.
+   * 
+   * @param sketching_method 
+   */
+  void SystemSolver::setSketchingMethod(std::string sketching_method)
+  {
+    sketching_method_ = sketching_method;
+  }
+
   //
   // Private methods
   //
@@ -710,18 +710,6 @@ namespace ReSolve
     }
 
     return 0;
-  }
-
-  /**
-   * @brief Selekt sketching method for randomized solvers
-   * 
-   * This needs to be moved to LinSolverIterative class and accessed from there.
-   * 
-   * @param sketching_method 
-   */
-  void SystemSolver::setSketchingMethod(std::string sketching_method)
-  {
-    sketching_method_ = sketching_method;
   }
 
 
