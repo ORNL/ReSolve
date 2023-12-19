@@ -24,7 +24,7 @@ namespace ReSolve
       real_type* getL(); //only for low synch, returns null ptr otherwise 
 
       int setup(index_type n, index_type restart);
-      int orthogonalize(index_type n, vector_type* V, real_type* H, index_type i); //, memory::MemorySpace memspace);
+      int orthogonalize(index_type n, vector_type* V, real_type* H, index_type i);
       bool isSetupComplete();
 
     private:
