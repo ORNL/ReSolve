@@ -182,7 +182,7 @@ namespace ReSolve
 
         // orthogonalize V[i+1], form a column of h_H_
 
-        GS_->orthogonalize(n_, d_V_, h_H_, i); //, memspace_);  ;
+        GS_->orthogonalize(n_, d_V_, h_H_, i);
         if(i != 0) {
           for(int k = 1; k <= i; k++) {
             k1 = k - 1;
@@ -282,7 +282,7 @@ namespace ReSolve
   int  LinSolverIterativeFGMRES::setupPreconditioner(std::string type, LinSolverDirect* LU_solver)
   {
     if (type != "LU") {
-      out::warning() << "Only cusolverRf tri solve can be used as a preconditioner at this time." << std::endl;
+      out::warning() << "Only LU-type solve can be used as a preconditioner at this time." << std::endl;
       return 1;
     } else {
       LU_solver_ = LU_solver;  
