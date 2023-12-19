@@ -27,17 +27,16 @@ if(RESOLVE_USE_CUDA)
   target_link_libraries(klu_rf_fgmres_test.exe PRIVATE ReSolve)
 
   # System solver test with cusolver rf and iterative refinement
-  add_executable(sys_cuda_refine_test.exe testSysHipRefine.cpp)
-  target_link_libraries(sys_cuda_refine_test.exe PRIVATE ReSolve)
+  add_executable(sys_refactor_cuda_test.exe testSysRefactor.cpp)
+  target_link_libraries(sys_refactor_cuda_test.exe PRIVATE ReSolve)
 
   # Build KLU+GLU test
   add_executable(klu_glu_test.exe testKLU_GLU.cpp)
   target_link_libraries(klu_glu_test.exe PRIVATE ReSolve)
   
   # System solver test with GLU
-  add_executable(sys_cuda_test.exe testSysCuda.cpp)
-  # add_executable(sys_cuda_test.exe testSysGLU.cpp)
-  target_link_libraries(sys_cuda_test.exe PRIVATE ReSolve)
+  add_executable(sys_glu_test.exe testSysGLU.cpp)
+  target_link_libraries(sys_glu_test.exe PRIVATE ReSolve)
 
   # Build randSolver test
   add_executable(rand_gmres_cuda_test.exe testRandGMRES_Cuda.cpp)
@@ -60,8 +59,8 @@ if(RESOLVE_USE_HIP)
   target_link_libraries(rocsolver_rf_fgmres_test.exe PRIVATE ReSolve)
 
   # System solver test with rocm rf and iterative refinement
-  add_executable(sys_hip_refine_test.exe testSysHipRefine.cpp)
-  target_link_libraries(sys_hip_refine_test.exe PRIVATE ReSolve)
+  add_executable(sys_refactor_hip_test.exe testSysRefactor.cpp)
+  target_link_libraries(sys_refactor_hip_test.exe PRIVATE ReSolve)
 
   # Build randSolver test
   add_executable(rand_gmres_hip_test.exe testRandGMRES_Rocm.cpp)
@@ -82,9 +81,9 @@ endif()
 if(RESOLVE_USE_CUDA)
   list(APPEND installable_tests klu_rf_test.exe
                                 klu_rf_fgmres_test.exe
-                                sys_cuda_refine_test.exe
+                                sys_refactor_cuda_test.exe
                                 klu_glu_test.exe
-                                sys_cuda_test.exe
+                                sys_glu_test.exe
                                 rand_gmres_cuda_test.exe
                                 sys_rand_gmres_cuda_test.exe)
 endif(RESOLVE_USE_CUDA)
@@ -92,7 +91,7 @@ endif(RESOLVE_USE_CUDA)
 if(RESOLVE_USE_HIP)
   list(APPEND installable_tests rocsolver_rf_test.exe
                                 rocsolver_rf_fgmres_test.exe
-                                sys_hip_refine_test.exe
+                                sys_refactor_hip_test.exe
                                 rand_gmres_hip_test.exe
                                 sys_rand_gmres_hip_test.exe)
 endif(RESOLVE_USE_HIP)
@@ -114,9 +113,9 @@ endif()
 if(RESOLVE_USE_CUDA)
   add_test(NAME klu_rf_test  COMMAND $<TARGET_FILE:klu_rf_test.exe>  "${test_data_dir}")
   add_test(NAME klu_rf_fgmres_test COMMAND $<TARGET_FILE:klu_rf_fgmres_test.exe> "${test_data_dir}")
-  add_test(NAME sys_cuda_refine_test COMMAND $<TARGET_FILE:sys_cuda_refine_test.exe> "${test_data_dir}")
+  add_test(NAME sys_refactor_cuda_test COMMAND $<TARGET_FILE:sys_refactor_cuda_test.exe> "${test_data_dir}")
   add_test(NAME klu_glu_test COMMAND $<TARGET_FILE:klu_glu_test.exe> "${test_data_dir}")
-  add_test(NAME sys_cuda_test COMMAND $<TARGET_FILE:sys_cuda_test.exe> "${test_data_dir}")
+  add_test(NAME sys_glu_test COMMAND $<TARGET_FILE:sys_glu_test.exe> "${test_data_dir}")
   add_test(NAME rand_gmres_cuda_test COMMAND $<TARGET_FILE:rand_gmres_cuda_test.exe>)
   add_test(NAME sys_rand_gmres_cuda_test COMMAND $<TARGET_FILE:sys_rand_gmres_cuda_test.exe>)
 endif(RESOLVE_USE_CUDA)
@@ -124,7 +123,7 @@ endif(RESOLVE_USE_CUDA)
 if(RESOLVE_USE_HIP)
   add_test(NAME rocsolver_rf_test  COMMAND $<TARGET_FILE:rocsolver_rf_test.exe>  "${test_data_dir}")
   add_test(NAME rocsolver_rf_fgmres_test  COMMAND $<TARGET_FILE:rocsolver_rf_fgmres_test.exe>  "${test_data_dir}")
-  add_test(NAME sys_hip_refine_test  COMMAND $<TARGET_FILE:sys_hip_refine_test.exe>  "${test_data_dir}")
+  add_test(NAME sys_refactor_hip_test  COMMAND $<TARGET_FILE:sys_refactor_hip_test.exe>  "${test_data_dir}")
   add_test(NAME rand_gmres_hip_test COMMAND $<TARGET_FILE:rand_gmres_hip_test.exe>)
   add_test(NAME sys_rand_gmres_hip_test COMMAND $<TARGET_FILE:sys_rand_gmres_hip_test.exe>)
 endif(RESOLVE_USE_HIP)
