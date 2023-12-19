@@ -43,8 +43,8 @@ if(RESOLVE_USE_CUDA)
   add_executable(rand_gmres_cuda_test.exe testRandGMRES_Cuda.cpp)
   target_link_libraries(rand_gmres_cuda_test.exe PRIVATE ReSolve)
 
-  add_executable(sys_rand_gmres_test.exe testSysRandGMRES.cpp)
-  target_link_libraries(sys_rand_gmres_test.exe PRIVATE ReSolve)
+  add_executable(sys_rand_gmres_cuda_test.exe testSysRandGMRES.cpp)
+  target_link_libraries(sys_rand_gmres_cuda_test.exe PRIVATE ReSolve)
 
 endif(RESOLVE_USE_CUDA)
 
@@ -67,6 +67,9 @@ if(RESOLVE_USE_HIP)
   add_executable(rand_gmres_hip_test.exe testRandGMRES_Rocm.cpp)
   target_link_libraries(rand_gmres_hip_test.exe PRIVATE ReSolve)
   
+  add_executable(sys_rand_gmres_hip_test.exe testSysRandGMRES.cpp)
+  target_link_libraries(sys_rand_gmres_hip_test.exe PRIVATE ReSolve)
+
 endif(RESOLVE_USE_HIP)
 
 set(installable_tests version.exe)
@@ -83,14 +86,15 @@ if(RESOLVE_USE_CUDA)
                                 klu_glu_test.exe
                                 sys_cuda_test.exe
                                 rand_gmres_cuda_test.exe
-                                sys_rand_gmres_test.exe)
+                                sys_rand_gmres_cuda_test.exe)
 endif(RESOLVE_USE_CUDA)
 
 if(RESOLVE_USE_HIP)
   list(APPEND installable_tests rocsolver_rf_test.exe
                                 rocsolver_rf_fgmres_test.exe
                                 sys_hip_refine_test.exe
-                                rand_gmres_hip_test.exe)
+                                rand_gmres_hip_test.exe
+                                sys_rand_gmres_hip_test.exe)
 endif(RESOLVE_USE_HIP)
 
 install(TARGETS ${installable_tests} 
@@ -114,7 +118,7 @@ if(RESOLVE_USE_CUDA)
   add_test(NAME klu_glu_test COMMAND $<TARGET_FILE:klu_glu_test.exe> "${test_data_dir}")
   add_test(NAME sys_cuda_test COMMAND $<TARGET_FILE:sys_cuda_test.exe> "${test_data_dir}")
   add_test(NAME rand_gmres_cuda_test COMMAND $<TARGET_FILE:rand_gmres_cuda_test.exe>)
-  add_test(NAME sys_rand_gmres_test COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe>)
+  add_test(NAME sys_rand_gmres_cuda_test COMMAND $<TARGET_FILE:sys_rand_gmres_cuda_test.exe>)
 endif(RESOLVE_USE_CUDA)
 
 if(RESOLVE_USE_HIP)
@@ -122,4 +126,5 @@ if(RESOLVE_USE_HIP)
   add_test(NAME rocsolver_rf_fgmres_test  COMMAND $<TARGET_FILE:rocsolver_rf_fgmres_test.exe>  "${test_data_dir}")
   add_test(NAME sys_hip_refine_test  COMMAND $<TARGET_FILE:sys_hip_refine_test.exe>  "${test_data_dir}")
   add_test(NAME rand_gmres_hip_test COMMAND $<TARGET_FILE:rand_gmres_hip_test.exe>)
+  add_test(NAME sys_rand_gmres_hip_test COMMAND $<TARGET_FILE:sys_rand_gmres_hip_test.exe>)
 endif(RESOLVE_USE_HIP)
