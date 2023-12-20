@@ -261,4 +261,26 @@ namespace ReSolve {
     }
   }
 
+  /**
+   * @brief If CUDA support is enabled in the handler.
+   * 
+   * @return true 
+   * @return false 
+   */
+  bool VectorHandler::getIsCudaEnabled() const
+  {
+    return isCudaEnabled_;
+  }
+
+  /**
+   * @brief If HIP support is enabled in the handler.
+   * 
+   * @return true 
+   * @return false 
+   */
+  bool VectorHandler::getIsHipEnabled() const
+  {
+    return isHipEnabled_;
+  }
+
 } // namespace ReSolve

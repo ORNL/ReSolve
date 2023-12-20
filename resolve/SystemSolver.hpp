@@ -26,16 +26,21 @@ namespace ReSolve
       using vector_type = vector::Vector;
       using matrix_type = matrix::Sparse;
 
+      /// @brief Temporary until abstract preconditioner class is created
+      using precond_type = LinSolverDirect;
+
       SystemSolver();
       SystemSolver(LinAlgWorkspaceCUDA* workspaceCuda, 
                    std::string factor = "klu",
-                   std::string refactor = "glu",
-                   std::string solve = "glu",
+                   std::string refactor = "cusolverrf",
+                   std::string solve = "cusolverrf",
+                   std::string precond = "none",
                    std::string ir = "none");
       SystemSolver(LinAlgWorkspaceHIP*  workspaceHip, 
                    std::string factor = "klu",
                    std::string refactor = "rocsolverrf",
                    std::string solve = "rocsolverrf",
+                   std::string precond = "none",
                    std::string ir = "none");
 
       ~SystemSolver();
@@ -46,9 +51,8 @@ namespace ReSolve
       int factorize(); //  numeric part
       int refactorize();
       int refactorizationSetup();
-      int precondition();
       int preconditionerSetup();
-      int solve(vector_type*  rhs, vector_type* x); // for triangular solve
+      int solve(vector_type*  rhs, vector_type* x); // for direct and iterative
       int refine(vector_type* rhs, vector_type* x); // for iterative refinement
 
       // we update the matrix once it changed
@@ -58,7 +62,9 @@ namespace ReSolve
       LinSolverDirect& getRefactorizationSolver();
       LinSolverIterative& getIterativeSolver();
 
+      real_type getVectorNorm(vector_type* rhs);
       real_type getResidualNorm(vector_type* rhs, vector_type* x);
+      real_type getNormOfScaledResiduals(vector_type* rhs, vector_type* x);
 
       // Get solver parameters
       const std::string getFactorizationMethod() const;
@@ -73,11 +79,17 @@ namespace ReSolve
       void setSolveMethod(std::string method);
       void setRefinementMethod(std::string method, std::string gs = "cgs2");
 
+      void setSketchingMethod(std::string sketching_method);
+
     private:
+      int setGramSchmidtMethod(std::string gs_method);
+
       LinSolverDirect* factorizationSolver_{nullptr};
       LinSolverDirect* refactorizationSolver_{nullptr};
       LinSolverIterative* iterativeSolver_{nullptr};
       GramSchmidt* gs_{nullptr};
+
+      precond_type* preconditioner_{nullptr};
 
       LinAlgWorkspaceCUDA* workspaceCuda_{nullptr};
       LinAlgWorkspaceHIP*  workspaceHip_{nullptr};
@@ -98,11 +110,13 @@ namespace ReSolve
       matrix::Sparse* A_{nullptr};
 
       // Configuration parameters
-      std::string factorizationMethod_;
-      std::string refactorizationMethod_;
-      std::string solveMethod_;
-      std::string irMethod_;
-      std::string gsMethod_;
+      std::string factorizationMethod_{"none"};
+      std::string refactorizationMethod_{"none"};
+      std::string solveMethod_{"none"};
+      std::string precondition_method_{"none"};
+      std::string irMethod_{"none"};
+      std::string gsMethod_{"cgs2"};
+      std::string sketching_method_{"count"}; ///< @todo move this to LinSolverIterative class
 
       std::string memspace_;
   };

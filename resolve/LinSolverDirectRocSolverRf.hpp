@@ -40,7 +40,7 @@ namespace ReSolve
        
       int refactorize();
       int solve(vector_type* rhs, vector_type* x);
-      int solve(vector_type* rhs);// the solutuon is returned IN RHS (rhs is overwritten)
+      int solve(vector_type* rhs);// the solution is returned IN RHS (rhs is overwritten)
     
       int setSolveMode(int mode); // should probably be enum 
       int getSolveMode(); //should be enum too

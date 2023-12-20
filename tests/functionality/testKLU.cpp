@@ -202,9 +202,9 @@ int main(int argc, char *argv[])
     error_sum++;
   }
   if (error_sum == 0) {
-    std::cout<<"Test 1 (KLU with KLU refactorization) PASSED"<<std::endl;
+    std::cout<<"Test KLU with KLU refactorization PASSED"<<std::endl;
   } else {
-    std::cout<<"Test 1 (KLU with KLU refactorization) FAILED, error sum: "<<error_sum<<std::endl;
+    std::cout<<"Test KLU with KLU refactorization FAILED, error sum: "<<error_sum<<std::endl;
   }
 
   //now DELETE

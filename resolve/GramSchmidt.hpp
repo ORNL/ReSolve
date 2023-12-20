@@ -16,7 +16,7 @@ namespace ReSolve
                       mgs_pm = 3, 
                       cgs1 = 4 };
 
-      GramSchmidt();
+      GramSchmidt() = delete;
       GramSchmidt(VectorHandler* vh, GSVariant variant);
       ~GramSchmidt();
       int setVariant(GramSchmidt::GSVariant variant);
@@ -24,7 +24,7 @@ namespace ReSolve
       real_type* getL(); //only for low synch, returns null ptr otherwise 
 
       int setup(index_type n, index_type restart);
-      int orthogonalize(index_type n, vector_type* V, real_type* H, index_type i, memory::MemorySpace memspace);
+      int orthogonalize(index_type n, vector_type* V, real_type* H, index_type i);
       bool isSetupComplete();
 
     private:
@@ -45,6 +45,7 @@ namespace ReSolve
       vector_type* vec_w_{nullptr}; // aux variable
     
       MemoryHandler mem_; ///< Device memory manager object
+      memory::MemorySpace memspace_;
   };
 
 }//namespace

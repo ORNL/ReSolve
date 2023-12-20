@@ -322,4 +322,26 @@ namespace ReSolve {
     return 1;
   }
 
+  /**
+   * @brief If CUDA support is enabled in the handler.
+   * 
+   * @return true 
+   * @return false 
+   */
+  bool MatrixHandler::getIsCudaEnabled() const
+  {
+    return isCudaEnabled_;
+  }
+
+  /**
+   * @brief If HIP support is enabled in the handler.
+   * 
+   * @return true 
+   * @return false 
+   */
+  bool MatrixHandler::getIsHipEnabled() const
+  {
+    return isHipEnabled_;
+  }
+
 } // namespace ReSolve

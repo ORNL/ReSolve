@@ -11,6 +11,8 @@ namespace ReSolve
   /**
    * @brief Randomized (F)GMRES
    * 
+   * @author Kasia Swirydowicz (kasia.swirydowicz@pnnl.gov)
+   * 
    * @note MatrixHandler and VectorHandler objects are inherited from
    * LinSolver base class.
    * 
@@ -21,16 +23,13 @@ namespace ReSolve
       using vector_type = vector::Vector;
 
     public:
-      enum SketchingMethod { cs = 0, // count sketch 
-                            fwht = 1}; // fast Walsh-Hadamard transform
+      enum SketchingMethod { cs = 0,    // count sketch 
+                             fwht = 1}; // fast Walsh-Hadamard transform
     
-      LinSolverIterativeRandFGMRES(std::string memspace = "cuda");
-
       LinSolverIterativeRandFGMRES(MatrixHandler* matrix_handler,
                                    VectorHandler* vector_handler,
                                    SketchingMethod rand_method, 
-                                   GramSchmidt*   gs,
-                                   std::string memspace = "cuda");
+                                   GramSchmidt*   gs);
 
       LinSolverIterativeRandFGMRES(index_type restart,
                                    real_type  tol,
@@ -39,40 +38,22 @@ namespace ReSolve
                                    MatrixHandler* matrix_handler,
                                    VectorHandler* vector_handler, 
                                    SketchingMethod rand_method, 
-                                   GramSchmidt*   gs,
-                                   std::string memspace = "cuda");
+                                   GramSchmidt*   gs);
 
       ~LinSolverIterativeRandFGMRES();
 
-      int solve(vector_type* rhs, vector_type* x);
-      int setup(matrix::Sparse* A);
-      int resetMatrix(matrix::Sparse* new_A); 
-      int setupPreconditioner(std::string name, LinSolverDirect* LU_solver);
+      int solve(vector_type* rhs, vector_type* x) override;
+      int setup(matrix::Sparse* A) override;
+      int resetMatrix(matrix::Sparse* new_A) override; 
+      int setupPreconditioner(std::string name, LinSolverDirect* LU_solver) override;
 
-      real_type getTol();
-      index_type getMaxit();
-      index_type getRestart();
-      index_type getConvCond();
-      bool getFlexible();
-      // std::string getRandSketchingMethod();
       index_type getKrand();
 
-      void setTol(real_type new_tol);
-      void setMaxit(index_type new_maxit);
-      void setRestart(index_type new_restart);
-      void setConvCond(index_type new_conv_cond);
-      void setFlexible(bool new_flexible);
-      // void setRandSketchingMethod(std::string rand_method);
-
     private:
-      memory::MemorySpace memspace_;
+      void setMemorySpace();
+      void precV(vector_type* rhs, vector_type* x); ///< Apply preconditioner
 
-      real_type tol_;
-      index_type maxit_;
-      index_type restart_;
-      std::string orth_option_;
-      index_type conv_cond_;
-      bool flexible_{true}; ///< if can be run as "normal" GMRES if needed, set flexible_ to `false`. Default is `true`, of course.
+      memory::MemorySpace memspace_;
 
       vector_type* d_V_{nullptr};
       vector_type* d_Z_{nullptr};
@@ -86,7 +67,6 @@ namespace ReSolve
       real_type* d_aux_{nullptr};
 
       GramSchmidt* GS_;     
-      void precV(vector_type* rhs, vector_type* x); ///< multiply the vector by preconditioner
       LinSolverDirect* LU_solver_;
       index_type n_;
       real_type one_over_k_{1.0};

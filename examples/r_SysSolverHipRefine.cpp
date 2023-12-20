@@ -42,13 +42,15 @@ int main(int argc, char *argv[])
   ReSolve::LinAlgWorkspaceHIP* workspace_HIP = new ReSolve::LinAlgWorkspaceHIP();
   workspace_HIP->initializeHandles();
   ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(workspace_HIP);
+
   real_type* rhs = nullptr;
   real_type* x   = nullptr;
 
   vector_type* vec_rhs = nullptr;
   vector_type* vec_x   = nullptr;
 
-  ReSolve::SystemSolver* solver = new ReSolve::SystemSolver(workspace_HIP, "fgmres");
+  ReSolve::SystemSolver* solver = new ReSolve::SystemSolver(workspace_HIP);
+  solver->setRefinementMethod("fgmres", "cgs2");
 
   for (int i = 0; i < numSystems; ++i)
   {
@@ -126,8 +128,9 @@ int main(int argc, char *argv[])
      
       status = solver->solve(vec_rhs, vec_x);
       std::cout << "KLU solve status: " << status << std::endl;      
-      std::cout << "\t 2-Norm of the residual: " 
-                << std::scientific << std::setprecision(16) 
+
+      std::cout << "\t 2-Norm of the residual      : " 
+                << std::scientific << std::setprecision(16)
                 << solver->getResidualNorm(vec_rhs, vec_x) << "\n";
       if (i == 1) {
         solver->refactorizationSetup();
@@ -139,21 +142,25 @@ int main(int argc, char *argv[])
       std::cout << "ROCSOLVER RF refactorization status: " << status << std::endl;      
       status = solver->solve(vec_rhs, vec_x);
       std::cout << "ROCSOLVER RF solve status: " << status << std::endl;
+
       real_type rnrm = solver->getResidualNorm(vec_rhs, vec_x);
-      std::cout << "\t 2-Norm of the residual (before IR): " 
-                << std::scientific << std::setprecision(16) 
-                << rnrm << "\n";
+      std::cout << std::scientific << std::setprecision(16) 
+                << "\t 2-Norm of the residual (after IR): " 
+                << rnrm 
+                << "\t 2-Norm of scaled residuals (after IR): "
+                << solver->getNormOfScaledResiduals(vec_rhs, vec_x)
+                << "\n";
 
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+      real_type norm_b = solver->getVectorNorm(vec_rhs);
       if (!std::isnan(rnrm) && !std::isinf(rnrm)) {
-        status = solver->refine(vec_rhs, vec_x);
         std::cout << "FGMRES solve status: " << status << std::endl;      
 
         std::cout << "FGMRES: init nrm: " 
                   << std::scientific << std::setprecision(16) 
-                  << rnrm
+                  << solver->getIterativeSolver().getInitResidualNorm()/norm_b
                   << " final nrm: "
-                  << solver->getResidualNorm(vec_rhs, vec_x)
+                  << solver->getIterativeSolver().getFinalResidualNorm()/norm_b
                   << " iter: " << solver->getIterativeSolver().getNumIter()
                   << "\n";
       }

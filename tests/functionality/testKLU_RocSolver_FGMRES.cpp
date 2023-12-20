@@ -10,11 +10,26 @@
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
-#include <resolve/LinSolverDirectRocSolverRf.hpp>
 #include <resolve/LinSolverIterativeFGMRES.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 //author: KS
 //functionality test to check whether cuSolverRf/FGMRES works correctly.
+
+#if defined (RESOLVE_USE_CUDA)
+#include <resolve/LinSolverDirectCuSolverRf.hpp>
+  using workspace_type = ReSolve::LinAlgWorkspaceCUDA;
+  using solver_type    = ReSolve::LinSolverDirectCuSolverRf;
+  std::string memory_space("cuda");
+#elif defined (RESOLVE_USE_HIP)
+#include <resolve/LinSolverDirectRocSolverRf.hpp>
+  using workspace_type = ReSolve::LinAlgWorkspaceHIP;
+  using solver_type    = ReSolve::LinSolverDirectRocSolverRf;
+  std::string memory_space("hip");
+#else
+  using workspace_type = ReSolve::LinAlgWorkspaceCpu;
+  using solver_type    = ReSolve::LinSolverDirectKLU;
+  std::string memory_space("cpu");
+#endif
 
 using namespace ReSolve::constants;
 
@@ -31,16 +46,16 @@ int main(int argc, char *argv[])
   int error_sum = 0;
   int status = 0;
 
-  ReSolve::LinAlgWorkspaceHIP* workspace_HIP = new ReSolve::LinAlgWorkspaceHIP();
-  workspace_HIP->initializeHandles();
-  ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(workspace_HIP);
-  ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(workspace_HIP);
+  workspace_type workspace;
+  workspace.initializeHandles();
+  ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(&workspace);
+  ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(&workspace);
 
   ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
 
-  ReSolve::LinSolverDirectRocSolverRf* Rf = new ReSolve::LinSolverDirectRocSolverRf(workspace_HIP);
+  solver_type* Rf = new solver_type(&workspace);
   ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::cgs2);
-  ReSolve::LinSolverIterativeFGMRES* FGMRES = new ReSolve::LinSolverIterativeFGMRES(matrix_handler, vector_handler, GS, "hip");
+  ReSolve::LinSolverIterativeFGMRES* FGMRES = new ReSolve::LinSolverIterativeFGMRES(matrix_handler, vector_handler, GS);
   // Input to this code is location of `data` directory where matrix files are stored
   const std::string data_path = (argc == 2) ? argv[1] : "./";
 
@@ -141,10 +156,10 @@ int main(int argc, char *argv[])
 
   real_type normRmatrix1CPU = sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE));
 
-  std::cout<<"Results (first matrix): "<<std::endl<<std::endl;
+  std::cout<<"Results (first matrix): " << std::scientific <<std::endl<<std::endl;
   std::cout<<"\t ||b-A*x||_2                 : " << std::setprecision(16) << normRmatrix1    << " (residual norm)" << std::endl;
-  std::cout<<"\t ||b-A*x||_2  (CPU)          : " << std::setprecision(16) << normRmatrix1CPU << " (residual norm)" << std::endl;
-  std::cout<<"\t ||b-A*x||_2/||b||_2         : " << normRmatrix1/normB1   << " (scaled residual norm)"             << std::endl;
+  std::cout << "\t ||b-A*x||_2  (CPU)          : " << std::setprecision(16) << normRmatrix1CPU << " (residual norm)" << std::endl;
+  std::cout << "\t ||b-A*x||_2/||b||_2         : " << normRmatrix1/normB1   << " (scaled residual norm)"             << std::endl;
   std::cout<<"\t ||x-x_true||_2              : " << normDiffMatrix1       << " (solution error)"                   << std::endl;
   std::cout<<"\t ||x-x_true||_2/||x_true||_2 : " << normDiffMatrix1/normXtrue << " (scaled solution error)"        << std::endl;
   std::cout<<"\t ||b-A*x_exact||_2           : " << exactSol_normRmatrix1 << " (control; residual norm with exact solution)\n\n";
@@ -247,9 +262,9 @@ int main(int argc, char *argv[])
     error_sum++;
   }
   if (error_sum == 0) {
-    std::cout<<"Test 4 (KLU with rocsolverrf refactorization + IR) PASSED"<<std::endl<<std::endl;;
+    std::cout<<"Test KLU with rocsolverrf refactorization + IR PASSED"<<std::endl<<std::endl;;
   } else {
-    std::cout<<"Test 4 (KLU with rocsolverrf refactorization + IR) FAILED, error sum: "<<error_sum<<std::endl<<std::endl;;
+    std::cout<<"Test KLU with rocsolverrf refactorization + IR FAILED, error sum: "<<error_sum<<std::endl<<std::endl;;
   }
 
   delete A;
@@ -261,7 +276,7 @@ int main(int argc, char *argv[])
   delete [] rhs;
   delete vec_r;
   delete vec_x;
-  delete workspace_HIP;
+  // delete workspace_HIP;
   delete matrix_handler;
   delete vector_handler;
 

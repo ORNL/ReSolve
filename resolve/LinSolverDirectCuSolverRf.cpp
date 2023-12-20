@@ -4,7 +4,7 @@
 
 namespace ReSolve 
 {
-  LinSolverDirectCuSolverRf::LinSolverDirectCuSolverRf()
+  LinSolverDirectCuSolverRf::LinSolverDirectCuSolverRf(LinAlgWorkspaceCUDA* /* workspace */)
   {
     cusolverRfCreate(&handle_cusolverrf_);
     setup_completed_ = false;

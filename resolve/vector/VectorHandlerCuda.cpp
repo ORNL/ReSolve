@@ -49,8 +49,10 @@ namespace ReSolve {
   { 
     cublasHandle_t handle_cublas =  workspace_->getCublasHandle();
     double nrm = 0.0;
-    cublasStatus_t st= cublasDdot (handle_cublas,  x->getSize(), x->getData(memory::DEVICE), 1, y->getData(memory::DEVICE), 1, &nrm);
-    if (st!=0) {printf("dot product crashed with code %d \n", st);}
+    cublasStatus_t st = cublasDdot(handle_cublas,  x->getSize(), x->getData(memory::DEVICE), 1, y->getData(memory::DEVICE), 1, &nrm);
+    if (st != 0) {
+      out::error() << "Dot product failed with error code " << st << "\n";
+    }
     return nrm;
   }
 
@@ -65,8 +67,8 @@ namespace ReSolve {
   {
     cublasHandle_t handle_cublas =  workspace_->getCublasHandle();
     cublasStatus_t st = cublasDscal(handle_cublas, x->getSize(), alpha, x->getData(memory::DEVICE), 1);
-    if (st!=0) {
-      ReSolve::io::Logger::error() << "scal crashed with code " << st << "\n";
+    if (st != 0) {
+      out::error() << "scal crashed with code " << st << "\n";
     }
   }
 
