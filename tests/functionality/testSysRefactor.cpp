@@ -19,7 +19,6 @@
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
-// #include <resolve/LinSolverDirectRocSolverRf.hpp>
 #include <resolve/LinSolverIterativeFGMRES.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 #include <resolve/SystemSolver.hpp>
@@ -27,16 +26,13 @@
 #if defined (RESOLVE_USE_CUDA)
 #include <resolve/LinSolverDirectCuSolverRf.hpp>
   using workspace_type = ReSolve::LinAlgWorkspaceCUDA;
-  using solver_type    = ReSolve::LinSolverDirectCuSolverRf;
   std::string memory_space("cuda");
 #elif defined (RESOLVE_USE_HIP)
 #include <resolve/LinSolverDirectRocSolverRf.hpp>
   using workspace_type = ReSolve::LinAlgWorkspaceHIP;
-  using solver_type    = ReSolve::LinSolverDirectRocSolverRf;
   std::string memory_space("hip");
 #else
   using workspace_type = ReSolve::LinAlgWorkspaceCpu;
-  // using solver_type    = ReSolve::LinSolverDirectKLU;
   std::string memory_space("cpu");
 #endif
 
@@ -46,20 +42,27 @@ int main(int argc, char *argv[])
 {
   // Use ReSolve data types.
   using real_type   = ReSolve::real_type;
+  using index_type  = ReSolve::index_type;
   using vector_type = ReSolve::vector::Vector;
 
-  //we want error sum to be 0 at the end
-  //that means PASS.
-  //otheriwse it is a FAIL.
+  // Error sum needs to be 0 at the end for test to PASS.
+  // It is a FAIL otheriwse.
   int error_sum = 0;
   int status = 0;
 
+  // Create workspace and initialize its handles.
   workspace_type workspace;
   workspace.initializeHandles();
+
+  // Create linear algebra handlers
   ReSolve::MatrixHandler matrix_handler(&workspace);
   ReSolve::VectorHandler vector_handler(&workspace);
 
+  // Create system solver
   ReSolve::SystemSolver solver(&workspace);
+
+  // Configure solver (CUDA-based solver needs slightly different
+  // settings than HIP-based one)
   solver.setRefinementMethod("fgmres", "cgs2");
   solver.getIterativeSolver().setRestart(100);
   if (memory_space == "hip") {
@@ -98,16 +101,18 @@ int main(int argc, char *argv[])
     return -1;
   }
   real_type* rhs = ReSolve::io::readRhsFromFile(rhs1_file);
-  real_type* x   = new real_type[A->getNumRows()];
+  rhs1_file.close();
+
+  // Create rhs, solution and residual vectors
   vector_type* vec_rhs = new vector_type(A->getNumRows());
   vector_type* vec_x   = new vector_type(A->getNumRows());
   vector_type* vec_r   = new vector_type(A->getNumRows());
-  rhs1_file.close();
 
+  // Allocate solution vector
   vec_x->allocate(ReSolve::memory::HOST);  //for KLU
   vec_x->allocate(ReSolve::memory::DEVICE);
 
-  // Set RHS vector on CPU
+  // Set RHS vector on CPU (update function allocates)
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   vec_rhs->setDataUpdated(ReSolve::memory::HOST);
 
@@ -147,6 +152,7 @@ int main(int argc, char *argv[])
   real_type nsr_system = solver.getNormOfScaledResiduals(vec_rhs, vec_x);
   real_type error      = std::abs(nsr_system - nsr_norm)/nsr_norm;
 
+  // Test norm of scaled residuals method in SystemSolver
   if (error > 10.0*std::numeric_limits<real_type>::epsilon()) {
     std::cout << "Norm of scaled residuals computation failed:\n";
     std::cout << std::scientific << std::setprecision(16)
@@ -196,14 +202,15 @@ int main(int argc, char *argv[])
     error_sum++;
   }
  
-
-  std::cout << "Results (first matrix): \n\n" << std::scientific << std::setprecision(16);
-  std::cout<<"\t ||b-A*x||_2                 : " << normRmatrix1              << " (residual norm)" << std::endl;
-  std::cout<<"\t ||b-A*x||_2  (CPU)          : " << normRmatrix1CPU           << " (residual norm)" << std::endl;
-  std::cout<<"\t ||b-A*x||_2/||b||_2         : " << normRmatrix1/normB1       << " (scaled residual norm)"             << std::endl;
-  std::cout<<"\t ||x-x_true||_2              : " << normDiffMatrix1           << " (solution error)"                   << std::endl;
-  std::cout<<"\t ||x-x_true||_2/||x_true||_2 : " << normDiffMatrix1/normXtrue << " (scaled solution error)"        << std::endl;
-  std::cout<<"\t ||b-A*x_exact||_2           : " << exactSol_normRmatrix1     << " (control; residual norm with exact solution)\n\n";
+  // Print out the result summary
+  std::cout << std::scientific << std::setprecision(16);
+  std::cout << "Results (first matrix): \n\n";
+  std::cout << "\t ||b-A*x||_2                 : " << normRmatrix1              << " (residual norm)" << std::endl;
+  std::cout << "\t ||b-A*x||_2  (CPU)          : " << normRmatrix1CPU           << " (residual norm)" << std::endl;
+  std::cout << "\t ||b-A*x||_2/||b||_2         : " << normRmatrix1/normB1       << " (relative residual norm)"  << std::endl;
+  std::cout << "\t ||x-x_true||_2              : " << normDiffMatrix1           << " (solution error)"          << std::endl;
+  std::cout << "\t ||x-x_true||_2/||x_true||_2 : " << normDiffMatrix1/normXtrue << " (relative solution error)" << std::endl;
+  std::cout << "\t ||b-A*x_exact||_2           : " << exactSol_normRmatrix1     << " (control; residual norm with exact solution)\n\n";
 
 
   // Now prepare the Rf solver
@@ -289,15 +296,26 @@ int main(int argc, char *argv[])
     error_sum++;
   }
  
+  // Get solver parameters
+  real_type tol = solver.getIterativeSolver().getTol();
+  index_type restart = solver.getIterativeSolver().getRestart();
+  index_type maxit = solver.getIterativeSolver().getMaxit();
+
+  // Get solver stats
+  index_type num_iter   = solver.getIterativeSolver().getNumIter();
+  real_type init_rnorm  = solver.getIterativeSolver().getInitResidualNorm();
+  real_type final_rnorm = solver.getIterativeSolver().getFinalResidualNorm();
+  
+
   std::cout << "Results (second matrix): " << std::endl << std::endl;
   std::cout << "\t ||b-A*x||_2                 : " << normRmatrix2              << " (residual norm)\n";
-  std::cout << "\t ||b-A*x||_2/||b||_2         : " << normRmatrix2/normB2       << " (scaled residual norm)\n";
+  std::cout << "\t ||b-A*x||_2/||b||_2         : " << normRmatrix2/normB2       << " (relative residual norm)\n";
   std::cout << "\t ||x-x_true||_2              : " << normDiffMatrix2           << " (solution error)\n";
-  std::cout << "\t ||x-x_true||_2/||x_true||_2 : " << normDiffMatrix2/normXtrue << " (scaled solution error)\n";
+  std::cout << "\t ||x-x_true||_2/||x_true||_2 : " << normDiffMatrix2/normXtrue << " (relative solution error)\n";
   std::cout << "\t ||b-A*x_exact||_2           : " << exactSol_normRmatrix2     << " (control; residual norm with exact solution)\n";
-  std::cout << "\t IR iterations               : " << solver.getIterativeSolver().getNumIter() << " (max 200, restart 100)\n";
-  std::cout << "\t IR starting res. norm       : " << solver.getIterativeSolver().getInitResidualNorm()  << "\n";
-  std::cout << "\t IR final res. norm          : " << solver.getIterativeSolver().getFinalResidualNorm() << " (tol 1e-14)\n\n";
+  std::cout << "\t IR iterations               : " << num_iter    << " (max " << maxit << ", restart " << restart << ")\n";
+  std::cout << "\t IR starting res. norm       : " << init_rnorm  << "\n";
+  std::cout << "\t IR final res. norm          : " << final_rnorm << " (tol " << std::setprecision(2) << tol << ")\n\n";
 
   if ((normRmatrix1/normB1 > 1e-12 ) || (normRmatrix2/normB2 > 1e-15)) {
     std::cout << "Result inaccurate!\n";
@@ -311,7 +329,6 @@ int main(int argc, char *argv[])
 
   delete A;
   delete A_coo;
-  delete [] x;
   delete [] rhs;
   delete vec_r;
   delete vec_x;
