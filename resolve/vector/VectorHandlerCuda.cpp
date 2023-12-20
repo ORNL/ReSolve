@@ -206,12 +206,12 @@ namespace ReSolve {
                   CUBLAS_OP_N,
                   size,       // m
                   1,          // n
-                  k + 1,      // k
+                  k,      // k
                   &MINUSONE, // alpha
                   x->getData(memory::DEVICE), // A
                   size,       // lda
                   alpha->getData(memory::DEVICE), // B
-                  k + 1,      // ldb
+                  k,      // ldb
                   &ONE,
                   y->getData(memory::DEVICE),          // c
                   size);      // ldc     
@@ -243,7 +243,7 @@ namespace ReSolve {
       cublasDgemm(handle_cublas,
                   CUBLAS_OP_T,
                   CUBLAS_OP_N,
-                  k + 1,   //m
+                  k,   //m
                   2,       //n
                   size,    //k
                   &ONE,   //alpha
@@ -253,7 +253,7 @@ namespace ReSolve {
                   size,    //ldb
                   &ZERO,
                   res->getData(memory::DEVICE),     //c
-                  k + 1);  //ldc 
+                  k);  //ldc 
     }
   }
 

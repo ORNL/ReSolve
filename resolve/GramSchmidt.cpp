@@ -197,13 +197,14 @@ namespace ReSolve
         vec_w_->setData(V->getVectorData(i + 1, memspace), memspace);
         vec_rv_->setCurrentSize(i + 1);
 
-        vector_handler_->massDot2Vec(n, V, i, vec_v_, vec_rv_, memspace);
+        // vector_handler_->massDot2Vec(n, V, i + 1, vec_v_, vec_rv_, memspace);
+        vector_handler_->massDot2Vec(n, V, i + 1, vec_v_, vec_rv_, memspace);
         vec_rv_->setDataUpdated(memspace);
         vec_rv_->copyData(memspace, memory::HOST);
 
         vec_rv_->deepCopyVectorData(&h_L_[idxmap(i, 0, num_vecs_ + 1)], 0, memory::HOST);
         h_rv_ = vec_rv_->getVectorData(1, memory::HOST);
-
+        
         for(int j=0; j<=i; ++j) {
           H[ idxmap(i, j, num_vecs_ + 1) ] = 0.0;
         }
@@ -218,7 +219,7 @@ namespace ReSolve
         }   // for j
         vec_Hcolumn_->setCurrentSize(i + 1);
         vec_Hcolumn_->update(&H[ idxmap(i, 0, num_vecs_ + 1)], memory::HOST, memspace); 
-        vector_handler_->massAxpy(n, vec_Hcolumn_, i, V, vec_w_, memspace);
+        vector_handler_->massAxpy(n, vec_Hcolumn_, i + 1, V, vec_w_, memspace);
 
         // normalize (second synch)
         t = vector_handler_->dot(vec_w_, vec_w_, memspace);  
@@ -228,6 +229,11 @@ namespace ReSolve
         if(fabs(t) > EPSILON) {
           t = 1.0 / t;
           vector_handler_->scal(&t, vec_w_, memspace);  
+          for (int ii=0; ii<=i; ++ii)
+          {
+            vec_v_->setData(V->getVectorData(ii, memspace), memspace);
+            vec_w_->setData(V->getVectorData(i + 1, memspace), memspace);
+          }        
         } else {
           assert(0 && "Iterative refinement failed, Krylov vector with ZERO norm\n");
           return -1;
@@ -240,7 +246,7 @@ namespace ReSolve
         vec_w_->setData(V->getVectorData(i + 1, memspace), memspace);
         vec_rv_->setCurrentSize(i + 1);
 
-        vector_handler_->massDot2Vec(n, V, i, vec_v_, vec_rv_, memspace);
+        vector_handler_->massDot2Vec(n, V, i + 1, vec_v_, vec_rv_, memspace);
         vec_rv_->setDataUpdated(memspace);
         vec_rv_->copyData(memspace, memory::HOST);
 
@@ -290,7 +296,7 @@ namespace ReSolve
         vec_Hcolumn_->setCurrentSize(i + 1);
         vec_Hcolumn_->update(&H[ idxmap(i, 0, num_vecs_ + 1)], memory::HOST, memspace); 
 
-        vector_handler_->massAxpy(n, vec_Hcolumn_, i, V,  vec_w_, memspace);
+        vector_handler_->massAxpy(n, vec_Hcolumn_, i + 1, V,  vec_w_, memspace);
         // normalize (second synch)
         t = vector_handler_->dot(vec_w_, vec_w_, memspace);  
         //set the last entry in Hessenberg matrix
