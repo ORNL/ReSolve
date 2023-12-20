@@ -6,6 +6,13 @@
 #include <resolve/MemoryUtils.hpp>
 
 namespace ReSolve { namespace matrix {
+  /**
+   * @brief This class implements basic sparse matrix interface. (Almost) all sparse matrix formats store information about matrix rows and columns (as integers) and data (as real numbers).
+   *        This class is virtualand implements only what is common for all basic formats.
+   *        Note that regardless of how row/column information is stored, all values need to be stored, so all utilities needed for values are implemented in this class.
+   *
+   * @author Kasia Swirydowicz <kasia.swirydowicz@pnnl.gov>
+   */
   class Sparse 
   {
     public:
@@ -59,25 +66,25 @@ namespace ReSolve { namespace matrix {
     
     protected:
       //size
-      index_type n_{0};
-      index_type m_{0};
-      index_type nnz_{0};
-      index_type nnz_expanded_{0};
+      index_type n_{0}; ///< number of rows
+      index_type m_{0}; ///< number of columns
+      index_type nnz_{0}; ///< number of non-zeros
+      index_type nnz_expanded_{0}; ///< number of non-zeros in an expanded matrix (for symmetric matrices)
 
-      bool is_symmetric_{false};
-      bool is_expanded_{false};
+      bool is_symmetric_{false}; ///< symmetry flag
+      bool is_expanded_{false}; ///< "expanded" flag
 
       //host data
-      index_type* h_row_data_{nullptr};
-      index_type* h_col_data_{nullptr};
-      real_type* h_val_data_{nullptr};
-      bool h_data_updated_{false};
+      index_type* h_row_data_{nullptr}; ///< row data (HOST)
+      index_type* h_col_data_{nullptr}; ///< column data (HOST)
+      real_type* h_val_data_{nullptr}; ///< value data (HOST)
+      bool h_data_updated_{false}; ///< HOST update flag
 
       //gpu data
-      index_type* d_row_data_{nullptr};
-      index_type* d_col_data_{nullptr};
-      real_type* d_val_data_{nullptr};
-      bool d_data_updated_{false};
+      index_type* d_row_data_{nullptr}; ///< row data (DEVICE)
+      index_type* d_col_data_{nullptr}; ///< column data (DEVICE)
+      real_type* d_val_data_{nullptr}; ///< value data (DEVICE)
+      bool d_data_updated_{false}; ///< DEVICE update flag
 
       void setNotUpdated();
       

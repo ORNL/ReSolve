@@ -32,7 +32,7 @@ namespace ReSolve {
    * This includes:
    *  - Matrix format conversion: coo2csr, csr2csc
    *  - Matrix vector product (SpMV)
-   *  - Matrix 1-norm
+   *  - Matrix Inf-norm
    * 
    * The class uses pointer to implementation (PIMPL) idiom to create
    * multiple matrix operation implementations running on CUDA and HIP devices

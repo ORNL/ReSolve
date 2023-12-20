@@ -4,10 +4,20 @@
 
 namespace ReSolve { namespace matrix {
 
+  /** 
+   * @brief empty constructor that does absolutely nothing        
+   */
   Sparse::Sparse()
   {
   }
 
+  /** 
+   * @brief basic constructor. It DOES NOT allocate any memory!
+   *
+   * @param[in] n   - number of rows
+   * @param[in] m   - number of columns
+   * @param[in] nnz - number of non-zeros        
+   */
   Sparse::Sparse(index_type n, 
                  index_type m, 
                  index_type nnz):
@@ -37,6 +47,15 @@ namespace ReSolve { namespace matrix {
     owns_gpu_vals_ = false;
   }
 
+  /** 
+   * @brief another basic constructor. It DOES NOT allocate any memory!
+   *
+   * @param[in] n         - number of rows
+   * @param[in] m         - number of columns
+   * @param[in] nnz       - number of non-zeros        
+   * @param[in] symmetric - true if symmetric, false if non-symmetric       
+   * @param[in] expanded  - true if expanded, false if not       
+   */
   Sparse::Sparse(index_type n, 
                  index_type m, 
                  index_type nnz,
@@ -70,69 +89,134 @@ namespace ReSolve { namespace matrix {
     owns_gpu_data_ = false;
     owns_gpu_vals_ = false;
   }
-
+  
+  /**
+   * @brief destructor
+   * */
   Sparse::~Sparse()
   {
     this->destroyMatrixData(memory::HOST);
     this->destroyMatrixData(memory::DEVICE);
   }
 
+  /** 
+   * @brief set the matrix update flags to false (for both HOST and DEVICE).
+   */
   void Sparse::setNotUpdated()
   {
     h_data_updated_ = false;
     d_data_updated_ = false; 
   }
   
+  /**
+   * @brief get number of matrix rows
+   *
+   * @return number of matrix rows.
+   */
   index_type Sparse::getNumRows()
   {
     return this->n_;
   }
 
+  /**
+   * @brief get number of matrix columns
+   *
+   * @return number of matrix columns.
+   */
   index_type Sparse::getNumColumns()
   {
     return this->m_;
   }
 
+  /**
+   * @brief get number of non-zeros in the matrix.
+   *
+   * @return number of non-zeros.
+   */
   index_type Sparse::getNnz()
   {
     return this->nnz_;
   }
 
+  /**
+   * @brief get number of non-zeros in expanded matrix.
+   *
+   * @return number of non-zeros in expanded matrix.
+   */
   index_type Sparse::getNnzExpanded()
   {
     return this->nnz_expanded_;
   }
 
+  /**
+   * @brief check if matrix is symmetric.
+   *
+   * @return true if symmetric, false otherwise.
+   */
   bool Sparse::symmetric()
   {
     return is_symmetric_;
   }
 
+  /**
+   * @brief check if (symmetric) matrix is expanded.
+   *
+   * @return true if expanded, false otherwise.
+   */
   bool Sparse::expanded()
   {
     return is_expanded_;
   }
 
+  /**
+   * @brief Set matrix symmetry property
+   *
+   * @param[in] symmetric - true to set matrix to symmetric and false to set to non-symmetric 
+   */  
   void Sparse::setSymmetric(bool symmetric)
   {
     this->is_symmetric_ = symmetric;
   }
 
+  /**
+   * @brief Set matrix "expanded" property
+   *
+   * @param[in] expanded - true to set matrix to expanded and false to set to not expanded
+   */  
   void Sparse::setExpanded(bool expanded)
   {
     this->is_expanded_ = expanded;
   }
 
+  /**
+   * @brief Set number of non-zeros in expanded matrix.
+   *
+   * @param[in] nnz_expanded_new - new number of non-zeros in expanded matrix
+   */  
   void Sparse::setNnzExpanded(index_type nnz_expanded_new)
   {
     this->nnz_expanded_ = nnz_expanded_new;
   }
 
+  /**
+   * @brief Set number of non-zeros.
+   *
+   * @param[in] nnz_new - new number of non-zeros
+   */  
   void Sparse::setNnz(index_type nnz_new)
   {
     this->nnz_ = nnz_new;
   }
 
+  /**
+   * @brief Set the data to be updated on HOST or DEVICE. 
+   *
+   * @param[in] memspace - memory space (HOST or DEVICE) of data that is set to "updated"
+   *
+   * @return 0 if successful, -1 if not.
+   * 
+   * @note The method automatically sets the other mirror data to non-updated (but it does not copy).
+   */  
   int Sparse::setUpdated(memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
@@ -149,6 +233,20 @@ namespace ReSolve { namespace matrix {
     return 0;
   }
 
+  /**
+   * @brief Set the pointers for matrix row, column, value data.
+   * 
+   * Useful if interfacing with other codes - this function only assigns pointers,
+   * but it does not allocate nor copy anything. Note that the data ownership
+   * flags would be left at default (false).
+   *
+   * @param[in] row_data - pointer to row data (array of integers)
+   * @param[in] col_data - pointer to column data (array of integers)
+   * @param[in] val_data - pointer to value data (array of real numbers)
+   * @param[in] memspace - memory space (HOST or DEVICE) of incoming data
+   *
+   * @return 0 if successful, -1 if not.
+   */  
   int Sparse::setMatrixData(index_type* row_data, index_type* col_data, real_type* val_data, memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
@@ -171,7 +269,16 @@ namespace ReSolve { namespace matrix {
     }
     return 0;
   }
-
+  
+  /**
+   * @brief destroy matrix data (HOST or DEVICE) if the matrix owns it 
+   * (will attempt to destroy all three arrays).
+   *
+   * @param[in] memspace - memory space (HOST or DEVICE) of incoming data
+   *
+   * @return 0 if successful, -1 if not.
+   *
+   */ 
   int Sparse::destroyMatrixData(memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
@@ -199,6 +306,18 @@ namespace ReSolve { namespace matrix {
     }
   }
 
+  /**
+   * @brief updata matrix values using the _new_values_ provided either as HOST or as DEVICE array.
+   * 
+   * This function will copy the data (not just assign a pointer) and allocate if needed.
+   * It also sets ownership and update flags.
+   *
+   * @param[in] new_vals    - pointer to new values data (array of real numbers)
+   * @param[in] memspaceIn  - memory space (HOST or DEVICE) of _new_vals_
+   * @param[in] memspaceOut - memory space (HOST or DEVICE) of matrix values to be updated.
+   *
+   * @return 0 if successful, -1 if not.
+   */  
   int Sparse::updateValues(real_type* new_vals, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut)
   {
  
@@ -251,6 +370,16 @@ namespace ReSolve { namespace matrix {
     return 0;
   }
 
+  /**
+   * @brief updata matrix values using the _new_values_ provided either as HOST or as DEVICE array.
+   * 
+   * This function only assigns a pointer, but does not copy. It sets update flags.
+   *
+   * @param[in] new_vals    - pointer to new values data (array of real numbers)
+   * @param[in] memspace    - memory space (HOST or DEVICE) of _new_vals_
+   *
+   * @return 0 if successful, -1 if not.
+   */  
   int Sparse::setNewValues(real_type* new_vals, memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
