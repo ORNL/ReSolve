@@ -5,11 +5,14 @@
 #include <resolve/matrix/Csc.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/LinSolverIterativeFGMRES.hpp>
-#include <resolve/LinSolverIterativeRandFGMRES.hpp>
 #include <resolve/GramSchmidt.hpp>
 
 #ifdef RESOLVE_USE_KLU
 #include <resolve/LinSolverDirectKLU.hpp>
+#endif
+
+#ifdef RESOLVE_USE_GPU
+#include <resolve/LinSolverIterativeRandFGMRES.hpp>
 #endif
 
 #ifdef RESOLVE_USE_CUDA
@@ -153,11 +156,13 @@ namespace ReSolve
     }
 
     // If we use iterative solver, we can set it up here
+#ifdef RESOLVE_USE_GPU
     if (solveMethod_ == "randgmres") {
       auto* rgmres = dynamic_cast<LinSolverIterativeRandFGMRES*>(iterativeSolver_);
       status += rgmres->setup(A_);
       status += gs_->setup(rgmres->getKrand(), rgmres->getRestart());
     }
+#endif
 
     return status;
   }
@@ -247,6 +252,7 @@ namespace ReSolve
       return 1;
     }
 
+#ifdef RESOLVE_USE_GPU
     // Create iterative solver
     if (solveMethod_ == "randgmres") {
       LinSolverIterativeRandFGMRES::SketchingMethod sketch;
@@ -266,6 +272,7 @@ namespace ReSolve
                                                           sketch,
                                                           gs_);
     }
+#endif
 
     return 0;
   }
@@ -515,6 +522,7 @@ namespace ReSolve
     solveMethod_ = method;
 
     if (method == "randgmres") {
+#ifdef RESOLVE_USE_GPU
       irMethod_ = "none";
       if (iterativeSolver_)
         delete iterativeSolver_;
@@ -535,6 +543,10 @@ namespace ReSolve
                                                           vectorHandler_,
                                                           sketch,
                                                           gs_);
+#else
+      solveMethod_ = "none";
+      out::error() << "Randomized GMRES only available on GPU.\n";
+#endif
     }
 
   }
