@@ -87,7 +87,10 @@ namespace ReSolve
 
   // Setup the parameters, sampling matrices, permuations, etc
   /** 
-   * @brief Sketching method setup. This function allocated P(erm), D (diagonal scaling matrix) andpopulates them and  allocates a bunch of other auxiliary arrays.
+   * @brief Sketching method setup. 
+   * 
+   * This function allocated P(erm), D (diagonal scaling matrix) andpopulates
+   * them and  allocates a bunch of other auxiliary arrays.
    *
    *
    * @param[in]  n  - size of base (non-sketched) vector
@@ -159,7 +162,9 @@ namespace ReSolve
 
   //to be fixed, this can be done on the GPU
   /** 
-   * @brief Reset values in the arrays used for sketching. If the solver restarts, call this method between restarts.
+   * @brief Reset values in the arrays used for sketching.
+   * 
+   * If the solver restarts, call this method between restarts.
    *
    * @post Everything is set up so you call call Theta.
    *

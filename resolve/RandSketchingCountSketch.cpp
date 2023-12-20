@@ -69,7 +69,9 @@ namespace ReSolve
 
   // Setup the parameters, sampling matrices, permuations, etc
   /** 
-   * @brief Sketching method setup. This function allocated _labels_, and _flip_ arrays and, populates them.
+   * @brief Sketching method setup.
+   * 
+   * This function allocated _labels_, and _flip_ arrays and, populates them.
    *
    * @param[in]  n  - size of base (non-sketched) vector
    * @param[in]  k  - size of sketched vector. 
@@ -115,7 +117,9 @@ namespace ReSolve
 
   //to be fixed, this can be done on the GPU
   /** 
-   * @brief Reset values in the arrays used for sketching. If the solver restarts, call this method between restarts.
+   * @brief Reset values in the arrays used for sketching. 
+   * 
+   * If the solver restarts, call this method between restarts.
    *
    * @post Everything is set up so you call call Theta.
    *

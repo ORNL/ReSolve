@@ -209,11 +209,13 @@ namespace ReSolve { namespace matrix {
   }
 
   /**
-   * @brief Set the data to be updated on HOST or DEVICE. Note it automatically sets the other mirror data to non-updated (but it does not copy).
+   * @brief Set the data to be updated on HOST or DEVICE. 
    *
    * @param[in] memspace - memory space (HOST or DEVICE) of data that is set to "updated"
    *
    * @return 0 if successful, -1 if not.
+   * 
+   * @note The method automatically sets the other mirror data to non-updated (but it does not copy).
    */  
   int Sparse::setUpdated(memory::MemorySpace memspace)
   {
@@ -232,7 +234,11 @@ namespace ReSolve { namespace matrix {
   }
 
   /**
-   * @brief Set the pointers for matrix row, column, value data. Useful if interfacing with other codes - this function only assigns pointers, but it does not allocate nor copy anything. Note that the data ownership flags would be left at default (false).
+   * @brief Set the pointers for matrix row, column, value data.
+   * 
+   * Useful if interfacing with other codes - this function only assigns pointers,
+   * but it does not allocate nor copy anything. Note that the data ownership
+   * flags would be left at default (false).
    *
    * @param[in] row_data - pointer to row data (array of integers)
    * @param[in] col_data - pointer to column data (array of integers)
@@ -265,7 +271,8 @@ namespace ReSolve { namespace matrix {
   }
   
   /**
-   * @brief destroy matrix data (HOST or DEVICE) if the matrix owns it (will attempt to destroy all three arrays).
+   * @brief destroy matrix data (HOST or DEVICE) if the matrix owns it 
+   * (will attempt to destroy all three arrays).
    *
    * @param[in] memspace - memory space (HOST or DEVICE) of incoming data
    *
@@ -300,7 +307,10 @@ namespace ReSolve { namespace matrix {
   }
 
   /**
-   * @brief updata matrix values using the _new_values_ provided either as HOST or as DEVICE array. This function will copy the data (not just assign a pointer) and allocate if needed. It also sets ownership and update flags.
+   * @brief updata matrix values using the _new_values_ provided either as HOST or as DEVICE array.
+   * 
+   * This function will copy the data (not just assign a pointer) and allocate if needed.
+   * It also sets ownership and update flags.
    *
    * @param[in] new_vals    - pointer to new values data (array of real numbers)
    * @param[in] memspaceIn  - memory space (HOST or DEVICE) of _new_vals_
@@ -363,7 +373,9 @@ namespace ReSolve { namespace matrix {
   }
 
   /**
-   * @brief updata matrix values using the _new_values_ provided either as HOST or as DEVICE array. This function only assigns a pointer, but does not copy. It sets update flags.
+   * @brief updata matrix values using the _new_values_ provided either as HOST or as DEVICE array.
+   * 
+   * This function only assigns a pointer, but does not copy. It sets update flags.
    *
    * @param[in] new_vals    - pointer to new values data (array of real numbers)
    * @param[in] memspace    - memory space (HOST or DEVICE) of _new_vals_

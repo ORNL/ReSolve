@@ -17,7 +17,7 @@ namespace ReSolve {
 
   // destructor
   /**
-   * @brief De-constructor
+   * @brief Destructor
    *
    */ 
   RandSketchingManager::~RandSketchingManager()
