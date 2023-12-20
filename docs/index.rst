@@ -24,11 +24,13 @@ Authors and acknowledgment
 --------------------------
 
 Primary authors of this project are:
+
 * Kasia Świrydowicz kasia.swirydowicz@pnnl.gov (PNNL)
 * Slaven Peles peless@ornl.gov (ORNL)
 
 ReSolve project would not be possible without significant contributions
 from (in alphabetic order): 
+
 * Maksudul Alam (ORNL)
 * Ryan Danehy (PNNL)
 * Nicholson Koukpaizan (ORNL)
@@ -51,6 +53,14 @@ terms.
 
 
 .. toctree::
+   :maxdepth: 2
+   :hidden:
+   :caption: User Guide
+
+   sphinx/guide
+
+   
+.. toctree::
    :maxdepth: 3
    :hidden:
    :caption: Developer Resources
@@ -60,10 +70,3 @@ terms.
    sphinx/licenses
    sphinx/notice 
    sphinx/developer_guide/index
-
-.. toctree::
-   :maxdepth: 2
-   :hidden:
-   :caption: User Guide
-
-   sphinx/guide

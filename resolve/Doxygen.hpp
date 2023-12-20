@@ -3,7 +3,7 @@
  * @author Slaven Peles (peless@ornl.gov)
  * @brief 
  * 
- * @mainpage ReSolve Source Code Documentation
+ * @mainpage ReSolve Source Code Documentation v1.0
  * 
  * ReSolve is a library of GPU-resident linear solvers. It contains iterative
  * and direct linear solvers designed to run on NVIDIA and AMD GPUs, as well as
