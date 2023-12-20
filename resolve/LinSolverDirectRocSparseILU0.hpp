@@ -41,7 +41,7 @@ namespace ReSolve
       int reset(matrix::Sparse* A);
        
       int solve(vector_type* rhs, vector_type* x) override;
-      int solve(vector_type* rhs) override; // the solutuon is returned IN RHS (rhs is overwritten)
+      int solve(vector_type* rhs) override; // the solution is returned IN RHS (rhs is overwritten)
     
 
     private:

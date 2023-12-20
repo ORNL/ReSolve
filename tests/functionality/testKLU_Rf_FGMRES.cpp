@@ -267,9 +267,9 @@ int main(int argc, char *argv[])
     error_sum++;
   }
   if (error_sum == 0) {
-    std::cout<<"Test 4 (KLU with cuSolverRf refactorization + IR) PASSED"<<std::endl;
+    std::cout<<"Test KLU with cuSolverRf refactorization + IR PASSED"<<std::endl;
   } else {
-    std::cout<<"Test 4 (KLU with cuSolverRf refactorization + IR) FAILED, error sum: "<<error_sum<<std::endl;
+    std::cout<<"Test KLU with cuSolverRf refactorization + IR FAILED, error sum: "<<error_sum<<std::endl;
   }
 
   delete A;

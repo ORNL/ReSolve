@@ -322,9 +322,9 @@ int main(int argc, char *argv[])
     error_sum++;
   }
   if (error_sum == 0) {
-    std::cout<<"Test 4 (KLU with rocsolverrf refactorization + IR) PASSED"<<std::endl<<std::endl;;
+    std::cout<<"Test KLU with rocsolverrf refactorization + IR PASSED"<<std::endl<<std::endl;;
   } else {
-    std::cout<<"Test 4 (KLU with rocsolverrf refactorization + IR) FAILED, error sum: "<<error_sum<<std::endl<<std::endl;;
+    std::cout<<"Test KLU with rocsolverrf refactorization + IR FAILED, error sum: "<<error_sum<<std::endl<<std::endl;;
   }
 
   delete A;

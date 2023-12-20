@@ -24,9 +24,10 @@ int main()
   std::cout << "ReSolveVersionGetVersionStr Test: " << versionstr << std::endl << std::endl;
 
   if (versionstr != answer) {
-    std::cout << "ReSolve version set incorrectly!\n";
+    std::cout << "ReSolve version set incorrectly. Test FAILED\n";
     return 1;
   }
+  std::cout << "ReSolve version test PASSED\n";
   
   return 0;
 }
