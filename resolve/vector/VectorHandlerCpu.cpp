@@ -220,21 +220,32 @@ namespace ReSolve {
    */
   void VectorHandlerCpu::massDot2Vec(index_type size, 
                                      vector::Vector* V, 
-                                     index_type k, 
+                                     index_type q, 
                                      vector::Vector* x, 
                                      vector::Vector* res)
   {
     real_type* res_data = res->getData(memory::HOST);
-    real_type* x_data = x->getData(memory::HOST);
-    real_type* V_data = V->getData(memory::HOST);
-    index_type i, j;
+    real_type* x_data   = x->getData(memory::HOST);
+    real_type* V_data   = V->getData(memory::HOST);
 
-    for (i = 0; i < k; ++i) {
+    real_type c0 = 0.0;
+    real_type cq = 0.0;
+
+    for (index_type i = 0; i < q; ++i) {
       res_data[i] = 0.0; 
-      res_data[i + k] = 0.0; 
-      for (j = 0; j < size; ++j) {
-        res_data[i] += V_data[i * size + j] * x_data[j];
-        res_data[i + k] += V_data[i * size + j] * x_data[j + size];
+      res_data[i + q] = 0.0;
+
+      // Make sure we don't accumulate round-off errors
+      for (index_type j = 0; j < size; ++j) {
+        real_type y0 = (V_data[i * size + j] * x_data[j])        - c0;    
+        real_type yq = (V_data[i * size + j] * x_data[j + size]) - cq;
+        real_type t0 = res_data[i]     + y0;
+        real_type tq = res_data[i + q] + yq;
+        c0 = (t0 - res_data[i]    ) - y0;
+        cq = (tq - res_data[i + q]) - yq;
+
+        res_data[i]     = t0;
+        res_data[i + q] = tq;
       }
     }
   }

@@ -407,7 +407,7 @@ namespace ReSolve {
                                       const real_type* mvec, 
                                       real_type* result)
   {
-    kernels::MassIPTwoVec<<<i + 1, 1024>>>(vec1, vec2, mvec, result, i + 1, n);
+    kernels::MassIPTwoVec<<<i, 1024>>>(vec1, vec2, mvec, result, i, n);
   }
 
   /**
@@ -421,7 +421,7 @@ namespace ReSolve {
    */
   void mass_axpy(index_type n, index_type i, const real_type* x, real_type* y, const real_type* alpha)
   {
-    kernels::massAxpy3<<<(n + 384 - 1) / 384, 384>>>(n, i + 1, x, y, alpha);
+    kernels::massAxpy3<<<(n + 384 - 1) / 384, 384>>>(n, i, x, y, alpha);
   }
 
   /**

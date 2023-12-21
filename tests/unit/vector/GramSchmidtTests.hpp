@@ -26,18 +26,10 @@ namespace ReSolve {
         TestOutcome GramSchmidtConstructor()
         {
           TestStatus status;
-          // status.skipTest();
-
-          // GramSchmidt gs1;
-          // status *= (gs1.getVariant() == GramSchmidt::mgs);
-          // status *= (gs1.getL() == nullptr);
-          // status *= !gs1.isSetupComplete();
 
           VectorHandler vh;
           GramSchmidt gs2(&vh, GramSchmidt::mgs_pm);
           status *= (gs2.getVariant() == GramSchmidt::mgs_pm);
-          // status *= (gs1.getL() == nullptr);
-          // status *= !gs1.isSetupComplete();
 
           return status.report(__func__);
         }
@@ -141,6 +133,12 @@ namespace ReSolve {
             workspace->initializeHandles();
             return new VectorHandler(workspace);
 #endif
+#ifdef RESOLVE_USE_HIP
+          } else if (memspace_ == "hip") {
+            LinAlgWorkspaceHIP* workspace = new LinAlgWorkspaceHIP();
+            workspace->initializeHandles();
+            return new VectorHandler(workspace);
+#endif
           } else {
             std::cout << "ReSolve not built with support for memory space " << memspace_ << "\n";
           }
@@ -167,7 +165,6 @@ namespace ReSolve {
               a->update(x->getVectorData(i, ms), ms, memory::HOST);
               b->update(x->getVectorData(j, ms), ms, memory::HOST);
               ip = handler->dot(a, b, memory::HOST);
-              
               if ( (i != j) && (abs(ip) > 1e-14)) {
                 status = false;
                 std::cout << "Vectors " << i << " and " << j << " are not orthogonal!"

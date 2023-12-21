@@ -524,7 +524,7 @@ namespace ReSolve {
                                       real_type* result)
   {
     hipLaunchKernelGGL(kernels::MassIPTwoVec_kernel,
-                       dim3(i + 1),
+                       dim3(i),
                        dim3(1024),
                        0,
                        0,
@@ -532,7 +532,7 @@ namespace ReSolve {
                        vec2,
                        mvec,
                        result,
-                       i + 1,
+                       i,
                        n);
   }
 
