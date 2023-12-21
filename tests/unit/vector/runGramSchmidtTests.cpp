@@ -21,8 +21,22 @@ int main(int, char**)
   }
 #endif
 
+#ifdef RESOLVE_USE_HIP
   {
-    std::cout << "Running tests on CPU!:\n";
+    std::cout << "Running tests with HIP backend:\n";
+    ReSolve::tests::GramSchmidtTests test("hip");
+
+    result += test.GramSchmidtConstructor();
+    result += test.orthogonalize(5000, ReSolve::GramSchmidt::mgs);
+    result += test.orthogonalize(5000, ReSolve::GramSchmidt::cgs2);
+    result += test.orthogonalize(5000, ReSolve::GramSchmidt::mgs_two_synch);
+    result += test.orthogonalize(5000, ReSolve::GramSchmidt::mgs_pm);
+    std::cout << "\n";
+  }
+#endif
+
+  {
+    std::cout << "Running tests on the CPU:\n";
     ReSolve::tests::GramSchmidtTests test("cpu");
 
     result += test.GramSchmidtConstructor();

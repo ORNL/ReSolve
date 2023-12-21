@@ -133,6 +133,12 @@ namespace ReSolve {
             workspace->initializeHandles();
             return new VectorHandler(workspace);
 #endif
+#ifdef RESOLVE_USE_HIP
+          } else if (memspace_ == "hip") {
+            LinAlgWorkspaceHIP* workspace = new LinAlgWorkspaceHIP();
+            workspace->initializeHandles();
+            return new VectorHandler(workspace);
+#endif
           } else {
             std::cout << "ReSolve not built with support for memory space " << memspace_ << "\n";
           }
