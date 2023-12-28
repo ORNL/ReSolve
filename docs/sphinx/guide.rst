@@ -3,12 +3,17 @@ User Guide
 
 Getting started
 ---------------
-ReSolve is maintained and developed on the 
-`ReSolve Github Project <https://github.com/ORNL/ReSolve>`_.
+ReSolve is maintained and developed at `Github <https://github.com/ORNL/ReSolve>`_.
+It has following build dependencies:
 
-Dependencies: - KLU, AMD and COLAMD libraries from SuiteSparse - CUDA >= 11.4 - CMake >= 3.22
+* C++11 compliant compiler
+* CMake >= 3.22
+* KLU, AMD and COLAMD libraries from SuiteSparse >= 5.0 (optional)
+* CUDA >= 11.4 (optional)
+* HIP/ROCm >= 5.6 (optional)
 
-To build it:
+
+To acquire and build Re::Soleve it is as easy as:
 
 .. code:: shell
 
@@ -16,6 +21,10 @@ To build it:
    $ mkdir build && cd build
    $ cmake ../resolve
    $ make
+
+Note if you don't include any of the optional dependencies, there will be
+little functionality provided. You might want to use tool such as ``ccmake``
+to enable features you need.
 
 To install the library
 ----------------------
@@ -28,7 +37,10 @@ In the directory where you built the library run
 
 To change the install location please use the CMAkePresets.json file as mentioned in `test and deploy <#test-and-deploy>`__
 
-To run it, download `test linear systems <https://github.com/NREL/opf_matrices/tree/master/acopf/activsg10k>`__ and then edit script ```runResolve`` <runResolve>`__ to match locations of your linear systems and binary installation. The script will emulate nonlinear solver calling the linear solver repeatedly.
+To run it, download `test linear systems <https://github.com/NREL/opf_matrices/tree/master/acopf/activsg10k>`__ 
+and then edit script |runResolve|_ 
+to match locations of your linear systems and binary installation.
+The script will emulate nonlinear solver calling the linear solver repeatedly.
 
 To use the ReSolve library in your own project
 ----------------------------------------------
@@ -119,18 +131,67 @@ call the preset flag in the cmake build step.
 
    cmake -B build --preset cluster
 
-Developing Documentation Using Dev Container
--------
+
+
+Writing Documentation
+---------------------
+
+Re::Solve uses Sphynx for the documentation. To build the documentation
+on your local machine you have to install ``sphynx``, ``docutils`` and a
+couple of other Python packages.
+
 
 Prerequisites
+^^^^^^^^^^^^^
+
+To get your documentation environment ready, you can install Anaconda and
+then get following packages:
+
+.. code:: shell
+    
+    conda install sphinx docutils sphinx_rtd_theme
+    conda install -c conda-forge sphinxcontrib-jquery m2r2
+
+Alternatively you can use ``pip install`` or ``apt`` tool on Linux.
+
+
+Building Sphynx Documentation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Once you have all the required packages, you can build the HTML docs by
+
+.. code:: shell
+
+  git clone git@github.com:ORNL/ReSolve.git
+  sphinx-build -M html ReSolve/docs/ ./build
+
+This will generate HTML documentation and place it in ``build``
+subdirectory in your current directory. Alternatively, if you cannot get
+Sphynx and other dependencies on your machine, you can use a development
+container.
+
+
+
+Developing Documentation Using Dev Container
+--------------------------------------------
+
+Re::Solve provides scripts for building development container with all
+tools required for Sphynx documentation generation. To create container
+for documentation development follow these straightforward steps:
+
+Prerequisites
+^^^^^^^^^^^^^
 
 #. install Docker Desktop and launch the app
 #. install the "Remote Development" extension in VSCode
 #. open your local clone of resolve in VSCode
 
-Build Container
 
-The build info for this container is in `.devcontainer/`. There is a Dockerfile and json file associated with the configuration.
+Build Container
+^^^^^^^^^^^^^^^
+
+The build info for this container is in `.devcontainer/`. There is a Dockerfile and
+json file associated with the configuration.
 
 #. if connected, disconnect from the PNNL VPN
 #. launch the container build  
@@ -140,10 +201,18 @@ The build info for this container is in `.devcontainer/`. There is a Dockerfile 
     * this will start building the container, taking about 40 minutes
     * click on the pop up with `(show log)` to view the progress
 
-#. Open new terminal within VSCODe and run the renderDocs.sh (note this takes a minute)
+#. Open new terminal within Visual Studio Code and run the renderDocs.sh (note this takes a minute)
 #. Open the link that was served to you after step 3
 
 Note - pushing/pulling from git is not supported in a devcontainer, and should be done independently.
 
+
+Getting Help
+------------
+
 For any questions or to report a bug please submit a `GitHub
 issue <https://github.com/ORNL/ReSolve/issues>`__.
+
+
+.. |runResolve| replace:: ``runResolve``
+.. _runResolve: https://github.com/ORNL/ReSolve/blob/develop/runResolve

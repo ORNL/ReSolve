@@ -2,7 +2,8 @@
 ReSolve
 *******
 
-ReSolve is a library of GPU-resident linear solver. It contains iterative and direct linear solvers designed to run on NVIDIA and AMD GPUs, as well as on CPU devices.
+ReSolve is a library of GPU-resident linear solver. It contains iterative and direct linear
+solvers designed to run on NVIDIA and AMD GPUs, as well as on CPU devices.
 
 To learn how to get start with resolve please checkout our `User Guide <sphinx/html/guide.html>`_
 
@@ -11,8 +12,9 @@ Documentation
 =============
 
 Source code documentation are also linked on this site.
-`ReSolve Github Project <https://github.com/ORNL/ReSolve>`_.
-`Source documentation <doxygen/html/index.html>`_
+
+* `ReSolve Github Project <https://github.com/ORNL/ReSolve>`_.
+* `Source documentation <doxygen/html/index.html>`_
 
 Contributing
 ------------
@@ -28,7 +30,8 @@ Primary authors of this project are:
 * Slaven Peles peless@ornl.gov (ORNL)
 
 ReSolve project would not be possible without significant contributions
-from (in alphabetic order): 
+from (in alphabetic order):
+
 * Maksudul Alam (ORNL)
 * Ryan Danehy (PNNL)
 * Nicholson Koukpaizan (ORNL)
@@ -51,19 +54,20 @@ terms.
 
 
 .. toctree::
+   :maxdepth: 2
+   :hidden:
+   :caption: User Resources
+
+   sphinx/guide
+   sphinx/licenses
+   sphinx/notice 
+
+
+.. toctree::
    :maxdepth: 3
    :hidden:
    :caption: Developer Resources
 
    sphinx/coding_guide/index
    doxygen/index
-   sphinx/licenses
-   sphinx/notice 
    sphinx/developer_guide/index
-
-.. toctree::
-   :maxdepth: 2
-   :hidden:
-   :caption: User Guide
-
-   sphinx/guide
