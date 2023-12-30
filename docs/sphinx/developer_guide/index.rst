@@ -83,6 +83,76 @@ Deception specific CI.
 
 Incline specific CI.
 
+
+Writing Documentation
+---------------------
+
+Re::Solve uses Sphynx for the documentation. To write and preview the
+documentation on your local machine use e.g. ``pip`` tool to install following
+Python packages:
+
+.. code:: shell
+    
+    pip install sphinx docutils sphinx_rtd_theme sphinxcontrib-jquery m2r2
+
+If you prefer using Anaconda utilities, getting these packages is 
+slightly different:
+
+.. code:: shell
+    
+    conda install sphinx docutils sphinx_rtd_theme
+    conda install -c conda-forge sphinxcontrib-jquery m2r2
+
+
+Once you have all the required packages, you can build the HTML docs by
+
+.. code:: shell
+
+  git clone git@github.com:ORNL/ReSolve.git
+  sphinx-build -M html ReSolve/docs/ ./build
+
+This will generate HTML documentation and place it in ``build``
+subdirectory in your current directory. 
+
+
+Using Dev Container for Writing Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In case you cannot install Sphynx and other dependencies on your machine,
+Re::Solve provides scripts for building development container with all
+tools required for Sphynx documentation generation. To create container
+for documentation development follow these straightforward steps:
+
+Prerequisites
+"""""""""""""
+
+#. install Docker Desktop and launch the app
+#. install the "Remote Development" extension in VSCode
+#. open your local clone of resolve in VSCode
+
+
+Build Container
+"""""""""""""""
+
+The build info for this container is in `.devcontainer/`. There is a Dockerfile and
+json file associated with the configuration.
+
+#. if connected, disconnect from the PNNL VPN
+#. launch the container build  
+
+    * `cmd shift p` to open the command pallette in vscode
+    * click `> Dev Container: rebuild and reopen container`
+    * this will start building the container, taking about 40 minutes
+    * click on the pop up with `(show log)` to view the progress
+
+#. Open new terminal within Visual Studio Code and run the renderDocs.sh (note this takes a minute)
+#. Open the link that was served to you after step 3
+
+.. note:: Pushing/pulling from git is not supported in a devcontainer,
+          and should be done separately.
+
+
+
 Devcontainer Configuration
 ----------------------------
 

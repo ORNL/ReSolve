@@ -2,30 +2,33 @@
 ReSolve
 *******
 
-ReSolve is a library of GPU-resident linear solver. It contains iterative and direct linear
-solvers designed to run on NVIDIA and AMD GPUs, as well as on CPU devices.
+ReSolve is an open-source library that provides GPU-resident linear solvers. 
+It contains iterative and direct solvers designed to run on NVIDIA and AMD
+GPUs, as well as on CPU devices.
 
-To learn how to get start with resolve please checkout our `User Guide <sphinx/html/guide.html>`_
+ReSolve source code and documentation are available at
+`GitHub <https://github.com/ORNL/ReSolve>`_.
 
 =============
 Documentation
 =============
 
-Source code documentation are also linked on this site.
+To get started, please check our `User Guide <sphinx/user_guide/index.html>`_
+Source code documentation generated in Doxygen is also
+`linked <doxygen/html/index.html>`_ to this site.
 
-* `ReSolve Github Project <https://github.com/ORNL/ReSolve>`_.
-* `Source documentation <doxygen/html/index.html>`_
 
 Contributing
 ------------
 
 For all contributions to ReSolve please follow the `developer
-guidelines <sphinx/coding_guide/index.html>`__
+guidelines <sphinx/coding_guidelines/index.html>`__
 
 Authors and acknowledgment
 --------------------------
 
 Primary authors of this project are:
+
 * Kasia Świrydowicz kasia.swirydowicz@pnnl.gov (PNNL)
 * Slaven Peles peless@ornl.gov (ORNL)
 
@@ -39,7 +42,13 @@ from (in alphabetic order):
 * Phil Roth (ORNL)
 * Cameron Rutherford (PNNL)
 
-Development of this code was supported by the Exascale Computing Project (ECP), Project Number: 17-SC-20-SC, a collaborative effort of two DOE organizations—the Office of Science and the National Nuclear Security Administration—responsible for the planning and preparation of a capable exascale ecosystem—including software, applications, hardware, advanced system engineering, and early testbed platforms—to support the nation’s exascale computing imperative.
+Development of this code was supported by the Exascale Computing Project (ECP),
+Project Number: 17-SC-20-SC, a collaborative effort of two DOE organizations
+— the Office of Science and the National Nuclear Security Administration —
+responsible for the planning and preparation of a capable exascale ecosystem
+— including software, applications, hardware, advanced system engineering, and
+early testbed platforms — to support the nation’s exascale computing
+imperative.
 
 License
 -------
@@ -48,9 +57,9 @@ Copyright © 2023, UT-Battelle, LLC, and Battelle Memorial Institute.
 
 ReSolve is a free software distributed under a BSD-style license. 
 
-See the `LICENSE <sphinx/license.rst>`__ and `NOTICE <sphinx/notice.rst>`__ files for details. All
-new contributions to ReSolve must be made under the same licensing
-terms.
+See the `LICENSE <sphinx/license.html>`__ and `NOTICE <sphinx/notice.html>`__
+files for details. All new contributions to ReSolve must be made under the
+same licensing terms.
 
 
 .. toctree::
@@ -58,8 +67,8 @@ terms.
    :hidden:
    :caption: User Resources
 
-   sphinx/guide
-   sphinx/licenses
+   sphinx/user_guide/index
+   sphinx/license
    sphinx/notice 
 
 
@@ -68,6 +77,6 @@ terms.
    :hidden:
    :caption: Developer Resources
 
-   sphinx/coding_guide/index
+   sphinx/coding_guidelines/index
    doxygen/index
    sphinx/developer_guide/index
