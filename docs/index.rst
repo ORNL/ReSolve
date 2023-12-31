@@ -80,3 +80,4 @@ same licensing terms.
    sphinx/coding_guidelines/index
    doxygen/index
    sphinx/developer_guide/index
+   sphinx/developer_guide/profiling

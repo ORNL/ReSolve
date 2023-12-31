@@ -18,11 +18,18 @@ We also export under the ``ReSolve::`` namespace in our installed CMake configur
 Spack Package
 ---------------
 
-Our current spack package is introduced in https://github.com/spack/spack/pull/40871, and contains support for building Re::Solve with CUDA and HIP/ROCm support.
+Our current Spack package has been introduced
+`upstream <https://github.com/spack/spack/pull/40871>`_, and contains support
+for building Re::Solve with CUDA and HIP/ROCm support.
 
-We also have a custom ``spack`` folder/installation that contains our spack submodule located in ``buildsystem/spack/spack``. This is used to build Re::Solve on CI platforms, as well as support development of the spack package as neccessary.
+We also have a custom ``spack`` folder/installation that contains our spack
+submodule located in ``buildsystem/spack/spack``. This is used to build
+Re::Solve on CI platforms, as well as support development of the spack package
+as neccessary.
 
-See the Quik-How-To section below for more information on how to update the spack package and typical workflows for building Re::Solve with spack on CI platforms for testing.
+See the Quik-How-To section below for more information on how to update the
+spack package and typical workflows for building Re::Solve with spack on CI
+platforms for testing.
 
 
 GitHub Actions 
