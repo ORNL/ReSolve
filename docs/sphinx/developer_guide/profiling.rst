@@ -97,12 +97,69 @@ look something like this:
   srun -N 1 -n 1 -c 56 hpcstruct ${OUT}.m
   srun -N 1 -n 1 -c 56 hpcprof -o ${OUT}.d ${OUT}.m
 
-Similar script could be written for LSF or MOAB scheduler.
+Any arguments that the executable takes can be simply added as when the
+executable is called locally. Similar script could be written for LSF or MOAB
+scheduler.
 
 ###########
 ROCProfiler
 ###########
 
 Unlike HPCToolkit, `ROCProfiler <https://rocm.docs.amd.com/projects/rocprofiler/en/latest/rocprof.html>`_
-requires code to be instrumented.
+requires code to be instrumented using `ROC Tracer <https://rocm.docs.amd.com/projects/roctracer/en/latest/>`_
+library. Both, ROCProfiler and ROC Tracer are part of the ROCm library, so
+no additional software needs to be installed once you obtain ROCm. 
+
+To build your instrumented code, you need to link your Re::Solve build to
+ROC Tracer library:
+
+.. code:: cmake
+
+  target_include_directories(ReSolve SYSTEM PUBLIC ${HIP_PATH}/roctracer/include ${HIP_PATH}/include )
+  target_link_libraries(ReSolve PUBLIC "-L${HIP_PATH}/roctracer/lib -lroctracer64" "-L${HIP_PATH}/roctracer/lib -lroctx64" )
+
+Next, you need to annotate events you want to trace in your code execution.
+This could be done in a straightforward manner using ROC Tracer push and pop
+commands:
+
+.. code:: c++
+
+  // some include files ...
+
+  #include <roctracer/roctx.h>
+
+  // some code ...
+
+  roctxRangePush("My Event");
+
+  // my event code ...
+
+  roctxRangePop();
+  roctxMarkA("My Event");
+
+The string label is an optional argument to the annotation code.
+
+.. note:: At this time, current Re::Solve code does not have any profiling
+          annotations. If you want to profile it, you need to add annotations
+          to Re::Solve sources relevant to your profiling and rebuild the code.
+
+Once your instrumented code is built, it can be profiled by calling the
+``rocprof`` tool like this:
+
+.. code:: shell
+
+  rocprof --stats --hip-trace --roctx-trace -o out.csv ./my_executable.exe
+
+In this example
+
+  * Flag ``-o`` specifies the output file in comma separated values format,
+    in this case ``out.csv``.
+  * File ``my_executable.exe`` is the binary being profiled.
+  * Flag ``--stats`` enables kernel execution stats.
+  * Flag ``--hip-trace`` includes HIP API timelines in profiling data.
+  * Flag ``--roctx-trace`` enables rocTX application code annotation trace.
+
+The profiler will create JSON output file ``out.json`` (note the extension is
+different than in the file specified in the call). To visualize output, one
+can upload the JSON file to `Perfetto <https://ui.perfetto.dev/>`_.
 
