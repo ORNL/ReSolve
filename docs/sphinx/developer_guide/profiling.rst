@@ -159,7 +159,32 @@ In this example
   * Flag ``--hip-trace`` includes HIP API timelines in profiling data.
   * Flag ``--roctx-trace`` enables rocTX application code annotation trace.
 
-The profiler will create JSON output file ``out.json`` (note the extension is
-different than in the file specified in the call). To visualize output, one
-can upload the JSON file to `Perfetto <https://ui.perfetto.dev/>`_.
+The profiler will create several files with name ``out`` but with different
+extensions. To visualize output, one can upload the ``out.json`` file to
+`Perfetto <https://ui.perfetto.dev/>`_.
+
+When running ROCProfiler on a machine with a scheduler, it is a good idea
+to write a profiling script. Here is an example for a SLURM scheduler:
+
+.. code:: shell
+
+  #!/bin/bash                                                                                                                                
+
+  #SBATCH -A CSC359                                                                                                                          
+  #SBATCH -J resolve_test                                                                                                                    
+  #SBATCH -o %x-%j.out                                                                                                                       
+  #SBATCH -t 00:30:00                                                                                                                        
+  #SBATCH -N 1                                                                                                                               
+  
+  EXE=build/examples/klu_rocsolverrf_fgmres.exe
+  OUT=rocprof-resolve25k
+  ARGS=""
+  
+  echo "`date` Starting run"
+  srun -N 1 -n 1 -c 1 -G 1 \
+    rocprof --stats --hip-trace --roctx-trace -o ${OUT}.csv \
+    ${EXE} ${ARGS}
+  echo "`date` Finished run"
+
+
 
