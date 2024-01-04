@@ -199,7 +199,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
   (master_doc, 'ReSolve', u'ReSolve Documentation',
-   'ReSolve Team', 'ReSolve', 'ReSolve is a library of GPU-resident linear solver.',
+   'ReSolve Team', 'ReSolve', 'ReSolve is a library of GPU-resident linear solvers.',
    'Miscellaneous'),
 ]
 
