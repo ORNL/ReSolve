@@ -1,8 +1,10 @@
 # ReSolve
 
-ReSolve is a library of GPU-resident linear solver. It contains iterative and direct linear solvers designed to run on NVIDIA and AMD GPUs, as well as on CPU devices.
+ReSolve is a library of GPU-resident linear solvers. It contains iterative and direct solvers designed to run on NVIDIA and AMD GPUs, as well as on CPU devices.
 
-ReadTheDocs Documentation lives here https://resolve.readthedocs.io/en/develop/
+The User Guide and developer's documentation is available [online](https://resolve.readthedocs.io/),
+including Doxygen-generated [source code documentation](https://resolve.readthedocs.io/en/develop/doxygen/html/index.html).
+
 
 ## Getting started
 

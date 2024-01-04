@@ -13,7 +13,7 @@ It has following build dependencies:
 * HIP/ROCm >= 5.6 (optional)
 
 
-To acquire and build Re::Soleve it is as easy as:
+To acquire and build Re::Solve it is as easy as:
 
 .. code:: shell
 

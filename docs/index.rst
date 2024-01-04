@@ -9,11 +9,11 @@ GPUs, as well as on CPU devices.
 ReSolve source code and documentation are available at
 `GitHub <https://github.com/ORNL/ReSolve>`_.
 
-=============
-Documentation
-=============
 
-To get started, please check our `User Guide <sphinx/user_guide/index.html>`_
+Documentation
+-------------
+
+To get started, please check our `User Guide <sphinx/user_guide/index.html>`_.
 Source code documentation generated in Doxygen is also
 `linked <doxygen/html/index.html>`_ to this site.
 
@@ -21,8 +21,9 @@ Source code documentation generated in Doxygen is also
 Contributing
 ------------
 
-For all contributions to ReSolve please follow the `developer
-guidelines <sphinx/coding_guidelines/index.html>`__
+For all contributions to ReSolve please consult 
+`Developer Guide <sphinx/developer_guide/index.html>`_ and follow the 
+`Coding Style Guidelines <sphinx/coding_guidelines/index.html>`_.
 
 Authors and acknowledgment
 --------------------------
@@ -53,13 +54,16 @@ imperative.
 License
 -------
 
-Copyright © 2023, UT-Battelle, LLC, and Battelle Memorial Institute.
-
-ReSolve is a free software distributed under a BSD-style license. 
-
-See the `LICENSE <sphinx/license.html>`__ and `NOTICE <sphinx/notice.html>`__
-files for details. All new contributions to ReSolve must be made under the
+ReSolve is a free software distributed under a BSD-style license. See
+the `LICENSE <sphinx/license.html>`__ and `NOTICE <sphinx/notice.html>`__
+for more details. All new contributions to ReSolve must be made under the
 same licensing terms.
+
+**Please Note:** If you are using ReSolve with any third party libraries linked
+in (e.g., KLU), be sure to review the respective license of the package as that
+license may have more restrictive terms than the ReSolve license.
+
+Copyright © 2023, UT-Battelle, LLC, and Battelle Memorial Institute.
 
 
 .. toctree::
