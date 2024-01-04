@@ -9,7 +9,8 @@
  * and direct linear solvers designed to run on NVIDIA and AMD GPUs, as well as
  * on CPU devices. This is the main page of source code documentation intended
  * for developers who want to contribute to ReSolve code. General documentation
- * is available at <a href=https://resolve.readthedocs.io>readthedocs</a>.
+ * is available at <a href=https://resolve.readthedocs.io/en/version-1.0/>readthedocs</a>. The
+ * ReSolve project is hosted on <a href=https://github.com/ORNL/ReSolve>GitHub</a>.
  * 
  * 
  * @section name_sec Name
