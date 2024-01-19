@@ -13,7 +13,7 @@
 #include <resolve/LinSolverDirectRocSolverRf.hpp>
 #include <resolve/LinSolverIterativeFGMRES.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
-#include <roctracer/roctx.h>
+#include <resolve/Profiling.hpp>
 
 using namespace ReSolve::constants;
 
@@ -58,10 +58,10 @@ int main(int argc, char *argv[])
   ReSolve::LinSolverDirectRocSolverRf* Rf = new ReSolve::LinSolverDirectRocSolverRf(workspace_HIP);
   ReSolve::LinSolverIterativeFGMRES* FGMRES = new ReSolve::LinSolverIterativeFGMRES(matrix_handler, vector_handler, GS);
 
-  roctxRangePush(__FUNCTION__);
+  RESOLVE_RANGE_PUSH(__FUNCTION__);
   for (int i = 0; i < numSystems; ++i)
   {
-    roctxRangePush("Matrix Read");
+    RESOLVE_RANGE_PUSH("Matrix Read");
     index_type j = 4 + i * 2;
     fileId = argv[j];
     rhsId = argv[j + 1];
@@ -109,14 +109,16 @@ int main(int argc, char *argv[])
       ReSolve::io::readAndUpdateMatrix(mat_file, A_coo);
       ReSolve::io::readAndUpdateRhs(rhs_file, &rhs);
     }
-    std::cout<<"Finished reading the matrix and rhs, size: "<<A->getNumRows()<<" x "<<A->getNumColumns()<< ", nnz: "<< A->getNnz()<< ", symmetric? "<<A->symmetric()<< ", Expanded? "<<A->expanded()<<std::endl;
+    std::cout << "Finished reading the matrix and rhs, size: " << A->getNumRows() << " x "<< A->getNumColumns() 
+              << ", nnz: "       << A->getNnz() 
+              << ", symmetric? " << A->symmetric()
+              << ", Expanded? "  << A->expanded() << std::endl;
     mat_file.close();
     rhs_file.close();
-	  roctxRangePop();
-	  roctxMarkA("Matrix Read");
+	  RESOLVE_RANGE_POP("Matrix Read");
 
     //Now convert to CSR.
-    roctxRangePush("Convert to CSR");
+    RESOLVE_RANGE_PUSH("Convert to CSR");
     if (i < 2) { 
       A->updateFromCoo(A_coo, ReSolve::memory::HOST);
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
@@ -125,13 +127,12 @@ int main(int argc, char *argv[])
       A->updateFromCoo(A_coo, ReSolve::memory::DEVICE);
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
     }
-	  roctxRangePop();
-	  roctxMarkA("Convert to CSR");
+	  RESOLVE_RANGE_POP("Convert to CSR");
     std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnzExpanded()<<std::endl;
     int status;
     real_type norm_b;
     if (i < 2) {
-		  roctxRangePush("KLU");
+		  RESOLVE_RANGE_PUSH("KLU");
       KLU->setup(A);
       matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
       status = KLU->analyze();
@@ -164,10 +165,9 @@ int main(int argc, char *argv[])
         GS->setup(A->getNumRows(), FGMRES->getRestart()); 
         FGMRES->setup(A); 
       }
-		  roctxRangePop();
-		  roctxMarkA("KLU");
+		  RESOLVE_RANGE_POP("KLU");
     } else {
-		  roctxRangePush("RocSolver");
+		  RESOLVE_RANGE_PUSH("RocSolver");
       //status =  KLU->refactorize();
       std::cout<<"Using ROCSOLVER RF"<<std::endl;
       status = Rf->refactorize();
@@ -208,13 +208,11 @@ int main(int argc, char *argv[])
                   << FGMRES->getFinalResidualNorm()/norm_b
                   << " iter: " << FGMRES->getNumIter() << "\n";
       }
-  	  roctxRangePop();
-	    roctxMarkA("RocSolver");
+	    RESOLVE_RANGE_POP("RocSolver");
     }
 
   } // for (int i = 0; i < numSystems; ++i)
-  roctxRangePop();
-  roctxMarkA(__FUNCTION__);
+  RESOLVE_RANGE_POP(__FUNCTION__);
 
   delete A;
   delete A_coo;

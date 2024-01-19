@@ -25,6 +25,7 @@ option(RESOLVE_TEST_WITH_BSUB "Use `jsrun` instead of `mpirun` commands when run
 option(RESOLVE_USE_KLU  "Use KLU, AMD and COLAMD libraries from SuiteSparse" ON)
 option(RESOLVE_USE_CUDA "Use CUDA language and SDK" OFF)
 option(RESOLVE_USE_HIP  "Use HIP language and ROCm library" OFF)
+option(RESOLVE_USE_PROFILING "Set profiling tracers in the code" OFF)
 
 option(RESOLVE_USE_GPU  "Use GPU device for computations" OFF)
 mark_as_advanced(FORCE RESOLVE_USE_GPU)
