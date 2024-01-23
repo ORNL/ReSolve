@@ -2,6 +2,7 @@
 #include <resolve/matrix/Csr.hpp>
 #include "LinSolverDirectRocSolverRf.hpp"
 #include <resolve/hip/hipKernels.h>
+#include <resolve/Profiling.hpp>
 
 namespace ReSolve 
 {
@@ -31,6 +32,7 @@ namespace ReSolve
                                         index_type* Q,
                                         vector_type* rhs)
   {
+    RESOLVE_RANGE_PUSH(__FUNCTION__);
     //remember - P and Q are generally CPU variables
     int error_sum = 0;
     this->A_ = (matrix::Csr*) A;
@@ -127,7 +129,7 @@ namespace ReSolve
                                                        n, 
                                                        L_csr_->getNnz(), 
                                                        descr_L_,
-                                                       L_csr_->getValues(ReSolve::memory::DEVICE), //vals_, 
+                                                       L_csr_->getValues(ReSolve::memory::DEVICE),
                                                        L_csr_->getRowData(ReSolve::memory::DEVICE), 
                                                        L_csr_->getColData(ReSolve::memory::DEVICE), 
                                                        info_L_, 
@@ -140,7 +142,7 @@ namespace ReSolve
                                                        n, 
                                                        U_csr_->getNnz(), 
                                                        descr_U_,
-                                                       U_csr_->getValues(ReSolve::memory::DEVICE), //vals_, 
+                                                       U_csr_->getValues(ReSolve::memory::DEVICE),
                                                        U_csr_->getRowData(ReSolve::memory::DEVICE), 
                                                        U_csr_->getColData(ReSolve::memory::DEVICE), 
                                                        info_U_,
@@ -153,7 +155,7 @@ namespace ReSolve
                                                     n, 
                                                     L_csr_->getNnz(), 
                                                     descr_L_,
-                                                    L_csr_->getValues(ReSolve::memory::DEVICE), //vals_, 
+                                                    L_csr_->getValues(ReSolve::memory::DEVICE),
                                                     L_csr_->getRowData(ReSolve::memory::DEVICE), 
                                                     L_csr_->getColData(ReSolve::memory::DEVICE), 
                                                     info_L_,   
@@ -185,11 +187,13 @@ namespace ReSolve
       }
 
     }
+    RESOLVE_RANGE_POP(__FUNCTION__);
     return error_sum;
   }
 
   int LinSolverDirectRocSolverRf::refactorize()
   {
+    RESOLVE_RANGE_PUSH(__FUNCTION__);
     int error_sum = 0;
     mem_.deviceSynchronize();
     status_rocblas_ =  rocsolver_dcsrrf_refactlu(workspace_->getRocblasHandle(),
@@ -228,13 +232,14 @@ namespace ReSolve
       error_sum += status_rocblas_;
 
     }
-
+    RESOLVE_RANGE_POP(__FUNCTION__);
     return error_sum; 
   }
 
   // solution is returned in RHS
   int LinSolverDirectRocSolverRf::solve(vector_type* rhs)
   {
+    RESOLVE_RANGE_PUSH(__FUNCTION__);
     int error_sum = 0;
     if (solve_mode_ == 0) {
       mem_.deviceSynchronize();
@@ -290,11 +295,13 @@ namespace ReSolve
       permuteVectorQ(A_->getNumRows(), d_Q_,d_aux1_,rhs->getData(ReSolve::memory::DEVICE));
       mem_.deviceSynchronize();
     }
+    RESOLVE_RANGE_POP(__FUNCTION__);
     return error_sum;
   }
 
   int LinSolverDirectRocSolverRf::solve(vector_type* rhs, vector_type* x)
   {
+    RESOLVE_RANGE_PUSH(__FUNCTION__);
     x->update(rhs->getData(ReSolve::memory::DEVICE), ReSolve::memory::DEVICE, ReSolve::memory::DEVICE);
     x->setDataUpdated(ReSolve::memory::DEVICE);
     int error_sum = 0;
@@ -355,6 +362,7 @@ namespace ReSolve
       permuteVectorQ(A_->getNumRows(), d_Q_,d_aux1_,x->getData(ReSolve::memory::DEVICE));
       mem_.deviceSynchronize();
     }
+    RESOLVE_RANGE_POP(__FUNCTION__);
     return error_sum;
   }
 
@@ -427,6 +435,5 @@ namespace ReSolve
         Mshifts[static_cast<size_t>(row)]++;
       }
     }
-    //Mshifts.~vector(); 
-  }
-}// namespace resolve
+  } // LinSolverDirectRocSolverRf::addFactors
+} // namespace resolve

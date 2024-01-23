@@ -13,6 +13,7 @@
 #include <resolve/LinSolverDirectRocSolverRf.hpp>
 #include <resolve/LinSolverIterativeFGMRES.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
+#include <resolve/Profiling.hpp>
 
 using namespace ReSolve::constants;
 
@@ -28,8 +29,8 @@ int main(int argc, char *argv[])
   std::string  rhsFileName = argv[2];
 
   index_type numSystems = atoi(argv[3]);
-  std::cout<<"Family mtx file name: "<< matrixFileName << ", total number of matrices: "<<numSystems<<std::endl;
-  std::cout<<"Family rhs file name: "<< rhsFileName << ", total number of RHSes: " << numSystems<<std::endl;
+  std::cout << "Family mtx file name: " << matrixFileName << ", total number of matrices: " << numSystems << std::endl;
+  std::cout << "Family rhs file name: " << rhsFileName    << ", total number of RHSes: "    << numSystems << std::endl;
 
   std::string fileId;
   std::string rhsId;
@@ -48,15 +49,19 @@ int main(int argc, char *argv[])
   vector_type* vec_rhs;
   vector_type* vec_x;
   vector_type* vec_r;
-  real_type norm_A, norm_x, norm_r;//used for INF norm
+  real_type norm_A;
+  real_type norm_x;
+  real_type norm_r;
 
   ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::cgs2);
   ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
   ReSolve::LinSolverDirectRocSolverRf* Rf = new ReSolve::LinSolverDirectRocSolverRf(workspace_HIP);
   ReSolve::LinSolverIterativeFGMRES* FGMRES = new ReSolve::LinSolverIterativeFGMRES(matrix_handler, vector_handler, GS);
 
+  RESOLVE_RANGE_PUSH(__FUNCTION__);
   for (int i = 0; i < numSystems; ++i)
   {
+    RESOLVE_RANGE_PUSH("Matrix Read");
     index_type j = 4 + i * 2;
     fileId = argv[j];
     rhsId = argv[j + 1];
@@ -104,11 +109,16 @@ int main(int argc, char *argv[])
       ReSolve::io::readAndUpdateMatrix(mat_file, A_coo);
       ReSolve::io::readAndUpdateRhs(rhs_file, &rhs);
     }
-    std::cout<<"Finished reading the matrix and rhs, size: "<<A->getNumRows()<<" x "<<A->getNumColumns()<< ", nnz: "<< A->getNnz()<< ", symmetric? "<<A->symmetric()<< ", Expanded? "<<A->expanded()<<std::endl;
+    std::cout << "Finished reading the matrix and rhs, size: " << A->getNumRows() << " x "<< A->getNumColumns() 
+              << ", nnz: "       << A->getNnz() 
+              << ", symmetric? " << A->symmetric()
+              << ", Expanded? "  << A->expanded() << std::endl;
     mat_file.close();
     rhs_file.close();
+    RESOLVE_RANGE_POP("Matrix Read");
 
     //Now convert to CSR.
+    RESOLVE_RANGE_PUSH("Convert to CSR");
     if (i < 2) { 
       A->updateFromCoo(A_coo, ReSolve::memory::HOST);
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
@@ -117,10 +127,12 @@ int main(int argc, char *argv[])
       A->updateFromCoo(A_coo, ReSolve::memory::DEVICE);
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
     }
+    RESOLVE_RANGE_POP("Convert to CSR");
     std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnzExpanded()<<std::endl;
     int status;
     real_type norm_b;
-    if (i < 2){
+    if (i < 2) {
+      RESOLVE_RANGE_PUSH("KLU");
       KLU->setup(A);
       matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
       status = KLU->analyze();
@@ -153,7 +165,9 @@ int main(int argc, char *argv[])
         GS->setup(A->getNumRows(), FGMRES->getRestart()); 
         FGMRES->setup(A); 
       }
+      RESOLVE_RANGE_POP("KLU");
     } else {
+      RESOLVE_RANGE_PUSH("RocSolver");
       //status =  KLU->refactorize();
       std::cout<<"Using ROCSOLVER RF"<<std::endl;
       status = Rf->refactorize();
@@ -177,10 +191,11 @@ int main(int argc, char *argv[])
       matrix_handler->matrixInfNorm(A, &norm_A, ReSolve::memory::DEVICE); 
       norm_x = vector_handler->infNorm(vec_x, ReSolve::memory::DEVICE);
       norm_r = vector_handler->infNorm(vec_r, ReSolve::memory::DEVICE);
-      std::cout << "\t Matrix inf  norm: " << std::scientific << std::setprecision(16) << norm_A<<"\n"
-        << "\t Residual inf norm: " << norm_r <<"\n"  
-        << "\t Solution inf norm: " << norm_x <<"\n"  
-        << "\t Norm of scaled residuals: "<< norm_r / (norm_A * norm_x) << "\n";
+      std::cout << std::scientific << std::setprecision(16)
+                << "\t Matrix inf  norm: "         << norm_A << "\n"
+                << "\t Residual inf norm: "        << norm_r << "\n"  
+                << "\t Solution inf norm: "        << norm_x << "\n"  
+                << "\t Norm of scaled residuals: " << norm_r / (norm_A * norm_x) << "\n";
 
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
       if(!std::isnan(rnrm) && !std::isinf(rnrm)) {
@@ -193,9 +208,11 @@ int main(int argc, char *argv[])
                   << FGMRES->getFinalResidualNorm()/norm_b
                   << " iter: " << FGMRES->getNumIter() << "\n";
       }
+      RESOLVE_RANGE_POP("RocSolver");
     }
 
   } // for (int i = 0; i < numSystems; ++i)
+  RESOLVE_RANGE_POP(__FUNCTION__);
 
   delete A;
   delete A_coo;

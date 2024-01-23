@@ -110,13 +110,10 @@ requires code to be instrumented using `ROC Tracer <https://rocm.docs.amd.com/pr
 library. Both, ROCProfiler and ROC Tracer are part of the ROCm library, so
 no additional software needs to be installed once you obtain ROCm. 
 
-To build your instrumented code, you need to link your Re::Solve build to
-ROC Tracer library:
-
-.. code:: cmake
-
-  target_include_directories(ReSolve SYSTEM PUBLIC ${HIP_PATH}/roctracer/include ${HIP_PATH}/include )
-  target_link_libraries(ReSolve PUBLIC "-L${HIP_PATH}/roctracer/lib -lroctracer64" "-L${HIP_PATH}/roctracer/lib -lroctx64" )
+First, you need to make sure your Re::Solve library was built with ROC Tracer
+support, i.e. the build was configured with CMake boolean flag
+``RESOLVE_USE_PROFILING`` set to ``On``. Note that ROC Tracer annotation will
+be enabled only if Re::Solve is built with HIP support.
 
 Next, you need to annotate events you want to trace in your code execution.
 This could be done in a straightforward manner using ROC Tracer push and pop
