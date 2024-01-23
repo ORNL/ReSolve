@@ -146,8 +146,12 @@ if(RESOLVE_USE_PROFILING)
     target_link_libraries(ReSolve PUBLIC "-lroctracer64 -lroctx64")
   elseif(RESOLVE_USE_CUDA)
     # Nothing to do for CUDA profiling for now.
+    message(NOTICE "Profiling support enabled, but Re::Solve does not create tracer annotations for CUDA.")
+    message(NOTICE "This profiling support option will have no effect.")
   else()
     # Noting to do for profiling on the host for now.
+    message(NOTICE "Profiling support enabled, but Re::Solve does not create tracer annotations for host code.")
+    message(NOTICE "This profiling support option will have no effect.")
   endif()
 endif(RESOLVE_USE_PROFILING)
 
