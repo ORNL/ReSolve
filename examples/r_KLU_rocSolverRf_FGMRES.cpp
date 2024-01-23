@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
               << ", Expanded? "  << A->expanded() << std::endl;
     mat_file.close();
     rhs_file.close();
-	  RESOLVE_RANGE_POP("Matrix Read");
+    RESOLVE_RANGE_POP("Matrix Read");
 
     //Now convert to CSR.
     RESOLVE_RANGE_PUSH("Convert to CSR");
@@ -127,12 +127,12 @@ int main(int argc, char *argv[])
       A->updateFromCoo(A_coo, ReSolve::memory::DEVICE);
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
     }
-	  RESOLVE_RANGE_POP("Convert to CSR");
+    RESOLVE_RANGE_POP("Convert to CSR");
     std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnzExpanded()<<std::endl;
     int status;
     real_type norm_b;
     if (i < 2) {
-		  RESOLVE_RANGE_PUSH("KLU");
+      RESOLVE_RANGE_PUSH("KLU");
       KLU->setup(A);
       matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
       status = KLU->analyze();
@@ -165,9 +165,9 @@ int main(int argc, char *argv[])
         GS->setup(A->getNumRows(), FGMRES->getRestart()); 
         FGMRES->setup(A); 
       }
-		  RESOLVE_RANGE_POP("KLU");
+      RESOLVE_RANGE_POP("KLU");
     } else {
-		  RESOLVE_RANGE_PUSH("RocSolver");
+      RESOLVE_RANGE_PUSH("RocSolver");
       //status =  KLU->refactorize();
       std::cout<<"Using ROCSOLVER RF"<<std::endl;
       status = Rf->refactorize();
@@ -208,7 +208,7 @@ int main(int argc, char *argv[])
                   << FGMRES->getFinalResidualNorm()/norm_b
                   << " iter: " << FGMRES->getNumIter() << "\n";
       }
-	    RESOLVE_RANGE_POP("RocSolver");
+      RESOLVE_RANGE_POP("RocSolver");
     }
 
   } // for (int i = 0; i < numSystems; ++i)
