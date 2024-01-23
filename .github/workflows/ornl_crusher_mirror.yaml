@@ -2,11 +2,11 @@ name: ORNL Crusher Mirror
 
 # triggers a github action everytime there is a push or mr
 on:
-  pull_request:
+  #pull_request:
   push:
     branches:
-      - develop
-      - main
+      - never #develop
+      - ever  #main
 
 jobs:
   # To test on HPC resources we must first mirror the repo and then trigger a pipeline
