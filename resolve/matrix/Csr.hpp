@@ -32,7 +32,7 @@ namespace ReSolve { namespace matrix {
 
       virtual int allocateMatrixData(memory::MemorySpace memspace); 
 
-      virtual void print() {return;}
+      virtual void print(std::ostream& file_out = std::cout);
 
       virtual int copyData(memory::MemorySpace memspaceOut);
 

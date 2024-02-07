@@ -72,7 +72,11 @@ namespace ReSolve
     }
   }
 
-  index_type matrix::Coo::updateData(index_type* row_data, index_type* col_data, real_type* val_data, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut)
+  index_type matrix::Coo::updateData(index_type* row_data,
+                                     index_type* col_data,
+                                     real_type* val_data,
+                                     memory::MemorySpace memspaceIn,
+                                     memory::MemorySpace memspaceOut)
   {
 
     //four cases (for now)
@@ -240,14 +244,18 @@ namespace ReSolve
     } // switch
   }
 
-  void matrix::Coo::print()
+  /**
+   * @brief Prints matrix data.
+   * 
+   * @param out - Output stream where the matrix data is printed
+   */
+  void matrix::Coo::print(std::ostream& out)
   {
-    std::cout << std::setprecision(16) << std::scientific
-              << "  Row:        Column:           Value:\n";
+    out << std::scientific << std::setprecision(std::numeric_limits<real_type>::digits10);
     for(int i = 0; i < nnz_; ++i) {
-      std::cout << std::setw(12) << h_row_data_[i] << " "
-                << std::setw(12) << h_col_data_[i] << " "
-                << std::setw(20) << h_val_data_[i] << "\n";
+      out << h_row_data_[i] << " "
+          << h_col_data_[i] << " "
+          << h_val_data_[i] << "\n";
     }
   }
 

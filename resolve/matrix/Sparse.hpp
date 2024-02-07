@@ -52,7 +52,7 @@ namespace ReSolve { namespace matrix {
 
       int destroyMatrixData(memory::MemorySpace memspace);
 
-      virtual void print() = 0;
+      virtual void print(std::ostream& file_out) = 0;
 
       virtual int copyData(memory::MemorySpace memspaceOut) = 0;
 

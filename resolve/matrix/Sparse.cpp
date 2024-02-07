@@ -1,13 +1,16 @@
 #include <cstring>  // <-- includes memcpy
 
+#include <resolve/utilities/logger/Logger.hpp>
 #include "Sparse.hpp"
 
-namespace ReSolve { namespace matrix {
+namespace ReSolve {
+
+  using out = io::Logger;
 
   /** 
    * @brief empty constructor that does absolutely nothing        
    */
-  Sparse::Sparse()
+  matrix::Sparse::Sparse()
   {
   }
 
@@ -18,9 +21,9 @@ namespace ReSolve { namespace matrix {
    * @param[in] m   - number of columns
    * @param[in] nnz - number of non-zeros        
    */
-  Sparse::Sparse(index_type n, 
-                 index_type m, 
-                 index_type nnz):
+  matrix::Sparse::Sparse(index_type n, 
+                         index_type m, 
+                         index_type nnz):
     n_{n},
     m_{m},
     nnz_{nnz}
@@ -56,11 +59,11 @@ namespace ReSolve { namespace matrix {
    * @param[in] symmetric - true if symmetric, false if non-symmetric       
    * @param[in] expanded  - true if expanded, false if not       
    */
-  Sparse::Sparse(index_type n, 
-                 index_type m, 
-                 index_type nnz,
-                 bool symmetric,
-                 bool expanded):
+  matrix::Sparse::Sparse(index_type n, 
+                         index_type m, 
+                         index_type nnz,
+                         bool symmetric,
+                         bool expanded):
     n_{n},
     m_{m},
     nnz_{nnz},
@@ -93,7 +96,7 @@ namespace ReSolve { namespace matrix {
   /**
    * @brief destructor
    * */
-  Sparse::~Sparse()
+  matrix::Sparse::~Sparse()
   {
     this->destroyMatrixData(memory::HOST);
     this->destroyMatrixData(memory::DEVICE);
@@ -102,7 +105,7 @@ namespace ReSolve { namespace matrix {
   /** 
    * @brief set the matrix update flags to false (for both HOST and DEVICE).
    */
-  void Sparse::setNotUpdated()
+  void matrix::Sparse::setNotUpdated()
   {
     h_data_updated_ = false;
     d_data_updated_ = false; 
@@ -113,7 +116,7 @@ namespace ReSolve { namespace matrix {
    *
    * @return number of matrix rows.
    */
-  index_type Sparse::getNumRows()
+  index_type matrix::Sparse::getNumRows()
   {
     return this->n_;
   }
@@ -123,7 +126,7 @@ namespace ReSolve { namespace matrix {
    *
    * @return number of matrix columns.
    */
-  index_type Sparse::getNumColumns()
+  index_type matrix::Sparse::getNumColumns()
   {
     return this->m_;
   }
@@ -133,7 +136,7 @@ namespace ReSolve { namespace matrix {
    *
    * @return number of non-zeros.
    */
-  index_type Sparse::getNnz()
+  index_type matrix::Sparse::getNnz()
   {
     return this->nnz_;
   }
@@ -143,7 +146,7 @@ namespace ReSolve { namespace matrix {
    *
    * @return number of non-zeros in expanded matrix.
    */
-  index_type Sparse::getNnzExpanded()
+  index_type matrix::Sparse::getNnzExpanded()
   {
     return this->nnz_expanded_;
   }
@@ -153,7 +156,7 @@ namespace ReSolve { namespace matrix {
    *
    * @return true if symmetric, false otherwise.
    */
-  bool Sparse::symmetric()
+  bool matrix::Sparse::symmetric()
   {
     return is_symmetric_;
   }
@@ -163,7 +166,7 @@ namespace ReSolve { namespace matrix {
    *
    * @return true if expanded, false otherwise.
    */
-  bool Sparse::expanded()
+  bool matrix::Sparse::expanded()
   {
     return is_expanded_;
   }
@@ -173,7 +176,7 @@ namespace ReSolve { namespace matrix {
    *
    * @param[in] symmetric - true to set matrix to symmetric and false to set to non-symmetric 
    */  
-  void Sparse::setSymmetric(bool symmetric)
+  void matrix::Sparse::setSymmetric(bool symmetric)
   {
     this->is_symmetric_ = symmetric;
   }
@@ -183,7 +186,7 @@ namespace ReSolve { namespace matrix {
    *
    * @param[in] expanded - true to set matrix to expanded and false to set to not expanded
    */  
-  void Sparse::setExpanded(bool expanded)
+  void matrix::Sparse::setExpanded(bool expanded)
   {
     this->is_expanded_ = expanded;
   }
@@ -193,7 +196,7 @@ namespace ReSolve { namespace matrix {
    *
    * @param[in] nnz_expanded_new - new number of non-zeros in expanded matrix
    */  
-  void Sparse::setNnzExpanded(index_type nnz_expanded_new)
+  void matrix::Sparse::setNnzExpanded(index_type nnz_expanded_new)
   {
     this->nnz_expanded_ = nnz_expanded_new;
   }
@@ -203,7 +206,7 @@ namespace ReSolve { namespace matrix {
    *
    * @param[in] nnz_new - new number of non-zeros
    */  
-  void Sparse::setNnz(index_type nnz_new)
+  void matrix::Sparse::setNnz(index_type nnz_new)
   {
     this->nnz_ = nnz_new;
   }
@@ -217,7 +220,7 @@ namespace ReSolve { namespace matrix {
    * 
    * @note The method automatically sets the other mirror data to non-updated (but it does not copy).
    */  
-  int Sparse::setUpdated(memory::MemorySpace memspace)
+  int matrix::Sparse::setUpdated(memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
     switch (memspace) {
@@ -236,18 +239,18 @@ namespace ReSolve { namespace matrix {
   /**
    * @brief Set the pointers for matrix row, column, value data.
    * 
-   * Useful if interfacing with other codes - this function only assigns pointers,
-   * but it does not allocate nor copy anything. Note that the data ownership
-   * flags would be left at default (false).
+   * Useful if interfacing with other codes - this function only assigns
+   * pointers, but it does not allocate nor copy anything. The data ownership
+   * flags would be set to false (default).
    *
    * @param[in] row_data - pointer to row data (array of integers)
    * @param[in] col_data - pointer to column data (array of integers)
    * @param[in] val_data - pointer to value data (array of real numbers)
    * @param[in] memspace - memory space (HOST or DEVICE) of incoming data
    *
-   * @return 0 if successful, -1 if not.
+   * @return 0 if successful, 1 if not.
    */  
-  int Sparse::setMatrixData(index_type* row_data, index_type* col_data, real_type* val_data, memory::MemorySpace memspace)
+  int matrix::Sparse::setMatrixData(index_type* row_data, index_type* col_data, real_type* val_data, memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
 
@@ -255,16 +258,40 @@ namespace ReSolve { namespace matrix {
 
     switch (memspace) {
       case HOST:
-        this->h_row_data_ = row_data;
-        this->h_col_data_ = col_data;
-        this->h_val_data_ = val_data;	
+        if (owns_cpu_data_ && (h_row_data_ || h_col_data_)) {
+          out::error() << "Trying to set matrix host data, but the data already set!\n";
+          out::error() << "Ignoring setMatrixData function call ...\n";
+          return 1;
+        }
+        if (owns_cpu_vals_ && h_val_data_) {
+          out::error() << "Trying to set matrix host values, but the values already set!\n";
+          out::error() << "Ignoring setNewValues function call ...\n";
+          return 1;
+        }
+        h_row_data_ = row_data;
+        h_col_data_ = col_data;
+        h_val_data_ = val_data;	
         h_data_updated_ = true;
+        owns_cpu_data_  = false;
+        owns_cpu_vals_  = false;
         break;
       case DEVICE:
-        this->d_row_data_ = row_data;
-        this->d_col_data_ = col_data;
-        this->d_val_data_ = val_data;	
+        if (owns_gpu_data_ && (d_row_data_ || d_col_data_)) {
+          out::error() << "Trying to set matrix host data, but the data already set!\n";
+          out::error() << "Ignoring setMatrixData function call ...\n";
+          return 1;
+        }
+        if (owns_gpu_vals_ && d_val_data_) {
+          out::error() << "Trying to set matrix device values, but the values already set!\n";
+          out::error() << "Ignoring setNewValues function call ...\n";
+          return 1;
+        }
+        d_row_data_ = row_data;
+        d_col_data_ = col_data;
+        d_val_data_ = val_data;	
         d_data_updated_ = true;
+        owns_gpu_data_  = false;
+        owns_gpu_vals_  = false;
         break;
     }
     return 0;
@@ -279,7 +306,7 @@ namespace ReSolve { namespace matrix {
    * @return 0 if successful, -1 if not.
    *
    */ 
-  int Sparse::destroyMatrixData(memory::MemorySpace memspace)
+  int matrix::Sparse::destroyMatrixData(memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
     switch (memspace) {
@@ -287,18 +314,24 @@ namespace ReSolve { namespace matrix {
         if (owns_cpu_data_) {
           delete [] h_row_data_;
           delete [] h_col_data_;
+          h_row_data_ = nullptr;
+          h_col_data_ = nullptr;
         }
         if (owns_cpu_vals_) {
           delete [] h_val_data_;
+          h_val_data_ = nullptr;
         }
         return 0;
       case DEVICE:
         if (owns_gpu_data_) {
           mem_.deleteOnDevice(d_row_data_);
           mem_.deleteOnDevice(d_col_data_);
+          d_row_data_ = nullptr;
+          d_col_data_ = nullptr;
         }
         if (owns_gpu_vals_) {
           mem_.deleteOnDevice(d_val_data_);
+          d_val_data_ = nullptr;
         }
         return 0;
       default:
@@ -318,7 +351,7 @@ namespace ReSolve { namespace matrix {
    *
    * @return 0 if successful, -1 if not.
    */  
-  int Sparse::updateValues(real_type* new_vals, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut)
+  int matrix::Sparse::updateValues(real_type* new_vals, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut)
   {
  
     index_type nnz_current = nnz_;
@@ -380,19 +413,31 @@ namespace ReSolve { namespace matrix {
    *
    * @return 0 if successful, -1 if not.
    */  
-  int Sparse::setNewValues(real_type* new_vals, memory::MemorySpace memspace)
+  int matrix::Sparse::setNewValues(real_type* new_vals, memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
     setNotUpdated();
 
     switch (memspace) {
       case HOST:
-        this->h_val_data_ = new_vals;	
+        if (owns_cpu_vals_ && h_val_data_) {
+          out::error() << "Trying to set matrix host values, but the values already set!\n";
+          out::error() << "Ignoring setNewValues function call ...\n";
+          return 1;
+        }
+        h_val_data_ = new_vals;	
         h_data_updated_ = true;
+        owns_cpu_vals_  = false;
         break;
       case DEVICE:
-        this->d_val_data_ = new_vals;	
+        if (owns_gpu_vals_ && d_val_data_) {
+          out::error() << "Trying to set matrix device values, but the values already set!\n";
+          out::error() << "Ignoring setNewValues function call ...\n";
+          return 1;
+        }
+        d_val_data_ = new_vals;	
         d_data_updated_ = true;
+        owns_gpu_vals_  = false;
         break;
       default:
         return -1;
@@ -400,5 +445,5 @@ namespace ReSolve { namespace matrix {
     return 0;
   }
 
-}} // namespace ReSolve::matrix
+} // namespace ReSolve
 

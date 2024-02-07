@@ -72,14 +72,16 @@ namespace ReSolve
   int matrix::Csc::updateData(index_type* row_data, index_type* col_data, real_type* val_data, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut)
   {
     index_type nnz_current = nnz_;
-    if (is_expanded_) {nnz_current = nnz_expanded_;}
+    if (is_expanded_) {
+      nnz_current = nnz_expanded_;
+    }
     //four cases (for now)
-    int control=-1;
+    int control = -1;
     setNotUpdated();
-    if ((memspaceIn == memory::HOST)     && (memspaceOut == memory::HOST))    { control = 0;}
-    if ((memspaceIn == memory::HOST)     && ((memspaceOut == memory::DEVICE))){ control = 1;}
-    if (((memspaceIn == memory::DEVICE)) && (memspaceOut == memory::HOST))    { control = 2;}
-    if (((memspaceIn == memory::DEVICE)) && ((memspaceOut == memory::DEVICE))){ control = 3;}
+    if ((memspaceIn == memory::HOST)   && (memspaceOut == memory::HOST)  ) { control = 0;}
+    if ((memspaceIn == memory::HOST)   && (memspaceOut == memory::DEVICE)) { control = 1;}
+    if ((memspaceIn == memory::DEVICE) && (memspaceOut == memory::HOST)  ) { control = 2;}
+    if ((memspaceIn == memory::DEVICE) && (memspaceOut == memory::DEVICE)) { control = 3;}
 
     if (memspaceOut == memory::HOST) {
       //check if cpu data allocated
@@ -236,4 +238,22 @@ namespace ReSolve
         return -1;
     } // switch
   }
-}
+
+  /**
+   * @brief Prints matrix data.
+   * 
+   * @param out - Output stream where the matrix data is printed
+   */
+  void matrix::Csc::print(std::ostream& out)
+  {
+    out << std::scientific << std::setprecision(std::numeric_limits<real_type>::digits10);
+    for(index_type i = 0; i < m_; ++i) {
+      for (index_type j = h_col_data_[i]; j < h_col_data_[i+1]; ++j) {
+        out << h_row_data_[j] << " "
+            << i              << " "
+            << h_val_data_[j] << "\n";
+      }
+    }
+  }
+
+} // namespace ReSolve
