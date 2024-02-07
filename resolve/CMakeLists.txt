@@ -13,6 +13,7 @@ set(ReSolve_SRC
     LinSolver.cpp
     GramSchmidt.cpp
     LinSolverIterativeFGMRES.cpp
+    LinSolverDirectCpuILU0.cpp
     LinSolverIterativeRandFGMRES.cpp
     RandSketchingManager.cpp
     RandSketchingCountSketch.cpp
@@ -47,7 +48,7 @@ set(ReSolve_HEADER_INSTALL
     cusolver_defs.hpp
     LinSolver.hpp
     LinSolverIterativeFGMRES.hpp
-    RefactorizationSolver.hpp
+    LinSolverDirectCpuILU0.cpp
     SystemSolver.hpp
     GramSchmidt.hpp
     MemoryUtils.hpp)

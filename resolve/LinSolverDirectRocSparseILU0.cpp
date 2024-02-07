@@ -254,20 +254,20 @@ namespace ReSolve
 
 
       
-          status_rocsparse_ = rocsparse_dcsrsv_solve(workspace_->getRocsparseHandle(), 
-                                               rocsparse_operation_none,
-                                               A_->getNumRows(),
-                                               A_->getNnzExpanded(), 
-                                               &(constants::ONE), 
-                                               descr_L_,
-                                               d_ILU_vals_, //vals_, 
-                                               A_->getRowData(ReSolve::memory::DEVICE), 
-                                               A_->getColData(ReSolve::memory::DEVICE), 
-                                               info_A_,
-                                               rhs->getData(ReSolve::memory::DEVICE),
-                                               d_aux1_, //result
-                                               rocsparse_solve_policy_auto,
-                                               buffer_);
+    status_rocsparse_ = rocsparse_dcsrsv_solve(workspace_->getRocsparseHandle(), 
+                                          rocsparse_operation_none,
+                                          A_->getNumRows(),
+                                          A_->getNnzExpanded(), 
+                                          &(constants::ONE), 
+                                          descr_L_,
+                                          d_ILU_vals_, //vals_, 
+                                          A_->getRowData(ReSolve::memory::DEVICE), 
+                                          A_->getColData(ReSolve::memory::DEVICE), 
+                                          info_A_,
+                                          rhs->getData(ReSolve::memory::DEVICE),
+                                          d_aux1_, //result
+                                          rocsparse_solve_policy_auto,
+                                          buffer_);
     error_sum += status_rocsparse_;
 
     status_rocsparse_ = rocsparse_dcsrsv_solve(workspace_->getRocsparseHandle(), 
@@ -290,4 +290,5 @@ namespace ReSolve
 
     return error_sum;
   }
+  
 }// namespace resolve

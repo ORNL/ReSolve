@@ -6,18 +6,23 @@
 
 ]]
 
-# Build matrix tests
+# Build matrix I/O tests
 add_executable(runMatrixIoTests.exe runMatrixIoTests.cpp)
 target_link_libraries(runMatrixIoTests.exe PRIVATE ReSolve resolve_matrix)
 
-# Build matrix tests
+# Build matrix handler tests
 add_executable(runMatrixHandlerTests.exe runMatrixHandlerTests.cpp)
 target_link_libraries(runMatrixHandlerTests.exe PRIVATE ReSolve resolve_matrix)
 
+# Build matrix factorization tests
+add_executable(runMatrixFactorizationTests.exe runMatrixFactorizationTests.cpp)
+target_link_libraries(runMatrixFactorizationTests.exe PRIVATE ReSolve resolve_matrix)
+
 # Install tests
-set(installable_tests runMatrixIoTests.exe runMatrixHandlerTests.exe)
+set(installable_tests runMatrixIoTests.exe runMatrixHandlerTests.exe runMatrixFactorizationTests.exe)
 install(TARGETS ${installable_tests} 
         RUNTIME DESTINATION bin/resolve/tests/unit)
 
-add_test(NAME matrix_test         COMMAND $<TARGET_FILE:runMatrixIoTests.exe>)
-add_test(NAME matrix_handler_test COMMAND $<TARGET_FILE:runMatrixHandlerTests.exe>)
+add_test(NAME matrix_test               COMMAND $<TARGET_FILE:runMatrixIoTests.exe>)
+add_test(NAME matrix_handler_test       COMMAND $<TARGET_FILE:runMatrixHandlerTests.exe>)
+add_test(NAME matrix_factorization_test COMMAND $<TARGET_FILE:runMatrixFactorizationTests.exe>)

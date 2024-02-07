@@ -1,13 +1,14 @@
-
+/**
+ * @file LinSolverDirectCpuILU0.hpp
+ * @author Slaven Peles (peless@ornl.gov)
+ * @brief Contains declaration of a class for incomplete LU factorization on CPU
+ *
+ * 
+ */
 #pragma once
 #include "Common.hpp"
 #include "LinSolver.hpp"
 #include <resolve/MemoryUtils.hpp>
-#include <resolve/workspace/LinAlgWorkspace.hpp>
-
-#include <rocsparse/rocsparse.h>
-#include <rocsolver/rocsolver.h>
-#include <hip/hip_runtime.h>
 
 namespace ReSolve 
 {
@@ -23,13 +24,16 @@ namespace ReSolve
     class Sparse;
   }
 
-  class LinSolverDirectRocSparseILU0 : public LinSolverDirect 
+  // Forward declaration of CPU workspace
+  class LinAlgWorkspaceCpu;
+
+  class LinSolverDirectCpuILU0 : public LinSolverDirect 
   {
     using vector_type = vector::Vector;
     
     public: 
-      LinSolverDirectRocSparseILU0(LinAlgWorkspaceHIP* workspace);
-      ~LinSolverDirectRocSparseILU0();
+      LinSolverDirectCpuILU0(LinAlgWorkspaceCpu* workspace = nullptr);
+      ~LinSolverDirectCpuILU0();
       
       int setup(matrix::Sparse* A,
                 matrix::Sparse* L = nullptr,
@@ -45,21 +49,7 @@ namespace ReSolve
     
 
     private:
-      rocsparse_status status_rocsparse_;
-
       MemoryHandler mem_; ///< Device memory manager object
-      LinAlgWorkspaceHIP* workspace_{nullptr};
-
-      rocsparse_mat_descr descr_A_{nullptr};
-      rocsparse_mat_descr descr_L_{nullptr};
-      rocsparse_mat_descr descr_U_{nullptr};
-
-      rocsparse_mat_info  info_A_{nullptr};
-      
-      void* buffer_{nullptr};
-      
-      real_type* d_aux1_{nullptr};
-      // since ILU OVERWRITES THE MATRIX values, we need a buffer to keep the values of ILU decomposition. 
-      real_type* d_ILU_vals_{nullptr};
+      LinAlgWorkspaceCpu* workspace_{nullptr};
   };
 }// namespace
