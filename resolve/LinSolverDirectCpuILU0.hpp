@@ -51,5 +51,11 @@ namespace ReSolve
     private:
       MemoryHandler mem_; ///< Device memory manager object
       LinAlgWorkspaceCpu* workspace_{nullptr};
+
+      matrix::Csr* A_{nullptr};
+      matrix::Csr* L_{nullptr};
+      matrix::Csr* U_{nullptr};
+
+      real_type zero_diagonal_{1e-6};
   };
 }// namespace

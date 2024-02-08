@@ -37,7 +37,10 @@ public:
     status.skipTest();
 
     ReSolve::LinSolverDirectCpuILU0* solver = new ReSolve::LinSolverDirectCpuILU0();
+    ReSolve::matrix::Csr* A = createCsrMatrix(0, "cpu");
+    solver->setup(A);
 
+    delete A;
     delete solver;
     
     return status.report(__func__);
@@ -118,51 +121,38 @@ private:
     return status;
   }
 
-  matrix::Csr* createCsrMatrix(const index_type N, std::string memspace)
+  matrix::Csr* createCsrMatrix(const index_type k, std::string memspace)
   {
-    std::vector<real_type> r1 = {1., 5., 7., 8., 3., 2., 4.}; // sum 30
-    std::vector<real_type> r2 = {1., 3., 2., 2., 1., 6., 7., 3., 2., 3.}; // sum 30
-    std::vector<real_type> r3 = {11., 15., 4.}; // sum 30
-    std::vector<real_type> r4 = {1., 1., 5., 1., 9., 2., 1., 2., 3., 2., 3.}; // sum 30
-    std::vector<real_type> r5 = {6., 5., 7., 3., 2., 5., 2.}; // sum 30
+    std::vector<index_type> rows = {0, 3, 6, 9, 12, 13, 17, 21, 24, 27};
+    std::vector<index_type> cols = {0, 4, 6,
+                                    1, 3, 5,
+                                    0, 4, 7,
+                                    3, 5, 8,
+                                    0,
+                                    1, 3, 5, 6,
+                                    2, 4, 6, 7,
+                                    0, 7, 8,
+                                    2, 4, 8};
+    std::vector<real_type>  vals = {2., 1., 3., 
+                                    7., 5., 4.,
+                                    1., 3., 2.,
+                                    3., 2., 8.,
+                                    1.,
+                                    4., 5., 1., 6.,
+                                    2., 2., 3., 3.,
+                                    2., 5., 1.,
+                                    7., 8., 4.};
 
-    const std::vector<std::vector<real_type> > data = {r1, r2, r3, r4, r5};
-
+    const index_type N   = rows.size() - 1;
+    const index_type NNZ = cols.size(); 
     // std::cout << N << "\n";
-
-    // First compute number of nonzeros
-    index_type NNZ = 0;
-    for (index_type i = 0; i < N; ++i)
-    {
-      size_t reminder = static_cast<size_t>(i%5);
-      NNZ += static_cast<index_type>(data[reminder].size());
-    }
 
     // Allocate NxN CSR matrix with NNZ nonzeros
     matrix::Csr* A = new matrix::Csr(N, N, NNZ);
     A->allocateMatrixData(memory::HOST);
+    A->updateData(&rows[0], &cols[0], &vals[0], memory::HOST, memory::HOST);
 
-    index_type* rowptr = A->getRowData(memory::HOST);
-    index_type* colidx = A->getColData(memory::HOST);
-    real_type* val     = A->getValues( memory::HOST); 
-
-    // Populate CSR matrix using same row pattern as for NNZ calculation
-    rowptr[0] = 0;
-    for (index_type i=0; i < N; ++i)
-    {
-      size_t reminder = static_cast<size_t>(i%5);
-      const std::vector<real_type>& row_sample = data[reminder];
-      index_type nnz_per_row = static_cast<index_type>(row_sample.size());
-
-      rowptr[i+1] = rowptr[i] + nnz_per_row;
-      for (index_type j = rowptr[i]; j < rowptr[i+1]; ++j)
-      {
-        colidx[j] = (j - rowptr[i]) * N/nnz_per_row + (N%(N/nnz_per_row));
-        // evenly distribute nonzeros ^^^^             ^^^^^^^^ perturb offset
-        val[j] = row_sample[static_cast<size_t>(j - rowptr[i])];
-      }
-    }
-    A->setUpdated(memory::HOST);
+    // A->print();
 
     if ((memspace == "cuda") || (memspace == "hip")) {
       A->copyData(memory::DEVICE);
