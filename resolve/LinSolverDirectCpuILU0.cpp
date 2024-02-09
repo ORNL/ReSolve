@@ -32,6 +32,8 @@ namespace ReSolve
   {
     int error_sum = 1;
 
+    zero_diagonal_ = 0.1;
+
     A_ = dynamic_cast<matrix::Csr*>(A);
     index_type N = A->getNumRows();
     index_type* rowsA = A->getRowData(memory::HOST);
@@ -113,11 +115,62 @@ namespace ReSolve
     L_->updateData(rowsL, colsL, valsL, memory::HOST, memory::HOST);
     U_->updateData(rowsU, colsU, valsU, memory::HOST, memory::HOST);
 
+    // std::cout <<   "Factor L:\n";
+    // L_->print();
+    // std::cout << "\nFactor U:\n";
+    // U_->print();
+
+    index_type* idxmap = new index_type[N];
+    std::cout << "\n\nMapping vector initialized: \n";
+    for (index_type u = 0; u < N; ++u)
+      idxmap[u] = -1;
+
+    // Factorize (incompletely)
+    std::cout << "\n\nTest factorization:\n";
+    for (index_type i = 1; i < N; ++i) {
+      for (index_type v = rowsL[i]; v < rowsL[i+1]; ++v) {
+        index_type k = colsL[v];
+        // std::cout << "(" << i << ", " << k << ")\n";
+        for (index_type u = rowsU[k]; u < rowsU[k+1]; ++u) {
+          idxmap[colsU[u]] = u;
+        }
+        // for (index_type u = 0; u < N; ++u)
+        //   std::cout << idxmap[u] << " ";
+        // std::cout << "\n";
+        valsL[v] /= valsU[rowsU[k]];
+        // std::cout << "Diag(" << k << ") = " << valsU[rowsU[k]] << "\n";
+
+        std::cout << "L factor:\n";
+        for (index_type w = v+1; w < rowsL[i+1]; ++w) {
+          index_type j = idxmap[colsL[w]];
+          std::cout << "(" << i << ", " << j << ")\n";
+          if (j == -1)
+            continue;
+          valsL[w] -= valsL[v]*valsU[j];
+        }
+
+        std::cout << "U factor:\n";
+        for (index_type w = rowsU[i]; w < rowsU[i+1]; ++w) {
+          index_type j = idxmap[colsU[w]];
+          std::cout << "(" << i << ", " << j << ")\n";
+          if (j == -1)
+            continue;
+          valsU[w] -= valsL[v]*valsU[j];
+        }
+
+
+        for (index_type u = 0; u < N; ++u)
+          idxmap[u] = -1;
+      }
+    }
+
+    // Set values to L and U matrices
+    L_->updateData(rowsL, colsL, valsL, memory::HOST, memory::HOST);
+    U_->updateData(rowsU, colsU, valsU, memory::HOST, memory::HOST);
     std::cout <<   "Factor L:\n";
     L_->print();
     std::cout << "\nFactor U:\n";
     U_->print();
-
 
     return error_sum;
   }

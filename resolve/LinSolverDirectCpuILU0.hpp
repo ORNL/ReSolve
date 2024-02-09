@@ -46,7 +46,9 @@ namespace ReSolve
        
       int solve(vector_type* rhs, vector_type* x) override;
       int solve(vector_type* rhs) override; // the solution is returned IN RHS (rhs is overwritten)
-    
+
+      matrix::Csr* getL() {return L_;} ///< Temporary for testing purposes.
+      matrix::Csr* getU() {return U_;} ///< Temporary for testing purposes.
 
     private:
       MemoryHandler mem_; ///< Device memory manager object

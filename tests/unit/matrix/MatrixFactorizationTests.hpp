@@ -34,15 +34,18 @@ public:
   TestOutcome matrixFactorizationConstructor()
   {
     TestStatus status;
-    status.skipTest();
+    // status.skipTest();
 
     ReSolve::LinSolverDirectCpuILU0* solver = new ReSolve::LinSolverDirectCpuILU0();
     ReSolve::matrix::Csr* A = createCsrMatrix(0, "cpu");
     solver->setup(A);
 
+    status *= verifyAnswer(*(solver->getL()), rowsL_, colsL_, valsL_, "cpu");
+    status *= verifyAnswer(*(solver->getU()), rowsU_, colsU_, valsU_, "cpu");
+    
     delete A;
     delete solver;
-    
+
     return status.report(__func__);
   }
 
@@ -120,6 +123,107 @@ private:
     }
     return status;
   }
+
+  bool verifyAnswer(matrix::Csr& A,
+                    const std::vector<index_type>& answer_rows,
+                    const std::vector<index_type>& answer_cols,
+                    const std::vector<real_type>&  answer_vals,
+                    std::string memspace)
+  {
+    bool status = true;
+    if (memspace != "cpu") {
+      A.copyData(memory::DEVICE);
+    }
+
+    for (index_type i = 0; i <= A.getNumRows(); ++i) {
+      if (A.getRowData(memory::HOST)[i] != answer_rows[i]) {
+        status = false;
+        std::cout << "Matrix row pointer rows[" << i << "] = " << A.getRowData(memory::HOST)[i]
+                  << ", expected: " << answer_rows[i] << "\n";
+      }
+    }
+
+    for (index_type i = 0; i < A.getNnz(); ++i) {
+      if (A.getColData(memory::HOST)[i] != answer_cols[i]) {
+        status = false;
+        std::cout << "Matrix column index cols[" << i << "] = " << A.getColData(memory::HOST)[i]
+                  << ", expected: " << answer_cols[i] << "\n";
+      }
+      if (!isEqual(A.getValues(memory::HOST)[i], answer_vals[i])) {
+        status = false;
+        std::cout << "Matrix value element vals[" << i << "] = " << A.getValues(memory::HOST)[i]
+                  << ", expected: " << answer_vals[i] << "\n";
+        // break; 
+      }
+    }
+    return status;
+  }
+
+  std::vector<index_type> rowsL_ = {0, 0, 0, 1, 1, 2, 4, 6, 7, 9};
+  std::vector<index_type> colsL_ = {0, 0, 1, 3, 2, 4, 0, 2, 4};
+  std::vector<real_type>  valsL_ = {0.5,
+                                          0.5,
+                                          5.714285714285714e-01,
+                                          7.142857142857144e-01,
+                                          20.0,
+                                          120.0,
+                                          1.0,
+                                          70.0,
+                                          417.5};
+
+  //  (3,1)       0.5000
+  //  (5,1)       0.5000
+  //  (6,2)       0.5714
+  //  (6,4)       0.7143
+  //  (7,3)      20.0000
+  //  (7,5)     120.0000
+  //  (8,1)       1.0000
+  //  (9,3)      70.0000
+  //  (9,5)     417.5000
+
+  std::vector<index_type> rowsU_ = {0, 3, 6, 9, 12, 13, 15, 17, 19, 20};
+  std::vector<index_type> colsU_ = {0, 4, 6, 1, 3, 5, 2, 4, 7, 3, 5, 8, 4, 5, 6, 6, 7, 7, 8, 8};
+  std::vector<real_type>  valsU_ = {2.0,
+                                    1.0,
+                                    3.0,
+                                    7.0,
+                                    5.0,
+                                    4.0,
+                                    0.1,
+                                    2.5,
+                                    2.0,
+                                    3.0,
+                                    2.0,
+                                    8.0,
+                                   -0.4,
+                                   -2.714285714285714,
+                                    6.0,
+                                    3.0,
+                                  -37.0,
+                                    5.0,
+                                    1.0,
+                                    4.0};
+  //  (1,1)       2.0000
+  //  (1,5)       1.0000
+  //  (1,7)       3.0000
+  //  (2,2)       7.0000
+  //  (2,4)       5.0000
+  //  (2,6)       4.0000
+  //  (3,3)       0.1000
+  //  (3,5)       2.5000
+  //  (3,8)       2.0000
+  //  (4,4)       3.0000
+  //  (4,6)       2.0000
+  //  (4,9)       8.0000
+  //  (5,5)      -0.4000
+  //  (6,6)      -2.7143
+  //  (6,7)       6.0000
+  //  (7,7)       3.0000
+  //  (7,8)     -37.0000
+  //  (8,8)       5.0000
+  //  (8,9)       1.0000
+  //  (9,9)       4.0000
+
 
   matrix::Csr* createCsrMatrix(const index_type k, std::string memspace)
   {
