@@ -17,8 +17,10 @@ namespace ReSolve
     h_labels_ = nullptr;
     h_flip_ = nullptr;
 
+#if defined(RESOLVE_USE_CUDA) || defined(RESOLVE_USE_HIP) 
     d_labels_ = nullptr;
     d_flip_ = nullptr;
+#endif
   }
 
   // destructor
@@ -26,13 +28,16 @@ namespace ReSolve
   {
     delete h_labels_;
     delete h_flip_;
+#if defined(RESOLVE_USE_CUDA) || defined(RESOLVE_USE_HIP) 
     mem_.deleteOnDevice(d_labels_);
     mem_.deleteOnDevice(d_flip_);
+#endif
   }
 
   // Actual sketching process
   int RandSketchingCountSketch::Theta(vector_type* input, vector_type* output)
   {
+#if defined(RESOLVE_USE_CUDA) || defined(RESOLVE_USE_HIP) 
     mem_.deviceSynchronize();
     count_sketch_theta(n_,
                        k_rand_,
@@ -41,7 +46,14 @@ namespace ReSolve
                        input->getData(ReSolve::memory::DEVICE), 
                        output->getData(ReSolve::memory::DEVICE));
     mem_.deviceSynchronize();
-
+#else // cpu only
+    count_sketch_theta(n_,
+                       k_rand_,
+                       h_labels_,
+                       h_flip_,
+                       input->getData(ReSolve::memory::HOST), 
+                       output->getData(ReSolve::memory::HOST));
+#endif
 
     return 0;
   }
@@ -70,6 +82,7 @@ namespace ReSolve
       }
     }
 
+#if defined(RESOLVE_USE_CUDA) || defined(RESOLVE_USE_HIP) 
     mem_.allocateArrayOnDevice(&d_labels_, n_); 
     mem_.allocateArrayOnDevice(&d_flip_, n_); 
 
@@ -79,6 +92,7 @@ namespace ReSolve
     mem_.copyArrayHostToDevice(d_flip_, h_flip_, n_);
 
     mem_.deviceSynchronize();
+#endif
     return 0;
   }
 

@@ -13,6 +13,7 @@ set(ReSolve_SRC
     LinSolver.cpp
     LinSolverDirectKLU.cpp
     SystemSolver.cpp
+    LinSolverDirectSerialILU0.cpp
 )
 
 # Temporary until there is CPU-only option for FGMRES
@@ -47,6 +48,7 @@ set(ReSolve_HEADER_INSTALL
     LinSolverDirectRocSparseILU0.hpp
     LinSolverDirectCuSparseILU0.hpp
     LinSolverDirectKLU.hpp
+    LinSolverDirectSerialILU0.hpp
     LinSolverIterativeFGMRES.hpp
     RefactorizationSolver.hpp
     SystemSolver.hpp

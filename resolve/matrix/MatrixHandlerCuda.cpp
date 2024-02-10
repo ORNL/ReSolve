@@ -87,7 +87,7 @@ namespace ReSolve {
         mem_.allocateBufferOnDevice(&buffer_spmv, bufferSize);
         workspace_->setSpmvMatrixDescriptor(matA);
         workspace_->setSpmvBuffer(buffer_spmv);
-
+printf("MATVEC BUFFER SIZE %d \n", bufferSize);
         workspace_->matvecSetupDone();
       } 
 

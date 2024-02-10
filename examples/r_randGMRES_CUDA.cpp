@@ -1,6 +1,7 @@
 #include <string>
 #include <iostream>
 #include <iomanip>
+#include <chrono>
 
 #include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/Csr.hpp>
@@ -21,6 +22,7 @@ int main(int argc, char *argv[])
   // Use the same data types as those you specified in ReSolve build.
   using real_type  = ReSolve::real_type;
   using vector_type = ReSolve::vector::Vector;
+  using namespace std::chrono;
 
   (void) argc; // TODO: Check if the number of input parameters is correct.
   std::string  matrixFileName = argv[1];
@@ -69,6 +71,7 @@ int main(int argc, char *argv[])
                                A_coo->symmetric(),
                                A_coo->expanded());
 
+  std::cout<<"Finished reading the matrix and rhs, size: "<<A->getNumRows()<<" x "<<A->getNumColumns()<< ", nnz: "<< A->getNnz()<< ", symmetric? "<<A->symmetric()<< ", Expanded? "<<A->expanded()<<std::endl;
   rhs = ReSolve::io::readRhsFromFile(rhs_file);
   x = new real_type[A->getNumRows()];
   vec_rhs = new vector_type(A->getNumRows());
@@ -78,7 +81,6 @@ int main(int argc, char *argv[])
   vec_x->allocate(ReSolve::memory::DEVICE);
   vec_x->setToZero(ReSolve::memory::DEVICE);
   vec_r = new vector_type(A->getNumRows());
-  std::cout<<"Finished reading the matrix and rhs, size: "<<A->getNumRows()<<" x "<<A->getNumColumns()<< ", nnz: "<< A->getNnz()<< ", symmetric? "<<A->symmetric()<< ", Expanded? "<<A->expanded()<<std::endl;
   mat_file.close();
   rhs_file.close();
 
@@ -101,8 +103,13 @@ int main(int argc, char *argv[])
   FGMRES->setFlexible(1); 
 
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+  auto start = high_resolution_clock::now();
   FGMRES->solve(vec_rhs, vec_x);
-
+  auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<milliseconds>(stop - start);
+ 
+  std::cout << "Time taken by solve: "
+         << duration.count() << " milliseconds" << std::endl;
   norm_b = vector_handler->dot(vec_rhs, vec_rhs, ReSolve::memory::DEVICE);
   norm_b = sqrt(norm_b);
   std::cout << "FGMRES: init nrm: " 
@@ -123,6 +130,5 @@ int main(int argc, char *argv[])
   delete workspace_CUDA;
   delete matrix_handler;
   delete vector_handler;
-
   return 0;
 }
