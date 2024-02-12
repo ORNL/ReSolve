@@ -32,8 +32,10 @@ namespace ReSolve
   {
     int error_sum = 1;
 
+    /// @todo Implement method for setting `zero_diagonal_` value.
     zero_diagonal_ = 0.1;
 
+    // Initialize member and local variables.
     A_ = dynamic_cast<matrix::Csr*>(A);
     index_type N = A->getNumRows();
     index_type* rowsA = A->getRowData(memory::HOST);
@@ -82,7 +84,7 @@ namespace ReSolve
     L_ = new matrix::Csr(N, N, nnzL);
     U_ = new matrix::Csr(N, N, nnzU);
 
-    // Crate data arrays for L and U factors
+    // Crate and initialize L and U factors
     index_type* colsL = new index_type[nnzL];
     index_type* colsU = new index_type[nnzU];
     real_type* valsL  = new real_type[nnzL];
@@ -120,6 +122,7 @@ namespace ReSolve
     // std::cout << "\nFactor U:\n";
     // U_->print();
 
+    // Allocate temporary vector that maps columns to elements in CSR data.
     index_type* idxmap = new index_type[N];
     std::cout << "\n\nMapping vector initialized: \n";
     for (index_type u = 0; u < N; ++u)

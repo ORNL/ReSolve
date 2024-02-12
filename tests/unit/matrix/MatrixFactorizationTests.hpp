@@ -34,50 +34,26 @@ public:
   TestOutcome matrixFactorizationConstructor()
   {
     TestStatus status;
-    // status.skipTest();
-
-    ReSolve::LinSolverDirectCpuILU0* solver = new ReSolve::LinSolverDirectCpuILU0();
-    ReSolve::matrix::Csr* A = createCsrMatrix(0, "cpu");
-    solver->setup(A);
-
-    status *= verifyAnswer(*(solver->getLFactor()), rowsL_, colsL_, valsL_, "cpu");
-    status *= verifyAnswer(*(solver->getUFactor()), rowsU_, colsU_, valsU_, "cpu");
+    status.skipTest();
     
-    delete A;
-    delete solver;
-
     return status.report(__func__);
   }
 
   TestOutcome matrixILU0()
   {
     TestStatus status;
-    status.skipTest();
+
+    ReSolve::LinSolverDirectCpuILU0 solver;
+    ReSolve::matrix::Csr* A = createCsrMatrix(0, "cpu");
+    solver.setup(A);
+
+    status *= verifyAnswer(*(solver.getLFactor()), rowsL_, colsL_, valsL_, "cpu");
+    status *= verifyAnswer(*(solver.getUFactor()), rowsU_, colsU_, valsU_, "cpu");
     
-    return status.report(__func__);
-  }
-
-  TestOutcome matrixInfNorm(index_type N)
-  {
-    TestStatus status;
-    ReSolve::memory::MemorySpace ms;
-    if (memspace_ == "cpu")
-      ms = memory::HOST;
-    else
-      ms = memory::DEVICE;
-
-    ReSolve::MatrixHandler* handler = createMatrixHandler();
-
-    matrix::Csr* A = createCsrMatrix(N, memspace_);
-    real_type norm;
-    handler->matrixInfNorm(A, &norm, ms);
-    status *= (norm == 30.0); 
-    
-    delete handler;
     delete A;
+
     return status.report(__func__);
   }
-
 
 private:
   std::string memspace_{"cpu"};
@@ -105,24 +81,125 @@ private:
     return nullptr;
   }
 
-  bool verifyAnswer(vector::Vector& x, real_type answer, std::string memspace)
+  // Test matrix:
+  //
+  //     [     2      0      0      0      1      0      3      0      0]
+  //     [     0      7      0      5      0      4      0      0      0]
+  //     [     1      0      0      0      3      0      0      2      0]
+  //     [     0      0      0      3      0      2      0      0      8]
+  // A = [     1      0      0      0      0      0      0      0      0]
+  //     [     0      4      0      5      0      1      6      0      0]
+  //     [     0      0      2      0      2      0      3      3      0]
+  //     [     2      0      0      0      0      0      0      5      1]
+  //     [     0      0      7      0      8      0      0      0      4]
+  std::vector<index_type> rowsA_ = {0, 3, 6, 9, 12, 13, 17, 21, 24, 27};
+  std::vector<index_type> colsA_ = {0, 4, 6,
+                                    1, 3, 5,
+                                    0, 4, 7,
+                                    3, 5, 8,
+                                    0,
+                                    1, 3, 5, 6,
+                                    2, 4, 6, 7,
+                                    0, 7, 8,
+                                    2, 4, 8};
+  std::vector<real_type>  valsA_ = {2., 1., 3., 
+                                    7., 5., 4.,
+                                    1., 3., 2.,
+                                    3., 2., 8.,
+                                    1.,
+                                    4., 5., 1., 6.,
+                                    2., 2., 3., 3.,
+                                    2., 5., 1.,
+                                    7., 8., 4.};
+
+  /**
+   * @brief Create test matrix.
+   * 
+   * The method creates a block diagonal test matrix from a fixed 9x9
+   * sparse blocks.
+   * 
+   * @todo Currently only single 9x9 sparse matrix is implemented; need to
+   * add option to create block diagonal matrix with `k` blocks. 
+   * 
+   * @param[in] k - multiple of basic matrix pattern (currently unused)
+   * @param[in] memspace - string ID of the memory space where matrix is stored
+   * 
+   */
+  matrix::Csr* createCsrMatrix(const index_type /* k */, std::string memspace)
   {
-    bool status = true;
-    if (memspace != "cpu") {
-      x.copyData(memory::DEVICE, memory::HOST);
+
+    const index_type N   = static_cast<index_type>(rowsA_.size() - 1);
+    const index_type NNZ = static_cast<index_type>(colsA_.size()); 
+
+    // Allocate NxN CSR matrix with NNZ nonzeros
+    matrix::Csr* A = new matrix::Csr(N, N, NNZ);
+    A->allocateMatrixData(memory::HOST);
+    A->updateData(&rowsA_[0], &colsA_[0], &valsA_[0], memory::HOST, memory::HOST);
+
+    // A->print();
+
+    if ((memspace == "cuda") || (memspace == "hip")) {
+      A->copyData(memory::DEVICE);
     }
 
-    for (index_type i = 0; i < x.getSize(); ++i) {
-      // std::cout << x.getData(memory::HOST)[i] << "\n";
-      if (!isEqual(x.getData(memory::HOST)[i], answer)) {
-        status = false;
-        std::cout << "Solution vector element x[" << i << "] = " << x.getData(memory::HOST)[i]
-                  << ", expected: " << answer << "\n";
-        break; 
-      }
-    }
-    return status;
+    return A;
   }
+
+  // Incomplete factor L of the test matrix (assumes zero_diagonal_ = 0.1):
+  //
+  //     [                                                              ]
+  //     [     0                                                        ]
+  //     [   0.5      0                                                 ]
+  //     [     0      0      0                                          ]
+  // L = [   0.5      0      0      0                                   ]
+  //     [     0 0.5714      0 0.7143      0                            ]
+  //     [     0      0     20      0    120      0                     ]
+  //     [     1      0      0      0      0      0      0              ]
+  //     [     0      0     70      0  417.5      0      0      0       ]
+  std::vector<index_type> rowsL_ = {0, 0, 0, 1, 1, 2, 4, 6, 7, 9};
+  std::vector<index_type> colsL_ = {0,
+                                    0,
+                                    1, 3,
+                                    2, 4,
+                                    0,
+                                    2, 4};
+  std::vector<real_type>  valsL_ = {0.5,
+                                    0.5,
+                                    5.714285714285714e-01, 7.142857142857144e-01,
+                                    20.0, 120.0,
+                                    1.0,
+                                    70.0, 417.5};
+
+  // Incomplete factor U of the test matrix (assumes zero_diagonal_ = 0.1):
+  //
+  //     [     2      0      0      0      1      0      3      0      0]
+  //     [            7      0      5      0      4      0      0      0]
+  //     [                 0.1      0    2.5      0      0      2      0]
+  //     [                          3      0      2      0      0      8]
+  // U = [                              -0.4      0      0      0      0]
+  //     [                                   -2.714      6      0      0]
+  //     [                                               3    -37      0]
+  //     [                                                      5      1]
+  //     [                                                             4]
+  std::vector<index_type> rowsU_ = {0, 3, 6, 9, 12, 13, 15, 17, 19, 20};
+  std::vector<index_type> colsU_ = {0, 4, 6,
+                                    1, 3, 5,
+                                    2, 4, 7,
+                                    3, 5, 8,
+                                    4,
+                                    5, 6,
+                                    6, 7,
+                                    7, 8,
+                                    8};
+  std::vector<real_type>  valsU_ = {2.0, 1.0, 3.0,
+                                    7.0, 5.0, 4.0,
+                                    0.1, 2.5, 2.0,
+                                    3.0, 2.0, 8.0,
+                                   -0.4,
+                                   -2.714285714285714, 6.0,
+                                    3.0, -37.0,
+                                    5.0, 1.0,
+                                    4.0};
 
   bool verifyAnswer(matrix::Sparse& A,
                     const std::vector<index_type>& answer_rows,
@@ -161,111 +238,6 @@ private:
     return status;
   }
 
-  std::vector<index_type> rowsL_ = {0, 0, 0, 1, 1, 2, 4, 6, 7, 9};
-  std::vector<index_type> colsL_ = {0, 0, 1, 3, 2, 4, 0, 2, 4};
-  std::vector<real_type>  valsL_ = {0.5,
-                                          0.5,
-                                          5.714285714285714e-01,
-                                          7.142857142857144e-01,
-                                          20.0,
-                                          120.0,
-                                          1.0,
-                                          70.0,
-                                          417.5};
-
-  //  (3,1)       0.5000
-  //  (5,1)       0.5000
-  //  (6,2)       0.5714
-  //  (6,4)       0.7143
-  //  (7,3)      20.0000
-  //  (7,5)     120.0000
-  //  (8,1)       1.0000
-  //  (9,3)      70.0000
-  //  (9,5)     417.5000
-
-  std::vector<index_type> rowsU_ = {0, 3, 6, 9, 12, 13, 15, 17, 19, 20};
-  std::vector<index_type> colsU_ = {0, 4, 6, 1, 3, 5, 2, 4, 7, 3, 5, 8, 4, 5, 6, 6, 7, 7, 8, 8};
-  std::vector<real_type>  valsU_ = {2.0,
-                                    1.0,
-                                    3.0,
-                                    7.0,
-                                    5.0,
-                                    4.0,
-                                    0.1,
-                                    2.5,
-                                    2.0,
-                                    3.0,
-                                    2.0,
-                                    8.0,
-                                   -0.4,
-                                   -2.714285714285714,
-                                    6.0,
-                                    3.0,
-                                  -37.0,
-                                    5.0,
-                                    1.0,
-                                    4.0};
-  //  (1,1)       2.0000
-  //  (1,5)       1.0000
-  //  (1,7)       3.0000
-  //  (2,2)       7.0000
-  //  (2,4)       5.0000
-  //  (2,6)       4.0000
-  //  (3,3)       0.1000
-  //  (3,5)       2.5000
-  //  (3,8)       2.0000
-  //  (4,4)       3.0000
-  //  (4,6)       2.0000
-  //  (4,9)       8.0000
-  //  (5,5)      -0.4000
-  //  (6,6)      -2.7143
-  //  (6,7)       6.0000
-  //  (7,7)       3.0000
-  //  (7,8)     -37.0000
-  //  (8,8)       5.0000
-  //  (8,9)       1.0000
-  //  (9,9)       4.0000
-
-
-  matrix::Csr* createCsrMatrix(const index_type /* k */, std::string memspace)
-  {
-    std::vector<index_type> rows = {0, 3, 6, 9, 12, 13, 17, 21, 24, 27};
-    std::vector<index_type> cols = {0, 4, 6,
-                                    1, 3, 5,
-                                    0, 4, 7,
-                                    3, 5, 8,
-                                    0,
-                                    1, 3, 5, 6,
-                                    2, 4, 6, 7,
-                                    0, 7, 8,
-                                    2, 4, 8};
-    std::vector<real_type>  vals = {2., 1., 3., 
-                                    7., 5., 4.,
-                                    1., 3., 2.,
-                                    3., 2., 8.,
-                                    1.,
-                                    4., 5., 1., 6.,
-                                    2., 2., 3., 3.,
-                                    2., 5., 1.,
-                                    7., 8., 4.};
-
-    const index_type N   = static_cast<index_type>(rows.size() - 1);
-    const index_type NNZ = static_cast<index_type>(cols.size()); 
-    // std::cout << N << "\n";
-
-    // Allocate NxN CSR matrix with NNZ nonzeros
-    matrix::Csr* A = new matrix::Csr(N, N, NNZ);
-    A->allocateMatrixData(memory::HOST);
-    A->updateData(&rows[0], &cols[0], &vals[0], memory::HOST, memory::HOST);
-
-    // A->print();
-
-    if ((memspace == "cuda") || (memspace == "hip")) {
-      A->copyData(memory::DEVICE);
-    }
-
-    return A;
-  }
 }; // class MatrixFactorizationTests
 
 }} // namespace ReSolve::tests

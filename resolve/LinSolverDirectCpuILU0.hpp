@@ -27,6 +27,18 @@ namespace ReSolve
   // Forward declaration of CPU workspace
   class LinAlgWorkspaceCpu;
 
+  /**
+   * @brief Incomplete LU factorization solver.
+   * 
+   * Implements ILU0 factorization from Algorithm 1 in 2023 paper by Suzuki,
+   * Fukaya, and Iwashita with modification where zero diagonal elements in
+   * the matrix are replaced by small values specified in `zero_diagonal_`.
+   * Factors L and U are stored in separate CSR matrices. Factor L does not
+   * store ones at the diagonal.
+   * 
+   * Methods in this class perform all operations on raw matrix data.
+   * 
+   */
   class LinSolverDirectCpuILU0 : public LinSolverDirect 
   {
     using vector_type = vector::Vector;
@@ -58,4 +70,4 @@ namespace ReSolve
 
       real_type zero_diagonal_{1e-6};
   };
-}// namespace
+} // namespace ReSolve
