@@ -40,8 +40,8 @@ public:
     ReSolve::matrix::Csr* A = createCsrMatrix(0, "cpu");
     solver->setup(A);
 
-    status *= verifyAnswer(*(solver->getL()), rowsL_, colsL_, valsL_, "cpu");
-    status *= verifyAnswer(*(solver->getU()), rowsU_, colsU_, valsU_, "cpu");
+    status *= verifyAnswer(*(solver->getLFactor()), rowsL_, colsL_, valsL_, "cpu");
+    status *= verifyAnswer(*(solver->getUFactor()), rowsU_, colsU_, valsU_, "cpu");
     
     delete A;
     delete solver;
@@ -124,7 +124,7 @@ private:
     return status;
   }
 
-  bool verifyAnswer(matrix::Csr& A,
+  bool verifyAnswer(matrix::Sparse& A,
                     const std::vector<index_type>& answer_rows,
                     const std::vector<index_type>& answer_cols,
                     const std::vector<real_type>&  answer_vals,
@@ -135,7 +135,8 @@ private:
       A.copyData(memory::DEVICE);
     }
 
-    for (index_type i = 0; i <= A.getNumRows(); ++i) {
+    size_t N = static_cast<size_t>(A.getNumRows());
+    for (size_t i = 0; i <= N; ++i) {
       if (A.getRowData(memory::HOST)[i] != answer_rows[i]) {
         status = false;
         std::cout << "Matrix row pointer rows[" << i << "] = " << A.getRowData(memory::HOST)[i]
@@ -143,7 +144,8 @@ private:
       }
     }
 
-    for (index_type i = 0; i < A.getNnz(); ++i) {
+    size_t NNZ = static_cast<size_t>(A.getNnz());
+    for (size_t i = 0; i < NNZ; ++i) {
       if (A.getColData(memory::HOST)[i] != answer_cols[i]) {
         status = false;
         std::cout << "Matrix column index cols[" << i << "] = " << A.getColData(memory::HOST)[i]
@@ -225,7 +227,7 @@ private:
   //  (9,9)       4.0000
 
 
-  matrix::Csr* createCsrMatrix(const index_type k, std::string memspace)
+  matrix::Csr* createCsrMatrix(const index_type /* k */, std::string memspace)
   {
     std::vector<index_type> rows = {0, 3, 6, 9, 12, 13, 17, 21, 24, 27};
     std::vector<index_type> cols = {0, 4, 6,
@@ -247,8 +249,8 @@ private:
                                     2., 5., 1.,
                                     7., 8., 4.};
 
-    const index_type N   = rows.size() - 1;
-    const index_type NNZ = cols.size(); 
+    const index_type N   = static_cast<index_type>(rows.size() - 1);
+    const index_type NNZ = static_cast<index_type>(cols.size()); 
     // std::cout << N << "\n";
 
     // Allocate NxN CSR matrix with NNZ nonzeros

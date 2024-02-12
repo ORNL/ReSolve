@@ -168,9 +168,11 @@ namespace ReSolve
     L_->updateData(rowsL, colsL, valsL, memory::HOST, memory::HOST);
     U_->updateData(rowsU, colsU, valsU, memory::HOST, memory::HOST);
     std::cout <<   "Factor L:\n";
-    L_->print();
+    auto* L = dynamic_cast<matrix::Csr*>(L_);
+    L->print();
     std::cout << "\nFactor U:\n";
-    U_->print();
+    auto* U = dynamic_cast<matrix::Csr*>(U_);
+    U->print();
 
     return error_sum;
   }
@@ -192,6 +194,16 @@ namespace ReSolve
   {
     int error_sum = 1;
     return error_sum;
+  }
+
+  matrix::Sparse* LinSolverDirectCpuILU0::getLFactor()
+  {
+    return L_;
+  }
+
+  matrix::Sparse* LinSolverDirectCpuILU0::getUFactor()
+  {
+    return U_;
   }
 
 }// namespace resolve

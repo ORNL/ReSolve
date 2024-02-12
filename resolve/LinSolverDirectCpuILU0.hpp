@@ -47,16 +47,14 @@ namespace ReSolve
       int solve(vector_type* rhs, vector_type* x) override;
       int solve(vector_type* rhs) override; // the solution is returned IN RHS (rhs is overwritten)
 
-      matrix::Csr* getL() {return L_;} ///< Temporary for testing purposes.
-      matrix::Csr* getU() {return U_;} ///< Temporary for testing purposes.
+      matrix::Sparse* getLFactor() override;
+      matrix::Sparse* getUFactor() override;
 
     private:
       MemoryHandler mem_; ///< Device memory manager object
       LinAlgWorkspaceCpu* workspace_{nullptr};
 
       matrix::Csr* A_{nullptr};
-      matrix::Csr* L_{nullptr};
-      matrix::Csr* U_{nullptr};
 
       real_type zero_diagonal_{1e-6};
   };
