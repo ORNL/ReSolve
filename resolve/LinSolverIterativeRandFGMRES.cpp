@@ -2,6 +2,7 @@
 #include <cassert>
 #include <cmath>
 #include <iomanip>
+#include <cstring>
 
 #include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
@@ -12,7 +13,7 @@
 namespace ReSolve
 {
   using out = io::Logger;
- 
+
   LinSolverIterativeRandFGMRES::LinSolverIterativeRandFGMRES(MatrixHandler* matrix_handler,
                                                              VectorHandler* vector_handler, 
                                                              SketchingMethod rand_method, 
@@ -94,8 +95,11 @@ namespace ReSolve
     h_c_  = new real_type[restart_];      // needed for givens
     h_s_  = new real_type[restart_];      // same
     h_rs_ = new real_type[restart_ + 1]; // for residual norm history
-
-    mem_.allocateArrayOnDevice(&d_aux_, restart_ + 1); 
+    if (memspace_ == memory::DEVICE) {
+      mem_.allocateArrayOnDevice(&d_aux_, restart_ + 1); 
+    } else {
+      d_aux_  = new real_type[restart_ + 1];
+    }
     // rand method
     k_rand_ = n_;
     switch(rand_method_) {
@@ -138,8 +142,8 @@ namespace ReSolve
   {
     using namespace constants;
 
-    //io::Logger::setVerbosity(io::Logger::EVERYTHING);
-    
+    io::Logger::setVerbosity(io::Logger::EVERYTHING);
+
     int outer_flag = 1;
     int notconv = 1; 
     int i = 0;
@@ -183,8 +187,8 @@ namespace ReSolve
     rnorm = sqrt(rnorm);
     bnorm = sqrt(bnorm);
     io::Logger::misc() << "it 0: norm of residual "
-                       << std::scientific << std::setprecision(16) 
-                       << rnorm << " Norm of rhs: " << bnorm << "\n";
+      << std::scientific << std::setprecision(16) 
+      << rnorm << " Norm of rhs: " << bnorm << "\n";
     initial_residual_norm_ = rnorm;
     while(outer_flag) {
       // check if maybe residual is already small enough?
@@ -227,6 +231,7 @@ namespace ReSolve
 
         // Z_i = (LU)^{-1}*V_i
         vec_v->setData( d_V_->getVectorData(i, memspace_), memspace_);
+//for (int ii=0; ii<10; ++ii) printf("V_0 [%d] = %16.16f \n ", ii,   vec_v->getData(ReSolve::memory::HOST)[ii]); 
         if (flexible_) {
           vec_z->setData( d_Z_->getVectorData(i, memspace_), memspace_);
         } else {
@@ -254,7 +259,13 @@ namespace ReSolve
         GS_->orthogonalize(k_rand_, d_S_, h_H_, i); //, memspace_);  
         // now post-process
         //checkCudaErrors(cudaMemcpy(d_Hcolumn, &h_H[i * (restart + 1)], sizeof(double) * (i + 1), cudaMemcpyHostToDevice));
-        mem_.copyArrayHostToDevice(d_aux_, &h_H_[i * (restart_ + 1)], i + 2);
+        if (memspace_ == memory::DEVICE) {
+          mem_.copyArrayHostToDevice(d_aux_, &h_H_[i * (restart_ + 1)], i + 2);
+        } else {
+          for (index_type ii = 0; ii < i + 2; ++ii) {
+            d_aux_[ii] = h_H_[i * (restart_ + 1) + ii];
+          }
+        }
         vec_z->setData(d_aux_, memspace_);
         vec_z->setCurrentSize(i + 1);
         //V(:, i+1) =w-V(:, 1:i)*d_H_col = V(:, i+1)-d_H_col * V(:,1:i); 
@@ -295,10 +306,10 @@ namespace ReSolve
 
         // residual norm estimate
         rnorm = fabs(h_rs_[i + 1]);
-        
+
         io::Logger::misc() << "it: "<<it<< " --> norm of the residual "
-                           << std::scientific << std::setprecision(16)
-                           << rnorm << "\n";
+          << std::scientific << std::setprecision(16)
+          << rnorm << "\n";
         // check convergence
         if (i + 1 >= restart_ || rnorm <= tolrel || it >= maxit_) {
           notconv = 0;
@@ -306,8 +317,8 @@ namespace ReSolve
       } // inner while
 
       io::Logger::misc() << "End of cycle, ESTIMATED norm of residual "
-                         << std::scientific << std::setprecision(16)
-                         << rnorm << "\n";
+        << std::scientific << std::setprecision(16)
+        << rnorm << "\n";
       // solve tri system
       h_rs_[i] = h_rs_[i] / h_H_[i * (restart_ + 1) + i];
       for (int ii = 2; ii <= i + 1; ii++) {
@@ -327,7 +338,12 @@ namespace ReSolve
           vector_handler_->axpy(&h_rs_[j], vec_z, x, memspace_);
         }
       } else {
-        mem_.setZeroArrayOnDevice(d_Z_->getData(memspace_), d_Z_->getSize());
+        if (memspace_ == memory::DEVICE) {
+          mem_.setZeroArrayOnDevice(d_Z_->getData(memspace_), d_Z_->getSize());
+        } else {
+          std::memset(d_Z_->getData(memspace_), 0.0, d_Z_->getSize() * sizeof(real_type));
+        }
+
         vec_z->setData( d_Z_->getVectorData(0, memspace_), memspace_);
         for(j = 0; j <= i; j++) {
           vec_v->setData( d_V_->getVectorData(j, memspace_), memspace_);
@@ -355,7 +371,11 @@ namespace ReSolve
         rand_manager_->reset();
 
         if (rand_method_ == cs) {
-          mem_.setZeroArrayOnDevice(d_S_->getData(memspace_), d_S_->getSize() * d_S_->getNumVectors());
+          if (memspace_ == memory::DEVICE) {
+            mem_.setZeroArrayOnDevice(d_S_->getData(memspace_), d_S_->getSize() * d_S_->getNumVectors());
+          } else {
+            std::memset(d_S_->getData(memspace_), 0.0, d_S_->getSize() * sizeof(real_type) * d_S_->getNumVectors());
+          }
         }
         vec_v->setData( d_V_->getVectorData(0, memspace_), memspace_);
         vec_s->setData( d_S_->getVectorData(0, memspace_), memspace_);
@@ -374,11 +394,11 @@ namespace ReSolve
         rnorm = vector_handler_->dot(d_V_, d_V_, memspace_);
         // rnorm = ||V_0||
         rnorm = sqrt(rnorm);
-        
+
         io::Logger::misc() << "End of cycle, COMPUTED norm of residual "
-                          << std::scientific << std::setprecision(16)
-                          << rnorm << "\n";
-        
+          << std::scientific << std::setprecision(16)
+          << rnorm << "\n";
+
         final_residual_norm_ = rnorm;
         total_iters_ = it;
       }

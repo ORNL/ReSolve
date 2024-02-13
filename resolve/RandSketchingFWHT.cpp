@@ -7,9 +7,10 @@
 #include <resolve/utilities/logger/Logger.hpp>
 #ifdef RESOLVE_USE_HIP
 #include <resolve/hip/hipKernels.h>
-#endif
-#ifdef RESOLVE_USE_CUDA
+#elif  RESOLVE_USE_CUDA
 #include <resolve/cuda/cudaKernels.h>
+#else
+#include <resolve/cpu/cpuKernels.h>
 #endif
 #include <resolve/RandSketchingFWHT.hpp> 
 namespace ReSolve 
@@ -46,9 +47,11 @@ namespace ReSolve
     delete h_D_;
     delete h_perm_;
 
+#if defined(RESOLVE_USE_CUDA) || defined(RESOLVE_USE_HIP) 
     mem_.deleteOnDevice(d_D_);
     mem_.deleteOnDevice(d_perm_);
     mem_.deleteOnDevice(d_aux_);
+#endif
   }
 
   // Actual sketching process
@@ -66,7 +69,9 @@ namespace ReSolve
    */
   int RandSketchingFWHT::Theta(vector_type* input, vector_type* output)
   {
-    mem_.setZeroArrayOnDevice(d_aux_, N_);
+   
+#if defined(RESOLVE_USE_CUDA) || defined(RESOLVE_USE_HIP) 
+     mem_.setZeroArrayOnDevice(d_aux_, N_);
     FWHT_scaleByD(n_, 
                   d_D_,
                   input->getData(ReSolve::memory::DEVICE), 
@@ -82,6 +87,7 @@ namespace ReSolve
                 output->getData(ReSolve::memory::DEVICE)); 
     mem_.deviceSynchronize();
     // remember - scaling is the solver's problem 
+#endif
     return 0;
   }
 
@@ -148,6 +154,7 @@ namespace ReSolve
       }
     }
 
+#if defined(RESOLVE_USE_CUDA) || defined(RESOLVE_USE_HIP) 
     mem_.allocateArrayOnDevice(&d_perm_, k_rand_); 
     mem_.allocateArrayOnDevice(&d_D_, n_); 
     mem_.allocateArrayOnDevice(&d_aux_, N_); 
@@ -156,7 +163,7 @@ namespace ReSolve
 
     mem_.copyArrayHostToDevice(d_perm_, h_perm_, k_rand_);
     mem_.copyArrayHostToDevice(d_D_, h_D_, n_);
-
+#endif
     return 0;
   }
 
@@ -203,9 +210,10 @@ namespace ReSolve
 
     //and copy
 
+#if defined(RESOLVE_USE_CUDA) || defined(RESOLVE_USE_HIP) 
     mem_.copyArrayHostToDevice(d_perm_, h_perm_, k_rand_);
     mem_.copyArrayHostToDevice(d_D_, h_D_, n_);
-
+#endif
     return 0;
   }
 }

@@ -6,6 +6,7 @@
 
 ]]
 
+
 if(RESOLVE_USE_KLU)
   # Build example with KLU factorization and KLU refactorization
   add_executable(klu_klu.exe r_KLU_KLU.cpp)
@@ -19,6 +20,11 @@ if(RESOLVE_USE_KLU)
   add_executable(system.exe r_SysSolver.cpp)
   target_link_libraries(system.exe PRIVATE ReSolve)
 endif(RESOLVE_USE_KLU)
+
+# Build rand example, CPU ONLY  r_randGMRES_cpu
+
+add_executable(gmres_cpu_rand.exe r_randGMRES_cpu.cpp)
+target_link_libraries(gmres_cpu_rand.exe PRIVATE ReSolve)
 
 # Create CUDA examples
 if(RESOLVE_USE_CUDA)
@@ -97,6 +103,8 @@ endif(RESOLVE_USE_CUDA)
 if(RESOLVE_USE_HIP)
   list(APPEND installable_executables klu_rocsolverrf.exe klu_rocsolverrf_fgmres.exe klu_rocsolverrf_check_redo.exe gmres_rocsparse_rand.exe)     
 endif(RESOLVE_USE_HIP)
+
+  list(APPEND installable_executables  gmres_cpu_rand.exe)     
 
 install(TARGETS ${installable_executables} 
         RUNTIME DESTINATION bin)

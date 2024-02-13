@@ -13,14 +13,15 @@ set(ReSolve_SRC
     LinSolver.cpp
     GramSchmidt.cpp
     LinSolverIterativeFGMRES.cpp
-)
-
-# Temporary until there is CPU-only option for FGMRES
-set(ReSolve_GPU_SRC
     LinSolverIterativeRandFGMRES.cpp
     RandSketchingManager.cpp
     RandSketchingCountSketch.cpp
     RandSketchingFWHT.cpp
+    LinSolverDirectSerialILU0.cpp
+)
+
+# Temporary until there is CPU-only option for FGMRES
+set(ReSolve_GPU_SRC
 )
 
 set(ReSolve_KLU_SRC
