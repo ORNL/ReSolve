@@ -25,7 +25,8 @@ namespace ReSolve
    * 
    * @todo There is little utility for the default constructor. Maybe remove?.
    */
-  RandSketchingFWHT::RandSketchingFWHT()
+  RandSketchingFWHT::RandSketchingFWHT(memory::MemorySpace memspace)
+    : memspace_(memspace)
   {
     h_seq_ = nullptr;
     h_D_ = nullptr;
@@ -44,17 +45,26 @@ namespace ReSolve
    */
   RandSketchingFWHT::~RandSketchingFWHT()
   {
+    using namespace memory;
+
     delete h_seq_;
     delete h_D_;
     delete h_perm_;
 
-#if defined(RESOLVE_USE_CUDA) || defined(RESOLVE_USE_HIP) 
-    mem_.deleteOnDevice(d_D_);
-    mem_.deleteOnDevice(d_perm_);
-    mem_.deleteOnDevice(d_aux_);
-#else
-    delete d_aux_; // if cpu, d_aux is a cpu variable.
-#endif
+// #if defined(RESOLVE_USE_CUDA) || defined(RESOLVE_USE_HIP)
+    switch (memspace_) {
+      case DEVICE:
+        mem_.deleteOnDevice(d_D_);
+        mem_.deleteOnDevice(d_perm_);
+        mem_.deleteOnDevice(d_aux_);
+        break;
+      case HOST:
+        delete [] d_aux_;
+        break;
+    }
+// #else
+//     delete d_aux_; // if cpu, d_aux is a cpu variable.
+// #endif
   }
 
   // Actual sketching process
@@ -72,39 +82,44 @@ namespace ReSolve
    */
   int RandSketchingFWHT::Theta(vector_type* input, vector_type* output)
   {
+    using namespace memory;
    
-#if defined(RESOLVE_USE_CUDA) || defined(RESOLVE_USE_HIP) 
-    mem_.setZeroArrayOnDevice(d_aux_, N_);
-    FWHT_scaleByD(n_, 
-                  d_D_,
-                  input->getData(ReSolve::memory::DEVICE), 
-                  d_aux_);  
+// #if defined(RESOLVE_USE_CUDA) || defined(RESOLVE_USE_HIP)
+    switch (memspace_) {
+      case DEVICE:
+        mem_.setZeroArrayOnDevice(d_aux_, N_);
+        FWHT_scaleByD(n_, 
+                      d_D_,
+                      input->getData(memspace_), 
+                      d_aux_);  
 
-    mem_.deviceSynchronize();
-    FWHT(1, log2N_, d_aux_);
+        mem_.deviceSynchronize();
+        FWHT(1, log2N_, d_aux_);
 
-    mem_.deviceSynchronize();
-    FWHT_select(k_rand_, 
-                d_perm_, 
-                d_aux_, 
-                output->getData(ReSolve::memory::DEVICE)); 
-    mem_.deviceSynchronize();
-    // remember - scaling is the solver's problem 
-#else
+        mem_.deviceSynchronize();
+        FWHT_select(k_rand_, 
+                    d_perm_, 
+                    d_aux_, 
+                    output->getData(memspace_)); 
+        mem_.deviceSynchronize();
+        break; // remember - scaling is the solver's problem 
+// #else
+      case HOST:
+        std::memset(d_aux_, 0.0, N_ * sizeof(real_type));
+        FWHT_scaleByD(n_, 
+                      h_D_,
+                      input->getData(memspace_),
+                      d_aux_);  
 
-    std::memset(d_aux_, 0.0, N_ * sizeof(real_type));
-    FWHT_scaleByD(n_, 
-                  h_D_,
-                  input->getData(ReSolve::memory::HOST), 
-                  d_aux_);  
+        FWHT(1, log2N_, d_aux_);
 
-    FWHT(1, log2N_, d_aux_);
-
-    FWHT_select(k_rand_, 
-                h_perm_, 
-                d_aux_, 
-                output->getData(ReSolve::memory::HOST)); 
-#endif
+        FWHT_select(k_rand_, 
+                    h_perm_, 
+                    d_aux_, 
+                    output->getData(memspace_));
+        break;
+    }
+// #endif
     return 0;
   }
 
@@ -171,18 +186,25 @@ namespace ReSolve
       }
     }
 
-#if defined(RESOLVE_USE_CUDA) || defined(RESOLVE_USE_HIP) 
-    mem_.allocateArrayOnDevice(&d_perm_, k_rand_); 
-    mem_.allocateArrayOnDevice(&d_D_, n_); 
-    mem_.allocateArrayOnDevice(&d_aux_, N_); 
-
-    //then copy
-
-    mem_.copyArrayHostToDevice(d_perm_, h_perm_, k_rand_);
-    mem_.copyArrayHostToDevice(d_D_, h_D_, n_);
-#else 
-    d_aux_  = new real_type[N_];
-#endif
+    using namespace memory;
+   
+// #if defined(RESOLVE_USE_CUDA) || defined(RESOLVE_USE_HIP)
+    switch (memspace_) {
+      case DEVICE:
+        mem_.allocateArrayOnDevice(&d_perm_, k_rand_); 
+        mem_.allocateArrayOnDevice(&d_D_, n_); 
+        mem_.allocateArrayOnDevice(&d_aux_, N_); 
+        //then copy
+        mem_.copyArrayHostToDevice(d_perm_, h_perm_, k_rand_);
+        mem_.copyArrayHostToDevice(d_D_, h_D_, n_);
+        break;
+      case HOST:
+        d_aux_  = new real_type[N_];
+        break;
+    }
+// #else 
+//     d_aux_  = new real_type[N_];
+// #endif
     return 0;
   }
 
@@ -229,10 +251,18 @@ namespace ReSolve
 
     //and copy
 
-#if defined(RESOLVE_USE_CUDA) || defined(RESOLVE_USE_HIP) 
-    mem_.copyArrayHostToDevice(d_perm_, h_perm_, k_rand_);
-    mem_.copyArrayHostToDevice(d_D_, h_D_, n_);
-#endif
+    using namespace memory;
+   
+// #if defined(RESOLVE_USE_CUDA) || defined(RESOLVE_USE_HIP)
+    switch (memspace_) {
+      case DEVICE:
+        mem_.copyArrayHostToDevice(d_perm_, h_perm_, k_rand_);
+        mem_.copyArrayHostToDevice(d_D_, h_D_, n_);
+        break;
+      case HOST:
+        break;
+    }
+// #endif
     return 0;
   }
 }

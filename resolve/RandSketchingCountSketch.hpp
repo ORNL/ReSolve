@@ -17,7 +17,7 @@ namespace ReSolve {
     public: 
 
       // constructor
-      RandSketchingCountSketch();
+      RandSketchingCountSketch(memory::MemorySpace memspace);
 
       // destructor
       virtual ~RandSketchingCountSketch();
@@ -35,5 +35,7 @@ namespace ReSolve {
 
       index_type* d_labels_;
       index_type* d_flip_;
+
+      memory::MemorySpace memspace_;
   };
 }

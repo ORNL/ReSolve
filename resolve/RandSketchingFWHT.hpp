@@ -16,7 +16,7 @@ namespace ReSolve {
     public: 
       // constructor
 
-      RandSketchingFWHT();
+      RandSketchingFWHT(memory::MemorySpace memspace);
 
       // destructor
       virtual ~RandSketchingFWHT();
@@ -40,5 +40,7 @@ namespace ReSolve {
       index_type N_; ///< padded vector size
       index_type log2N_; ///< log2 of N_, used multiple times so we store it
       real_type one_over_k_;///< 1/k, used many times for scaling so we store the value to avoid recomputation
+
+      memory::MemorySpace memspace_;
   };
 }

@@ -107,14 +107,14 @@ namespace ReSolve
         if(ceil(restart_ * log(n_)) < k_rand_) {
           k_rand_ = static_cast<index_type>(std::ceil(restart_ * std::log(static_cast<real_type>(n_))));
         }
-        rand_manager_ = new RandSketchingCountSketch();
+        rand_manager_ = new RandSketchingCountSketch(memspace_);
         //set k and n 
         break;
       case fwht:
         if ( ceil(2.0 * restart_ * log(n_) / log(restart_)) < k_rand_) {
           k_rand_ = static_cast<index_type>(std::ceil(2.0 * restart_ * std::log(n_) / std::log(restart_)));
         }
-        rand_manager_ = new RandSketchingFWHT();
+        rand_manager_ = new RandSketchingFWHT(memspace_);
         break;
       default:
         io::Logger::warning() << "Wrong sketching method, setting to default (CountSketch)\n"; 
@@ -122,7 +122,7 @@ namespace ReSolve
         if(ceil(restart_ * log(n_)) < k_rand_) {
           k_rand_ = static_cast<index_type>(std::ceil(restart_ * std::log(n_)));
         }
-        rand_manager_ = new RandSketchingCountSketch();
+        rand_manager_ = new RandSketchingCountSketch(memspace_);
         break;
     }
 
