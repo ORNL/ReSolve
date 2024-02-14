@@ -1,5 +1,6 @@
 #include <cmath>
 #include <limits>
+#include <cstring>
 
 #include "RandSketchingFWHT.hpp"
 #include <resolve/MemoryUtils.hpp>
@@ -51,6 +52,8 @@ namespace ReSolve
     mem_.deleteOnDevice(d_D_);
     mem_.deleteOnDevice(d_perm_);
     mem_.deleteOnDevice(d_aux_);
+#else
+    delete d_aux_; // if cpu, d_aux is a cpu variable.
 #endif
   }
 
@@ -71,7 +74,7 @@ namespace ReSolve
   {
    
 #if defined(RESOLVE_USE_CUDA) || defined(RESOLVE_USE_HIP) 
-     mem_.setZeroArrayOnDevice(d_aux_, N_);
+    mem_.setZeroArrayOnDevice(d_aux_, N_);
     FWHT_scaleByD(n_, 
                   d_D_,
                   input->getData(ReSolve::memory::DEVICE), 
@@ -87,6 +90,20 @@ namespace ReSolve
                 output->getData(ReSolve::memory::DEVICE)); 
     mem_.deviceSynchronize();
     // remember - scaling is the solver's problem 
+#else
+
+    std::memset(d_aux_, 0.0, N_ * sizeof(real_type));
+    FWHT_scaleByD(n_, 
+                  h_D_,
+                  input->getData(ReSolve::memory::HOST), 
+                  d_aux_);  
+
+    FWHT(1, log2N_, d_aux_);
+
+    FWHT_select(k_rand_, 
+                h_perm_, 
+                d_aux_, 
+                output->getData(ReSolve::memory::HOST)); 
 #endif
     return 0;
   }
@@ -163,6 +180,8 @@ namespace ReSolve
 
     mem_.copyArrayHostToDevice(d_perm_, h_perm_, k_rand_);
     mem_.copyArrayHostToDevice(d_D_, h_D_, n_);
+#else 
+    d_aux_  = new real_type[N_];
 #endif
     return 0;
   }

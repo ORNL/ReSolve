@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
   ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::mgs);
 
   ReSolve::LinSolverDirectSerialILU0* Rf = new ReSolve::LinSolverDirectSerialILU0(workspace_Cpu);
-  ReSolve::LinSolverIterativeRandFGMRES* FGMRES = new ReSolve::LinSolverIterativeRandFGMRES(matrix_handler, vector_handler, ReSolve::LinSolverIterativeRandFGMRES::cs, GS);
+  ReSolve::LinSolverIterativeRandFGMRES* FGMRES = new ReSolve::LinSolverIterativeRandFGMRES(matrix_handler, vector_handler, ReSolve::LinSolverIterativeRandFGMRES::fwht, GS);
 
   std::cout << std::endl << std::endl << std::endl;
   std::cout << "========================================================================================================================"<<std::endl;
