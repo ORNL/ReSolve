@@ -128,7 +128,7 @@ namespace ReSolve
           // diagonal, add to both
 
           L_->getValues(ReSolve::memory::HOST)[lit] = 1.0;
-          U_->getValues(ReSolve::memory::HOST)[uit] = A_->getValues(ReSolve::memory::HOST)[j];
+          U_->getValues(ReSolve::memory::HOST)[uit] = h_ILU_vals_[j];
 
           L_->getColData(ReSolve::memory::HOST)[lit] = i;
           U_->getColData(ReSolve::memory::HOST)[uit] = i;
@@ -142,7 +142,7 @@ namespace ReSolve
         if (A->getColData(ReSolve::memory::HOST)[j] > i) {
           // upper part
 
-          U_->getValues(ReSolve::memory::HOST) [uit] = A_->getValues(ReSolve::memory::HOST) [j]; 
+          U_->getValues(ReSolve::memory::HOST) [uit] = h_ILU_vals_[j]; 
           U_->getColData(ReSolve::memory::HOST)[uit] = A_->getColData(ReSolve::memory::HOST)[j]; ;
 
           uit++;
@@ -151,7 +151,7 @@ namespace ReSolve
 
         if (A->getColData(ReSolve::memory::HOST)[j] < i) {
           // lower part
-          L_->getValues(ReSolve::memory::HOST) [lit]  = A_->getValues(ReSolve::memory::HOST)[j]; 
+          L_->getValues(ReSolve::memory::HOST) [lit] =  h_ILU_vals_[j]; 
           L_->getColData(ReSolve::memory::HOST)[lit] = A_->getColData(ReSolve::memory::HOST)[j]; 
 
           lit++;
