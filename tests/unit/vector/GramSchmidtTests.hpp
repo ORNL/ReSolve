@@ -171,7 +171,7 @@ namespace ReSolve {
                           << " Inner product computed: " << ip << ", expected: " << 0.0 << "\n";
                 break; 
               }
-              if ( (i == j) && !isEqual(abs(sqrt(ip)), 1.0)) {
+              if ( (i == j) && !isEqual(sqrt(ip), 1.0)) {           
                 status = false;
                 std::cout << std::setprecision(16);
                 std::cout << "Vector " << i << " has norm: " << sqrt(ip) << " expected: "<< 1.0 <<"\n";
