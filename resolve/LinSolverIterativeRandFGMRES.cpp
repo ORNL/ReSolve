@@ -104,25 +104,25 @@ namespace ReSolve
     k_rand_ = n_;
     switch(rand_method_) {
       case cs:
-        if(ceil(restart_ * log(n_)) < k_rand_) {
+        if (ceil(restart_ * log(n_)) < k_rand_) {
           k_rand_ = static_cast<index_type>(std::ceil(restart_ * std::log(static_cast<real_type>(n_))));
         }
-        rand_manager_ = new RandSketchingCountSketch();
+        rand_manager_ = new RandSketchingCountSketch(memspace_);
         //set k and n 
         break;
       case fwht:
-        if ( ceil(2.0 * restart_ * log(n_) / log(restart_)) < k_rand_) {
+        if (ceil(2.0 * restart_ * log(n_) / log(restart_)) < k_rand_) {
           k_rand_ = static_cast<index_type>(std::ceil(2.0 * restart_ * std::log(n_) / std::log(restart_)));
         }
-        rand_manager_ = new RandSketchingFWHT();
+        rand_manager_ = new RandSketchingFWHT(memspace_);
         break;
       default:
         io::Logger::warning() << "Wrong sketching method, setting to default (CountSketch)\n"; 
         rand_method_ = cs;
-        if(ceil(restart_ * log(n_)) < k_rand_) {
+        if (ceil(restart_ * log(n_)) < k_rand_) {
           k_rand_ = static_cast<index_type>(std::ceil(restart_ * std::log(n_)));
         }
-        rand_manager_ = new RandSketchingCountSketch();
+        rand_manager_ = new RandSketchingCountSketch(memspace_);
         break;
     }
 
@@ -142,7 +142,7 @@ namespace ReSolve
   {
     using namespace constants;
 
-    io::Logger::setVerbosity(io::Logger::EVERYTHING);
+    // io::Logger::setVerbosity(io::Logger::EVERYTHING);
 
     int outer_flag = 1;
     int notconv = 1; 

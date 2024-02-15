@@ -16,6 +16,13 @@ if(RESOLVE_USE_KLU)
   target_link_libraries(klu_klu_test.exe PRIVATE ReSolve)
 endif(RESOLVE_USE_KLU)
 
+if(NOT RESOLVE_USE_GPU)
+  # Build Random GMRES test
+  add_executable(rand_gmres_cpu_test.exe testSysRandGMRES.cpp)
+  target_link_libraries(rand_gmres_cpu_test.exe PRIVATE ReSolve)
+endif()
+
+
 if(RESOLVE_USE_CUDA)
         
   # Build KLU+Rf test
@@ -78,6 +85,10 @@ if(RESOLVE_USE_KLU)
   list(APPEND installable_tests klu_klu_test.exe)
 endif()
 
+if(NOT RESOLVE_USE_GPU)
+  list(APPEND installable_tests rand_gmres_cpu_test.exe)
+endif()
+
 if(RESOLVE_USE_CUDA)
   list(APPEND installable_tests klu_rf_test.exe
                                 klu_rf_fgmres_test.exe
@@ -108,6 +119,10 @@ add_test(NAME version COMMAND $<TARGET_FILE:version.exe> "${test_data_dir}")
 
 if(RESOLVE_USE_KLU)
   add_test(NAME klu_klu_test COMMAND $<TARGET_FILE:klu_klu_test.exe> "${test_data_dir}")
+endif()
+
+if(NOT RESOLVE_USE_GPU)
+  add_test(NAME sys_rand_gmres_cpu_test COMMAND $<TARGET_FILE:rand_gmres_cpu_test.exe>)
 endif()
 
 if(RESOLVE_USE_CUDA)
