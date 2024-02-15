@@ -111,7 +111,7 @@ namespace ReSolve
         //set k and n 
         break;
       case fwht:
-        if ( ceil(2.0 * restart_ * log(n_) / log(restart_)) < k_rand_) {
+        if (ceil(2.0 * restart_ * log(n_) / log(restart_)) < k_rand_) {
           k_rand_ = static_cast<index_type>(std::ceil(2.0 * restart_ * std::log(n_) / std::log(restart_)));
         }
         rand_manager_ = new RandSketchingFWHT(memspace_);
