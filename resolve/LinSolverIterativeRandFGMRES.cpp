@@ -104,7 +104,7 @@ namespace ReSolve
     k_rand_ = n_;
     switch(rand_method_) {
       case cs:
-        if(ceil(restart_ * log(n_)) < k_rand_) {
+        if (ceil(restart_ * log(n_)) < k_rand_) {
           k_rand_ = static_cast<index_type>(std::ceil(restart_ * std::log(static_cast<real_type>(n_))));
         }
         rand_manager_ = new RandSketchingCountSketch(memspace_);
