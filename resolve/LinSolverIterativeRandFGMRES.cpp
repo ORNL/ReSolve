@@ -142,7 +142,7 @@ namespace ReSolve
   {
     using namespace constants;
 
-    io::Logger::setVerbosity(io::Logger::EVERYTHING);
+    // io::Logger::setVerbosity(io::Logger::EVERYTHING);
 
     int outer_flag = 1;
     int notconv = 1; 
