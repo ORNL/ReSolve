@@ -8,7 +8,7 @@
 #include <resolve/utilities/logger/Logger.hpp>
 #ifdef RESOLVE_USE_HIP
 #include <resolve/hip/hipKernels.h>
-#elif  RESOLVE_USE_CUDA
+#elif  defined (RESOLVE_USE_CUDA)
 #include <resolve/cuda/cudaKernels.h>
 #else
 #include <resolve/cpu/cpuKernels.h>
@@ -47,11 +47,10 @@ namespace ReSolve
   {
     using namespace memory;
 
-    delete h_seq_;
-    delete h_D_;
-    delete h_perm_;
+    delete [] h_seq_;
+    delete [] h_D_;
+    delete [] h_perm_;
 
-// #if defined(RESOLVE_USE_CUDA) || defined(RESOLVE_USE_HIP)
     switch (memspace_) {
       case DEVICE:
         mem_.deleteOnDevice(d_D_);
@@ -62,9 +61,6 @@ namespace ReSolve
         delete [] d_aux_;
         break;
     }
-// #else
-//     delete d_aux_; // if cpu, d_aux is a cpu variable.
-// #endif
   }
 
   // Actual sketching process
@@ -84,7 +80,6 @@ namespace ReSolve
   {
     using namespace memory;
    
-// #if defined(RESOLVE_USE_CUDA) || defined(RESOLVE_USE_HIP)
     switch (memspace_) {
       case DEVICE:
         mem_.setZeroArrayOnDevice(d_aux_, N_);
@@ -103,7 +98,6 @@ namespace ReSolve
                     output->getData(memspace_)); 
         mem_.deviceSynchronize();
         break; // remember - scaling is the solver's problem 
-// #else
       case HOST:
         std::memset(d_aux_, 0.0, N_ * sizeof(real_type));
         FWHT_scaleByD(n_, 
@@ -119,16 +113,14 @@ namespace ReSolve
                     output->getData(memspace_));
         break;
     }
-// #endif
     return 0;
   }
 
-  // Setup the parameters, sampling matrices, permuations, etc
   /** 
    * @brief Sketching method setup. 
    * 
-   * This function allocated P(erm), D (diagonal scaling matrix) andpopulates
-   * them and  allocates a bunch of other auxiliary arrays.
+   * This function allocated P(erm), D (diagonal scaling matrix) and populates
+   * them. It also allocates auxiliary arrays.
    *
    *
    * @param[in]  n  - size of base (non-sketched) vector
@@ -138,7 +130,6 @@ namespace ReSolve
    *
    * @return 0 of successful, -1 otherwise. 
    */
-   
   int RandSketchingFWHT::setup(index_type n, index_type k)
   {
     k_rand_ = k;
@@ -188,7 +179,6 @@ namespace ReSolve
 
     using namespace memory;
    
-// #if defined(RESOLVE_USE_CUDA) || defined(RESOLVE_USE_HIP)
     switch (memspace_) {
       case DEVICE:
         mem_.allocateArrayOnDevice(&d_perm_, k_rand_); 
@@ -202,13 +192,9 @@ namespace ReSolve
         d_aux_  = new real_type[N_];
         break;
     }
-// #else 
-//     d_aux_  = new real_type[N_];
-// #endif
     return 0;
   }
 
-  //to be fixed, this can be done on the GPU
   /** 
    * @brief Reset values in the arrays used for sketching.
    * 
@@ -216,7 +202,9 @@ namespace ReSolve
    *
    * @post Everything is set up so you call call Theta.
    *
-   * @return 0 of successful, -1 otherwise. 
+   * @return 0 of successful, -1 otherwise.
+   * 
+   * @todo Need to be fixed, this can be done on the GPU.
    */
   int RandSketchingFWHT::reset() // if needed can be reset (like when Krylov method restarts)
   {
@@ -240,9 +228,9 @@ namespace ReSolve
     }
 
     // and D
-    for (int i = 0; i < n_; ++i){
+    for (int i = 0; i < n_; ++i) {
       r = rand() % 100;
-      if (r < 50){
+      if (r < 50) {
         h_D_[i] = -1;
       } else { 
         h_D_[i] = 1;
@@ -253,16 +241,13 @@ namespace ReSolve
 
     using namespace memory;
    
-// #if defined(RESOLVE_USE_CUDA) || defined(RESOLVE_USE_HIP)
-    switch (memspace_) {
-      case DEVICE:
-        mem_.copyArrayHostToDevice(d_perm_, h_perm_, k_rand_);
-        mem_.copyArrayHostToDevice(d_D_, h_D_, n_);
-        break;
-      case HOST:
-        break;
+    if (memspace_ == memory::DEVICE) {
+      mem_.copyArrayHostToDevice(d_perm_, h_perm_, k_rand_);
+      mem_.copyArrayHostToDevice(d_D_, h_D_, n_);
+
+      mem_.deviceSynchronize();
     }
-// #endif
+
     return 0;
   }
 }

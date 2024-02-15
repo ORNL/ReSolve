@@ -4,7 +4,7 @@
 
 #ifdef RESOLVE_USE_HIP
 #include <resolve/hip/hipKernels.h>
-#elif RESOLVE_USE_CUDA
+#elif defined (RESOLVE_USE_CUDA)
 #include <resolve/cuda/cudaKernels.h>
 #else
 #include <resolve/cpu/cpuKernels.h>
@@ -19,23 +19,19 @@ namespace ReSolve
     h_labels_ = nullptr;
     h_flip_ = nullptr;
 
-// #if defined(RESOLVE_USE_CUDA) || defined(RESOLVE_USE_HIP) 
     d_labels_ = nullptr;
     d_flip_ = nullptr;
-// #endif
   }
 
   // destructor
   RandSketchingCountSketch::~RandSketchingCountSketch()
   {
-    delete h_labels_;
-    delete h_flip_;
-// #if defined(RESOLVE_USE_CUDA) || defined(RESOLVE_USE_HIP)
+    delete [] h_labels_;
+    delete [] h_flip_;
     if (memspace_ == memory::DEVICE) {
       mem_.deleteOnDevice(d_labels_);
       mem_.deleteOnDevice(d_flip_);
     }
-// #endif
   }
 
   // Actual sketching process
@@ -43,7 +39,6 @@ namespace ReSolve
   {
     using namespace memory;
    
-// #if defined(RESOLVE_USE_CUDA) || defined(RESOLVE_USE_HIP)
     switch (memspace_) {
       case DEVICE:
         mem_.deviceSynchronize();
@@ -56,7 +51,6 @@ namespace ReSolve
         mem_.deviceSynchronize();
         break;
       case HOST:
-// #else // cpu only
         count_sketch_theta(n_,
                           k_rand_,
                           h_labels_,
@@ -65,12 +59,11 @@ namespace ReSolve
                           output->getData(ReSolve::memory::HOST));
         break;
     }
-// #endif
 
     return 0;
   }
 
-  // Setup the parameters, sampling matrices, permuations, etc
+  /// Setup the parameters, sampling matrices, permuations, etc
   int RandSketchingCountSketch::setup(index_type n, index_type k)
   {
     k_rand_ = k;
@@ -108,41 +101,28 @@ namespace ReSolve
       case HOST:
         break;
     }
-// #if defined(RESOLVE_USE_CUDA) || defined(RESOLVE_USE_HIP) 
-//     mem_.allocateArrayOnDevice(&d_labels_, n_); 
-//     mem_.allocateArrayOnDevice(&d_flip_, n_); 
-
-//     //then copy
-
-//     mem_.copyArrayHostToDevice(d_labels_, h_labels_, n_);
-//     mem_.copyArrayHostToDevice(d_flip_, h_flip_, n_);
-
-//     mem_.deviceSynchronize();
-// #endif
     return 0;
   }
 
-  //to be fixed, this can be done on the GPU
+  /// @todo Need to be fixed, this can be done on the GPU.
   int RandSketchingCountSketch::reset() // if needed can be reset (like when Krylov method restarts)
   {
     for (int i = 0; i < n_; ++i) {
       h_labels_[i] = rand() % k_rand_;
 
       int r = rand()%100;
-      if (r < 50){
+      if (r < 50) {
         h_flip_[i] = -1;
       } else { 
         h_flip_[i] = 1;
       }
     }
-// #if defined(RESOLVE_USE_CUDA) || defined(RESOLVE_USE_HIP)
     if (memspace_ == memory::DEVICE) {
       mem_.copyArrayHostToDevice(d_labels_, h_labels_, n_);
       mem_.copyArrayHostToDevice(d_flip_, h_flip_, n_);
 
       mem_.deviceSynchronize();
     }
-// #endif
     return 0;
   }
 }
