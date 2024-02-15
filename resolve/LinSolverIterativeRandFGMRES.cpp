@@ -119,7 +119,7 @@ namespace ReSolve
       default:
         io::Logger::warning() << "Wrong sketching method, setting to default (CountSketch)\n"; 
         rand_method_ = cs;
-        if(ceil(restart_ * log(n_)) < k_rand_) {
+        if (ceil(restart_ * log(n_)) < k_rand_) {
           k_rand_ = static_cast<index_type>(std::ceil(restart_ * std::log(n_)));
         }
         rand_manager_ = new RandSketchingCountSketch(memspace_);
