@@ -187,8 +187,8 @@ namespace ReSolve
     rnorm = sqrt(rnorm);
     bnorm = sqrt(bnorm);
     io::Logger::misc() << "it 0: norm of residual "
-      << std::scientific << std::setprecision(16) 
-      << rnorm << " Norm of rhs: " << bnorm << "\n";
+                       << std::scientific << std::setprecision(16) 
+                       << rnorm << " Norm of rhs: " << bnorm << "\n";
     initial_residual_norm_ = rnorm;
     while(outer_flag) {
       // check if maybe residual is already small enough?
@@ -307,9 +307,9 @@ namespace ReSolve
         // residual norm estimate
         rnorm = fabs(h_rs_[i + 1]);
 
-        io::Logger::misc() << "it: "<<it<< " --> norm of the residual "
-          << std::scientific << std::setprecision(16)
-          << rnorm << "\n";
+        io::Logger::misc() << "it: "<< it << " --> norm of the residual "
+                           << std::scientific << std::setprecision(16)
+                           << rnorm << "\n";
         // check convergence
         if (i + 1 >= restart_ || rnorm <= tolrel || it >= maxit_) {
           notconv = 0;
@@ -317,8 +317,8 @@ namespace ReSolve
       } // inner while
 
       io::Logger::misc() << "End of cycle, ESTIMATED norm of residual "
-        << std::scientific << std::setprecision(16)
-        << rnorm << "\n";
+                         << std::scientific << std::setprecision(16)
+                         << rnorm << "\n";
       // solve tri system
       h_rs_[i] = h_rs_[i] / h_H_[i * (restart_ + 1) + i];
       for (int ii = 2; ii <= i + 1; ii++) {
@@ -396,8 +396,8 @@ namespace ReSolve
         rnorm = sqrt(rnorm);
 
         io::Logger::misc() << "End of cycle, COMPUTED norm of residual "
-          << std::scientific << std::setprecision(16)
-          << rnorm << "\n";
+                           << std::scientific << std::setprecision(16)
+                           << rnorm << "\n";
 
         final_residual_norm_ = rnorm;
         total_iters_ = it;

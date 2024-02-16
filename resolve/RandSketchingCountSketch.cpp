@@ -13,6 +13,13 @@
 
 namespace ReSolve 
 {
+  /**
+   * @brief Default constructor
+   * 
+   * @post All class variables set to nullptr.
+   * 
+   * @todo Consider removing.
+   */
   RandSketchingCountSketch::RandSketchingCountSketch(memory::MemorySpace memspace)
     : memspace_(memspace)
   {
@@ -35,6 +42,17 @@ namespace ReSolve
   }
 
   // Actual sketching process
+  /**
+   * @brief Sketching method using CountSketch algorithm.
+   *
+   * @param[in]  input - Vector size _n_
+   * @param[out]  output - Vector size _k_ 
+   *
+   * @pre Both input and output variables are initialized and of correct size. Setup has been run at least once 
+   * 
+   * @return output = Theta (input) 
+   * 
+   */
   int RandSketchingCountSketch::Theta(vector_type* input, vector_type* output)
   {
     using namespace memory;
@@ -64,6 +82,17 @@ namespace ReSolve
   }
 
   /// Setup the parameters, sampling matrices, permuations, etc
+  /**
+   * @brief Sketching setup method for CountSketch algorithm.
+   *
+   * @param[in]  n - Size of base vector
+   * @param[in]  k - Size of sketch 
+   *
+   * @pre _n_ > _k_. 
+   * 
+   * @post The arrays needed for performing sketches with CountSketch (_flip_ and _labels_ ) are initialized. If GPU is enabled, the arrays will be copied to the GPU, as well 
+   * 
+   */
   int RandSketchingCountSketch::setup(index_type n, index_type k)
   {
     k_rand_ = k;
@@ -105,6 +134,17 @@ namespace ReSolve
   }
 
   /// @todo Need to be fixed, this can be done on the GPU.
+  /**
+   * @brief Reset CountSketch arrays (for intance, if solver restarted)
+   *
+   * @param[in]  n - Size of base vector
+   * @param[in]  k - Size of sketch 
+   *
+   * @pre _n_ > _k_. _k_ value DID NOT CHANGE from the time the setup function was executed.
+   * 
+   * @post The arrays needed for performing sketches with CountSketch (_flip_ and _labels_ ) are reset to new values. If GPU is enabled, the arrays will be copied to the GPU, as well 
+   * 
+   */
   int RandSketchingCountSketch::reset() // if needed can be reset (like when Krylov method restarts)
   {
     for (int i = 0; i < n_; ++i) {

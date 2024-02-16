@@ -30,12 +30,11 @@ namespace ReSolve {
       virtual int reset(); // if needed can be reset (like when Krylov method restarts)
 
     private:
-      index_type* h_labels_;
-      index_type* h_flip_;
+      index_type* h_labels_;///< label array size _n_, with values from _0_ to _k-1_ assigned by random
+      index_type* h_flip_; ///< flip array with valyes of 1 and -1 assigned by random
 
-      index_type* d_labels_;
-      index_type* d_flip_;
-
+      index_type* d_labels_; ///< h_labels GPU counterpart
+      index_type* d_flip_;   ///< h_flip GPU counterpart
       memory::MemorySpace memspace_;
   };
 }
