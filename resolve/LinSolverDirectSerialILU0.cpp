@@ -14,8 +14,8 @@ namespace ReSolve
 
   LinSolverDirectSerialILU0::~LinSolverDirectSerialILU0()
   {
-    delete h_aux1_;
-    delete h_ILU_vals_;
+    delete [] h_aux1_;
+    delete [] h_ILU_vals_;
   }
 
   int LinSolverDirectSerialILU0::setup(matrix::Sparse* A,
@@ -81,8 +81,8 @@ namespace ReSolve
     }
 
     //clean up
-    delete ja_mapper;
-    delete u_ptr;
+    delete [] ja_mapper;
+    delete [] u_ptr;
 
     // split into L and U!
     index_type nnzL = 0, nnzU = 0;
@@ -106,6 +106,7 @@ namespace ReSolve
         }
       }  
     }
+    // TODO: What is the purpose of nnzL and nnzU if they are not used after this?
     // allocate L and U
 
     L_ = new matrix::Csr(n, n, nnz, false, true);  

@@ -341,7 +341,7 @@ namespace ReSolve
         if (memspace_ == memory::DEVICE) {
           mem_.setZeroArrayOnDevice(d_Z_->getData(memspace_), d_Z_->getSize());
         } else {
-          std::memset(d_Z_->getData(memspace_), 0.0, d_Z_->getSize() * sizeof(real_type));
+          std::memset(d_Z_->getData(memspace_), 0.0, static_cast<size_t>(d_Z_->getSize()) * sizeof(real_type));
         }
 
         vec_z->setData( d_Z_->getVectorData(0, memspace_), memspace_);
@@ -374,7 +374,7 @@ namespace ReSolve
           if (memspace_ == memory::DEVICE) {
             mem_.setZeroArrayOnDevice(d_S_->getData(memspace_), d_S_->getSize() * d_S_->getNumVectors());
           } else {
-            std::memset(d_S_->getData(memspace_), 0.0, d_S_->getSize() * sizeof(real_type) * d_S_->getNumVectors());
+            std::memset(d_S_->getData(memspace_), 0.0, static_cast<size_t>(d_S_->getSize()) * sizeof(real_type) * static_cast<size_t>(d_S_->getNumVectors()));
           }
         }
         vec_v->setData( d_V_->getVectorData(0, memspace_), memspace_);
