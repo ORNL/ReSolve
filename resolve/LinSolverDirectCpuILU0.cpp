@@ -21,14 +21,19 @@ namespace ReSolve
   {
   }
 
+  /**
+   * @brief Destructor
+   * 
+   * @todo Address how L and U factors are deleted (currently base class does that).
+   */
   LinSolverDirectCpuILU0::~LinSolverDirectCpuILU0()
   {
-    if (false) { //(is_analysis_successful) {
+    if (false) { //(owns_factors_) {
       delete L_;
       delete U_;
-      delete [] diagU_;
-      delete [] idxmap_;
     }
+    delete [] diagU_;
+    delete [] idxmap_;
   }
 
   int LinSolverDirectCpuILU0::setup(matrix::Sparse* A,
@@ -38,10 +43,7 @@ namespace ReSolve
                                     index_type*,
                                     vector_type* )
   {
-    int error_sum = 1;
-
-    /// @todo Implement method for setting `zero_diagonal_` value.
-    zero_diagonal_ = 0.1;
+    int error_sum = 0;
 
     // Initialize member and local variables.
     A_ = dynamic_cast<matrix::Csr*>(A);
@@ -88,16 +90,6 @@ namespace ReSolve
     rowsL[N] = nnzL;
     rowsU[N] = nnzU;
 
-    std::cout << "nnzL: " << nnzL << ", nnzU: " << nnzU << "\n";
-    std::cout << "rowsL  rowsU\n";
-    for(index_type i = 0; i <= N; ++i) {
-      std::cout << rowsL[i] << "  " << rowsU[i] << "\n";
-    }
-
-    // Crate and initialize L and U factors
-    // L_ = new matrix::Csr(N, N, nnzL);
-    // U_ = new matrix::Csr(N, N, nnzU);
-
     index_type* colsL = new index_type[nnzL];
     index_type* colsU = new index_type[nnzU];
     real_type* valsL  = new real_type[nnzL];
@@ -125,102 +117,206 @@ namespace ReSolve
     }
     assert(lcount == nnzL);
     assert(ucount == nnzU);
-    std::cout << lcount << " ?= " << nnzL << "\n";
-    std::cout << ucount << " ?= " << nnzU << "\n";
-
-    // Set values to L and U matrices
-    // L_->updateData(rowsL, colsL, valsL, memory::HOST, memory::HOST);
-    // U_->updateData(rowsU, colsU, valsU, memory::HOST, memory::HOST);
-
-    // std::cout <<   "Factor L:\n";
-    // L_->print();
-    // std::cout << "\nFactor U:\n";
-    // U_->print();
 
     // Allocate temporary vector that maps columns to elements in CSR data.
     idxmap_ = new index_type[N];
-    std::cout << "\n\nMapping vector initialized: \n";
     for (index_type u = 0; u < N; ++u)
        idxmap_[u] = -1;
 
     // Factorize (incompletely)
-    std::cout << "\n\nTest factorization:\n";
     for (index_type i = 1; i < N; ++i) {
       for (index_type v = rowsL[i]; v < rowsL[i+1]; ++v) {
         index_type k = colsL[v];
-        // std::cout << "(" << i << ", " << k << ")\n";
         for (index_type u = rowsU[k]; u < rowsU[k+1]; ++u) {
            idxmap_[colsU[u]] = u;
         }
-        // for (index_type u = 0; u < N; ++u)
-        //   std::cout <<  idxmap_[u] << " ";
-        // std::cout << "\n";
         valsL[v] /= valsU[rowsU[k]];
-        // std::cout << "Diag(" << k << ") = " << valsU[rowsU[k]] << "\n";
 
-        std::cout << "L factor:\n";
         for (index_type w = v+1; w < rowsL[i+1]; ++w) {
           index_type j =  idxmap_[colsL[w]];
-          std::cout << "(" << i << ", " << j << ")\n";
           if (j == -1)
             continue;
           valsL[w] -= valsL[v]*valsU[j];
         }
 
-        std::cout << "U factor:\n";
         for (index_type w = rowsU[i]; w < rowsU[i+1]; ++w) {
           index_type j =  idxmap_[colsU[w]];
-          std::cout << "(" << i << ", " << j << ")\n";
           if (j == -1)
             continue;
           valsU[w] -= valsL[v]*valsU[j];
         }
-
 
         for (index_type u = 0; u < N; ++u)
            idxmap_[u] = -1;
       }
     }
 
-    // Set values to L and U matrices
-    // L_->setOwnsData(memory::HOST);
-    // U_->setOwnsData(memory::HOST);
-
-    is_analysis_successful = true;
-    // L_->updateData(rowsL, colsL, valsL, memory::HOST, memory::HOST);
-    // U_->updateData(rowsU, colsU, valsU, memory::HOST, memory::HOST);
-
     // Use hijacking constructor to create L and U factors
     L_ = new matrix::Csr(N, N, nnzL, false, true, &rowsL, &colsL, &valsL, memory::HOST, memory::HOST);
     U_ = new matrix::Csr(N, N, nnzU, false, true, &rowsU, &colsU, &valsU, memory::HOST, memory::HOST);
 
-    std::cout <<   "Factor L:\n";
-    auto* L = dynamic_cast<matrix::Csr*>(L_);
-    L->print();
-    std::cout << "\nFactor U:\n";
-    auto* U = dynamic_cast<matrix::Csr*>(U_);
-    U->print();
+    owns_factors_ = true;
 
     return error_sum;
   }
 
   int LinSolverDirectCpuILU0::reset(matrix::Sparse* A)
   {
+    using namespace memory;
     int error_sum = 0;
-    
+    assert(A_->getNumRows() == A->getNumRows());
+    assert(A_->getNnz() == A->getNnz());
+    A_ = dynamic_cast<matrix::Csr*>(A);
+
+    index_type* rowsL = L_->getRowData(HOST);
+    index_type* colsL = L_->getColData(HOST);
+    real_type* valsL = L_->getValues(HOST);
+
+    index_type* rowsU = U_->getRowData(HOST);
+    index_type* colsU = U_->getColData(HOST);
+    real_type* valsU = U_->getValues(HOST);
+
+    // index_type* rowsA = A_->getRowData(HOST);
+    index_type* colsA = A_->getColData(HOST);
+    real_type* valsA = A_->getValues(HOST);
+
+    // Update values in L and U factors
+    index_type N = A_->getNumRows();
+    index_type acount = 0; 
+    for (index_type i = 0; i < N; ++i) {
+      for (index_type j = rowsL[i]; j < rowsL[i+1]; ++j) {
+          valsL[j] = valsA[acount];
+          ++acount;
+      }
+      for (index_type j = rowsU[i]; j < rowsU[i+1]; ++j) {
+        if ((colsU[j] == i) && (colsA[acount] != i)) {
+          valsU[j] = zero_diagonal_;
+        } else {
+          valsU[j] = valsA[acount];
+          ++acount;
+        }
+      }
+    }
+
+    for (index_type u = 0; u < N; ++u)
+       idxmap_[u] = -1;
+
+    // Factorize (incompletely)
+    for (index_type i = 1; i < N; ++i) {
+      for (index_type v = rowsL[i]; v < rowsL[i+1]; ++v) {
+        index_type k = colsL[v];
+        for (index_type u = rowsU[k]; u < rowsU[k+1]; ++u) {
+           idxmap_[colsU[u]] = u;
+        }
+        valsL[v] /= valsU[rowsU[k]];
+
+        for (index_type w = v+1; w < rowsL[i+1]; ++w) {
+          index_type j =  idxmap_[colsL[w]];
+          if (j == -1)
+            continue;
+          valsL[w] -= valsL[v]*valsU[j];
+        }
+
+        for (index_type w = rowsU[i]; w < rowsU[i+1]; ++w) {
+          index_type j =  idxmap_[colsU[w]];
+          if (j == -1)
+            continue;
+          valsU[w] -= valsL[v]*valsU[j];
+        }
+
+        for (index_type u = 0; u < N; ++u)
+           idxmap_[u] = -1;
+      }
+    }
+
     return error_sum;
   }
 
-  // solution is returned in RHS
-  int LinSolverDirectCpuILU0::solve(vector_type* /* rhs */)
+  /**
+   * @brief Triangular solve
+   * 
+   * @param[in,out] rhs_vec - right-hand-side vector
+   * @return int - error code
+   */
+  int LinSolverDirectCpuILU0::solve(vector_type* rhs_vec)
   {
-    int error_sum = 1;
+    using namespace memory;
+    int error_sum = 0;
+    assert(A_->getNumRows() == rhs_vec->getSize());
+
+    index_type N = A_->getNumRows();
+
+    real_type* rhs = rhs_vec->getData(HOST);
+
+    index_type* rowsL = L_->getRowData(HOST);
+    index_type* colsL = L_->getColData(HOST);
+    real_type*  valsL = L_->getValues(HOST);
+
+    // Forward substitution
+    for (index_type i = 0; i < N; ++i) {
+      for (index_type j = rowsL[i]; j < rowsL[i+1]; ++j) {
+        rhs[i] -= valsL[j] * rhs[colsL[j]];
+      }
+    }
+
+    index_type* rowsU = U_->getRowData(HOST);
+    index_type* colsU = U_->getColData(HOST);
+    real_type*  valsU = U_->getValues(HOST);
+
+    // Backward substitution
+    for (index_type i = N - 1; i >= 0; --i) {
+      for (index_type j = rowsU[i] + 1; j < rowsU[i+1]; ++j) {
+        rhs[i] -= valsU[j] * rhs[colsU[j]];
+      }
+      rhs[i] /= valsU[rowsU[i]];
+    }
+
     return error_sum;
   }
 
-  int LinSolverDirectCpuILU0::solve(vector_type* /* rhs */, vector_type* /* x */)
+  /**
+   * @brief Triangular solve
+   * 
+   * @param[in]  rhs_vec - right-hand-side vector 
+   * @param[out] x_vec   - solution vector
+   * @return int - status code
+   */
+  int LinSolverDirectCpuILU0::solve(vector_type* rhs_vec, vector_type* x_vec)
   {
-    int error_sum = 1;
+    using namespace memory;
+    int error_sum = 0;
+    assert(A_->getNumRows() == rhs_vec->getSize());
+    assert(A_->getNumRows() == x_vec->getSize());
+
+    const index_type N = A_->getNumRows();
+
+    const real_type* rhs = rhs_vec->getData(HOST);
+    real_type*       x   = x_vec->getData(HOST);
+
+    const index_type* rowsL = L_->getRowData(HOST);
+    const index_type* colsL = L_->getColData(HOST);
+    const real_type*  valsL = L_->getValues(HOST);
+
+    // Forward substitution
+    for (index_type i = 0; i < N; ++i) {
+      x[i] = rhs[i];
+      for (index_type j = rowsL[i]; j < rowsL[i+1]; ++j) {
+        x[i] -= valsL[j] * x[colsL[j]];
+      }
+    }
+
+    const index_type* rowsU = U_->getRowData(HOST);
+    const index_type* colsU = U_->getColData(HOST);
+    const real_type*  valsU = U_->getValues(HOST);
+
+    // Backward substitution
+    for (index_type i = N - 1; i >= 0; --i) {
+      for (index_type j = rowsU[i] + 1; j < rowsU[i+1]; ++j) {
+        x[i] -= valsU[j] * x[colsU[j]];
+      }
+      x[i] /= valsU[rowsU[i]];
+    }
+
     return error_sum;
   }
 
@@ -234,4 +330,20 @@ namespace ReSolve
     return U_;
   }
 
-}// namespace resolve
+  /**
+   * @brief Sets approximation to zero on matrix diagonal.
+   * 
+   * If the original matrix has structural zeros on the diagonal, the ILU0
+   * analysis will add diagonal elements and set them to `zero_diagonal_`
+   * value. The default is 1e-6, this function allows user to change that.
+   * 
+   * @param z - small value approximating zero
+   * @return int - returns status code
+   */
+  int LinSolverDirectCpuILU0::setZeroDiagonal(real_type z)
+  {
+    zero_diagonal_ = z;
+    return 0;
+  }
+
+} // namespace resolve

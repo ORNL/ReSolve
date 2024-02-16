@@ -39,17 +39,45 @@ public:
     return status.report(__func__);
   }
 
+  /**
+   * @brief Test ILU0 factorization and triangular solve.
+   * 
+   * @return TestOutcome 
+   */
   TestOutcome matrixILU0()
   {
     TestStatus status;
 
     ReSolve::LinSolverDirectCpuILU0 solver;
     ReSolve::matrix::Csr* A = createCsrMatrix(0, "cpu");
-    solver.setup(A);
 
+    ReSolve::vector::Vector rhs(A->getNumRows());
+    rhs.setToConst(constants::ONE, memory::HOST);
+
+    ReSolve::vector::Vector x(A->getNumRows());
+    x.allocate(memory::HOST);
+
+    // Reference solutions are for zero diagonal approximated with 0.1
+    solver.setZeroDiagonal(0.1);
+
+    // Test ILU0 analysis and factorization
+    solver.setup(A);
     status *= verifyAnswer(*(solver.getLFactor()), rowsL_, colsL_, valsL_, "cpu");
     status *= verifyAnswer(*(solver.getUFactor()), rowsU_, colsU_, valsU_, "cpu");
-    
+
+    // Test ILU0 factorization when matrix values change but sparsity is the same
+    solver.reset(A);
+    status *= verifyAnswer(*(solver.getLFactor()), rowsL_, colsL_, valsL_, "cpu");
+    status *= verifyAnswer(*(solver.getUFactor()), rowsU_, colsU_, valsU_, "cpu");
+
+    // Test forward-backward substitution without overwriting rhs
+    solver.solve(&rhs, &x);
+    status *= verifyAnswer(x, solX_, "cpu");
+
+    // Test forward-backward substitution
+    solver.solve(&rhs);
+    status *= verifyAnswer(rhs, solX_, "cpu");
+
     delete A;
 
     return status.report(__func__);
@@ -145,6 +173,62 @@ private:
     return A;
   }
 
+  // Lower triangular part of the test matrix A:
+  //
+  //            [                                                              ]
+  //            [     0                                                        ]
+  //            [     1      0                                                 ]
+  //            [     0      0      0                                          ]
+  // lower(L) = [     1      0      0      0                                   ]
+  //            [     0      4      0      5      0                            ]
+  //            [     0      0      2      0      2      0                     ]
+  //            [     2      0      0      0      0      0      0              ]
+  //            [     0      0      7      0      8      0      0      0       ]
+  std::vector<index_type> rowsAL_ = {0, 0, 0, 1, 1, 2, 4, 6, 7, 9};
+  std::vector<index_type> colsAL_ = {0,
+                                    0,
+                                    1, 3,
+                                    2, 4,
+                                    0,
+                                    2, 4};
+  std::vector<real_type>  valsAL_ = {1.0,
+                                    1.0,
+                                    4.0, 5.0,
+                                    2.0, 2.0,
+                                    2.0,
+                                    7.0, 8.0};
+
+  // Upper triangular part of the test matrix A (zero_diagonal_ = 0.1):
+  //
+  //            [     2      0      0      0      1      0      3      0      0]
+  //            [            7      0      5      0      4      0      0      0]
+  //            [                 0.1      0      3      0      0      2      0]
+  //            [                          3      0      2      0      0      8]
+  // upper(A) = [                               0.1      0      0      0      0]
+  //            [                                        1      6      0      0]
+  //            [                                               3      3      0]
+  //            [                                                      5      1]
+  //            [                                                             4]
+  std::vector<index_type> rowsAU_ = {0, 3, 6, 9, 12, 13, 15, 17, 19, 20};
+  std::vector<index_type> colsAU_ = {0, 4, 6,
+                                    1, 3, 5,
+                                    2, 4, 7,
+                                    3, 5, 8,
+                                    4,
+                                    5, 6,
+                                    6, 7,
+                                    7, 8,
+                                    8};
+  std::vector<real_type>  valsAU_ = {2.0, 1.0, 3.0,
+                                    7.0, 5.0, 4.0,
+                                    0.1, 3.0, 2.0,
+                                    3.0, 2.0, 8.0,
+                                    0.1,
+                                    1.0, 6.0,
+                                    3.0, 3.0,
+                                    5.0, 1.0,
+                                    4.0};
+
   // Incomplete factor L of the test matrix (assumes zero_diagonal_ = 0.1):
   //
   //     [                                                              ]
@@ -201,6 +285,20 @@ private:
                                     5.0, 1.0,
                                     4.0};
 
+  /**
+   * @brief Compare sparse matrix with a reference.
+   * 
+   * @param A           - matrix obtained in a test
+   * @param answer_rows - reference matrix row data
+   * @param answer_cols - reference matrix column data
+   * @param answer_vals - reference matrix values
+   * @param memspace    - memory space where matrix data is stored
+   * @return true  - if elements of the matrix agree with the reference values
+   * @return false - otherwise
+   * 
+   * @todo Only CSR matrices are supported at this time. Need to make this
+   * more general.
+   */
   bool verifyAnswer(matrix::Sparse& A,
                     const std::vector<index_type>& answer_rows,
                     const std::vector<index_type>& answer_cols,
@@ -238,6 +336,46 @@ private:
     return status;
   }
 
+  /// Reference solution to LUx = 1, where L and U are ILU0 factors
+  /// and 1 is vector with all elements set to one.
+  std::vector<real_type> solX_ = {-1.889187500000000e+02,
+                                  -1.423733082706767e+02,
+                                  -2.065000000000000e+02,
+                                  -2.461315789473683e+01,
+                                  -1.250000000000000e+00,
+                                   2.801697368421052e+02,
+                                   1.266958333333333e+02,
+                                   1.213750000000000e+01,
+                                  -6.068750000000000e+01};
+
+  
+  /**
+   * @brief Compare vector with a reference vector.
+   * 
+   * @param x        - vector with a result
+   * @param answer   - reference solution
+   * @param memspace - memory space where the result is stored
+   * @return true  - if two vector elements agree to within precision
+   * @return false - otherwise
+   */
+  bool verifyAnswer(vector::Vector& x, const std::vector<real_type>& answer, std::string memspace)
+  {
+    bool status = true;
+    if (memspace != "cpu") {
+      x.copyData(memory::DEVICE, memory::HOST);
+    }
+
+    for (index_type i = 0; i < x.getSize(); ++i) {
+      size_t ii = static_cast<size_t>(i);
+      if (!isEqual(x.getData(memory::HOST)[i], answer[ii])) {
+        status = false;
+        std::cout << "Solution vector element x[" << i << "] = " << x.getData(memory::HOST)[i]
+                  << ", expected: " << answer[ii] << "\n";
+        break; 
+      }
+    }
+    return status;
+  }
 }; // class MatrixFactorizationTests
 
 }} // namespace ReSolve::tests

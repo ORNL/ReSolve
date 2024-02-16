@@ -62,14 +62,16 @@ namespace ReSolve
       matrix::Sparse* getLFactor() override;
       matrix::Sparse* getUFactor() override;
 
+      int setZeroDiagonal(real_type z);
+
     private:
-      MemoryHandler mem_; ///< Device memory manager object
+      // MemoryHandler mem_; ///< Device memory manager object
       LinAlgWorkspaceCpu* workspace_{nullptr};
 
-      matrix::Csr* A_{nullptr};
+      matrix::Csr* A_{nullptr};     ///< Pointer to the system matrix
       real_type*  diagU_{nullptr};  ///< Buffer holding diagonal of factor U
       index_type* idxmap_{nullptr}; ///< Mapping for matrix column indices
-      bool is_analysis_successful{false};
+      bool owns_factors_{false};    ///< If the class owns L and U factors
 
       real_type zero_diagonal_{1e-6}; ///< Approximation for zero diagonal
   };
