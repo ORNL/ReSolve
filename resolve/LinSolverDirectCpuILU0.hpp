@@ -67,7 +67,10 @@ namespace ReSolve
       LinAlgWorkspaceCpu* workspace_{nullptr};
 
       matrix::Csr* A_{nullptr};
+      real_type*  diagU_{nullptr};  ///< Buffer holding diagonal of factor U
+      index_type* idxmap_{nullptr}; ///< Mapping for matrix column indices
+      bool is_analysis_successful{false};
 
-      real_type zero_diagonal_{1e-6};
+      real_type zero_diagonal_{1e-6}; ///< Approximation for zero diagonal
   };
 } // namespace ReSolve

@@ -19,6 +19,17 @@ namespace ReSolve { namespace matrix {
           bool symmetric,
           bool expanded);
       
+      Csr(index_type n, 
+          index_type m, 
+          index_type nnz,
+          bool symmetric,
+          bool expanded,
+          index_type** rows,
+          index_type** cols,
+          real_type** vals,
+          memory::MemorySpace memspaceSrc,
+          memory::MemorySpace memspaceDst);
+      
       Csr(matrix::Coo* mat, memory::MemorySpace memspace);
 
       ~Csr();

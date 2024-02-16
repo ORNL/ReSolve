@@ -37,6 +37,119 @@ namespace ReSolve
     coo2csr(A_coo, memspace);
   }
 
+  /**
+   * @brief Hijacking constructor
+   * 
+   * @param[in] n 
+   * @param[in] m 
+   * @param[in] nnz 
+   * @param[in] symmetric 
+   * @param[in] expanded 
+   * @param[in,out] rows 
+   * @param[in,out] cols 
+   * @param[in,out] vals 
+   * @param[in] memspaceSrc 
+   * @param[in] memspaceDst 
+   */
+  matrix::Csr::Csr(index_type n, 
+                   index_type m, 
+                   index_type nnz,
+                   bool symmetric,
+                   bool expanded,
+                   index_type** rows,
+                   index_type** cols,
+                   real_type** vals,
+                   memory::MemorySpace memspaceSrc,
+                   memory::MemorySpace memspaceDst)
+    : Sparse(n, m, nnz, symmetric, expanded)
+  {
+    using namespace memory;
+    int control = -1;
+    if ((memspaceSrc == memory::HOST)   && (memspaceDst == memory::HOST))  { control = 0;}
+    if ((memspaceSrc == memory::HOST)   && (memspaceDst == memory::DEVICE)){ control = 1;}
+    if ((memspaceSrc == memory::DEVICE) && (memspaceDst == memory::HOST))  { control = 2;}
+    if ((memspaceSrc == memory::DEVICE) && (memspaceDst == memory::DEVICE)){ control = 3;}
+
+    switch (control)
+    {
+      case 0: // cpu->cpu
+        // Set host data
+        h_row_data_ = *rows;
+        h_col_data_ = *cols;
+        h_val_data_ = *vals;
+        h_data_updated_ = true;
+        owns_cpu_data_  = true;
+        // Set device data to null
+        if (d_row_data_ || d_col_data_ || d_val_data_) {
+          out::error() << "Device data unexpectedly allocated. "
+                       << "Possible bug in matrix::Sparse class.\n";
+        }
+        d_row_data_ = nullptr;
+        d_col_data_ = nullptr;
+        d_val_data_ = nullptr;
+        d_data_updated_ = false;
+        owns_gpu_data_  = false;
+        // Hijack data from the source
+        *rows = nullptr;
+        *cols = nullptr;
+        *vals = nullptr;
+        break;
+      case 2: // gpu->cpu
+        // Set device data and copy it to host
+        d_row_data_ = *rows;
+        d_col_data_ = *cols;
+        d_val_data_ = *vals;
+        d_data_updated_ = true;
+        owns_gpu_data_  = true;
+        copyData(memspaceDst);
+        // Hijack data from the source
+        *rows = nullptr;
+        *cols = nullptr;
+        *vals = nullptr;
+        break;
+      case 1: // cpu->gpu
+        // Set host data and copy it to device
+        h_row_data_ = *rows;
+        h_col_data_ = *cols;
+        h_val_data_ = *vals;
+        h_data_updated_ = true;
+        owns_cpu_data_  = true;
+        copyData(memspaceDst);
+
+        // Hijack data from the source
+        *rows = nullptr;
+        *cols = nullptr;
+        *vals = nullptr;
+        break;
+      case 3: // gpu->gpu
+        // Set device data
+        d_row_data_ = *rows;
+        d_col_data_ = *cols;
+        d_val_data_ = *vals;
+        d_data_updated_ = true;
+        owns_gpu_data_  = true;
+        // Set host data to null
+        if (h_row_data_ || h_col_data_ || h_val_data_) {
+          out::error() << "Host data unexpectedly allocated. "
+                       << "Possible bug in matrix::Sparse class.\n";
+        }
+        h_row_data_ = nullptr;
+        h_col_data_ = nullptr;
+        h_val_data_ = nullptr;
+        h_data_updated_ = false;
+        owns_cpu_data_  = false;
+        // Hijack data from the source
+        *rows = nullptr;
+        *cols = nullptr;
+        *vals = nullptr;
+        break;
+      default:
+        out::error() << "Csr constructor failed! "
+                     << "Possible bug in memory spaces setting.\n";
+        break;
+    }
+  }
+
   matrix::Csr::~Csr()
   {
   }
