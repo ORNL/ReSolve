@@ -21,7 +21,7 @@ namespace ReSolve {
    * @todo Decide how to allow user to configure grid and block sizes.
    */
   void  count_sketch_theta(index_type n,
-                           index_type k,
+                           index_type /* k */,
                            index_type* labels,
                            index_type* flip,
                            real_type* input,
@@ -63,7 +63,9 @@ namespace ReSolve {
     } 
   }
 
-  void FWHT(index_type M, index_type log2N, real_type* h_Data) 
+  void FWHT(index_type M, 
+            index_type log2N, 
+            real_type* h_Data) 
   {
     index_type h = 1;
     index_type N =  static_cast<index_type>(std::pow(2.0,log2N));
