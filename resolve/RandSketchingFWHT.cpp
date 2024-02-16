@@ -99,7 +99,7 @@ namespace ReSolve
         mem_.deviceSynchronize();
         break; // remember - scaling is the solver's problem 
       case HOST:
-        std::memset(d_aux_, 0.0, N_ * sizeof(real_type));
+        std::memset(d_aux_, 0.0, static_cast<size_t>(N_) * sizeof(real_type));
         FWHT_scaleByD(n_, 
                       h_D_,
                       input->getData(memspace_),
