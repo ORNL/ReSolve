@@ -1,3 +1,5 @@
+#include <cmath>
+#include <stdio.h>
 #include "cpuKernels.h"
 
 //
@@ -61,9 +63,24 @@ namespace ReSolve {
     } 
   }
 
-  void FWHT(index_type M, index_type log2N, real_type* d_Data) 
+  void FWHT(index_type M, index_type log2N, real_type* h_Data) 
   {
-
+    index_type h = 1;
+    index_type N =  static_cast<index_type>(std::pow(2.0,log2N));
+    real_type x, y;
+    
+    while (h < N) {
+      for (index_type i = 0; i < N; i += 2*h) {
+        for (index_type j = i; j < i + h; ++j) {
+          x = h_Data[j];
+          y = h_Data[j + h];
+          h_Data[j] = x + y;
+          h_Data[j + h] = x - y;
+        } 
+      }
+      // note: in "normal" FWHT there is also a division by sqrt(2) here     
+      h *= 2;
+    } 
   }
 
 }
