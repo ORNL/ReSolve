@@ -27,14 +27,15 @@
 #if defined (RESOLVE_USE_CUDA)
 #include <resolve/LinSolverDirectCuSparseILU0.hpp>
   using workspace_type = ReSolve::LinAlgWorkspaceCUDA;
-  std::string memory_space("cuda");
+  ReSolve::memory::MemorySpace memspace = ReSolve::memory::DEVICE;
 #elif defined (RESOLVE_USE_HIP)
 #include <resolve/LinSolverDirectRocSparseILU0.hpp>
   using workspace_type = ReSolve::LinAlgWorkspaceHIP;
-  std::string memory_space("hip");
+  ReSolve::memory::MemorySpace memspace = ReSolve::memory::DEVICE;
 #else
+  #include <cmath>
   using workspace_type = ReSolve::LinAlgWorkspaceCpu;
-  std::string memory_space("cpu");
+  ReSolve::memory::MemorySpace memspace = ReSolve::memory::HOST;
 #endif
 
 using namespace ReSolve::constants;
@@ -77,8 +78,8 @@ int main(int argc, char *argv[])
   vec_x->allocate(ReSolve::memory::HOST);
 
   // Set the initial guess to 0
-  vec_x->allocate(ReSolve::memory::DEVICE);
-  vec_x->setToZero(ReSolve::memory::DEVICE);
+  vec_x->allocate(memspace);
+  vec_x->setToZero(memspace);
 
   // Norm of rhs vector
   real_type norm_b = 0.0;
@@ -88,7 +89,7 @@ int main(int argc, char *argv[])
   solver->getIterativeSolver().setMaxit(2500);
   solver->getIterativeSolver().setTol(1e-12);
 
-  matrix_handler.setValuesChanged(true, ReSolve::memory::DEVICE);
+  matrix_handler.setValuesChanged(true, memspace);
 
   // Set system matrix and initialize iterative solver
   status = solver->setMatrix(A);
@@ -103,7 +104,7 @@ int main(int argc, char *argv[])
   error_sum += status;
 
   // Get residual norm
-  norm_b = vector_handler.dot(vec_rhs, vec_rhs, ReSolve::memory::DEVICE);
+  norm_b = vector_handler.dot(vec_rhs, vec_rhs, memspace);
   norm_b = std::sqrt(norm_b);
   real_type final_norm_first =  solver->getIterativeSolver().getFinalResidualNorm();
   std::cout << std::scientific << std::setprecision(16)
@@ -141,7 +142,7 @@ int main(int argc, char *argv[])
   error_sum += status;
 
   // Set the initial guess to 0
-  vec_x->setToZero(ReSolve::memory::DEVICE);
+  vec_x->setToZero(memspace);
 
   // Solve system
   status = solver->solve(vec_rhs, vec_x);
@@ -185,7 +186,7 @@ ReSolve::vector::Vector* generateRhs(const index_type N)
 {
   vector_type* vec_rhs = new vector_type(N);
   vec_rhs->allocate(ReSolve::memory::HOST);
-  vec_rhs->allocate(ReSolve::memory::DEVICE);
+  vec_rhs->allocate(memspace);
 
   real_type* data = vec_rhs->getData(ReSolve::memory::HOST);
   for (int i = 0; i < N; ++i) {
@@ -196,7 +197,7 @@ ReSolve::vector::Vector* generateRhs(const index_type N)
       data[i] = -111.0;
     }
   }
-  vec_rhs->copyData(ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+  vec_rhs->copyData(ReSolve::memory::HOST, memspace);
   return vec_rhs;
 } 
 
@@ -259,6 +260,6 @@ ReSolve::matrix::Csr* generateMatrix(const index_type N)
 
 
   A->setUpdated(ReSolve::memory::HOST);
-  A->copyData(ReSolve::memory::DEVICE);
+  A->copyData(memspace);
   return A;
 }

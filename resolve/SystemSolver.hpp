@@ -7,6 +7,7 @@ namespace ReSolve
   class GramSchmidt;
   class LinAlgWorkspaceCUDA;
   class LinAlgWorkspaceHIP;
+  class LinAlgWorkspaceCpu;
   class MatrixHandler;
   class VectorHandler;
 
@@ -29,7 +30,12 @@ namespace ReSolve
       /// @brief Temporary until abstract preconditioner class is created
       using precond_type = LinSolverDirect;
 
-      SystemSolver();
+      SystemSolver(LinAlgWorkspaceCpu* workspaceCpu, 
+                   std::string factor = "klu",
+                   std::string refactor = "klu",
+                   std::string solve = "klu",
+                   std::string precond = "none",
+                   std::string ir = "none");
       SystemSolver(LinAlgWorkspaceCUDA* workspaceCuda, 
                    std::string factor = "klu",
                    std::string refactor = "cusolverrf",
@@ -93,6 +99,7 @@ namespace ReSolve
 
       LinAlgWorkspaceCUDA* workspaceCuda_{nullptr};
       LinAlgWorkspaceHIP*  workspaceHip_{nullptr};
+      LinAlgWorkspaceCpu*  workspaceCpu_{nullptr};
 
       MatrixHandler* matrixHandler_{nullptr};
       VectorHandler* vectorHandler_{nullptr};

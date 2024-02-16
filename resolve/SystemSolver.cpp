@@ -5,15 +5,15 @@
 #include <resolve/matrix/Csc.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/LinSolverIterativeFGMRES.hpp>
+#include <resolve/LinSolverDirectSerialILU0.hpp>
 #include <resolve/GramSchmidt.hpp>
+#include <resolve/workspace/LinAlgWorkspaceCpu.hpp>
 
 #ifdef RESOLVE_USE_KLU
 #include <resolve/LinSolverDirectKLU.hpp>
 #endif
 
-#ifdef RESOLVE_USE_GPU
 #include <resolve/LinSolverIterativeRandFGMRES.hpp>
-#endif
 
 #ifdef RESOLVE_USE_CUDA
 #include <resolve/workspace/LinAlgWorkspaceCUDA.hpp>
@@ -43,14 +43,32 @@ namespace ReSolve
   // Create a shortcut name for Logger static class
   using out = io::Logger;
 
-  SystemSolver::SystemSolver()
+  SystemSolver::SystemSolver(LinAlgWorkspaceCpu* workspaceCpu,
+                             std::string factor,
+                             std::string refactor,
+                             std::string solve,
+                             std::string precond,
+                             std::string ir) 
+    : workspaceCpu_(workspaceCpu),
+      factorizationMethod_(factor),
+      refactorizationMethod_(refactor),
+      solveMethod_(solve),
+      precondition_method_(precond),
+      irMethod_(ir)
   {
-    //set defaults:
+    if ((refactor != "none") && (precond != "none")) {
+      out::warning() << "Incorrect input: "
+                     << "Refactorization and preconditioning cannot both be enabled.\n"
+                     << "Setting both to 'none' ...\n";
+      refactorizationMethod_ = "none";
+      precondition_method_   = "none";
+    }
+
+    // Instantiate handlers
+    matrixHandler_ = new MatrixHandler(workspaceCpu_);
+    vectorHandler_ = new VectorHandler(workspaceCpu_);
+
     memspace_ = "cpu";
-    factorizationMethod_ = "klu";
-    refactorizationMethod_ = "klu";
-    solveMethod_ = "klu";
-    irMethod_ = "none";
     
     initialize();
   }
@@ -156,13 +174,11 @@ namespace ReSolve
     }
 
     // If we use iterative solver, we can set it up here
-#ifdef RESOLVE_USE_GPU
     if (solveMethod_ == "randgmres") {
       auto* rgmres = dynamic_cast<LinSolverIterativeRandFGMRES*>(iterativeSolver_);
       status += rgmres->setup(A_);
       status += gs_->setup(rgmres->getKrand(), rgmres->getRestart());
     }
-#endif
 
     return status;
   }
@@ -242,9 +258,10 @@ namespace ReSolve
     } else if (precondition_method_ == "ilu0") {
 #ifdef RESOLVE_USE_CUDA
       preconditioner_ = new LinSolverDirectCuSparseILU0(workspaceCuda_);
-#endif
-#ifdef RESOLVE_USE_HIP
+#elif defined(RESOLVE_USE_HIP)
       preconditioner_ = new LinSolverDirectRocSparseILU0(workspaceHip_);
+#else
+      preconditioner_ = new LinSolverDirectSerialILU0(workspaceCpu_);
 #endif
     } else {
       out::error() << "Preconditioner method " << precondition_method_ 
@@ -252,7 +269,6 @@ namespace ReSolve
       return 1;
     }
 
-#ifdef RESOLVE_USE_GPU
     // Create iterative solver
     if (solveMethod_ == "randgmres") {
       LinSolverIterativeRandFGMRES::SketchingMethod sketch;
@@ -272,7 +288,6 @@ namespace ReSolve
                                                           sketch,
                                                           gs_);
     }
-#endif
 
     return 0;
   }
@@ -522,7 +537,6 @@ namespace ReSolve
     solveMethod_ = method;
 
     if (method == "randgmres") {
-#ifdef RESOLVE_USE_GPU
       irMethod_ = "none";
       if (iterativeSolver_)
         delete iterativeSolver_;
@@ -543,10 +557,6 @@ namespace ReSolve
                                                           vectorHandler_,
                                                           sketch,
                                                           gs_);
-#else
-      solveMethod_ = "none";
-      out::error() << "Randomized GMRES only available on GPU.\n";
-#endif
     }
 
   }

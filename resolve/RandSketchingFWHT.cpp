@@ -1,5 +1,6 @@
 #include <cmath>
 #include <limits>
+#include <cstring>
 
 #include "RandSketchingFWHT.hpp"
 #include <resolve/MemoryUtils.hpp>
@@ -7,9 +8,10 @@
 #include <resolve/utilities/logger/Logger.hpp>
 #ifdef RESOLVE_USE_HIP
 #include <resolve/hip/hipKernels.h>
-#endif
-#ifdef RESOLVE_USE_CUDA
+#elif  defined (RESOLVE_USE_CUDA)
 #include <resolve/cuda/cudaKernels.h>
+#else
+#include <resolve/cpu/cpuKernels.h>
 #endif
 #include <resolve/RandSketchingFWHT.hpp> 
 namespace ReSolve 
@@ -23,7 +25,8 @@ namespace ReSolve
    * 
    * @todo There is little utility for the default constructor. Maybe remove?.
    */
-  RandSketchingFWHT::RandSketchingFWHT()
+  RandSketchingFWHT::RandSketchingFWHT(memory::MemorySpace memspace)
+    : memspace_(memspace)
   {
     h_seq_ = nullptr;
     h_D_ = nullptr;
@@ -42,13 +45,22 @@ namespace ReSolve
    */
   RandSketchingFWHT::~RandSketchingFWHT()
   {
-    delete h_seq_;
-    delete h_D_;
-    delete h_perm_;
+    using namespace memory;
 
-    mem_.deleteOnDevice(d_D_);
-    mem_.deleteOnDevice(d_perm_);
-    mem_.deleteOnDevice(d_aux_);
+    delete [] h_seq_;
+    delete [] h_D_;
+    delete [] h_perm_;
+
+    switch (memspace_) {
+      case DEVICE:
+        mem_.deleteOnDevice(d_D_);
+        mem_.deleteOnDevice(d_perm_);
+        mem_.deleteOnDevice(d_aux_);
+        break;
+      case HOST:
+        delete [] d_aux_;
+        break;
+    }
   }
 
   // Actual sketching process
@@ -66,31 +78,49 @@ namespace ReSolve
    */
   int RandSketchingFWHT::Theta(vector_type* input, vector_type* output)
   {
-    mem_.setZeroArrayOnDevice(d_aux_, N_);
-    FWHT_scaleByD(n_, 
-                  d_D_,
-                  input->getData(ReSolve::memory::DEVICE), 
-                  d_aux_);  
+    using namespace memory;
+   
+    switch (memspace_) {
+      case DEVICE:
+        mem_.setZeroArrayOnDevice(d_aux_, N_);
+        FWHT_scaleByD(n_, 
+                      d_D_,
+                      input->getData(memspace_), 
+                      d_aux_);  
 
-    mem_.deviceSynchronize();
-    FWHT(1, log2N_, d_aux_);
+        mem_.deviceSynchronize();
+        FWHT(1, log2N_, d_aux_);
 
-    mem_.deviceSynchronize();
-    FWHT_select(k_rand_, 
-                d_perm_, 
-                d_aux_, 
-                output->getData(ReSolve::memory::DEVICE)); 
-    mem_.deviceSynchronize();
-    // remember - scaling is the solver's problem 
+        mem_.deviceSynchronize();
+        FWHT_select(k_rand_, 
+                    d_perm_, 
+                    d_aux_, 
+                    output->getData(memspace_)); 
+        mem_.deviceSynchronize();
+        break; // remember - scaling is the solver's problem 
+      case HOST:
+        std::memset(d_aux_, 0.0, static_cast<size_t>(N_) * sizeof(real_type));
+        FWHT_scaleByD(n_, 
+                      h_D_,
+                      input->getData(memspace_),
+                      d_aux_);  
+
+        FWHT(1, log2N_, d_aux_);
+
+        FWHT_select(k_rand_, 
+                    h_perm_, 
+                    d_aux_, 
+                    output->getData(memspace_));
+        break;
+    }
     return 0;
   }
 
-  // Setup the parameters, sampling matrices, permuations, etc
   /** 
    * @brief Sketching method setup. 
    * 
-   * This function allocated P(erm), D (diagonal scaling matrix) andpopulates
-   * them and  allocates a bunch of other auxiliary arrays.
+   * This function allocated P(erm), D (diagonal scaling matrix) and populates
+   * them. It also allocates auxiliary arrays.
    *
    *
    * @param[in]  n  - size of base (non-sketched) vector
@@ -100,7 +130,6 @@ namespace ReSolve
    *
    * @return 0 of successful, -1 otherwise. 
    */
-   
   int RandSketchingFWHT::setup(index_type n, index_type k)
   {
     k_rand_ = k;
@@ -148,19 +177,24 @@ namespace ReSolve
       }
     }
 
-    mem_.allocateArrayOnDevice(&d_perm_, k_rand_); 
-    mem_.allocateArrayOnDevice(&d_D_, n_); 
-    mem_.allocateArrayOnDevice(&d_aux_, N_); 
-
-    //then copy
-
-    mem_.copyArrayHostToDevice(d_perm_, h_perm_, k_rand_);
-    mem_.copyArrayHostToDevice(d_D_, h_D_, n_);
-
+    using namespace memory;
+   
+    switch (memspace_) {
+      case DEVICE:
+        mem_.allocateArrayOnDevice(&d_perm_, k_rand_); 
+        mem_.allocateArrayOnDevice(&d_D_, n_); 
+        mem_.allocateArrayOnDevice(&d_aux_, N_); 
+        //then copy
+        mem_.copyArrayHostToDevice(d_perm_, h_perm_, k_rand_);
+        mem_.copyArrayHostToDevice(d_D_, h_D_, n_);
+        break;
+      case HOST:
+        d_aux_  = new real_type[N_];
+        break;
+    }
     return 0;
   }
 
-  //to be fixed, this can be done on the GPU
   /** 
    * @brief Reset values in the arrays used for sketching.
    * 
@@ -168,7 +202,9 @@ namespace ReSolve
    *
    * @post Everything is set up so you call call Theta.
    *
-   * @return 0 of successful, -1 otherwise. 
+   * @return 0 of successful, -1 otherwise.
+   * 
+   * @todo Need to be fixed, this can be done on the GPU.
    */
   int RandSketchingFWHT::reset() // if needed can be reset (like when Krylov method restarts)
   {
@@ -192,9 +228,9 @@ namespace ReSolve
     }
 
     // and D
-    for (int i = 0; i < n_; ++i){
+    for (int i = 0; i < n_; ++i) {
       r = rand() % 100;
-      if (r < 50){
+      if (r < 50) {
         h_D_[i] = -1;
       } else { 
         h_D_[i] = 1;
@@ -203,8 +239,14 @@ namespace ReSolve
 
     //and copy
 
-    mem_.copyArrayHostToDevice(d_perm_, h_perm_, k_rand_);
-    mem_.copyArrayHostToDevice(d_D_, h_D_, n_);
+    using namespace memory;
+   
+    if (memspace_ == memory::DEVICE) {
+      mem_.copyArrayHostToDevice(d_perm_, h_perm_, k_rand_);
+      mem_.copyArrayHostToDevice(d_D_, h_D_, n_);
+
+      mem_.deviceSynchronize();
+    }
 
     return 0;
   }

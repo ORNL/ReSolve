@@ -165,13 +165,13 @@ namespace ReSolve {
               a->update(x->getVectorData(i, ms), ms, memory::HOST);
               b->update(x->getVectorData(j, ms), ms, memory::HOST);
               ip = handler->dot(a, b, memory::HOST);
-              if ( (i != j) && (abs(ip) > 1e-14)) {
+              if ( (i != j) && !isEqual(ip, 0.0)) {
                 status = false;
                 std::cout << "Vectors " << i << " and " << j << " are not orthogonal!"
                           << " Inner product computed: " << ip << ", expected: " << 0.0 << "\n";
                 break; 
               }
-              if ( (i == j) && !isEqual(abs(sqrt(ip)), 1.0)) {
+              if ( (i == j) && !isEqual(sqrt(ip), 1.0)) {           
                 status = false;
                 std::cout << std::setprecision(16);
                 std::cout << "Vector " << i << " has norm: " << sqrt(ip) << " expected: "<< 1.0 <<"\n";

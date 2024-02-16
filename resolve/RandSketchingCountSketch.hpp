@@ -17,7 +17,7 @@ namespace ReSolve {
     public: 
 
       // constructor
-      RandSketchingCountSketch();
+      RandSketchingCountSketch(memory::MemorySpace memspace);
 
       // destructor
       virtual ~RandSketchingCountSketch();
@@ -35,5 +35,6 @@ namespace ReSolve {
 
       index_type* d_labels_; ///< h_labels GPU counterpart
       index_type* d_flip_;   ///< h_flip GPU counterpart
+      memory::MemorySpace memspace_;
   };
 }

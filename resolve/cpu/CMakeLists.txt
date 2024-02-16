@@ -9,10 +9,12 @@
 set(ReSolve_CPU_SRC
     MemoryUtils.cpp
     cpuVectorKernels.cpp
+    cpuKernels.cpp
 )
 
 set(ReSolve_CPU_HEADER_INSTALL
     CpuMemory.hpp
+    cpuKernels.h
 )
 
 # First create dummy backend

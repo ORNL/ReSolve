@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
   vector_type* vec_x;
   vector_type* vec_r;
 
-  ReSolve::SystemSolver* solver = new ReSolve::SystemSolver();
+  ReSolve::SystemSolver* solver = new ReSolve::SystemSolver(workspace);
 
   for (int i = 0; i < numSystems; ++i)
   {
