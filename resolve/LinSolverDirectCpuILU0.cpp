@@ -16,8 +16,8 @@
 
 namespace ReSolve 
 {
-  LinSolverDirectCpuILU0::LinSolverDirectCpuILU0(LinAlgWorkspaceCpu* workspace)
-    : workspace_(workspace)
+  LinSolverDirectCpuILU0::LinSolverDirectCpuILU0(LinAlgWorkspaceCpu* /* workspace */)
+    // : workspace_(workspace)
   {
   }
 

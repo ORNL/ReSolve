@@ -92,7 +92,7 @@ public:
     const index_type M = 1 + *(std::max_element(cols.begin(), cols.end()));
 
     // Get number of nonzeros
-    const index_type NNZ = general_coo_matrix_vals_.size();
+    const index_type NNZ = static_cast<index_type>(general_coo_matrix_vals_.size());
 
     // Create the test COO matrix
     ReSolve::matrix::Coo A(N, M, NNZ, false, false);

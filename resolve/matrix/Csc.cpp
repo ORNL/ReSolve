@@ -1,4 +1,5 @@
 #include <cstring>  // <-- includes memcpy
+#include <iomanip>
 
 #include <resolve/utilities/logger/Logger.hpp>
 #include "Csc.hpp"

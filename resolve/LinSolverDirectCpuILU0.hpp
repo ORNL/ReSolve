@@ -66,7 +66,7 @@ namespace ReSolve
 
     private:
       // MemoryHandler mem_; ///< Device memory manager object
-      LinAlgWorkspaceCpu* workspace_{nullptr};
+      // LinAlgWorkspaceCpu* workspace_{nullptr};
 
       matrix::Csr* A_{nullptr};     ///< Pointer to the system matrix
       real_type*  diagU_{nullptr};  ///< Buffer holding diagonal of factor U

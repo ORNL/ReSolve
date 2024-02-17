@@ -1,6 +1,7 @@
 #include <cstring>  // <-- includes memcpy
 #include <algorithm>
 #include <cassert>
+#include <iomanip>
 
 #include "Csr.hpp"
 #include "Coo.hpp"
