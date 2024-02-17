@@ -1,12 +1,13 @@
 name: PNNL Mirror
 
 # triggers a github action everytime there is a push or mr
+# Disable disfunctional PNNL mirror
 on:
-  pull_request:
-  push:
-    branches:
-      - develop
-      - main
+  # pull_request:
+  # push:
+  #   branches:
+  #     - develop
+  #     - main
 
 jobs:
   # To test on HPC resources we must first mirror the repo and then trigger a pipeline
