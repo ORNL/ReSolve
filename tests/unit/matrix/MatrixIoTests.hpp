@@ -3,6 +3,7 @@
 #include <vector>
 #include <sstream>
 #include <iterator>
+#include <algorithm>
 #include <tests/unit/TestBase.hpp>
 
 namespace ReSolve { namespace tests {
