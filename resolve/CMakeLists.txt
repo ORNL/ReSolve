@@ -13,15 +13,12 @@ set(ReSolve_SRC
     LinSolver.cpp
     GramSchmidt.cpp
     LinSolverIterativeFGMRES.cpp
+    LinSolverDirectCpuILU0.cpp
     LinSolverIterativeRandFGMRES.cpp
     RandSketchingManager.cpp
     RandSketchingCountSketch.cpp
     RandSketchingFWHT.cpp
     LinSolverDirectSerialILU0.cpp
-)
-
-# Temporary until there is CPU-only option for FGMRES
-set(ReSolve_GPU_SRC
 )
 
 set(ReSolve_KLU_SRC
@@ -47,17 +44,16 @@ set(ReSolve_HEADER_INSTALL
     cusolver_defs.hpp
     LinSolver.hpp
     LinSolverIterativeFGMRES.hpp
-    RefactorizationSolver.hpp
+    LinSolverDirectCpuILU0.hpp
     SystemSolver.hpp
     GramSchmidt.hpp
+    RandSketchingManager.hpp
+    RandSketchingCountSketch.hpp
+    RandSketchingFWHT.hpp
     MemoryUtils.hpp)
 
 set(ReSolve_KLU_HEADER_INSTALL
   LinSolverDirectKLU.hpp
-)
-
-set(ReSolve_GPU_HEADER_INSTALL
-    RandSketchingManager.hpp
 )
 
 set(ReSolve_CUDA_HEADER_INSTALL
@@ -94,12 +90,6 @@ set(ReSolve_Targets_List
     resolve_tpl
     resolve_workspace
 )
-
-# Temporary until there is CPU-only option for FGMRES
-if(RESOLVE_USE_GPU)
-  list(APPEND ReSolve_SRC ${ReSolve_GPU_SRC})
-  list(APPEND ReSolve_HEADER_INSTALL ${ReSolve_GPU_HEADER_INSTALL})
-endif()
 
 # If CUDA support is enabled add CUDA SDK specific code and dependencies
 if(RESOLVE_USE_CUDA)

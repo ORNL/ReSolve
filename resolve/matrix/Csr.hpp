@@ -19,6 +19,17 @@ namespace ReSolve { namespace matrix {
           bool symmetric,
           bool expanded);
       
+      Csr(index_type n, 
+          index_type m, 
+          index_type nnz,
+          bool symmetric,
+          bool expanded,
+          index_type** rows,
+          index_type** cols,
+          real_type** vals,
+          memory::MemorySpace memspaceSrc,
+          memory::MemorySpace memspaceDst);
+      
       Csr(matrix::Coo* mat, memory::MemorySpace memspace);
 
       ~Csr();
@@ -32,7 +43,7 @@ namespace ReSolve { namespace matrix {
 
       virtual int allocateMatrixData(memory::MemorySpace memspace); 
 
-      virtual void print() {return;}
+      virtual void print(std::ostream& file_out = std::cout);
 
       virtual int copyData(memory::MemorySpace memspaceOut);
 

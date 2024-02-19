@@ -72,10 +72,10 @@ namespace ReSolve
       virtual real_type getMatrixConditionNumber();
     
     protected:
-      matrix::Sparse* L_;
-      matrix::Sparse* U_;
-      index_type* P_;
-      index_type* Q_;
+      matrix::Sparse* L_{nullptr};
+      matrix::Sparse* U_{nullptr};
+      index_type* P_{nullptr};
+      index_type* Q_{nullptr};
       bool factors_extracted_;
 
       int ordering_{1}; // 0 = AMD, 1 = COLAMD, 2 = user provided P, Q

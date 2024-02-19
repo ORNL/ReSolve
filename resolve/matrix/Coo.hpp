@@ -24,7 +24,7 @@ namespace ReSolve { namespace matrix {
 
       virtual index_type allocateMatrixData(memory::MemorySpace memspace);
 
-      virtual void print();
+      virtual void print(std::ostream& file_out = std::cout);
 
       virtual int copyData(memory::MemorySpace memspaceOut);
   };

@@ -34,7 +34,7 @@ namespace ReSolve { namespace vector {
       index_type getNumVectors();
 
       void setDataUpdated(memory::MemorySpace memspace);
-      void setData(real_type* data, memory::MemorySpace memspace);
+      int setData(real_type* data, memory::MemorySpace memspace);
       void allocate(memory::MemorySpace memspace);   
       void setToZero(memory::MemorySpace memspace);
       void setToZero(index_type i, memory::MemorySpace memspace); // set i-th ivector to 0
@@ -47,8 +47,8 @@ namespace ReSolve { namespace vector {
       int deepCopyVectorData(real_type* dest, memory::MemorySpace memspace);  //copy FULL multivector 
     
     private:
-      index_type n_; ///< size
-      index_type k_; ///< k_ = 1 for vectors and k_>1 for multivectors (multivectors are accessed column-wise). 
+      index_type n_{0}; ///< size
+      index_type k_{0}; ///< k_ = 1 for vectors and k_>1 for multivectors (multivectors are accessed column-wise). 
       index_type n_current_; ///< if vectors dynamically changes size, "current n_" keeps track of this. Needed for some solver implementations. 
       real_type* d_data_{nullptr}; ///< DEVICE data array
       real_type* h_data_{nullptr}; ///< HOST data array

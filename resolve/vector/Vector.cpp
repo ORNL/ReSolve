@@ -1,8 +1,11 @@
 #include <cstring>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/vector/VectorKernels.hpp>
+#include <resolve/utilities/logger/Logger.hpp>
 
 namespace ReSolve { namespace vector {
+
+  using out = ReSolve::io::Logger;
 
   /** 
    * @brief basic constructor.
@@ -91,21 +94,34 @@ namespace ReSolve { namespace vector {
    * 
    * @warning This function DOES NOT ALLOCATE any data, it only assigns the pointer.  
    */
-  void Vector::setData(real_type* data, memory::MemorySpace memspace)
+  int Vector::setData(real_type* data, memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
     switch (memspace) {
       case HOST:
+        if (owns_cpu_data_ && h_data_) {
+          out::error() << "Trying to set vector host values, but the values already set!\n";
+          out::error() << "Ignoring setData function call ...\n";
+          return 1;
+        }
         h_data_ = data;
         cpu_updated_ = true;
         gpu_updated_ = false;
+        owns_cpu_data_ = false;
         break;
       case DEVICE:
+        if (owns_gpu_data_ && d_data_) {
+          out::error() << "Trying to set vector device values, but the values already set!\n";
+          out::error() << "Ignoring setData function call ...\n";
+          return 1;
+        }
         d_data_ = data;
         gpu_updated_ = true;
         cpu_updated_ = false;
+        owns_gpu_data_ = false;
         break;
     }
+    return 0;
   }
 
   /** 
@@ -465,7 +481,9 @@ namespace ReSolve { namespace vector {
   }
 
   /** 
-   * @brief Set current lenght of the vector (use for vectors and multivectors that change size throughout computation). Note: vector needs to be allocated using maximum expected lenght.
+   * @brief Set current lenght of the vector (use for vectors and multivectors
+   * that change size throughout computation). Note: vector needs to be
+   * allocated using maximum expected lenght.
    * 
    * @param[in] new_n_current       - New vector lenght
    *

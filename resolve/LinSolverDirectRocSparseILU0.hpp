@@ -6,9 +6,9 @@
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 
 #include <rocsparse/rocsparse.h>
-//#include <rocblas/rocblas.h>
 #include <rocsolver/rocsolver.h>
 #include <hip/hip_runtime.h>
+
 namespace ReSolve 
 {
   // Forward declaration of vector::Vector class
