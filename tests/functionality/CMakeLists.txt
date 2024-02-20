@@ -10,17 +10,20 @@
 add_executable(version.exe testVersion.cpp) 
 target_link_libraries(version.exe PRIVATE ReSolve)
 
+add_executable(sys_rand_gmres_test.exe testSysRandGMRES.cpp)
+target_link_libraries(sys_rand_gmres_test.exe PRIVATE ReSolve)
+
 if(RESOLVE_USE_KLU)
   # Build KLU+KLU test
   add_executable(klu_klu_test.exe testKLU.cpp)
   target_link_libraries(klu_klu_test.exe PRIVATE ReSolve)
 endif(RESOLVE_USE_KLU)
 
-if(NOT RESOLVE_USE_GPU)
-  # Build Random GMRES test
-  add_executable(rand_gmres_cpu_test.exe testSysRandGMRES.cpp)
-  target_link_libraries(rand_gmres_cpu_test.exe PRIVATE ReSolve)
-endif()
+# if(NOT RESOLVE_USE_GPU)
+#   # Build Random GMRES test
+#   add_executable(rand_gmres_cpu_test.exe testSysRandGMRES.cpp)
+#   target_link_libraries(rand_gmres_cpu_test.exe PRIVATE ReSolve)
+# endif()
 
 
 if(RESOLVE_USE_CUDA)
@@ -73,8 +76,8 @@ if(RESOLVE_USE_HIP)
   add_executable(rand_gmres_hip_test.exe testRandGMRES_Rocm.cpp)
   target_link_libraries(rand_gmres_hip_test.exe PRIVATE ReSolve)
   
-  add_executable(sys_rand_gmres_hip_test.exe testSysRandGMRES.cpp)
-  target_link_libraries(sys_rand_gmres_hip_test.exe PRIVATE ReSolve)
+  # add_executable(sys_rand_gmres_hip_test.exe testSysRandGMRES.cpp)
+  # target_link_libraries(sys_rand_gmres_hip_test.exe PRIVATE ReSolve)
 
 endif(RESOLVE_USE_HIP)
 
@@ -85,9 +88,9 @@ if(RESOLVE_USE_KLU)
   list(APPEND installable_tests klu_klu_test.exe)
 endif()
 
-if(NOT RESOLVE_USE_GPU)
-  list(APPEND installable_tests rand_gmres_cpu_test.exe)
-endif()
+# if(NOT RESOLVE_USE_GPU)
+#   list(APPEND installable_tests rand_gmres_cpu_test.exe)
+# endif()
 
 if(RESOLVE_USE_CUDA)
   list(APPEND installable_tests klu_rf_test.exe
@@ -96,7 +99,8 @@ if(RESOLVE_USE_CUDA)
                                 klu_glu_test.exe
                                 sys_glu_test.exe
                                 rand_gmres_cuda_test.exe
-                                sys_rand_gmres_cuda_test.exe)
+                                #sys_rand_gmres_cuda_test.exe
+  )
 endif(RESOLVE_USE_CUDA)
 
 if(RESOLVE_USE_HIP)
@@ -104,7 +108,8 @@ if(RESOLVE_USE_HIP)
                                 rocsolver_rf_fgmres_test.exe
                                 sys_refactor_hip_test.exe
                                 rand_gmres_hip_test.exe
-                                sys_rand_gmres_hip_test.exe)
+                                #sys_rand_gmres_hip_test.exe
+  )
 endif(RESOLVE_USE_HIP)
 
 install(TARGETS ${installable_tests} 
@@ -121,9 +126,12 @@ if(RESOLVE_USE_KLU)
   add_test(NAME klu_klu_test COMMAND $<TARGET_FILE:klu_klu_test.exe> "${test_data_dir}")
 endif()
 
-if(NOT RESOLVE_USE_GPU)
-  add_test(NAME sys_rand_gmres_cpu_test COMMAND $<TARGET_FILE:rand_gmres_cpu_test.exe>)
-endif()
+add_test(NAME sys_rand_count_gmres_test COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-s" "count")
+add_test(NAME sys_rand_fwht_gmres_test COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-s" "fwht")
+
+# if(NOT RESOLVE_USE_GPU)
+#   add_test(NAME sys_rand_gmres_cpu_test COMMAND $<TARGET_FILE:rand_gmres_cpu_test.exe>)
+# endif()
 
 if(RESOLVE_USE_CUDA)
   add_test(NAME klu_rf_test  COMMAND $<TARGET_FILE:klu_rf_test.exe>  "${test_data_dir}")
@@ -132,7 +140,7 @@ if(RESOLVE_USE_CUDA)
   add_test(NAME klu_glu_test COMMAND $<TARGET_FILE:klu_glu_test.exe> "${test_data_dir}")
   add_test(NAME sys_glu_test COMMAND $<TARGET_FILE:sys_glu_test.exe> "${test_data_dir}")
   add_test(NAME rand_gmres_cuda_test COMMAND $<TARGET_FILE:rand_gmres_cuda_test.exe>)
-  add_test(NAME sys_rand_gmres_cuda_test COMMAND $<TARGET_FILE:sys_rand_gmres_cuda_test.exe>)
+  # add_test(NAME sys_rand_gmres_cuda_test COMMAND $<TARGET_FILE:sys_rand_gmres_cuda_test.exe>)
 endif(RESOLVE_USE_CUDA)
 
 if(RESOLVE_USE_HIP)
@@ -140,5 +148,6 @@ if(RESOLVE_USE_HIP)
   add_test(NAME rocsolver_rf_fgmres_test  COMMAND $<TARGET_FILE:rocsolver_rf_fgmres_test.exe>  "${test_data_dir}")
   add_test(NAME sys_refactor_hip_test  COMMAND $<TARGET_FILE:sys_refactor_hip_test.exe>  "${test_data_dir}")
   add_test(NAME rand_gmres_hip_test COMMAND $<TARGET_FILE:rand_gmres_hip_test.exe>)
-  add_test(NAME sys_rand_gmres_hip_test COMMAND $<TARGET_FILE:sys_rand_gmres_hip_test.exe>)
+  # add_test(NAME sys_rand_count_gmres_hip_test COMMAND $<TARGET_FILE:sys_rand_gmres_hip_test.exe> "-s" "count")
+  # add_test(NAME sys_rand_fwht_gmres_hip_test COMMAND $<TARGET_FILE:sys_rand_gmres_hip_test.exe> "-s" "fwht")
 endif(RESOLVE_USE_HIP)

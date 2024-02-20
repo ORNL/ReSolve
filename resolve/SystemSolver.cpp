@@ -6,6 +6,7 @@
 #include <resolve/vector/Vector.hpp>
 #include <resolve/LinSolverIterativeFGMRES.hpp>
 #include <resolve/LinSolverDirectSerialILU0.hpp>
+#include <resolve/LinSolverDirectCpuILU0.hpp>
 #include <resolve/GramSchmidt.hpp>
 #include <resolve/workspace/LinAlgWorkspaceCpu.hpp>
 
@@ -261,7 +262,8 @@ namespace ReSolve
 #elif defined(RESOLVE_USE_HIP)
       preconditioner_ = new LinSolverDirectRocSparseILU0(workspaceHip_);
 #else
-      preconditioner_ = new LinSolverDirectSerialILU0(workspaceCpu_);
+      // preconditioner_ = new LinSolverDirectSerialILU0(workspaceCpu_);
+      preconditioner_ = new LinSolverDirectCpuILU0(workspaceCpu_);
 #endif
     } else {
       out::error() << "Preconditioner method " << precondition_method_ 
@@ -281,12 +283,18 @@ namespace ReSolve
                        << "Using default.\n";
         sketch = LinSolverIterativeRandFGMRES::cs;
       }
-
       setGramSchmidtMethod(gsMethod_);
       iterativeSolver_ = new LinSolverIterativeRandFGMRES(matrixHandler_,
                                                           vectorHandler_,
                                                           sketch,
                                                           gs_);
+    } else if (solveMethod_ == "fgmres") {
+      setGramSchmidtMethod(gsMethod_);
+      iterativeSolver_ = new LinSolverIterativeFGMRES(matrixHandler_,
+                                                      vectorHandler_,
+                                                      gs_);
+    } else {
+      // do nothing
     }
 
     return 0;
@@ -532,15 +540,16 @@ namespace ReSolve
    * @param[in] method - ID of the solve method
    * 
    */
-  void SystemSolver::setSolveMethod(std::string method)
+  int SystemSolver::setSolveMethod(std::string method)
   {
     solveMethod_ = method;
 
+    // Remove existing iterative solver and set IR to "none".
+    irMethod_ = "none";
+    if (iterativeSolver_)
+      delete iterativeSolver_;
+
     if (method == "randgmres") {
-      irMethod_ = "none";
-      if (iterativeSolver_)
-        delete iterativeSolver_;
-      
       LinSolverIterativeRandFGMRES::SketchingMethod sketch;
       if (sketching_method_ == "count") {
         sketch = LinSolverIterativeRandFGMRES::cs;
@@ -557,8 +566,17 @@ namespace ReSolve
                                                           vectorHandler_,
                                                           sketch,
                                                           gs_);
+    } else if (solveMethod_ == "fgmres") {
+      setGramSchmidtMethod(gsMethod_);
+      iterativeSolver_ = new LinSolverIterativeFGMRES(matrixHandler_,
+                                                      vectorHandler_,
+                                                      gs_);
+    } else {
+      out::error() << "Solve method " << solveMethod_ 
+                   << " not recognized ...\n";
+      return 1;
     }
-
+    return 0;
   }
 
   /**
@@ -690,15 +708,32 @@ namespace ReSolve
   }
 
   /**
-   * @brief Selekt sketching method for randomized solvers
+   * @brief Select sketching method for randomized solvers
    * 
-   * This needs to be moved to LinSolverIterative class and accessed from there.
+   * This is a brute force method that will delete randomized GMRES solver
+   * only to change its sketching function.
    * 
-   * @param sketching_method 
+   * @todo This needs to be moved to LinSolverIterative class and accessed from there.
+   * 
+   * @param[in] sketching_method - string ID of the sketching method
    */
-  void SystemSolver::setSketchingMethod(std::string sketching_method)
+  int SystemSolver::setSketchingMethod(std::string sketching_method)
   {
-    sketching_method_ = sketching_method;
+    if (solveMethod_ != "randgmres") {
+      out::warning() << "Trying to set sketching method to an incompatible solver.\n";
+      out::warning() << "The setting will be ignored.\n";
+      return 1;
+    }
+    if (sketching_method_ != sketching_method) {
+      // For now use a brute force solution and just delete existing iterative solver
+      if (iterativeSolver_) {
+        delete iterativeSolver_;
+        iterativeSolver_ = nullptr;
+      }
+      sketching_method_ = sketching_method;
+      setSolveMethod("randgmres");
+    }
+    return 0;
   }
 
   //
@@ -733,6 +768,5 @@ namespace ReSolve
 
     return 0;
   }
-
 
 } // namespace ReSolve

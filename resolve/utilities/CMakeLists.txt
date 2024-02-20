@@ -7,4 +7,5 @@
 ]]
 
 add_subdirectory(logger)
+add_subdirectory(params)
 add_subdirectory(version)

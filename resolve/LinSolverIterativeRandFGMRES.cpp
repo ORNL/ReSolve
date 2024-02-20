@@ -430,6 +430,21 @@ namespace ReSolve
     return 0;
   }
 
+  int LinSolverIterativeRandFGMRES::setSketchingMethod(std::string method)
+  {
+    if (method == "count") {
+      rand_method_ = LinSolverIterativeRandFGMRES::cs;
+    } else if (method == "fwht") {
+      rand_method_ = LinSolverIterativeRandFGMRES::fwht;
+    } else {
+      out::warning() << "Sketching method " << method << " not recognized!\n"
+                      << "Using default.\n";
+      rand_method_ = LinSolverIterativeRandFGMRES::cs;
+      return 1;
+    }
+    return 0;
+  }
+
   //
   // Private methods
   //

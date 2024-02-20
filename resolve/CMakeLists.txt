@@ -127,7 +127,7 @@ target_include_directories(ReSolve INTERFACE
 )
 
 target_link_libraries(ReSolve PUBLIC ${ReSolve_Targets_List})
-target_link_libraries(ReSolve PRIVATE resolve_version)
+target_link_libraries(ReSolve PRIVATE resolve_version resolve_options)
 
 if(RESOLVE_USE_PROFILING)
   if(RESOLVE_USE_HIP)
