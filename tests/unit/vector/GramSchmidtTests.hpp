@@ -208,7 +208,7 @@ namespace ReSolve {
               if ( (i != j) && !isEqual(ip, 0.0, tol)) {
                 status = false;
                 std::cout << "Vectors " << i << " and " << j << " are not orthogonal!"
-                  << " Inner product computed: " << ip << ", expected: " << 0.0 << "\n";
+                          << " Inner product computed: " << ip << ", expected: " << 0.0 << "\n";
                 break; 
               }
               if ( (i == j) && !isEqual(sqrt(ip), 1.0, tol)) {           
