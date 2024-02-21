@@ -41,11 +41,14 @@ namespace ReSolve
         delete vec_Hcolumn_;;    
       }
 
-      if(variant_ == cgs2) {
+      if (variant_ == cgs2) {
         delete h_aux_;
         delete vec_Hcolumn_;    
       }    
-      if(variant_ == mgs_pm) {
+      if (variant_ == cgs1) {
+        delete vec_Hcolumn_;    
+      }    
+      if (variant_ == mgs_pm) {
         delete h_aux_;
       }
 
@@ -102,7 +105,10 @@ namespace ReSolve
         vec_Hcolumn_ = new vector_type(num_vecs_ + 1);
         vec_Hcolumn_->allocate(memspace_);      
       }
-
+      if(variant_ == cgs1) {
+        vec_Hcolumn_ = new vector_type(num_vecs_ + 1);
+        vec_Hcolumn_->allocate(memspace_);      
+      }
       if(variant_ == mgs_pm) {
         h_aux_ = new real_type[num_vecs_ + 1];
       }
@@ -312,6 +318,33 @@ namespace ReSolve
         return 0;
         break;
 
+      case cgs1:
+        vec_v_->setData(V->getVectorData(i + 1, memspace), memspace);
+        //Hcol = V(:,1:i)^T*V(:,i+1);
+        vector_handler_->gemv('T', n, i + 1, &ONE, &ZERO, V,  vec_v_, vec_Hcolumn_, memspace);
+        // V(:,i+1) = V(:, i+1) -  V(:,1:i)*Hcol
+        vector_handler_->gemv('N', n, i + 1, &ONE, &MINUSONE, V, vec_Hcolumn_, vec_v_, memspace );  
+        mem_.deviceSynchronize();
+        
+        // copy H_col to H
+        vec_Hcolumn_->setDataUpdated(memspace);
+        vec_Hcolumn_->setCurrentSize(i + 1);
+        vec_Hcolumn_->deepCopyVectorData(&H[ idxmap(i, 0, num_vecs_ + 1)], 0, memory::HOST);
+        mem_.deviceSynchronize();
+
+        t = vector_handler_->dot(vec_v_, vec_v_, memspace);  
+        //set the last entry in Hessenberg matrix
+        t = sqrt(t);
+        H[ idxmap(i, i + 1, num_vecs_ + 1) ] = t; 
+        if(fabs(t) > EPSILON) {
+          t = 1.0/t;
+          vector_handler_->scal(&t, vec_v_, memspace);  
+        } else {
+          assert(0 && "Gram-Schmidt failed, vector with ZERO norm\n");
+          return -1;
+        }
+        return 0;
+        break;
       default:
         assert(0 && "Iterative refinement failed, wrong orthogonalization.\n");
         return -1;

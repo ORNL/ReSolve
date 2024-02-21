@@ -235,6 +235,11 @@ protected:
   {
     return (std::abs(a - b)/(1.0 + std::abs(b)) < eps);
   }
+  
+  bool isEqual(const real_type a, const real_type b, const real_type tol)
+  {
+    return (std::abs(a - b)/(1.0 + std::abs(b)) < tol);
+  }
 
 protected:
   std::string mem_space_;
