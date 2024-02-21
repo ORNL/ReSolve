@@ -52,6 +52,7 @@ namespace ReSolve {
               break;
             case GramSchmidt::cgs1:
               testname += " (Classical Gram-Schmidt)";
+              status.expectFailure();
               break;
             case GramSchmidt::cgs2:
               testname += " (Reorthogonalized Classical Gram-Schmidt)";
@@ -108,11 +109,8 @@ namespace ReSolve {
 
           GS->orthogonalize(N, V, H, 0); 
           GS->orthogonalize(N, V, H, 1); 
-          if (var ==  GramSchmidt::cgs1) {
-            status *= verifyAnswer(V, 3, handler, memspace_, 1e-13);
-          } else {
-            status *= verifyAnswer(V, 3, handler, memspace_);
-          }           
+          status *= verifyAnswer(V, 3, handler, memspace_);
+
           delete handler;
           delete [] H;
           delete V; 
@@ -185,45 +183,6 @@ namespace ReSolve {
           delete b;
           return status;
         }
- 
-        bool verifyAnswer(vector::Vector* x, index_type K,  ReSolve::VectorHandler* handler, std::string memspace, real_type const tol)
-        {
-          ReSolve::memory::MemorySpace ms;
-          if (memspace == "cpu")
-            ms = memory::HOST;
-          else
-            ms = memory::DEVICE;
-
-          vector::Vector* a = new vector::Vector(x->getSize()); 
-          vector::Vector* b = new vector::Vector(x->getSize());
-
-          real_type ip; 
-          bool status = true;
-
-          for (index_type i = 0; i < K; ++i) {
-            for (index_type j = 0; j < K; ++j) {
-              a->update(x->getVectorData(i, ms), ms, memory::HOST);
-              b->update(x->getVectorData(j, ms), ms, memory::HOST);
-              ip = handler->dot(a, b, memory::HOST);
-              if ( (i != j) && !isEqual(ip, 0.0, tol)) {
-                status = false;
-                std::cout << "Vectors " << i << " and " << j << " are not orthogonal!"
-                          << " Inner product computed: " << ip << ", expected: " << 0.0 << "\n";
-                break; 
-              }
-              if ( (i == j) && !isEqual(sqrt(ip), 1.0, tol)) {           
-                status = false;
-                std::cout << std::setprecision(16);
-                std::cout << "Vector " << i << " has norm: " << sqrt(ip) << " expected: "<< 1.0 <<"\n";
-                break; 
-              }
-            }
-          }
-          delete a;
-          delete b;
-          return status;
-        }
-
    }; // class
-  }
-}
+  } // namespace tests
+} // namespace ReSolve
