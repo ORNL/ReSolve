@@ -85,9 +85,9 @@ namespace ReSolve
       int setSolveMethod(std::string method);
       void setRefinementMethod(std::string method, std::string gs = "cgs2");
       int setSketchingMethod(std::string method);
+      int setGramSchmidtMethod(std::string gs_method);
 
     private:
-      int setGramSchmidtMethod(std::string gs_method);
 
       LinSolverDirect* factorizationSolver_{nullptr};
       LinSolverDirect* refactorizationSolver_{nullptr};

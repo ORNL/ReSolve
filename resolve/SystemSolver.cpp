@@ -179,6 +179,12 @@ namespace ReSolve
       auto* rgmres = dynamic_cast<LinSolverIterativeRandFGMRES*>(iterativeSolver_);
       status += rgmres->setup(A_);
       status += gs_->setup(rgmres->getKrand(), rgmres->getRestart());
+    } else if (solveMethod_ == "fgmres") {
+      auto* fgmres = dynamic_cast<LinSolverIterativeFGMRES*>(iterativeSolver_);
+      status += fgmres->setup(A_);
+      status += gs_->setup(A_->getNumRows(), fgmres->getRestart()); 
+    } else {
+      // do nothing
     }
 
     return status;
@@ -427,7 +433,7 @@ namespace ReSolve
     int status = 0;
 
     // Use Krylov solver if selected
-    if (solveMethod_ == "randgmres") {
+    if (solveMethod_ == "randgmres" || solveMethod_ == "fgmres") {
       status += iterativeSolver_->resetMatrix(A_);
       status += iterativeSolver_->solve(rhs, x);
       return status;
