@@ -17,6 +17,7 @@ int main(int, char**)
     result += test.orthogonalize(5000, ReSolve::GramSchmidt::cgs2);
     result += test.orthogonalize(5000, ReSolve::GramSchmidt::mgs_two_synch);
     result += test.orthogonalize(5000, ReSolve::GramSchmidt::mgs_pm);
+    result += test.orthogonalize(5000, ReSolve::GramSchmidt::cgs1);
     std::cout << "\n";
   }
 #endif
@@ -31,6 +32,7 @@ int main(int, char**)
     result += test.orthogonalize(5000, ReSolve::GramSchmidt::cgs2);
     result += test.orthogonalize(5000, ReSolve::GramSchmidt::mgs_two_synch);
     result += test.orthogonalize(5000, ReSolve::GramSchmidt::mgs_pm);
+    result += test.orthogonalize(5000, ReSolve::GramSchmidt::cgs1);
     std::cout << "\n";
   }
 #endif
@@ -44,6 +46,7 @@ int main(int, char**)
     result += test.orthogonalize(5000, ReSolve::GramSchmidt::cgs2);
     result += test.orthogonalize(5000, ReSolve::GramSchmidt::mgs_two_synch);
     result += test.orthogonalize(5000, ReSolve::GramSchmidt::mgs_pm);
+    result += test.orthogonalize(5000, ReSolve::GramSchmidt::cgs1);
     std::cout << "\n";
   }
   return result.summary();
