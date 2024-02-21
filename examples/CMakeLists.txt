@@ -80,6 +80,11 @@ if(RESOLVE_USE_HIP)
   # Rand GMRES test with rocsparse
   add_executable(gmres_rocsparse_rand.exe r_randGMRES.cpp)
   target_link_libraries(gmres_rocsparse_rand.exe PRIVATE ReSolve)
+
+  # "Normal" GMRES test with rocsparse
+  add_executable(gmres_rocsparse.exe r_GMRES.cpp)
+  target_link_libraries(gmres_rocsparse.exe PRIVATE ReSolve)
+
   # Build example with a configurable system solver
   add_executable(system_hip.exe r_SysSolverHip.cpp)
   target_link_libraries(system_hip.exe PRIVATE ReSolve)
@@ -101,7 +106,7 @@ if(RESOLVE_USE_CUDA)
 endif(RESOLVE_USE_CUDA)
 
 if(RESOLVE_USE_HIP)
-  list(APPEND installable_executables klu_rocsolverrf.exe klu_rocsolverrf_fgmres.exe klu_rocsolverrf_check_redo.exe gmres_rocsparse_rand.exe)     
+  list(APPEND installable_executables klu_rocsolverrf.exe klu_rocsolverrf_fgmres.exe klu_rocsolverrf_check_redo.exe gmres_rocsparse_rand.exe gmres_rocsparse.exe)     
 endif(RESOLVE_USE_HIP)
 
   list(APPEND installable_executables  gmres_cpu_rand.exe)     
