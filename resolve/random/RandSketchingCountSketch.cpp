@@ -9,7 +9,7 @@
 #else
 #include <resolve/cpu/cpuKernels.h>
 #endif
-#include <resolve/RandSketchingCountSketch.hpp> 
+#include <resolve/random/RandSketchingCountSketch.hpp> 
 
 namespace ReSolve 
 {

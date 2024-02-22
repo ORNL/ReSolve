@@ -13,7 +13,7 @@
 #else
 #include <resolve/cpu/cpuKernels.h>
 #endif
-#include <resolve/RandSketchingFWHT.hpp> 
+#include <resolve/random/RandSketchingFWHT.hpp> 
 namespace ReSolve 
 {
   using out = io::Logger;

@@ -15,9 +15,6 @@ set(ReSolve_SRC
     LinSolverIterativeFGMRES.cpp
     LinSolverDirectCpuILU0.cpp
     LinSolverIterativeRandFGMRES.cpp
-    RandSketchingManager.cpp
-    RandSketchingCountSketch.cpp
-    RandSketchingFWHT.cpp
     LinSolverDirectSerialILU0.cpp
 )
 
@@ -38,6 +35,7 @@ set(ReSolve_ROCM_SRC
   LinSolverDirectRocSolverRf.cpp
   LinSolverDirectRocSparseILU0.cpp
 )
+
 # Header files to be installed
 set(ReSolve_HEADER_INSTALL
     Common.hpp
@@ -47,9 +45,6 @@ set(ReSolve_HEADER_INSTALL
     LinSolverDirectCpuILU0.hpp
     SystemSolver.hpp
     GramSchmidt.hpp
-    RandSketchingManager.hpp
-    RandSketchingCountSketch.hpp
-    RandSketchingFWHT.hpp
     MemoryUtils.hpp)
 
 set(ReSolve_KLU_HEADER_INSTALL
@@ -73,6 +68,7 @@ add_subdirectory(workspace)
 # Next build vector and matrix objects that may use this backend.
 add_subdirectory(vector)
 add_subdirectory(matrix)
+add_subdirectory(random)
 
 # Build shared library ReSolve
 add_library(resolve_tpl INTERFACE)
@@ -86,6 +82,7 @@ endif()
 set(ReSolve_Targets_List
     resolve_matrix
     resolve_vector
+    resolve_random
     resolve_logger
     resolve_tpl
     resolve_workspace

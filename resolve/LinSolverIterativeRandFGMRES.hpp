@@ -4,7 +4,7 @@
 #include <resolve/vector/Vector.hpp>
 #include "LinSolver.hpp"
 #include "GramSchmidt.hpp"
-#include "RandSketchingManager.hpp"
+#include <resolve/random/RandSketchingManager.hpp>
 
 namespace ReSolve
 {

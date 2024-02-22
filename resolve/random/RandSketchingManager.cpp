@@ -1,4 +1,5 @@
 // this is a virtual class
+#include <resolve/vector/Vector.hpp>
 #include "RandSketchingManager.hpp"
 
 namespace ReSolve {

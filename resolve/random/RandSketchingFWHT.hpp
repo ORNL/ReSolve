@@ -1,6 +1,6 @@
 #pragma once
 #include <resolve/Common.hpp>
-#include <resolve/RandSketchingManager.hpp>
+#include <resolve/random/RandSketchingManager.hpp>
 
 namespace ReSolve {
   // Forward declaration of vector::Vector class
