@@ -30,10 +30,24 @@ namespace ReSolve
                    << "\tordering         = " << Common_.ordering         << "\n"
                    << "\tpivot threshold  = " << Common_.tol              << "\n"
                    << "\thalt if singular = " << Common_.halt_if_singular << "\n";
+    std::cout << "LinSolverDirectKLU constructor\n";
+    std::cout << "L_ = " << L_ << ", P_ = " << P_ << "\n";
   } 
 
   LinSolverDirectKLU::~LinSolverDirectKLU()
   {
+    std::cout << "LinSolverDirectKLU destructor\n";
+    std::cout << "L_ = " << L_ << ", P_ = " << P_ << "\n";
+    if (factors_extracted_) {
+      delete L_;
+      delete U_;
+      delete [] P_;
+      delete [] Q_;
+      L_ = nullptr;
+      U_ = nullptr;
+      P_ = nullptr;
+      Q_ = nullptr;
+    }
     klu_free_symbolic(&Symbolic_, &Common_);
     klu_free_numeric(&Numeric_, &Common_);
   }
@@ -69,8 +83,9 @@ namespace ReSolve
       U_ = nullptr;
     }
 
-    if (Symbolic_ == nullptr){
-      printf("Symbolic_ factorization crashed withCommon_.status = %d \n", Common_.status);
+    if (Symbolic_ == nullptr) {
+      out::error() << "Symbolic_ factorization crashed with Common_.status = "
+                   << Common_.status << "\n";
       return 1;
     }
     return 0;
@@ -82,7 +97,11 @@ namespace ReSolve
       klu_free_numeric(&Numeric_, &Common_);
     }
 
-    Numeric_ = klu_factor(A_->getRowData(memory::HOST), A_->getColData(memory::HOST), A_->getValues(memory::HOST), Symbolic_, &Common_);
+    Numeric_ = klu_factor(A_->getRowData(memory::HOST),
+                          A_->getColData(memory::HOST),
+                          A_->getValues(memory::HOST),
+                          Symbolic_,
+                          &Common_);
 
     factors_extracted_ = false;
 
@@ -96,7 +115,7 @@ namespace ReSolve
       U_ = nullptr;
     }
 
-    if (Numeric_ == nullptr){
+    if (Numeric_ == nullptr) {
       return 1;
     }
     return 0;
@@ -104,7 +123,12 @@ namespace ReSolve
 
   int  LinSolverDirectKLU::refactorize() 
   {
-    int kluStatus = klu_refactor (A_->getRowData(memory::HOST), A_->getColData(memory::HOST), A_->getValues(memory::HOST), Symbolic_, Numeric_, &Common_);
+    int kluStatus = klu_refactor(A_->getRowData(memory::HOST),
+                                 A_->getColData(memory::HOST),
+                                 A_->getValues(memory::HOST),
+                                 Symbolic_,
+                                 Numeric_,
+                                 &Common_);
 
     factors_extracted_ = false;
 
@@ -128,9 +152,6 @@ namespace ReSolve
   int LinSolverDirectKLU::solve(vector_type* rhs, vector_type* x) 
   {
     //copy the vector
-
-    //  std::memcpy(x, rhs, A->getNumRows() * sizeof(real_type));
-
     x->update(rhs->getData(memory::HOST), memory::HOST, memory::HOST);
     x->setDataUpdated(memory::HOST);
 
@@ -223,7 +244,7 @@ namespace ReSolve
 
   index_type* LinSolverDirectKLU::getPOrdering()
   {
-    if (Numeric_ != nullptr){
+    if (Numeric_ != nullptr) {
       P_ = new index_type[A_->getNumRows()];
       size_t nrows = static_cast<size_t>(A_->getNumRows());
       std::memcpy(P_, Numeric_->Pnum, nrows * sizeof(index_type));
@@ -236,7 +257,7 @@ namespace ReSolve
 
   index_type* LinSolverDirectKLU::getQOrdering()
   {
-    if (Numeric_ != nullptr){
+    if (Numeric_ != nullptr) {
       Q_ = new index_type[A_->getNumRows()];
       size_t nrows = static_cast<size_t>(A_->getNumRows());
       std::memcpy(Q_, Symbolic_->Q, nrows * sizeof(index_type));
@@ -269,4 +290,4 @@ namespace ReSolve
     klu_rcond(Symbolic_, Numeric_, &Common_);
     return Common_.rcond;
   }
-}
+} // namespace ReSolve

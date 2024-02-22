@@ -50,6 +50,7 @@ namespace ReSolve
       virtual real_type getMatrixConditionNumber() override;
 
     private:
+      bool factors_extracted_{false};
       klu_common Common_; //settings
       klu_symbolic* Symbolic_{nullptr};
       klu_numeric* Numeric_{nullptr}; 

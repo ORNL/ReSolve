@@ -42,10 +42,12 @@ namespace ReSolve
     private:
 
       MemoryHandler mem_; ///< Device memory manager object
-      LinAlgWorkspaceCpu* workspace_; 
+      LinAlgWorkspaceCpu* workspace_{nullptr}; 
+      bool owns_factors_{false};    ///< If the class owns L and U factors
 
-      real_type* h_aux1_;
-      // since ILU OVERWRITES THE MATRIX values, we need a buffer to keep the values of ILU decomposition. 
-      real_type* h_ILU_vals_;
+      real_type* h_aux1_{nullptr};
+      // since ILU OVERWRITES THE MATRIX values, we need a buffer to keep 
+      // the values of ILU decomposition. 
+      real_type* h_ILU_vals_{nullptr};
   };
 }// namespace

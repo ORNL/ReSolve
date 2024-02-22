@@ -76,7 +76,6 @@ namespace ReSolve
       matrix::Sparse* U_{nullptr};
       index_type* P_{nullptr};
       index_type* Q_{nullptr};
-      bool factors_extracted_;
 
       int ordering_{1}; // 0 = AMD, 1 = COLAMD, 2 = user provided P, Q
       real_type pivot_threshold_tol_{0.1};
