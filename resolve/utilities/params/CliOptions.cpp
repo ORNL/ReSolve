@@ -10,7 +10,7 @@ namespace ReSolve
     : argc_(argc),
       argv_(argv)
   {
-    appName_ = argv_[0];
+    app_name_ = argv_[0];
     parse();
   }
 
@@ -20,7 +20,7 @@ namespace ReSolve
 
   std::string CliOptions::getAppName() const
   {
-    return appName_;
+    return app_name_;
   }
 
   bool CliOptions::hasKey(const std::string& key) const
@@ -30,7 +30,7 @@ namespace ReSolve
 
   CliOptions::Option* CliOptions::getParamFromKey(const std::string& key) const
   {
-    const Options::const_iterator i = options_.find(key);
+    const OptionsList::const_iterator i = options_.find(key);
     CliOptions::Option* opt = 0;
     if (i != options_.end()) {
       opt = new CliOptions::Option((*i).first, (*i).second);
@@ -38,9 +38,9 @@ namespace ReSolve
     return opt;
   }
 
-  void CliOptions::printOptions() const
+  void CliOptions::printOptionsList() const
   {
-    Options::const_iterator m = options_.begin();
+    OptionsList::const_iterator m = options_.begin();
     int i = 0;
     if (options_.empty()) {
         std::cout << "No parameters\n";
@@ -59,6 +59,8 @@ namespace ReSolve
   /**
    * @brief Parse command line input and store it in a map
    * 
+   * @pre Pointer to command line options is copied to `argv_`
+   * @post Command line options are parsed and stored in map `options_`
    */
   void CliOptions::parse()
   {
@@ -69,7 +71,7 @@ namespace ReSolve
       const std::string p = *i;
       if (option->first == "" && p[0] == '-')
       {
-        // Set option ID
+        // Set option ID and continue
         option->first = p;
         if (i == this->last())
         {
@@ -81,10 +83,11 @@ namespace ReSolve
       else if (option->first != "" && p[0] == '-')
       {
         // Option ID has been set in prior cycle, string p is also option ID.
-        option->second = "null"; /* or leave empty? */
+        // Leave option value empty, since what follows is the next option ID.
+        option->second = "";
         // Set option without parameter value
         options_.insert(Option(option->first, option->second));
-        // Set parameter ID for the next option
+        // Set parameter ID for the next option and continue
         option->first = p;
         option->second = "";
         if (i == this->last())
@@ -96,11 +99,11 @@ namespace ReSolve
       }
       else if (option->first != "")
       {
-        // String p contains parameter value
+        // String p does not start with '-', contains parameter value
         option->second = p;
         // Set option with parameter value
         options_.insert(Option(option->first, option->second));
-        // Reset option to receive the next entry
+        // Reset 'option' pair to receive the next entry and continue
         option->first = "";
         option->second = "";
         continue;
