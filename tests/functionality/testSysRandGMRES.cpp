@@ -30,13 +30,16 @@
 #include <resolve/LinSolverDirectCuSparseILU0.hpp>
   using workspace_type = ReSolve::LinAlgWorkspaceCUDA;
   ReSolve::memory::MemorySpace memspace = ReSolve::memory::DEVICE;
+  const std::string hwbackend("CUDA");
 #elif defined (RESOLVE_USE_HIP)
 #include <resolve/LinSolverDirectRocSparseILU0.hpp>
   using workspace_type = ReSolve::LinAlgWorkspaceHIP;
   ReSolve::memory::MemorySpace memspace = ReSolve::memory::DEVICE;
+  const std::string hwbackend("HIP");
 #else
   using workspace_type = ReSolve::LinAlgWorkspaceCpu;
   ReSolve::memory::MemorySpace memspace = ReSolve::memory::HOST;
+  const std::string hwbackend("CPU");
 #endif
 
 using namespace ReSolve::constants;
@@ -47,8 +50,10 @@ using index_type  = ReSolve::index_type;
 using vector_type = ReSolve::vector::Vector;
 
 // Forward declarations of helper functions that create test linear system
-ReSolve::matrix::Csr* generateMatrix(const index_type N);
-ReSolve::vector::Vector* generateRhs(const index_type N);
+static void processInputs(std::string& method, std::string& gs, std::string& sketch);
+static std::string headerInfo(const std::string& method, const std::string& gs, const std::string& sketch);
+static ReSolve::matrix::Csr* generateMatrix(const index_type N);
+static ReSolve::vector::Vector* generateRhs(const index_type N);
 
 int main(int argc, char *argv[])
 {
@@ -57,6 +62,7 @@ int main(int argc, char *argv[])
   int error_sum = 0;
   int status = 0;
 
+  // Collect all CLI
   ReSolve::CliOptions options(argc, argv);
   ReSolve::CliOptions::Option* opt = nullptr;
 
@@ -64,18 +70,15 @@ int main(int argc, char *argv[])
   const index_type N = opt ? atoi((*opt).second.c_str()) : 10000;
 
   opt = options.getParamFromKey("-i");
-  std::string krylov = opt ? (*opt).second : "randgmres";
+  std::string method = opt ? (*opt).second : "randgmres";
 
   opt = options.getParamFromKey("-g");
   std::string gs = opt ? (*opt).second : "cgs2";
 
   opt = options.getParamFromKey("-s");
-  const std::string sketching = opt ? (*opt).second : "";
-  if ((sketching != "count") && (sketching != "fwht")) {
-    std::cout << "Sketching method " << sketching << " not recognized.\n";
-    std::cout << "Setting sketching to the default (count).\n\n";
-  }
+  std::string sketch = opt ? (*opt).second : "count";
 
+  processInputs(method, gs, sketch);
 
   // Generate linear system data
   ReSolve::matrix::Csr* A = generateMatrix(N);
@@ -90,7 +93,7 @@ int main(int argc, char *argv[])
   ReSolve::VectorHandler vector_handler(&workspace);
 
   // Create system solver
-  ReSolve::SystemSolver solver(&workspace, "none", "none", krylov, "ilu0", "none");
+  ReSolve::SystemSolver solver(&workspace, "none", "none", method, "ilu0", "none");
   solver.setGramSchmidtMethod(gs);
 
   // Create solution vector
@@ -105,12 +108,13 @@ int main(int argc, char *argv[])
   real_type norm_b = 0.0;
 
   // Set solver options
-  if (krylov == "randgmres") {
-    solver.setSketchingMethod(sketching);
+  real_type tol = 1e-12;
+  if (method == "randgmres") {
+    solver.setSketchingMethod(sketch);
   }
   solver.getIterativeSolver().setRestart(200);
   solver.getIterativeSolver().setMaxit(2500);
-  solver.getIterativeSolver().setTol(1e-12);
+  solver.getIterativeSolver().setTol(tol);
 
   matrix_handler.setValuesChanged(true, memspace);
 
@@ -130,10 +134,10 @@ int main(int argc, char *argv[])
   norm_b = vector_handler.dot(vec_rhs, vec_rhs, memspace);
   norm_b = std::sqrt(norm_b);
   real_type final_norm = solver.getIterativeSolver().getFinalResidualNorm();
-  std::cout << std::scientific << std::setprecision(16)
-            << "Iterative solver results: \n"
-            << "\t Sketching method:                                    : "
-            << sketching << "\n" 
+  std::cout << headerInfo(method, gs, sketch)
+            << "\t Solver tolerance:               "//                     : "
+            << tol << "\n"
+            << std::scientific << std::setprecision(16)
             << "\t Initial residual norm:          ||b-Ax_0||_2         : " 
             << solver.getIterativeSolver().getInitResidualNorm() << " \n"
             << "\t Initial relative residual norm: ||b-Ax_0||_2/||b||_2 : "
@@ -145,20 +149,82 @@ int main(int argc, char *argv[])
             << "\t Number of iterations                                 : " 
             << solver.getIterativeSolver().getNumIter() << "\n";
 
-  if (final_norm/norm_b > 1e-11 ) {
+  if (final_norm/norm_b > (10.0 * tol)) {
     std::cout << "Result inaccurate!\n";
     error_sum++;
   }
   if (error_sum == 0) {
-    std::cout<<"Test PASSED"<<std::endl<<std::endl;;
+    std::cout<<"Test PASSED\n\n";
   } else {
-    std::cout<<"Test FAILED, error sum: "<<error_sum<<std::endl<<std::endl;;
+    std::cout<<"Test FAILED, error sum: " << error_sum << "\n\n";
   }
 
   delete A;
   delete vec_rhs;
 
   return error_sum;
+}
+
+void processInputs(std::string& method, std::string& gs, std::string& sketch)
+{
+  if (method == "randgmres") {
+    if ((sketch != "count") && (sketch != "fwht")) {
+      std::cout << "Sketching method " << sketch << " not recognized.\n";
+      std::cout << "Setting sketch to the default (count).\n\n";
+      sketch = "count";
+    }
+  }
+
+  if ((method != "randgmres") && (method != "fgmres")) {
+    std::cout << "Unknown method " << method << "\n";
+    std::cout << "Setting iterative solver method to the default (FGMRES).\n\n";
+    method = "fgmres";
+  }
+
+  if (gs != "cgs1" && gs != "cgs2" && gs != "mgs" && gs != "mgs_two_synch" && gs != "mgs_pm") {
+    std::cout << "Unknown orthogonalization " << gs << "\n";
+    std::cout << "Setting orthogonalization to the default (CGS2).\n\n";
+    gs = "cgs2";
+  }
+}
+
+std::string headerInfo(const std::string& method, const std::string& gs, const std::string& sketch)
+{
+  std::string header("Results for ");
+  if (method == "randgmres") {
+    header += "randomized FGMRES solver\n";
+    header += "\t Sketching method:               ";
+    if (sketch == "count") {
+      header += "count sketching\n";
+    } else if (sketch == "fwht") {
+      header += "fast Walsh-Hadamard transform\n";
+    }
+  } else if (method == "fgmres") {
+    header += "FGMRES solver\n";
+  } else {
+    return header + "unknown method\n";
+  }
+
+  std::string withgs = "\t Orthogonalization method:       ";
+  if (gs == "cgs2") {
+    header += (withgs + "reorthogonalized classical Gram-Schmidt\n");
+  } else if (gs == "cgs1")  {
+    header += (withgs + "classical Gram-Schmidt\n");
+  } else if (gs == "mgs") {
+    header += (withgs + "modified Gram-Schmidt\n");    
+  } else if (gs == "mgs_two_synch") {
+    header += (withgs + "modified Gram-Schmidt 2-sync\n");    
+  } else if (gs == "mgs_pm") {
+    header += (withgs + "post-modern modified Gram-Schmidt\n");    
+  } else if (gs == "mgs") {
+    header += (withgs + "modified Gram-Schmidt\n");    
+  } else {
+    // do nothing
+  }
+
+  std::string hw = "\t Hardware backend:               " + hwbackend + "\n";
+
+  return header + hw;
 }
 
 ReSolve::vector::Vector* generateRhs(const index_type N)
