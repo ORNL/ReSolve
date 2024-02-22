@@ -763,8 +763,6 @@ namespace ReSolve
       gs_ = new GramSchmidt(vectorHandler_, GramSchmidt::mgs_two_synch);
     } else if (gsMethod == "mgs_pm") {
       gs_ = new GramSchmidt(vectorHandler_, GramSchmidt::mgs_pm);
-    } else if (gsMethod == "cgs1") {
-      gs_ = new GramSchmidt(vectorHandler_, GramSchmidt::cgs1);
     } else {
       out::warning() << "Gram-Schmidt variant " << gsMethod_ << " not recognized.\n";
       out::warning() << "Using default cgs2 Gram-Schmidt variant.\n";
