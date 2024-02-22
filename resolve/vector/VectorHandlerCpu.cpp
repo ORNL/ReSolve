@@ -54,7 +54,7 @@ namespace ReSolve {
       real_type t = sum + y;
       c = (t - sum) - y;
       sum = t;        
-      //   sum += (x_data[i] * y_data[i]);
+      //sum += (x_data[i] * y_data[i]);
     } 
     return sum;
   }
@@ -149,20 +149,30 @@ namespace ReSolve {
     switch (transpose) {
       case 'T':
         for (i = 0; i < k; ++i) {
-          sum = 0; 
+          sum = (*beta) * x_data[i]; 
+          real_type c = 0.0;
           for (j = 0; j < n; ++j) {
-            sum += V_data[i * n + j] * y_data[j]; 
+            real_type y = ((*alpha) * V_data[i * n + j] * y_data[j]) - c;
+            real_type t = sum + y;
+            c = (t - sum) - y;
+            sum = t;        
+            //sum += ((*alpha) * V_data[i * n + j] * y_data[j]); 
           }
-          x_data[i] = (*beta) * x_data[i] + (*alpha) * sum;
+          x_data[i] = sum;
         }
         break;
       default:
         for (i = 0; i < n; ++i) {
-          sum = 0.0; 
+          sum = (*beta) * x_data[i] ; 
+          real_type c = 0.0;
           for (j = 0; j < k; ++j) {
-            sum += V_data[n * j + i] * y_data[j]; 
+            real_type y = ((*alpha) * V_data[n * j + i] * y_data[j]) - c;
+            real_type t = sum + y;
+            c = (t - sum) - y;
+            sum = t;        
+            //sum += ((*alpha) * V_data[n * j + i] * y_data[j]); 
           }
-          x_data[i] = (*beta) * x_data[i] + (*alpha) * sum;
+          x_data[i] = sum;
         }
         break;
         if (transpose != 'N') {
