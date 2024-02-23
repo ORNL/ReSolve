@@ -15,6 +15,8 @@
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 
 using namespace ReSolve::constants;
+#include <chrono>
+using namespace std::chrono;
 
 int main(int argc, char *argv[])
 {
@@ -40,7 +42,7 @@ int main(int argc, char *argv[])
   vector_type* vec_x;
   vector_type* vec_r;
 
-  ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::cgs2);
+  ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::mgs_two_synch);
 
   ReSolve::LinSolverDirectRocSparseILU0* Rf = new ReSolve::LinSolverDirectRocSparseILU0(workspace_HIP);
   ReSolve::LinSolverIterativeRandFGMRES* FGMRES = new ReSolve::LinSolverIterativeRandFGMRES(matrix_handler, vector_handler,ReSolve::LinSolverIterativeRandFGMRES::cs, GS);
@@ -89,7 +91,7 @@ int main(int argc, char *argv[])
   matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
 
   Rf->setup(A);
-  FGMRES->setRestart(150);
+  FGMRES->setRestart(800);
   FGMRES->setMaxit(2500);
   FGMRES->setTol(1e-12);
   FGMRES->setup(A);
@@ -101,7 +103,10 @@ int main(int argc, char *argv[])
   FGMRES->setFlexible(1); 
 
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+  auto start = high_resolution_clock::now(); 
   FGMRES->solve(vec_rhs, vec_x);
+  auto stop = high_resolution_clock::now();
+  auto duration = duration_cast<milliseconds>(stop - start);
 
   norm_b = vector_handler->dot(vec_rhs, vec_rhs, ReSolve::memory::DEVICE);
   norm_b = sqrt(norm_b);
@@ -110,7 +115,8 @@ int main(int argc, char *argv[])
     << FGMRES->getInitResidualNorm()/norm_b
     << " final nrm: "
     << FGMRES->getFinalResidualNorm()/norm_b
-    << " iter: " << FGMRES->getNumIter() << "\n";
+    << " iter: " << FGMRES->getNumIter()
+    << " solve time (ms): " << duration.count() <<  "\n";
 
 
   delete A;

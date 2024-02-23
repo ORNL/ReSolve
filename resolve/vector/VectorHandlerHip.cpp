@@ -195,8 +195,8 @@ namespace ReSolve {
     if (k < 200) {
       mass_axpy(size, k, x->getData(memory::DEVICE), y->getData(memory::DEVICE),alpha->getData(memory::DEVICE));
     
-    } else {
-      rocblas_handle handle_rocblas =  workspace_->getRocblasHandle();
+    } else {    
+  rocblas_handle handle_rocblas =  workspace_->getRocblasHandle();
       rocblas_dgemm(handle_rocblas,
                     rocblas_operation_none,
                     rocblas_operation_none,
@@ -233,14 +233,14 @@ namespace ReSolve {
   {
     using namespace constants;
 
-    if (k < 200) {
+   if (k < 200) {
       mass_inner_product_two_vectors(size, k, x->getData(memory::DEVICE) , x->getData(1, memory::DEVICE), V->getData(memory::DEVICE), res->getData(memory::DEVICE));
     } else {
-      rocblas_handle handle_rocblas =  workspace_->getRocblasHandle();
+ rocblas_handle handle_rocblas =  workspace_->getRocblasHandle();
       rocblas_dgemm(handle_rocblas,
                     rocblas_operation_transpose,
                     rocblas_operation_none,
-                    k + 1,   //m
+                    k,   //m
                     2,       //n
                     size,    //k
                     &ONE,   //alpha
@@ -250,7 +250,7 @@ namespace ReSolve {
                     size,    //ldb
                     &ZERO,
                     res->getData(memory::DEVICE),     //c
-                    k + 1);  //ldc 
+                    k);  //ldc 
     
     }
   }

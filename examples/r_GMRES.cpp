@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
   vector_type* vec_x;
   vector_type* vec_r;
 
-  ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::mgs_pm);
+  ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::mgs_two_synch);
 
   ReSolve::LinSolverDirectRocSparseILU0* Rf = new ReSolve::LinSolverDirectRocSparseILU0(workspace_HIP);
   ReSolve::LinSolverIterativeFGMRES* FGMRES = new ReSolve::LinSolverIterativeFGMRES(matrix_handler, vector_handler, GS);
@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
 
   Rf->setup(A);
   FGMRES->setRestart(800);
-  FGMRES->setMaxit(2500);
+  FGMRES->setMaxit(800);
   FGMRES->setTol(1e-12);
   FGMRES->setup(A);
   GS->setup(A->getNumRows(), FGMRES->getRestart()); 

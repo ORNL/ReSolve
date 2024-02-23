@@ -133,6 +133,7 @@ namespace ReSolve
         t = 0.0;
         t = vector_handler_->dot(vec_w_, vec_w_, memspace);
         //set the last entry in Hessenberg matrix
+if (i<10) for (int ii=0; ii<i; ++ii) printf("H(%d, %d) = %16.16f \n", i, ii,  H[ idxmap(i, ii, num_vecs_ + 1) ] );
         t = sqrt(t);
         H[ idxmap(i, i + 1, num_vecs_ + 1) ] = t; 
         if(fabs(t) > EPSILON) {
@@ -199,6 +200,7 @@ namespace ReSolve
 
         // vector_handler_->massDot2Vec(n, V, i + 1, vec_v_, vec_rv_, memspace);
         vector_handler_->massDot2Vec(n, V, i + 1, vec_v_, vec_rv_, memspace);
+        mem_.deviceSynchronize();
         vec_rv_->setDataUpdated(memspace);
         vec_rv_->copyData(memspace, memory::HOST);
 
@@ -220,6 +222,7 @@ namespace ReSolve
         vec_Hcolumn_->setCurrentSize(i + 1);
         vec_Hcolumn_->update(&H[ idxmap(i, 0, num_vecs_ + 1)], memory::HOST, memspace); 
         vector_handler_->massAxpy(n, vec_Hcolumn_, i + 1, V, vec_w_, memspace);
+        mem_.deviceSynchronize();
 
         // normalize (second synch)
         t = vector_handler_->dot(vec_w_, vec_w_, memspace);  
