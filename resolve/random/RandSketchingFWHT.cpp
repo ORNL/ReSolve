@@ -2,18 +2,18 @@
 #include <limits>
 #include <cstring>
 
-#include "RandSketchingFWHT.hpp"
 #include <resolve/MemoryUtils.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/utilities/logger/Logger.hpp>
+#include <resolve/cpu/cpuKernels.h>
 #ifdef RESOLVE_USE_HIP
 #include <resolve/hip/hipKernels.h>
-#elif  defined (RESOLVE_USE_CUDA)
+#endif
+#ifdef RESOLVE_USE_CUDA
 #include <resolve/cuda/cudaKernels.h>
-#else
-#include <resolve/cpu/cpuKernels.h>
 #endif
 #include <resolve/random/RandSketchingFWHT.hpp> 
+
 namespace ReSolve 
 {
   using out = io::Logger;

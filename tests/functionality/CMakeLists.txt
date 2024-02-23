@@ -23,25 +23,27 @@ endif(RESOLVE_USE_KLU)
 
 if(RESOLVE_USE_CUDA)
         
-  # Build KLU+Rf test
-  add_executable(klu_rf_test.exe testKLU_Rf.cpp)
-  target_link_libraries(klu_rf_test.exe PRIVATE ReSolve)
+  if(RESOLVE_USE_KLU)
+    # Build KLU+Rf test
+    add_executable(klu_rf_test.exe testKLU_Rf.cpp)
+    target_link_libraries(klu_rf_test.exe PRIVATE ReSolve)
 
-  # Build KLU+Rf+fgmres test
-  add_executable(klu_rf_fgmres_test.exe testKLU_Rf_FGMRES.cpp)
-  target_link_libraries(klu_rf_fgmres_test.exe PRIVATE ReSolve)
+    # Build KLU+Rf+fgmres test
+    add_executable(klu_rf_fgmres_test.exe testKLU_Rf_FGMRES.cpp)
+    target_link_libraries(klu_rf_fgmres_test.exe PRIVATE ReSolve)
 
-  # System solver test with cusolver rf and iterative refinement
-  add_executable(sys_refactor_cuda_test.exe testSysRefactor.cpp)
-  target_link_libraries(sys_refactor_cuda_test.exe PRIVATE ReSolve)
+    # System solver test with cusolver rf and iterative refinement
+    add_executable(sys_refactor_cuda_test.exe testSysRefactor.cpp)
+    target_link_libraries(sys_refactor_cuda_test.exe PRIVATE ReSolve)
 
-  # Build KLU+GLU test
-  add_executable(klu_glu_test.exe testKLU_GLU.cpp)
-  target_link_libraries(klu_glu_test.exe PRIVATE ReSolve)
-  
-  # System solver test with GLU
-  add_executable(sys_glu_test.exe testSysGLU.cpp)
-  target_link_libraries(sys_glu_test.exe PRIVATE ReSolve)
+    # Build KLU+GLU test
+    add_executable(klu_glu_test.exe testKLU_GLU.cpp)
+    target_link_libraries(klu_glu_test.exe PRIVATE ReSolve)
+    
+    # System solver test with GLU
+    add_executable(sys_glu_test.exe testSysGLU.cpp)
+    target_link_libraries(sys_glu_test.exe PRIVATE ReSolve)
+  endif(RESOLVE_USE_KLU)
 
   # Build randSolver test
   add_executable(rand_gmres_cuda_test.exe testRandGMRES_Cuda.cpp)
@@ -52,17 +54,19 @@ endif(RESOLVE_USE_CUDA)
 
 if(RESOLVE_USE_HIP)
         
-  # Build KLU+rossolver test
-  add_executable(rocsolver_rf_test.exe testKLU_RocSolver.cpp)
-  target_link_libraries(rocsolver_rf_test.exe PRIVATE ReSolve)
-
-  # And another one to test FGMRES version
-  add_executable(rocsolver_rf_fgmres_test.exe testKLU_RocSolver_FGMRES.cpp)
-  target_link_libraries(rocsolver_rf_fgmres_test.exe PRIVATE ReSolve)
-
-  # System solver test with rocm rf and iterative refinement
-  add_executable(sys_refactor_hip_test.exe testSysRefactor.cpp)
-  target_link_libraries(sys_refactor_hip_test.exe PRIVATE ReSolve)
+  if(RESOLVE_USE_KLU)
+    # Build KLU+rossolver test
+    add_executable(rocsolver_rf_test.exe testKLU_RocSolver.cpp)
+    target_link_libraries(rocsolver_rf_test.exe PRIVATE ReSolve)
+  
+    # And another one to test FGMRES version
+    add_executable(rocsolver_rf_fgmres_test.exe testKLU_RocSolver_FGMRES.cpp)
+    target_link_libraries(rocsolver_rf_fgmres_test.exe PRIVATE ReSolve)
+  
+    # System solver test with rocm rf and iterative refinement
+    add_executable(sys_refactor_hip_test.exe testSysRefactor.cpp)
+    target_link_libraries(sys_refactor_hip_test.exe PRIVATE ReSolve)
+  endif(RESOLVE_USE_KLU)
 
   # Build randSolver test
   add_executable(rand_gmres_hip_test.exe testRandGMRES_Rocm.cpp)
@@ -78,19 +82,23 @@ if(RESOLVE_USE_KLU)
 endif()
 
 if(RESOLVE_USE_CUDA)
-  list(APPEND installable_tests klu_rf_test.exe
-                                klu_rf_fgmres_test.exe
-                                sys_refactor_cuda_test.exe
-                                klu_glu_test.exe
-                                sys_glu_test.exe
-                                rand_gmres_cuda_test.exe)
+  if(RESOLVE_USE_KLU)
+    list(APPEND installable_tests klu_rf_test.exe
+                                  klu_rf_fgmres_test.exe
+                                  sys_refactor_cuda_test.exe
+                                  klu_glu_test.exe
+                                  sys_glu_test.exe)
+  endif()
+  list(APPEND installable_tests rand_gmres_cuda_test.exe)
 endif(RESOLVE_USE_CUDA)
 
 if(RESOLVE_USE_HIP)
-  list(APPEND installable_tests rocsolver_rf_test.exe
-                                rocsolver_rf_fgmres_test.exe
-                                sys_refactor_hip_test.exe
-                                rand_gmres_hip_test.exe)
+  if(RESOLVE_USE_KLU)
+    list(APPEND installable_tests rocsolver_rf_test.exe
+                                  rocsolver_rf_fgmres_test.exe
+                                  sys_refactor_hip_test.exe)
+  endif()
+  list(APPEND installable_tests rand_gmres_hip_test.exe)
 endif(RESOLVE_USE_HIP)
 
 install(TARGETS ${installable_tests} 

@@ -263,14 +263,22 @@ namespace ReSolve
     if (precondition_method_ == "none") {
       // do nothing
     } else if (precondition_method_ == "ilu0") {
+      if (memspace_ == "cpu") {
+        // preconditioner_ = new LinSolverDirectSerialILU0(workspaceCpu_);
+        preconditioner_ = new LinSolverDirectCpuILU0(workspaceCpu_);
 #ifdef RESOLVE_USE_CUDA
-      preconditioner_ = new LinSolverDirectCuSparseILU0(workspaceCuda_);
-#elif defined(RESOLVE_USE_HIP)
-      preconditioner_ = new LinSolverDirectRocSparseILU0(workspaceHip_);
-#else
-      // preconditioner_ = new LinSolverDirectSerialILU0(workspaceCpu_);
-      preconditioner_ = new LinSolverDirectCpuILU0(workspaceCpu_);
+      } else if (memspace_ == "cuda") {
+        preconditioner_ = new LinSolverDirectCuSparseILU0(workspaceCuda_);
 #endif
+#ifdef RESOLVE_USE_HIP
+      } else if (memspace_ == "hip") {
+        preconditioner_ = new LinSolverDirectRocSparseILU0(workspaceHip_);
+#endif
+      } else {
+        out::error() << "Memory space " << memspace_
+                    << " not recognized ...\n";
+        return 1;
+      }
     } else {
       out::error() << "Preconditioner method " << precondition_method_ 
                    << " not recognized ...\n";

@@ -8,7 +8,7 @@
 
 # C++ code
 set(Random_SRC 
-    RandSketchingManager.cpp
+    # RandSketchingManager.cpp
     RandSketchingCountSketch.cpp
     RandSketchingFWHT.cpp
 )

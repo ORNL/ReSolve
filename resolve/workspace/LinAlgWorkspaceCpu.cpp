@@ -5,6 +5,7 @@ namespace ReSolve
 {
   LinAlgWorkspaceCpu::LinAlgWorkspaceCpu()
   {
+    std::cout << "Creating CPU workspace ...\n";
   }
   
   LinAlgWorkspaceCpu::~LinAlgWorkspaceCpu()

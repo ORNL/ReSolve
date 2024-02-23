@@ -9,9 +9,9 @@
 #include <resolve/matrix/io.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/VectorHandler.hpp>
-#include <resolve/LinSolverDirectKLU.hpp>
 #include <resolve/LinSolverDirectCuSparseILU0.hpp>
 #include <resolve/LinSolverIterativeRandFGMRES.hpp>
+#include <resolve/GramSchmidt.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 
 using namespace ReSolve::constants;

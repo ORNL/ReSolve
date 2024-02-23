@@ -1,13 +1,12 @@
 #include "RandSketchingCountSketch.hpp"
 #include <resolve/MemoryUtils.hpp>
 #include <resolve/vector/Vector.hpp>
-
+#include <resolve/cpu/cpuKernels.h>
 #ifdef RESOLVE_USE_HIP
 #include <resolve/hip/hipKernels.h>
-#elif defined (RESOLVE_USE_CUDA)
+#endif
+#ifdef RESOLVE_USE_CUDA
 #include <resolve/cuda/cudaKernels.h>
-#else
-#include <resolve/cpu/cpuKernels.h>
 #endif
 #include <resolve/random/RandSketchingCountSketch.hpp> 
 
@@ -23,6 +22,7 @@ namespace ReSolve
   RandSketchingCountSketch::RandSketchingCountSketch(memory::MemorySpace memspace)
     : memspace_(memspace)
   {
+    std::cout << "Count skecthing memory space: " << memspace_ << "\n";
     h_labels_ = nullptr;
     h_flip_ = nullptr;
 
@@ -109,7 +109,7 @@ namespace ReSolve
     for (int i=0; i<n; ++i) {
       h_labels_[i] = rand() % k_rand_;
       int r = rand()%100;
-      if (r < 50){
+      if (r < 50) {
         h_flip_[i] = -1;
       } else { 
         h_flip_[i] = 1;
