@@ -1,5 +1,4 @@
 #include <resolve/utilities/logger/Logger.hpp>
-#include <resolve/cuda/cudaKernels.h>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 #include <resolve/vector/VectorHandlerImpl.hpp>
@@ -20,7 +19,7 @@ namespace ReSolve {
    * 
    * @param new_workspace - workspace to be set     
    */
-  VectorHandlerCpu:: VectorHandlerCpu(LinAlgWorkspaceCpu* new_workspace)
+  VectorHandlerCpu::VectorHandlerCpu(LinAlgWorkspaceCpu* new_workspace)
   {
     workspace_ = new_workspace;
   }

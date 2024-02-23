@@ -1,6 +1,7 @@
 #pragma once
 #include <resolve/Common.hpp>
 #include <resolve/random/RandSketchingManager.hpp>
+#include <resolve/MemoryUtils.hpp>
 
 namespace ReSolve {
   // Forward declaration of vector::Vector class
@@ -42,5 +43,6 @@ namespace ReSolve {
       real_type one_over_k_;///< 1/k, used many times for scaling so we store the value to avoid recomputation
 
       memory::MemorySpace memspace_;
+      MemoryHandler mem_; ///< Device memory manager object
   };
 }

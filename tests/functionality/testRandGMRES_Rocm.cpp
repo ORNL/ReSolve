@@ -4,12 +4,11 @@
 #include <vector>
 #include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/Csr.hpp>
-#include <resolve/matrix/Csc.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/matrix/io.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/VectorHandler.hpp>
-#include <resolve/LinSolverDirectKLU.hpp>
+#include <resolve/GramSchmidt.hpp>
 #include <resolve/LinSolverDirectRocSparseILU0.hpp>
 #include <resolve/LinSolverIterativeRandFGMRES.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>

@@ -1,7 +1,6 @@
 // this is a virtual class
 #pragma once
 #include <resolve/Common.hpp>
-#include <resolve/MemoryUtils.hpp>
 
 
 namespace ReSolve
@@ -14,7 +13,8 @@ namespace ReSolve
 
 namespace ReSolve { 
   class RandSketchingManager {
-    using vector_type = vector::Vector;
+    private:
+      using vector_type = vector::Vector;
     
     public: 
       // constructor
@@ -40,6 +40,5 @@ namespace ReSolve {
       index_type k_rand_; ///< size of sketched vector
       index_type N_;      ///< padded n -- generally N_ > n_
     
-      MemoryHandler mem_; ///< Device memory manager object
   };
 } // namespace ReSolve

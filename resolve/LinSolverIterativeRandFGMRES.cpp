@@ -5,6 +5,9 @@
 #include <cstring>
 
 #include <resolve/utilities/logger/Logger.hpp>
+#include <resolve/matrix/Sparse.hpp>
+#include <resolve/vector/Vector.hpp>
+#include <resolve/GramSchmidt.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include "LinSolverIterativeRandFGMRES.hpp"
 #include <resolve/random/RandSketchingCountSketch.hpp> 
