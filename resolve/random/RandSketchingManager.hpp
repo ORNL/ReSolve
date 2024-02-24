@@ -11,8 +11,10 @@ namespace ReSolve
   }
 }
 
-namespace ReSolve { 
-  class RandSketchingManager {
+namespace ReSolve
+{ 
+  class RandSketchingManager
+  {
     private:
       using vector_type = vector::Vector;
     

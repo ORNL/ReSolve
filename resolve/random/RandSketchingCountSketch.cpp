@@ -1,7 +1,9 @@
 #include "RandSketchingCountSketch.hpp"
 #include <resolve/MemoryUtils.hpp>
 #include <resolve/vector/Vector.hpp>
+#ifndef RESOLVE_USE_GPU
 #include <resolve/cpu/cpuKernels.h>
+#endif
 #ifdef RESOLVE_USE_HIP
 #include <resolve/hip/hipKernels.h>
 #endif

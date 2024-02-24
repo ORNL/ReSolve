@@ -16,11 +16,11 @@ set(ReSolve_SRC
     LinSolverDirectCpuILU0.cpp
     LinSolverIterativeRandFGMRES.cpp
     LinSolverDirectSerialILU0.cpp
+    SystemSolver.cpp
 )
 
 set(ReSolve_KLU_SRC
   LinSolverDirectKLU.cpp
-  SystemSolver.cpp
 )
 
 # C++ code that links to CUDA SDK libraries
@@ -92,6 +92,11 @@ set(ReSolve_Object_List
     resolve_options
     resolve_version
 )
+# If no GPU support is enabled, link to dummy device backend
+if(NOT RESOLVE_USE_GPU)
+  add_subdirectory(cpu)
+  list(APPEND ReSolve_Targets_List resolve_backend_cpu)
+endif(NOT RESOLVE_USE_GPU)
 
 # If CUDA support is enabled add CUDA SDK specific code and dependencies
 if(RESOLVE_USE_CUDA)
@@ -109,12 +114,6 @@ if(RESOLVE_USE_HIP)
   list(APPEND ReSolve_SRC ${ReSolve_ROCM_SRC})
   list(APPEND ReSolve_Targets_List resolve_backend_hip)
   list(APPEND ReSolve_HEADER_INSTALL ${ReSolve_ROCM_HEADER_INSTALL})
-endif()
-
-# If no GPU support is enabled, link to dummy device backend
-if(NOT RESOLVE_USE_GPU)
-  add_subdirectory(cpu)
-  list(APPEND ReSolve_Targets_List resolve_backend_cpu)
 endif()
 
 # Set installable targets

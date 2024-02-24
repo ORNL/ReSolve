@@ -7,14 +7,14 @@
 ]]
 
 set(ReSolve_CPU_SRC
-    MemoryUtils.cpp
     cpuVectorKernels.cpp
     cpuKernels.cpp
+    MemoryUtils.cpp
 )
 
 set(ReSolve_CPU_HEADER_INSTALL
-    CpuMemory.hpp
     cpuKernels.h
+    CpuMemory.hpp
 )
 
 # First create dummy backend

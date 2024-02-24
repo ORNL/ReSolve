@@ -223,8 +223,10 @@ namespace ReSolve
     // Create factorization solver
     if (factorizationMethod_ == "none") {
       // do nothing
+#ifdef RESOLVE_USE_KLU
     } else if (factorizationMethod_ == "klu") {
       factorizationSolver_ = new ReSolve::LinSolverDirectKLU();
+#endif
     } else {
       out::error() << "Unrecognized factorization " << factorizationMethod_ << "\n";
       return 1;
