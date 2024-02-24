@@ -91,6 +91,11 @@ set(ReSolve_Targets_List
     resolve_workspace
 )
 
+set(ReSolve_Object_List
+    resolve_options
+    resolve_version
+)
+
 # If CUDA support is enabled add CUDA SDK specific code and dependencies
 if(RESOLVE_USE_CUDA)
   add_subdirectory(cuda)
@@ -127,7 +132,7 @@ target_include_directories(ReSolve INTERFACE
 )
 
 target_link_libraries(ReSolve PUBLIC ${ReSolve_Targets_List})
-target_link_libraries(ReSolve PRIVATE resolve_version resolve_options)
+target_link_libraries(ReSolve PRIVATE ${ReSolve_Object_List})
 
 if(RESOLVE_USE_PROFILING)
   if(RESOLVE_USE_HIP)
