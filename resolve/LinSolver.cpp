@@ -33,14 +33,10 @@ namespace ReSolve
     U_ = nullptr;
     P_ = nullptr;
     Q_ = nullptr;
-    std::cout << "LinSolverDirect constructor\n";
-    std::cout << "L_ = " << L_ << ", P_ = " << P_ << "\n";
   }
 
   LinSolverDirect::~LinSolverDirect()
   {
-    std::cout << "LinSolverDirect destructor\n";
-    std::cout << "L_ = " << L_ << ", P_ = " << P_ << "\n";
   }
 
   int LinSolverDirect::setup(matrix::Sparse* A,

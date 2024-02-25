@@ -10,14 +10,10 @@ namespace ReSolve
   LinSolverDirectSerialILU0::LinSolverDirectSerialILU0(LinAlgWorkspaceCpu* workspace)
   {
     workspace_ = workspace;
-    std::cout << "LinSolverDirectSerialILU0 constructor\n";
-    std::cout << "L_ = " << L_ << ", P_ = " << P_ << "\n";
   }
 
   LinSolverDirectSerialILU0::~LinSolverDirectSerialILU0()
   {
-    std::cout << "LinSolverDirectSerialILU0 destructor\n";
-    std::cout << "L_ = " << L_ << ", P_ = " << P_ << "\n";
     if (owns_factors_) {
       delete L_;
       delete U_;

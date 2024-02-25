@@ -30,14 +30,10 @@ namespace ReSolve
                    << "\tordering         = " << Common_.ordering         << "\n"
                    << "\tpivot threshold  = " << Common_.tol              << "\n"
                    << "\thalt if singular = " << Common_.halt_if_singular << "\n";
-    std::cout << "LinSolverDirectKLU constructor\n";
-    std::cout << "L_ = " << L_ << ", P_ = " << P_ << "\n";
   } 
 
   LinSolverDirectKLU::~LinSolverDirectKLU()
   {
-    std::cout << "LinSolverDirectKLU destructor\n";
-    std::cout << "L_ = " << L_ << ", P_ = " << P_ << "\n";
     if (factors_extracted_) {
       delete L_;
       delete U_;

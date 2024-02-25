@@ -19,8 +19,6 @@ namespace ReSolve
   LinSolverDirectCpuILU0::LinSolverDirectCpuILU0(LinAlgWorkspaceCpu* /* workspace */)
     // : workspace_(workspace)
   {
-    std::cout << "LinSolverDirectCpuILU0 constructor\n";
-    std::cout << "L_ = " << L_ << ", P_ = " << P_ << "\n";
   }
 
   /**
@@ -30,9 +28,6 @@ namespace ReSolve
    */
   LinSolverDirectCpuILU0::~LinSolverDirectCpuILU0()
   {
-    std::cout << "LinSolverDirectCpuILU0 destructor\n";
-    std::cout << "L_ = " << L_ << ", P_ = " << P_ << "\n";
-    std::cout << "Deleting factors ...\n";
     if (owns_factors_) {
       delete L_;
       delete U_;
