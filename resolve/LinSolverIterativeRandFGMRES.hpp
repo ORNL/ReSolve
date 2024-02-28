@@ -48,7 +48,7 @@ namespace ReSolve
       int setupPreconditioner(std::string name, LinSolverDirect* LU_solver) override;
 
       index_type getKrand();
-
+      int setSketchingMethod(std::string method);
     private:
       void setMemorySpace();
       void precV(vector_type* rhs, vector_type* x); ///< Apply preconditioner
