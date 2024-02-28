@@ -115,8 +115,8 @@ namespace ReSolve
     // TODO: What is the purpose of nnzL and nnzU if they are not used after this?
     // allocate L and U
 
-    L_ = new matrix::Csr(n, n, nnz, false, true);
-    U_ = new matrix::Csr(n, n, nnz, false, true);
+    L_ = new matrix::Csr(n, n, nnzL, false, true);
+    U_ = new matrix::Csr(n, n, nnzU, false, true);
     owns_factors_ = true;
 
     L_->allocateMatrixData(ReSolve::memory::HOST);  
