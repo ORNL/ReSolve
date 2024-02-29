@@ -91,7 +91,7 @@ public:
         std::cout << "--- " << ORANGE << "FAIL" << CLEAR << " (EXPECTED)" << ": Test " << funcname << "\n";
         break;
       case UNEXPECTED_PASS:
-        std::cout << "--- " << YELLOW << "PASS" << CLEAR << "(UNEXPECTED)" << ": Test " << funcname << "\n";
+        std::cout << "--- " << BLUE << "PASS" << CLEAR << " (UNEXPECTED)" << ": Test " << funcname << "\n";
         break;
       default:
         std::cout << "--- " << RED << "FAIL" << CLEAR << "Unrecognized test result " << outcome_ 

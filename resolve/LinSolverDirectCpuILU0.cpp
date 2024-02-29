@@ -28,9 +28,11 @@ namespace ReSolve
    */
   LinSolverDirectCpuILU0::~LinSolverDirectCpuILU0()
   {
-    if (false) { //(owns_factors_) {
+    if (owns_factors_) {
       delete L_;
       delete U_;
+      L_ = nullptr;
+      U_ = nullptr;
     }
     delete [] diagU_;
     delete [] idxmap_;

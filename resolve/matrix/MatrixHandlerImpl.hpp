@@ -1,6 +1,4 @@
 #pragma once
-#include <resolve/Common.hpp>
-#include <resolve/MemoryUtils.hpp>
 
 namespace ReSolve
 { 

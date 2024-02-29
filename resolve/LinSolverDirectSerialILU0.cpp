@@ -14,6 +14,12 @@ namespace ReSolve
 
   LinSolverDirectSerialILU0::~LinSolverDirectSerialILU0()
   {
+    if (owns_factors_) {
+      delete L_;
+      delete U_;
+      L_ = nullptr;
+      U_ = nullptr;
+    }
     delete [] h_aux1_;
     delete [] h_ILU_vals_;
   }
@@ -109,8 +115,9 @@ namespace ReSolve
     // TODO: What is the purpose of nnzL and nnzU if they are not used after this?
     // allocate L and U
 
-    L_ = new matrix::Csr(n, n, nnz, false, true);  
-    U_ = new matrix::Csr(n, n, nnz, false, true);  
+    L_ = new matrix::Csr(n, n, nnzL, false, true);
+    U_ = new matrix::Csr(n, n, nnzU, false, true);
+    owns_factors_ = true;
 
     L_->allocateMatrixData(ReSolve::memory::HOST);  
     U_->allocateMatrixData(ReSolve::memory::HOST);  
@@ -159,9 +166,9 @@ namespace ReSolve
           kL++;
         }
       }  
-    //update row pointers
-    L_->getRowData(ReSolve::memory::HOST)[i + 1] = L_->getRowData(ReSolve::memory::HOST)[i] + kL; 
-    U_->getRowData(ReSolve::memory::HOST)[i + 1] = U_->getRowData(ReSolve::memory::HOST)[i] + kU; 
+      //update row pointers
+      L_->getRowData(ReSolve::memory::HOST)[i + 1] = L_->getRowData(ReSolve::memory::HOST)[i] + kL; 
+      U_->getRowData(ReSolve::memory::HOST)[i + 1] = U_->getRowData(ReSolve::memory::HOST)[i] + kU; 
     }
    
     return zero_pivot;
@@ -175,7 +182,7 @@ namespace ReSolve
   int LinSolverDirectSerialILU0::solve(vector_type* rhs)
   {
     int error_sum = 0;
-printf("solve t 1\n");
+    // printf("solve t 1\n");
     // h_aux1 = L^{-1} rhs
     for (index_type i = 0; i < L_->getNumRows(); ++i) {
       h_aux1_[i] = rhs->getData(ReSolve::memory::HOST)[i];
@@ -205,7 +212,7 @@ printf("solve t 1\n");
     //printf("solve t 2i, L has %d rows, U has %d rows \n", L_->getNumRows(), U_->getNumRows());
     int error_sum = 0;
     // h_aux1 = L^{-1} rhs
-//for (int ii=0; ii<10; ++ii) printf("y[%d] = %16.16f \n ", ii,   rhs->getData(ReSolve::memory::HOST)[ii]); 
+      //for (int ii=0; ii<10; ++ii) printf("y[%d] = %16.16f \n ", ii,   rhs->getData(ReSolve::memory::HOST)[ii]); 
     for (index_type i = 0; i < L_->getNumRows(); ++i) {
       h_aux1_[i] = rhs->getData(ReSolve::memory::HOST)[i];
       for (index_type j = L_->getRowData(ReSolve::memory::HOST)[i]; j < L_->getRowData(ReSolve::memory::HOST)[i + 1] - 1; ++j) {
@@ -215,7 +222,7 @@ printf("solve t 1\n");
       h_aux1_[i] /= L_->getValues(ReSolve::memory::HOST)[L_->getRowData(ReSolve::memory::HOST)[i + 1] - 1];
     }
 
-//for (int ii=0; ii<10; ++ii) printf("(L)^{-1}y[%d] = %16.16f \n ", ii,  h_aux1_[ii]); 
+    //for (int ii=0; ii<10; ++ii) printf("(L)^{-1}y[%d] = %16.16f \n ", ii,  h_aux1_[ii]); 
     // x = U^{-1} h_aux1
 
     for (index_type i = U_->getNumRows() - 1; i >= 0; --i) {
@@ -226,7 +233,7 @@ printf("solve t 1\n");
       }
       x->getData(ReSolve::memory::HOST)[i] /= U_->getValues(ReSolve::memory::HOST)[U_->getRowData(ReSolve::memory::HOST)[i]]; //divide by the diagonal entry
     }
-//for (int ii=0; ii<10; ++ii) printf("(LU)^{-1}y[%d] = %16.16f \n ", ii,  x->getData(ReSolve::memory::HOST)[ii]); 
+    //for (int ii=0; ii<10; ++ii) printf("(LU)^{-1}y[%d] = %16.16f \n ", ii,  x->getData(ReSolve::memory::HOST)[ii]); 
    return error_sum;
   }
-}// namespace resolve
+} // namespace resolve
