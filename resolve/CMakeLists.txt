@@ -30,7 +30,7 @@ set(ReSolve_CUDASDK_SRC
     LinSolverDirectCuSparseILU0.cpp
 )
 
-# HIP files
+# C++ code that links to ROCm libraries
 set(ReSolve_ROCM_SRC
   LinSolverDirectRocSolverRf.cpp
   LinSolverDirectRocSparseILU0.cpp
@@ -92,6 +92,7 @@ set(ReSolve_Object_List
     resolve_options
     resolve_version
 )
+
 # If no GPU support is enabled, link to dummy device backend
 if(NOT RESOLVE_USE_GPU)
   add_subdirectory(cpu)
