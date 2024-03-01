@@ -5,7 +5,9 @@
 #include <resolve/MemoryUtils.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/utilities/logger/Logger.hpp>
+#ifndef RESOLVE_USE_GPU
 #include <resolve/cpu/cpuKernels.h>
+#endif
 #ifdef RESOLVE_USE_HIP
 #include <resolve/hip/hipKernels.h>
 #endif
@@ -37,10 +39,8 @@ namespace ReSolve
     d_aux_ = nullptr; 
   }
 
-  // destructor
-
   /**
-   * @brief Default de-constructor
+   * @brief destructor
    * 
    */
   RandSketchingFWHT::~RandSketchingFWHT()
@@ -63,10 +63,10 @@ namespace ReSolve
     }
   }
 
-  // Actual sketching process
-
   /** 
    * @brief Sketching method - it sketches a given vector (shrinks its size)
+   * 
+   * Implements actula sketching process.
    *
    * @param[in]  input   - input vector, size _n_ 
    * @param[out] output  - output vector, size _k_ 
@@ -198,6 +198,7 @@ namespace ReSolve
   /** 
    * @brief Reset values in the arrays used for sketching.
    * 
+   * Sketching can be reset, similar to Krylov method restarts.
    * If the solver restarts, call this method between restarts.
    *
    * @post Everything is set up so you call call Theta.
@@ -206,7 +207,7 @@ namespace ReSolve
    * 
    * @todo Need to be fixed, this can be done on the GPU.
    */
-  int RandSketchingFWHT::reset() // if needed can be reset (like when Krylov method restarts)
+  int RandSketchingFWHT::reset()
   {
     srand(static_cast<unsigned>(time(nullptr)));
 

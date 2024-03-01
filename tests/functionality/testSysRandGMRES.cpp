@@ -233,9 +233,7 @@ std::string headerInfo(const std::string& method, const std::string& gs, const s
     // do nothing
   }
 
-  // std::string hw = "\t Hardware backend:               " + hwbackend + "\n";
-
-  return header; //+ hw;
+  return header;
 }
 
 ReSolve::vector::Vector* generateRhs(const index_type N, ReSolve::memory::MemorySpace memspace)

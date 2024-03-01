@@ -4,7 +4,6 @@ namespace ReSolve
 {
   LinAlgWorkspaceHIP::LinAlgWorkspaceHIP()
   {
-    std::cout << "Creating HIP workspace ...\n";
     handle_rocsparse_   = nullptr;
     handle_rocblas_     = nullptr;
 

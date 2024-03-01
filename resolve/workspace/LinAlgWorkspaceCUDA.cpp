@@ -4,7 +4,6 @@ namespace ReSolve
 {
   LinAlgWorkspaceCUDA::LinAlgWorkspaceCUDA()
   {
-    std::cout << "Creating CUDA workspace ...\n";
     handle_cusolversp_ = nullptr;
     handle_cusparse_   = nullptr;
     handle_cublas_     = nullptr;

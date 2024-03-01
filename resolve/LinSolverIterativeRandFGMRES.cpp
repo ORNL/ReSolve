@@ -471,10 +471,8 @@ namespace ReSolve
     }
 
     if (is_matrix_handler_cuda || is_matrix_handler_hip) {
-      std::cout << "Memory space of randomized GMRES is on GPU ...\n";
       memspace_ = memory::DEVICE;
     } else {
-      std::cout << "Memory space of randomized GMRES is on CPU ...\n";
       memspace_ = memory::HOST;
     }
   }
