@@ -8,12 +8,13 @@
 
 set(ReSolve_CUDA_SRC
     cudaKernels.cu
-    VectorKernels.cu
+    cudaVectorKernels.cu
     MemoryUtils.cu
 )
 
 set(ReSolve_CUDA_HEADER_INSTALL
     cudaKernels.h
+    cudaVectorKernels.h
     CudaMemory.hpp
     cuda_check_errors.hpp
 )

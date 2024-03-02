@@ -1,8 +1,8 @@
 #include <resolve/Common.hpp>
-#include <resolve/vector/VectorKernels.hpp>
+// #include <resolve/vector/VectorKernels.hpp>
 
 
-namespace ReSolve { namespace vector {
+namespace ReSolve { //namespace vector {
 
 
 void set_array_const(index_type n, real_type val, real_type* arr)
@@ -12,4 +12,4 @@ void set_array_const(index_type n, real_type val, real_type* arr)
   }
 }
 
-}} // namespace ReSolve::vector
+} //} // namespace ReSolve::vector

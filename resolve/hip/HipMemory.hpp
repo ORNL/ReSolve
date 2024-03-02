@@ -3,6 +3,7 @@
 #include <iostream>
 #include <hip/hip_runtime.h>
 
+#include <resolve/hip/hipVectorKernels.h>
 #include "hip_check_errors.hpp"
 
 namespace ReSolve
@@ -93,6 +94,25 @@ namespace ReSolve
       static int setZeroArrayOnDevice(T* v, I n)
       {
         return checkHipErrors(hipMemset(v, 0, sizeof(T) * n));
+      }
+
+      /**
+       * @brief Sets elements of device array v to constant value c
+       *
+       * @param v - pointer to the array to be allocated on the device
+       * @param c - value to set all array elements
+       * @param n - number of the array elements to be set to zero
+       * 
+       * @tparam T - Array element type
+       * @tparam I - Array index type
+       *
+       * @post First n elements of array v are set to zero
+       */
+      template <typename I, typename T>
+      static int setArrayToConstOnDevice(T* v, T c, I n)
+      {
+        hip_set_array_const(n, c, v);
+        return checkHipErrors(0);
       }
 
       /** 

@@ -8,12 +8,13 @@
 
 set(ReSolve_HIP_SRC
     hipKernels.hip
-    VectorKernels.hip
+    hipVectorKernels.hip
     MemoryUtils.hip
 )
 
 set(ReSolve_HIP_HEADER_INSTALL
     hipKernels.h
+    hipVectorKernels.h
     HipMemory.hpp
     hip_check_errors.hpp
 )

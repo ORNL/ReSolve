@@ -5,15 +5,21 @@
 
 namespace ReSolve { namespace vector {
   /**
-   * @brief This class implements vectors (dense arrays) and multivectors and some basic utilities (get size, allocate, set data, get data, etc).
+   * @brief This class implements vectors (dense arrays) and multivectors and
+   * some basic utilities (get size, allocate, set data, get data, etc).
    *       
    * 
    * What you need to know:
-   *  - Multivectors are stored in one array, organized column-wise. A vector is a multivector of size 1.
-   *  - There is a mirroring memory approach: the class has DEVICE and HOST data pointers. If needed,  only one (or none) can be used or allocated. Unless triggered directly or by other function, the data is NOT automatically updated between HOST and DEVICE.
+   *  - Multivectors are stored in one array, organized column-wise. A vector
+   *    is a multivector of size 1.
+   *  - There is a mirroring memory approach: the class has DEVICE and HOST
+   *    data pointers. If needed,  only one (or none) can be used or allocated.
+   *    Unless triggered directly or by other function, the data is NOT
+   *    automatically updated between HOST and DEVICE.
    *  - Constructor DOES NOT allocate memory. This has to be done separately.
    *  - You can get (and set) "raw" data easily, if needed. 
-   *  - There is memory ownership utility - vector can own memory (separate flags for HOST and DEVICE) or not, depending on how it is used.
+   *  - There is memory ownership utility - vector can own memory (separate
+   *    flags for HOST and DEVICE) or not, depending on how it is used.
    *
    * @author Kasia Swirydowicz <kasia.swirydowicz@pnnl.gov>
    */

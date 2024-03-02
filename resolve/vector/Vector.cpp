@@ -1,6 +1,5 @@
 #include <cstring>
 #include <resolve/vector/Vector.hpp>
-#include <resolve/vector/VectorKernels.hpp>
 #include <resolve/utilities/logger/Logger.hpp>
 
 namespace ReSolve { namespace vector {
@@ -348,9 +347,7 @@ namespace ReSolve { namespace vector {
           h_data_ = new real_type[n_ * k_]; 
           owns_cpu_data_ = true;
         }
-        for (int i = 0; i < n_ * k_; ++i){
-          h_data_[i] = 0.0;
-        }
+        mem_.setZeroArrayOnHost(h_data_, n_ * k_);
         break;
       case DEVICE:
         if (d_data_ == nullptr) {
@@ -379,9 +376,7 @@ namespace ReSolve { namespace vector {
           h_data_ = new real_type[n_ * k_]; 
           owns_cpu_data_ = true;
         }
-        for (int i = (n_current_) * j; i < n_current_ * (j + 1); ++i) {
-          h_data_[i] = 0.0;
-        }
+        mem_.setZeroArrayOnHost(&h_data_[j * n_current_], n_current_);
         break;
       case DEVICE:
         if (d_data_ == nullptr) {
@@ -412,16 +407,14 @@ namespace ReSolve { namespace vector {
           h_data_ = new real_type[n_ * k_]; 
           owns_cpu_data_ = true;
         }
-        for (int i = 0; i < n_ * k_; ++i){
-          h_data_[i] = C;
-        }
+        mem_.setArrayToConstOnHost(h_data_, C, n_ * k_);
         break;
       case DEVICE:
         if (d_data_ == nullptr) {
           mem_.allocateArrayOnDevice(&d_data_, n_ * k_);
           owns_gpu_data_ = true;
         }
-        set_array_const(n_ * k_, C, d_data_);
+        mem_.setArrayToConstOnDevice(d_data_, C, n_ * k_);
         break;
     }
   }
@@ -444,16 +437,14 @@ namespace ReSolve { namespace vector {
           h_data_ = new real_type[n_ * k_]; 
           owns_cpu_data_ = true;
         }
-        for (int i = j * n_current_; i < (j + 1 ) * n_current_ ; ++i) {
-          h_data_[i] = C;
-        }
+        mem_.setArrayToConstOnHost(&h_data_[n_current_ * j], C, n_current_);
         break;
       case DEVICE:
         if (d_data_ == nullptr) {
           mem_.allocateArrayOnDevice(&d_data_, n_ * k_);
           owns_gpu_data_ = true;
         }
-        set_array_const(n_current_ * 1, C, &d_data_[n_current_ * j]);
+        mem_.setArrayToConstOnDevice(&d_data_[n_current_ * j], C, n_current_);
         break;
     }
   }

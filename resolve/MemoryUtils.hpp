@@ -9,6 +9,7 @@ namespace ReSolve
   {
     enum MemorySpace{HOST = 0, DEVICE};
     enum MemoryDirection{HOST_TO_HOST = 0, HOST_TO_DEVICE, DEVICE_TO_HOST, DEVICE_TO_DEVICE};
+    enum DeviceType{NONE=0, CUDADEVICE, HIPDEVICE};
   }
 }
 
@@ -47,6 +48,9 @@ namespace ReSolve
       int setZeroArrayOnDevice(T* v, I n);
       
       template <typename I, typename T>
+      int setArrayToConstOnDevice(T* v, T c, I n);
+      
+      template <typename I, typename T>
       int copyArrayDeviceToHost(T* dst, const T* src, I n);
       
       template <typename I, typename T>
@@ -55,12 +59,32 @@ namespace ReSolve
       template <typename I, typename T>
       int copyArrayHostToDevice(T* dst, const T* src, I n);
 
-      /// Implemented here as it is always needed
+      /// 
+      /// Methods implemented here are always needed
+      ///
+
       template <typename I, typename T>
       int copyArrayHostToHost(T* dst, const T* src, I n)
       {
-        std::size_t nelements = static_cast<std::size_t>(n);
-        memcpy(dst, src, nelements * sizeof(T));
+        std::size_t arraysize = static_cast<std::size_t>(n) * sizeof(T);
+        memcpy(dst, src, arraysize);
+        return 0;
+      }
+
+      template <typename I, typename T>
+      int setZeroArrayOnHost(T* v, I n)
+      {
+        std::size_t arraysize = static_cast<std::size_t>(n) * sizeof(T);
+        memset(v, 0, arraysize);
+        return 0;
+      }
+
+      template <typename I, typename T>
+      int setArrayToConstOnHost(T* v, T c, I n)
+      {
+        for (I i = 0; i < n; ++i) {
+          v[i] = c;
+        }
         return 0;
       }
   };

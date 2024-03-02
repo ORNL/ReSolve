@@ -1,7 +1,6 @@
 #pragma once
 
 
-#include <resolve/MemoryUtils.hpp>
 
 namespace ReSolve
 {
@@ -11,8 +10,6 @@ namespace ReSolve
       LinAlgWorkspaceCpu();
       ~LinAlgWorkspaceCpu();
       void initializeHandles();
-    private:
-      // MemoryHandler mem_; ///< Memory handler not needed for now
   };
 
 }

@@ -7,7 +7,7 @@
 ]]
 
 set(ReSolve_CPU_SRC
-    cpuVectorKernels.cpp
+    #cpuVectorKernels.cpp
     cpuKernels.cpp
     MemoryUtils.cpp
 )
