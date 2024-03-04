@@ -15,6 +15,8 @@
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 #include <cmath>
 using namespace ReSolve::constants;
+#include <chrono>
+using namespace std::chrono;
 
 int main(int argc, char *argv[])
 {
@@ -100,7 +102,10 @@ int main(int argc, char *argv[])
   FGMRES->setFlexible(1); 
 
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  auto start = high_resolution_clock::now(); 
   FGMRES->solve(vec_rhs, vec_x);
+  auto stop = high_resolution_clock::now();
+  auto duration = duration_cast<milliseconds>(stop - start);
 
   norm_b = vector_handler->dot(vec_rhs, vec_rhs, ReSolve::memory::HOST);
   norm_b = sqrt(norm_b);
@@ -109,7 +114,8 @@ int main(int argc, char *argv[])
     << FGMRES->getInitResidualNorm()/norm_b
     << " final nrm: "
     << FGMRES->getFinalResidualNorm()/norm_b
-    << " iter: " << FGMRES->getNumIter() << "\n";
+    << " iter: " << FGMRES->getNumIter()
+    << " solve time (ms): " << duration.count() <<  "\n";
 
 
   delete A;

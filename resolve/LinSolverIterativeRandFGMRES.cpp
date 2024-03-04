@@ -10,6 +10,8 @@
 #include <resolve/RandSketchingCountSketch.hpp> 
 #include <resolve/RandSketchingFWHT.hpp> 
 
+#include <chrono>
+using namespace std::chrono;
 namespace ReSolve
 {
   using out = io::Logger;
@@ -141,6 +143,9 @@ namespace ReSolve
   int  LinSolverIterativeRandFGMRES::solve(vector_type* rhs, vector_type* x)
   {
     using namespace constants;
+    std::chrono::high_resolution_clock::time_point start, stop;
+    long long int total_ms = 0; 
+    long long int total_gs = 0; 
 
     // io::Logger::setVerbosity(io::Logger::EVERYTHING);
 
@@ -237,9 +242,12 @@ namespace ReSolve
         } else {
           vec_z->setData( d_Z_->getVectorData(0, memspace_), memspace_);
         }
+        auto start = high_resolution_clock::now(); 
         this->precV(vec_v, vec_z);
-
         mem_.deviceSynchronize();
+        auto stop = high_resolution_clock::now();
+        auto duration = duration_cast<microseconds>(stop - start);
+        total_ms += (int)  duration.count();
 
         // V_{i+1}=A*Z_i
 
@@ -256,7 +264,13 @@ namespace ReSolve
           vector_handler_->scal(&one_over_k_, vec_s, memspace_);
         }
         mem_.deviceSynchronize();
+        start = high_resolution_clock::now();
         GS_->orthogonalize(k_rand_, d_S_, h_H_, i); //, memspace_);  
+        mem_.deviceSynchronize();
+        stop = high_resolution_clock::now();
+        auto duration1 = duration_cast<microseconds>(stop - start);
+
+        total_gs += (int)  duration1.count();
         // now post-process
         //checkCudaErrors(cudaMemcpy(d_Hcolumn, &h_H[i * (restart + 1)], sizeof(double) * (i + 1), cudaMemcpyHostToDevice));
         if (memspace_ == memory::DEVICE) {
@@ -401,6 +415,7 @@ namespace ReSolve
 
         final_residual_norm_ = rnorm;
         total_iters_ = it;
+        printf("Prec time: %lld  gs time %lld\n", total_ms, total_gs);
       }
     } // outer while
     return 0;

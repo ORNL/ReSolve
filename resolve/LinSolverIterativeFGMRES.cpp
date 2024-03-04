@@ -7,6 +7,8 @@
 #include <resolve/matrix/MatrixHandler.hpp>
 #include "LinSolverIterativeFGMRES.hpp"
 
+#include <chrono>
+using namespace std::chrono;
 namespace ReSolve
 {
   using out = io::Logger;
@@ -90,7 +92,11 @@ namespace ReSolve
   {
     using namespace constants;
 
-    //io::Logger::setVerbosity(io::Logger::EVERYTHING);
+    io::Logger::setVerbosity(io::Logger::EVERYTHING);
+    
+    std::chrono::high_resolution_clock::time_point start, stop;
+    long long int total_ms = 0; 
+    long long int total_gs = 0; 
     
     int outer_flag = 1;
     int notconv = 1; 
@@ -171,8 +177,12 @@ namespace ReSolve
         } else {
           vec_z->setData( d_Z_->getVectorData(0, memspace_), memspace_);
         }
+        auto start = high_resolution_clock::now(); 
         this->precV(vec_v, vec_z);
         mem_.deviceSynchronize();
+        auto stop = high_resolution_clock::now();
+        auto duration = duration_cast<microseconds>(stop - start);
+        total_ms += (int)  duration.count();
 
         // V_{i+1}=A*Z_i
 
@@ -182,7 +192,13 @@ namespace ReSolve
 
         // orthogonalize V[i+1], form a column of h_H_
 
+        start = high_resolution_clock::now();
         GS_->orthogonalize(n_, d_V_, h_H_, i);
+
+        mem_.deviceSynchronize();
+        stop = high_resolution_clock::now();
+        auto duration1 = duration_cast<microseconds>(stop - start);
+        total_gs += (int)  duration1.count();
         if(i != 0) {
           for(int k = 1; k <= i; k++) {
             k1 = k - 1;
@@ -274,6 +290,7 @@ namespace ReSolve
         io::Logger::misc() << "End of cycle, COMPUTED norm of residual "
                            << std::scientific << std::setprecision(16)
                            << rnorm << "\n";
+        printf("Prec time: %lld  gs time %lld\n", total_ms, total_gs);
       }
     } // outer while
     return 0;

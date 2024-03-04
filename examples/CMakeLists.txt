@@ -26,6 +26,13 @@ endif(RESOLVE_USE_KLU)
 add_executable(gmres_cpu_rand.exe r_randGMRES_cpu.cpp)
 target_link_libraries(gmres_cpu_rand.exe PRIVATE ReSolve)
 
+
+# Build GMRES example, CPU ONLY  rGMRES_cpu
+
+add_executable(gmres_cpu.exe r_GMRES_cpu.cpp)
+target_link_libraries(gmres_cpu.exe PRIVATE ReSolve)
+
+
 # Create CUDA examples
 if(RESOLVE_USE_CUDA)
         
@@ -52,6 +59,11 @@ if(RESOLVE_USE_CUDA)
   #rand solver
   add_executable(gmres_cusparse_rand.exe r_randGMRES_CUDA.cpp)
   target_link_libraries(gmres_cusparse_rand.exe PRIVATE ReSolve)
+
+ #standalone iterative solver
+  add_executable(gmres_cusparse.exe r_GMRES_CUDA.cpp)
+  target_link_libraries(gmres_cusparse.exe PRIVATE ReSolve)
+
 
   # Build example with a configurable system solver
   add_executable(system_cuda.exe r_SysSolverCuda.cpp)
@@ -80,6 +92,12 @@ if(RESOLVE_USE_HIP)
   # Rand GMRES test with rocsparse
   add_executable(gmres_rocsparse_rand.exe r_randGMRES.cpp)
   target_link_libraries(gmres_rocsparse_rand.exe PRIVATE ReSolve)
+
+
+  # Normal GMRES test with rocsparse
+  add_executable(gmres_rocsparse.exe r_GMRES.cpp)
+  target_link_libraries(gmres_rocsparse.exe PRIVATE ReSolve)
+
   # Build example with a configurable system solver
   add_executable(system_hip.exe r_SysSolverHip.cpp)
   target_link_libraries(system_hip.exe PRIVATE ReSolve)
@@ -97,14 +115,14 @@ if(RESOLVE_USE_KLU)
 endif()
 
 if(RESOLVE_USE_CUDA)
-  list(APPEND installable_executables klu_glu.exe klu_rf.exe klu_rf_fgmres.exe  klu_glu_values_update.exe gmres_cusparse_rand.exe klu_cusolverrf_check_redo.exe)      
+  list(APPEND installable_executables klu_glu.exe klu_rf.exe klu_rf_fgmres.exe  klu_glu_values_update.exe gmres_cusparse_rand.exe gmres_cusparse.exe klu_cusolverrf_check_redo.exe)      
 endif(RESOLVE_USE_CUDA)
 
 if(RESOLVE_USE_HIP)
-  list(APPEND installable_executables klu_rocsolverrf.exe klu_rocsolverrf_fgmres.exe klu_rocsolverrf_check_redo.exe gmres_rocsparse_rand.exe)     
+  list(APPEND installable_executables klu_rocsolverrf.exe klu_rocsolverrf_fgmres.exe klu_rocsolverrf_check_redo.exe gmres_rocsparse_rand.exe gmres_rocsparse.exe)     
 endif(RESOLVE_USE_HIP)
 
-  list(APPEND installable_executables  gmres_cpu_rand.exe)     
+  list(APPEND installable_executables  gmres_cpu_rand.exe gmres_cpu.exe)     
 
 install(TARGETS ${installable_executables} 
         RUNTIME DESTINATION bin)

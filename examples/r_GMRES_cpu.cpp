@@ -10,10 +10,10 @@
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
-#include <resolve/LinSolverDirectCuSparseILU0.hpp>
-#include <resolve/LinSolverIterativeRandFGMRES.hpp>
+#include <resolve/LinSolverDirectSerialILU0.hpp>
+#include <resolve/LinSolverIterativeFGMRES.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
-
+#include <cmath>
 using namespace ReSolve::constants;
 #include <chrono>
 using namespace std::chrono;
@@ -31,10 +31,10 @@ int main(int argc, char *argv[])
 
   ReSolve::matrix::Coo* A_coo;
   ReSolve::matrix::Csr* A;
-  ReSolve::LinAlgWorkspaceCUDA* workspace_CUDA = new ReSolve::LinAlgWorkspaceCUDA();
-  workspace_CUDA->initializeHandles();
-  ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(workspace_CUDA);
-  ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(workspace_CUDA);
+  ReSolve::LinAlgWorkspaceCpu* workspace_Cpu = new ReSolve::LinAlgWorkspaceCpu();
+  workspace_Cpu->initializeHandles();
+  ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(workspace_Cpu);
+  ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(workspace_Cpu);
   real_type* rhs = nullptr;
   real_type* x   = nullptr;
 
@@ -42,10 +42,10 @@ int main(int argc, char *argv[])
   vector_type* vec_x;
   vector_type* vec_r;
 
-  ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::mgs_two_synch);
+  ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::mgs);
 
-  ReSolve::LinSolverDirectCuSparseILU0* Rf = new ReSolve::LinSolverDirectCuSparseILU0(workspace_CUDA);
-  ReSolve::LinSolverIterativeRandFGMRES* FGMRES = new ReSolve::LinSolverIterativeRandFGMRES(matrix_handler, vector_handler, ReSolve::LinSolverIterativeRandFGMRES::fwht, GS);
+  ReSolve::LinSolverDirectSerialILU0* Rf = new ReSolve::LinSolverDirectSerialILU0(workspace_Cpu);
+  ReSolve::LinSolverIterativeFGMRES* FGMRES = new ReSolve::LinSolverIterativeFGMRES(matrix_handler, vector_handler, GS);
 
   std::cout << std::endl << std::endl << std::endl;
   std::cout << "========================================================================================================================"<<std::endl;
@@ -77,38 +77,37 @@ int main(int argc, char *argv[])
   vec_x = new vector_type(A->getNumRows());
   vec_x->allocate(ReSolve::memory::HOST);
   //iinit guess is 0U
-  vec_x->allocate(ReSolve::memory::DEVICE);
-  vec_x->setToZero(ReSolve::memory::DEVICE);
+  vec_x->allocate(ReSolve::memory::HOST);
+  vec_x->setToZero(ReSolve::memory::HOST);
   vec_r = new vector_type(A->getNumRows());
   std::cout<<"Finished reading the matrix and rhs, size: "<<A->getNumRows()<<" x "<<A->getNumColumns()<< ", nnz: "<< A->getNnz()<< ", symmetric? "<<A->symmetric()<< ", Expanded? "<<A->expanded()<<std::endl;
   mat_file.close();
   rhs_file.close();
 
-  A->updateFromCoo(A_coo, ReSolve::memory::DEVICE);
-  vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+  A->updateFromCoo(A_coo, ReSolve::memory::HOST);
+  vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   //Now call direct solver
   real_type norm_b;
-  matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
+  matrix_handler->setValuesChanged(true, ReSolve::memory::HOST);
 
   Rf->setup(A, nullptr, nullptr, nullptr, nullptr, vec_rhs);
   FGMRES->setRestart(800);
   FGMRES->setMaxit(800);
   FGMRES->setTol(1e-12);
   FGMRES->setup(A);
-  GS->setup(FGMRES->getKrand(), FGMRES->getRestart()); 
-
-  //matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
+  GS->setup(A->getNumRows(), FGMRES->getRestart()); 
+  //matrix_handler->setValuesChanged(true, ReSolve::memory::HOST);
   FGMRES->resetMatrix(A);
   FGMRES->setupPreconditioner("LU", Rf);
   FGMRES->setFlexible(1); 
 
-  vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+  vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   auto start = high_resolution_clock::now(); 
   FGMRES->solve(vec_rhs, vec_x);
   auto stop = high_resolution_clock::now();
   auto duration = duration_cast<milliseconds>(stop - start);
 
-  norm_b = vector_handler->dot(vec_rhs, vec_rhs, ReSolve::memory::DEVICE);
+  norm_b = vector_handler->dot(vec_rhs, vec_rhs, ReSolve::memory::HOST);
   norm_b = sqrt(norm_b);
   std::cout << "FGMRES: init nrm: " 
     << std::scientific << std::setprecision(16) 
@@ -126,9 +125,8 @@ int main(int argc, char *argv[])
   delete [] rhs;
   delete vec_r;
   delete vec_x;
-  delete workspace_CUDA;
+  delete workspace_Cpu;
   delete matrix_handler;
   delete vector_handler;
-
   return 0;
 }

@@ -11,7 +11,7 @@
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
 #include <resolve/LinSolverDirectCuSparseILU0.hpp>
-#include <resolve/LinSolverIterativeRandFGMRES.hpp>
+#include <resolve/LinSolverIterativeFGMRES.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 
 using namespace ReSolve::constants;
@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
   ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::mgs_two_synch);
 
   ReSolve::LinSolverDirectCuSparseILU0* Rf = new ReSolve::LinSolverDirectCuSparseILU0(workspace_CUDA);
-  ReSolve::LinSolverIterativeRandFGMRES* FGMRES = new ReSolve::LinSolverIterativeRandFGMRES(matrix_handler, vector_handler, ReSolve::LinSolverIterativeRandFGMRES::fwht, GS);
+  ReSolve::LinSolverIterativeFGMRES* FGMRES = new ReSolve::LinSolverIterativeFGMRES(matrix_handler, vector_handler, GS);
 
   std::cout << std::endl << std::endl << std::endl;
   std::cout << "========================================================================================================================"<<std::endl;
@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
   FGMRES->setMaxit(800);
   FGMRES->setTol(1e-12);
   FGMRES->setup(A);
-  GS->setup(FGMRES->getKrand(), FGMRES->getRestart()); 
+  GS->setup(A->getNumRows(), FGMRES->getRestart()); 
 
   //matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
   FGMRES->resetMatrix(A);
