@@ -32,7 +32,7 @@ namespace ReSolve {
 
     private:
       index_type* h_labels_{nullptr}; ///< label array size _n_, with values from _0_ to _k-1_ assigned by random
-      index_type* h_flip_{nullptr};   ///< flip array with valyes of 1 and -1 assigned by random
+      index_type* h_flip_{nullptr};   ///< flip array with values of 1 and -1 assigned by random
 
       index_type* d_labels_{nullptr}; ///< h_labels GPU counterpart
       index_type* d_flip_{nullptr};   ///< h_flip GPU counterpart
