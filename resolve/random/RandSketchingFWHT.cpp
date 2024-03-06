@@ -66,7 +66,7 @@ namespace ReSolve
   /** 
    * @brief Sketching method - it sketches a given vector (shrinks its size)
    * 
-   * Implements actula sketching process.
+   * Implements actual sketching process.
    *
    * @param[in]  input   - input vector, size _n_ 
    * @param[out] output  - output vector, size _k_ 
