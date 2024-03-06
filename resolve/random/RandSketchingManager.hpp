@@ -40,7 +40,7 @@ namespace ReSolve
     protected:
       index_type n_;      ///< size of base vector
       index_type k_rand_; ///< size of sketched vector
-      index_type N_;      ///< padded n -- generally N_ > n_
+      index_type N_;      ///< padded n -- generally N_ >= n_
     
   };
 } // namespace ReSolve
