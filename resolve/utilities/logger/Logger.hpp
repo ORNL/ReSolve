@@ -38,7 +38,7 @@ namespace ReSolve
         static void closeOutputFile();
         static void setVerbosity(Verbosity v);
 
-        static std::vector<std::ostream*>&& init();
+        static std::vector<std::ostream*>& init();
 
       private:
         static void updateVerbosity(std::vector<std::ostream*>& output_streams);
