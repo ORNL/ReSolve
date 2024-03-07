@@ -15,15 +15,12 @@ set(ReSolve_SRC
     LinSolverIterativeFGMRES.cpp
     LinSolverDirectCpuILU0.cpp
     LinSolverIterativeRandFGMRES.cpp
-    RandSketchingManager.cpp
-    RandSketchingCountSketch.cpp
-    RandSketchingFWHT.cpp
     LinSolverDirectSerialILU0.cpp
+    SystemSolver.cpp
 )
 
 set(ReSolve_KLU_SRC
   LinSolverDirectKLU.cpp
-  SystemSolver.cpp
 )
 
 # C++ code that links to CUDA SDK libraries
@@ -33,11 +30,12 @@ set(ReSolve_CUDASDK_SRC
     LinSolverDirectCuSparseILU0.cpp
 )
 
-# HIP files
+# C++ code that links to ROCm libraries
 set(ReSolve_ROCM_SRC
   LinSolverDirectRocSolverRf.cpp
   LinSolverDirectRocSparseILU0.cpp
 )
+
 # Header files to be installed
 set(ReSolve_HEADER_INSTALL
     Common.hpp
@@ -47,9 +45,6 @@ set(ReSolve_HEADER_INSTALL
     LinSolverDirectCpuILU0.hpp
     SystemSolver.hpp
     GramSchmidt.hpp
-    RandSketchingManager.hpp
-    RandSketchingCountSketch.hpp
-    RandSketchingFWHT.hpp
     MemoryUtils.hpp)
 
 set(ReSolve_KLU_HEADER_INSTALL
@@ -73,6 +68,7 @@ add_subdirectory(workspace)
 # Next build vector and matrix objects that may use this backend.
 add_subdirectory(vector)
 add_subdirectory(matrix)
+add_subdirectory(random)
 
 # Build shared library ReSolve
 add_library(resolve_tpl INTERFACE)
@@ -86,6 +82,7 @@ endif()
 set(ReSolve_Targets_List
     resolve_matrix
     resolve_vector
+    resolve_random
     resolve_logger
     resolve_tpl
     resolve_workspace
@@ -95,6 +92,12 @@ set(ReSolve_Object_List
     resolve_options
     resolve_version
 )
+
+# If no GPU support is enabled, link to dummy device backend
+if(NOT RESOLVE_USE_GPU)
+  add_subdirectory(cpu)
+  list(APPEND ReSolve_Targets_List resolve_backend_cpu)
+endif(NOT RESOLVE_USE_GPU)
 
 # If CUDA support is enabled add CUDA SDK specific code and dependencies
 if(RESOLVE_USE_CUDA)
@@ -112,12 +115,6 @@ if(RESOLVE_USE_HIP)
   list(APPEND ReSolve_SRC ${ReSolve_ROCM_SRC})
   list(APPEND ReSolve_Targets_List resolve_backend_hip)
   list(APPEND ReSolve_HEADER_INSTALL ${ReSolve_ROCM_HEADER_INSTALL})
-endif()
-
-# If no GPU support is enabled, link to dummy device backend
-if(NOT RESOLVE_USE_GPU)
-  add_subdirectory(cpu)
-  list(APPEND ReSolve_Targets_List resolve_backend_cpu)
 endif()
 
 # Set installable targets

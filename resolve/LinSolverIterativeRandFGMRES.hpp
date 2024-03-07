@@ -1,13 +1,21 @@
 #pragma once
 #include "Common.hpp"
-#include <resolve/matrix/Sparse.hpp>
-#include <resolve/vector/Vector.hpp>
 #include "LinSolver.hpp"
-#include "GramSchmidt.hpp"
-#include "RandSketchingManager.hpp"
 
 namespace ReSolve
 {
+  // Forward declarations
+  class RandSketchingManager;
+  class GramSchmidt;
+  namespace matrix
+  {
+    class Sparse;
+  }
+  namespace vector
+  {
+    class Vector;
+  }
+
   /**
    * @brief Randomized (F)GMRES
    * 

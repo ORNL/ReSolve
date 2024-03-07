@@ -12,37 +12,20 @@
 #include <iomanip>
 #include <vector>
 #include <cmath>
-#include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/Csc.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/matrix/io.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/VectorHandler.hpp>
-#include <resolve/LinSolverDirectKLU.hpp>
 #include <resolve/LinSolverIterativeRandFGMRES.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 #include <resolve/GramSchmidt.hpp>
 #include <resolve/SystemSolver.hpp>
 #include <resolve/utilities/params/CliOptions.hpp>
 
-#if defined (RESOLVE_USE_CUDA)
-#include <resolve/LinSolverDirectCuSparseILU0.hpp>
-  using workspace_type = ReSolve::LinAlgWorkspaceCUDA;
-  ReSolve::memory::MemorySpace memspace = ReSolve::memory::DEVICE;
-  const std::string hwbackend("CUDA");
-#elif defined (RESOLVE_USE_HIP)
-#include <resolve/LinSolverDirectRocSparseILU0.hpp>
-  using workspace_type = ReSolve::LinAlgWorkspaceHIP;
-  ReSolve::memory::MemorySpace memspace = ReSolve::memory::DEVICE;
-  const std::string hwbackend("HIP");
-#else
-  using workspace_type = ReSolve::LinAlgWorkspaceCpu;
-  ReSolve::memory::MemorySpace memspace = ReSolve::memory::HOST;
-  const std::string hwbackend("CPU");
-#endif
-
 using namespace ReSolve::constants;
+using namespace ReSolve::colors;
 
 // Use ReSolve data types.
 using real_type  = ReSolve::real_type;
@@ -50,17 +33,44 @@ using index_type  = ReSolve::index_type;
 using vector_type = ReSolve::vector::Vector;
 
 // Forward declarations of helper functions that create test linear system
+template <class T>
+static int test(int argc, char *argv[], const std::string& hwbackend);
 static void processInputs(std::string& method, std::string& gs, std::string& sketch);
 static std::string headerInfo(const std::string& method, const std::string& gs, const std::string& sketch);
-static ReSolve::matrix::Csr* generateMatrix(const index_type N);
-static ReSolve::vector::Vector* generateRhs(const index_type N);
+static ReSolve::matrix::Csr* generateMatrix(const index_type N, ReSolve::memory::MemorySpace memspace);
+static ReSolve::vector::Vector* generateRhs(const index_type N, ReSolve::memory::MemorySpace memspace);
 
 int main(int argc, char *argv[])
+{
+  int error_sum = 0;
+
+#ifndef RESOLVE_USE_GPU
+  error_sum += test<ReSolve::LinAlgWorkspaceCpu>(argc, argv, "CPU");
+#endif
+
+#ifdef RESOLVE_USE_HIP
+  error_sum += test<ReSolve::LinAlgWorkspaceHIP>(argc, argv, "HIP");
+#endif
+
+#ifdef RESOLVE_USE_CUDA
+  error_sum += test<ReSolve::LinAlgWorkspaceCUDA>(argc, argv, "CUDA");
+#endif
+
+  return error_sum;
+}
+
+template <class T>
+int test(int argc, char *argv[], const std::string& hwbackend)
 {
   // Error sum needs to be 0 at the end for test to PASS.
   // It is a FAIL otheriwse.
   int error_sum = 0;
   int status = 0;
+
+  ReSolve::memory::MemorySpace memspace = ReSolve::memory::DEVICE;
+  if (hwbackend == "CPU") {
+    memspace = ReSolve::memory::HOST;
+  }
 
   // Collect all CLI
   ReSolve::CliOptions options(argc, argv);
@@ -81,11 +91,11 @@ int main(int argc, char *argv[])
   processInputs(method, gs, sketch);
 
   // Generate linear system data
-  ReSolve::matrix::Csr* A = generateMatrix(N);
-  vector_type* vec_rhs = generateRhs(N);
+  ReSolve::matrix::Csr* A = generateMatrix(N, memspace);
+  vector_type* vec_rhs = generateRhs(N, memspace);
 
   // Create workspace and initialize its handles.
-  workspace_type workspace;
+  T workspace;
   workspace.initializeHandles();
 
   // Create linear algebra handlers
@@ -134,9 +144,10 @@ int main(int argc, char *argv[])
   norm_b = vector_handler.dot(vec_rhs, vec_rhs, memspace);
   norm_b = std::sqrt(norm_b);
   real_type final_norm = solver.getIterativeSolver().getFinalResidualNorm();
-  std::cout << headerInfo(method, gs, sketch)
-            << "\t Solver tolerance:               "//                     : "
-            << tol << "\n"
+  std::cout << std::defaultfloat
+            << headerInfo(method, gs, sketch)
+            << "\t Hardware backend:               " << hwbackend << "\n"
+            << "\t Solver tolerance:               " << tol       << "\n"
             << std::scientific << std::setprecision(16)
             << "\t Initial residual norm:          ||b-Ax_0||_2         : " 
             << solver.getIterativeSolver().getInitResidualNorm() << " \n"
@@ -154,9 +165,9 @@ int main(int argc, char *argv[])
     error_sum++;
   }
   if (error_sum == 0) {
-    std::cout<<"Test PASSED\n\n";
+    std::cout << "Test " << GREEN << "PASSED" << CLEAR << "\n\n";
   } else {
-    std::cout<<"Test FAILED, error sum: " << error_sum << "\n\n";
+    std::cout << "Test " << RED << "FAILED" << CLEAR << ", error sum: " << error_sum << "\n\n";
   }
 
   delete A;
@@ -222,12 +233,10 @@ std::string headerInfo(const std::string& method, const std::string& gs, const s
     // do nothing
   }
 
-  std::string hw = "\t Hardware backend:               " + hwbackend + "\n";
-
-  return header + hw;
+  return header;
 }
 
-ReSolve::vector::Vector* generateRhs(const index_type N)
+ReSolve::vector::Vector* generateRhs(const index_type N, ReSolve::memory::MemorySpace memspace)
 {
   vector_type* vec_rhs = new vector_type(N);
   vec_rhs->allocate(ReSolve::memory::HOST);
@@ -246,7 +255,7 @@ ReSolve::vector::Vector* generateRhs(const index_type N)
   return vec_rhs;
 } 
 
-ReSolve::matrix::Csr* generateMatrix(const index_type N)
+ReSolve::matrix::Csr* generateMatrix(const index_type N, ReSolve::memory::MemorySpace memspace)
 {
   std::vector<real_type> r1 = {1., 5., 7., 8., 3., 2., 4.}; // sum 30
   std::vector<real_type> r2 = {1., 3., 2., 2., 1., 6., 7., 3., 2., 3.}; // sum 30

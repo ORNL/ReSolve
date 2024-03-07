@@ -5,10 +5,13 @@
 #include <cstring>
 
 #include <resolve/utilities/logger/Logger.hpp>
+#include <resolve/matrix/Sparse.hpp>
+#include <resolve/vector/Vector.hpp>
+#include <resolve/GramSchmidt.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include "LinSolverIterativeRandFGMRES.hpp"
-#include <resolve/RandSketchingCountSketch.hpp> 
-#include <resolve/RandSketchingFWHT.hpp> 
+#include <resolve/random/RandSketchingCountSketch.hpp> 
+#include <resolve/random/RandSketchingFWHT.hpp> 
 
 namespace ReSolve
 {

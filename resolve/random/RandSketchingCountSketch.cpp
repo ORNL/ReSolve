@@ -1,15 +1,16 @@
 #include "RandSketchingCountSketch.hpp"
 #include <resolve/MemoryUtils.hpp>
 #include <resolve/vector/Vector.hpp>
-
-#ifdef RESOLVE_USE_HIP
-#include <resolve/hip/hipKernels.h>
-#elif defined (RESOLVE_USE_CUDA)
-#include <resolve/cuda/cudaKernels.h>
-#else
+#ifndef RESOLVE_USE_GPU
 #include <resolve/cpu/cpuKernels.h>
 #endif
-#include <resolve/RandSketchingCountSketch.hpp> 
+#ifdef RESOLVE_USE_HIP
+#include <resolve/hip/hipKernels.h>
+#endif
+#ifdef RESOLVE_USE_CUDA
+#include <resolve/cuda/cudaKernels.h>
+#endif
+#include <resolve/random/RandSketchingCountSketch.hpp> 
 
 namespace ReSolve 
 {
@@ -30,7 +31,7 @@ namespace ReSolve
     d_flip_ = nullptr;
   }
 
-  // destructor
+  /// Destructor
   RandSketchingCountSketch::~RandSketchingCountSketch()
   {
     delete [] h_labels_;
@@ -41,14 +42,16 @@ namespace ReSolve
     }
   }
 
-  // Actual sketching process
   /**
    * @brief Sketching method using CountSketch algorithm.
+   * 
+   * Implements actual sketching process.
    *
    * @param[in]  input - Vector size _n_
    * @param[out]  output - Vector size _k_ 
    *
-   * @pre Both input and output variables are initialized and of correct size. Setup has been run at least once 
+   * @pre Both input and output variables are initialized and of correct size.
+   * Setup has been run at least once 
    * 
    * @return output = Theta (input) 
    * 
@@ -81,10 +84,11 @@ namespace ReSolve
     return 0;
   }
 
-  /// Setup the parameters, sampling matrices, permuations, etc
   /**
    * @brief Sketching setup method for CountSketch algorithm.
-   *
+   * 
+   * Sets up parameters, sampling matrices, permuations, etc.
+   * 
    * @param[in]  n - Size of base vector
    * @param[in]  k - Size of sketch 
    *
@@ -109,7 +113,7 @@ namespace ReSolve
     for (int i=0; i<n; ++i) {
       h_labels_[i] = rand() % k_rand_;
       int r = rand()%100;
-      if (r < 50){
+      if (r < 50) {
         h_flip_[i] = -1;
       } else { 
         h_flip_[i] = 1;
@@ -133,17 +137,20 @@ namespace ReSolve
     return 0;
   }
 
-  /// @todo Need to be fixed, this can be done on the GPU.
   /**
    * @brief Reset CountSketch arrays (for intance, if solver restarted)
    *
    * @param[in]  n - Size of base vector
    * @param[in]  k - Size of sketch 
    *
-   * @pre _n_ > _k_. _k_ value DID NOT CHANGE from the time the setup function was executed.
+   * @pre _n_ > _k_. _k_ value DID NOT CHANGE from the time the setup function
+   * was executed.
    * 
-   * @post The arrays needed for performing sketches with CountSketch (_flip_ and _labels_ ) are reset to new values. If GPU is enabled, the arrays will be copied to the GPU, as well 
+   * @post The arrays needed for performing sketches with CountSketch
+   * (_flip_ and _labels_ ) are reset to new values. If GPU is enabled, the
+   * arrays will be copied to the GPU, as well 
    * 
+   * @todo Need to be fixed, this can be done on the GPU.
    */
   int RandSketchingCountSketch::reset() // if needed can be reset (like when Krylov method restarts)
   {
