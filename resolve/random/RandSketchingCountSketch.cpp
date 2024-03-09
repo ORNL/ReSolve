@@ -58,29 +58,14 @@ namespace ReSolve
    */
   int RandSketchingCountSketch::Theta(vector_type* input, vector_type* output)
   {
-    using namespace memory;
-   
-    switch (memspace_) {
-      case DEVICE:
-        mem_.deviceSynchronize();
-        count_sketch_theta(n_,
-                          k_rand_,
-                          d_labels_,
-                          d_flip_,
-                          input->getData(ReSolve::memory::DEVICE), 
-                          output->getData(ReSolve::memory::DEVICE));
-        mem_.deviceSynchronize();
-        break;
-      case HOST:
-        count_sketch_theta(n_,
-                          k_rand_,
-                          h_labels_,
-                          h_flip_,
-                          input->getData(ReSolve::memory::HOST), 
-                          output->getData(ReSolve::memory::HOST));
-        break;
-    }
-
+    mem_.deviceSynchronize();
+    count_sketch_theta(n_,
+                       k_rand_,
+                       d_labels_,
+                       d_flip_,
+                       input->getData(memspace_),
+                       output->getData(memspace_));
+    mem_.deviceSynchronize();
     return 0;
   }
 
@@ -120,19 +105,13 @@ namespace ReSolve
       }
     }
 
-    using namespace memory;
-   
-    switch (memspace_) {
-      case DEVICE:
-        mem_.allocateArrayOnDevice(&d_labels_, n_); 
-        mem_.allocateArrayOnDevice(&d_flip_, n_); 
-        //then copy
-        mem_.copyArrayHostToDevice(d_labels_, h_labels_, n_);
-        mem_.copyArrayHostToDevice(d_flip_, h_flip_, n_);
-        mem_.deviceSynchronize();
-        break;
-      case HOST:
-        break;
+    if (memspace_ == memory::DEVICE) {
+      mem_.allocateArrayOnDevice(&d_labels_, n_); 
+      mem_.allocateArrayOnDevice(&d_flip_, n_); 
+      //then copy
+      mem_.copyArrayHostToDevice(d_labels_, h_labels_, n_);
+      mem_.copyArrayHostToDevice(d_flip_, h_flip_, n_);
+      mem_.deviceSynchronize();
     }
     return 0;
   }
@@ -164,12 +143,13 @@ namespace ReSolve
         h_flip_[i] = 1;
       }
     }
+
     if (memspace_ == memory::DEVICE) {
       mem_.copyArrayHostToDevice(d_labels_, h_labels_, n_);
       mem_.copyArrayHostToDevice(d_flip_, h_flip_, n_);
-
       mem_.deviceSynchronize();
     }
+
     return 0;
   }
 }

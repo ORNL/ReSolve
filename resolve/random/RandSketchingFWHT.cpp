@@ -83,36 +83,27 @@ namespace ReSolve
     switch (memspace_) {
       case DEVICE:
         mem_.setZeroArrayOnDevice(d_aux_, N_);
-        FWHT_scaleByD(n_, 
-                      d_D_,
-                      input->getData(memspace_), 
-                      d_aux_);  
-
-        mem_.deviceSynchronize();
-        FWHT(1, log2N_, d_aux_);
-
-        mem_.deviceSynchronize();
-        FWHT_select(k_rand_, 
-                    d_perm_, 
-                    d_aux_, 
-                    output->getData(memspace_)); 
-        mem_.deviceSynchronize();
         break; // remember - scaling is the solver's problem 
       case HOST:
-        std::memset(d_aux_, 0.0, static_cast<size_t>(N_) * sizeof(real_type));
-        FWHT_scaleByD(n_, 
-                      h_D_,
-                      input->getData(memspace_),
-                      d_aux_);  
-
-        FWHT(1, log2N_, d_aux_);
-
-        FWHT_select(k_rand_, 
-                    h_perm_, 
-                    d_aux_, 
-                    output->getData(memspace_));
+        // std::memset(d_aux_, 0.0, static_cast<size_t>(N_) * sizeof(real_type));
+        mem_.setZeroArrayOnHost(d_aux_, N_);
         break;
     }
+
+    FWHT_scaleByD(n_, 
+                  d_D_,
+                  input->getData(memspace_), 
+                  d_aux_);  
+
+    mem_.deviceSynchronize();
+    FWHT(1, log2N_, d_aux_);
+
+    mem_.deviceSynchronize();
+    FWHT_select(k_rand_, 
+                d_perm_, 
+                d_aux_, 
+                output->getData(memspace_)); 
+    mem_.deviceSynchronize();
     return 0;
   }
 
@@ -216,7 +207,8 @@ namespace ReSolve
 
     for (int i = 0; i < N_; ++i) {
       h_seq_[i] = i;
-    } 
+    }
+
     //Fisher-Yates
     for (int i = N_ - 1; i > 0; i--) {
       r = rand() % i; 
@@ -238,10 +230,8 @@ namespace ReSolve
       }
     }
 
-    //and copy
+    // and copy to device, if needed
 
-    using namespace memory;
-   
     if (memspace_ == memory::DEVICE) {
       mem_.copyArrayHostToDevice(d_perm_, h_perm_, k_rand_);
       mem_.copyArrayHostToDevice(d_D_, h_D_, n_);

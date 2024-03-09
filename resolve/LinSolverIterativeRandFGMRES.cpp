@@ -63,21 +63,17 @@ namespace ReSolve
 
     d_V_ = nullptr;
     d_Z_ = nullptr;
-
   }
 
   LinSolverIterativeRandFGMRES::~LinSolverIterativeRandFGMRES()
   {
     if (d_V_ != nullptr) {
-      // cudaFree(d_V_);
       delete d_V_;   
     }
 
     if (d_Z_ != nullptr) {
-      //      cudaFree(d_Z_);
       delete d_Z_;   
     }
-
   }
 
   int LinSolverIterativeRandFGMRES::setup(matrix::Sparse* A)
@@ -111,7 +107,7 @@ namespace ReSolve
           k_rand_ = static_cast<index_type>(std::ceil(restart_ * std::log(static_cast<real_type>(n_))));
         }
         rand_manager_ = new RandSketchingCountSketch(memspace_);
-        //set k and n 
+        // set k and n 
         break;
       case fwht:
         if (ceil(2.0 * restart_ * log(n_) / log(restart_)) < k_rand_) {
@@ -234,7 +230,7 @@ namespace ReSolve
 
         // Z_i = (LU)^{-1}*V_i
         vec_v->setData( d_V_->getVectorData(i, memspace_), memspace_);
-//for (int ii=0; ii<10; ++ii) printf("V_0 [%d] = %16.16f \n ", ii,   vec_v->getData(ReSolve::memory::HOST)[ii]); 
+        //for (int ii=0; ii<10; ++ii) printf("V_0 [%d] = %16.16f \n ", ii,   vec_v->getData(ReSolve::memory::HOST)[ii]); 
         if (flexible_) {
           vec_z->setData( d_Z_->getVectorData(i, memspace_), memspace_);
         } else {
