@@ -58,14 +58,28 @@ namespace ReSolve
    */
   int RandSketchingCountSketch::Theta(vector_type* input, vector_type* output)
   {
-    mem_.deviceSynchronize();
-    count_sketch_theta(n_,
-                       k_rand_,
-                       d_labels_,
-                       d_flip_,
-                       input->getData(memspace_),
-                       output->getData(memspace_));
-    mem_.deviceSynchronize();
+    using namespace memory;
+   
+    switch (memspace_) {
+      case DEVICE:
+        mem_.deviceSynchronize();
+        count_sketch_theta(n_,
+                           k_rand_,
+                           d_labels_,
+                           d_flip_,
+                           input->getData(memspace_), 
+                           output->getData(memspace_));
+        mem_.deviceSynchronize();
+        break;
+      case HOST:
+        count_sketch_theta(n_,
+                           k_rand_,
+                           h_labels_,
+                           h_flip_,
+                           input->getData(memspace_),
+                           output->getData(memspace_));
+        break;
+    }
     return 0;
   }
 
