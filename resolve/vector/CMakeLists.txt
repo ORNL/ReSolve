@@ -20,14 +20,13 @@ set(Vector_CUDASDK_SRC
 
 #and hip
 set(Vector_ROCM_SRC 
-  VectorHandlerHip.cpp
+    VectorHandlerHip.cpp
 )
 
 # Header files to be installed
 set(Vector_HEADER_INSTALL
     Vector.hpp
     VectorHandler.hpp
-    VectorKernels.hpp
 )
 
 add_library(resolve_vector SHARED ${Vector_SRC})

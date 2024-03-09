@@ -7,10 +7,10 @@
  * 
  */
 
-#include "hipKernels.h"
-
 #include <hip/hip_runtime.h>
 #include <hip/hip_cooperative_groups.h>
+
+#include "hipSketchingKernels.h"
 
 namespace ReSolve {
   namespace kernels {

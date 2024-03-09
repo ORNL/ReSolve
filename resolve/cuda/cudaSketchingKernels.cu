@@ -7,8 +7,8 @@
  * 
  */
 
-#include "cudaKernels.h"
 #include <cooperative_groups.h>
+#include "cudaSketchingKernels.h"
 
 
 namespace ReSolve {

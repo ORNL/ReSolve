@@ -1,6 +1,6 @@
 #include <cmath>
 #include <stdio.h>
-#include "cpuKernels.h"
+#include "cpuSketchingKernels.h"
 
 //
 // Kernel wrappers to mimic gpu behavior and make implementation consistent
