@@ -2,10 +2,10 @@
 #include <resolve/MemoryUtils.hpp>
 #include <resolve/vector/Vector.hpp>
 #ifndef RESOLVE_USE_GPU
-#include <resolve/cpu/cpuKernels.h>
+#include <resolve/cpu/cpuSketchingKernels.h>
 #endif
 #ifdef RESOLVE_USE_HIP
-#include <resolve/hip/hipKernels.h>
+#include <resolve/hip/hipSketchingKernels.h>
 #endif
 #ifdef RESOLVE_USE_CUDA
 #include <resolve/cuda/cudaKernels.h>

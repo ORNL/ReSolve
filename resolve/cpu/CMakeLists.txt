@@ -8,12 +8,12 @@
 
 set(ReSolve_CPU_SRC
     #cpuVectorKernels.cpp
-    cpuKernels.cpp
+    cpuSketchingKernels.cpp
     MemoryUtils.cpp
 )
 
 set(ReSolve_CPU_HEADER_INSTALL
-    cpuKernels.h
+    cpuSketchingKernels.h
     CpuMemory.hpp
 )
 

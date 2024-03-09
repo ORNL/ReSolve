@@ -41,25 +41,6 @@ namespace ReSolve {
                       real_type* vec_in, 
                       real_type* vec_out);
 
-  // needed for rand solver
-  void  count_sketch_theta(index_type n,
-                           index_type k,
-                           index_type* labels,
-                           index_type* flip,
-                           real_type* input,
-                           real_type* output);
-
-  void FWHT_select(index_type k,
-                   index_type* perm,
-                   real_type* input,
-                   real_type* output);
-
-  void FWHT_scaleByD(index_type n,
-                     index_type* D,
-                     real_type* x,
-                     real_type* y);
-
-  void FWHT(index_type M, index_type log2N, real_type* d_Data); 
 
   void vector_inf_norm(index_type n,  
                        real_type* input,
