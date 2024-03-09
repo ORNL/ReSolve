@@ -8,7 +8,7 @@
 #include <resolve/hip/hipSketchingKernels.h>
 #endif
 #ifdef RESOLVE_USE_CUDA
-#include <resolve/cuda/cudaKernels.h>
+#include <resolve/cuda/cudaSketchingKernels.h>
 #endif
 #include <resolve/random/RandSketchingCountSketch.hpp> 
 
