@@ -27,8 +27,7 @@ namespace ReSolve
    * 
    * @todo There is little utility for the default constructor. Maybe remove?.
    */
-  RandomSketchingFWHT::RandomSketchingFWHT(memory::MemorySpace memspace)
-    : memspace_(memspace)
+  RandomSketchingFWHT::RandomSketchingFWHT()
   {
     h_seq_ = nullptr;
     h_D_ = nullptr;
@@ -51,16 +50,9 @@ namespace ReSolve
     delete [] h_D_;
     delete [] h_perm_;
 
-    switch (memspace_) {
-      case DEVICE:
-        mem_.deleteOnDevice(d_D_);
-        mem_.deleteOnDevice(d_perm_);
-        mem_.deleteOnDevice(d_aux_);
-        break;
-      case HOST:
-        delete [] d_aux_;
-        break;
-    }
+    mem_.deleteOnDevice(d_D_);
+    mem_.deleteOnDevice(d_perm_);
+    mem_.deleteOnDevice(d_aux_);
   }
 
   /** 
@@ -78,41 +70,21 @@ namespace ReSolve
    */
   int RandomSketchingFWHT::Theta(vector_type* input, vector_type* output)
   {
-    using namespace memory;
-   
-    switch (memspace_) {
-      case DEVICE:
-        mem_.setZeroArrayOnDevice(d_aux_, N_);
-        FWHT_scaleByD(n_, 
-                      d_D_,
-                      input->getData(memspace_), 
-                      d_aux_);  
+    mem_.setZeroArrayOnDevice(d_aux_, N_);
+    FWHT_scaleByD(n_, 
+                  d_D_,
+                  input->getData(memory::DEVICE), 
+                  d_aux_);  
 
-        mem_.deviceSynchronize();
-        FWHT(1, log2N_, d_aux_);
+    mem_.deviceSynchronize();
+    FWHT(1, log2N_, d_aux_);
 
-        mem_.deviceSynchronize();
-        FWHT_select(k_rand_, 
-                    d_perm_, 
-                    d_aux_, 
-                    output->getData(memspace_)); 
-        mem_.deviceSynchronize();
-        break; // remember - scaling is the solver's problem 
-      case HOST:
-        std::memset(d_aux_, 0.0, static_cast<size_t>(N_) * sizeof(real_type));
-        FWHT_scaleByD(n_, 
-                      h_D_,
-                      input->getData(memspace_),
-                      d_aux_);  
-
-        FWHT(1, log2N_, d_aux_);
-
-        FWHT_select(k_rand_, 
-                    h_perm_, 
-                    d_aux_, 
-                    output->getData(memspace_));
-        break;
-    }
+    mem_.deviceSynchronize();
+    FWHT_select(k_rand_, 
+                d_perm_, 
+                d_aux_, 
+                output->getData(memory::DEVICE)); 
+    mem_.deviceSynchronize();
     return 0;
   }
 
@@ -177,21 +149,14 @@ namespace ReSolve
       }
     }
 
-    using namespace memory;
-   
-    switch (memspace_) {
-      case DEVICE:
-        mem_.allocateArrayOnDevice(&d_perm_, k_rand_); 
-        mem_.allocateArrayOnDevice(&d_D_, n_); 
-        mem_.allocateArrayOnDevice(&d_aux_, N_); 
-        //then copy
-        mem_.copyArrayHostToDevice(d_perm_, h_perm_, k_rand_);
-        mem_.copyArrayHostToDevice(d_D_, h_D_, n_);
-        break;
-      case HOST:
-        d_aux_  = new real_type[N_];
-        break;
-    }
+    // allocate on device
+    mem_.allocateArrayOnDevice(&d_perm_, k_rand_); 
+    mem_.allocateArrayOnDevice(&d_D_, n_); 
+    mem_.allocateArrayOnDevice(&d_aux_, N_); 
+    // then copy
+    mem_.copyArrayHostToDevice(d_perm_, h_perm_, k_rand_);
+    mem_.copyArrayHostToDevice(d_D_, h_D_, n_);
+
     return 0;
   }
 
@@ -239,14 +204,10 @@ namespace ReSolve
       }
     }
 
-    // and copy to device, if needed
+    mem_.copyArrayHostToDevice(d_perm_, h_perm_, k_rand_);
+    mem_.copyArrayHostToDevice(d_D_, h_D_, n_);
 
-    if (memspace_ == memory::DEVICE) {
-      mem_.copyArrayHostToDevice(d_perm_, h_perm_, k_rand_);
-      mem_.copyArrayHostToDevice(d_D_, h_D_, n_);
-
-      mem_.deviceSynchronize();
-    }
+    mem_.deviceSynchronize();
 
     return 0;
   }

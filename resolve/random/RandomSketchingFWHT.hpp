@@ -15,7 +15,7 @@ namespace ReSolve {
 
     using vector_type = vector::Vector;
     public: 
-      RandomSketchingFWHT(memory::MemorySpace memspace);
+      RandomSketchingFWHT();
       virtual ~RandomSketchingFWHT();
 
       // Actual sketching process
@@ -41,7 +41,6 @@ namespace ReSolve {
       index_type log2N_{0};       ///< log2 of N_, used multiple times so we store it
       real_type one_over_k_{0.0}; ///< 1/k, used many times for scaling so we store the value to avoid recomputation
 
-      memory::MemorySpace memspace_;
       MemoryHandler mem_; ///< Device memory manager object
   };
 }

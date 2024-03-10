@@ -18,7 +18,7 @@ namespace ReSolve {
     public: 
 
       // constructor
-      RandomSketchingCount(memory::MemorySpace memspace);
+      RandomSketchingCount();
 
       // destructor
       virtual ~RandomSketchingCount();
@@ -39,7 +39,7 @@ namespace ReSolve {
 
       index_type* d_labels_{nullptr}; ///< h_labels GPU counterpart
       index_type* d_flip_{nullptr};   ///< h_flip GPU counterpart
-      memory::MemorySpace memspace_;
+
       MemoryHandler mem_; ///< Device memory manager object
   };
 }

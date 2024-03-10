@@ -1,4 +1,3 @@
-#include "RandomSketchingCount.hpp"
 #include <resolve/MemoryUtils.hpp>
 #include <resolve/vector/Vector.hpp>
 #ifndef RESOLVE_USE_GPU
@@ -21,8 +20,7 @@ namespace ReSolve
    * 
    * @todo Consider removing.
    */
-  RandomSketchingCount::RandomSketchingCount(memory::MemorySpace memspace)
-    : memspace_(memspace)
+  RandomSketchingCount::RandomSketchingCount()
   {
     h_labels_ = nullptr;
     h_flip_ = nullptr;
@@ -36,10 +34,8 @@ namespace ReSolve
   {
     delete [] h_labels_;
     delete [] h_flip_;
-    if (memspace_ == memory::DEVICE) {
-      mem_.deleteOnDevice(d_labels_);
-      mem_.deleteOnDevice(d_flip_);
-    }
+    mem_.deleteOnDevice(d_labels_);
+    mem_.deleteOnDevice(d_flip_);
   }
 
   /**
@@ -58,28 +54,14 @@ namespace ReSolve
    */
   int RandomSketchingCount::Theta(vector_type* input, vector_type* output)
   {
-    using namespace memory;
-   
-    switch (memspace_) {
-      case DEVICE:
-        mem_.deviceSynchronize();
-        count_sketch_theta(n_,
-                           k_rand_,
-                           d_labels_,
-                           d_flip_,
-                           input->getData(memspace_), 
-                           output->getData(memspace_));
-        mem_.deviceSynchronize();
-        break;
-      case HOST:
-        count_sketch_theta(n_,
-                           k_rand_,
-                           h_labels_,
-                           h_flip_,
-                           input->getData(memspace_),
-                           output->getData(memspace_));
-        break;
-    }
+    mem_.deviceSynchronize();
+    count_sketch_theta(n_,
+                        k_rand_,
+                        d_labels_,
+                        d_flip_,
+                        input->getData(memory::DEVICE), 
+                        output->getData(memory::DEVICE));
+    mem_.deviceSynchronize();
     return 0;
   }
 
@@ -119,14 +101,14 @@ namespace ReSolve
       }
     }
 
-    if (memspace_ == memory::DEVICE) {
-      mem_.allocateArrayOnDevice(&d_labels_, n_); 
-      mem_.allocateArrayOnDevice(&d_flip_, n_); 
-      //then copy
-      mem_.copyArrayHostToDevice(d_labels_, h_labels_, n_);
-      mem_.copyArrayHostToDevice(d_flip_, h_flip_, n_);
-      mem_.deviceSynchronize();
-    }
+    // allocate arrays on device
+    mem_.allocateArrayOnDevice(&d_labels_, n_); 
+    mem_.allocateArrayOnDevice(&d_flip_, n_); 
+    // then copy
+    mem_.copyArrayHostToDevice(d_labels_, h_labels_, n_);
+    mem_.copyArrayHostToDevice(d_flip_, h_flip_, n_);
+    mem_.deviceSynchronize();
+
     return 0;
   }
 
@@ -158,11 +140,9 @@ namespace ReSolve
       }
     }
 
-    if (memspace_ == memory::DEVICE) {
-      mem_.copyArrayHostToDevice(d_labels_, h_labels_, n_);
-      mem_.copyArrayHostToDevice(d_flip_, h_flip_, n_);
-      mem_.deviceSynchronize();
-    }
+    mem_.copyArrayHostToDevice(d_labels_, h_labels_, n_);
+    mem_.copyArrayHostToDevice(d_flip_, h_flip_, n_);
+    mem_.deviceSynchronize();
 
     return 0;
   }
