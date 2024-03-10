@@ -1,6 +1,6 @@
 #pragma once
 #include <resolve/Common.hpp>
-#include <resolve/random/RandSketchingManager.hpp>
+#include <resolve/random/RandomSketchingImpl.hpp>
 #include <resolve/MemoryUtils.hpp>
 
 namespace ReSolve {
@@ -10,13 +10,13 @@ namespace ReSolve {
     class Vector;
   }
   
-  class RandSketchingFWHT : public RandSketchingManager
+  class RandomSketchingFWHT : public RandomSketchingImpl
   {
 
     using vector_type = vector::Vector;
     public: 
-      RandSketchingFWHT(memory::MemorySpace memspace);
-      virtual ~RandSketchingFWHT();
+      RandomSketchingFWHT(memory::MemorySpace memspace);
+      virtual ~RandomSketchingFWHT();
 
       // Actual sketching process
       virtual int Theta(vector_type* input, vector_type* output);

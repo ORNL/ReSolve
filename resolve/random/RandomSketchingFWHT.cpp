@@ -14,7 +14,7 @@
 #ifdef RESOLVE_USE_CUDA
 #include <resolve/cuda/cudaSketchingKernels.h>
 #endif
-#include <resolve/random/RandSketchingFWHT.hpp> 
+#include <resolve/random/RandomSketchingFWHT.hpp> 
 
 namespace ReSolve 
 {
@@ -27,7 +27,7 @@ namespace ReSolve
    * 
    * @todo There is little utility for the default constructor. Maybe remove?.
    */
-  RandSketchingFWHT::RandSketchingFWHT(memory::MemorySpace memspace)
+  RandomSketchingFWHT::RandomSketchingFWHT(memory::MemorySpace memspace)
     : memspace_(memspace)
   {
     h_seq_ = nullptr;
@@ -43,7 +43,7 @@ namespace ReSolve
    * @brief destructor
    * 
    */
-  RandSketchingFWHT::~RandSketchingFWHT()
+  RandomSketchingFWHT::~RandomSketchingFWHT()
   {
     using namespace memory;
 
@@ -76,7 +76,7 @@ namespace ReSolve
    *
    * @return 0 of successful, -1 otherwise (TODO). 
    */
-  int RandSketchingFWHT::Theta(vector_type* input, vector_type* output)
+  int RandomSketchingFWHT::Theta(vector_type* input, vector_type* output)
   {
     using namespace memory;
    
@@ -130,7 +130,7 @@ namespace ReSolve
    *
    * @return 0 of successful, -1 otherwise. 
    */
-  int RandSketchingFWHT::setup(index_type n, index_type k)
+  int RandomSketchingFWHT::setup(index_type n, index_type k)
   {
     k_rand_ = k;
     n_ = n;
@@ -207,7 +207,7 @@ namespace ReSolve
    * 
    * @todo Need to be fixed, this can be done on the GPU.
    */
-  int RandSketchingFWHT::reset()
+  int RandomSketchingFWHT::reset()
   {
     srand(static_cast<unsigned>(time(nullptr)));
 

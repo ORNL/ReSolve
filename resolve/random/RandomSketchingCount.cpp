@@ -1,4 +1,4 @@
-#include "RandSketchingCountSketch.hpp"
+#include "RandomSketchingCount.hpp"
 #include <resolve/MemoryUtils.hpp>
 #include <resolve/vector/Vector.hpp>
 #ifndef RESOLVE_USE_GPU
@@ -10,7 +10,7 @@
 #ifdef RESOLVE_USE_CUDA
 #include <resolve/cuda/cudaSketchingKernels.h>
 #endif
-#include <resolve/random/RandSketchingCountSketch.hpp> 
+#include <resolve/random/RandomSketchingCount.hpp> 
 
 namespace ReSolve 
 {
@@ -21,7 +21,7 @@ namespace ReSolve
    * 
    * @todo Consider removing.
    */
-  RandSketchingCountSketch::RandSketchingCountSketch(memory::MemorySpace memspace)
+  RandomSketchingCount::RandomSketchingCount(memory::MemorySpace memspace)
     : memspace_(memspace)
   {
     h_labels_ = nullptr;
@@ -32,7 +32,7 @@ namespace ReSolve
   }
 
   /// Destructor
-  RandSketchingCountSketch::~RandSketchingCountSketch()
+  RandomSketchingCount::~RandomSketchingCount()
   {
     delete [] h_labels_;
     delete [] h_flip_;
@@ -56,7 +56,7 @@ namespace ReSolve
    * @return output = Theta (input) 
    * 
    */
-  int RandSketchingCountSketch::Theta(vector_type* input, vector_type* output)
+  int RandomSketchingCount::Theta(vector_type* input, vector_type* output)
   {
     using namespace memory;
    
@@ -96,7 +96,7 @@ namespace ReSolve
    * @post The arrays needed for performing sketches with CountSketch (_flip_ and _labels_ ) are initialized. If GPU is enabled, the arrays will be copied to the GPU, as well 
    * 
    */
-  int RandSketchingCountSketch::setup(index_type n, index_type k)
+  int RandomSketchingCount::setup(index_type n, index_type k)
   {
     k_rand_ = k;
     n_ = n;
@@ -145,7 +145,7 @@ namespace ReSolve
    * 
    * @todo Need to be fixed, this can be done on the GPU.
    */
-  int RandSketchingCountSketch::reset() // if needed can be reset (like when Krylov method restarts)
+  int RandomSketchingCount::reset() // if needed can be reset (like when Krylov method restarts)
   {
     for (int i = 0; i < n_; ++i) {
       h_labels_[i] = rand() % k_rand_;

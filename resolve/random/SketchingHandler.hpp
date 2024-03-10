@@ -3,7 +3,7 @@
 
 namespace ReSolve
 {
-  class RandSketchingManager;
+  class RandomSketchingImpl;
   namespace vector
   {
     class VectorHandler;
@@ -27,7 +27,7 @@ namespace ReSolve
       int reset();
 
     private:
-      RandSketchingManager* sketching_{nullptr}; ///< Pointer to implementation
+      RandomSketchingImpl* sketching_{nullptr}; ///< Pointer to implementation
 
       bool isCpuEnabled_{false};
       bool isCudaEnabled_{false};

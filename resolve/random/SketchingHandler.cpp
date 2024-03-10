@@ -1,12 +1,11 @@
 // this is a virtual class
 #include <resolve/vector/Vector.hpp>
-#include <resolve/random/RandSketchingCountSketch.hpp>
-#include <resolve/random/RandSketchingFWHT.hpp>
+#include <resolve/random/RandomSketchingCount.hpp>
+#include <resolve/random/RandomSketchingFWHT.hpp>
 #include "SketchingHandler.hpp"
 
 namespace ReSolve {
   
-  // constructor
   /**
    * @brief Simple constructor
    *
@@ -18,12 +17,12 @@ namespace ReSolve {
     switch (method)
     {
       case LinSolverIterativeRandFGMRES::cs:
-        sketching_ = new RandSketchingCountSketch(memspace);
+        sketching_ = new RandomSketchingCount(memspace);
         /* code */
         break;
       
       case LinSolverIterativeRandFGMRES::fwht:
-        sketching_ = new RandSketchingFWHT(memspace);
+        sketching_ = new RandomSketchingFWHT(memspace);
         /* code */
         break;
       
@@ -32,7 +31,6 @@ namespace ReSolve {
     }
   }
 
-  // destructor
   /**
    * @brief Destructor
    *

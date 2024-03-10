@@ -8,9 +8,8 @@
 
 # C++ code
 set(Random_SRC 
-    # RandSketchingManager.cpp
-    RandSketchingCountSketch.cpp
-    RandSketchingFWHT.cpp
+    RandomSketchingCount.cpp
+    RandomSketchingFWHT.cpp
     SketchingHandler.cpp
 )
 
@@ -24,9 +23,9 @@ set(Random_ROCM_SRC
 
 # Header files to be installed
 set(Random_HEADER_INSTALL
-    RandSketchingManager.hpp
-    RandSketchingCountSketch.hpp
-    RandSketchingFWHT.hpp
+    RandomSketchingImpl.hpp
+    RandomSketchingCount.hpp
+    RandomSketchingFWHT.hpp
     SketchingHandler.hpp
 )
 

@@ -13,19 +13,19 @@ namespace ReSolve
 
 namespace ReSolve
 { 
-  class RandSketchingManager
+  class RandomSketchingImpl
   {
     private:
       using vector_type = vector::Vector;
     
     public: 
       // constructor
-      RandSketchingManager()
+      RandomSketchingImpl()
       {
       }
 
       // destructor
-      virtual ~RandSketchingManager()
+      virtual ~RandomSketchingImpl()
       {
       }
 
