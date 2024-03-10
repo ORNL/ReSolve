@@ -26,6 +26,9 @@ namespace ReSolve {
       virtual int reset(); // if needed can be reset (like when Krylov method restarts)
 
     private:
+      index_type n_;      ///< size of base vector
+      index_type k_rand_; ///< size of sketched vector
+
       index_type* h_seq_{nullptr};  ///< auxiliary variable used for Fisher-Yates algorithm 
       index_type* h_D_{nullptr};    ///< D is a diagonal matrix (FWHT computed y = PHDx), we store it as an array. D consists of _1_s and _-1_s
       index_type* h_perm_{nullptr}; ///< permuation array, containing _k_ values in range of _0_ to _n-1_

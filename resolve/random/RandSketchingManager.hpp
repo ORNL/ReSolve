@@ -1,4 +1,4 @@
-// this is a virtual class
+// this is the implementation virtual class
 #pragma once
 #include <resolve/Common.hpp>
 
@@ -36,11 +36,5 @@ namespace ReSolve
       virtual int setup(index_type n, index_type k) = 0;
       // Need to use with methods that restart
       virtual int reset() = 0;
-
-    protected:
-      index_type n_;      ///< size of base vector
-      index_type k_rand_; ///< size of sketched vector
-      index_type N_;      ///< padded n -- generally N_ >= n_
-    
   };
 } // namespace ReSolve

@@ -31,6 +31,10 @@ namespace ReSolve {
       virtual int reset(); // if needed can be reset (like when Krylov method restarts)
 
     private:
+      index_type n_;      ///< size of base vector
+      index_type k_rand_; ///< size of sketched vector
+      // index_type N_;      ///< padded n -- generally N_ >= n_
+
       index_type* h_labels_{nullptr}; ///< label array size _n_, with values from _0_ to _k-1_ assigned by random
       index_type* h_flip_{nullptr};   ///< flip array with values of 1 and -1 assigned by random
 

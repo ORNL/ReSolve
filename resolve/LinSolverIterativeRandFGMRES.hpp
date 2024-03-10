@@ -5,7 +5,7 @@
 namespace ReSolve
 {
   // Forward declarations
-  class RandSketchingManager;
+  class SketchingHandler;
   class GramSchmidt;
   namespace matrix
   {
@@ -81,7 +81,7 @@ namespace ReSolve
 
       index_type k_rand_{0}; ///< size of sketch space. We need to know it so we can allocate S!
       MemoryHandler mem_;    ///< Device memory manager object
-      RandSketchingManager* rand_manager_{nullptr};
+      SketchingHandler* rand_manager_{nullptr};
       SketchingMethod rand_method_; 
   };
 } // namespace ReSolve

@@ -11,6 +11,7 @@ set(Random_SRC
     # RandSketchingManager.cpp
     RandSketchingCountSketch.cpp
     RandSketchingFWHT.cpp
+    SketchingHandler.cpp
 )
 
 # C++ code that depends on CUDA SDK libraries
@@ -26,6 +27,7 @@ set(Random_HEADER_INSTALL
     RandSketchingManager.hpp
     RandSketchingCountSketch.hpp
     RandSketchingFWHT.hpp
+    SketchingHandler.hpp
 )
 
 # Build shared library ReSolve::random
