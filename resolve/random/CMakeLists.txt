@@ -9,7 +9,9 @@
 # C++ code
 set(Random_SRC 
     RandomSketchingCount.cpp
+    RandomSketchingCountCpu.cpp
     RandomSketchingFWHT.cpp
+    RandomSketchingFWHTCpu.cpp
     SketchingHandler.cpp
 )
 
@@ -25,9 +27,16 @@ set(Random_ROCM_SRC
 set(Random_HEADER_INSTALL
     RandomSketchingImpl.hpp
     RandomSketchingCount.hpp
+    RandomSketchingCountCpu.hpp
     RandomSketchingFWHT.hpp
+    RandomSketchingFWHTCpu.hpp
     SketchingHandler.hpp
 )
+
+# if(RESOLVE_USE_GPU)
+#   list(APPEND Random_SRC RandomSketchingCount.cpp RandomSketchingFWHT.cpp)
+# endif(RESOLVE_USE_GPU)
+
 
 # Build shared library ReSolve::random
 add_library(resolve_random SHARED ${Random_SRC})

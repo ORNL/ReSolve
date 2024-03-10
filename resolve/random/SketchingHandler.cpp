@@ -1,7 +1,9 @@
 // this is a virtual class
 #include <resolve/vector/Vector.hpp>
 #include <resolve/random/RandomSketchingCount.hpp>
+#include <resolve/random/RandomSketchingCountCpu.hpp>
 #include <resolve/random/RandomSketchingFWHT.hpp>
+#include <resolve/random/RandomSketchingFWHTCpu.hpp>
 #include "SketchingHandler.hpp"
 
 namespace ReSolve {
@@ -17,13 +19,19 @@ namespace ReSolve {
     switch (method)
     {
       case LinSolverIterativeRandFGMRES::cs:
-        sketching_ = new RandomSketchingCount(memspace);
-        /* code */
+        if (memspace == memory::DEVICE) {
+          sketching_ = new RandomSketchingCount(memspace);
+        } else {
+          sketching_ = new RandomSketchingCountCpu();
+        }
         break;
       
       case LinSolverIterativeRandFGMRES::fwht:
-        sketching_ = new RandomSketchingFWHT(memspace);
-        /* code */
+        if (memspace == memory::DEVICE) {
+          sketching_ = sketching_ = new RandomSketchingFWHT(memspace);
+        } else {
+          sketching_ = sketching_ = new RandomSketchingFWHTCpu();
+        }
         break;
       
       default:
