@@ -15,7 +15,7 @@ namespace ReSolve
       using SketchingMethod = LinSolverIterativeRandFGMRES::SketchingMethod;
       using vector_type = vector::Vector;
     public:
-      SketchingHandler(SketchingMethod method, memory::MemorySpace memspace);
+      SketchingHandler(SketchingMethod method, memory::DeviceType devtype);
       ~SketchingHandler();
 
       // Actual sketching process

@@ -1,8 +1,10 @@
 // this is a virtual class
 #include <resolve/vector/Vector.hpp>
-#include <resolve/random/RandomSketchingCount.hpp>
+#include <resolve/random/RandomSketchingCountCuda.hpp>
+#include <resolve/random/RandomSketchingCountHip.hpp>
 #include <resolve/random/RandomSketchingCountCpu.hpp>
-#include <resolve/random/RandomSketchingFWHT.hpp>
+#include <resolve/random/RandomSketchingFWHTCuda.hpp>
+#include <resolve/random/RandomSketchingFWHTHip.hpp>
 #include <resolve/random/RandomSketchingFWHTCpu.hpp>
 #include "SketchingHandler.hpp"
 
@@ -12,31 +14,53 @@ namespace ReSolve {
    * @brief Constructor creates requested sketching method.
    *
    */ 
-  SketchingHandler::SketchingHandler(SketchingMethod method, memory::MemorySpace memspace)
+  SketchingHandler::SketchingHandler(SketchingMethod method, memory::DeviceType devtype)
   {
-    switch (method)
-    {
+    switch (method) {
       case LinSolverIterativeRandFGMRES::cs:
-        if (memspace == memory::DEVICE) {
-#ifdef RESOLVE_USE_GPU
-          sketching_ = new RandomSketchingCount();
+        switch(devtype) {
+          case memory::CUDADEVICE:
+#ifdef RESOLVE_USE_CUDA
+            sketching_ = new RandomSketchingCountCuda();
 #endif
-        } else {
-          sketching_ = new RandomSketchingCountCpu();
+            break;
+          case memory::HIPDEVICE:
+#ifdef RESOLVE_USE_HIP
+            sketching_ = new RandomSketchingCountHip();
+#endif
+            break;
+          case memory::NONE:
+            sketching_ = new RandomSketchingCountCpu();
+            break;
+          default:
+            sketching_ = nullptr;
+            break;
         }
-        break;
-      
+        break;    
+
       case LinSolverIterativeRandFGMRES::fwht:
-        if (memspace == memory::DEVICE) {
-#ifdef RESOLVE_USE_GPU
-          sketching_ = new RandomSketchingFWHT();
+        switch(devtype) {
+          case memory::CUDADEVICE:
+#ifdef RESOLVE_USE_CUDA
+            sketching_ = new RandomSketchingFWHTCuda();
 #endif
-        } else {
-          sketching_ = new RandomSketchingFWHTCpu();
+            break;
+          case memory::HIPDEVICE:
+#ifdef RESOLVE_USE_HIP
+            sketching_ = new RandomSketchingFWHTHip();
+#endif
+            break;
+          case memory::NONE:
+            sketching_ = new RandomSketchingFWHTCpu();
+            break;
+          default:
+            sketching_ = nullptr;
+            break;
         }
-        break;
-      
+        break;      
+
       default:
+        sketching_ = nullptr;
         break;
     }
   }

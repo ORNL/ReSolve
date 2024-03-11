@@ -11,17 +11,17 @@ namespace ReSolve {
     class Vector;
   }
 
-  class RandomSketchingCount : public RandomSketchingImpl
+  class RandomSketchingCountCuda : public RandomSketchingImpl
   {
 
     using vector_type = vector::Vector;
     public: 
 
       // constructor
-      RandomSketchingCount();
+      RandomSketchingCountCuda();
 
       // destructor
-      virtual ~RandomSketchingCount();
+      virtual ~RandomSketchingCountCuda();
 
       // Actual sketching process
       virtual int Theta(vector_type* input, vector_type* output);

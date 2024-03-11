@@ -10,13 +10,13 @@ namespace ReSolve {
     class Vector;
   }
   
-  class RandomSketchingFWHT : public RandomSketchingImpl
+  class RandomSketchingFWHTHip : public RandomSketchingImpl
   {
 
     using vector_type = vector::Vector;
     public: 
-      RandomSketchingFWHT();
-      virtual ~RandomSketchingFWHT();
+      RandomSketchingFWHTHip();
+      virtual ~RandomSketchingFWHTHip();
 
       // Actual sketching process
       virtual int Theta(vector_type* input, vector_type* output);

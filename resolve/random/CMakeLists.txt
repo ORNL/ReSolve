@@ -16,27 +16,36 @@ set(Random_SRC
 
 # C++ code that depends on CUDA SDK libraries
 set(Random_CUDASDK_SRC 
+    RandomSketchingCountCuda.cpp
+    RandomSketchingFWHTCuda.cpp
 )
 
 # and on HIP
 set(Random_ROCM_SRC 
+    RandomSketchingCountHip.cpp
+    RandomSketchingFWHTHip.cpp
 )
 
 # Header files to be installed
 set(Random_HEADER_INSTALL
     RandomSketchingImpl.hpp
-    RandomSketchingCount.hpp
     RandomSketchingCountCpu.hpp
-    RandomSketchingFWHT.hpp
     RandomSketchingFWHTCpu.hpp
     cpuSketchingKernels.h
     SketchingHandler.hpp
 )
 
-if(RESOLVE_USE_GPU)
-  set(Random_GPU_SRC RandomSketchingCount.cpp RandomSketchingFWHT.cpp)
-  list(APPEND Random_SRC ${Random_GPU_SRC})
-endif(RESOLVE_USE_GPU)
+# Header files to be installed when HIP support is enabled
+set(Random_ROCM_HEADER_INSTALL
+  RandomSketchingCountHip.hpp
+  RandomSketchingFWHTHip.hpp
+)
+
+# Header files to be installed when HIP support is enabled
+set(Random_CUDASDK_HEADER_INSTALL
+  RandomSketchingCountCuda.hpp
+  RandomSketchingFWHTCuda.hpp
+)
 
 
 # Build shared library ReSolve::random
@@ -47,11 +56,13 @@ target_link_libraries(resolve_random PRIVATE resolve_logger resolve_vector)
 if (RESOLVE_USE_CUDA)
   target_sources(resolve_random PRIVATE ${Random_CUDASDK_SRC})
   target_link_libraries(resolve_random PUBLIC resolve_backend_cuda)
+  list(APPEND Random_HEADER_INSTALL ${Random_CUDASDK_HEADER_INSTALL})
 endif()
 
 if (RESOLVE_USE_HIP)
   target_sources(resolve_random PRIVATE ${Random_ROCM_SRC})
   target_link_libraries(resolve_random PUBLIC resolve_backend_hip)
+  list(APPEND Random_HEADER_INSTALL ${Random_ROCM_HEADER_INSTALL})
 endif()
 
 # Link to dummy device backend if GPU support is not enabled

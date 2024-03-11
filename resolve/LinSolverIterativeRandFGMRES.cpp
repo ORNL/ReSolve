@@ -105,14 +105,14 @@ namespace ReSolve
         if (ceil(restart_ * log(n_)) < k_rand_) {
           k_rand_ = static_cast<index_type>(std::ceil(restart_ * std::log(static_cast<real_type>(n_))));
         }
-        rand_manager_ = new SketchingHandler(rand_method_, memspace_);
+        rand_manager_ = new SketchingHandler(rand_method_, device_type_);
         // set k and n 
         break;
       case fwht:
         if (ceil(2.0 * restart_ * log(n_) / log(restart_)) < k_rand_) {
           k_rand_ = static_cast<index_type>(std::ceil(2.0 * restart_ * std::log(n_) / std::log(restart_)));
         }
-        rand_manager_ = new SketchingHandler(rand_method_, memspace_);
+        rand_manager_ = new SketchingHandler(rand_method_, device_type_);
         break;
       default:
         io::Logger::warning() << "Wrong sketching method, setting to default (CountSketch)\n"; 
@@ -120,7 +120,7 @@ namespace ReSolve
         if (ceil(restart_ * log(n_)) < k_rand_) {
           k_rand_ = static_cast<index_type>(std::ceil(restart_ * std::log(n_)));
         }
-        rand_manager_ = new SketchingHandler(cs, memspace_);
+        rand_manager_ = new SketchingHandler(cs, device_type_);
         break;
     }
 
@@ -465,10 +465,15 @@ namespace ReSolve
       out::error() << "Matrix and vector handler backends are incompatible!\n";  
     }
 
-    if (is_matrix_handler_cuda || is_matrix_handler_hip) {
+    if (is_matrix_handler_cuda) {
       memspace_ = memory::DEVICE;
+      device_type_ = memory::CUDADEVICE;
+    } else if (is_matrix_handler_hip) {
+      memspace_ = memory::DEVICE;
+      device_type_ = memory::HIPDEVICE;
     } else {
       memspace_ = memory::HOST;
+      device_type_ = memory::NONE;
     }
   }
 
