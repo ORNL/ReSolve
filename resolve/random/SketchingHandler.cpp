@@ -9,13 +9,11 @@
 namespace ReSolve {
   
   /**
-   * @brief Simple constructor
+   * @brief Constructor creates requested sketching method.
    *
    */ 
   SketchingHandler::SketchingHandler(SketchingMethod method, memory::MemorySpace memspace)
   {
-    // if (vh.getIsCudaEnabled()) {
-    // }
     switch (method)
     {
       case LinSolverIterativeRandFGMRES::cs:

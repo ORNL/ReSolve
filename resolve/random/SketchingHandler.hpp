@@ -23,15 +23,16 @@ namespace ReSolve
 
       // Setup the parameters, sampling matrices, permuations, etc
       int setup(index_type n, index_type k);
-      // Need to use with methods that restart
+
+      // Needed for iterative methods with restarting
       int reset();
 
     private:
       RandomSketchingImpl* sketching_{nullptr}; ///< Pointer to implementation
 
-      bool isCpuEnabled_{false};
-      bool isCudaEnabled_{false};
-      bool isHipEnabled_{false};
+      // bool isCpuEnabled_{false};
+      // bool isCudaEnabled_{false};
+      // bool isHipEnabled_{false};
   };
 
 } // namespace ReSolve

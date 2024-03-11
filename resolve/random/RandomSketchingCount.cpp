@@ -1,6 +1,5 @@
 #include <resolve/MemoryUtils.hpp>
 #include <resolve/vector/Vector.hpp>
-#include <resolve/random/cpuSketchingKernels.h>
 #ifdef RESOLVE_USE_HIP
 #include <resolve/hip/hipSketchingKernels.h>
 #endif
