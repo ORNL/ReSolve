@@ -8,10 +8,9 @@
 
 # C++ code
 set(Random_SRC 
-    RandomSketchingCount.cpp
     RandomSketchingCountCpu.cpp
-    RandomSketchingFWHT.cpp
     RandomSketchingFWHTCpu.cpp
+    cpuSketchingKernels.cpp
     SketchingHandler.cpp
 )
 
@@ -30,12 +29,14 @@ set(Random_HEADER_INSTALL
     RandomSketchingCountCpu.hpp
     RandomSketchingFWHT.hpp
     RandomSketchingFWHTCpu.hpp
+    cpuSketchingKernels.h
     SketchingHandler.hpp
 )
 
-# if(RESOLVE_USE_GPU)
-#   list(APPEND Random_SRC RandomSketchingCount.cpp RandomSketchingFWHT.cpp)
-# endif(RESOLVE_USE_GPU)
+if(RESOLVE_USE_GPU)
+  set(Random_GPU_SRC RandomSketchingCount.cpp RandomSketchingFWHT.cpp)
+  list(APPEND Random_SRC ${Random_GPU_SRC})
+endif(RESOLVE_USE_GPU)
 
 
 # Build shared library ReSolve::random

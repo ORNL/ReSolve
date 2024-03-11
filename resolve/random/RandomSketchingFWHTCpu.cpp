@@ -5,9 +5,7 @@
 #include <resolve/MemoryUtils.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/utilities/logger/Logger.hpp>
-#ifndef RESOLVE_USE_GPU
-#include <resolve/cpu/cpuSketchingKernels.h>
-#endif
+#include <resolve/random/cpuSketchingKernels.h>
 #ifdef RESOLVE_USE_HIP
 #include <resolve/hip/hipSketchingKernels.h>
 #endif
@@ -63,14 +61,14 @@ namespace ReSolve
   int RandomSketchingFWHTCpu::Theta(vector_type* input, vector_type* output)
   {
     std::memset(d_aux_, 0.0, static_cast<size_t>(N_) * sizeof(real_type));
-    FWHT_scaleByD(n_, 
+    cpu::FWHT_scaleByD(n_, 
                        h_D_,
                        input->getData(memory::HOST),
                        d_aux_);  
 
-    FWHT(1, log2N_, d_aux_);
+    cpu::FWHT(1, log2N_, d_aux_);
 
-    FWHT_select(k_rand_, 
+    cpu::FWHT_select(k_rand_, 
                      h_perm_, 
                      d_aux_, 
                      output->getData(memory::HOST));

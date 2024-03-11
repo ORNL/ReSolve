@@ -5,9 +5,7 @@
 #include <resolve/MemoryUtils.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/utilities/logger/Logger.hpp>
-#ifndef RESOLVE_USE_GPU
-#include <resolve/cpu/cpuSketchingKernels.h>
-#endif
+#include <resolve/random/cpuSketchingKernels.h>
 #ifdef RESOLVE_USE_HIP
 #include <resolve/hip/hipSketchingKernels.h>
 #endif

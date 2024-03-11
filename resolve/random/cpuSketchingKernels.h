@@ -2,8 +2,8 @@
 
 namespace ReSolve
 {
-  // namespace cpu
-  // {
+  namespace cpu
+  {
     void  count_sketch_theta(index_type n,
                             index_type k,
                             index_type* labels,
@@ -21,6 +21,6 @@ namespace ReSolve
                     const real_type* input,
                     real_type* output);
     void FWHT(index_type M, index_type log2N, real_type* d_Data);
-  // }
+  }
 }
 

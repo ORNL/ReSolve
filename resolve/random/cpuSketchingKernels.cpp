@@ -8,7 +8,7 @@
 //
 
 namespace ReSolve {
-  // namespace cpu {
+  namespace cpu {
     /**
      * @brief CountSketch Theta, CPU version 
      * 
@@ -86,6 +86,6 @@ namespace ReSolve {
       } 
     }
 
-  // } // namespace cpu
+  } // namespace cpu
 } // namespace ReSolve
 

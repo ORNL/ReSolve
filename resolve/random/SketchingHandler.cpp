@@ -20,7 +20,9 @@ namespace ReSolve {
     {
       case LinSolverIterativeRandFGMRES::cs:
         if (memspace == memory::DEVICE) {
+#ifdef RESOLVE_USE_GPU
           sketching_ = new RandomSketchingCount();
+#endif
         } else {
           sketching_ = new RandomSketchingCountCpu();
         }
@@ -28,9 +30,11 @@ namespace ReSolve {
       
       case LinSolverIterativeRandFGMRES::fwht:
         if (memspace == memory::DEVICE) {
-          sketching_ = sketching_ = new RandomSketchingFWHT();
+#ifdef RESOLVE_USE_GPU
+          sketching_ = new RandomSketchingFWHT();
+#endif
         } else {
-          sketching_ = sketching_ = new RandomSketchingFWHTCpu();
+          sketching_ = new RandomSketchingFWHTCpu();
         }
         break;
       

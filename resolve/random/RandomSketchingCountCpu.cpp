@@ -1,7 +1,5 @@
 #include <resolve/vector/Vector.hpp>
-#ifndef RESOLVE_USE_GPU
-#include <resolve/cpu/cpuSketchingKernels.h>
-#endif
+#include <resolve/random/cpuSketchingKernels.h>
 #ifdef RESOLVE_USE_HIP
 #include <resolve/hip/hipSketchingKernels.h>
 #endif
@@ -20,7 +18,6 @@ namespace ReSolve
    * @todo Consider removing.
    */
   RandomSketchingCountCpu::RandomSketchingCountCpu()
-    // : memspace_(memory::HOST)
   {
   }
 
@@ -29,10 +26,6 @@ namespace ReSolve
   {
     delete [] h_labels_;
     delete [] h_flip_;
-    // if (memspace_ == memory::DEVICE) {
-    //   mem_.deleteOnDevice(d_labels_);
-    //   mem_.deleteOnDevice(d_flip_);
-    // }
   }
 
   /**
@@ -51,7 +44,7 @@ namespace ReSolve
    */
   int RandomSketchingCountCpu::Theta(vector_type* input, vector_type* output)
   {
-    count_sketch_theta(n_,
+    cpu::count_sketch_theta(n_,
                             k_rand_,
                             h_labels_,
                             h_flip_,

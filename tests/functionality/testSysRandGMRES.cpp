@@ -44,9 +44,7 @@ int main(int argc, char *argv[])
 {
   int error_sum = 0;
 
-#ifndef RESOLVE_USE_GPU
   error_sum += test<ReSolve::LinAlgWorkspaceCpu>(argc, argv, "CPU");
-#endif
 
 #ifdef RESOLVE_USE_HIP
   error_sum += test<ReSolve::LinAlgWorkspaceHIP>(argc, argv, "HIP");
