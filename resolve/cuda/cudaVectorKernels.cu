@@ -12,9 +12,10 @@
 #include <resolve/cuda/cudaVectorKernels.h>
 
 
-namespace ReSolve {
-
-  namespace kernels {
+namespace ReSolve
+{
+  namespace kernels
+  {
 
     /**
      * @brief CUDA kernel that sets values of an array to a constant.
@@ -44,5 +45,4 @@ namespace ReSolve {
     num_blocks = (n + block_size - 1) / block_size;
     kernels::set_const<<<num_blocks, block_size>>>(n, val, arr);
   }
-
 } // namespace ReSolve

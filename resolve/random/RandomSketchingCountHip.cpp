@@ -52,12 +52,12 @@ namespace ReSolve
   int RandomSketchingCountHip::Theta(vector_type* input, vector_type* output)
   {
     mem_.deviceSynchronize();
-    count_sketch_theta(n_,
-                        k_rand_,
-                        d_labels_,
-                        d_flip_,
-                        input->getData(memory::DEVICE), 
-                        output->getData(memory::DEVICE));
+    hip::count_sketch_theta(n_,
+                            k_rand_,
+                            d_labels_,
+                            d_flip_,
+                            input->getData(memory::DEVICE), 
+                            output->getData(memory::DEVICE));
     mem_.deviceSynchronize();
     return 0;
   }

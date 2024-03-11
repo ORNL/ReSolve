@@ -7,8 +7,10 @@
 // @author Kasia Swirydowicz
 //
 
-namespace ReSolve {
-  namespace cpu {
+namespace ReSolve
+{
+  namespace cpu
+  {
     /**
      * @brief CountSketch Theta, CPU version 
      * 

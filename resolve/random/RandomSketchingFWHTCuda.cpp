@@ -68,19 +68,19 @@ namespace ReSolve
   int RandomSketchingFWHTCuda::Theta(vector_type* input, vector_type* output)
   {
     mem_.setZeroArrayOnDevice(d_aux_, N_);
-    FWHT_scaleByD(n_, 
-                  d_D_,
-                  input->getData(memory::DEVICE), 
-                  d_aux_);  
+    cuda::FWHT_scaleByD(n_, 
+                        d_D_,
+                        input->getData(memory::DEVICE), 
+                        d_aux_);  
 
     mem_.deviceSynchronize();
-    FWHT(1, log2N_, d_aux_);
+    cuda::FWHT(1, log2N_, d_aux_);
 
     mem_.deviceSynchronize();
-    FWHT_select(k_rand_, 
-                d_perm_, 
-                d_aux_, 
-                output->getData(memory::DEVICE)); 
+    cuda::FWHT_select(k_rand_, 
+                      d_perm_, 
+                      d_aux_, 
+                      output->getData(memory::DEVICE)); 
     mem_.deviceSynchronize();
     return 0;
   }
