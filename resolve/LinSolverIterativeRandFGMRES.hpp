@@ -1,3 +1,9 @@
+/**
+ * @file LinSolverIterativeRandFGMRES.hpp
+ * @author Kasia Swirydowicz (kasia.swirydowicz@pnnl.gov)
+ * @brief Declaration of LinSolverIterativeRandFGMRES class
+ * 
+ */
 #pragma once
 #include "Common.hpp"
 #include "LinSolver.hpp"
@@ -21,7 +27,7 @@ namespace ReSolve
    * 
    * @author Kasia Swirydowicz (kasia.swirydowicz@pnnl.gov)
    * 
-   * @note MatrixHandler and VectorHandler objects are inherited from
+   * @note Pointers to MatrixHandler and VectorHandler objects are inherited from
    * LinSolver base class.
    * 
    */
@@ -66,7 +72,7 @@ namespace ReSolve
       vector_type* d_V_{nullptr};
       vector_type* d_Z_{nullptr};
       // for performing Gram-Schmidt
-      vector_type* d_S_{nullptr};///< this is where sketched vectors are stored
+      vector_type* d_S_{nullptr}; ///< this is where sketched vectors are stored
 
       real_type* h_H_{nullptr};
       real_type* h_c_{nullptr};
@@ -74,9 +80,9 @@ namespace ReSolve
       real_type* h_rs_{nullptr};
       real_type* d_aux_{nullptr};
 
-      GramSchmidt* GS_;     
-      LinSolverDirect* LU_solver_;
-      index_type n_;
+      GramSchmidt* GS_{nullptr};
+      LinSolverDirect* LU_solver_{nullptr};
+      index_type n_{0};
       real_type one_over_k_{1.0};
 
       index_type k_rand_{0}; ///< size of sketch space. We need to know it so we can allocate S!

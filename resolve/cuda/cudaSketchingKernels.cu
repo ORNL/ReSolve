@@ -1,7 +1,7 @@
 /**
- * @file cudaKernels.cu
+ * @file cudaSketchingKernels.cu
  * @author Kasia Swirydowicz (kasia.swirydowicz@pnnl.gov)
- * @brief 
+ * @brief CUDA implementation of random sketching kernels.
  * @date 2023-12-08
  * 
  * 
@@ -26,14 +26,16 @@ namespace ReSolve
        * @param[in]  labels - array size [n x 1] containing integers from 0 to k-1, assigned randomly.
        * @param[in]  flip   - array size [n x 1] containing values `1` and `-1`
        * @param[in]  input  - input vector, size [n x 1] 
-       * @param[out] output - output vector, size [k x 1] (this vector must be allocated and initialized with `0`s prior to calling the kernel).
+       * @param[out] output - output vector, size [k x 1]
+       * 
+       * @pre _output_ vector must be allocated and initialized with 0s prior to calling this kernel.
        */
-      __global__ void  count_sketch(const index_type n,
-                                    const index_type k, 
-                                    const index_type* labels,
-                                    const index_type* flip,
-                                    const real_type* input,
-                                    real_type* output)
+      __global__ void count_sketch(const index_type n,
+                                   const index_type k, 
+                                   const index_type* labels,
+                                   const index_type* flip,
+                                   const real_type* input,
+                                   real_type* output)
       {
         index_type idx = blockIdx.x * blockDim.x + threadIdx.x; 
         while (idx < n) {
@@ -55,10 +57,10 @@ namespace ReSolve
        * @param[out] output - 
        */
       __global__ void select(const index_type k, 
-                            const index_type* perm,
-                            const real_type* input,
-                            real_type* output){
-
+                             const index_type* perm,
+                             const real_type* input,
+                             real_type* output)
+      {
         index_type idx = blockIdx.x * blockDim.x + threadIdx.x; 
         while (idx < k) {
           output[idx] = input[perm[idx]];
@@ -257,9 +259,9 @@ namespace ReSolve
      * @todo Decide how to allow user to configure grid and block sizes.
      */
     void FWHT_select(index_type k,
-                    const index_type* perm,
-                    const real_type* input,
-                    real_type* output)
+                     const index_type* perm,
+                     const real_type* input,
+                     real_type* output)
     {
       kernels::select<<<1000, 1024>>>(k, perm, input, output);
     }

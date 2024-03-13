@@ -1,8 +1,8 @@
 /**
- * @file cudaKernels.h
+ * @file cudaSketchingKernels.h
  * @author Kasia Swirydowicz (kasia.swirydowicz@pnnl.gov)
  * 
- * @brief Contains prototypes of CUDA kernels.
+ * @brief Contains prototypes of CUDA random sketching kernels.
  * 
  * @note These kernels will be used in CUDA specific code, only.
  * 

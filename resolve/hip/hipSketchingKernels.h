@@ -1,7 +1,7 @@
 /**
- * @file hipKernels.h
+ * @file hipSketchingKernels.h
  * @author Kasia Swirydowicz (kasia.swirydowicz@pnnl.gov)
- * @brief Contains prototypes of HIP kernels.
+ * @brief Contains prototypes of HIP random sketching kernels.
  * @date 2023-12-08
  * 
  * @note These kernels will be used in HIP specific code, only.

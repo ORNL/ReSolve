@@ -1,8 +1,7 @@
 /**
- * @file hipKernels.hip
+ * @file hipSketchingKernels.hip
  * @author Kasia Swirydowicz (kasia.swirydowicz@pnnl.gov)
- * @brief 
- * @date 2023-12-08
+ * @brief HIP implementation of kernels for random sketching.
  * 
  * 
  */
@@ -28,13 +27,13 @@ namespace ReSolve
        * @param[in]  input  - 
        * @param[out] output -
        */
-      __global__ void  count_sketch_kernel(const index_type n,
+      __global__ void count_sketch_kernel(const index_type n,
                                           const index_type k, 
                                           const index_type* labels,
                                           const index_type* flip,
                                           const real_type* input,
-                                          real_type* output){
-
+                                          real_type* output)
+      {
         index_type idx = blockIdx.x * blockDim.x + threadIdx.x; 
         while (idx < n) {
           real_type val = input[idx];
@@ -57,8 +56,8 @@ namespace ReSolve
       __global__ void select_kernel(const index_type k, 
                                     const index_type* perm,
                                     const real_type* input,
-                                    real_type* output){
-
+                                    real_type* output)
+      {
         index_type idx = blockIdx.x * blockDim.x + threadIdx.x; 
         while (idx < k) {
           output[idx] = input[perm[idx]];
@@ -77,13 +76,16 @@ namespace ReSolve
       __global__ void scaleByD_kernel(const index_type n,
                                       const index_type* D,
                                       const real_type* x,
-                                      real_type* y){
+                                      real_type* y)
+      {
         index_type idx = blockIdx.x * blockDim.x + threadIdx.x; 
 
-        while (idx < n){
+        while (idx < n) {
 
-          if (D[idx] == 1) y[idx]=x[idx];
-          else y[idx]= (-1.0)*x[idx];
+          if (D[idx] == 1)
+            y[idx] = x[idx];
+          else
+            y[idx] = (-1.0)*x[idx];
 
           idx += blockDim.x * gridDim.x;
         }
@@ -231,7 +233,7 @@ namespace ReSolve
      * 
      * @todo Decide how to allow user to configure grid and block sizes.
      */
-    void  count_sketch_theta(index_type n,
+    void count_sketch_theta(index_type n,
                             index_type k,
                             index_type* labels,
                             index_type* flip,
@@ -239,16 +241,16 @@ namespace ReSolve
                             real_type* output)
     {
       hipLaunchKernelGGL(kernels::count_sketch_kernel,
-                        dim3(10000),
-                        dim3(1024),
-                        0,
-                        0,
-                        n,
-                        k,
-                        labels,
-                        flip,
-                        input,
-                        output);
+                         dim3(10000),
+                         dim3(1024),
+                         0,
+                         0,
+                         n,
+                         k,
+                         labels,
+                         flip,
+                         input,
+                         output);
     }
 
     /**
@@ -262,9 +264,9 @@ namespace ReSolve
      * @todo Decide how to allow user to configure grid and block sizes.
      */
     void FWHT_select(index_type k,
-                    index_type* perm,
-                    real_type* input,
-                    real_type* output)
+                     index_type* perm,
+                     real_type* input,
+                     real_type* output)
     {
       hipLaunchKernelGGL(kernels::select_kernel, dim3(1000), dim3(1024), 0, 0,k, perm, input, output);
     }
