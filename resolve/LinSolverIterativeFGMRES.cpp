@@ -241,7 +241,7 @@ namespace ReSolve
           vector_handler_->axpy(&h_rs_[j], vec_z, x, memspace_);
         }
       } else {
-        mem_.setZeroArrayOnDevice(d_Z_->getData(memspace_), d_Z_->getSize());
+        d_Z_->setToZero(memspace_);
         vec_z->setData( d_Z_->getVectorData(0, memspace_), memspace_);
         for(j = 0; j <= i; j++) {
           vec_v->setData( d_V_->getVectorData(j, memspace_), memspace_);
