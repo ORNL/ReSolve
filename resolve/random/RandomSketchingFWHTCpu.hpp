@@ -1,3 +1,10 @@
+/**
+ * @file RandomSketchingFWHTCpu.hpp
+ * @author Kasia Swirydowicz (kasia.swirydowicz@pnnl.gov)
+ * @author Slaven Peles (peless@ornl.gov)
+ * @brief Declaration of RandomSketchingFWHTCpu class.
+ * 
+ */
 #pragma once
 
 #include <resolve/Common.hpp>
@@ -11,11 +18,15 @@ namespace ReSolve {
     class Vector;
   }
   
+  /**
+   * @brief Fast Walsh-Hadamard transform implementation using CPU backend.
+   * 
+   */
   class RandomSketchingFWHTCpu : public RandomSketchingImpl
   {
-
-    using vector_type = vector::Vector;
-    public: 
+    private:
+      using vector_type = vector::Vector;
+    public:
       RandomSketchingFWHTCpu();
       virtual ~RandomSketchingFWHTCpu();
 
@@ -27,8 +38,8 @@ namespace ReSolve {
       virtual int reset(); // if needed can be reset (like when Krylov method restarts)
 
     private:
-      index_type n_;      ///< size of base vector
-      index_type k_rand_; ///< size of sketched vector
+      index_type n_{0};      ///< size of base vector
+      index_type k_rand_{0}; ///< size of sketched vector
 
       index_type* h_seq_{nullptr};  ///< auxiliary variable used for Fisher-Yates algorithm 
       index_type* h_D_{nullptr};    ///< D is a diagonal matrix (FWHT computed y = PHDx), we store it as an array. D consists of _1_s and _-1_s

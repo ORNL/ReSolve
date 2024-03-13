@@ -1,11 +1,13 @@
+/**
+ * @file RandomSketchingCountHip.cpp
+ * @author Kasia Swirydowicz (kasia.swirydowicz@pnnl.gov)
+ * @author Slaven Peles (peless@ornl.gov)
+ * @brief Definition of RandomSketchingCountHip class.
+ * 
+ */
 #include <resolve/MemoryUtils.hpp>
 #include <resolve/vector/Vector.hpp>
-#ifdef RESOLVE_USE_HIP
 #include <resolve/hip/hipSketchingKernels.h>
-#endif
-#ifdef RESOLVE_USE_CUDA
-#include <resolve/cuda/cudaSketchingKernels.h>
-#endif
 #include <resolve/random/RandomSketchingCountHip.hpp> 
 
 namespace ReSolve 
@@ -14,16 +16,9 @@ namespace ReSolve
    * @brief Default constructor
    * 
    * @post All class variables set to nullptr.
-   * 
-   * @todo Consider removing.
    */
   RandomSketchingCountHip::RandomSketchingCountHip()
   {
-    h_labels_ = nullptr;
-    h_flip_ = nullptr;
-
-    d_labels_ = nullptr;
-    d_flip_ = nullptr;
   }
 
   /// Destructor
@@ -44,9 +39,9 @@ namespace ReSolve
    * @param[out]  output - Vector size _k_ 
    *
    * @pre Both input and output variables are initialized and of correct size.
-   * Setup has been run at least once 
+   * Setup has been run at least once.
    * 
-   * @return output = Theta (input) 
+   * @return 0 if successful, !=0 otherwise (TODO). 
    * 
    */
   int RandomSketchingCountHip::Theta(vector_type* input, vector_type* output)
@@ -72,8 +67,11 @@ namespace ReSolve
    *
    * @pre _n_ > _k_. 
    * 
-   * @post The arrays needed for performing sketches with CountSketch (_flip_ and _labels_ ) are initialized. If GPU is enabled, the arrays will be copied to the GPU, as well 
+   * @post The arrays needed for performing sketches with CountSketch
+   * (_flip_ and _labels_ ) are initialized. If GPU is enabled, the arrays
+   * will be copied to the GPU, as well 
    * 
+   * @return 0 if successful, !=0 otherwise (TODO). 
    */
   int RandomSketchingCountHip::setup(index_type n, index_type k)
   {
@@ -121,6 +119,8 @@ namespace ReSolve
    * @post The arrays needed for performing sketches with CountSketch
    * (_flip_ and _labels_ ) are reset to new values. If GPU is enabled, the
    * arrays will be copied to the GPU, as well 
+   * 
+   * @return 0 if successful, !=0 otherwise (TODO). 
    * 
    * @todo Need to be fixed, this can be done on the GPU.
    */

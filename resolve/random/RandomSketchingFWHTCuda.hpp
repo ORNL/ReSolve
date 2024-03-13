@@ -1,3 +1,10 @@
+/**
+ * @file RandomSketchingFWHTCuda.hpp
+ * @author Kasia Swirydowicz (kasia.swirydowicz@pnnl.gov)
+ * @author Slaven Peles (peless@ornl.gov)
+ * @brief Declaration of RandomSketchingFWHTCuda class.
+ * 
+ */
 #pragma once
 #include <resolve/Common.hpp>
 #include <resolve/random/RandomSketchingImpl.hpp>
@@ -10,6 +17,10 @@ namespace ReSolve {
     class Vector;
   }
   
+  /**
+   * @brief Fast Walsh-Hadamard transform implementation using CUDA backend.
+   * 
+   */
   class RandomSketchingFWHTCuda : public RandomSketchingImpl
   {
 
@@ -26,8 +37,8 @@ namespace ReSolve {
       virtual int reset(); // if needed can be reset (like when Krylov method restarts)
 
     private:
-      index_type n_;      ///< size of base vector
-      index_type k_rand_; ///< size of sketched vector
+      index_type n_{0};      ///< size of base vector
+      index_type k_rand_{0}; ///< size of sketched vector
 
       index_type* h_seq_{nullptr};  ///< auxiliary variable used for Fisher-Yates algorithm 
       index_type* h_D_{nullptr};    ///< D is a diagonal matrix (FWHT computed y = PHDx), we store it as an array. D consists of _1_s and _-1_s
@@ -43,4 +54,4 @@ namespace ReSolve {
 
       MemoryHandler mem_; ///< Device memory manager object
   };
-}
+} // namespace ReSolve

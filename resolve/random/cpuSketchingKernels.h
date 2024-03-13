@@ -1,3 +1,9 @@
+/**
+ * @file cpuSketchingKernels.h
+ * @author Kasia Swirydowicz (kasia.swirydowicz@pnnl.gov)
+ * @brief Function prototypes for random sketching kernels.
+ * 
+ */
 #include <resolve/Common.hpp>
 
 namespace ReSolve

@@ -1,3 +1,10 @@
+/**
+ * @file RandomSketchingFWHTCuda.cpp
+ * @author Kasia Swirydowicz (kasia.swirydowicz@pnnl.gov)
+ * @author Slaven Peles (peless@ornl.gov)
+ * @brief Definition of RandomSketchingFWHTCuda class.
+ * 
+ */
 #include <cmath>
 #include <limits>
 #include <cstring>
@@ -5,12 +12,7 @@
 #include <resolve/MemoryUtils.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/utilities/logger/Logger.hpp>
-#ifdef RESOLVE_USE_HIP
-#include <resolve/hip/hipSketchingKernels.h>
-#endif
-#ifdef RESOLVE_USE_CUDA
 #include <resolve/cuda/cudaSketchingKernels.h>
-#endif
 #include <resolve/random/RandomSketchingFWHTCuda.hpp> 
 
 namespace ReSolve 
@@ -20,23 +22,13 @@ namespace ReSolve
   /**
    * @brief Default constructor
    * 
-   * @post All class variables are set to nullptr.
-   * 
-   * @todo There is little utility for the default constructor. Maybe remove?.
    */
   RandomSketchingFWHTCuda::RandomSketchingFWHTCuda()
   {
-    h_seq_ = nullptr;
-    h_D_ = nullptr;
-    h_perm_ = nullptr;
-
-    d_D_ = nullptr;
-    d_perm_ = nullptr;
-    d_aux_ = nullptr; 
   }
 
   /**
-   * @brief destructor
+   * @brief Destructor
    * 
    */
   RandomSketchingFWHTCuda::~RandomSketchingFWHTCuda()
@@ -63,7 +55,7 @@ namespace ReSolve
    * @pre both vectors are allocated. Setup function from this class has been called.
    * @warning normal FWHT function requires scaling by 1/k. This function does not scale.
    *
-   * @return 0 of successful, -1 otherwise (TODO). 
+   * @return 0 if successful, !=0 otherwise (TODO). 
    */
   int RandomSketchingFWHTCuda::Theta(vector_type* input, vector_type* output)
   {
@@ -91,13 +83,12 @@ namespace ReSolve
    * This function allocated P(erm), D (diagonal scaling matrix) and populates
    * them. It also allocates auxiliary arrays.
    *
-   *
    * @param[in]  n  - size of base (non-sketched) vector
    * @param[in]  k  - size of sketched vector. 
    * 
-   * @post Everything is set up so you call call Theta.
+   * @post Everything is set up so you can call Theta.
    *
-   * @return 0 of successful, -1 otherwise. 
+   * @return 0 if successful, !=0 otherwise (TODO). 
    */
   int RandomSketchingFWHTCuda::setup(index_type n, index_type k)
   {
@@ -163,9 +154,9 @@ namespace ReSolve
    * Sketching can be reset, similar to Krylov method restarts.
    * If the solver restarts, call this method between restarts.
    *
-   * @post Everything is set up so you call call Theta.
+   * @post Everything is set up so you can call Theta.
    *
-   * @return 0 of successful, -1 otherwise.
+   * @return 0 if successful, !=0 otherwise (TODO). 
    * 
    * @todo Need to be fixed, this can be done on the GPU.
    */
@@ -203,7 +194,6 @@ namespace ReSolve
 
     mem_.copyArrayHostToDevice(d_perm_, h_perm_, k_rand_);
     mem_.copyArrayHostToDevice(d_D_, h_D_, n_);
-
     mem_.deviceSynchronize();
 
     return 0;

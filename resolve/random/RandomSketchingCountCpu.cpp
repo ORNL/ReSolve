@@ -1,3 +1,10 @@
+/**
+ * @file RandomSketchingCountCpu.cpp
+ * @author Kasia Swirydowicz (kasia.swirydowicz@pnnl.gov)
+ * @author Slaven Peles (peless@ornl.gov)
+ * @brief Definition of RandomSketchingCountCuda class.
+ * 
+ */
 #include <resolve/vector/Vector.hpp>
 #include <resolve/random/cpuSketchingKernels.h>
 #include <resolve/random/RandomSketchingCountCpu.hpp> 
@@ -8,8 +15,6 @@ namespace ReSolve
    * @brief Default constructor
    * 
    * @post All class variables set to nullptr.
-   * 
-   * @todo Consider removing.
    */
   RandomSketchingCountCpu::RandomSketchingCountCpu()
   {
@@ -33,7 +38,7 @@ namespace ReSolve
    * @pre Both input and output variables are initialized and of correct size.
    * Setup has been run at least once 
    * 
-   * @return output = Theta (input) 
+   * @return 0 if successful, !=0 otherwise (TODO). 
    * 
    */
   int RandomSketchingCountCpu::Theta(vector_type* input, vector_type* output)
@@ -60,6 +65,7 @@ namespace ReSolve
    * @post The arrays needed for performing sketches with CountSketch (_flip_ and _labels_ )
    * are initialized. If GPU is enabled, the arrays will be copied to the GPU, as well 
    * 
+   * @return 0 if successful, !=0 otherwise (TODO). 
    */
   int RandomSketchingCountCpu::setup(index_type n, index_type k)
   {
@@ -101,9 +107,11 @@ namespace ReSolve
    * (_flip_ and _labels_ ) are reset to new values. If GPU is enabled, the
    * arrays will be copied to the GPU, as well 
    * 
+   * @return 0 if successful, !=0 otherwise (TODO).
+   * 
    * @todo Need to be fixed, this can be done on the GPU.
    */
-  int RandomSketchingCountCpu::reset() // if needed can be reset (like when Krylov method restarts)
+  int RandomSketchingCountCpu::reset()
   {
     for (int i = 0; i < n_; ++i) {
       h_labels_[i] = rand() % k_rand_;
@@ -115,7 +123,6 @@ namespace ReSolve
         h_flip_[i] = 1;
       }
     }
-
     return 0;
   }
 }

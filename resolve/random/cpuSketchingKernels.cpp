@@ -1,18 +1,19 @@
+/**
+ * @file cpuSketchingKernels.cpp
+ * @author your name (you@domain.com)
+ * @brief CPU implementation of random sketching kernels.
+ * 
+ */
 #include <cmath>
 #include <stdio.h>
 #include "cpuSketchingKernels.h"
-
-//
-// Kernel wrappers to mimic gpu behavior and make implementation consistent
-// @author Kasia Swirydowicz
-//
 
 namespace ReSolve
 {
   namespace cpu
   {
     /**
-     * @brief CountSketch Theta, CPU version 
+     * @brief Count sketch theta function.
      * 
      * @param[in]  n      - input vector size
      * @param[in]  k      - output vector size
@@ -23,7 +24,7 @@ namespace ReSolve
      * 
      * @todo Decide how to allow user to configure grid and block sizes.
      */
-    void  count_sketch_theta(index_type n,
+    void count_sketch_theta(index_type n,
                             index_type /* k */,
                             index_type* labels,
                             index_type* flip,
@@ -40,10 +41,25 @@ namespace ReSolve
       }
     }
 
+    /**
+     * @brief y = D*x
+     * 
+     * Multiply array x by diagonal matrix D and store result in array y.
+     * 
+     * @param[in] n  - size of arrays x, y and matrix D.
+     * @param[in] D  - diagonal matrix (stored as integer array).
+     * @param[in] x  - input array x
+     * @param[out] y - output array y
+     * 
+     * @pre Arrays x, y, and D are allocated to size n.
+     * @pre Arrays x and D are initialized.
+     * 
+     * @post Array y is overwritten with D*x.
+     */
     void FWHT_scaleByD(index_type n,
-                      const index_type* D,
-                      const real_type* x,
-                      real_type* y)
+                       const index_type* D,
+                       const real_type* x,
+                       real_type* y)
     {
 
       for (index_type i = 0; i < n; ++i) {
@@ -55,18 +71,37 @@ namespace ReSolve
       }  
     }
   
+    /**
+     * @brief Permute _input_ using _perm_ and store in _output_.
+     * 
+     * @param[in]  k      - size of input and output arrays
+     * @param[in]  perm   - permutation matrix (stored as an integer array)
+     * @param[in]  input  - input array
+     * @param[out] output - output array
+     * 
+     * @pre Arrays input, output, and perm are allocated to size k.
+     * @pre Arrays input and perm are initialized.
+     * 
+     * @post Array output is overwritten with permuted values of input.
+     */
     void FWHT_select(index_type k,
-                    const index_type* perm,
-                    const real_type* input,
-                    real_type* output)
+                     const index_type* perm,
+                     const real_type* input,
+                     real_type* output)
     {
-
       for (index_type i = 0; i < k; ++i) {
         output[i] = input[perm[i]];
       } 
     }
 
-    void FWHT(index_type M, 
+    /**
+     * @brief 
+     * 
+     * @param[in]  M      - Placeholder for GPU grid size (not used here)
+     * @param[in]  log2N  - 
+     * @param[out] h_Data - 
+     */
+    void FWHT(index_type /* M */, 
               index_type log2N, 
               real_type* h_Data) 
     {

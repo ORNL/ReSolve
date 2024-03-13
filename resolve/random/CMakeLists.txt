@@ -20,7 +20,7 @@ set(Random_CUDASDK_SRC
     RandomSketchingFWHTCuda.cpp
 )
 
-# and on HIP
+# C++ code that depends on ROCm libraries
 set(Random_ROCM_SRC 
     RandomSketchingCountHip.cpp
     RandomSketchingFWHTHip.cpp
@@ -37,14 +37,14 @@ set(Random_HEADER_INSTALL
 
 # Header files to be installed when HIP support is enabled
 set(Random_ROCM_HEADER_INSTALL
-  RandomSketchingCountHip.hpp
-  RandomSketchingFWHTHip.hpp
+    RandomSketchingCountHip.hpp
+    RandomSketchingFWHTHip.hpp
 )
 
 # Header files to be installed when HIP support is enabled
 set(Random_CUDASDK_HEADER_INSTALL
-  RandomSketchingCountCuda.hpp
-  RandomSketchingFWHTCuda.hpp
+    RandomSketchingCountCuda.hpp
+    RandomSketchingFWHTCuda.hpp
 )
 
 

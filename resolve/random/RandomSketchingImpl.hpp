@@ -1,4 +1,9 @@
-// this is the implementation virtual class
+/**
+ * @file RandomSketchingImpl.hpp
+ * @author Slaven Peles (peless@ornl.gov)
+ * @brief Pure virtual RandomSketchingImpl class.
+ * 
+ */
 #pragma once
 #include <resolve/Common.hpp>
 
@@ -14,7 +19,9 @@ namespace ReSolve
 namespace ReSolve
 {
   /** 
-   * @brief Interface to random sketching implementations
+   * @brief Interface to random sketching implementations.
+   * 
+   * All sketching methods inherit from this class.
    */
   class RandomSketchingImpl
   {
