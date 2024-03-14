@@ -29,7 +29,7 @@ namespace ReSolve
   {
     this->matrix_handler_ = matrix_handler;
     this->vector_handler_ = vector_handler;
-    this->rand_method_ = rand_method;
+    this->sketching_method_ = rand_method;
     this->GS_ = gs;
 
     setMemorySpace();
@@ -55,7 +55,7 @@ namespace ReSolve
   {
     this->matrix_handler_ = matrix_handler;
     this->vector_handler_ = vector_handler;
-    this->rand_method_ = rand_method;
+    this->sketching_method_ = rand_method;
     this->GS_ = gs;
 
     setMemorySpace();
@@ -72,12 +72,20 @@ namespace ReSolve
 
   LinSolverIterativeRandFGMRES::~LinSolverIterativeRandFGMRES()
   {
-    if (d_V_ != nullptr) {
+    if (is_solver_set_) {
+      delete [] h_H_ ;
+      delete [] h_c_ ;
+      delete [] h_s_ ;
+      delete [] h_rs_;
+      if (memspace_ == memory::DEVICE) { 
+        mem_.deleteOnDevice(d_aux_);
+      } else {
+        delete [] d_aux_;
+      }
       delete d_V_;   
-    }
-
-    if (d_Z_ != nullptr) {
-      delete d_Z_;   
+      delete d_Z_;
+      delete d_S_;
+      delete sketching_handler_;
     }
   }
 
@@ -94,7 +102,7 @@ namespace ReSolve
       // otherwise Z is just one vector, not multivector and we dont keep it
       d_Z_ = new vector_type(n_);
     }
-    d_Z_->allocate(memspace_);      
+    d_Z_->allocate(memspace_);   
     h_H_  = new real_type[restart_ * (restart_ + 1)];
     h_c_  = new real_type[restart_];      // needed for givens
     h_s_  = new real_type[restart_];      // same
@@ -106,39 +114,42 @@ namespace ReSolve
     }
     // Set randomized method
     k_rand_ = n_;
-    switch(rand_method_) {
+    switch (sketching_method_) {
       case cs:
         if (ceil(restart_ * log(n_)) < k_rand_) {
           k_rand_ = static_cast<index_type>(std::ceil(restart_ * std::log(static_cast<real_type>(n_))));
         }
-        rand_manager_ = new SketchingHandler(rand_method_, device_type_);
+        sketching_handler_ = new SketchingHandler(sketching_method_, device_type_);
         // set k and n 
         break;
       case fwht:
         if (ceil(2.0 * restart_ * log(n_) / log(restart_)) < k_rand_) {
           k_rand_ = static_cast<index_type>(std::ceil(2.0 * restart_ * std::log(n_) / std::log(restart_)));
         }
-        rand_manager_ = new SketchingHandler(rand_method_, device_type_);
+        sketching_handler_ = new SketchingHandler(sketching_method_, device_type_);
         break;
       default:
         io::Logger::warning() << "Wrong sketching method, setting to default (CountSketch)\n"; 
-        rand_method_ = cs;
+        sketching_method_ = cs;
         if (ceil(restart_ * log(n_)) < k_rand_) {
           k_rand_ = static_cast<index_type>(std::ceil(restart_ * std::log(n_)));
         }
-        rand_manager_ = new SketchingHandler(cs, device_type_);
+        sketching_handler_ = new SketchingHandler(cs, device_type_);
         break;
     }
 
-    rand_manager_->setup(n_, k_rand_); 
+    sketching_handler_->setup(n_, k_rand_); 
 
     one_over_k_ = 1.0 / sqrt((real_type) k_rand_);
 
     d_S_ = new vector_type(k_rand_, restart_ + 1);
     d_S_->allocate(memspace_);      
-    if (rand_method_ == cs) {
+    if (sketching_method_ == cs) {
       d_S_->setToZero(memspace_);
     }
+
+    is_solver_set_ = true;
+
     return 0;
   }
 
@@ -175,9 +186,9 @@ namespace ReSolve
     vec_v->setData( d_V_->getVectorData(0, memspace_), memspace_);
     vec_s->setData( d_S_->getVectorData(0, memspace_), memspace_);
 
-    rand_manager_->Theta(vec_v, vec_s);
+    sketching_handler_->Theta(vec_v, vec_s);
 
-    if (rand_method_ == fwht){
+    if (sketching_method_ == fwht) {
       vector_handler_->scal(&one_over_k_, vec_s, memspace_);
     }
     mem_.deviceSynchronize();
@@ -249,8 +260,8 @@ namespace ReSolve
         // orthogonalize V[i+1], form a column of h_H_
         // this is where it differs from normal solver GS
         vec_s->setData( d_S_->getVectorData(i + 1, memspace_), memspace_);
-        rand_manager_->Theta(vec_v, vec_s); 
-        if (rand_method_ == fwht){
+        sketching_handler_->Theta(vec_v, vec_s); 
+        if (sketching_method_ == fwht) {
           vector_handler_->scal(&one_over_k_, vec_s, memspace_);
         }
         mem_.deviceSynchronize();
@@ -259,9 +270,7 @@ namespace ReSolve
         if (memspace_ == memory::DEVICE) {
           mem_.copyArrayHostToDevice(d_aux_, &h_H_[i * (restart_ + 1)], i + 2);
         } else {
-          for (index_type ii = 0; ii < i + 2; ++ii) {
-            d_aux_[ii] = h_H_[i * (restart_ + 1) + ii];
-          }
+          mem_.copyArrayHostToHost(d_aux_, &h_H_[i * (restart_ + 1)], i + 2);
         }
         vec_z->setData(d_aux_, memspace_);
         vec_z->setCurrentSize(i + 1);
@@ -364,9 +373,9 @@ namespace ReSolve
       matrix_handler_->matvec(A_, x, d_V_, &MINUSONE, &ONE,"csr", memspace_); 
       if (outer_flag) {
 
-        rand_manager_->reset();
+        sketching_handler_->reset();
 
-        if (rand_method_ == cs) {
+        if (sketching_method_ == cs) {
           if (memspace_ == memory::DEVICE) {
             mem_.setZeroArrayOnDevice(d_S_->getData(memspace_), d_S_->getSize() * d_S_->getNumVectors());
           } else {
@@ -375,8 +384,8 @@ namespace ReSolve
         }
         vec_v->setData( d_V_->getVectorData(0, memspace_), memspace_);
         vec_s->setData( d_S_->getVectorData(0, memspace_), memspace_);
-        rand_manager_->Theta(vec_v, vec_s);
-        if (rand_method_ == fwht){
+        sketching_handler_->Theta(vec_v, vec_s);
+        if (sketching_method_ == fwht) {
           vector_handler_->scal(&one_over_k_, vec_s, memspace_);
         }
         mem_.deviceSynchronize();
@@ -434,13 +443,13 @@ namespace ReSolve
   int LinSolverIterativeRandFGMRES::setSketchingMethod(std::string method)
   {
     if (method == "count") {
-      rand_method_ = LinSolverIterativeRandFGMRES::cs;
+      sketching_method_ = LinSolverIterativeRandFGMRES::cs;
     } else if (method == "fwht") {
-      rand_method_ = LinSolverIterativeRandFGMRES::fwht;
+      sketching_method_ = LinSolverIterativeRandFGMRES::fwht;
     } else {
       out::warning() << "Sketching method " << method << " not recognized!\n"
-                      << "Using default.\n";
-      rand_method_ = LinSolverIterativeRandFGMRES::cs;
+                     << "Using default.\n";
+      sketching_method_ = LinSolverIterativeRandFGMRES::cs;
       return 1;
     }
     return 0;

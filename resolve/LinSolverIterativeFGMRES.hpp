@@ -1,3 +1,9 @@
+/**
+ * @file LinSolverIterativeFGMRES.hpp
+ * @author Kasia Swirydowicz (kasia.swirydowicz@pnnl.gov)
+ * @brief Declaration of LinSolverIterativeFGMRES class
+ * 
+ */
 #pragma once
 #include "Common.hpp"
 #include <resolve/matrix/Sparse.hpp>
@@ -57,6 +63,7 @@ namespace ReSolve
       GramSchmidt* GS_{nullptr};     
       LinSolverDirect* LU_solver_{nullptr};
       index_type n_{0};
+      bool is_solver_set_{false};
 
       MemoryHandler mem_; ///< Device memory manager object
   };

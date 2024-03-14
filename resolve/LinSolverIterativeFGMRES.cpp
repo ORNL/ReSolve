@@ -1,3 +1,9 @@
+/**
+ * @file LinSolverIterativeFGMRES.cpp
+ * @author Kasia Swirydowicz (kasia.swirydowicz@pnnl.gov)
+ * @brief Implementation of LinSolverIterativeFGMRES class
+ * 
+ */
 #include <iostream>
 #include <cassert>
 #include <cmath>
@@ -52,16 +58,14 @@ namespace ReSolve
 
   LinSolverIterativeFGMRES::~LinSolverIterativeFGMRES()
   {
-    if (d_V_ != nullptr) {
-      // cudaFree(d_V_);
+    if (is_solver_set_) {
+      delete [] h_H_ ;
+      delete [] h_c_ ;
+      delete [] h_s_ ;
+      delete [] h_rs_;
       delete d_V_;   
+      delete d_Z_;
     }
-
-    if (d_Z_ != nullptr) {
-      //      cudaFree(d_Z_);
-      delete d_Z_;   
-    }
-
   }
 
   int LinSolverIterativeFGMRES::setup(matrix::Sparse* A)
@@ -82,6 +86,8 @@ namespace ReSolve
     h_c_  = new real_type[restart_];      // needed for givens
     h_s_  = new real_type[restart_];      // same
     h_rs_ = new real_type[restart_ + 1]; // for residual norm history
+
+    is_solver_set_ = true;
 
     return 0;
   }
