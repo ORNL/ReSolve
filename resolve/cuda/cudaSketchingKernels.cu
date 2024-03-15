@@ -232,7 +232,7 @@ namespace ReSolve
      * @param[in]  n      - (unsketched ) vector lenght
      * @param[in]  k      - sketched vector lenght (_n_ >> _k_)
      * @param[in]  labels - array of lenght _n_, containing integers with values between 0 and  k-1 
-     * @param[in]  flip   -
+     * @param[in]  flip   - array with values 1 and -1 
      * @param[in]  input  - 
      * @param[out] output - 
      * 
