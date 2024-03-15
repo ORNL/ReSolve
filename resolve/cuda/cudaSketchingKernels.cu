@@ -233,7 +233,7 @@ namespace ReSolve
      * @param[in]  k      - sketched vector lenght (_n_ >> _k_)
      * @param[in]  labels - array of lenght _n_, containing integers with values between 0 and  k-1 
      * @param[in]  flip   - array with values 1 and -1 
-     * @param[in]  input  - 
+     * @param[in]  input  - input vector, lenght _n_
      * @param[out] output - 
      * 
      * @todo Decide how to allow user to configure grid and block sizes.
