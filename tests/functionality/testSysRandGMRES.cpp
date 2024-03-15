@@ -34,9 +34,9 @@ using vector_type = ReSolve::vector::Vector;
 
 // Forward declarations of helper functions that create test linear system
 template <class T>
-static int test(int argc, char *argv[], const std::string& hwbackend);
+static int test(int argc, char *argv[]);
 static void processInputs(std::string& method, std::string& gs, std::string& sketch);
-static std::string headerInfo(const std::string& method, const std::string& gs, const std::string& sketch);
+static std::string headerInfo(const std::string& method, const std::string& gs, const std::string& sketch, bool flexible);
 static ReSolve::matrix::Csr* generateMatrix(const index_type N, ReSolve::memory::MemorySpace memspace);
 static ReSolve::vector::Vector* generateRhs(const index_type N, ReSolve::memory::MemorySpace memspace);
 
@@ -44,33 +44,26 @@ int main(int argc, char *argv[])
 {
   int error_sum = 0;
 
-#ifndef RESOLVE_USE_GPU
-  error_sum += test<ReSolve::LinAlgWorkspaceCpu>(argc, argv, "CPU");
-#endif
+  error_sum += test<ReSolve::LinAlgWorkspaceCpu>(argc, argv);
 
 #ifdef RESOLVE_USE_HIP
-  error_sum += test<ReSolve::LinAlgWorkspaceHIP>(argc, argv, "HIP");
+  error_sum += test<ReSolve::LinAlgWorkspaceHIP>(argc, argv);
 #endif
 
 #ifdef RESOLVE_USE_CUDA
-  error_sum += test<ReSolve::LinAlgWorkspaceCUDA>(argc, argv, "CUDA");
+  error_sum += test<ReSolve::LinAlgWorkspaceCUDA>(argc, argv);
 #endif
 
   return error_sum;
 }
 
 template <class T>
-int test(int argc, char *argv[], const std::string& hwbackend)
+int test(int argc, char *argv[])
 {
   // Error sum needs to be 0 at the end for test to PASS.
   // It is a FAIL otheriwse.
   int error_sum = 0;
   int status = 0;
-
-  ReSolve::memory::MemorySpace memspace = ReSolve::memory::DEVICE;
-  if (hwbackend == "CPU") {
-    memspace = ReSolve::memory::HOST;
-  }
 
   // Collect all CLI
   ReSolve::CliOptions options(argc, argv);
@@ -88,11 +81,13 @@ int test(int argc, char *argv[], const std::string& hwbackend)
   opt = options.getParamFromKey("-s");
   std::string sketch = opt ? (*opt).second : "count";
 
-  processInputs(method, gs, sketch);
+  opt = options.getParamFromKey("-x");
+  bool flexible = true;
+  if(opt) {
+    flexible = !((*opt).second == "no");
+  }
 
-  // Generate linear system data
-  ReSolve::matrix::Csr* A = generateMatrix(N, memspace);
-  vector_type* vec_rhs = generateRhs(N, memspace);
+  processInputs(method, gs, sketch);
 
   // Create workspace and initialize its handles.
   T workspace;
@@ -102,9 +97,25 @@ int test(int argc, char *argv[], const std::string& hwbackend)
   ReSolve::MatrixHandler matrix_handler(&workspace);
   ReSolve::VectorHandler vector_handler(&workspace);
 
+  // Set memory space where to run tests
+  std::string hwbackend = "CPU";
+  ReSolve::memory::MemorySpace memspace = ReSolve::memory::HOST;
+  if (matrix_handler.getIsCudaEnabled()) {
+    memspace = ReSolve::memory::DEVICE;
+    hwbackend = "CUDA";
+  }
+  if (matrix_handler.getIsHipEnabled()) {
+    memspace = ReSolve::memory::DEVICE;
+    hwbackend = "HIP";
+  }
+
   // Create system solver
   ReSolve::SystemSolver solver(&workspace, "none", "none", method, "ilu0", "none");
   solver.setGramSchmidtMethod(gs);
+
+  // Generate linear system data
+  ReSolve::matrix::Csr* A = generateMatrix(N, memspace);
+  vector_type* vec_rhs = generateRhs(N, memspace);
 
   // Create solution vector
   vector_type vec_x(A->getNumRows());
@@ -125,6 +136,7 @@ int test(int argc, char *argv[], const std::string& hwbackend)
   solver.getIterativeSolver().setRestart(200);
   solver.getIterativeSolver().setMaxit(2500);
   solver.getIterativeSolver().setTol(tol);
+  solver.getIterativeSolver().setFlexible(flexible);
 
   matrix_handler.setValuesChanged(true, memspace);
 
@@ -145,7 +157,7 @@ int test(int argc, char *argv[], const std::string& hwbackend)
   norm_b = std::sqrt(norm_b);
   real_type final_norm = solver.getIterativeSolver().getFinalResidualNorm();
   std::cout << std::defaultfloat
-            << headerInfo(method, gs, sketch)
+            << headerInfo(method, gs, sketch, flexible)
             << "\t Hardware backend:               " << hwbackend << "\n"
             << "\t Solver tolerance:               " << tol       << "\n"
             << std::scientific << std::setprecision(16)
@@ -199,11 +211,13 @@ void processInputs(std::string& method, std::string& gs, std::string& sketch)
   }
 }
 
-std::string headerInfo(const std::string& method, const std::string& gs, const std::string& sketch)
+std::string headerInfo(const std::string& method, const std::string& gs, const std::string& sketch, bool flexible)
 {
   std::string header("Results for ");
   if (method == "randgmres") {
-    header += "randomized FGMRES solver\n";
+    header += "randomized ";
+    header += flexible ? "FGMRES" : "GMRES";
+    header += " solver\n";
     header += "\t Sketching method:               ";
     if (sketch == "count") {
       header += "count sketching\n";
@@ -211,7 +225,8 @@ std::string headerInfo(const std::string& method, const std::string& gs, const s
       header += "fast Walsh-Hadamard transform\n";
     }
   } else if (method == "fgmres") {
-    header += "FGMRES solver\n";
+    header += flexible ? "FGMRES" : "GMRES";
+    header += " solver\n";
   } else {
     return header + "unknown method\n";
   }

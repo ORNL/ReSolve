@@ -28,6 +28,8 @@ namespace ReSolve
 
   template int MemoryUtils<memory::Cuda>::setZeroArrayOnDevice<index_type, real_type>( real_type*, index_type);
 
+  template int  MemoryUtils<memory::Cuda>::setArrayToConstOnDevice<index_type, real_type>( real_type*, real_type, index_type);
+
   template int MemoryUtils<memory::Cuda>::copyArrayDeviceToHost<index_type,  real_type>( real_type*, const  real_type*, index_type);
   template int MemoryUtils<memory::Cuda>::copyArrayDeviceToHost<index_type, index_type>(index_type*, const index_type*, index_type);
 

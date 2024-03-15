@@ -1,6 +1,13 @@
+/**
+ * @file RandomSketchingCountCuda.hpp
+ * @author Kasia Swirydowicz (kasia.swirydowicz@pnnl.gov)
+ * @author Slaven Peles (peless@ornl.gov)
+ * @brief Declaration of RandomSketchingCountCuda class.
+ * 
+ */
 #pragma once
 #include <resolve/Common.hpp>
-#include <resolve/random/RandSketchingManager.hpp>
+#include <resolve/random/RandomSketchingImpl.hpp>
 #include <resolve/MemoryUtils.hpp>
 
 namespace ReSolve {
@@ -11,17 +18,21 @@ namespace ReSolve {
     class Vector;
   }
 
-  class RandSketchingCountSketch : public RandSketchingManager
+  /**
+   * @brief Count sketch implementation for CUDA device.
+   * 
+   */
+  class RandomSketchingCountCuda : public RandomSketchingImpl
   {
 
     using vector_type = vector::Vector;
     public: 
 
       // constructor
-      RandSketchingCountSketch(memory::MemorySpace memspace);
+      RandomSketchingCountCuda();
 
       // destructor
-      virtual ~RandSketchingCountSketch();
+      virtual ~RandomSketchingCountCuda();
 
       // Actual sketching process
       virtual int Theta(vector_type* input, vector_type* output);
@@ -31,12 +42,15 @@ namespace ReSolve {
       virtual int reset(); // if needed can be reset (like when Krylov method restarts)
 
     private:
+      index_type n_{0};      ///< size of base vector
+      index_type k_rand_{0}; ///< size of sketched vector
+
       index_type* h_labels_{nullptr}; ///< label array size _n_, with values from _0_ to _k-1_ assigned by random
       index_type* h_flip_{nullptr};   ///< flip array with values of 1 and -1 assigned by random
 
       index_type* d_labels_{nullptr}; ///< h_labels GPU counterpart
       index_type* d_flip_{nullptr};   ///< h_flip GPU counterpart
-      memory::MemorySpace memspace_;
+
       MemoryHandler mem_; ///< Device memory manager object
   };
 }

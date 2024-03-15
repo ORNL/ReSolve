@@ -7,13 +7,15 @@
  * @note Kernel wrappers implemented here are intended for use in hardware
  * agnostic code.
  */
+#include <cuda_runtime.h>
 
-#include <resolve/vector/VectorKernels.hpp>
+#include <resolve/cuda/cudaVectorKernels.h>
 
 
-namespace ReSolve { namespace vector {
-
-  namespace kernels {
+namespace ReSolve
+{
+  namespace kernels
+  {
 
     /**
      * @brief CUDA kernel that sets values of an array to a constant.
@@ -36,12 +38,11 @@ namespace ReSolve { namespace vector {
 
   } // namespace kernels
 
-  void set_array_const(index_type n, real_type val, real_type* arr)
+  void cuda_set_array_const(index_type n, real_type val, real_type* arr)
   {
     index_type num_blocks;
     index_type block_size = 512;
     num_blocks = (n + block_size - 1) / block_size;
     kernels::set_const<<<num_blocks, block_size>>>(n, val, arr);
   }
-
-}} // namespace ReSolve::vector
+} // namespace ReSolve

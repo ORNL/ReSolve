@@ -1,3 +1,10 @@
+/**
+ * @file RandomSketchingFWHTCuda.cpp
+ * @author Kasia Swirydowicz (kasia.swirydowicz@pnnl.gov)
+ * @author Slaven Peles (peless@ornl.gov)
+ * @brief Definition of RandomSketchingFWHTCuda class.
+ * 
+ */
 #include <cmath>
 #include <limits>
 #include <cstring>
@@ -5,16 +12,8 @@
 #include <resolve/MemoryUtils.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/utilities/logger/Logger.hpp>
-#ifndef RESOLVE_USE_GPU
-#include <resolve/cpu/cpuKernels.h>
-#endif
-#ifdef RESOLVE_USE_HIP
-#include <resolve/hip/hipKernels.h>
-#endif
-#ifdef RESOLVE_USE_CUDA
-#include <resolve/cuda/cudaKernels.h>
-#endif
-#include <resolve/random/RandSketchingFWHT.hpp> 
+#include <resolve/cuda/cudaSketchingKernels.h>
+#include <resolve/random/RandomSketchingFWHTCuda.hpp> 
 
 namespace ReSolve 
 {
@@ -23,27 +22,16 @@ namespace ReSolve
   /**
    * @brief Default constructor
    * 
-   * @post All class variables are set to nullptr.
-   * 
-   * @todo There is little utility for the default constructor. Maybe remove?.
    */
-  RandSketchingFWHT::RandSketchingFWHT(memory::MemorySpace memspace)
-    : memspace_(memspace)
+  RandomSketchingFWHTCuda::RandomSketchingFWHTCuda()
   {
-    h_seq_ = nullptr;
-    h_D_ = nullptr;
-    h_perm_ = nullptr;
-
-    d_D_ = nullptr;
-    d_perm_ = nullptr;
-    d_aux_ = nullptr; 
   }
 
   /**
-   * @brief destructor
+   * @brief Destructor
    * 
    */
-  RandSketchingFWHT::~RandSketchingFWHT()
+  RandomSketchingFWHTCuda::~RandomSketchingFWHTCuda()
   {
     using namespace memory;
 
@@ -51,16 +39,9 @@ namespace ReSolve
     delete [] h_D_;
     delete [] h_perm_;
 
-    switch (memspace_) {
-      case DEVICE:
-        mem_.deleteOnDevice(d_D_);
-        mem_.deleteOnDevice(d_perm_);
-        mem_.deleteOnDevice(d_aux_);
-        break;
-      case HOST:
-        delete [] d_aux_;
-        break;
-    }
+    mem_.deleteOnDevice(d_D_);
+    mem_.deleteOnDevice(d_perm_);
+    mem_.deleteOnDevice(d_aux_);
   }
 
   /** 
@@ -74,45 +55,25 @@ namespace ReSolve
    * @pre both vectors are allocated. Setup function from this class has been called.
    * @warning normal FWHT function requires scaling by 1/k. This function does not scale.
    *
-   * @return 0 of successful, -1 otherwise (TODO). 
+   * @return 0 if successful, !=0 otherwise (TODO). 
    */
-  int RandSketchingFWHT::Theta(vector_type* input, vector_type* output)
+  int RandomSketchingFWHTCuda::Theta(vector_type* input, vector_type* output)
   {
-    using namespace memory;
-   
-    switch (memspace_) {
-      case DEVICE:
-        mem_.setZeroArrayOnDevice(d_aux_, N_);
-        FWHT_scaleByD(n_, 
-                      d_D_,
-                      input->getData(memspace_), 
-                      d_aux_);  
+    mem_.setZeroArrayOnDevice(d_aux_, N_);
+    cuda::FWHT_scaleByD(n_, 
+                        d_D_,
+                        input->getData(memory::DEVICE), 
+                        d_aux_);  
 
-        mem_.deviceSynchronize();
-        FWHT(1, log2N_, d_aux_);
+    mem_.deviceSynchronize();
+    cuda::FWHT(1, log2N_, d_aux_);
 
-        mem_.deviceSynchronize();
-        FWHT_select(k_rand_, 
-                    d_perm_, 
-                    d_aux_, 
-                    output->getData(memspace_)); 
-        mem_.deviceSynchronize();
-        break; // remember - scaling is the solver's problem 
-      case HOST:
-        std::memset(d_aux_, 0.0, static_cast<size_t>(N_) * sizeof(real_type));
-        FWHT_scaleByD(n_, 
-                      h_D_,
-                      input->getData(memspace_),
-                      d_aux_);  
-
-        FWHT(1, log2N_, d_aux_);
-
-        FWHT_select(k_rand_, 
-                    h_perm_, 
-                    d_aux_, 
-                    output->getData(memspace_));
-        break;
-    }
+    mem_.deviceSynchronize();
+    cuda::FWHT_select(k_rand_, 
+                      d_perm_, 
+                      d_aux_, 
+                      output->getData(memory::DEVICE)); 
+    mem_.deviceSynchronize();
     return 0;
   }
 
@@ -122,15 +83,14 @@ namespace ReSolve
    * This function allocated P(erm), D (diagonal scaling matrix) and populates
    * them. It also allocates auxiliary arrays.
    *
-   *
    * @param[in]  n  - size of base (non-sketched) vector
    * @param[in]  k  - size of sketched vector. 
    * 
-   * @post Everything is set up so you call call Theta.
+   * @post Everything is set up so you can call Theta.
    *
-   * @return 0 of successful, -1 otherwise. 
+   * @return 0 if successful, !=0 otherwise (TODO). 
    */
-  int RandSketchingFWHT::setup(index_type n, index_type k)
+  int RandomSketchingFWHTCuda::setup(index_type n, index_type k)
   {
     k_rand_ = k;
     n_ = n;
@@ -177,21 +137,14 @@ namespace ReSolve
       }
     }
 
-    using namespace memory;
-   
-    switch (memspace_) {
-      case DEVICE:
-        mem_.allocateArrayOnDevice(&d_perm_, k_rand_); 
-        mem_.allocateArrayOnDevice(&d_D_, n_); 
-        mem_.allocateArrayOnDevice(&d_aux_, N_); 
-        //then copy
-        mem_.copyArrayHostToDevice(d_perm_, h_perm_, k_rand_);
-        mem_.copyArrayHostToDevice(d_D_, h_D_, n_);
-        break;
-      case HOST:
-        d_aux_  = new real_type[N_];
-        break;
-    }
+    // allocate on device
+    mem_.allocateArrayOnDevice(&d_perm_, k_rand_); 
+    mem_.allocateArrayOnDevice(&d_D_, n_); 
+    mem_.allocateArrayOnDevice(&d_aux_, N_); 
+    // then copy
+    mem_.copyArrayHostToDevice(d_perm_, h_perm_, k_rand_);
+    mem_.copyArrayHostToDevice(d_D_, h_D_, n_);
+
     return 0;
   }
 
@@ -201,13 +154,13 @@ namespace ReSolve
    * Sketching can be reset, similar to Krylov method restarts.
    * If the solver restarts, call this method between restarts.
    *
-   * @post Everything is set up so you call call Theta.
+   * @post Everything is set up so you can call Theta.
    *
-   * @return 0 of successful, -1 otherwise.
+   * @return 0 if successful, !=0 otherwise (TODO). 
    * 
    * @todo Need to be fixed, this can be done on the GPU.
    */
-  int RandSketchingFWHT::reset()
+  int RandomSketchingFWHTCuda::reset()
   {
     srand(static_cast<unsigned>(time(nullptr)));
 
@@ -216,7 +169,8 @@ namespace ReSolve
 
     for (int i = 0; i < N_; ++i) {
       h_seq_[i] = i;
-    } 
+    }
+
     //Fisher-Yates
     for (int i = N_ - 1; i > 0; i--) {
       r = rand() % i; 
@@ -238,16 +192,9 @@ namespace ReSolve
       }
     }
 
-    //and copy
-
-    using namespace memory;
-   
-    if (memspace_ == memory::DEVICE) {
-      mem_.copyArrayHostToDevice(d_perm_, h_perm_, k_rand_);
-      mem_.copyArrayHostToDevice(d_D_, h_D_, n_);
-
-      mem_.deviceSynchronize();
-    }
+    mem_.copyArrayHostToDevice(d_perm_, h_perm_, k_rand_);
+    mem_.copyArrayHostToDevice(d_D_, h_D_, n_);
+    mem_.deviceSynchronize();
 
     return 0;
   }

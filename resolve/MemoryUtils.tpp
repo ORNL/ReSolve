@@ -53,6 +53,13 @@ namespace ReSolve
     
     template <class Policy>
     template <typename I, typename T>
+    int MemoryUtils<Policy>::setArrayToConstOnDevice(T* v, T c, I n)
+    {
+      return Policy::template setArrayToConstOnDevice<I, T>(v, c, n);
+    }
+    
+    template <class Policy>
+    template <typename I, typename T>
     int MemoryUtils<Policy>::copyArrayDeviceToHost(T* dst, const T* src, I n)
     {
       return Policy::template copyArrayDeviceToHost<I, T>(dst, src, n);

@@ -1,3 +1,9 @@
+/**
+ * @file LinSolverIterativeFGMRES.cpp
+ * @author Kasia Swirydowicz (kasia.swirydowicz@pnnl.gov)
+ * @brief Implementation of LinSolverIterativeFGMRES class
+ * 
+ */
 #include <iostream>
 #include <cassert>
 #include <cmath>
@@ -52,16 +58,14 @@ namespace ReSolve
 
   LinSolverIterativeFGMRES::~LinSolverIterativeFGMRES()
   {
-    if (d_V_ != nullptr) {
-      // cudaFree(d_V_);
+    if (is_solver_set_) {
+      delete [] h_H_ ;
+      delete [] h_c_ ;
+      delete [] h_s_ ;
+      delete [] h_rs_;
       delete d_V_;   
+      delete d_Z_;
     }
-
-    if (d_Z_ != nullptr) {
-      //      cudaFree(d_Z_);
-      delete d_Z_;   
-    }
-
   }
 
   int LinSolverIterativeFGMRES::setup(matrix::Sparse* A)
@@ -82,6 +86,8 @@ namespace ReSolve
     h_c_  = new real_type[restart_];      // needed for givens
     h_s_  = new real_type[restart_];      // same
     h_rs_ = new real_type[restart_ + 1]; // for residual norm history
+
+    is_solver_set_ = true;
 
     return 0;
   }
@@ -241,7 +247,7 @@ namespace ReSolve
           vector_handler_->axpy(&h_rs_[j], vec_z, x, memspace_);
         }
       } else {
-        mem_.setZeroArrayOnDevice(d_Z_->getData(memspace_), d_Z_->getSize());
+        d_Z_->setToZero(memspace_);
         vec_z->setData( d_Z_->getVectorData(0, memspace_), memspace_);
         for(j = 0; j <= i; j++) {
           vec_v->setData( d_V_->getVectorData(j, memspace_), memspace_);

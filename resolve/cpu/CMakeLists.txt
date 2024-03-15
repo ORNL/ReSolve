@@ -7,13 +7,10 @@
 ]]
 
 set(ReSolve_CPU_SRC
-    cpuVectorKernels.cpp
-    cpuKernels.cpp
     MemoryUtils.cpp
 )
 
 set(ReSolve_CPU_HEADER_INSTALL
-    cpuKernels.h
     CpuMemory.hpp
 )
 

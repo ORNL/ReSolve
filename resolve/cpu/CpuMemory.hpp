@@ -100,6 +100,21 @@ namespace ReSolve
        * @return Allways return failure!
        */
       template <typename I, typename T>
+      static int setArrayToConstOnDevice(T* /* v */, T /* c */, I /* n */)
+      {
+        ReSolve::io::Logger::error() << "Trying to initialize array on a GPU device, but GPU support not available.\n";
+        return -1;
+      }
+
+      /** 
+       * @brief Dummy function to notify us something is wrong.
+       * 
+       * This will be called only if GPU device support is not built, so
+       * trying to access a device should indicate a bug in the code.
+       *
+       * @return Allways return failure!
+       */
+      template <typename I, typename T>
       static int copyArrayDeviceToHost(T* /* dst */, const T* /* src */, I /* n */)
       {
         ReSolve::io::Logger::error() << "Trying to copy from a GPU device, but GPU support not available.\n";

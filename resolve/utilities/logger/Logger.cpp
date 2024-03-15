@@ -68,11 +68,11 @@ namespace ReSolve
     /**
      * @brief Delivers default values for output streams.
      */
-    std::vector<std::ostream*>&& Logger::init()
+    std::vector<std::ostream*>& Logger::init()
     {
       tmp_.resize(Logger::EVERYTHING + 1);
       updateVerbosity(tmp_);
-      return std::move(tmp_);
+      return tmp_;
     }
 
     /**
