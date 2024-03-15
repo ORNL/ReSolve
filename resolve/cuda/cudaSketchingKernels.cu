@@ -229,7 +229,7 @@ namespace ReSolve
     /**
      * @brief Kernel wrapper for 
      * 
-     * @param[in]  n      - 
+     * @param[in]  n      - (unsketched ) vector lenght
      * @param[in]  k      - 
      * @param[in]  labels - 
      * @param[in]  flip   -
