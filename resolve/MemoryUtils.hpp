@@ -9,7 +9,7 @@ namespace ReSolve
   {
     enum MemorySpace{HOST = 0, DEVICE};
     enum MemoryDirection{HOST_TO_HOST = 0, HOST_TO_DEVICE, DEVICE_TO_HOST, DEVICE_TO_DEVICE};
-    enum DeviceType{NONE=0, CUDADEVICE, HIPDEVICE};
+    enum DeviceType{NONE = 0, CUDADEVICE, HIPDEVICE};
   }
 }
 
