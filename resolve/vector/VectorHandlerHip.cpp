@@ -240,7 +240,7 @@ namespace ReSolve {
       rocblas_dgemm(handle_rocblas,
                     rocblas_operation_transpose,
                     rocblas_operation_none,
-                    k + 1,   //m
+                    k,   //m
                     2,       //n
                     size,    //k
                     &ONE,   //alpha
@@ -250,7 +250,7 @@ namespace ReSolve {
                     size,    //ldb
                     &ZERO,
                     res->getData(memory::DEVICE),     //c
-                    k + 1);  //ldc 
+                    k);  //ldc 
     
     }
   }
