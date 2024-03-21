@@ -171,6 +171,12 @@ namespace ReSolve
     return flexible_;
   }
 
+  int LinSolverIterative::setOrthogonalization(GramSchmidt* gs)
+  {
+    out::error() << "Solver does not implement setting orthogonalization.\n";
+    return 1;
+  }
+
   void  LinSolverIterative::setTol(real_type new_tol)
   {
     this->tol_ = new_tol;

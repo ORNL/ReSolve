@@ -455,6 +455,12 @@ namespace ReSolve
     return 0;
   }
 
+  int LinSolverIterativeRandFGMRES::setOrthogonalization(GramSchmidt* gs)
+  {
+    GS_ = gs;
+    return 0;
+  }
+
   //
   // Private methods
   //

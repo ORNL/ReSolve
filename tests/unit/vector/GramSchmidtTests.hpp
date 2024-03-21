@@ -68,7 +68,7 @@ namespace ReSolve {
           ReSolve::VectorHandler* handler = createVectorHandler();
 
           vector::Vector* V = new vector::Vector(N, 3); // we will be using a space of 3 vectors
-          real_type* H = new real_type[6]; //in this case, Hessenberg matrix is 3 x 2
+          real_type* H = new real_type[9]; // In this case, Hessenberg matrix is NOT 3 x 2 ???
           real_type* aux_data; // needed for setup
 
           V->allocate(ms);

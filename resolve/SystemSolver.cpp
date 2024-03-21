@@ -758,10 +758,8 @@ namespace ReSolve
 
   int SystemSolver::setGramSchmidtMethod(std::string gsMethod)
   {
-    if (gs_ != nullptr)
-      delete gs_;
-
-    if (gsMethod == "none") {
+    if (gs_ != nullptr) {
+      gs_->setVariant(gsMethod);
       return 0;
     }
 

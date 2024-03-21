@@ -21,6 +21,8 @@ namespace ReSolve
 
   // Forward declaration of MatrixHandler class
   class MatrixHandler;
+  
+  class GramSchmidt;
 
   class LinSolver 
   {
@@ -97,6 +99,7 @@ namespace ReSolve
       virtual real_type getInitResidualNorm() const;
       virtual index_type getNumIter() const;
 
+      virtual int setOrthogonalization(GramSchmidt* gs);
 
       real_type getTol();
       index_type getMaxit();

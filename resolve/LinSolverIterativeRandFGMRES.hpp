@@ -60,6 +60,7 @@ namespace ReSolve
       int setup(matrix::Sparse* A) override;
       int resetMatrix(matrix::Sparse* new_A) override; 
       int setupPreconditioner(std::string name, LinSolverDirect* LU_solver) override;
+      int setOrthogonalization(GramSchmidt* gs) override;
 
       index_type getKrand();
       int setSketchingMethod(std::string method);
