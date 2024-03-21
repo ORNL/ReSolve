@@ -48,32 +48,6 @@ namespace ReSolve
     return 0;  
   }
 
-  int GramSchmidt::setVariant(std::string variant)
-  {
-    if (setup_complete_) {
-      freeGramSchmidtData();
-      setup_complete_ = false;
-    }
-
-    if (variant == "cgs2") {
-      variant_ = GramSchmidt::cgs2;
-    } else if (variant == "mgs") {
-      variant_ = GramSchmidt::mgs;
-    } else if (variant == "mgs_two_synch") {
-      variant_ = GramSchmidt::mgs_two_synch;
-    } else if (variant == "mgs_pm") {
-      variant_ = GramSchmidt::mgs_pm;
-    } else if (variant == "cgs1") {
-      variant_ = GramSchmidt::cgs1;
-    } else {
-      out::warning() << "Gram-Schmidt variant " << variant << " not recognized.\n";
-      out::warning() << "Using default cgs2 Gram-Schmidt variant.\n";
-      variant_ = GramSchmidt::cgs2;
-    }
-
-    return 0;  
-  }
-
   GramSchmidt::GSVariant GramSchmidt::getVariant()
   {
     return variant_;  

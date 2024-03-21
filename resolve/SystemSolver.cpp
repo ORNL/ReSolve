@@ -756,28 +756,30 @@ namespace ReSolve
   // Private methods
   //
 
-  int SystemSolver::setGramSchmidtMethod(std::string gsMethod)
+  int SystemSolver::setGramSchmidtMethod(std::string variant)
   {
-    if (gs_ != nullptr) {
-      gs_->setVariant(gsMethod);
-      return 0;
+    // Map string input to the Gram-Schmidt variant enum
+    GramSchmidt::GSVariant gs_variant;
+    if (variant == "cgs2") {
+      gs_variant = GramSchmidt::cgs2;
+    } else if (variant == "mgs") {
+      gs_variant = GramSchmidt::mgs;
+    } else if (variant == "mgs_two_synch") {
+      gs_variant = GramSchmidt::mgs_two_synch;
+    } else if (variant == "mgs_pm") {
+      gs_variant = GramSchmidt::mgs_pm;
+    } else if (variant == "cgs1") {
+      gs_variant = GramSchmidt::cgs1;
+    } else {
+      out::warning() << "Gram-Schmidt variant " << variant << " not recognized.\n";
+      out::warning() << "Using default cgs2 Gram-Schmidt variant.\n";
+      gs_variant = GramSchmidt::cgs2;
     }
 
-    if (gsMethod == "cgs2") {
-      gs_ = new GramSchmidt(vectorHandler_, GramSchmidt::cgs2);
-    } else if (gsMethod == "mgs") {
-      gs_ = new GramSchmidt(vectorHandler_, GramSchmidt::mgs);
-    } else if (gsMethod == "mgs_two_synch") {
-      gs_ = new GramSchmidt(vectorHandler_, GramSchmidt::mgs_two_synch);
-    } else if (gsMethod == "mgs_pm") {
-      gs_ = new GramSchmidt(vectorHandler_, GramSchmidt::mgs_pm);
-    } else if (gsMethod == "cgs1") {
-      gs_ = new GramSchmidt(vectorHandler_, GramSchmidt::cgs1);
+    if (gs_) {
+      gs_->setVariant(gs_variant);
     } else {
-      out::warning() << "Gram-Schmidt variant " << gsMethod_ << " not recognized.\n";
-      out::warning() << "Using default cgs2 Gram-Schmidt variant.\n";
-      gs_ = new GramSchmidt(vectorHandler_, GramSchmidt::cgs2);
-      gsMethod_ = "cgs2";
+      gs_ = new GramSchmidt(vectorHandler_, gs_variant);
     }
 
     return 0;

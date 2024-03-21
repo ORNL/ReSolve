@@ -20,7 +20,6 @@ namespace ReSolve
       GramSchmidt(VectorHandler* vh, GSVariant variant);
       ~GramSchmidt();
       int setVariant(GramSchmidt::GSVariant variant);
-      int setVariant(std::string variant);
       GSVariant  getVariant();
       real_type* getL(); //only for low synch, returns null ptr otherwise 
 
