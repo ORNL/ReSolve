@@ -10,7 +10,7 @@ namespace ReSolve
   {
       using vector_type = vector::Vector;
     public:
-      enum GSVariant { mgs = 0, 
+      enum GSVariant {mgs = 0, 
                       cgs2 = 1,
                       mgs_two_synch = 2, 
                       mgs_pm = 3, 

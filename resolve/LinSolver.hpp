@@ -36,12 +36,12 @@ namespace ReSolve
       real_type evaluateResidual();
         
     protected:  
-      matrix::Sparse* A_;
-      real_type* rhs_;
-      real_type* sol_;
+      matrix::Sparse* A_{nullptr};
+      real_type* rhs_{nullptr};
+      real_type* sol_{nullptr};
 
-      MatrixHandler* matrix_handler_;
-      VectorHandler* vector_handler_;
+      MatrixHandler* matrix_handler_{nullptr};
+      VectorHandler* vector_handler_{nullptr};
   };
 
   class LinSolverDirect : public LinSolver 
@@ -109,7 +109,7 @@ namespace ReSolve
 
       void setTol(real_type new_tol);
       void setMaxit(index_type new_maxit);
-      void setRestart(index_type new_restart);
+      virtual int setRestart(index_type new_restart) = 0;
       void setConvCond(index_type new_conv_cond);
       void setFlexible(bool new_flexible);
 

@@ -133,16 +133,17 @@ int test(int argc, char *argv[])
   if (method == "randgmres") {
     solver.setSketchingMethod(sketch);
   }
-  solver.getIterativeSolver().setRestart(200);
   solver.getIterativeSolver().setMaxit(2500);
   solver.getIterativeSolver().setTol(tol);
-  solver.getIterativeSolver().setFlexible(flexible);
 
   matrix_handler.setValuesChanged(true, memspace);
 
   // Set system matrix and initialize iterative solver
   status = solver.setMatrix(A);
   error_sum += status;
+
+  solver.getIterativeSolver().setRestart(200);
+  solver.getIterativeSolver().setFlexible(flexible);
 
   // Set preconditioner (default in this case ILU0)
   status = solver.preconditionerSetup();

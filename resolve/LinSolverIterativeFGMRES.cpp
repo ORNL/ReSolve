@@ -59,35 +59,40 @@ namespace ReSolve
   LinSolverIterativeFGMRES::~LinSolverIterativeFGMRES()
   {
     if (is_solver_set_) {
-      delete [] h_H_ ;
-      delete [] h_c_ ;
-      delete [] h_s_ ;
-      delete [] h_rs_;
-      delete d_V_;   
-      delete d_Z_;
+      freeSolverData();
     }
   }
 
+  /**
+   * @brief Set pointer to system matrix and allocate solver data.
+   * 
+   * @param[in] A - Sparse system matrix
+   * 
+   * @pre A is a valid sparse matrix
+   * 
+   * @post A_ == A
+   * @post Solver data allocated. 
+   */
   int LinSolverIterativeFGMRES::setup(matrix::Sparse* A)
   {
-    this->A_ = A;
-    n_ = A_->getNumRows();
-
-    d_V_ = new vector_type(n_, restart_ + 1);
-    d_V_->allocate(memspace_);      
-    if (flexible_) {
-      d_Z_ = new vector_type(n_, restart_ + 1);
-    } else {
-      // otherwise Z is just a one vector, not multivector and we dont keep it
-      d_Z_ = new vector_type(n_);
+    // If A_ is already set, then report error and exit.
+    if (n_ != A->getNumRows()) {
+      if (is_solver_set_) {
+        out::warning() << "Matrix size changed. Reallocating solver ...\n";
+        freeSolverData();
+        is_solver_set_ = false;
+      }
     }
-    d_Z_->allocate(memspace_);      
-    h_H_  = new real_type[restart_ * (restart_ + 1)];
-    h_c_  = new real_type[restart_];      // needed for givens
-    h_s_  = new real_type[restart_];      // same
-    h_rs_ = new real_type[restart_ + 1]; // for residual norm history
 
-    is_solver_set_ = true;
+    // Set pointer to matrix A and the matrix size.
+    A_ = A;
+    n_ = A->getNumRows();
+
+    // Allocate solver data.
+    if (!is_solver_set_) {
+      allocateSolverData();
+      is_solver_set_ = true;
+    }
 
     return 0;
   }
@@ -100,15 +105,15 @@ namespace ReSolve
     
     int outer_flag = 1;
     int notconv = 1; 
-    int i = 0;
+    int i  = 0;
     int it = 0;
-    int j;
-    int k;
-    int k1;
+    int j  = 0;
+    int k  = 0;
+    int k1 = 0;
 
-    real_type t;
-    real_type rnorm;
-    real_type bnorm;
+    real_type t = 0.0;
+    real_type rnorm = 0.0;
+    real_type bnorm = 0.0;
     // real_type rnorm_aux;
     real_type tolrel;
     vector_type* vec_v = new vector_type(n_);
@@ -189,17 +194,17 @@ namespace ReSolve
         // orthogonalize V[i+1], form a column of h_H_
 
         GS_->orthogonalize(n_, d_V_, h_H_, i);
-        if(i != 0) {
-          for(int k = 1; k <= i; k++) {
+        if (i != 0) {
+          for (index_type k = 1; k <= i; k++) {
             k1 = k - 1;
             t = h_H_[i * (restart_ + 1) + k1];
             h_H_[i * (restart_ + 1) + k1] = h_c_[k1] * t + h_s_[k1] * h_H_[i * (restart_ + 1) + k];
             h_H_[i * (restart_ + 1) + k] = -h_s_[k1] * t + h_c_[k1] * h_H_[i * (restart_ + 1) + k];
           }
         } // if i!=0
-        double Hii = h_H_[i * (restart_ + 1) + i];
-        double Hii1 = h_H_[(i) * (restart_ + 1) + i + 1];
-        double gam = sqrt(Hii * Hii + Hii1 * Hii1);
+        real_type Hii = h_H_[i * (restart_ + 1) + i];
+        real_type Hii1 = h_H_[(i) * (restart_ + 1) + i + 1];
+        real_type gam = sqrt(Hii * Hii + Hii1 * Hii1);
 
         if(fabs(gam - ZERO) <= EPSILON) {
           gam = EPSMAC;
@@ -211,16 +216,16 @@ namespace ReSolve
         h_rs_[i + 1] = -h_s_[i] * h_rs_[i];
         h_rs_[i] = h_c_[i] * h_rs_[i];
 
-        h_H_[(i) * (restart_ + 1) + (i)] = h_c_[i] * Hii + h_s_[i] * Hii1;
+        h_H_[(i) * (restart_ + 1) + (i)]     = h_c_[i] * Hii  + h_s_[i] * Hii1;
         h_H_[(i) * (restart_ + 1) + (i + 1)] = h_c_[i] * Hii1 - h_s_[i] * Hii;
 
         // residual norm estimate
         rnorm = fabs(h_rs_[i + 1]);
-        io::Logger::misc() << "it: "<<it<< " --> norm of the residual "
+        io::Logger::misc() << "it: " << it << " --> norm of the residual "
                            << std::scientific << std::setprecision(16)
                            << rnorm << "\n";
         // check convergence
-        if(i + 1 >= restart_ || rnorm <= tolrel || it >= maxit_) {
+        if (i + 1 >= restart_ || rnorm <= tolrel || it >= maxit_) {
           notconv = 0;
         }
       } // inner while
@@ -234,7 +239,7 @@ namespace ReSolve
         k = i - ii + 1;
         k1 = k + 1;
         t = h_rs_[k];
-        for(j = k1; j <= i; j++) {
+        for (j = k1; j <= i; j++) {
           t -= h_H_[j * (restart_ + 1) + k] * h_rs_[j];
         }
         h_rs_[k] = t / h_H_[k * (restart_ + 1) + k];
@@ -242,14 +247,14 @@ namespace ReSolve
 
       // get solution
       if (flexible_) {
-        for(j = 0; j <= i; j++) {
+        for (j = 0; j <= i; j++) {
           vec_z->setData( d_Z_->getVectorData(j, memspace_), memspace_);
           vector_handler_->axpy(&h_rs_[j], vec_z, x, memspace_);
         }
       } else {
         d_Z_->setToZero(memspace_);
         vec_z->setData( d_Z_->getVectorData(0, memspace_), memspace_);
-        for(j = 0; j <= i; j++) {
+        for (j = 0; j <= i; j++) {
           vec_v->setData( d_V_->getVectorData(j, memspace_), memspace_);
           vector_handler_->axpy(&h_rs_[j], vec_v, vec_z, memspace_);
         }
@@ -299,6 +304,11 @@ namespace ReSolve
 
   int  LinSolverIterativeFGMRES::resetMatrix(matrix::Sparse* new_matrix)
   {
+    // if (n_ != new_matrix->getNumRows()) {
+    //   out::error() << "New matrix has different size. Use setup function instead.\n";
+    //   A_ = nullptr;
+    //   return 1;
+    // }
     A_ = new_matrix;
     matrix_handler_->setValuesChanged(true, memspace_);
     return 0;
@@ -310,11 +320,89 @@ namespace ReSolve
     return 0;
   }
 
+  int LinSolverIterativeFGMRES::setRestart(index_type restart)
+  {
+    if (restart_ == restart) {
+      return 0;
+    }
+
+    // Set new restart value
+    restart_ = restart;
+
+    // If solver is already set, reallocate solver data
+    if (is_solver_set_) {
+      freeSolverData();
+      allocateSolverData();
+    }
+
+    matrix_handler_->setValuesChanged(true, memspace_);
+
+    GS_->setup(n_, restart_);
+
+    return 0;
+  }
+
+  int LinSolverIterativeFGMRES::setFlexible(bool is_flexible)
+  {
+    // TODO: Add vector method resize
+    if (d_Z_) {
+      delete d_Z_;
+      if (is_flexible) {
+        d_Z_ = new vector_type(n_, restart_ + 1);
+      } else {
+        // otherwise Z is just a one vector, not multivector and we dont keep it
+        d_Z_ = new vector_type(n_);
+      }
+      d_Z_->allocate(memspace_); 
+    }
+    flexible_ = is_flexible;
+    matrix_handler_->setValuesChanged(true, memspace_);
+    return 0;
+  }
+
   //
   // Private methods
   //
 
-  void  LinSolverIterativeFGMRES::precV(vector_type* rhs, vector_type* x)
+  int LinSolverIterativeFGMRES::allocateSolverData()
+  {
+    d_V_ = new vector_type(n_, restart_ + 1);
+    d_V_->allocate(memspace_);      
+    if (flexible_) {
+      d_Z_ = new vector_type(n_, restart_ + 1);
+    } else {
+      // otherwise Z is just a one vector, not multivector and we dont keep it
+      d_Z_ = new vector_type(n_);
+    }
+    d_Z_->allocate(memspace_);
+    h_H_  = new real_type[restart_ * (restart_ + 1)];
+    h_c_  = new real_type[restart_];      // needed for givens
+    h_s_  = new real_type[restart_];      // same
+    h_rs_ = new real_type[restart_ + 1];  // for residual norm history
+
+    return 0;
+  }
+
+  int LinSolverIterativeFGMRES::freeSolverData()
+  {
+    delete [] h_H_ ;
+    delete [] h_c_ ;
+    delete [] h_s_ ;
+    delete [] h_rs_;
+    delete d_V_;   
+    delete d_Z_;
+
+    h_H_  = nullptr;
+    h_c_  = nullptr;
+    h_s_  = nullptr;
+    h_rs_ = nullptr;
+    d_V_  = nullptr;
+    d_Z_  = nullptr;
+
+    return 0;
+  }
+
+  void LinSolverIterativeFGMRES::precV(vector_type* rhs, vector_type* x)
   { 
     LU_solver_->solve(rhs, x);
   }
@@ -338,4 +426,4 @@ namespace ReSolve
     }
   }
 
-}//namespace
+} // namespace

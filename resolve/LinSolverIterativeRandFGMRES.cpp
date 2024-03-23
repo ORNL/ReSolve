@@ -265,7 +265,7 @@ namespace ReSolve
           vector_handler_->scal(&one_over_k_, vec_s, memspace_);
         }
         mem_.deviceSynchronize();
-        GS_->orthogonalize(k_rand_, d_S_, h_H_, i); //, memspace_);  
+        GS_->orthogonalize(k_rand_, d_S_, h_H_, i);
         // now post-process
         if (memspace_ == memory::DEVICE) {
           mem_.copyArrayHostToDevice(d_aux_, &h_H_[i * (restart_ + 1)], i + 2);
@@ -343,17 +343,16 @@ namespace ReSolve
           vector_handler_->axpy(&h_rs_[j], vec_z, x, memspace_);
         }
       } else {
-        if (memspace_ == memory::DEVICE) {
-          mem_.setZeroArrayOnDevice(d_Z_->getData(memspace_), d_Z_->getSize());
-        } else {
-          std::memset(d_Z_->getData(memspace_), 0.0, static_cast<size_t>(d_Z_->getSize()) * sizeof(real_type));
-        }
-
+        // if (memspace_ == memory::DEVICE) {
+        //   mem_.setZeroArrayOnDevice(d_Z_->getData(memspace_), d_Z_->getSize());
+        // } else {
+        //   std::memset(d_Z_->getData(memspace_), 0.0, static_cast<size_t>(d_Z_->getSize()) * sizeof(real_type));
+        // }
+        d_Z_->setToZero(0, memspace_);
         vec_z->setData( d_Z_->getVectorData(0, memspace_), memspace_);
         for(j = 0; j <= i; j++) {
           vec_v->setData( d_V_->getVectorData(j, memspace_), memspace_);
           vector_handler_->axpy(&h_rs_[j], vec_v, vec_z, memspace_);
-
         }
         // now multiply d_Z by precon
 
@@ -376,11 +375,12 @@ namespace ReSolve
         sketching_handler_->reset();
 
         if (sketching_method_ == cs) {
-          if (memspace_ == memory::DEVICE) {
-            mem_.setZeroArrayOnDevice(d_S_->getData(memspace_), d_S_->getSize() * d_S_->getNumVectors());
-          } else {
-            std::memset(d_S_->getData(memspace_), 0.0, static_cast<size_t>(d_S_->getSize()) * sizeof(real_type) * static_cast<size_t>(d_S_->getNumVectors()));
-          }
+          d_S_->setToZero(memspace_);
+          // if (memspace_ == memory::DEVICE) {
+          //   mem_.setZeroArrayOnDevice(d_S_->getData(memspace_), d_S_->getSize() * d_S_->getNumVectors());
+          // } else {
+          //   std::memset(d_S_->getData(memspace_), 0.0, static_cast<size_t>(d_S_->getSize()) * sizeof(real_type) * static_cast<size_t>(d_S_->getNumVectors()));
+          // }
         }
         vec_v->setData( d_V_->getVectorData(0, memspace_), memspace_);
         vec_s->setData( d_S_->getVectorData(0, memspace_), memspace_);
@@ -458,6 +458,12 @@ namespace ReSolve
   int LinSolverIterativeRandFGMRES::setOrthogonalization(GramSchmidt* gs)
   {
     GS_ = gs;
+    return 0;
+  }
+
+  int LinSolverIterativeRandFGMRES::setRestart(index_type new_restart)
+  {
+    restart_ = new_restart;
     return 0;
   }
 

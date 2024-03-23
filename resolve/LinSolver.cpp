@@ -187,10 +187,10 @@ namespace ReSolve
     this->maxit_ = new_maxit;
   }
 
-  void  LinSolverIterative::setRestart(index_type new_restart)
-  {
-    this->restart_ = new_restart;
-  }
+  // void  LinSolverIterative::setRestart(index_type new_restart)
+  // {
+  //   this->restart_ = new_restart;
+  // }
 
   void  LinSolverIterative::setConvCond(index_type new_conv_cond)
   {

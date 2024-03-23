@@ -66,34 +66,38 @@ namespace ReSolve
   int GramSchmidt::setup(index_type n, index_type restart)
   {
     if (setup_complete_) {
-      return 1; // display some nasty comment too
-    } else {
-      vec_w_ = new vector_type(n);
-      vec_v_ = new vector_type(n);
-      this->num_vecs_ = restart;
-      if(variant_ == mgs_two_synch || variant_ == mgs_pm) {
-        h_L_  = new real_type[num_vecs_ * (num_vecs_ + 1)];
-        h_rv_ = new real_type[num_vecs_ + 1];
+      if ((vec_v_->getSize() != n) || (num_vecs_ != restart)) {
+        freeGramSchmidtData();
+        setup_complete_ = false;
+      }
+    }
 
-        vec_rv_ = new vector_type(num_vecs_ + 1, 2);
-        vec_rv_->allocate(memspace_);      
+    vec_w_ = new vector_type(n);
+    vec_v_ = new vector_type(n);
 
-        vec_Hcolumn_ = new vector_type(num_vecs_ + 1);
-        vec_Hcolumn_->allocate(memspace_);      
-      }
-      if(variant_ == cgs2) {
-        h_aux_ = new real_type[num_vecs_ + 1];
-        vec_Hcolumn_ = new vector_type(num_vecs_ + 1);
-        vec_Hcolumn_->allocate(memspace_);      
-      }
-      if(variant_ == cgs1) {
-        vec_Hcolumn_ = new vector_type(num_vecs_ + 1);
-        vec_Hcolumn_->allocate(memspace_);      
-      }
-      if(variant_ == mgs_pm) {
-        h_aux_ = new real_type[num_vecs_ + 1];
-      }
-    }  
+    num_vecs_ = restart;
+    if((variant_ == mgs_two_synch) || (variant_ == mgs_pm)) {
+      h_L_  = new real_type[num_vecs_ * (num_vecs_ + 1)];
+      h_rv_ = new real_type[num_vecs_ + 1];
+
+      vec_rv_ = new vector_type(num_vecs_ + 1, 2);
+      vec_rv_->allocate(memspace_);      
+
+      vec_Hcolumn_ = new vector_type(num_vecs_ + 1);
+      vec_Hcolumn_->allocate(memspace_);      
+    }
+    if(variant_ == cgs2) {
+      h_aux_ = new real_type[num_vecs_ + 1];
+      vec_Hcolumn_ = new vector_type(num_vecs_ + 1);
+      vec_Hcolumn_->allocate(memspace_);      
+    }
+    if(variant_ == cgs1) {
+      vec_Hcolumn_ = new vector_type(num_vecs_ + 1);
+      vec_Hcolumn_->allocate(memspace_);      
+    }
+    if(variant_ == mgs_pm) {
+      h_aux_ = new real_type[num_vecs_ + 1];
+    }
 
     return 0;
   }
@@ -351,28 +355,38 @@ namespace ReSolve
   int GramSchmidt::freeGramSchmidtData()
   {
     if(variant_ == mgs_two_synch || variant_ == mgs_pm) {    
-      delete h_L_;    
-      delete h_rv_;    
+      delete h_L_;
+      h_L_ = nullptr;
+      delete h_rv_;
+      h_rv_ = nullptr;  
 
-      delete vec_rv_;    
-      delete vec_Hcolumn_;;    
+      delete vec_rv_;
+      vec_rv_ = nullptr;
+      delete vec_Hcolumn_;
+      vec_Hcolumn_ = nullptr;
     }
 
     if (variant_ == cgs2) {
       delete h_aux_;
+      h_aux_ = nullptr;
       delete vec_Hcolumn_;    
+      vec_Hcolumn_ = nullptr;
     }    
 
     if (variant_ == cgs1) {
       delete vec_Hcolumn_;    
+      vec_Hcolumn_ = nullptr;
     }    
 
     if (variant_ == mgs_pm) {
       delete h_aux_;
+      h_aux_ = nullptr;
     }
 
     delete vec_w_;
-    delete vec_v_;   
+    vec_w_ = nullptr;
+    delete vec_v_;
+    vec_v_ = nullptr;
 
     return 0;
   }
