@@ -740,15 +740,29 @@ namespace ReSolve
       out::warning() << "The setting will be ignored.\n";
       return 1;
     }
-    if (sketching_method_ != sketching_method) {
-      // For now use a brute force solution and just delete existing iterative solver
-      if (iterativeSolver_) {
-        delete iterativeSolver_;
-        iterativeSolver_ = nullptr;
-      }
-      sketching_method_ = sketching_method;
-      setSolveMethod("randgmres");
+
+    LinSolverIterativeRandFGMRES::SketchingMethod tmp;
+    if (sketching_method == "count") {
+      tmp = LinSolverIterativeRandFGMRES::cs;
+      // sketching_method_ = LinSolverIterativeRandFGMRES::cs;
+    } else if (sketching_method == "fwht") {
+      tmp = LinSolverIterativeRandFGMRES::fwht;
+      // sketching_method_ = LinSolverIterativeRandFGMRES::fwht;
+    } else {
+      out::warning() << "Sketching method " << sketching_method << " not recognized!\n"
+                     << "Using default (count sketch).\n";
+      tmp = LinSolverIterativeRandFGMRES::cs;
     }
+
+    sketching_method_ = sketching_method;
+
+    // At this point iterative solver, if created, can only be LinSolverIterativeRandFGMRES
+    if (iterativeSolver_) {
+      // TODO: Use cast here as a temporary solution; will be replaced by parameter setting framework
+      auto* sol = dynamic_cast<LinSolverIterativeRandFGMRES*>(iterativeSolver_);
+      sol->setSketchingMethod(tmp);
+    }
+    
     return 0;
   }
 

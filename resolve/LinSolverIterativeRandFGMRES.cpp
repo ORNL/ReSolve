@@ -73,82 +73,32 @@ namespace ReSolve
   LinSolverIterativeRandFGMRES::~LinSolverIterativeRandFGMRES()
   {
     if (is_solver_set_) {
-      delete [] h_H_ ;
-      delete [] h_c_ ;
-      delete [] h_s_ ;
-      delete [] h_rs_;
-      if (memspace_ == memory::DEVICE) { 
-        mem_.deleteOnDevice(d_aux_);
-      } else {
-        delete [] d_aux_;
-      }
-      delete d_V_;   
-      delete d_Z_;
-      delete d_S_;
-      delete sketching_handler_;
+      freeSolverData();
+      is_solver_set_ = false;
+    }
+
+    if (is_sketching_set_) {
+      freeSketchingData();
+      is_sketching_set_ = false;
     }
   }
 
+  /**
+   * @brief Set system matrix and allocate solver and sketching data
+   * 
+   * @param[in] A - sparse system matrix
+   * @return 0 if setup successful 
+   */
   int LinSolverIterativeRandFGMRES::setup(matrix::Sparse* A)
   {
-    this->A_ = A;
+    A_ = A;
     n_ = A_->getNumRows();
 
-    d_V_ = new vector_type(n_, restart_ + 1);
-    d_V_->allocate(memspace_);      
-    if (flexible_) {
-      d_Z_ = new vector_type(n_, restart_ + 1);
-    } else {
-      // otherwise Z is just one vector, not multivector and we dont keep it
-      d_Z_ = new vector_type(n_);
-    }
-    d_Z_->allocate(memspace_);   
-    h_H_  = new real_type[restart_ * (restart_ + 1)];
-    h_c_  = new real_type[restart_];      // needed for givens
-    h_s_  = new real_type[restart_];      // same
-    h_rs_ = new real_type[restart_ + 1];  // for residual norm history
-    if (memspace_ == memory::DEVICE) {
-      mem_.allocateArrayOnDevice(&d_aux_, restart_ + 1); 
-    } else {
-      d_aux_  = new real_type[restart_ + 1];
-    }
-    // Set randomized method
-    k_rand_ = n_;
-    switch (sketching_method_) {
-      case cs:
-        if (ceil(restart_ * log(n_)) < k_rand_) {
-          k_rand_ = static_cast<index_type>(std::ceil(restart_ * std::log(static_cast<real_type>(n_))));
-        }
-        sketching_handler_ = new SketchingHandler(sketching_method_, device_type_);
-        // set k and n 
-        break;
-      case fwht:
-        if (ceil(2.0 * restart_ * log(n_) / log(restart_)) < k_rand_) {
-          k_rand_ = static_cast<index_type>(std::ceil(2.0 * restart_ * std::log(n_) / std::log(restart_)));
-        }
-        sketching_handler_ = new SketchingHandler(sketching_method_, device_type_);
-        break;
-      default:
-        io::Logger::warning() << "Wrong sketching method, setting to default (CountSketch)\n"; 
-        sketching_method_ = cs;
-        if (ceil(restart_ * log(n_)) < k_rand_) {
-          k_rand_ = static_cast<index_type>(std::ceil(restart_ * std::log(n_)));
-        }
-        sketching_handler_ = new SketchingHandler(cs, device_type_);
-        break;
-    }
-
-    sketching_handler_->setup(n_, k_rand_); 
-
-    one_over_k_ = 1.0 / sqrt((real_type) k_rand_);
-
-    d_S_ = new vector_type(k_rand_, restart_ + 1);
-    d_S_->allocate(memspace_);      
-    if (sketching_method_ == cs) {
-      d_S_->setToZero(memspace_);
-    }
-
+    allocateSolverData();
     is_solver_set_ = true;
+
+    allocateSketchingData();
+    is_sketching_set_ = true;
 
     return 0;
   }
@@ -265,6 +215,7 @@ namespace ReSolve
           vector_handler_->scal(&one_over_k_, vec_s, memspace_);
         }
         mem_.deviceSynchronize();
+        std::cout << "K_rand = " << k_rand_ << "\n";
         GS_->orthogonalize(k_rand_, d_S_, h_H_, i);
         // now post-process
         if (memspace_ == memory::DEVICE) {
@@ -440,18 +391,25 @@ namespace ReSolve
    * @param[in] method - string describing sketching method 
    * @return 0 if successful, 1 otherwise.
    */
-  int LinSolverIterativeRandFGMRES::setSketchingMethod(std::string method)
+  int LinSolverIterativeRandFGMRES::setSketchingMethod(SketchingMethod method)
   {
-    if (method == "count") {
-      sketching_method_ = LinSolverIterativeRandFGMRES::cs;
-    } else if (method == "fwht") {
-      sketching_method_ = LinSolverIterativeRandFGMRES::fwht;
-    } else {
-      out::warning() << "Sketching method " << method << " not recognized!\n"
-                     << "Using default.\n";
-      sketching_method_ = LinSolverIterativeRandFGMRES::cs;
-      return 1;
+    if (is_sketching_set_) {
+      if (method == sketching_method_) {
+        out::warning() << "Keeping sketching method " << method << "\n";
+        return 0;
+      }
+      out::warning() << "Deleting sketching method " << sketching_method_ << "\n";
+      freeSketchingData();
     }
+
+    // If solver is set, go ahead and create sketching, otherwise just set sketching method.
+    sketching_method_ = method;
+    if (is_solver_set_) {
+      out::warning() << "Allocating sketching method " << sketching_method_ << "\n";
+      allocateSketchingData();
+      is_sketching_set_ = true;
+    }
+
     return 0;
   }
 
@@ -471,7 +429,111 @@ namespace ReSolve
   // Private methods
   //
 
-  void  LinSolverIterativeRandFGMRES::precV(vector_type* rhs, vector_type* x)
+  int LinSolverIterativeRandFGMRES::allocateSolverData()
+  {
+    d_V_ = new vector_type(n_, restart_ + 1);
+    d_V_->allocate(memspace_);      
+    if (flexible_) {
+      d_Z_ = new vector_type(n_, restart_ + 1);
+    } else {
+      // otherwise Z is just one vector, not multivector and we dont keep it
+      d_Z_ = new vector_type(n_);
+    }
+    d_Z_->allocate(memspace_);   
+    h_H_  = new real_type[restart_ * (restart_ + 1)];
+    h_c_  = new real_type[restart_];      // needed for givens
+    h_s_  = new real_type[restart_];      // same
+    h_rs_ = new real_type[restart_ + 1];  // for residual norm history
+    if (memspace_ == memory::DEVICE) {
+      mem_.allocateArrayOnDevice(&d_aux_, restart_ + 1); 
+    } else {
+      d_aux_  = new real_type[restart_ + 1];
+    }
+    return 0;
+  }
+
+  int LinSolverIterativeRandFGMRES::freeSolverData()
+  {
+    delete [] h_H_ ;
+    delete [] h_c_ ;
+    delete [] h_s_ ;
+    delete [] h_rs_;
+    if (memspace_ == memory::DEVICE) { 
+      mem_.deleteOnDevice(d_aux_);
+    } else {
+      delete [] d_aux_;
+    }
+    delete d_V_;   
+    delete d_Z_;
+
+    h_H_   = nullptr;
+    h_c_   = nullptr;
+    h_s_   = nullptr;
+    h_rs_  = nullptr;
+    d_aux_ = nullptr;
+    d_V_   = nullptr;
+    d_Z_   = nullptr;
+
+    return 0;
+  }
+
+  /**
+   * @brief Allocate data and instantiate sketching handler.
+   * 
+   * @pre Randomized solver data is allocated.
+   */
+  int LinSolverIterativeRandFGMRES::allocateSketchingData()
+  {
+    // Set randomized method
+    k_rand_ = n_;
+    switch (sketching_method_) {
+      case cs:
+        if (ceil(restart_ * log(n_)) < k_rand_) {
+          k_rand_ = static_cast<index_type>(std::ceil(restart_ * std::log(static_cast<real_type>(n_))));
+        }
+        sketching_handler_ = new SketchingHandler(sketching_method_, device_type_);
+        // set k and n 
+        break;
+      case fwht:
+        if (ceil(2.0 * restart_ * log(n_) / log(restart_)) < k_rand_) {
+          k_rand_ = static_cast<index_type>(std::ceil(2.0 * restart_ * std::log(n_) / std::log(restart_)));
+        }
+        sketching_handler_ = new SketchingHandler(sketching_method_, device_type_);
+        break;
+      default:
+        io::Logger::warning() << "Wrong sketching method, setting to default (CountSketch)\n"; 
+        sketching_method_ = cs;
+        if (ceil(restart_ * log(n_)) < k_rand_) {
+          k_rand_ = static_cast<index_type>(std::ceil(restart_ * std::log(n_)));
+        }
+        sketching_handler_ = new SketchingHandler(cs, device_type_);
+        break;
+    }
+
+    one_over_k_ = 1.0 / sqrt((real_type) k_rand_);
+    std::cout << "K_rand = " << k_rand_ << "; restart = " << restart_ << "\n";
+    d_S_ = new vector_type(k_rand_, restart_ + 1);
+    d_S_->allocate(memspace_);      
+    if (sketching_method_ == cs) {
+      d_S_->setToZero(memspace_);
+    }
+
+    sketching_handler_->setup(n_, k_rand_); 
+    return 0;
+  }
+
+  int LinSolverIterativeRandFGMRES::freeSketchingData()
+  {
+    delete d_S_;
+    delete sketching_handler_;
+
+    d_S_ = nullptr;
+    sketching_handler_ = nullptr;
+
+    return 0;
+  }
+
+  void LinSolverIterativeRandFGMRES::precV(vector_type* rhs, vector_type* x)
   { 
     LU_solver_->solve(rhs, x);
   }

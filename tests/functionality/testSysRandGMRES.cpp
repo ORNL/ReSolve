@@ -130,11 +130,9 @@ int test(int argc, char *argv[])
 
   // Set solver options
   real_type tol = 1e-12;
-  if (method == "randgmres") {
-    solver.setSketchingMethod(sketch);
-  }
   solver.getIterativeSolver().setMaxit(2500);
   solver.getIterativeSolver().setTol(tol);
+  solver.getIterativeSolver().setRestart(200);
 
   matrix_handler.setValuesChanged(true, memspace);
 
@@ -142,7 +140,9 @@ int test(int argc, char *argv[])
   status = solver.setMatrix(A);
   error_sum += status;
 
-  solver.getIterativeSolver().setRestart(200);
+  if (method == "randgmres") {
+    solver.setSketchingMethod(sketch);
+  }
   solver.getIterativeSolver().setFlexible(flexible);
 
   // Set preconditioner (default in this case ILU0)

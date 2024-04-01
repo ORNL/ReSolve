@@ -65,8 +65,12 @@ namespace ReSolve
       int setRestart(index_type restart) override;
 
       index_type getKrand();
-      int setSketchingMethod(std::string method);
+      int setSketchingMethod(SketchingMethod method);
     private:
+      int allocateSolverData();
+      int freeSolverData();
+      int allocateSketchingData();
+      int freeSketchingData();
       void setMemorySpace();
       void precV(vector_type* rhs, vector_type* x); ///< Apply preconditioner
 
@@ -94,5 +98,6 @@ namespace ReSolve
       SketchingMethod sketching_method_;
       memory::DeviceType device_type_{memory::NONE};
       bool is_solver_set_{false};
+      bool is_sketching_set_{false};
   };
 } // namespace ReSolve
