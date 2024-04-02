@@ -410,6 +410,8 @@ namespace ReSolve
       is_sketching_set_ = true;
     }
 
+    GS_->setup(k_rand_, restart_);
+
     return 0;
   }
 
@@ -518,7 +520,7 @@ namespace ReSolve
       d_S_->setToZero(memspace_);
     }
 
-    sketching_handler_->setup(n_, k_rand_); 
+    sketching_handler_->setup(n_, k_rand_);
     return 0;
   }
 
