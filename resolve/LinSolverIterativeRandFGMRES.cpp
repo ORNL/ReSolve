@@ -421,9 +421,35 @@ namespace ReSolve
     return 0;
   }
 
-  int LinSolverIterativeRandFGMRES::setRestart(index_type new_restart)
+  int LinSolverIterativeRandFGMRES::setRestart(index_type restart)
   {
-    restart_ = new_restart;
+    if (restart_ == restart) {
+      return 0;
+    }
+
+    // Set new restart value
+    restart_ = restart;
+
+    // If solver is already set, reallocate solver data
+    if (is_solver_set_) {
+      freeSolverData();
+      is_solver_set_ =  false;
+    }
+
+    if (is_sketching_set_) {
+      freeSketchingData();
+      is_sketching_set_ = false;
+    }
+
+    allocateSolverData();
+    is_solver_set_ = true;
+    allocateSketchingData();
+    is_sketching_set_ = true;
+
+    matrix_handler_->setValuesChanged(true, memspace_);
+
+    GS_->setup(k_rand_, restart_);
+
     return 0;
   }
 
