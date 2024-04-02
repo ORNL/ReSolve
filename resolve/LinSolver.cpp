@@ -197,10 +197,10 @@ namespace ReSolve
     this->conv_cond_ = new_conv_cond;
   }
 
-  void  LinSolverIterative::setFlexible(bool new_flex)
-  {
-    this->flexible_ = new_flex;
-  }
+  // void  LinSolverIterative::setFlexible(bool new_flex)
+  // {
+  //   this->flexible_ = new_flex;
+  // }
 }
 
 

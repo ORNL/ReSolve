@@ -63,6 +63,7 @@ namespace ReSolve
       int setOrthogonalization(GramSchmidt* gs) override;
 
       int setRestart(index_type restart) override;
+      int setFlexible(bool is_flexible) override;
 
       index_type getKrand();
       int setSketchingMethod(SketchingMethod method);

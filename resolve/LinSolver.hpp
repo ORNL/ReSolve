@@ -111,7 +111,7 @@ namespace ReSolve
       void setMaxit(index_type new_maxit);
       virtual int setRestart(index_type new_restart) = 0;
       void setConvCond(index_type new_conv_cond);
-      void setFlexible(bool new_flexible);
+      virtual int setFlexible(bool new_flexible) = 0;
 
     protected:
       real_type initial_residual_norm_;

@@ -453,6 +453,24 @@ namespace ReSolve
     return 0;
   }
 
+  int LinSolverIterativeRandFGMRES::setFlexible(bool is_flexible)
+  {
+    // TODO: Add vector method resize
+    if (d_Z_) {
+      delete d_Z_;
+      if (is_flexible) {
+        d_Z_ = new vector_type(n_, restart_ + 1);
+      } else {
+        // otherwise Z is just a one vector, not multivector and we dont keep it
+        d_Z_ = new vector_type(n_);
+      }
+      d_Z_->allocate(memspace_); 
+    }
+    flexible_ = is_flexible;
+    matrix_handler_->setValuesChanged(true, memspace_);
+    return 0;
+  }
+
   //
   // Private methods
   //

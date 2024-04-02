@@ -45,7 +45,7 @@ namespace ReSolve
       int setOrthogonalization(GramSchmidt* gs) override;
 
       int setRestart(index_type restart) override;
-      int setFlexible(bool is_flexible);
+      int setFlexible(bool is_flexible) override;
 
     private:
       int allocateSolverData();
