@@ -77,26 +77,30 @@ namespace ReSolve
 
     num_vecs_ = restart;
     if((variant_ == mgs_two_synch) || (variant_ == mgs_pm)) {
-      h_L_  = new real_type[num_vecs_ * (num_vecs_ + 1)];
-      h_rv_ = new real_type[num_vecs_ + 1];
+      h_L_  = new real_type[num_vecs_ * (num_vecs_ + 1)]();
+      h_rv_ = new real_type[num_vecs_ + 1]();
 
       vec_rv_ = new vector_type(num_vecs_ + 1, 2);
-      vec_rv_->allocate(memspace_);      
+      vec_rv_->allocate(memspace_);
+      vec_rv_->setToZero(memspace_);
 
       vec_Hcolumn_ = new vector_type(num_vecs_ + 1);
       vec_Hcolumn_->allocate(memspace_);      
+      vec_Hcolumn_->setToZero(memspace_);      
     }
     if(variant_ == cgs2) {
-      h_aux_ = new real_type[num_vecs_ + 1];
+      h_aux_ = new real_type[num_vecs_ + 1]();
       vec_Hcolumn_ = new vector_type(num_vecs_ + 1);
-      vec_Hcolumn_->allocate(memspace_);      
+      vec_Hcolumn_->allocate(memspace_);
+      vec_Hcolumn_->setToZero(memspace_);      
     }
     if(variant_ == cgs1) {
       vec_Hcolumn_ = new vector_type(num_vecs_ + 1);
       vec_Hcolumn_->allocate(memspace_);      
+      vec_Hcolumn_->setToZero(memspace_);      
     }
     if(variant_ == mgs_pm) {
-      h_aux_ = new real_type[num_vecs_ + 1];
+      h_aux_ = new real_type[num_vecs_ + 1]();
     }
 
     return 0;
@@ -106,8 +110,8 @@ namespace ReSolve
   {
     using namespace constants;
 
-    double t;
-    double s;
+    double t = 0.0;
+    double s = 0.0;
 
     switch (variant_) {
       case mgs: 
