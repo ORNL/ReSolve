@@ -34,7 +34,7 @@ using vector_type = ReSolve::vector::Vector;
 
 // Forward declarations of helper functions that create test linear system
 template <class T>
-static int test(int argc, char *argv[]);
+static int test(int argc, char* argv[]);
 static void processInputs(std::string& method, std::string& gs, std::string& sketch);
 static std::string headerInfo(const std::string& method, const std::string& gs, const std::string& sketch, bool flexible);
 static ReSolve::matrix::Csr* generateMatrix(const index_type N, ReSolve::memory::MemorySpace memspace);

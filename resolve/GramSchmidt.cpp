@@ -122,9 +122,10 @@ namespace ReSolve
         }
         t = 0.0;
         t = vector_handler_->dot(vec_w_, vec_w_, memspace_);
+        // std::cout << "Line " << __LINE__ << ": t = " << t << "\n";
         //set the last entry in Hessenberg matrix
         t = sqrt(t);
-        std::cout << "Line " << __LINE__ << ": subscript of H: " << idxmap(i, i + 1, num_vecs_ + 1) << "\n";
+        // std::cout << "Line " << __LINE__ << ": subscript of H: " << idxmap(i, i + 1, num_vecs_ + 1) << "\n";
         H[ idxmap(i, i + 1, num_vecs_ + 1) ] = t;
         if(fabs(t) > EPSILON) {
           t = 1.0/t;
@@ -169,9 +170,10 @@ namespace ReSolve
         }
 
         t = vector_handler_->dot(vec_v_, vec_v_, memspace_);  
+        // std::cout << "Line " << __LINE__ << ": t = " << t << "\n";
         //set the last entry in Hessenberg matrix
         t = sqrt(t);
-        std::cout << "Line " << __LINE__ << ": subscript of H: " << idxmap(i, i + 1, num_vecs_ + 1) << "\n";
+        // std::cout << "Line " << __LINE__ << ": subscript of H: " << idxmap(i, i + 1, num_vecs_ + 1) << "\n";
         H[ idxmap(i, i + 1, num_vecs_ + 1) ] = t; 
 
         if(fabs(t) > EPSILON) {
@@ -219,7 +221,7 @@ namespace ReSolve
         t = vector_handler_->dot(vec_w_, vec_w_, memspace_);  
         //set the last entry in Hessenberg matrix
         t = sqrt(t);
-        std::cout << "Line " << __LINE__ << ": subscript of H: " << idxmap(i, i + 1, num_vecs_ + 1) << "\n";
+        // std::cout << "Line " << __LINE__ << ": subscript of H: " << idxmap(i, i + 1, num_vecs_ + 1) << "\n";
         H[ idxmap(i, i + 1, num_vecs_ + 1)] = t;    
         if(fabs(t) > EPSILON) {
           t = 1.0 / t;
@@ -297,7 +299,7 @@ namespace ReSolve
         t = vector_handler_->dot(vec_w_, vec_w_, memspace_);  
         //set the last entry in Hessenberg matrix
         t = sqrt(t);
-        std::cout << "Line " << __LINE__ << ": subscript of H: " << idxmap(i, i + 1, num_vecs_ + 1) << "\n";
+        // std::cout << "Line " << __LINE__ << ": subscript of H: " << idxmap(i, i + 1, num_vecs_ + 1) << "\n";
         H[ idxmap(i, i + 1, num_vecs_ + 1) ] = t;    
         if(fabs(t) > EPSILON) {
           t = 1.0 / t;
@@ -327,7 +329,7 @@ namespace ReSolve
         t = vector_handler_->dot(vec_v_, vec_v_, memspace_);  
         //set the last entry in Hessenberg matrix
         t = sqrt(t);
-        std::cout << "Line " << __LINE__ << ": subscript of H: " << idxmap(i, i + 1, num_vecs_ + 1) << "\n";
+        // std::cout << "Line " << __LINE__ << ": subscript of H: " << idxmap(i, i + 1, num_vecs_ + 1) << "\n";
         H[ idxmap(i, i + 1, num_vecs_ + 1) ] = t; 
         if(fabs(t) > EPSILON) {
           t = 1.0/t;

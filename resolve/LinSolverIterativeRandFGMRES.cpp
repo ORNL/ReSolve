@@ -91,14 +91,33 @@ namespace ReSolve
    */
   int LinSolverIterativeRandFGMRES::setup(matrix::Sparse* A)
   {
+    // If A_ is already set, then report error and exit.
+    if (n_ != A->getNumRows()) {
+      if (is_solver_set_) {
+        out::warning() << "Matrix size changed. Reallocating solver ...\n";
+        freeSolverData();
+        is_solver_set_ = false;
+      }
+
+      if (is_sketching_set_) {
+        out::warning() << "Matrix size changed. Reallocating solver ...\n";
+        freeSketchingData();
+        is_sketching_set_ = false;
+      }
+    }
+
     A_ = A;
     n_ = A_->getNumRows();
 
-    allocateSolverData();
-    is_solver_set_ = true;
+    if (!is_solver_set_) {
+      allocateSolverData();
+      is_solver_set_ = true;
+    }
 
-    allocateSketchingData();
-    is_sketching_set_ = true;
+    if (!is_sketching_set_) {
+      allocateSketchingData();
+      is_sketching_set_ = true;
+    }
 
     return 0;
   }
@@ -215,7 +234,7 @@ namespace ReSolve
           vector_handler_->scal(&one_over_k_, vec_s, memspace_);
         }
         mem_.deviceSynchronize();
-        std::cout << "K_rand = " << k_rand_ << "\n";
+        // std::cout << "K_rand = " << k_rand_ << "\n";
         GS_->orthogonalize(k_rand_, d_S_, h_H_, i);
         // now post-process
         if (memspace_ == memory::DEVICE) {
@@ -400,6 +419,7 @@ namespace ReSolve
       }
       out::warning() << "Deleting sketching method " << sketching_method_ << "\n";
       freeSketchingData();
+      is_sketching_set_ = false;
     }
 
     // If solver is set, go ahead and create sketching, otherwise just set sketching method.
@@ -410,7 +430,9 @@ namespace ReSolve
       is_sketching_set_ = true;
     }
 
+    // std::cout << "setSketchingMethod: krand = " << k_rand_ << ", restart = " << restart_ << "\n";
     GS_->setup(k_rand_, restart_);
+    matrix_handler_->setValuesChanged(true, memspace_);
 
     return 0;
   }
@@ -433,22 +455,17 @@ namespace ReSolve
     // If solver is already set, reallocate solver data
     if (is_solver_set_) {
       freeSolverData();
-      is_solver_set_ =  false;
+      allocateSolverData();
     }
 
     if (is_sketching_set_) {
       freeSketchingData();
-      is_sketching_set_ = false;
+      allocateSketchingData();
     }
 
-    allocateSolverData();
-    is_solver_set_ = true;
-    allocateSketchingData();
-    is_sketching_set_ = true;
-
-    matrix_handler_->setValuesChanged(true, memspace_);
-
+    // std::cout << "setRestart: krand = " << k_rand_ << ", restart = " << restart_ << "\n";
     GS_->setup(k_rand_, restart_);
+    matrix_handler_->setValuesChanged(true, memspace_);
 
     return 0;
   }
@@ -530,13 +547,17 @@ namespace ReSolve
    */
   int LinSolverIterativeRandFGMRES::allocateSketchingData()
   {
+    // std::cout << "Setting sketching method " << sketching_method_ << "\n";
+    // std::cout << "System size = " << n_ << "\n";
     // Set randomized method
     k_rand_ = n_;
     switch (sketching_method_) {
       case cs:
         if (ceil(restart_ * log(n_)) < k_rand_) {
-          k_rand_ = static_cast<index_type>(std::ceil(restart_ * std::log(static_cast<real_type>(n_))));
+          k_rand_ = static_cast<index_type>(ceil(restart_ * log(static_cast<real_type>(n_))));
         }
+        // std::cout << "krand = " << std::ceil(restart_ * std::log(static_cast<real_type>(n_))) << "\n";
+        // std::cout << "In file " << __FILE__ << ", line " << __LINE__ << ", krand = " << k_rand_ << "\n";
         sketching_handler_ = new SketchingHandler(sketching_method_, device_type_);
         // set k and n 
         break;
@@ -544,6 +565,7 @@ namespace ReSolve
         if (ceil(2.0 * restart_ * log(n_) / log(restart_)) < k_rand_) {
           k_rand_ = static_cast<index_type>(std::ceil(2.0 * restart_ * std::log(n_) / std::log(restart_)));
         }
+        // std::cout << "In file " << __FILE__ << ", line " << __LINE__ << ", krand = " << k_rand_ << "\n";
         sketching_handler_ = new SketchingHandler(sketching_method_, device_type_);
         break;
       default:
@@ -555,9 +577,10 @@ namespace ReSolve
         sketching_handler_ = new SketchingHandler(cs, device_type_);
         break;
     }
+    // std::cout << "In file " << __FILE__ << ", line " << __LINE__ << ", krand = " << k_rand_ << "\n";
 
     one_over_k_ = 1.0 / sqrt((real_type) k_rand_);
-    std::cout << "K_rand = " << k_rand_ << "; restart = " << restart_ << "\n";
+    // std::cout << "K_rand = " << k_rand_ << "; restart = " << restart_ << "\n";
     d_S_ = new vector_type(k_rand_, restart_ + 1);
     d_S_->allocate(memspace_);      
     if (sketching_method_ == cs) {

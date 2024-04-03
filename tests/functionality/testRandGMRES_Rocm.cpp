@@ -14,6 +14,7 @@
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 
 using namespace ReSolve::constants;
+using namespace ReSolve::colors;
 using real_type  = ReSolve::real_type;
 using index_type  = ReSolve::index_type;
 using vector_type = ReSolve::vector::Vector;
@@ -46,7 +47,7 @@ int main(int argc, char *argv[])
   ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::cgs2);
 
   ReSolve::LinSolverDirectRocSparseILU0* Rf = new ReSolve::LinSolverDirectRocSparseILU0(workspace_HIP);
-  ReSolve::LinSolverIterativeRandFGMRES* FGMRES = new ReSolve::LinSolverIterativeRandFGMRES(matrix_handler, vector_handler,ReSolve::LinSolverIterativeRandFGMRES::cs, GS);//, "hip");
+  ReSolve::LinSolverIterativeRandFGMRES* FGMRES = new ReSolve::LinSolverIterativeRandFGMRES(matrix_handler, vector_handler,ReSolve::LinSolverIterativeRandFGMRES::cs, GS);
 
 
   vec_x = new vector_type(A->getNumRows());
@@ -59,15 +60,21 @@ int main(int argc, char *argv[])
   real_type norm_b;
   matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
 
+  real_type tol = 1e-12;
+
   status = Rf->setup(A);
   error_sum += status;
+  status = GS->setup(FGMRES->getKrand(), FGMRES->getRestart()); 
 
-  FGMRES->setRestart(200);
   FGMRES->setMaxit(2500);
-  FGMRES->setTol(1e-12);
+  FGMRES->setTol(tol);
   FGMRES->setup(A);
 
-  status = GS->setup(FGMRES->getKrand(), FGMRES->getRestart()); 
+  // Typically, you would want these settings _before_ matrix A setup, but here we test
+  // flexibility of Re::Solve configuration options
+  FGMRES->setRestart(200);
+  FGMRES->setSketchingMethod(ReSolve::LinSolverIterativeRandFGMRES::cs);
+
   error_sum += status;
 
   //matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
@@ -85,28 +92,26 @@ int main(int argc, char *argv[])
   norm_b = std::sqrt(norm_b);
   real_type final_norm_first =  FGMRES->getFinalResidualNorm();
   std::cout << "Randomized FGMRES results (first run): \n"
-    << "\t Sketching method:                                    : CountSketch\n" 
-    << "\t Initial residual norm:          ||b-Ax_0||_2         : " 
-    << std::scientific << std::setprecision(16) 
-    << FGMRES->getInitResidualNorm()<<" \n"
-    << "\t Initial relative residual norm: ||b-Ax_0||_2/||b||_2 : "
-    << FGMRES->getInitResidualNorm()/norm_b<<" \n"
-    << "\t Final residual norm:            ||b-Ax||_2           : " 
-    << FGMRES->getFinalResidualNorm() <<" \n"
-    << "\t Final relative residual norm:   ||b-Ax||_2/||b||_2   : " 
-    << FGMRES->getFinalResidualNorm()/norm_b <<" \n"
-    << "\t Number of iterations                                 : " << FGMRES->getNumIter() << "\n";
-
-  delete FGMRES;
-  delete GS;
-  GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::cgs2);
-  FGMRES = new ReSolve::LinSolverIterativeRandFGMRES(matrix_handler, vector_handler,ReSolve::LinSolverIterativeRandFGMRES::fwht, GS);
+            << "\t Sketching method:                                    : CountSketch\n" 
+            << "\t Initial residual norm:          ||b-Ax_0||_2         : " 
+            << std::scientific << std::setprecision(16) 
+            << FGMRES->getInitResidualNorm()<<" \n"
+            << "\t Initial relative residual norm: ||b-Ax_0||_2/||b||_2 : "
+            << FGMRES->getInitResidualNorm()/norm_b<<" \n"
+            << "\t Final residual norm:            ||b-Ax||_2           : " 
+            << FGMRES->getFinalResidualNorm() <<" \n"
+            << "\t Final relative residual norm:   ||b-Ax||_2/||b||_2   : " 
+            << FGMRES->getFinalResidualNorm()/norm_b <<" \n"
+            << "\t Number of iterations                                 : " << FGMRES->getNumIter() << "\n";
 
 
+  // Change sketching method for the existing randomized GMRES solver
+  FGMRES->setSketchingMethod(ReSolve::LinSolverIterativeRandFGMRES::fwht);
   FGMRES->setRestart(150);
   FGMRES->setMaxit(2500);
-  FGMRES->setTol(1e-12);
-  FGMRES->setup(A);
+  FGMRES->setTol(tol);
+  // FGMRES->setup(A);
+  FGMRES->resetMatrix(A);
 
   status = GS->setup(FGMRES->getKrand(), FGMRES->getRestart()); 
   error_sum += status;
@@ -119,27 +124,28 @@ int main(int argc, char *argv[])
 
 
   std::cout << "Randomized FGMRES results (second run): \n"
-    << "\t Sketching method:                                    : FWHT\n" 
-    << "\t Initial residual norm:          ||b-Ax_0||_2         : " 
-    << std::scientific << std::setprecision(16) 
-    << FGMRES->getInitResidualNorm()<<" \n"
-    << "\t Initial relative residual norm: ||b-Ax_0||_2/||b||_2 : "
-    << FGMRES->getInitResidualNorm()/norm_b<<" \n"
-    << "\t Final residual norm:            ||b-Ax||_2           : " 
-    << FGMRES->getFinalResidualNorm() <<" \n"
-    << "\t Final relative residual norm:   ||b-Ax||_2/||b||_2   : " 
-    << FGMRES->getFinalResidualNorm()/norm_b <<" \n"
-    << "\t Number of iterations                                 : " << FGMRES->getNumIter() << "\n";
+            << "\t Sketching method:                                    : FWHT\n" 
+            << "\t Initial residual norm:          ||b-Ax_0||_2         : " 
+            << std::scientific << std::setprecision(16) 
+            << FGMRES->getInitResidualNorm()<<" \n"
+            << "\t Initial relative residual norm: ||b-Ax_0||_2/||b||_2 : "
+            << FGMRES->getInitResidualNorm()/norm_b<<" \n"
+            << "\t Final residual norm:            ||b-Ax||_2           : " 
+            << FGMRES->getFinalResidualNorm() <<" \n"
+            << "\t Final relative residual norm:   ||b-Ax||_2/||b||_2   : " 
+            << FGMRES->getFinalResidualNorm()/norm_b <<" \n"
+            << "\t Number of iterations                                 : " << FGMRES->getNumIter() << "\n";
 
-  if ((final_norm_first/norm_b > 1e-11) || (FGMRES->getFinalResidualNorm()/norm_b > 1e-11 )) {
+  if ((final_norm_first/norm_b > 10.*tol) || (FGMRES->getFinalResidualNorm()/norm_b > 10.*tol)) {
     std::cout << "Result inaccurate!\n";
     error_sum++;
   }
   if (error_sum == 0) {
-    std::cout<<"Test randomized GMRES PASSED"<<std::endl<<std::endl;;
+    std::cout << "Test randomized GMRES " << GREEN << "PASSED" << CLEAR << "\n\n";
   } else {
-    std::cout<<"Test randomized GMRES FAILED, error sum: "<<error_sum<<std::endl<<std::endl;;
+    std::cout << "Test randomized GMRES " << RED << "FAILED" << CLEAR << ", error sum: " << error_sum << "\n\n";
   }
+
   delete A;
   delete Rf;
   delete vec_x;

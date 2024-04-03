@@ -77,7 +77,7 @@ namespace ReSolve {
   /** 
    * @brief compute infinity norm of a vector (i.e., find an entry with largest absolute value)
    * 
-   * @param[in] The vector
+   * @param[in] x vector
    *
    * @return infinity norm (real number) of _x_
    * 
@@ -173,11 +173,11 @@ namespace ReSolve {
           }
           x_data[i] = sum;
         }
-        break;
         if (transpose != 'N') {
           out::warning() << "Unrecognized transpose option " << transpose
                          << " in gemv. Using non-transposed multivector.\n";
         }
+        break;
     } // switch
   }
 
