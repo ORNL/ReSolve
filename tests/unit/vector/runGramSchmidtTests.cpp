@@ -10,8 +10,12 @@ int main(int, char**)
 #ifdef RESOLVE_USE_CUDA
   {
     std::cout << "Running tests with CUDA backend:\n";
-    ReSolve::tests::GramSchmidtTests test("cuda");
 
+    ReSolve::LinAlgWorkspaceCUDA* workspace = new ReSolve::LinAlgWorkspaceCUDA();
+    workspace->initializeHandles();
+    ReSolve::VectorHandler* handler = new ReSolve::VectorHandler(workspace);
+
+    ReSolve::tests::GramSchmidtTests test(handler);
     result += test.GramSchmidtConstructor();
     result += test.orthogonalize(5000, ReSolve::GramSchmidt::mgs);
     result += test.orthogonalize(5000, ReSolve::GramSchmidt::cgs2);
@@ -19,14 +23,21 @@ int main(int, char**)
     result += test.orthogonalize(5000, ReSolve::GramSchmidt::mgs_pm);
     result += test.orthogonalize(5000, ReSolve::GramSchmidt::cgs1);
     std::cout << "\n";
+
+    delete handler;
+    delete workspace;
   }
 #endif
 
 #ifdef RESOLVE_USE_HIP
   {
     std::cout << "Running tests with HIP backend:\n";
-    ReSolve::tests::GramSchmidtTests test("hip");
 
+    ReSolve::LinAlgWorkspaceHIP* workspace = new ReSolve::LinAlgWorkspaceHIP();
+    workspace->initializeHandles();
+    ReSolve::VectorHandler* handler = new ReSolve::VectorHandler(workspace);
+
+    ReSolve::tests::GramSchmidtTests test(handler);
     result += test.GramSchmidtConstructor();
     result += test.orthogonalize(5000, ReSolve::GramSchmidt::mgs);
     result += test.orthogonalize(5000, ReSolve::GramSchmidt::cgs2);
@@ -34,13 +45,20 @@ int main(int, char**)
     result += test.orthogonalize(5000, ReSolve::GramSchmidt::mgs_pm);
     result += test.orthogonalize(5000, ReSolve::GramSchmidt::cgs1);
     std::cout << "\n";
+
+    delete handler;
+    delete workspace;
   }
 #endif
 
   {
     std::cout << "Running tests on the CPU:\n";
-    ReSolve::tests::GramSchmidtTests test("cpu");
 
+    ReSolve::LinAlgWorkspaceCpu* workspace = new ReSolve::LinAlgWorkspaceCpu();
+    workspace->initializeHandles();
+    ReSolve::VectorHandler* handler = new ReSolve::VectorHandler(workspace);
+
+    ReSolve::tests::GramSchmidtTests test(handler);
     result += test.GramSchmidtConstructor();
     result += test.orthogonalize(5000, ReSolve::GramSchmidt::mgs);
     result += test.orthogonalize(5000, ReSolve::GramSchmidt::cgs2);
@@ -48,6 +66,9 @@ int main(int, char**)
     result += test.orthogonalize(5000, ReSolve::GramSchmidt::mgs_pm);
     result += test.orthogonalize(5000, ReSolve::GramSchmidt::cgs1);
     std::cout << "\n";
+
+    delete handler;
+    delete workspace;
   }
   return result.summary();
 }

@@ -8,14 +8,17 @@
 #include <tests/unit/TestBase.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 
-namespace ReSolve { 
-  namespace tests {
+namespace ReSolve
+{ 
+  namespace tests
+  {
     const real_type var1 = 0.17;
     const real_type var2 = 2.0;
+
     class GramSchmidtTests : TestBase
     {
       public:       
-        GramSchmidtTests(std::string memspace) : memspace_(memspace) 
+        GramSchmidtTests(ReSolve::VectorHandler* handler) : handler_(handler) 
         {
         }
 
@@ -60,24 +63,19 @@ namespace ReSolve {
           }
 
           ReSolve::memory::MemorySpace ms;
-          if (memspace_ == "cpu")
-            ms = memory::HOST;
-          else
+          if (handler_->getIsCudaEnabled() || handler_->getIsHipEnabled())
             ms = memory::DEVICE;
-
-          ReSolve::VectorHandler* handler = createVectorHandler();
+          else
+            ms = memory::HOST;
 
           vector::Vector* V = new vector::Vector(N, 3); // we will be using a space of 3 vectors
           real_type* H = new real_type[9]; // In this case, Hessenberg matrix is NOT 3 x 2 ???
-          real_type* aux_data; // needed for setup
+          real_type* aux_data = nullptr; // needed for setup
 
-          V->allocate(ms);
-          if (ms != memory::HOST) {
-            V->allocate(memory::HOST);
-          }
+          V->allocate(memory::DEVICE);
+          V->allocate(memory::HOST);
 
-
-          ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(handler, var);
+          ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(handler_, var);
           GS->setup(N, 3);
           
           //fill 2nd and 3rd vector with values
@@ -102,16 +100,15 @@ namespace ReSolve {
 
           //set the first vector to all 1s, normalize 
           V->setToConst(0, 1.0, ms);
-          real_type nrm = handler->dot(V, V, ms);
+          real_type nrm = handler_->dot(V, V, ms);
           nrm = sqrt(nrm);
           nrm = 1.0 / nrm;
-          handler->scal(&nrm, V, ms);
+          handler_->scal(&nrm, V, ms);
 
           GS->orthogonalize(N, V, H, 0); 
           GS->orthogonalize(N, V, H, 1); 
-          status *= verifyAnswer(V, 3, handler, memspace_);
+          status *= verifyAnswer(V, 3);
 
-          delete handler;
           delete [] H;
           delete V; 
           delete GS;
@@ -120,39 +117,16 @@ namespace ReSolve {
         }    
 
       private:
-        std::string memspace_{"cuda"};
-
-        ReSolve::VectorHandler* createVectorHandler()
-        {
-          if (memspace_ == "cpu") { // TODO: Fix memory leak here
-            LinAlgWorkspaceCpu* workpsace = new LinAlgWorkspaceCpu();
-            return new VectorHandler(workpsace);
-#ifdef RESOLVE_USE_CUDA
-          } else if (memspace_ == "cuda") {
-            LinAlgWorkspaceCUDA* workspace = new LinAlgWorkspaceCUDA();
-            workspace->initializeHandles();
-            return new VectorHandler(workspace);
-#endif
-#ifdef RESOLVE_USE_HIP
-          } else if (memspace_ == "hip") {
-            LinAlgWorkspaceHIP* workspace = new LinAlgWorkspaceHIP();
-            workspace->initializeHandles();
-            return new VectorHandler(workspace);
-#endif
-          } else {
-            std::cout << "ReSolve not built with support for memory space " << memspace_ << "\n";
-          }
-          return nullptr;
-        }
+        ReSolve::VectorHandler* handler_{nullptr};
 
         // x is a multivector containing K vectors 
-        bool verifyAnswer(vector::Vector* x, index_type K,  ReSolve::VectorHandler* handler, std::string memspace)
+        bool verifyAnswer(vector::Vector* x, index_type K)
         {
           ReSolve::memory::MemorySpace ms;
-          if (memspace == "cpu")
-            ms = memory::HOST;
-          else
+          if (handler_->getIsCudaEnabled() || handler_->getIsHipEnabled())
             ms = memory::DEVICE;
+          else
+            ms = memory::HOST;
 
           vector::Vector* a = new vector::Vector(x->getSize()); 
           vector::Vector* b = new vector::Vector(x->getSize());
@@ -164,7 +138,7 @@ namespace ReSolve {
             for (index_type j = 0; j < K; ++j) {
               a->update(x->getVectorData(i, ms), ms, memory::HOST);
               b->update(x->getVectorData(j, ms), ms, memory::HOST);
-              ip = handler->dot(a, b, memory::HOST);
+              ip = handler_->dot(a, b, memory::HOST);
               if ( (i != j) && !isEqual(ip, 0.0)) {
                 status = false;
                 std::cout << "Vectors " << i << " and " << j << " are not orthogonal!"
