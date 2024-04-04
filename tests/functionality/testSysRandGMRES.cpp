@@ -209,7 +209,7 @@ void processInputs(std::string& method, std::string& gs, std::string& sketch)
     method = "fgmres";
   }
 
-  if (gs != "cgs1" && gs != "cgs2" && gs != "mgs" && gs != "mgs_two_synch" && gs != "mgs_pm") {
+  if (gs != "cgs1" && gs != "cgs2" && gs != "mgs" && gs != "mgs_two_sync" && gs != "mgs_pm") {
     std::cout << "Unknown orthogonalization " << gs << "\n";
     std::cout << "Setting orthogonalization to the default (CGS2).\n\n";
     gs = "cgs2";
@@ -243,7 +243,7 @@ std::string headerInfo(const std::string& method, const std::string& gs, const s
     header += (withgs + "classical Gram-Schmidt\n");
   } else if (gs == "mgs") {
     header += (withgs + "modified Gram-Schmidt\n");    
-  } else if (gs == "mgs_two_synch") {
+  } else if (gs == "mgs_two_sync") {
     header += (withgs + "modified Gram-Schmidt 2-sync\n");    
   } else if (gs == "mgs_pm") {
     header += (withgs + "post-modern modified Gram-Schmidt\n");    

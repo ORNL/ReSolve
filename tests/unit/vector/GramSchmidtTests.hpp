@@ -44,7 +44,7 @@ namespace ReSolve {
             case GramSchmidt::mgs:
               testname += " (Modified Gram-Schmidt)";
               break;
-            case GramSchmidt::mgs_two_synch:
+            case GramSchmidt::mgs_two_sync:
               testname += " (Modified Gram-Schmidt 2-Sync)";
               break;
             case GramSchmidt::mgs_pm:

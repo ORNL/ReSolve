@@ -37,6 +37,7 @@ namespace ReSolve
     }
   }
 
+  /// @todo Should this function restore the setup after changing the variant?
   int GramSchmidt::setVariant(GSVariant variant)
   {
     if (setup_complete_) {
@@ -76,7 +77,7 @@ namespace ReSolve
     vec_v_ = new vector_type(n);
 
     num_vecs_ = restart;
-    if((variant_ == mgs_two_synch) || (variant_ == mgs_pm)) {
+    if((variant_ == mgs_two_sync) || (variant_ == mgs_pm)) {
       h_L_  = new real_type[num_vecs_ * (num_vecs_ + 1)]();
       h_rv_ = new real_type[num_vecs_ + 1]();
 
@@ -126,14 +127,11 @@ namespace ReSolve
         }
         t = 0.0;
         t = vector_handler_->dot(vec_w_, vec_w_, memspace_);
-        // std::cout << "Line " << __LINE__ << ": t = " << t << "\n";
         //set the last entry in Hessenberg matrix
         t = sqrt(t);
-        // std::cout << "Line " << __LINE__ << ": subscript of H: " << idxmap(i, i + 1, num_vecs_ + 1) << "\n";
         H[ idxmap(i, i + 1, num_vecs_ + 1) ] = t;
         if(fabs(t) > EPSILON) {
           t = 1.0/t;
-          // std::cout << "Line " << __LINE__ << ": Scaling vector " << vec_w_ << " by " << t << "\n";
           vector_handler_->scal(&t, vec_w_, memspace_);  
         } else {
           assert(0 && "Gram-Schmidt failed, vector with ZERO norm\n");
@@ -174,15 +172,12 @@ namespace ReSolve
         }
 
         t = vector_handler_->dot(vec_v_, vec_v_, memspace_);  
-        // std::cout << "Line " << __LINE__ << ": t = " << t << "\n";
         //set the last entry in Hessenberg matrix
         t = sqrt(t);
-        // std::cout << "Line " << __LINE__ << ": subscript of H: " << idxmap(i, i + 1, num_vecs_ + 1) << "\n";
         H[ idxmap(i, i + 1, num_vecs_ + 1) ] = t; 
 
         if(fabs(t) > EPSILON) {
           t = 1.0/t;
-          // std::cout << "Line " << __LINE__ << ": Scaling vector by " << t << "\n";
           vector_handler_->scal(&t, vec_v_, memspace_);  
         } else {
           assert(0 && "Gram-Schmidt failed, vector with ZERO norm\n");
@@ -191,7 +186,7 @@ namespace ReSolve
         return 0;
         break;
 
-      case mgs_two_synch:
+      case mgs_two_sync:
         // V[1:i]^T[V[i] w]
         vec_v_->setData(V->getVectorData(i, memspace_), memspace_);
         vec_w_->setData(V->getVectorData(i + 1, memspace_), memspace_);
@@ -225,11 +220,9 @@ namespace ReSolve
         t = vector_handler_->dot(vec_w_, vec_w_, memspace_);  
         //set the last entry in Hessenberg matrix
         t = sqrt(t);
-        // std::cout << "Line " << __LINE__ << ": subscript of H: " << idxmap(i, i + 1, num_vecs_ + 1) << "\n";
         H[ idxmap(i, i + 1, num_vecs_ + 1)] = t;    
         if(fabs(t) > EPSILON) {
           t = 1.0 / t;
-          // std::cout << "Line " << __LINE__ << ": Scaling vector by " << t << "\n";
           vector_handler_->scal(&t, vec_w_, memspace_);  
           for (int ii=0; ii<=i; ++ii)
           {
@@ -303,11 +296,9 @@ namespace ReSolve
         t = vector_handler_->dot(vec_w_, vec_w_, memspace_);  
         //set the last entry in Hessenberg matrix
         t = sqrt(t);
-        // std::cout << "Line " << __LINE__ << ": subscript of H: " << idxmap(i, i + 1, num_vecs_ + 1) << "\n";
         H[ idxmap(i, i + 1, num_vecs_ + 1) ] = t;    
         if(fabs(t) > EPSILON) {
           t = 1.0 / t;
-          // std::cout << "Line " << __LINE__ << ": Scaling vector by " << t << "\n";
           vector_handler_->scal(&t, vec_w_, memspace_);  
         } else {
           assert(0 && "Iterative refinement failed, Krylov vector with ZERO norm\n");
@@ -333,11 +324,9 @@ namespace ReSolve
         t = vector_handler_->dot(vec_v_, vec_v_, memspace_);  
         //set the last entry in Hessenberg matrix
         t = sqrt(t);
-        // std::cout << "Line " << __LINE__ << ": subscript of H: " << idxmap(i, i + 1, num_vecs_ + 1) << "\n";
         H[ idxmap(i, i + 1, num_vecs_ + 1) ] = t; 
         if(fabs(t) > EPSILON) {
           t = 1.0/t;
-          // std::cout << "Line " << __LINE__ << ": Scaling vector by " << t << "\n";
           vector_handler_->scal(&t, vec_v_, memspace_);  
         } else {
           assert(0 && "Gram-Schmidt failed, vector with ZERO norm\n");
@@ -360,7 +349,7 @@ namespace ReSolve
 
   int GramSchmidt::freeGramSchmidtData()
   {
-    if(variant_ == mgs_two_synch || variant_ == mgs_pm) {    
+    if(variant_ == mgs_two_sync || variant_ == mgs_pm) {    
       delete h_L_;
       h_L_ = nullptr;
       delete h_rv_;

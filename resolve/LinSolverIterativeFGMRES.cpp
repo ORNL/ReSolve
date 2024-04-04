@@ -27,8 +27,8 @@ namespace ReSolve
 
     setMemorySpace();
 
-    d_V_ = nullptr;
-    d_Z_ = nullptr;
+    vec_V_ = nullptr;
+    vec_Z_ = nullptr;
   }
 
   LinSolverIterativeFGMRES::LinSolverIterativeFGMRES(index_type restart, 
@@ -51,8 +51,8 @@ namespace ReSolve
     conv_cond_ = conv_cond;
     flexible_ = true;
 
-    d_V_ = nullptr;
-    d_Z_ = nullptr;
+    vec_V_ = nullptr;
+    vec_Z_ = nullptr;
 
   }
 
@@ -114,20 +114,19 @@ namespace ReSolve
     real_type t = 0.0;
     real_type rnorm = 0.0;
     real_type bnorm = 0.0;
-    // real_type rnorm_aux;
     real_type tolrel;
     vector_type* vec_v = new vector_type(n_);
     vector_type* vec_z = new vector_type(n_);
     //V[0] = b-A*x_0
     //debug
-    d_Z_->setToZero(memspace_);
-    d_V_->setToZero(memspace_);
+    vec_Z_->setToZero(memspace_);
+    vec_V_->setToZero(memspace_);
 
-    rhs->deepCopyVectorData(d_V_->getData(memspace_), 0, memspace_);  
-    matrix_handler_->matvec(A_, x, d_V_, &MINUSONE, &ONE, "csr", memspace_); 
+    rhs->deepCopyVectorData(vec_V_->getData(memspace_), 0, memspace_);  
+    matrix_handler_->matvec(A_, x, vec_V_, &MINUSONE, &ONE, "csr", memspace_); 
     rnorm = 0.0;
     bnorm = vector_handler_->dot(rhs, rhs, memspace_);
-    rnorm = vector_handler_->dot(d_V_, d_V_, memspace_);
+    rnorm = vector_handler_->dot(vec_V_, vec_V_, memspace_);
     //rnorm = ||V_1||
     rnorm = sqrt(rnorm);
     bnorm = sqrt(bnorm);
@@ -165,7 +164,7 @@ namespace ReSolve
 
       // normalize first vector
       t = 1.0 / rnorm;
-      vector_handler_->scal(&t, d_V_, memspace_);
+      vector_handler_->scal(&t, vec_V_, memspace_);
       // initialize norm history
       h_rs_[0] = rnorm;
       i = -1;
@@ -176,24 +175,24 @@ namespace ReSolve
         it++;
 
         // Z_i = (LU)^{-1}*V_i
-        vec_v->setData( d_V_->getVectorData(i, memspace_), memspace_);
+        vec_v->setData( vec_V_->getVectorData(i, memspace_), memspace_);
         if (flexible_) {
-          vec_z->setData( d_Z_->getVectorData(i, memspace_), memspace_);
+          vec_z->setData( vec_Z_->getVectorData(i, memspace_), memspace_);
         } else {
-          vec_z->setData( d_Z_->getVectorData(0, memspace_), memspace_);
+          vec_z->setData( vec_Z_->getVectorData(0, memspace_), memspace_);
         }
         this->precV(vec_v, vec_z);
         mem_.deviceSynchronize();
 
         // V_{i+1}=A*Z_i
 
-        vec_v->setData( d_V_->getVectorData(i + 1, memspace_), memspace_);
+        vec_v->setData( vec_V_->getVectorData(i + 1, memspace_), memspace_);
 
         matrix_handler_->matvec(A_, vec_z, vec_v, &ONE, &ZERO,"csr", memspace_); 
 
         // orthogonalize V[i+1], form a column of h_H_
 
-        GS_->orthogonalize(n_, d_V_, h_H_, i);
+        GS_->orthogonalize(n_, vec_V_, h_H_, i);
         if (i != 0) {
           for (index_type k = 1; k <= i; k++) {
             k1 = k - 1;
@@ -248,19 +247,19 @@ namespace ReSolve
       // get solution
       if (flexible_) {
         for (j = 0; j <= i; j++) {
-          vec_z->setData( d_Z_->getVectorData(j, memspace_), memspace_);
+          vec_z->setData( vec_Z_->getVectorData(j, memspace_), memspace_);
           vector_handler_->axpy(&h_rs_[j], vec_z, x, memspace_);
         }
       } else {
-        d_Z_->setToZero(memspace_);
-        vec_z->setData( d_Z_->getVectorData(0, memspace_), memspace_);
+        vec_Z_->setToZero(memspace_);
+        vec_z->setData( vec_Z_->getVectorData(0, memspace_), memspace_);
         for (j = 0; j <= i; j++) {
-          vec_v->setData( d_V_->getVectorData(j, memspace_), memspace_);
+          vec_v->setData( vec_V_->getVectorData(j, memspace_), memspace_);
           vector_handler_->axpy(&h_rs_[j], vec_v, vec_z, memspace_);
         }
         // now multiply d_Z by precon
 
-        vec_v->setData( d_V_->getData(memspace_), memspace_);
+        vec_v->setData( vec_V_->getData(memspace_), memspace_);
         this->precV(vec_z, vec_v);
         // and add to x 
         vector_handler_->axpy(&ONE, vec_v, x, memspace_);
@@ -273,9 +272,9 @@ namespace ReSolve
         outer_flag = 0;
       }
 
-      rhs->deepCopyVectorData(d_V_->getData(memspace_), 0, memspace_);  
-      matrix_handler_->matvec(A_, x, d_V_, &MINUSONE, &ONE,"csr", memspace_); 
-      rnorm = vector_handler_->dot(d_V_, d_V_, memspace_);
+      rhs->deepCopyVectorData(vec_V_->getData(memspace_), 0, memspace_);  
+      matrix_handler_->matvec(A_, x, vec_V_, &MINUSONE, &ONE,"csr", memspace_); 
+      rnorm = vector_handler_->dot(vec_V_, vec_V_, memspace_);
       // rnorm = ||V_1||
       rnorm = sqrt(rnorm);
 
@@ -304,11 +303,6 @@ namespace ReSolve
 
   int  LinSolverIterativeFGMRES::resetMatrix(matrix::Sparse* new_matrix)
   {
-    // if (n_ != new_matrix->getNumRows()) {
-    //   out::error() << "New matrix has different size. Use setup function instead.\n";
-    //   A_ = nullptr;
-    //   return 1;
-    // }
     A_ = new_matrix;
     matrix_handler_->setValuesChanged(true, memspace_);
     return 0;
@@ -345,15 +339,15 @@ namespace ReSolve
   int LinSolverIterativeFGMRES::setFlexible(bool is_flexible)
   {
     // TODO: Add vector method resize
-    if (d_Z_) {
-      delete d_Z_;
+    if (vec_Z_) {
+      delete vec_Z_;
       if (is_flexible) {
-        d_Z_ = new vector_type(n_, restart_ + 1);
+        vec_Z_ = new vector_type(n_, restart_ + 1);
       } else {
         // otherwise Z is just a one vector, not multivector and we dont keep it
-        d_Z_ = new vector_type(n_);
+        vec_Z_ = new vector_type(n_);
       }
-      d_Z_->allocate(memspace_); 
+      vec_Z_->allocate(memspace_); 
     }
     flexible_ = is_flexible;
     matrix_handler_->setValuesChanged(true, memspace_);
@@ -366,15 +360,15 @@ namespace ReSolve
 
   int LinSolverIterativeFGMRES::allocateSolverData()
   {
-    d_V_ = new vector_type(n_, restart_ + 1);
-    d_V_->allocate(memspace_);      
+    vec_V_ = new vector_type(n_, restart_ + 1);
+    vec_V_->allocate(memspace_);      
     if (flexible_) {
-      d_Z_ = new vector_type(n_, restart_ + 1);
+      vec_Z_ = new vector_type(n_, restart_ + 1);
     } else {
       // otherwise Z is just a one vector, not multivector and we dont keep it
-      d_Z_ = new vector_type(n_);
+      vec_Z_ = new vector_type(n_);
     }
-    d_Z_->allocate(memspace_);
+    vec_Z_->allocate(memspace_);
     h_H_  = new real_type[restart_ * (restart_ + 1)];
     h_c_  = new real_type[restart_];      // needed for givens
     h_s_  = new real_type[restart_];      // same
@@ -389,15 +383,15 @@ namespace ReSolve
     delete [] h_c_ ;
     delete [] h_s_ ;
     delete [] h_rs_;
-    delete d_V_;   
-    delete d_Z_;
+    delete vec_V_;   
+    delete vec_Z_;
 
     h_H_  = nullptr;
     h_c_  = nullptr;
     h_s_  = nullptr;
     h_rs_ = nullptr;
-    d_V_  = nullptr;
-    d_Z_  = nullptr;
+    vec_V_  = nullptr;
+    vec_Z_  = nullptr;
 
     return 0;
   }

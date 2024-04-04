@@ -744,10 +744,8 @@ namespace ReSolve
     LinSolverIterativeRandFGMRES::SketchingMethod tmp;
     if (sketching_method == "count") {
       tmp = LinSolverIterativeRandFGMRES::cs;
-      // sketching_method_ = LinSolverIterativeRandFGMRES::cs;
     } else if (sketching_method == "fwht") {
       tmp = LinSolverIterativeRandFGMRES::fwht;
-      // sketching_method_ = LinSolverIterativeRandFGMRES::fwht;
     } else {
       out::warning() << "Sketching method " << sketching_method << " not recognized!\n"
                      << "Using default (count sketch).\n";
@@ -778,8 +776,8 @@ namespace ReSolve
       gs_variant = GramSchmidt::cgs2;
     } else if (variant == "mgs") {
       gs_variant = GramSchmidt::mgs;
-    } else if (variant == "mgs_two_synch") {
-      gs_variant = GramSchmidt::mgs_two_synch;
+    } else if (variant == "mgs_two_sync") {
+      gs_variant = GramSchmidt::mgs_two_sync;
     } else if (variant == "mgs_pm") {
       gs_variant = GramSchmidt::mgs_pm;
     } else if (variant == "cgs1") {

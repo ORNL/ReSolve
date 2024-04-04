@@ -56,8 +56,8 @@ namespace ReSolve
       memory::MemorySpace memspace_;
 
       std::string orth_option_;
-      vector_type* d_V_{nullptr};
-      vector_type* d_Z_{nullptr};
+      vector_type* vec_V_{nullptr};
+      vector_type* vec_Z_{nullptr};
 
       real_type* h_H_{nullptr};
       real_type* h_c_{nullptr};

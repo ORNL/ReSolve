@@ -37,8 +37,8 @@ namespace ReSolve
       using vector_type = vector::Vector;
 
     public:
-      enum SketchingMethod { cs = 0,    // count sketch 
-                             fwht = 1}; // fast Walsh-Hadamard transform
+      enum SketchingMethod {cs = 0, // count sketch 
+                            fwht};  // fast Walsh-Hadamard transform
     
       LinSolverIterativeRandFGMRES(MatrixHandler* matrix_handler,
                                    VectorHandler* vector_handler,
@@ -67,6 +67,7 @@ namespace ReSolve
 
       index_type getKrand();
       int setSketchingMethod(SketchingMethod method);
+
     private:
       int allocateSolverData();
       int freeSolverData();
@@ -77,10 +78,10 @@ namespace ReSolve
 
       memory::MemorySpace memspace_;
 
-      vector_type* d_V_{nullptr};
-      vector_type* d_Z_{nullptr};
+      vector_type* vec_V_{nullptr};
+      vector_type* vec_Z_{nullptr};
       // for performing Gram-Schmidt
-      vector_type* d_S_{nullptr}; ///< this is where sketched vectors are stored
+      vector_type* vec_S_{nullptr}; ///< this is where sketched vectors are stored
 
       real_type* h_H_{nullptr};
       real_type* h_c_{nullptr};
