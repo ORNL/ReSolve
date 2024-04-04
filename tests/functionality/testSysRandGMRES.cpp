@@ -2,7 +2,7 @@
  * @file testSysRandGMRES.cpp
  * @author Kasia Swirydowicz (kasia.swirydowicz@pnnl.gov)
  * @author Slaven Peles (peless@ornl.gov)
- * @brief Functionality test for SystemSolver and randomized GMRES classes 
+ * @brief Functionality tests for SystemSolver and GMRES classes 
  * @date 2023-12-18
  * 
  * 
@@ -173,6 +173,10 @@ int test(int argc, char *argv[])
             << "\t Number of iterations                                 : " 
             << solver.getIterativeSolver().getNumIter() << "\n";
 
+  if (!isfinite(final_norm)) {
+    std::cout << "Result is not a finite number!\n";
+    error_sum++;
+  }
   if (final_norm/norm_b > (10.0 * tol)) {
     std::cout << "Result inaccurate!\n";
     error_sum++;
