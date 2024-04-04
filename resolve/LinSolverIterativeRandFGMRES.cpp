@@ -165,27 +165,27 @@ namespace ReSolve
     rnorm = 0.0;
     bnorm = vector_handler_->dot(rhs, rhs, memspace_);
     rnorm = vector_handler_->dot(vec_s, vec_s, memspace_);
-    rnorm = sqrt(rnorm); // rnorm = ||V_1||
-    bnorm = sqrt(bnorm);
+    rnorm = std::sqrt(rnorm); // rnorm = ||V_1||
+    bnorm = std::sqrt(bnorm);
     io::Logger::misc() << "it 0: norm of residual "
                        << std::scientific << std::setprecision(16) 
                        << rnorm << " Norm of rhs: " << bnorm << "\n";
     initial_residual_norm_ = rnorm;
     while(outer_flag) {
       // check if maybe residual is already small enough?
-      if(it == 0) {
+      if (it == 0) {
         tolrel = tol_ * rnorm;
-        if(fabs(tolrel) < 1e-16) {
+        if (std::abs(tolrel) < 1e-16) {
           tolrel = 1e-16;
         }
       }
       int exit_cond = 0;
       if (conv_cond_ == 0) {
-        exit_cond =  ((fabs(rnorm - ZERO) <= EPSILON));
+        exit_cond =  ((std::abs(rnorm - ZERO) <= EPSILON));
       } else if (conv_cond_ == 1) {
-        exit_cond =  ((fabs(rnorm - ZERO) <= EPSILON) || (rnorm < tol_));
+        exit_cond =  ((std::abs(rnorm - ZERO) <= EPSILON) || (rnorm < tol_));
       } else if (conv_cond_ == 2) {
-        exit_cond =  ((fabs(rnorm - ZERO) <= EPSILON) || (rnorm < (tol_*bnorm)));
+        exit_cond =  ((std::abs(rnorm - ZERO) <= EPSILON) || (rnorm < (tol_*bnorm)));
       }
       if (exit_cond) {
         outer_flag = 0;
@@ -263,9 +263,9 @@ namespace ReSolve
         } // if (i != 0)
         double Hii = h_H_[i * (restart_ + 1) + i];
         double Hii1 = h_H_[(i) * (restart_ + 1) + i + 1];
-        double gam = sqrt(Hii * Hii + Hii1 * Hii1);
+        double gam = std::sqrt(Hii * Hii + Hii1 * Hii1);
 
-        if(fabs(gam - ZERO) <= EPSILON) {
+        if(std::abs(gam - ZERO) <= EPSILON) {
           gam = EPSMAC;
         }
 
@@ -275,11 +275,11 @@ namespace ReSolve
         h_rs_[i + 1] = -h_s_[i] * h_rs_[i];
         h_rs_[i] = h_c_[i] * h_rs_[i];
 
-        h_H_[(i) * (restart_ + 1) + (i)] = h_c_[i] * Hii + h_s_[i] * Hii1;
+        h_H_[(i) * (restart_ + 1) + (i)]     = h_c_[i] * Hii  + h_s_[i] * Hii1;
         h_H_[(i) * (restart_ + 1) + (i + 1)] = h_c_[i] * Hii1 - h_s_[i] * Hii;
 
         // residual norm estimate
-        rnorm = fabs(h_rs_[i + 1]);
+        rnorm = std::abs(h_rs_[i + 1]);
 
         io::Logger::misc() << "it: "<< it << " --> norm of the residual "
                            << std::scientific << std::setprecision(16)
@@ -350,13 +350,13 @@ namespace ReSolve
         mem_.deviceSynchronize();
         rnorm = vector_handler_->dot(vec_S_, vec_S_, memspace_);
         // rnorm = ||S_0||
-        rnorm = sqrt(rnorm);
+        rnorm = std::sqrt(rnorm);
       }
 
       if (!outer_flag) {
         rnorm = vector_handler_->dot(vec_V_, vec_V_, memspace_);
         // rnorm = ||V_0||
-        rnorm = sqrt(rnorm);
+        rnorm = std::sqrt(rnorm);
 
         io::Logger::misc() << "End of cycle, COMPUTED norm of residual "
                            << std::scientific << std::setprecision(16)
@@ -538,14 +538,14 @@ namespace ReSolve
     k_rand_ = n_;
     switch (sketching_method_) {
       case cs:
-        if (ceil(restart_ * log(n_)) < k_rand_) {
-          k_rand_ = static_cast<index_type>(ceil(restart_ * log(static_cast<real_type>(n_))));
+        if (std::ceil(restart_ * std::log(n_)) < k_rand_) {
+          k_rand_ = static_cast<index_type>(std::ceil(restart_ * std::log(static_cast<real_type>(n_))));
         }
         sketching_handler_ = new SketchingHandler(sketching_method_, device_type_);
         // set k and n 
         break;
       case fwht:
-        if (ceil(2.0 * restart_ * log(n_) / log(restart_)) < k_rand_) {
+        if (std::ceil(2.0 * restart_ * std::log(n_) / std::log(restart_)) < k_rand_) {
           k_rand_ = static_cast<index_type>(std::ceil(2.0 * restart_ * std::log(n_) / std::log(restart_)));
         }
         sketching_handler_ = new SketchingHandler(sketching_method_, device_type_);
@@ -553,14 +553,14 @@ namespace ReSolve
       default:
         io::Logger::warning() << "Wrong sketching method, setting to default (CountSketch)\n"; 
         sketching_method_ = cs;
-        if (ceil(restart_ * log(n_)) < k_rand_) {
+        if (std::ceil(restart_ * std::log(n_)) < k_rand_) {
           k_rand_ = static_cast<index_type>(std::ceil(restart_ * std::log(n_)));
         }
         sketching_handler_ = new SketchingHandler(cs, device_type_);
         break;
     }
 
-    one_over_k_ = 1.0 / sqrt((real_type) k_rand_);
+    one_over_k_ = 1.0 / std::sqrt((real_type) k_rand_);
     vec_S_ = new vector_type(k_rand_, restart_ + 1);
     vec_S_->allocate(memspace_);      
     if (sketching_method_ == cs) {

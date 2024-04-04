@@ -128,9 +128,9 @@ namespace ReSolve
         t = 0.0;
         t = vector_handler_->dot(vec_w_, vec_w_, memspace_);
         //set the last entry in Hessenberg matrix
-        t = sqrt(t);
+        t = std::sqrt(t);
         H[ idxmap(i, i + 1, num_vecs_ + 1) ] = t;
-        if(fabs(t) > EPSILON) {
+        if(std::abs(t) > EPSILON) {
           t = 1.0/t;
           vector_handler_->scal(&t, vec_w_, memspace_);  
         } else {
@@ -173,10 +173,10 @@ namespace ReSolve
 
         t = vector_handler_->dot(vec_v_, vec_v_, memspace_);  
         //set the last entry in Hessenberg matrix
-        t = sqrt(t);
+        t = std::sqrt(t);
         H[ idxmap(i, i + 1, num_vecs_ + 1) ] = t; 
 
-        if(fabs(t) > EPSILON) {
+        if(std::abs(t) > EPSILON) {
           t = 1.0/t;
           vector_handler_->scal(&t, vec_v_, memspace_);  
         } else {
@@ -219,9 +219,9 @@ namespace ReSolve
         // normalize (second synch)
         t = vector_handler_->dot(vec_w_, vec_w_, memspace_);  
         //set the last entry in Hessenberg matrix
-        t = sqrt(t);
+        t = std::sqrt(t);
         H[ idxmap(i, i + 1, num_vecs_ + 1)] = t;    
-        if(fabs(t) > EPSILON) {
+        if(std::abs(t) > EPSILON) {
           t = 1.0 / t;
           vector_handler_->scal(&t, vec_w_, memspace_);  
           for (int ii=0; ii<=i; ++ii)
@@ -295,9 +295,9 @@ namespace ReSolve
         // normalize (second synch)
         t = vector_handler_->dot(vec_w_, vec_w_, memspace_);  
         //set the last entry in Hessenberg matrix
-        t = sqrt(t);
+        t = std::sqrt(t);
         H[ idxmap(i, i + 1, num_vecs_ + 1) ] = t;    
-        if(fabs(t) > EPSILON) {
+        if(std::abs(t) > EPSILON) {
           t = 1.0 / t;
           vector_handler_->scal(&t, vec_w_, memspace_);  
         } else {
@@ -323,9 +323,9 @@ namespace ReSolve
 
         t = vector_handler_->dot(vec_v_, vec_v_, memspace_);  
         //set the last entry in Hessenberg matrix
-        t = sqrt(t);
+        t = std::sqrt(t);
         H[ idxmap(i, i + 1, num_vecs_ + 1) ] = t; 
-        if(fabs(t) > EPSILON) {
+        if(std::abs(t) > EPSILON) {
           t = 1.0/t;
           vector_handler_->scal(&t, vec_v_, memspace_);  
         } else {

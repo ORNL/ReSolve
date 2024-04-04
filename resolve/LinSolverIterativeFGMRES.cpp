@@ -128,29 +128,29 @@ namespace ReSolve
     bnorm = vector_handler_->dot(rhs, rhs, memspace_);
     rnorm = vector_handler_->dot(vec_V_, vec_V_, memspace_);
     //rnorm = ||V_1||
-    rnorm = sqrt(rnorm);
-    bnorm = sqrt(bnorm);
+    rnorm = std::sqrt(rnorm);
+    bnorm = std::sqrt(bnorm);
     io::Logger::misc() << "it 0: norm of residual "
                        << std::scientific << std::setprecision(16) 
                        << rnorm << " Norm of rhs: " << bnorm << "\n";
     initial_residual_norm_ = rnorm;
     while(outer_flag) {
       // check if maybe residual is already small enough?
-      if(it == 0) {
+      if (it == 0) {
         tolrel = tol_ * rnorm;
-        if(fabs(tolrel) < 1e-16) {
+        if (std::abs(tolrel) < 1e-16) {
           tolrel = 1e-16;
         }
       }
       int exit_cond = 0;
-      if (conv_cond_ == 0){
-        exit_cond =  ((fabs(rnorm - ZERO) <= EPSILON));
+      if (conv_cond_ == 0) {
+        exit_cond =  ((std::abs(rnorm - ZERO) <= EPSILON));
       } else {
-        if (conv_cond_ == 1){
-          exit_cond =  ((fabs(rnorm - ZERO) <= EPSILON) || (rnorm < tol_));
+        if (conv_cond_ == 1) {
+          exit_cond =  ((std::abs(rnorm - ZERO) <= EPSILON) || (rnorm < tol_));
         } else {
-          if (conv_cond_ == 2){
-            exit_cond =  ((fabs(rnorm - ZERO) <= EPSILON) || (rnorm < (tol_*bnorm)));
+          if (conv_cond_ == 2) {
+            exit_cond =  ((std::abs(rnorm - ZERO) <= EPSILON) || (rnorm < (tol_*bnorm)));
           }
         }
       }
@@ -203,9 +203,9 @@ namespace ReSolve
         } // if i!=0
         real_type Hii = h_H_[i * (restart_ + 1) + i];
         real_type Hii1 = h_H_[(i) * (restart_ + 1) + i + 1];
-        real_type gam = sqrt(Hii * Hii + Hii1 * Hii1);
+        real_type gam = std::sqrt(Hii * Hii + Hii1 * Hii1);
 
-        if(fabs(gam - ZERO) <= EPSILON) {
+        if(std::abs(gam - ZERO) <= EPSILON) {
           gam = EPSMAC;
         }
 
@@ -219,7 +219,7 @@ namespace ReSolve
         h_H_[(i) * (restart_ + 1) + (i + 1)] = h_c_[i] * Hii1 - h_s_[i] * Hii;
 
         // residual norm estimate
-        rnorm = fabs(h_rs_[i + 1]);
+        rnorm = std::abs(h_rs_[i + 1]);
         io::Logger::misc() << "it: " << it << " --> norm of the residual "
                            << std::scientific << std::setprecision(16)
                            << rnorm << "\n";
@@ -276,7 +276,7 @@ namespace ReSolve
       matrix_handler_->matvec(A_, x, vec_V_, &MINUSONE, &ONE,"csr", memspace_); 
       rnorm = vector_handler_->dot(vec_V_, vec_V_, memspace_);
       // rnorm = ||V_1||
-      rnorm = sqrt(rnorm);
+      rnorm = std::sqrt(rnorm);
 
       if(!outer_flag) {
         final_residual_norm_ = rnorm;
