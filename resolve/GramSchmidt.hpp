@@ -30,8 +30,8 @@ namespace ReSolve
     private:
       int freeGramSchmidtData();
     
-      GSVariant variant_;
-      bool setup_complete_; //to avoid double allocations and stuff
+      GSVariant variant_{mgs};
+      bool setup_complete_{false}; //to avoid double allocations and stuff
 
       index_type num_vecs_; //the same as restart  
       vector_type* vec_rv_{nullptr};

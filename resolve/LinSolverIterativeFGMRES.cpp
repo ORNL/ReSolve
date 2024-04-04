@@ -18,42 +18,43 @@ namespace ReSolve
   using out = io::Logger;
 
   LinSolverIterativeFGMRES::LinSolverIterativeFGMRES(MatrixHandler* matrix_handler,
+                                                     VectorHandler* vector_handler)
+  {
+    matrix_handler_ = matrix_handler;
+    vector_handler_ = vector_handler;
+    GS_ = nullptr;
+    setMemorySpace();
+  }
+
+  LinSolverIterativeFGMRES::LinSolverIterativeFGMRES(MatrixHandler* matrix_handler,
                                                      VectorHandler* vector_handler,
                                                      GramSchmidt*   gs)
   {
-    this->matrix_handler_ = matrix_handler;
-    this->vector_handler_ = vector_handler;
-    this->GS_ = gs;
-
+    matrix_handler_ = matrix_handler;
+    vector_handler_ = vector_handler;
+    GS_ = gs;
     setMemorySpace();
-
-    vec_V_ = nullptr;
-    vec_Z_ = nullptr;
   }
 
-  LinSolverIterativeFGMRES::LinSolverIterativeFGMRES(index_type restart, 
-                                                     real_type  tol,
-                                                     index_type maxit,
-                                                     index_type conv_cond,
+  LinSolverIterativeFGMRES::LinSolverIterativeFGMRES(index_type     restart,
+                                                     real_type      tol,
+                                                     index_type     maxit,
+                                                     index_type     conv_cond,
                                                      MatrixHandler* matrix_handler,
                                                      VectorHandler* vector_handler,
                                                      GramSchmidt*   gs)
   {
-    this->matrix_handler_ = matrix_handler;
-    this->vector_handler_ = vector_handler;
-    this->GS_ = gs;
-
-    setMemorySpace();
-
+    // Base class settings here (to be removed when solver parameter settings are implemented)
     tol_ = tol; 
     maxit_= maxit; 
     restart_ = restart;
     conv_cond_ = conv_cond;
     flexible_ = true;
 
-    vec_V_ = nullptr;
-    vec_Z_ = nullptr;
-
+    matrix_handler_ = matrix_handler;
+    vector_handler_ = vector_handler;
+    GS_ = gs;
+    setMemorySpace();
   }
 
   LinSolverIterativeFGMRES::~LinSolverIterativeFGMRES()
@@ -308,19 +309,37 @@ namespace ReSolve
     return 0;
   }
 
+  /**
+   * @brief Sets pointer to Gram-Schmidt (re)orthogonalization.
+   * 
+   * @param[in] gs - pointer to Gram-Schmidt class instance.
+   * @return 0 if successful, error code otherwise.
+   */
   int LinSolverIterativeFGMRES::setOrthogonalization(GramSchmidt* gs)
   {
     GS_ = gs;
     return 0;
   }
 
+  /**
+   * @brief Set/change GMRES restart value
+   * 
+   * This function should leave solver instance in the same state but with
+   * the new restart value.
+   * 
+   * @param[in] restart - the restart value 
+   * @return 0 if successful, error code otherwise.
+   * 
+   * @todo Consider not setting up GS, if it was not previously set up.
+   */
   int LinSolverIterativeFGMRES::setRestart(index_type restart)
   {
+    // If the new restart value is the same as the old, do nothing.
     if (restart_ == restart) {
       return 0;
     }
 
-    // Set new restart value
+    // Otherwise, set new restart value
     restart_ = restart;
 
     // If solver is already set, reallocate solver data
@@ -331,11 +350,21 @@ namespace ReSolve
 
     matrix_handler_->setValuesChanged(true, memspace_);
 
-    GS_->setup(n_, restart_);
+    // If Gram-Schmidt is already set, we need to reallocate it since the
+    // restart value has changed.
+    // if (GS_->isSetupComplete()) {
+      GS_->setup(n_, restart_);
+    // }
 
     return 0;
   }
 
+  /**
+   * @brief Switches between flexible and standard GMRES
+   * 
+   * @param is_flexible - true means set flexible GMRES
+   * @return 0 if successful, error code otherwise.
+   */
   int LinSolverIterativeFGMRES::setFlexible(bool is_flexible)
   {
     // TODO: Add vector method resize

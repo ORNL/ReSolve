@@ -23,51 +23,55 @@ namespace ReSolve
   using out = io::Logger;
 
   LinSolverIterativeRandFGMRES::LinSolverIterativeRandFGMRES(MatrixHandler* matrix_handler,
-                                                             VectorHandler* vector_handler, 
-                                                             SketchingMethod rand_method, 
-                                                             GramSchmidt*   gs)
+                                                             VectorHandler* vector_handler)
   {
-    this->matrix_handler_ = matrix_handler;
-    this->vector_handler_ = vector_handler;
-    this->sketching_method_ = rand_method;
-    this->GS_ = gs;
+    matrix_handler_ = matrix_handler;
+    vector_handler_ = vector_handler;
+    GS_ = nullptr;
 
     setMemorySpace();
+  }
 
+  LinSolverIterativeRandFGMRES::LinSolverIterativeRandFGMRES(MatrixHandler*  matrix_handler,
+                                                             VectorHandler*  vector_handler, 
+                                                             SketchingMethod rand_method, 
+                                                             GramSchmidt*    gs)
+  {
     tol_ = 1e-14; //default
     maxit_= 100; //default
     restart_ = 10;
     conv_cond_ = 0;//default
     flexible_ = true;
 
-    vec_V_ = nullptr;
-    vec_Z_ = nullptr;
-  }
-
-  LinSolverIterativeRandFGMRES::LinSolverIterativeRandFGMRES(index_type restart, 
-                                                             real_type  tol,
-                                                             index_type maxit,
-                                                             index_type conv_cond,
-                                                             MatrixHandler* matrix_handler,
-                                                             VectorHandler* vector_handler,
-                                                             SketchingMethod rand_method, 
-                                                             GramSchmidt*   gs)
-  {
-    this->matrix_handler_ = matrix_handler;
-    this->vector_handler_ = vector_handler;
-    this->sketching_method_ = rand_method;
-    this->GS_ = gs;
+    matrix_handler_ = matrix_handler;
+    vector_handler_ = vector_handler;
+    sketching_method_ = rand_method;
+    GS_ = gs;
 
     setMemorySpace();
+  }
 
+  LinSolverIterativeRandFGMRES::LinSolverIterativeRandFGMRES(index_type      restart, 
+                                                             real_type       tol,
+                                                             index_type      maxit,
+                                                             index_type      conv_cond,
+                                                             MatrixHandler*  matrix_handler,
+                                                             VectorHandler*  vector_handler,
+                                                             SketchingMethod rand_method, 
+                                                             GramSchmidt*    gs)
+  {
     tol_ = tol; 
     maxit_= maxit; 
     restart_ = restart;
     conv_cond_ = conv_cond;
     flexible_ = true;
 
-    vec_V_ = nullptr;
-    vec_Z_ = nullptr;
+    matrix_handler_ = matrix_handler;
+    vector_handler_ = vector_handler;
+    sketching_method_ = rand_method;
+    GS_ = gs;
+
+    setMemorySpace();
   }
 
   LinSolverIterativeRandFGMRES::~LinSolverIterativeRandFGMRES()
@@ -419,6 +423,8 @@ namespace ReSolve
       is_sketching_set_ = true;
     }
 
+    // If Gram-Schmidt is already set, we need to reallocate it since the
+    // k_rand_ value has changed.
     GS_->setup(k_rand_, restart_);
     matrix_handler_->setValuesChanged(true, memspace_);
 
@@ -431,8 +437,20 @@ namespace ReSolve
     return 0;
   }
 
+  /**
+   * @brief Set/change GMRES restart value
+   * 
+   * This function should leave solver instance in the same state but with
+   * the new restart value.
+   * 
+   * @param[in] restart - the restart value 
+   * @return 0 if successful, error code otherwise.
+   * 
+   * @todo Consider not setting up GS, if it was not previously set up.
+   */
   int LinSolverIterativeRandFGMRES::setRestart(index_type restart)
   {
+    // If the new restart value is the same as the old, do nothing.
     if (restart_ == restart) {
       return 0;
     }
@@ -446,17 +464,26 @@ namespace ReSolve
       allocateSolverData();
     }
 
+    // If sketching has been set, reallocate sketching data
     if (is_sketching_set_) {
       freeSketchingData();
       allocateSketchingData();
     }
 
+    // If Gram-Schmidt is already set, we need to reallocate it since the
+    // restart value has changed.
     GS_->setup(k_rand_, restart_);
     matrix_handler_->setValuesChanged(true, memspace_);
 
     return 0;
   }
 
+  /**
+   * @brief Switches between flexible and standard GMRES
+   * 
+   * @param is_flexible - true means set flexible GMRES
+   * @return 0 if successful, error code otherwise.
+   */
   int LinSolverIterativeRandFGMRES::setFlexible(bool is_flexible)
   {
     // TODO: Add vector method resize

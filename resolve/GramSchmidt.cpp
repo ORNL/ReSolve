@@ -17,17 +17,14 @@ namespace ReSolve
 
   GramSchmidt::GramSchmidt(VectorHandler* vh,  GSVariant variant)
     : variant_(variant),
+      setup_complete_(false),
       vector_handler_(vh)
   {
-    h_L_ = nullptr;
-
     if (vector_handler_->getIsCudaEnabled() || vector_handler_->getIsHipEnabled()) {
       memspace_ = memory::DEVICE;
     } else {
       memspace_ = memory::HOST;
     }
-
-    setup_complete_ = false;
   }
 
   GramSchmidt::~GramSchmidt()
@@ -37,14 +34,38 @@ namespace ReSolve
     }
   }
 
-  /// @todo Should this function restore the setup after changing the variant?
+  /**
+   * @brief Sets/changes Gram-Schmidt variant
+   * 
+   * This function should leave Gram-Schmidt class instance in the same state
+   * as it found it only with different implementation of the orthogonalization.
+   * 
+   * @param[in] variant - Gram-Schmidt orthogonalization variant
+   */
   int GramSchmidt::setVariant(GSVariant variant)
   {
-    if (setup_complete_) {
-      freeGramSchmidtData();
-      setup_complete_ = false;
+    // If the same variant is already set, do nothing.
+    if(variant == variant_) {
+      return 0;
     }
+
+    // If Gram-Scmidt data is not allocated, just set the variant and exit.
+    if (!setup_complete_) {
+      variant_ = variant;
+      return 0;
+    }
+
+    // If we reached this point, the setup was done for a different variant.
+    index_type n = vec_v_->getSize();
+
+    // First delete current data structures
+    freeGramSchmidtData();
+    setup_complete_ = false;
+
+    // Next, change variant and set up Gram-Scmidt again
     variant_ = variant;
+    setup(n, num_vecs_);
+    setup_complete_ = true;
 
     return 0;  
   }

@@ -27,15 +27,17 @@ namespace ReSolve
 
     public:
       LinSolverIterativeFGMRES(MatrixHandler* matrix_handler,
-                              VectorHandler* vector_handler,
-                              GramSchmidt*   gs);
+                               VectorHandler* vector_handler);
+      LinSolverIterativeFGMRES(MatrixHandler* matrix_handler,
+                               VectorHandler* vector_handler,
+                               GramSchmidt*   gs);
       LinSolverIterativeFGMRES(index_type restart,
-                              real_type  tol,
-                              index_type maxit,
-                              index_type conv_cond,
-                              MatrixHandler* matrix_handler,
-                              VectorHandler* vector_handler,
-                              GramSchmidt*   gs);
+                               real_type  tol,
+                               index_type maxit,
+                               index_type conv_cond,
+                               MatrixHandler* matrix_handler,
+                               VectorHandler* vector_handler,
+                               GramSchmidt*   gs);
       ~LinSolverIterativeFGMRES();
 
       int solve(vector_type* rhs, vector_type* x) override;
@@ -55,7 +57,6 @@ namespace ReSolve
 
       memory::MemorySpace memspace_;
 
-      std::string orth_option_;
       vector_type* vec_V_{nullptr};
       vector_type* vec_Z_{nullptr};
 
