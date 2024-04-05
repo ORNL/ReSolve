@@ -5,8 +5,10 @@
  * 
  */
 #pragma once
+
 #include "Common.hpp"
-#include "LinSolver.hpp"
+#include <resolve/LinSolverDirect.hpp>
+#include <resolve/LinSolverIterative.hpp>
 
 namespace ReSolve
 {

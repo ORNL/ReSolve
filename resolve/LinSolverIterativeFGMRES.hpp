@@ -5,11 +5,13 @@
  * 
  */
 #pragma once
+
 #include "Common.hpp"
 #include <resolve/matrix/Sparse.hpp>
 #include <resolve/vector/Vector.hpp>
-#include "LinSolver.hpp"
 #include "GramSchmidt.hpp"
+#include <resolve/LinSolverDirect.hpp>
+#include <resolve/LinSolverIterative.hpp>
 
 namespace ReSolve 
 {
