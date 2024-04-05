@@ -23,10 +23,8 @@ namespace ReSolve {
         {
           if (handler_.getIsCudaEnabled() || handler_.getIsHipEnabled()) {
             memspace_ = memory::DEVICE;
-            std::cout << "Memory space set to device: " << memspace_ << "\n";
           } else {
             memspace_ = memory::HOST;
-            std::cout << "Memory space set to host: " << memspace_ << "\n";
           }
         }
 
