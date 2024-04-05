@@ -72,8 +72,10 @@ namespace ReSolve
           real_type* H = new real_type[9]; // In this case, Hessenberg matrix is NOT 3 x 2 ???
           real_type* aux_data = nullptr; // needed for setup
 
-          V->allocate(memory::DEVICE);
-          V->allocate(memory::HOST);
+          V->allocate(ms);
+          if (ms == memory::DEVICE) {
+            V->allocate(memory::HOST);
+          }
 
           ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(handler_, var);
           GS->setup(N, 3);
