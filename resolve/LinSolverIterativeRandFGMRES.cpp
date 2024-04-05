@@ -23,132 +23,105 @@ namespace ReSolve
   using out = io::Logger;
 
   LinSolverIterativeRandFGMRES::LinSolverIterativeRandFGMRES(MatrixHandler* matrix_handler,
-                                                             VectorHandler* vector_handler, 
-                                                             SketchingMethod rand_method, 
-                                                             GramSchmidt*   gs)
+                                                             VectorHandler* vector_handler)
   {
-    this->matrix_handler_ = matrix_handler;
-    this->vector_handler_ = vector_handler;
-    this->sketching_method_ = rand_method;
-    this->GS_ = gs;
+    matrix_handler_ = matrix_handler;
+    vector_handler_ = vector_handler;
+    GS_ = nullptr;
 
     setMemorySpace();
+  }
 
+  LinSolverIterativeRandFGMRES::LinSolverIterativeRandFGMRES(MatrixHandler*  matrix_handler,
+                                                             VectorHandler*  vector_handler, 
+                                                             SketchingMethod rand_method, 
+                                                             GramSchmidt*    gs)
+  {
     tol_ = 1e-14; //default
     maxit_= 100; //default
     restart_ = 10;
     conv_cond_ = 0;//default
     flexible_ = true;
 
-    d_V_ = nullptr;
-    d_Z_ = nullptr;
-  }
-
-  LinSolverIterativeRandFGMRES::LinSolverIterativeRandFGMRES(index_type restart, 
-                                                             real_type  tol,
-                                                             index_type maxit,
-                                                             index_type conv_cond,
-                                                             MatrixHandler* matrix_handler,
-                                                             VectorHandler* vector_handler,
-                                                             SketchingMethod rand_method, 
-                                                             GramSchmidt*   gs)
-  {
-    this->matrix_handler_ = matrix_handler;
-    this->vector_handler_ = vector_handler;
-    this->sketching_method_ = rand_method;
-    this->GS_ = gs;
+    matrix_handler_ = matrix_handler;
+    vector_handler_ = vector_handler;
+    sketching_method_ = rand_method;
+    GS_ = gs;
 
     setMemorySpace();
+  }
 
+  LinSolverIterativeRandFGMRES::LinSolverIterativeRandFGMRES(index_type      restart, 
+                                                             real_type       tol,
+                                                             index_type      maxit,
+                                                             index_type      conv_cond,
+                                                             MatrixHandler*  matrix_handler,
+                                                             VectorHandler*  vector_handler,
+                                                             SketchingMethod rand_method, 
+                                                             GramSchmidt*    gs)
+  {
     tol_ = tol; 
     maxit_= maxit; 
     restart_ = restart;
     conv_cond_ = conv_cond;
     flexible_ = true;
 
-    d_V_ = nullptr;
-    d_Z_ = nullptr;
+    matrix_handler_ = matrix_handler;
+    vector_handler_ = vector_handler;
+    sketching_method_ = rand_method;
+    GS_ = gs;
+
+    setMemorySpace();
   }
 
   LinSolverIterativeRandFGMRES::~LinSolverIterativeRandFGMRES()
   {
     if (is_solver_set_) {
-      delete [] h_H_ ;
-      delete [] h_c_ ;
-      delete [] h_s_ ;
-      delete [] h_rs_;
-      if (memspace_ == memory::DEVICE) { 
-        mem_.deleteOnDevice(d_aux_);
-      } else {
-        delete [] d_aux_;
-      }
-      delete d_V_;   
-      delete d_Z_;
-      delete d_S_;
-      delete sketching_handler_;
+      freeSolverData();
+      is_solver_set_ = false;
+    }
+
+    if (is_sketching_set_) {
+      freeSketchingData();
+      is_sketching_set_ = false;
     }
   }
 
+  /**
+   * @brief Set system matrix and allocate solver and sketching data
+   * 
+   * @param[in] A - sparse system matrix
+   * @return 0 if setup successful 
+   */
   int LinSolverIterativeRandFGMRES::setup(matrix::Sparse* A)
   {
-    this->A_ = A;
+    // If A_ is already set, then report error and exit.
+    if (n_ != A->getNumRows()) {
+      if (is_solver_set_) {
+        out::warning() << "Matrix size changed. Reallocating solver ...\n";
+        freeSolverData();
+        is_solver_set_ = false;
+      }
+
+      if (is_sketching_set_) {
+        out::warning() << "Matrix size changed. Reallocating solver ...\n";
+        freeSketchingData();
+        is_sketching_set_ = false;
+      }
+    }
+
+    A_ = A;
     n_ = A_->getNumRows();
 
-    d_V_ = new vector_type(n_, restart_ + 1);
-    d_V_->allocate(memspace_);      
-    if (flexible_) {
-      d_Z_ = new vector_type(n_, restart_ + 1);
-    } else {
-      // otherwise Z is just one vector, not multivector and we dont keep it
-      d_Z_ = new vector_type(n_);
-    }
-    d_Z_->allocate(memspace_);   
-    h_H_  = new real_type[restart_ * (restart_ + 1)];
-    h_c_  = new real_type[restart_];      // needed for givens
-    h_s_  = new real_type[restart_];      // same
-    h_rs_ = new real_type[restart_ + 1];  // for residual norm history
-    if (memspace_ == memory::DEVICE) {
-      mem_.allocateArrayOnDevice(&d_aux_, restart_ + 1); 
-    } else {
-      d_aux_  = new real_type[restart_ + 1];
-    }
-    // Set randomized method
-    k_rand_ = n_;
-    switch (sketching_method_) {
-      case cs:
-        if (ceil(restart_ * log(n_)) < k_rand_) {
-          k_rand_ = static_cast<index_type>(std::ceil(restart_ * std::log(static_cast<real_type>(n_))));
-        }
-        sketching_handler_ = new SketchingHandler(sketching_method_, device_type_);
-        // set k and n 
-        break;
-      case fwht:
-        if (ceil(2.0 * restart_ * log(n_) / log(restart_)) < k_rand_) {
-          k_rand_ = static_cast<index_type>(std::ceil(2.0 * restart_ * std::log(n_) / std::log(restart_)));
-        }
-        sketching_handler_ = new SketchingHandler(sketching_method_, device_type_);
-        break;
-      default:
-        io::Logger::warning() << "Wrong sketching method, setting to default (CountSketch)\n"; 
-        sketching_method_ = cs;
-        if (ceil(restart_ * log(n_)) < k_rand_) {
-          k_rand_ = static_cast<index_type>(std::ceil(restart_ * std::log(n_)));
-        }
-        sketching_handler_ = new SketchingHandler(cs, device_type_);
-        break;
+    if (!is_solver_set_) {
+      allocateSolverData();
+      is_solver_set_ = true;
     }
 
-    sketching_handler_->setup(n_, k_rand_); 
-
-    one_over_k_ = 1.0 / sqrt((real_type) k_rand_);
-
-    d_S_ = new vector_type(k_rand_, restart_ + 1);
-    d_S_->allocate(memspace_);      
-    if (sketching_method_ == cs) {
-      d_S_->setToZero(memspace_);
+    if (!is_sketching_set_) {
+      allocateSketchingData();
+      is_sketching_set_ = true;
     }
-
-    is_solver_set_ = true;
 
     return 0;
   }
@@ -177,14 +150,14 @@ namespace ReSolve
     vector_type* vec_s = new vector_type(k_rand_);
     //V[0] = b-A*x_0
     //debug
-    d_Z_->setToZero(memspace_);
-    d_V_->setToZero(memspace_);
+    vec_Z_->setToZero(memspace_);
+    vec_V_->setToZero(memspace_);
 
-    rhs->deepCopyVectorData(d_V_->getData(memspace_), 0, memspace_);  
-    matrix_handler_->matvec(A_, x, d_V_, &MINUSONE, &ONE, "csr", memspace_); 
+    rhs->deepCopyVectorData(vec_V_->getData(memspace_), 0, memspace_);  
+    matrix_handler_->matvec(A_, x, vec_V_, &MINUSONE, &ONE, "csr", memspace_); 
 
-    vec_v->setData( d_V_->getVectorData(0, memspace_), memspace_);
-    vec_s->setData( d_S_->getVectorData(0, memspace_), memspace_);
+    vec_v->setData(vec_V_->getVectorData(0, memspace_), memspace_);
+    vec_s->setData(vec_S_->getVectorData(0, memspace_), memspace_);
 
     sketching_handler_->Theta(vec_v, vec_s);
 
@@ -196,27 +169,27 @@ namespace ReSolve
     rnorm = 0.0;
     bnorm = vector_handler_->dot(rhs, rhs, memspace_);
     rnorm = vector_handler_->dot(vec_s, vec_s, memspace_);
-    rnorm = sqrt(rnorm); // rnorm = ||V_1||
-    bnorm = sqrt(bnorm);
+    rnorm = std::sqrt(rnorm); // rnorm = ||V_1||
+    bnorm = std::sqrt(bnorm);
     io::Logger::misc() << "it 0: norm of residual "
                        << std::scientific << std::setprecision(16) 
                        << rnorm << " Norm of rhs: " << bnorm << "\n";
     initial_residual_norm_ = rnorm;
     while(outer_flag) {
       // check if maybe residual is already small enough?
-      if(it == 0) {
+      if (it == 0) {
         tolrel = tol_ * rnorm;
-        if(fabs(tolrel) < 1e-16) {
+        if (std::abs(tolrel) < 1e-16) {
           tolrel = 1e-16;
         }
       }
       int exit_cond = 0;
       if (conv_cond_ == 0) {
-        exit_cond =  ((fabs(rnorm - ZERO) <= EPSILON));
+        exit_cond =  ((std::abs(rnorm - ZERO) <= EPSILON));
       } else if (conv_cond_ == 1) {
-        exit_cond =  ((fabs(rnorm - ZERO) <= EPSILON) || (rnorm < tol_));
+        exit_cond =  ((std::abs(rnorm - ZERO) <= EPSILON) || (rnorm < tol_));
       } else if (conv_cond_ == 2) {
-        exit_cond =  ((fabs(rnorm - ZERO) <= EPSILON) || (rnorm < (tol_*bnorm)));
+        exit_cond =  ((std::abs(rnorm - ZERO) <= EPSILON) || (rnorm < (tol_*bnorm)));
       }
       if (exit_cond) {
         outer_flag = 0;
@@ -228,8 +201,8 @@ namespace ReSolve
 
       // normalize first vector
       t = 1.0 / rnorm;
-      vector_handler_->scal(&t, d_V_, memspace_);
-      vector_handler_->scal(&t, d_S_, memspace_);
+      vector_handler_->scal(&t, vec_V_, memspace_);
+      vector_handler_->scal(&t, vec_S_, memspace_);
 
       mem_.deviceSynchronize();
       // initialize norm history
@@ -242,30 +215,30 @@ namespace ReSolve
         it++;
 
         // Z_i = (LU)^{-1}*V_i
-        vec_v->setData( d_V_->getVectorData(i, memspace_), memspace_);
+        vec_v->setData(vec_V_->getVectorData(i, memspace_), memspace_);
         if (flexible_) {
-          vec_z->setData( d_Z_->getVectorData(i, memspace_), memspace_);
+          vec_z->setData(vec_Z_->getVectorData(i, memspace_), memspace_);
         } else {
-          vec_z->setData( d_Z_->getVectorData(0, memspace_), memspace_);
+          vec_z->setData(vec_Z_->getVectorData(0, memspace_), memspace_);
         }
         this->precV(vec_v, vec_z);
 
         mem_.deviceSynchronize();
 
         // V_{i+1}=A*Z_i
-        vec_v->setData( d_V_->getVectorData(i + 1, memspace_), memspace_);
+        vec_v->setData(vec_V_->getVectorData(i + 1, memspace_), memspace_);
 
         matrix_handler_->matvec(A_, vec_z, vec_v, &ONE, &ZERO, "csr", memspace_); 
 
         // orthogonalize V[i+1], form a column of h_H_
         // this is where it differs from normal solver GS
-        vec_s->setData( d_S_->getVectorData(i + 1, memspace_), memspace_);
+        vec_s->setData(vec_S_->getVectorData(i + 1, memspace_), memspace_);
         sketching_handler_->Theta(vec_v, vec_s); 
         if (sketching_method_ == fwht) {
           vector_handler_->scal(&one_over_k_, vec_s, memspace_);
         }
         mem_.deviceSynchronize();
-        GS_->orthogonalize(k_rand_, d_S_, h_H_, i); //, memspace_);  
+        GS_->orthogonalize(k_rand_, vec_S_, h_H_, i);
         // now post-process
         if (memspace_ == memory::DEVICE) {
           mem_.copyArrayHostToDevice(d_aux_, &h_H_[i * (restart_ + 1)], i + 2);
@@ -276,13 +249,13 @@ namespace ReSolve
         vec_z->setCurrentSize(i + 1);
         // V(:, i+1) = w - V(:, 1:i)*d_H_col = V(:, i+1) - d_H_col*V(:,1:i); 
 
-        vector_handler_->gemv('N', n_, i + 1, &MINUSONE, &ONE, d_V_, vec_z, vec_v, memspace_ );  
+        vector_handler_->gemv('N', n_, i + 1, &MINUSONE, &ONE, vec_V_, vec_z, vec_v, memspace_ );  
 
         vec_z->setCurrentSize(n_);
         t = 1.0 / h_H_[i * (restart_ + 1) + i + 1];
         vector_handler_->scal(&t, vec_v, memspace_);  
         mem_.deviceSynchronize();
-        vec_s->setData( d_S_->getVectorData(i + 1, memspace_), memspace_);
+        vec_s->setData(vec_S_->getVectorData(i + 1, memspace_), memspace_);
 
         if (i != 0) {
           for (int k = 1; k <= i; k++) {
@@ -294,9 +267,9 @@ namespace ReSolve
         } // if (i != 0)
         double Hii = h_H_[i * (restart_ + 1) + i];
         double Hii1 = h_H_[(i) * (restart_ + 1) + i + 1];
-        double gam = sqrt(Hii * Hii + Hii1 * Hii1);
+        double gam = std::sqrt(Hii * Hii + Hii1 * Hii1);
 
-        if(fabs(gam - ZERO) <= EPSILON) {
+        if(std::abs(gam - ZERO) <= EPSILON) {
           gam = EPSMAC;
         }
 
@@ -306,11 +279,11 @@ namespace ReSolve
         h_rs_[i + 1] = -h_s_[i] * h_rs_[i];
         h_rs_[i] = h_c_[i] * h_rs_[i];
 
-        h_H_[(i) * (restart_ + 1) + (i)] = h_c_[i] * Hii + h_s_[i] * Hii1;
+        h_H_[(i) * (restart_ + 1) + (i)]     = h_c_[i] * Hii  + h_s_[i] * Hii1;
         h_H_[(i) * (restart_ + 1) + (i + 1)] = h_c_[i] * Hii1 - h_s_[i] * Hii;
 
         // residual norm estimate
-        rnorm = fabs(h_rs_[i + 1]);
+        rnorm = std::abs(h_rs_[i + 1]);
 
         io::Logger::misc() << "it: "<< it << " --> norm of the residual "
                            << std::scientific << std::setprecision(16)
@@ -339,25 +312,19 @@ namespace ReSolve
       // get solution
       if (flexible_) {
         for (j = 0; j <= i; j++) {
-          vec_z->setData( d_Z_->getVectorData(j, memspace_), memspace_);
+          vec_z->setData(vec_Z_->getVectorData(j, memspace_), memspace_);
           vector_handler_->axpy(&h_rs_[j], vec_z, x, memspace_);
         }
       } else {
-        if (memspace_ == memory::DEVICE) {
-          mem_.setZeroArrayOnDevice(d_Z_->getData(memspace_), d_Z_->getSize());
-        } else {
-          std::memset(d_Z_->getData(memspace_), 0.0, static_cast<size_t>(d_Z_->getSize()) * sizeof(real_type));
-        }
-
-        vec_z->setData( d_Z_->getVectorData(0, memspace_), memspace_);
+        vec_Z_->setToZero(0, memspace_);
+        vec_z->setData( vec_Z_->getVectorData(0, memspace_), memspace_);
         for(j = 0; j <= i; j++) {
-          vec_v->setData( d_V_->getVectorData(j, memspace_), memspace_);
+          vec_v->setData(vec_V_->getVectorData(j, memspace_), memspace_);
           vector_handler_->axpy(&h_rs_[j], vec_v, vec_z, memspace_);
-
         }
         // now multiply d_Z by precon
 
-        vec_v->setData( d_V_->getData(memspace_), memspace_);
+        vec_v->setData(vec_V_->getData(memspace_), memspace_);
         this->precV(vec_z, vec_v);
         // and add to x 
         vector_handler_->axpy(&ONE, vec_v, x, memspace_);
@@ -369,35 +336,31 @@ namespace ReSolve
         outer_flag = 0;
       }
 
-      rhs->deepCopyVectorData(d_V_->getData(memspace_), 0, memspace_);  
-      matrix_handler_->matvec(A_, x, d_V_, &MINUSONE, &ONE,"csr", memspace_); 
+      rhs->deepCopyVectorData(vec_V_->getData(memspace_), 0, memspace_);  
+      matrix_handler_->matvec(A_, x, vec_V_, &MINUSONE, &ONE,"csr", memspace_); 
       if (outer_flag) {
 
         sketching_handler_->reset();
 
         if (sketching_method_ == cs) {
-          if (memspace_ == memory::DEVICE) {
-            mem_.setZeroArrayOnDevice(d_S_->getData(memspace_), d_S_->getSize() * d_S_->getNumVectors());
-          } else {
-            std::memset(d_S_->getData(memspace_), 0.0, static_cast<size_t>(d_S_->getSize()) * sizeof(real_type) * static_cast<size_t>(d_S_->getNumVectors()));
-          }
+          vec_S_->setToZero(memspace_);
         }
-        vec_v->setData( d_V_->getVectorData(0, memspace_), memspace_);
-        vec_s->setData( d_S_->getVectorData(0, memspace_), memspace_);
+        vec_v->setData(vec_V_->getVectorData(0, memspace_), memspace_);
+        vec_s->setData(vec_S_->getVectorData(0, memspace_), memspace_);
         sketching_handler_->Theta(vec_v, vec_s);
         if (sketching_method_ == fwht) {
           vector_handler_->scal(&one_over_k_, vec_s, memspace_);
         }
         mem_.deviceSynchronize();
-        rnorm = vector_handler_->dot(d_S_, d_S_, memspace_);
+        rnorm = vector_handler_->dot(vec_S_, vec_S_, memspace_);
         // rnorm = ||S_0||
-        rnorm = sqrt(rnorm);
+        rnorm = std::sqrt(rnorm);
       }
 
       if (!outer_flag) {
-        rnorm = vector_handler_->dot(d_V_, d_V_, memspace_);
+        rnorm = vector_handler_->dot(vec_V_, vec_V_, memspace_);
         // rnorm = ||V_0||
-        rnorm = sqrt(rnorm);
+        rnorm = std::sqrt(rnorm);
 
         io::Logger::misc() << "End of cycle, COMPUTED norm of residual "
                            << std::scientific << std::setprecision(16)
@@ -440,18 +403,102 @@ namespace ReSolve
    * @param[in] method - string describing sketching method 
    * @return 0 if successful, 1 otherwise.
    */
-  int LinSolverIterativeRandFGMRES::setSketchingMethod(std::string method)
+  int LinSolverIterativeRandFGMRES::setSketchingMethod(SketchingMethod method)
   {
-    if (method == "count") {
-      sketching_method_ = LinSolverIterativeRandFGMRES::cs;
-    } else if (method == "fwht") {
-      sketching_method_ = LinSolverIterativeRandFGMRES::fwht;
-    } else {
-      out::warning() << "Sketching method " << method << " not recognized!\n"
-                     << "Using default.\n";
-      sketching_method_ = LinSolverIterativeRandFGMRES::cs;
-      return 1;
+    if (is_sketching_set_) {
+      if (method == sketching_method_) {
+        out::misc() << "Keeping sketching method " << method << "\n";
+        return 0;
+      }
+      out::misc() << "Deleting sketching method " << sketching_method_ << "\n";
+      freeSketchingData();
+      is_sketching_set_ = false;
     }
+
+    // If solver is set, go ahead and create sketching, otherwise just set sketching method.
+    sketching_method_ = method;
+    if (is_solver_set_) {
+      out::misc() << "Allocating sketching method " << sketching_method_ << "\n";
+      allocateSketchingData();
+      is_sketching_set_ = true;
+    }
+
+    // If Gram-Schmidt is already set, we need to reallocate it since the
+    // k_rand_ value has changed.
+    GS_->setup(k_rand_, restart_);
+    matrix_handler_->setValuesChanged(true, memspace_);
+
+    return 0;
+  }
+
+  int LinSolverIterativeRandFGMRES::setOrthogonalization(GramSchmidt* gs)
+  {
+    GS_ = gs;
+    return 0;
+  }
+
+  /**
+   * @brief Set/change GMRES restart value
+   * 
+   * This function should leave solver instance in the same state but with
+   * the new restart value.
+   * 
+   * @param[in] restart - the restart value 
+   * @return 0 if successful, error code otherwise.
+   * 
+   * @todo Consider not setting up GS, if it was not previously set up.
+   */
+  int LinSolverIterativeRandFGMRES::setRestart(index_type restart)
+  {
+    // If the new restart value is the same as the old, do nothing.
+    if (restart_ == restart) {
+      return 0;
+    }
+
+    // Set new restart value
+    restart_ = restart;
+
+    // If solver is already set, reallocate solver data
+    if (is_solver_set_) {
+      freeSolverData();
+      allocateSolverData();
+    }
+
+    // If sketching has been set, reallocate sketching data
+    if (is_sketching_set_) {
+      freeSketchingData();
+      allocateSketchingData();
+    }
+
+    // If Gram-Schmidt is already set, we need to reallocate it since the
+    // restart value has changed.
+    GS_->setup(k_rand_, restart_);
+    matrix_handler_->setValuesChanged(true, memspace_);
+
+    return 0;
+  }
+
+  /**
+   * @brief Switches between flexible and standard GMRES
+   * 
+   * @param is_flexible - true means set flexible GMRES
+   * @return 0 if successful, error code otherwise.
+   */
+  int LinSolverIterativeRandFGMRES::setFlexible(bool is_flexible)
+  {
+    // TODO: Add vector method resize
+    if (vec_Z_) {
+      delete vec_Z_;
+      if (is_flexible) {
+        vec_Z_ = new vector_type(n_, restart_ + 1);
+      } else {
+        // otherwise Z is just a one vector, not multivector and we dont keep it
+        vec_Z_ = new vector_type(n_);
+      }
+      vec_Z_->allocate(memspace_); 
+    }
+    flexible_ = is_flexible;
+    matrix_handler_->setValuesChanged(true, memspace_);
     return 0;
   }
 
@@ -459,7 +506,110 @@ namespace ReSolve
   // Private methods
   //
 
-  void  LinSolverIterativeRandFGMRES::precV(vector_type* rhs, vector_type* x)
+  int LinSolverIterativeRandFGMRES::allocateSolverData()
+  {
+    vec_V_ = new vector_type(n_, restart_ + 1);
+    vec_V_->allocate(memspace_);      
+    if (flexible_) {
+      vec_Z_ = new vector_type(n_, restart_ + 1);
+    } else {
+      // otherwise Z is just one vector, not multivector and we dont keep it
+      vec_Z_ = new vector_type(n_);
+    }
+    vec_Z_->allocate(memspace_);   
+    h_H_  = new real_type[restart_ * (restart_ + 1)];
+    h_c_  = new real_type[restart_];      // needed for givens
+    h_s_  = new real_type[restart_];      // same
+    h_rs_ = new real_type[restart_ + 1];  // for residual norm history
+    if (memspace_ == memory::DEVICE) {
+      mem_.allocateArrayOnDevice(&d_aux_, restart_ + 1); 
+    } else {
+      d_aux_  = new real_type[restart_ + 1];
+    }
+    return 0;
+  }
+
+  int LinSolverIterativeRandFGMRES::freeSolverData()
+  {
+    delete [] h_H_ ;
+    delete [] h_c_ ;
+    delete [] h_s_ ;
+    delete [] h_rs_;
+    if (memspace_ == memory::DEVICE) { 
+      mem_.deleteOnDevice(d_aux_);
+    } else {
+      delete [] d_aux_;
+    }
+    delete vec_V_;   
+    delete vec_Z_;
+
+    h_H_   = nullptr;
+    h_c_   = nullptr;
+    h_s_   = nullptr;
+    h_rs_  = nullptr;
+    d_aux_ = nullptr;
+    vec_V_   = nullptr;
+    vec_Z_   = nullptr;
+
+    return 0;
+  }
+
+  /**
+   * @brief Allocate data and instantiate sketching handler.
+   * 
+   * @pre Randomized solver data is allocated.
+   */
+  int LinSolverIterativeRandFGMRES::allocateSketchingData()
+  {
+    // Set randomized method
+    k_rand_ = n_;
+    switch (sketching_method_) {
+      case cs:
+        if (std::ceil(restart_ * std::log(n_)) < k_rand_) {
+          k_rand_ = static_cast<index_type>(std::ceil(restart_ * std::log(static_cast<real_type>(n_))));
+        }
+        sketching_handler_ = new SketchingHandler(sketching_method_, device_type_);
+        // set k and n 
+        break;
+      case fwht:
+        if (std::ceil(2.0 * restart_ * std::log(n_) / std::log(restart_)) < k_rand_) {
+          k_rand_ = static_cast<index_type>(std::ceil(2.0 * restart_ * std::log(n_) / std::log(restart_)));
+        }
+        sketching_handler_ = new SketchingHandler(sketching_method_, device_type_);
+        break;
+      default:
+        io::Logger::warning() << "Wrong sketching method, setting to default (CountSketch)\n"; 
+        sketching_method_ = cs;
+        if (std::ceil(restart_ * std::log(n_)) < k_rand_) {
+          k_rand_ = static_cast<index_type>(std::ceil(restart_ * std::log(n_)));
+        }
+        sketching_handler_ = new SketchingHandler(cs, device_type_);
+        break;
+    }
+
+    one_over_k_ = 1.0 / std::sqrt((real_type) k_rand_);
+    vec_S_ = new vector_type(k_rand_, restart_ + 1);
+    vec_S_->allocate(memspace_);      
+    if (sketching_method_ == cs) {
+      vec_S_->setToZero(memspace_);
+    }
+
+    sketching_handler_->setup(n_, k_rand_);
+    return 0;
+  }
+
+  int LinSolverIterativeRandFGMRES::freeSketchingData()
+  {
+    delete vec_S_;
+    delete sketching_handler_;
+
+    vec_S_ = nullptr;
+    sketching_handler_ = nullptr;
+
+    return 0;
+  }
+
+  void LinSolverIterativeRandFGMRES::precV(vector_type* rhs, vector_type* x)
   { 
     LU_solver_->solve(rhs, x);
   }

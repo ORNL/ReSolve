@@ -41,7 +41,7 @@ namespace ReSolve
 
     private:
 
-      MemoryHandler mem_; ///< Device memory manager object
+      // MemoryHandler mem_; ///< Device memory manager object
       LinAlgWorkspaceCpu* workspace_{nullptr}; 
       bool owns_factors_{false};    ///< If the class owns L and U factors
 

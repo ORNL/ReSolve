@@ -80,7 +80,7 @@ namespace ReSolve
   
   void LinAlgWorkspaceHIP::setNormBufferState(bool r)
   {
-    norm_buffer_ready_ = r;;
+    norm_buffer_ready_ = r;
   }
   
   bool LinAlgWorkspaceHIP::matvecSetup()

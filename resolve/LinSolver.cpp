@@ -171,6 +171,12 @@ namespace ReSolve
     return flexible_;
   }
 
+  int LinSolverIterative::setOrthogonalization(GramSchmidt* /* gs */)
+  {
+    out::error() << "Solver does not implement setting orthogonalization.\n";
+    return 1;
+  }
+
   void  LinSolverIterative::setTol(real_type new_tol)
   {
     this->tol_ = new_tol;
@@ -181,19 +187,9 @@ namespace ReSolve
     this->maxit_ = new_maxit;
   }
 
-  void  LinSolverIterative::setRestart(index_type new_restart)
-  {
-    this->restart_ = new_restart;
-  }
-
   void  LinSolverIterative::setConvCond(index_type new_conv_cond)
   {
     this->conv_cond_ = new_conv_cond;
-  }
-
-  void  LinSolverIterative::setFlexible(bool new_flex)
-  {
-    this->flexible_ = new_flex;
   }
 }
 

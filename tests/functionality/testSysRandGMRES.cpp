@@ -2,7 +2,7 @@
  * @file testSysRandGMRES.cpp
  * @author Kasia Swirydowicz (kasia.swirydowicz@pnnl.gov)
  * @author Slaven Peles (peless@ornl.gov)
- * @brief Functionality test for SystemSolver and randomized GMRES classes 
+ * @brief Functionality tests for SystemSolver and GMRES classes 
  * @date 2023-12-18
  * 
  * 
@@ -34,7 +34,7 @@ using vector_type = ReSolve::vector::Vector;
 
 // Forward declarations of helper functions that create test linear system
 template <class T>
-static int test(int argc, char *argv[]);
+static int test(int argc, char* argv[]);
 static void processInputs(std::string& method, std::string& gs, std::string& sketch);
 static std::string headerInfo(const std::string& method, const std::string& gs, const std::string& sketch, bool flexible);
 static ReSolve::matrix::Csr* generateMatrix(const index_type N, ReSolve::memory::MemorySpace memspace);
@@ -130,19 +130,20 @@ int test(int argc, char *argv[])
 
   // Set solver options
   real_type tol = 1e-12;
-  if (method == "randgmres") {
-    solver.setSketchingMethod(sketch);
-  }
-  solver.getIterativeSolver().setRestart(200);
   solver.getIterativeSolver().setMaxit(2500);
   solver.getIterativeSolver().setTol(tol);
-  solver.getIterativeSolver().setFlexible(flexible);
 
   matrix_handler.setValuesChanged(true, memspace);
 
   // Set system matrix and initialize iterative solver
   status = solver.setMatrix(A);
   error_sum += status;
+
+  solver.getIterativeSolver().setRestart(200);
+  if (method == "randgmres") {
+    solver.setSketchingMethod(sketch);
+  }
+  solver.getIterativeSolver().setFlexible(flexible);
 
   // Set preconditioner (default in this case ILU0)
   status = solver.preconditionerSetup();
@@ -172,6 +173,10 @@ int test(int argc, char *argv[])
             << "\t Number of iterations                                 : " 
             << solver.getIterativeSolver().getNumIter() << "\n";
 
+  if (!std::isfinite(final_norm)) {
+    std::cout << "Result is not a finite number!\n";
+    error_sum++;
+  }
   if (final_norm/norm_b > (10.0 * tol)) {
     std::cout << "Result inaccurate!\n";
     error_sum++;
@@ -204,7 +209,7 @@ void processInputs(std::string& method, std::string& gs, std::string& sketch)
     method = "fgmres";
   }
 
-  if (gs != "cgs1" && gs != "cgs2" && gs != "mgs" && gs != "mgs_two_synch" && gs != "mgs_pm") {
+  if (gs != "cgs1" && gs != "cgs2" && gs != "mgs" && gs != "mgs_two_sync" && gs != "mgs_pm") {
     std::cout << "Unknown orthogonalization " << gs << "\n";
     std::cout << "Setting orthogonalization to the default (CGS2).\n\n";
     gs = "cgs2";
@@ -238,7 +243,7 @@ std::string headerInfo(const std::string& method, const std::string& gs, const s
     header += (withgs + "classical Gram-Schmidt\n");
   } else if (gs == "mgs") {
     header += (withgs + "modified Gram-Schmidt\n");    
-  } else if (gs == "mgs_two_synch") {
+  } else if (gs == "mgs_two_sync") {
     header += (withgs + "modified Gram-Schmidt 2-sync\n");    
   } else if (gs == "mgs_pm") {
     header += (withgs + "post-modern modified Gram-Schmidt\n");    

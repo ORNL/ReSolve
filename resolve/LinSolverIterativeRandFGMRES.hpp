@@ -37,9 +37,12 @@ namespace ReSolve
       using vector_type = vector::Vector;
 
     public:
-      enum SketchingMethod { cs = 0,    // count sketch 
-                             fwht = 1}; // fast Walsh-Hadamard transform
+      enum SketchingMethod {cs = 0, // count sketch 
+                            fwht};  // fast Walsh-Hadamard transform
     
+      LinSolverIterativeRandFGMRES(MatrixHandler* matrix_handler,
+                                   VectorHandler* vector_handler);
+
       LinSolverIterativeRandFGMRES(MatrixHandler* matrix_handler,
                                    VectorHandler* vector_handler,
                                    SketchingMethod rand_method, 
@@ -60,19 +63,28 @@ namespace ReSolve
       int setup(matrix::Sparse* A) override;
       int resetMatrix(matrix::Sparse* new_A) override; 
       int setupPreconditioner(std::string name, LinSolverDirect* LU_solver) override;
+      int setOrthogonalization(GramSchmidt* gs) override;
+
+      int setRestart(index_type restart) override;
+      int setFlexible(bool is_flexible) override;
 
       index_type getKrand();
-      int setSketchingMethod(std::string method);
+      int setSketchingMethod(SketchingMethod method);
+
     private:
+      int allocateSolverData();
+      int freeSolverData();
+      int allocateSketchingData();
+      int freeSketchingData();
       void setMemorySpace();
       void precV(vector_type* rhs, vector_type* x); ///< Apply preconditioner
 
       memory::MemorySpace memspace_;
 
-      vector_type* d_V_{nullptr};
-      vector_type* d_Z_{nullptr};
+      vector_type* vec_V_{nullptr};
+      vector_type* vec_Z_{nullptr};
       // for performing Gram-Schmidt
-      vector_type* d_S_{nullptr}; ///< this is where sketched vectors are stored
+      vector_type* vec_S_{nullptr}; ///< this is where sketched vectors are stored
 
       real_type* h_H_{nullptr};
       real_type* h_c_{nullptr};
@@ -91,5 +103,6 @@ namespace ReSolve
       SketchingMethod sketching_method_;
       memory::DeviceType device_type_{memory::NONE};
       bool is_solver_set_{false};
+      bool is_sketching_set_{false};
   };
 } // namespace ReSolve
