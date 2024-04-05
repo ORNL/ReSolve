@@ -18,8 +18,17 @@ namespace ReSolve { namespace tests {
 class MatrixHandlerTests : TestBase
 {
 public:
-  MatrixHandlerTests(std::string memspace) : memspace_(memspace) 
-  {}
+  MatrixHandlerTests(ReSolve::MatrixHandler& handler) : handler_(handler) 
+  {
+    if (handler_.getIsCudaEnabled() || handler_.getIsHipEnabled()) {
+      memspace_ = memory::DEVICE;
+      std::cout << "Memory space set to device: " << memspace_ << "\n";
+    } else {
+      memspace_ = memory::HOST;
+      std::cout << "Memory space set to host: " << memspace_ << "\n";
+    }
+  }
+
   virtual ~MatrixHandlerTests()
   {}
 
@@ -34,88 +43,52 @@ public:
   TestOutcome matrixInfNorm(index_type N)
   {
     TestStatus status;
-    ReSolve::memory::MemorySpace ms;
-    if (memspace_ == "cpu")
-      ms = memory::HOST;
-    else
-      ms = memory::DEVICE;
 
-    ReSolve::MatrixHandler* handler = createMatrixHandler();
-
-    matrix::Csr* A = createCsrMatrix(N, memspace_);
+    matrix::Csr* A = createCsrMatrix(N);
     real_type norm;
-    handler->matrixInfNorm(A, &norm, ms);
+    handler_.matrixInfNorm(A, &norm, memspace_);
     status *= (norm == 30.0); 
     
-    delete handler;
     delete A;
+
     return status.report(__func__);
   }
 
   TestOutcome matVec(index_type N)
   {
     TestStatus status;
-    ReSolve::memory::MemorySpace ms;
-    if (memspace_ == "cpu")
-      ms = memory::HOST;
-    else
-      ms = memory::DEVICE;
 
-    ReSolve::MatrixHandler* handler = createMatrixHandler();
-
-    matrix::Csr* A = createCsrMatrix(N, memspace_);
+    matrix::Csr* A = createCsrMatrix(N);
     vector::Vector x(N);
     vector::Vector y(N);
-    x.allocate(ms);
-    if (x.getData(ms) == NULL) printf("oups we have an issue \n");
-    y.allocate(ms);
+    x.allocate(memspace_);
+    if (x.getData(memspace_) == NULL) 
+      std::cout << "Oups we have an issue \n";
+    y.allocate(memspace_);
 
-    x.setToConst(1.0, ms);
-    y.setToConst(1.0, ms);
+    x.setToConst(1.0, memspace_);
+    y.setToConst(1.0, memspace_);
 
     real_type alpha = 2.0/30.0;
     real_type beta  = 2.0;
-    handler->setValuesChanged(true, ms);
-    handler->matvec(A, &x, &y, &alpha, &beta, "csr", ms);
+    handler_.setValuesChanged(true, memspace_);
+    handler_.matvec(A, &x, &y, &alpha, &beta, "csr", memspace_);
 
-    status *= verifyAnswer(y, 4.0, memspace_);
+    status *= verifyAnswer(y, 4.0);
 
-    delete handler;
     delete A;
 
     return status.report(__func__);
   }
 
 private:
-  std::string memspace_{"cpu"};
+  ReSolve::MatrixHandler& handler_;
+  memory::MemorySpace memspace_{memory::HOST};
 
-  ReSolve::MatrixHandler* createMatrixHandler()
-  {
-    if (memspace_ == "cpu") {
-      LinAlgWorkspaceCpu* workspace = new LinAlgWorkspaceCpu();
-      return new MatrixHandler(workspace);
-#ifdef RESOLVE_USE_CUDA
-    } else if (memspace_ == "cuda") {
-      LinAlgWorkspaceCUDA* workspace = new LinAlgWorkspaceCUDA();
-      workspace->initializeHandles();
-      return new MatrixHandler(workspace);
-#endif
-#ifdef RESOLVE_USE_HIP
-    } else if (memspace_ == "hip") {
-      LinAlgWorkspaceHIP* workspace = new LinAlgWorkspaceHIP();
-      workspace->initializeHandles();
-      return new MatrixHandler(workspace);
-#endif
-    } else {
-      std::cout << "ReSolve not built with support for memory space " << memspace_ << "\n";
-    }
-    return nullptr;
-  }
-
-  bool verifyAnswer(vector::Vector& x, real_type answer, std::string memspace)
+  bool verifyAnswer(vector::Vector& x, real_type answer)
   {
     bool status = true;
-    if (memspace != "cpu") {
+    if (memspace_ == memory::DEVICE) {
       x.copyData(memory::DEVICE, memory::HOST);
     }
 
@@ -131,7 +104,7 @@ private:
     return status;
   }
 
-  matrix::Csr* createCsrMatrix(const index_type N, std::string memspace)
+  matrix::Csr* createCsrMatrix(const index_type N)
   {
     std::vector<real_type> r1 = {1., 5., 7., 8., 3., 2., 4.}; // sum 30
     std::vector<real_type> r2 = {1., 3., 2., 2., 1., 6., 7., 3., 2., 3.}; // sum 30
@@ -177,8 +150,8 @@ private:
     }
     A->setUpdated(memory::HOST);
 
-    if ((memspace == "cuda") || (memspace == "hip")) {
-      A->copyData(memory::DEVICE);
+    if (memspace_ == memory::DEVICE) {
+      A->copyData(memspace_);
     }
 
     return A;

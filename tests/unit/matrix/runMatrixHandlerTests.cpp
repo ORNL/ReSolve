@@ -11,8 +11,12 @@ int main(int, char**)
 
   {
     std::cout << "Running tests on CPU:\n";
-    ReSolve::tests::MatrixHandlerTests test("cpu");
-      
+
+    ReSolve::LinAlgWorkspaceCpu workspace;
+    workspace.initializeHandles();
+    ReSolve::MatrixHandler handler(&workspace);
+
+    ReSolve::tests::MatrixHandlerTests test(handler);
     result += test.matrixHandlerConstructor();
     result += test.matrixInfNorm(10000);
     result += test.matVec(50);
@@ -23,8 +27,11 @@ int main(int, char**)
 #ifdef RESOLVE_USE_CUDA
   {
     std::cout << "Running tests with CUDA backend:\n";
-    ReSolve::tests::MatrixHandlerTests test("cuda");
+    ReSolve::LinAlgWorkspaceCUDA workspace;
+    workspace.initializeHandles();
+    ReSolve::MatrixHandler handler(&workspace);
 
+    ReSolve::tests::MatrixHandlerTests test(handler);
     result += test.matrixHandlerConstructor();
     result += test.matrixInfNorm(1000000);
     result += test.matVec(50);
@@ -36,8 +43,11 @@ int main(int, char**)
 #ifdef RESOLVE_USE_HIP
   {
     std::cout << "Running tests with HIP backend:\n";
-    ReSolve::tests::MatrixHandlerTests test("hip");
+    ReSolve::LinAlgWorkspaceHIP workspace;
+    workspace.initializeHandles();
+    ReSolve::MatrixHandler handler(&workspace);
 
+    ReSolve::tests::MatrixHandlerTests test(handler);
     result += test.matrixHandlerConstructor();
     result += test.matrixInfNorm(1000000);
     result += test.matVec(50);

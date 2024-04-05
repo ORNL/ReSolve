@@ -9,8 +9,12 @@ int main(int, char**)
 
   {
     std::cout << "Running tests on CPU:\n";
-    ReSolve::tests::VectorHandlerTests test("cpu");
-      
+
+    ReSolve::LinAlgWorkspaceCpu workspace;
+    workspace.initializeHandles();
+    ReSolve::VectorHandler handler(&workspace);
+
+    ReSolve::tests::VectorHandlerTests test(handler);
     result += test.vectorHandlerConstructor();
     result += test.dot(50);
     result += test.axpy(50);
@@ -26,8 +30,12 @@ int main(int, char**)
 #ifdef RESOLVE_USE_CUDA
   {
     std::cout << "Running tests with CUDA backend:\n";
-    ReSolve::tests::VectorHandlerTests test("cuda");
 
+    ReSolve::LinAlgWorkspaceCUDA workspace;
+    workspace.initializeHandles();
+    ReSolve::VectorHandler handler(&workspace);
+
+    ReSolve::tests::VectorHandlerTests test(handler);
     result += test.dot(5000);
     result += test.axpy(5000);
     result += test.scal(5000);
@@ -45,8 +53,12 @@ int main(int, char**)
 #ifdef RESOLVE_USE_HIP
   {
     std::cout << "Running tests with HIP backend:\n";
-    ReSolve::tests::VectorHandlerTests test("hip");
 
+    ReSolve::LinAlgWorkspaceHIP workspace;
+    workspace.initializeHandles();
+    ReSolve::VectorHandler handler(&workspace);
+
+    ReSolve::tests::VectorHandlerTests test(handler);
     result += test.dot(5000);
     result += test.axpy(5000);
     result += test.scal(5000);
@@ -60,5 +72,6 @@ int main(int, char**)
     std::cout << "\n";
   }
 #endif
+
   return result.summary();
 }

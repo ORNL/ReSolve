@@ -23,7 +23,9 @@ namespace ReSolve
     cusparseDestroy(handle_cusparse_);
     cusolverSpDestroy(handle_cusolversp_);
     cublasDestroy(handle_cublas_);
-    cusparseDestroySpMat(mat_A_);
+    if (matvec_setup_done_) {
+      cusparseDestroySpMat(mat_A_);
+    }
   }
 
   void* LinAlgWorkspaceCUDA::getSpmvBuffer()
@@ -53,7 +55,7 @@ namespace ReSolve
   
   void LinAlgWorkspaceCUDA::setNormBufferState(bool r)
   {
-    norm_buffer_ready_ = r;;
+    norm_buffer_ready_ = r;
   }
 
   cusparseHandle_t LinAlgWorkspaceCUDA::getCusparseHandle()

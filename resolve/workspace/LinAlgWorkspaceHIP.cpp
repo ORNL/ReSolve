@@ -18,7 +18,9 @@ namespace ReSolve
   {
     rocsparse_destroy_handle(handle_rocsparse_);
     rocblas_destroy_handle(handle_rocblas_);
-    rocsparse_destroy_mat_descr(mat_A_);
+    if (matvec_setup_done_) {
+      rocsparse_destroy_mat_descr(mat_A_);
+    }
     if (d_r_size_ != 0)  mem_.deleteOnDevice(d_r_);
     if (norm_buffer_ready_ == true)  mem_.deleteOnDevice(norm_buffer_);
   }
