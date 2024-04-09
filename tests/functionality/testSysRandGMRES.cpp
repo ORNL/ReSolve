@@ -129,9 +129,12 @@ int test(int argc, char *argv[])
   real_type norm_b = 0.0;
 
   // Set solver options
-  real_type tol = 1e-12;
+  //real_type tol = 1e-12;
   solver.getIterativeSolver().setMaxit(2500);
-  solver.getIterativeSolver().setTol(tol);
+  // solver.getIterativeSolver().setTol(tol);
+  solver.getIterativeSolver().setCliParam("tol", "1e-12");
+  real_type tol = 0.0;
+  solver.getIterativeSolver().getCliParam("tol", tol);
 
   matrix_handler.setValuesChanged(true, memspace);
 
@@ -139,7 +142,10 @@ int test(int argc, char *argv[])
   status = solver.setMatrix(A);
   error_sum += status;
 
-  solver.getIterativeSolver().setRestart(200);
+  // solver.getIterativeSolver().setRestart(200);
+  solver.getIterativeSolver().setCliParam("restart", "200");
+  std::cout << "restart = ";
+  solver.getIterativeSolver().printCliParam("restart");
   if (method == "randgmres") {
     solver.setSketchingMethod(sketch);
   }

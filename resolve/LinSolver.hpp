@@ -7,7 +7,9 @@
  */
 #pragma once
 
+#include <map>
 #include <string>
+
 #include "Common.hpp"
 
 namespace ReSolve 
@@ -29,6 +31,8 @@ namespace ReSolve
 
   // Forward declaration of MatrixHandler class
   class MatrixHandler;
+
+  class SolverParameters;
   
   /**
    * @brief Base class for all linear solvers.
@@ -44,14 +48,44 @@ namespace ReSolve
       virtual ~LinSolver();
 
       real_type evaluateResidual();
+
+      virtual int setCliParam(const std::string /* id */, const std::string /* value */)
+      {
+        return 1;
+      }
+        
+      virtual int getCliParam(const std::string /* id */, std::string& /* value */)
+      {
+        return 1;
+      }
+        
+      virtual int getCliParam(const std::string /* id */, index_type& /* value */)
+      {
+        return 1;
+      }
+        
+      virtual int getCliParam(const std::string /* id */, real_type& /* value */)
+      {
+        return 1;
+      }
+        
+      virtual int getCliParam(const std::string /* id */, bool& /* value */)
+      {
+        return 1;
+      }
+        
+      virtual int printCliParam(const std::string /* id */)
+      {
+        return 1;
+      }
         
     protected:  
       matrix::Sparse* A_{nullptr};
-      real_type* rhs_{nullptr};
-      real_type* sol_{nullptr};
 
       MatrixHandler* matrix_handler_{nullptr};
       VectorHandler* vector_handler_{nullptr};
+
+      std::map<std::string, int> params_list_;
   };
 
 } // namespace ReSolve

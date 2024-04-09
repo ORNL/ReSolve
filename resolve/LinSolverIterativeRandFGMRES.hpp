@@ -70,12 +70,23 @@ namespace ReSolve
       index_type getKrand();
       int setSketchingMethod(SketchingMethod method);
 
+      int setCliParam(const std::string id, const std::string value) override;
+      int getCliParam(const std::string id, std::string& value) override;
+      int getCliParam(const std::string id, index_type& value) override;
+      int getCliParam(const std::string id, real_type& value) override;
+      int getCliParam(const std::string id, bool& value) override;
+      int printCliParam(const std::string id) override;
+
+    private:
+      enum ParamaterIDs {TOL=0, MAXIT, RESTART, CONV_COND, FLEXIBLE};
+
     private:
       int allocateSolverData();
       int freeSolverData();
       int allocateSketchingData();
       int freeSketchingData();
       void setMemorySpace();
+      void initParamList();
       void precV(vector_type* rhs, vector_type* x); ///< Apply preconditioner
 
       memory::MemorySpace memspace_;

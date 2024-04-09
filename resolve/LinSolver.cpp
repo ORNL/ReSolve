@@ -5,6 +5,7 @@
  * @brief Implementation of linear solver base class.
  * 
  */
+
 #include <resolve/matrix/Sparse.hpp>
 #include <resolve/utilities/logger/Logger.hpp>
 
