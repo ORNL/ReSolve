@@ -1,0 +1,41 @@
+Language: Cpp
+AccessModifierOffset: 0
+AlignConsecutiveMacros: true
+BreakBeforeBraces: Linux
+IndentWidth: 2
+ConstructorInitializerIndentWidth: 2
+AlignAfterOpenBracket: Align
+Standard: c++11
+IndentAccessModifiers: true
+IndentCaseBlocks: true
+IndentCaseLabels: true
+IndentGotoLabels: true
+IndentExternBlock: Indent
+UseTab: Never
+ReflowComments: true
+QualifierAlignment: Left
+ReferenceAlignment: Pointer
+PointerAlignment: Left
+InsertBraces: true
+NamespaceIndentation: All
+LineEnding: LF
+IntegerLiteralSeparator:
+    Binary: 4
+    BinaryMinDigits: 8
+    Decimal: 3
+    DecimalMinDigits: 4
+    Hex: 2
+    HexMinDigits: 6
+BreakTemplateDeclarations: Yes
+BinPackArguments: false
+BinPackParameters: false
+AllowShortFunctionsOnASingleLine: None
+AllowAllArgumentsOnNextLine: false
+IncludeBlocks: Regroup
+IncludeCategories:
+    - Regex: '^<resolve/'
+      Priority: 1
+    - Regex: '^<[[:alnum:].]+>'
+      Priority: -1
+    - Regex: '.*'
+      Priority: 0

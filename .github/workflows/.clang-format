@@ -1,9 +1,0 @@
-# Documentation about the style options and their meaning
-# https://releases.llvm.org/12.0.0/tools/clang/docs/ClangFormatStyleOptions.html 
-
-Language:        Cpp
-AccessModifierOffset: 0
-AlignConsecutiveMacros: true
-BreakBeforeBraces: Linux
-ColumnLimit:     150
-ConstructorInitializerIndentWidth: 2
