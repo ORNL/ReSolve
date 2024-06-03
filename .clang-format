@@ -26,7 +26,7 @@ IntegerLiteralSeparator:
     DecimalMinDigits: 4
     Hex: 2
     HexMinDigits: 6
-BreakTemplateDeclarations: Yes
+AlwaysBreakTemplateDeclarations: true
 BinPackArguments: false
 BinPackParameters: false
 AllowShortFunctionsOnASingleLine: None
