@@ -50,6 +50,14 @@ namespace ReSolve { namespace matrix {
       int updateFromCoo(matrix::Coo* mat, memory::MemorySpace memspaceOut);
 
     private:
+        // NOTE: see comment in resolve/matrix/Utilities.cpp
+        virtual int expand();
+
+        // NOTE: see comment in resolve/matrix/Utilities.cpp
+        virtual std::function<
+            std::tuple<std::tuple<index_type, index_type, real_type>, bool>()>
+            elements(memory::MemorySpace);
+
       int coo2csr(matrix::Coo* mat, memory::MemorySpace memspace);
   };
 

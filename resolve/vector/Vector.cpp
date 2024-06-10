@@ -482,7 +482,7 @@ namespace ReSolve { namespace vector {
    *
    * @pre   _new_n_current_ <= _n_ i.e,, _new_n_current_ is smaller than the allocated vector lenght.
    */
-  int Vector::setCurrentSize(int new_n_current)
+  int Vector::setCurrentSize(index_type new_n_current)
   {
     if (new_n_current > n_) {
       return -1;

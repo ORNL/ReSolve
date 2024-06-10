@@ -2,8 +2,11 @@
 // Mirroring memory approach 
 #pragma once
 #include <string>
+#include <functional>
+#include <tuple>
 #include <resolve/Common.hpp>
 #include <resolve/MemoryUtils.hpp>
+#include <resolve/matrix/Utilities.hpp>
 
 namespace ReSolve { namespace matrix {
   /**
@@ -38,7 +41,7 @@ namespace ReSolve { namespace matrix {
       void setExpanded(bool expanded);
       void setNnzExpanded(index_type nnz_expanded_new);
       void setNnz(index_type nnz_new); // for resetting when removing duplicates
-      index_type setUpdated(memory::MemorySpace what);
+      int setUpdated(memory::MemorySpace what);
 
       virtual index_type* getRowData(memory::MemorySpace memspace) = 0;
       virtual index_type* getColData(memory::MemorySpace memspace) = 0;
@@ -97,5 +100,21 @@ namespace ReSolve { namespace matrix {
 
       MemoryHandler mem_; ///< Device memory manager object
 
+    private:
+      // NOTE: temporary. see comment in resolve/matrix/Utilities.cpp
+      virtual int expand() = 0;
+
+      // NOTE: ditto (same note on `virtual void expand()`)
+      friend int matrix::expand(matrix::Sparse*);
+
+      // NOTE: temporary. see comment in resolve/matrix/Utilities.cpp
+      virtual std::function<
+          std::tuple<std::tuple<index_type, index_type, real_type>, bool>()>
+          elements(memory::MemorySpace) = 0;
+
+      // NOTE: ditto (same note on `virtual void elements()`)
+      friend std::function<
+          std::tuple<std::tuple<index_type, index_type, real_type>, bool>()>
+      matrix::elements(matrix::Sparse*);
   };
 }} // namespace ReSolve::matrix

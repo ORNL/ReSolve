@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cassert>
 #include <iomanip>
+#include <memory>
 
 #include "Csr.hpp"
 #include "Coo.hpp"
@@ -534,5 +535,119 @@ namespace ReSolve
     }
   }
 
+  int matrix::Csr::expand()
+  {
+    // NOTE: this is pretty abuse-resistant, but note that if you have (for
+    //       some reason) stored differing values on opposing sides of the
+    //       diagonal, the result is nominally undefined (but technically
+    //       predictable
+    //
+    //       ...please don't rely on it being predictable
+
+    if (is_symmetric_ && !is_expanded_) {
+      index_type* rows = getRowData(memory::HOST);
+      index_type* columns = getColData(memory::HOST);
+      real_type* values = getValues(memory::HOST);
+
+      if (rows == nullptr || columns == nullptr || values == nullptr) {
+        return 0;
+      }
+
+      index_type* new_rows = new index_type[n_ + 1];
+      index_type new_i;
+      std::unique_ptr<index_type[]> remaining(new index_type[n_]);
+      std::fill_n(remaining.get(), n_, 0);
+
+      // allocation
+
+      for (index_type row = 0; row < n_; row++) {
+        for (index_type i = rows[row]; i < rows[row + 1]; i++) {
+          if (columns[i] != row) {
+            remaining[columns[i]]++;
+          }
+        }
+      }
+
+      new_rows[0] = 0;
+      for (index_type row = 0; row < n_; row++) {
+        new_rows[row + 1] =
+            new_rows[row] + remaining[row] + rows[row + 1] - rows[row];
+      }
+
+      assert(nnz_expanded_ == new_rows[n_]);
+
+#ifdef NDEBUG
+      // TODO: should this be here? is this a good idea?
+      nnz_expanded_ = new_rows[n_];
+#endif
+
+      index_type* new_columns = new index_type[nnz_expanded_];
+      real_type* new_values = new real_type[nnz_expanded_];
+
+      // fill
+
+      for (index_type row = 0; row < n_; row++) {
+        new_i = new_rows[row];
+        for (index_type i = rows[row]; i < rows[row + 1]; i++) {
+          new_columns[new_i] = columns[i];
+          new_values[new_i] = values[i];
+
+          if (columns[i] != row) {
+            index_type o = new_rows[columns[i] + 1] - remaining[columns[i]]--;
+            new_columns[o] = row;
+            new_values[o] = values[i];
+          }
+
+          new_i++;
+        }
+      }
+
+      if (destroyMatrixData(memory::HOST) != 0 ||
+          setMatrixData(new_rows, new_columns, new_values, memory::HOST) != 0) {
+        // TODO: make fallible
+        assert(false && "invalid state after csr matrix expansion");
+        return -1;
+      }
+
+      setNnz(nnz_expanded_);
+      setExpanded(true);
+      owns_cpu_data_ = owns_cpu_vals_ = true;
+    }
+
+    return 0;
+  }
+
+  std::function<
+      std::tuple<std::tuple<index_type, index_type, real_type>, bool>()>
+  matrix::Csr::elements(memory::MemorySpace memory_space)
+  {
+    std::shared_ptr<index_type> i(new index_type(0)), j(new index_type(0));
+    std::shared_ptr<index_type> n(new index_type(getNnz()));
+    index_type* rows = getRowData(memory_space);
+    index_type* columns = getColData(memory_space);
+    real_type* values = getValues(memory_space);
+
+    if (rows == nullptr || columns == nullptr || values == nullptr) {
+      return []() -> std::tuple<std::tuple<index_type, index_type, real_type>,
+                                bool> {
+        return {{0, 0, 0}, false};
+      };
+    }
+
+    return
+        [=]()
+            -> std::tuple<std::tuple<index_type, index_type, real_type>, bool> {
+          if (*j == *n) {
+            return {{0, 0, 0}, false};
+          }
+
+          while (rows[*i + 1] == *j) {
+            (*i)++;
+          }
+
+          (*j)++;
+          return {{*i, columns[*j - 1], values[*j - 1]}, true};
+        };
+  }
 } // namespace ReSolve 
 
