@@ -9,7 +9,7 @@
 #include <tests/unit/TestBase.hpp>
 
 #include <resolve/LinSolverDirectLUSOL.hpp>
-#include <resolve/matrix/Csr.hpp>
+#include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
@@ -28,6 +28,7 @@ namespace ReSolve
         LUSOLTests()
         {
         }
+
         virtual ~LUSOLTests()
         {
         }
@@ -45,7 +46,7 @@ namespace ReSolve
           TestStatus status;
 
           LinSolverDirectLUSOL solver;
-          matrix::Csr* A = createCsrMatrix(0, "cpu");
+          matrix::Coo* A = createMatrix();
 
           vector::Vector rhs(A->getNumRows());
           rhs.setToConst(constants::ONE, memory::HOST);
@@ -53,13 +54,20 @@ namespace ReSolve
           vector::Vector x(A->getNumColumns());
           x.allocate(memory::HOST);
 
-          solver.setup(A);
+          if (solver.setup(A) < 0) {
+            status *= false;
+          }
+          if (solver.analyze() < 0) {
+            status *= false;
+          }
           if (solver.factorize() < 0) {
             status *= false;
           }
-          solver.solve(&rhs, &x);
+          if (solver.solve(&rhs, &x) < 0) {
+            status *= false;
+          }
 
-          status *= verifyAnswer(x, solX_, "cpu");
+          status *= verifyAnswer(x, solX_);
 
           delete A;
 
@@ -84,7 +92,9 @@ namespace ReSolve
         //     [     0      0      2      0      2      0      3      3      0]
         //     [     2      0      0      0      0      0      0      5      1]
         //     [     0      0      7      0      8      0      0      0      4]
-        std::vector<index_type> rowsA_ = {0, 3, 6, 9, 12, 13, 17, 21, 24, 27};
+        std::vector<index_type> rowsA_ = {0, 0, 0, 1, 1, 1, 2, 2, 2,
+                                          3, 3, 3, 4, 5, 5, 5, 5, 6,
+                                          6, 6, 6, 7, 7, 7, 8, 8, 8};
         std::vector<index_type> colsA_ = {0, 4, 6, 1, 3, 5, 0, 4, 7,
                                           3, 5, 8, 0, 1, 3, 5, 6, 2,
                                           4, 6, 7, 0, 7, 8, 2, 4, 8};
@@ -92,41 +102,16 @@ namespace ReSolve
                                          3., 2., 8., 1., 4., 5., 1., 6., 2.,
                                          2., 3., 3., 2., 5., 1., 7., 8., 4.};
 
-        /**
-         * @brief Create test matrix.
-         *
-         * The method creates a block diagonal test matrix from a fixed 9x9
-         * sparse blocks.
-         *
-         * @todo Currently only single 9x9 sparse matrix is implemented; need to
-         * add option to create block diagonal matrix with `k` blocks.
-         *
-         * @param[in] k - multiple of basic matrix pattern (currently unused)
-         * @param[in] memspace - string ID of the memory space where matrix is
-         * stored
-         *
-         */
-        matrix::Csr* createCsrMatrix(const index_type /* k */,
-                                     std::string memspace)
+        /// @brief Creates a test matrix
+        matrix::Coo* createMatrix()
         {
-
-          const index_type N = static_cast<index_type>(rowsA_.size() - 1);
-          const index_type NNZ = static_cast<index_type>(colsA_.size());
-
-          // Allocate NxN CSR matrix with NNZ nonzeros
-          matrix::Csr* A = new matrix::Csr(N, N, NNZ);
-          A->allocateMatrixData(memory::HOST);
-          A->updateData(&rowsA_[0],
-                        &colsA_[0],
-                        &valsA_[0],
+          // NOTE: these are hardcoded for now
+          matrix::Coo* A = new matrix::Coo(9, 9, valsA_.size(), true, true);
+          A->updateData(rowsA_.data(),
+                        colsA_.data(),
+                        valsA_.data(),
                         memory::HOST,
                         memory::HOST);
-
-          // A->print();
-
-          if ((memspace == "cuda") || (memspace == "hip")) {
-            A->copyData(memory::DEVICE);
-          }
 
           return A;
         }
@@ -149,8 +134,7 @@ namespace ReSolve
         bool verifyAnswer(matrix::Sparse& A,
                           const std::vector<index_type>& answer_rows,
                           const std::vector<index_type>& answer_cols,
-                          const std::vector<real_type>& answer_vals,
-                          std::string memspace)
+                          const std::vector<real_type>& answer_vals)
         {
           bool status = true;
 
@@ -204,8 +188,7 @@ namespace ReSolve
          * @return false - otherwise
          */
         bool verifyAnswer(vector::Vector& x,
-                          const std::vector<real_type>& answer,
-                          std::string memspace)
+                          const std::vector<real_type>& answer)
         {
           bool status = true;
 

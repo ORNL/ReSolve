@@ -8,18 +8,18 @@
 namespace ReSolve {
 
 
-  //TODO: these should be dropped
+  // TODO: these should be dropped
   constexpr double EPSILON = 1.0e-18;
   constexpr double EPSMAC  = 1.0e-16;
 
 
-  //TODO: let cmake manage these. combined with the todo above relating to cstdint
-  //      this is related to resolve/lusol/lusol_precision.f90. whatever is here should
-  //      have an equivalent there
+  // TODO: let cmake manage these. combined with the todo above relating to cstdint
+  //       this is related to resolve/lusol/lusol_precision.f90. whatever is here should
+  //       have an equivalent there
 
-  // i'd love to make this std::float64_t but we're not on c++23
+  // NOTE: i'd love to make this std::float64_t but we're not on c++23
   using real_type = double;
-  using index_type = std::int64_t;
+  using index_type = std::int32_t;
 
   namespace constants
   {

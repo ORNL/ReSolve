@@ -1,12 +1,12 @@
 #include <cmath>
 #include <cstdlib>
 #include <limits>
+#include <algorithm>
 
 #include "LinSolverDirectLUSOL.hpp"
 #include "lusol/lusol.hpp"
 
 #include <resolve/matrix/Csc.hpp>
-#include <resolve/matrix/Utilities.hpp>
 #include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/vector/Vector.hpp>
 
@@ -98,9 +98,15 @@ namespace ReSolve
                                   vector_type* /* rhs */)
   {
     A_ = A;
-    if (matrix::expand(A_) != 0) {
-      return -1;
-    }
+    return 0;
+  }
+
+  int LinSolverDirectLUSOL::analyze()
+  {
+    // NOTE: LUSOL does not come with any discrete analysis operation. it is
+    //       possible to break apart bits of lu1fac into that, but for now,
+    //       we don't bother and shunt it all into ::factorize()
+
     nelem_ = A_->getNnz();
     m_ = A_->getNumRows();
     n_ = A_->getNumColumns();
@@ -113,26 +119,25 @@ namespace ReSolve
       lena_ = std::min(5 * nelem_, 2 * m_ * n_);
     }
 
+    // NOTE: this is extremely unsafe. this should be removed the moment
+    //       a safer alternative is available
+
+    // INVARIANT: the input matrix is of the coo format
+
+    real_type* a_in = A_->getValues(memory::HOST);
+    index_type* indc_in = A_->getRowData(memory::HOST);
+    index_type* indr_in = A_->getColData(memory::HOST);
+
     a_ = static_cast<real_type*>(std::realloc(a_, lena_ * sizeof(real_type)));
-    indc_ = static_cast<index_type*>(
-        std::realloc(indc_, lena_ * sizeof(index_type)));
-    indr_ = static_cast<index_type*>(
-        std::realloc(indr_, lena_ * sizeof(index_type)));
+    indc_ =
+      static_cast<index_type*>(std::realloc(indc_, lena_ * sizeof(index_type)));
+    indr_ =
+      static_cast<index_type*>(std::realloc(indr_, lena_ * sizeof(index_type)));
 
-    auto f = matrix::elements(A_);
-    bool ok;
-    std::tuple<index_type, index_type, real_type> t;
-    index_type i = 0, j, k;
-    real_type x;
-
-    for (std::tie(t, ok) = f(); ok; std::tie(t, ok) = f()) {
-      std::tie(j, k, x) = t;
-
-      indc_[i] = j + 1;
-      indr_[i] = k + 1;
-      a_[i] = x;
-
-      i++;
+    for (index_type i = 0; i < nelem_; i++) {
+      a_[i] = a_in[i];
+      indc_[i] = indc_in[i] + 1;
+      indr_[i] = indr_in[i] + 1;
     }
 
     p_ = static_cast<index_type*>(std::realloc(p_, m_ * sizeof(index_type)));
@@ -171,16 +176,13 @@ namespace ReSolve
     return 0;
   }
 
-  int LinSolverDirectLUSOL::analyze()
-  {
-    // NOTE: LUSOL does not come with any discrete analysis operation. it is
-    //       possible to break apart bits of lu1fac into that, but for now,
-    //       we don't bother and shunt it all into ::factorize()
-    return 0;
-  }
-
   int LinSolverDirectLUSOL::factorize()
   {
+    // NOTE: this is probably good enough as far as checking goes
+    if (a_ == nullptr || indc_ == nullptr || indr_ == nullptr) {
+      return -1;
+    }
+
     index_type inform = 0;
 
     lu1fac(&m_,
