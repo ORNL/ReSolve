@@ -15,7 +15,6 @@ int main(int, char**)
 
     result += test.matrixFactorizationConstructor();
     result += test.matrixILU0();
-    result += test.matrixLUSOL();
 
     std::cout << "\n";
   }

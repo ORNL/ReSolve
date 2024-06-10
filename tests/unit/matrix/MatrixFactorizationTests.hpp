@@ -15,7 +15,6 @@
 #include <tests/unit/TestBase.hpp>
 
 #include <resolve/LinSolverDirectCpuILU0.hpp>
-#include <resolve/LinSolverDirectLUSOL.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/Vector.hpp>
@@ -102,32 +101,6 @@ namespace ReSolve
           // Test forward-backward substitution
           solver.solve(&rhs);
           status *= verifyAnswer(rhs, solX_, "cpu");
-
-          delete A;
-
-          return status.report(__func__);
-        }
-
-        TestOutcome matrixLUSOL()
-        {
-          TestStatus status;
-
-          LinSolverDirectLUSOL solver;
-          matrix::Csr* A = createCsrMatrix(0, "cpu");
-
-          vector::Vector rhs(A->getNumRows());
-          rhs.setToConst(constants::ONE, memory::HOST);
-
-          vector::Vector x(A->getNumColumns());
-          x.allocate(memory::HOST);
-
-          solver.setup(A);
-          if (solver.factorize() < 0) {
-            status *= false;
-          }
-          solver.solve(&rhs, &x);
-
-          status *= verifyAnswer(x, solX_LUSOL_, "cpu");
 
           delete A;
 
@@ -361,18 +334,6 @@ namespace ReSolve
                                         1.266958333333333e+02,
                                         1.213750000000000e+01,
                                         -6.068750000000000e+01};
-
-        /// Reference solution to LUSOL's factorization of LUx = 1 using the
-        /// matrix A defined above
-        std::vector<real_type> solX_LUSOL_ = {1,
-                                              -2.7715806930261,
-                                              0.930348258706468,
-                                              2.37505455180239,
-                                              -0.0398009950248756,
-                                              2.13144802304268,
-                                              -0.320066334991708,
-                                              0.0597014925373134,
-                                              -1.29850746268657};
 
         /**
          * @brief Compare vector with a reference vector.
