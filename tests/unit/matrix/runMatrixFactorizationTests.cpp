@@ -14,7 +14,7 @@ int main(int, char**)
     ReSolve::tests::MatrixFactorizationTests test("cpu");
 
     result += test.matrixFactorizationConstructor();
-    //result += test.matrixILU0();
+    result += test.matrixILU0();
     result += test.matrixLUSOL();
 
     std::cout << "\n";
