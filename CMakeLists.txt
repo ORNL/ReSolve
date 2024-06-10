@@ -23,6 +23,7 @@ endif()
 
 option(RESOLVE_TEST_WITH_BSUB "Use `jsrun` instead of `mpirun` commands when running tests" OFF)
 option(RESOLVE_USE_KLU  "Use KLU, AMD and COLAMD libraries from SuiteSparse" ON)
+option(RESOLVE_USE_LUSOL "Build the LUSOL library" ON)
 option(RESOLVE_USE_CUDA "Use CUDA language and SDK" OFF)
 option(RESOLVE_USE_HIP  "Use HIP language and ROCm library" OFF)
 option(RESOLVE_USE_PROFILING "Set profiling tracers in the code" OFF)
@@ -33,6 +34,11 @@ mark_as_advanced(FORCE RESOLVE_USE_GPU)
 option(RESOLVE_USE_ASAN "Use LLVM address sanitizer" OFF)
 option(RESOLVE_USE_DOXYGEN "Use Doxygen to generate Re::Solve documentation" ON)
 set(RESOLVE_CTEST_OUTPUT_DIR ${PROJECT_BINARY_DIR} CACHE PATH "Directory where CTest outputs are saved")
+
+# update this if more fortran code is added. this should be good enough for now though
+if(RESOLVE_USE_LUSOL)
+  enable_language(Fortran)
+endif()
 
 if(RESOLVE_USE_CUDA)
   set(RESOLVE_USE_GPU ON CACHE BOOL "Using CUDA GPU!" FORCE)
@@ -90,7 +96,7 @@ if(RESOLVE_USE_CUDA)
 
   if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
     set(CMAKE_CUDA_ARCHITECTURES 60 CACHE STRING "Selects CUDA architectures")
-  endif()
+endif()
 
   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-extended-lambda")
 
@@ -153,7 +159,7 @@ configure_package_config_file(./cmake/ReSolveConfig.cmake.in
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/ReSolveConfig.cmake"
         "${CMAKE_CURRENT_BINARY_DIR}/ReSolveConfigVersion.cmake"
         DESTINATION share/resolve/cmake)
-    
+
 # Add usage examples
 add_subdirectory(examples)
 

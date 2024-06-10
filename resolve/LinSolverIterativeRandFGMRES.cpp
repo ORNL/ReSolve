@@ -2,7 +2,7 @@
  * @file LinSolverIterativeRandFGMRES.cpp
  * @author Kasia Swirydowicz (kasia.swirydowicz@pnnl.gov)
  * @brief Implementation of LinSolverIterativeRandFGMRES class.
- * 
+ *
  */
 #include <iostream>
 #include <cassert>
@@ -33,8 +33,8 @@ namespace ReSolve
   }
 
   LinSolverIterativeRandFGMRES::LinSolverIterativeRandFGMRES(MatrixHandler*  matrix_handler,
-                                                             VectorHandler*  vector_handler, 
-                                                             SketchingMethod rand_method, 
+                                                             VectorHandler*  vector_handler,
+                                                             SketchingMethod rand_method,
                                                              GramSchmidt*    gs)
   {
     tol_ = 1e-14; //default
@@ -51,17 +51,17 @@ namespace ReSolve
     setMemorySpace();
   }
 
-  LinSolverIterativeRandFGMRES::LinSolverIterativeRandFGMRES(index_type      restart, 
+  LinSolverIterativeRandFGMRES::LinSolverIterativeRandFGMRES(index_type      restart,
                                                              real_type       tol,
                                                              index_type      maxit,
                                                              index_type      conv_cond,
                                                              MatrixHandler*  matrix_handler,
                                                              VectorHandler*  vector_handler,
-                                                             SketchingMethod rand_method, 
+                                                             SketchingMethod rand_method,
                                                              GramSchmidt*    gs)
   {
-    tol_ = tol; 
-    maxit_= maxit; 
+    tol_ = tol;
+    maxit_= maxit;
     restart_ = restart;
     conv_cond_ = conv_cond;
     flexible_ = true;
@@ -89,9 +89,9 @@ namespace ReSolve
 
   /**
    * @brief Set system matrix and allocate solver and sketching data
-   * 
+   *
    * @param[in] A - sparse system matrix
-   * @return 0 if setup successful 
+   * @return 0 if setup successful
    */
   int LinSolverIterativeRandFGMRES::setup(matrix::Sparse* A)
   {
@@ -133,8 +133,8 @@ namespace ReSolve
     // io::Logger::setVerbosity(io::Logger::EVERYTHING);
 
     int outer_flag = 1;
-    int notconv = 1; 
-    int i = 0;
+    int notconv = 1;
+    index_type i = 0;
     int it = 0;
     int j;
     int k;
@@ -153,8 +153,8 @@ namespace ReSolve
     vec_Z_->setToZero(memspace_);
     vec_V_->setToZero(memspace_);
 
-    rhs->deepCopyVectorData(vec_V_->getData(memspace_), 0, memspace_);  
-    matrix_handler_->matvec(A_, x, vec_V_, &MINUSONE, &ONE, "csr", memspace_); 
+    rhs->deepCopyVectorData(vec_V_->getData(memspace_), 0, memspace_);
+    matrix_handler_->matvec(A_, x, vec_V_, &MINUSONE, &ONE, "csr", memspace_);
 
     vec_v->setData(vec_V_->getVectorData(0, memspace_), memspace_);
     vec_s->setData(vec_S_->getVectorData(0, memspace_), memspace_);
@@ -172,7 +172,7 @@ namespace ReSolve
     rnorm = std::sqrt(rnorm); // rnorm = ||V_1||
     bnorm = std::sqrt(bnorm);
     io::Logger::misc() << "it 0: norm of residual "
-                       << std::scientific << std::setprecision(16) 
+                       << std::scientific << std::setprecision(16)
                        << rnorm << " Norm of rhs: " << bnorm << "\n";
     initial_residual_norm_ = rnorm;
     while(outer_flag) {
@@ -228,12 +228,12 @@ namespace ReSolve
         // V_{i+1}=A*Z_i
         vec_v->setData(vec_V_->getVectorData(i + 1, memspace_), memspace_);
 
-        matrix_handler_->matvec(A_, vec_z, vec_v, &ONE, &ZERO, "csr", memspace_); 
+        matrix_handler_->matvec(A_, vec_z, vec_v, &ONE, &ZERO, "csr", memspace_);
 
         // orthogonalize V[i+1], form a column of h_H_
         // this is where it differs from normal solver GS
         vec_s->setData(vec_S_->getVectorData(i + 1, memspace_), memspace_);
-        sketching_handler_->Theta(vec_v, vec_s); 
+        sketching_handler_->Theta(vec_v, vec_s);
         if (sketching_method_ == fwht) {
           vector_handler_->scal(&one_over_k_, vec_s, memspace_);
         }
@@ -247,13 +247,13 @@ namespace ReSolve
         }
         vec_z->setData(d_aux_, memspace_);
         vec_z->setCurrentSize(i + 1);
-        // V(:, i+1) = w - V(:, 1:i)*d_H_col = V(:, i+1) - d_H_col*V(:,1:i); 
+        // V(:, i+1) = w - V(:, 1:i)*d_H_col = V(:, i+1) - d_H_col*V(:,1:i);
 
-        vector_handler_->gemv('N', n_, i + 1, &MINUSONE, &ONE, vec_V_, vec_z, vec_v, memspace_ );  
+        vector_handler_->gemv('N', n_, i + 1, &MINUSONE, &ONE, vec_V_, vec_z, vec_v, memspace_ );
 
         vec_z->setCurrentSize(n_);
         t = 1.0 / h_H_[i * (restart_ + 1) + i + 1];
-        vector_handler_->scal(&t, vec_v, memspace_);  
+        vector_handler_->scal(&t, vec_v, memspace_);
         mem_.deviceSynchronize();
         vec_s->setData(vec_S_->getVectorData(i + 1, memspace_), memspace_);
 
@@ -326,7 +326,7 @@ namespace ReSolve
 
         vec_v->setData(vec_V_->getData(memspace_), memspace_);
         this->precV(vec_z, vec_v);
-        // and add to x 
+        // and add to x
         vector_handler_->axpy(&ONE, vec_v, x, memspace_);
       }
 
@@ -336,8 +336,8 @@ namespace ReSolve
         outer_flag = 0;
       }
 
-      rhs->deepCopyVectorData(vec_V_->getData(memspace_), 0, memspace_);  
-      matrix_handler_->matvec(A_, x, vec_V_, &MINUSONE, &ONE,"csr", memspace_); 
+      rhs->deepCopyVectorData(vec_V_->getData(memspace_), 0, memspace_);
+      matrix_handler_->matvec(A_, x, vec_V_, &MINUSONE, &ONE,"csr", memspace_);
       if (outer_flag) {
 
         sketching_handler_->reset();
@@ -379,7 +379,7 @@ namespace ReSolve
       out::warning() << "Only cusolverRf tri solve can be used as a preconditioner at this time." << std::endl;
       return 1;
     } else {
-      LU_solver_ = LU_solver;  
+      LU_solver_ = LU_solver;
       return 0;
     }
 
@@ -399,8 +399,8 @@ namespace ReSolve
 
   /**
    * @brief Set sketching method based on input string.
-   * 
-   * @param[in] method - string describing sketching method 
+   *
+   * @param[in] method - string describing sketching method
    * @return 0 if successful, 1 otherwise.
    */
   int LinSolverIterativeRandFGMRES::setSketchingMethod(SketchingMethod method)
@@ -439,13 +439,13 @@ namespace ReSolve
 
   /**
    * @brief Set/change GMRES restart value
-   * 
+   *
    * This function should leave solver instance in the same state but with
    * the new restart value.
-   * 
-   * @param[in] restart - the restart value 
+   *
+   * @param[in] restart - the restart value
    * @return 0 if successful, error code otherwise.
-   * 
+   *
    * @todo Consider not setting up GS, if it was not previously set up.
    */
   int LinSolverIterativeRandFGMRES::setRestart(index_type restart)
@@ -480,7 +480,7 @@ namespace ReSolve
 
   /**
    * @brief Switches between flexible and standard GMRES
-   * 
+   *
    * @param is_flexible - true means set flexible GMRES
    * @return 0 if successful, error code otherwise.
    */
@@ -495,7 +495,7 @@ namespace ReSolve
         // otherwise Z is just a one vector, not multivector and we dont keep it
         vec_Z_ = new vector_type(n_);
       }
-      vec_Z_->allocate(memspace_); 
+      vec_Z_->allocate(memspace_);
     }
     flexible_ = is_flexible;
     matrix_handler_->setValuesChanged(true, memspace_);
@@ -509,20 +509,20 @@ namespace ReSolve
   int LinSolverIterativeRandFGMRES::allocateSolverData()
   {
     vec_V_ = new vector_type(n_, restart_ + 1);
-    vec_V_->allocate(memspace_);      
+    vec_V_->allocate(memspace_);
     if (flexible_) {
       vec_Z_ = new vector_type(n_, restart_ + 1);
     } else {
       // otherwise Z is just one vector, not multivector and we dont keep it
       vec_Z_ = new vector_type(n_);
     }
-    vec_Z_->allocate(memspace_);   
+    vec_Z_->allocate(memspace_);
     h_H_  = new real_type[restart_ * (restart_ + 1)];
     h_c_  = new real_type[restart_];      // needed for givens
     h_s_  = new real_type[restart_];      // same
     h_rs_ = new real_type[restart_ + 1];  // for residual norm history
     if (memspace_ == memory::DEVICE) {
-      mem_.allocateArrayOnDevice(&d_aux_, restart_ + 1); 
+      mem_.allocateArrayOnDevice(&d_aux_, restart_ + 1);
     } else {
       d_aux_  = new real_type[restart_ + 1];
     }
@@ -535,12 +535,12 @@ namespace ReSolve
     delete [] h_c_ ;
     delete [] h_s_ ;
     delete [] h_rs_;
-    if (memspace_ == memory::DEVICE) { 
+    if (memspace_ == memory::DEVICE) {
       mem_.deleteOnDevice(d_aux_);
     } else {
       delete [] d_aux_;
     }
-    delete vec_V_;   
+    delete vec_V_;
     delete vec_Z_;
 
     h_H_   = nullptr;
@@ -556,7 +556,7 @@ namespace ReSolve
 
   /**
    * @brief Allocate data and instantiate sketching handler.
-   * 
+   *
    * @pre Randomized solver data is allocated.
    */
   int LinSolverIterativeRandFGMRES::allocateSketchingData()
@@ -569,7 +569,7 @@ namespace ReSolve
           k_rand_ = static_cast<index_type>(std::ceil(restart_ * std::log(static_cast<real_type>(n_))));
         }
         sketching_handler_ = new SketchingHandler(sketching_method_, device_type_);
-        // set k and n 
+        // set k and n
         break;
       case fwht:
         if (std::ceil(2.0 * restart_ * std::log(n_) / std::log(restart_)) < k_rand_) {
@@ -578,7 +578,7 @@ namespace ReSolve
         sketching_handler_ = new SketchingHandler(sketching_method_, device_type_);
         break;
       default:
-        io::Logger::warning() << "Wrong sketching method, setting to default (CountSketch)\n"; 
+        io::Logger::warning() << "Wrong sketching method, setting to default (CountSketch)\n";
         sketching_method_ = cs;
         if (std::ceil(restart_ * std::log(n_)) < k_rand_) {
           k_rand_ = static_cast<index_type>(std::ceil(restart_ * std::log(n_)));
@@ -589,7 +589,7 @@ namespace ReSolve
 
     one_over_k_ = 1.0 / std::sqrt((real_type) k_rand_);
     vec_S_ = new vector_type(k_rand_, restart_ + 1);
-    vec_S_->allocate(memspace_);      
+    vec_S_->allocate(memspace_);
     if (sketching_method_ == cs) {
       vec_S_->setToZero(memspace_);
     }
@@ -610,7 +610,7 @@ namespace ReSolve
   }
 
   void LinSolverIterativeRandFGMRES::precV(vector_type* rhs, vector_type* x)
-  { 
+  {
     LU_solver_->solve(rhs, x);
   }
 
@@ -618,7 +618,7 @@ namespace ReSolve
   /**
    * @brief Set memory space and device tape based on how MatrixHandler
    * and VectorHandler are configured.
-   * 
+   *
    */
   void LinSolverIterativeRandFGMRES::setMemorySpace()
   {
@@ -627,9 +627,9 @@ namespace ReSolve
     bool is_vector_handler_cuda = matrix_handler_->getIsCudaEnabled();
     bool is_vector_handler_hip  = matrix_handler_->getIsHipEnabled();
 
-    if ((is_matrix_handler_cuda != is_vector_handler_cuda) || 
+    if ((is_matrix_handler_cuda != is_vector_handler_cuda) ||
         (is_matrix_handler_hip  != is_vector_handler_hip )) {
-      out::error() << "Matrix and vector handler backends are incompatible!\n";  
+      out::error() << "Matrix and vector handler backends are incompatible!\n";
     }
 
     if (is_matrix_handler_cuda) {

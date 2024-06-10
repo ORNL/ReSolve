@@ -18,11 +18,16 @@ target_link_libraries(runMatrixHandlerTests.exe PRIVATE ReSolve resolve_matrix)
 add_executable(runMatrixFactorizationTests.exe runMatrixFactorizationTests.cpp)
 target_link_libraries(runMatrixFactorizationTests.exe PRIVATE ReSolve resolve_matrix)
 
+# Build matrix expansion tests
+add_executable(runMatrixExpansionTests.exe runMatrixExpansionTests.cpp)
+target_link_libraries(runMatrixExpansionTests.exe PRIVATE ReSolve resolve_matrix)
+
 # Install tests
-set(installable_tests runMatrixIoTests.exe runMatrixHandlerTests.exe runMatrixFactorizationTests.exe)
-install(TARGETS ${installable_tests} 
+set(installable_tests runMatrixIoTests.exe runMatrixHandlerTests.exe runMatrixFactorizationTests.exe runMatrixExpansionTests.exe)
+install(TARGETS ${installable_tests}
         RUNTIME DESTINATION bin/resolve/tests/unit)
 
 add_test(NAME matrix_test               COMMAND $<TARGET_FILE:runMatrixIoTests.exe>)
 add_test(NAME matrix_handler_test       COMMAND $<TARGET_FILE:runMatrixHandlerTests.exe>)
 add_test(NAME matrix_factorization_test COMMAND $<TARGET_FILE:runMatrixFactorizationTests.exe>)
+add_test(NAME matrix_expansion_test     COMMAND $<TARGET_FILE:runMatrixExpansionTests.exe>)

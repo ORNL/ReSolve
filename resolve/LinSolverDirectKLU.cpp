@@ -4,7 +4,7 @@
 #include <resolve/utilities/logger/Logger.hpp>
 #include "LinSolverDirectKLU.hpp"
 
-namespace ReSolve 
+namespace ReSolve
 {
   using out = io::Logger;
 
@@ -30,7 +30,7 @@ namespace ReSolve
                    << "\tordering         = " << Common_.ordering         << "\n"
                    << "\tpivot threshold  = " << Common_.tol              << "\n"
                    << "\thalt if singular = " << Common_.halt_if_singular << "\n";
-  } 
+  }
 
   LinSolverDirectKLU::~LinSolverDirectKLU()
   {
@@ -52,30 +52,30 @@ namespace ReSolve
                                 matrix::Sparse* /* L */,
                                 matrix::Sparse* /* U */,
                                 index_type*     /* P */,
-                                index_type*     /* Q */,    
+                                index_type*     /* Q */,
                                 vector_type*  /* rhs */)
   {
     this->A_ = A;
     return 0;
   }
 
-  int LinSolverDirectKLU::analyze() 
+  int LinSolverDirectKLU::analyze()
   {
-    // in case we called this function AGAIN 
+    // in case we called this function AGAIN
     if (Symbolic_ != nullptr) {
       klu_free_symbolic(&Symbolic_, &Common_);
     }
     Symbolic_ = klu_analyze(A_->getNumRows(), A_->getRowData(memory::HOST), A_->getColData(memory::HOST), &Common_) ;
 
     factors_extracted_ = false;
-    
+
     if (L_ != nullptr) {
-      delete L_; 
+      delete L_;
       L_ = nullptr;
     }
-   
+
     if (U_ != nullptr) {
-      delete U_; 
+      delete U_;
       U_ = nullptr;
     }
 
@@ -87,7 +87,7 @@ namespace ReSolve
     return 0;
   }
 
-  int LinSolverDirectKLU::factorize() 
+  int LinSolverDirectKLU::factorize()
   {
     if (Numeric_ != nullptr) {
       klu_free_numeric(&Numeric_, &Common_);
@@ -102,12 +102,12 @@ namespace ReSolve
     factors_extracted_ = false;
 
     if (L_ != nullptr) {
-      delete L_; 
+      delete L_;
       L_ = nullptr;
     }
-    
+
     if (U_ != nullptr) {
-      delete U_; 
+      delete U_;
       U_ = nullptr;
     }
 
@@ -117,7 +117,7 @@ namespace ReSolve
     return 0;
   }
 
-  int  LinSolverDirectKLU::refactorize() 
+  int  LinSolverDirectKLU::refactorize()
   {
     int kluStatus = klu_refactor(A_->getRowData(memory::HOST),
                                  A_->getColData(memory::HOST),
@@ -129,12 +129,12 @@ namespace ReSolve
     factors_extracted_ = false;
 
     if (L_ != nullptr) {
-      delete L_; 
+      delete L_;
       L_ = nullptr;
     }
-   
+
     if (U_ != nullptr) {
-      delete U_; 
+      delete U_;
       U_ = nullptr;
     }
 
@@ -145,7 +145,7 @@ namespace ReSolve
     return 0;
   }
 
-  int LinSolverDirectKLU::solve(vector_type* rhs, vector_type* x) 
+  int LinSolverDirectKLU::solve(vector_type* rhs, vector_type* x)
   {
     //copy the vector
     x->update(rhs->getData(memory::HOST), memory::HOST, memory::HOST);
@@ -176,19 +176,19 @@ namespace ReSolve
       U_ = new matrix::Csc(A_->getNumRows(), A_->getNumColumns(), nnzU);
       L_->allocateMatrixData(memory::HOST);
       U_->allocateMatrixData(memory::HOST);
-    
-      int ok = klu_extract(Numeric_, 
-                           Symbolic_, 
-                           L_->getColData(memory::HOST), 
-                           L_->getRowData(memory::HOST), 
-                           L_->getValues( memory::HOST), 
-                           U_->getColData(memory::HOST), 
-                           U_->getRowData(memory::HOST), 
-                           U_->getValues( memory::HOST), 
-                           nullptr, 
-                           nullptr, 
-                           nullptr, 
-                           nullptr, 
+
+      int ok = klu_extract(Numeric_,
+                           Symbolic_,
+                           L_->getColData(memory::HOST),
+                           L_->getRowData(memory::HOST),
+                           L_->getValues( memory::HOST),
+                           U_->getColData(memory::HOST),
+                           U_->getRowData(memory::HOST),
+                           U_->getValues( memory::HOST),
+                           nullptr,
+                           nullptr,
+                           nullptr,
+                           nullptr,
                            nullptr,
                            nullptr,
                            nullptr,
@@ -212,18 +212,18 @@ namespace ReSolve
       U_ = new matrix::Csc(A_->getNumRows(), A_->getNumColumns(), nnzU);
       L_->allocateMatrixData(memory::HOST);
       U_->allocateMatrixData(memory::HOST);
-      int ok = klu_extract(Numeric_, 
-                           Symbolic_, 
-                           L_->getColData(memory::HOST), 
-                           L_->getRowData(memory::HOST), 
-                           L_->getValues( memory::HOST), 
-                           U_->getColData(memory::HOST), 
-                           U_->getRowData(memory::HOST), 
-                           U_->getValues( memory::HOST), 
-                           nullptr, 
-                           nullptr, 
-                           nullptr, 
-                           nullptr, 
+      int ok = klu_extract(Numeric_,
+                           Symbolic_,
+                           L_->getColData(memory::HOST),
+                           L_->getRowData(memory::HOST),
+                           L_->getValues( memory::HOST),
+                           U_->getColData(memory::HOST),
+                           U_->getRowData(memory::HOST),
+                           U_->getValues( memory::HOST),
+                           nullptr,
+                           nullptr,
+                           nullptr,
+                           nullptr,
                            nullptr,
                            nullptr,
                            nullptr,
@@ -266,7 +266,7 @@ namespace ReSolve
   void LinSolverDirectKLU::setPivotThreshold(real_type tol)
   {
     pivot_threshold_tol_ = tol;
-    Common_.tol = tol;    
+    Common_.tol = tol;
   }
 
   void LinSolverDirectKLU::setOrdering(int ordering)

@@ -23,6 +23,10 @@ set(ReSolve_KLU_SRC
   LinSolverDirectKLU.cpp
 )
 
+set(ReSolve_LUSOL_SRC
+  LinSolverDirectLUSOL.cpp
+)
+
 # C++ code that links to CUDA SDK libraries
 set(ReSolve_CUDASDK_SRC
     LinSolverDirectCuSolverGLU.cpp
@@ -49,6 +53,10 @@ set(ReSolve_HEADER_INSTALL
 
 set(ReSolve_KLU_HEADER_INSTALL
   LinSolverDirectKLU.hpp
+)
+
+set(ReSolve_LUSOL_HEADER_INSTALL
+  LinSolverDirectLUSOL.hpp
 )
 
 set(ReSolve_CUDA_HEADER_INSTALL
@@ -93,6 +101,14 @@ set(ReSolve_Object_List
     resolve_version
 )
 
+if(RESOLVE_USE_LUSOL)
+  add_subdirectory(lusol)
+  target_link_libraries(resolve_tpl INTERFACE lusol)
+  list(APPEND ReSolve_SRC ${ReSolve_LUSOL_SRC})
+  list(APPEND ReSolve_HEADER_INSTALL ${ReSolve_LUSOL_HEADER_INSTALL})
+  list(APPEND ReSolve_Targets_List lusol lusol_precision)
+endif()
+
 # If no GPU support is enabled, link to dummy device backend
 if(NOT RESOLVE_USE_GPU)
   add_subdirectory(cpu)
@@ -123,7 +139,7 @@ install(TARGETS ${ReSolve_Targets_List} EXPORT ReSolveTargets)
 # Create ReSolve library
 add_library(ReSolve SHARED ${ReSolve_SRC})
 
-target_include_directories(ReSolve INTERFACE 
+target_include_directories(ReSolve INTERFACE
     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
     $<INSTALL_INTERFACE:include>
 )
@@ -156,4 +172,3 @@ install(TARGETS ReSolve
 
 # install include headers
 install(FILES ${ReSolve_HEADER_INSTALL} DESTINATION include/resolve)
-

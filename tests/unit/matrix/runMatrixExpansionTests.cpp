@@ -3,7 +3,7 @@
 #include <fstream>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/io.hpp>
-#include "MatrixFactorizationTests.hpp"
+#include "MatrixExpansionTests.hpp"
 
 int main(int, char**)
 {
@@ -11,15 +11,13 @@ int main(int, char**)
 
   {
     std::cout << "Running tests on CPU:\n";
-    ReSolve::tests::MatrixFactorizationTests test("cpu");
+    ReSolve::tests::MatrixExpansionTests test;
 
-    result += test.matrixFactorizationConstructor();
-    //result += test.matrixILU0();
-    result += test.matrixLUSOL();
+    result += test.cooMatrix5x5();
+    result += test.csrMatrix5x5();
 
     std::cout << "\n";
   }
-
 
   return result.summary();
 }

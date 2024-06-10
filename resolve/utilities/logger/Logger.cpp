@@ -32,8 +32,8 @@ namespace ReSolve
 
     /**
      * @brief Sets verbosity level
-     * 
-     * @pre `output_streams_` vector is allocated 
+     *
+     * @pre `output_streams_` vector is allocated
      * @post Verbosity level is set to user supplied value `v` and outputs
      * for `output_streams_` are set accordingly.
      */
@@ -43,15 +43,21 @@ namespace ReSolve
       updateVerbosity(output_streams_);
     }
 
+    /// @brief Gets verbosity level
+    Logger::Verbosity Logger::verbosity()
+    {
+      return verbosity_;
+    }
+
     /**
      * @brief Private method to update verbosity.
-     * 
+     *
      * This function directs each output stream <= `verbosity_` to user
      * selected output and sets all others to null device. Each output stream
      * corresponds to different verbosity level.
-     * 
+     *
      * @param[in] output_streams - vector of pointers to output streams
-     * 
+     *
      * @pre Vector `output_streams` is allocated and correctly initialized.
      * @post All streams `output_stream_[i]`, where `i <= verbosity_` are
      * directed to stream `logger_`. The rest are sent to null device
@@ -77,9 +83,9 @@ namespace ReSolve
 
     /**
      * @brief Returns reference to output stream for error messages.
-     * 
+     *
      * @return Reference to error messages stream in `output_streams_`.
-     * 
+     *
      * @pre `output_streams_` vector is allocated and correctly initialized.
      */
     std::ostream& Logger::error()
@@ -91,9 +97,9 @@ namespace ReSolve
 
     /**
      * @brief Returns reference to output stream for warning messages.
-     * 
+     *
      * @return Reference to warning messages stream in `output_streams_`.
-     * 
+     *
      * @pre `output_streams_` vector is allocated and correctly initialized.
      */
     std::ostream& Logger::warning()
@@ -105,9 +111,9 @@ namespace ReSolve
 
     /**
      * @brief Returns reference to analysis summary messages output stream.
-     * 
+     *
      * @return Reference to analysis summary messages stream in `output_streams_`.
-     * 
+     *
      * @pre `output_streams_` vector is allocated and correctly initialized.
      */
     std::ostream& Logger::summary()
@@ -118,10 +124,10 @@ namespace ReSolve
 
     /**
      * @brief Returns reference to output stream for all other messages.
-     * 
+     *
      * @return Reference to output stream to miscellaneous messages
      * in `output_streams_`.
-     * 
+     *
      * @pre `output_streams_` vector is allocated and correctly initialized.
      */
     std::ostream& Logger::misc()
@@ -133,9 +139,9 @@ namespace ReSolve
     /**
      * @brief Open file `filename` and update outputs for different verbosities
      * streams.
-     * 
+     *
      * @param[in] filename - The name of the output file.
-     * 
+     *
      * @pre `output_streams_` vector is allocated and correctly initialized.
      * @post All active streams are directed to user supplied file `filename`.
      */
@@ -148,12 +154,12 @@ namespace ReSolve
 
     /**
      * @brief Set outputs of active streams to user provided `std::ostream` object.
-     * 
+     *
      * All active outputs are redirected to `out` stream. All inactive ones are
      * directed to null device.
-     * 
+     *
      * @param[in] out - User provided output stream.
-     * 
+     *
      * @pre `output_streams_` vector is allocated and correctly initialized.
      * @post All active streams (`output_streams_[i]` where `i <= verbosity_`)
      * are set to user provided `out` output stream.
@@ -166,7 +172,7 @@ namespace ReSolve
 
     /**
      * @brief Close output file.
-     * 
+     *
      * @pre Output file `file_` has been opened.
      * @post Output file `file_` is closed and active output streams are
      * set to default output `std::cout`.

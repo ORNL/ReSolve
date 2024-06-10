@@ -6,10 +6,10 @@ namespace ReSolve { namespace vector {
 
   using out = ReSolve::io::Logger;
 
-  /** 
+  /**
    * @brief basic constructor.
-   * 
-   * @param[in] n - Number of elements in the vector    
+   *
+   * @param[in] n - Number of elements in the vector
    */
   Vector::Vector(index_type n):
     n_(n),
@@ -24,11 +24,11 @@ namespace ReSolve { namespace vector {
   {
   }
 
-  /** 
+  /**
    * @brief multivector constructor.
-   * 
-   * @param[in] n - Number of elements in the vector    
-   * @param[in] k - Number of vectors in multivector    
+   *
+   * @param[in] n - Number of elements in the vector
+   * @param[in] k - Number of vectors in multivector
    */
   Vector::Vector(index_type n, index_type k)
     : n_(n),
@@ -43,9 +43,9 @@ namespace ReSolve { namespace vector {
   {
   }
 
-  /** 
+  /**
    * @brief destructor.
-   * 
+   *
    */
   Vector::~Vector()
   {
@@ -54,9 +54,9 @@ namespace ReSolve { namespace vector {
   }
 
 
-  /** 
+  /**
    * @brief get the number of elements in a single vector.
-   * 
+   *
    * @return _n_, number of elements in the vector.
    */
   index_type Vector::getSize() const
@@ -64,10 +64,10 @@ namespace ReSolve { namespace vector {
     return n_;
   }
 
-  /** 
-   * @brief get the current number of elements in a single vector 
+  /**
+   * @brief get the current number of elements in a single vector
    * (use only for vectors with changing sizes, allocate for maximum expected size).
-   * 
+   *
    * @return _n_current_, number of elements currently in thr vector.
    */
   index_type Vector::getCurrentSize()
@@ -75,9 +75,9 @@ namespace ReSolve { namespace vector {
     return n_current_;
   }
 
-  /** 
+  /**
    * @brief get the total number of vectors in multivector.
-   * 
+   *
    * @return _k_, number of vectors in multivector, or 1 if the vector is not a multivector.
    */
   index_type Vector::getNumVectors()
@@ -85,13 +85,13 @@ namespace ReSolve { namespace vector {
     return k_;
   }
 
-  /** 
+  /**
    * @brief set the vector  data variable (HOST or DEVICE) to the provided pointer.
-   * 
+   *
    * @param[in] data     - Pointer to data
    * @param[in] memspace - Memory space (HOST or DEVICE)
-   * 
-   * @warning This function DOES NOT ALLOCATE any data, it only assigns the pointer.  
+   *
+   * @warning This function DOES NOT ALLOCATE any data, it only assigns the pointer.
    */
   int Vector::setData(real_type* data, memory::MemorySpace memspace)
   {
@@ -123,15 +123,15 @@ namespace ReSolve { namespace vector {
     return 0;
   }
 
-  /** 
+  /**
    * @brief set the flag to indicate that the data (HOST or DEVICE) has been updated.
-   * 
-   * Important because of data mirroring approach. 
-   * 
-   * @param[in] memspace - Memory space (HOST or DEVICE)  
+   *
+   * Important because of data mirroring approach.
+   *
+   * @param[in] memspace - Memory space (HOST or DEVICE)
    */
   void Vector::setDataUpdated(memory::MemorySpace memspace)
-  { 
+  {
     using namespace ReSolve::memory;
     switch (memspace) {
       case HOST:
@@ -145,12 +145,12 @@ namespace ReSolve { namespace vector {
     }
   }
 
-  /** 
-   * @brief update vector values based on another vector data.  
-   * 
+  /**
+   * @brief update vector values based on another vector data.
+   *
    * @param[in] v           - Vector, which data will be copied
-   * @param[in] memspaceIn  - Memory space of the incoming data (HOST or DEVICE)  
-   * @param[in] memspaceOut - Memory space the data will be copied to (HOST or DEVICE)  
+   * @param[in] memspaceIn  - Memory space of the incoming data (HOST or DEVICE)
+   * @param[in] memspaceOut - Memory space the data will be copied to (HOST or DEVICE)
    *
    * @pre   size of _v_ is equal or larger than the current vector size.
    */
@@ -160,14 +160,14 @@ namespace ReSolve { namespace vector {
     return update(data, memspaceIn, memspaceOut);
   }
 
-  /** 
-   * @brief update vector data based on given input. 
-   * 
-   * This function allocates (if necessary) and copies the data. 
-   * 
+  /**
+   * @brief update vector data based on given input.
+   *
+   * This function allocates (if necessary) and copies the data.
+   *
    * @param[in] data        - Data that is to be copied
-   * @param[in] memspaceIn  - Memory space of the incoming data (HOST or DEVICE)  
-   * @param[in] memspaceOut - Memory space the data will be copied to (HOST or DEVICE)  
+   * @param[in] memspaceIn  - Memory space of the incoming data (HOST or DEVICE)
+   * @param[in] memspaceOut - Memory space the data will be copied to (HOST or DEVICE)
    *
    * @return 0 if successful, -1 otherwise.
    */
@@ -181,14 +181,14 @@ namespace ReSolve { namespace vector {
 
     if ((memspaceOut == memory::HOST) && (h_data_ == nullptr)) {
       //allocate first
-      h_data_ = new real_type[n_ * k_]; 
+      h_data_ = new real_type[n_ * k_];
       owns_cpu_data_ = true;
     }
     if ((memspaceOut == memory::DEVICE) && (d_data_ == nullptr)) {
       //allocate first
       mem_.allocateArrayOnDevice(&d_data_, n_ * k_);
       owns_gpu_data_ = true;
-    } 
+    }
 
     switch(control)  {
       case 0: //cpu->cpu
@@ -217,41 +217,41 @@ namespace ReSolve { namespace vector {
     return 0;
   }
 
-  /** 
+  /**
    * @brief get a pointer to HOST or DEVICE vector data.
-   * 
-   * @param[in] memspace  - Memory space of the pointer (HOST or DEVICE)  
+   *
+   * @param[in] memspace  - Memory space of the pointer (HOST or DEVICE)
    *
    * @return pointer to the vector data (HOST or DEVICE). In case of multivectors, vectors are stored column-wise.
-   * 
+   *
    * @note This function gives you access to the pointer, not to a copy.
-   * If you change the values using the pointer, the vector values will change too. 
+   * If you change the values using the pointer, the vector values will change too.
    */
   real_type* Vector::getData(memory::MemorySpace memspace)
   {
     return this->getData(0, memspace);
   }
 
-  /** 
+  /**
    * @brief get a pointer to HOST or DEVICE data of a particular vector in a multivector.
-   * 
-   * @param[in] i         - Index of a vector in multivector  
-   * @param[in] memspace  - Memory space of the pointer (HOST or DEVICE)  
+   *
+   * @param[in] i         - Index of a vector in multivector
+   * @param[in] memspace  - Memory space of the pointer (HOST or DEVICE)
    *
    * @return pointer to the _i_th vector data (HOST or DEVICE) within a multivector.
-   * 
+   *
    * @pre   _i_ < _k_ i.e,, _i_ is smaller than the total number of vectors in multivector.
-   * 
-   * @note This function gives you access to the pointer, not to a copy. 
-   * If you change the values using the pointer, the vector values will change too. 
+   *
+   * @note This function gives you access to the pointer, not to a copy.
+   * If you change the values using the pointer, the vector values will change too.
    */
   real_type* Vector::getData(index_type i, memory::MemorySpace memspace)
   {
     if ((memspace == memory::HOST) && (cpu_updated_ == false) && (gpu_updated_ == true )) {
       // remember IN FIRST OUT SECOND!!!
-      copyData(memory::DEVICE, memspace);  
+      copyData(memory::DEVICE, memspace);
       owns_cpu_data_ = true;
-    } 
+    }
 
     if ((memspace == memory::DEVICE) && (gpu_updated_ == false) && (cpu_updated_ == true )) {
       copyData(memory::HOST, memspace);
@@ -269,11 +269,11 @@ namespace ReSolve { namespace vector {
   }
 
 
-  /** 
-   * @brief copy internal vector data from HOST to DEVICE or from DEVICE to HOST 
-   * 
-   * @param[in] memspaceIn   - Memory space of the data to copy FROM  
-   * @param[in] memspaceOut  - Memory space of the data to copy TO 
+  /**
+   * @brief copy internal vector data from HOST to DEVICE or from DEVICE to HOST
+   *
+   * @param[in] memspaceIn   - Memory space of the data to copy FROM
+   * @param[in] memspaceOut  - Memory space of the data to copy TO
    *
    * @return 0 if successful, -1 otherwise.
    *
@@ -293,7 +293,7 @@ namespace ReSolve { namespace vector {
       //allocate first
       mem_.allocateArrayOnDevice(&d_data_, n_ * k_);
       owns_gpu_data_ = true;
-    } 
+    }
     switch(control)  {
       case 0: //cpu->cuda
         mem_.copyArrayHostToDevice(d_data_, h_data_, n_current_ * k_);
@@ -309,19 +309,19 @@ namespace ReSolve { namespace vector {
     return 0;
   }
 
-  /** 
-   * @brief allocate vector data for HOST or DEVICE 
-   * 
-   * @param[in] memspace   - Memory space of the data to be allocated 
+  /**
+   * @brief allocate vector data for HOST or DEVICE
+   *
+   * @param[in] memspace   - Memory space of the data to be allocated
    *
    */
-  void Vector::allocate(memory::MemorySpace memspace) 
+  void Vector::allocate(memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
     switch (memspace) {
       case HOST:
         delete [] h_data_;
-        h_data_ = new real_type[n_ * k_]; 
+        h_data_ = new real_type[n_ * k_];
         owns_cpu_data_ = true;
         break;
       case DEVICE:
@@ -332,19 +332,19 @@ namespace ReSolve { namespace vector {
     }
   }
 
-  /** 
+  /**
    * @brief set vector data to zero. In case of multivectors, entire multivector is set to zero.
-   * 
+   *
    * @param[in] memspace   - Memory space of the data to be set to 0 (HOST or DEVICE)
    *
    */
-  void Vector::setToZero(memory::MemorySpace memspace) 
+  void Vector::setToZero(memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
     switch (memspace) {
       case HOST:
         if (h_data_ == nullptr) {
-          h_data_ = new real_type[n_ * k_]; 
+          h_data_ = new real_type[n_ * k_];
           owns_cpu_data_ = true;
         }
         mem_.setZeroArrayOnHost(h_data_, n_ * k_);
@@ -359,21 +359,21 @@ namespace ReSolve { namespace vector {
     }
   }
 
-  /** 
+  /**
    * @brief set the data of a single vector in a multivector to zero.
-   * 
+   *
    * @param[in] i          - Index of a vector in a multivector
    * @param[in] memspace   - Memory space of the data to be set to 0 (HOST or DEVICE)
    *
    * @pre   _i_ < _k_ i.e,, _i_ is smaller than the total number of vectors in multivector.
    */
-  void Vector::setToZero(index_type j, memory::MemorySpace memspace) 
+  void Vector::setToZero(index_type j, memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
     switch (memspace) {
       case HOST:
         if (h_data_ == nullptr) {
-          h_data_ = new real_type[n_ * k_]; 
+          h_data_ = new real_type[n_ * k_];
           owns_cpu_data_ = true;
         }
         mem_.setZeroArrayOnHost(&h_data_[j * n_current_], n_current_);
@@ -389,22 +389,22 @@ namespace ReSolve { namespace vector {
     }
   }
 
-  /** 
+  /**
    * @brief set vector data to a given constant.
-   * 
+   *
    * In case of multivectors, entire multivector is set to the constant.
-   * 
+   *
    * @param[in] C          - Constant (real number)
    * @param[in] memspace   - Memory space of the data to be set to 0 (HOST or DEVICE)
    *
    */
-  void Vector::setToConst(real_type C, memory::MemorySpace memspace) 
+  void Vector::setToConst(real_type C, memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
     switch (memspace) {
       case HOST:
         if (h_data_ == nullptr) {
-          h_data_ = new real_type[n_ * k_]; 
+          h_data_ = new real_type[n_ * k_];
           owns_cpu_data_ = true;
         }
         mem_.setArrayToConstOnHost(h_data_, C, n_ * k_);
@@ -419,22 +419,22 @@ namespace ReSolve { namespace vector {
     }
   }
 
-  /** 
+  /**
    * @brief set the data of a single vector in a multivector to a given constant.
-   * 
+   *
    * @param[in] j          - Index of a vector in a multivector
    * @param[in] C          - Constant (real number)
    * @param[in] memspace   - Memory space of the data to be set to 0 (HOST or DEVICE)
    *
    * @pre   _j_ < _k_ i.e,, _j_ is smaller than the total number of vectors in multivector.
    */
-  void Vector::setToConst(index_type j, real_type C, memory::MemorySpace memspace) 
+  void Vector::setToConst(index_type j, real_type C, memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
     switch (memspace) {
       case HOST:
         if (h_data_ == nullptr) {
-          h_data_ = new real_type[n_ * k_]; 
+          h_data_ = new real_type[n_ * k_];
           owns_cpu_data_ = true;
         }
         mem_.setArrayToConstOnHost(&h_data_[n_current_ * j], C, n_current_);
@@ -449,18 +449,18 @@ namespace ReSolve { namespace vector {
     }
   }
 
-  /** 
+  /**
    * @brief get a pointer to HOST or DEVICE data of a specified vector in a multivector.
-   * 
+   *
    * @param[in] i          - Index of a vector in a multivector
-   * @param[in] memspace   - Memory space of the pointer (HOST or DEVICE)  
+   * @param[in] memspace   - Memory space of the pointer (HOST or DEVICE)
    *
    * @return pointer to the _i_ th vector data (HOST or DEVICE). e
    *
    * @pre   _i_ < _k_ i.e,, _i_ is smaller than the total number of vectors in multivector.
-   * 
+   *
    * @note This function gives you access to the pointer, not to a copy.
-   * If you change the values using the pointer, the vector values will change too. 
+   * If you change the values using the pointer, the vector values will change too.
    */
   real_type* Vector::getVectorData(index_type i, memory::MemorySpace memspace)
   {
@@ -471,18 +471,18 @@ namespace ReSolve { namespace vector {
     }
   }
 
-  /** 
+  /**
    * @brief Set current lenght of the vector (use for vectors and multivectors
    * that change size throughout computation). Note: vector needs to be
    * allocated using maximum expected lenght.
-   * 
+   *
    * @param[in] new_n_current       - New vector lenght
    *
    * @return 0 if successful, -1 otherwise.
    *
    * @pre   _new_n_current_ <= _n_ i.e,, _new_n_current_ is smaller than the allocated vector lenght.
    */
-  int Vector::setCurrentSize(int new_n_current)
+  int Vector::setCurrentSize(index_type new_n_current)
   {
     if (new_n_current > n_) {
       return -1;
@@ -492,9 +492,9 @@ namespace ReSolve { namespace vector {
     }
   }
 
-  /** 
-   * @brief copy HOST or DEVICE data of a specified vector in a multivector to _dest_. 
-   * 
+  /**
+   * @brief copy HOST or DEVICE data of a specified vector in a multivector to _dest_.
+   *
    * @param[out] dest      - Pointer to the memory to which data is copied
    * @param[in] i          - Index of a vector in a multivector
    * @param[in] memspace   - Memory space (HOST or DEVICE) to copy from
@@ -521,13 +521,13 @@ namespace ReSolve { namespace vector {
       }
       return 0;
     }
-  }  
+  }
 
-  /** 
+  /**
    * @brief copy HOST or DEVICE vector data to _dest_.
-   * 
-   * In case of multivector, all data (size _k_ * _n_) is copied. 
-   * 
+   *
+   * In case of multivector, all data (size _k_ * _n_) is copied.
+   *
    * @param[out] dest      - Pointer to the memory to which data is copied
    * @param[in] memspace   - Memory space (HOST or DEVICE) to copy from
    *
