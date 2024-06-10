@@ -3,7 +3,7 @@
  * @author Kasia Swirydowicz (kasia.swirydowicz@pnnl.gov)
  * @author Slaven Peles (peless@ornl.gov)
  * @brief Definition of RandomSketchingFWHTCpu class.
- *
+ * 
  */
 #include <cmath>
 #include <limits>
@@ -13,15 +13,15 @@
 #include <resolve/vector/Vector.hpp>
 #include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/random/cpuSketchingKernels.h>
-#include <resolve/random/RandomSketchingFWHTCpu.hpp>
+#include <resolve/random/RandomSketchingFWHTCpu.hpp> 
 
-namespace ReSolve
+namespace ReSolve 
 {
   using out = io::Logger;
 
   /**
    * @brief Default constructor
-   *
+   * 
    * @post All class variables are set to nullptr.
    */
   RandomSketchingFWHTCpu::RandomSketchingFWHTCpu()
@@ -30,7 +30,7 @@ namespace ReSolve
 
   /**
    * @brief destructor
-   *
+   * 
    */
   RandomSketchingFWHTCpu::~RandomSketchingFWHTCpu()
   {
@@ -40,48 +40,48 @@ namespace ReSolve
     delete [] d_aux_;
   }
 
-  /**
+  /** 
    * @brief Sketching method - it sketches a given vector (shrinks its size)
-   *
+   * 
    * Implements actual sketching process.
    *
-   * @param[in]  input   - input vector, size _n_
-   * @param[out] output  - output vector, size _k_
-   *
+   * @param[in]  input   - input vector, size _n_ 
+   * @param[out] output  - output vector, size _k_ 
+   * 
    * @pre both vectors are allocated. Setup function from this class has been called.
    * @warning normal FWHT function requires scaling by 1/k. This function does not scale.
    *
-   * @return 0 if successful, !=0 otherwise (TODO).
+   * @return 0 if successful, !=0 otherwise (TODO). 
    */
   int RandomSketchingFWHTCpu::Theta(vector_type* input, vector_type* output)
   {
     std::memset(d_aux_, 0.0, static_cast<size_t>(N_) * sizeof(real_type));
-    cpu::FWHT_scaleByD(n_,
+    cpu::FWHT_scaleByD(n_, 
                        h_D_,
                        input->getData(memory::HOST),
-                       d_aux_);
+                       d_aux_);  
 
     cpu::FWHT(1, log2N_, d_aux_);
 
-    cpu::FWHT_select(k_rand_,
-                     h_perm_,
-                     d_aux_,
+    cpu::FWHT_select(k_rand_, 
+                     h_perm_, 
+                     d_aux_, 
                      output->getData(memory::HOST));
     return 0;
   }
 
-  /**
-   * @brief Sketching method setup.
-   *
+  /** 
+   * @brief Sketching method setup. 
+   * 
    * This function allocated P(erm), D (diagonal scaling matrix) and populates
    * them. It also allocates auxiliary arrays.
    *
    * @param[in]  n  - size of base (non-sketched) vector
-   * @param[in]  k  - size of sketched vector.
-   *
+   * @param[in]  k  - size of sketched vector. 
+   * 
    * @post Everything is set up so you can call Theta.
    *
-   * @return 0 if successful, !=0 otherwise (TODO).
+   * @return 0 if successful, !=0 otherwise (TODO). 
    */
   int RandomSketchingFWHTCpu::setup(index_type n, index_type k)
   {
@@ -99,22 +99,22 @@ namespace ReSolve
 
     srand(static_cast<unsigned>(time(nullptr)));
 
-    h_seq_  = new index_type[N_];
-    h_perm_  = new index_type[k_rand_];
-    h_D_  = new index_type[n_];
+    h_seq_  = new int[N_];
+    h_perm_  = new int[k_rand_];
+    h_D_  = new int[n_];
 
     int r;
     int temp;
 
     for (int i = 0; i < N_; ++i) {
       h_seq_[i] = i;
-    }
+    } 
     //Fisher-Yates
     for (int i = N_ - 1; i > 0; i--) {
-      r = rand() % i;
+      r = rand() % i; 
       temp = h_seq_[i];
       h_seq_[i] = h_seq_[r];
-      h_seq_[r] = temp;
+      h_seq_[r] = temp; 
     }
     for (int i = 0; i < k_rand_; ++i) {
       h_perm_[i] = h_seq_[i];
@@ -125,7 +125,7 @@ namespace ReSolve
       r = rand() % 100;
       if (r < 50){
         h_D_[i] = -1;
-      } else {
+      } else { 
         h_D_[i] = 1;
       }
     }
@@ -136,16 +136,16 @@ namespace ReSolve
     return 0;
   }
 
-  /**
+  /** 
    * @brief Reset values in the arrays used for sketching.
-   *
+   * 
    * Sketching can be reset, similar to Krylov method restarts.
    * If the solver restarts, call this method between restarts.
    *
    * @post Everything is set up so you can call Theta.
    *
-   * @return 0 if successful, !=0 otherwise (TODO).
-   *
+   * @return 0 if successful, !=0 otherwise (TODO). 
+   * 
    * @todo Need to be fixed, this can be done on the GPU.
    */
   int RandomSketchingFWHTCpu::reset()
@@ -161,10 +161,10 @@ namespace ReSolve
 
     //Fisher-Yates
     for (int i = N_ - 1; i > 0; i--) {
-      r = rand() % i;
+      r = rand() % i; 
       temp = h_seq_[i];
       h_seq_[i] = h_seq_[r];
-      h_seq_[r] = temp;
+      h_seq_[r] = temp; 
     }
     for (int i = 0; i < k_rand_; ++i) {
       h_perm_[i] = h_seq_[i];
@@ -175,7 +175,7 @@ namespace ReSolve
       r = rand() % 100;
       if (r < 50) {
         h_D_[i] = -1;
-      } else {
+      } else { 
         h_D_[i] = 1;
       }
     }

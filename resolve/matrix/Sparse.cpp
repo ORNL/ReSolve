@@ -7,22 +7,22 @@ namespace ReSolve {
 
   using out = io::Logger;
 
-  /**
-   * @brief empty constructor that does absolutely nothing
+  /** 
+   * @brief empty constructor that does absolutely nothing        
    */
   matrix::Sparse::Sparse()
   {
   }
 
-  /**
+  /** 
    * @brief basic constructor. It DOES NOT allocate any memory!
    *
    * @param[in] n   - number of rows
    * @param[in] m   - number of columns
-   * @param[in] nnz - number of non-zeros
+   * @param[in] nnz - number of non-zeros        
    */
-  matrix::Sparse::Sparse(index_type n,
-                         index_type m,
+  matrix::Sparse::Sparse(index_type n, 
+                         index_type m, 
                          index_type nnz):
     n_{n},
     m_{m},
@@ -42,25 +42,25 @@ namespace ReSolve {
     d_row_data_ = nullptr;
     d_col_data_ = nullptr;
     d_val_data_ = nullptr;
-
+    
     owns_cpu_data_ = false;
     owns_cpu_vals_ = false;
-
+    
     owns_gpu_data_ = false;
     owns_gpu_vals_ = false;
   }
 
-  /**
+  /** 
    * @brief another basic constructor. It DOES NOT allocate any memory!
    *
    * @param[in] n         - number of rows
    * @param[in] m         - number of columns
-   * @param[in] nnz       - number of non-zeros
-   * @param[in] symmetric - true if symmetric, false if non-symmetric
-   * @param[in] expanded  - true if expanded, false if not
+   * @param[in] nnz       - number of non-zeros        
+   * @param[in] symmetric - true if symmetric, false if non-symmetric       
+   * @param[in] expanded  - true if expanded, false if not       
    */
-  matrix::Sparse::Sparse(index_type n,
-                         index_type m,
+  matrix::Sparse::Sparse(index_type n, 
+                         index_type m, 
                          index_type nnz,
                          bool symmetric,
                          bool expanded):
@@ -88,11 +88,11 @@ namespace ReSolve {
 
     owns_cpu_data_ = false;
     owns_cpu_vals_ = false;
-
+    
     owns_gpu_data_ = false;
     owns_gpu_vals_ = false;
   }
-
+  
   /**
    * @brief destructor
    * */
@@ -102,15 +102,15 @@ namespace ReSolve {
     this->destroyMatrixData(memory::DEVICE);
   }
 
-  /**
+  /** 
    * @brief set the matrix update flags to false (for both HOST and DEVICE).
    */
   void matrix::Sparse::setNotUpdated()
   {
     h_data_updated_ = false;
-    d_data_updated_ = false;
+    d_data_updated_ = false; 
   }
-
+  
   /**
    * @brief get number of matrix rows
    *
@@ -174,8 +174,8 @@ namespace ReSolve {
   /**
    * @brief Set matrix symmetry property
    *
-   * @param[in] symmetric - true to set matrix to symmetric and false to set to non-symmetric
-   */
+   * @param[in] symmetric - true to set matrix to symmetric and false to set to non-symmetric 
+   */  
   void matrix::Sparse::setSymmetric(bool symmetric)
   {
     this->is_symmetric_ = symmetric;
@@ -185,7 +185,7 @@ namespace ReSolve {
    * @brief Set matrix "expanded" property
    *
    * @param[in] expanded - true to set matrix to expanded and false to set to not expanded
-   */
+   */  
   void matrix::Sparse::setExpanded(bool expanded)
   {
     this->is_expanded_ = expanded;
@@ -195,7 +195,7 @@ namespace ReSolve {
    * @brief Set number of non-zeros in expanded matrix.
    *
    * @param[in] nnz_expanded_new - new number of non-zeros in expanded matrix
-   */
+   */  
   void matrix::Sparse::setNnzExpanded(index_type nnz_expanded_new)
   {
     this->nnz_expanded_ = nnz_expanded_new;
@@ -205,22 +205,22 @@ namespace ReSolve {
    * @brief Set number of non-zeros.
    *
    * @param[in] nnz_new - new number of non-zeros
-   */
+   */  
   void matrix::Sparse::setNnz(index_type nnz_new)
   {
     this->nnz_ = nnz_new;
   }
 
   /**
-   * @brief Set the data to be updated on HOST or DEVICE.
+   * @brief Set the data to be updated on HOST or DEVICE. 
    *
    * @param[in] memspace - memory space (HOST or DEVICE) of data that is set to "updated"
    *
    * @return 0 if successful, -1 if not.
-   *
+   * 
    * @note The method automatically sets the other mirror data to non-updated (but it does not copy).
-   */
-  index_type matrix::Sparse::setUpdated(memory::MemorySpace memspace)
+   */  
+  int matrix::Sparse::setUpdated(memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
     switch (memspace) {
@@ -238,7 +238,7 @@ namespace ReSolve {
 
   /**
    * @brief Set the pointers for matrix row, column, value data.
-   *
+   * 
    * Useful if interfacing with other codes - this function only assigns
    * pointers, but it does not allocate nor copy anything. The data ownership
    * flags would be set to false (default).
@@ -249,7 +249,7 @@ namespace ReSolve {
    * @param[in] memspace - memory space (HOST or DEVICE) of incoming data
    *
    * @return 0 if successful, 1 if not.
-   */
+   */  
   int matrix::Sparse::setMatrixData(index_type* row_data, index_type* col_data, real_type* val_data, memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
@@ -270,7 +270,7 @@ namespace ReSolve {
         }
         h_row_data_ = row_data;
         h_col_data_ = col_data;
-        h_val_data_ = val_data;
+        h_val_data_ = val_data;	
         h_data_updated_ = true;
         owns_cpu_data_  = false;
         owns_cpu_vals_  = false;
@@ -288,7 +288,7 @@ namespace ReSolve {
         }
         d_row_data_ = row_data;
         d_col_data_ = col_data;
-        d_val_data_ = val_data;
+        d_val_data_ = val_data;	
         d_data_updated_ = true;
         owns_gpu_data_  = false;
         owns_gpu_vals_  = false;
@@ -296,16 +296,16 @@ namespace ReSolve {
     }
     return 0;
   }
-
+  
   /**
-   * @brief destroy matrix data (HOST or DEVICE) if the matrix owns it
+   * @brief destroy matrix data (HOST or DEVICE) if the matrix owns it 
    * (will attempt to destroy all three arrays).
    *
    * @param[in] memspace - memory space (HOST or DEVICE) of incoming data
    *
    * @return 0 if successful, -1 if not.
    *
-   */
+   */ 
   int matrix::Sparse::destroyMatrixData(memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
@@ -341,7 +341,7 @@ namespace ReSolve {
 
   /**
    * @brief updata matrix values using the _new_values_ provided either as HOST or as DEVICE array.
-   *
+   * 
    * This function will copy the data (not just assign a pointer) and allocate if needed.
    * It also sets ownership and update flags.
    *
@@ -350,10 +350,10 @@ namespace ReSolve {
    * @param[in] memspaceOut - memory space (HOST or DEVICE) of matrix values to be updated.
    *
    * @return 0 if successful, -1 if not.
-   */
+   */  
   int matrix::Sparse::updateValues(real_type* new_vals, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut)
   {
-
+ 
     index_type nnz_current = nnz_;
     if (is_expanded_) {nnz_current = nnz_expanded_;}
     //four cases (for now)
@@ -363,7 +363,7 @@ namespace ReSolve {
     if ((memspaceIn == memory::HOST)   && (memspaceOut == memory::DEVICE)){ control = 1;}
     if ((memspaceIn == memory::DEVICE) && (memspaceOut == memory::HOST))  { control = 2;}
     if ((memspaceIn == memory::DEVICE) && (memspaceOut == memory::DEVICE)){ control = 3;}
-
+   
     if (memspaceOut == memory::HOST) {
       //check if cpu data allocated
       if (h_val_data_ == nullptr) {
@@ -375,7 +375,7 @@ namespace ReSolve {
     if (memspaceOut == memory::DEVICE) {
       //check if cuda data allocated
       if (d_val_data_ == nullptr) {
-        mem_.allocateArrayOnDevice(&d_val_data_, nnz_current);
+        mem_.allocateArrayOnDevice(&d_val_data_, nnz_current); 
         owns_gpu_vals_ = true;
       }
     }
@@ -405,14 +405,14 @@ namespace ReSolve {
 
   /**
    * @brief updata matrix values using the _new_values_ provided either as HOST or as DEVICE array.
-   *
+   * 
    * This function only assigns a pointer, but does not copy. It sets update flags.
    *
    * @param[in] new_vals    - pointer to new values data (array of real numbers)
    * @param[in] memspace    - memory space (HOST or DEVICE) of _new_vals_
    *
    * @return 0 if successful, -1 if not.
-   */
+   */  
   int matrix::Sparse::setNewValues(real_type* new_vals, memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
@@ -425,7 +425,7 @@ namespace ReSolve {
           out::error() << "Ignoring setNewValues function call ...\n";
           return 1;
         }
-        h_val_data_ = new_vals;
+        h_val_data_ = new_vals;	
         h_data_updated_ = true;
         owns_cpu_vals_  = false;
         break;
@@ -435,7 +435,7 @@ namespace ReSolve {
           out::error() << "Ignoring setNewValues function call ...\n";
           return 1;
         }
-        d_val_data_ = new_vals;
+        d_val_data_ = new_vals;	
         d_data_updated_ = true;
         owns_gpu_vals_  = false;
         break;
@@ -446,3 +446,4 @@ namespace ReSolve {
   }
 
 } // namespace ReSolve
+

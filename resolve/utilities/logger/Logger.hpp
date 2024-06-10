@@ -1,5 +1,5 @@
 /**
- * @file
+ * @file 
 */
 
 #pragma once
@@ -14,9 +14,9 @@ namespace ReSolve
   {
     /**
      * @brief Class that manages and logs outputs from Re::Solve code.
-     *
+     * 
      * All methods and data in this class are static.
-     *
+     * 
      */
     class Logger
     {
@@ -37,7 +37,6 @@ namespace ReSolve
         static void openOutputFile(std::string filename);
         static void closeOutputFile();
         static void setVerbosity(Verbosity v);
-        static Verbosity verbosity();
 
         static std::vector<std::ostream*>& init();
 

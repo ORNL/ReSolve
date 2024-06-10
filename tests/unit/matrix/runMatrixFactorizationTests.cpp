@@ -7,12 +7,12 @@
 
 int main(int, char**)
 {
-  ReSolve::tests::TestingResults result;
+  ReSolve::tests::TestingResults result; 
 
   {
     std::cout << "Running tests on CPU:\n";
     ReSolve::tests::MatrixFactorizationTests test("cpu");
-
+      
     result += test.matrixFactorizationConstructor();
     result += test.matrixILU0();
 
