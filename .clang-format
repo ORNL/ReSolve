@@ -20,13 +20,6 @@ PointerAlignment: Left
 InsertBraces: true
 NamespaceIndentation: All
 LineEnding: LF
-IntegerLiteralSeparator:
-    Binary: 4
-    BinaryMinDigits: 8
-    Decimal: 3
-    DecimalMinDigits: 4
-    Hex: 2
-    HexMinDigits: 6
 AlwaysBreakTemplateDeclarations: true
 BinPackArguments: false
 BinPackParameters: false
