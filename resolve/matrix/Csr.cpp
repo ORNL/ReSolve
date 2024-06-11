@@ -617,9 +617,7 @@ namespace ReSolve
     return 0;
   }
 
-  std::function<
-      std::tuple<std::tuple<index_type, index_type, real_type>, bool>()>
-  matrix::Csr::elements(memory::MemorySpace memory_space)
+  std::function<std::tuple<std::tuple<index_type, index_type, real_type>, bool>()> matrix::Csr::elements(memory::MemorySpace memory_space)
   {
     std::shared_ptr<index_type> i(new index_type(0)), j(new index_type(0));
     std::shared_ptr<index_type> n(new index_type(getNnz()));
@@ -628,15 +626,12 @@ namespace ReSolve
     real_type* values = getValues(memory_space);
 
     if (rows == nullptr || columns == nullptr || values == nullptr) {
-      return []() -> std::tuple<std::tuple<index_type, index_type, real_type>,
-                                bool> {
+      return []() -> std::tuple<std::tuple<index_type, index_type, real_type>, bool> {
         return {{0, 0, 0}, false};
       };
     }
 
-    return
-        [=]()
-            -> std::tuple<std::tuple<index_type, index_type, real_type>, bool> {
+    return [=]() -> std::tuple<std::tuple<index_type, index_type, real_type>, bool> {
           if (*j == *n) {
             return {{0, 0, 0}, false};
           }

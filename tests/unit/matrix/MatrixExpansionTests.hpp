@@ -65,25 +65,20 @@ namespace ReSolve
                                    {0, 4, 3.0},
                                    {4, 0, 3.0}};
 
-        bool validateAnswer(
-            matrix::Coo* A,
-            std::vector<std::tuple<index_type, index_type, real_type>> target)
+        bool validateAnswer(matrix::Coo* A,
+                            std::vector<std::tuple<index_type, index_type, real_type>> target)
         {
           return validateAnswer(matrix::elements(A), target);
         }
 
-        bool validateAnswer(
-            matrix::Csr* A,
-            std::vector<std::tuple<index_type, index_type, real_type>> target)
+        bool validateAnswer(matrix::Csr* A,
+                            std::vector<std::tuple<index_type, index_type, real_type>> target)
         {
           return validateAnswer(matrix::elements(A), target);
         }
 
-        bool validateAnswer(
-            std::function<
-                std::tuple<std::tuple<index_type, index_type, real_type>,
-                           bool>()> f,
-            std::vector<std::tuple<index_type, index_type, real_type>> target)
+        bool validateAnswer(std::function<std::tuple<std::tuple<index_type, index_type, real_type>, bool>()> f,
+                            std::vector<std::tuple<index_type, index_type, real_type>> target)
         {
           bool ok;
           std::tuple<index_type, index_type, real_type> t;

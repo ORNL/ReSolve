@@ -108,13 +108,9 @@ namespace ReSolve { namespace matrix {
       friend int matrix::expand(matrix::Sparse*);
 
       // NOTE: temporary. see comment in resolve/matrix/Utilities.cpp
-      virtual std::function<
-          std::tuple<std::tuple<index_type, index_type, real_type>, bool>()>
-          elements(memory::MemorySpace) = 0;
+      virtual std::function<std::tuple<std::tuple<index_type, index_type, real_type>, bool>()> elements(memory::MemorySpace) = 0;
 
       // NOTE: ditto (same note on `virtual void elements()`)
-      friend std::function<
-          std::tuple<std::tuple<index_type, index_type, real_type>, bool>()>
-      matrix::elements(matrix::Sparse*);
+      friend std::function<std::tuple<std::tuple<index_type, index_type, real_type>, bool>()> matrix::elements(matrix::Sparse*);
   };
 }} // namespace ReSolve::matrix

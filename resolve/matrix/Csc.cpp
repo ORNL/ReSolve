@@ -263,14 +263,11 @@ namespace ReSolve
     return -1;
   }
 
-  std::function<
-      std::tuple<std::tuple<index_type, index_type, real_type>, bool>()>
-  matrix::Csc::elements(memory::MemorySpace _)
+  std::function<std::tuple<std::tuple<index_type, index_type, real_type>, bool>()> matrix::Csc::elements(memory::MemorySpace _)
   {
     out::error() << "Sparse::elements(memory::MemorySpace) is not implemented"
                     "for Csc!\n";
-    return []() -> std::tuple<std::tuple<index_type, index_type, real_type>,
-                              bool> {
+    return []() -> std::tuple<std::tuple<index_type, index_type, real_type>, bool> {
       return {{0, 0, 0}, false};
     };
   }

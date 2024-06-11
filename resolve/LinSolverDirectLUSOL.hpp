@@ -56,18 +56,20 @@ namespace ReSolve
 
       /// @brief Storage used for the matrices
       ///
-      /// Primary storage area used by LUSOL. Used to hold the nonzeros of matrices
+      /// Primary workspace used by LUSOL. Used to hold the nonzeros of matrices
       /// passed along API boundaries and as a general scratch region
       real_type* a_ = nullptr;
 
-      /// @brief Row indices of matrices passed along API boundaries
+      /// @brief Row data of matrices passed along API boundaries, in addition to
+      ///        functioning as additional workspace storage for LUSOL
       index_type* indc_ = nullptr;
 
-      /// @brief Column indices of matrices passed along API boundaries
+      /// @brief Column data of matrices passed along API boundaries, in addition to
+      ///        functioning as additional workspace storage for LUSOL
       index_type* indr_ = nullptr;
 
       /// @brief The number of nonzero elements within the input matrix, A
-      index_type nelem_ = -1;
+      index_type nelem_ = 0;
 
       /// @brief The length of the dynamically-allocated arrays held within `a_`,
       ///        `indc_`, and `indr_`
@@ -103,13 +105,13 @@ namespace ReSolve
       /// utilizing it will return with inform set to 7, and the intended behavior of
       /// the callee is that they should resize `a_`, `indc_`, and `indr_` to at least
       /// the value specified in `luparm_[12]`
-      index_type lena_ = -1;
+      index_type lena_ = 0;
 
       /// @brief The number of rows in the input matrix, A
-      index_type m_ = -1;
+      index_type m_ = 0;
 
       /// @brief The number of columns in the input matrix, A
-      index_type n_ = -1;
+      index_type n_ = 0;
 
       /// @brief Index-typed parameters passed along the API boundary
       index_type luparm_[30] = {0};

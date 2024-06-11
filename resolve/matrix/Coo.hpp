@@ -33,9 +33,7 @@ namespace ReSolve { namespace matrix {
       virtual int expand();
 
       // NOTE: see comment in resolve/matrix/Utilities.cpp
-      virtual std::function<
-          std::tuple<std::tuple<index_type, index_type, real_type>, bool>()>
-          elements(memory::MemorySpace);
+      virtual std::function<std::tuple<std::tuple<index_type, index_type, real_type>, bool>()> elements(memory::MemorySpace);
   };
 
 }} // namespace ReSolve::matrix

@@ -25,9 +25,7 @@ namespace ReSolve
 
   // NOTE: i don't like these too much. they're just "good enough"
 
-  std::function<
-      std::tuple<std::tuple<index_type, index_type, real_type>, bool>()>
-  matrix::elements(matrix::Sparse* A)
+  std::function<std::tuple<std::tuple<index_type, index_type, real_type>, bool>()> matrix::elements(matrix::Sparse* A)
   {
     return A->elements(memory::HOST);
   }

@@ -56,8 +56,7 @@ namespace ReSolve
     parmlu_[2] = std::pow(std::numeric_limits<real_type>::epsilon(), 0.8);
 
     // TODO: figure out where this exponent comes from :)
-    parmlu_[4] = parmlu_[3] =
-        std::pow(std::numeric_limits<real_type>::epsilon(), 0.67);
+    parmlu_[4] = parmlu_[3] = std::pow(std::numeric_limits<real_type>::epsilon(), 0.67);
 
     parmlu_[5] = 3.0;
     parmlu_[6] = 0.3;
@@ -103,6 +102,11 @@ namespace ReSolve
 
   int LinSolverDirectLUSOL::analyze()
   {
+    // TODO: replace this with something better
+    if (a_ != nullptr || indc_ != nullptr || indr_ != nullptr) {
+        return -1;
+    }
+
     // NOTE: LUSOL does not come with any discrete analysis operation. it is
     //       possible to break apart bits of lu1fac into that, but for now,
     //       we don't bother and shunt it all into ::factorize()
@@ -128,11 +132,9 @@ namespace ReSolve
     index_type* indc_in = A_->getRowData(memory::HOST);
     index_type* indr_in = A_->getColData(memory::HOST);
 
-    a_ = static_cast<real_type*>(std::realloc(a_, lena_ * sizeof(real_type)));
-    indc_ =
-      static_cast<index_type*>(std::realloc(indc_, lena_ * sizeof(index_type)));
-    indr_ =
-      static_cast<index_type*>(std::realloc(indr_, lena_ * sizeof(index_type)));
+    a_ = new real_type[lena_];
+    indc_ = new index_type[lena_];
+    indr_ = new index_type[lena_];
 
     for (index_type i = 0; i < nelem_; i++) {
       a_[i] = a_in[i];
@@ -140,37 +142,37 @@ namespace ReSolve
       indr_[i] = indr_in[i] + 1;
     }
 
-    p_ = static_cast<index_type*>(std::realloc(p_, m_ * sizeof(index_type)));
+    p_ = new index_type[m_];
     std::fill_n(p_, m_, 0);
 
-    q_ = static_cast<index_type*>(std::realloc(q_, n_ * sizeof(index_type)));
+    q_ = new index_type[n_];
     std::fill_n(q_, n_, 0);
 
-    lenc_ = static_cast<index_type*>(std::realloc(lenc_, n_ * sizeof(index_type)));
+    lenc_ = new index_type[n_];
     std::fill_n(lenc_, n_, 0);
 
-    lenr_ = static_cast<index_type*>(std::realloc(lenr_, m_ * sizeof(index_type)));
+    lenr_ = new index_type[m_];
     std::fill_n(lenr_, m_, 0);
 
-    locc_ = static_cast<index_type*>(std::realloc(locc_, n_ * sizeof(index_type)));
+    locc_ = new index_type[n_];
     std::fill_n(locc_, n_, 0);
 
-    locr_ = static_cast<index_type*>(std::realloc(locr_, m_ * sizeof(index_type)));
+    locr_ = new index_type[m_];
     std::fill_n(locr_, m_, 0);
 
-    iploc_ = static_cast<index_type*>(std::realloc(iploc_, n_ * sizeof(index_type)));
+    iploc_ = new index_type[n_];
     std::fill_n(iploc_, n_, 0);
 
-    iqloc_ = static_cast<index_type*>(std::realloc(iqloc_, m_ * sizeof(index_type)));
+    iqloc_ = new index_type[m_];
     std::fill_n(iqloc_, m_, 0);
 
-    ipinv_ = static_cast<index_type*>(std::realloc(ipinv_, m_ * sizeof(index_type)));
+    ipinv_ = new index_type[m_];
     std::fill_n(ipinv_, m_, 0);
 
-    iqinv_ = static_cast<index_type*>(std::realloc(iqinv_, n_ * sizeof(index_type)));
+    iqinv_ = new index_type[n_];
     std::fill_n(iqinv_, n_, 0);
 
-    w_ = static_cast<real_type*>(std::realloc(w_, n_ * sizeof(real_type)));
+    w_ = new real_type[n_];
     std::fill_n(w_, n_, 0);
 
     return 0;
@@ -209,8 +211,7 @@ namespace ReSolve
 
     // TODO: consider handling inform = 7
 
-    // NOTE: this is probably enough to be handled correctly by most callees
-    return -inform;
+    return inform;
   }
 
   int LinSolverDirectLUSOL::refactorize()
@@ -248,8 +249,7 @@ namespace ReSolve
            locr_,
            &inform);
 
-    // NOTE: ditto above
-    return -inform;
+    return inform;
   }
 
   int LinSolverDirectLUSOL::solve(vector_type* x)

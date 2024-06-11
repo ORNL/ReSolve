@@ -29,8 +29,6 @@ namespace ReSolve
     ///
     /// This interfaced is to be used as a bandage. It will be removed in a
     /// later version
-    std::function<
-        std::tuple<std::tuple<index_type, index_type, real_type>, bool>()>
-    elements(Sparse*);
+    std::function<std::tuple<std::tuple<index_type, index_type, real_type>, bool>()> elements(Sparse*);
   } // namespace matrix
 } // namespace ReSolve
