@@ -124,7 +124,8 @@ namespace ReSolve
         matrix::Coo* createMatrix()
         {
           // NOTE: these are hardcoded for now
-          matrix::Coo* A = new matrix::Coo(9, 9, valsA_.size(), true, true);
+          index_type size = static_cast<index_type>(valsA_.size());
+          matrix::Coo* A = new matrix::Coo(9, 9, size, true, true);
           A->updateData(rowsA_.data(),
                         colsA_.data(),
                         valsA_.data(),
