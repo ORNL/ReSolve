@@ -4,6 +4,7 @@ AlignConsecutiveMacros: true
 BreakBeforeBraces: Linux
 IndentWidth: 2
 ConstructorInitializerIndentWidth: 2
+ColumnLimit: 0
 AlignAfterOpenBracket: Align
 Standard: c++11
 IndentAccessModifiers: true
@@ -33,7 +34,7 @@ AllowShortFunctionsOnASingleLine: None
 AllowAllArgumentsOnNextLine: false
 IncludeBlocks: Regroup
 IncludeCategories:
-    - Regex: '^<resolve/'
+    - Regex: '^<(resolve|tests)/'
       Priority: 1
     - Regex: '^<[[:alnum:].]+>'
       Priority: -1
