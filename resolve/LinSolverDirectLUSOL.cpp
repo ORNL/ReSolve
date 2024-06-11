@@ -252,7 +252,7 @@ namespace ReSolve
     return inform;
   }
 
-  int LinSolverDirectLUSOL::solve(vector_type* x)
+  int LinSolverDirectLUSOL::solve(vector_type* /* x */)
   {
     log::error() << "LinSolverDirect::solve(vector_type*) called on "
                     "LinSolverDirectLUSOL which is unimplemented!\n";
@@ -287,19 +287,19 @@ namespace ReSolve
     return nullptr;
   }
 
-  void LinSolverDirectLUSOL::setPivotThreshold(real_type _)
+  void LinSolverDirectLUSOL::setPivotThreshold(real_type /* _ */)
   {
     log::error() << "LinSolverDirect::setPivotThreshold(real_type) called on "
                     "LinSolverDirectLUSOL on which it is irrelevant!\n";
   }
 
-  void LinSolverDirectLUSOL::setOrdering(int _)
+  void LinSolverDirectLUSOL::setOrdering(int /* _ */)
   {
     log::error() << "LinSolverDirect::setOrdering(int) called on "
                     "LinSolverDirectLUSOL on which it is irrelevant!\n";
   }
 
-  void LinSolverDirectLUSOL::setHaltIfSingular(bool _)
+  void LinSolverDirectLUSOL::setHaltIfSingular(bool /* _ */)
   {
     log::error() << "LinSolverDirect::setHaltIfSingular(bool) called on "
                     "LinSolverDirectLUSOL on which it is irrelevant!\n";
