@@ -6,7 +6,6 @@
 #include <tuple>
 #include <resolve/Common.hpp>
 #include <resolve/MemoryUtils.hpp>
-#include <resolve/matrix/Utilities.hpp>
 
 namespace ReSolve { namespace matrix {
   /**
@@ -99,18 +98,5 @@ namespace ReSolve { namespace matrix {
       bool owns_gpu_vals_{false}; ///< for values
 
       MemoryHandler mem_; ///< Device memory manager object
-
-    private:
-      // NOTE: temporary. see comment in resolve/matrix/Utilities.cpp
-      virtual int expand() = 0;
-
-      // NOTE: ditto (same note on `virtual void expand()`)
-      friend int matrix::expand(matrix::Sparse*);
-
-      // NOTE: temporary. see comment in resolve/matrix/Utilities.cpp
-      virtual std::function<std::tuple<std::tuple<index_type, index_type, real_type>, bool>()> elements(memory::MemorySpace) = 0;
-
-      // NOTE: ditto (same note on `virtual void elements()`)
-      friend std::function<std::tuple<std::tuple<index_type, index_type, real_type>, bool>()> matrix::elements(matrix::Sparse*);
   };
 }} // namespace ReSolve::matrix

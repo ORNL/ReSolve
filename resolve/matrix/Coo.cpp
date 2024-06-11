@@ -1,8 +1,6 @@
 #include <cstring>  // <-- includes memcpy
 #include <iostream>
 #include <iomanip> 
-#include <cassert>
-#include <memory>
 
 #include <resolve/utilities/logger/Logger.hpp>
 #include "Coo.hpp"
@@ -259,102 +257,5 @@ namespace ReSolve
           << h_col_data_[i] << " "
           << h_val_data_[i] << "\n";
     }
-  }
-
-  int matrix::Coo::expand()
-  {
-    if (is_symmetric_ && !is_expanded_) {
-      index_type* rows = getRowData(memory::HOST);
-      index_type* columns = getColData(memory::HOST);
-      real_type* values = getValues(memory::HOST);
-
-      if (rows == nullptr || columns == nullptr || values == nullptr) {
-        return 0;
-      }
-
-      // NOTE: this is predicated on the same define as that which disables
-      //       assert(3), to avoid record-keeping where it is not necessary
-#ifndef NDEBUG
-      index_type n_diagonal = 0;
-#endif
-
-      // NOTE: so because most of the code here uses new/delete and there's no
-      //       realloc(3) equivalent for that memory management scheme, we
-      //       have to manually new/memcpy/delete, unfortunately
-      index_type* new_rows = new index_type[nnz_expanded_];
-      index_type* new_columns = new index_type[nnz_expanded_];
-      real_type* new_values = new real_type[nnz_expanded_];
-
-      index_type j = 0;
-      for (index_type i = 0; i < nnz_; i++) {
-        new_rows[j] = rows[i];
-        new_columns[j] = columns[i];
-        new_values[j] = values[i];
-
-        j++;
-
-#ifndef NDEBUG
-        if (rows[i] == columns[i]) {
-          n_diagonal++;
-        } else {
-#else
-        if (rows[i] != columns[i]) {
-#endif
-          new_rows[j] = columns[i];
-          new_columns[j] = rows[i];
-          new_values[j] = values[i];
-
-          j++;
-        }
-      }
-
-      // NOTE: the effectiveness of this is probably questionable given that
-      //       it occurs after we've already risked writing out-of-bounds, but
-      //       i guess if that worked or we've over-allocated, this will catch
-      //       something (in debug builds/release builds with asserts enabled)
-      assert(nnz_expanded_ == ((2 * nnz_) - n_diagonal));
-
-      if (destroyMatrixData(memory::HOST) != 0 ||
-          setMatrixData(new_rows, new_columns, new_values, memory::HOST) != 0) {
-        // TODO: make fallible
-        assert(false && "invalid state after coo matrix expansion");
-        return -1;
-      }
-
-      setNnz(nnz_expanded_);
-      setExpanded(true);
-      owns_cpu_data_ = owns_cpu_vals_ = true;
-    }
-
-    return 0;
-  }
-
-  std::function<
-      std::tuple<std::tuple<index_type, index_type, real_type>, bool>()>
-  matrix::Coo::elements(memory::MemorySpace memory_space)
-  {
-    std::shared_ptr<index_type> i(new index_type(0));
-    std::shared_ptr<index_type> n(new index_type(getNnz()));
-    index_type* rows = getRowData(memory_space);
-    index_type* columns = getColData(memory_space);
-    real_type* values = getValues(memory_space);
-
-    if (rows == nullptr || columns == nullptr || values == nullptr) {
-      return []() -> std::tuple<std::tuple<index_type, index_type, real_type>,
-                                bool> {
-        return {{0, 0, 0}, false};
-      };
-    }
-
-    return
-        [=]()
-            -> std::tuple<std::tuple<index_type, index_type, real_type>, bool> {
-          if (*i == *n) {
-            return {{0, 0, 0}, false};
-          }
-
-          (*i)++;
-          return {{rows[*i - 1], columns[*i - 1], values[*i - 1]}, true};
-        };
   }
 } // namespace ReSolve
