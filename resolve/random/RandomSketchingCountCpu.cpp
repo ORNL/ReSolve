@@ -74,10 +74,10 @@ namespace ReSolve
     srand(static_cast<unsigned>(time(nullptr)));
 
     //allocate labeling scheme vector and move to GPU
-    h_labels_ = new int[n_];
+    h_labels_ = new index_type[n_];
 
     //allocate sgn - a vector of flip signs
-    h_flip_  = new int[n_];
+    h_flip_  = new index_type[n_];
 
     //populate labeling scheme (can be done on the gpu really)
     //to be fixed, this can be done on the GPU

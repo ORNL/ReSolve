@@ -533,6 +533,5 @@ namespace ReSolve
       }
     }
   }
-
 } // namespace ReSolve 
 

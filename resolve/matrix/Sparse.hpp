@@ -2,6 +2,8 @@
 // Mirroring memory approach 
 #pragma once
 #include <string>
+#include <functional>
+#include <tuple>
 #include <resolve/Common.hpp>
 #include <resolve/MemoryUtils.hpp>
 
@@ -38,7 +40,7 @@ namespace ReSolve { namespace matrix {
       void setExpanded(bool expanded);
       void setNnzExpanded(index_type nnz_expanded_new);
       void setNnz(index_type nnz_new); // for resetting when removing duplicates
-      index_type setUpdated(memory::MemorySpace what);
+      int setUpdated(memory::MemorySpace what);
 
       virtual index_type* getRowData(memory::MemorySpace memspace) = 0;
       virtual index_type* getColData(memory::MemorySpace memspace) = 0;
@@ -96,6 +98,5 @@ namespace ReSolve { namespace matrix {
       bool owns_gpu_vals_{false}; ///< for values
 
       MemoryHandler mem_; ///< Device memory manager object
-
   };
 }} // namespace ReSolve::matrix

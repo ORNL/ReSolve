@@ -43,6 +43,12 @@ namespace ReSolve
       updateVerbosity(output_streams_);
     }
 
+    /// @brief Gets verbosity level
+    Logger::Verbosity Logger::verbosity()
+    {
+      return verbosity_;
+    }
+
     /**
      * @brief Private method to update verbosity.
      * 

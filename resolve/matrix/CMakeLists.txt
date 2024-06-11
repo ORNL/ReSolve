@@ -7,7 +7,7 @@
 ]]
 
 # C++ code
-set(Matrix_SRC 
+set(Matrix_SRC
     io.cpp
     Sparse.cpp
     Csr.cpp
@@ -18,12 +18,12 @@ set(Matrix_SRC
 )
 
 # C++ code that depends on CUDA SDK libraries
-set(Matrix_CUDASDK_SRC 
+set(Matrix_CUDASDK_SRC
     MatrixHandlerCuda.cpp
 )
 
 # and on HIP
-set(Matrix_ROCM_SRC 
+set(Matrix_ROCM_SRC
   MatrixHandlerHip.cpp
 )
 

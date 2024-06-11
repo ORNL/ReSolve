@@ -134,7 +134,7 @@ namespace ReSolve
 
     int outer_flag = 1;
     int notconv = 1; 
-    int i = 0;
+    index_type i = 0;
     int it = 0;
     int j;
     int k;

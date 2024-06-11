@@ -99,9 +99,9 @@ namespace ReSolve
 
     srand(static_cast<unsigned>(time(nullptr)));
 
-    h_seq_  = new int[N_];
-    h_perm_  = new int[k_rand_];
-    h_D_  = new int[n_];
+    h_seq_  = new index_type[N_];
+    h_perm_  = new index_type[k_rand_];
+    h_D_  = new index_type[n_];
 
     int r;
     int temp;

@@ -27,7 +27,6 @@ namespace ReSolve { namespace matrix {
       virtual void print(std::ostream& file_out = std::cout);
 
       virtual int copyData(memory::MemorySpace memspaceOut);
-
   };
 
 }} // namespace ReSolve::matrix

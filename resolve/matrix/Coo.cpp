@@ -72,11 +72,11 @@ namespace ReSolve
     }
   }
 
-  index_type matrix::Coo::updateData(index_type* row_data,
-                                     index_type* col_data,
-                                     real_type* val_data,
-                                     memory::MemorySpace memspaceIn,
-                                     memory::MemorySpace memspaceOut)
+  int matrix::Coo::updateData(index_type* row_data,
+                              index_type* col_data,
+                              real_type* val_data,
+                              memory::MemorySpace memspaceIn,
+                              memory::MemorySpace memspaceOut)
   {
 
     //four cases (for now)
@@ -152,7 +152,7 @@ namespace ReSolve
     return 0;
   } 
 
-  index_type matrix::Coo::updateData(index_type* row_data, index_type* col_data, real_type* val_data, index_type new_nnz, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut)
+  int matrix::Coo::updateData(index_type* row_data, index_type* col_data, real_type* val_data, index_type new_nnz, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut)
   {
     this->destroyMatrixData(memspaceOut);
     this->nnz_ = new_nnz;
@@ -160,7 +160,7 @@ namespace ReSolve
     return i;
   } 
 
-  index_type matrix::Coo::allocateMatrixData(memory::MemorySpace memspace)
+  int matrix::Coo::allocateMatrixData(memory::MemorySpace memspace)
   {
     index_type nnz_current = nnz_;
     if (is_expanded_) {nnz_current = nnz_expanded_;}
@@ -258,5 +258,4 @@ namespace ReSolve
           << h_val_data_[i] << "\n";
     }
   }
-
 } // namespace ReSolve

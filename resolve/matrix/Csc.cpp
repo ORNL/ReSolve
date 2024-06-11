@@ -256,5 +256,4 @@ namespace ReSolve
       }
     }
   }
-
 } // namespace ReSolve
