@@ -103,10 +103,9 @@ set(ReSolve_Object_List
 
 if(RESOLVE_USE_LUSOL)
   add_subdirectory(lusol)
-  target_link_libraries(resolve_tpl INTERFACE lusol)
   list(APPEND ReSolve_SRC ${ReSolve_LUSOL_SRC})
   list(APPEND ReSolve_HEADER_INSTALL ${ReSolve_LUSOL_HEADER_INSTALL})
-  list(APPEND ReSolve_Targets_List lusol lusol_precision)
+  list(APPEND ReSolve_Targets_List lusol_lib)
 endif()
 
 # If no GPU support is enabled, link to dummy device backend
