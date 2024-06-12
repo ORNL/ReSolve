@@ -2,6 +2,7 @@
 
 #include <resolve/Common.hpp>
 #include <resolve/LinSolver.hpp>
+#include <resolve/MemoryUtils.hpp>
 
 #include <cstdint>
 #include <memory>
@@ -51,6 +52,13 @@ namespace ReSolve
       virtual real_type getMatrixConditionNumber() override;
 
     private:
+      int allocateSolverData();
+      int freeSolverData();
+
+      bool is_solver_data_allocated_{false};
+
+      MemoryHandler mem_;
+
       //NOTE: a_, indc_, and indr_ may need to be passed along to the GPU at some
       //      point in the future, so they are manually managed
 
