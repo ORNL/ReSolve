@@ -12,13 +12,13 @@
 
 namespace ReSolve
 {
-  using log = io::Logger;
+  using out = io::Logger;
 
   LinSolverDirectLUSOL::LinSolverDirectLUSOL()
   {
     luparm_[0] = 6;
 
-    switch (log::verbosity()) {
+    switch (out::verbosity()) {
       case io::Logger::NONE:
         luparm_[1] = -1;
         break;
@@ -65,28 +65,11 @@ namespace ReSolve
 
   LinSolverDirectLUSOL::~LinSolverDirectLUSOL()
   {
+    freeSolverData();
     delete L_;
     delete U_;
-    delete[] P_;
-    delete[] Q_;
-    delete[] a_;
-    delete[] indc_;
-    delete[] indr_;
-    delete[] p_;
-    delete[] q_;
-    delete[] lenc_;
-    delete[] lenr_;
-    delete[] locc_;
-    delete[] locr_;
-    delete[] iploc_;
-    delete[] iqloc_;
-    delete[] ipinv_;
-    delete[] iqinv_;
-    delete[] w_;
-    L_ = U_ = nullptr;
-    P_ = Q_ = indc_ = indr_ = p_ = q_ = lenc_ = lenr_ = locc_ = locr_ = iploc_ =
-        iqloc_ = ipinv_ = iqinv_ = nullptr;
-    a_ = w_ = nullptr;
+    L_ = nullptr;
+    U_ = nullptr;
   }
 
   int LinSolverDirectLUSOL::setup(matrix::Sparse* A,
@@ -100,80 +83,43 @@ namespace ReSolve
     return 0;
   }
 
+  /**
+   * @brief Analysis function of LUISOL
+   * 
+   * At this time, only memory allocation and initialization is done here.
+   * 
+   * @return int - 0 if successful, error code otherwise
+   * 
+   * @pre System matrix `A_` is in unsorted COO format without duplicates.
+   * 
+   * @note LUSOL does not expose symbolic factorization in its API. It might 
+   * be possible refactor lu1fac into separate symbolic and numerical
+   * factorization functions, but for now, we do the both in ::factorize().
+   */
   int LinSolverDirectLUSOL::analyze()
   {
-    // TODO: replace this with something better
-    if (a_ != nullptr || indc_ != nullptr || indr_ != nullptr) {
-        return -1;
+    // Brute force solution: If the solver workspace is already allocated, nuke it!
+    if (is_solver_data_allocated_) {
+      freeSolverData();
+      is_solver_data_allocated_ = false;
     }
-
-    // NOTE: LUSOL does not come with any discrete analysis operation. it is
-    //       possible to break apart bits of lu1fac into that, but for now,
-    //       we don't bother and shunt it all into ::factorize()
 
     nelem_ = A_->getNnz();
     m_ = A_->getNumRows();
     n_ = A_->getNumColumns();
 
-    // NOTE: determines a hopefully "good enough" size for a_, indc_, indr_.
-    //       see lena_'s documentation for more details
-    if (nelem_ >= parmlu_[7] * m_ * n_) {
-      lena_ = m_ * n_;
-    } else {
-      lena_ = std::min(5 * nelem_, 2 * m_ * n_);
-    }
-
-    // NOTE: this is extremely unsafe. this should be removed the moment
-    //       a safer alternative is available
-
-    // INVARIANT: the input matrix is of the coo format
+    allocateSolverData();
+    is_solver_data_allocated_ = true;
 
     real_type* a_in = A_->getValues(memory::HOST);
     index_type* indc_in = A_->getRowData(memory::HOST);
     index_type* indr_in = A_->getColData(memory::HOST);
-
-    a_ = new real_type[lena_];
-    indc_ = new index_type[lena_];
-    indr_ = new index_type[lena_];
 
     for (index_type i = 0; i < nelem_; i++) {
       a_[i] = a_in[i];
       indc_[i] = indc_in[i] + 1;
       indr_[i] = indr_in[i] + 1;
     }
-
-    p_ = new index_type[m_];
-    std::fill_n(p_, m_, 0);
-
-    q_ = new index_type[n_];
-    std::fill_n(q_, n_, 0);
-
-    lenc_ = new index_type[n_];
-    std::fill_n(lenc_, n_, 0);
-
-    lenr_ = new index_type[m_];
-    std::fill_n(lenr_, m_, 0);
-
-    locc_ = new index_type[n_];
-    std::fill_n(locc_, n_, 0);
-
-    locr_ = new index_type[m_];
-    std::fill_n(locr_, m_, 0);
-
-    iploc_ = new index_type[n_];
-    std::fill_n(iploc_, n_, 0);
-
-    iqloc_ = new index_type[m_];
-    std::fill_n(iqloc_, m_, 0);
-
-    ipinv_ = new index_type[m_];
-    std::fill_n(ipinv_, m_, 0);
-
-    iqinv_ = new index_type[n_];
-    std::fill_n(iqinv_, n_, 0);
-
-    w_ = new real_type[n_];
-    std::fill_n(w_, n_, 0);
 
     return 0;
   }
@@ -182,6 +128,7 @@ namespace ReSolve
   {
     // NOTE: this is probably good enough as far as checking goes
     if (a_ == nullptr || indc_ == nullptr || indr_ == nullptr) {
+      out::error() << "LUSOL workspace not allocated!\n";
       return -1;
     }
 
@@ -216,7 +163,7 @@ namespace ReSolve
 
   int LinSolverDirectLUSOL::refactorize()
   {
-    log::error() << "LinSolverDirect::refactorize() called on "
+    out::error() << "LinSolverDirect::refactorize() called on "
                     "LinSolverDirectLUSOL which is unimplemented!\n";
     return -1;
   }
@@ -254,61 +201,153 @@ namespace ReSolve
 
   int LinSolverDirectLUSOL::solve(vector_type* /* x */)
   {
-    log::error() << "LinSolverDirect::solve(vector_type*) called on "
+    out::error() << "LinSolverDirect::solve(vector_type*) called on "
                     "LinSolverDirectLUSOL which is unimplemented!\n";
     return -1;
   }
 
   matrix::Sparse* LinSolverDirectLUSOL::getLFactor()
   {
-    log::error() << "LinSolverDirect::getLFactor() called on "
+    out::error() << "LinSolverDirect::getLFactor() called on "
                     "LinSolverDirectLUSOL which is unimplemented!\n";
     return nullptr;
   }
 
   matrix::Sparse* LinSolverDirectLUSOL::getUFactor()
   {
-    log::error() << "LinSolverDirect::getUFactor() called on "
+    out::error() << "LinSolverDirect::getUFactor() called on "
                     "LinSolverDirectLUSOL which is unimplemented!\n";
     return nullptr;
   }
 
   index_type* LinSolverDirectLUSOL::getPOrdering()
   {
-    log::error() << "LinSolverDirect::getPOrdering() called on "
+    out::error() << "LinSolverDirect::getPOrdering() called on "
                     "LinSolverDirectLUSOL which is unimplemented!\n";
     return nullptr;
   }
 
   index_type* LinSolverDirectLUSOL::getQOrdering()
   {
-    log::error() << "LinSolverDirect::getQOrdering() called on "
+    out::error() << "LinSolverDirect::getQOrdering() called on "
                     "LinSolverDirectLUSOL which is unimplemented!\n";
     return nullptr;
   }
 
   void LinSolverDirectLUSOL::setPivotThreshold(real_type /* _ */)
   {
-    log::error() << "LinSolverDirect::setPivotThreshold(real_type) called on "
+    out::error() << "LinSolverDirect::setPivotThreshold(real_type) called on "
                     "LinSolverDirectLUSOL on which it is irrelevant!\n";
   }
 
   void LinSolverDirectLUSOL::setOrdering(int /* _ */)
   {
-    log::error() << "LinSolverDirect::setOrdering(int) called on "
+    out::error() << "LinSolverDirect::setOrdering(int) called on "
                     "LinSolverDirectLUSOL on which it is irrelevant!\n";
   }
 
   void LinSolverDirectLUSOL::setHaltIfSingular(bool /* _ */)
   {
-    log::error() << "LinSolverDirect::setHaltIfSingular(bool) called on "
+    out::error() << "LinSolverDirect::setHaltIfSingular(bool) called on "
                     "LinSolverDirectLUSOL on which it is irrelevant!\n";
   }
 
   real_type LinSolverDirectLUSOL::getMatrixConditionNumber()
   {
-    log::error() << "LinSolverDirect::getMatrixConditionNumber() called on "
+    out::error() << "LinSolverDirect::getMatrixConditionNumber() called on "
                     "LinSolverDirectLUSOL which is unimplemented!\n";
+    return 0;
+  }
+
+  //
+  // Private Methods
+  //
+
+  int LinSolverDirectLUSOL::allocateSolverData()
+  {
+    // NOTE: determines a hopefully "good enough" size for a_, indc_, indr_.
+    //       see lena_'s documentation for more details
+    if (nelem_ >= parmlu_[7] * m_ * n_) {
+      lena_ = m_ * n_;
+    } else {
+      lena_ = std::min(5 * nelem_, 2 * m_ * n_);
+    }
+
+    a_ = new real_type[lena_];
+    indc_ = new index_type[lena_];
+    indr_ = new index_type[lena_];
+    mem_.setZeroArrayOnHost(a_, lena_);
+    mem_.setZeroArrayOnHost(indc_, lena_);
+    mem_.setZeroArrayOnHost(indr_, lena_);
+
+
+    p_ = new index_type[m_];
+    mem_.setZeroArrayOnHost(p_, m_);
+
+    q_ = new index_type[n_];
+    mem_.setZeroArrayOnHost(q_, n_);
+
+    lenc_ = new index_type[n_];
+    mem_.setZeroArrayOnHost(lenc_, n_);
+
+    lenr_ = new index_type[m_];
+    mem_.setZeroArrayOnHost(lenr_, m_);
+
+    locc_ = new index_type[n_];
+    mem_.setZeroArrayOnHost(locc_, n_);
+
+    locr_ = new index_type[m_];
+    mem_.setZeroArrayOnHost(locr_, m_);
+
+    iploc_ = new index_type[n_];
+    mem_.setZeroArrayOnHost(iploc_, n_);
+
+    iqloc_ = new index_type[m_];
+    mem_.setZeroArrayOnHost(iqloc_, m_);
+
+    ipinv_ = new index_type[m_];
+    mem_.setZeroArrayOnHost(ipinv_, m_);
+
+    iqinv_ = new index_type[n_];
+    mem_.setZeroArrayOnHost(iqinv_, n_);
+
+    w_ = new real_type[n_];
+    mem_.setZeroArrayOnHost(w_, n_);
+  
+    return 0;
+  }
+
+  int LinSolverDirectLUSOL::freeSolverData()
+  {
+    delete[] a_;
+    delete[] indc_;
+    delete[] indr_;
+    delete[] p_;
+    delete[] q_;
+    delete[] lenc_;
+    delete[] lenr_;
+    delete[] locc_;
+    delete[] locr_;
+    delete[] iploc_;
+    delete[] iqloc_;
+    delete[] ipinv_;
+    delete[] iqinv_;
+    delete[] w_;
+    a_     = nullptr; 
+    indc_  = nullptr; 
+    indr_  = nullptr; 
+    p_     = nullptr; 
+    q_     = nullptr; 
+    lenc_  = nullptr; 
+    lenr_  = nullptr;
+    locc_  = nullptr;
+    locr_  = nullptr; 
+    iploc_ = nullptr;
+    iqloc_ = nullptr; 
+    ipinv_ = nullptr; 
+    iqinv_ = nullptr;
+    w_     = nullptr;
+
     return 0;
   }
 } // namespace ReSolve

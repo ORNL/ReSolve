@@ -1,7 +1,7 @@
 #pragma once
 
 #include <resolve/resolve_defs.hpp>
-#include <cstdlib>
+#include <cstring> // <- declares `memcpy`
 
 namespace ReSolve
 {
