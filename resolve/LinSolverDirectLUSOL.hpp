@@ -4,7 +4,7 @@
 #include <memory>
 
 #include <resolve/Common.hpp>
-#include <resolve/LinSolver.hpp>
+#include <resolve/LinSolverDirect.hpp>
 #include <resolve/MemoryUtils.hpp>
 
 namespace ReSolve
