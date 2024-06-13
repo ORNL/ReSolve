@@ -510,7 +510,7 @@ namespace ReSolve
         setRestart(atoi(value.c_str()));
         break;
       case CONV_COND:
-        setRestart(atoi(value.c_str()));
+        setConvCond(atoi(value.c_str()));
         break;
       case FLEXIBLE:
         bool is_flexible = (value == "yes");
@@ -571,6 +571,7 @@ namespace ReSolve
     {
       case FLEXIBLE:
         value = getFlexible();
+        break;
       default:
         out::error() << "Unknown boolean parameter " << id << "\n";
         return 1;
@@ -587,6 +588,9 @@ namespace ReSolve
       break;
     case MAXIT:
       std::cout << getMaxit() << "\n";
+      break;
+    case RESTART:
+      std::cout << getRestart() << "\n";
       break;
     default:
       out::error() << "Unknown parameter " << id << "\n";
