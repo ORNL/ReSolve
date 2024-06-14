@@ -1,14 +1,17 @@
 #include <algorithm>
 #include <cassert>
+#include <memory>
 
-#include <resolve/utilities/logger/Logger.hpp>
-#include <resolve/vector/Vector.hpp>
+#include "MatrixHandlerCpu.hpp"
+
 #include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/Csc.hpp>
 #include <resolve/matrix/Csr.hpp>
-#include "MatrixHandlerCpu.hpp"
+#include <resolve/utilities/logger/Logger.hpp>
+#include <resolve/vector/Vector.hpp>
 
-namespace ReSolve {
+namespace ReSolve
+{
   // Create a shortcut name for Logger static class
   using out = io::Logger;
 
@@ -30,50 +33,85 @@ namespace ReSolve {
     values_changed_ = values_changed;
   }
 
-
   /**
    * @brief result := alpha * A * x + beta * result
    */
-  int MatrixHandlerCpu::matvec(matrix::Sparse* Ageneric, 
-                               vector_type* vec_x, 
-                               vector_type* vec_result, 
-                               const real_type* alpha, 
+  int MatrixHandlerCpu::matvec(matrix::Sparse* Ageneric,
+                               vector_type* vec_x,
+                               vector_type* vec_result,
+                               const real_type* alpha,
                                const real_type* beta,
-                               std::string matrixFormat) 
+                               std::string matrixFormat)
   {
     using namespace constants;
     // int error_sum = 0;
     if (matrixFormat == "csr") {
-      matrix::Csr* A = (matrix::Csr*) Ageneric;
+      matrix::Csr* A = (matrix::Csr*)Ageneric;
       index_type* ia = A->getRowData(memory::HOST);
       index_type* ja = A->getColData(memory::HOST);
-      real_type*   a = A->getValues( memory::HOST);
+      real_type* a = A->getValues(memory::HOST);
 
-      real_type* x_data      = vec_x->getData(memory::HOST);
+      real_type* x_data = vec_x->getData(memory::HOST);
       real_type* result_data = vec_result->getData(memory::HOST);
       real_type sum;
       real_type y;
       real_type t;
       real_type c;
 
-      //Kahan algorithm for stability; Kahan-Babushka version didnt make a difference   
+      // Kahan algorithm for stability; Kahan-Babushka version didnt make a difference
       for (int i = 0; i < A->getNumRows(); ++i) {
         sum = 0.0;
         c = 0.0;
-        for (int j = ia[i]; j < ia[i+1]; ++j) { 
-          y =  ( a[j] * x_data[ja[j]]) - c;
+        for (int j = ia[i]; j < ia[i + 1]; ++j) {
+          y = (a[j] * x_data[ja[j]]) - c;
           t = sum + y;
           c = (t - sum) - y;
           sum = t;
           //  sum += ( a[j] * x_data[ja[j]]);
         }
         sum *= (*alpha);
-        result_data[i] = result_data[i]*(*beta) + sum;
-      } 
+        result_data[i] = result_data[i] * (*beta) + sum;
+      }
+      vec_result->setDataUpdated(memory::HOST);
+      return 0;
+    } else if (matrixFormat == "coo") {
+      matrix::Coo* A = static_cast<matrix::Coo*>(Ageneric);
+      index_type* rows = A->getRowData(memory::HOST);
+      index_type* columns = A->getColData(memory::HOST);
+      real_type* values = A->getValues(memory::HOST);
+
+      real_type* xs = vec_x->getData(memory::HOST);
+      real_type* rs = vec_result->getData(memory::HOST);
+
+      index_type n_rows = A->getNumRows();
+
+      // same algorithm used above, adapted to be workable with a coo matrix
+      // TODO: optimize this a little more---i'm not too sure how good it is
+
+      std::unique_ptr<real_type[]> sums(new real_type[n_rows]);
+      std::fill_n(sums.get(), n_rows, 0);
+
+      std::unique_ptr<real_type[]> compensations(new real_type[n_rows]);
+      std::fill_n(compensations.get(), n_rows, 0);
+
+      real_type y, t;
+
+      for (index_type i = 0; i < A->getNnz(); i++) {
+        y = (values[i] * xs[columns[i]]) - compensations[rows[i]];
+        t = sums[rows[i]] + y;
+        compensations[rows[i]] = t - sums[rows[i]] - y;
+        sums[rows[i]] = t;
+      }
+
+      for (index_type i = 0; i < n_rows; i++) {
+        sums[i] *= *alpha;
+        rs[i] = (rs[i] * *beta) + sums[i];
+      }
+
       vec_result->setDataUpdated(memory::HOST);
       return 0;
     } else {
-      out::error() << "MatVec not implemented (yet) for " 
+      out::error() << "MatVec not implemented (yet) for "
                    << matrixFormat << " matrix format." << std::endl;
       return 1;
     }
@@ -85,17 +123,16 @@ namespace ReSolve {
     index_type i, j;
 
     for (i = 0; i < A->getNumRows(); ++i) {
-      sum = 0.0; 
-      for (j  = A->getRowData(memory::HOST)[i]; j < A->getRowData(memory::HOST)[i+1]; ++j) {
+      sum = 0.0;
+      for (j = A->getRowData(memory::HOST)[i]; j < A->getRowData(memory::HOST)[i + 1]; ++j) {
         sum += std::abs(A->getValues(memory::HOST)[j]);
       }
       if (i == 0) {
         nrm = sum;
       } else {
-        if (sum > nrm)
-        {
+        if (sum > nrm) {
           nrm = sum;
-        } 
+        }
       }
     }
     *norm = nrm;
@@ -104,7 +141,7 @@ namespace ReSolve {
 
   /**
    * @brief Convert CSC to CSR matrix on the host
-   * 
+   *
    * @authors Slaven Peles <peless@ornl.gov>, Daniel Reynolds (SMU), and
    * David Gardner and Carol Woodward (LLNL)
    */
@@ -116,15 +153,15 @@ namespace ReSolve {
     assert(A_csr->getNumRows() == A_csc->getNumColumns());
 
     index_type nnz = A_csc->getNnz();
-    index_type n   = A_csc->getNumColumns();
+    index_type n = A_csc->getNumColumns();
 
     index_type* rowIdxCsc = A_csc->getRowData(memory::HOST);
     index_type* colPtrCsc = A_csc->getColData(memory::HOST);
-    real_type*  valuesCsc = A_csc->getValues( memory::HOST);
+    real_type* valuesCsc = A_csc->getValues(memory::HOST);
 
     index_type* rowPtrCsr = A_csr->getRowData(memory::HOST);
     index_type* colIdxCsr = A_csr->getColData(memory::HOST);
-    real_type*  valuesCsr = A_csr->getValues( memory::HOST);
+    real_type* valuesCsr = A_csr->getValues(memory::HOST);
 
     // Set all CSR row pointers to zero
     for (index_type i = 0; i <= n; ++i) {
@@ -143,10 +180,9 @@ namespace ReSolve {
     }
 
     // Compute cumualtive sum of nnz per row
-    for (index_type row = 0, rowsum = 0; row < n; ++row)
-    {
+    for (index_type row = 0, rowsum = 0; row < n; ++row) {
       // Store value in row pointer to temp
-      index_type temp  = rowPtrCsr[row];
+      index_type temp = rowPtrCsr[row];
 
       // Copy cumulative sum to the row pointer
       rowPtrCsr[row] = rowsum;
@@ -156,28 +192,25 @@ namespace ReSolve {
     }
     rowPtrCsr[n] = nnz;
 
-    for (index_type col = 0; col < n; ++col)
-    {
+    for (index_type col = 0; col < n; ++col) {
       // Compute positions of column indices and values in CSR matrix and store them there
       // Overwrites CSR row pointers in the process
-      for (index_type jj = colPtrCsc[col]; jj < colPtrCsc[col+1]; jj++)
-      {
-          index_type row  = rowIdxCsc[jj];
-          index_type dest = rowPtrCsr[row];
+      for (index_type jj = colPtrCsc[col]; jj < colPtrCsc[col + 1]; jj++) {
+        index_type row = rowIdxCsc[jj];
+        index_type dest = rowPtrCsr[row];
 
-          colIdxCsr[dest] = col;
-          valuesCsr[dest] = valuesCsc[jj];
+        colIdxCsr[dest] = col;
+        valuesCsr[dest] = valuesCsc[jj];
 
-          rowPtrCsr[row]++;
+        rowPtrCsr[row]++;
       }
     }
 
     // Restore CSR row pointer values
-    for (index_type row = 0, last = 0; row <= n; row++)
-    {
-        index_type temp  = rowPtrCsr[row];
-        rowPtrCsr[row] = last;
-        last    = temp;
+    for (index_type row = 0, last = 0; row <= n; row++) {
+      index_type temp = rowPtrCsr[row];
+      rowPtrCsr[row] = last;
+      last = temp;
     }
 
     return 0;

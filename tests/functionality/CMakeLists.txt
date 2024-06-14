@@ -14,6 +14,11 @@ target_link_libraries(version.exe PRIVATE ReSolve)
 add_executable(sys_rand_gmres_test.exe testSysRandGMRES.cpp)
 target_link_libraries(sys_rand_gmres_test.exe PRIVATE ReSolve)
 
+if(RESOLVE_USE_LUSOL)
+  add_executable(lusol_lusol_test.exe testLUSOL.cpp)
+  target_link_libraries(lusol_lusol_test.exe PRIVATE ReSolve)
+endif()
+
 if(RESOLVE_USE_KLU)
   # Build KLU+KLU test
   add_executable(klu_klu_test.exe testKLU.cpp)
@@ -110,6 +115,10 @@ install(DIRECTORY data DESTINATION bin/resolve/tests/functionality)
 set(test_data_dir ${CMAKE_SOURCE_DIR}/tests/functionality/)
 
 add_test(NAME version COMMAND $<TARGET_FILE:version.exe> "${test_data_dir}")
+
+if(RESOLVE_USE_LUSOL)
+  add_test(NAME lusol_lusol_test COMMAND $<TARGET_FILE:lusol_lusol_test.exe> "${test_data_dir}")
+endif()
 
 if(RESOLVE_USE_KLU)
   add_test(NAME klu_klu_test COMMAND $<TARGET_FILE:klu_klu_test.exe> "${test_data_dir}")
