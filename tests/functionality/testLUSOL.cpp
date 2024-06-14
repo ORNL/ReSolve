@@ -75,7 +75,7 @@ real_type compute_error(int& error_sum,
   std::unique_ptr<vector_type> vec_diff(new vector_type(A->getNumRows()));
 
   std::unique_ptr<real_type[]> x_data(new real_type[A->getNumRows()]);
-  std::fill_n(x_data.get(), A->getNumRows(), 0);
+  std::fill_n(x_data.get(), A->getNumRows(), 1.0);
 
   vec_test->setData(x_data.get(), ReSolve::memory::HOST);
   vec_r->update(rhs.get(), ReSolve::memory::HOST, ReSolve::memory::HOST);
@@ -111,7 +111,13 @@ real_type compute_error(int& error_sum,
 
   vec_r->update(rhs.get(), ReSolve::memory::HOST, ReSolve::memory::HOST);
 
-  error_sum += matrix_handler->matvec(A.get(), vec_x.get(), vec_r.get(), &ONE, &MINUSONE, "coo", ReSolve::memory::HOST);
+  error_sum += matrix_handler->matvec(A.get(),
+                                      vec_x.get(),
+                                      vec_r.get(),
+                                      &ONE,
+                                      &MINUSONE,
+                                      "coo",
+                                      ReSolve::memory::HOST);
 
   real_type normRmatrixCPU = sqrt(vector_handler->dot(vec_r.get(), vec_r.get(), ReSolve::memory::HOST));
 
@@ -121,7 +127,6 @@ real_type compute_error(int& error_sum,
   std::cout << "\t ||b-A*x||_2/||b||_2         : " << normRmatrix / normB << " (scaled residual norm)\n";
   std::cout << "\t ||x-x_true||_2              : " << normDiffMatrix << " (solution error)\n";
   std::cout << "\t ||x-x_true||_2/||x_true||_2 : " << normDiffMatrix / normXtrue << " (scaled solution error)\n";
-  std::cout << "\t ||x_true||_2                : " << normXtrue << "\n";
   std::cout << "\t ||b-A*x_exact||_2           : " << exactSol_normRmatrix << " (control; residual norm with exact solution)\n\n";
 
   return normRmatrix / normB;
@@ -141,7 +146,7 @@ int main(int argc, char* argv[])
   std::string matrix_one_path = data_path + "data/matrix_ACTIVSg200_AC_10.mtx";
   std::string matrix_two_path = data_path + "data/matrix_ACTIVSg200_AC_11.mtx";
 
-  std::string rhs_one_path = data_path + "data/rhs_ACTIVSg200_AC_10.mtx";
+  std::string rhs_one_path = data_path + "data/rhs_ACTIVSg200_AC_10.mtx.ones";
   std::string rhs_two_path = data_path + "data/rhs_ACTIVSg200_AC_11.mtx.ones";
 
   real_type scaled_residual_norm_one = compute_error(error_sum, matrix_handler, vector_handler, matrix_one_path, rhs_one_path);
