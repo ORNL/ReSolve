@@ -1,5 +1,5 @@
 // Matrix utilities
-// Mirroring memory approach
+// Mirroring memory approach 
 #pragma once
 #include <string>
 #include <functional>
@@ -15,14 +15,14 @@ namespace ReSolve { namespace matrix {
    *
    * @author Kasia Swirydowicz <kasia.swirydowicz@pnnl.gov>
    */
-  class Sparse
+  class Sparse 
   {
     public:
       //basic constructor
       Sparse();
       Sparse(index_type n, index_type m, index_type nnz);
-      Sparse(index_type n,
-             index_type m,
+      Sparse(index_type n, 
+             index_type m, 
              index_type nnz,
              bool symmetric,
              bool expanded);
@@ -34,7 +34,7 @@ namespace ReSolve { namespace matrix {
       index_type getNnz();
       index_type getNnzExpanded();
 
-      bool symmetric();
+      bool symmetric(); 
       bool expanded();
       void setSymmetric(bool symmetric);
       void setExpanded(bool expanded);
@@ -62,12 +62,12 @@ namespace ReSolve { namespace matrix {
       int setValueOwnership(bool, memory::MemorySpace);
 
       //update Values just updates values; it allocates if necessary.
-      //values have the same dimensions between different formats
+      //values have the same dimensions between different formats 
       virtual int updateValues(real_type* new_vals, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut);
-
-      //set new values just sets the pointer, use caution.
+      
+      //set new values just sets the pointer, use caution.   
       virtual int setNewValues(real_type* new_vals, memory::MemorySpace memspace);
-
+    
     protected:
       //size
       index_type n_{0}; ///< number of rows
@@ -91,7 +91,7 @@ namespace ReSolve { namespace matrix {
       bool d_data_updated_{false}; ///< DEVICE update flag
 
       void setNotUpdated();
-
+      
       // Data ownership flags
       bool owns_cpu_data_{false}; ///< for row/col data
       bool owns_cpu_vals_{false}; ///< for values

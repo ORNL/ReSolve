@@ -1,13 +1,12 @@
-#include <algorithm>
 #include <cmath>
 #include <cstdlib>
 #include <limits>
+#include <algorithm>
 
 #include "LinSolverDirectLUSOL.hpp"
 #include "lusol/lusol.hpp"
 
 #include <resolve/matrix/Csc.hpp>
-#include <resolve/matrix/Csr.hpp>
 #include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/vector/Vector.hpp>
 
@@ -86,14 +85,14 @@ namespace ReSolve
 
   /**
    * @brief Analysis function of LUISOL
-   *
+   * 
    * At this time, only memory allocation and initialization is done here.
-   *
+   * 
    * @return int - 0 if successful, error code otherwise
-   *
+   * 
    * @pre System matrix `A_` is in unsorted COO format without duplicates.
-   *
-   * @note LUSOL does not expose symbolic factorization in its API. It might
+   * 
+   * @note LUSOL does not expose symbolic factorization in its API. It might 
    * be possible refactor lu1fac into separate symbolic and numerical
    * factorization functions, but for now, we do the both in ::factorize().
    */
@@ -314,7 +313,7 @@ namespace ReSolve
 
     w_ = new real_type[n_];
     mem_.setZeroArrayOnHost(w_, n_);
-
+  
     return 0;
   }
 
@@ -334,18 +333,18 @@ namespace ReSolve
     delete[] ipinv_;
     delete[] iqinv_;
     delete[] w_;
-    a_     = nullptr;
-    indc_  = nullptr;
-    indr_  = nullptr;
-    p_     = nullptr;
-    q_     = nullptr;
-    lenc_  = nullptr;
+    a_     = nullptr; 
+    indc_  = nullptr; 
+    indr_  = nullptr; 
+    p_     = nullptr; 
+    q_     = nullptr; 
+    lenc_  = nullptr; 
     lenr_  = nullptr;
     locc_  = nullptr;
-    locr_  = nullptr;
+    locr_  = nullptr; 
     iploc_ = nullptr;
-    iqloc_ = nullptr;
-    ipinv_ = nullptr;
+    iqloc_ = nullptr; 
+    ipinv_ = nullptr; 
     iqinv_ = nullptr;
     w_     = nullptr;
 
