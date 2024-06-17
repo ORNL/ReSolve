@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 
+#include <resolve/Common.hpp>
 #include <resolve/LinSolverDirectLUSOL.hpp>
 #include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
@@ -15,8 +16,54 @@
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 
 using namespace ReSolve::constants;
+using index_type = ReSolve::index_type;
 using real_type = ReSolve::real_type;
 using vector_type = ReSolve::vector::Vector;
+
+/// @brief Specialized matvec implementation for COO matrices
+int specializedMatvec(ReSolve::matrix::Coo* Ageneric,
+                      vector_type* vec_x,
+                      vector_type* vec_result,
+                      const real_type* alpha,
+                      const real_type* beta)
+{
+
+  ReSolve::matrix::Coo* A = static_cast<ReSolve::matrix::Coo*>(Ageneric);
+  index_type* rows = A->getRowData(ReSolve::memory::HOST);
+  index_type* columns = A->getColData(ReSolve::memory::HOST);
+  real_type* values = A->getValues(ReSolve::memory::HOST);
+
+  real_type* xs = vec_x->getData(ReSolve::memory::HOST);
+  real_type* rs = vec_result->getData(ReSolve::memory::HOST);
+
+  index_type n_rows = A->getNumRows();
+
+  // same algorithm used above, adapted to be workable with a coo matrix
+  // TODO: optimize this a little more---i'm not too sure how good it is
+
+  std::unique_ptr<real_type[]> sums(new real_type[n_rows]);
+  std::fill_n(sums.get(), n_rows, 0);
+
+  std::unique_ptr<real_type[]> compensations(new real_type[n_rows]);
+  std::fill_n(compensations.get(), n_rows, 0);
+
+  real_type y, t;
+
+  for (index_type i = 0; i < A->getNnz(); i++) {
+    y = (values[i] * xs[columns[i]]) - compensations[rows[i]];
+    t = sums[rows[i]] + y;
+    compensations[rows[i]] = t - sums[rows[i]] - y;
+    sums[rows[i]] = t;
+  }
+
+  for (index_type i = 0; i < n_rows; i++) {
+    sums[i] *= *alpha;
+    rs[i] = (rs[i] * *beta) + sums[i];
+  }
+
+  vec_result->setDataUpdated(ReSolve::memory::HOST);
+  return 0;
+}
 
 real_type compute_error(int& error_sum,
                         std::unique_ptr<ReSolve::MatrixHandler>& matrix_handler,
@@ -83,13 +130,11 @@ real_type compute_error(int& error_sum,
   vec_diff->update(x_data.get(), ReSolve::memory::HOST, ReSolve::memory::HOST);
 
   matrix_handler->setValuesChanged(true, ReSolve::memory::HOST);
-  error_sum += matrix_handler->matvec(A.get(),
-                                      vec_x.get(),
-                                      vec_r.get(),
-                                      &ONE,
-                                      &MINUSONE,
-                                      "coo",
-                                      ReSolve::memory::HOST);
+  error_sum += specializedMatvec(A.get(),
+                                 vec_x.get(),
+                                 vec_r.get(),
+                                 &ONE,
+                                 &MINUSONE);
 
   real_type normRmatrix = sqrt(vector_handler->dot(vec_r.get(), vec_r.get(), ReSolve::memory::HOST));
   real_type normXtrue = sqrt(vector_handler->dot(vec_x.get(), vec_x.get(), ReSolve::memory::HOST));
@@ -100,25 +145,21 @@ real_type compute_error(int& error_sum,
 
   // compute the residual using exact solution
   vec_r->update(rhs.get(), ReSolve::memory::HOST, ReSolve::memory::HOST);
-  error_sum += matrix_handler->matvec(A.get(),
-                                      vec_test.get(),
-                                      vec_r.get(),
-                                      &ONE,
-                                      &MINUSONE,
-                                      "coo",
-                                      ReSolve::memory::HOST);
+  error_sum += specializedMatvec(A.get(),
+                                 vec_test.get(),
+                                 vec_r.get(),
+                                 &ONE,
+                                 &MINUSONE);
   real_type exactSol_normRmatrix = sqrt(vector_handler->dot(vec_r.get(), vec_r.get(), ReSolve::memory::HOST));
   // evaluate the residual ON THE CPU using COMPUTED solution
 
   vec_r->update(rhs.get(), ReSolve::memory::HOST, ReSolve::memory::HOST);
 
-  error_sum += matrix_handler->matvec(A.get(),
-                                      vec_x.get(),
-                                      vec_r.get(),
-                                      &ONE,
-                                      &MINUSONE,
-                                      "coo",
-                                      ReSolve::memory::HOST);
+  error_sum += specializedMatvec(A.get(),
+                                 vec_x.get(),
+                                 vec_r.get(),
+                                 &ONE,
+                                 &MINUSONE);
 
   real_type normRmatrixCPU = sqrt(vector_handler->dot(vec_r.get(), vec_r.get(), ReSolve::memory::HOST));
 

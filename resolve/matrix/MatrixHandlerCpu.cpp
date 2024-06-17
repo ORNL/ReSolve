@@ -73,42 +73,6 @@ namespace ReSolve {
       } 
       vec_result->setDataUpdated(memory::HOST);
       return 0;
-    } else if (matrixFormat == "coo") {
-      matrix::Coo* A = static_cast<matrix::Coo*>(Ageneric);
-      index_type* rows = A->getRowData(memory::HOST);
-      index_type* columns = A->getColData(memory::HOST);
-      real_type* values = A->getValues(memory::HOST);
-
-      real_type* xs = vec_x->getData(memory::HOST);
-      real_type* rs = vec_result->getData(memory::HOST);
-
-      index_type n_rows = A->getNumRows();
-
-      // same algorithm used above, adapted to be workable with a coo matrix
-      // TODO: optimize this a little more---i'm not too sure how good it is
-
-      std::unique_ptr<real_type[]> sums(new real_type[n_rows]);
-      std::fill_n(sums.get(), n_rows, 0);
-
-      std::unique_ptr<real_type[]> compensations(new real_type[n_rows]);
-      std::fill_n(compensations.get(), n_rows, 0);
-
-      real_type y, t;
-
-      for (index_type i = 0; i < A->getNnz(); i++) {
-        y = (values[i] * xs[columns[i]]) - compensations[rows[i]];
-        t = sums[rows[i]] + y;
-        compensations[rows[i]] = t - sums[rows[i]] - y;
-        sums[rows[i]] = t;
-      }
-
-      for (index_type i = 0; i < n_rows; i++) {
-        sums[i] *= *alpha;
-        rs[i] = (rs[i] * *beta) + sums[i];
-      }
-
-      vec_result->setDataUpdated(memory::HOST);
-      return 0;
     } else {
       out::error() << "MatVec not implemented (yet) for " 
                    << matrixFormat << " matrix format." << std::endl;
