@@ -79,7 +79,7 @@ namespace ReSolve
         h_col_data_ = *cols;
         h_val_data_ = *vals;
         h_data_updated_ = true;
-        owns_cpu_data_  = true;
+        owns_cpu_vals_ = owns_cpu_data_  = true;
         // Set device data to null
         if (d_row_data_ || d_col_data_ || d_val_data_) {
           out::error() << "Device data unexpectedly allocated. "
@@ -89,7 +89,7 @@ namespace ReSolve
         d_col_data_ = nullptr;
         d_val_data_ = nullptr;
         d_data_updated_ = false;
-        owns_gpu_data_  = false;
+        owns_gpu_vals_ = owns_gpu_data_  = false;
         // Hijack data from the source
         *rows = nullptr;
         *cols = nullptr;
@@ -101,7 +101,7 @@ namespace ReSolve
         d_col_data_ = *cols;
         d_val_data_ = *vals;
         d_data_updated_ = true;
-        owns_gpu_data_  = true;
+        owns_gpu_vals_ = owns_gpu_data_  = true;
         copyData(memspaceDst);
         // Hijack data from the source
         *rows = nullptr;
@@ -114,7 +114,7 @@ namespace ReSolve
         h_col_data_ = *cols;
         h_val_data_ = *vals;
         h_data_updated_ = true;
-        owns_cpu_data_  = true;
+        owns_cpu_vals_ = owns_cpu_data_  = true;
         copyData(memspaceDst);
 
         // Hijack data from the source
@@ -128,7 +128,7 @@ namespace ReSolve
         d_col_data_ = *cols;
         d_val_data_ = *vals;
         d_data_updated_ = true;
-        owns_gpu_data_  = true;
+        owns_gpu_vals_ = owns_gpu_data_  = true;
         // Set host data to null
         if (h_row_data_ || h_col_data_ || h_val_data_) {
           out::error() << "Host data unexpectedly allocated. "
@@ -138,7 +138,7 @@ namespace ReSolve
         h_col_data_ = nullptr;
         h_val_data_ = nullptr;
         h_data_updated_ = false;
-        owns_cpu_data_  = false;
+        owns_cpu_vals_ = owns_cpu_data_  = false;
         // Hijack data from the source
         *rows = nullptr;
         *cols = nullptr;

@@ -8,11 +8,21 @@ namespace ReSolve { namespace matrix {
     public:
       Coo();
       Coo(index_type n, index_type m, index_type nnz);
-      Coo(index_type n, 
-                index_type m, 
-                index_type nnz,
-                bool symmetric,
-                bool expanded);
+      Coo(index_type n,
+          index_type m,
+          index_type nnz,
+          bool symmetric,
+          bool expanded);
+      Coo(index_type n,
+          index_type m,
+          index_type nnz,
+          bool symmetric,
+          bool expanded,
+          index_type** rows,
+          index_type** cols,
+          real_type** vals,
+          memory::MemorySpace memspaceSrc,
+          memory::MemorySpace memspaceDst);
       ~Coo();
 
       virtual index_type* getRowData(memory::MemorySpace memspace);
@@ -27,8 +37,6 @@ namespace ReSolve { namespace matrix {
       virtual void print(std::ostream& file_out = std::cout);
 
       virtual int copyData(memory::MemorySpace memspaceOut);
-
-      int expand();
   };
 
 }} // namespace ReSolve::matrix

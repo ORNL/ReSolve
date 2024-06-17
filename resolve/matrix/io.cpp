@@ -38,8 +38,7 @@ namespace ReSolve { namespace io {
     }
     ss << line;
     ss >> n >> m >> nnz;
-    //create matrix object
-    matrix::Coo* A = new matrix::Coo(n, m, nnz,symmetric, expanded );  
+
     //create coo arrays
     index_type* coo_rows = new index_type[nnz];
     index_type* coo_cols = new index_type[nnz];
@@ -60,10 +59,19 @@ namespace ReSolve { namespace io {
 
       i++;
     }
-    A->setMatrixData(coo_rows, coo_cols, coo_vals, memory::HOST);
-    A->setDataOwnership(true, memory::HOST);
-    A->setValueOwnership(true, memory::HOST);
+
+    matrix::Coo* A = new matrix::Coo(n,
+                                     m,
+                                     nnz,
+                                     symmetric,
+                                     false,
+                                     &coo_rows,
+                                     &coo_cols,
+                                     &coo_vals,
+                                     memory::HOST,
+                                     memory::HOST);
     A->setNnzExpanded((2 * nnz) - n_diagonal);
+
     return A;
   }
 

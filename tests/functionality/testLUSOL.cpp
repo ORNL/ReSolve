@@ -8,6 +8,7 @@
 #include <resolve/LinSolverDirectLUSOL.hpp>
 #include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
+#include <resolve/matrix/Utilities.hpp>
 #include <resolve/matrix/io.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/vector/VectorHandler.hpp>
@@ -34,7 +35,7 @@ real_type compute_error(int& error_sum,
   std::unique_ptr<ReSolve::matrix::Coo> A(ReSolve::io::readMatrixFromFile(matrix_file));
   matrix_file.close();
 
-  A->expand();
+  ReSolve::matrix::expand(*A);
 
   std::ifstream rhs_file(rhs_path);
   if (!rhs_file.is_open()) {
