@@ -70,7 +70,11 @@ namespace ReSolve
     }
   }
 
-  int matrix::Csc::updateData(index_type* row_data, index_type* col_data, real_type* val_data, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut)
+  int matrix::Csc::updateData(index_type* row_data,
+                              index_type* col_data,
+                              real_type* val_data,
+                              memory::MemorySpace memspaceIn,
+                              memory::MemorySpace memspaceOut)
   {
     index_type nnz_current = nnz_;
     if (is_expanded_) {
@@ -90,7 +94,7 @@ namespace ReSolve
         out::error() << "In Csc::updateData one of host row or column data is null!\n";
       }
       if ((h_col_data_ == nullptr) && (h_row_data_ == nullptr)) {
-        this->h_col_data_ = new index_type[n_ + 1];
+        this->h_col_data_ = new index_type[m_ + 1];
         this->h_row_data_ = new index_type[nnz_current];
         owns_cpu_data_ = true;
       } 
@@ -106,7 +110,7 @@ namespace ReSolve
         out::error() << "In Csc::updateData one of device row or column data is null!\n";
       }
       if ((d_col_data_ == nullptr) && (d_row_data_ == nullptr)) {
-        mem_.allocateArrayOnDevice(&d_col_data_, n_ + 1); 
+        mem_.allocateArrayOnDevice(&d_col_data_, m_ + 1); 
         mem_.allocateArrayOnDevice(&d_row_data_, nnz_current);
         owns_gpu_data_ = true;
       }
@@ -116,27 +120,27 @@ namespace ReSolve
       }
     }
 
-    switch(control)  {
+    switch(control) {
       case 0: //cpu->cpu
-        mem_.copyArrayHostToHost(h_col_data_, col_data,      n_ + 1);
+        mem_.copyArrayHostToHost(h_col_data_, col_data,      m_ + 1);
         mem_.copyArrayHostToHost(h_row_data_, row_data, nnz_current);
         mem_.copyArrayHostToHost(h_val_data_, val_data, nnz_current);
         h_data_updated_ = true;
         break;
       case 2://gpu->cpu
-        mem_.copyArrayDeviceToHost(h_col_data_, col_data,      n_ + 1);
+        mem_.copyArrayDeviceToHost(h_col_data_, col_data,      m_ + 1);
         mem_.copyArrayDeviceToHost(h_row_data_, row_data, nnz_current);
         mem_.copyArrayDeviceToHost(h_val_data_, val_data, nnz_current);
         h_data_updated_ = true;
         break;
       case 1://cpu->gpu
-        mem_.copyArrayHostToDevice(d_col_data_, col_data,      n_ + 1);
+        mem_.copyArrayHostToDevice(d_col_data_, col_data,      m_ + 1);
         mem_.copyArrayHostToDevice(d_row_data_, row_data, nnz_current);
         mem_.copyArrayHostToDevice(d_val_data_, val_data, nnz_current);
         d_data_updated_ = true;
         break;
       case 3://gpu->gpu
-        mem_.copyArrayDeviceToDevice(d_col_data_, col_data,      n_ + 1);
+        mem_.copyArrayDeviceToDevice(d_col_data_, col_data,      m_ + 1);
         mem_.copyArrayDeviceToDevice(d_row_data_, row_data, nnz_current);
         mem_.copyArrayDeviceToDevice(d_val_data_, val_data, nnz_current);
         d_data_updated_ = true;
@@ -148,7 +152,12 @@ namespace ReSolve
 
   } 
 
-  int matrix::Csc::updateData(index_type* row_data, index_type* col_data, real_type* val_data, index_type new_nnz, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut)
+  int matrix::Csc::updateData(index_type* row_data,
+                              index_type* col_data,
+                              real_type* val_data,
+                              index_type new_nnz,
+                              memory::MemorySpace memspaceIn,
+                              memory::MemorySpace memspaceOut)
   {
     this->destroyMatrixData(memspaceOut);
     this->nnz_ = new_nnz;
@@ -163,8 +172,8 @@ namespace ReSolve
     destroyMatrixData(memspace);//just in case
 
     if (memspace == memory::HOST) {
-      this->h_col_data_ = new index_type[n_ + 1];
-      std::fill(h_col_data_, h_col_data_ + n_ + 1, 0);  
+      this->h_col_data_ = new index_type[m_ + 1];
+      std::fill(h_col_data_, h_col_data_ + m_ + 1, 0);  
       this->h_row_data_ = new index_type[nnz_current];
       std::fill(h_row_data_, h_row_data_ + nnz_current, 0);  
       this->h_val_data_ = new real_type[nnz_current];
@@ -175,7 +184,7 @@ namespace ReSolve
     }
 
     if (memspace == memory::DEVICE) {
-      mem_.allocateArrayOnDevice(&d_col_data_,      n_ + 1); 
+      mem_.allocateArrayOnDevice(&d_col_data_,      m_ + 1); 
       mem_.allocateArrayOnDevice(&d_row_data_, nnz_current); 
       mem_.allocateArrayOnDevice(&d_val_data_, nnz_current); 
       owns_gpu_data_ = true;
@@ -201,7 +210,7 @@ namespace ReSolve
             out::error() << "In Csc::copyData one of host row or column data is null!\n";
           }
           if ((h_col_data_ == nullptr) && (h_row_data_ == nullptr)) {
-            h_col_data_ = new index_type[n_ + 1];      
+            h_col_data_ = new index_type[m_ + 1];      
             h_row_data_ = new index_type[nnz_current];      
             owns_cpu_data_ = true;
           }
@@ -209,7 +218,7 @@ namespace ReSolve
             h_val_data_ = new real_type[nnz_current];      
             owns_cpu_vals_ = true;
           }
-          mem_.copyArrayDeviceToHost(h_col_data_, d_col_data_,      n_ + 1);
+          mem_.copyArrayDeviceToHost(h_col_data_, d_col_data_,      m_ + 1);
           mem_.copyArrayDeviceToHost(h_row_data_, d_row_data_, nnz_current);
           mem_.copyArrayDeviceToHost(h_val_data_, d_val_data_, nnz_current);
           h_data_updated_ = true;
@@ -221,7 +230,7 @@ namespace ReSolve
             out::error() << "In Csc::copyData one of device row or column data is null!\n";
           }
           if ((d_col_data_ == nullptr) && (d_row_data_ == nullptr)) {
-            mem_.allocateArrayOnDevice(&d_col_data_, n_ + 1); 
+            mem_.allocateArrayOnDevice(&d_col_data_, m_ + 1); 
             mem_.allocateArrayOnDevice(&d_row_data_, nnz_current); 
             owns_gpu_data_ = true;
           }
@@ -229,7 +238,7 @@ namespace ReSolve
             mem_.allocateArrayOnDevice(&d_val_data_, nnz_current); 
             owns_gpu_vals_ = true;
           }
-          mem_.copyArrayHostToDevice(d_col_data_, h_col_data_,      n_ + 1);
+          mem_.copyArrayHostToDevice(d_col_data_, h_col_data_,      m_ + 1);
           mem_.copyArrayHostToDevice(d_row_data_, h_row_data_, nnz_current);
           mem_.copyArrayHostToDevice(d_val_data_, h_val_data_, nnz_current);
           d_data_updated_ = true;
