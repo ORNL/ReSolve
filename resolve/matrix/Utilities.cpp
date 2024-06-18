@@ -84,13 +84,6 @@ namespace ReSolve
 
   int matrix::expand(matrix::Csr& A)
   {
-    // NOTE: this is pretty abuse-resistant, but note that if you have (for
-    //       some reason) stored differing values on opposing sides of the
-    //       diagonal, the result is nominally undefined (but technically
-    //       predictable
-    //
-    //       ...please don't rely on it being predictable
-
     if (A.symmetric() && !A.expanded()) {
       index_type* rows = A.getRowData(memory::HOST);
       index_type* columns = A.getColData(memory::HOST);

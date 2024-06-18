@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cmath>
+#include <functional>
 #include <iomanip>
 #include <iostream>
 #include <memory>
@@ -66,13 +67,14 @@ int specializedMatvec(ReSolve::matrix::Coo* Ageneric,
 }
 
 real_type compute_error(int& error_sum,
-                        std::unique_ptr<ReSolve::MatrixHandler>& matrix_handler,
-                        std::unique_ptr<ReSolve::VectorHandler>& vector_handler,
+                        ReSolve::MatrixHandler& matrix_handler,
+                        ReSolve::VectorHandler& vector_handler,
+                        std::function<int(ReSolve::matrix::Coo*,
+                                          vector_type*,
+                                          vector_type*)> inner,
                         std::string matrix_path,
                         std::string rhs_path)
 {
-  int status;
-
   std::ifstream matrix_file(matrix_path);
   if (!matrix_file.is_open()) {
     std::cout << "Failed to open " << matrix_path << "\n";
@@ -93,7 +95,6 @@ real_type compute_error(int& error_sum,
   std::unique_ptr<real_type[]> rhs(ReSolve::io::readRhsFromFile(rhs_file));
   rhs_file.close();
 
-  ReSolve::LinSolverDirectLUSOL lusol;
   std::unique_ptr<real_type[]> x(new real_type[A->getNumRows()]);
   std::unique_ptr<vector_type> vec_rhs(new vector_type(A->getNumRows()));
   std::unique_ptr<vector_type> vec_x(new vector_type(A->getNumRows()));
@@ -103,45 +104,33 @@ real_type compute_error(int& error_sum,
   vec_rhs->setDataUpdated(ReSolve::memory::HOST);
   vec_x->allocate(ReSolve::memory::HOST);
 
-  error_sum += lusol.setup(A.get());
-  error_sum += lusol.analyze();
-
-  status = lusol.factorize();
-  if (status != 0) {
-    // LUSOL will segfault if you continue to try to solve if factorization failed
-    error_sum += status;
-    return 1;
-  }
-
-  status = lusol.solve(vec_rhs.get(), vec_x.get());
-  if (status != 0) {
-    error_sum += status;
+  if (inner(A.get(), vec_rhs.get(), vec_x.get()) != 0) {
     return 1;
   }
 
   std::unique_ptr<vector_type> vec_test(new vector_type(A->getNumRows()));
   std::unique_ptr<vector_type> vec_diff(new vector_type(A->getNumRows()));
 
-  std::unique_ptr<real_type[]> x_data(new real_type[A->getNumRows()]);
-  std::fill_n(x_data.get(), A->getNumRows(), 1.0);
+  real_type* x_data = new real_type[A->getNumRows()];
+  std::fill_n(x_data, A->getNumRows(), 1.0);
 
-  vec_test->setData(x_data.get(), ReSolve::memory::HOST);
+  vec_test->setData(x_data, ReSolve::memory::HOST);
   vec_r->update(rhs.get(), ReSolve::memory::HOST, ReSolve::memory::HOST);
-  vec_diff->update(x_data.get(), ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_diff->update(x_data, ReSolve::memory::HOST, ReSolve::memory::HOST);
 
-  matrix_handler->setValuesChanged(true, ReSolve::memory::HOST);
+  matrix_handler.setValuesChanged(true, ReSolve::memory::HOST);
   error_sum += specializedMatvec(A.get(),
                                  vec_x.get(),
                                  vec_r.get(),
                                  &ONE,
                                  &MINUSONE);
 
-  real_type normRmatrix = sqrt(vector_handler->dot(vec_r.get(), vec_r.get(), ReSolve::memory::HOST));
-  real_type normXtrue = sqrt(vector_handler->dot(vec_x.get(), vec_x.get(), ReSolve::memory::HOST));
-  real_type normB = sqrt(vector_handler->dot(vec_rhs.get(), vec_rhs.get(), ReSolve::memory::HOST));
+  real_type normRmatrix = sqrt(vector_handler.dot(vec_r.get(), vec_r.get(), ReSolve::memory::HOST));
+  real_type normXtrue = sqrt(vector_handler.dot(vec_x.get(), vec_x.get(), ReSolve::memory::HOST));
+  real_type normB = sqrt(vector_handler.dot(vec_rhs.get(), vec_rhs.get(), ReSolve::memory::HOST));
 
-  vector_handler->axpy(&MINUSONE, vec_x.get(), vec_diff.get(), ReSolve::memory::HOST);
-  real_type normDiffMatrix = sqrt(vector_handler->dot(vec_diff.get(), vec_diff.get(), ReSolve::memory::HOST));
+  vector_handler.axpy(&MINUSONE, vec_x.get(), vec_diff.get(), ReSolve::memory::HOST);
+  real_type normDiffMatrix = sqrt(vector_handler.dot(vec_diff.get(), vec_diff.get(), ReSolve::memory::HOST));
 
   // compute the residual using exact solution
   vec_r->update(rhs.get(), ReSolve::memory::HOST, ReSolve::memory::HOST);
@@ -150,7 +139,7 @@ real_type compute_error(int& error_sum,
                                  vec_r.get(),
                                  &ONE,
                                  &MINUSONE);
-  real_type exactSol_normRmatrix = sqrt(vector_handler->dot(vec_r.get(), vec_r.get(), ReSolve::memory::HOST));
+  real_type exactSol_normRmatrix = sqrt(vector_handler.dot(vec_r.get(), vec_r.get(), ReSolve::memory::HOST));
   // evaluate the residual ON THE CPU using COMPUTED solution
 
   vec_r->update(rhs.get(), ReSolve::memory::HOST, ReSolve::memory::HOST);
@@ -161,7 +150,7 @@ real_type compute_error(int& error_sum,
                                  &ONE,
                                  &MINUSONE);
 
-  real_type normRmatrixCPU = sqrt(vector_handler->dot(vec_r.get(), vec_r.get(), ReSolve::memory::HOST));
+  real_type normRmatrixCPU = sqrt(vector_handler.dot(vec_r.get(), vec_r.get(), ReSolve::memory::HOST));
 
   std::cout << "Results: \n";
   std::cout << "\t ||b-A*x||_2                 : " << std::setprecision(16) << normRmatrix << " (residual norm)\n";
@@ -171,6 +160,7 @@ real_type compute_error(int& error_sum,
   std::cout << "\t ||x-x_true||_2/||x_true||_2 : " << normDiffMatrix / normXtrue << " (scaled solution error)\n";
   std::cout << "\t ||b-A*x_exact||_2           : " << exactSol_normRmatrix << " (control; residual norm with exact solution)\n\n";
 
+  delete[] x_data;
   return normRmatrix / normB;
 }
 
@@ -184,6 +174,7 @@ int main(int argc, char* argv[])
   std::unique_ptr<ReSolve::LinAlgWorkspaceCpu> workspace(new ReSolve::LinAlgWorkspaceCpu());
   std::unique_ptr<ReSolve::MatrixHandler> matrix_handler(new ReSolve::MatrixHandler(workspace.get()));
   std::unique_ptr<ReSolve::VectorHandler> vector_handler(new ReSolve::VectorHandler(workspace.get()));
+  ReSolve::LinSolverDirectLUSOL lusol;
 
   std::string matrix_one_path = data_path + "data/matrix_ACTIVSg200_AC_10.mtx";
   std::string matrix_two_path = data_path + "data/matrix_ACTIVSg200_AC_11.mtx";
@@ -191,8 +182,42 @@ int main(int argc, char* argv[])
   std::string rhs_one_path = data_path + "data/rhs_ACTIVSg200_AC_10.mtx.ones";
   std::string rhs_two_path = data_path + "data/rhs_ACTIVSg200_AC_11.mtx.ones";
 
-  real_type scaled_residual_norm_one = compute_error(error_sum, matrix_handler, vector_handler, matrix_one_path, rhs_one_path);
-  real_type scaled_residual_norm_two = compute_error(error_sum, matrix_handler, vector_handler, matrix_two_path, rhs_two_path);
+  auto f = [&](ReSolve::matrix::Coo* A,
+               vector_type* rhs,
+               vector_type* x) -> int {
+    int status;
+
+    error_sum += lusol.setup(A);
+    error_sum += lusol.analyze();
+
+    status = lusol.factorize();
+    if (status != 0) {
+      // LUSOL will segfault if solving is attempted after factorization failed
+      error_sum += status;
+      return 1;
+    }
+
+    status = lusol.solve(rhs, x);
+    if (status != 0) {
+      error_sum += status;
+      return 1;
+    }
+
+    return 0;
+  };
+
+  real_type scaled_residual_norm_one = compute_error(error_sum,
+                                                     *matrix_handler,
+                                                     *vector_handler,
+                                                     f,
+                                                     matrix_one_path,
+                                                     rhs_one_path);
+  real_type scaled_residual_norm_two = compute_error(error_sum,
+                                                     *matrix_handler,
+                                                     *vector_handler,
+                                                     f,
+                                                     matrix_two_path,
+                                                     rhs_two_path);
 
   if (scaled_residual_norm_one > 1e-16 || scaled_residual_norm_two > 1e-16) {
     std::cout << "the result is inaccurate\n";
