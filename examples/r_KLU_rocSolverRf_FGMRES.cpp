@@ -1,6 +1,7 @@
 #include <string>
 #include <iostream>
 #include <iomanip>
+#include <sys/time.h>
 
 #include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/Csr.hpp>
@@ -58,9 +59,17 @@ int main(int argc, char *argv[])
   ReSolve::LinSolverDirectRocSolverRf* Rf = new ReSolve::LinSolverDirectRocSolverRf(workspace_HIP);
   ReSolve::LinSolverIterativeFGMRES* FGMRES = new ReSolve::LinSolverIterativeFGMRES(matrix_handler, vector_handler, GS);
 
+  struct timeval t1;
+  struct timeval t2;
+
   RESOLVE_RANGE_PUSH(__FUNCTION__);
   for (int i = 0; i < numSystems; ++i)
   {
+    double time_io      = 0.0;
+    double time_convert = 0.0;
+    double time_factorize = 0.0;
+    double time_solve   = 0.0;
+
     RESOLVE_RANGE_PUSH("Matrix Read");
     index_type j = 4 + i * 2;
     fileId = argv[j];
@@ -90,6 +99,9 @@ int main(int argc, char *argv[])
       std::cout << "Failed to open file " << rhsFileNameFull << "\n";
       return -1;
     }
+
+    // Time system I/O
+    gettimeofday(&t1, 0);
     if (i == 0) {
       A_coo = ReSolve::io::readMatrixFromFile(mat_file);
       A = new ReSolve::matrix::Csr(A_coo->getNumRows(),
@@ -109,6 +121,8 @@ int main(int argc, char *argv[])
       ReSolve::io::readAndUpdateMatrix(mat_file, A_coo);
       ReSolve::io::readAndUpdateRhs(rhs_file, &rhs);
     }
+    gettimeofday(&t2, 0);
+    time_io += (1000000.0 * (t2.tv_sec - t1.tv_sec) + t2.tv_usec - t1.tv_usec) / 1000.0;
     std::cout << "Finished reading the matrix and rhs, size: " << A->getNumRows() << " x "<< A->getNumColumns() 
               << ", nnz: "       << A->getNnz() 
               << ", symmetric? " << A->symmetric()
@@ -118,6 +132,8 @@ int main(int argc, char *argv[])
     RESOLVE_RANGE_POP("Matrix Read");
 
     //Now convert to CSR.
+    // Time matrix conversion
+    gettimeofday(&t1, 0);
     RESOLVE_RANGE_PUSH("Convert to CSR");
     if (i < 2) { 
       A->updateFromCoo(A_coo, ReSolve::memory::HOST);
@@ -128,20 +144,31 @@ int main(int argc, char *argv[])
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
     }
     RESOLVE_RANGE_POP("Convert to CSR");
-    std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnzExpanded()<<std::endl;
+    gettimeofday(&t2, 0);
+    time_convert += (1000000.0 * (t2.tv_sec - t1.tv_sec) + t2.tv_usec - t1.tv_usec) / 1000.0;
+    std::cout << "COO to CSR completed. Expanded NNZ: " << A->getNnzExpanded() << std::endl;
     int status;
     real_type norm_b;
     if (i < 2) {
+      // Time factorization (CPU part)
+      gettimeofday(&t1, 0);
       RESOLVE_RANGE_PUSH("KLU");
       KLU->setup(A);
       matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
       status = KLU->analyze();
-      std::cout<<"KLU analysis status: "<<status<<std::endl;
+      // std::cout << "KLU analysis status: " << status << std::endl;
       status = KLU->factorize();
+      gettimeofday(&t2, 0);
+      time_factorize += (1000000.0 * (t2.tv_sec - t1.tv_sec) + t2.tv_usec - t1.tv_usec) / 1000.0;
       std::cout<<"KLU factorization status: "<<status<<std::endl;
 
+      // Time solve (CPU part)
+      gettimeofday(&t1, 0);
       status = KLU->solve(vec_rhs, vec_x);
+      gettimeofday(&t2, 0);
+      time_solve += (1000000.0 * (t2.tv_sec - t1.tv_sec) + t2.tv_usec - t1.tv_usec) / 1000.0;
       std::cout<<"KLU solve status: "<<status<<std::endl;      
+
       vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
       norm_b = vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE);
       norm_b = sqrt(norm_b);
@@ -151,6 +178,8 @@ int main(int argc, char *argv[])
         << std::scientific << std::setprecision(16) 
         << sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE))/norm_b << "\n";
       if (i == 1) {
+        // Time factorization (GPU setup)
+        gettimeofday(&t1, 0);
         ReSolve::matrix::Csc* L = (ReSolve::matrix::Csc*) KLU->getLFactor();
         ReSolve::matrix::Csc* U = (ReSolve::matrix::Csc*) KLU->getUFactor();
         if (L == nullptr) {
@@ -161,26 +190,41 @@ int main(int argc, char *argv[])
         Rf->setSolveMode(1);
         Rf->setup(A, L, U, P, Q, vec_rhs);
         Rf->refactorize();
-        std::cout<<"about to set FGMRES" <<std::endl;
+        // std::cout<<"about to set FGMRES" <<std::endl;
         GS->setup(A->getNumRows(), FGMRES->getRestart()); 
         FGMRES->setup(A); 
+        gettimeofday(&t2, 0);
+        time_factorize += (1000000.0 * (t2.tv_sec - t1.tv_sec) + t2.tv_usec - t1.tv_usec) / 1000.0;
       }
       RESOLVE_RANGE_POP("KLU");
     } else {
       RESOLVE_RANGE_PUSH("RocSolver");
       //status =  KLU->refactorize();
       std::cout<<"Using ROCSOLVER RF"<<std::endl;
+
+      // Time (re)factorization (GPU part)
+      gettimeofday(&t1, 0);
       status = Rf->refactorize();
+      gettimeofday(&t2, 0);
+      time_factorize += (1000000.0 * (t2.tv_sec - t1.tv_sec) + t2.tv_usec - t1.tv_usec) / 1000.0;
       std::cout<<"ROCSOLVER RF refactorization status: "<<status<<std::endl;      
+
+      // Time solve (GPU part)
+      gettimeofday(&t1, 0);
       status = Rf->solve(vec_rhs, vec_x);
+      gettimeofday(&t2, 0);
+      time_solve += (1000000.0 * (t2.tv_sec - t1.tv_sec) + t2.tv_usec - t1.tv_usec) / 1000.0;
       std::cout<<"ROCSOLVER RF solve status: "<<status<<std::endl;      
       vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
       norm_b = vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE);
       norm_b = sqrt(norm_b);
 
-      //matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
+      // Time iterative refinement setup as a part of solve on GPU
+      gettimeofday(&t1, 0);
       FGMRES->resetMatrix(A);
       FGMRES->setupPreconditioner("LU", Rf);
+      gettimeofday(&t2, 0);
+      time_solve += (1000000.0 * (t2.tv_sec - t1.tv_sec) + t2.tv_usec - t1.tv_usec) / 1000.0;
 
       matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", ReSolve::memory::DEVICE); 
       real_type rnrm = sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE));
@@ -199,7 +243,11 @@ int main(int argc, char *argv[])
 
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
       if(!std::isnan(rnrm) && !std::isinf(rnrm)) {
+        // Timeiterative refinement as a part of solve
+        gettimeofday(&t1, 0);
         FGMRES->solve(vec_rhs, vec_x);
+        gettimeofday(&t2, 0);
+        time_solve += (1000000.0 * (t2.tv_sec - t1.tv_sec) + t2.tv_usec - t1.tv_usec) / 1000.0;
 
         std::cout << "FGMRES: init nrm: " 
                   << std::scientific << std::setprecision(16) 
@@ -210,6 +258,12 @@ int main(int argc, char *argv[])
       }
       RESOLVE_RANGE_POP("RocSolver");
     }
+
+    // Print timing summary
+    std::cout << std::defaultfloat << std::setprecision(4) 
+              << "I/O time: " << time_io << ", conversion time: " << time_convert
+              << ", factorization time: " << time_factorize << ", solve time: " << time_solve
+              << "\nTOTAL: " << time_factorize + time_solve << "\n";
 
   } // for (int i = 0; i < numSystems; ++i)
   RESOLVE_RANGE_POP(__FUNCTION__);

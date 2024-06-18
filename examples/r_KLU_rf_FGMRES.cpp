@@ -255,10 +255,10 @@ int main(int argc, char *argv[])
           << " iter: " << FGMRES->getNumIter() << "\n";
       }
     }
-    std::cout << std::setprecision(4) 
+    std::cout << std::defaultfloat << std::setprecision(4) 
               << "I/O time: " << time_io << ", conversion time: " << time_convert
               << ", factorization time: " << time_factorize << ", solve time: " << time_solve
-              << ", TOTAL: " << time_factorize + time_solve << "\n";
+              << "\nTOTAL: " << time_factorize + time_solve << "\n";
   } // for (int i = 0; i < numSystems; ++i)
 
   delete A;
