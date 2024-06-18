@@ -20,13 +20,16 @@ namespace ReSolve
         return 0;
       }
 
-      // NOTE: this is predicated on the same define as that which disables
-      //       assert(3), to avoid record-keeping where it is not necessary
-#ifndef NDEBUG
+      index_type nnz = A.getNnz();
       index_type n_diagonal = 0;
-#endif
+      for (index_type i = 0; i < nnz; i++) {
+        if (rows[i] == columns[i]) {
+          n_diagonal++;
+        }
+      }
 
-      index_type nnz_expanded = A.getNnzExpanded();
+      index_type nnz_expanded = (2 * nnz) - n_diagonal;
+      A.setNnzExpanded(nnz_expanded);
 
       // NOTE: so because most of the code here uses new/delete and there's no
       //       realloc(3) equivalent for that memory management scheme, we
@@ -35,7 +38,6 @@ namespace ReSolve
       index_type* new_columns = new index_type[nnz_expanded];
       real_type* new_values = new real_type[nnz_expanded];
 
-      index_type nnz = A.getNnz();
       index_type j = 0;
 
       for (index_type i = 0; i < nnz; i++) {
@@ -45,13 +47,7 @@ namespace ReSolve
 
         j++;
 
-#ifndef NDEBUG
-        if (rows[i] == columns[i]) {
-          n_diagonal++;
-        } else {
-#else
         if (rows[i] != columns[i]) {
-#endif
           new_rows[j] = columns[i];
           new_columns[j] = rows[i];
           new_values[j] = values[i];
@@ -60,15 +56,8 @@ namespace ReSolve
         }
       }
 
-      // NOTE: the effectiveness of this is probably questionable given that
-      //       it occurs after we've already risked writing out-of-bounds, but
-      //       i guess if that worked or we've over-allocated, this will catch
-      //       something (in debug builds/release builds with asserts enabled)
-      assert(nnz_expanded == ((2 * nnz) - n_diagonal));
-
       if (A.destroyMatrixData(memory::HOST) != 0 ||
           A.setMatrixData(new_rows, new_columns, new_values, memory::HOST) != 0) {
-        // TODO: make fallible
         assert(false && "invalid state after coo matrix expansion");
         return -1;
       }
@@ -115,14 +104,8 @@ namespace ReSolve
             new_rows[row] + remaining[row] + rows[row + 1] - rows[row];
       }
 
-      assert(A.getNnzExpanded() == new_rows[n_rows]);
-
-#ifdef NDEBUG
-      // TODO: should this be here? is this a good idea?
       A.setNnzExpanded(new_rows[n_rows]);
-#endif
-
-      index_type nnz_expanded = A.getNnzExpanded();
+      index_type nnz_expanded = new_rows[n_rows];
       index_type* new_columns = new index_type[nnz_expanded];
       real_type* new_values = new real_type[nnz_expanded];
 
