@@ -1,6 +1,7 @@
 #include <string>
 #include <iostream>
 #include <iomanip>
+#include <sys/time.h>
 
 #include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/Csr.hpp>
@@ -55,8 +56,18 @@ int main(int argc, char *argv[])
   ReSolve::LinSolverDirectCuSolverRf* Rf = new ReSolve::LinSolverDirectCuSolverRf;
   ReSolve::LinSolverIterativeFGMRES* FGMRES = new ReSolve::LinSolverIterativeFGMRES(matrix_handler, vector_handler, GS);
 
+  struct timeval t1;
+  struct timeval t2;
+  // struct timeval t3;
+  // struct timeval t4;
+
   for (int i = 0; i < numSystems; ++i)
   {
+    double time_io      = 0.0;
+    double time_convert = 0.0;
+    double time_factorize = 0.0;
+    double time_solve   = 0.0;
+
     index_type j = 4 + i * 2;
     fileId = argv[j];
     rhsId = argv[j + 1];
@@ -85,6 +96,7 @@ int main(int argc, char *argv[])
       std::cout << "Failed to open file " << rhsFileNameFull << "\n";
       return -1;
     }
+    gettimeofday(&t1, 0);
     if (i == 0) {
       A_coo = ReSolve::io::readMatrixFromFile(mat_file);
       A = new ReSolve::matrix::Csr(A_coo->getNumRows(),
@@ -105,11 +117,17 @@ int main(int argc, char *argv[])
       ReSolve::io::readAndUpdateMatrix(mat_file, A_coo);
       ReSolve::io::readAndUpdateRhs(rhs_file, &rhs);
     }
-    std::cout<<"Finished reading the matrix and rhs, size: "<<A->getNumRows()<<" x "<<A->getNumColumns()<< ", nnz: "<< A->getNnz()<< ", symmetric? "<<A->symmetric()<< ", Expanded? "<<A->expanded()<<std::endl;
+    gettimeofday(&t2, 0);
+    time_io += (1000000.0 * (t2.tv_sec - t1.tv_sec) + t2.tv_usec - t1.tv_usec) / 1000.0;
+    std::cout << "Finished reading the matrix and rhs, size: "
+              << A->getNumRows() << " x " << A->getNumColumns()
+              << ", nnz: " << A->getNnz() << ", symmetric? " << A->symmetric()
+              << ", Expanded? " << A->expanded() << std::endl;
     mat_file.close();
     rhs_file.close();
 
     //Now convert to CSR.
+    gettimeofday(&t1, 0);
     if (i < 2) { 
       A->updateFromCoo(A_coo, ReSolve::memory::HOST);
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
@@ -118,19 +136,32 @@ int main(int argc, char *argv[])
       A->updateFromCoo(A_coo, ReSolve::memory::DEVICE);
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
     }
-    std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnzExpanded()<<std::endl;
+    gettimeofday(&t2, 0);
+    time_convert += (1000000.0 * (t2.tv_sec - t1.tv_sec) + t2.tv_usec - t1.tv_usec) / 1000.0;
+    std::cout << "COO to CSR completed. Expanded NNZ: " << A->getNnzExpanded() << std::endl;
     //Now call direct solver
     int status;
     real_type norm_b;
-    if (i < 2){
+    if (i < 2) {
+      // setup + factorize
+      gettimeofday(&t1, 0);
       KLU->setup(A);
       matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
       status = KLU->analyze();
-      std::cout<<"KLU analysis status: "<<status<<std::endl;
+      // std::cout<<"KLU analysis status: "<<status<<std::endl;
       status = KLU->factorize();
-      std::cout<<"KLU factorization status: "<<status<<std::endl;
+      gettimeofday(&t2, 0);
+      time_factorize += (1000000.0 * (t2.tv_sec - t1.tv_sec) + t2.tv_usec - t1.tv_usec) / 1000.0;
+      std::cout<<"KLU factorization status: " << status << std::endl;
+
+      // solve
+      gettimeofday(&t1, 0);
       status = KLU->solve(vec_rhs, vec_x);
-      std::cout<<"KLU solve status: "<<status<<std::endl;      
+      gettimeofday(&t2, 0);
+      time_solve += (1000000.0 * (t2.tv_sec - t1.tv_sec) + t2.tv_usec - t1.tv_usec) / 1000.0;
+      std::cout<<"KLU solve status: "<<status<<std::endl;
+
+      // compute residual norms
       vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
       norm_b = vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE);
       norm_b = sqrt(norm_b);
@@ -141,14 +172,15 @@ int main(int argc, char *argv[])
       norm_x = vector_handler->infNorm(vec_x, ReSolve::memory::DEVICE);
       norm_r = vector_handler->infNorm(vec_r, ReSolve::memory::DEVICE);
       std::cout << "\t Matrix inf  norm: " << std::scientific << std::setprecision(16) << norm_A<<"\n"
-        << "\t Residual inf norm: " << norm_r <<"\n"  
-        << "\t Solution inf norm: " << norm_x <<"\n"  
-        << "\t Norm of scaled residuals: "<< norm_r / (norm_A * norm_x) << "\n";
+                << "\t Residual inf norm: " << norm_r <<"\n"  
+                << "\t Solution inf norm: " << norm_x <<"\n"  
+                << "\t Norm of scaled residuals: "<< norm_r / (norm_A * norm_x) << "\n";
       
       std::cout << "\t2-Norm of the residual: "
                 << std::scientific << std::setprecision(16) 
                 << sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE))/norm_b << "\n";
       if (i == 1) {
+        gettimeofday(&t1, 0);
         ReSolve::matrix::Csc* L_csc = (ReSolve::matrix::Csc*) KLU->getLFactor();
         ReSolve::matrix::Csc* U_csc = (ReSolve::matrix::Csc*) KLU->getUFactor();
         ReSolve::matrix::Csr* L = new ReSolve::matrix::Csr(L_csc->getNumRows(), L_csc->getNumColumns(), L_csc->getNnz());
@@ -161,16 +193,24 @@ int main(int argc, char *argv[])
         index_type* P = KLU->getPOrdering();
         index_type* Q = KLU->getQOrdering();
         Rf->setup(A, L, U, P, Q);
-        std::cout<<"about to set FGMRES" <<std::endl;
+        // std::cout<<"about to set FGMRES" <<std::endl;
         GS->setup(A->getNumRows(), FGMRES->getRestart()); 
         FGMRES->setup(A); 
+        gettimeofday(&t2, 0);
+        time_factorize += (1000000.0 * (t2.tv_sec - t1.tv_sec) + t2.tv_usec - t1.tv_usec) / 1000.0;
       }
     } else {
       //status =  KLU->refactorize();
       std::cout<<"Using CUSOLVER RF"<<std::endl;
+      gettimeofday(&t1, 0);
       status = Rf->refactorize();
+      gettimeofday(&t2, 0);
+      time_factorize += (1000000.0 * (t2.tv_sec - t1.tv_sec) + t2.tv_usec - t1.tv_usec) / 1000.0;
       std::cout<<"CUSOLVER RF refactorization status: "<<status<<std::endl;      
+      gettimeofday(&t1, 0);
       status = Rf->solve(vec_rhs, vec_x);
+      gettimeofday(&t2, 0);
+      time_solve += (1000000.0 * (t2.tv_sec - t1.tv_sec) + t2.tv_usec - t1.tv_usec) / 1000.0;
       std::cout<<"CUSOLVER RF solve status: "<<status<<std::endl;      
 
       vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
@@ -178,8 +218,11 @@ int main(int argc, char *argv[])
       norm_b = sqrt(norm_b);
 
       //matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
+      gettimeofday(&t1, 0);
       FGMRES->resetMatrix(A);
       FGMRES->setupPreconditioner("LU", Rf);
+      gettimeofday(&t2, 0);
+      time_solve += (1000000.0 * (t2.tv_sec - t1.tv_sec) + t2.tv_usec - t1.tv_usec) / 1000.0;
       
       matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", ReSolve::memory::DEVICE); 
 
@@ -199,7 +242,10 @@ int main(int argc, char *argv[])
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
       
       if(!std::isnan(norm_r) && !std::isinf(norm_r)) {
+        gettimeofday(&t1, 0);
         FGMRES->solve(vec_rhs, vec_x);
+        gettimeofday(&t2, 0);
+        time_solve += (1000000.0 * (t2.tv_sec - t1.tv_sec) + t2.tv_usec - t1.tv_usec) / 1000.0;
 
         std::cout << "FGMRES: init nrm: " 
           << std::scientific << std::setprecision(16) 
@@ -209,7 +255,10 @@ int main(int argc, char *argv[])
           << " iter: " << FGMRES->getNumIter() << "\n";
       }
     }
-
+    std::cout << std::setprecision(4) 
+              << "I/O time: " << time_io << ", conversion time: " << time_convert
+              << ", factorization time: " << time_factorize << ", solve time: " << time_solve
+              << ", TOTAL: " << time_factorize + time_solve << "\n";
   } // for (int i = 0; i < numSystems; ++i)
 
   delete A;
