@@ -55,6 +55,20 @@ namespace ReSolve
           return status.report(__func__);
         }
 
+        TestOutcome cscMatrix5x5()
+        {
+          TestStatus status;
+
+          std::unique_ptr<matrix::Csc> A = buildCscMatrix5x5();
+          matrix::expand(*A);
+
+          A->print();
+
+          status *= validateAnswer(*A, target_triples_5x5_);
+
+          return status.report(__func__);
+        }
+
       private:
         std::vector<std::tuple<index_type, index_type, real_type>>
             target_triples_5x5_ = {{1, 1, 1.0},
@@ -117,6 +131,35 @@ namespace ReSolve
               target);
         }
 
+        bool validateAnswer(matrix::Csc& A,
+                            std::vector<std::tuple<index_type, index_type, real_type>> target)
+        {
+          std::shared_ptr<index_type> i(new index_type(0)), j(new index_type(0));
+          std::shared_ptr<index_type> nnz(new index_type(A.getNnz()));
+          index_type* rows = A.getRowData(memory::HOST);
+          index_type* columns = A.getColData(memory::HOST);
+          real_type* values = A.getValues(memory::HOST);
+
+          if (rows == nullptr || columns == nullptr || values == nullptr) {
+            return false;
+          }
+
+          return validateAnswer(
+              [=]() -> std::tuple<std::tuple<index_type, index_type, real_type>, bool> {
+                if (*j == *nnz) {
+                  return {{0, 0, 0}, false};
+                }
+
+                while (columns[*i + 1] == *j) {
+                  (*i)++;
+                }
+
+                (*j)++;
+                return {{rows[*j - 1], *i, values[*j - 1]}, true};
+              },
+              target);
+        }
+
         bool validateAnswer(std::function<std::tuple<std::tuple<index_type, index_type, real_type>, bool>()> f,
                             std::vector<std::tuple<index_type, index_type, real_type>> target)
         {
@@ -124,12 +167,20 @@ namespace ReSolve
           std::tuple<index_type, index_type, real_type> t;
 
           for (std::tie(t, ok) = f(); ok; std::tie(t, ok) = f()) {
-            if (std::find(target.begin(), target.end(), t) == target.end()) {
+            auto p = std::find(target.begin(), target.end(), t);
+            if (p == target.end()) {
               return false;
             }
+
+            // NOTE: this is used to ensure that the matrix matches exactly
+            std::get<0>(*p) = -1;
           }
 
-          return true;
+          return std::all_of(target.begin(),
+                             target.end(),
+                             [](std::tuple<index_type, index_type, real_type> i) -> bool {
+                               return std::get<0>(i) == -1;
+                             });
         }
 
         std::vector<index_type> rows_coo_5x5_ = {1, 3, 0};
@@ -158,6 +209,22 @@ namespace ReSolve
           A->updateData(rows_csr_5x5_.data(),
                         columns_csr_5x5_.data(),
                         values_csr_5x5_.data(),
+                        memory::HOST,
+                        memory::HOST);
+
+          return A;
+        }
+
+        std::vector<index_type> rows_csc_5x5_ = {1, 3, 0};
+        std::vector<index_type> columns_csc_5x5_ = {0, 0, 1, 1, 1, 3};
+        std::vector<real_type> values_csc_5x5_ = {1.0, 2.0, 3.0};
+
+        std::unique_ptr<matrix::Csc> buildCscMatrix5x5()
+        {
+          std::unique_ptr<matrix::Csc> A(new matrix::Csc(5, 5, 3, true, false));
+          A->updateData(rows_csc_5x5_.data(),
+                        columns_csc_5x5_.data(),
+                        values_csc_5x5_.data(),
                         memory::HOST,
                         memory::HOST);
 

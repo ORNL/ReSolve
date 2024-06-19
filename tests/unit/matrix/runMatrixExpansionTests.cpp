@@ -17,6 +17,7 @@ int main(int, char**)
 
     result += test.cooMatrix5x5();
     result += test.csrMatrix5x5();
+    result += test.cscMatrix5x5();
 
     std::cout << "\n";
   }
