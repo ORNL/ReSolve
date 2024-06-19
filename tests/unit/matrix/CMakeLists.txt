@@ -24,8 +24,12 @@ if(RESOLVE_USE_LUSOL)
   target_link_libraries(runLUSOLTests.exe PRIVATE ReSolve resolve_matrix)
 endif()
 
+# Build matrix expansion tests
+add_executable(runMatrixExpansionTests.exe runMatrixExpansionTests.cpp)
+target_link_libraries(runMatrixExpansionTests.exe PRIVATE ReSolve resolve_matrix)
+
 # Install tests
-set(installable_tests runMatrixIoTests.exe runMatrixHandlerTests.exe runMatrixFactorizationTests.exe)
+set(installable_tests runMatrixIoTests.exe runMatrixHandlerTests.exe runMatrixFactorizationTests.exe runMatrixExpansionTests.exe)
 if(RESOLVE_USE_LUSOL)
   list(APPEND installable_tests runLUSOLTests.exe)
 endif()
@@ -38,3 +42,4 @@ add_test(NAME matrix_factorization_test COMMAND $<TARGET_FILE:runMatrixFactoriza
 if(RESOLVE_USE_LUSOL)
   add_test(NAME lusol_test              COMMAND $<TARGET_FILE:runLUSOLTests.exe>)
 endif()
+add_test(NAME matrix_expansion_test     COMMAND $<TARGET_FILE:runMatrixExpansionTests.exe>)
