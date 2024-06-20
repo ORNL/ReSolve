@@ -54,7 +54,7 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ env.USERNAME }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      
+
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v5
@@ -76,13 +76,13 @@ jobs:
     permissions:
       packages: write
       contents: read
-    
+
     strategy:
       matrix:
         # Minimal Build(s) - GHCR mirror speeds these up a lot!
         spack_spec:
           - resolve@develop+klu
-          - resolve@develop~klu 
+          - resolve@develop~klu
 
     name: Build ReSolve with Spack
     steps:
@@ -92,10 +92,10 @@ jobs:
           # Once we move submodule deps into spack, we can do some more builds
           # Also need to change build script to use spack from base image
           submodules: true
-      
+
       - name: Setup Spack
         run: echo "$PWD/buildsystem/spack/spack/bin" >> "$GITHUB_PATH"
-      
+
       - name: Create heredoc spack.yaml
         run: |
           cat << EOF > spack.yaml
@@ -111,28 +111,29 @@ jobs:
             mirrors:
               local-buildcache: oci://${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
               spack: https://binaries.spack.io/develop
+          EOF
 
       - name: Configure GHCR mirror
         run: spack -e . mirror set --oci-username ${{ env.USERNAME }} --oci-password "${{ secrets.GITHUB_TOKEN }}" local-buildcache
-      
+
       - name: Trust keys
         run: spack -e . buildcache keys --install --trust
-      
+
       - name: Find external packages
         run: spack -e . external find --all
-      
+
       - name: Spack develop ReSolve
         run: spack -e . develop --path=$(pwd) resolve@develop
 
       - name: Concretize
         run: spack -e . concretize
-  
+
       - name: Install
         run: spack -e . install --no-check-signature
-      
+
       - name: Test Installation
         run: cd `ls | grep spack-build | grep -v txt` && ctest -VV
-      
+
       # Push with force to override existing binaries...
       - name: Push to binaries to buildcache
         run: |
