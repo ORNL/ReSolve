@@ -129,7 +129,7 @@ jobs:
         run: spack -e . concretize
 
       - name: Install
-        run: spack -e . install --keep-stage --no-check-signature
+        run: spack -e . install --keep-stage --no-check-signature --no-cache
 
       - name: Test Installation
         run: cd $(spack -e . location --build-dir resolve@develop) && ctest -VV
