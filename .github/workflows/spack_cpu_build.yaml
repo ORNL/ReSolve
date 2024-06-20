@@ -81,8 +81,9 @@ jobs:
       matrix:
         # Minimal Build(s) - GHCR mirror speeds these up a lot!
         spack_spec:
-          - resolve@develop+klu
-          - resolve@develop~klu
+          - resolve@develop~klu~lusol
+          - resolve@develop+klu~lusol
+          - resolve@develop+klu+lusol
 
     name: Build ReSolve with Spack
     steps:
