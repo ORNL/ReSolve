@@ -13,7 +13,7 @@ project(ReSolve VERSION "0.99.1")
 
 set(CMAKE_CXX_STANDARD 11)
 
-set(PACKAGE_NAME  "ReSolve")
+set(PACKAGE_NAME "ReSolve")
 set(PACKAGE_TARNAME "resolve")
 
 # Prohibit in-source build
@@ -21,31 +21,39 @@ if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
   message(FATAL_ERROR "In-source build prohibited.")
 endif()
 
-option(RESOLVE_TEST_WITH_BSUB "Use `jsrun` instead of `mpirun` commands when running tests" OFF)
-option(RESOLVE_USE_KLU  "Use KLU, AMD and COLAMD libraries from SuiteSparse" ON)
-option(RESOLVE_USE_LUSOL "Build the LUSOL library" ON)
+option(RESOLVE_TEST_WITH_BSUB
+       "Use `jsrun` instead of `mpirun` commands when running tests" OFF)
+option(RESOLVE_USE_KLU "Use KLU, AMD and COLAMD libraries from SuiteSparse" ON)
+option(RESOLVE_USE_LUSOL "Build the LUSOL library" OFF)
 option(RESOLVE_USE_CUDA "Use CUDA language and SDK" OFF)
-option(RESOLVE_USE_HIP  "Use HIP language and ROCm library" OFF)
+option(RESOLVE_USE_HIP "Use HIP language and ROCm library" OFF)
 option(RESOLVE_USE_PROFILING "Set profiling tracers in the code" OFF)
 
-option(RESOLVE_USE_GPU  "Use GPU device for computations" OFF)
+option(RESOLVE_USE_GPU "Use GPU device for computations" OFF)
 mark_as_advanced(FORCE RESOLVE_USE_GPU)
 
 option(RESOLVE_USE_ASAN "Use LLVM address sanitizer" OFF)
 option(RESOLVE_USE_DOXYGEN "Use Doxygen to generate Re::Solve documentation" ON)
-set(RESOLVE_CTEST_OUTPUT_DIR ${PROJECT_BINARY_DIR} CACHE PATH "Directory where CTest outputs are saved")
+set(RESOLVE_CTEST_OUTPUT_DIR
+    ${PROJECT_BINARY_DIR}
+    CACHE PATH "Directory where CTest outputs are saved")
 
-# update this if more fortran code is added. this should be good enough for now though
+# update this if more fortran code is added. this should be good enough for now
+# though
 if(RESOLVE_USE_LUSOL)
   enable_language(Fortran)
 endif()
 
 if(RESOLVE_USE_CUDA)
-  set(RESOLVE_USE_GPU ON CACHE BOOL "Using CUDA GPU!" FORCE)
+  set(RESOLVE_USE_GPU
+      ON
+      CACHE BOOL "Using CUDA GPU!" FORCE)
 endif()
 
 if(RESOLVE_USE_HIP)
-  set(RESOLVE_USE_GPU ON CACHE BOOL "Using HIP GPU!" FORCE)
+  set(RESOLVE_USE_GPU
+      ON
+      CACHE BOOL "Using HIP GPU!" FORCE)
 endif()
 
 # MacOS specific things
@@ -59,24 +67,24 @@ set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib)
 # Add CMake sources from `cmake` dir
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
-# Including clang-format cmake files to do automatic checking of formating
-# TODO: Set up clang-format
-#include(./cmake/clang-format)
+# Including clang-format cmake files to do automatic checking of formating TODO:
+# Set up clang-format include(./cmake/clang-format)
 
-# This will create target `doxygen` for building documentation locally.
-# For now, this target is intended only for developers who want to test
-# different documentation configurations. To have Doxygen configuration
-# changed at readthedocs, update `docs/doxygen/Doxyfile.in` accordingly.
-if (RESOLVE_USE_DOXYGEN)
+# This will create target `doxygen` for building documentation locally. For now,
+# this target is intended only for developers who want to test different
+# documentation configurations. To have Doxygen configuration changed at
+# readthedocs, update `docs/doxygen/Doxyfile.in` accordingly.
+if(RESOLVE_USE_DOXYGEN)
   include(ReSolveFindDoxygen)
 endif()
 
-
-if (RESOLVE_USE_KLU)
+if(RESOLVE_USE_KLU)
   include(FindKLU)
   if(NOT KLU_LIBRARY)
     message(STATUS "Cannot find KLU, disabling SuiteSparse module ...")
-    set(RESOLVE_USE_KLU OFF CACHE BOOL "Build without SuiteSparse AMD module." FORCE)
+    set(RESOLVE_USE_KLU
+        OFF
+        CACHE BOOL "Build without SuiteSparse AMD module." FORCE)
   endif()
 else()
   message(STATUS "Not using SuiteSparse KLU")
@@ -95,8 +103,10 @@ if(RESOLVE_USE_CUDA)
   endif()
 
   if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
-    set(CMAKE_CUDA_ARCHITECTURES 60 CACHE STRING "Selects CUDA architectures")
-endif()
+    set(CMAKE_CUDA_ARCHITECTURES
+        60
+        CACHE STRING "Selects CUDA architectures")
+  endif()
 
   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-extended-lambda")
 
@@ -113,20 +123,17 @@ else()
   message(STATUS "Not using HIP")
 endif(RESOLVE_USE_HIP)
 
-if (RESOLVE_USE_ASAN)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
+if(RESOLVE_USE_ASAN)
+  set(CMAKE_CXX_FLAGS
+      "${CMAKE_CXX_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
 endif()
 
 # The binary dir is already a global include directory
-configure_file(
-  ${CMAKE_SOURCE_DIR}/resolve/resolve_defs.hpp.in
-  ${CMAKE_BINARY_DIR}/resolve/resolve_defs.hpp)
-install(
-  FILES ${CMAKE_BINARY_DIR}/resolve/resolve_defs.hpp
-  DESTINATION include/resolve
-  )
-
+configure_file(${CMAKE_SOURCE_DIR}/resolve/resolve_defs.hpp.in
+               ${CMAKE_BINARY_DIR}/resolve/resolve_defs.hpp)
+install(FILES ${CMAKE_BINARY_DIR}/resolve/resolve_defs.hpp
+        DESTINATION include/resolve)
 
 # Enable testing
 enable_testing()
@@ -138,31 +145,33 @@ add_subdirectory(resolve)
 include(CMakePackageConfigHelpers)
 
 # Creates a version file for the package
-write_basic_package_version_file(ReSolveConfigVersion.cmake
-                                 VERSION ${CMAKE_PROJECT_VERSION}
-                                 COMPATIBILITY AnyNewerVersion)
+write_basic_package_version_file(
+  ReSolveConfigVersion.cmake
+  VERSION ${CMAKE_PROJECT_VERSION}
+  COMPATIBILITY AnyNewerVersion)
 
 # Generate install rules for targets
-install(EXPORT ReSolveTargets
-        FILE ReSolveTargets.cmake
-        NAMESPACE ReSolve::
-        DESTINATION share/resolve/cmake
-)
-
+install(
+  EXPORT ReSolveTargets
+  FILE ReSolveTargets.cmake
+  NAMESPACE ReSolve::
+  DESTINATION share/resolve/cmake)
 
 # Creates a config file
-configure_package_config_file(./cmake/ReSolveConfig.cmake.in
-                              ${CMAKE_CURRENT_BINARY_DIR}/ReSolveConfig.cmake
-                              INSTALL_DESTINATION share/resolve/cmake)
+configure_package_config_file(
+  ./cmake/ReSolveConfig.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/ReSolveConfig.cmake
+  INSTALL_DESTINATION share/resolve/cmake)
 
 # Generates install rules for cmake config files
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/ReSolveConfig.cmake"
-        "${CMAKE_CURRENT_BINARY_DIR}/ReSolveConfigVersion.cmake"
+              "${CMAKE_CURRENT_BINARY_DIR}/ReSolveConfigVersion.cmake"
         DESTINATION share/resolve/cmake)
 
 # Add usage examples
 add_subdirectory(examples)
 
 # Add tests
-set(RESOLVE_CTEST_OUTPUT_DIR ${PROJECT_BINARY_DIR} CACHE PATH "Directory where CTest outputs are saved")
+set(RESOLVE_CTEST_OUTPUT_DIR
+    ${PROJECT_BINARY_DIR}
+    CACHE PATH "Directory where CTest outputs are saved")
 add_subdirectory(tests)
