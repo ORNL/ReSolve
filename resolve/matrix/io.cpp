@@ -38,13 +38,10 @@ namespace ReSolve { namespace io {
     }
     ss << line;
     ss >> n >> m >> nnz;
-
     //create coo arrays
     index_type* coo_rows = new index_type[nnz];
     index_type* coo_cols = new index_type[nnz];
     real_type* coo_vals = new real_type[nnz];
-    index_type n_diagonal = 0;
-
     i = 0;
     index_type a, b;
     real_type c;
@@ -52,27 +49,18 @@ namespace ReSolve { namespace io {
       coo_rows[i] = a - 1;
       coo_cols[i] = b - 1;
       coo_vals[i] = c;
-
-      if (a == b) {
-        n_diagonal++;
-      }
-
       i++;
     }
-
-    matrix::Coo* A = new matrix::Coo(n,
-                                     m,
-                                     nnz,
-                                     symmetric,
-                                     false,
-                                     &coo_rows,
-                                     &coo_cols,
-                                     &coo_vals,
-                                     memory::HOST,
-                                     memory::HOST);
-    A->setNnzExpanded((2 * nnz) - n_diagonal);
-
-    return A;
+    return new matrix::Coo(n,
+                           m,
+                           nnz,
+                           symmetric,
+                           expanded,
+                           &coo_rows,
+                           &coo_cols,
+                           &coo_vals,
+                           memory::HOST,
+                           memory::HOST);
   }
 
 

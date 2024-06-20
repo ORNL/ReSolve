@@ -1,12 +1,12 @@
 #include <cstring>  // <-- includes memcpy
 #include <iostream>
-#include <iomanip> 
+#include <iomanip>
 
 #include <resolve/utilities/logger/Logger.hpp>
 #include "Coo.hpp"
 
 
-namespace ReSolve 
+namespace ReSolve
 {
   using out = io::Logger;
 
@@ -17,16 +17,18 @@ namespace ReSolve
   matrix::Coo::Coo(index_type n, index_type m, index_type nnz) : Sparse(n, m, nnz)
   {
   }
-  
-  matrix::Coo::Coo(index_type n, 
-                   index_type m, 
+
+  matrix::Coo::Coo(index_type n,
+                   index_type m,
                    index_type nnz,
                    bool symmetric,
                    bool expanded) : Sparse(n, m, nnz, symmetric, expanded)
   {
   }
 
-  /// @brief Hijacking constructor
+  /**
+   * @brief Hijacking constructor
+   */
   matrix::Coo::Coo(index_type n,
                    index_type m,
                    index_type nnz,
@@ -125,7 +127,7 @@ namespace ReSolve
         break;
     }
   }
-  
+
   matrix::Coo::~Coo()
   {
   }
@@ -190,7 +192,7 @@ namespace ReSolve
     if (((memspaceIn == memory::DEVICE)) && ((memspaceOut == memory::DEVICE))){ control = 3;}
 
     if (memspaceOut == memory::HOST) {
-      //check if cpu data allocated	
+      //check if cpu data allocated
       if ((h_row_data_ == nullptr) != (h_col_data_ == nullptr)) {
         out::error() << "In Coo::updateData one of host row or column data is null!\n";
       }
@@ -250,7 +252,7 @@ namespace ReSolve
         return -1;
     }
     return 0;
-  } 
+  }
 
   int matrix::Coo::updateData(index_type* row_data, index_type* col_data, real_type* val_data, index_type new_nnz, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut)
   {
@@ -258,7 +260,7 @@ namespace ReSolve
     this->nnz_ = new_nnz;
     int i = this->updateData(row_data, col_data, val_data, memspaceIn, memspaceOut);
     return i;
-  } 
+  }
 
   int matrix::Coo::allocateMatrixData(memory::MemorySpace memspace)
   {
@@ -268,20 +270,20 @@ namespace ReSolve
 
     if (memspace == memory::HOST) {
       this->h_row_data_ = new index_type[nnz_current];
-      std::fill(h_row_data_, h_row_data_ + nnz_current, 0);  
+      std::fill(h_row_data_, h_row_data_ + nnz_current, 0);
       this->h_col_data_ = new index_type[nnz_current];
-      std::fill(h_col_data_, h_col_data_ + nnz_current, 0);  
+      std::fill(h_col_data_, h_col_data_ + nnz_current, 0);
       this->h_val_data_ = new real_type[nnz_current];
-      std::fill(h_val_data_, h_val_data_ + nnz_current, 0.0);  
+      std::fill(h_val_data_, h_val_data_ + nnz_current, 0.0);
       owns_cpu_data_ = true;
       owns_cpu_vals_ = true;
       return 0;
     }
 
     if (memspace == memory::DEVICE) {
-      mem_.allocateArrayOnDevice(&d_row_data_, nnz_current); 
-      mem_.allocateArrayOnDevice(&d_col_data_, nnz_current); 
-      mem_.allocateArrayOnDevice(&d_val_data_, nnz_current); 
+      mem_.allocateArrayOnDevice(&d_row_data_, nnz_current);
+      mem_.allocateArrayOnDevice(&d_col_data_, nnz_current);
+      mem_.allocateArrayOnDevice(&d_val_data_, nnz_current);
       owns_gpu_data_ = true;
       owns_gpu_vals_ = true;
       return 0;
@@ -305,12 +307,12 @@ namespace ReSolve
             out::error() << "In Coo::copyData one of host row or column data is null!\n";
           }
           if ((h_row_data_ == nullptr) && (h_col_data_ == nullptr)) {
-            h_row_data_ = new index_type[nnz_current];      
-            h_col_data_ = new index_type[nnz_current];      
+            h_row_data_ = new index_type[nnz_current];
+            h_col_data_ = new index_type[nnz_current];
             owns_cpu_data_ = true;
           }
           if (h_val_data_ == nullptr) {
-            h_val_data_ = new real_type[nnz_current];      
+            h_val_data_ = new real_type[nnz_current];
             owns_cpu_vals_ = true;
           }
           mem_.copyArrayDeviceToHost(h_row_data_, d_row_data_, nnz_current);
@@ -346,7 +348,7 @@ namespace ReSolve
 
   /**
    * @brief Prints matrix data.
-   * 
+   *
    * @param out - Output stream where the matrix data is printed
    */
   void matrix::Coo::print(std::ostream& out)

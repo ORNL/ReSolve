@@ -9,7 +9,9 @@
 
 namespace ReSolve
 {
-  /// @invariant The input matrix must be deduplicated, otherwise the result is undefined
+  /**
+   * @invariant The input matrix must be deduplicated, otherwise the result is undefined
+   */
   int matrix::expand(matrix::Coo& A)
   {
     if (A.symmetric() && !A.expanded()) {
@@ -72,7 +74,9 @@ namespace ReSolve
     return 0;
   }
 
-  /// @invariant The input matrix must be deduplicated, otherwise the result is undefined
+  /**
+   * @invariant The input matrix must be deduplicated, otherwise the result is undefined
+   */
   int matrix::expand(matrix::Csr& A)
   {
     if (A.symmetric() && !A.expanded()) {
@@ -144,7 +148,9 @@ namespace ReSolve
     return 0;
   }
 
-  /// @invariant The input matrix must be deduplicated, otherwise the result is undefined
+  /**
+   * @invariant The input matrix must be deduplicated, otherwise the result is undefined
+   */
   int matrix::expand(matrix::Csc& A)
   {
     if (A.symmetric() && !A.expanded()) {
