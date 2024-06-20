@@ -128,8 +128,11 @@ jobs:
       - name: Concretize
         run: spack -e . concretize
 
-      - name: Install
-        run: spack -e . install --keep-stage --no-check-signature --no-cache
+      - name: Install dependencies
+        run: spack -e . install --no-check-signature --only dependencies
+
+      - name: Install package
+        run: spack -e . install --keep-stage --no-check-signature --no-cache --fresh
 
       - name: Test Installation
         run: cd $(spack -e . location --build-dir resolve@develop) && ctest -VV
