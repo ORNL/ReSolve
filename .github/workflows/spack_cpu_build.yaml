@@ -135,8 +135,11 @@ jobs:
       - name: Install package
         run: spack -e . install --keep-stage --no-check-signature --no-cache --fresh
 
-      - name: Test Installation
+      - name: Test Build
         run: cd $(spack -e . location --build-dir resolve@develop) && ctest -VV
+
+      - name: Test Installation
+        run: cd $(spack -e . location --build-dir resolve@develop) && make test_install
 
       # Push with force to override existing binaries...
       - name: Push to binaries to buildcache
