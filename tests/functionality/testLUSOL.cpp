@@ -67,7 +67,7 @@ int main(int argc, char* argv[])
   real_type* rhs = ReSolve::io::readRhsFromFile(rhs_file);
   rhs_file.close();
 
-  std::unique_ptr<real_type[]> x(new real_type[A->getNumRows()]);
+  real_type* x = new real_type[A->getNumRows()];
   std::unique_ptr<vector_type> vec_rhs(new vector_type(A->getNumRows()));
   std::unique_ptr<vector_type> vec_x(new vector_type(A->getNumRows()));
   std::unique_ptr<vector_type> vec_r(new vector_type(A->getNumRows()));
@@ -145,6 +145,7 @@ int main(int argc, char* argv[])
   std::cout << "\t ||b-A*x_exact||_2           : " << exactSol_normRmatrix << " (control; residual norm with exact solution)\n\n";
 
   delete[] rhs;
+  delete[] x;
   delete[] x_data;
   real_type scaled_residual_norm_one = normRmatrix / normB;
 
@@ -168,7 +169,7 @@ int main(int argc, char* argv[])
   rhs = ReSolve::io::readRhsFromFile(rhs_file);
   rhs_file.close();
 
-  x = std::unique_ptr<real_type[]>(new real_type[A->getNumRows()]);
+  x = new real_type[A->getNumRows()];
   vec_rhs = std::unique_ptr<vector_type>(new vector_type(A->getNumRows()));
   vec_x = std::unique_ptr<vector_type>(new vector_type(A->getNumRows()));
   vec_r = std::unique_ptr<vector_type>(new vector_type(A->getNumRows()));
@@ -246,6 +247,7 @@ int main(int argc, char* argv[])
   std::cout << "\t ||b-A*x_exact||_2           : " << exactSol_normRmatrix << " (control; residual norm with exact solution)\n\n";
 
   delete[] rhs;
+  delete[] x;
   delete[] x_data;
   real_type scaled_residual_norm_two = normRmatrix / normB;
 
