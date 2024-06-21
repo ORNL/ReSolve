@@ -16,6 +16,9 @@ namespace ReSolve
 {
   namespace tests
   {
+    /**
+     * @class Unit tests for `ReSolve::matrix::expand`
+     */
     class MatrixExpansionTests : TestBase
     {
       public:
@@ -27,44 +30,50 @@ namespace ReSolve
         {
         }
 
-        TestOutcome cooMatrix5x5()
+        /**
+         * @brief Correctness test of `ReSolve::matrix::expand` on a COO
+         *        matrix
+         */
+        TestOutcome cooMatrix()
         {
           TestStatus status;
 
           std::unique_ptr<matrix::Coo> A = buildCooMatrix5x5();
           matrix::expand(*A);
 
-          A->print();
-
-          status *= validateAnswer(*A, target_triples_5x5_);
+          status *= verifyAnswer(*A, target_triples_5x5_);
 
           return status.report(__func__);
         }
 
-        TestOutcome csrMatrix5x5()
+        /**
+         * @brief Correctness test of `ReSolve::matrix::expand` on a CSR
+         *        matrix
+         */
+        TestOutcome csrMatrix()
         {
           TestStatus status;
 
           std::unique_ptr<matrix::Csr> A = buildCsrMatrix5x5();
           matrix::expand(*A);
 
-          A->print();
-
-          status *= validateAnswer(*A, target_triples_5x5_);
+          status *= verifyAnswer(*A, target_triples_5x5_);
 
           return status.report(__func__);
         }
 
-        TestOutcome cscMatrix5x5()
+        /**
+         * @brief Correctness test of `ReSolve::matrix::expand` on a CSC
+         *        matrix
+         */
+        TestOutcome cscMatrix()
         {
           TestStatus status;
 
           std::unique_ptr<matrix::Csc> A = buildCscMatrix5x5();
           matrix::expand(*A);
 
-          A->print();
-
-          status *= validateAnswer(*A, target_triples_5x5_);
+          status *= verifyAnswer(*A, target_triples_5x5_);
 
           return status.report(__func__);
         }
@@ -77,8 +86,8 @@ namespace ReSolve
                                    {0, 4, 3.0},
                                    {4, 0, 3.0}};
 
-        bool validateAnswer(matrix::Coo& A,
-                            std::vector<std::tuple<index_type, index_type, real_type>> target)
+        bool verifyAnswer(matrix::Coo& A,
+                          std::vector<std::tuple<index_type, index_type, real_type>> target)
         {
           std::shared_ptr<index_type> i(new index_type(0));
           std::shared_ptr<index_type> nnz(new index_type(A.getNnz()));
@@ -90,7 +99,7 @@ namespace ReSolve
             return false;
           }
 
-          return validateAnswer(
+          return verifyAnswer(
               [=]() -> std::tuple<std::tuple<index_type, index_type, index_type>, bool> {
                 if (*i == *nnz) {
                   return {{0, 0, 0}, false};
@@ -102,7 +111,7 @@ namespace ReSolve
               target);
         }
 
-        bool validateAnswer(matrix::Csr& A,
+        bool verifyAnswer(matrix::Csr& A,
                             std::vector<std::tuple<index_type, index_type, real_type>> target)
         {
           std::shared_ptr<index_type> i(new index_type(0)), j(new index_type(0));
@@ -115,7 +124,7 @@ namespace ReSolve
             return false;
           }
 
-          return validateAnswer(
+          return verifyAnswer(
               [=]() -> std::tuple<std::tuple<index_type, index_type, real_type>, bool> {
                 if (*j == *nnz) {
                   return {{0, 0, 0}, false};
@@ -131,7 +140,7 @@ namespace ReSolve
               target);
         }
 
-        bool validateAnswer(matrix::Csc& A,
+        bool verifyAnswer(matrix::Csc& A,
                             std::vector<std::tuple<index_type, index_type, real_type>> target)
         {
           std::shared_ptr<index_type> i(new index_type(0)), j(new index_type(0));
@@ -144,7 +153,7 @@ namespace ReSolve
             return false;
           }
 
-          return validateAnswer(
+          return verifyAnswer(
               [=]() -> std::tuple<std::tuple<index_type, index_type, real_type>, bool> {
                 if (*j == *nnz) {
                   return {{0, 0, 0}, false};
@@ -160,7 +169,7 @@ namespace ReSolve
               target);
         }
 
-        bool validateAnswer(std::function<std::tuple<std::tuple<index_type, index_type, real_type>, bool>()> f,
+        bool verifyAnswer(std::function<std::tuple<std::tuple<index_type, index_type, real_type>, bool>()> f,
                             std::vector<std::tuple<index_type, index_type, real_type>> target)
         {
           bool ok;

@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  std::unique_ptr<real_type[]> rhs(ReSolve::io::readRhsFromFile(rhs_file));
+  real_type* rhs = ReSolve::io::readRhsFromFile(rhs_file);
   rhs_file.close();
 
   std::unique_ptr<real_type[]> x(new real_type[A->getNumRows()]);
@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
   std::unique_ptr<vector_type> vec_x(new vector_type(A->getNumRows()));
   std::unique_ptr<vector_type> vec_r(new vector_type(A->getNumRows()));
 
-  vec_rhs->update(rhs.get(), ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   vec_rhs->setDataUpdated(ReSolve::memory::HOST);
   vec_x->allocate(ReSolve::memory::HOST);
 
@@ -99,7 +99,7 @@ int main(int argc, char* argv[])
   std::fill_n(x_data, A->getNumRows(), 1.0);
 
   vec_test->setData(x_data, ReSolve::memory::HOST);
-  vec_r->update(rhs.get(), ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   vec_diff->update(x_data, ReSolve::memory::HOST, ReSolve::memory::HOST);
 
   matrix_handler->setValuesChanged(true, ReSolve::memory::HOST);
@@ -117,7 +117,7 @@ int main(int argc, char* argv[])
   real_type normDiffMatrix = sqrt(vector_handler->dot(vec_diff.get(), vec_diff.get(), ReSolve::memory::HOST));
 
   // compute the residual using exact solution
-  vec_r->update(rhs.get(), ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   error_sum += specializedMatvec(A.get(),
                                  vec_test.get(),
                                  vec_r.get(),
@@ -126,7 +126,7 @@ int main(int argc, char* argv[])
   real_type exactSol_normRmatrix = sqrt(vector_handler->dot(vec_r.get(), vec_r.get(), ReSolve::memory::HOST));
   // evaluate the residual ON THE CPU using COMPUTED solution
 
-  vec_r->update(rhs.get(), ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
 
   error_sum += specializedMatvec(A.get(),
                                  vec_x.get(),
@@ -144,6 +144,7 @@ int main(int argc, char* argv[])
   std::cout << "\t ||x-x_true||_2/||x_true||_2 : " << normDiffMatrix / normXtrue << " (scaled solution error)\n";
   std::cout << "\t ||b-A*x_exact||_2           : " << exactSol_normRmatrix << " (control; residual norm with exact solution)\n\n";
 
+  delete[] rhs;
   delete[] x_data;
   real_type scaled_residual_norm_one = normRmatrix / normB;
 
@@ -164,7 +165,7 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  rhs = std::unique_ptr<real_type[]>(ReSolve::io::readRhsFromFile(rhs_file));
+  rhs = ReSolve::io::readRhsFromFile(rhs_file);
   rhs_file.close();
 
   x = std::unique_ptr<real_type[]>(new real_type[A->getNumRows()]);
@@ -172,7 +173,7 @@ int main(int argc, char* argv[])
   vec_x = std::unique_ptr<vector_type>(new vector_type(A->getNumRows()));
   vec_r = std::unique_ptr<vector_type>(new vector_type(A->getNumRows()));
 
-  vec_rhs->update(rhs.get(), ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   vec_rhs->setDataUpdated(ReSolve::memory::HOST);
   vec_x->allocate(ReSolve::memory::HOST);
 
@@ -199,7 +200,7 @@ int main(int argc, char* argv[])
   std::fill_n(x_data, A->getNumRows(), 1.0);
 
   vec_test->setData(x_data, ReSolve::memory::HOST);
-  vec_r->update(rhs.get(), ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   vec_diff->update(x_data, ReSolve::memory::HOST, ReSolve::memory::HOST);
 
   matrix_handler->setValuesChanged(true, ReSolve::memory::HOST);
@@ -217,7 +218,7 @@ int main(int argc, char* argv[])
   normDiffMatrix = sqrt(vector_handler->dot(vec_diff.get(), vec_diff.get(), ReSolve::memory::HOST));
 
   // compute the residual using exact solution
-  vec_r->update(rhs.get(), ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   error_sum += specializedMatvec(A.get(),
                                  vec_test.get(),
                                  vec_r.get(),
@@ -226,7 +227,7 @@ int main(int argc, char* argv[])
   exactSol_normRmatrix = sqrt(vector_handler->dot(vec_r.get(), vec_r.get(), ReSolve::memory::HOST));
   // evaluate the residual ON THE CPU using COMPUTED solution
 
-  vec_r->update(rhs.get(), ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
 
   error_sum += specializedMatvec(A.get(),
                                  vec_x.get(),
@@ -244,6 +245,7 @@ int main(int argc, char* argv[])
   std::cout << "\t ||x-x_true||_2/||x_true||_2 : " << normDiffMatrix / normXtrue << " (scaled solution error)\n";
   std::cout << "\t ||b-A*x_exact||_2           : " << exactSol_normRmatrix << " (control; residual norm with exact solution)\n\n";
 
+  delete[] rhs;
   delete[] x_data;
   real_type scaled_residual_norm_two = normRmatrix / normB;
 

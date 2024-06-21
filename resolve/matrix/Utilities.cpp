@@ -10,7 +10,9 @@
 namespace ReSolve
 {
   /**
-   * @invariant The input matrix must be deduplicated, otherwise the result is undefined
+   * @pre The input matrix must be deduplicated
+   * @pre If the input matrix is symmetric and unexpanded, it is either upper
+   *      or lower triangular
    */
   int matrix::expand(matrix::Coo& A)
   {
@@ -75,7 +77,9 @@ namespace ReSolve
   }
 
   /**
-   * @invariant The input matrix must be deduplicated, otherwise the result is undefined
+   * @pre The input matrix must be deduplicated
+   * @pre If the input matrix is symmetric and unexpanded, it is either upper
+   *      or lower triangular
    */
   int matrix::expand(matrix::Csr& A)
   {
@@ -149,7 +153,9 @@ namespace ReSolve
   }
 
   /**
-   * @invariant The input matrix must be deduplicated, otherwise the result is undefined
+   * @pre The input matrix must be deduplicated
+   * @pre If the input matrix is symmetric and unexpanded, it is either upper
+   *      or lower triangular
    */
   int matrix::expand(matrix::Csc& A)
   {

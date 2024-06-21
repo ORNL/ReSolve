@@ -15,9 +15,9 @@ int main(int, char**)
     std::cout << "Running tests on CPU:\n";
     ReSolve::tests::MatrixExpansionTests test;
 
-    result += test.cooMatrix5x5();
-    result += test.csrMatrix5x5();
-    result += test.cscMatrix5x5();
+    result += test.cooMatrix();
+    result += test.csrMatrix();
+    result += test.cscMatrix();
 
     std::cout << "\n";
   }
