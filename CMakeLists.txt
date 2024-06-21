@@ -23,7 +23,7 @@ endif()
 
 option(RESOLVE_TEST_WITH_BSUB "Use `jsrun` instead of `mpirun` commands when running tests" OFF)
 option(RESOLVE_USE_KLU  "Use KLU, AMD and COLAMD libraries from SuiteSparse" ON)
-option(RESOLVE_USE_LUSOL "Build the LUSOL library" ON)
+option(RESOLVE_USE_LUSOL "Build the LUSOL library" OFF)
 option(RESOLVE_USE_CUDA "Use CUDA language and SDK" OFF)
 option(RESOLVE_USE_HIP  "Use HIP language and ROCm library" OFF)
 option(RESOLVE_USE_PROFILING "Set profiling tracers in the code" OFF)
@@ -96,7 +96,7 @@ if(RESOLVE_USE_CUDA)
 
   if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
     set(CMAKE_CUDA_ARCHITECTURES 60 CACHE STRING "Selects CUDA architectures")
-endif()
+  endif()
 
   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-extended-lambda")
 
