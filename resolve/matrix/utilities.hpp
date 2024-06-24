@@ -1,5 +1,7 @@
 #pragma once
 
+#include <resolve/MemoryUtils.hpp>
+
 namespace ReSolve
 {
   namespace matrix
@@ -8,10 +10,7 @@ namespace ReSolve
     class Coo;
     class Csr;
 
-    /// @brief 
-    /// @param A_coo 
-    /// @param A_csr 
-    /// @return 
-    int coo2csr(matrix::Coo* A_coo, matrix::Csr* A_csr);
+    /// @brief Converts symmetric or general COO to general CSR matrix
+    int coo2csr(matrix::Coo* A_coo, matrix::Csr* A_csr, memory::MemorySpace memspace);
   }
 }

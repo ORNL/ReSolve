@@ -15,7 +15,7 @@ set(Matrix_SRC
     Coo.cpp
     MatrixHandler.cpp
     MatrixHandlerCpu.cpp
-    utilities.h
+    utilities.cpp
 )
 
 # C++ code that depends on CUDA SDK libraries
@@ -36,7 +36,7 @@ set(Matrix_HEADER_INSTALL
     Csr.hpp
     Csc.hpp
     MatrixHandler.hpp
-    utilities.cpp
+    utilities.hpp
 )
 
 # Build shared library ReSolve::matrix
