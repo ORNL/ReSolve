@@ -82,6 +82,7 @@ jobs:
         # Minimal Build(s) - GHCR mirror speeds these up a lot!
         spack_spec:
           - resolve@develop~klu~lusol
+          - resolve@develop~klu+lusol
           - resolve@develop+klu~lusol
           - resolve@develop+klu+lusol
 
