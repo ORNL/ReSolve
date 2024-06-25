@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <resolve/Common.hpp>
 #include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/Csr.hpp>
