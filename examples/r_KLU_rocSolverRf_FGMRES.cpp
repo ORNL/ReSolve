@@ -69,6 +69,7 @@ int main(int argc, char *argv[])
     double time_convert = 0.0;
     double time_factorize = 0.0;
     double time_solve   = 0.0;
+    double time_ir      = 0.0;
 
     RESOLVE_RANGE_PUSH("Matrix Read");
     index_type j = 4 + i * 2;
@@ -224,7 +225,7 @@ int main(int argc, char *argv[])
       FGMRES->resetMatrix(A);
       FGMRES->setupPreconditioner("LU", Rf);
       gettimeofday(&t2, 0);
-      time_solve += (1000000.0 * (t2.tv_sec - t1.tv_sec) + t2.tv_usec - t1.tv_usec) / 1000.0;
+      time_ir += (1000000.0 * (t2.tv_sec - t1.tv_sec) + t2.tv_usec - t1.tv_usec) / 1000.0;
 
       matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", ReSolve::memory::DEVICE); 
       real_type rnrm = sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE));
@@ -247,7 +248,7 @@ int main(int argc, char *argv[])
         gettimeofday(&t1, 0);
         FGMRES->solve(vec_rhs, vec_x);
         gettimeofday(&t2, 0);
-        time_solve += (1000000.0 * (t2.tv_sec - t1.tv_sec) + t2.tv_usec - t1.tv_usec) / 1000.0;
+        time_ir += (1000000.0 * (t2.tv_sec - t1.tv_sec) + t2.tv_usec - t1.tv_usec) / 1000.0;
 
         std::cout << "FGMRES: init nrm: " 
                   << std::scientific << std::setprecision(16) 
@@ -263,7 +264,8 @@ int main(int argc, char *argv[])
     std::cout << std::defaultfloat << std::setprecision(4) 
               << "I/O time: " << time_io << ", conversion time: " << time_convert
               << ", factorization time: " << time_factorize << ", solve time: " << time_solve
-              << "\nTOTAL: " << time_factorize + time_solve << "\n";
+              << ", IR time: " << time_ir
+              << "\nTOTAL: " << time_factorize + time_solve + time_ir << "\n";
 
   } // for (int i = 0; i < numSystems; ++i)
   RESOLVE_RANGE_POP(__FUNCTION__);
