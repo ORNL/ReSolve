@@ -49,8 +49,6 @@ namespace ReSolve { namespace matrix {
 
       int updateFromCoo(matrix::Coo* mat, memory::MemorySpace memspaceOut);
 
-    private:
-      int coo2csr(matrix::Coo* mat, memory::MemorySpace memspace);
   };
 
 }} // namespace ReSolve::matrix
