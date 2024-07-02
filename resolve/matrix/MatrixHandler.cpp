@@ -6,7 +6,7 @@
 #include <resolve/matrix/Csc.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
-#include <resolve/matrix/utilities.hpp>
+#include <resolve/matrix/Utilities.hpp>
 #include "MatrixHandler.hpp"
 #include "MatrixHandlerCpu.hpp"
 
