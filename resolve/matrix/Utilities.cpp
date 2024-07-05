@@ -110,7 +110,7 @@ namespace ReSolve
       void print() const
       {
         // Add 1 to indices to restore indexing from MM format
-        std::cout << rowidx_ + 1 << " " << colidx_ + 1 << " " << value_ << "\n";
+        std::cout << rowidx_ << " " << colidx_ << " " << value_ << "\n";
       }
 
     private:
@@ -155,9 +155,9 @@ namespace ReSolve
       bool is_upper_triangular = false;
       bool is_lower_triangular = false;
 
-      // Compute size of expanded matrix if it is stored as symmetric.
-      // Also check if matrix is upper- or lower-triangular, if it is
-      // defined as such.
+      // Compute size of the symmetric matrix when expanded as general.
+      // Check if matrix is upper- or lower-triangular, if it is
+      // defined as symmetric and not expanded.
       // Complexity O(NNZ)
       index_type nnz_expanded = nnz;
       if (is_symmetric && !is_expanded) {
@@ -200,15 +200,17 @@ namespace ReSolve
       if (it != tmp.end()) {
         out::error() << "NNZ computed inaccurately!\n";
       }
-      print_list(tmp);
-      std::cout << "Size of tmp list = " << tmp.size() << "\n\n";
+      // print_list(tmp);
+      // std::cout << "Size of tmp list = " << tmp.size() << "\n\n";
 
-      // Sort tmp: Complexity NNZ*log(NNZ)
+      // Sort tmp
+      // Complexity NNZ*log(NNZ)
       tmp.sort();
-      print_list(tmp);
-      std::cout << "Size of tmp list = " << tmp.size() << "\n\n";
+      // print_list(tmp);
+      // std::cout << "Size of tmp list = " << tmp.size() << "\n\n";
 
       // Deduplicate tmp
+      // Complexity O(NNZ)
       it = tmp.begin();
       while (it != tmp.end())
       {
@@ -219,12 +221,13 @@ namespace ReSolve
           tmp.erase(it_tmp);
         }
       }
-      print_list(tmp);
+      // print_list(tmp);
       index_type nnz_expanded_no_duplicates = tmp.size();
-      std::cout << "Size of tmp list = " << tmp.size() << "\n\n";
+      // std::cout << "Size of tmp list = " << tmp.size() << "\n\n";
 
 
       // Convert to general CSR
+      // Complexity O(NNZ)
       A_csr->setExpanded(true);
       A_csr->setNnz(nnz_expanded_no_duplicates);
       A_csr->setNnzExpanded(nnz_expanded_no_duplicates);
@@ -241,12 +244,15 @@ namespace ReSolve
       rows_csr[0] = csr_row_idx;
       ++csr_row_counter;
 
+      // Loop throught the list of COO triplets
       it = tmp.begin();
       while (it != tmp.end())
       {
+        // Set column indices and matrix values
         cols_csr[csr_val_counter] = it->getColIdx();
         vals_csr[csr_val_counter] = it->getValue();
 
+        // When row index changes, set next row pointer
         if (csr_row_idx != it->getRowIdx()) {
           csr_row_idx = it->getRowIdx();
           ++csr_row_counter;
@@ -259,10 +265,10 @@ namespace ReSolve
       // Set last row pointer
       rows_csr[csr_row_counter] = nnz_expanded_no_duplicates;
 
-      std::cout << "Size of tmp list = " << tmp.size() << "\n\n";
-      std::cout << "Rows counted = " << csr_row_counter << "\n";
-      std::cout << "NNZs counted = " << csr_val_counter << "\n\n";
-      A_csr->print();
+      // std::cout << "Size of tmp list = " << tmp.size() << "\n\n";
+      // std::cout << "Rows counted = " << csr_row_counter << "\n";
+      // std::cout << "NNZs counted = " << csr_val_counter << "\n\n";
+      // A_csr->print();
 
       return 0;
     }

@@ -12,10 +12,6 @@ int main(int, char**)
 
   ReSolve::tests::TestingResults result;
   result += test.cooToCsr();
-  // result += test.cooMatrixExport();
-  // result += test.cooMatrixReadAndUpdate();
-  // result += test.rhsVectorReadFromFile();
-  // result += test.rhsVectorReadAndUpdate();
 
   return result.summary();
 }
