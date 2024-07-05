@@ -18,6 +18,10 @@ target_link_libraries(runMatrixHandlerTests.exe PRIVATE ReSolve resolve_matrix)
 add_executable(runMatrixFactorizationTests.exe runMatrixFactorizationTests.cpp)
 target_link_libraries(runMatrixFactorizationTests.exe PRIVATE ReSolve resolve_matrix)
 
+# Build matrix conversion tests
+add_executable(runMatrixConversionTests.exe runMatrixConversionTests.cpp)
+target_link_libraries(runMatrixConversionTests.exe PRIVATE ReSolve resolve_matrix)
+
 # Build LUSOL-related tests
 if(RESOLVE_USE_LUSOL)
   add_executable(runLUSOLTests.exe runLUSOLTests.cpp)
@@ -25,7 +29,7 @@ if(RESOLVE_USE_LUSOL)
 endif()
 
 # Install tests
-set(installable_tests runMatrixIoTests.exe runMatrixHandlerTests.exe runMatrixFactorizationTests.exe)
+set(installable_tests runMatrixIoTests.exe runMatrixHandlerTests.exe runMatrixFactorizationTests.exe runMatrixConversionTests.exe)
 if(RESOLVE_USE_LUSOL)
   list(APPEND installable_tests runLUSOLTests.exe)
 endif()
@@ -35,6 +39,7 @@ install(TARGETS ${installable_tests}
 add_test(NAME matrix_test               COMMAND $<TARGET_FILE:runMatrixIoTests.exe>)
 add_test(NAME matrix_handler_test       COMMAND $<TARGET_FILE:runMatrixHandlerTests.exe>)
 add_test(NAME matrix_factorization_test COMMAND $<TARGET_FILE:runMatrixFactorizationTests.exe>)
+add_test(NAME matrix_conversion_test    COMMAND $<TARGET_FILE:runMatrixConversionTests.exe>)
 if(RESOLVE_USE_LUSOL)
   add_test(NAME lusol_test              COMMAND $<TARGET_FILE:runLUSOLTests.exe>)
 endif()
