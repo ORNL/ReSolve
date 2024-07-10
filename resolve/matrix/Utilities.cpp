@@ -219,7 +219,7 @@ namespace ReSolve
       B->setSymmetric(A->symmetric());
       B->setNnz(new_rows[n_rows]);
       // NOTE: this is necessary because updateData always reads the current nnz from
-      //       this field
+      //       this field. see #176
       B->setNnzExpanded(new_rows[n_rows]);
       B->setExpanded(true);
 
