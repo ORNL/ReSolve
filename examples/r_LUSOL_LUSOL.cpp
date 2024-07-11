@@ -6,8 +6,6 @@
 
 #include <resolve/LinSolverDirectLUSOL.hpp>
 #include <resolve/matrix/Coo.hpp>
-#include <resolve/matrix/Csc.hpp>
-#include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/matrix/Utilities.hpp>
 #include <resolve/matrix/io.hpp>
@@ -61,29 +59,30 @@ int specializedMatvec(ReSolve::matrix::Coo* Ageneric,
   return 0;
 }
 
+void usage()
+{
+  std::cerr << "usage: lusol_lusol.exe MATRIX_FILE RHS_FILE NUM_SYSTEMS [MATRIX_FILE_ID RHS_FILE_ID...]" << std::endl;
+  exit(1);
+}
+
 int main(int argc, char* argv[])
 {
 
   if (argc <= 4) {
-    std::cerr << "usage: lusol_lusol.exe MATRIX_FILE RHS_FILE NUM_SYSTEMS [MATRIX_FILE_ID RHS_FILE_ID...]" << std::endl;
-    return 1;
+    usage();
   }
 
-  std::string matrixFileName = argv[1];
-  std::string rhsFileName = argv[2];
-
-  index_type numSystems = atoi(argv[3]);
-  if (numSystems == 0) {
+  index_type n_systems = atoi(argv[3]);
+  if (n_systems == 0) {
     return 0;
   }
 
-  std::cout << "Family mtx file name: " << matrixFileName << ", total number of matrices: " << numSystems << std::endl;
-  std::cout << "Family rhs file name: " << rhsFileName << ", total number of RHSes: " << numSystems << std::endl;
+  if (argc % 2 != 0 || (argc - 4) / 2 < n_systems) {
+    usage();
+  }
 
-  std::string fileId;
-  std::string rhsId;
-  std::string matrixFileNameFull;
-  std::string rhsFileNameFull;
+  std::string matrix_file_prefix = argv[1];
+  std::string rhs_file_prefix = argv[2];
 
   std::unique_ptr<ReSolve::LinAlgWorkspaceCpu> workspace(new ReSolve::LinAlgWorkspaceCpu());
   std::unique_ptr<ReSolve::MatrixHandler> matrix_handler(new ReSolve::MatrixHandler(workspace.get()));
@@ -92,89 +91,98 @@ int main(int argc, char* argv[])
 
   std::unique_ptr<ReSolve::LinSolverDirectLUSOL> lusol(new ReSolve::LinSolverDirectLUSOL);
 
-  ReSolve::matrix::Coo* A;
+  // NOTE: this has to be manually managed because of the way readAndUpdateRhs takes its arguments.
+  //       fixing this would require the second parameter to be a reference to a pointer and not a
+  //       pointer to a pointer
   real_type* rhs;
-  vector_type *vec_rhs, *vec_r, *vec_x;
+  std::unique_ptr<ReSolve::matrix::Coo> A;
+  std::unique_ptr<vector_type> vec_rhs, vec_r, vec_x;
 
-  for (int i = 0; i < numSystems; ++i) {
-    index_type j = 4 + i * 2;
-    fileId = argv[j];
-    rhsId = argv[j + 1];
+  for (int system = 0; system < n_systems; system++) {
 
-    matrixFileNameFull = "";
-    rhsFileNameFull = "";
-
-    matrixFileNameFull = matrixFileName + fileId + ".mtx";
-    rhsFileNameFull = rhsFileName + rhsId + ".mtx";
-    std::cout << "Reading: " << matrixFileNameFull << std::endl;
-
-    std::ifstream mat_file(matrixFileNameFull);
-    if (!mat_file.is_open()) {
-      std::cout << "Failed to open file " << matrixFileNameFull << "\n";
-      return -1;
+    std::string matrix_file_path = matrix_file_prefix + argv[system + 4] + ".mtx";
+    std::ifstream matrix_file(matrix_file_path);
+    if (!matrix_file.is_open()) {
+      std::cout << "Failed to open file " << matrix_file_path << "\n";
+      return 1;
     }
-    std::ifstream rhs_file(rhsFileNameFull);
+
+    std::cout << "Matrix file: " << matrix_file_path << std::endl;
+
+    std::string rhs_file_path = rhs_file_prefix + argv[system + 5] + ".mtx";
+    std::ifstream rhs_file(rhs_file_path);
     if (!rhs_file.is_open()) {
-      std::cout << "Failed to open file " << rhsFileNameFull << "\n";
-      return -1;
+      std::cout << "Failed to open file " << rhs_file_path << "\n";
+      return 1;
     }
-    if (i == 0) {
-      A = ReSolve::io::readMatrixFromFile(mat_file);
-      rhs = ReSolve::io::readRhsFromFile(rhs_file);
-      vec_rhs = new vector_type(A->getNumRows());
-      vec_r = new vector_type(A->getNumRows());
+    std::cout << "RHS file: " << rhs_file_path << std::endl;
 
-      vec_x = new vector_type(A->getNumRows());
+    if (system == 0) {
+      A = std::unique_ptr<ReSolve::matrix::Coo>(ReSolve::io::readMatrixFromFile(matrix_file));
+      rhs = ReSolve::io::readRhsFromFile(rhs_file);
+      vec_rhs = std::unique_ptr<vector_type>(new vector_type(A->getNumRows()));
+      vec_r = std::unique_ptr<vector_type>(new vector_type(A->getNumRows()));
+
+      vec_x = std::unique_ptr<vector_type>(new vector_type(A->getNumRows()));
       vec_x->allocate(ReSolve::memory::HOST);
     } else {
-      ReSolve::io::readAndUpdateMatrix(mat_file, A);
+      ReSolve::io::readAndUpdateMatrix(matrix_file, A.get());
       ReSolve::io::readAndUpdateRhs(rhs_file, &rhs);
     }
+
+    matrix_file.close();
+    rhs_file.close();
+
     std::cout << "Finished reading the matrix and rhs, size: " << A->getNumRows()
               << " x " << A->getNumColumns()
               << ", nnz: " << A->getNnz()
               << ", symmetric? " << A->symmetric()
               << ", Expanded? " << A->expanded() << std::endl;
-    mat_file.close();
-    rhs_file.close();
 
     vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
     vec_rhs->setDataUpdated(ReSolve::memory::HOST);
-    ReSolve::matrix::expand(*A);
-    std::cout << "Matrix expansion completed. Expanded NNZ: " << A->getNnzExpanded() << std::endl;
-    // Now call direct solver
-    int status;
 
-    lusol->setup(A);
-    status = lusol->analyze();
-    std::cout << "LUSOL analysis status: " << status << std::endl;
-    status = lusol->factorize();
-    std::cout << "LUSOL factorization status: " << status << std::endl;
-    status = lusol->solve(vec_rhs, vec_x);
-    std::cout << "LUSOL solve status: " << status << std::endl;
+    ReSolve::matrix::expand(*A.get());
+    std::cout << "Matrix expansion completed. Expanded NNZ: " << A->getNnzExpanded() << std::endl;
+
+    if (lusol->setup(A.get()) != 0) {
+      std::cout << "setup failed on matrix " << system << "/" << n_systems << std::endl;
+      return 1;
+    }
+
+    if (lusol->analyze() != 0) {
+      std::cout << "analysis failed on matrix " << system << "/" << n_systems << std::endl;
+      return 1;
+    }
+
+    if (lusol->factorize() != 0) {
+      std::cout << "factorization failed on matrix " << system << "/" << n_systems << std::endl;
+      return 1;
+    }
+
+    if (lusol->solve(vec_rhs.get(), vec_x.get()) != 0) {
+      std::cout << "solving failed on matrix " << system << "/" << n_systems << std::endl;
+      return 1;
+    }
+
     vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
 
     matrix_handler->setValuesChanged(true, ReSolve::memory::HOST);
 
-    specializedMatvec(A, vec_x, vec_r, &ONE, &MINUSONE);
-    norm_r = vector_handler->infNorm(vec_r, ReSolve::memory::HOST);
+    specializedMatvec(A.get(), vec_x.get(), vec_r.get(), &ONE, &MINUSONE);
+    norm_r = vector_handler->infNorm(vec_r.get(), ReSolve::memory::HOST);
 
     std::cout << "\t2-Norm of the residual: "
               << std::scientific << std::setprecision(16)
-              << sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::HOST)) << "\n";
-    matrix_handler->matrixInfNorm(A, &norm_A, ReSolve::memory::HOST);
-    norm_x = vector_handler->infNorm(vec_x, ReSolve::memory::HOST);
-    std::cout << "\tMatrix inf  norm: " << std::scientific << std::setprecision(16) << norm_A << "\n"
+              << sqrt(vector_handler->dot(vec_r.get(), vec_r.get(), ReSolve::memory::HOST)) << "\n";
+    matrix_handler->matrixInfNorm(A.get(), &norm_A, ReSolve::memory::HOST);
+    norm_x = vector_handler->infNorm(vec_x.get(), ReSolve::memory::HOST);
+    std::cout << "\tMatrix inf norm: " << std::scientific << std::setprecision(16) << norm_A << "\n"
               << "\tResidual inf norm: " << norm_r << "\n"
               << "\tSolution inf norm: " << norm_x << "\n"
               << "\tNorm of scaled residuals: " << norm_r / (norm_A * norm_x) << "\n";
   }
 
-  delete A;
   delete[] rhs;
-  delete vec_r;
-  delete vec_x;
-  delete vec_rhs;
-
   return 0;
 }
