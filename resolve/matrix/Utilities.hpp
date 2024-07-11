@@ -9,17 +9,17 @@ namespace ReSolve
   namespace matrix
   {
     /**
-     * @brief Expands a symmetric COO matrix stored only as a half to its full size
+     * @brief Expands a symmetric COO matrix stored as upper or lower triangular to its full size
      */
     int expand(Coo&);
 
     /**
-     * @brief Expands a symmetric CSR matrix stored only as a half to its full size
+     * @brief Expands a symmetric CSR matrix stored as upper or lower triangular to its full size
      */
     int expand(Csr&);
 
     /**
-     * @brief Expands a symmetric CSC matrix stored only as a half to its full size
+     * @brief Expands a symmetric CSC matrix stored as upper or lower triangular to its full size
      */
     int expand(Csc&);
   } // namespace matrix
