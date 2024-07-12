@@ -32,32 +32,6 @@ namespace ReSolve
      */
     int coo2csr(matrix::Coo* A, matrix::Csr* B, memory::MemorySpace memspace)
     {
-      // NOTE: a note on deduplication:
-      //       currently, this function allocates more memory than necessary to contain
-      //       the matrix. this is because it's impossible to cleanly check the amount
-      //       of space each row needs ahead of time without storing a full dense matrix
-      //       with the dimensions of A
-      //
-      //       additionally, this necessitates that we shrink the rows to remove this
-      //       unused space, which is costly and necessitates a lot of shifting
-      //
-      //       one potential solution to this that i thought of was to store an array of
-      //       bloom filters (maybe u64s or u128s) of the size of the number of columns,
-      //       each filter indicating if there is a value stored at that column in a row
-      //
-      //       if, during the preprocessing step, we encounter a potential duplicate, we
-      //       backtrack to see if there actually is one. given that the number of
-      //       duplicates is probably small, this shouldn't carry too much of a
-      //       performance penalty
-      //
-      //       if performance becomes a problem, this could be coupled with arrays
-      //       maintaining the last and/or first seen indices in the coo arrays at which
-      //       a row had an associated value, to speed up the backtracking process
-      //
-      //       this would be applied during the first allocation phase when an element
-      //       for a row is encountered, prior to the increment of its size in
-      //       `new_rows`
-
       index_type* rows = A->getRowData(memory::HOST);
       index_type* columns = A->getColData(memory::HOST);
       real_type* values = A->getValues(memory::HOST);
@@ -136,18 +110,6 @@ namespace ReSolve
                                  columns[i])
                 - new_columns);
 
-        // NOTE: the stuff beyond here is basically insertion sort. i'm not
-        //       sure if it's the best way of going about sorting the
-        //       column-value pairs, but it seemed to me to be the most
-        //       natural way of going about this. the only potential
-        //       benefit to using something else (that i can forsee) would
-        //       be that on really large matrices with many nonzeroes in a
-        //       row, something like mergesort might be better or maybe
-        //       a reimpl of plain std::sort. the advantage offered by
-        //       insertion sort here is that we can do it while we fill
-        //       the row, as opposed to doing sorting in a postprocessing
-        //       step as was done prior
-
         if (new_columns[insertion_pos] == columns[i]) {
           new_values[insertion_pos] = values[i];
         } else {
@@ -186,8 +148,7 @@ namespace ReSolve
         }
       }
 
-      // backshifting stage, approximately O(n^2 * nnz) in the worst case
-      // (this probably isn't the tightest bound i could apply)
+      // backshifting stage, approximately O(nnz * m) in the worst case
       //
       // all this does is shift back rows to remove empty space in between them
       // by indexing each row in order, checking to see if the amount of used
