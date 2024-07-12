@@ -94,7 +94,7 @@ namespace ReSolve
       // fill stage, approximately O(nnz * m) in the worst case
       //
       // all this does is iterate over the nonzeroes in the coo matrix,
-      // check to see if a value at that colum already exists using binary search,
+      // check to see if a value at that column already exists using binary search,
       // and if it does, then insert the new value at that position (deduplicating
       // the matrix), otherwise, it allocates a new spot in the row (where you see
       // used[rows[i]]++) and shifts everything over, performing what is effectively
