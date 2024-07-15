@@ -70,16 +70,18 @@ namespace ReSolve
         }
       } else {
         bool is_upper_triangular = false;
+        bool is_lower_triangular = false;
         for (index_type i = 0; i < nnz_with_duplicates; i++) {
           csr_rows[coo_rows[i] + 1]++;
           if (coo_rows[i] != coo_columns[i]) {
             used[coo_columns[i]]++;
 
-            if (coo_rows[i] > coo_columns[i] && is_upper_triangular) {
+            is_upper_triangular |= coo_rows[i] < coo_columns[i];
+            is_lower_triangular |= coo_rows[i] > coo_columns[i];
+            if (is_upper_triangular && is_lower_triangular) {
               assert(false && "a matrix indicated to be symmetric triangular was not actually symmetric triangular");
               return -1;
             }
-            is_upper_triangular = coo_rows[i] < coo_columns[i];
           }
         }
       }
