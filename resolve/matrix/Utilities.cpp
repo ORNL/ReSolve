@@ -107,10 +107,14 @@ namespace ReSolve
       // indices swapped.
 
       for (index_type i = 0; i < nnz_with_duplicates; i++) {
+        // this points to the first element not less than `coo_columns[i]`. see
+        // https://en.cppreference.com/w/cpp/algorithm/lower_bound for more details
         index_type* closest_position =
             std::lower_bound(&csr_columns[csr_rows[coo_rows[i]]],
                              &csr_columns[csr_rows[coo_rows[i]] + used[coo_rows[i]]],
                              coo_columns[i]);
+
+        // this is the offset at which the element's value belongs
         index_type insertion_offset = static_cast<index_type>(closest_position - csr_columns);
 
         if (csr_columns[insertion_offset] == coo_columns[i]) {
