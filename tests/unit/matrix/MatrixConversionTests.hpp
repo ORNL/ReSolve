@@ -142,7 +142,7 @@ namespace ReSolve
         const index_type simple_symmetric_expected_nnz_ = 8;
         index_type simple_symmetric_expected_i_[8] = {0, 1, 1, 1, 2, 3, 3, 4};
         index_type simple_symmetric_expected_j_[8] = {0, 1, 2, 3, 1, 1, 4, 3};
-        real_type simple_symmetric_expected_a_[8] = {2.0, 4.0, 6.0, 7.0, 6.0, 7.0, 8.0, 8.0};
+        real_type simple_symmetric_expected_a_[8] = {3.0, 7.0, 11.0, 7.0, 11.0, 7.0, 8.0, 8.0};
 
         const index_type simple_upper_unexpanded_symmetric_n_ = 5;
         const index_type simple_upper_unexpanded_symmetric_m_ = 5;
@@ -176,7 +176,7 @@ namespace ReSolve
         const index_type simple_asymmetric_expected_nnz_ = 8;
         index_type simple_asymmetric_expected_i_[8] = {0, 1, 1, 1, 2, 3, 3, 4};
         index_type simple_asymmetric_expected_j_[8] = {0, 1, 2, 3, 1, 1, 4, 3};
-        real_type simple_asymmetric_expected_a_[8] = {2.0, 4.0, 6.0, 7.0, 9.0, 6.0, 8.0, 8.0};
+        real_type simple_asymmetric_expected_a_[8] = {2.0, 4.0, 11.0, 7.0, 9.0, 6.0, 15.0, 8.0};
 
         bool verifyAnswer(matrix::Csr* A,
                           const index_type& n,
@@ -197,9 +197,7 @@ namespace ReSolve
           index_type answer_offset = 0;
           for (index_type i = 0; i < A->getNumRows(); i++) {
             for (index_type offset = rows[i]; offset < rows[i + 1]; offset++) {
-              if (i != is[answer_offset] ||
-                  columns[offset] != js[answer_offset] ||
-                  !isEqual(values[offset], as[answer_offset])) {
+              if (i != is[answer_offset] || columns[offset] != js[answer_offset] || !isEqual(values[offset], as[answer_offset])) {
                 return false;
               }
               answer_offset++;
