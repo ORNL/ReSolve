@@ -1,12 +1,13 @@
+#include <algorithm>
 #include <cmath>
 #include <cstdlib>
 #include <limits>
-#include <algorithm>
 
 #include "LinSolverDirectLUSOL.hpp"
 #include "lusol/lusol.hpp"
 
 #include <resolve/matrix/Csc.hpp>
+#include <resolve/matrix/Csr.hpp>
 #include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/vector/Vector.hpp>
 
@@ -72,6 +73,7 @@ namespace ReSolve
     U_ = nullptr;
   }
 
+  /// @pre A is in the COO format, is a fully expanded matrix, and contains no duplicates
   int LinSolverDirectLUSOL::setup(matrix::Sparse* A,
                                   matrix::Sparse* /* L */,
                                   matrix::Sparse* /* U */,
@@ -84,17 +86,13 @@ namespace ReSolve
   }
 
   /**
-   * @brief Analysis function of LUISOL
-   * 
    * At this time, only memory allocation and initialization is done here.
-   * 
+   *
    * @return int - 0 if successful, error code otherwise
-   * 
-   * @pre System matrix `A_` is in unsorted COO format without duplicates.
-   * 
-   * @note LUSOL does not expose symbolic factorization in its API. It might 
-   * be possible refactor lu1fac into separate symbolic and numerical
-   * factorization functions, but for now, we do the both in ::factorize().
+   *
+   * @note LUSOL does not expose symbolic factorization in its API. It might
+   *       be possible refactor lu1fac into separate symbolic and numerical
+   *       factorization functions, but for now, we do the both in ::factorize().
    */
   int LinSolverDirectLUSOL::analyze()
   {
@@ -206,32 +204,116 @@ namespace ReSolve
     return -1;
   }
 
+  index_type depermute(index_type i, index_type n, index_type* p)
+  {
+    for (index_type k = 0; k < n; k++) {
+      if (p[k] - 1 == i) {
+        return k;
+      }
+    }
+
+    return -1;
+  }
+
   matrix::Sparse* LinSolverDirectLUSOL::getLFactor()
   {
-    out::error() << "LinSolverDirect::getLFactor() called on "
-                    "LinSolverDirectLUSOL which is unimplemented!\n";
-    return nullptr;
+    matrix::Csc* L = new matrix::Csc(n_, m_, luparm_[22], false, true);
+    L->allocateMatrixData(memory::HOST);
+
+    index_type* columns = L->getColData(memory::HOST);
+    index_type* rows = L->getRowData(memory::HOST);
+    real_type* values = L->getValues(memory::HOST);
+
+    // preprocessing since columns are stored unordered within lusol's workspace
+
+    columns[0] = 0;
+    index_type offset = lena_ - 1;
+    for (index_type i = 0; i < luparm_[19]; i++) {
+      index_type column_nnz = lenc_[i];
+      index_type column_nnz_end = offset - column_nnz;
+      index_type corresponding_column = depermute(indr_[column_nnz_end + 1] - 1, m_, p_);
+
+      columns[corresponding_column + 1] = column_nnz;
+      offset = column_nnz_end;
+    }
+
+    for (index_type column = 0; column < m_; column++) {
+      columns[column + 1] += columns[column];
+    }
+
+    // fill the destination arrays
+    // TODO: sort the destination arrays by row
+    // TODO: add ones along the diagonal
+    // TODO: use the already allocated L_ and U_ matrices instead of allocating new ones
+
+    offset = lena_ - 1;
+    for (index_type i = 0; i < luparm_[19]; i++) {
+      index_type corresponding_column = depermute(indr_[offset - lenc_[i] + 1] - 1, m_, p_);
+
+      for (index_type destination_offset = columns[corresponding_column];
+           destination_offset < columns[corresponding_column + 1];
+           destination_offset++) {
+        rows[destination_offset] = depermute(indc_[offset] - 1, m_, p_);
+        values[destination_offset] = a_[offset];
+        offset--;
+      }
+    }
+
+    return static_cast<matrix::Sparse*>(L);
   }
 
   matrix::Sparse* LinSolverDirectLUSOL::getUFactor()
   {
-    out::error() << "LinSolverDirect::getUFactor() called on "
-                    "LinSolverDirectLUSOL which is unimplemented!\n";
-    return nullptr;
+    matrix::Csr* U = new matrix::Csr(n_, m_, luparm_[23], false, true);
+    U->allocateMatrixData(memory::HOST);
+
+    index_type* rows = U->getRowData(memory::HOST);
+    index_type* columns = U->getColData(memory::HOST);
+    real_type* values = U->getValues(memory::HOST);
+
+    rows[0] = 0;
+    for (index_type row = 0; row < n_; row++) {
+      index_type corresponding_row = p_[row] - 1;
+
+      rows[row + 1] = rows[row] + lenr_[corresponding_row];
+
+      index_type offset = locr_[corresponding_row] - 1;
+      for (index_type destination_offset = rows[row];
+           destination_offset < rows[row + 1];
+           destination_offset++) {
+        columns[destination_offset] = depermute(indr_[offset] - 1, n_, q_);
+        values[destination_offset] = a_[offset];
+        offset++;
+      }
+    }
+
+    return static_cast<matrix::Sparse*>(U);
   }
 
   index_type* LinSolverDirectLUSOL::getPOrdering()
   {
-    out::error() << "LinSolverDirect::getPOrdering() called on "
-                    "LinSolverDirectLUSOL which is unimplemented!\n";
-    return nullptr;
+    if (P_ == nullptr) {
+      P_ = new index_type[m_];
+    }
+
+    for (index_type i = 0; i < m_; i++) {
+      P_[i] = p_[i] - 1;
+    }
+
+    return P_;
   }
 
   index_type* LinSolverDirectLUSOL::getQOrdering()
   {
-    out::error() << "LinSolverDirect::getQOrdering() called on "
-                    "LinSolverDirectLUSOL which is unimplemented!\n";
-    return nullptr;
+    if (Q_ == nullptr) {
+      Q_ = new index_type[n_];
+    }
+
+    for (index_type i = 0; i < n_; i++) {
+      Q_[i] = q_[i] - 1;
+    }
+
+    return Q_;
   }
 
   void LinSolverDirectLUSOL::setPivotThreshold(real_type /* _ */)
@@ -267,11 +349,7 @@ namespace ReSolve
   {
     // NOTE: determines a hopefully "good enough" size for a_, indc_, indr_.
     //       see lena_'s documentation for more details
-    if (nelem_ >= parmlu_[7] * m_ * n_) {
-      lena_ = m_ * n_;
-    } else {
-      lena_ = std::min(5 * nelem_, 2 * m_ * n_);
-    }
+    lena_ = std::max({2 * nelem_, 10 * m_, 10 * n_, 10000});
 
     a_ = new real_type[lena_];
     indc_ = new index_type[lena_];
@@ -279,7 +357,6 @@ namespace ReSolve
     mem_.setZeroArrayOnHost(a_, lena_);
     mem_.setZeroArrayOnHost(indc_, lena_);
     mem_.setZeroArrayOnHost(indr_, lena_);
-
 
     p_ = new index_type[m_];
     mem_.setZeroArrayOnHost(p_, m_);
@@ -313,7 +390,7 @@ namespace ReSolve
 
     w_ = new real_type[n_];
     mem_.setZeroArrayOnHost(w_, n_);
-  
+
     return 0;
   }
 
@@ -333,20 +410,24 @@ namespace ReSolve
     delete[] ipinv_;
     delete[] iqinv_;
     delete[] w_;
-    a_     = nullptr; 
-    indc_  = nullptr; 
-    indr_  = nullptr; 
-    p_     = nullptr; 
-    q_     = nullptr; 
-    lenc_  = nullptr; 
-    lenr_  = nullptr;
-    locc_  = nullptr;
-    locr_  = nullptr; 
+    delete[] P_;
+    delete[] Q_;
+    a_ = nullptr;
+    indc_ = nullptr;
+    indr_ = nullptr;
+    p_ = nullptr;
+    q_ = nullptr;
+    lenc_ = nullptr;
+    lenr_ = nullptr;
+    locc_ = nullptr;
+    locr_ = nullptr;
     iploc_ = nullptr;
-    iqloc_ = nullptr; 
-    ipinv_ = nullptr; 
+    iqloc_ = nullptr;
+    ipinv_ = nullptr;
     iqinv_ = nullptr;
-    w_     = nullptr;
+    w_ = nullptr;
+    P_ = nullptr;
+    Q_ = nullptr;
 
     return 0;
   }

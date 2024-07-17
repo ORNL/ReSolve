@@ -1,11 +1,11 @@
 #pragma once
 
+#include <cstdint>
+#include <memory>
+
 #include <resolve/Common.hpp>
 #include <resolve/LinSolver.hpp>
 #include <resolve/MemoryUtils.hpp>
-
-#include <cstdint>
-#include <memory>
 
 namespace ReSolve
 {
@@ -21,27 +21,34 @@ namespace ReSolve
 
   class LinSolverDirectLUSOL : public LinSolverDirect
   {
-    using vector_type = vector::Vector;
+      using vector_type = vector::Vector;
 
     public:
       LinSolverDirectLUSOL();
       ~LinSolverDirectLUSOL();
 
+      /// @brief Setup function of the linear solver
       int setup(matrix::Sparse* A,
                 matrix::Sparse* L = nullptr,
                 matrix::Sparse* U = nullptr,
-                index_type*     P = nullptr,
-                index_type*     Q = nullptr,
-                vector_type*  rhs = nullptr) override;
+                index_type* P = nullptr,
+                index_type* Q = nullptr,
+                vector_type* rhs = nullptr) override;
 
+      /// @brief Analysis function of LUSOL
       int analyze() override;
+
       int factorize() override;
       int refactorize() override;
       int solve(vector_type* rhs, vector_type* x) override;
       int solve(vector_type* x) override;
 
+      /// @brief Returns the L factor of the solution in CSC format (?)
       matrix::Sparse* getLFactor() override;
+
+      /// @brief Returns the U factor of the solution in CSR format
       matrix::Sparse* getUFactor() override;
+
       index_type* getPOrdering() override;
       index_type* getQOrdering() override;
 
@@ -59,9 +66,6 @@ namespace ReSolve
 
       MemoryHandler mem_;
 
-      //NOTE: a_, indc_, and indr_ may need to be passed along to the GPU at some
-      //      point in the future, so they are manually managed
-
       /// @brief Storage used for the matrices
       ///
       /// Primary workspace used by LUSOL. Used to hold the nonzeros of matrices
@@ -78,6 +82,12 @@ namespace ReSolve
 
       /// @brief The number of nonzero elements within the input matrix, A
       index_type nelem_ = 0;
+
+      /// @brief The permutation vector P, stored in the way LUSOL expects it to be (1-indexed)
+      index_type* p_ = nullptr;
+
+      /// @brief The permutation vector Q, stored in the way LUSOL expects it to be (1-indexed)
+      index_type* q_ = nullptr;
 
       /// @brief The length of the dynamically-allocated arrays held within `a_`,
       ///        `indc_`, and `indr_`
@@ -127,12 +137,6 @@ namespace ReSolve
       /// @brief Real-typed parameters passed along the API boundary
       real_type parmlu_[30] = {0};
 
-      /// @brief The row permutation
-      index_type* p_ = nullptr;
-
-      /// @brief The column permutation
-      index_type* q_ = nullptr;
-
       /// @brief Number of entries within nontrivial columns of L, stored in pivot order
       index_type* lenc_ = nullptr;
 
@@ -145,12 +149,12 @@ namespace ReSolve
       /// @brief Points to the beginning of rows of U within a
       index_type* locr_ = nullptr;
 
-      //TODO: it would be nice to have more information about these "undefined" (as
-      //      said within the source code documentation of lu1fac) parameters
+      // TODO: it would be nice to have more information about these "undefined" (as
+      //       said within the source code documentation of lu1fac) parameters
       //
-      //      there is some amount of documentation in the "notes on array names"
-      //      section, but given they're only really storage parameters and aren't
-      //      useful post-factorization, we'll leave it at "undefined" for now
+      //       there is some amount of documentation in the "notes on array names"
+      //       section, but given they're only really storage parameters and aren't
+      //       useful post-factorization, we'll leave it at "undefined" for now
 
       /// @brief Undefined value
       index_type* iploc_ = nullptr;
@@ -176,4 +180,4 @@ namespace ReSolve
       /// important what `w_` contains prior to this.
       real_type* w_ = nullptr;
   };
-}
+} // namespace ReSolve
