@@ -204,17 +204,6 @@ namespace ReSolve
     return -1;
   }
 
-  index_type depermute(index_type i, index_type n, index_type* p)
-  {
-    for (index_type k = 0; k < n; k++) {
-      if (p[k] - 1 == i) {
-        return k;
-      }
-    }
-
-    return -1;
-  }
-
   matrix::Sparse* LinSolverDirectLUSOL::getLFactor()
   {
     matrix::Csc* L = new matrix::Csc(n_, m_, luparm_[22], false, true);
@@ -231,7 +220,7 @@ namespace ReSolve
     for (index_type i = 0; i < luparm_[19]; i++) {
       index_type column_nnz = lenc_[i];
       index_type column_nnz_end = offset - column_nnz;
-      index_type corresponding_column = depermute(indr_[column_nnz_end + 1] - 1, m_, p_);
+      index_type corresponding_column = indr_[column_nnz_end + 1] - 1;
 
       columns[corresponding_column + 1] = column_nnz;
       offset = column_nnz_end;
@@ -245,15 +234,16 @@ namespace ReSolve
     // TODO: sort the destination arrays by row
     // TODO: add ones along the diagonal
     // TODO: use the already allocated L_ and U_ matrices instead of allocating new ones
+    // TODO: size appears to be constrained by nsing
 
     offset = lena_ - 1;
     for (index_type i = 0; i < luparm_[19]; i++) {
-      index_type corresponding_column = depermute(indr_[offset - lenc_[i] + 1] - 1, m_, p_);
+      index_type corresponding_column = indr_[offset - lenc_[i] + 1] - 1;
 
       for (index_type destination_offset = columns[corresponding_column];
            destination_offset < columns[corresponding_column + 1];
            destination_offset++) {
-        rows[destination_offset] = depermute(indc_[offset] - 1, m_, p_);
+        rows[destination_offset] = indc_[offset] - 1;
         values[destination_offset] = a_[offset];
         offset--;
       }
@@ -271,17 +261,26 @@ namespace ReSolve
     index_type* columns = U->getColData(memory::HOST);
     real_type* values = U->getValues(memory::HOST);
 
-    rows[0] = 0;
+    // preprocessing since rows technically aren't ordered either
+
+    for (index_type stored_row = 0; stored_row < luparm_[15]; stored_row++) {
+      index_type corresponding_row = p_[stored_row] - 1;
+      rows[corresponding_row + 1] = lenr_[corresponding_row];
+    }
+
     for (index_type row = 0; row < n_; row++) {
-      index_type corresponding_row = p_[row] - 1;
+      rows[row + 1] += rows[row];
+    }
 
-      rows[row + 1] = rows[row] + lenr_[corresponding_row];
+    // fill the destination arrays
 
-      index_type offset = locr_[corresponding_row] - 1;
+    for (index_type row = 0; row < n_; row++) {
+      index_type offset = locr_[row] - 1;
+
       for (index_type destination_offset = rows[row];
            destination_offset < rows[row + 1];
            destination_offset++) {
-        columns[destination_offset] = depermute(indr_[offset] - 1, n_, q_);
+        columns[destination_offset] = indr_[offset] - 1;
         values[destination_offset] = a_[offset];
         offset++;
       }
@@ -349,7 +348,7 @@ namespace ReSolve
   {
     // NOTE: determines a hopefully "good enough" size for a_, indc_, indr_.
     //       see lena_'s documentation for more details
-    lena_ = std::max({2 * nelem_, 10 * m_, 10 * n_, 10000});
+    lena_ = std::max({2 * nelem_, 10 * m_, 10 * n_, 1000000});
 
     a_ = new real_type[lena_];
     indc_ = new index_type[lena_];
