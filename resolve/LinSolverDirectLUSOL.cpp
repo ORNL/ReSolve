@@ -206,11 +206,14 @@ namespace ReSolve
 
   matrix::Sparse* LinSolverDirectLUSOL::getLFactor()
   {
-    matrix::Csc* L = new matrix::Csc(n_, m_, luparm_[22] + std::min({m_, n_}), false, true);
+    index_type diagonal_bound = std::min({m_, n_});
+
+    matrix::Csc* L = new matrix::Csc(n_, m_, luparm_[22] + diagonal_bound, false, true);
     L->allocateMatrixData(memory::HOST);
 
     index_type* columns = L->getColData(memory::HOST);
     index_type* rows = L->getRowData(memory::HOST);
+    std::fill_n(rows, luparm_[22], -1);
     real_type* values = L->getValues(memory::HOST);
 
     // build an inverse permutation array for p
@@ -238,9 +241,14 @@ namespace ReSolve
       columns[column + 1] += columns[column];
     }
 
+    // handle rectangular l factors correctly
+    for (index_type column = 0; column < diagonal_bound; column++) {
+      columns[column + 1] += column + 1;
+      rows[columns[column + 1] - 1] = column;
+      values[columns[column + 1] - 1] = 1.0;
+    }
+
     // fill the destination arrays
-    // TODO: sort the destination arrays by row
-    // TODO: add ones along the diagonal
     // TODO: use the already allocated L_ and U_ matrices instead of allocating new ones
     // TODO: size appears to be constrained by nsing
 
@@ -249,10 +257,33 @@ namespace ReSolve
       index_type corresponding_column = pt[indr_[offset - lenc_[i] + 1] - 1];
 
       for (index_type destination_offset = columns[corresponding_column];
-           destination_offset < columns[corresponding_column + 1];
+           destination_offset < columns[corresponding_column + 1] - 1;
            destination_offset++) {
-        rows[destination_offset] = pt[indc_[offset] - 1];
-        values[destination_offset] = a_[offset];
+        index_type row = pt[indc_[offset] - 1];
+
+        // closest position to the target row
+        index_type* closest_position =
+            std::lower_bound(&rows[columns[corresponding_column]], &rows[destination_offset], row);
+
+        // destination offset for the element being inserted
+        index_type insertion_offset = static_cast<index_type>(closest_position - rows);
+
+        // to my knowledge, lusol doesn't write duplicates at all. this is likely a bug
+        if (rows[insertion_offset] == row) {
+          out::error() << "duplicate element found during LUSOL L factor extraction\n";
+          return nullptr;
+        }
+
+        for (index_type offset = destination_offset;
+             offset > insertion_offset;
+             offset--) {
+          std::swap(rows[offset], rows[offset - 1]);
+          std::swap(values[offset], values[offset - 1]);
+        }
+
+        rows[insertion_offset] = row;
+        values[insertion_offset] = a_[offset];
+
         offset--;
       }
     }
@@ -267,6 +298,7 @@ namespace ReSolve
 
     index_type* rows = U->getRowData(memory::HOST);
     index_type* columns = U->getColData(memory::HOST);
+    std::fill_n(columns, luparm_[23], -1);
     real_type* values = U->getValues(memory::HOST);
 
     // build an inverse permutation array for q
@@ -296,8 +328,31 @@ namespace ReSolve
       for (index_type destination_offset = rows[row];
            destination_offset < rows[row + 1];
            destination_offset++) {
-        columns[destination_offset] = qt[indr_[offset] - 1];
+        index_type column = qt[indr_[offset] - 1];
+
+        // closest position to the target column
+        index_type* closest_position =
+            std::lower_bound(&columns[rows[row]], &columns[destination_offset], column);
+
+        // destination offset for the element being inserted
+        index_type insertion_offset = static_cast<index_type>(closest_position - columns);
+
+        // as said above, i'm pretty certain lusol doesn't write duplicates
+        if (columns[insertion_offset] == column) {
+          out::error() << "duplicate element found during LUSOL L factor extraction\n";
+          return nullptr;
+        }
+
+        for (index_type offset = destination_offset;
+             offset > insertion_offset;
+             offset--) {
+          std::swap(columns[offset], columns[offset - 1]);
+          std::swap(values[offset], values[offset - 1]);
+        }
+
+        columns[insertion_offset] = column;
         values[destination_offset] = a_[offset];
+
         offset++;
       }
     }
