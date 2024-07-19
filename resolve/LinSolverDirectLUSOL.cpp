@@ -206,12 +206,20 @@ namespace ReSolve
 
   matrix::Sparse* LinSolverDirectLUSOL::getLFactor()
   {
-    matrix::Csc* L = new matrix::Csc(n_, m_, luparm_[22], false, true);
+    matrix::Csc* L = new matrix::Csc(n_, m_, luparm_[22] + std::min({m_, n_}), false, true);
     L->allocateMatrixData(memory::HOST);
 
     index_type* columns = L->getColData(memory::HOST);
     index_type* rows = L->getRowData(memory::HOST);
     real_type* values = L->getValues(memory::HOST);
+
+    // build an inverse permutation array for p
+
+    // NOTE: this is not one-indexed like the original is
+    std::unique_ptr<index_type[]> pt = std::unique_ptr<index_type[]>(new index_type[m_]);
+    for (index_type i = 0; i < m_; i++) {
+      pt[p_[i] - 1] = i;
+    }
 
     // preprocessing since columns are stored unordered within lusol's workspace
 
@@ -220,7 +228,7 @@ namespace ReSolve
     for (index_type i = 0; i < luparm_[19]; i++) {
       index_type column_nnz = lenc_[i];
       index_type column_nnz_end = offset - column_nnz;
-      index_type corresponding_column = indr_[column_nnz_end + 1] - 1;
+      index_type corresponding_column = pt[indr_[column_nnz_end + 1] - 1];
 
       columns[corresponding_column + 1] = column_nnz;
       offset = column_nnz_end;
@@ -238,12 +246,12 @@ namespace ReSolve
 
     offset = lena_ - 1;
     for (index_type i = 0; i < luparm_[19]; i++) {
-      index_type corresponding_column = indr_[offset - lenc_[i] + 1] - 1;
+      index_type corresponding_column = pt[indr_[offset - lenc_[i] + 1] - 1];
 
       for (index_type destination_offset = columns[corresponding_column];
            destination_offset < columns[corresponding_column + 1];
            destination_offset++) {
-        rows[destination_offset] = indc_[offset] - 1;
+        rows[destination_offset] = pt[indc_[offset] - 1];
         values[destination_offset] = a_[offset];
         offset--;
       }
@@ -261,11 +269,19 @@ namespace ReSolve
     index_type* columns = U->getColData(memory::HOST);
     real_type* values = U->getValues(memory::HOST);
 
+    // build an inverse permutation array for q
+
+    // NOTE: this is not one-indexed like the original is
+    std::unique_ptr<index_type[]> qt = std::unique_ptr<index_type[]>(new index_type[n_]);
+    for (index_type i = 0; i < n_; i++) {
+      qt[q_[i] - 1] = i;
+    }
+
     // preprocessing since rows technically aren't ordered either
 
     for (index_type stored_row = 0; stored_row < luparm_[15]; stored_row++) {
       index_type corresponding_row = p_[stored_row] - 1;
-      rows[corresponding_row + 1] = lenr_[corresponding_row];
+      rows[stored_row + 1] = lenr_[corresponding_row];
     }
 
     for (index_type row = 0; row < n_; row++) {
@@ -275,12 +291,12 @@ namespace ReSolve
     // fill the destination arrays
 
     for (index_type row = 0; row < n_; row++) {
-      index_type offset = locr_[row] - 1;
+      index_type offset = locr_[p_[row] - 1] - 1;
 
       for (index_type destination_offset = rows[row];
            destination_offset < rows[row + 1];
            destination_offset++) {
-        columns[destination_offset] = indr_[offset] - 1;
+        columns[destination_offset] = qt[indr_[offset] - 1];
         values[destination_offset] = a_[offset];
         offset++;
       }
@@ -348,7 +364,7 @@ namespace ReSolve
   {
     // NOTE: determines a hopefully "good enough" size for a_, indc_, indr_.
     //       see lena_'s documentation for more details
-    lena_ = std::max({2 * nelem_, 10 * m_, 10 * n_, 1000000});
+    lena_ = std::max({2 * nelem_, 10 * m_, 10 * n_, 10000});
 
     a_ = new real_type[lena_];
     indc_ = new index_type[lena_];
