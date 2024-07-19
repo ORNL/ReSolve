@@ -274,11 +274,11 @@ namespace ReSolve
           return nullptr;
         }
 
-        for (index_type offset = destination_offset;
-             offset > insertion_offset;
-             offset--) {
-          std::swap(rows[offset], rows[offset - 1]);
-          std::swap(values[offset], values[offset - 1]);
+        for (index_type swap_offset = destination_offset;
+             swap_offset > insertion_offset;
+             swap_offset--) {
+          std::swap(rows[swap_offset], rows[swap_offset - 1]);
+          std::swap(values[swap_offset], values[swap_offset - 1]);
         }
 
         rows[insertion_offset] = row;
@@ -339,19 +339,19 @@ namespace ReSolve
 
         // as said above, i'm pretty certain lusol doesn't write duplicates
         if (columns[insertion_offset] == column) {
-          out::error() << "duplicate element found during LUSOL L factor extraction\n";
+          out::error() << "duplicate element found during LUSOL U factor extraction\n";
           return nullptr;
         }
 
-        for (index_type offset = destination_offset;
-             offset > insertion_offset;
-             offset--) {
-          std::swap(columns[offset], columns[offset - 1]);
-          std::swap(values[offset], values[offset - 1]);
+        for (index_type swap_offset = destination_offset;
+             swap_offset > insertion_offset;
+             swap_offset--) {
+          std::swap(columns[swap_offset], columns[swap_offset - 1]);
+          std::swap(values[swap_offset], values[swap_offset - 1]);
         }
 
         columns[insertion_offset] = column;
-        values[destination_offset] = a_[offset];
+        values[insertion_offset] = a_[offset];
 
         offset++;
       }
