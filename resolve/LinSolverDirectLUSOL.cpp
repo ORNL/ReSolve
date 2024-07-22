@@ -218,7 +218,7 @@ namespace ReSolve
     }
 
     if (L_ != nullptr) {
-      // by the way we've implemented setup, we can just return the
+      // because of the way we've implemented setup, we can just return the
       // existing pointer in L_ as this means we've already extracted L
       //
       // this isn't perfect, but it's functional
@@ -299,7 +299,8 @@ namespace ReSolve
         }
 
         rows[insertion_offset] = row;
-        values[insertion_offset] = a_[offset];
+        // why. why
+        values[insertion_offset] = -a_[offset];
 
         offset--;
       }
@@ -445,7 +446,7 @@ namespace ReSolve
   {
     // NOTE: determines a hopefully "good enough" size for a_, indc_, indr_.
     //       see lena_'s documentation for more details
-    lena_ = std::max({2 * nelem_, 10 * m_, 10 * n_, 10000});
+    lena_ = std::max({2 * nelem_, 10 * m_, 10 * n_, 1000000});
 
     a_ = new real_type[lena_];
     indc_ = new index_type[lena_];
