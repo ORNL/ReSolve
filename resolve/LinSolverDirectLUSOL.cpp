@@ -82,6 +82,11 @@ namespace ReSolve
                                   vector_type* /* rhs */)
   {
     A_ = A;
+    is_factorized_ = false;
+    delete L_;
+    delete U_;
+    L_ = nullptr;
+    U_ = nullptr;
     return 0;
   }
 
@@ -154,6 +159,8 @@ namespace ReSolve
            w_,
            &inform);
 
+    is_factorized_ = true;
+
     // TODO: consider handling inform = 7
 
     return inform;
@@ -168,7 +175,7 @@ namespace ReSolve
 
   int LinSolverDirectLUSOL::solve(vector_type* rhs, vector_type* x)
   {
-    if (rhs->getSize() != m_ || x->getSize() != n_) {
+    if (rhs->getSize() != m_ || x->getSize() != n_ || !is_factorized_) {
       return -1;
     }
 
@@ -206,15 +213,27 @@ namespace ReSolve
 
   matrix::Sparse* LinSolverDirectLUSOL::getLFactor()
   {
+    if (!is_factorized_) {
+      return nullptr;
+    }
+
+    if (L_ != nullptr) {
+      // by the way we've implemented setup, we can just return the
+      // existing pointer in L_ as this means we've already extracted L
+      //
+      // this isn't perfect, but it's functional
+      return L_;
+    }
+
     index_type diagonal_bound = std::min({m_, n_});
 
-    matrix::Csc* L = new matrix::Csc(n_, m_, luparm_[22] + diagonal_bound, false, true);
-    L->allocateMatrixData(memory::HOST);
+    L_ = static_cast<matrix::Sparse*>(new matrix::Csc(n_, m_, luparm_[22] + diagonal_bound, false, true));
+    L_->allocateMatrixData(memory::HOST);
 
-    index_type* columns = L->getColData(memory::HOST);
-    index_type* rows = L->getRowData(memory::HOST);
+    index_type* columns = L_->getColData(memory::HOST);
+    index_type* rows = L_->getRowData(memory::HOST);
     std::fill_n(rows, luparm_[22], -1);
-    real_type* values = L->getValues(memory::HOST);
+    real_type* values = L_->getValues(memory::HOST);
 
     // build an inverse permutation array for p
 
@@ -249,8 +268,6 @@ namespace ReSolve
     }
 
     // fill the destination arrays
-    // TODO: use the already allocated L_ and U_ matrices instead of allocating new ones
-    // TODO: size appears to be constrained by nsing
 
     offset = lena_ - 1;
     for (index_type i = 0; i < luparm_[19]; i++) {
@@ -288,18 +305,27 @@ namespace ReSolve
       }
     }
 
-    return static_cast<matrix::Sparse*>(L);
+    return L_;
   }
 
   matrix::Sparse* LinSolverDirectLUSOL::getUFactor()
   {
-    matrix::Csr* U = new matrix::Csr(n_, m_, luparm_[23], false, true);
-    U->allocateMatrixData(memory::HOST);
+    if (!is_factorized_) {
+      return nullptr;
+    }
 
-    index_type* rows = U->getRowData(memory::HOST);
-    index_type* columns = U->getColData(memory::HOST);
+    if (U_ != nullptr) {
+      // likewise
+      return U_;
+    }
+
+    U_ = static_cast<matrix::Sparse*>(new matrix::Csr(n_, m_, luparm_[23] - luparm_[10], false, true));
+    U_->allocateMatrixData(memory::HOST);
+
+    index_type* rows = U_->getRowData(memory::HOST);
+    index_type* columns = U_->getColData(memory::HOST);
     std::fill_n(columns, luparm_[23], -1);
-    real_type* values = U->getValues(memory::HOST);
+    real_type* values = U_->getValues(memory::HOST);
 
     // build an inverse permutation array for q
 
@@ -357,7 +383,7 @@ namespace ReSolve
       }
     }
 
-    return static_cast<matrix::Sparse*>(U);
+    return U_;
   }
 
   index_type* LinSolverDirectLUSOL::getPOrdering()

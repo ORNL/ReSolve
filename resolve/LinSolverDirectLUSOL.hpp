@@ -66,6 +66,9 @@ namespace ReSolve
 
       MemoryHandler mem_;
 
+      /// @brief Indicates if we have factorized the matrix yet
+      bool is_factorized_ = false;
+
       /// @brief Storage used for the matrices
       ///
       /// Primary workspace used by LUSOL. Used to hold the nonzeros of matrices
