@@ -170,7 +170,7 @@ namespace ReSolve
       // spaces is equivalent to the amount of nonzeroes in the row, and if not,
       // shifts every subsequent row back the amount of unused spaces
 
-      for (index_type column = 0; column < n_columns - 1; column++) {
+      for (index_type column = 0; column < n_columns; column++) {
         index_type column_nnz = partitions[column + 1] - partitions[column];
         if (used[column] != column_nnz) {
           index_type correction = column_nnz - used[column];
@@ -363,7 +363,7 @@ namespace ReSolve
       // spaces is equivalent to the amount of nonzeroes in the row, and if not,
       // shifts every subsequent row back the amount of unused spaces
 
-      for (index_type row = 0; row < n_rows - 1; row++) {
+      for (index_type row = 0; row < n_rows; row++) {
         index_type row_nnz = csr_rows[row + 1] - csr_rows[row];
         if (used[row] != row_nnz) {
           index_type correction = row_nnz - used[row];
