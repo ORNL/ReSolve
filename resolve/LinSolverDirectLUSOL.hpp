@@ -96,30 +96,7 @@ namespace ReSolve
       ///        `indc_`, and `indr_`
       ///
       /// This should be much greater than the number of nonzeroes in the input
-      /// matrix A, and a (hopefully optimal enough for most cases) formula derived
-      /// from correspondence with Michael Saunders is
-      ///
-      /// ```cpp
-      /// //NOTE: parmlu_[7] specifies the threshold at which LUSOL uses a dense LU
-      /// //      factorization, and is referred to within the source as "dens2"
-      /// if (nelem_ >= parmlu_[7] * m_ * n_) {
-      ///   // A is dense
-      ///   lena_ = m_ * n_;
-      /// } else {
-      ///   // A is sparse
-      ///   lena_ = min(5 * nelem_, 2 * m_ * n_);
-      /// }
-      /// ```
-      ///
-      /// The idea behind the approximate bound `5 * nelem_` is that the LU factors are
-      /// almost always going to be significantly more dense compared to the density of
-      /// the input matrix A. However, there are cases with smaller (but still sparse)
-      /// matrices in which `2 * m_ * n_` is likely preferable.
-      ///
-      /// In the dense case, predicated upon the number of nonzeroes exceeding
-      /// `parmlu_[7] * m_ * n_` (the threshold at which LUSOL uses a dense LU
-      /// factorization) is the use of the approximate bound `m_ * n_`, which should
-      /// always be enough.
+      /// matrix A, as stated in LUSOL's source code.
       ///
       /// Note that this is not an upper bound on the required space; the size of this
       /// buffer may be insufficient, in which case a call to a LUSOL subroutine

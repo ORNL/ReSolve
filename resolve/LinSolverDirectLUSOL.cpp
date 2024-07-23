@@ -299,7 +299,6 @@ namespace ReSolve
         }
 
         rows[insertion_offset] = row;
-        // why. why
         values[insertion_offset] = -a_[offset];
 
         offset--;
@@ -446,7 +445,7 @@ namespace ReSolve
   {
     // NOTE: determines a hopefully "good enough" size for a_, indc_, indr_.
     //       see lena_'s documentation for more details
-    lena_ = std::max({2 * nelem_, 10 * m_, 10 * n_, 1000000});
+    lena_ = std::max({2 * nelem_, 10 * m_, 10 * n_, 10000});
 
     a_ = new real_type[lena_];
     indc_ = new index_type[lena_];
