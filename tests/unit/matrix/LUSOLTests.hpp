@@ -78,7 +78,6 @@ namespace ReSolve
                                  reference_u_factor_columns_,
                                  reference_u_factor_values_);
 
-          // TODO: verify p and q permutation vectors
           index_type* p_ordering = solver.getPOrdering();
 
           for (index_type i = 0; i < A->getNumRows(); i++) {
