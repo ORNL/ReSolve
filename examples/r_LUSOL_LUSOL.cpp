@@ -95,7 +95,7 @@ int main(int argc, char* argv[])
   //       fixing this would require the second parameter to be a reference to a pointer and not a
   //       pointer to a pointer
   real_type* rhs;
-  std::unique_ptr<ReSolve::matrix::Coo> A;
+  std::unique_ptr<ReSolve::matrix::Coo> A_unexpanded, A;
   std::unique_ptr<vector_type> vec_rhs, vec_r, vec_x;
 
   for (int system = 0; system < n_systems; system++) {
@@ -118,50 +118,53 @@ int main(int argc, char* argv[])
     std::cout << "RHS file: " << rhs_file_path << std::endl;
 
     if (system == 0) {
-      A = std::unique_ptr<ReSolve::matrix::Coo>(ReSolve::io::readMatrixFromFile(matrix_file));
+      A_unexpanded = std::unique_ptr<ReSolve::matrix::Coo>(ReSolve::io::readMatrixFromFile(matrix_file));
+      A = std::unique_ptr<ReSolve::matrix::Coo>(new ReSolve::matrix::Coo(A_unexpanded->getNumRows(),
+                                                                         A_unexpanded->getNumColumns(),
+                                                                         0));
       rhs = ReSolve::io::readRhsFromFile(rhs_file);
-      vec_rhs = std::unique_ptr<vector_type>(new vector_type(A->getNumRows()));
-      vec_r = std::unique_ptr<vector_type>(new vector_type(A->getNumRows()));
+      vec_rhs = std::unique_ptr<vector_type>(new vector_type(A_unexpanded->getNumRows()));
+      vec_r = std::unique_ptr<vector_type>(new vector_type(A_unexpanded->getNumRows()));
 
-      vec_x = std::unique_ptr<vector_type>(new vector_type(A->getNumRows()));
+      vec_x = std::unique_ptr<vector_type>(new vector_type(A_unexpanded->getNumRows()));
       vec_x->allocate(ReSolve::memory::HOST);
     } else {
-      ReSolve::io::readAndUpdateMatrix(matrix_file, A.get());
+      ReSolve::io::readAndUpdateMatrix(matrix_file, A_unexpanded.get());
       ReSolve::io::readAndUpdateRhs(rhs_file, &rhs);
     }
 
     matrix_file.close();
     rhs_file.close();
 
-    std::cout << "Finished reading the matrix and rhs, size: " << A->getNumRows()
-              << " x " << A->getNumColumns()
-              << ", nnz: " << A->getNnz()
-              << ", symmetric? " << A->symmetric()
-              << ", Expanded? " << A->expanded() << std::endl;
+    std::cout << "Finished reading the matrix and rhs, size: " << A_unexpanded->getNumRows()
+              << " x " << A_unexpanded->getNumColumns()
+              << ", nnz: " << A_unexpanded->getNnz()
+              << ", symmetric? " << A_unexpanded->symmetric()
+              << ", Expanded? " << A_unexpanded->expanded() << std::endl;
 
     vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
     vec_rhs->setDataUpdated(ReSolve::memory::HOST);
 
-    ReSolve::matrix::expand(*A.get());
+    ReSolve::matrix::coo2coo(A_unexpanded.get(), A.get(), ReSolve::memory::HOST);
     std::cout << "Matrix expansion completed. Expanded NNZ: " << A->getNnzExpanded() << std::endl;
 
     if (lusol->setup(A.get()) != 0) {
-      std::cout << "setup failed on matrix " << system << "/" << n_systems << std::endl;
+      std::cout << "setup failed on matrix " << system + 1 << "/" << n_systems << std::endl;
       return 1;
     }
 
     if (lusol->analyze() != 0) {
-      std::cout << "analysis failed on matrix " << system << "/" << n_systems << std::endl;
+      std::cout << "analysis failed on matrix " << system + 1 << "/" << n_systems << std::endl;
       return 1;
     }
 
     if (lusol->factorize() != 0) {
-      std::cout << "factorization failed on matrix " << system << "/" << n_systems << std::endl;
+      std::cout << "factorization failed on matrix " << system + 1 << "/" << n_systems << std::endl;
       return 1;
     }
 
     if (lusol->solve(vec_rhs.get(), vec_x.get()) != 0) {
-      std::cout << "solving failed on matrix " << system << "/" << n_systems << std::endl;
+      std::cout << "solving failed on matrix " << system + 1 << "/" << n_systems << std::endl;
       return 1;
     }
 
