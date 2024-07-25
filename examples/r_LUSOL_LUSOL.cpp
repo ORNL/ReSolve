@@ -100,7 +100,7 @@ int main(int argc, char* argv[])
 
   for (int system = 0; system < n_systems; system++) {
 
-    std::string matrix_file_path = matrix_file_prefix + argv[system + 4] + ".mtx";
+    std::string matrix_file_path = matrix_file_prefix + argv[(2 * system) + 4] + ".mtx";
     std::ifstream matrix_file(matrix_file_path);
     if (!matrix_file.is_open()) {
       std::cout << "Failed to open file " << matrix_file_path << "\n";
@@ -109,7 +109,7 @@ int main(int argc, char* argv[])
 
     std::cout << "Matrix file: " << matrix_file_path << std::endl;
 
-    std::string rhs_file_path = rhs_file_prefix + argv[system + 5] + ".mtx";
+    std::string rhs_file_path = rhs_file_prefix + argv[(2 * system) + 5] + ".mtx";
     std::ifstream rhs_file(rhs_file_path);
     if (!rhs_file.is_open()) {
       std::cout << "Failed to open file " << rhs_file_path << "\n";
