@@ -1,4 +1,8 @@
+#include <chrono>
 #include <cmath>
+#include <filesystem>
+#include <format>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <memory>
@@ -17,6 +21,7 @@ using namespace ReSolve::constants;
 using index_type = ReSolve::index_type;
 using real_type = ReSolve::real_type;
 using vector_type = ReSolve::vector::Vector;
+using std::chrono::steady_clock;
 
 int specializedMatvec(ReSolve::matrix::Coo* Ageneric,
                       vector_type* vec_x,
@@ -97,6 +102,17 @@ int main(int argc, char* argv[])
   real_type* rhs;
   std::unique_ptr<ReSolve::matrix::Coo> A_unexpanded, A;
   std::unique_ptr<vector_type> vec_rhs, vec_r, vec_x;
+  steady_clock clock;
+  bool output_existed = std::filesystem::exists(std::filesystem::path("./lusol_output.csv"));
+  std::fstream output("./lusol_output.csv", std::ios::out | std::ios::app);
+
+  // TODO: add factor sparsity metric
+  // TODO: add this to KLU test code
+  // TODO: remove KLU refactorization for a fair comparison
+
+  if (!output_existed) {
+    output << "matrix_file_path,rhs_file_path,system,total_systems,n_rows,n_columns,initial_nnz,cleaned_nnz,ns_factorization,ns_solving,residual_2_norm,matrix_inf_norm,residual_inf_norm,solution_inf_norm,residual_scaled_norm,l_nnz,l_elements,u_nnz,u_elements\n";
+  }
 
   for (int system = 0; system < n_systems; system++) {
 
@@ -158,15 +174,34 @@ int main(int argc, char* argv[])
       return 1;
     }
 
+    steady_clock::time_point factorization_start = clock.now();
+
     if (lusol->factorize() != 0) {
       std::cout << "factorization failed on matrix " << system + 1 << "/" << n_systems << std::endl;
       return 1;
     }
 
+    steady_clock::time_point factorization_end = clock.now();
+
+    steady_clock::duration factorization_time = factorization_end - factorization_start;
+
+    std::cout << "factorized in " << std::chrono::nanoseconds(factorization_time).count() << "ns" << std::endl;
+
+    steady_clock::time_point solving_start = clock.now();
+
+    auto L = lusol->getLFactor();
+    auto U = lusol->getUFactor();
+
     if (lusol->solve(vec_rhs.get(), vec_x.get()) != 0) {
       std::cout << "solving failed on matrix " << system + 1 << "/" << n_systems << std::endl;
       return 1;
     }
+
+    steady_clock::time_point solving_end = clock.now();
+
+    steady_clock::duration solving_time = solving_end - solving_start;
+
+    std::cout << "solved in " << std::chrono::nanoseconds(solving_time).count() << "ns" << std::endl;
 
     vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
 
@@ -175,16 +210,32 @@ int main(int argc, char* argv[])
     specializedMatvec(A.get(), vec_x.get(), vec_r.get(), &ONE, &MINUSONE);
     norm_r = vector_handler->infNorm(vec_r.get(), ReSolve::memory::HOST);
 
-    std::cout << "\t2-Norm of the residual: "
-              << std::scientific << std::setprecision(16)
-              << sqrt(vector_handler->dot(vec_r.get(), vec_r.get(), ReSolve::memory::HOST)) << "\n";
     matrix_handler->matrixInfNorm(A.get(), &norm_A, ReSolve::memory::HOST);
     norm_x = vector_handler->infNorm(vec_x.get(), ReSolve::memory::HOST);
-    std::cout << "\tMatrix inf norm: " << std::scientific << std::setprecision(16) << norm_A << "\n"
-              << "\tResidual inf norm: " << norm_r << "\n"
-              << "\tSolution inf norm: " << norm_x << "\n"
-              << "\tNorm of scaled residuals: " << norm_r / (norm_A * norm_x) << "\n";
+
+    output << std::format("{},{},{},{},{},{},{},{},{},{},{:.16e},{:.16e},{:.16e},{:.16e},{:.16e},{},{},{},{}\n",
+                          matrix_file_path,
+                          rhs_file_path,
+                          system + 1,
+                          n_systems,
+                          A->getNumRows(),
+                          A->getNumColumns(),
+                          A_unexpanded->getNnz(),
+                          A->getNnz(),
+                          std::chrono::nanoseconds(factorization_time).count(),
+                          std::chrono::nanoseconds(solving_time).count(),
+                          sqrt(vector_handler->dot(vec_r.get(), vec_r.get(), ReSolve::memory::HOST)),
+                          norm_A,
+                          norm_r,
+                          norm_x,
+                          norm_r / (norm_A * norm_x),
+                          L->getNnz(),
+                          L->getNumRows() * L->getNumColumns(),
+                          U->getNnz(),
+                          U->getNumRows() * U->getNumColumns());
   }
+
+  output.close();
 
   delete[] rhs;
   return 0;

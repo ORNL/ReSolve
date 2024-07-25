@@ -95,9 +95,11 @@ namespace ReSolve
    *
    * @return int - 0 if successful, error code otherwise
    *
+   * @pre System matrix `A_` is in unsorted COO format without duplicates.
+   *
    * @note LUSOL does not expose symbolic factorization in its API. It might
-   *       be possible refactor lu1fac into separate symbolic and numerical
-   *       factorization functions, but for now, we do the both in ::factorize().
+   * be possible refactor lu1fac into separate symbolic and numerical
+   * factorization functions, but for now, we do the both in ::factorize().
    */
   int LinSolverDirectLUSOL::analyze()
   {
@@ -445,7 +447,12 @@ namespace ReSolve
   {
     // NOTE: determines a hopefully "good enough" size for a_, indc_, indr_.
     //       see lena_'s documentation for more details
-    lena_ = std::max({2 * nelem_, 10 * m_, 10 * n_, 10000});
+    /*if (nelem_ >= parmlu_[7] * m_ * n_) {
+      lena_ = m_ * n_;
+    } else {
+      lena_ = std::min(5 * nelem_, 2 * m_ * n_);
+    }*/
+    lena_ = 3000000;
 
     a_ = new real_type[lena_];
     indc_ = new index_type[lena_];
