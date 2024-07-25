@@ -7,12 +7,9 @@
 #include <resolve/Common.hpp>
 #include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/Csr.hpp>
-#include <resolve/utilities/logger/Logger.hpp>
-#include <resolve/utilities/misc/IndexValuePair.hpp>
 
 namespace ReSolve
 {
-  using out = io::Logger;
   namespace matrix
   {
     /**

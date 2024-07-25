@@ -5,7 +5,6 @@
 
 #include "Csr.hpp"
 #include "Coo.hpp"
-#include <resolve/utilities/misc/IndexValuePair.hpp>
 #include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/matrix/Utilities.hpp>
 
