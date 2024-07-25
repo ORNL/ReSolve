@@ -1,7 +1,6 @@
 #include <chrono>
 #include <cmath>
 #include <filesystem>
-#include <format>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -162,27 +161,26 @@ int main(int argc, char* argv[])
     matrix_handler->matrixInfNorm(A, &norm_A, ReSolve::memory::HOST);
     norm_x = vector_handler->infNorm(vec_x, ReSolve::memory::HOST);
 
-    output << std::format("{},{},{},{},{},{},{},{},{},{},{:.16e},{:.16e},{:.16e},{:.16e},{:.16e},{},{},{},{}",
-                          matrixFileNameFull,
-                          rhsFileNameFull,
-                          i + 1,
-                          numSystems,
-                          A->getNumRows(),
-                          A->getNumColumns(),
-                          A_coo->getNnz(),
-                          A->getNnz(),
-                          std::chrono::nanoseconds(factorization_time).count(),
-                          std::chrono::nanoseconds(solving_time).count(),
-                          sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::HOST)),
-                          norm_A,
-                          norm_r,
-                          norm_x,
-                          norm_r / (norm_A * norm_x),
-                          L->getNnz(),
-                          L->getNumRows() * L->getNumColumns(),
-                          U->getNnz(),
-                          U->getNumRows() * U->getNumColumns())
-           << std::endl;
+    output << std::setprecision(16) << std::scientific
+           << matrixFileNameFull << ","
+           << rhsFileNameFull << ","
+           << i + 1 << ","
+           << numSystems << ","
+           << A->getNumRows() << ","
+           << A->getNumColumns() << ","
+           << A_coo->getNnz() << ","
+           << A->getNnz() << ","
+           << std::chrono::nanoseconds(factorization_time).count() << ","
+           << std::chrono::nanoseconds(solving_time).count() << ","
+           << sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::HOST)) << ","
+           << norm_A << ","
+           << norm_r << ","
+           << norm_x << ","
+           << (norm_r / (norm_A * norm_x)) << ","
+           << L->getNnz() << ","
+           << (L->getNumRows() * L->getNumColumns()) << ","
+           << U->getNnz() << ","
+           << (U->getNumRows() * U->getNumColumns()) << std::endl;
   }
 
   output.close();

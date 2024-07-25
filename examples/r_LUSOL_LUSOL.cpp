@@ -1,7 +1,6 @@
 #include <chrono>
 #include <cmath>
 #include <filesystem>
-#include <format>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -95,7 +94,6 @@ int main(int argc, char* argv[])
     output << "matrix_file_path,rhs_file_path,system,total_systems,n_rows,n_columns,initial_nnz,cleaned_nnz,ns_factorization,ns_solving,residual_2_norm,matrix_inf_norm,residual_inf_norm,solution_inf_norm,residual_scaled_norm,l_nnz,l_elements,u_nnz,u_elements\n";
   }
 
-  [[omp::directive(parallel for)]]
   for (int system = 0; system < n_systems; system++) {
     std::unique_ptr<ReSolve::LinAlgWorkspaceCpu> workspace(new ReSolve::LinAlgWorkspaceCpu());
     std::unique_ptr<ReSolve::MatrixHandler> matrix_handler(new ReSolve::MatrixHandler(workspace.get()));
@@ -197,27 +195,26 @@ int main(int argc, char* argv[])
     matrix_handler->matrixInfNorm(A.get(), &norm_A, ReSolve::memory::HOST);
     norm_x = vector_handler->infNorm(vec_x.get(), ReSolve::memory::HOST);
 
-    [[omp::directive(critical)]] output << std::format("{},{},{},{},{},{},{},{},{},{},{:.16e},{:.16e},{:.16e},{:.16e},{:.16e},{},{},{},{}",
-                                                       matrix_file_path,
-                                                       rhs_file_path,
-                                                       system + 1,
-                                                       n_systems,
-                                                       A->getNumRows(),
-                                                       A->getNumColumns(),
-                                                       A_unexpanded->getNnz(),
-                                                       A->getNnz(),
-                                                       std::chrono::nanoseconds(factorization_time).count(),
-                                                       std::chrono::nanoseconds(solving_time).count(),
-                                                       sqrt(vector_handler->dot(vec_r.get(), vec_r.get(), ReSolve::memory::HOST)),
-                                                       norm_A,
-                                                       norm_r,
-                                                       norm_x,
-                                                       norm_r / (norm_A * norm_x),
-                                                       L->getNnz(),
-                                                       L->getNumRows() * L->getNumColumns(),
-                                                       U->getNnz(),
-                                                       U->getNumRows() * U->getNumColumns())
-                                        << std::endl;
+    output << std::setprecision(16) << std::scientific
+           << matrix_file_path << ","
+           << rhs_file_path << ","
+           << system + 1 << ","
+           << n_systems << ","
+           << A->getNumRows() << ","
+           << A->getNumColumns() << ","
+           << A_unexpanded->getNnz() << ","
+           << A->getNnz() << ","
+           << std::chrono::nanoseconds(factorization_time).count() << ","
+           << std::chrono::nanoseconds(solving_time).count() << ","
+           << sqrt(vector_handler->dot(vec_r.get(), vec_r.get(), ReSolve::memory::HOST)) << ","
+           << norm_A << ","
+           << norm_r << ","
+           << norm_x << ","
+           << (norm_r / (norm_A * norm_x)) << ","
+           << L->getNnz() << ","
+           << (L->getNumRows() * L->getNumColumns()) << ","
+           << U->getNnz() << ","
+           << (U->getNumRows() * U->getNumColumns()) << std::endl;
 
     delete[] rhs;
   }
