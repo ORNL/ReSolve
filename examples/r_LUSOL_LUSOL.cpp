@@ -106,7 +106,6 @@ int main(int argc, char* argv[])
   bool output_existed = std::filesystem::exists(std::filesystem::path("./lusol_output.csv"));
   std::fstream output("./lusol_output.csv", std::ios::out | std::ios::app);
 
-  // TODO: add factor sparsity metric
   // TODO: add this to KLU test code
   // TODO: remove KLU refactorization for a fair comparison
 
@@ -187,10 +186,10 @@ int main(int argc, char* argv[])
 
     std::cout << "factorized in " << std::chrono::nanoseconds(factorization_time).count() << "ns" << std::endl;
 
-    steady_clock::time_point solving_start = clock.now();
-
     auto L = lusol->getLFactor();
     auto U = lusol->getUFactor();
+
+    steady_clock::time_point solving_start = clock.now();
 
     if (lusol->solve(vec_rhs.get(), vec_x.get()) != 0) {
       std::cout << "solving failed on matrix " << system + 1 << "/" << n_systems << std::endl;
