@@ -162,7 +162,7 @@ int main(int argc, char* argv[])
     matrix_handler->matrixInfNorm(A, &norm_A, ReSolve::memory::HOST);
     norm_x = vector_handler->infNorm(vec_x, ReSolve::memory::HOST);
 
-    output << std::format("{},{},{},{},{},{},{},{},{},{},{:.16e},{:.16e},{:.16e},{:.16e},{:.16e},{},{},{},{}\n",
+    output << std::format("{},{},{},{},{},{},{},{},{},{},{:.16e},{:.16e},{:.16e},{:.16e},{:.16e},{},{},{},{}",
                           matrixFileNameFull,
                           rhsFileNameFull,
                           i + 1,
@@ -181,7 +181,8 @@ int main(int argc, char* argv[])
                           L->getNnz(),
                           L->getNumRows() * L->getNumColumns(),
                           U->getNnz(),
-                          U->getNumRows() * U->getNumColumns());
+                          U->getNumRows() * U->getNumColumns())
+           << std::endl;
   }
 
   output.close();

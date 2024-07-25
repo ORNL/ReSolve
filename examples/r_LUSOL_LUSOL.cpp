@@ -72,7 +72,6 @@ void usage()
 
 int main(int argc, char* argv[])
 {
-
   if (argc <= 4) {
     usage();
   }
@@ -89,20 +88,6 @@ int main(int argc, char* argv[])
   std::string matrix_file_prefix = argv[1];
   std::string rhs_file_prefix = argv[2];
 
-  std::unique_ptr<ReSolve::LinAlgWorkspaceCpu> workspace(new ReSolve::LinAlgWorkspaceCpu());
-  std::unique_ptr<ReSolve::MatrixHandler> matrix_handler(new ReSolve::MatrixHandler(workspace.get()));
-  std::unique_ptr<ReSolve::VectorHandler> vector_handler(new ReSolve::VectorHandler(workspace.get()));
-  real_type norm_A, norm_x, norm_r; // used for INF norm
-
-  std::unique_ptr<ReSolve::LinSolverDirectLUSOL> lusol(new ReSolve::LinSolverDirectLUSOL);
-
-  // NOTE: this has to be manually managed because of the way readAndUpdateRhs takes its arguments.
-  //       fixing this would require the second parameter to be a reference to a pointer and not a
-  //       pointer to a pointer
-  real_type* rhs;
-  std::unique_ptr<ReSolve::matrix::Coo> A_unexpanded, A;
-  std::unique_ptr<vector_type> vec_rhs, vec_r, vec_x;
-  steady_clock clock;
   bool output_existed = std::filesystem::exists(std::filesystem::path("./lusol_output.csv"));
   std::fstream output("./lusol_output.csv", std::ios::out | std::ios::app);
 
@@ -110,40 +95,43 @@ int main(int argc, char* argv[])
     output << "matrix_file_path,rhs_file_path,system,total_systems,n_rows,n_columns,initial_nnz,cleaned_nnz,ns_factorization,ns_solving,residual_2_norm,matrix_inf_norm,residual_inf_norm,solution_inf_norm,residual_scaled_norm,l_nnz,l_elements,u_nnz,u_elements\n";
   }
 
+  [[omp::directive(parallel for)]]
   for (int system = 0; system < n_systems; system++) {
+    std::unique_ptr<ReSolve::LinAlgWorkspaceCpu> workspace(new ReSolve::LinAlgWorkspaceCpu());
+    std::unique_ptr<ReSolve::MatrixHandler> matrix_handler(new ReSolve::MatrixHandler(workspace.get()));
+    std::unique_ptr<ReSolve::VectorHandler> vector_handler(new ReSolve::VectorHandler(workspace.get()));
+    std::unique_ptr<ReSolve::LinSolverDirectLUSOL> lusol(new ReSolve::LinSolverDirectLUSOL);
 
-    std::string matrix_file_path = matrix_file_prefix + argv[system + 4] + ".mtx";
+    real_type norm_A, norm_x, norm_r; // used for INF norm
+    steady_clock clock;
+
+    std::string matrix_file_path = matrix_file_prefix + argv[(2 * system) + 4] + ".mtx";
     std::ifstream matrix_file(matrix_file_path);
     if (!matrix_file.is_open()) {
       std::cout << "Failed to open file " << matrix_file_path << "\n";
-      return 1;
+      continue;
     }
 
     std::cout << "Matrix file: " << matrix_file_path << std::endl;
 
-    std::string rhs_file_path = rhs_file_prefix + argv[system + 5] + ".mtx";
+    std::string rhs_file_path = rhs_file_prefix + argv[(2 * system) + 5] + ".mtx";
     std::ifstream rhs_file(rhs_file_path);
     if (!rhs_file.is_open()) {
       std::cout << "Failed to open file " << rhs_file_path << "\n";
-      return 1;
+      continue;
     }
     std::cout << "RHS file: " << rhs_file_path << std::endl;
 
-    if (system == 0) {
-      A_unexpanded = std::unique_ptr<ReSolve::matrix::Coo>(ReSolve::io::readMatrixFromFile(matrix_file));
-      A = std::unique_ptr<ReSolve::matrix::Coo>(new ReSolve::matrix::Coo(A_unexpanded->getNumRows(),
-                                                                         A_unexpanded->getNumColumns(),
-                                                                         0));
-      rhs = ReSolve::io::readRhsFromFile(rhs_file);
-      vec_rhs = std::unique_ptr<vector_type>(new vector_type(A_unexpanded->getNumRows()));
-      vec_r = std::unique_ptr<vector_type>(new vector_type(A_unexpanded->getNumRows()));
+    std::unique_ptr<ReSolve::matrix::Coo> A_unexpanded = std::unique_ptr<ReSolve::matrix::Coo>(ReSolve::io::readMatrixFromFile(matrix_file));
+    std::unique_ptr<ReSolve::matrix::Coo> A = std::unique_ptr<ReSolve::matrix::Coo>(new ReSolve::matrix::Coo(A_unexpanded->getNumRows(),
+                                                                                                             A_unexpanded->getNumColumns(),
+                                                                                                             0));
+    real_type* rhs = ReSolve::io::readRhsFromFile(rhs_file);
+    std::unique_ptr<vector_type> vec_rhs = std::unique_ptr<vector_type>(new vector_type(A_unexpanded->getNumRows()));
+    std::unique_ptr<vector_type> vec_r = std::unique_ptr<vector_type>(new vector_type(A_unexpanded->getNumRows()));
 
-      vec_x = std::unique_ptr<vector_type>(new vector_type(A_unexpanded->getNumRows()));
-      vec_x->allocate(ReSolve::memory::HOST);
-    } else {
-      ReSolve::io::readAndUpdateMatrix(matrix_file, A_unexpanded.get());
-      ReSolve::io::readAndUpdateRhs(rhs_file, &rhs);
-    }
+    std::unique_ptr<vector_type> vec_x = std::unique_ptr<vector_type>(new vector_type(A_unexpanded->getNumRows()));
+    vec_x->allocate(ReSolve::memory::HOST);
 
     matrix_file.close();
     rhs_file.close();
@@ -162,19 +150,19 @@ int main(int argc, char* argv[])
 
     if (lusol->setup(A.get()) != 0) {
       std::cout << "setup failed on matrix " << system + 1 << "/" << n_systems << std::endl;
-      return 1;
+      continue;
     }
 
     if (lusol->analyze() != 0) {
       std::cout << "analysis failed on matrix " << system + 1 << "/" << n_systems << std::endl;
-      return 1;
+      continue;
     }
 
     steady_clock::time_point factorization_start = clock.now();
 
     if (lusol->factorize() != 0) {
       std::cout << "factorization failed on matrix " << system + 1 << "/" << n_systems << std::endl;
-      return 1;
+      continue;
     }
 
     steady_clock::time_point factorization_end = clock.now();
@@ -190,7 +178,7 @@ int main(int argc, char* argv[])
 
     if (lusol->solve(vec_rhs.get(), vec_x.get()) != 0) {
       std::cout << "solving failed on matrix " << system + 1 << "/" << n_systems << std::endl;
-      return 1;
+      continue;
     }
 
     steady_clock::time_point solving_end = clock.now();
@@ -209,30 +197,31 @@ int main(int argc, char* argv[])
     matrix_handler->matrixInfNorm(A.get(), &norm_A, ReSolve::memory::HOST);
     norm_x = vector_handler->infNorm(vec_x.get(), ReSolve::memory::HOST);
 
-    output << std::format("{},{},{},{},{},{},{},{},{},{},{:.16e},{:.16e},{:.16e},{:.16e},{:.16e},{},{},{},{}\n",
-                          matrix_file_path,
-                          rhs_file_path,
-                          system + 1,
-                          n_systems,
-                          A->getNumRows(),
-                          A->getNumColumns(),
-                          A_unexpanded->getNnz(),
-                          A->getNnz(),
-                          std::chrono::nanoseconds(factorization_time).count(),
-                          std::chrono::nanoseconds(solving_time).count(),
-                          sqrt(vector_handler->dot(vec_r.get(), vec_r.get(), ReSolve::memory::HOST)),
-                          norm_A,
-                          norm_r,
-                          norm_x,
-                          norm_r / (norm_A * norm_x),
-                          L->getNnz(),
-                          L->getNumRows() * L->getNumColumns(),
-                          U->getNnz(),
-                          U->getNumRows() * U->getNumColumns());
+    [[omp::directive(critical)]] output << std::format("{},{},{},{},{},{},{},{},{},{},{:.16e},{:.16e},{:.16e},{:.16e},{:.16e},{},{},{},{}",
+                                                       matrix_file_path,
+                                                       rhs_file_path,
+                                                       system + 1,
+                                                       n_systems,
+                                                       A->getNumRows(),
+                                                       A->getNumColumns(),
+                                                       A_unexpanded->getNnz(),
+                                                       A->getNnz(),
+                                                       std::chrono::nanoseconds(factorization_time).count(),
+                                                       std::chrono::nanoseconds(solving_time).count(),
+                                                       sqrt(vector_handler->dot(vec_r.get(), vec_r.get(), ReSolve::memory::HOST)),
+                                                       norm_A,
+                                                       norm_r,
+                                                       norm_x,
+                                                       norm_r / (norm_A * norm_x),
+                                                       L->getNnz(),
+                                                       L->getNumRows() * L->getNumColumns(),
+                                                       U->getNnz(),
+                                                       U->getNumRows() * U->getNumColumns())
+                                        << std::endl;
+
+    delete[] rhs;
   }
 
   output.close();
-
-  delete[] rhs;
   return 0;
 }

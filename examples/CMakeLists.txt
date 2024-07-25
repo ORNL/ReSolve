@@ -22,9 +22,11 @@ if(RESOLVE_USE_KLU)
 endif(RESOLVE_USE_KLU)
 
 if(RESOLVE_USE_LUSOL)
+  find_package(OpenMP REQUIRED)
+
   # Basic LUSOL example without any refactorization
   add_executable(lusol_lusol.exe r_LUSOL_LUSOL.cpp)
-  target_link_libraries(lusol_lusol.exe PRIVATE ReSolve)
+  target_link_libraries(lusol_lusol.exe PRIVATE ReSolve OpenMP::OpenMP_CXX)
 endif()
 
 # Build rand example, CPU ONLY  r_randGMRES_cpu
