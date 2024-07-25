@@ -106,9 +106,6 @@ int main(int argc, char* argv[])
   bool output_existed = std::filesystem::exists(std::filesystem::path("./lusol_output.csv"));
   std::fstream output("./lusol_output.csv", std::ios::out | std::ios::app);
 
-  // TODO: add this to KLU test code
-  // TODO: remove KLU refactorization for a fair comparison
-
   if (!output_existed) {
     output << "matrix_file_path,rhs_file_path,system,total_systems,n_rows,n_columns,initial_nnz,cleaned_nnz,ns_factorization,ns_solving,residual_2_norm,matrix_inf_norm,residual_inf_norm,solution_inf_norm,residual_scaled_norm,l_nnz,l_elements,u_nnz,u_elements\n";
   }

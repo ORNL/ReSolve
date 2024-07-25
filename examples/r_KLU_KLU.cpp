@@ -117,14 +117,9 @@ int main(int argc, char* argv[])
     rhs_file.close();
 
     // Now convert to CSR.
-    if (i < 2) {
-      A->updateFromCoo(A_coo, ReSolve::memory::HOST);
-      vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
-      vec_rhs->setDataUpdated(ReSolve::memory::HOST);
-    } else {
-      A->updateFromCoo(A_coo, ReSolve::memory::HOST);
-      vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
-    }
+    A->updateFromCoo(A_coo, ReSolve::memory::HOST);
+    vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+    vec_rhs->setDataUpdated(ReSolve::memory::HOST);
     std::cout << "COO to CSR completed. Expanded NNZ: " << A->getNnzExpanded() << std::endl;
     // Now call direct solver
     int status;
