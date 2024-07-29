@@ -226,13 +226,14 @@ namespace ReSolve
     }
 
     index_type diagonal_bound = std::min({m_, n_});
+    index_type current_nnz = luparm_[22];
 
-    L_ = static_cast<matrix::Sparse*>(new matrix::Csc(n_, m_, luparm_[22] + diagonal_bound, false, true));
+    L_ = static_cast<matrix::Sparse*>(new matrix::Csc(n_, m_, current_nnz + diagonal_bound, false, true));
     L_->allocateMatrixData(memory::HOST);
 
     index_type* columns = L_->getColData(memory::HOST);
     index_type* rows = L_->getRowData(memory::HOST);
-    std::fill_n(rows, luparm_[22], -1);
+    std::fill_n(rows, current_nnz, -1);
     real_type* values = L_->getValues(memory::HOST);
 
     // build an inverse permutation array for p
@@ -247,7 +248,8 @@ namespace ReSolve
 
     columns[0] = 0;
     index_type offset = lena_ - 1;
-    for (index_type i = 0; i < luparm_[19]; i++) {
+    index_type initial_m = luparm_[19];
+    for (index_type i = 0; i < initial_m; i++) {
       index_type column_nnz = lenc_[i];
       index_type column_nnz_end = offset - column_nnz;
       index_type corresponding_column = pt[indr_[column_nnz_end + 1] - 1];
@@ -267,10 +269,12 @@ namespace ReSolve
       values[columns[column + 1] - 1] = 1.0;
     }
 
-    // fill the destination arrays
+    // fill the destination arrays. iterates over the stored columns, depermuting the
+    // column indices to fully compute P*L*Pt while sorting each column's contents using
+    // insertion sort
 
     offset = lena_ - 1;
-    for (index_type i = 0; i < luparm_[19]; i++) {
+    for (index_type i = 0; i < initial_m; i++) {
       index_type corresponding_column = pt[indr_[offset - lenc_[i] + 1] - 1];
 
       for (index_type destination_offset = columns[corresponding_column];
@@ -319,12 +323,14 @@ namespace ReSolve
       return U_;
     }
 
-    U_ = static_cast<matrix::Sparse*>(new matrix::Csr(n_, m_, luparm_[23] - luparm_[10], false, true));
+    index_type current_nnz = luparm_[23];
+    index_type n_singularities = luparm_[10];
+    U_ = static_cast<matrix::Sparse*>(new matrix::Csr(n_, m_, current_nnz - n_singularities, false, true));
     U_->allocateMatrixData(memory::HOST);
 
     index_type* rows = U_->getRowData(memory::HOST);
     index_type* columns = U_->getColData(memory::HOST);
-    std::fill_n(columns, luparm_[23], -1);
+    std::fill_n(columns, current_nnz, -1);
     real_type* values = U_->getValues(memory::HOST);
 
     // build an inverse permutation array for q
@@ -337,7 +343,8 @@ namespace ReSolve
 
     // preprocessing since rows technically aren't ordered either
 
-    for (index_type stored_row = 0; stored_row < luparm_[15]; stored_row++) {
+    index_type stored_rows = luparm_[15];
+    for (index_type stored_row = 0; stored_row < stored_rows; stored_row++) {
       index_type corresponding_row = p_[stored_row] - 1;
       rows[stored_row + 1] = lenr_[corresponding_row];
     }
@@ -351,9 +358,7 @@ namespace ReSolve
     for (index_type row = 0; row < n_; row++) {
       index_type offset = locr_[p_[row] - 1] - 1;
 
-      for (index_type destination_offset = rows[row];
-           destination_offset < rows[row + 1];
-           destination_offset++) {
+      for (index_type destination_offset = rows[row]; destination_offset < rows[row + 1]; destination_offset++) {
         index_type column = qt[indr_[offset] - 1];
 
         // closest position to the target column
@@ -369,9 +374,7 @@ namespace ReSolve
           return nullptr;
         }
 
-        for (index_type swap_offset = destination_offset;
-             swap_offset > insertion_offset;
-             swap_offset--) {
+        for (index_type swap_offset = destination_offset; swap_offset > insertion_offset; swap_offset--) {
           std::swap(columns[swap_offset], columns[swap_offset - 1]);
           std::swap(values[swap_offset], values[swap_offset - 1]);
         }

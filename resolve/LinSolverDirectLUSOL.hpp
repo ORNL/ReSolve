@@ -31,9 +31,9 @@ namespace ReSolve
       int setup(matrix::Sparse* A,
                 matrix::Sparse* L = nullptr,
                 matrix::Sparse* U = nullptr,
-                index_type* P = nullptr,
-                index_type* Q = nullptr,
-                vector_type* rhs = nullptr) override;
+                index_type*     P = nullptr,
+                index_type*     Q = nullptr,
+                vector_type*  rhs = nullptr) override;
 
       /// @brief Analysis function of LUSOL
       int analyze() override;
