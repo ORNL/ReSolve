@@ -211,6 +211,12 @@ namespace ReSolve
     return -1;
   }
 
+  /**
+   * @pre The input matrix has been factorized
+   *
+   * @post A pointer to the L factor of the input matrix is returned in CSC
+   *       format. The linear solver instance owns this data
+   */
   matrix::Sparse* LinSolverDirectLUSOL::getLFactor()
   {
     if (!is_factorized_) {
@@ -271,7 +277,7 @@ namespace ReSolve
 
     // fill the destination arrays. iterates over the stored columns, depermuting the
     // column indices to fully compute P*L*Pt while sorting each column's contents using
-    // insertion sort
+    // insertion sort (where L is the L factor as stored in LUSOL's workspace)
 
     offset = lena_ - 1;
     for (index_type i = 0; i < initial_m; i++) {
@@ -312,6 +318,12 @@ namespace ReSolve
     return L_;
   }
 
+  /**
+   * @pre The input matrix has been factorized
+   *
+   * @post A pointer to the U factor of the input matrix is returned in CSR
+   *      format. The linear solver instance owns this data
+   */
   matrix::Sparse* LinSolverDirectLUSOL::getUFactor()
   {
     if (!is_factorized_) {

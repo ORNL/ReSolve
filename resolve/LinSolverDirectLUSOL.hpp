@@ -43,7 +43,7 @@ namespace ReSolve
       int solve(vector_type* rhs, vector_type* x) override;
       int solve(vector_type* x) override;
 
-      /// @brief Returns the L factor of the solution in CSC format (?)
+      /// @brief Returns the L factor of the solution in CSC format
       matrix::Sparse* getLFactor() override;
 
       /// @brief Returns the U factor of the solution in CSR format
