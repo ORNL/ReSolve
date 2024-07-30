@@ -452,7 +452,7 @@ namespace ReSolve
     } else {
       lena_ = std::min(5 * nelem_, 2 * m_ * n_);
     }*/
-    lena_ = 3000000;
+    lena_ = 10000000;
 
     a_ = new real_type[lena_];
     indc_ = new index_type[lena_];

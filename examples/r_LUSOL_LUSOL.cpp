@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <filesystem>
@@ -22,13 +23,29 @@ using real_type = ReSolve::real_type;
 using vector_type = ReSolve::vector::Vector;
 using std::chrono::steady_clock;
 
+int specializedInfNorm(ReSolve::matrix::Coo* A,
+                       real_type* norm)
+{
+
+  std::unique_ptr<index_type[]> sums = std::unique_ptr<index_type[]>(new index_type[A->getNumRows()]);
+
+  index_type* rows = A->getRowData(ReSolve::memory::HOST);
+  real_type* values = A->getValues(ReSolve::memory::HOST);
+
+  for (index_type i = 0; i < A->getNnz(); i++) {
+    sums[rows[i]] += std::abs(values[i]);
+  }
+
+  *norm = *std::max_element(sums.get(), sums.get() + A->getNumRows());
+  return 0;
+}
+
 int specializedMatvec(ReSolve::matrix::Coo* Ageneric,
                       vector_type* vec_x,
                       vector_type* vec_result,
                       const real_type* alpha,
                       const real_type* beta)
 {
-
   ReSolve::matrix::Coo* A = static_cast<ReSolve::matrix::Coo*>(Ageneric);
   index_type* rows = A->getRowData(ReSolve::memory::HOST);
   index_type* columns = A->getColData(ReSolve::memory::HOST);
@@ -96,7 +113,6 @@ int main(int argc, char* argv[])
 
   for (int system = 0; system < n_systems; system++) {
     std::unique_ptr<ReSolve::LinAlgWorkspaceCpu> workspace(new ReSolve::LinAlgWorkspaceCpu());
-    std::unique_ptr<ReSolve::MatrixHandler> matrix_handler(new ReSolve::MatrixHandler(workspace.get()));
     std::unique_ptr<ReSolve::VectorHandler> vector_handler(new ReSolve::VectorHandler(workspace.get()));
     std::unique_ptr<ReSolve::LinSolverDirectLUSOL> lusol(new ReSolve::LinSolverDirectLUSOL);
 
@@ -187,12 +203,10 @@ int main(int argc, char* argv[])
 
     vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
 
-    matrix_handler->setValuesChanged(true, ReSolve::memory::HOST);
-
     specializedMatvec(A.get(), vec_x.get(), vec_r.get(), &ONE, &MINUSONE);
     norm_r = vector_handler->infNorm(vec_r.get(), ReSolve::memory::HOST);
 
-    matrix_handler->matrixInfNorm(A.get(), &norm_A, ReSolve::memory::HOST);
+    specializedInfNorm(A.get(), &norm_A);
     norm_x = vector_handler->infNorm(vec_x.get(), ReSolve::memory::HOST);
 
     output << std::setprecision(16) << std::scientific
