@@ -1,6 +1,7 @@
 #include <string>
 #include <iostream>
 #include <iomanip>
+#include <sys/time.h>
 
 #include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/Csr.hpp>
@@ -52,8 +53,20 @@ int main(int argc, char *argv[])
   ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
   ReSolve::LinSolverDirectCuSolverGLU* GLU = new ReSolve::LinSolverDirectCuSolverGLU(workspace_CUDA);
 
+  struct timeval t1;
+  struct timeval t2;
+    
+  double time_io      = 0.0;
+  double time_convert = 0.0;
+  double time_factorize = 0.0;
+  double time_solve   = 0.0;
   for (int i = 0; i < numSystems; ++i)
   {
+    time_io      = 0.0;
+    time_convert = 0.0;
+    time_factorize = 0.0;
+    time_solve   = 0.0;
+   
     index_type j = 4 + i * 2;
     fileId = argv[j];
     rhsId = argv[j + 1];
@@ -82,6 +95,8 @@ int main(int argc, char *argv[])
       std::cout << "Failed to open file " << rhsFileNameFull << "\n";
       return -1;
     }
+    // Time system I/O
+    gettimeofday(&t1, 0);
     if (i == 0) {
       A_coo = ReSolve::io::readMatrixFromFile(mat_file);
       A = new ReSolve::matrix::Csr(A_coo->getNumRows(),
@@ -101,11 +116,15 @@ int main(int argc, char *argv[])
       ReSolve::io::readAndUpdateMatrix(mat_file, A_coo);
       ReSolve::io::readAndUpdateRhs(rhs_file, &rhs);
     }
+    gettimeofday(&t2, 0);
+    time_io += (1000000.0 * (t2.tv_sec - t1.tv_sec) + t2.tv_usec - t1.tv_usec) / 1000.0;
     std::cout<<"Finished reading the matrix and rhs, size: "<<A->getNumRows()<<" x "<<A->getNumColumns()<< ", nnz: "<< A->getNnz()<< ", symmetric? "<<A->symmetric()<< ", Expanded? "<<A->expanded()<<std::endl;
     mat_file.close();
     rhs_file.close();
 
     //Now convert to CSR.
+    // Time matrix conversion
+    gettimeofday(&t1, 0);
     if (i < 1) {
       A->updateFromCoo(A_coo, ReSolve::memory::HOST);
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
@@ -114,28 +133,44 @@ int main(int argc, char *argv[])
       A->updateFromCoo(A_coo, ReSolve::memory::DEVICE);
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
     }
+    gettimeofday(&t2, 0);
+    time_convert += (1000000.0 * (t2.tv_sec - t1.tv_sec) + t2.tv_usec - t1.tv_usec) / 1000.0;
     std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnzExpanded()<<std::endl;
     //Now call direct solver
     int status;
     if (i < 1) {
+      // Time factorization (CPU part)
+      gettimeofday(&t1, 0);
       KLU->setup(A);
       status = KLU->analyze();
       std::cout<<"KLU analysis status: "<<status<<std::endl;
       status = KLU->factorize();
-      std::cout<<"KLU factorization status: "<<status<<std::endl;
+      gettimeofday(&t2, 0);
       matrix_type* L = KLU->getLFactor();
       matrix_type* U = KLU->getUFactor();
       if (L == nullptr) {printf("ERROR");}
       index_type* P = KLU->getPOrdering();
       index_type* Q = KLU->getQOrdering();
       GLU->setup(A, L, U, P, Q); 
+      time_factorize += (1000000.0 * (t2.tv_sec - t1.tv_sec) + t2.tv_usec - t1.tv_usec) / 1000.0;
+      std::cout<<"KLU factorization status: "<<status<<std::endl;
+      // time solve (cpu part)
+      gettimeofday(&t1, 0);
       status = GLU->solve(vec_rhs, vec_x);
+      gettimeofday(&t2, 0);
+      time_solve += (1000000.0 * (t2.tv_sec - t1.tv_sec) + t2.tv_usec - t1.tv_usec) / 1000.0;
       std::cout<<"GLU solve status: "<<status<<std::endl;      
     } else {
       std::cout<<"Using CUSOLVER GLU"<<std::endl;
+        gettimeofday(&t1, 0);
       status = GLU->refactorize();
+        gettimeofday(&t2, 0);
+        time_factorize += (1000000.0 * (t2.tv_sec - t1.tv_sec) + t2.tv_usec - t1.tv_usec) / 1000.0;
       std::cout<<"CUSOLVER GLU refactorization status: "<<status<<std::endl;      
+      gettimeofday(&t1, 0);
       status = GLU->solve(vec_rhs, vec_x);
+      gettimeofday(&t2, 0);
+      time_solve += (1000000.0 * (t2.tv_sec - t1.tv_sec) + t2.tv_usec - t1.tv_usec) / 1000.0;
       std::cout<<"CUSOLVER GLU solve status: "<<status<<std::endl;      
     }
 
@@ -158,6 +193,11 @@ int main(int argc, char *argv[])
               << std::scientific << std::setprecision(16) 
               << sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE))/bnorm << "\n";
 
+    // Print timing summary
+    std::cout << std::defaultfloat << std::setprecision(4) 
+              << "I/O time: " << time_io << ", conversion time: " << time_convert
+              << ", factorization time: " << time_factorize << ", solve time: " << time_solve
+              << "\nTOTAL: " << time_factorize + time_solve << "\n";
   } // for (int i = 0; i < numSystems; ++i)
 
   //now DELETE

@@ -2,6 +2,7 @@
 #include <iostream>
 #include <iomanip>
 #include <sys/time.h>
+#include <sys/time.h>
 
 #include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/Csr.hpp>
@@ -67,6 +68,7 @@ int main(int argc, char *argv[])
     double time_convert = 0.0;
     double time_factorize = 0.0;
     double time_solve   = 0.0;
+    double time_ir      = 0.0;
 
     index_type j = 4 + i * 2;
     fileId = argv[j];
@@ -222,7 +224,7 @@ int main(int argc, char *argv[])
       FGMRES->resetMatrix(A);
       FGMRES->setupPreconditioner("LU", Rf);
       gettimeofday(&t2, 0);
-      time_solve += (1000000.0 * (t2.tv_sec - t1.tv_sec) + t2.tv_usec - t1.tv_usec) / 1000.0;
+      time_ir += (1000000.0 * (t2.tv_sec - t1.tv_sec) + t2.tv_usec - t1.tv_usec) / 1000.0;
       
       matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", ReSolve::memory::DEVICE); 
 
@@ -241,24 +243,27 @@ int main(int argc, char *argv[])
       matrix_handler->matrixInfNorm(A, &norm_A, ReSolve::memory::DEVICE); 
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
       
-      if(!std::isnan(norm_r) && !std::isinf(norm_r)) {
+      if(!std::isnan(norm_r) && !std::isinf(norm_r) && !std::isnan(norm_x) && !isinf(norm_x)) {
         gettimeofday(&t1, 0);
         FGMRES->solve(vec_rhs, vec_x);
         gettimeofday(&t2, 0);
-        time_solve += (1000000.0 * (t2.tv_sec - t1.tv_sec) + t2.tv_usec - t1.tv_usec) / 1000.0;
-
+        time_ir += (1000000.0 * (t2.tv_sec - t1.tv_sec) + t2.tv_usec - t1.tv_usec) / 1000.0;
         std::cout << "FGMRES: init nrm: " 
-          << std::scientific << std::setprecision(16) 
-          << FGMRES->getInitResidualNorm()/norm_b
-          << " final nrm: "
-          << FGMRES->getFinalResidualNorm()/norm_b
-          << " iter: " << FGMRES->getNumIter() << "\n";
+                  << std::scientific << std::setprecision(16) 
+                  << FGMRES->getInitResidualNorm()/norm_b
+                  << " final nrm: "
+                  << FGMRES->getFinalResidualNorm()/norm_b
+                  << " iter: " << FGMRES->getNumIter() << "\n";
+      } else {
+	std::cout << "This is a bad system, IR is not performed (inf or nan in x or r) " << std::endl;
       }
     }
+    // Print timing summary
     std::cout << std::defaultfloat << std::setprecision(4) 
               << "I/O time: " << time_io << ", conversion time: " << time_convert
               << ", factorization time: " << time_factorize << ", solve time: " << time_solve
-              << "\nTOTAL: " << time_factorize + time_solve << "\n";
+              << ", IR time: " << time_ir
+              << "\nTOTAL: " << time_factorize + time_solve + time_ir << "\n";
   } // for (int i = 0; i < numSystems; ++i)
 
   delete A;
