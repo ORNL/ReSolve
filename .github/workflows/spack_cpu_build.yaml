@@ -13,11 +13,12 @@ env:
 on: [pull_request]
 
 jobs:
-  checkout_code:
-    name: Checkout code
+  base_image_build:
+    name: Build base image
     runs-on: ubuntu-22.04
     permissions:
       contents: read
+      packages: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -26,13 +27,6 @@ jobs:
           # Also need to change build script to use spack from base image
           submodules: true
 
-  check_for_image:
-    needs: checkout_code
-    name: Check for image
-    runs-on: ubuntu-22.04
-    permissions:
-      packages: read
-    steps:
       # No GHCR base image with skopeo, so this will do...
       - name: "Set up skopeo"
         uses: warjiang/setup-skopeo@v0.1.3
@@ -46,7 +40,6 @@ jobs:
           CONTAINER_TAG=${{ env.BASE_VERSION }}
           OCI_URL="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.BASE_VERSION }}"
           echo Checking for CONTAINER_TAG $CONTAINER_TAG
-          mkdir -p /etc/gitlab-runner/certs
           skopeo inspect \
               docker://$OCI_URL \
               --raw \
@@ -54,16 +47,6 @@ jobs:
             > /dev/null && echo "Image already exists. Please bump version." && exit 0
           echo "IMAGE_EXISTS=false" >> $GITHUB_ENV
 
-  base_image_build:
-    needs: check_for_image
-    runs-on: ubuntu-22.04
-    permissions:
-      packages: write
-      contents: read
-
-    name: Build Custom Base Image
-
-    steps:
       # https://docs.github.com/en/actions/publishing-packages/publishing-docker-images
       - name: Log in to the Container registry
         uses: docker/login-action@v3
