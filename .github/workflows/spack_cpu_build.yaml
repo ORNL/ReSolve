@@ -27,11 +27,18 @@ jobs:
           submodules: true
 
   check_for_image:
+    needs: checkout_code
     name: Check for image
-    runs-on: docker.io/kfox1111/misc:skopeo
+    runs-on: ubuntu-22.04
     permissions:
       packages: read
     steps:
+      # No GHCR base image with skopeo, so this will do...
+      - name: "Set up skopeo"
+        uses: warjiang/setup-skopeo@latest
+        with:
+          version: latest
+
       # Use skopeo to check for image for convenience
       - name: Check for existing base images
         run: |
@@ -48,6 +55,7 @@ jobs:
           echo "IMAGE_EXISTS=false" >> $GITHUB_ENV
 
   base_image_build:
+    needs: check_for_image
     runs-on: ubuntu-22.04
     permissions:
       packages: write
