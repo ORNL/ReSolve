@@ -32,15 +32,6 @@ jobs:
     permissions:
       packages: read
     steps:
-      # https://docs.github.com/en/actions/publishing-packages/publishing-docker-images
-      # This isn't necessary for skopeo, but spack will need this to push later...
-      - name: Log in to the Container registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ env.USERNAME }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
       # Use skopeo to check for image for convenience
       - name: Check for existing base images
         run: |
@@ -57,7 +48,6 @@ jobs:
           echo "IMAGE_EXISTS=false" >> $GITHUB_ENV
 
   base_image_build:
-    if: ${{ env.IMAGE_EXISTS == false }}
     runs-on: ubuntu-22.04
     permissions:
       packages: write
@@ -66,8 +56,17 @@ jobs:
     name: Build Custom Base Image
 
     steps:
+      # https://docs.github.com/en/actions/publishing-packages/publishing-docker-images
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ env.USERNAME }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       # Need to build custom base image with gfortran
       - name: Create Dockerfile heredoc
+        if: ${{ env.IMAGE_EXISTS == 'false' }}
         run: |
           cat << EOF > Dockerfile
           FROM ubuntu:22.04
@@ -86,6 +85,7 @@ jobs:
           EOF
 
       - name: Extract metadata (tags, labels) for Docker
+        if: ${{ env.IMAGE_EXISTS == 'false' }}
         id: meta
         uses: docker/metadata-action@v5
         with:
@@ -93,6 +93,7 @@ jobs:
           labels: org.opencontainers.image.version=${{ env.BASE_VERSION }}
 
       - name: Build and push Docker base image
+        if: ${{ env.IMAGE_EXISTS == 'false' }}
         uses: docker/build-push-action@v5
         with:
           context: .
