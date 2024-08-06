@@ -35,7 +35,7 @@ jobs:
     steps:
       # No GHCR base image with skopeo, so this will do...
       - name: "Set up skopeo"
-        uses: warjiang/setup-skopeo@latest
+        uses: warjiang/setup-skopeo@v0.1.3
         with:
           version: latest
 
