@@ -15,7 +15,7 @@ on: [pull_request]
 jobs:
   base_image_build:
     name: Build base image
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.04-v0.1.0
     permissions:
       contents: read
       packages: write
