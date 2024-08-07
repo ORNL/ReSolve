@@ -7,7 +7,7 @@ env:
   # Our repo name contains upper case characters, so we can't use ${{ github.repository }}
   IMAGE_NAME: resolve
   USERNAME: resolve-bot
-  BASE_VERSION: ubuntu-22.04-fortran
+  BASE_VERSION: ubuntu-22.04-fortran-v0.1.0
 
 # Until we remove the need to clone submodules to build, this should on be in PRs
 on: [pull_request]
@@ -15,7 +15,7 @@ on: [pull_request]
 jobs:
   base_image_build:
     name: Build base image
-    runs-on: ubuntu-22.04-v0.1.0
+    runs-on: ubuntu-22.04
     permissions:
       contents: read
       packages: write
