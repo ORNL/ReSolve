@@ -7,19 +7,18 @@ env:
   # Our repo name contains upper case characters, so we can't use ${{ github.repository }}
   IMAGE_NAME: resolve
   USERNAME: resolve-bot
-  BASE_VERSION: ubuntu-22.04-fortran
+  BASE_VERSION: ubuntu-22.04-fortran-v0.1.0
 
 # Until we remove the need to clone submodules to build, this should on be in PRs
 on: [pull_request]
 
 jobs:
   base_image_build:
+    name: Build base image
     runs-on: ubuntu-22.04
     permissions:
-      packages: write
       contents: read
-
-    name: Build Custom Base Image
+      packages: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -28,8 +27,37 @@ jobs:
           # Also need to change build script to use spack from base image
           submodules: true
 
+      # No GHCR base image with skopeo, so this will do...
+      - name: "Set up skopeo"
+        uses: warjiang/setup-skopeo@v0.1.3
+        with:
+          version: latest
+
+      # Use skopeo to check for image for convenience
+      - name: Check for existing base images
+        run: |
+          set -e
+          CONTAINER_TAG=${{ env.BASE_VERSION }}
+          OCI_URL="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.BASE_VERSION }}"
+          echo Checking for CONTAINER_TAG $CONTAINER_TAG
+          skopeo inspect \
+              docker://$OCI_URL \
+              --raw \
+              --creds "${{ env.USERNAME }}:${{ secrets.GITHUB_TOKEN }}" \
+            > /dev/null && echo "Image already exists. Please bump version." && exit 0
+          echo "IMAGE_EXISTS=false" >> $GITHUB_ENV
+
+      # https://docs.github.com/en/actions/publishing-packages/publishing-docker-images
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ env.USERNAME }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       # Need to build custom base image with gfortran
       - name: Create Dockerfile heredoc
+        if: ${{ env.IMAGE_EXISTS == 'false' }}
         run: |
           cat << EOF > Dockerfile
           FROM ubuntu:22.04
@@ -47,15 +75,8 @@ jobs:
               && rm -rf /var/lib/apt/lists/*
           EOF
 
-      # https://docs.github.com/en/actions/publishing-packages/publishing-docker-images
-      - name: Log in to the Container registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ env.USERNAME }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Extract metadata (tags, labels) for Docker
+        if: ${{ env.IMAGE_EXISTS == 'false' }}
         id: meta
         uses: docker/metadata-action@v5
         with:
@@ -63,6 +84,7 @@ jobs:
           labels: org.opencontainers.image.version=${{ env.BASE_VERSION }}
 
       - name: Build and push Docker base image
+        if: ${{ env.IMAGE_EXISTS == 'false' }}
         uses: docker/build-push-action@v5
         with:
           context: .
