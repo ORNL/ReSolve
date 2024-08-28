@@ -239,7 +239,6 @@ namespace ReSolve
 
     index_type* columns = L_->getColData(memory::HOST);
     index_type* rows = L_->getRowData(memory::HOST);
-    std::fill_n(rows, current_nnz, -1);
     real_type* values = L_->getValues(memory::HOST);
 
     // build an inverse permutation array for p
@@ -296,7 +295,7 @@ namespace ReSolve
         index_type insertion_offset = static_cast<index_type>(closest_position - rows);
 
         // to my knowledge, lusol doesn't write duplicates at all. this is likely a bug
-        if (rows[insertion_offset] == row) {
+        if (rows[insertion_offset] == row && closest_position != &rows[columns[corresponding_column]]) {
           out::error() << "duplicate element found during LUSOL L factor extraction\n";
           return nullptr;
         }
@@ -342,7 +341,6 @@ namespace ReSolve
 
     index_type* rows = U_->getRowData(memory::HOST);
     index_type* columns = U_->getColData(memory::HOST);
-    std::fill_n(columns, current_nnz, -1);
     real_type* values = U_->getValues(memory::HOST);
 
     // build an inverse permutation array for q
@@ -381,7 +379,7 @@ namespace ReSolve
         index_type insertion_offset = static_cast<index_type>(closest_position - columns);
 
         // as said above, i'm pretty certain lusol doesn't write duplicates
-        if (columns[insertion_offset] == column) {
+        if (columns[insertion_offset] == column && closest_position != &columns[rows[row]]) {
           out::error() << "duplicate element found during LUSOL U factor extraction\n";
           return nullptr;
         }
