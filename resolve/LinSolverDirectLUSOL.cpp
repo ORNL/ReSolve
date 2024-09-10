@@ -295,7 +295,7 @@ namespace ReSolve
         index_type insertion_offset = static_cast<index_type>(closest_position - rows);
 
         // to my knowledge, lusol doesn't write duplicates at all. this is likely a bug
-        if (rows[insertion_offset] == row && closest_position != &rows[columns[corresponding_column]]) {
+        if (rows[insertion_offset] == row && closest_position != &rows[destination_offset]) {
           out::error() << "duplicate element found during LUSOL L factor extraction\n";
           return nullptr;
         }
@@ -379,7 +379,7 @@ namespace ReSolve
         index_type insertion_offset = static_cast<index_type>(closest_position - columns);
 
         // as said above, i'm pretty certain lusol doesn't write duplicates
-        if (columns[insertion_offset] == column && closest_position != &columns[rows[row]]) {
+        if (columns[insertion_offset] == column && closest_position != &columns[destination_offset]) {
           out::error() << "duplicate element found during LUSOL U factor extraction\n";
           return nullptr;
         }
