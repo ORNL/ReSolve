@@ -19,6 +19,12 @@ namespace ReSolve
     class Sparse;
   }
 
+  /**
+   * @brief Wrapper for LUSOL solver.
+   * 
+   * LUSOL Fortran code is in file `lusol.f90`.
+   * 
+   */
   class LinSolverDirectLUSOL : public LinSolverDirect
   {
       using vector_type = vector::Vector;
