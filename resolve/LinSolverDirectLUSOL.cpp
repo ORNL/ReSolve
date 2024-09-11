@@ -17,8 +17,10 @@ namespace ReSolve
 
   LinSolverDirectLUSOL::LinSolverDirectLUSOL()
   {
+    // File number for printed messages
     luparm_[0] = 6;
 
+    // Set LUSOL output print level
     switch (out::verbosity()) {
       case io::Logger::NONE:
         luparm_[1] = -1;
@@ -35,32 +37,47 @@ namespace ReSolve
         break;
     }
 
-    // TODO: these are defaults. make these configurable in the future using the
-    //       forthcoming parameter manager
-
+    // maximum number of columns searched allowed in a Markowitz-type
+    // search for the next pivot element. For some of the factorization, the
+    // number of rows searched is maxrow = maxcol - 1.
     luparm_[2] = 5;
+
+    // Pivoting type
+    // luparm_[5] = 0    =>  TPP: Threshold Partial   Pivoting.        0
+    //            = 1    =>  TRP: Threshold Rook      Pivoting.
+    //            = 2    =>  TCP: Threshold Complete  Pivoting.
+    //            = 3    =>  TSP: Threshold Symmetric Pivoting.
+    //            = 4    =>  TDP: Threshold Diagonal  Pivoting.
     luparm_[5] = 0;
+
+    // Keep factors (1 == keep; 0 == discard)
     luparm_[7] = 1;
 
-    // NOTE: the default value of this is suggested to change based upon the
-    //       pivoting strategy in use. see the LUSOL source for more information
+    // Max Lij allowed during factor
     parmlu_[0] = 10.0;
 
+    // Max Lij allowed during updates.
     parmlu_[1] = 10.0;
 
-    // NOTE: there's ReSolve::constants::DEFAULT_TOL but this carries with it
-    //       the implication that it's configurable. i'm unaware of any such
-    //       location to configure it and it's likely related to the parameter
-    //       manager mentioned above
-    //
-    //       so, for now, we use the suggested default in LUSOL
+    // Absolute tolerance for treating reals as zero.
     parmlu_[2] = std::pow(std::numeric_limits<real_type>::epsilon(), 0.8);
 
-    // TODO: figure out where this exponent comes from :)
-    parmlu_[4] = parmlu_[3] = std::pow(std::numeric_limits<real_type>::epsilon(), 0.67);
+    // Absolute tol for flagging small diagonals of U.
+    parmlu_[3] = std::pow(std::numeric_limits<real_type>::epsilon(), 0.67);
 
+    // Relative tol for flagging small diagonals of U.
+    parmlu_[4] = std::pow(std::numeric_limits<real_type>::epsilon(), 0.67);
+
+    // Factor limiting waste space in  U.
     parmlu_[5] = 3.0;
+
+    // The density at which the Markowitz pivot strategy should search maxcol
+    // columns and no rows.
     parmlu_[6] = 0.3;
+
+    // the density at which the Markowitz strategy should search only 1 column,
+    // or (if storage is available) the density at which all remaining rows and
+    // columns will be processed by a dense LU code.
     parmlu_[7] = 0.5;
   }
 
@@ -77,9 +94,9 @@ namespace ReSolve
   int LinSolverDirectLUSOL::setup(matrix::Sparse* A,
                                   matrix::Sparse* /* L */,
                                   matrix::Sparse* /* U */,
-                                  index_type* /* P */,
-                                  index_type* /* Q */,
-                                  vector_type* /* rhs */)
+                                  index_type*     /* P */,
+                                  index_type*     /* Q */,
+                                  vector_type*  /* rhs */)
   {
     A_ = A;
     is_factorized_ = false;
@@ -294,7 +311,7 @@ namespace ReSolve
         // destination offset for the element being inserted
         index_type insertion_offset = static_cast<index_type>(closest_position - rows);
 
-        // to my knowledge, lusol doesn't write duplicates at all. this is likely a bug
+        // LUSOL is not supposed to create duplicates. Report error if it does.
         if (rows[insertion_offset] == row && closest_position != &rows[destination_offset]) {
           out::error() << "duplicate element found during LUSOL L factor extraction\n";
           return nullptr;
@@ -378,7 +395,7 @@ namespace ReSolve
         // destination offset for the element being inserted
         index_type insertion_offset = static_cast<index_type>(closest_position - columns);
 
-        // as said above, i'm pretty certain lusol doesn't write duplicates
+        // LUSOL is not supposed to create duplicates. Report error if it does.
         if (columns[insertion_offset] == column && closest_position != &columns[destination_offset]) {
           out::error() << "duplicate element found during LUSOL U factor extraction\n";
           return nullptr;
