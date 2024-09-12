@@ -1,18 +1,20 @@
 #pragma once
 
 #include <algorithm>
+#include <iomanip>
 #include <iterator>
 #include <sstream>
 #include <string>
 #include <vector>
 
-#include <tests/unit/TestBase.hpp>
-
 #include <resolve/LinSolverDirectLUSOL.hpp>
 #include <resolve/matrix/Coo.hpp>
+#include <resolve/matrix/Csc.hpp>
+#include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
+#include <tests/unit/TestBase.hpp>
 
 namespace ReSolve
 {
@@ -63,6 +65,31 @@ namespace ReSolve
           if (solver.factorize() < 0) {
             status *= false;
           }
+
+          matrix::Csc* L = static_cast<matrix::Csc*>(solver.getLFactor());
+          matrix::Csr* U = static_cast<matrix::Csr*>(solver.getUFactor());
+
+          status *= verifyAnswer(*L,
+                                 reference_l_factor_rows_,
+                                 reference_l_factor_columns_,
+                                 reference_l_factor_values_);
+          status *= verifyAnswer(*U,
+                                 reference_u_factor_rows_,
+                                 reference_u_factor_columns_,
+                                 reference_u_factor_values_);
+
+          index_type* p_ordering = solver.getPOrdering();
+
+          for (index_type i = 0; i < A->getNumRows(); i++) {
+            status *= p_ordering[i] == reference_p_ordering_[i];
+          }
+
+          index_type* q_ordering = solver.getQOrdering();
+
+          for (index_type i = 0; i < A->getNumColumns(); i++) {
+            status *= q_ordering[i] == reference_q_ordering_[i];
+          }
+
           if (solver.solve(&rhs, &x) < 0) {
             status *= false;
           }
@@ -135,54 +162,137 @@ namespace ReSolve
           return A;
         }
 
-        /**
-         * @brief Compare sparse matrix with a reference.
-         *
-         * @param A           - matrix obtained in a test
-         * @param answer_rows - reference matrix row data
-         * @param answer_cols - reference matrix column data
-         * @param answer_vals - reference matrix values
-         * @param memspace    - memory space where matrix data is stored
-         * @return true  - if elements of the matrix agree with the reference
-         * values
-         * @return false - otherwise
-         *
-         * @todo Only CSR matrices are supported at this time. Need to make this
-         * more general.
-         */
-        bool verifyAnswer(matrix::Sparse& A,
-                          const std::vector<index_type>& answer_rows,
-                          const std::vector<index_type>& answer_cols,
-                          const std::vector<real_type>& answer_vals)
+        /// @brief Reference P ordering
+        std::vector<index_type> reference_p_ordering_ = {4, 8, 1, 3, 5, 7, 6, 0, 2};
+
+        /// @brief Reference Q ordering
+        std::vector<index_type> reference_q_ordering_ = {0, 2, 1, 3, 5, 7, 8, 6, 4};
+
+        /// @brief Reference lower-triangular L factor rows
+        std::vector<index_type> reference_l_factor_rows_ = {5, 7, 8, 0, 6, 1, 4, 2, 4, 3, 4, 6, 8, 5, 8, 6, 8, 7, 8};
+
+        /// @brief Reference lower-triangular L factor columns
+        std::vector<index_type> reference_l_factor_columns_ = {0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 5, 5, 5, 6, 6, 7, 7, 8};
+
+        /// @brief Reference lower-triangular L factor values
+        std::vector<real_type> reference_l_factor_values_ = {2,
+                                                             2,
+                                                             1,
+                                                             1,
+                                                             0.2857142857142857,
+                                                             1,
+                                                             0.5714285714285714,
+                                                             1,
+                                                             0.7142857142857144,
+                                                             1,
+                                                             1,
+                                                             0.6000000000000001,
+                                                             0.4,
+                                                             1,
+                                                             0.2295081967213115,
+                                                             1,
+                                                             -0.2295081967213115,
+                                                             1,
+                                                             1};
+
+        /// @brief Compare a sparse CSR matrix with a reference specified in COO
+        bool verifyAnswer(matrix::Csr& A,
+                          const std::vector<index_type>& coo_answer_rows,
+                          const std::vector<index_type>& coo_answer_columns,
+                          const std::vector<real_type>& coo_answer_values)
         {
           bool status = true;
+          index_type i = 0;
 
-          size_t N = static_cast<size_t>(A.getNumRows());
-          for (size_t i = 0; i <= N; ++i) {
-            if (A.getRowData(memory::HOST)[i] != answer_rows[i]) {
-              status = false;
-              std::cout << "Matrix row pointer rows[" << i
-                        << "] = " << A.getRowData(memory::HOST)[i]
-                        << ", expected: " << answer_rows[i] << "\n";
+          index_type* rows = A.getRowData(memory::HOST);
+          index_type* columns = A.getColData(memory::HOST);
+          real_type* values = A.getValues(memory::HOST);
+
+          for (index_type row = 0; row < A.getNumRows(); row++) {
+            for (index_type offset = rows[row]; offset < rows[row + 1]; offset++) {
+              if (row != coo_answer_rows[i]
+                  || columns[offset] != coo_answer_columns[i]
+                  || !isEqual(values[offset], coo_answer_values[i])) {
+                std::cout << std::setprecision(16)
+                          << "i = " << i << ", ("
+                          << coo_answer_rows[i] << ", "
+                          << coo_answer_columns[i] << ", "
+                          << coo_answer_values[i] << ") != ("
+                          << row << ", "
+                          << columns[offset] << ", "
+                          << values[offset] << ")\n";
+                status = false;
+              }
+              i++;
             }
           }
 
-          size_t NNZ = static_cast<size_t>(A.getNnz());
-          for (size_t i = 0; i < NNZ; ++i) {
-            if (A.getColData(memory::HOST)[i] != answer_cols[i]) {
-              status = false;
-              std::cout << "Matrix column index cols[" << i
-                        << "] = " << A.getColData(memory::HOST)[i]
-                        << ", expected: " << answer_cols[i] << "\n";
-            }
-            if (!isEqual(A.getValues(memory::HOST)[i], answer_vals[i])) {
-              status = false;
-              std::cout << "Matrix value element vals[" << i
-                        << "] = " << A.getValues(memory::HOST)[i]
-                        << ", expected: " << answer_vals[i] << "\n";
-              // break;
+          return status;
+        }
+
+        /// @brief Reference upper triangular U factor rows
+        std::vector<index_type> reference_u_factor_rows_ = {0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 6, 6, 6, 7, 7, 8};
+
+        /// @brief Reference upper triangular U factor columns
+        std::vector<index_type> reference_u_factor_columns_ = {0, 1, 6, 8, 2, 3, 4, 3, 4, 6, 4, 6, 7, 5, 6, 6, 7, 8, 7, 8, 8};
+
+        /// @brief Reference upper triangular U factor values
+        std::vector<real_type> reference_u_factor_values_ = {1,
+                                                             7,
+                                                             4,
+                                                             8,
+                                                             7,
+                                                             5,
+                                                             4,
+                                                             3,
+                                                             2,
+                                                             8,
+                                                             -2.714285714285714,
+                                                             -5.714285714285715,
+                                                             6,
+                                                             5,
+                                                             1,
+                                                             -1.742857142857143,
+                                                             3,
+                                                             -0.2857142857142856,
+                                                             3,
+                                                             1,
+                                                             3.295081967213115};
+
+        /// @brief Compare a sparse CSC matrix with a reference specified in COO
+        bool verifyAnswer(matrix::Csc& A,
+                          const std::vector<index_type>& coo_answer_rows,
+                          const std::vector<index_type>& coo_answer_columns,
+                          const std::vector<real_type>& coo_answer_values)
+        {
+          bool status = true;
+          index_type i = 0;
+
+          index_type* columns = A.getColData(memory::HOST);
+          index_type* rows = A.getRowData(memory::HOST);
+          real_type* values = A.getValues(memory::HOST);
+
+          for (index_type column = 0; column < A.getNumColumns(); column++) {
+            for (index_type offset = columns[column];
+                 offset < columns[column + 1];
+                 offset++) {
+              if (column != coo_answer_columns[i]
+                  || rows[offset] != coo_answer_rows[i]
+                  || !isEqual(values[offset], coo_answer_values[i])) {
+                std::cout << std::setprecision(16)
+                          << "i = " << i << ", ("
+                          << coo_answer_rows[i] << ", "
+                          << coo_answer_columns[i] << ", "
+                          << coo_answer_values[i] << ") != ("
+                          << rows[offset] << ", "
+                          << column << ", "
+                          << values[offset] << ")\n";
+                status = false;
+              }
+              i++;
             }
           }
+
           return status;
         }
 

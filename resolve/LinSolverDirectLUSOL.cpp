@@ -1,12 +1,13 @@
+#include <algorithm>
 #include <cmath>
 #include <cstdlib>
 #include <limits>
-#include <algorithm>
 
 #include "LinSolverDirectLUSOL.hpp"
 #include "lusol/lusol.hpp"
 
 #include <resolve/matrix/Csc.hpp>
+#include <resolve/matrix/Csr.hpp>
 #include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/vector/Vector.hpp>
 
@@ -16,8 +17,10 @@ namespace ReSolve
 
   LinSolverDirectLUSOL::LinSolverDirectLUSOL()
   {
+    // File number for printed messages
     luparm_[0] = 6;
 
+    // Set LUSOL output print level
     switch (out::verbosity()) {
       case io::Logger::NONE:
         luparm_[1] = -1;
@@ -34,32 +37,47 @@ namespace ReSolve
         break;
     }
 
-    // TODO: these are defaults. make these configurable in the future using the
-    //       forthcoming parameter manager
-
+    // maximum number of columns searched allowed in a Markowitz-type
+    // search for the next pivot element. For some of the factorization, the
+    // number of rows searched is maxrow = maxcol - 1.
     luparm_[2] = 5;
+
+    // Pivoting type
+    // luparm_[5] = 0    =>  TPP: Threshold Partial   Pivoting.        0
+    //            = 1    =>  TRP: Threshold Rook      Pivoting.
+    //            = 2    =>  TCP: Threshold Complete  Pivoting.
+    //            = 3    =>  TSP: Threshold Symmetric Pivoting.
+    //            = 4    =>  TDP: Threshold Diagonal  Pivoting.
     luparm_[5] = 0;
+
+    // Keep factors (1 == keep; 0 == discard)
     luparm_[7] = 1;
 
-    // NOTE: the default value of this is suggested to change based upon the
-    //       pivoting strategy in use. see the LUSOL source for more information
+    // Max Lij allowed during factor
     parmlu_[0] = 10.0;
 
+    // Max Lij allowed during updates.
     parmlu_[1] = 10.0;
 
-    // NOTE: there's ReSolve::constants::DEFAULT_TOL but this carries with it
-    //       the implication that it's configurable. i'm unaware of any such
-    //       location to configure it and it's likely related to the parameter
-    //       manager mentioned above
-    //
-    //       so, for now, we use the suggested default in LUSOL
+    // Absolute tolerance for treating reals as zero.
     parmlu_[2] = std::pow(std::numeric_limits<real_type>::epsilon(), 0.8);
 
-    // TODO: figure out where this exponent comes from :)
-    parmlu_[4] = parmlu_[3] = std::pow(std::numeric_limits<real_type>::epsilon(), 0.67);
+    // Absolute tol for flagging small diagonals of U.
+    parmlu_[3] = std::pow(std::numeric_limits<real_type>::epsilon(), 0.67);
 
+    // Relative tol for flagging small diagonals of U.
+    parmlu_[4] = std::pow(std::numeric_limits<real_type>::epsilon(), 0.67);
+
+    // Factor limiting waste space in  U.
     parmlu_[5] = 3.0;
+
+    // The density at which the Markowitz pivot strategy should search maxcol
+    // columns and no rows.
     parmlu_[6] = 0.3;
+
+    // the density at which the Markowitz strategy should search only 1 column,
+    // or (if storage is available) the density at which all remaining rows and
+    // columns will be processed by a dense LU code.
     parmlu_[7] = 0.5;
   }
 
@@ -72,29 +90,31 @@ namespace ReSolve
     U_ = nullptr;
   }
 
+  /// @pre A is in the COO format, is a fully expanded matrix, and contains no duplicates
   int LinSolverDirectLUSOL::setup(matrix::Sparse* A,
                                   matrix::Sparse* /* L */,
                                   matrix::Sparse* /* U */,
-                                  index_type* /* P */,
-                                  index_type* /* Q */,
-                                  vector_type* /* rhs */)
+                                  index_type*     /* P */,
+                                  index_type*     /* Q */,
+                                  vector_type*  /* rhs */)
   {
     A_ = A;
+    is_factorized_ = false;
+    delete L_;
+    delete U_;
+    L_ = nullptr;
+    U_ = nullptr;
     return 0;
   }
 
   /**
-   * @brief Analysis function of LUISOL
-   * 
    * At this time, only memory allocation and initialization is done here.
-   * 
+   *
    * @return int - 0 if successful, error code otherwise
-   * 
-   * @pre System matrix `A_` is in unsorted COO format without duplicates.
-   * 
-   * @note LUSOL does not expose symbolic factorization in its API. It might 
-   * be possible refactor lu1fac into separate symbolic and numerical
-   * factorization functions, but for now, we do the both in ::factorize().
+   *
+   * @note LUSOL does not expose symbolic factorization in its API. It might
+   *       be possible refactor lu1fac into separate symbolic and numerical
+   *       factorization functions, but for now, we do the both in ::factorize().
    */
   int LinSolverDirectLUSOL::analyze()
   {
@@ -156,6 +176,8 @@ namespace ReSolve
            w_,
            &inform);
 
+    is_factorized_ = true;
+
     // TODO: consider handling inform = 7
 
     return inform;
@@ -170,7 +192,7 @@ namespace ReSolve
 
   int LinSolverDirectLUSOL::solve(vector_type* rhs, vector_type* x)
   {
-    if (rhs->getSize() != m_ || x->getSize() != n_) {
+    if (rhs->getSize() != m_ || x->getSize() != n_ || !is_factorized_) {
       return -1;
     }
 
@@ -206,32 +228,218 @@ namespace ReSolve
     return -1;
   }
 
+  /**
+   * @pre The input matrix has been factorized
+   *
+   * @post A pointer to the L factor of the input matrix is returned in CSC
+   *       format. The linear solver instance owns this data
+   */
   matrix::Sparse* LinSolverDirectLUSOL::getLFactor()
   {
-    out::error() << "LinSolverDirect::getLFactor() called on "
-                    "LinSolverDirectLUSOL which is unimplemented!\n";
-    return nullptr;
+    if (!is_factorized_) {
+      return nullptr;
+    }
+
+    if (L_ != nullptr) {
+      // because of the way we've implemented setup, we can just return the
+      // existing pointer in L_ as this means we've already extracted L
+      //
+      // this isn't perfect, but it's functional
+      return L_;
+    }
+
+    index_type diagonal_bound = std::min({m_, n_});
+    index_type current_nnz = luparm_[22];
+
+    L_ = static_cast<matrix::Sparse*>(new matrix::Csc(n_, m_, current_nnz + diagonal_bound, false, true));
+    L_->allocateMatrixData(memory::HOST);
+
+    index_type* columns = L_->getColData(memory::HOST);
+    index_type* rows = L_->getRowData(memory::HOST);
+    real_type* values = L_->getValues(memory::HOST);
+
+    // build an inverse permutation array for p
+
+    // NOTE: this is not one-indexed like the original is
+    std::unique_ptr<index_type[]> pt = std::unique_ptr<index_type[]>(new index_type[m_]);
+    for (index_type i = 0; i < m_; i++) {
+      pt[p_[i] - 1] = i;
+    }
+
+    // preprocessing since columns are stored unordered within lusol's workspace
+
+    columns[0] = 0;
+    index_type offset = lena_ - 1;
+    index_type initial_m = luparm_[19];
+    for (index_type i = 0; i < initial_m; i++) {
+      index_type column_nnz = lenc_[i];
+      index_type column_nnz_end = offset - column_nnz;
+      index_type corresponding_column = pt[indr_[column_nnz_end + 1] - 1];
+
+      columns[corresponding_column + 1] = column_nnz;
+      offset = column_nnz_end;
+    }
+
+    for (index_type column = 0; column < m_; column++) {
+      columns[column + 1] += columns[column];
+    }
+
+    // handle rectangular l factors correctly
+    for (index_type column = 0; column < diagonal_bound; column++) {
+      columns[column + 1] += column + 1;
+      rows[columns[column + 1] - 1] = column;
+      values[columns[column + 1] - 1] = 1.0;
+    }
+
+    // fill the destination arrays. iterates over the stored columns, depermuting the
+    // column indices to fully compute P*L*Pt while sorting each column's contents using
+    // insertion sort (where L is the L factor as stored in LUSOL's workspace)
+
+    offset = lena_ - 1;
+    for (index_type i = 0; i < initial_m; i++) {
+      index_type corresponding_column = pt[indr_[offset - lenc_[i] + 1] - 1];
+
+      for (index_type destination_offset = columns[corresponding_column];
+           destination_offset < columns[corresponding_column + 1] - 1;
+           destination_offset++) {
+        index_type row = pt[indc_[offset] - 1];
+
+        // closest position to the target row
+        index_type* closest_position =
+            std::lower_bound(&rows[columns[corresponding_column]], &rows[destination_offset], row);
+
+        // destination offset for the element being inserted
+        index_type insertion_offset = static_cast<index_type>(closest_position - rows);
+
+        // LUSOL is not supposed to create duplicates. Report error if it does.
+        if (rows[insertion_offset] == row && closest_position != &rows[destination_offset]) {
+          out::error() << "duplicate element found during LUSOL L factor extraction\n";
+          return nullptr;
+        }
+
+        for (index_type swap_offset = destination_offset;
+             swap_offset > insertion_offset;
+             swap_offset--) {
+          std::swap(rows[swap_offset], rows[swap_offset - 1]);
+          std::swap(values[swap_offset], values[swap_offset - 1]);
+        }
+
+        rows[insertion_offset] = row;
+        values[insertion_offset] = -a_[offset];
+
+        offset--;
+      }
+    }
+
+    return L_;
   }
 
+  /**
+   * @pre The input matrix has been factorized
+   *
+   * @post A pointer to the U factor of the input matrix is returned in CSR
+   *      format. The linear solver instance owns this data
+   */
   matrix::Sparse* LinSolverDirectLUSOL::getUFactor()
   {
-    out::error() << "LinSolverDirect::getUFactor() called on "
-                    "LinSolverDirectLUSOL which is unimplemented!\n";
-    return nullptr;
+    if (!is_factorized_) {
+      return nullptr;
+    }
+
+    if (U_ != nullptr) {
+      // likewise
+      return U_;
+    }
+
+    index_type current_nnz = luparm_[23];
+    index_type n_singularities = luparm_[10];
+    U_ = static_cast<matrix::Sparse*>(new matrix::Csr(n_, m_, current_nnz - n_singularities, false, true));
+    U_->allocateMatrixData(memory::HOST);
+
+    index_type* rows = U_->getRowData(memory::HOST);
+    index_type* columns = U_->getColData(memory::HOST);
+    real_type* values = U_->getValues(memory::HOST);
+
+    // build an inverse permutation array for q
+
+    // NOTE: this is not one-indexed like the original is
+    std::unique_ptr<index_type[]> qt = std::unique_ptr<index_type[]>(new index_type[n_]);
+    for (index_type i = 0; i < n_; i++) {
+      qt[q_[i] - 1] = i;
+    }
+
+    // preprocessing since rows technically aren't ordered either
+
+    index_type stored_rows = luparm_[15];
+    for (index_type stored_row = 0; stored_row < stored_rows; stored_row++) {
+      index_type corresponding_row = p_[stored_row] - 1;
+      rows[stored_row + 1] = lenr_[corresponding_row];
+    }
+
+    for (index_type row = 0; row < n_; row++) {
+      rows[row + 1] += rows[row];
+    }
+
+    // fill the destination arrays
+
+    for (index_type row = 0; row < n_; row++) {
+      index_type offset = locr_[p_[row] - 1] - 1;
+
+      for (index_type destination_offset = rows[row]; destination_offset < rows[row + 1]; destination_offset++) {
+        index_type column = qt[indr_[offset] - 1];
+
+        // closest position to the target column
+        index_type* closest_position =
+            std::lower_bound(&columns[rows[row]], &columns[destination_offset], column);
+
+        // destination offset for the element being inserted
+        index_type insertion_offset = static_cast<index_type>(closest_position - columns);
+
+        // LUSOL is not supposed to create duplicates. Report error if it does.
+        if (columns[insertion_offset] == column && closest_position != &columns[destination_offset]) {
+          out::error() << "duplicate element found during LUSOL U factor extraction\n";
+          return nullptr;
+        }
+
+        for (index_type swap_offset = destination_offset; swap_offset > insertion_offset; swap_offset--) {
+          std::swap(columns[swap_offset], columns[swap_offset - 1]);
+          std::swap(values[swap_offset], values[swap_offset - 1]);
+        }
+
+        columns[insertion_offset] = column;
+        values[insertion_offset] = a_[offset];
+
+        offset++;
+      }
+    }
+
+    return U_;
   }
 
   index_type* LinSolverDirectLUSOL::getPOrdering()
   {
-    out::error() << "LinSolverDirect::getPOrdering() called on "
-                    "LinSolverDirectLUSOL which is unimplemented!\n";
-    return nullptr;
+    if (P_ == nullptr) {
+      P_ = new index_type[m_];
+    }
+
+    for (index_type i = 0; i < m_; i++) {
+      P_[i] = p_[i] - 1;
+    }
+
+    return P_;
   }
 
   index_type* LinSolverDirectLUSOL::getQOrdering()
   {
-    out::error() << "LinSolverDirect::getQOrdering() called on "
-                    "LinSolverDirectLUSOL which is unimplemented!\n";
-    return nullptr;
+    if (Q_ == nullptr) {
+      Q_ = new index_type[n_];
+    }
+
+    for (index_type i = 0; i < n_; i++) {
+      Q_[i] = q_[i] - 1;
+    }
+
+    return Q_;
   }
 
   void LinSolverDirectLUSOL::setPivotThreshold(real_type /* _ */)
@@ -267,11 +475,7 @@ namespace ReSolve
   {
     // NOTE: determines a hopefully "good enough" size for a_, indc_, indr_.
     //       see lena_'s documentation for more details
-    if (nelem_ >= parmlu_[7] * m_ * n_) {
-      lena_ = m_ * n_;
-    } else {
-      lena_ = std::min(5 * nelem_, 2 * m_ * n_);
-    }
+    lena_ = std::max({2 * nelem_, 10 * m_, 10 * n_, 10000});
 
     a_ = new real_type[lena_];
     indc_ = new index_type[lena_];
@@ -279,7 +483,6 @@ namespace ReSolve
     mem_.setZeroArrayOnHost(a_, lena_);
     mem_.setZeroArrayOnHost(indc_, lena_);
     mem_.setZeroArrayOnHost(indr_, lena_);
-
 
     p_ = new index_type[m_];
     mem_.setZeroArrayOnHost(p_, m_);
@@ -313,7 +516,7 @@ namespace ReSolve
 
     w_ = new real_type[n_];
     mem_.setZeroArrayOnHost(w_, n_);
-  
+
     return 0;
   }
 
@@ -333,20 +536,24 @@ namespace ReSolve
     delete[] ipinv_;
     delete[] iqinv_;
     delete[] w_;
-    a_     = nullptr; 
-    indc_  = nullptr; 
-    indr_  = nullptr; 
-    p_     = nullptr; 
-    q_     = nullptr; 
-    lenc_  = nullptr; 
-    lenr_  = nullptr;
-    locc_  = nullptr;
-    locr_  = nullptr; 
+    delete[] P_;
+    delete[] Q_;
+    a_ = nullptr;
+    indc_ = nullptr;
+    indr_ = nullptr;
+    p_ = nullptr;
+    q_ = nullptr;
+    lenc_ = nullptr;
+    lenr_ = nullptr;
+    locc_ = nullptr;
+    locr_ = nullptr;
     iploc_ = nullptr;
-    iqloc_ = nullptr; 
-    ipinv_ = nullptr; 
+    iqloc_ = nullptr;
+    ipinv_ = nullptr;
     iqinv_ = nullptr;
-    w_     = nullptr;
+    w_ = nullptr;
+    P_ = nullptr;
+    Q_ = nullptr;
 
     return 0;
   }
