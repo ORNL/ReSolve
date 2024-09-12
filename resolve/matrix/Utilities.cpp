@@ -265,6 +265,11 @@ namespace ReSolve
       // Set last row pointer
       rows_csr[csr_row_counter] = nnz_expanded_no_duplicates;
 
+      // Move data to `memspace`
+      if (memspace != memory::HOST) {
+        A_csr->copyData(memspace);
+      }
+
       // std::cout << "Size of tmp list = " << tmp.size() << "\n\n";
       // std::cout << "Rows counted = " << csr_row_counter << "\n";
       // std::cout << "NNZs counted = " << csr_val_counter << "\n\n";
