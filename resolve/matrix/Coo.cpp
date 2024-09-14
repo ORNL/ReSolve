@@ -26,6 +26,101 @@ namespace ReSolve
   {
   }
   
+  /**
+   * @brief Hijacking constructor
+   */
+  matrix::Coo::Coo(index_type n,
+                   index_type m,
+                   index_type nnz,
+                   bool symmetric,
+                   bool expanded,
+                   index_type** rows,
+                   index_type** cols,
+                   real_type** vals,
+                   memory::MemorySpace memspaceSrc,
+                   memory::MemorySpace memspaceDst)
+    : Sparse(n, m, nnz, symmetric, expanded)
+  {
+    using namespace memory;
+    int control = -1;
+    if ((memspaceSrc == memory::HOST)   && (memspaceDst == memory::HOST))  { control = 0;}
+    if ((memspaceSrc == memory::HOST)   && (memspaceDst == memory::DEVICE)){ control = 1;}
+    if ((memspaceSrc == memory::DEVICE) && (memspaceDst == memory::HOST))  { control = 2;}
+    if ((memspaceSrc == memory::DEVICE) && (memspaceDst == memory::DEVICE)){ control = 3;}
+
+    switch (control)
+    {
+      case 0: // cpu->cpu
+        // Set host data
+        h_row_data_ = *rows;
+        h_col_data_ = *cols;
+        h_val_data_ = *vals;
+        h_data_updated_ = true;
+        owns_cpu_vals_ = true;
+        owns_cpu_data_  = true;
+        // Make sure there is no device data.
+        if (d_row_data_ || d_col_data_ || d_val_data_) {
+          out::error() << "Device data unexpectedly allocated. "
+                       << "Possible bug in matrix::Sparse class.\n";
+        }
+        // Hijack data from the source
+        *rows = nullptr;
+        *cols = nullptr;
+        *vals = nullptr;
+        break;
+      case 2: // gpu->cpu
+        // Set device data and copy it to host
+        d_row_data_ = *rows;
+        d_col_data_ = *cols;
+        d_val_data_ = *vals;
+        d_data_updated_ = true;
+        owns_gpu_vals_ = true;
+        owns_gpu_data_  = true;
+        copyData(memspaceDst);
+        // Hijack data from the source
+        *rows = nullptr;
+        *cols = nullptr;
+        *vals = nullptr;
+        break;
+      case 1: // cpu->gpu
+        // Set host data and copy it to device
+        h_row_data_ = *rows;
+        h_col_data_ = *cols;
+        h_val_data_ = *vals;
+        h_data_updated_ = true;
+        owns_cpu_vals_ = true;
+        owns_cpu_data_  = true;
+        copyData(memspaceDst);
+        // Hijack data from the source
+        *rows = nullptr;
+        *cols = nullptr;
+        *vals = nullptr;
+        break;
+      case 3: // gpu->gpu
+        // Set device data
+        d_row_data_ = *rows;
+        d_col_data_ = *cols;
+        d_val_data_ = *vals;
+        d_data_updated_ = true;
+        owns_gpu_vals_ = true;
+        owns_gpu_data_  = true;
+        // Make sure there is no device data.
+        if (h_row_data_ || h_col_data_ || h_val_data_) {
+          out::error() << "Host data unexpectedly allocated. "
+                       << "Possible bug in matrix::Sparse class.\n";
+        }
+        // Hijack data from the source
+        *rows = nullptr;
+        *cols = nullptr;
+        *vals = nullptr;
+        break;
+      default:
+        out::error() << "Coo constructor failed! "
+                     << "Possible bug in memory spaces setting.\n";
+        break;
+    }
+  }
+
   matrix::Coo::~Coo()
   {
   }
@@ -249,12 +344,12 @@ namespace ReSolve
    * 
    * @param out - Output stream where the matrix data is printed
    */
-  void matrix::Coo::print(std::ostream& out)
+  void matrix::Coo::print(std::ostream& out, index_type indexing_base)
   {
     out << std::scientific << std::setprecision(std::numeric_limits<real_type>::digits10);
     for(int i = 0; i < nnz_; ++i) {
-      out << h_row_data_[i] << " "
-          << h_col_data_[i] << " "
+      out << h_row_data_[i] + indexing_base << " "
+          << h_col_data_[i] + indexing_base << " "
           << h_val_data_[i] << "\n";
     }
   }

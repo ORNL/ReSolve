@@ -383,13 +383,13 @@ namespace ReSolve
    * 
    * @param out - Output stream where the matrix data is printed
    */
-  void matrix::Csr::print(std::ostream& out)
+  void matrix::Csr::print(std::ostream& out, index_type indexing_base)
   {
     out << std::scientific << std::setprecision(std::numeric_limits<real_type>::digits10);
     for(index_type i = 0; i < n_; ++i) {
       for (index_type j = h_row_data_[i]; j < h_row_data_[i+1]; ++j) {
-        out << i << " " 
-            << h_col_data_[j] << " "
+        out << i              + indexing_base << " " 
+            << h_col_data_[j] + indexing_base << " "
             << h_val_data_[j] << "\n";
       }
     }

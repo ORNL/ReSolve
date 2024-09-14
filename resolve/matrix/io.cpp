@@ -21,39 +21,52 @@ namespace ReSolve { namespace io {
 
     std::stringstream ss;
     std::string line;
-    index_type i = 0;
     index_type m, n, nnz;
     bool symmetric = false;
     bool expanded = true;
-    std::getline(file, line);
-    //symmetric?
-    size_t found = line.find("symmetric");
-    if (found != std::string::npos) {
-      symmetric = true;
-      expanded = false;
-    } 
-    while (line.at(0) == '%') {
-      std::getline(file, line); 
-      // std::cout<<line<<std::endl;
+
+    // Parse header and check if matrix is symmetric
+    while (std::getline(file, line))
+    {
+      if (line.at(0) != '%')
+        break;
+      if (line.find("symmetric") != std::string::npos) {
+        symmetric = true;
+        expanded = false;
+      }
     }
+
+    // Read the first line with matrix sizes
     ss << line;
     ss >> n >> m >> nnz;
-    //create matrix object
-    matrix::Coo* A = new matrix::Coo(n, m, nnz,symmetric, expanded );  
-    //create coo arrays
+
+    // Allocate and COO matrix data arrays
     index_type* coo_rows = new index_type[nnz];
     index_type* coo_cols = new index_type[nnz];
     real_type* coo_vals = new real_type[nnz];
-    i = 0;
-    index_type a, b;
-    real_type c;
-    while (file >> a >> b >> c) {
-      coo_rows[i] = a - 1;
-      coo_cols[i] = b - 1;
-      coo_vals[i] = c;
-      i++;
+
+    // Set COO data arrays
+    index_type idx = 0;
+    index_type i, j;
+    real_type v;
+    while (file >> i >> j >> v) {
+      coo_rows[idx] = i - 1;
+      coo_cols[idx] = j - 1;
+      coo_vals[idx] = v;
+      idx++;
     }
-    A->setMatrixData(coo_rows, coo_cols, coo_vals, memory::HOST);
+
+    // Create matrix object
+    matrix::Coo* A = new matrix::Coo(n,
+                                     m,
+                                     nnz,
+                                     symmetric,
+                                     expanded,
+                                     &coo_rows,
+                                     &coo_cols,
+                                     &coo_vals,
+                                     memory::HOST,
+                                     memory::HOST);  
     return A;
   }
 
@@ -95,18 +108,40 @@ namespace ReSolve { namespace io {
     }
 
     std::stringstream ss;
-    A->setExpanded(false);
     std::string line;
-    index_type i = 0;
-    index_type m, n, nnz;
+    // Default is a general matrix
+    bool symmetric = false;
+    bool expanded = true;
+
+    // Parse header and check if matrix is symmetric
     std::getline(file, line);
+    if (line.find("symmetric") != std::string::npos) {
+      symmetric = true;
+      expanded = false;
+    }
+    if (symmetric != A->symmetric()) {
+      Logger::error() << "In function readAndUpdateMatrix:"
+                      << "Source data does not match the symmetry of destination matrix.\n";
+    }
+    if (A->symmetric()) {
+      if (expanded != A->expanded()) {
+        Logger::error() << "In function readAndUpdateMatrix:"
+                        << "Source data symmetric but the destination matrix is expanded.\n";
+      }
+    }
+
+    // Skip the header comments
     while (line.at(0) == '%') {
       std::getline(file, line); 
       //  std::cout << line << std::endl;
     }
 
+    // Read the first line with matrix sizes
+    index_type m, n, nnz;
     ss << line;
     ss >> n >> m >> nnz;
+
+    // Make sure input data matches matrix A size
     if ((A->getNumRows() != n) || (A->getNumColumns() != m) || (A->getNnz() < nnz)) {      
       Logger::error() << "Wrong matrix size: " << A->getNumRows()
                       << "x" << A->getNumColumns() 
@@ -115,18 +150,19 @@ namespace ReSolve { namespace io {
       return;
     }
     A->setNnz(nnz);
-    //create coo arrays
+
+    // Populate COO data arrays
     index_type* coo_rows = A->getRowData(memory::HOST);
     index_type* coo_cols = A->getColData(memory::HOST);
     real_type* coo_vals  = A->getValues( memory::HOST);
-    i = 0;
-    index_type a, b;
-    real_type c;
-    while (file >> a >> b >> c) {
-      coo_rows[i] = a - 1;
-      coo_cols[i] = b - 1;
-      coo_vals[i] = c;
-      i++;
+    index_type idx = 0;
+    index_type i, j;
+    real_type v;
+    while (file >> i >> j >> v) {
+      coo_rows[idx] = i - 1;
+      coo_cols[idx] = j - 1;
+      coo_vals[idx] = v;
+      idx++;
     }
   }
 
@@ -179,7 +215,8 @@ namespace ReSolve { namespace io {
     file_out << A->getNumRows()    << " " 
              << A->getNumColumns() << " "
              << A->getNnz()        << "\n";
-    A->print(file_out);
+    A->print(file_out, 1);
+    // Indexing base 1 ^^
     return 0;
   }
 
