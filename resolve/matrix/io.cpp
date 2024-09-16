@@ -72,7 +72,7 @@ namespace ReSolve { namespace io {
       }
     }
 
-    std::cout << "NNZ = " << nnz << ", tmp.size() = " << tmp.size() << "\n";
+    nnz = tmp.size();
 
     // Create matrix
     matrix::Coo* B = new matrix::Coo(n, m, nnz, symmetric, expanded);
@@ -167,14 +167,12 @@ namespace ReSolve { namespace io {
     ss >> n >> m >> nnz;
 
     // Make sure input data matches matrix A size
-    if ((A->getNumRows() != n) || (A->getNumColumns() != m) || (A->getNnz() < nnz)) {      
+    if ((A->getNumRows() != n) || (A->getNumColumns() != m)) {
       Logger::error() << "Wrong matrix size: " << A->getNumRows()
-                      << "x" << A->getNumColumns() 
-                      << ", NNZ: " << A->getNnz()
-                      << " Cannot update! \n ";
+                      << "x" << A->getNumColumns()
+                      << ". Cannot update! \n ";
       return;
     }
-    A->setNnz(nnz);
 
     std::list<CooTriplet> tmp;
 
@@ -205,6 +203,15 @@ namespace ReSolve { namespace io {
         tmp.erase(it_tmp);
       }
     }
+
+    // Set correct nnz after duplicates are merged. 
+    nnz = tmp.size();
+    if (A->getNnz() < nnz) {
+      Logger::error() << "Too many NNZs: " << A->getNnz()
+                      << ". Cannot update! \n ";
+      return;
+    }
+    A->setNnz(nnz);
 
     // Populate COO data arrays
     index_type* coo_rows = A->getRowData(memory::HOST);

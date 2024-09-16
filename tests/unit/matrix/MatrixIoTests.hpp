@@ -49,7 +49,7 @@ public:
     delete A;
     A = nullptr;
 
-    std::istringstream file2(symmetric_coo_matrix_file_);
+    std::istringstream file2(symmetric_duplicates_coo_matrix_file_);
     A = ReSolve::io::readMatrixFromFile(file2);
 
     nnz_answer = static_cast<index_type>(symmetric_coo_matrix_vals_.size());
@@ -147,20 +147,20 @@ public:
 
     status *= verifyAnswer(A, symmetric_coo_matrix_rows_, symmetric_coo_matrix_cols_, symmetric_coo_matrix_vals_);
 
-    // Read string into istream and status it to `readMatrixFromFile` function.
-    std::istringstream file(general_coo_matrix_file_);
+    // Read next matrix market file into istream. This matrix has duplicates
+    // that need to be merged and number of nonzeros needs to be recalculated
+    // accordingly.
+    std::istringstream file(symmetric_duplicates_coo_matrix_file_);
 
     // Update matrix A with data from the matrix market file
-    A.setSymmetric(false);
     ReSolve::io::readAndUpdateMatrix(file, &A);
 
-    nnz_answer = static_cast<index_type>(general_coo_matrix_vals_.size());
     if (A.getNnz() != nnz_answer) {
       std::cout << "Incorrect NNZ read from the file ...\n";
       status = false;
     }
 
-    status *= verifyAnswer(A, general_coo_matrix_rows_, general_coo_matrix_cols_, general_coo_matrix_vals_);
+    status *= verifyAnswer(A, symmetric_coo_matrix_rows_, symmetric_coo_matrix_cols_, symmetric_coo_matrix_vals_);
 
     return status.report(__func__);
   }
@@ -321,6 +321,13 @@ R"(%%MatrixMarket matrix coordinate real general
                                                             3.332e+01,
                                                             1.200e+01 };
 
+  //
+  //     [11          15]
+  //     [   22 23 24   ]
+  // A = [      33    35]
+  //     [         44   ]
+  //     [            55]
+  //
   const std::string symmetric_coo_matrix_file_ =
 R"(%%MatrixMarket matrix coordinate real symmetric
 % This ASCII file represents a sparse MxN matrix with L 
@@ -353,6 +360,33 @@ R"(%%MatrixMarket matrix coordinate real symmetric
  3  5  35.0
  4  4  44.0   
  5  5  55.0
+ )";
+
+
+  //
+  //     [11          15]
+  //     [   22 23 24   ]
+  // A = [      33    35]
+  //     [         44   ]
+  //     [            55]
+  //
+  // A(1,1), A(5,5) and A(2,4) are stored in duplicate entries.
+  const std::string symmetric_duplicates_coo_matrix_file_ =
+R"(%%MatrixMarket matrix coordinate real symmetric
+%
+ 5  5  12
+ 5  5  50.0
+ 1  1  10.0
+ 1  5  15.0
+ 2  2  22.0 
+ 2  3  23.0  
+ 2  4  20.0 
+ 3  3  33.0 
+ 3  5  35.0
+ 4  4  44.0   
+ 5  5   5.0
+ 2  4   4.0 
+ 1  1   1.0
  )";
 
 
