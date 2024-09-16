@@ -14,7 +14,57 @@
 
 namespace ReSolve { namespace io {
 
-  matrix::Coo* readMatrixFromFile(std::istream& file)
+  static int loadToList(std::istream& file, std::list<CooTriplet>& tmp, bool is_expand_symmetric)
+  {
+    index_type idx = 0;
+    index_type i, j;
+    real_type v;
+    while (file >> i >> j >> v) {
+      CooTriplet triplet(i - 1, j - 1, v);
+      tmp.push_back(std::move(triplet));
+      idx++;
+    }
+
+    return 0;
+  }
+
+  static int removeDuplicates(std::list<CooTriplet>& tmp)
+  {
+    std::list<CooTriplet>::iterator it = tmp.begin();
+    while (it != tmp.end())
+    {
+      std::list<CooTriplet>::iterator it_tmp = it;
+      it++;
+      if (*it == *it_tmp) {
+        *it += *it_tmp;
+        tmp.erase(it_tmp);
+      }
+    }
+
+    return 0;
+  }
+
+  static int copyListToCoo(const std::list<CooTriplet>& tmp, matrix::Coo* A)
+  {
+    index_type* coo_rows = A->getRowData(memory::HOST);
+    index_type* coo_cols = A->getColData(memory::HOST);
+    real_type*  coo_vals = A->getValues( memory::HOST);
+
+    index_type element_counter = 0;
+    std::list<CooTriplet>::const_iterator it = tmp.begin();
+    while (it != tmp.end())
+    {
+      coo_rows[element_counter] = it->getRowIdx();
+      coo_cols[element_counter] = it->getColIdx();
+      coo_vals[element_counter] = it->getValue();
+      it++;
+      element_counter++;
+    }
+
+    return 0;
+  }
+
+  matrix::Coo* readMatrixFromFile(std::istream& file, bool is_expand_symmetric)
   {
     if(!file) {
       Logger::error() << "Empty input to readMatrixFromFile function ... \n" << std::endl;
@@ -46,51 +96,23 @@ namespace ReSolve { namespace io {
 
     // Store COO data in the temporary workspace.
     // Complexity O(NNZ)
-    index_type idx = 0;
-    index_type i, j;
-    real_type v;
-    while (file >> i >> j >> v) {
-      CooTriplet triplet(i - 1, j - 1, v);
-      tmp.push_back(std::move(triplet));
-      idx++;
-    }
+    loadToList(file, tmp, is_expand_symmetric);
 
     // Sort tmp
-    // Complexity NNZ*log(NNZ)
+    // Complexity O(NNZ*log(NNZ))
     tmp.sort();
 
     // Deduplicate tmp
     // Complexity O(NNZ)
-    std::list<CooTriplet>::iterator it = tmp.begin();
-    while (it != tmp.end())
-    {
-      std::list<CooTriplet>::iterator it_tmp = it;
-      it++;
-      if (*it == *it_tmp) {
-        *it += *it_tmp;
-        tmp.erase(it_tmp);
-      }
-    }
+    removeDuplicates(tmp);
 
     nnz = tmp.size();
 
     // Create matrix
     matrix::Coo* B = new matrix::Coo(n, m, nnz, symmetric, expanded);
     B->allocateMatrixData(memory::HOST);
-    index_type* coo_rows = B->getRowData(memory::HOST);
-    index_type* coo_cols = B->getColData(memory::HOST);
-    real_type*  coo_vals = B->getValues(memory::HOST);
 
-    index_type element_counter = 0;
-    it = tmp.begin();
-    while (it != tmp.end())
-    {
-      coo_rows[element_counter] = it->getRowIdx();
-      coo_cols[element_counter] = it->getColIdx();
-      coo_vals[element_counter] = it->getValue();
-      it++;
-      element_counter++;
-    }
+    copyListToCoo(tmp, B);
 
     return B;
   }
@@ -138,6 +160,9 @@ namespace ReSolve { namespace io {
     bool symmetric = false;
     bool expanded = true;
 
+    // Default is not to expand symmetric matrix
+    bool is_expand_symmetric = false;
+
     // Parse header and check if matrix is symmetric
     std::getline(file, line);
     if (line.find("symmetric") != std::string::npos) {
@@ -178,31 +203,15 @@ namespace ReSolve { namespace io {
 
     // Store COO data in the temporary workspace.
     // Complexity O(NNZ)
-    index_type idx = 0;
-    index_type i, j;
-    real_type v;
-    while (file >> i >> j >> v) {
-      CooTriplet triplet(i - 1, j - 1, v);
-      tmp.push_back(std::move(triplet));
-      idx++;
-    }
+    loadToList(file, tmp, is_expand_symmetric);
 
     // Sort tmp
-    // Complexity NNZ*log(NNZ)
+    // Complexity O(NNZ*log(NNZ))
     tmp.sort();
 
     // Deduplicate tmp
     // Complexity O(NNZ)
-    std::list<CooTriplet>::iterator it = tmp.begin();
-    while (it != tmp.end())
-    {
-      std::list<CooTriplet>::iterator it_tmp = it;
-      it++;
-      if (*it == *it_tmp) {
-        *it += *it_tmp;
-        tmp.erase(it_tmp);
-      }
-    }
+    removeDuplicates(tmp);
 
     // Set correct nnz after duplicates are merged. 
     nnz = tmp.size();
@@ -213,21 +222,9 @@ namespace ReSolve { namespace io {
     }
     A->setNnz(nnz);
 
-    // Populate COO data arrays
-    index_type* coo_rows = A->getRowData(memory::HOST);
-    index_type* coo_cols = A->getColData(memory::HOST);
-    real_type*  coo_vals = A->getValues( memory::HOST);
-
-    index_type element_counter = 0;
-    it = tmp.begin();
-    while (it != tmp.end())
-    {
-      coo_rows[element_counter] = it->getRowIdx();
-      coo_cols[element_counter] = it->getColIdx();
-      coo_vals[element_counter] = it->getValue();
-      it++;
-      element_counter++;
-    }
+    // Populate COO matrix
+    // Complexity O(NNZ)
+    copyListToCoo(tmp, A);
   }
 
   void readAndUpdateRhs(std::istream& file, real_type** p_rhs) 

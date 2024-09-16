@@ -13,6 +13,7 @@ int main(int, char**)
   ReSolve::tests::TestingResults result;
   result += test.newCooToCsr();
   result += test.oldCooToCsr();
+  result += test.simpleCooToCsr();
 
   return result.summary();
 }

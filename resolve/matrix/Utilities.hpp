@@ -44,6 +44,19 @@ namespace ReSolve
         return value_;
       }
 
+      const index_type getRowIdx() const
+      {
+        return rowidx_;
+      }
+      const index_type getColIdx() const
+      {
+        return colidx_;
+      }
+      const real_type getValue() const
+      {
+        return value_;
+      }
+
       bool operator < (const CooTriplet& str) const
       {
         if (rowidx_ < str.rowidx_)
@@ -101,5 +114,8 @@ namespace ReSolve
 
     /// @brief Converts symmetric or general COO to general CSR matrix
     int coo2csr_new(matrix::Coo* A_coo, matrix::Csr* A_csr, memory::MemorySpace memspace);
+
+    /// @brief Converts row-major sorted COO to CSR matrix, preserves symmetry properties.
+    int coo2csr_simple(matrix::Coo* A_coo, matrix::Csr* A_csr, memory::MemorySpace memspace);
   }
 }

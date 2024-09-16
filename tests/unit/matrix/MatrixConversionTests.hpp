@@ -33,6 +33,24 @@ class MatrixConversionTests : TestBase
       return status.report(__func__);
     }
   
+    TestOutcome simpleCooToCsr()
+    {
+      TestStatus status;
+      status = true;
+  
+      matrix::Coo* A = createSymmetricExpandedCooMatrix(); 
+      ReSolve::matrix::Csr* A_csr = new matrix::Csr(A->getNumRows(), A->getNumColumns(), A->getNnz(), A->symmetric(), A->expanded());
+  
+      int retval = coo2csr_simple(A, A_csr, memory::HOST);
+  
+      status *= verifyAnswer(*A_csr, symmetric_expanded_csr_matrix_rows_, symmetric_expanded_csr_matrix_cols_, symmetric_expanded_csr_matrix_vals_);
+  
+      delete A;
+      delete A_csr;
+  
+      return status.report(__func__);
+    }
+  
     TestOutcome oldCooToCsr()
     {
       TestStatus status;
@@ -99,6 +117,38 @@ class MatrixConversionTests : TestBase
       index_type cols[10] = {0, 4, 3, 1, 2, 4, 2, 3, 4, 3};
       real_type  vals[10] = {11.0, 15.0,12.0, 22.0, 23.0, 35.0, 33.0, 44.0, 55.0, 12.0};
   
+      A->allocateMatrixData(memory::HOST);
+      A->updateData(rows, cols, vals, memory::HOST, memory::HOST);
+      return A;
+    }
+  
+    //
+    //     [11          15]
+    //     [   22 23 24   ]
+    // A = [   23 33    35]
+    //     [   24    44   ]
+    //     [15    35    55]
+    //
+    // Symmetric matrix in COO general format
+    //
+    matrix::Coo* createSymmetricExpandedCooMatrix()
+    {
+      matrix::Coo* A = new matrix::Coo(5, 5, 13, true, true);
+      index_type rows[13] = {0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4};
+      index_type cols[13] = {0, 4, 1, 2, 3, 1, 2, 4, 1, 3, 0, 2, 4};
+      real_type  vals[13] = { 11.0,
+                              15.0,
+                              22.0,
+                              23.0,
+                              24.0,
+                              23.0,
+                              33.0,
+                              35.0,
+                              24.0,
+                              44.0,
+                              15.0,
+                              35.0,
+                              55.0 };  
       A->allocateMatrixData(memory::HOST);
       A->updateData(rows, cols, vals, memory::HOST, memory::HOST);
       return A;
