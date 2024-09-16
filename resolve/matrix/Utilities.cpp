@@ -82,9 +82,10 @@ namespace ReSolve
       }
       row_csr[n] = nnz;
 
-
       A_csr->updateData(row_csr, cols_coo, vals_coo, memory::HOST, memspace);
 
+      delete [] row_csr;
+      
       return 0;
     }
 
