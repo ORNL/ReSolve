@@ -3,10 +3,12 @@
 #include <string>
 #include <fstream>
 #include <sstream>
+#include <list>
 
 #include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/matrix/Coo.hpp>
+#include <resolve/matrix/Utilities.hpp>
 #include "io.hpp"
 
 
@@ -40,34 +42,57 @@ namespace ReSolve { namespace io {
     ss << line;
     ss >> n >> m >> nnz;
 
-    // Allocate and COO matrix data arrays
-    index_type* coo_rows = new index_type[nnz];
-    index_type* coo_cols = new index_type[nnz];
-    real_type* coo_vals = new real_type[nnz];
+    std::list<CooTriplet> tmp;
 
-    // Set COO data arrays
+    // Store COO data in the temporary workspace.
+    // Complexity O(NNZ)
     index_type idx = 0;
     index_type i, j;
     real_type v;
     while (file >> i >> j >> v) {
-      coo_rows[idx] = i - 1;
-      coo_cols[idx] = j - 1;
-      coo_vals[idx] = v;
+      CooTriplet triplet(i - 1, j - 1, v);
+      tmp.push_back(std::move(triplet));
       idx++;
     }
 
-    // Create matrix object
-    matrix::Coo* A = new matrix::Coo(n,
-                                     m,
-                                     nnz,
-                                     symmetric,
-                                     expanded,
-                                     &coo_rows,
-                                     &coo_cols,
-                                     &coo_vals,
-                                     memory::HOST,
-                                     memory::HOST);  
-    return A;
+    // Sort tmp
+    // Complexity NNZ*log(NNZ)
+    tmp.sort();
+
+    // Deduplicate tmp
+    // Complexity O(NNZ)
+    std::list<CooTriplet>::iterator it = tmp.begin();
+    while (it != tmp.end())
+    {
+      std::list<CooTriplet>::iterator it_tmp = it;
+      it++;
+      if (*it == *it_tmp) {
+        *it += *it_tmp;
+        tmp.erase(it_tmp);
+      }
+    }
+
+    std::cout << "NNZ = " << nnz << ", tmp.size() = " << tmp.size() << "\n";
+
+    // Create matrix
+    matrix::Coo* B = new matrix::Coo(n, m, nnz, symmetric, expanded);
+    B->allocateMatrixData(memory::HOST);
+    index_type* coo_rows = B->getRowData(memory::HOST);
+    index_type* coo_cols = B->getColData(memory::HOST);
+    real_type*  coo_vals = B->getValues(memory::HOST);
+
+    index_type element_counter = 0;
+    it = tmp.begin();
+    while (it != tmp.end())
+    {
+      coo_rows[element_counter] = it->getRowIdx();
+      coo_cols[element_counter] = it->getColIdx();
+      coo_vals[element_counter] = it->getValue();
+      it++;
+      element_counter++;
+    }
+
+    return B;
   }
 
 
@@ -151,18 +176,50 @@ namespace ReSolve { namespace io {
     }
     A->setNnz(nnz);
 
-    // Populate COO data arrays
-    index_type* coo_rows = A->getRowData(memory::HOST);
-    index_type* coo_cols = A->getColData(memory::HOST);
-    real_type* coo_vals  = A->getValues( memory::HOST);
+    std::list<CooTriplet> tmp;
+
+    // Store COO data in the temporary workspace.
+    // Complexity O(NNZ)
     index_type idx = 0;
     index_type i, j;
     real_type v;
     while (file >> i >> j >> v) {
-      coo_rows[idx] = i - 1;
-      coo_cols[idx] = j - 1;
-      coo_vals[idx] = v;
+      CooTriplet triplet(i - 1, j - 1, v);
+      tmp.push_back(std::move(triplet));
       idx++;
+    }
+
+    // Sort tmp
+    // Complexity NNZ*log(NNZ)
+    tmp.sort();
+
+    // Deduplicate tmp
+    // Complexity O(NNZ)
+    std::list<CooTriplet>::iterator it = tmp.begin();
+    while (it != tmp.end())
+    {
+      std::list<CooTriplet>::iterator it_tmp = it;
+      it++;
+      if (*it == *it_tmp) {
+        *it += *it_tmp;
+        tmp.erase(it_tmp);
+      }
+    }
+
+    // Populate COO data arrays
+    index_type* coo_rows = A->getRowData(memory::HOST);
+    index_type* coo_cols = A->getColData(memory::HOST);
+    real_type*  coo_vals = A->getValues( memory::HOST);
+
+    index_type element_counter = 0;
+    it = tmp.begin();
+    while (it != tmp.end())
+    {
+      coo_rows[element_counter] = it->getRowIdx();
+      coo_cols[element_counter] = it->getColIdx();
+      coo_vals[element_counter] = it->getValue();
+      it++;
+      element_counter++;
     }
   }
 
