@@ -35,7 +35,7 @@ namespace ReSolve
              A_coo->symmetric(),
              A_coo->expanded())
   {
-    matrix::coo2csr(A_coo, this, memspace);
+    matrix::coo2csr_simple(A_coo, this, memspace);
   }
 
   /**
@@ -374,7 +374,7 @@ namespace ReSolve
     assert(nnz_          == A_coo->getNnz());
     assert(is_symmetric_ == A_coo->symmetric()); // <- Do we need to check for this?
 
-    return matrix::coo2csr(A_coo, this, memspaceOut);
+    return matrix::coo2csr_simple(A_coo, this, memspaceOut);
   }
 
 

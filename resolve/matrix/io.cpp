@@ -23,6 +23,13 @@ namespace ReSolve { namespace io {
       CooTriplet triplet(i - 1, j - 1, v);
       tmp.push_back(std::move(triplet));
       idx++;
+      if (is_expand_symmetric) {
+        if (i != j) {
+          CooTriplet triplet(j - 1, i - 1, v);
+          tmp.push_back(std::move(triplet));
+          idx++;
+        }
+      }
     }
 
     return 0;
@@ -84,7 +91,7 @@ namespace ReSolve { namespace io {
         break;
       if (line.find("symmetric") != std::string::npos) {
         symmetric = true;
-        expanded = false;
+        expanded  = is_expand_symmetric;
       }
     }
 
@@ -96,7 +103,7 @@ namespace ReSolve { namespace io {
 
     // Store COO data in the temporary workspace.
     // Complexity O(NNZ)
-    loadToList(file, tmp, is_expand_symmetric);
+    loadToList(file, tmp, symmetric*is_expand_symmetric);
 
     // Sort tmp
     // Complexity O(NNZ*log(NNZ))
@@ -173,11 +180,9 @@ namespace ReSolve { namespace io {
       Logger::error() << "In function readAndUpdateMatrix:"
                       << "Source data does not match the symmetry of destination matrix.\n";
     }
+    // If the destination matrix is symmetric and expanded, then expand data.
     if (A->symmetric()) {
-      if (expanded != A->expanded()) {
-        Logger::error() << "In function readAndUpdateMatrix:"
-                        << "Source data symmetric but the destination matrix is expanded.\n";
-      }
+      is_expand_symmetric = A->expanded();
     }
 
     // Skip the header comments

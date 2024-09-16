@@ -49,8 +49,9 @@ public:
     delete A;
     A = nullptr;
 
+    bool is_expand_symmetric = false;
     std::istringstream file2(symmetric_duplicates_coo_matrix_file_);
-    A = ReSolve::io::readMatrixFromFile(file2);
+    A = ReSolve::io::readMatrixFromFile(file2, is_expand_symmetric);
 
     nnz_answer = static_cast<index_type>(symmetric_coo_matrix_vals_.size());
     if (A->getNnz() != nnz_answer) {
@@ -69,6 +70,34 @@ public:
     }
 
     status *= verifyAnswer(*A, symmetric_coo_matrix_rows_, symmetric_coo_matrix_cols_, symmetric_coo_matrix_vals_);
+
+    delete A;
+    A = nullptr;
+
+    is_expand_symmetric = true;
+    std::istringstream file3(symmetric_duplicates_coo_matrix_file_);
+    A = ReSolve::io::readMatrixFromFile(file3, is_expand_symmetric);
+
+    nnz_answer = static_cast<index_type>(symmetric_expanded_coo_matrix_vals_.size());
+    if (A->getNnz() != nnz_answer) {
+      std::cout << "Incorrect NNZ read from the file ...\n";
+      status = false;
+    }
+
+    if (!A->symmetric()) {
+      std::cout << "Incorrect matrix type, matrix is symmetric ...\n";
+      status = false;
+    }
+
+    if (!A->expanded()) {
+      std::cout << "Incorrect matrix type, matrix is expanded ...\n";
+      status = false;
+    }
+
+    status *= verifyAnswer(*A, symmetric_expanded_coo_matrix_rows_, symmetric_expanded_coo_matrix_cols_, symmetric_expanded_coo_matrix_vals_);
+
+    delete A;
+    A = nullptr;
 
     return status.report(__func__);
   }
@@ -161,6 +190,25 @@ public:
     }
 
     status *= verifyAnswer(A, symmetric_coo_matrix_rows_, symmetric_coo_matrix_cols_, symmetric_coo_matrix_vals_);
+
+    // Create a 5x5 COO matrix with 10 nonzeros
+    is_expanded = true;
+    ReSolve::matrix::Coo B(5, 5, 13, is_symmetric, is_expanded);
+    B.allocateMatrixData(memory::HOST);
+
+    // Read in symmetric matrix data
+    std::istringstream file3(symmetric_duplicates_coo_matrix_file_);
+
+    // Update matrix B with data from the matrix market file
+    ReSolve::io::readAndUpdateMatrix(file3, &B);
+
+    nnz_answer = static_cast<index_type>(symmetric_expanded_coo_matrix_vals_.size());
+    if (B.getNnz() != nnz_answer) {
+      std::cout << "Incorrect NNZ read from the file ...\n";
+      status = false;
+    }
+
+    status *= verifyAnswer(B, symmetric_expanded_coo_matrix_rows_, symmetric_expanded_coo_matrix_cols_, symmetric_expanded_coo_matrix_vals_);
 
     return status.report(__func__);
   }
@@ -393,7 +441,7 @@ R"(%%MatrixMarket matrix coordinate real symmetric
   /// Matching COO matrix data as it is supposed to be read from the file
   const std::vector<index_type> symmetric_coo_matrix_rows_ = {0,0,1,1,1,2,2,3,4};
   const std::vector<index_type> symmetric_coo_matrix_cols_ = {0,4,1,2,3,2,4,3,4};
-  const std::vector<real_type> symmetric_coo_matrix_vals_ = { 11.0,
+  const std::vector<real_type>  symmetric_coo_matrix_vals_ = {11.0,
                                                               15.0,
                                                               22.0,
                                                               23.0,
@@ -401,8 +449,33 @@ R"(%%MatrixMarket matrix coordinate real symmetric
                                                               33.0,
                                                               35.0,
                                                               44.0,
-                                                              55.0 };
+                                                              55.0};
 
+    // Matching expanded COO matrix data as it is supposed to be created
+    //
+    //     [11          15]
+    //     [   22 23 24   ]
+    // A = [   23 33    35]
+    //     [   24    44   ]
+    //     [15    35    55]
+    //
+    // Symmetric matrix stored in COO general format
+    //
+    const std::vector<index_type> symmetric_expanded_coo_matrix_rows_ = {0,0,1,1,1,2,2,2,3,3,4,4,4};
+    const std::vector<index_type> symmetric_expanded_coo_matrix_cols_ = {0,4,1,2,3,1,2,4,1,3,0,2,4};
+    const std::vector<real_type>  symmetric_expanded_coo_matrix_vals_ = { 11.0,
+                                                                          15.0,
+                                                                          22.0,
+                                                                          23.0,
+                                                                          24.0,
+                                                                          23.0,
+                                                                          33.0,
+                                                                          35.0,
+                                                                          24.0,
+                                                                          44.0,
+                                                                          15.0,
+                                                                          35.0,
+                                                                          55.0 };
 
   const std::string general_vector_file_ = 
 R"(% This ASCII file represents a sparse MxN matrix with L 

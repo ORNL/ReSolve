@@ -12,7 +12,7 @@ namespace ReSolve { namespace matrix {
 namespace ReSolve { namespace io {
   using vector_type = vector::Vector;
 
-  matrix::Coo* readMatrixFromFile(std::istream& file, bool is_expand_symmetric = false);
+  matrix::Coo* readMatrixFromFile(std::istream& file, bool is_expand_symmetric = true);
   void readAndUpdateMatrix(std::istream& file, matrix::Coo* A);
   real_type* readRhsFromFile(std::istream& file); 
   void readAndUpdateRhs(std::istream& file, real_type** rhs); 
