@@ -116,7 +116,7 @@ namespace ReSolve {
    */
   int MatrixHandler::coo2csr(matrix::Coo* A_coo, matrix::Csr* A_csr, memory::MemorySpace memspace)
   {
-    return matrix::coo2csr(A_coo, A_csr, memspace);
+    return matrix::coo2csr_simple(A_coo, A_csr, memspace);
   }
 
   /**
