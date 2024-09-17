@@ -46,28 +46,15 @@ namespace ReSolve
         value_  = value;
       }
 
-      index_type getRowIdx()
+      index_type getRowIdx() const
       {
         return rowidx_;
       }
-      index_type getColIdx()
+      index_type getColIdx() const
       {
         return colidx_;
       }
-      real_type getValue()
-      {
-        return value_;
-      }
-
-      const index_type getRowIdx() const
-      {
-        return rowidx_;
-      }
-      const index_type getColIdx() const
-      {
-        return colidx_;
-      }
-      const real_type getValue() const
+      real_type getValue() const
       {
         return value_;
       }
@@ -114,7 +101,7 @@ namespace ReSolve
   {
 
     // Static helper functionsdeclarations
-    static void print_list(std::list<CooTriplet>& l);
+    // static void print_list(std::list<CooTriplet>& l);
     static int loadToList(std::istream& file, std::list<CooTriplet>& tmp, bool is_expand_symmetric);
     static int removeDuplicates(std::list<CooTriplet>& tmp);
     static int copyListToCoo(const std::list<CooTriplet>& tmp, matrix::Coo* A);
@@ -160,7 +147,7 @@ namespace ReSolve
 
       // Store COO data in the temporary workspace.
       // Complexity O(NNZ)
-      loadToList(file, tmp, symmetric*is_expand_symmetric);
+      loadToList(file, tmp, symmetric && is_expand_symmetric);
 
       // Sort tmp
       // Complexity O(NNZ*log(NNZ))
@@ -170,7 +157,7 @@ namespace ReSolve
       // Complexity O(NNZ)
       removeDuplicates(tmp);
 
-      nnz = tmp.size();
+      nnz = static_cast<index_type>(tmp.size());
 
       // Create matrix
       matrix::Coo* B = new matrix::Coo(n, m, nnz, symmetric, expanded);
@@ -222,7 +209,6 @@ namespace ReSolve
       std::string line;
       // Default is a general matrix
       bool symmetric = false;
-      bool expanded = true;
 
       // Default is not to expand symmetric matrix
       bool is_expand_symmetric = false;
@@ -231,7 +217,6 @@ namespace ReSolve
       std::getline(file, line);
       if (line.find("symmetric") != std::string::npos) {
         symmetric = true;
-        expanded = false;
       }
       if (symmetric != A->symmetric()) {
         Logger::error() << "In function readAndUpdateMatrix:"
@@ -276,7 +261,7 @@ namespace ReSolve
       removeDuplicates(tmp);
 
       // Set correct nnz after duplicates are merged. 
-      nnz = tmp.size();
+      nnz = static_cast<index_type>(tmp.size());
       if (A->getNnz() < nnz) {
         Logger::error() << "Too many NNZs: " << A->getNnz()
                         << ". Cannot update! \n ";
@@ -362,29 +347,27 @@ namespace ReSolve
     // Static helper functions
     //
 
-    void print_list(std::list<CooTriplet>& l)
-    {
-      // Print out the list
-      std::cout << "tmp list:\n";
-      for (CooTriplet& n : l)
-        n.print();
-      std::cout << "\n";
-    }
+    // Commented out; needed for debugging only.
+    // void print_list(std::list<CooTriplet>& l)
+    // {
+    //   // Print out the list
+    //   std::cout << "tmp list:\n";
+    //   for (CooTriplet& n : l)
+    //     n.print();
+    //   std::cout << "\n";
+    // }
 
     int loadToList(std::istream& file, std::list<CooTriplet>& tmp, bool is_expand_symmetric)
     {
-      index_type idx = 0;
       index_type i, j;
       real_type v;
       while (file >> i >> j >> v) {
         CooTriplet triplet(i - 1, j - 1, v);
         tmp.push_back(std::move(triplet));
-        idx++;
         if (is_expand_symmetric) {
           if (i != j) {
             CooTriplet triplet(j - 1, i - 1, v);
             tmp.push_back(std::move(triplet));
-            idx++;
           }
         }
       }

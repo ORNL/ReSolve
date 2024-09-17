@@ -23,7 +23,7 @@ class MatrixConversionTests : TestBase
       matrix::Coo* A = createSymmetricExpandedCooMatrix(); 
       ReSolve::matrix::Csr* A_csr = new matrix::Csr(A->getNumRows(), A->getNumColumns(), A->getNnz(), A->symmetric(), A->expanded());
   
-      int retval = coo2csr_simple(A, A_csr, memory::HOST);
+      coo2csr_simple(A, A_csr, memory::HOST);
   
       status *= verifyAnswer(*A_csr, symmetric_expanded_csr_matrix_rows_, symmetric_expanded_csr_matrix_cols_, symmetric_expanded_csr_matrix_vals_);
   

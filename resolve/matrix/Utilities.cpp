@@ -25,14 +25,19 @@ namespace ReSolve
      */
     int coo2csr_simple(matrix::Coo* A_coo, matrix::Csr* A_csr, memory::MemorySpace memspace)
     {
+      if ((A_coo->getNumRows()    != A_csr->getNumRows())    ||
+          (A_coo->getNumColumns() != A_csr->getNumColumns()) ||
+          (A_coo->getNnz()        != A_csr->getNnz())        ||
+          (A_coo->symmetric()     != A_csr->symmetric())     ||
+          (A_coo->expanded()      != A_csr->expanded())) {
+        io::Logger::error() << "COO and CSR matrix are not of same size or type.\n";
+        return 1;
+      }
       index_type n = A_coo->getNumRows();
-      index_type m = A_coo->getNumColumns();
       index_type nnz = A_coo->getNnz();
       /* const */ index_type* rows_coo = A_coo->getRowData(memory::HOST);
       /* const */ index_type* cols_coo = A_coo->getColData(memory::HOST);
       /* const */ real_type*  vals_coo = A_coo->getValues(memory::HOST);
-      bool is_symmetric = A_coo->symmetric();
-      bool is_expanded  = A_coo->expanded();
 
       index_type* row_csr = new index_type[n + 1];
 
