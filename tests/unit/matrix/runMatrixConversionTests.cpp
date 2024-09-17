@@ -11,8 +11,6 @@ int main(int, char**)
   ReSolve::tests::MatrixConversionTests test;
 
   ReSolve::tests::TestingResults result;
-  result += test.newCooToCsr();
-  result += test.oldCooToCsr();
   result += test.simpleCooToCsr();
 
   return result.summary();

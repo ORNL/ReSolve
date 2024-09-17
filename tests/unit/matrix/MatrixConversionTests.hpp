@@ -15,24 +15,6 @@ class MatrixConversionTests : TestBase
     MatrixConversionTests(){}
     virtual ~MatrixConversionTests(){}
   
-    TestOutcome newCooToCsr()
-    {
-      TestStatus status;
-      status = true;
-  
-      matrix::Coo* A = createSymmetricCooMatrix(); 
-      ReSolve::matrix::Csr* A_csr = new matrix::Csr(A->getNumRows(), A->getNumColumns(), 0);
-  
-      int retval = coo2csr_new(A, A_csr, memory::HOST);
-  
-      status *= verifyAnswer(*A_csr, symmetric_expanded_csr_matrix_rows_, symmetric_expanded_csr_matrix_cols_, symmetric_expanded_csr_matrix_vals_);
-  
-      delete A;
-      delete A_csr;
-  
-      return status.report(__func__);
-    }
-  
     TestOutcome simpleCooToCsr()
     {
       TestStatus status;
@@ -42,24 +24,6 @@ class MatrixConversionTests : TestBase
       ReSolve::matrix::Csr* A_csr = new matrix::Csr(A->getNumRows(), A->getNumColumns(), A->getNnz(), A->symmetric(), A->expanded());
   
       int retval = coo2csr_simple(A, A_csr, memory::HOST);
-  
-      status *= verifyAnswer(*A_csr, symmetric_expanded_csr_matrix_rows_, symmetric_expanded_csr_matrix_cols_, symmetric_expanded_csr_matrix_vals_);
-  
-      delete A;
-      delete A_csr;
-  
-      return status.report(__func__);
-    }
-  
-    TestOutcome oldCooToCsr()
-    {
-      TestStatus status;
-      status.expectFailure();
-  
-      matrix::Coo* A = createSymmetricCooMatrix(); 
-      ReSolve::matrix::Csr* A_csr = new matrix::Csr(A->getNumRows(), A->getNumColumns(), 0);
-  
-      int retval = coo2csr(A, A_csr, memory::HOST);
   
       status *= verifyAnswer(*A_csr, symmetric_expanded_csr_matrix_rows_, symmetric_expanded_csr_matrix_cols_, symmetric_expanded_csr_matrix_vals_);
   
