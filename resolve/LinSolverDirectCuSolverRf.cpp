@@ -114,6 +114,7 @@ namespace ReSolve
     status_cusolverrf_ =  cusolverRfRefactor(handle_cusolverrf_);
     error_sum += status_cusolverrf_;
 
+    mem_.deviceSynchronize();
     return error_sum; 
   }
 
@@ -128,6 +129,7 @@ namespace ReSolve
                                           A_->getNumRows(),
                                           rhs->getData(memory::DEVICE),
                                           A_->getNumRows());
+    mem_.deviceSynchronize();
     return status_cusolverrf_;
   }
 
@@ -143,6 +145,7 @@ namespace ReSolve
                                           A_->getNumRows(),
                                           x->getData(memory::DEVICE),
                                           A_->getNumRows());
+    mem_.deviceSynchronize();
     return status_cusolverrf_;
   }
 
