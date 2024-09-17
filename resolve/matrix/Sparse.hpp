@@ -32,13 +32,11 @@ namespace ReSolve { namespace matrix {
       index_type getNumRows();
       index_type getNumColumns();
       index_type getNnz();
-      index_type getNnzExpanded();
 
       bool symmetric(); 
       bool expanded();
       void setSymmetric(bool symmetric);
       void setExpanded(bool expanded);
-      void setNnzExpanded(index_type nnz_expanded_new);
       void setNnz(index_type nnz_new); // for resetting when removing duplicates
       int setUpdated(memory::MemorySpace what);
 
@@ -71,7 +69,6 @@ namespace ReSolve { namespace matrix {
       index_type n_{0}; ///< number of rows
       index_type m_{0}; ///< number of columns
       index_type nnz_{0}; ///< number of non-zeros
-      index_type nnz_expanded_{0}; ///< number of non-zeros in an expanded matrix (for symmetric matrices)
 
       bool is_symmetric_{false}; ///< symmetry flag
       bool is_expanded_{false}; ///< "expanded" flag

@@ -128,7 +128,7 @@ int main(int argc, char *argv[])
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
     }
     RESOLVE_RANGE_POP("Convert to CSR");
-    std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnzExpanded()<<std::endl;
+    std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnz()<<std::endl;
     int status;
     real_type norm_b;
     if (i < 2) {

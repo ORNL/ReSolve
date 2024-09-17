@@ -40,7 +40,7 @@ namespace ReSolve
     handle_cusolversp_ = workspaceCUDA->getCusolverSpHandle();
     A_ = (matrix::Csr*) A;
     index_type n = A_->getNumRows();
-    index_type nnz = A_->getNnzExpanded();
+    index_type nnz = A_->getNnz();
     //create combined factor
     addFactors(L,U);
 
@@ -160,7 +160,7 @@ namespace ReSolve
     status_cusolver_ =  cusolverSpDgluReset(handle_cusolversp_, 
                                             A_->getNumRows(),
                                             /* A is original matrix */
-                                            A_->getNnzExpanded(),
+                                            A_->getNnz(),
                                             descr_A_,
                                             A_->getValues( memory::DEVICE),
                                             A_->getRowData(memory::DEVICE),

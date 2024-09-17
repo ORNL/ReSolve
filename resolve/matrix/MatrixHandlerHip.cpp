@@ -59,7 +59,7 @@ namespace ReSolve {
                                            rocsparse_operation_none,
                                            A->getNumRows(),
                                            A->getNumColumns(),
-                                           A->getNnzExpanded(), 
+                                           A->getNnz(), 
                                            descrA,
                                            A->getValues( memory::DEVICE), 
                                            A->getRowData(memory::DEVICE),
@@ -77,7 +77,7 @@ namespace ReSolve {
                                 rocsparse_operation_none,
                                 A->getNumRows(),
                                 A->getNumColumns(),
-                                A->getNnzExpanded(),
+                                A->getNnz(),
                                 alpha, 
                                 descrA,
                                 A->getValues( memory::DEVICE), 
@@ -127,7 +127,7 @@ namespace ReSolve {
 
     mem_.deviceSynchronize();
     matrix_row_sums(A->getNumRows(),
-                    A->getNnzExpanded(),
+                    A->getNnz(),
                     A->getRowData(memory::DEVICE),
                     A->getValues(memory::DEVICE),
                     d_r);

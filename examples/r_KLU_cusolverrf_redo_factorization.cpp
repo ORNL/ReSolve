@@ -123,7 +123,7 @@ int main(int argc, char *argv[] )
       matrix_handler->coo2csr(A_coo, A, ReSolve::memory::DEVICE);
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
     }
-    std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnzExpanded()<<std::endl;
+    std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnz()<<std::endl;
     //Now call direct solver
     if (i < 2) {
       KLU->setup(A);

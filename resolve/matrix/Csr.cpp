@@ -201,7 +201,6 @@ namespace ReSolve
   {
     //four cases (for now)
     index_type nnz_current = nnz_;
-    if (is_expanded_) {nnz_current = nnz_expanded_;}
     setNotUpdated();
     int control = -1;
     if ((memspaceIn == memory::HOST)     && (memspaceOut == memory::HOST))    { control = 0;}
@@ -285,7 +284,6 @@ namespace ReSolve
   int matrix::Csr::allocateMatrixData(memory::MemorySpace memspace)
   {
     index_type nnz_current = nnz_;
-    if (is_expanded_) {nnz_current = nnz_expanded_;}
     destroyMatrixData(memspace);//just in case
 
     if (memspace == memory::HOST) {
@@ -316,9 +314,6 @@ namespace ReSolve
     using namespace ReSolve::memory;
 
     index_type nnz_current = nnz_;
-    if (is_expanded_) {
-      nnz_current = nnz_expanded_;
-    }
 
     switch (memspaceOut) {
       case HOST:

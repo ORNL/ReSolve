@@ -57,7 +57,7 @@ namespace ReSolve {
         status = cusparseCreateCsr(&matA, 
                                    A->getNumRows(),
                                    A->getNumColumns(),
-                                   A->getNnzExpanded(),
+                                   A->getNnz(),
                                    A->getRowData(memory::DEVICE),
                                    A->getColData(memory::DEVICE),
                                    A->getValues( memory::DEVICE), 
@@ -138,7 +138,7 @@ namespace ReSolve {
     }
 
     matrix_row_sums(A->getNumRows(),
-                    A->getNnzExpanded(),
+                    A->getNnz(),
                     A->getRowData(memory::DEVICE),
                     A->getValues(memory::DEVICE),
                     d_r);

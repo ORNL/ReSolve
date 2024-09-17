@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
       A->updateFromCoo(A_coo, ReSolve::memory::HOST);
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
     }
-    std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnzExpanded()<<std::endl;
+    std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnz()<<std::endl;
     //Now call direct solver
     int status;
 

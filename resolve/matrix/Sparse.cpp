@@ -30,7 +30,6 @@ namespace ReSolve {
   {
     this->is_symmetric_ = false;
     this->is_expanded_ = true; //default is a normal non-symmetric fully expanded matrix
-    this->nnz_expanded_ = nnz;
 
     setNotUpdated();
 
@@ -70,11 +69,6 @@ namespace ReSolve {
     is_symmetric_{symmetric},
     is_expanded_{expanded}
   {
-    if (is_expanded_) {
-      this->nnz_expanded_ = nnz_;
-    } else {
-      this->nnz_expanded_ = 0;
-    }
     setNotUpdated();
 
     //set everything to nullptr
@@ -142,16 +136,6 @@ namespace ReSolve {
   }
 
   /**
-   * @brief get number of non-zeros in expanded matrix.
-   *
-   * @return number of non-zeros in expanded matrix.
-   */
-  index_type matrix::Sparse::getNnzExpanded()
-  {
-    return this->nnz_expanded_;
-  }
-
-  /**
    * @brief check if matrix is symmetric.
    *
    * @return true if symmetric, false otherwise.
@@ -189,16 +173,6 @@ namespace ReSolve {
   void matrix::Sparse::setExpanded(bool expanded)
   {
     this->is_expanded_ = expanded;
-  }
-
-  /**
-   * @brief Set number of non-zeros in expanded matrix.
-   *
-   * @param[in] nnz_expanded_new - new number of non-zeros in expanded matrix
-   */  
-  void matrix::Sparse::setNnzExpanded(index_type nnz_expanded_new)
-  {
-    this->nnz_expanded_ = nnz_expanded_new;
   }
 
   /**
@@ -355,7 +329,6 @@ namespace ReSolve {
   {
  
     index_type nnz_current = nnz_;
-    if (is_expanded_) {nnz_current = nnz_expanded_;}
     //four cases (for now)
     setNotUpdated();
     int control=-1;
