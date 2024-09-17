@@ -7,13 +7,16 @@ namespace ReSolve { namespace vector {
 namespace ReSolve { namespace matrix { 
   class Sparse;
   class Coo;
+  class Csr;
 }}
 
 namespace ReSolve { namespace io {
   using vector_type = vector::Vector;
 
   matrix::Coo* readMatrixFromFile(std::istream& file, bool is_expand_symmetric = true);
+  matrix::Csr* readCsrMatrixFromFile(std::istream& file, bool is_expand_symmetric = true);
   void readAndUpdateMatrix(std::istream& file, matrix::Coo* A);
+  void readAndUpdateMatrix(std::istream& file, matrix::Csr* A);
   real_type* readRhsFromFile(std::istream& file); 
   void readAndUpdateRhs(std::istream& file, real_type** rhs); 
 

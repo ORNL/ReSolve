@@ -8,6 +8,7 @@
 #include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/matrix/Coo.hpp>
+#include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/Utilities.hpp>
 #include "io.hpp"
 
@@ -101,10 +102,22 @@ namespace ReSolve
   {
 
     // Static helper functionsdeclarations
+    static void readListFromFile(std::istream& file,
+                                 bool is_expand_symmetric,                                  
+                                 std::list<CooTriplet>& tmp,
+                                 index_type& n,
+                                 index_type& m,
+                                 index_type& nnz,
+                                 bool& symmetric,
+                                 bool& expanded);
+    static void readAndUpdateSparseMatrix(std::istream& file,
+                                          matrix::Sparse* A,
+                                          std::list<CooTriplet>& tmp);
     // static void print_list(std::list<CooTriplet>& l);
     static int loadToList(std::istream& file, std::list<CooTriplet>& tmp, bool is_expand_symmetric);
     static int removeDuplicates(std::list<CooTriplet>& tmp);
     static int copyListToCoo(const std::list<CooTriplet>& tmp, matrix::Coo* A);
+    static int copyListToCsr(const std::list<CooTriplet>& tmp, matrix::Csr* A);
 
 
     /**
@@ -122,42 +135,13 @@ namespace ReSolve
         return nullptr;
       }
 
-      std::stringstream ss;
-      std::string line;
-      index_type m, n, nnz;
+      index_type m = 0, n = 0, nnz = 0;
       bool symmetric = false;
       bool expanded = true;
 
-      // Parse header and check if matrix is symmetric
-      while (std::getline(file, line))
-      {
-        if (line.at(0) != '%')
-          break;
-        if (line.find("symmetric") != std::string::npos) {
-          symmetric = true;
-          expanded  = is_expand_symmetric;
-        }
-      }
-
-      // Read the first line with matrix sizes
-      ss << line;
-      ss >> n >> m >> nnz;
-
       std::list<CooTriplet> tmp;
 
-      // Store COO data in the temporary workspace.
-      // Complexity O(NNZ)
-      loadToList(file, tmp, symmetric && is_expand_symmetric);
-
-      // Sort tmp
-      // Complexity O(NNZ*log(NNZ))
-      tmp.sort();
-
-      // Deduplicate tmp
-      // Complexity O(NNZ)
-      removeDuplicates(tmp);
-
-      nnz = static_cast<index_type>(tmp.size());
+      readListFromFile(file, is_expand_symmetric, tmp, n, m, nnz, symmetric, expanded);
 
       // Create matrix
       matrix::Coo* B = new matrix::Coo(n, m, nnz, symmetric, expanded);
@@ -166,6 +150,30 @@ namespace ReSolve
       copyListToCoo(tmp, B);
 
       return B;
+    }
+
+    matrix::Csr* readCsrMatrixFromFile(std::istream& file, bool is_expand_symmetric)
+    {
+      if(!file) {
+        Logger::error() << "Empty input to readMatrixFromFile function ... \n" << std::endl;
+        return nullptr;
+      }
+
+      index_type m = 0, n = 0, nnz = 0;
+      bool symmetric = false;
+      bool expanded = true;
+
+      std::list<CooTriplet> tmp;
+
+      readListFromFile(file, is_expand_symmetric, tmp, n, m, nnz, symmetric, expanded);
+
+      // Create matrix
+      matrix::Csr* A = new matrix::Csr(n, m, nnz, symmetric, expanded);
+      A->allocateMatrixData(memory::HOST);
+
+      copyListToCsr(tmp, A);
+
+      return A;
     }
 
 
@@ -205,73 +213,27 @@ namespace ReSolve
         return;
       }
 
-      std::stringstream ss;
-      std::string line;
-      // Default is a general matrix
-      bool symmetric = false;
+      std::list<CooTriplet> tmp;
 
-      // Default is not to expand symmetric matrix
-      bool is_expand_symmetric = false;
+      readAndUpdateSparseMatrix(file, A, tmp);
 
-      // Parse header and check if matrix is symmetric
-      std::getline(file, line);
-      if (line.find("symmetric") != std::string::npos) {
-        symmetric = true;
-      }
-      if (symmetric != A->symmetric()) {
-        Logger::error() << "In function readAndUpdateMatrix:"
-                        << "Source data does not match the symmetry of destination matrix.\n";
-      }
-      // If the destination matrix is symmetric and expanded, then expand data.
-      if (A->symmetric()) {
-        is_expand_symmetric = A->expanded();
-      }
+      // Populate COO matrix. Complexity O(NNZ)
+      copyListToCoo(tmp, A);
+    }
 
-      // Skip the header comments
-      while (line.at(0) == '%') {
-        std::getline(file, line); 
-        //  std::cout << line << std::endl;
-      }
-
-      // Read the first line with matrix sizes
-      index_type m, n, nnz;
-      ss << line;
-      ss >> n >> m >> nnz;
-
-      // Make sure input data matches matrix A size
-      if ((A->getNumRows() != n) || (A->getNumColumns() != m)) {
-        Logger::error() << "Wrong matrix size: " << A->getNumRows()
-                        << "x" << A->getNumColumns()
-                        << ". Cannot update! \n ";
+    void readAndUpdateMatrix(std::istream& file, matrix::Csr* A)
+    {
+      if(!file) {
+        Logger::error() << "Empty input to readMatrixFromFile function ..." << std::endl;
         return;
       }
 
       std::list<CooTriplet> tmp;
 
-      // Store COO data in the temporary workspace.
-      // Complexity O(NNZ)
-      loadToList(file, tmp, is_expand_symmetric);
+      readAndUpdateSparseMatrix(file, A, tmp);
 
-      // Sort tmp
-      // Complexity O(NNZ*log(NNZ))
-      tmp.sort();
-
-      // Deduplicate tmp
-      // Complexity O(NNZ)
-      removeDuplicates(tmp);
-
-      // Set correct nnz after duplicates are merged. 
-      nnz = static_cast<index_type>(tmp.size());
-      if (A->getNnz() < nnz) {
-        Logger::error() << "Too many NNZs: " << A->getNnz()
-                        << ". Cannot update! \n ";
-        return;
-      }
-      A->setNnz(nnz);
-
-      // Populate COO matrix
-      // Complexity O(NNZ)
-      copyListToCoo(tmp, A);
+      // Populate COO matrix. Complexity O(NNZ)
+      copyListToCsr(tmp, A);
     }
 
     void readAndUpdateRhs(std::istream& file, real_type** p_rhs) 
@@ -347,6 +309,112 @@ namespace ReSolve
     // Static helper functions
     //
 
+    static void readListFromFile(std::istream& file,
+                                 bool is_expand_symmetric,
+                                 std::list<CooTriplet>& tmp,
+                                 index_type& n,
+                                 index_type& m,
+                                 index_type& nnz,
+                                 bool& symmetric,
+                                 bool& expanded)
+    {
+      std::stringstream ss;
+      std::string line;
+      m = 0;
+      n = 0;
+      nnz = 0;
+      symmetric = false;
+      expanded = true;
+
+      // Parse header and check if matrix is symmetric
+      while (std::getline(file, line))
+      {
+        if (line.at(0) != '%')
+          break;
+        if (line.find("symmetric") != std::string::npos) {
+          symmetric = true;
+          expanded  = is_expand_symmetric;
+        }
+      }
+
+      // Read the first line with matrix sizes
+      ss << line;
+      ss >> n >> m >> nnz;
+
+      // Store COO data in the temporary workspace. Complexity O(NNZ)
+      loadToList(file, tmp, symmetric && is_expand_symmetric);
+
+      // Sort tmp. Complexity O(NNZ*log(NNZ))
+      tmp.sort();
+
+      // Deduplicate tmp. Complexity O(NNZ)
+      removeDuplicates(tmp);
+
+      nnz = static_cast<index_type>(tmp.size());
+    }
+
+    static void readAndUpdateSparseMatrix(std::istream& file, matrix::Sparse* A, std::list<CooTriplet>& tmp)
+    {
+      std::stringstream ss;
+      std::string line;
+      // Default is a general matrix
+      bool symmetric = false;
+
+      // Default is not to expand symmetric matrix
+      bool is_expand_symmetric = false;
+
+      // Parse header and check if matrix is symmetric
+      std::getline(file, line);
+      if (line.find("symmetric") != std::string::npos) {
+        symmetric = true;
+      }
+      if (symmetric != A->symmetric()) {
+        Logger::error() << "In function readAndUpdateMatrix:"
+                        << "Source data does not match the symmetry of destination matrix.\n";
+      }
+      // If the destination matrix is symmetric and expanded, then expand data.
+      if (A->symmetric()) {
+        is_expand_symmetric = A->expanded();
+      }
+
+      // Skip the header comments
+      while (line.at(0) == '%') {
+        std::getline(file, line); 
+        //  std::cout << line << std::endl;
+      }
+
+      // Read the first line with matrix sizes
+      index_type m, n, nnz;
+      ss << line;
+      ss >> n >> m >> nnz;
+
+      // Make sure input data matches matrix A size
+      if ((A->getNumRows() != n) || (A->getNumColumns() != m)) {
+        Logger::error() << "Wrong matrix size: " << A->getNumRows()
+                        << "x" << A->getNumColumns()
+                        << ". Cannot update! \n ";
+        return;
+      }
+
+      // Store COO data in the temporary workspace. Complexity O(NNZ)
+      loadToList(file, tmp, is_expand_symmetric);
+
+      // Sort tmp. Complexity O(NNZ*log(NNZ))
+      tmp.sort();
+
+      // Deduplicate tmp. Complexity O(NNZ)
+      removeDuplicates(tmp);
+
+      nnz = static_cast<index_type>(tmp.size());
+      if (A->getNnz() < nnz) {
+        Logger::error() << "Too many NNZs: " << A->getNnz()
+                        << ". Cannot update! \n ";
+        return;
+      }
+      A->setNnz(nnz);
+    }
+
+
     // Commented out; needed for debugging only.
     // void print_list(std::list<CooTriplet>& l)
     // {
@@ -407,6 +475,42 @@ namespace ReSolve
         it++;
         element_counter++;
       }
+
+      return 0;
+    }
+
+    int copyListToCsr(const std::list<CooTriplet>& tmp, matrix::Csr* A)
+    {
+      index_type* csr_rows = A->getRowData(memory::HOST);
+      index_type* csr_cols = A->getColData(memory::HOST);
+      real_type*  csr_vals = A->getValues( memory::HOST);
+
+      // Set number of nonzeros
+      index_type nnz = static_cast<index_type>(tmp.size());
+
+      // Set all iterators
+      index_type column_index_counter = 0;
+      index_type row_pointer_counter = 0;
+      std::list<CooTriplet>::const_iterator it = tmp.begin();
+
+      // Set first row pointer to zero
+      csr_rows[0] = 0;
+      csr_cols[0] = it->getColIdx();
+      csr_vals[0] = it->getValue();
+
+      for (index_type i = 1; i < nnz; ++i) {
+        std::list<CooTriplet>::const_iterator it_tmp = it;
+        it++;
+        if (it->getRowIdx() != it_tmp->getRowIdx()) {
+          row_pointer_counter++;
+          csr_rows[row_pointer_counter] = i;
+        }
+        column_index_counter++;
+        csr_cols[column_index_counter] = it->getColIdx();
+        csr_vals[column_index_counter] = it->getValue();
+      }
+      row_pointer_counter++;
+      csr_rows[row_pointer_counter] = nnz;
 
       return 0;
     }

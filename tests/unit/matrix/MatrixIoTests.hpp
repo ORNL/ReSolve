@@ -99,6 +99,30 @@ public:
     delete A;
     A = nullptr;
 
+    std::istringstream file4(symmetric_duplicates_coo_matrix_file_);
+    ReSolve::matrix::Csr* B = ReSolve::io::readCsrMatrixFromFile(file4, is_expand_symmetric);
+
+    nnz_answer = static_cast<index_type>(symmetric_expanded_csr_matrix_vals_.size());
+    if (B->getNnz() != nnz_answer) {
+      std::cout << "Incorrect NNZ read from the file ...\n";
+      status = false;
+    }
+
+    if (!B->symmetric()) {
+      std::cout << "Incorrect matrix type, matrix is symmetric ...\n";
+      status = false;
+    }
+
+    if (!B->expanded()) {
+      std::cout << "Incorrect matrix type, matrix is expanded ...\n";
+      status = false;
+    }
+
+    status *= verifyAnswer(*B, symmetric_expanded_csr_matrix_rows_, symmetric_expanded_csr_matrix_cols_, symmetric_expanded_csr_matrix_vals_);
+
+    delete B;
+    B = nullptr;
+
     return status.report(__func__);
   }
 
@@ -191,7 +215,7 @@ public:
 
     status *= verifyAnswer(A, symmetric_coo_matrix_rows_, symmetric_coo_matrix_cols_, symmetric_coo_matrix_vals_);
 
-    // Create a 5x5 COO matrix with 10 nonzeros
+    // Create a 5x5 COO matrix with 13 nonzeros
     is_expanded = true;
     ReSolve::matrix::Coo B(5, 5, 13, is_symmetric, is_expanded);
     B.allocateMatrixData(memory::HOST);
@@ -209,6 +233,26 @@ public:
     }
 
     status *= verifyAnswer(B, symmetric_expanded_coo_matrix_rows_, symmetric_expanded_coo_matrix_cols_, symmetric_expanded_coo_matrix_vals_);
+
+    // Create a symmetric 5x5 CSR matrix in general format with 13 nonzeros
+    is_expanded  = true;
+    is_symmetric = true;
+    ReSolve::matrix::Csr C(5, 5, 13, is_symmetric, is_expanded);
+    C.allocateMatrixData(memory::HOST);
+
+    // Read in symmetric matrix data
+    std::istringstream file4(symmetric_duplicates_coo_matrix_file_);
+
+    // Update matrix B with data from the matrix market file
+    ReSolve::io::readAndUpdateMatrix(file4, &C);
+
+    nnz_answer = static_cast<index_type>(symmetric_expanded_csr_matrix_vals_.size());
+    if (C.getNnz() != nnz_answer) {
+      std::cout << "Incorrect NNZ read from the file ...\n";
+      status = false;
+    }
+
+    status *= verifyAnswer(C, symmetric_expanded_csr_matrix_rows_, symmetric_expanded_csr_matrix_cols_, symmetric_expanded_csr_matrix_vals_);
 
     return status.report(__func__);
   }
@@ -285,6 +329,29 @@ private:
     }
     return true;
   }
+
+    bool verifyAnswer(/* const */ ReSolve::matrix::Csr& answer,
+                      const std::vector<index_type>& row_data,
+                      const std::vector<index_type>& col_data,
+                      const std::vector<real_type>& val_data)
+    {
+      for (size_t i = 0; i < val_data.size(); ++i) {
+        if ((answer.getColData(memory::HOST)[i] != col_data[i]) ||
+            (!isEqual(answer.getValues(memory::HOST)[i], val_data[i]))) {
+          std::cout << "Incorrect matrix value at storage element " << i << ".\n";
+          return false;
+        }          
+      }
+  
+      for (size_t i = 0; i < row_data.size(); ++i) {
+        if(answer.getRowData(memory::HOST)[i] != row_data[i]) {
+          std::cout << "Incorrect row pointer value at storage element " << i << ".\n";
+          return false;
+        }
+      }
+  
+      return true;
+    }
 
 private:
   //
@@ -464,6 +531,32 @@ R"(%%MatrixMarket matrix coordinate real symmetric
     const std::vector<index_type> symmetric_expanded_coo_matrix_rows_ = {0,0,1,1,1,2,2,2,3,3,4,4,4};
     const std::vector<index_type> symmetric_expanded_coo_matrix_cols_ = {0,4,1,2,3,1,2,4,1,3,0,2,4};
     const std::vector<real_type>  symmetric_expanded_coo_matrix_vals_ = { 11.0,
+                                                                          15.0,
+                                                                          22.0,
+                                                                          23.0,
+                                                                          24.0,
+                                                                          23.0,
+                                                                          33.0,
+                                                                          35.0,
+                                                                          24.0,
+                                                                          44.0,
+                                                                          15.0,
+                                                                          35.0,
+                                                                          55.0 };
+
+    // Matching expanded CSR matrix data as it is supposed to be converted
+    //
+    //     [11          15]
+    //     [   22 23 24   ]
+    // A = [   23 33    35]
+    //     [   24    44   ]
+    //     [15    35    55]
+    //
+    // Symmetric matrix in CSR general format
+    //
+    const std::vector<index_type> symmetric_expanded_csr_matrix_rows_ = {0,2,5,8,10,13};
+    const std::vector<index_type> symmetric_expanded_csr_matrix_cols_ = {0,4,1,2,3,1,2,4,1,3,0,2,4};
+    const std::vector<real_type>  symmetric_expanded_csr_matrix_vals_ = { 11.0,
                                                                           15.0,
                                                                           22.0,
                                                                           23.0,
