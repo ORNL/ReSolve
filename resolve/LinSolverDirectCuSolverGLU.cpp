@@ -170,6 +170,7 @@ namespace ReSolve
 
     status_cusolver_ =  cusolverSpDgluFactor(handle_cusolversp_, info_M_, glu_buffer_);
     error_sum += status_cusolver_;
+    mem_.deviceSynchronize();
 
     return error_sum;
   }
@@ -190,6 +191,7 @@ namespace ReSolve
                                             &r_nrminf_,
                                             info_M_,
                                             glu_buffer_);
+    mem_.deviceSynchronize();
     return status_cusolver_; 
   }
 

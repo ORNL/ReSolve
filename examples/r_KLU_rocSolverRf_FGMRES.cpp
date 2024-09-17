@@ -188,7 +188,7 @@ int main(int argc, char *argv[])
         }
         index_type* P = KLU->getPOrdering();
         index_type* Q = KLU->getQOrdering();
-        Rf->setSolveMode(1);
+        Rf->setSolveMode(0);
         Rf->setup(A, L, U, P, Q, vec_rhs);
         Rf->refactorize();
         // std::cout<<"about to set FGMRES" <<std::endl;
