@@ -30,8 +30,6 @@ namespace ReSolve { namespace matrix {
           memory::MemorySpace memspaceSrc,
           memory::MemorySpace memspaceDst);
       
-      Csr(matrix::Coo* mat, memory::MemorySpace memspace);
-
       ~Csr();
 
       virtual index_type* getRowData(memory::MemorySpace memspace);

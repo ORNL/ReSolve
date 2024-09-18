@@ -159,18 +159,45 @@ public:
     // Write the matrix to an ostream
     ReSolve::io::writeMatrixToFile(&A, buffer);
     status *= (buffer.str() == resolve_general_coo_matrix_file_);
-    buffer.str("");
-
-    // Create the test CSR matrix
-    ReSolve::matrix::Csr B(&A, ReSolve::memory::HOST);
-
-    // Write the matrix to an ostream
-    ReSolve::io::writeMatrixToFile(&B, buffer);
-    status *= (buffer.str() == resolve_row_sorted_general_coo_matrix_file_);
 
     return status.report(__func__);
   }
 
+  TestOutcome csrMatrixExport()
+  {
+    TestStatus status;
+    status = true;
+
+    // Read string into istream and status it to `readMatrixFromFile` function.
+    std::ostringstream buffer;
+
+    // Deep copy constant test vectors with matrix data to nonconstant ones
+    std::vector<index_type> rows = general_csr_matrix_rows_;
+    std::vector<index_type> cols = general_csr_matrix_cols_;
+    std::vector<real_type>  vals = general_csr_matrix_vals_;
+
+    // Get number of matrix rows
+    const index_type N = static_cast<index_type>(rows.size()) - 1;
+
+    // Get number of matrix columns
+    const index_type M = 1 + *(std::max_element(cols.begin(), cols.end()));
+
+    // Get number of nonzeros
+    const index_type NNZ = static_cast<index_type>(vals.size());
+
+    // Create the test CSR matrix
+    ReSolve::matrix::Csr A(N, M, NNZ, false, false);
+    A.setMatrixData(&rows[0],
+                    &cols[0],
+                    &vals[0],
+                    memory::HOST);
+
+    // Write the matrix to an ostream
+    ReSolve::io::writeMatrixToFile(&A, buffer);
+    status *= (buffer.str() == resolve_row_sorted_general_coo_matrix_file_);
+
+    return status.report(__func__);
+  }
 
   TestOutcome cooMatrixReadAndUpdate()
   {
@@ -427,14 +454,26 @@ R"(%%MatrixMarket matrix coordinate real general
   /// Matching COO matrix data as it is supposed to be read from the file
   const std::vector<index_type> general_coo_matrix_rows_ = {0,0,1,2,3,3,3,4};
   const std::vector<index_type> general_coo_matrix_cols_ = {0,3,1,2,1,3,4,4};
-  const std::vector<real_type> general_coo_matrix_vals_ = { 1.000e+00,
-                                                            6.000e+00,
-                                                            1.050e+01,
-                                                            1.500e-02,
-                                                            2.505e+02,
-                                                           -2.800e+02,
-                                                            3.332e+01,
-                                                            1.200e+01 };
+  const std::vector<real_type> general_coo_matrix_vals_  = { 1.000e+00,
+                                                             6.000e+00,
+                                                             1.050e+01,
+                                                             1.500e-02,
+                                                             2.505e+02,
+                                                            -2.800e+02,
+                                                             3.332e+01,
+                                                             1.200e+01 };
+
+  /// Matching CSR matrix data as it is supposed to be read from the file
+  const std::vector<index_type> general_csr_matrix_rows_ = {0,2,3,4,7,8};
+  const std::vector<index_type> general_csr_matrix_cols_ = {0,3,1,2,1,3,4,4};
+  const std::vector<real_type>  general_csr_matrix_vals_ = { 1.000e+00,
+                                                             6.000e+00,
+                                                             1.050e+01,
+                                                             1.500e-02,
+                                                             2.505e+02,
+                                                            -2.800e+02,
+                                                             3.332e+01,
+                                                             1.200e+01 };
 
   //
   //     [11          15]

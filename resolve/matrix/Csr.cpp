@@ -6,7 +6,6 @@
 #include "Csr.hpp"
 #include "Coo.hpp"
 #include <resolve/utilities/logger/Logger.hpp>
-#include <resolve/matrix/Utilities.hpp>
 
 namespace ReSolve 
 {
@@ -26,16 +25,6 @@ namespace ReSolve
                    bool symmetric,
                    bool expanded) : Sparse(n, m, nnz, symmetric, expanded)
   {
-  }
-
-  matrix::Csr::Csr(matrix::Coo* A_coo, memory::MemorySpace memspace)
-    : Sparse(A_coo->getNumRows(),
-             A_coo->getNumColumns(),
-             A_coo->getNnz(),
-             A_coo->symmetric(),
-             A_coo->expanded())
-  {
-    matrix::coo2csr_simple(A_coo, this, memspace);
   }
 
   /**
