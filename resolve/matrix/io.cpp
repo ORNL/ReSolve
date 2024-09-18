@@ -476,6 +476,9 @@ namespace ReSolve
         element_counter++;
       }
 
+      // We updated matrix values outside Matrix API. We need to note that.
+      A->setUpdated(memory::HOST);
+
       return 0;
     }
 
@@ -511,6 +514,9 @@ namespace ReSolve
       }
       row_pointer_counter++;
       csr_rows[row_pointer_counter] = nnz;
+
+      // We updated matrix values outside Matrix API. We need to note that.
+      A->setUpdated(memory::HOST);
 
       return 0;
     }
