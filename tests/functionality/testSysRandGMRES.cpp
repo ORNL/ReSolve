@@ -173,7 +173,7 @@ int test(int argc, char *argv[])
             << "\t Number of iterations                                 : " 
             << solver.getIterativeSolver().getNumIter() << "\n";
 
-  if (!std::isfinite(final_norm)) {
+  if (!std::isfinite(final_norm/norm_b)) {
     std::cout << "Result is not a finite number!\n";
     error_sum++;
   }

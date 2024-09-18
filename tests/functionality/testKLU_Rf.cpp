@@ -16,6 +16,7 @@
 //functionality test to check whether cuSolverRf works correctly.
 
 using namespace ReSolve::constants;
+using namespace ReSolve::colors;
 
 int main(int argc, char *argv[])
 {
@@ -55,8 +56,7 @@ int main(int argc, char *argv[])
     std::cout << "Failed to open file " << matrixFileName1 << "\n";
     return -1;
   }
-  ReSolve::matrix::Coo* A_coo = ReSolve::io::readMatrixFromFile(mat1);
-  ReSolve::matrix::Csr* A = new ReSolve::matrix::Csr(A_coo, ReSolve::memory::HOST);
+  ReSolve::matrix::Csr* A = ReSolve::io::readCsrMatrixFromFile(mat1);
   mat1.close();
 
   // Read first rhs vector
@@ -163,7 +163,7 @@ int main(int argc, char *argv[])
     std::cout << "Failed to open file " << matrixFileName2 << "\n";
     return -1;
   }
-  ReSolve::io::readAndUpdateMatrix(mat2, A_coo);
+  ReSolve::io::readAndUpdateMatrix(mat2, A);
   mat2.close();
 
   // Load the second rhs vector
@@ -176,7 +176,6 @@ int main(int argc, char *argv[])
   ReSolve::io::readAndUpdateRhs(rhs2_file, &rhs);
   rhs2_file.close();
 
-  A->updateFromCoo(A_coo, ReSolve::memory::DEVICE);
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
 
   status = Rf->refactorize();
@@ -214,14 +213,19 @@ int main(int argc, char *argv[])
   std::cout<<"\t ||x-x_true||_2/||x_true||_2 : "<<normDiffMatrix2/normXtrue<<" (scaled solution error)"<<std::endl;
   std::cout<<"\t ||b-A*x_exact||_2           : "<<exactSol_normRmatrix2<<" (control; residual norm with exact solution)"<<std::endl<<std::endl;
 
+  if (!std::isfinite(normRmatrix1/normB1) || !std::isfinite(normRmatrix2/normB2)) {
+    std::cout << "Result is not a finite number!\n";
+    error_sum++;
+  }
   if ((normRmatrix1/normB1 > 1e-16 ) || (normRmatrix2/normB2 > 1e-16)) {
     std::cout << "Result inaccurate!\n";
     error_sum++;
   }
   if (error_sum == 0) {
-    std::cout<<"Test KLU with cuSolverRf refactorization PASSED"<<std::endl;
+    std::cout << "Test KLU with cuSolverGLU refactorization " << GREEN << "PASSED" << CLEAR << std::endl;
   } else {
-    std::cout<<"Test KLU with cuSolverRf refactorization FAILED, error sum: "<<error_sum<<std::endl;
+    std::cout << "Test KLU with cuSolverGLU refactorization " << RED << "FAILED" << CLEAR
+              << ", error sum: " << error_sum << std::endl;
   }
 
   //now DELETE
