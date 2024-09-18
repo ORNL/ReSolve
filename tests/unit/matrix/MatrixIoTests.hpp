@@ -539,7 +539,8 @@ R"(%%MatrixMarket matrix coordinate real symmetric
  3  5  35.0
  4  4  44.0   
  5  5   5.0
- 2  4   4.0 
+ 2  4   2.0 
+ 2  4   2.0 
  1  1   1.0
  )";
 

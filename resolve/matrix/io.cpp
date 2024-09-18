@@ -22,14 +22,14 @@ namespace ReSolve
    * only.
    * 
    */
-  class CooTriplet
+  class MatrixElementTriplet
   {
     public:
-      CooTriplet() : rowidx_(0), colidx_(0), value_(0.0)
+      MatrixElementTriplet() : rowidx_(0), colidx_(0), value_(0.0)
       {}
-      CooTriplet(index_type i, index_type j, real_type v) : rowidx_(i), colidx_(j), value_(v)
+      MatrixElementTriplet(index_type i, index_type j, real_type v) : rowidx_(i), colidx_(j), value_(v)
       {}
-      ~CooTriplet()
+      ~MatrixElementTriplet()
       {}
       void setColIdx (index_type new_idx)
       {
@@ -59,7 +59,7 @@ namespace ReSolve
         return value_;
       }
 
-      bool operator < (const CooTriplet& str) const
+      bool operator < (const MatrixElementTriplet& str) const
       {
         if (rowidx_ < str.rowidx_)
           return true;
@@ -70,12 +70,12 @@ namespace ReSolve
         return false;
       }
 
-      bool operator == (const CooTriplet& str) const
+      bool operator == (const MatrixElementTriplet& str) const
       {
         return (rowidx_ == str.rowidx_) && (colidx_ == str.colidx_);
       }
 
-      CooTriplet& operator += (const CooTriplet t)
+      MatrixElementTriplet& operator += (const MatrixElementTriplet t)
       {
         if ((rowidx_ != t.rowidx_) || (colidx_ != t.colidx_)) {
           io::Logger::error() << "Adding values into non-matching triplet.\n";
@@ -103,7 +103,7 @@ namespace ReSolve
     // Static helper functionsdeclarations
     static void readListFromFile(std::istream& file,
                                  bool is_expand_symmetric,                                  
-                                 std::list<CooTriplet>& tmp,
+                                 std::list<MatrixElementTriplet>& tmp,
                                  index_type& n,
                                  index_type& m,
                                  index_type& nnz,
@@ -111,12 +111,12 @@ namespace ReSolve
                                  bool& expanded);
     static void readAndUpdateSparseMatrix(std::istream& file,
                                           matrix::Sparse* A,
-                                          std::list<CooTriplet>& tmp);
-    // static void print_list(std::list<CooTriplet>& l);
-    static int loadToList(std::istream& file, std::list<CooTriplet>& tmp, bool is_expand_symmetric);
-    static int removeDuplicates(std::list<CooTriplet>& tmp);
-    static int copyListToCoo(const std::list<CooTriplet>& tmp, matrix::Coo* A);
-    static int copyListToCsr(const std::list<CooTriplet>& tmp, matrix::Csr* A);
+                                          std::list<MatrixElementTriplet>& tmp);
+    // static void print_list(std::list<MatrixElementTriplet>& l);
+    static int loadToList(std::istream& file, std::list<MatrixElementTriplet>& tmp, bool is_expand_symmetric);
+    static int removeDuplicates(std::list<MatrixElementTriplet>& tmp);
+    static int copyListToCoo(const std::list<MatrixElementTriplet>& tmp, matrix::Coo* A);
+    static int copyListToCsr(const std::list<MatrixElementTriplet>& tmp, matrix::Csr* A);
 
 
     /**
@@ -138,7 +138,7 @@ namespace ReSolve
       bool symmetric = false;
       bool expanded = true;
 
-      std::list<CooTriplet> tmp;
+      std::list<MatrixElementTriplet> tmp;
 
       readListFromFile(file, is_expand_symmetric, tmp, n, m, nnz, symmetric, expanded);
 
@@ -162,7 +162,7 @@ namespace ReSolve
       bool symmetric = false;
       bool expanded = true;
 
-      std::list<CooTriplet> tmp;
+      std::list<MatrixElementTriplet> tmp;
 
       readListFromFile(file, is_expand_symmetric, tmp, n, m, nnz, symmetric, expanded);
 
@@ -212,7 +212,7 @@ namespace ReSolve
         return;
       }
 
-      std::list<CooTriplet> tmp;
+      std::list<MatrixElementTriplet> tmp;
 
       readAndUpdateSparseMatrix(file, A, tmp);
 
@@ -227,7 +227,7 @@ namespace ReSolve
         return;
       }
 
-      std::list<CooTriplet> tmp;
+      std::list<MatrixElementTriplet> tmp;
 
       readAndUpdateSparseMatrix(file, A, tmp);
 
@@ -310,7 +310,7 @@ namespace ReSolve
 
     static void readListFromFile(std::istream& file,
                                  bool is_expand_symmetric,
-                                 std::list<CooTriplet>& tmp,
+                                 std::list<MatrixElementTriplet>& tmp,
                                  index_type& n,
                                  index_type& m,
                                  index_type& nnz,
@@ -352,7 +352,7 @@ namespace ReSolve
       nnz = static_cast<index_type>(tmp.size());
     }
 
-    static void readAndUpdateSparseMatrix(std::istream& file, matrix::Sparse* A, std::list<CooTriplet>& tmp)
+    static void readAndUpdateSparseMatrix(std::istream& file, matrix::Sparse* A, std::list<MatrixElementTriplet>& tmp)
     {
       std::stringstream ss;
       std::string line;
@@ -415,25 +415,25 @@ namespace ReSolve
 
 
     // Commented out; needed for debugging only.
-    // void print_list(std::list<CooTriplet>& l)
+    // void print_list(std::list<MatrixElementTriplet>& l)
     // {
     //   // Print out the list
     //   std::cout << "tmp list:\n";
-    //   for (CooTriplet& n : l)
+    //   for (MatrixElementTriplet& n : l)
     //     n.print();
     //   std::cout << "\n";
     // }
 
-    int loadToList(std::istream& file, std::list<CooTriplet>& tmp, bool is_expand_symmetric)
+    int loadToList(std::istream& file, std::list<MatrixElementTriplet>& tmp, bool is_expand_symmetric)
     {
       index_type i, j;
       real_type v;
       while (file >> i >> j >> v) {
-        CooTriplet triplet(i - 1, j - 1, v);
+        MatrixElementTriplet triplet(i - 1, j - 1, v);
         tmp.push_back(std::move(triplet));
         if (is_expand_symmetric) {
           if (i != j) {
-            CooTriplet triplet(j - 1, i - 1, v);
+            MatrixElementTriplet triplet(j - 1, i - 1, v);
             tmp.push_back(std::move(triplet));
           }
         }
@@ -442,12 +442,12 @@ namespace ReSolve
       return 0;
     }
 
-    int removeDuplicates(std::list<CooTriplet>& tmp)
+    int removeDuplicates(std::list<MatrixElementTriplet>& tmp)
     {
-      std::list<CooTriplet>::iterator it = tmp.begin();
+      std::list<MatrixElementTriplet>::iterator it = tmp.begin();
       while (it != tmp.end())
       {
-        std::list<CooTriplet>::iterator it_tmp = it;
+        std::list<MatrixElementTriplet>::iterator it_tmp = it;
         it++;
         if (*it == *it_tmp) {
           *it += *it_tmp;
@@ -458,14 +458,14 @@ namespace ReSolve
       return 0;
     }
 
-    int copyListToCoo(const std::list<CooTriplet>& tmp, matrix::Coo* A)
+    int copyListToCoo(const std::list<MatrixElementTriplet>& tmp, matrix::Coo* A)
     {
       index_type* coo_rows = A->getRowData(memory::HOST);
       index_type* coo_cols = A->getColData(memory::HOST);
       real_type*  coo_vals = A->getValues( memory::HOST);
 
       index_type element_counter = 0;
-      std::list<CooTriplet>::const_iterator it = tmp.begin();
+      std::list<MatrixElementTriplet>::const_iterator it = tmp.begin();
       while (it != tmp.end())
       {
         coo_rows[element_counter] = it->getRowIdx();
@@ -481,7 +481,7 @@ namespace ReSolve
       return 0;
     }
 
-    int copyListToCsr(const std::list<CooTriplet>& tmp, matrix::Csr* A)
+    int copyListToCsr(const std::list<MatrixElementTriplet>& tmp, matrix::Csr* A)
     {
       index_type* csr_rows = A->getRowData(memory::HOST);
       index_type* csr_cols = A->getColData(memory::HOST);
@@ -493,7 +493,7 @@ namespace ReSolve
       // Set all iterators
       index_type column_index_counter = 0;
       index_type row_pointer_counter = 0;
-      std::list<CooTriplet>::const_iterator it = tmp.begin();
+      std::list<MatrixElementTriplet>::const_iterator it = tmp.begin();
 
       // Set first row pointer to zero
       csr_rows[0] = 0;
@@ -501,7 +501,7 @@ namespace ReSolve
       csr_vals[0] = it->getValue();
 
       for (index_type i = 1; i < nnz; ++i) {
-        std::list<CooTriplet>::const_iterator it_tmp = it;
+        std::list<MatrixElementTriplet>::const_iterator it_tmp = it;
         it++;
         if (it->getRowIdx() != it_tmp->getRowIdx()) {
           row_pointer_counter++;
