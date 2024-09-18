@@ -110,16 +110,6 @@ namespace ReSolve {
   }
 
   /**
-   * @brief Converts COO to CSR matrix format.
-   * 
-   * Conversion takes place on CPU, and then CSR matrix is copied to `memspace`.
-   */
-  int MatrixHandler::coo2csr(matrix::Coo* A_coo, matrix::Csr* A_csr, memory::MemorySpace memspace)
-  {
-    return matrix::coo2csr_simple(A_coo, A_csr, memspace);
-  }
-
-  /**
    * @brief Matrix vector product: result = alpha * A * x + beta * result
    * 
    * @param[in]  A - Sparse matrix

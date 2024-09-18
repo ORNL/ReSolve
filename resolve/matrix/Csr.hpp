@@ -47,8 +47,6 @@ namespace ReSolve { namespace matrix {
 
       virtual int copyData(memory::MemorySpace memspaceOut);
 
-      int updateFromCoo(matrix::Coo* mat, memory::MemorySpace memspaceOut);
-
   };
 
 }} // namespace ReSolve::matrix

@@ -53,7 +53,6 @@ namespace ReSolve {
       ~MatrixHandler();
 
       int csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr, memory::MemorySpace memspace);
-      int coo2csr(matrix::Coo* A_coo, matrix::Csr* A_csr, memory::MemorySpace memspace);
 
       /// Should compute vec_result := alpha*A*vec_x + beta*vec_result, but at least on cpu alpha and beta are flipped
       int matvec(matrix::Sparse* A,

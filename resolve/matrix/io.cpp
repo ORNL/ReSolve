@@ -9,7 +9,6 @@
 #include <resolve/vector/Vector.hpp>
 #include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/Csr.hpp>
-#include <resolve/matrix/Utilities.hpp>
 #include "io.hpp"
 
 

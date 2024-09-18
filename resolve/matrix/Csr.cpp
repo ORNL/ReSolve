@@ -362,16 +362,6 @@ namespace ReSolve
     } // switch
   }
 
-  int matrix::Csr::updateFromCoo(matrix::Coo* A_coo, memory::MemorySpace memspaceOut)
-  {
-    assert(n_            == A_coo->getNumRows());
-    assert(m_            == A_coo->getNumColumns());
-    assert(nnz_          == A_coo->getNnz());
-    assert(is_symmetric_ == A_coo->symmetric()); // <- Do we need to check for this?
-
-    return matrix::coo2csr_simple(A_coo, this, memspaceOut);
-  }
-
 
   /**
    * @brief Prints matrix data.
