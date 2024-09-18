@@ -31,7 +31,6 @@ int main(int argc, char *argv[])
   std::string fileId;
   std::string rhsId;
 
-  ReSolve::matrix::Coo* A_coo;
   ReSolve::matrix::Csr* A;
   ReSolve::LinAlgWorkspaceCpu* workspace = new ReSolve::LinAlgWorkspaceCpu();
   ReSolve::MatrixHandler* matrix_handler = new ReSolve::MatrixHandler(workspace);
@@ -65,12 +64,8 @@ int main(int argc, char *argv[])
     std::cout << "Failed to open file " << rhsFileName << "\n";
     return -1;
   }
-  A_coo = ReSolve::io::readMatrixFromFile(mat_file);
-  A = new ReSolve::matrix::Csr(A_coo->getNumRows(),
-                               A_coo->getNumColumns(),
-                               A_coo->getNnz(),
-                               A_coo->symmetric(),
-                               A_coo->expanded());
+  bool is_expand_symmetric = true;
+  A = ReSolve::io::readCsrMatrixFromFile(mat_file, is_expand_symmetric);
 
   rhs = ReSolve::io::readRhsFromFile(rhs_file);
   x = new real_type[A->getNumRows()];
@@ -81,8 +76,6 @@ int main(int argc, char *argv[])
   mat_file.close();
   rhs_file.close();
 
-  //Now convert to CSR.
-  A->updateFromCoo(A_coo, ReSolve::memory::HOST);
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   vec_rhs->setDataUpdated(ReSolve::memory::HOST);
   std::cout << "COO to CSR completed. Expanded NNZ: " << A->getNnz() << std::endl;

@@ -25,8 +25,6 @@ int main(int argc, char *argv[])
   std::string  matrixFileName = argv[1];
   std::string  rhsFileName = argv[2];
 
-
-  ReSolve::matrix::Coo* A_coo;
   ReSolve::matrix::Csr* A;
   ReSolve::LinAlgWorkspaceCpu* workspace_Cpu = new ReSolve::LinAlgWorkspaceCpu();
   workspace_Cpu->initializeHandles();
@@ -61,12 +59,8 @@ int main(int argc, char *argv[])
     std::cout << "Failed to open file " << rhsFileName << "\n";
     return -1;
   }
-  A_coo = ReSolve::io::readMatrixFromFile(mat_file);
-  A = new ReSolve::matrix::Csr(A_coo->getNumRows(),
-                               A_coo->getNumColumns(),
-                               A_coo->getNnz(),
-                               A_coo->symmetric(),
-                               A_coo->expanded());
+  bool is_expand_symmetric = true;
+  A = ReSolve::io::readCsrMatrixFromFile(mat_file, is_expand_symmetric);
 
   rhs = ReSolve::io::readRhsFromFile(rhs_file);
   x = new real_type[A->getNumRows()];
@@ -81,7 +75,6 @@ int main(int argc, char *argv[])
   mat_file.close();
   rhs_file.close();
 
-  A->updateFromCoo(A_coo, ReSolve::memory::HOST);
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   //Now call direct solver
   real_type norm_b;
@@ -112,7 +105,6 @@ int main(int argc, char *argv[])
 
 
   delete A;
-  delete A_coo;
   delete Rf;
   delete [] x;
   delete [] rhs;

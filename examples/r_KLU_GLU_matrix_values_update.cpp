@@ -37,9 +37,8 @@ int main(int argc, char *argv[])
   std::string matrixFileNameFull;
   std::string rhsFileNameFull;
 
-  ReSolve::matrix::Coo* A_coo;
-  ReSolve::matrix::Coo* A_exp_coo;
   ReSolve::matrix::Csr* A;
+  ReSolve::matrix::Csr* A_exp;
   ReSolve::LinAlgWorkspaceCUDA* workspace_CUDA = new ReSolve::LinAlgWorkspaceCUDA;
   workspace_CUDA->initializeHandles();
   ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(workspace_CUDA);
@@ -84,13 +83,9 @@ int main(int argc, char *argv[])
       std::cout << "Failed to open file " << rhsFileNameFull << "\n";
       return -1;
     }
+    bool is_expand_symmetric = true;
     if (i == 0) {
-      A_coo = ReSolve::io::readMatrixFromFile(mat_file);
-      A = new ReSolve::matrix::Csr(A_coo->getNumRows(),
-                                   A_coo->getNumColumns(),
-                                   A_coo->getNnz(),
-                                   A_coo->symmetric(),
-                                   A_coo->expanded());
+      A = ReSolve::io::readCsrMatrixFromFile(mat_file, is_expand_symmetric);
 
       rhs = ReSolve::io::readRhsFromFile(rhs_file);
       x = new real_type[A->getNumRows()];
@@ -101,26 +96,25 @@ int main(int argc, char *argv[])
       vec_r = new vector_type(A->getNumRows());
     } else {
       if (i==1) {
-        A_exp_coo = ReSolve::io::readMatrixFromFile(mat_file);
+        A_exp = ReSolve::io::readCsrMatrixFromFile(mat_file, is_expand_symmetric);
       } else {
-        ReSolve::io::readAndUpdateMatrix(mat_file, A_exp_coo);
+        ReSolve::io::readAndUpdateMatrix(mat_file, A_exp);
       }
       std::cout<<"Updating values of A_coo!"<<std::endl; 
-      A_coo->updateValues(A_exp_coo->getValues(ReSolve::memory::HOST), ReSolve::memory::HOST, ReSolve::memory::HOST);
-      //ReSolve::io::readAndUpdateMatrix(mat_file, A_coo);
+      A->updateValues(A_exp->getValues(ReSolve::memory::HOST), ReSolve::memory::HOST, ReSolve::memory::HOST);
+      //ReSolve::io::readAndUpdateMatrix(mat_file, A);
       ReSolve::io::readAndUpdateRhs(rhs_file, &rhs);
     }
       std::cout<<"Finished reading the matrix and rhs, size: "<<A->getNumRows()<<" x "<<A->getNumColumns()<< ", nnz: "<< A->getNnz()<< ", symmetric? "<<A->symmetric()<< ", Expanded? "<<A->expanded()<<std::endl;
       mat_file.close();
       rhs_file.close();
 
-      //Now convert to CSR.
+      // Update host and device data.
       if (i < 1) { 
-        A->updateFromCoo(A_coo, ReSolve::memory::HOST);
         vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
         vec_rhs->setDataUpdated(ReSolve::memory::HOST);
       } else { 
-        A->updateFromCoo(A_coo, ReSolve::memory::DEVICE);
+        A->copyData(ReSolve::memory::DEVICE);
         vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
       }
       std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnz()<<std::endl;
@@ -165,6 +159,7 @@ int main(int argc, char *argv[])
 
     //now DELETE
     delete A;
+    delete A_exp;
     delete KLU;
     delete GLU;
     delete [] x;
