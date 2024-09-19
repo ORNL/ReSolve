@@ -142,7 +142,7 @@ namespace ReSolve
                                           matrix::Sparse* A,
                                           std::list<MatrixElementTriplet>& tmp);
     // static void print_list(std::list<MatrixElementTriplet>& l);
-    static int loadToList(std::istream& file, std::list<MatrixElementTriplet>& tmp, bool is_expand_symmetric);
+    static int loadToList(std::istream& file, bool is_expand_symmetric, std::list<MatrixElementTriplet>& tmp);
     static int removeDuplicates(std::list<MatrixElementTriplet>& tmp);
     static int copyListToCoo(const std::list<MatrixElementTriplet>& tmp, matrix::Coo* A);
     static int copyListToCsr(const std::list<MatrixElementTriplet>& tmp, matrix::Csr* A);
@@ -485,7 +485,7 @@ namespace ReSolve
       ss >> n >> m >> nnz;
 
       // Store COO data in the temporary workspace. Complexity O(NNZ)
-      loadToList(file, tmp, symmetric && is_expand_symmetric);
+      loadToList(file, symmetric && is_expand_symmetric, tmp);
 
       // Sort tmp. Complexity O(NNZ*log(NNZ)).
       tmp.sort();
@@ -500,9 +500,9 @@ namespace ReSolve
     /**
      * @brief 
      * 
-     * @param[in]     file - std::istream to Matrix Market file (data).
-     * @param[in,out] A - sparse matrix to be updated
-     * @param[out]    tmp - temporary list with matrix entries
+     * @param[in]  file - std::istream to Matrix Market file (data).
+     * @param[in]  A - sparse matrix to be updated
+     * @param[out] tmp - temporary list with matrix entries
      * 
      * @pre `file` is a valid std::istream with Matrix Market data.
      * @pre Input data is in valid Matrix Market format.
@@ -513,10 +513,6 @@ namespace ReSolve
      * zeros read from the Matrix Market file.
      * @post `tmp` list is overwritten with matrix elements read from the input
      * stream.
-     * @post Number of nonzeros in `A` is updated to the number of nozeros in
-     * input matrix data after duplicates are removed and the matrix is
-     * (optionally) expanded. It can be smaller than the number of current
-     * nonzero elements in `A`.
      * @invariant Elements of `A` are unchanged in this function but they are
      * expected to be overwritten with values in `tmp` later in the code. 
      */
@@ -564,7 +560,7 @@ namespace ReSolve
       }
 
       // Store COO data in the temporary workspace. Complexity O(NNZ)
-      loadToList(file, tmp, is_expand_symmetric);
+      loadToList(file, is_expand_symmetric, tmp);
 
       // Sort tmp. Complexity O(NNZ*log(NNZ))
       tmp.sort();
@@ -572,13 +568,6 @@ namespace ReSolve
       // Remove duplicates in `tmp` list. Complexity O(NNZ)
       removeDuplicates(tmp);
 
-      nnz = static_cast<index_type>(tmp.size());
-      if (A->getNnz() < nnz) {
-        Logger::error() << "Too many NNZs: " << A->getNnz()
-                        << ". Cannot update! \n ";
-        return;
-      }
-      A->setNnz(nnz);
     }
 
 
@@ -596,8 +585,8 @@ namespace ReSolve
      * @brief Loads data from Matrix Market file to a std::list.
      * 
      * @param[in]  file - std::istream to Matrix Market file (data).
-     * @param[out] tmp - temporary list with matrix entries
      * @param[in]  is_expand_symmetric - whether to expand symmetric matrix.
+     * @param[out] tmp - temporary list with matrix entries
      * @return int - 0 if successful, error code otherwise.
      * 
      * @pre `file` is a valid std::istream with Matrix Market data.
@@ -606,7 +595,7 @@ namespace ReSolve
      * @post `tmp` list is overwritten with matrix elements read from the input
      * stream.
      */
-    int loadToList(std::istream& file, std::list<MatrixElementTriplet>& tmp, bool is_expand_symmetric)
+    int loadToList(std::istream& file, bool is_expand_symmetric, std::list<MatrixElementTriplet>& tmp)
     {
       index_type i, j;
       real_type v;
@@ -675,6 +664,14 @@ namespace ReSolve
       index_type* coo_cols = A->getColData(memory::HOST);
       real_type*  coo_vals = A->getValues( memory::HOST);
 
+      index_type nnz = static_cast<index_type>(tmp.size());
+      if (A->getNnz() < nnz) {
+        Logger::error() << "Too many NNZs: " << nnz
+                        << ". Cannot update! \n ";
+        return 1;
+      }
+      A->setNnz(nnz);
+
       index_type element_counter = 0;
       std::list<MatrixElementTriplet>::const_iterator it = tmp.begin();
       while (it != tmp.end())
@@ -714,6 +711,12 @@ namespace ReSolve
 
       // Set number of nonzeros
       index_type nnz = static_cast<index_type>(tmp.size());
+      if (A->getNnz() < nnz) {
+        Logger::error() << "Too many NNZs: " << nnz
+                        << ". Cannot update! \n ";
+        return 1;
+      }
+      A->setNnz(nnz);
 
       // Set all iterators
       index_type column_index_counter = 0;
