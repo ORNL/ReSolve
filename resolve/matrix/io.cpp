@@ -16,7 +16,13 @@ namespace ReSolve
 { 
   
   /**
+   * @class MatrixElementTriplet
+   * 
    * @brief Helper class for COO matrix sorting.
+   * 
+   * Contains triplet of row index, column index and the value of a sparse
+   * matrix element, as well as methods and operator overloads for its
+   * management.
    * 
    * The entire code is in this file. Its scope is to support matrix file I/O
    * only.
@@ -25,20 +31,17 @@ namespace ReSolve
   class MatrixElementTriplet
   {
     public:
+      /// Default constructor initializes all to zero.
       MatrixElementTriplet() : rowidx_(0), colidx_(0), value_(0.0)
       {}
+
+      /// Constructor that initializes row and column indices and the element value.
       MatrixElementTriplet(index_type i, index_type j, real_type v) : rowidx_(i), colidx_(j), value_(v)
       {}
-      ~MatrixElementTriplet()
-      {}
-      void setColIdx (index_type new_idx)
-      {
-        colidx_ = new_idx;
-      }
-      void setValue (real_type new_value)
-      {
-        value_ = new_value;
-      }
+
+      ~MatrixElementTriplet() = default;
+
+      /// Set the row and column indices and the element value.
       void set(index_type rowidx, index_type colidx, real_type value)
       {
         rowidx_ = rowidx;
@@ -59,31 +62,57 @@ namespace ReSolve
         return value_;
       }
 
-      bool operator < (const MatrixElementTriplet& str) const
+      /**
+       * @brief Overload of `<` operator
+       * 
+       * Ensures that matrix elements stored in MatrixElementTriplet will be
+       * sorted by their indices in a row-major order.
+       * 
+       */
+      bool operator < (const MatrixElementTriplet& t) const
       {
-        if (rowidx_ < str.rowidx_)
+        if (rowidx_ < t.rowidx_)
           return true;
 
-        if ((rowidx_ == str.rowidx_) && (colidx_ < str.colidx_))
+        if ((rowidx_ == t.rowidx_) && (colidx_ < t.colidx_))
           return true;
 
         return false;
       }
 
+      /**
+       * @brief Overload of `==` operator.
+       * 
+       * This overload is used to indicate when two different instances of
+       * MatrixElementTriplet correspond to the same matrix element.
+       */
       bool operator == (const MatrixElementTriplet& str) const
       {
         return (rowidx_ == str.rowidx_) && (colidx_ == str.colidx_);
       }
 
+      /**
+       * @brief Overload of `+=` operator.
+       * 
+       * @param t - Triplet to be added in place.
+       * @return MatrixElementTriplet& - reference to `*this`.
+       * 
+       * This overload is used to merge duplicates in sparse matrix in COO
+       * format. It will return error and leave `*this` unchanged if the
+       * argument corresponds to an element with different row or column
+       * indices.
+       */
       MatrixElementTriplet& operator += (const MatrixElementTriplet t)
       {
         if ((rowidx_ != t.rowidx_) || (colidx_ != t.colidx_)) {
           io::Logger::error() << "Adding values into non-matching triplet.\n";
+          return *this;
         }
         value_ += t.value_;
         return *this;
       }
 
+      /// Utility to print indices (0 index base).
       void print() const
       {
         // Add 1 to indices to restore indexing from MM format
