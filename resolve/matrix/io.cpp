@@ -152,9 +152,14 @@ namespace ReSolve
      * @brief Create a COO matrix and populate it with data from Matrix Market
      * file.
      * 
-     * @param file 
-     * @param is_expand_symmetric 
-     * @return matrix::Coo* 
+     * @param file - input Matrix Market file
+     * @param is_expand_symmetric - whether to expand symmetric matrix to general format
+     * @return matrix::Coo* - pointer to COO matrix
+     * 
+     * @pre file is a valid std::istream with Matrix Market data.
+     * @pre input data is in valid Matrix Market format.
+     * @post Valid COO matrix sorted in row major order and without duplicates
+     * is created.
      */
     matrix::Coo* readMatrixFromFile(std::istream& file, bool is_expand_symmetric)
     {
@@ -180,6 +185,18 @@ namespace ReSolve
       return B;
     }
 
+    /**
+     * @brief 
+     * 
+     * @param file - input Matrix Market file
+     * @param is_expand_symmetric - whether to expand symmetric matrix to general format
+     * @return matrix::Csr* - pointer to COO matrix
+     * 
+     * @pre file is a valid std::istream with Matrix Market data.
+     * @pre input data is in valid Matrix Market format.
+     * @post Valid CSR matrix sorted in row major order and without duplicates
+     * is created.
+     */
     matrix::Csr* readCsrMatrixFromFile(std::istream& file, bool is_expand_symmetric)
     {
       if(!file) {
@@ -204,7 +221,17 @@ namespace ReSolve
       return A;
     }
 
-
+    /**
+     * @brief Imports vector data from a Matrix Market file.
+     * 
+     * @param file - std::istream to Matrix Market file (data).
+     * @return real_type* - pointer to array with (dense) vector entries.
+     * 
+     * @pre `file` is a valid std::istream with Matrix Market data.
+     * @pre Input data is in valid Matrix Market format.
+     * @post A raw array with vector data is created.
+     * 
+     */
     real_type* readRhsFromFile(std::istream& file)
     {
       if(!file) {
@@ -227,13 +254,28 @@ namespace ReSolve
 
       real_type* vec = new real_type[n];
       real_type a;
-      while (file >> a){
+      while (file >> a) {
         vec[i] = a;
         i++;
       }
       return vec;
     }
 
+    /**
+     * @brief Reads data from a Matrix Market file and updates COO matrix A.
+     * 
+     * Compute complexity of this function is O(NNZ*log(NNZ)). There is an
+     * overload of this function that generates a CSR matrix.
+     * 
+     * @param file - std::istream to Matrix Market file (data).
+     * @param A - output COO matrix.
+     * 
+     * @pre `file` is a valid std::istream with Matrix Market data.
+     * @pre Input data is in valid Matrix Market format.
+     * @pre Size of matrix stored in the Matrix Market file matches the size of A.
+     * @post Valid COO matrix sorted in row major order and without duplicates
+     * is created.
+     */
     void readAndUpdateMatrix(std::istream& file, matrix::Coo* A)
     {
       if(!file) {
@@ -249,6 +291,21 @@ namespace ReSolve
       copyListToCoo(tmp, A);
     }
 
+    /**
+     * @brief Reads data from a Matrix Market file and updates CSR matrix A.
+     * 
+     * Compute complexity of this function is O(NNZ*log(NNZ)). There is an
+     * overload of this function that generates a COO matrix.
+     * 
+     * @param file - std::istream to Matrix Market file (data).
+     * @param A - output CSR matrix.
+     * 
+     * @pre `file` is a valid std::istream with Matrix Market data.
+     * @pre Input data is in valid Matrix Market format.
+     * @pre Size of matrix stored in the Matrix Market file matches the size of A.
+     * @post Valid CSR matrix sorted in row major order and without duplicates
+     * is created.
+     */
     void readAndUpdateMatrix(std::istream& file, matrix::Csr* A)
     {
       if(!file) {
@@ -264,6 +321,17 @@ namespace ReSolve
       copyListToCsr(tmp, A);
     }
 
+    /**
+     * @brief Reads data from a Matrix Market file and updates array p_rhs.
+     * 
+     * @param file - std::istream to Matrix Market file (data).
+     * @param p_rhs - pointer to a pointer to a raw array with vector data.
+     * 
+     * @todo The righ-hand-side should be of vector type, not a raw array. With
+     * current implementation it is impossible to verify if the sufficient
+     * space is allocated to store all the data from the input file. Risk of
+     * writing past the end of the array is high.
+     */
     void readAndUpdateRhs(std::istream& file, real_type** p_rhs) 
     {
       if (!file) {
@@ -297,6 +365,17 @@ namespace ReSolve
       }
     }
 
+    /**
+     * @brief Writes matrix A to a file in Matrix Market format.
+     * 
+     * @param A - input matrix.
+     * @param file_out - std::ostream to output file.
+     * @return int - 0 if successful, error code otherwise.
+     * 
+     * @pre `A` is a valid sparse matrix.
+     * @post Valid Matrix Marked data is written to std::ostream.
+     * @invariant Matrix `A` elements are unchanged.
+     */
     int writeMatrixToFile(matrix::Sparse* A, std::ostream& file_out)
     {
       if (A == nullptr) {
@@ -311,24 +390,36 @@ namespace ReSolve
       }
       file_out << "% Generated by Re::Solve <https://github.com/ORNL/ReSolve>\n";
       file_out << A->getNumRows()    << " " 
-              << A->getNumColumns() << " "
-              << A->getNnz()        << "\n";
-      A->print(file_out, 1);
-      // Indexing base 1 ^^
+               << A->getNumColumns() << " "
+               << A->getNnz()        << "\n";
+      
+      index_type indexing_base = 1;
+      A->print(file_out, indexing_base);
       return 0;
     }
 
+    /**
+     * @brief Writes vector data to a file in Matrix Market format.
+     * 
+     * @param vec_x - Input vector.
+     * @param file_out - std::ostream to output file.
+     * @return int - 0 if successful, error code otherwise.
+     * 
+     * @pre `vec_x` is a valid vector.
+     * @post Valid Matrix Market data is written to std::ostream.
+     * @invariant Elements of `vec_x` are unchanged.
+     */
     int writeVectorToFile(vector_type* vec_x, std::ostream& file_out)
     {
       real_type* x_data = vec_x->getData(memory::HOST);
-      // std::ofstream file_out (filename, std::ofstream::out);
+
       file_out << "%%MatrixMarket matrix array real general \n";
-      file_out << "% ID: XXX \n";
+      file_out << "% Generated by Re::Solve <https://github.com/ORNL/ReSolve>\n";
       file_out << vec_x->getSize() << " " << 1 << "\n";
       for (int i = 0; i < vec_x->getSize(); ++i) {
         file_out << std::setprecision(32) << std::scientific << x_data[i] << "\n";
       }
-      // file_out.close();
+
       return 0;
     }
 
@@ -337,6 +428,30 @@ namespace ReSolve
     // Static helper functions
     //
 
+    /**
+     * @brief Reads Matrix Market data from std::istream and stores it into
+     * std::list<MatrixElementTriplet>.
+     * 
+     * @param[in]  file - std::istream to Matrix Market file (data).
+     * @param[in]  is_expand_symmetric - whether to expand symmetric matrix to general format
+     * @param[out] tmp - std::list where to store matrix data
+     * @param[out] n - number of rows as read from Matrix Market file
+     * @param[out] m - number of columns as read from Matrix Market file 
+     * @param[out] nnz - calculated number of matrix nonzeros
+     * @param[out] symmetric - if matrix is symmetric
+     * @param[out] expanded - if symmetric matrix is expanded to general format
+     * 
+     * @pre `file` is a valid std::istream with Matrix Market data.
+     * @pre Input data is in valid Matrix Market format.
+     * @pre `tmp` is an empty list!
+     * @post Matrix size is set to values read from the Matrix Market file.
+     * @post `nnz` is number of nonzeros in the matrix after duplicates are
+     * removed and the matrix is (optionally) expanded.
+     * @post `symmetric` and `expanded` flags are set based on data read into
+     * `tmp` list.
+     * @post `tmp` list is overwritten with matrix elements read from the input
+     * stream.
+     */
     static void readListFromFile(std::istream& file,
                                  bool is_expand_symmetric,
                                  std::list<MatrixElementTriplet>& tmp,
@@ -372,15 +487,39 @@ namespace ReSolve
       // Store COO data in the temporary workspace. Complexity O(NNZ)
       loadToList(file, tmp, symmetric && is_expand_symmetric);
 
-      // Sort tmp. Complexity O(NNZ*log(NNZ))
+      // Sort tmp. Complexity O(NNZ*log(NNZ)).
       tmp.sort();
 
-      // Deduplicate tmp. Complexity O(NNZ)
+      // Deduplicate tmp. Complexity O(NNZ).
       removeDuplicates(tmp);
 
+      // Set nnz without duplicates and for possibly expanded matrix.
       nnz = static_cast<index_type>(tmp.size());
     }
 
+    /**
+     * @brief 
+     * 
+     * @param[in]     file - std::istream to Matrix Market file (data).
+     * @param[in,out] A - sparse matrix to be updated
+     * @param[out]    tmp - temporary list with matrix entries
+     * 
+     * @pre `file` is a valid std::istream with Matrix Market data.
+     * @pre Input data is in valid Matrix Market format.
+     * @pre `tmp` is an empty list!
+     * @pre Matrix size of `A` must match matrix size read from the Matrix Market
+     * file.
+     * @pre Number of nonzeros in `A` must not be smaller than the number of
+     * zeros read from the Matrix Market file.
+     * @post `tmp` list is overwritten with matrix elements read from the input
+     * stream.
+     * @post Number of nonzeros in `A` is updated to the number of nozeros in
+     * input matrix data after duplicates are removed and the matrix is
+     * (optionally) expanded. It can be smaller than the number of current
+     * nonzero elements in `A`.
+     * @invariant Elements of `A` are unchanged in this function but they are
+     * expected to be overwritten with values in `tmp` later in the code. 
+     */
     static void readAndUpdateSparseMatrix(std::istream& file, matrix::Sparse* A, std::list<MatrixElementTriplet>& tmp)
     {
       std::stringstream ss;
@@ -430,7 +569,7 @@ namespace ReSolve
       // Sort tmp. Complexity O(NNZ*log(NNZ))
       tmp.sort();
 
-      // Deduplicate tmp. Complexity O(NNZ)
+      // Remove duplicates in `tmp` list. Complexity O(NNZ)
       removeDuplicates(tmp);
 
       nnz = static_cast<index_type>(tmp.size());
@@ -453,10 +592,30 @@ namespace ReSolve
     //   std::cout << "\n";
     // }
 
+    /**
+     * @brief Loads data from Matrix Market file to a std::list.
+     * 
+     * @param[in]  file - std::istream to Matrix Market file (data).
+     * @param[out] tmp - temporary list with matrix entries
+     * @param[in]  is_expand_symmetric - whether to expand symmetric matrix.
+     * @return int - 0 if successful, error code otherwise.
+     * 
+     * @pre `file` is a valid std::istream with Matrix Market data.
+     * @pre Input data is in valid Matrix Market format.
+     * @pre `tmp` is an empty list!
+     * @post `tmp` list is overwritten with matrix elements read from the input
+     * stream.
+     */
     int loadToList(std::istream& file, std::list<MatrixElementTriplet>& tmp, bool is_expand_symmetric)
     {
       index_type i, j;
       real_type v;
+
+      // If the `tmp` list is not empty, clear it.
+      if (tmp.size() != 0) {
+        tmp.clear();
+      }
+
       while (file >> i >> j >> v) {
         MatrixElementTriplet triplet(i - 1, j - 1, v);
         tmp.push_back(std::move(triplet));
@@ -471,6 +630,16 @@ namespace ReSolve
       return 0;
     }
 
+    /**
+     * @brief Removes duplicates from `tmp` list.
+     * 
+     * @param[in,out] tmp - List with matrix entries. 
+     * @return int - 0 if successful, error code otherwise.
+     * 
+     * @pre `tmp` contains matrix elements.
+     * @post Duplicates in `tmp` are added in place to the first instance
+     * of that matrix element.
+     */
     int removeDuplicates(std::list<MatrixElementTriplet>& tmp)
     {
       std::list<MatrixElementTriplet>::iterator it = tmp.begin();
@@ -487,6 +656,19 @@ namespace ReSolve
       return 0;
     }
 
+    /**
+     * @brief Writes data from the std::list to COO matrix.
+     * 
+     * @param[in]  tmp - List with matrix entries
+     * @param[out] A   - Output COO matrix
+     * @return int - 0 if successful, error code otherwise.
+     * 
+     * @pre `tmp` contains matrix elements sorted in row-major order and
+     * without duplicates.
+     * @pre Number of `tmp` elements is not larger than number of nonzeros
+     * in `A`.
+     * @post Matrix data in `A` is updated with data from `tmp`.
+     */
     int copyListToCoo(const std::list<MatrixElementTriplet>& tmp, matrix::Coo* A)
     {
       index_type* coo_rows = A->getRowData(memory::HOST);
@@ -510,6 +692,20 @@ namespace ReSolve
       return 0;
     }
 
+
+    /**
+     * @brief Writes data from the std::list to CSR matrix.
+     * 
+     * @param[in]  tmp - List with matrix entries
+     * @param[out] A   - Output CSR matrix
+     * @return int - 0 if successful, error code otherwise.
+     * 
+     * @pre `tmp` contains matrix elements sorted in row-major order and
+     * without duplicates.
+     * @pre Number of `tmp` elements is not larger than number of nonzeros
+     * in `A`.
+     * @post Matrix data in `A` is updated with data from `tmp`.
+     */
     int copyListToCsr(const std::list<MatrixElementTriplet>& tmp, matrix::Csr* A)
     {
       index_type* csr_rows = A->getRowData(memory::HOST);
