@@ -83,9 +83,9 @@ int main(int argc, char *argv[])
     }
     bool is_expand_symmetric = true;
     if (i == 0) {
-      A = ReSolve::io::readCsrMatrixFromFile(mat_file, is_expand_symmetric);
+      A = ReSolve::io::createCsrFromFile(mat_file, is_expand_symmetric);
 
-      rhs = ReSolve::io::readRhsFromFile(rhs_file);
+      rhs = ReSolve::io::createArrayFromFile(rhs_file);
       x = new real_type[A->getNumRows()];
       vec_rhs = new vector_type(A->getNumRows());
       vec_x = new vector_type(A->getNumRows());
@@ -93,8 +93,8 @@ int main(int argc, char *argv[])
       vec_x->allocate(ReSolve::memory::DEVICE);
       vec_r = new vector_type(A->getNumRows());
     } else {
-      ReSolve::io::readAndUpdateMatrix(mat_file, A);
-      ReSolve::io::readAndUpdateRhs(rhs_file, &rhs);
+      ReSolve::io::updateMatrixFromFile(mat_file, A);
+      ReSolve::io::updateArrayFromFile(rhs_file, &rhs);
     }
     std::cout<<"Finished reading the matrix and rhs, size: "<<A->getNumRows()<<" x "<<A->getNumColumns()<< ", nnz: "<< A->getNnz()<< ", symmetric? "<<A->symmetric()<< ", Expanded? "<<A->expanded()<<std::endl;
     mat_file.close();

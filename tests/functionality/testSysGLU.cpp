@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
     std::cout << "Failed to open file " << matrixFileName1 << "\n";
     return -1;
   }
-  ReSolve::matrix::Csr* A = ReSolve::io::readCsrMatrixFromFile(mat1);
+  ReSolve::matrix::Csr* A = ReSolve::io::createCsrFromFile(mat1);
   mat1.close();
 
   // Read first rhs vector
@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
     std::cout << "Failed to open file " << rhsFileName1 << "\n";
     return -1;
   }
-  real_type* rhs = ReSolve::io::readRhsFromFile(rhs1_file);
+  real_type* rhs = ReSolve::io::createArrayFromFile(rhs1_file);
   real_type* x   = new real_type[A->getNumRows()];
   vector_type* vec_rhs = new vector_type(A->getNumRows());
   vector_type* vec_x   = new vector_type(A->getNumRows());
@@ -201,7 +201,7 @@ int main(int argc, char *argv[])
     std::cout << "Failed to open file " << matrixFileName2 << "\n";
     return -1;
   }
-  ReSolve::io::readAndUpdateMatrix(mat2, A);
+  ReSolve::io::updateMatrixFromFile(mat2, A);
   mat2.close();
 
   // Load the second rhs vector
@@ -210,7 +210,7 @@ int main(int argc, char *argv[])
     std::cout << "Failed to open file " << rhsFileName2 << "\n";
     return -1;
   }
-  ReSolve::io::readAndUpdateRhs(rhs2_file, &rhs);
+  ReSolve::io::updateArrayFromFile(rhs2_file, &rhs);
   rhs2_file.close();
 
   // Update system values

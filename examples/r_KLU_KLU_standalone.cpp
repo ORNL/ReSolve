@@ -65,9 +65,9 @@ int main(int argc, char *argv[])
     return -1;
   }
   bool is_expand_symmetric = true;
-  A = ReSolve::io::readCsrMatrixFromFile(mat_file, is_expand_symmetric);
+  A = ReSolve::io::createCsrFromFile(mat_file, is_expand_symmetric);
 
-  rhs = ReSolve::io::readRhsFromFile(rhs_file);
+  rhs = ReSolve::io::createArrayFromFile(rhs_file);
   x = new real_type[A->getNumRows()];
   vec_rhs = new vector_type(A->getNumRows());
   vec_x = new vector_type(A->getNumRows());

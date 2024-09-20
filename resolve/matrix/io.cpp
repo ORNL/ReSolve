@@ -130,17 +130,17 @@ namespace ReSolve
   {
 
     // Static helper functionsdeclarations
-    static void readListFromFile(std::istream& file,
-                                 bool is_expand_symmetric,                                  
-                                 std::list<MatrixElementTriplet>& tmp,
-                                 index_type& n,
-                                 index_type& m,
-                                 index_type& nnz,
-                                 bool& symmetric,
-                                 bool& expanded);
-    static void readAndUpdateSparseMatrix(std::istream& file,
-                                          matrix::Sparse* A,
-                                          std::list<MatrixElementTriplet>& tmp);
+    static void createMatrixFromFileAsList(std::istream& file,
+                                           bool is_expand_symmetric,                                  
+                                           std::list<MatrixElementTriplet>& tmp,
+                                           index_type& n,
+                                           index_type& m,
+                                           index_type& nnz,
+                                           bool& symmetric,
+                                           bool& expanded);
+    static void createMatrixFromFileAsList(std::istream& file,
+                                           matrix::Sparse* A,
+                                           std::list<MatrixElementTriplet>& tmp);
     // static void print_list(std::list<MatrixElementTriplet>& l);
     static int loadToList(std::istream& file, bool is_expand_symmetric, std::list<MatrixElementTriplet>& tmp);
     static int removeDuplicates(std::list<MatrixElementTriplet>& tmp);
@@ -161,10 +161,10 @@ namespace ReSolve
      * @post Valid COO matrix sorted in row major order and without duplicates
      * is created.
      */
-    matrix::Coo* readMatrixFromFile(std::istream& file, bool is_expand_symmetric)
+    matrix::Coo* createCooFromFile(std::istream& file, bool is_expand_symmetric)
     {
       if(!file) {
-        Logger::error() << "Empty input to readMatrixFromFile function ... \n" << std::endl;
+        Logger::error() << "Empty input to createCooFromFile function ... \n" << std::endl;
         return nullptr;
       }
 
@@ -174,7 +174,7 @@ namespace ReSolve
 
       std::list<MatrixElementTriplet> tmp;
 
-      readListFromFile(file, is_expand_symmetric, tmp, n, m, nnz, symmetric, expanded);
+      createMatrixFromFileAsList(file, is_expand_symmetric, tmp, n, m, nnz, symmetric, expanded);
 
       // Create matrix
       matrix::Coo* B = new matrix::Coo(n, m, nnz, symmetric, expanded);
@@ -197,10 +197,10 @@ namespace ReSolve
      * @post Valid CSR matrix sorted in row major order and without duplicates
      * is created.
      */
-    matrix::Csr* readCsrMatrixFromFile(std::istream& file, bool is_expand_symmetric)
+    matrix::Csr* createCsrFromFile(std::istream& file, bool is_expand_symmetric)
     {
       if(!file) {
-        Logger::error() << "Empty input to readMatrixFromFile function ... \n" << std::endl;
+        Logger::error() << "Empty input to createCooFromFile function ... \n" << std::endl;
         return nullptr;
       }
 
@@ -210,7 +210,7 @@ namespace ReSolve
 
       std::list<MatrixElementTriplet> tmp;
 
-      readListFromFile(file, is_expand_symmetric, tmp, n, m, nnz, symmetric, expanded);
+      createMatrixFromFileAsList(file, is_expand_symmetric, tmp, n, m, nnz, symmetric, expanded);
 
       // Create matrix
       matrix::Csr* A = new matrix::Csr(n, m, nnz, symmetric, expanded);
@@ -232,7 +232,7 @@ namespace ReSolve
      * @post A raw array with vector data is created.
      * 
      */
-    real_type* readRhsFromFile(std::istream& file)
+    real_type* createArrayFromFile(std::istream& file)
     {
       if(!file) {
         Logger::error() << "Empty input to " << __func__ << " function ... \n" << std::endl;
@@ -276,16 +276,16 @@ namespace ReSolve
      * @post Valid COO matrix sorted in row major order and without duplicates
      * is created.
      */
-    void readAndUpdateMatrix(std::istream& file, matrix::Coo* A)
+    void updateMatrixFromFile(std::istream& file, matrix::Coo* A)
     {
       if(!file) {
-        Logger::error() << "Empty input to readMatrixFromFile function ..." << std::endl;
+        Logger::error() << "Empty input to createCooFromFile function ..." << std::endl;
         return;
       }
 
       std::list<MatrixElementTriplet> tmp;
 
-      readAndUpdateSparseMatrix(file, A, tmp);
+      createMatrixFromFileAsList(file, A, tmp);
 
       // Populate COO matrix. Complexity O(NNZ)
       copyListToCoo(tmp, A);
@@ -306,16 +306,16 @@ namespace ReSolve
      * @post Valid CSR matrix sorted in row major order and without duplicates
      * is created.
      */
-    void readAndUpdateMatrix(std::istream& file, matrix::Csr* A)
+    void updateMatrixFromFile(std::istream& file, matrix::Csr* A)
     {
       if(!file) {
-        Logger::error() << "Empty input to readMatrixFromFile function ..." << std::endl;
+        Logger::error() << "Empty input to updateMatrixFromFile function ..." << std::endl;
         return;
       }
 
       std::list<MatrixElementTriplet> tmp;
 
-      readAndUpdateSparseMatrix(file, A, tmp);
+      createMatrixFromFileAsList(file, A, tmp);
 
       // Populate COO matrix. Complexity O(NNZ)
       copyListToCsr(tmp, A);
@@ -332,10 +332,10 @@ namespace ReSolve
      * space is allocated to store all the data from the input file. Risk of
      * writing past the end of the array is high.
      */
-    void readAndUpdateRhs(std::istream& file, real_type** p_rhs) 
+    void updateArrayFromFile(std::istream& file, real_type** p_rhs) 
     {
       if (!file) {
-        Logger::error() << "Empty input to readAndUpdateRhs function ..." << std::endl;
+        Logger::error() << "Empty input to updateArrayFromFile function ..." << std::endl;
         return;
       }
 
@@ -452,14 +452,14 @@ namespace ReSolve
      * @post `tmp` list is overwritten with matrix elements read from the input
      * stream.
      */
-    static void readListFromFile(std::istream& file,
-                                 bool is_expand_symmetric,
-                                 std::list<MatrixElementTriplet>& tmp,
-                                 index_type& n,
-                                 index_type& m,
-                                 index_type& nnz,
-                                 bool& symmetric,
-                                 bool& expanded)
+    static void createMatrixFromFileAsList(std::istream& file,
+                                           bool is_expand_symmetric,
+                                           std::list<MatrixElementTriplet>& tmp,
+                                           index_type& n,
+                                           index_type& m,
+                                           index_type& nnz,
+                                           bool& symmetric,
+                                           bool& expanded)
     {
       std::stringstream ss;
       std::string line;
@@ -516,7 +516,9 @@ namespace ReSolve
      * @invariant Elements of `A` are unchanged in this function but they are
      * expected to be overwritten with values in `tmp` later in the code. 
      */
-    static void readAndUpdateSparseMatrix(std::istream& file, matrix::Sparse* A, std::list<MatrixElementTriplet>& tmp)
+    static void createMatrixFromFileAsList(std::istream& file,
+                                           matrix::Sparse* A,
+                                           std::list<MatrixElementTriplet>& tmp)
     {
       std::stringstream ss;
       std::string line;
@@ -532,7 +534,7 @@ namespace ReSolve
         symmetric = true;
       }
       if (symmetric != A->symmetric()) {
-        Logger::error() << "In function readAndUpdateMatrix:"
+        Logger::error() << "In function updateMatrixFromFile:"
                         << "Source data does not match the symmetry of destination matrix.\n";
       }
       // If the destination matrix is symmetric and expanded, then expand data.

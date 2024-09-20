@@ -20,9 +20,9 @@ public:
   {
     TestStatus status;
 
-    // Read string into istream and status it to `readMatrixFromFile` function.
+    // Read string into istream and status it to `createCooFromFile` function.
     std::istringstream file(general_coo_matrix_file_);
-    ReSolve::matrix::Coo* A = ReSolve::io::readMatrixFromFile(file);
+    ReSolve::matrix::Coo* A = ReSolve::io::createCooFromFile(file);
 
     // Check if the matrix data was correctly loaded
     status = true;
@@ -51,7 +51,7 @@ public:
 
     bool is_expand_symmetric = false;
     std::istringstream file2(symmetric_duplicates_coo_matrix_file_);
-    A = ReSolve::io::readMatrixFromFile(file2, is_expand_symmetric);
+    A = ReSolve::io::createCooFromFile(file2, is_expand_symmetric);
 
     nnz_answer = static_cast<index_type>(symmetric_coo_matrix_vals_.size());
     if (A->getNnz() != nnz_answer) {
@@ -76,7 +76,7 @@ public:
 
     is_expand_symmetric = true;
     std::istringstream file3(symmetric_duplicates_coo_matrix_file_);
-    A = ReSolve::io::readMatrixFromFile(file3, is_expand_symmetric);
+    A = ReSolve::io::createCooFromFile(file3, is_expand_symmetric);
 
     nnz_answer = static_cast<index_type>(symmetric_expanded_coo_matrix_vals_.size());
     if (A->getNnz() != nnz_answer) {
@@ -110,7 +110,7 @@ public:
 
     bool is_expand_symmetric = true;
     std::istringstream file(symmetric_duplicates_coo_matrix_file_);
-    ReSolve::matrix::Csr* B = ReSolve::io::readCsrMatrixFromFile(file, is_expand_symmetric);
+    ReSolve::matrix::Csr* B = ReSolve::io::createCsrFromFile(file, is_expand_symmetric);
 
     index_type nnz_answer = static_cast<index_type>(symmetric_expanded_csr_matrix_vals_.size());
     if (B->getNnz() != nnz_answer) {
@@ -142,7 +142,7 @@ public:
     TestStatus status;
     status = true;
 
-    // Read string into istream and status it to `readMatrixFromFile` function.
+    // Read string into istream and status it to `createCooFromFile` function.
     std::ostringstream buffer;
 
     // Deep copy constant test vectors with matrix data to nonconstant ones
@@ -178,7 +178,7 @@ public:
     TestStatus status;
     status = true;
 
-    // Read string into istream and status it to `readMatrixFromFile` function.
+    // Read string into istream and status it to `createCooFromFile` function.
     std::ostringstream buffer;
 
     // Deep copy constant test vectors with matrix data to nonconstant ones
@@ -220,11 +220,11 @@ public:
     ReSolve::matrix::Coo A(5, 5, 10, is_symmetric, is_expanded);
     A.allocateMatrixData(memory::HOST);
 
-    // Read string into istream and status it to `readMatrixFromFile` function.
+    // Read string into istream and status it to `createCooFromFile` function.
     std::istringstream file2(symmetric_coo_matrix_file_);
 
     // Update matrix A with data from the matrix market file
-    ReSolve::io::readAndUpdateMatrix(file2, &A);
+    ReSolve::io::updateMatrixFromFile(file2, &A);
 
     // Check if the matrix data was correctly loaded
     status = true;
@@ -243,7 +243,7 @@ public:
     std::istringstream file(symmetric_duplicates_coo_matrix_file_);
 
     // Update matrix A with data from the matrix market file
-    ReSolve::io::readAndUpdateMatrix(file, &A);
+    ReSolve::io::updateMatrixFromFile(file, &A);
 
     if (A.getNnz() != nnz_answer) {
       std::cout << "Incorrect NNZ read from the file ...\n";
@@ -261,7 +261,7 @@ public:
     std::istringstream file3(symmetric_duplicates_coo_matrix_file_);
 
     // Update matrix B with data from the matrix market file
-    ReSolve::io::readAndUpdateMatrix(file3, &B);
+    ReSolve::io::updateMatrixFromFile(file3, &B);
 
     nnz_answer = static_cast<index_type>(symmetric_expanded_coo_matrix_vals_.size());
     if (B.getNnz() != nnz_answer) {
@@ -290,7 +290,7 @@ public:
     std::istringstream file(symmetric_duplicates_coo_matrix_file_);
 
     // Update matrix B with data from the matrix market file
-    ReSolve::io::readAndUpdateMatrix(file, &A);
+    ReSolve::io::updateMatrixFromFile(file, &A);
 
     index_type nnz_answer = static_cast<index_type>(symmetric_expanded_csr_matrix_vals_.size());
     if (A.getNnz() != nnz_answer) {
@@ -308,11 +308,11 @@ public:
   {
     TestStatus status;
 
-    // Read string into istream and status it to `readMatrixFromFile` function.
+    // Read string into istream and status it to `createCooFromFile` function.
     std::istringstream file(general_vector_file_);
 
     // Create rhs vector and load its data from the input file
-    real_type* rhs = ReSolve::io::readRhsFromFile(file);
+    real_type* rhs = ReSolve::io::createArrayFromFile(file);
 
     // Check if the matrix data was correctly loaded
     status = true;
@@ -334,14 +334,14 @@ public:
   {
     TestStatus status;
 
-    // Read string into istream and status it to `readMatrixFromFile` function.
+    // Read string into istream and status it to `createCooFromFile` function.
     std::istringstream file(general_vector_file_);
 
-    // For now let's test only the case when `readAndUpdateRhs` does not allocate rhs
+    // For now let's test only the case when `updateArrayFromFile` does not allocate rhs
     real_type* rhs = new real_type[5]; //nullptr;
 
     // Update matrix A with data from the matrix market file
-    ReSolve::io::readAndUpdateRhs(file, &rhs);
+    ReSolve::io::updateArrayFromFile(file, &rhs);
 
     // Check if the matrix data was correctly loaded
     status = true;
