@@ -99,10 +99,20 @@ public:
     delete A;
     A = nullptr;
 
-    std::istringstream file4(symmetric_duplicates_coo_matrix_file_);
-    ReSolve::matrix::Csr* B = ReSolve::io::readCsrMatrixFromFile(file4, is_expand_symmetric);
+    return status.report(__func__);
+  }
 
-    nnz_answer = static_cast<index_type>(symmetric_expanded_csr_matrix_vals_.size());
+
+  TestOutcome csrMatrixImport()
+  {
+    TestStatus status;
+    status = true;
+
+    bool is_expand_symmetric = true;
+    std::istringstream file(symmetric_duplicates_coo_matrix_file_);
+    ReSolve::matrix::Csr* B = ReSolve::io::readCsrMatrixFromFile(file, is_expand_symmetric);
+
+    index_type nnz_answer = static_cast<index_type>(symmetric_expanded_csr_matrix_vals_.size());
     if (B->getNnz() != nnz_answer) {
       std::cout << "Incorrect NNZ read from the file ...\n";
       status = false;
@@ -261,25 +271,35 @@ public:
 
     status *= verifyAnswer(B, symmetric_expanded_coo_matrix_rows_, symmetric_expanded_coo_matrix_cols_, symmetric_expanded_coo_matrix_vals_);
 
-    // Create a symmetric 5x5 CSR matrix in general format with 13 nonzeros
-    is_expanded  = true;
-    is_symmetric = true;
-    ReSolve::matrix::Csr C(5, 5, 13, is_symmetric, is_expanded);
-    C.allocateMatrixData(memory::HOST);
+    return status.report(__func__);
+  }
+
+
+  TestOutcome csrMatrixReadAndUpdate()
+  {
+    TestStatus status;
+    status = true;
+
+    bool is_symmetric = true;
+    bool is_expanded  = true;
+
+    ReSolve::matrix::Csr A(5, 5, 13, is_symmetric, is_expanded);
+    A.allocateMatrixData(memory::HOST);
 
     // Read in symmetric matrix data
-    std::istringstream file4(symmetric_duplicates_coo_matrix_file_);
+    std::istringstream file(symmetric_duplicates_coo_matrix_file_);
 
     // Update matrix B with data from the matrix market file
-    ReSolve::io::readAndUpdateMatrix(file4, &C);
+    ReSolve::io::readAndUpdateMatrix(file, &A);
 
-    nnz_answer = static_cast<index_type>(symmetric_expanded_csr_matrix_vals_.size());
-    if (C.getNnz() != nnz_answer) {
+    index_type nnz_answer = static_cast<index_type>(symmetric_expanded_csr_matrix_vals_.size());
+    if (A.getNnz() != nnz_answer) {
       std::cout << "Incorrect NNZ read from the file ...\n";
+      std::cout << A.getNnz() << " ?= " << nnz_answer << "\n";
       status = false;
     }
 
-    status *= verifyAnswer(C, symmetric_expanded_csr_matrix_rows_, symmetric_expanded_csr_matrix_cols_, symmetric_expanded_csr_matrix_vals_);
+    status *= verifyAnswer(A, symmetric_expanded_csr_matrix_rows_, symmetric_expanded_csr_matrix_cols_, symmetric_expanded_csr_matrix_vals_);
 
     return status.report(__func__);
   }
@@ -528,7 +548,7 @@ R"(%%MatrixMarket matrix coordinate real symmetric
   const std::string symmetric_duplicates_coo_matrix_file_ =
 R"(%%MatrixMarket matrix coordinate real symmetric
 %
- 5  5  12
+ 5  5  13
  5  5  50.0
  1  1  10.0
  1  5  15.0
