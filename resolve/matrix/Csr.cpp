@@ -6,7 +6,6 @@
 #include "Csr.hpp"
 #include "Coo.hpp"
 #include <resolve/utilities/logger/Logger.hpp>
-#include <resolve/matrix/Utilities.hpp>
 
 namespace ReSolve 
 {
@@ -26,16 +25,6 @@ namespace ReSolve
                    bool symmetric,
                    bool expanded) : Sparse(n, m, nnz, symmetric, expanded)
   {
-  }
-
-  matrix::Csr::Csr(matrix::Coo* A_coo, memory::MemorySpace memspace)
-    : Sparse(A_coo->getNumRows(),
-             A_coo->getNumColumns(),
-             A_coo->getNnz(),
-             A_coo->symmetric(),
-             A_coo->expanded())
-  {
-    matrix::coo2csr(A_coo, this, memspace);
   }
 
   /**
@@ -201,7 +190,6 @@ namespace ReSolve
   {
     //four cases (for now)
     index_type nnz_current = nnz_;
-    if (is_expanded_) {nnz_current = nnz_expanded_;}
     setNotUpdated();
     int control = -1;
     if ((memspaceIn == memory::HOST)     && (memspaceOut == memory::HOST))    { control = 0;}
@@ -285,7 +273,6 @@ namespace ReSolve
   int matrix::Csr::allocateMatrixData(memory::MemorySpace memspace)
   {
     index_type nnz_current = nnz_;
-    if (is_expanded_) {nnz_current = nnz_expanded_;}
     destroyMatrixData(memspace);//just in case
 
     if (memspace == memory::HOST) {
@@ -316,9 +303,6 @@ namespace ReSolve
     using namespace ReSolve::memory;
 
     index_type nnz_current = nnz_;
-    if (is_expanded_) {
-      nnz_current = nnz_expanded_;
-    }
 
     switch (memspaceOut) {
       case HOST:
@@ -367,29 +351,19 @@ namespace ReSolve
     } // switch
   }
 
-  int matrix::Csr::updateFromCoo(matrix::Coo* A_coo, memory::MemorySpace memspaceOut)
-  {
-    assert(n_            == A_coo->getNumRows());
-    assert(m_            == A_coo->getNumColumns());
-    assert(nnz_          == A_coo->getNnz());
-    assert(is_symmetric_ == A_coo->symmetric()); // <- Do we need to check for this?
-
-    return matrix::coo2csr(A_coo, this, memspaceOut);
-  }
-
 
   /**
    * @brief Prints matrix data.
    * 
    * @param out - Output stream where the matrix data is printed
    */
-  void matrix::Csr::print(std::ostream& out)
+  void matrix::Csr::print(std::ostream& out, index_type indexing_base)
   {
     out << std::scientific << std::setprecision(std::numeric_limits<real_type>::digits10);
     for(index_type i = 0; i < n_; ++i) {
       for (index_type j = h_row_data_[i]; j < h_row_data_[i+1]; ++j) {
-        out << i << " " 
-            << h_col_data_[j] << " "
+        out << i              + indexing_base << " " 
+            << h_col_data_[j] + indexing_base << " "
             << h_val_data_[j] << "\n";
       }
     }

@@ -33,7 +33,7 @@ namespace ReSolve
   {
     this->A_ = (matrix::Csr*) A;
     index_type n = A_->getNumRows();
-    index_type nnz = A_->getNnzExpanded();
+    index_type nnz = A_->getNnz();
 
     h_ILU_vals_ = new real_type[nnz];
     h_aux1_ = new real_type[n];

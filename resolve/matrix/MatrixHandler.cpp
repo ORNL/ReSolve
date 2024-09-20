@@ -6,7 +6,6 @@
 #include <resolve/matrix/Csc.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
-#include <resolve/matrix/Utilities.hpp>
 #include "MatrixHandler.hpp"
 #include "MatrixHandlerCpu.hpp"
 
@@ -107,16 +106,6 @@ namespace ReSolve {
         devImpl_->setValuesChanged(isValuesChanged);
         break;
     }
-  }
-
-  /**
-   * @brief Converts COO to CSR matrix format.
-   * 
-   * Conversion takes place on CPU, and then CSR matrix is copied to `memspace`.
-   */
-  int MatrixHandler::coo2csr(matrix::Coo* A_coo, matrix::Csr* A_csr, memory::MemorySpace memspace)
-  {
-    return matrix::coo2csr(A_coo, A_csr, memspace);
   }
 
   /**

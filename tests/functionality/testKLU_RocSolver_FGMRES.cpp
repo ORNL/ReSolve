@@ -32,6 +32,7 @@
 #endif
 
 using namespace ReSolve::constants;
+using namespace ReSolve::colors;
 
 int main(int argc, char *argv[])
 {
@@ -75,8 +76,7 @@ int main(int argc, char *argv[])
     std::cout << "Failed to open file " << matrixFileName1 << "\n";
     return -1;
   }
-  ReSolve::matrix::Coo* A_coo = ReSolve::io::readMatrixFromFile(mat1);
-  ReSolve::matrix::Csr* A = new ReSolve::matrix::Csr(A_coo, ReSolve::memory::HOST);
+  ReSolve::matrix::Csr* A = ReSolve::io::createCsrFromFile(mat1);
   mat1.close();
 
   // Read first rhs vector
@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
     std::cout << "Failed to open file " << rhsFileName1 << "\n";
     return -1;
   }
-  real_type* rhs = ReSolve::io::readRhsFromFile(rhs1_file);
+  real_type* rhs = ReSolve::io::createArrayFromFile(rhs1_file);
   real_type* x   = new real_type[A->getNumRows()];
   vector_type* vec_rhs = new vector_type(A->getNumRows());
   vector_type* vec_x   = new vector_type(A->getNumRows());
@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
   vec_diff  = new vector_type(A->getNumRows());
   real_type* x_data = new real_type[A->getNumRows()];
 
-  for (int i=0; i<A->getNumRows(); ++i){
+  for (int i = 0; i < A->getNumRows(); ++i) {
     x_data[i] = 1.0;
   }
 
@@ -192,7 +192,7 @@ int main(int argc, char *argv[])
     std::cout << "Failed to open file " << matrixFileName2 << "\n";
     return -1;
   }
-  ReSolve::io::readAndUpdateMatrix(mat2, A_coo);
+  ReSolve::io::updateMatrixFromFile(mat2, A);
   mat2.close();
 
   // Load the second rhs vector
@@ -202,10 +202,9 @@ int main(int argc, char *argv[])
     std::cout << "Failed to open file " << rhsFileName2 << "\n";
     return -1;
   }
-  ReSolve::io::readAndUpdateRhs(rhs2_file, &rhs);
+  ReSolve::io::updateArrayFromFile(rhs2_file, &rhs);
   rhs2_file.close();
 
-  A->updateFromCoo(A_coo, ReSolve::memory::DEVICE);
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
 
   status = Rf->refactorize();
@@ -256,15 +255,20 @@ int main(int argc, char *argv[])
   std::cout<<"\t IR starting res. norm       : "<<FGMRES->getInitResidualNorm()<<" "<<std::endl;
   std::cout<<"\t IR final res. norm          : "<<FGMRES->getFinalResidualNorm()<<" (tol 1e-14)"<<std::endl<<std::endl;
 
+  if (!std::isfinite(normRmatrix1/normB1) || !std::isfinite(normRmatrix2/normB2)) {
+    std::cout << "Result is not a finite number!\n";
+    error_sum++;
+  }
   // TODO: 1e-9 is too lose acuracy!
   if ((normRmatrix1/normB1 > 1e-12 ) || (normRmatrix2/normB2 > 1e-9)) {
     std::cout << "Result inaccurate!\n";
     error_sum++;
   }
   if (error_sum == 0) {
-    std::cout<<"Test KLU with rocsolverrf refactorization + IR PASSED"<<std::endl<<std::endl;;
+    std::cout << "Test KLU with cuSolverGLU refactorization " << GREEN << "PASSED" << CLEAR << std::endl;
   } else {
-    std::cout<<"Test KLU with rocsolverrf refactorization + IR FAILED, error sum: "<<error_sum<<std::endl<<std::endl;;
+    std::cout << "Test KLU with cuSolverGLU refactorization " << RED << "FAILED" << CLEAR
+              << ", error sum: " << error_sum << std::endl;
   }
 
   delete A;
@@ -276,7 +280,6 @@ int main(int argc, char *argv[])
   delete [] rhs;
   delete vec_r;
   delete vec_x;
-  // delete workspace_HIP;
   delete matrix_handler;
   delete vector_handler;
 

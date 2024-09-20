@@ -1,7 +1,7 @@
 #include <string>
 #include <iostream>
 
-
+#include <resolve/Common.hpp>
 #include <resolve/utilities/version/version.hpp>
 
 //author: RD
@@ -18,16 +18,18 @@
  */
 int main()
 {
+  using namespace ReSolve::colors;
   std::string answer("0.99.1");
   std::string versionstr;
   ReSolve::VersionGetVersionStr(versionstr);
   std::cout << "ReSolveVersionGetVersionStr Test: " << versionstr << std::endl << std::endl;
 
   if (versionstr != answer) {
-    std::cout << "ReSolve version set incorrectly. Test FAILED\n";
+    std::cout << "ReSolve version set incorrectly. " 
+              << "Test " << RED << "FAILED" << CLEAR << "\n";
     return 1;
   }
-  std::cout << "ReSolve version test PASSED\n";
+  std::cout << "ReSolve version test " << GREEN << "PASSED" << CLEAR << "\n";
   
   return 0;
 }

@@ -37,6 +37,7 @@
 #endif
 
 using namespace ReSolve::constants;
+using namespace ReSolve::colors;
 
 int main(int argc, char *argv[])
 {
@@ -90,8 +91,7 @@ int main(int argc, char *argv[])
     std::cout << "Failed to open file " << matrixFileName1 << "\n";
     return -1;
   }
-  ReSolve::matrix::Coo* A_coo = ReSolve::io::readMatrixFromFile(mat1);
-  ReSolve::matrix::Csr* A = new ReSolve::matrix::Csr(A_coo, ReSolve::memory::HOST);
+  ReSolve::matrix::Csr* A = ReSolve::io::createCsrFromFile(mat1, true);
   mat1.close();
 
   // Read first rhs vector
@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
     std::cout << "Failed to open file " << rhsFileName1 << "\n";
     return -1;
   }
-  real_type* rhs = ReSolve::io::readRhsFromFile(rhs1_file);
+  real_type* rhs = ReSolve::io::createArrayFromFile(rhs1_file);
   rhs1_file.close();
 
   // Create rhs, solution and residual vectors
@@ -223,7 +223,7 @@ int main(int argc, char *argv[])
     std::cout << "Failed to open file " << matrixFileName2 << "\n";
     return -1;
   }
-  ReSolve::io::readAndUpdateMatrix(mat2, A_coo);
+  ReSolve::io::updateMatrixFromFile(mat2, A);
   mat2.close();
 
   // Load the second rhs vector
@@ -232,10 +232,9 @@ int main(int argc, char *argv[])
     std::cout << "Failed to open file " << rhsFileName2 << "\n";
     return -1;
   }
-  ReSolve::io::readAndUpdateRhs(rhs2_file, &rhs);
+  ReSolve::io::updateArrayFromFile(rhs2_file, &rhs);
   rhs2_file.close();
 
-  A->updateFromCoo(A_coo, ReSolve::memory::DEVICE);
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
 
   status = solver.refactorize();
@@ -317,18 +316,21 @@ int main(int argc, char *argv[])
   std::cout << "\t IR starting res. norm       : " << init_rnorm  << "\n";
   std::cout << "\t IR final res. norm          : " << final_rnorm << " (tol " << std::setprecision(2) << tol << ")\n\n";
 
+  if (!std::isfinite(normRmatrix1/normB1) || !std::isfinite(normRmatrix2/normB2)) {
+    std::cout << "Result is not a finite number!\n";
+    error_sum++;
+  }
   if ((normRmatrix1/normB1 > 1e-12 ) || (normRmatrix2/normB2 > 1e-15)) {
     std::cout << "Result inaccurate!\n";
     error_sum++;
   }
   if (error_sum == 0) {
-    std::cout<<"Test KLU with rocsolverrf refactorization + IR PASSED"<<std::endl<<std::endl;;
+    std::cout<<"Test KLU with Rf solver + IR " << GREEN << "PASSED" << CLEAR <<std::endl<<std::endl;;
   } else {
-    std::cout<<"Test KLU with rocsolverrf refactorization + IR FAILED, error sum: "<<error_sum<<std::endl<<std::endl;;
+    std::cout<<"Test KLU with Rf solver + IR " << RED << "FAILED" << CLEAR << ", error sum: "<<error_sum<<std::endl<<std::endl;;
   }
 
   delete A;
-  delete A_coo;
   delete [] rhs;
   delete vec_r;
   delete vec_x;

@@ -30,8 +30,6 @@ namespace ReSolve { namespace matrix {
           memory::MemorySpace memspaceSrc,
           memory::MemorySpace memspaceDst);
       
-      Csr(matrix::Coo* mat, memory::MemorySpace memspace);
-
       ~Csr();
 
       virtual index_type* getRowData(memory::MemorySpace memspace);
@@ -43,11 +41,9 @@ namespace ReSolve { namespace matrix {
 
       virtual int allocateMatrixData(memory::MemorySpace memspace); 
 
-      virtual void print(std::ostream& file_out = std::cout);
+      virtual void print(std::ostream& file_out = std::cout, index_type indexing_base = 0);
 
       virtual int copyData(memory::MemorySpace memspaceOut);
-
-      int updateFromCoo(matrix::Coo* mat, memory::MemorySpace memspaceOut);
 
   };
 

@@ -26,7 +26,6 @@ int main(int argc, char *argv[])
   std::string  rhsFileName = argv[2];
 
 
-  ReSolve::matrix::Coo* A_coo;
   ReSolve::matrix::Csr* A;
   ReSolve::LinAlgWorkspaceHIP* workspace_HIP = new ReSolve::LinAlgWorkspaceHIP();
   workspace_HIP->initializeHandles();
@@ -61,14 +60,10 @@ int main(int argc, char *argv[])
     std::cout << "Failed to open file " << rhsFileName << "\n";
     return -1;
   }
-  A_coo = ReSolve::io::readMatrixFromFile(mat_file);
-  A = new ReSolve::matrix::Csr(A_coo->getNumRows(),
-                               A_coo->getNumColumns(),
-                               A_coo->getNnz(),
-                               A_coo->symmetric(),
-                               A_coo->expanded());
+  bool is_expand_symmetric = true;
+  A = ReSolve::io::createCsrFromFile(mat_file, is_expand_symmetric);
 
-  rhs = ReSolve::io::readRhsFromFile(rhs_file);
+  rhs = ReSolve::io::createArrayFromFile(rhs_file);
   x = new real_type[A->getNumRows()];
   vec_rhs = new vector_type(A->getNumRows());
   vec_x = new vector_type(A->getNumRows());
@@ -81,7 +76,7 @@ int main(int argc, char *argv[])
   mat_file.close();
   rhs_file.close();
 
-  A->updateFromCoo(A_coo, ReSolve::memory::DEVICE);
+  A->copyData(ReSolve::memory::DEVICE);
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
   //Now call direct solver
   real_type norm_b;
@@ -113,7 +108,6 @@ int main(int argc, char *argv[])
 
 
   delete A;
-  delete A_coo;
   delete Rf;
   delete [] x;
   delete [] rhs;

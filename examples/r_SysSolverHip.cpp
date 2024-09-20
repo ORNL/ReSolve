@@ -36,7 +36,6 @@ int main(int argc, char *argv[] )
   std::string matrixFileNameFull;
   std::string rhsFileNameFull;
 
-  ReSolve::matrix::Coo* A_coo;
   ReSolve::matrix::Csr* A;
 
   ReSolve::LinAlgWorkspaceHIP* workspace_HIP = new ReSolve::LinAlgWorkspaceHIP();
@@ -80,21 +79,17 @@ int main(int argc, char *argv[] )
       std::cout << "Failed to open file " << rhsFileNameFull << "\n";
       return -1;
     }
+    bool is_expand_symmetric = true;
     if (i == 0) {
-      A_coo = ReSolve::io::readMatrixFromFile(mat_file);
-      A = new ReSolve::matrix::Csr(A_coo->getNumRows(),
-                                   A_coo->getNumColumns(),
-                                   A_coo->getNnz(),
-                                   A_coo->symmetric(),
-                                   A_coo->expanded());
+      A = ReSolve::io::createCsrFromFile(mat_file, is_expand_symmetric);
 
-      rhs = ReSolve::io::readRhsFromFile(rhs_file);
+      rhs = ReSolve::io::createArrayFromFile(rhs_file);
       x = new real_type[A->getNumRows()];
       vec_rhs = new vector_type(A->getNumRows());
       vec_x = new vector_type(A->getNumRows());
     } else {
-      ReSolve::io::readAndUpdateMatrix(mat_file, A_coo);
-      ReSolve::io::readAndUpdateRhs(rhs_file, &rhs);
+      ReSolve::io::updateMatrixFromFile(mat_file, A);
+      ReSolve::io::updateArrayFromFile(rhs_file, &rhs);
     }
     std::cout << "Finished reading the matrix and rhs, size: " << A->getNumRows()
               << " x " << A->getNumColumns()
@@ -104,16 +99,15 @@ int main(int argc, char *argv[] )
     mat_file.close();
     rhs_file.close();
 
-    //Now convert to CSR.
+    // Update host and device data.
     if (i < 2) { 
-      A->updateFromCoo(A_coo, ReSolve::memory::HOST);
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
       vec_rhs->setDataUpdated(ReSolve::memory::HOST);
     } else { 
-      A->updateFromCoo(A_coo, ReSolve::memory::DEVICE);
+      A->copyData(ReSolve::memory::DEVICE);
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
     }
-    std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnzExpanded()<<std::endl;
+    std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnz()<<std::endl;
     //Now call direct solver
     solver->setMatrix(A);
     int status = -1;
@@ -144,7 +138,6 @@ int main(int argc, char *argv[] )
 
   //now DELETE
   delete A;
-  delete A_coo;
   delete [] x;
   delete [] rhs;
   delete vec_rhs;

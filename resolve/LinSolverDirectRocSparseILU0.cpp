@@ -29,7 +29,7 @@ namespace ReSolve
     this->A_ = (matrix::Csr*) A;
     index_type n = A_->getNumRows();
 
-    index_type nnz = A_->getNnzExpanded();
+    index_type nnz = A_->getNnz();
     mem_.allocateArrayOnDevice(&d_ILU_vals_,nnz); 
     //copy A values to a buffer first
     mem_.copyArrayDeviceToDevice(d_ILU_vals_, A_->getValues(ReSolve::memory::DEVICE), nnz);
@@ -190,7 +190,7 @@ namespace ReSolve
     int error_sum = 0;
     this->A_ = A;
     index_type n = A_->getNumRows();
-    index_type nnz = A_->getNnzExpanded();
+    index_type nnz = A_->getNnz();
     mem_.copyArrayDeviceToDevice(d_ILU_vals_, A_->getValues(ReSolve::memory::DEVICE), nnz);
 
     status_rocsparse_ = rocsparse_dcsrilu0(workspace_->getRocsparseHandle(), 
@@ -215,7 +215,7 @@ namespace ReSolve
     status_rocsparse_ = rocsparse_dcsrsv_solve(workspace_->getRocsparseHandle(), 
                                                rocsparse_operation_none,
                                                A_->getNumRows(),
-                                               A_->getNnzExpanded(), 
+                                               A_->getNnz(), 
                                                &(constants::ONE), 
                                                descr_L_,
                                                d_ILU_vals_, //vals_, 
@@ -231,7 +231,7 @@ namespace ReSolve
     status_rocsparse_ = rocsparse_dcsrsv_solve(workspace_->getRocsparseHandle(), 
                                                rocsparse_operation_none,
                                                A_->getNumRows(),
-                                               A_->getNnzExpanded(), 
+                                               A_->getNnz(), 
                                                &(constants::ONE), 
                                                descr_U_,
                                                d_ILU_vals_, //vals_, 
@@ -257,7 +257,7 @@ namespace ReSolve
     status_rocsparse_ = rocsparse_dcsrsv_solve(workspace_->getRocsparseHandle(), 
                                           rocsparse_operation_none,
                                           A_->getNumRows(),
-                                          A_->getNnzExpanded(), 
+                                          A_->getNnz(), 
                                           &(constants::ONE), 
                                           descr_L_,
                                           d_ILU_vals_, //vals_, 
@@ -273,7 +273,7 @@ namespace ReSolve
     status_rocsparse_ = rocsparse_dcsrsv_solve(workspace_->getRocsparseHandle(), 
                                                rocsparse_operation_none,
                                                A_->getNumRows(),
-                                               A_->getNnzExpanded(), 
+                                               A_->getNnz(), 
                                                &(constants::ONE), 
                                                descr_U_,
                                                d_ILU_vals_, //vals_, 

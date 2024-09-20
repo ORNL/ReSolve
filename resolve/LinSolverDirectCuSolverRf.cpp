@@ -57,7 +57,7 @@ namespace ReSolve
     status_cusolverrf_ = cusolverRfSetResetValuesFastMode(handle_cusolverrf_, CUSOLVERRF_RESET_VALUES_FAST_MODE_ON);
     error_sum += status_cusolverrf_;
     status_cusolverrf_ = cusolverRfSetupDevice(n, 
-                                               A_->getNnzExpanded(),
+                                               A_->getNnz(),
                                                A_->getRowData(memory::DEVICE),
                                                A_->getColData(memory::DEVICE),
                                                A_->getValues( memory::DEVICE),
@@ -101,7 +101,7 @@ namespace ReSolve
   {
     int error_sum = 0;
     status_cusolverrf_ = cusolverRfResetValues(A_->getNumRows(), 
-                                               A_->getNnzExpanded(), 
+                                               A_->getNnz(), 
                                                A_->getRowData(memory::DEVICE),
                                                A_->getColData(memory::DEVICE),
                                                A_->getValues( memory::DEVICE),

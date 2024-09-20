@@ -91,6 +91,7 @@ Primary authors of this project are Kasia &#346;wirydowicz and Slaven Peles.
 
 ReSolve project would not be possible without significant contributions from (in alphabetic order):
 - Maksudul Alam
+- Kaleb Brunhoeber
 - Ryan Danehy
 - Nicholson Koukpaizan
 - Jaelyn Litzinger
