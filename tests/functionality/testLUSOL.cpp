@@ -1,6 +1,7 @@
 /**
  * @file testLUSOL.cpp
  * @author Slaven Peles (peless@ornl.gov)
+ * @author Kaleb Brunhoeber
  * @brief Functionality test for LUSOL direct solver
  * 
  */
@@ -17,24 +18,19 @@
 #include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
-// #include <resolve/matrix/Utilities.hpp>
 #include <resolve/matrix/io.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 
 using namespace ReSolve::constants;
+using namespace ReSolve::colors;
 using index_type = ReSolve::index_type;
 using real_type = ReSolve::real_type;
 using vector_type = ReSolve::vector::Vector;
 
+// Prototype for Coo to CSR matrix conversion function
 static int coo2csr_simple(ReSolve::matrix::Coo* A_coo, ReSolve::matrix::Csr* A_csr, ReSolve::memory::MemorySpace memspace);
-/// @brief Specialized matvec implementation for COO matrices
-static int specializedMatvec(ReSolve::matrix::Coo* Ageneric,
-                             vector_type* vec_x,
-                             vector_type* vec_result,
-                             const real_type* alpha,
-                             const real_type* beta);
 
 int main(int argc, char* argv[])
 {
@@ -44,9 +40,9 @@ int main(int argc, char* argv[])
   // argv[1] contains the path to the data directory, if it is not ./
   const std::string data_path = (argc == 2) ? argv[1] : "./";
 
-  std::unique_ptr<ReSolve::LinAlgWorkspaceCpu> workspace(new ReSolve::LinAlgWorkspaceCpu());
-  std::unique_ptr<ReSolve::MatrixHandler> matrix_handler(new ReSolve::MatrixHandler(workspace.get()));
-  std::unique_ptr<ReSolve::VectorHandler> vector_handler(new ReSolve::VectorHandler(workspace.get()));
+  ReSolve::LinAlgWorkspaceCpu workspace;
+  ReSolve::MatrixHandler matrix_handler(&workspace);
+  ReSolve::VectorHandler vector_handler(&workspace);
   ReSolve::LinSolverDirectLUSOL lusol;
 
   std::string matrix_one_path = data_path + "data/matrix_ACTIVSg200_AC_10.mtx";
@@ -65,8 +61,6 @@ int main(int argc, char* argv[])
   std::unique_ptr<ReSolve::matrix::Coo> A(ReSolve::io::createCooFromFile(matrix_file, is_expand_symmetric));
   matrix_file.close();
 
-  // ReSolve::matrix::expand(*A);
-
   std::ifstream rhs_file(rhs_one_path);
   if (!rhs_file.is_open()) {
     std::cout << "Failed to open " << rhs_one_path << "\n";
@@ -77,13 +71,13 @@ int main(int argc, char* argv[])
   rhs_file.close();
 
   real_type* x = new real_type[A->getNumRows()];
-  std::unique_ptr<vector_type> vec_rhs(new vector_type(A->getNumRows()));
-  std::unique_ptr<vector_type> vec_x(new vector_type(A->getNumRows()));
-  std::unique_ptr<vector_type> vec_r(new vector_type(A->getNumRows()));
+  vector_type vec_rhs(A->getNumRows());
+  vector_type vec_x(A->getNumRows());
+  vector_type vec_r(A->getNumRows());
 
-  vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
-  vec_rhs->setDataUpdated(ReSolve::memory::HOST);
-  vec_x->allocate(ReSolve::memory::HOST);
+  vec_rhs.update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_rhs.setDataUpdated(ReSolve::memory::HOST);
+  vec_x.allocate(ReSolve::memory::HOST);
 
   error_sum += lusol.setup(A.get());
   error_sum += lusol.analyze();
@@ -95,61 +89,64 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  status = lusol.solve(vec_rhs.get(), vec_x.get());
+  status = lusol.solve(&vec_rhs, &vec_x);
   if (status != 0) {
     error_sum += status;
     return 1;
   }
 
-  std::unique_ptr<vector_type> vec_test(new vector_type(A->getNumRows()));
-  std::unique_ptr<vector_type> vec_diff(new vector_type(A->getNumRows()));
+  vector_type vec_test(A->getNumRows());
+  vector_type vec_diff(A->getNumRows());
 
   real_type* x_data = new real_type[A->getNumRows()];
   std::fill_n(x_data, A->getNumRows(), 1.0);
 
-  vec_test->setData(x_data, ReSolve::memory::HOST);
-  vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
-  vec_diff->update(x_data, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_test.update(x_data, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_r.update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_diff.update(x_data, ReSolve::memory::HOST, ReSolve::memory::HOST);
 
   ReSolve::matrix::Csr A_csr(A->getNumRows(), A->getNumColumns(), A->getNnz(), A->symmetric(), A->expanded());
   status = coo2csr_simple(A.get(), &A_csr, ReSolve::memory::HOST);
 
-  matrix_handler->setValuesChanged(true, ReSolve::memory::HOST);
-  // status = matrix_handler->matvec(A_csr, vec_x.get(), vec_r.get(), &ONE, &MINUSONE,"csr",ReSolve::memory::HOST);
-  error_sum += specializedMatvec(A.get(),
-                                 vec_x.get(),
-                                 vec_r.get(),
-                                 &ONE,
-                                 &MINUSONE);
+  matrix_handler.setValuesChanged(true, ReSolve::memory::HOST);
+  error_sum += matrix_handler.matvec(&A_csr,
+                                      &vec_x,
+                                      &vec_r,
+                                      &ONE,
+                                      &MINUSONE,
+                                      "csr",
+                                      ReSolve::memory::HOST);
 
-  real_type normRmatrix = sqrt(vector_handler->dot(vec_r.get(), vec_r.get(), ReSolve::memory::HOST));
-  real_type normXtrue = sqrt(vector_handler->dot(vec_x.get(), vec_x.get(), ReSolve::memory::HOST));
-  real_type normB = sqrt(vector_handler->dot(vec_rhs.get(), vec_rhs.get(), ReSolve::memory::HOST));
+  real_type normRmatrix = sqrt(vector_handler.dot(&vec_r, &vec_r, ReSolve::memory::HOST));
+  real_type normXtrue = sqrt(vector_handler.dot(&vec_x, &vec_x, ReSolve::memory::HOST));
+  real_type normB = sqrt(vector_handler.dot(&vec_rhs, &vec_rhs, ReSolve::memory::HOST));
 
-  vector_handler->axpy(&MINUSONE, vec_x.get(), vec_diff.get(), ReSolve::memory::HOST);
-  real_type normDiffMatrix = sqrt(vector_handler->dot(vec_diff.get(), vec_diff.get(), ReSolve::memory::HOST));
+  vector_handler.axpy(&MINUSONE, &vec_x, &vec_diff, ReSolve::memory::HOST);
+  real_type normDiffMatrix = sqrt(vector_handler.dot(&vec_diff, &vec_diff, ReSolve::memory::HOST));
 
   // compute the residual using exact solution
-  vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
-  // error_sum += matrix_handler->matvec(A_csr, vec_test.get(), vec_r.get(), &ONE, &MINUSONE,"csr",ReSolve::memory::HOST);
-  error_sum += specializedMatvec(A.get(),
-                                 vec_test.get(),
-                                 vec_r.get(),
-                                 &ONE,
-                                 &MINUSONE);
-  real_type exactSol_normRmatrix = sqrt(vector_handler->dot(vec_r.get(), vec_r.get(), ReSolve::memory::HOST));
+  vec_r.update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  error_sum += matrix_handler.matvec(&A_csr,
+                                      &vec_test,
+                                      &vec_r,
+                                      &ONE,
+                                      &MINUSONE,
+                                      "csr",
+                                      ReSolve::memory::HOST);
+  real_type exactSol_normRmatrix = sqrt(vector_handler.dot(&vec_r, &vec_r, ReSolve::memory::HOST));
+
   // evaluate the residual ON THE CPU using COMPUTED solution
+  vec_r.update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
 
-  vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  error_sum += matrix_handler.matvec(&A_csr,
+                                      &vec_x,
+                                      &vec_r,
+                                      &ONE,
+                                      &MINUSONE,
+                                      "csr",
+                                      ReSolve::memory::HOST);
 
-  // error_sum += matrix_handler->matvec(A_csr, vec_x.get(), vec_r.get(), &ONE, &MINUSONE,"csr",ReSolve::memory::HOST);
-  error_sum += specializedMatvec(A.get(),
-                                 vec_x.get(),
-                                 vec_r.get(),
-                                 &ONE,
-                                 &MINUSONE);
-
-  real_type normRmatrixCPU = sqrt(vector_handler->dot(vec_r.get(), vec_r.get(), ReSolve::memory::HOST));
+  real_type normRmatrixCPU = sqrt(vector_handler.dot(&vec_r, &vec_r, ReSolve::memory::HOST));
 
   std::cout << "Results: \n";
   std::cout << "\t ||b-A*x||_2                 : " << std::setprecision(16) << normRmatrix << " (residual norm)\n";
@@ -173,8 +170,6 @@ int main(int argc, char* argv[])
   A = std::unique_ptr<ReSolve::matrix::Coo>(ReSolve::io::createCooFromFile(matrix_file));
   matrix_file.close();
 
-  // ReSolve::matrix::expand(*A);
-
   rhs_file = std::ifstream(rhs_two_path);
   if (!rhs_file.is_open()) {
     std::cout << "Failed to open " << rhs_two_path << "\n";
@@ -185,13 +180,10 @@ int main(int argc, char* argv[])
   rhs_file.close();
 
   x = new real_type[A->getNumRows()];
-  vec_rhs = std::unique_ptr<vector_type>(new vector_type(A->getNumRows()));
-  vec_x = std::unique_ptr<vector_type>(new vector_type(A->getNumRows()));
-  vec_r = std::unique_ptr<vector_type>(new vector_type(A->getNumRows()));
 
-  vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
-  vec_rhs->setDataUpdated(ReSolve::memory::HOST);
-  vec_x->allocate(ReSolve::memory::HOST);
+  vec_rhs.update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_rhs.setDataUpdated(ReSolve::memory::HOST);
+  vec_x.allocate(ReSolve::memory::HOST);
 
   error_sum += lusol.setup(A.get());
   error_sum += lusol.analyze();
@@ -203,60 +195,60 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  status = lusol.solve(vec_rhs.get(), vec_x.get());
+  status = lusol.solve(&vec_rhs, &vec_x);
   if (status != 0) {
     error_sum += status;
     return 1;
   }
 
-  vec_test = std::unique_ptr<vector_type>(new vector_type(A->getNumRows()));
-  vec_diff = std::unique_ptr<vector_type>(new vector_type(A->getNumRows()));
-
   x_data = new real_type[A->getNumRows()];
   std::fill_n(x_data, A->getNumRows(), 1.0);
 
-  vec_test->setData(x_data, ReSolve::memory::HOST);
-  vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
-  vec_diff->update(x_data, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_test.update(x_data, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_r.update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_diff.update(x_data, ReSolve::memory::HOST, ReSolve::memory::HOST);
 
   status = coo2csr_simple(A.get(), &A_csr, ReSolve::memory::HOST);
 
-  matrix_handler->setValuesChanged(true, ReSolve::memory::HOST);
-  // error_sum += matrix_handler->matvec(A_csr, vec_x.get(), vec_r.get(), &ONE, &MINUSONE,"csr",ReSolve::memory::HOST);
-  error_sum += specializedMatvec(A.get(),
-                                 vec_x.get(),
-                                 vec_r.get(),
-                                 &ONE,
-                                 &MINUSONE);
+  matrix_handler.setValuesChanged(true, ReSolve::memory::HOST);
+  error_sum += matrix_handler.matvec(&A_csr,
+                                     &vec_x,
+                                     &vec_r,
+                                     &ONE,
+                                     &MINUSONE,
+                                     "csr",
+                                     ReSolve::memory::HOST);
 
-  normRmatrix = sqrt(vector_handler->dot(vec_r.get(), vec_r.get(), ReSolve::memory::HOST));
-  normXtrue = sqrt(vector_handler->dot(vec_x.get(), vec_x.get(), ReSolve::memory::HOST));
-  normB = sqrt(vector_handler->dot(vec_rhs.get(), vec_rhs.get(), ReSolve::memory::HOST));
+  normRmatrix = sqrt(vector_handler.dot(&vec_r, &vec_r, ReSolve::memory::HOST));
+  normXtrue = sqrt(vector_handler.dot(&vec_x, &vec_x, ReSolve::memory::HOST));
+  normB = sqrt(vector_handler.dot(&vec_rhs, &vec_rhs, ReSolve::memory::HOST));
 
-  vector_handler->axpy(&MINUSONE, vec_x.get(), vec_diff.get(), ReSolve::memory::HOST);
-  normDiffMatrix = sqrt(vector_handler->dot(vec_diff.get(), vec_diff.get(), ReSolve::memory::HOST));
+  vector_handler.axpy(&MINUSONE, &vec_x, &vec_diff, ReSolve::memory::HOST);
+  normDiffMatrix = sqrt(vector_handler.dot(&vec_diff, &vec_diff, ReSolve::memory::HOST));
 
   // compute the residual using exact solution
-  vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
-  // error_sum += matrix_handler->matvec(A_csr, vec_test.get(), vec_r.get(), &ONE, &MINUSONE,"csr",ReSolve::memory::HOST);
-  error_sum += specializedMatvec(A.get(),
-                                 vec_test.get(),
-                                 vec_r.get(),
-                                 &ONE,
-                                 &MINUSONE);
-  exactSol_normRmatrix = sqrt(vector_handler->dot(vec_r.get(), vec_r.get(), ReSolve::memory::HOST));
+  vec_r.update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  error_sum += matrix_handler.matvec(&A_csr,
+                                      &vec_test,
+                                      &vec_r,
+                                      &ONE,
+                                      &MINUSONE,
+                                      "csr",
+                                      ReSolve::memory::HOST);
+  exactSol_normRmatrix = sqrt(vector_handler.dot(&vec_r, &vec_r, ReSolve::memory::HOST));
+
   // evaluate the residual ON THE CPU using COMPUTED solution
+  vec_r.update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
 
-  vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  error_sum += matrix_handler.matvec(&A_csr,
+                                      &vec_x,
+                                      &vec_r,
+                                      &ONE,
+                                      &MINUSONE,
+                                      "csr",
+                                      ReSolve::memory::HOST);
 
-  // error_sum += matrix_handler->matvec(A_csr, vec_x.get(), vec_r.get(), &ONE, &MINUSONE,"csr",ReSolve::memory::HOST);
-  error_sum += specializedMatvec(A.get(),
-                                 vec_x.get(),
-                                 vec_r.get(),
-                                 &ONE,
-                                 &MINUSONE);
-
-  normRmatrixCPU = sqrt(vector_handler->dot(vec_r.get(), vec_r.get(), ReSolve::memory::HOST));
+  normRmatrixCPU = sqrt(vector_handler.dot(&vec_r, &vec_r, ReSolve::memory::HOST));
 
   std::cout << "Results: \n";
   std::cout << "\t ||b-A*x||_2                 : " << std::setprecision(16) << normRmatrix << " (residual norm)\n";
@@ -271,15 +263,18 @@ int main(int argc, char* argv[])
   delete[] x_data;
   real_type scaled_residual_norm_two = normRmatrix / normB;
 
-  if (scaled_residual_norm_one > 1e-16 || scaled_residual_norm_two > 1e-16) {
-    std::cout << "the result is inaccurate\n";
+  if (!isfinite(scaled_residual_norm_one) || !isfinite(scaled_residual_norm_one)) {
+    std::cout << "Result is not a finite number!\n";
     error_sum++;
   }
-
+  if ((scaled_residual_norm_one > DEFAULT_TOL) || (scaled_residual_norm_one > DEFAULT_TOL)) {
+    std::cout << "Result inaccurate!\n";
+    error_sum++;
+  }
   if (error_sum == 0) {
-    std::cout << "PASSED" << std::endl;
+    std::cout << "Test LUSOL " << GREEN << "PASSED" << CLEAR << "\n\n";
   } else {
-    std::cout << "FAILED, #errors = " << error_sum << std::endl;
+    std::cout << "Test LUSOL " << RED << "FAILED" << CLEAR << ", error sum: " << error_sum << "\n\n";
   }
 
   return error_sum;
@@ -301,9 +296,6 @@ int specializedMatvec(ReSolve::matrix::Coo* Ageneric,
   real_type* rs = vec_result->getData(ReSolve::memory::HOST);
 
   index_type n_rows = A->getNumRows();
-
-  // same algorithm used above, adapted to be workable with a coo matrix
-  // TODO: optimize this a little more---i'm not too sure how good it is
 
   std::unique_ptr<real_type[]> sums(new real_type[n_rows]);
   std::fill_n(sums.get(), n_rows, 0);
