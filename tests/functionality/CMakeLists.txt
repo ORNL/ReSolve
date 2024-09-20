@@ -85,7 +85,7 @@ if(RESOLVE_USE_KLU)
   list(APPEND installable_tests klu_klu_test.exe)
 endif()
 
-if(RESOLVE_USE_KLU)
+if(RESOLVE_USE_LUSOL)
   list(APPEND installable_tests lusol_test.exe)
 endif()
 
