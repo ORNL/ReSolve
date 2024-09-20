@@ -36,5 +36,5 @@ add_test(NAME matrix_test               COMMAND $<TARGET_FILE:runMatrixIoTests.e
 add_test(NAME matrix_handler_test       COMMAND $<TARGET_FILE:runMatrixHandlerTests.exe>)
 add_test(NAME matrix_factorization_test COMMAND $<TARGET_FILE:runMatrixFactorizationTests.exe>)
 if(RESOLVE_USE_LUSOL)
-  add_test(NAME lusol_test              COMMAND $<TARGET_FILE:runLUSOLTests.exe>)
+  add_test(NAME lusol_factorization_test COMMAND $<TARGET_FILE:runLUSOLTests.exe>)
 endif()

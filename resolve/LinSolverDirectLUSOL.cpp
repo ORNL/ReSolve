@@ -473,9 +473,10 @@ namespace ReSolve
 
   int LinSolverDirectLUSOL::allocateSolverData()
   {
-    // NOTE: determines a hopefully "good enough" size for a_, indc_, indr_.
-    //       see lena_'s documentation for more details
-    lena_ = std::max({2 * nelem_, 10 * m_, 10 * n_, 10000});
+    // LUSOL does not do symbolic analysis to determine workspace size to store
+    // L and U factors, so we have to guess something. See documentation for 
+    // lena_ in resolve/lusol/lusol.f90 file.
+    lena_ = std::max({20 * nelem_, 10 * m_, 10 * n_, 10000});
 
     a_ = new real_type[lena_];
     indc_ = new index_type[lena_];
