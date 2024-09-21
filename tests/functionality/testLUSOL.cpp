@@ -263,7 +263,7 @@ int main(int argc, char* argv[])
   delete[] x_data;
   real_type scaled_residual_norm_two = normRmatrix / normB;
 
-  if (!isfinite(scaled_residual_norm_one) || !isfinite(scaled_residual_norm_two)) {
+  if (!std::isfinite(scaled_residual_norm_one) || !std::isfinite(scaled_residual_norm_two)) {
     std::cout << "Result is not a finite number!\n";
     error_sum++;
   }
