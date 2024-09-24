@@ -10,6 +10,7 @@ namespace ReSolve
 
   matrix::Csc::Csc()
   {
+    sparse_format_ = COMPRESSED_SPARSE_COLUMN;
   }
 
   matrix::Csc::Csc(index_type n, index_type m, index_type nnz) : Sparse(n, m, nnz)
@@ -22,6 +23,7 @@ namespace ReSolve
                        bool symmetric,
                        bool expanded) : Sparse(n, m, nnz, symmetric, expanded)
   {
+    sparse_format_ = COMPRESSED_SPARSE_COLUMN;
   }
 
   matrix::Csc::~Csc()

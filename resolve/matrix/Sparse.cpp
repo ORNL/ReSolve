@@ -135,6 +135,11 @@ namespace ReSolve {
     return this->nnz_;
   }
 
+  matrix::Sparse::SparseFormat matrix::Sparse::getSparseFormat() const
+  {
+    return sparse_format_;
+  }
+
   /**
    * @brief check if matrix is symmetric.
    *

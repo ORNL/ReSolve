@@ -137,7 +137,7 @@ int main(int argc, char *argv[])
     vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
     real_type bnorm = sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE));
     matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
-    matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", ReSolve::memory::DEVICE); 
+    matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, ReSolve::memory::DEVICE); 
 
     
     matrix_handler->matrixInfNorm(A, &norm_A, ReSolve::memory::DEVICE); 

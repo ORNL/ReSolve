@@ -70,7 +70,7 @@ public:
     real_type alpha = 2.0/30.0;
     real_type beta  = 2.0;
     handler_.setValuesChanged(true, memspace_);
-    handler_.matvec(A, &x, &y, &alpha, &beta, "csr", memspace_);
+    handler_.matvec(A, &x, &y, &alpha, &beta, memspace_);
 
     status *= verifyAnswer(y, 4.0);
 

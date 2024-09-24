@@ -28,17 +28,20 @@ namespace ReSolve {
   }
 
 
-  int MatrixHandlerHip::matvec(matrix::Sparse* Ageneric, 
+  int MatrixHandlerHip::matvec(matrix::Sparse* A, 
                                vector_type* vec_x, 
                                vector_type* vec_result, 
                                const real_type* alpha, 
-                               const real_type* beta,
-                               std::string matrixFormat) 
+                               const real_type* beta) 
   {
     using namespace constants;
+
+    if (A->getSparseFormat() != matrix::Sparse::COMPRESSED_SPARSE_ROW) {
+      out::error() << "Matrix has to be in CSR format for matrix-vector product.\n";
+      return 1;
+    }
+
     int error_sum = 0;
-    if (matrixFormat == "csr") {
-      matrix::Csr* A = dynamic_cast<matrix::Csr*>(Ageneric);
       //result = alpha *A*x + beta * result
       rocsparse_status status;
 
@@ -96,16 +99,15 @@ namespace ReSolve {
       vec_result->setDataUpdated(memory::DEVICE);
 
       return error_sum;
-    } else {
-      out::error() << "MatVec not implemented (yet) for " 
-                   << matrixFormat << " matrix format." << std::endl;
-      return 1;
-    }
   }
 
   int MatrixHandlerHip::matrixInfNorm(matrix::Sparse* A, real_type* norm)
   {
-    // we assume A is in CSR format
+    if (A->getSparseFormat() != matrix::Sparse::COMPRESSED_SPARSE_ROW) {
+      out::error() << "Matrix has to be in CSR format for norm computation.\n";
+      return 1;
+    }
+
     real_type* d_r = workspace_->getDr();
     index_type d_r_size = workspace_->getDrSize();
     

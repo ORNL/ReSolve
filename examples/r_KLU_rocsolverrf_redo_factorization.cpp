@@ -140,7 +140,7 @@ int main(int argc, char *argv[] )
 
     matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
 
-    matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", ReSolve::memory::DEVICE); 
+    matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, ReSolve::memory::DEVICE); 
     res_nrm = sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE));
     b_nrm = sqrt(vector_handler->dot(vec_rhs, vec_rhs, ReSolve::memory::DEVICE));
     std::cout << "\t 2-Norm of the residual: " 
@@ -163,7 +163,7 @@ int main(int argc, char *argv[] )
 
          matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
 
-         matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", ReSolve::memory::DEVICE); 
+         matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, ReSolve::memory::DEVICE); 
          res_nrm = sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE));
          
          std::cout<<"\t New residual norm: "
