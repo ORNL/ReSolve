@@ -17,6 +17,7 @@ namespace ReSolve
 
   matrix::Coo::Coo(index_type n, index_type m, index_type nnz) : Sparse(n, m, nnz)
   {
+    sparse_format_ = TRIPLET;
   }
   
   matrix::Coo::Coo(index_type n, 
@@ -43,7 +44,6 @@ namespace ReSolve
                    memory::MemorySpace memspaceDst)
     : Sparse(n, m, nnz, symmetric, expanded)
   {
-    using namespace memory;
     sparse_format_ = TRIPLET;
 
     int control = -1;

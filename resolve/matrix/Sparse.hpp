@@ -25,7 +25,7 @@ namespace ReSolve { namespace matrix {
   {
     public:
       /// Supported sparse matrix formats
-      enum SparseFormat{TRIPLET, COMPRESSED_SPARSE_ROW, COMPRESSED_SPARSE_COLUMN};
+      enum SparseFormat{NONE, TRIPLET, COMPRESSED_SPARSE_ROW, COMPRESSED_SPARSE_COLUMN};
 
     public:
       //basic constructor
@@ -76,7 +76,7 @@ namespace ReSolve { namespace matrix {
       virtual int setNewValues(real_type* new_vals, memory::MemorySpace memspace);
     
     protected:
-      SparseFormat sparse_format_{COMPRESSED_SPARSE_ROW}; ///< Matrix format
+      SparseFormat sparse_format_{NONE}; ///< Matrix format
       index_type n_{0}; ///< number of rows
       index_type m_{0}; ///< number of columns
       index_type nnz_{0}; ///< number of non-zeros

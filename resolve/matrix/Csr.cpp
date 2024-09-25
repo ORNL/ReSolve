@@ -56,7 +56,6 @@ namespace ReSolve
                    memory::MemorySpace memspaceDst)
     : Sparse(n, m, nnz, symmetric, expanded)
   {
-    using namespace memory;
     sparse_format_ = COMPRESSED_SPARSE_ROW;
 
     int control = -1;

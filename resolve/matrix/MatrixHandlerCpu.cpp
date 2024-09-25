@@ -33,6 +33,20 @@ namespace ReSolve {
 
   /**
    * @brief result := alpha * A * x + beta * result
+   * 
+   * @param[in]     A - matrix
+   * @param[in]     vec_x - vector multiplied by A
+   * @param[in,out] vec_result - resulting vector
+   * @param[in]     alpha - matrix-vector multiplication factor
+   * @param[in]     beta - sum into result factor
+   * @return int    error code, 0 if successful
+   * 
+   * @pre Matrix `A` is in CSR format.
+   * 
+   * @note If we decide to implement this function for different matrix
+   * format, the check for CSR matrix will be replaced with a switch
+   * statement to select implementation for recognized input matrix
+   * format.
    */
   int MatrixHandlerCpu::matvec(matrix::Sparse* A, 
                                vector_type* vec_x, 
@@ -42,10 +56,8 @@ namespace ReSolve {
   {
     using namespace constants;
 
-    if (A->getSparseFormat() != matrix::Sparse::COMPRESSED_SPARSE_ROW) {
-      out::error() << "Matrix has to be in CSR format for matrix-vector product.\n";
-      return 1;
-    }
+    assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW &&
+           "Matrix has to be in CSR format for matrix-vector product.\n");
 
     index_type* ia = A->getRowData(memory::HOST);
     index_type* ja = A->getColData(memory::HOST);
@@ -76,12 +88,24 @@ namespace ReSolve {
     return 0;
   }
 
+  /**
+   * @brief Matrix infinity norm
+   * 
+   * @param[in]  A - matrix
+   * @param[out] norm - matrix norm
+   * @return int error code, 0 if successful
+   * 
+   * @pre Matrix `A` is in CSR format.
+   * 
+   * @note If we decide to implement this function for different matrix
+   * format, the check for CSR matrix will be replaced with a switch
+   * statement to select implementation for recognized input matrix
+   * format.
+   */
   int MatrixHandlerCpu::matrixInfNorm(matrix::Sparse* A, real_type* norm)
   {
-    if (A->getSparseFormat() != matrix::Sparse::COMPRESSED_SPARSE_ROW) {
-      out::error() << "Matrix has to be in CSR format for norm computation.\n";
-      return 1;
-    }
+    assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW &&
+           "Matrix has to be in CSR format for matrix-vector product.\n");
 
     real_type sum, nrm;
     index_type i, j;
