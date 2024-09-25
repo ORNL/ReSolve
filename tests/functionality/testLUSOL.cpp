@@ -86,18 +86,19 @@ int main(int argc, char* argv[])
   if (status != 0) {
     // LUSOL will segfault if solving is attempted after factorization failed
     error_sum += status;
-    return 1;
+    return error_sum;
   }
 
   status = lusol.solve(&vec_rhs, &vec_x);
   if (status != 0) {
     error_sum += status;
-    return 1;
+    return error_sum;
   }
 
   vector_type vec_test(A->getNumRows());
   vector_type vec_diff(A->getNumRows());
 
+  // The solution is supposed to be a vector with all elements 1.
   real_type* x_data = new real_type[A->getNumRows()];
   std::fill_n(x_data, A->getNumRows(), 1.0);
 
@@ -105,10 +106,14 @@ int main(int argc, char* argv[])
   vec_r.update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   vec_diff.update(x_data, ReSolve::memory::HOST, ReSolve::memory::HOST);
 
+  // Matrix-vector product does not support COO format so we need to convert to CSR
   ReSolve::matrix::Csr A_csr(A->getNumRows(), A->getNumColumns(), A->getNnz(), A->symmetric(), A->expanded());
   error_sum += coo2csr(A.get(), &A_csr, ReSolve::memory::HOST);
 
+  // Tell matrix handler this is a new matrix
   matrix_handler.setValuesChanged(true, ReSolve::memory::HOST);
+
+  // Compute r := A*x - r with computed solution x
   error_sum += matrix_handler.matvec(&A_csr,
                                      &vec_x,
                                      &vec_r,
@@ -117,14 +122,17 @@ int main(int argc, char* argv[])
                                      "csr",
                                      ReSolve::memory::HOST);
 
+  // Compute vector norms
   real_type normRmatrix = sqrt(vector_handler.dot(&vec_r, &vec_r, ReSolve::memory::HOST));
   real_type normXtrue = sqrt(vector_handler.dot(&vec_x, &vec_x, ReSolve::memory::HOST));
   real_type normB = sqrt(vector_handler.dot(&vec_rhs, &vec_rhs, ReSolve::memory::HOST));
 
+  // Compute vec_diff := vec_diff - vec_x
   vector_handler.axpy(&MINUSONE, &vec_x, &vec_diff, ReSolve::memory::HOST);
+  // Compute norm of vec_diff
   real_type normDiffMatrix = sqrt(vector_handler.dot(&vec_diff, &vec_diff, ReSolve::memory::HOST));
 
-  // compute the residual using exact solution
+  // Compute residual r := A*x - r using exact solution x
   vec_r.update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   error_sum += matrix_handler.matvec(&A_csr,
                                      &vec_test,
@@ -135,22 +143,8 @@ int main(int argc, char* argv[])
                                      ReSolve::memory::HOST);
   real_type exactSol_normRmatrix = sqrt(vector_handler.dot(&vec_r, &vec_r, ReSolve::memory::HOST));
 
-  // evaluate the residual ON THE CPU using COMPUTED solution
-  vec_r.update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
-
-  error_sum += matrix_handler.matvec(&A_csr,
-                                     &vec_x,
-                                     &vec_r,
-                                     &ONE,
-                                     &MINUSONE,
-                                     "csr",
-                                     ReSolve::memory::HOST);
-
-  real_type normRmatrixCPU = sqrt(vector_handler.dot(&vec_r, &vec_r, ReSolve::memory::HOST));
-
   std::cout << "Results: \n";
   std::cout << "\t ||b-A*x||_2                 : " << std::setprecision(16) << normRmatrix << " (residual norm)\n";
-  std::cout << "\t ||b-A*x||_2  (CPU)          : " << std::setprecision(16) << normRmatrixCPU << " (residual norm)\n";
   std::cout << "\t ||b-A*x||_2/||b||_2         : " << normRmatrix / normB << " (scaled residual norm)\n";
   std::cout << "\t ||x-x_true||_2              : " << normDiffMatrix << " (solution error)\n";
   std::cout << "\t ||x-x_true||_2/||x_true||_2 : " << normDiffMatrix / normXtrue << " (scaled solution error)\n";
@@ -160,6 +154,11 @@ int main(int argc, char* argv[])
   delete[] x;       // x      = nullptr;
   delete[] x_data;  // x_data = nullptr;
   real_type scaled_residual_norm_one = normRmatrix / normB;
+
+
+  //
+  // Repeat the test for a different matrix
+  //
 
   matrix_file = std::ifstream(matrix_two_path);
   if (!matrix_file.is_open()) {
@@ -192,15 +191,16 @@ int main(int argc, char* argv[])
   if (status != 0) {
     // LUSOL will segfault if solving is attempted after factorization failed
     error_sum += status;
-    return 1;
+    return error_sum;
   }
 
   status = lusol.solve(&vec_rhs, &vec_x);
   if (status != 0) {
     error_sum += status;
-    return 1;
+    return error_sum;
   }
 
+  // The solution is supposed to be a vector with all elements 1.
   x_data = new real_type[A->getNumRows()];
   std::fill_n(x_data, A->getNumRows(), 1.0);
 
@@ -208,9 +208,13 @@ int main(int argc, char* argv[])
   vec_r.update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   vec_diff.update(x_data, ReSolve::memory::HOST, ReSolve::memory::HOST);
 
+  // Matrix-vector product does not support COO format so we need to convert to CSR
   error_sum += coo2csr(A.get(), &A_csr, ReSolve::memory::HOST);
 
+  // Tell matrix handler this is a new matrix
   matrix_handler.setValuesChanged(true, ReSolve::memory::HOST);
+
+  // Compute r := A*x - r with computed solution x
   error_sum += matrix_handler.matvec(&A_csr,
                                      &vec_x,
                                      &vec_r,
@@ -219,15 +223,19 @@ int main(int argc, char* argv[])
                                      "csr",
                                      ReSolve::memory::HOST);
 
+  // Compute vector norms
   normRmatrix = sqrt(vector_handler.dot(&vec_r, &vec_r, ReSolve::memory::HOST));
   normXtrue = sqrt(vector_handler.dot(&vec_x, &vec_x, ReSolve::memory::HOST));
   normB = sqrt(vector_handler.dot(&vec_rhs, &vec_rhs, ReSolve::memory::HOST));
 
+  // Compute vec_diff := vec_diff - vec_x
   vector_handler.axpy(&MINUSONE, &vec_x, &vec_diff, ReSolve::memory::HOST);
+  // Compute norm of vec_diff
   normDiffMatrix = sqrt(vector_handler.dot(&vec_diff, &vec_diff, ReSolve::memory::HOST));
 
   // compute the residual using exact solution
   vec_r.update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  // Compute residual r := A*x - r using exact solution x
   error_sum += matrix_handler.matvec(&A_csr,
                                      &vec_test,
                                      &vec_r,
@@ -235,24 +243,11 @@ int main(int argc, char* argv[])
                                      &MINUSONE,
                                      "csr",
                                      ReSolve::memory::HOST);
+  // Compute residual error norm                                     
   exactSol_normRmatrix = sqrt(vector_handler.dot(&vec_r, &vec_r, ReSolve::memory::HOST));
-
-  // evaluate the residual ON THE CPU using COMPUTED solution
-  vec_r.update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
-
-  error_sum += matrix_handler.matvec(&A_csr,
-                                     &vec_x,
-                                     &vec_r,
-                                     &ONE,
-                                     &MINUSONE,
-                                     "csr",
-                                     ReSolve::memory::HOST);
-
-  normRmatrixCPU = sqrt(vector_handler.dot(&vec_r, &vec_r, ReSolve::memory::HOST));
 
   std::cout << "Results: \n";
   std::cout << "\t ||b-A*x||_2                 : " << std::setprecision(16) << normRmatrix << " (residual norm)\n";
-  std::cout << "\t ||b-A*x||_2  (CPU)          : " << std::setprecision(16) << normRmatrixCPU << " (residual norm)\n";
   std::cout << "\t ||b-A*x||_2/||b||_2         : " << normRmatrix / normB << " (scaled residual norm)\n";
   std::cout << "\t ||x-x_true||_2              : " << normDiffMatrix << " (solution error)\n";
   std::cout << "\t ||x-x_true||_2/||x_true||_2 : " << normDiffMatrix / normXtrue << " (scaled solution error)\n";
