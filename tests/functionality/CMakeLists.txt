@@ -20,6 +20,10 @@ if(RESOLVE_USE_KLU)
   target_link_libraries(klu_klu_test.exe PRIVATE ReSolve)
 endif(RESOLVE_USE_KLU)
 
+if(RESOLVE_USE_LUSOL)
+  add_executable(lusol_test.exe testLUSOL.cpp)
+  target_link_libraries(lusol_test.exe PRIVATE ReSolve)
+endif()
 
 if(RESOLVE_USE_CUDA)
         
@@ -81,6 +85,10 @@ if(RESOLVE_USE_KLU)
   list(APPEND installable_tests klu_klu_test.exe)
 endif()
 
+if(RESOLVE_USE_LUSOL)
+  list(APPEND installable_tests lusol_test.exe)
+endif()
+
 if(RESOLVE_USE_CUDA)
   if(RESOLVE_USE_KLU)
     list(APPEND installable_tests klu_rf_test.exe
@@ -113,6 +121,10 @@ add_test(NAME version COMMAND $<TARGET_FILE:version.exe> "${test_data_dir}")
 
 if(RESOLVE_USE_KLU)
   add_test(NAME klu_klu_test COMMAND $<TARGET_FILE:klu_klu_test.exe> "${test_data_dir}")
+endif()
+
+if(RESOLVE_USE_LUSOL)
+  add_test(NAME lusol_test COMMAND $<TARGET_FILE:lusol_test.exe> "${test_data_dir}")
 endif()
 
 # Krylov solvers tests (FGMRES)
