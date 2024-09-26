@@ -12,10 +12,12 @@ namespace ReSolve
 
   matrix::Coo::Coo()
   {
+    sparse_format_ = TRIPLET;
   }
 
   matrix::Coo::Coo(index_type n, index_type m, index_type nnz) : Sparse(n, m, nnz)
   {
+    sparse_format_ = TRIPLET;
   }
   
   matrix::Coo::Coo(index_type n, 
@@ -24,6 +26,7 @@ namespace ReSolve
                    bool symmetric,
                    bool expanded) : Sparse(n, m, nnz, symmetric, expanded)
   {
+    sparse_format_ = TRIPLET;
   }
   
   /**
@@ -41,7 +44,8 @@ namespace ReSolve
                    memory::MemorySpace memspaceDst)
     : Sparse(n, m, nnz, symmetric, expanded)
   {
-    using namespace memory;
+    sparse_format_ = TRIPLET;
+
     int control = -1;
     if ((memspaceSrc == memory::HOST)   && (memspaceDst == memory::HOST))  { control = 0;}
     if ((memspaceSrc == memory::HOST)   && (memspaceDst == memory::DEVICE)){ control = 1;}

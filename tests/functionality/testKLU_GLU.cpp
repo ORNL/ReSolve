@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
   vec_diff->update(x_data, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
 
   matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
-  status = matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr",ReSolve::memory::DEVICE); 
+  status = matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, ReSolve::memory::DEVICE); 
   error_sum += status;
   
   real_type normRmatrix1 = sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE));
@@ -134,7 +134,7 @@ int main(int argc, char *argv[])
  
   //compute the residual using exact solution
   vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-  status = matrix_handler->matvec(A, vec_test, vec_r, &ONE, &MINUSONE, "csr", ReSolve::memory::DEVICE); 
+  status = matrix_handler->matvec(A, vec_test, vec_r, &ONE, &MINUSONE, ReSolve::memory::DEVICE); 
 
   vec_x->update(vec_x->getData(ReSolve::memory::DEVICE), ReSolve::memory::DEVICE, ReSolve::memory::HOST);
   error_sum += status;
@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
   //evaluate the residual ON THE CPU using COMPUTED solution
   vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
 
-  status = matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE,"csr", ReSolve::memory::HOST);
+  status = matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, ReSolve::memory::HOST);
   error_sum += status;
  
   real_type normRmatrix1CPU = sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::HOST));
@@ -189,7 +189,7 @@ int main(int argc, char *argv[])
    vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
    matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
 
-  status = matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, "csr", ReSolve::memory::DEVICE); 
+  status = matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, ReSolve::memory::DEVICE); 
   error_sum += status;
 
   real_type normRmatrix2 = sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE));
@@ -204,7 +204,7 @@ int main(int argc, char *argv[])
  
   //compute the residual using exact solution
   vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-  status = matrix_handler->matvec(A, vec_test, vec_r, &ONE, &MINUSONE, "csr", ReSolve::memory::DEVICE); 
+  status = matrix_handler->matvec(A, vec_test, vec_r, &ONE, &MINUSONE, ReSolve::memory::DEVICE); 
   error_sum += status;
   real_type exactSol_normRmatrix2 = sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE));
   

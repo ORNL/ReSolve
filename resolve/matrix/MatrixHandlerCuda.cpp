@@ -29,97 +29,127 @@ namespace ReSolve {
   }
 
 
-  int MatrixHandlerCuda::matvec(matrix::Sparse* Ageneric, 
+  /**
+   * @brief result := alpha * A * x + beta * result
+   * 
+   * @param[in]     A - matrix
+   * @param[in]     vec_x - vector multiplied by A
+   * @param[in,out] vec_result - resulting vector
+   * @param[in]     alpha - matrix-vector multiplication factor
+   * @param[in]     beta - sum into result factor
+   * @return int    error code, 0 if successful
+   * 
+   * @pre Matrix `A` is in CSR format.
+   * 
+   * @note If we decide to implement this function for different matrix
+   * format, the check for CSR matrix will be replaced with a switch
+   * statement to select implementation for recognized input matrix
+   * format.
+   */
+  int MatrixHandlerCuda::matvec(matrix::Sparse* A, 
                                 vector_type* vec_x, 
                                 vector_type* vec_result, 
                                 const real_type* alpha, 
-                                const real_type* beta,
-                                std::string matrixFormat) 
+                                const real_type* beta) 
   {
     using namespace constants;
+
+    assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW &&
+           "Matrix has to be in CSR format for matrix-vector product.\n");
+
     int error_sum = 0;
-    if (matrixFormat == "csr") {
-      matrix::Csr* A = dynamic_cast<matrix::Csr*>(Ageneric);
-      //result = alpha *A*x + beta * result
-      cusparseStatus_t status;
-      cusparseDnVecDescr_t vecx = workspace_->getVecX();
-      cusparseCreateDnVec(&vecx, A->getNumRows(), vec_x->getData(memory::DEVICE), CUDA_R_64F);
+    //result = alpha *A*x + beta * result
+    cusparseStatus_t status;
+    cusparseDnVecDescr_t vecx = workspace_->getVecX();
+    cusparseCreateDnVec(&vecx, A->getNumRows(), vec_x->getData(memory::DEVICE), CUDA_R_64F);
 
 
-      cusparseDnVecDescr_t vecAx = workspace_->getVecY();
-      cusparseCreateDnVec(&vecAx, A->getNumRows(), vec_result->getData(memory::DEVICE), CUDA_R_64F);
+    cusparseDnVecDescr_t vecAx = workspace_->getVecY();
+    cusparseCreateDnVec(&vecAx, A->getNumRows(), vec_result->getData(memory::DEVICE), CUDA_R_64F);
 
-      cusparseSpMatDescr_t matA = workspace_->getSpmvMatrixDescriptor();
+    cusparseSpMatDescr_t matA = workspace_->getSpmvMatrixDescriptor();
 
-      void* buffer_spmv = workspace_->getSpmvBuffer();
-      cusparseHandle_t handle_cusparse = workspace_->getCusparseHandle();
-      if (values_changed_) {
-        status = cusparseCreateCsr(&matA, 
-                                   A->getNumRows(),
-                                   A->getNumColumns(),
-                                   A->getNnz(),
-                                   A->getRowData(memory::DEVICE),
-                                   A->getColData(memory::DEVICE),
-                                   A->getValues( memory::DEVICE), 
-                                   CUSPARSE_INDEX_32I, 
-                                   CUSPARSE_INDEX_32I,
-                                   CUSPARSE_INDEX_BASE_ZERO,
-                                   CUDA_R_64F);
-        error_sum += status;
-        values_changed_ = false;
-      }
-      if (!workspace_->matvecSetup()) {
-        //setup first, allocate, etc.
-        size_t bufferSize = 0;
+    void* buffer_spmv = workspace_->getSpmvBuffer();
+    cusparseHandle_t handle_cusparse = workspace_->getCusparseHandle();
+    if (values_changed_) {
+      status = cusparseCreateCsr(&matA, 
+                                 A->getNumRows(),
+                                 A->getNumColumns(),
+                                 A->getNnz(),
+                                 A->getRowData(memory::DEVICE),
+                                 A->getColData(memory::DEVICE),
+                                 A->getValues( memory::DEVICE), 
+                                 CUSPARSE_INDEX_32I, 
+                                 CUSPARSE_INDEX_32I,
+                                 CUSPARSE_INDEX_BASE_ZERO,
+                                 CUDA_R_64F);
+      error_sum += status;
+      values_changed_ = false;
+    }
+    if (!workspace_->matvecSetup()) {
+      //setup first, allocate, etc.
+      size_t bufferSize = 0;
 
-        status = cusparseSpMV_bufferSize(handle_cusparse, 
-                                         CUSPARSE_OPERATION_NON_TRANSPOSE,
-                                         &MINUSONE,
-                                         matA,
-                                         vecx,
-                                         &ONE,
-                                         vecAx,
-                                         CUDA_R_64F,
-                                         CUSPARSE_SPMV_CSR_ALG2, 
-                                         &bufferSize);
-        error_sum += status;
-        mem_.deviceSynchronize();
-        mem_.allocateBufferOnDevice(&buffer_spmv, bufferSize);
-        workspace_->setSpmvMatrixDescriptor(matA);
-        workspace_->setSpmvBuffer(buffer_spmv);
-
-        workspace_->matvecSetupDone();
-      } 
-
-      status = cusparseSpMV(handle_cusparse,
-                            CUSPARSE_OPERATION_NON_TRANSPOSE,       
-                            alpha, 
-                            matA, 
-                            vecx, 
-                            beta, 
-                            vecAx, 
-                            CUDA_R_64F,
-                            CUSPARSE_SPMV_CSR_ALG2, 
-                            buffer_spmv);
+      status = cusparseSpMV_bufferSize(handle_cusparse, 
+                                       CUSPARSE_OPERATION_NON_TRANSPOSE,
+                                       &MINUSONE,
+                                       matA,
+                                       vecx,
+                                       &ONE,
+                                       vecAx,
+                                       CUDA_R_64F,
+                                       CUSPARSE_SPMV_CSR_ALG2, 
+                                       &bufferSize);
       error_sum += status;
       mem_.deviceSynchronize();
-      if (status)
-        out::error() << "Matvec status: "   << status                    << ". "
-                     << "Last error code: " << mem_.getLastDeviceError() << ".\n";
-      vec_result->setDataUpdated(memory::DEVICE);
+      mem_.allocateBufferOnDevice(&buffer_spmv, bufferSize);
+      workspace_->setSpmvMatrixDescriptor(matA);
+      workspace_->setSpmvBuffer(buffer_spmv);
 
-      cusparseDestroyDnVec(vecx);
-      cusparseDestroyDnVec(vecAx);
-      return error_sum;
-    } else {
-      out::error() << "MatVec not implemented (yet) for " 
-        << matrixFormat << " matrix format." << std::endl;
-      return 1;
-    }
+      workspace_->matvecSetupDone();
+    } 
+
+    status = cusparseSpMV(handle_cusparse,
+                          CUSPARSE_OPERATION_NON_TRANSPOSE,       
+                          alpha, 
+                          matA, 
+                          vecx, 
+                          beta, 
+                          vecAx, 
+                          CUDA_R_64F,
+                          CUSPARSE_SPMV_CSR_ALG2, 
+                          buffer_spmv);
+    error_sum += status;
+    mem_.deviceSynchronize();
+    if (status)
+      out::error() << "Matvec status: "   << status                    << ". "
+                   << "Last error code: " << mem_.getLastDeviceError() << ".\n";
+    vec_result->setDataUpdated(memory::DEVICE);
+
+    cusparseDestroyDnVec(vecx);
+    cusparseDestroyDnVec(vecAx);
+    return error_sum;
   }
 
+  /**
+   * @brief Matrix infinity norm
+   * 
+   * @param[in]  A - matrix
+   * @param[out] norm - matrix norm
+   * @return int error code, 0 if successful
+   * 
+   * @pre Matrix `A` is in CSR format.
+   * 
+   * @note If we decide to implement this function for different matrix
+   * format, the check for CSR matrix will be replaced with a switch
+   * statement to select implementation for recognized input matrix
+   * format.
+   */
   int MatrixHandlerCuda::matrixInfNorm(matrix::Sparse* A, real_type* norm)
   {
+    assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW &&
+           "Matrix has to be in CSR format for matrix-vector product.\n");
+
     if (workspace_->getNormBufferState() == false) { // not allocated  
       real_type* buffer;
       mem_.allocateArrayOnDevice(&buffer, 1024);

@@ -38,8 +38,7 @@ namespace ReSolve {
                          vector_type* vec_x,
                          vector_type* vec_result,
                          const real_type* alpha,
-                         const real_type* beta,
-                         std::string matrix_type) = 0;
+                         const real_type* beta) = 0;
       virtual int matrixInfNorm(matrix::Sparse* A, real_type* norm) = 0;
 
       virtual void setValuesChanged(bool isValuesChanged) = 0;    

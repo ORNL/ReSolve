@@ -116,7 +116,6 @@ namespace ReSolve {
    * @param[out] vec_result - Vector where the result is stored
    * @param[in]  alpha - scalar parameter
    * @param[in]  beta  - scalar parameter
-   * @param[in]  matrixFormat - Only CSR format is supported at this time
    * @param[in]  memspace     - Device where the product is computed
    * @return result := alpha * A * x + beta * result
    */
@@ -125,16 +124,15 @@ namespace ReSolve {
                             vector_type* vec_result, 
                             const real_type* alpha, 
                             const real_type* beta,
-                            std::string matrixFormat, 
                             memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
     switch (memspace) {
       case HOST:
-        return cpuImpl_->matvec(A, vec_x, vec_result, alpha, beta, matrixFormat);
+        return cpuImpl_->matvec(A, vec_x, vec_result, alpha, beta);
         break;
       case DEVICE:
-        return devImpl_->matvec(A, vec_x, vec_result, alpha, beta, matrixFormat);
+        return devImpl_->matvec(A, vec_x, vec_result, alpha, beta);
         break;
     }
     return 1;

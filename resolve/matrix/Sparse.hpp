@@ -8,15 +8,25 @@
 #include <resolve/MemoryUtils.hpp>
 
 namespace ReSolve { namespace matrix {
+
   /**
-   * @brief This class implements basic sparse matrix interface. (Almost) all sparse matrix formats store information about matrix rows and columns (as integers) and data (as real numbers).
-   *        This class is virtualand implements only what is common for all basic formats.
-   *        Note that regardless of how row/column information is stored, all values need to be stored, so all utilities needed for values are implemented in this class.
+   * @brief This class implements basic sparse matrix interface. 
+   * 
+   * Most of sparse matrix formats store information about matrix rows and
+   * columns as integers and nonzero element values as real numbers.
+   * This class is virtual and implements only what is common for all basic
+   * formats. Note that regardless of how row/column information is stored,
+   * all nonzero matrix values need to be stored, so all utilities needed for
+   * the values are implemented in this class.
    *
    * @author Kasia Swirydowicz <kasia.swirydowicz@pnnl.gov>
    */
   class Sparse 
   {
+    public:
+      /// Supported sparse matrix formats
+      enum SparseFormat{NONE, TRIPLET, COMPRESSED_SPARSE_ROW, COMPRESSED_SPARSE_COLUMN};
+
     public:
       //basic constructor
       Sparse();
@@ -32,6 +42,7 @@ namespace ReSolve { namespace matrix {
       index_type getNumRows();
       index_type getNumColumns();
       index_type getNnz();
+      SparseFormat getSparseFormat() const;
 
       bool symmetric(); 
       bool expanded();
@@ -65,7 +76,7 @@ namespace ReSolve { namespace matrix {
       virtual int setNewValues(real_type* new_vals, memory::MemorySpace memspace);
     
     protected:
-      //size
+      SparseFormat sparse_format_{NONE}; ///< Matrix format
       index_type n_{0}; ///< number of rows
       index_type m_{0}; ///< number of columns
       index_type nnz_{0}; ///< number of non-zeros

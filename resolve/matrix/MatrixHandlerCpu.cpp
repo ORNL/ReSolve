@@ -33,54 +33,80 @@ namespace ReSolve {
 
   /**
    * @brief result := alpha * A * x + beta * result
+   * 
+   * @param[in]     A - matrix
+   * @param[in]     vec_x - vector multiplied by A
+   * @param[in,out] vec_result - resulting vector
+   * @param[in]     alpha - matrix-vector multiplication factor
+   * @param[in]     beta - sum into result factor
+   * @return int    error code, 0 if successful
+   * 
+   * @pre Matrix `A` is in CSR format.
+   * 
+   * @note If we decide to implement this function for different matrix
+   * format, the check for CSR matrix will be replaced with a switch
+   * statement to select implementation for recognized input matrix
+   * format.
    */
-  int MatrixHandlerCpu::matvec(matrix::Sparse* Ageneric, 
+  int MatrixHandlerCpu::matvec(matrix::Sparse* A, 
                                vector_type* vec_x, 
                                vector_type* vec_result, 
                                const real_type* alpha, 
-                               const real_type* beta,
-                               std::string matrixFormat) 
+                               const real_type* beta) 
   {
     using namespace constants;
-    // int error_sum = 0;
-    if (matrixFormat == "csr") {
-      matrix::Csr* A = (matrix::Csr*) Ageneric;
-      index_type* ia = A->getRowData(memory::HOST);
-      index_type* ja = A->getColData(memory::HOST);
-      real_type*   a = A->getValues( memory::HOST);
 
-      real_type* x_data      = vec_x->getData(memory::HOST);
-      real_type* result_data = vec_result->getData(memory::HOST);
-      real_type sum;
-      real_type y;
-      real_type t;
-      real_type c;
+    assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW &&
+           "Matrix has to be in CSR format for matrix-vector product.\n");
 
-      //Kahan algorithm for stability; Kahan-Babushka version didnt make a difference   
-      for (int i = 0; i < A->getNumRows(); ++i) {
-        sum = 0.0;
-        c = 0.0;
-        for (int j = ia[i]; j < ia[i+1]; ++j) { 
-          y =  ( a[j] * x_data[ja[j]]) - c;
-          t = sum + y;
-          c = (t - sum) - y;
-          sum = t;
-          //  sum += ( a[j] * x_data[ja[j]]);
-        }
-        sum *= (*alpha);
-        result_data[i] = result_data[i]*(*beta) + sum;
-      } 
-      vec_result->setDataUpdated(memory::HOST);
-      return 0;
-    } else {
-      out::error() << "MatVec not implemented (yet) for " 
-                   << matrixFormat << " matrix format." << std::endl;
-      return 1;
-    }
+    index_type* ia = A->getRowData(memory::HOST);
+    index_type* ja = A->getColData(memory::HOST);
+    real_type*   a = A->getValues( memory::HOST);
+
+    real_type* x_data      = vec_x->getData(memory::HOST);
+    real_type* result_data = vec_result->getData(memory::HOST);
+    real_type sum;
+    real_type y;
+    real_type t;
+    real_type c;
+
+    //Kahan algorithm for stability; Kahan-Babushka version didnt make a difference   
+    for (int i = 0; i < A->getNumRows(); ++i) {
+      sum = 0.0;
+      c = 0.0;
+      for (int j = ia[i]; j < ia[i+1]; ++j) { 
+        y =  ( a[j] * x_data[ja[j]]) - c;
+        t = sum + y;
+        c = (t - sum) - y;
+        sum = t;
+        //  sum += ( a[j] * x_data[ja[j]]);
+      }
+      sum *= (*alpha);
+      result_data[i] = result_data[i]*(*beta) + sum;
+    } 
+    vec_result->setDataUpdated(memory::HOST);
+    return 0;
   }
 
+  /**
+   * @brief Matrix infinity norm
+   * 
+   * @param[in]  A - matrix
+   * @param[out] norm - matrix norm
+   * @return int error code, 0 if successful
+   * 
+   * @pre Matrix `A` is in CSR format.
+   * 
+   * @note If we decide to implement this function for different matrix
+   * format, the check for CSR matrix will be replaced with a switch
+   * statement to select implementation for recognized input matrix
+   * format.
+   */
   int MatrixHandlerCpu::matrixInfNorm(matrix::Sparse* A, real_type* norm)
   {
+    assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW &&
+           "Matrix has to be in CSR format for matrix-vector product.\n");
+
     real_type sum, nrm;
     index_type i, j;
 
@@ -92,8 +118,7 @@ namespace ReSolve {
       if (i == 0) {
         nrm = sum;
       } else {
-        if (sum > nrm)
-        {
+        if (sum > nrm) {
           nrm = sum;
         } 
       }

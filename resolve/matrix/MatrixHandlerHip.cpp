@@ -28,84 +28,113 @@ namespace ReSolve {
   }
 
 
-  int MatrixHandlerHip::matvec(matrix::Sparse* Ageneric, 
+  /**
+   * @brief result := alpha * A * x + beta * result
+   * 
+   * @param[in]     A - matrix
+   * @param[in]     vec_x - vector multiplied by A
+   * @param[in,out] vec_result - resulting vector
+   * @param[in]     alpha - matrix-vector multiplication factor
+   * @param[in]     beta - sum into result factor
+   * @return int    error code, 0 if successful
+   * 
+   * @pre Matrix `A` is in CSR format.
+   * 
+   * @note If we decide to implement this function for different matrix
+   * format, the check for CSR matrix will be replaced with a switch
+   * statement to select implementation for recognized input matrix
+   * format.
+   */
+  int MatrixHandlerHip::matvec(matrix::Sparse* A, 
                                vector_type* vec_x, 
                                vector_type* vec_result, 
                                const real_type* alpha, 
-                               const real_type* beta,
-                               std::string matrixFormat) 
+                               const real_type* beta) 
   {
     using namespace constants;
+
+    assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW &&
+           "Matrix has to be in CSR format for matrix-vector product.\n");
+
     int error_sum = 0;
-    if (matrixFormat == "csr") {
-      matrix::Csr* A = dynamic_cast<matrix::Csr*>(Ageneric);
-      //result = alpha *A*x + beta * result
-      rocsparse_status status;
+    //result = alpha *A*x + beta * result
+    rocsparse_status status;
 
-      rocsparse_handle handle_rocsparse = workspace_->getRocsparseHandle();
+    rocsparse_handle handle_rocsparse = workspace_->getRocsparseHandle();
+    
+    rocsparse_mat_info infoA = workspace_->getSpmvMatrixInfo();
+    rocsparse_mat_descr descrA =  workspace_->getSpmvMatrixDescriptor();
+    
+    if (!workspace_->matvecSetup()) {
+      //setup first, allocate, etc.
+      rocsparse_create_mat_descr(&(descrA));
+      rocsparse_set_mat_index_base(descrA, rocsparse_index_base_zero);
+      rocsparse_set_mat_type(descrA, rocsparse_matrix_type_general);
+
+      rocsparse_create_mat_info(&infoA);
       
-      rocsparse_mat_info infoA = workspace_->getSpmvMatrixInfo();
-      rocsparse_mat_descr descrA =  workspace_->getSpmvMatrixDescriptor();
-      
-      if (!workspace_->matvecSetup()) {
-        //setup first, allocate, etc.
-        rocsparse_create_mat_descr(&(descrA));
-        rocsparse_set_mat_index_base(descrA, rocsparse_index_base_zero);
-        rocsparse_set_mat_type(descrA, rocsparse_matrix_type_general);
-
-        rocsparse_create_mat_info(&infoA);
-        
-        status = rocsparse_dcsrmv_analysis(handle_rocsparse,
-                                           rocsparse_operation_none,
-                                           A->getNumRows(),
-                                           A->getNumColumns(),
-                                           A->getNnz(), 
-                                           descrA,
-                                           A->getValues( memory::DEVICE), 
-                                           A->getRowData(memory::DEVICE),
-                                           A->getColData(memory::DEVICE), // cuda is used as "device"
-                                           infoA);
-        error_sum += status;
-        mem_.deviceSynchronize();
-
-        workspace_->setSpmvMatrixDescriptor(descrA);
-        workspace_->setSpmvMatrixInfo(infoA);
-        workspace_->matvecSetupDone();
-      } 
-      
-      status = rocsparse_dcsrmv(handle_rocsparse,
-                                rocsparse_operation_none,
-                                A->getNumRows(),
-                                A->getNumColumns(),
-                                A->getNnz(),
-                                alpha, 
-                                descrA,
-                                A->getValues( memory::DEVICE), 
-                                A->getRowData(memory::DEVICE),
-                                A->getColData(memory::DEVICE),
-                                infoA,
-                                vec_x->getData(memory::DEVICE),
-                                beta,
-                                vec_result->getData(memory::DEVICE));
-
+      status = rocsparse_dcsrmv_analysis(handle_rocsparse,
+                                          rocsparse_operation_none,
+                                          A->getNumRows(),
+                                          A->getNumColumns(),
+                                          A->getNnz(), 
+                                          descrA,
+                                          A->getValues( memory::DEVICE), 
+                                          A->getRowData(memory::DEVICE),
+                                          A->getColData(memory::DEVICE), // cuda is used as "device"
+                                          infoA);
       error_sum += status;
       mem_.deviceSynchronize();
-      if (status)
-        out::error() << "Matvec status: "   << status                    << ". "
-                     << "Last error code: " << mem_.getLastDeviceError() << ".\n";
-      vec_result->setDataUpdated(memory::DEVICE);
 
-      return error_sum;
-    } else {
-      out::error() << "MatVec not implemented (yet) for " 
-                   << matrixFormat << " matrix format." << std::endl;
-      return 1;
-    }
+      workspace_->setSpmvMatrixDescriptor(descrA);
+      workspace_->setSpmvMatrixInfo(infoA);
+      workspace_->matvecSetupDone();
+    } 
+    
+    status = rocsparse_dcsrmv(handle_rocsparse,
+                              rocsparse_operation_none,
+                              A->getNumRows(),
+                              A->getNumColumns(),
+                              A->getNnz(),
+                              alpha, 
+                              descrA,
+                              A->getValues( memory::DEVICE), 
+                              A->getRowData(memory::DEVICE),
+                              A->getColData(memory::DEVICE),
+                              infoA,
+                              vec_x->getData(memory::DEVICE),
+                              beta,
+                              vec_result->getData(memory::DEVICE));
+
+    error_sum += status;
+    mem_.deviceSynchronize();
+    if (status)
+      out::error() << "Matvec status: "   << status                    << ". "
+                   << "Last error code: " << mem_.getLastDeviceError() << ".\n";
+    vec_result->setDataUpdated(memory::DEVICE);
+
+    return error_sum;
   }
 
+  /**
+   * @brief Matrix infinity norm
+   * 
+   * @param[in]  A - matrix
+   * @param[out] norm - matrix norm
+   * @return int error code, 0 if successful
+   * 
+   * @pre Matrix `A` is in CSR format.
+   * 
+   * @note If we decide to implement this function for different matrix
+   * format, the check for CSR matrix will be replaced with a switch
+   * statement to select implementation for recognized input matrix
+   * format.
+   */
   int MatrixHandlerHip::matrixInfNorm(matrix::Sparse* A, real_type* norm)
   {
-    // we assume A is in CSR format
+    assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW &&
+           "Matrix has to be in CSR format for matrix-vector product.\n");
+
     real_type* d_r = workspace_->getDr();
     index_type d_r_size = workspace_->getDrSize();
     

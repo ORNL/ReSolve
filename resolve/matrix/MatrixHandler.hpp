@@ -60,7 +60,6 @@ namespace ReSolve {
                  vector_type* vec_result,
                  const real_type* alpha,
                  const real_type* beta,
-                 std::string matrix_type,
                  memory::MemorySpace memspace);
       int matrixInfNorm(matrix::Sparse *A, real_type* norm, memory::MemorySpace memspace);
       void setValuesChanged(bool toWhat, memory::MemorySpace memspace); 

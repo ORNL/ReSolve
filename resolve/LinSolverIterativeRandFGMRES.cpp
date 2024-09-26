@@ -154,7 +154,7 @@ namespace ReSolve
     vec_V_->setToZero(memspace_);
 
     rhs->deepCopyVectorData(vec_V_->getData(memspace_), 0, memspace_);  
-    matrix_handler_->matvec(A_, x, vec_V_, &MINUSONE, &ONE, "csr", memspace_); 
+    matrix_handler_->matvec(A_, x, vec_V_, &MINUSONE, &ONE, memspace_); 
 
     vec_v->setData(vec_V_->getVectorData(0, memspace_), memspace_);
     vec_s->setData(vec_S_->getVectorData(0, memspace_), memspace_);
@@ -228,7 +228,7 @@ namespace ReSolve
         // V_{i+1}=A*Z_i
         vec_v->setData(vec_V_->getVectorData(i + 1, memspace_), memspace_);
 
-        matrix_handler_->matvec(A_, vec_z, vec_v, &ONE, &ZERO, "csr", memspace_); 
+        matrix_handler_->matvec(A_, vec_z, vec_v, &ONE, &ZERO, memspace_); 
 
         // orthogonalize V[i+1], form a column of h_H_
         // this is where it differs from normal solver GS
@@ -337,7 +337,7 @@ namespace ReSolve
       }
 
       rhs->deepCopyVectorData(vec_V_->getData(memspace_), 0, memspace_);  
-      matrix_handler_->matvec(A_, x, vec_V_, &MINUSONE, &ONE,"csr", memspace_); 
+      matrix_handler_->matvec(A_, x, vec_V_, &MINUSONE, &ONE, memspace_); 
       if (outer_flag) {
 
         sketching_handler_->reset();
