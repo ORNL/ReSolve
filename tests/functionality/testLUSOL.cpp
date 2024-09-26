@@ -119,7 +119,6 @@ int main(int argc, char* argv[])
                                      &vec_r,
                                      &ONE,
                                      &MINUSONE,
-                                     "csr",
                                      ReSolve::memory::HOST);
 
   // Compute vector norms
@@ -139,7 +138,6 @@ int main(int argc, char* argv[])
                                      &vec_r,
                                      &ONE,
                                      &MINUSONE,
-                                     "csr",
                                      ReSolve::memory::HOST);
   real_type exactSol_normRmatrix = sqrt(vector_handler.dot(&vec_r, &vec_r, ReSolve::memory::HOST));
 
@@ -220,7 +218,6 @@ int main(int argc, char* argv[])
                                      &vec_r,
                                      &ONE,
                                      &MINUSONE,
-                                     "csr",
                                      ReSolve::memory::HOST);
 
   // Compute vector norms
@@ -241,7 +238,6 @@ int main(int argc, char* argv[])
                                      &vec_r,
                                      &ONE,
                                      &MINUSONE,
-                                     "csr",
                                      ReSolve::memory::HOST);
   // Compute residual error norm                                     
   exactSol_normRmatrix = sqrt(vector_handler.dot(&vec_r, &vec_r, ReSolve::memory::HOST));
