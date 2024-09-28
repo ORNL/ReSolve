@@ -13,11 +13,7 @@ namespace ReSolve {
   constexpr double EPSMAC  = 1.0e-16;
 
 
-  // TODO: let cmake manage these. combined with the todo above relating to cstdint
-  //       this is related to resolve/lusol/lusol_precision.f90. whatever is here should
-  //       have an equivalent there
-
-  // NOTE: i'd love to make this std::float64_t but we're not on c++23
+  /// @todo Provide CMake option to se these types at config time
   using real_type = double;
   using index_type = std::int32_t;
 

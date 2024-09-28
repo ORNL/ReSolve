@@ -177,14 +177,21 @@ namespace ReSolve
           tolrel = 1e-16;
         }
       }
-      int exit_cond = 0;
-      if (conv_cond_ == 0) {
-        exit_cond =  ((std::abs(rnorm - ZERO) <= EPSILON));
-      } else if (conv_cond_ == 1) {
-        exit_cond =  ((std::abs(rnorm - ZERO) <= EPSILON) || (rnorm < tol_));
-      } else if (conv_cond_ == 2) {
-        exit_cond =  ((std::abs(rnorm - ZERO) <= EPSILON) || (rnorm < (tol_*bnorm)));
+
+      bool exit_cond = false;
+      switch (conv_cond_)
+      {
+        case 0:
+          exit_cond = ((std::abs(rnorm - ZERO) <= EPSILON));
+          break;
+        case 1:
+          exit_cond = ((std::abs(rnorm - ZERO) <= EPSILON) || (rnorm < tol_));
+          break;
+        case 2:
+          exit_cond = ((std::abs(rnorm - ZERO) <= EPSILON) || (rnorm < (tol_*bnorm)));
+          break;
       }
+
       if (exit_cond) {
         outer_flag = 0;
         final_residual_norm_ = rnorm;
@@ -259,9 +266,9 @@ namespace ReSolve
             h_H_[i * (restart_ + 1) + k] = -h_s_[k1] * t + h_c_[k1] * h_H_[i * (restart_ + 1) + k];
           }
         } // if (i != 0)
-        double Hii = h_H_[i * (restart_ + 1) + i];
-        double Hii1 = h_H_[(i) * (restart_ + 1) + i + 1];
-        double gam = std::sqrt(Hii * Hii + Hii1 * Hii1);
+        real_type Hii = h_H_[i * (restart_ + 1) + i];
+        real_type Hii1 = h_H_[(i) * (restart_ + 1) + i + 1];
+        real_type gam = std::sqrt(Hii * Hii + Hii1 * Hii1);
 
         if(std::abs(gam - ZERO) <= EPSILON) {
           gam = EPSMAC;

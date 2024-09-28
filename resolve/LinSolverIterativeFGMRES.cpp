@@ -152,17 +152,7 @@ namespace ReSolve
           exit_cond = ((std::abs(rnorm - ZERO) <= EPSILON) || (rnorm < (tol_*bnorm)));
           break;
       }
-      // if (conv_cond_ == 0) {
-      //   exit_cond =  ((std::abs(rnorm - ZERO) <= EPSILON));
-      // } else {
-      //   if (conv_cond_ == 1) {
-      //     exit_cond =  ((std::abs(rnorm - ZERO) <= EPSILON) || (rnorm < tol_));
-      //   } else {
-      //     if (conv_cond_ == 2) {
-      //       exit_cond =  ((std::abs(rnorm - ZERO) <= EPSILON) || (rnorm < (tol_*bnorm)));
-      //     }
-      //   }
-      // }
+
       if (exit_cond) {
         outer_flag = 0;
         final_residual_norm_ = rnorm;
@@ -486,6 +476,12 @@ namespace ReSolve
       break;
     case RESTART:
       std::cout << getRestart() << "\n";
+      break;
+    case CONV_COND:
+      std::cout << getConvCond() << "\n";
+      break;
+    case FLEXIBLE:
+      std::cout << getFlexible() << "\n";
       break;
     default:
       out::error() << "Unknown parameter " << id << "\n";
