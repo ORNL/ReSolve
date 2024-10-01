@@ -178,11 +178,9 @@ namespace ReSolve
     if (solveMethod_ == "randgmres") {
       auto* rgmres = dynamic_cast<LinSolverIterativeRandFGMRES*>(iterativeSolver_);
       status += rgmres->setup(A_);
-      status += gs_->setup(rgmres->getKrand(), rgmres->getRestart());
     } else if (solveMethod_ == "fgmres") {
       auto* fgmres = dynamic_cast<LinSolverIterativeFGMRES*>(iterativeSolver_);
       status += fgmres->setup(A_);
-      status += gs_->setup(A_->getNumRows(), fgmres->getRestart()); 
     } else {
       // do nothing
     }
@@ -417,7 +415,6 @@ namespace ReSolve
 #endif
 
     if (irMethod_ == "fgmres") {
-      gs_->setup(A_->getNumRows(), iterativeSolver_->getRestart()); 
       status += iterativeSolver_->setup(A_);
       status += iterativeSolver_->setupPreconditioner("LU", refactorizationSolver_);
     }

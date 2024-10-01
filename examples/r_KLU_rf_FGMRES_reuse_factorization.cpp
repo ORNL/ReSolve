@@ -151,7 +151,6 @@ int main(int argc, char *argv[])
         std::cout<<"about to set FGMRES" <<std::endl;
         FGMRES->setRestart(1000); 
         FGMRES->setMaxit(2000);
-        GS->setup(A->getNumRows(), FGMRES->getRestart()); 
         FGMRES->setup(A);
       }
     } else {

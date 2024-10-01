@@ -38,7 +38,6 @@ namespace ReSolve
       vector_type* vec_Hcolumn_{nullptr};
 
       real_type* h_L_{nullptr};
-      real_type* h_rv_{nullptr};
       real_type* h_aux_{nullptr};
       VectorHandler* vector_handler_{nullptr};
 

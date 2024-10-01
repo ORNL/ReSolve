@@ -22,16 +22,6 @@ namespace ReSolve
 {
   using out = io::Logger;
 
-  LinSolverIterativeRandFGMRES::LinSolverIterativeRandFGMRES(MatrixHandler* matrix_handler,
-                                                             VectorHandler* vector_handler)
-  {
-    matrix_handler_ = matrix_handler;
-    vector_handler_ = vector_handler;
-    GS_ = nullptr;
-
-    setMemorySpace();
-  }
-
   LinSolverIterativeRandFGMRES::LinSolverIterativeRandFGMRES(MatrixHandler*  matrix_handler,
                                                              VectorHandler*  vector_handler, 
                                                              SketchingMethod rand_method, 
@@ -122,6 +112,8 @@ namespace ReSolve
       allocateSketchingData();
       is_sketching_set_ = true;
     }
+
+    GS_->setup(n_, restart_);
 
     return 0;
   }

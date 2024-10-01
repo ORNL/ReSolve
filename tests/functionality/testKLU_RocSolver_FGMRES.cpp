@@ -181,7 +181,6 @@ int main(int argc, char *argv[])
   FGMRES->setMaxit(200); 
   FGMRES->setRestart(100); 
 
-  GS->setup(A->getNumRows(), FGMRES->getRestart()); 
   status =  FGMRES->setup(A); 
   error_sum += status;
 

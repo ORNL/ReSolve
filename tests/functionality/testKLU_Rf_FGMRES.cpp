@@ -186,7 +186,6 @@ int main(int argc, char *argv[])
   FGMRES->setFlexible(1); 
   FGMRES->setTol(1e-17); 
 
-  GS->setup(A->getNumRows(), FGMRES->getRestart()); 
   status =  FGMRES->setup(A); 
   error_sum += status;
 

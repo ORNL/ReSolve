@@ -27,8 +27,6 @@ namespace ReSolve
 
     public:
       LinSolverIterativeFGMRES(MatrixHandler* matrix_handler,
-                               VectorHandler* vector_handler);
-      LinSolverIterativeFGMRES(MatrixHandler* matrix_handler,
                                VectorHandler* vector_handler,
                                GramSchmidt*   gs);
       LinSolverIterativeFGMRES(index_type restart,

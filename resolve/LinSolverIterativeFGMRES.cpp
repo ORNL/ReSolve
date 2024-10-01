@@ -18,15 +18,6 @@ namespace ReSolve
   using out = io::Logger;
 
   LinSolverIterativeFGMRES::LinSolverIterativeFGMRES(MatrixHandler* matrix_handler,
-                                                     VectorHandler* vector_handler)
-  {
-    matrix_handler_ = matrix_handler;
-    vector_handler_ = vector_handler;
-    GS_ = nullptr;
-    setMemorySpace();
-  }
-
-  LinSolverIterativeFGMRES::LinSolverIterativeFGMRES(MatrixHandler* matrix_handler,
                                                      VectorHandler* vector_handler,
                                                      GramSchmidt*   gs)
   {
@@ -94,6 +85,8 @@ namespace ReSolve
       allocateSolverData();
       is_solver_set_ = true;
     }
+
+    GS_->setup(n_, restart_);
 
     return 0;
   }
