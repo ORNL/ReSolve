@@ -63,9 +63,6 @@ int main(int argc, char *argv[])
   status = Rf->setup(A);
   error_sum += status;
 
-  status = GS->setup(FGMRES->getKrand(), FGMRES->getRestart()); 
-  error_sum += status;
-
   FGMRES->setMaxit(2500);
   FGMRES->setTol(tol);
   FGMRES->setup(A);
