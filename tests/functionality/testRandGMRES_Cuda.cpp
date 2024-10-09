@@ -169,6 +169,7 @@ ReSolve::vector::Vector* generateRhs(const index_type N)
       data[i] = -111.0;
     }
   }
+  vec_rhs->setDataUpdated(ReSolve::memory::HOST);
   vec_rhs->syncData(ReSolve::memory::HOST, ReSolve::memory::DEVICE);
   return vec_rhs;
 } 

@@ -123,6 +123,7 @@ namespace ReSolve {
         devImpl_->scal(alpha, x);
         break;
     }
+    x->setDataUpdated(memspace);
   }
 
   /** 
@@ -169,6 +170,7 @@ namespace ReSolve {
         devImpl_->axpy(alpha, x, y);      
         break;
     }
+    y->setDataUpdated(memspace);
   }
 
   /** 
@@ -207,6 +209,7 @@ namespace ReSolve {
         devImpl_->gemv(transpose, n, k, alpha, beta, V, y, x);
         break;
     }
+    x->setDataUpdated(memspace);
   }
 
   /** 
@@ -232,6 +235,7 @@ namespace ReSolve {
         devImpl_->massAxpy(size, alpha, k, x, y);
         break;
     }
+    y->setDataUpdated(memspace);
   }
 
   /** 
@@ -259,6 +263,7 @@ namespace ReSolve {
         devImpl_->massDot2Vec(size, V, k, x, res);
         break;
     }
+    res->setDataUpdated(memspace);
   }
 
   /**
