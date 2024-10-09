@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
         vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
         vec_rhs->setDataUpdated(ReSolve::memory::HOST);
       } else { 
-        A->copyData(ReSolve::memory::DEVICE);
+        A->syncData(ReSolve::memory::DEVICE);
         vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
       }
       std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnz()<<std::endl;

@@ -167,7 +167,7 @@ private:
     // A->print();
 
     if ((memspace == "cuda") || (memspace == "hip")) {
-      A->copyData(memory::DEVICE);
+      A->syncData(memory::DEVICE);
     }
 
     return A;
@@ -307,7 +307,7 @@ private:
   {
     bool status = true;
     if (memspace != "cpu") {
-      A.copyData(memory::DEVICE);
+      A.syncData(memory::DEVICE);
     }
 
     size_t N = static_cast<size_t>(A.getNumRows());
@@ -362,7 +362,7 @@ private:
   {
     bool status = true;
     if (memspace != "cpu") {
-      x.copyData(memory::DEVICE, memory::HOST);
+      x.syncData(memory::DEVICE, memory::HOST);
     }
 
     for (index_type i = 0; i < x.getSize(); ++i) {

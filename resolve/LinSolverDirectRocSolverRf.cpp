@@ -44,7 +44,7 @@ namespace ReSolve
     addFactors(L, U);
 
     M_->setUpdated(ReSolve::memory::HOST);
-    M_->copyData(ReSolve::memory::DEVICE);
+    M_->syncData(ReSolve::memory::DEVICE);
 
     if (d_P_ == nullptr) {
       mem_.allocateArrayOnDevice(&d_P_, n); 
