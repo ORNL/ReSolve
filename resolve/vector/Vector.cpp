@@ -248,13 +248,12 @@ namespace ReSolve { namespace vector {
   real_type* Vector::getData(index_type i, memory::MemorySpace memspace)
   {
     if ((memspace == memory::HOST) && (cpu_updated_ == false) && (gpu_updated_ == true )) {
-      // remember IN FIRST OUT SECOND!!!
-      syncData(memory::DEVICE, memspace);  
+      syncData(memspace);  
       owns_cpu_data_ = true;
     } 
 
     if ((memspace == memory::DEVICE) && (gpu_updated_ == false) && (cpu_updated_ == true )) {
-      syncData(memory::HOST, memspace);
+      syncData(memspace);
       owns_gpu_data_ = true;
     }
     if (memspace == memory::HOST) {
@@ -272,13 +271,12 @@ namespace ReSolve { namespace vector {
   /** 
    * @brief copy internal vector data from HOST to DEVICE or from DEVICE to HOST 
    * 
-   * @param[in] memspaceIn   - Memory space of the data to copy FROM  
-   * @param[in] memspaceOut  - Memory space of the data to copy TO 
+   * @param[in] memspaceOut  - Memory space to sync
    *
-   * @return 0 if successful, -1 otherwise.
+   * @return 0 if successful, 1 otherwise.
    *
    */
-  int Vector::syncData(memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut)
+  int Vector::syncData(memory::MemorySpace memspaceOut)
   {
     using namespace ReSolve::memory;
 
@@ -316,7 +314,7 @@ namespace ReSolve { namespace vector {
         cpu_updated_ = true;
         break;
       default:
-        return -1;
+        return 1;
     }
     return 0;
   }
