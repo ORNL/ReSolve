@@ -96,7 +96,7 @@ namespace ReSolve
             }
           }
           V.setDataUpdated(memory::HOST); 
-          V.syncData(memory::HOST, memspace_);
+          V.syncData(memspace_);
 
           //set the first vector to all 1s, normalize 
           V.setToConst(0, 1.0, memspace_);

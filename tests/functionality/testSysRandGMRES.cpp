@@ -272,7 +272,7 @@ ReSolve::vector::Vector* generateRhs(const index_type N, ReSolve::memory::Memory
     }
   }
   vec_rhs->setDataUpdated(ReSolve::memory::HOST);
-  vec_rhs->syncData(ReSolve::memory::HOST, memspace);
+  vec_rhs->syncData(memspace);
   return vec_rhs;
 } 
 

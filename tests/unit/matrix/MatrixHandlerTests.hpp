@@ -87,7 +87,7 @@ private:
   {
     bool status = true;
     if (memspace_ == memory::DEVICE) {
-      x.syncData(memory::DEVICE, memory::HOST);
+      x.syncData(memory::HOST);
     }
 
     for (index_type i = 0; i < x.getSize(); ++i) {

@@ -362,7 +362,7 @@ private:
   {
     bool status = true;
     if (memspace != "cpu") {
-      x.syncData(memory::DEVICE, memory::HOST);
+      x.syncData(memory::HOST);
     }
 
     for (index_type i = 0; i < x.getSize(); ++i) {
