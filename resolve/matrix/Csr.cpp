@@ -302,13 +302,21 @@ namespace ReSolve
     return -1;
   }
 
-  int matrix::Csr::syncData(memory::MemorySpace memspaceOut)
+  /**
+   * @brief Sync data in memspace with the updated memory space.
+   * 
+   * @param memspace - memory space to be synced up (HOST or DEVICE)
+   * @return int - 0 if successful, error code otherwise
+   * 
+   * @todo Handle case when neither memory space is updated. Currently,
+   * this function does nothing in that situation, quitely ignoring
+   * the sync call.
+   */
+  int matrix::Csr::syncData(memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
 
-    index_type nnz_current = nnz_;
-
-    switch (memspaceOut) {
+    switch (memspace) {
       case HOST:
         //check if we need to copy or not
         if ((d_data_updated_ == true) && (h_data_updated_ == false)) {
@@ -317,16 +325,16 @@ namespace ReSolve
           }
           if ((h_row_data_ == nullptr) && (h_col_data_ == nullptr)) {
             h_row_data_ = new index_type[n_ + 1];
-            h_col_data_ = new index_type[nnz_current];      
+            h_col_data_ = new index_type[nnz_];      
             owns_cpu_data_ = true;
           }
           if (h_val_data_ == nullptr) {
-            h_val_data_ = new real_type[nnz_current];      
+            h_val_data_ = new real_type[nnz_];      
             owns_cpu_vals_ = true;
           }
-          mem_.copyArrayDeviceToHost(h_row_data_, d_row_data_,      n_ + 1);
-          mem_.copyArrayDeviceToHost(h_col_data_, d_col_data_, nnz_current);
-          mem_.copyArrayDeviceToHost(h_val_data_, d_val_data_, nnz_current);
+          mem_.copyArrayDeviceToHost(h_row_data_, d_row_data_, n_ + 1);
+          mem_.copyArrayDeviceToHost(h_col_data_, d_col_data_,   nnz_);
+          mem_.copyArrayDeviceToHost(h_val_data_, d_val_data_,   nnz_);
           h_data_updated_ = true;
         }
         return 0;
@@ -337,16 +345,16 @@ namespace ReSolve
           }
           if ((d_row_data_ == nullptr) && (d_col_data_ == nullptr)) {
             mem_.allocateArrayOnDevice(&d_row_data_, n_ + 1); 
-            mem_.allocateArrayOnDevice(&d_col_data_, nnz_current); 
+            mem_.allocateArrayOnDevice(&d_col_data_,   nnz_); 
             owns_gpu_data_ = true;
           }
           if (d_val_data_ == nullptr) {
-            mem_.allocateArrayOnDevice(&d_val_data_, nnz_current); 
+            mem_.allocateArrayOnDevice(&d_val_data_, nnz_);
             owns_gpu_vals_ = true;
           }
-          mem_.copyArrayHostToDevice(d_row_data_, h_row_data_,      n_ + 1);
-          mem_.copyArrayHostToDevice(d_col_data_, h_col_data_, nnz_current);
-          mem_.copyArrayHostToDevice(d_val_data_, h_val_data_, nnz_current);
+          mem_.copyArrayHostToDevice(d_row_data_, h_row_data_, n_ + 1);
+          mem_.copyArrayHostToDevice(d_col_data_, h_col_data_,   nnz_);
+          mem_.copyArrayHostToDevice(d_val_data_, h_val_data_,   nnz_);
           d_data_updated_ = true;
         }
         return 0;
