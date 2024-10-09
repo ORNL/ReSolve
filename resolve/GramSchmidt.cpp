@@ -164,9 +164,9 @@ namespace ReSolve
           vector_handler_->scal(&t, vec_w_, memspace_);  
         } else {
           assert(0 && "Gram-Schmidt failed, vector with ZERO norm\n");
-          return -1;
+          return 1;
         }
-        break;
+        return 0;
 
       case cgs2:
         vec_v_->setData(V->getVectorData(i + 1, memspace_), memspace_);
@@ -210,10 +210,9 @@ namespace ReSolve
           vector_handler_->scal(&t, vec_v_, memspace_);  
         } else {
           assert(0 && "Gram-Schmidt failed, vector with ZERO norm\n");
-          return -1;
+          return 1;
         }
         return 0;
-        break;
 
       case mgs_two_sync:
         // V[1:i]^T[V[i] w]
@@ -260,11 +259,10 @@ namespace ReSolve
           }        
         } else {
           assert(0 && "Iterative refinement failed, Krylov vector with ZERO norm\n");
-          return -1;
+          return 1;
         }
         h_rv = nullptr;
         return 0;
-        break;
 
       case mgs_pm:
         vec_v_->setData(V->getVectorData(i, memspace_), memspace_);
@@ -332,11 +330,10 @@ namespace ReSolve
           vector_handler_->scal(&t, vec_w_, memspace_);  
         } else {
           assert(0 && "Iterative refinement failed, Krylov vector with ZERO norm\n");
-          return -1;
+          return 1;
         }
         h_rv = nullptr;
         return 0;
-        break;
 
       case cgs1:
         vec_v_->setData(V->getVectorData(i + 1, memspace_), memspace_);
@@ -361,14 +358,13 @@ namespace ReSolve
           vector_handler_->scal(&t, vec_v_, memspace_);  
         } else {
           assert(0 && "Gram-Schmidt failed, vector with ZERO norm\n");
-          return -1;
+          return 1;
         }
         return 0;
-        break;
+        
       default:
         assert(0 && "Iterative refinement failed, wrong orthogonalization.\n");
-        return -1;
-        break;
+        return 1;
     } //switch
 
     return 0;
