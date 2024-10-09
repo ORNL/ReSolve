@@ -216,7 +216,7 @@ namespace ReSolve
         // vector_handler_->massDot2Vec(n, V, i + 1, vec_v_, vec_rv_, memspace_);
         vector_handler_->massDot2Vec(n, V, i + 1, vec_v_, vec_rv_, memspace_);
         vec_rv_->setDataUpdated(memspace_);
-        vec_rv_->copyData(memspace_, memory::HOST);
+        vec_rv_->syncData(memspace_, memory::HOST);
 
         vec_rv_->deepCopyVectorData(&h_L_[idxmap(i, 0, num_vecs_ + 1)], 0, memory::HOST);
         h_rv_ = vec_rv_->getVectorData(1, memory::HOST);
@@ -264,7 +264,7 @@ namespace ReSolve
 
         vector_handler_->massDot2Vec(n, V, i + 1, vec_v_, vec_rv_, memspace_);
         vec_rv_->setDataUpdated(memspace_);
-        vec_rv_->copyData(memspace_, memory::HOST);
+        vec_rv_->syncData(memspace_, memory::HOST);
 
         vec_rv_->deepCopyVectorData(&h_L_[idxmap(i, 0, num_vecs_ + 1)], 0, memory::HOST);
         h_rv_ = vec_rv_->getVectorData(1, memory::HOST);

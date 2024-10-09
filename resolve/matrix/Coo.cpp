@@ -80,7 +80,7 @@ namespace ReSolve
         d_data_updated_ = true;
         owns_gpu_vals_ = true;
         owns_gpu_data_  = true;
-        copyData(memspaceDst);
+        syncData(memspaceDst);
         // Hijack data from the source
         *rows = nullptr;
         *cols = nullptr;
@@ -94,7 +94,7 @@ namespace ReSolve
         h_data_updated_ = true;
         owns_cpu_vals_ = true;
         owns_cpu_data_  = true;
-        copyData(memspaceDst);
+        syncData(memspaceDst);
         // Hijack data from the source
         *rows = nullptr;
         *cols = nullptr;
@@ -132,7 +132,7 @@ namespace ReSolve
   index_type* matrix::Coo::getRowData(memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
-    copyData(memspace);
+    syncData(memspace);
     switch (memspace) {
       case HOST:
         return this->h_row_data_;
@@ -146,7 +146,7 @@ namespace ReSolve
   index_type* matrix::Coo::getColData(memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
-    copyData(memspace);
+    syncData(memspace);
     switch (memspace) {
       case HOST:
         return this->h_col_data_;
@@ -160,7 +160,7 @@ namespace ReSolve
   real_type* matrix::Coo::getValues(memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
-    copyData(memspace);
+    syncData(memspace);
     switch (memspace) {
       case HOST:
         return this->h_val_data_;
@@ -286,7 +286,7 @@ namespace ReSolve
     return -1;
   }
 
-  int matrix::Coo::copyData(memory::MemorySpace memspaceOut)
+  int matrix::Coo::syncData(memory::MemorySpace memspaceOut)
   {
     using namespace ReSolve::memory;
 
@@ -296,7 +296,7 @@ namespace ReSolve
       case HOST:
         if ((d_data_updated_ == true) && (h_data_updated_ == false)) {
           if ((h_row_data_ == nullptr) != (h_col_data_ == nullptr)) {
-            out::error() << "In Coo::copyData one of host row or column data is null!\n";
+            out::error() << "In Coo::syncData one of host row or column data is null!\n";
           }
           if ((h_row_data_ == nullptr) && (h_col_data_ == nullptr)) {
             h_row_data_ = new index_type[nnz_current];      
@@ -316,7 +316,7 @@ namespace ReSolve
       case DEVICE:
         if ((d_data_updated_ == false) && (h_data_updated_ == true)) {
           if ((d_row_data_ == nullptr) != (d_col_data_ == nullptr)) {
-            out::error() << "In Coo::copyData one of device row or column data is null!\n";
+            out::error() << "In Coo::syncData one of device row or column data is null!\n";
           }
           if ((d_row_data_ == nullptr) && (d_col_data_ == nullptr)) {
             mem_.allocateArrayOnDevice(&d_row_data_, nnz_current);

@@ -87,7 +87,7 @@ private:
   {
     bool status = true;
     if (memspace_ == memory::DEVICE) {
-      x.copyData(memory::DEVICE, memory::HOST);
+      x.syncData(memory::DEVICE, memory::HOST);
     }
 
     for (index_type i = 0; i < x.getSize(); ++i) {
@@ -149,7 +149,7 @@ private:
     A->setUpdated(memory::HOST);
 
     if (memspace_ == memory::DEVICE) {
-      A->copyData(memspace_);
+      A->syncData(memspace_);
     }
 
     return A;

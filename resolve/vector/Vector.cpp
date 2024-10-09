@@ -249,12 +249,12 @@ namespace ReSolve { namespace vector {
   {
     if ((memspace == memory::HOST) && (cpu_updated_ == false) && (gpu_updated_ == true )) {
       // remember IN FIRST OUT SECOND!!!
-      copyData(memory::DEVICE, memspace);  
+      syncData(memory::DEVICE, memspace);  
       owns_cpu_data_ = true;
     } 
 
     if ((memspace == memory::DEVICE) && (gpu_updated_ == false) && (cpu_updated_ == true )) {
-      copyData(memory::HOST, memspace);
+      syncData(memory::HOST, memspace);
       owns_gpu_data_ = true;
     }
     if (memspace == memory::HOST) {
@@ -278,7 +278,7 @@ namespace ReSolve { namespace vector {
    * @return 0 if successful, -1 otherwise.
    *
    */
-  int Vector::copyData(memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut)
+  int Vector::syncData(memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut)
   {
     int control=-1;
     if ((memspaceIn == memory::HOST)   && (memspaceOut == memory::DEVICE)){ control = 0;}

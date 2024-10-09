@@ -33,7 +33,7 @@ namespace ReSolve
   index_type* matrix::Csc::getRowData(memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
-    copyData(memspace);
+    syncData(memspace);
     switch (memspace) {
       case HOST:
         return this->h_row_data_;
@@ -47,7 +47,7 @@ namespace ReSolve
   index_type* matrix::Csc::getColData(memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
-    copyData(memspace);
+    syncData(memspace);
     switch (memspace) {
       case HOST:
         return this->h_col_data_;
@@ -61,7 +61,7 @@ namespace ReSolve
   real_type* matrix::Csc::getValues(memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
-    copyData(memspace);
+    syncData(memspace);
     switch (memspace) {
       case HOST:
         return this->h_val_data_;
@@ -193,7 +193,7 @@ namespace ReSolve
     return -1;
   }
 
-  int matrix::Csc::copyData(memory::MemorySpace memspaceOut)
+  int matrix::Csc::syncData(memory::MemorySpace memspaceOut)
   {
     using namespace ReSolve::memory;
 
@@ -203,7 +203,7 @@ namespace ReSolve
       case HOST:
         if ((d_data_updated_ == true) && (h_data_updated_ == false)) {
           if ((h_row_data_ == nullptr) != (h_col_data_ == nullptr)) {
-            out::error() << "In Csc::copyData one of host row or column data is null!\n";
+            out::error() << "In Csc::syncData one of host row or column data is null!\n";
           }
           if ((h_col_data_ == nullptr) && (h_row_data_ == nullptr)) {
             h_col_data_ = new index_type[m_ + 1];      
@@ -223,7 +223,7 @@ namespace ReSolve
       case DEVICE:
         if ((d_data_updated_ == false) && (h_data_updated_ == true)) {
           if ((d_row_data_ == nullptr) != (d_col_data_ == nullptr)) {
-            out::error() << "In Csc::copyData one of device row or column data is null!\n";
+            out::error() << "In Csc::syncData one of device row or column data is null!\n";
           }
           if ((d_col_data_ == nullptr) && (d_row_data_ == nullptr)) {
             mem_.allocateArrayOnDevice(&d_col_data_, m_ + 1); 

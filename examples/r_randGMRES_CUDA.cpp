@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
   mat_file.close();
   rhs_file.close();
 
-  A->copyData(ReSolve::memory::DEVICE);
+  A->syncData(ReSolve::memory::DEVICE);
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
   //Now call direct solver
   real_type norm_b;
