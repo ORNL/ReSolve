@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
     return -1;
   }
   ReSolve::matrix::Csr* A = ReSolve::io::createCsrFromFile(mat1);
-  A->copyData(ReSolve::memory::DEVICE);
+  A->syncData(ReSolve::memory::DEVICE);
   mat1.close();
 
   // Read first rhs vector
@@ -194,7 +194,7 @@ int main(int argc, char *argv[])
     return -1;
   }
   ReSolve::io::updateMatrixFromFile(mat2, A);
-  A->copyData(ReSolve::memory::DEVICE);
+  A->syncData(ReSolve::memory::DEVICE);
   mat2.close();
 
   // Load the second rhs vector
