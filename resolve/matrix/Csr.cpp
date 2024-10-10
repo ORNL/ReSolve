@@ -151,7 +151,7 @@ namespace ReSolve
   index_type* matrix::Csr::getRowData(memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
-    // syncData(memspace);
+
     switch (memspace) {
       case HOST:
         return this->h_row_data_;
@@ -165,7 +165,7 @@ namespace ReSolve
   index_type* matrix::Csr::getColData(memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
-    // syncData(memspace);
+
     switch (memspace) {
       case HOST:
         return this->h_col_data_;
@@ -179,7 +179,7 @@ namespace ReSolve
   real_type* matrix::Csr::getValues(memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
-    // syncData(memspace);
+
     switch (memspace) {
       case HOST:
         return this->h_val_data_;

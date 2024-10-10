@@ -133,7 +133,7 @@ namespace ReSolve
   index_type* matrix::Coo::getRowData(memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
-    // syncData(memspace);
+
     switch (memspace) {
       case HOST:
         return this->h_row_data_;
@@ -147,7 +147,7 @@ namespace ReSolve
   index_type* matrix::Coo::getColData(memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
-    // syncData(memspace);
+
     switch (memspace) {
       case HOST:
         return this->h_col_data_;
@@ -161,7 +161,7 @@ namespace ReSolve
   real_type* matrix::Coo::getValues(memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
-    // syncData(memspace);
+
     switch (memspace) {
       case HOST:
         return this->h_val_data_;
@@ -304,11 +304,11 @@ namespace ReSolve
     switch (memspace) {
       case HOST:
         if (h_data_updated_) {
-          out::misc() << "In Csr::syncData trying to sync host, but host already up to date!\n";
+          out::misc() << "In Coo::syncData trying to sync host, but host already up to date!\n";
           return 0;
         }
         if (!d_data_updated_) {
-          out::error() << "In Csr::syncData trying to sync host with device, but device is out of date!\n";
+          out::error() << "In Coo::syncData trying to sync host with device, but device is out of date!\n";
           assert(d_data_updated_);
         }
         if ((h_row_data_ == nullptr) != (h_col_data_ == nullptr)) {
@@ -330,11 +330,11 @@ namespace ReSolve
         return 0;
       case DEVICE:
         if (d_data_updated_) {
-          out::misc() << "In Csr::syncData trying to sync device, but device already up to date!\n";
+          out::misc() << "In Coo::syncData trying to sync device, but device already up to date!\n";
           return 0;
         }
         if (!h_data_updated_) {
-          out::error() << "In Csr::syncData trying to sync device with host, but host is out of date!\n";
+          out::error() << "In Coo::syncData trying to sync device with host, but host is out of date!\n";
           assert(h_data_updated_);
         }
         if ((d_row_data_ == nullptr) != (d_col_data_ == nullptr)) {
