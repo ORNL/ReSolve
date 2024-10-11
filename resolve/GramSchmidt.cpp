@@ -100,7 +100,6 @@ namespace ReSolve
     num_vecs_ = restart;
     if((variant_ == mgs_two_sync) || (variant_ == mgs_pm)) {
       h_L_  = new real_type[num_vecs_ * (num_vecs_ + 1)]();
-      h_rv_ = new real_type[num_vecs_ + 1]();
 
       vec_rv_ = new vector_type(num_vecs_ + 1, 2);
       vec_rv_->allocate(memspace_);
@@ -108,24 +107,32 @@ namespace ReSolve
 
       vec_Hcolumn_ = new vector_type(num_vecs_ + 1);
       vec_Hcolumn_->allocate(memspace_);      
-      vec_Hcolumn_->setToZero(memspace_);      
+      vec_Hcolumn_->setToZero(memspace_);
+
+      setup_complete_ = true; 
     }
     if(variant_ == cgs2) {
       h_aux_ = new real_type[num_vecs_ + 1]();
       vec_Hcolumn_ = new vector_type(num_vecs_ + 1);
       vec_Hcolumn_->allocate(memspace_);
       vec_Hcolumn_->setToZero(memspace_);      
+
+      setup_complete_ = true; 
     }
     if(variant_ == cgs1) {
       vec_Hcolumn_ = new vector_type(num_vecs_ + 1);
       vec_Hcolumn_->allocate(memspace_);      
       vec_Hcolumn_->setToZero(memspace_);      
+
+      setup_complete_ = true; 
     }
     if(variant_ == mgs_pm) {
       h_aux_ = new real_type[num_vecs_ + 1]();
+
+      setup_complete_ = true; 
     }
 
-    return 0;
+    return setup_complete_ ? 0 : 1;
   }
 
   int GramSchmidt::orthogonalize(index_type n, vector::Vector* V, real_type* H, index_type i)
@@ -134,6 +141,7 @@ namespace ReSolve
 
     double t = 0.0;
     double s = 0.0;
+    real_type* h_rv = nullptr;
 
     switch (variant_) {
       case mgs: 
@@ -156,9 +164,9 @@ namespace ReSolve
           vector_handler_->scal(&t, vec_w_, memspace_);  
         } else {
           assert(0 && "Gram-Schmidt failed, vector with ZERO norm\n");
-          return -1;
+          return 1;
         }
-        break;
+        return 0;
 
       case cgs2:
         vec_v_->setData(V->getVectorData(i + 1, memspace_), memspace_);
@@ -202,10 +210,9 @@ namespace ReSolve
           vector_handler_->scal(&t, vec_v_, memspace_);  
         } else {
           assert(0 && "Gram-Schmidt failed, vector with ZERO norm\n");
-          return -1;
+          return 1;
         }
         return 0;
-        break;
 
       case mgs_two_sync:
         // V[1:i]^T[V[i] w]
@@ -219,14 +226,14 @@ namespace ReSolve
         vec_rv_->copyData(memspace_, memory::HOST);
 
         vec_rv_->deepCopyVectorData(&h_L_[idxmap(i, 0, num_vecs_ + 1)], 0, memory::HOST);
-        h_rv_ = vec_rv_->getVectorData(1, memory::HOST);
+        h_rv = vec_rv_->getVectorData(1, memory::HOST);
         
         for(int j=0; j<=i; ++j) {
           H[ idxmap(i, j, num_vecs_ + 1) ] = 0.0;
         }
         // triangular solve
         for(int j = 0; j <= i; ++j) {
-          H[ idxmap(i, j, num_vecs_ + 1) ] = h_rv_[j];
+          H[ idxmap(i, j, num_vecs_ + 1) ] = h_rv[j];
           s = 0.0;
           for(int k = 0; k < j; ++k) {
             s += h_L_[ idxmap(j, k, num_vecs_ + 1) ] * H[ idxmap(i, k, num_vecs_ + 1) ];
@@ -252,10 +259,10 @@ namespace ReSolve
           }        
         } else {
           assert(0 && "Iterative refinement failed, Krylov vector with ZERO norm\n");
-          return -1;
+          return 1;
         }
+        h_rv = nullptr;
         return 0;
-        break;
 
       case mgs_pm:
         vec_v_->setData(V->getVectorData(i, memspace_), memspace_);
@@ -267,7 +274,7 @@ namespace ReSolve
         vec_rv_->copyData(memspace_, memory::HOST);
 
         vec_rv_->deepCopyVectorData(&h_L_[idxmap(i, 0, num_vecs_ + 1)], 0, memory::HOST);
-        h_rv_ = vec_rv_->getVectorData(1, memory::HOST);
+        h_rv = vec_rv_->getVectorData(1, memory::HOST);
 
         for(int j = 0; j <= i; ++j) {
           H[ idxmap(i, j, num_vecs_ + 1) ] = 0.0;
@@ -275,7 +282,7 @@ namespace ReSolve
 
         //triangular solve
         for(int j = 0; j <= i; ++j) {
-          H[ idxmap(i, j, num_vecs_ + 1) ] = h_rv_[j];
+          H[ idxmap(i, j, num_vecs_ + 1) ] = h_rv[j];
           s = 0.0;
           for(int k = 0; k < j; ++k) {
             s += h_L_[ idxmap(j, k, num_vecs_ + 1) ] * H[ idxmap(i, k, num_vecs_ + 1) ];
@@ -287,16 +294,16 @@ namespace ReSolve
         double h;
         for(int j = 0; j <= i; ++j) {
           // go through COLUMN OF L
-          h_rv_[j] = 0.0;
+          h_rv[j] = 0.0;
           for(int k = j + 1; k <= i; ++k) {
             h = h_L_[ idxmap(k, j, num_vecs_ + 1)];
-            h_rv_[j] += H[ idxmap(i, k, num_vecs_ + 1) ] * h;
+            h_rv[j] += H[ idxmap(i, k, num_vecs_ + 1) ] * h;
           }
         }
 
         // and do one more tri solve with L^T: h_aux = (I-L)^{-1}h_rv
         for(int j = 0; j <= i; ++j) {
-          h_aux_[j] = h_rv_[j];
+          h_aux_[j] = h_rv[j];
           s = 0.0;
           for(int k = 0; k < j; ++k) {
             s += h_L_[ idxmap(j, k, num_vecs_ + 1) ] * h_aux_[k];
@@ -323,10 +330,10 @@ namespace ReSolve
           vector_handler_->scal(&t, vec_w_, memspace_);  
         } else {
           assert(0 && "Iterative refinement failed, Krylov vector with ZERO norm\n");
-          return -1;
+          return 1;
         }
+        h_rv = nullptr;
         return 0;
-        break;
 
       case cgs1:
         vec_v_->setData(V->getVectorData(i + 1, memspace_), memspace_);
@@ -351,14 +358,13 @@ namespace ReSolve
           vector_handler_->scal(&t, vec_v_, memspace_);  
         } else {
           assert(0 && "Gram-Schmidt failed, vector with ZERO norm\n");
-          return -1;
+          return 1;
         }
         return 0;
-        break;
+        
       default:
         assert(0 && "Iterative refinement failed, wrong orthogonalization.\n");
-        return -1;
-        break;
+        return 1;
     } //switch
 
     return 0;
@@ -373,8 +379,6 @@ namespace ReSolve
     if(variant_ == mgs_two_sync || variant_ == mgs_pm) {    
       delete h_L_;
       h_L_ = nullptr;
-      delete h_rv_;
-      h_rv_ = nullptr;  
 
       delete vec_rv_;
       vec_rv_ = nullptr;

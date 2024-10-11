@@ -156,7 +156,6 @@ int main(int argc, char *argv[])
         Rf->setup(A, L, U, P, Q, vec_rhs);
         Rf->refactorize();
         std::cout<<"about to set FGMRES" <<std::endl;
-        GS->setup(A->getNumRows(), FGMRES->getRestart()); 
         FGMRES->setup(A); 
       }
       RESOLVE_RANGE_POP("KLU");

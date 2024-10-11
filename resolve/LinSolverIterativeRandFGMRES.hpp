@@ -41,9 +41,6 @@ namespace ReSolve
                             fwht};  // fast Walsh-Hadamard transform
     
       LinSolverIterativeRandFGMRES(MatrixHandler* matrix_handler,
-                                   VectorHandler* vector_handler);
-
-      LinSolverIterativeRandFGMRES(MatrixHandler* matrix_handler,
                                    VectorHandler* vector_handler,
                                    SketchingMethod rand_method, 
                                    GramSchmidt*   gs);
