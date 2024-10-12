@@ -1,11 +1,12 @@
 #pragma once
-#include "Common.hpp"
-#include "LinSolver.hpp"
-#include <resolve/MemoryUtils.hpp>
-#include <resolve/workspace/LinAlgWorkspace.hpp>
 
 #include <cusparse.h>
 #include <cuda_runtime.h>
+
+#include "Common.hpp"
+#include <resolve/MemoryUtils.hpp>
+#include <resolve/workspace/LinAlgWorkspace.hpp>
+#include <resolve/LinSolverDirect.hpp>
 
 namespace ReSolve 
 {

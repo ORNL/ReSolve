@@ -39,6 +39,7 @@ namespace ReSolve
     GS_ = gs;
 
     setMemorySpace();
+    initParamList();
   }
 
   LinSolverIterativeRandFGMRES::LinSolverIterativeRandFGMRES(index_type      restart, 
@@ -62,6 +63,7 @@ namespace ReSolve
     GS_ = gs;
 
     setMemorySpace();
+    initParamList();
   }
 
   LinSolverIterativeRandFGMRES::~LinSolverIterativeRandFGMRES()
@@ -175,14 +177,21 @@ namespace ReSolve
           tolrel = 1e-16;
         }
       }
-      int exit_cond = 0;
-      if (conv_cond_ == 0) {
-        exit_cond =  ((std::abs(rnorm - ZERO) <= EPSILON));
-      } else if (conv_cond_ == 1) {
-        exit_cond =  ((std::abs(rnorm - ZERO) <= EPSILON) || (rnorm < tol_));
-      } else if (conv_cond_ == 2) {
-        exit_cond =  ((std::abs(rnorm - ZERO) <= EPSILON) || (rnorm < (tol_*bnorm)));
+
+      bool exit_cond = false;
+      switch (conv_cond_)
+      {
+        case 0:
+          exit_cond = ((std::abs(rnorm - ZERO) <= EPSILON));
+          break;
+        case 1:
+          exit_cond = ((std::abs(rnorm - ZERO) <= EPSILON) || (rnorm < tol_));
+          break;
+        case 2:
+          exit_cond = ((std::abs(rnorm - ZERO) <= EPSILON) || (rnorm < (tol_*bnorm)));
+          break;
       }
+
       if (exit_cond) {
         outer_flag = 0;
         final_residual_norm_ = rnorm;
@@ -257,9 +266,9 @@ namespace ReSolve
             h_H_[i * (restart_ + 1) + k] = -h_s_[k1] * t + h_c_[k1] * h_H_[i * (restart_ + 1) + k];
           }
         } // if (i != 0)
-        double Hii = h_H_[i * (restart_ + 1) + i];
-        double Hii1 = h_H_[(i) * (restart_ + 1) + i + 1];
-        double gam = std::sqrt(Hii * Hii + Hii1 * Hii1);
+        real_type Hii = h_H_[i * (restart_ + 1) + i];
+        real_type Hii1 = h_H_[(i) * (restart_ + 1) + i + 1];
+        real_type gam = std::sqrt(Hii * Hii + Hii1 * Hii1);
 
         if(std::abs(gam - ZERO) <= EPSILON) {
           gam = EPSMAC;
@@ -494,6 +503,109 @@ namespace ReSolve
     return 0;
   }
 
+  int LinSolverIterativeRandFGMRES::setCliParam(const std::string id, const std::string value)
+  {
+    switch (params_list_[id])
+    {
+      case TOL:
+        setTol(atof(value.c_str()));
+        break;
+      case MAXIT:
+        setMaxit(atoi(value.c_str()));
+        break;
+      case RESTART:
+        setRestart(atoi(value.c_str()));
+        break;
+      case CONV_COND:
+        setConvCond(atoi(value.c_str()));
+        break;
+      case FLEXIBLE:
+        bool is_flexible = (value == "yes");
+        setFlexible(is_flexible);
+        break;
+    }
+    return 0;
+  }
+
+  int LinSolverIterativeRandFGMRES::getCliParam(const std::string id, std::string& /* value */)
+  {
+    switch (params_list_[id])
+    {
+      default:
+        out::error() << "Unknown string parameter " << id << "\n";
+        return 1;
+    }
+    return 0;
+  }
+
+  int LinSolverIterativeRandFGMRES::getCliParam(const std::string id, index_type& value)
+  {
+    switch (params_list_[id])
+    {
+      case MAXIT:
+        value = getMaxit();
+        break;
+      case RESTART:
+        value = getRestart();
+        break;
+      case CONV_COND:
+        value = getConvCond();
+        break;
+      default:
+        out::error() << "Unknown integer parameter " << id << "\n";
+        return 1;
+    }
+    return 0;
+  }
+
+  int LinSolverIterativeRandFGMRES::getCliParam(const std::string id, real_type& value)
+  {
+    switch (params_list_[id])
+    {
+      case TOL:
+        value = getTol();
+        break;
+      default:
+        out::error() << "Unknown real parameter " << id << "\n";
+        return 1;
+    }
+    return 0;
+  }
+
+  int LinSolverIterativeRandFGMRES::getCliParam(const std::string id, bool& value)
+  {
+    switch (params_list_[id])
+    {
+      case FLEXIBLE:
+        value = getFlexible();
+        break;
+      default:
+        out::error() << "Unknown boolean parameter " << id << "\n";
+        return 1;
+    }
+    return 0;
+  }
+
+  int LinSolverIterativeRandFGMRES::printCliParam(const std::string id)
+  {
+    switch (params_list_[id])
+    {
+    case TOL:
+      std::cout << getTol() << "\n";
+      break;
+    case MAXIT:
+      std::cout << getMaxit() << "\n";
+      break;
+    case RESTART:
+      std::cout << getRestart() << "\n";
+      break;
+    default:
+      out::error() << "Unknown parameter " << id << "\n";
+      return 1;
+    }
+    return 0;
+  }
+
   //
   // Private methods
   //
@@ -634,6 +746,15 @@ namespace ReSolve
       memspace_ = memory::HOST;
       device_type_ = memory::NONE;
     }
+  }
+
+  void LinSolverIterativeRandFGMRES::initParamList()
+  {
+    params_list_["tol"]       = TOL;
+    params_list_["maxit"]     = MAXIT;
+    params_list_["restart"]   = RESTART;
+    params_list_["conv_cond"] = CONV_COND;
+    params_list_["flexible"]  = FLEXIBLE;
   }
 
 } // namespace ReSolve

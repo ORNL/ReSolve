@@ -1,8 +1,11 @@
 #pragma once
-#include "Common.hpp"
-#include "LinSolver.hpp"
+
 #include "cusolver_defs.hpp"
+
+#include "Common.hpp"
 #include <resolve/MemoryUtils.hpp>
+#include <resolve/LinSolverDirect.hpp>
+
 namespace ReSolve 
 {
   // Forward declaration of vector::Vector class

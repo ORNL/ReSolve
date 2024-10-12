@@ -11,6 +11,8 @@ add_subdirectory(utilities)
 # C++ files
 set(ReSolve_SRC
     LinSolver.cpp
+    LinSolverDirect.cpp
+    LinSolverIterative.cpp
     GramSchmidt.cpp
     LinSolverIterativeFGMRES.cpp
     LinSolverDirectCpuILU0.cpp
@@ -36,8 +38,8 @@ set(ReSolve_CUDASDK_SRC
 
 # C++ code that links to ROCm libraries
 set(ReSolve_ROCM_SRC
-  LinSolverDirectRocSolverRf.cpp
-  LinSolverDirectRocSparseILU0.cpp
+    LinSolverDirectRocSolverRf.cpp
+    LinSolverDirectRocSparseILU0.cpp
 )
 
 # Header files to be installed
@@ -45,6 +47,8 @@ set(ReSolve_HEADER_INSTALL
     Common.hpp
     cusolver_defs.hpp
     LinSolver.hpp
+    LinSolverDirect.hpp
+    LinSolverIterative.hpp
     LinSolverIterativeFGMRES.hpp
     LinSolverDirectCpuILU0.hpp
     SystemSolver.hpp
@@ -52,7 +56,7 @@ set(ReSolve_HEADER_INSTALL
     MemoryUtils.hpp)
 
 set(ReSolve_KLU_HEADER_INSTALL
-  LinSolverDirectKLU.hpp
+    LinSolverDirectKLU.hpp
 )
 
 set(ReSolve_LUSOL_HEADER_INSTALL

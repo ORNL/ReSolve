@@ -1,13 +1,15 @@
 #pragma once
-#include "Common.hpp"
-#include "LinSolver.hpp"
-#include <resolve/MemoryUtils.hpp>
-#include <resolve/workspace/LinAlgWorkspace.hpp>
 
 #include <rocsparse/rocsparse.h>
 #include <rocblas/rocblas.h>
 #include <rocsolver/rocsolver.h>
 #include <hip/hip_runtime.h>
+
+#include "Common.hpp"
+#include <resolve/MemoryUtils.hpp>
+#include <resolve/workspace/LinAlgWorkspace.hpp>
+#include <resolve/LinSolverDirect.hpp>
+
 namespace ReSolve 
 {
   // Forward declaration of vector::Vector class
