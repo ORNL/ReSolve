@@ -36,7 +36,7 @@ namespace ReSolve { namespace matrix {
 
       virtual void print(std::ostream& file_out = std::cout, index_type indexing_base = 0);
 
-      virtual int copyData(memory::MemorySpace memspaceOut);
+      virtual int syncData(memory::MemorySpace memspaceOut);
   };
 
 }} // namespace ReSolve::matrix

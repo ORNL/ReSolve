@@ -65,7 +65,7 @@ namespace ReSolve { namespace matrix {
 
       virtual void print(std::ostream& file_out, index_type indexing_base) = 0;
 
-      virtual int copyData(memory::MemorySpace memspaceOut) = 0;
+      virtual int syncData(memory::MemorySpace memspaceOut) = 0;
 
 
       //update Values just updates values; it allocates if necessary.

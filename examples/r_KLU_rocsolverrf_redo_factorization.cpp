@@ -27,8 +27,8 @@ int main(int argc, char *argv[] )
   std::string  rhsFileName = argv[2];
 
   index_type numSystems = atoi(argv[3]);
-  std::cout<<"Family mtx file name: "<< matrixFileName << ", total number of matrices: "<<numSystems<<std::endl;
-  std::cout<<"Family rhs file name: "<< rhsFileName << ", total number of RHSes: " << numSystems<<std::endl;
+  std::cout << "Family mtx file name: " << matrixFileName << ", total number of matrices: " << numSystems << std::endl;
+  std::cout << "Family rhs file name: " << rhsFileName    << ", total number of RHSes: "    << numSystems << std::endl;
 
   std::string fileId;
   std::string rhsId;
@@ -97,29 +97,34 @@ int main(int argc, char *argv[] )
       ReSolve::io::updateMatrixFromFile(mat_file, A);
       ReSolve::io::updateArrayFromFile(rhs_file, &rhs);
     }
-    std::cout<<"Finished reading the matrix and rhs, size: "<<A->getNumRows()<<" x "<<A->getNumColumns()<< ", nnz: "<< A->getNnz()<< ", symmetric? "<<A->symmetric()<< ", Expanded? "<<A->expanded()<<std::endl;
+    // Copy matrix data to device
+    A->syncData(ReSolve::memory::DEVICE);
+
+    std::cout << "Finished reading the matrix and rhs, size: " << A->getNumRows() << " x "<< A->getNumColumns() 
+              << ", nnz: "       << A->getNnz() 
+              << ", symmetric? " << A->symmetric()
+              << ", Expanded? "  << A->expanded() << std::endl;
     mat_file.close();
     rhs_file.close();
 
     // Update host and device data.
     if (i < 2) { 
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
-      vec_rhs->setDataUpdated(ReSolve::memory::HOST);
     } else { 
-      A->copyData(ReSolve::memory::DEVICE);
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
     }
-    std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnz()<<std::endl;
+    std::cout << "CSR matrix loaded. Expanded NNZ: " << A->getNnz() << std::endl;
+
     //Now call direct solver
     int status;
     if (i < 2){
       KLU->setup(A);
       status = KLU->analyze();
-      std::cout<<"KLU analysis status: "<<status<<std::endl;
+      std::cout<<"KLU analysis status: " << status << std::endl;
       status = KLU->factorize();
-      std::cout<<"KLU factorization status: "<<status<<std::endl;
+      std::cout << "KLU factorization status: " << status << std::endl;
       status = KLU->solve(vec_rhs, vec_x);
-      std::cout<<"KLU solve status: "<<status<<std::endl;      
+      std::cout << "KLU solve status: " << status << std::endl;      
       if (i == 1) {
         ReSolve::matrix::Csc* L = (ReSolve::matrix::Csc*) KLU->getLFactor();
         ReSolve::matrix::Csc* U = (ReSolve::matrix::Csc*) KLU->getUFactor();
@@ -130,16 +135,16 @@ int main(int argc, char *argv[] )
         Rf->refactorize();
       }
     } else {
-      std::cout<<"Using rocsolver rf"<<std::endl;
+      std::cout << "Using rocsolver rf" << std::endl;
       status = Rf->refactorize();
-      std::cout<<"rocsolver rf refactorization status: "<<status<<std::endl;      
+      std::cout << "rocsolver rf refactorization status: " << status << std::endl;      
       status = Rf->solve(vec_rhs, vec_x);
-      std::cout<<"rocsolver rf solve status: "<<status<<std::endl;      
+      std::cout << "rocsolver rf solve status: " << status << std::endl;      
     }
+
+    // Check accuracy of the solution
     vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-
     matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
-
     matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, ReSolve::memory::DEVICE); 
     res_nrm = sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE));
     b_nrm = sqrt(vector_handler->dot(vec_rhs, vec_rhs, ReSolve::memory::DEVICE));
@@ -148,15 +153,16 @@ int main(int argc, char *argv[] )
               << res_nrm/b_nrm << "\n";
     if (!isnan(res_nrm)) {
        if (res_nrm/b_nrm > 1e-7 ) {
-         std::cout << "\n \t !!! ALERT !!! Residual norm is too large; redoing KLU symbolic and numeric factorization. !!! ALERT !!! \n \n";
+         std::cout << "\n \t !!! ALERT !!! Residual norm is too large; "
+                   << "redoing KLU symbolic and numeric factorization. !!! ALERT !!! \n\n";
        
          KLU->setup(A);
          status = KLU->analyze();
-         std::cout<<"KLU analysis status: "<<status<<std::endl;
+         std::cout << "KLU analysis status: " << status << std::endl;
          status = KLU->factorize();
-         std::cout<<"KLU factorization status: "<<status<<std::endl;
+         std::cout << "KLU factorization status: " << status << std::endl;
          status = KLU->solve(vec_rhs, vec_x);
-         std::cout<<"KLU solve status: "<<status<<std::endl;      
+         std::cout << "KLU solve status: " << status << std::endl;      
          
          vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
          vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
@@ -166,7 +172,7 @@ int main(int argc, char *argv[] )
          matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, ReSolve::memory::DEVICE); 
          res_nrm = sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE));
          
-         std::cout<<"\t New residual norm: "
+         std::cout << "\t New residual norm: "
            << std::scientific << std::setprecision(16)
            << res_nrm/b_nrm << "\n";
 

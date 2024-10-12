@@ -248,13 +248,12 @@ namespace ReSolve { namespace vector {
   real_type* Vector::getData(index_type i, memory::MemorySpace memspace)
   {
     if ((memspace == memory::HOST) && (cpu_updated_ == false) && (gpu_updated_ == true )) {
-      // remember IN FIRST OUT SECOND!!!
-      copyData(memory::DEVICE, memspace);  
+      syncData(memspace);  
       owns_cpu_data_ = true;
     } 
 
     if ((memspace == memory::DEVICE) && (gpu_updated_ == false) && (cpu_updated_ == true )) {
-      copyData(memory::HOST, memspace);
+      syncData(memspace);
       owns_gpu_data_ = true;
     }
     if (memspace == memory::HOST) {
@@ -272,40 +271,51 @@ namespace ReSolve { namespace vector {
   /** 
    * @brief copy internal vector data from HOST to DEVICE or from DEVICE to HOST 
    * 
-   * @param[in] memspaceIn   - Memory space of the data to copy FROM  
-   * @param[in] memspaceOut  - Memory space of the data to copy TO 
+   * @param[in] memspaceOut  - Memory space to sync
    *
-   * @return 0 if successful, -1 otherwise.
+   * @return 0 if successful, 1 otherwise.
    *
    */
-  int Vector::copyData(memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut)
+  int Vector::syncData(memory::MemorySpace memspaceOut)
   {
-    int control=-1;
-    if ((memspaceIn == memory::HOST)   && (memspaceOut == memory::DEVICE)){ control = 0;}
-    if ((memspaceIn == memory::DEVICE) && (memspaceOut == memory::HOST))  { control = 1;}
+    using namespace ReSolve::memory;
 
-    if ((memspaceOut == memory::HOST) && (h_data_ == nullptr)) {
-      //allocate first
-      h_data_ = new real_type[n_ * k_];
-      owns_cpu_data_ = true;
-    }
-    if ((memspaceOut == memory::DEVICE) && (d_data_ == nullptr)) {
-      //allocate first
-      mem_.allocateArrayOnDevice(&d_data_, n_ * k_);
-      owns_gpu_data_ = true;
-    } 
-    switch(control)  {
-      case 0: //cpu->cuda
+    switch(memspaceOut)  {
+      case DEVICE: // cpu->gpu
+        if (gpu_updated_) {
+          out::misc() << "Trying to sync device, but device already up to date!\n";
+          return 0;
+        }
+        if (!cpu_updated_) {
+          out::error() << "Trying to sync device with host, but host is out of date!\n";
+        }
+        if (d_data_ == nullptr) {
+          //allocate first
+          mem_.allocateArrayOnDevice(&d_data_, n_ * k_);
+          owns_gpu_data_ = true;
+        } 
         mem_.copyArrayHostToDevice(d_data_, h_data_, n_current_ * k_);
+        gpu_updated_ = true;
         break;
-      case 1: //cuda->cpu
+      case HOST: //cuda->cpu
+        if (cpu_updated_) {
+          out::misc() << "Trying to sync host, but host already up to date!\n";
+          return 0;
+        }
+        if (!gpu_updated_) {
+          out::error() << "Trying to sync host with device, but device is out of date!\n";
+        }
+        if (h_data_ == nullptr) {
+          //allocate first
+          h_data_ = new real_type[n_ * k_];
+          owns_cpu_data_ = true;
+        }
         mem_.copyArrayDeviceToHost(h_data_, d_data_, n_current_ * k_);
+        cpu_updated_ = true;
         break;
       default:
-        return -1;
+        return 1;
     }
-    cpu_updated_ = true;
-    gpu_updated_ = true;
     return 0;
   }
 

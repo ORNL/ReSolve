@@ -1,6 +1,7 @@
 #include <cstring>  // <-- includes memcpy
 #include <iostream>
-#include <iomanip> 
+#include <iomanip>
+#include <cassert>
 
 #include <resolve/utilities/logger/Logger.hpp>
 #include "Coo.hpp"
@@ -80,7 +81,7 @@ namespace ReSolve
         d_data_updated_ = true;
         owns_gpu_vals_ = true;
         owns_gpu_data_  = true;
-        copyData(memspaceDst);
+        syncData(memspaceDst);
         // Hijack data from the source
         *rows = nullptr;
         *cols = nullptr;
@@ -94,7 +95,7 @@ namespace ReSolve
         h_data_updated_ = true;
         owns_cpu_vals_ = true;
         owns_cpu_data_  = true;
-        copyData(memspaceDst);
+        syncData(memspaceDst);
         // Hijack data from the source
         *rows = nullptr;
         *cols = nullptr;
@@ -132,7 +133,7 @@ namespace ReSolve
   index_type* matrix::Coo::getRowData(memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
-    copyData(memspace);
+
     switch (memspace) {
       case HOST:
         return this->h_row_data_;
@@ -146,7 +147,7 @@ namespace ReSolve
   index_type* matrix::Coo::getColData(memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
-    copyData(memspace);
+
     switch (memspace) {
       case HOST:
         return this->h_col_data_;
@@ -160,7 +161,7 @@ namespace ReSolve
   real_type* matrix::Coo::getValues(memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
-    copyData(memspace);
+
     switch (memspace) {
       case HOST:
         return this->h_val_data_;
@@ -286,55 +287,75 @@ namespace ReSolve
     return -1;
   }
 
-  int matrix::Coo::copyData(memory::MemorySpace memspaceOut)
+  /**
+   * @brief Sync data in memspace with the updated memory space.
+   * 
+   * @param memspace - memory space to be synced up (HOST or DEVICE)
+   * @return int - 0 if successful, error code otherwise
+   * 
+   * @todo Handle case when neither memory space is updated. Currently,
+   * this function does nothing in that situation, quitely ignoring
+   * the sync call.
+   */
+  int matrix::Coo::syncData(memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
 
-    index_type nnz_current = nnz_;
-
-    switch (memspaceOut) {
+    switch (memspace) {
       case HOST:
-        if ((d_data_updated_ == true) && (h_data_updated_ == false)) {
-          if ((h_row_data_ == nullptr) != (h_col_data_ == nullptr)) {
-            out::error() << "In Coo::copyData one of host row or column data is null!\n";
-          }
-          if ((h_row_data_ == nullptr) && (h_col_data_ == nullptr)) {
-            h_row_data_ = new index_type[nnz_current];      
-            h_col_data_ = new index_type[nnz_current];      
-            owns_cpu_data_ = true;
-          }
-          if (h_val_data_ == nullptr) {
-            h_val_data_ = new real_type[nnz_current];      
-            owns_cpu_vals_ = true;
-          }
-          mem_.copyArrayDeviceToHost(h_row_data_, d_row_data_, nnz_current);
-          mem_.copyArrayDeviceToHost(h_col_data_, d_col_data_, nnz_current);
-          mem_.copyArrayDeviceToHost(h_val_data_, d_val_data_, nnz_current);
-          h_data_updated_ = true;
+        if (h_data_updated_) {
+          out::misc() << "In Coo::syncData trying to sync host, but host already up to date!\n";
+          return 0;
         }
+        if (!d_data_updated_) {
+          out::error() << "In Coo::syncData trying to sync host with device, but device is out of date!\n";
+          assert(d_data_updated_);
+        }
+        if ((h_row_data_ == nullptr) != (h_col_data_ == nullptr)) {
+          out::error() << "In Coo::syncData one of host row or column data is null!\n";
+        }
+        if ((h_row_data_ == nullptr) && (h_col_data_ == nullptr)) {
+          h_row_data_ = new index_type[nnz_];      
+          h_col_data_ = new index_type[nnz_];      
+          owns_cpu_data_ = true;
+        }
+        if (h_val_data_ == nullptr) {
+          h_val_data_ = new real_type[nnz_];      
+          owns_cpu_vals_ = true;
+        }
+        mem_.copyArrayDeviceToHost(h_row_data_, d_row_data_, nnz_);
+        mem_.copyArrayDeviceToHost(h_col_data_, d_col_data_, nnz_);
+        mem_.copyArrayDeviceToHost(h_val_data_, d_val_data_, nnz_);
+        h_data_updated_ = true;
         return 0;
       case DEVICE:
-        if ((d_data_updated_ == false) && (h_data_updated_ == true)) {
-          if ((d_row_data_ == nullptr) != (d_col_data_ == nullptr)) {
-            out::error() << "In Coo::copyData one of device row or column data is null!\n";
-          }
-          if ((d_row_data_ == nullptr) && (d_col_data_ == nullptr)) {
-            mem_.allocateArrayOnDevice(&d_row_data_, nnz_current);
-            mem_.allocateArrayOnDevice(&d_col_data_, nnz_current);
-            owns_gpu_data_ = true;
-          }
-          if (d_val_data_ == nullptr) {
-            mem_.allocateArrayOnDevice(&d_val_data_, nnz_current);
-            owns_gpu_vals_ = true;
-          }
-          mem_.copyArrayHostToDevice(d_row_data_, h_row_data_, nnz_current);
-          mem_.copyArrayHostToDevice(d_col_data_, h_col_data_, nnz_current);
-          mem_.copyArrayHostToDevice(d_val_data_, h_val_data_, nnz_current);
-          d_data_updated_ = true;
+        if (d_data_updated_) {
+          out::misc() << "In Coo::syncData trying to sync device, but device already up to date!\n";
+          return 0;
         }
+        if (!h_data_updated_) {
+          out::error() << "In Coo::syncData trying to sync device with host, but host is out of date!\n";
+          assert(h_data_updated_);
+        }
+        if ((d_row_data_ == nullptr) != (d_col_data_ == nullptr)) {
+          out::error() << "In Coo::syncData one of device row or column data is null!\n";
+        }
+        if ((d_row_data_ == nullptr) && (d_col_data_ == nullptr)) {
+          mem_.allocateArrayOnDevice(&d_row_data_, nnz_);
+          mem_.allocateArrayOnDevice(&d_col_data_, nnz_);
+          owns_gpu_data_ = true;
+        }
+        if (d_val_data_ == nullptr) {
+          mem_.allocateArrayOnDevice(&d_val_data_, nnz_);
+          owns_gpu_vals_ = true;
+        }
+        mem_.copyArrayHostToDevice(d_row_data_, h_row_data_, nnz_);
+        mem_.copyArrayHostToDevice(d_col_data_, h_col_data_, nnz_);
+        mem_.copyArrayHostToDevice(d_val_data_, h_val_data_, nnz_);
+        d_data_updated_ = true;
         return 0;
       default:
-        return -1;
+        return 1;
     } // switch
   }
 

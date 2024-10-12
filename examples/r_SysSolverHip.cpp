@@ -91,6 +91,9 @@ int main(int argc, char *argv[] )
       ReSolve::io::updateMatrixFromFile(mat_file, A);
       ReSolve::io::updateArrayFromFile(rhs_file, &rhs);
     }
+    // Copy matrix data to device
+    A->syncData(ReSolve::memory::DEVICE);
+
     std::cout << "Finished reading the matrix and rhs, size: " << A->getNumRows()
               << " x " << A->getNumColumns()
               << ", nnz: " << A->getNnz()
@@ -102,12 +105,11 @@ int main(int argc, char *argv[] )
     // Update host and device data.
     if (i < 2) { 
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
-      vec_rhs->setDataUpdated(ReSolve::memory::HOST);
     } else { 
-      A->copyData(ReSolve::memory::DEVICE);
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
     }
-    std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnz()<<std::endl;
+    std::cout << "CSR matrix loaded. Expanded NNZ: " << A->getNnz() << std::endl;
+
     //Now call direct solver
     solver->setMatrix(A);
     int status = -1;

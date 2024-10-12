@@ -166,7 +166,8 @@ ReSolve::vector::Vector* generateRhs(const index_type N)
       data[i] = -111.0;
     }
   }
-  vec_rhs->copyData(ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+  vec_rhs->setDataUpdated(ReSolve::memory::HOST);
+  vec_rhs->syncData(ReSolve::memory::DEVICE);
   return vec_rhs;
 } 
 
@@ -229,6 +230,6 @@ ReSolve::matrix::Csr* generateMatrix(const index_type N)
 
 
   A->setUpdated(ReSolve::memory::HOST);
-  A->copyData(ReSolve::memory::DEVICE);
+  A->syncData(ReSolve::memory::DEVICE);
   return A;
 }

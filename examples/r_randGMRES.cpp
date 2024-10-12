@@ -72,13 +72,17 @@ int main(int argc, char *argv[])
   vec_x->allocate(ReSolve::memory::DEVICE);
   vec_x->setToZero(ReSolve::memory::DEVICE);
   vec_r = new vector_type(A->getNumRows());
-  std::cout<<"Finished reading the matrix and rhs, size: "<<A->getNumRows()<<" x "<<A->getNumColumns()<< ", nnz: "<< A->getNnz()<< ", symmetric? "<<A->symmetric()<< ", Expanded? "<<A->expanded()<<std::endl;
+  std::cout << "Finished reading the matrix and rhs, size: " << A->getNumRows() << " x "<< A->getNumColumns() 
+            << ", nnz: "       << A->getNnz() 
+            << ", symmetric? " << A->symmetric()
+            << ", Expanded? "  << A->expanded() << std::endl;
   mat_file.close();
   rhs_file.close();
 
-  A->copyData(ReSolve::memory::DEVICE);
+  A->syncData(ReSolve::memory::DEVICE);
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-  //Now call direct solver
+
+  //Now call the solver
   real_type norm_b;
   matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
 
@@ -105,7 +109,6 @@ int main(int argc, char *argv[])
     << " final nrm: "
     << FGMRES->getFinalResidualNorm()/norm_b
     << " iter: " << FGMRES->getNumIter() << "\n";
-
 
   delete A;
   delete Rf;

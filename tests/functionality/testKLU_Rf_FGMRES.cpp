@@ -77,6 +77,7 @@ int main(int argc, char *argv[])
     return -1;
   }
   ReSolve::matrix::Csr* A = ReSolve::io::createCsrFromFile(mat1);
+  A->syncData(ReSolve::memory::DEVICE);
   mat1.close();
 
   // Read first rhs vector
@@ -171,6 +172,8 @@ int main(int argc, char *argv[])
   ReSolve::matrix::Csc* U_csc = (ReSolve::matrix::Csc*) KLU->getUFactor();
   ReSolve::matrix::Csr* L = new ReSolve::matrix::Csr(L_csc->getNumRows(), L_csc->getNumColumns(), L_csc->getNnz());
   ReSolve::matrix::Csr* U = new ReSolve::matrix::Csr(U_csc->getNumRows(), U_csc->getNumColumns(), U_csc->getNnz());
+  L_csc->syncData(ReSolve::memory::DEVICE);
+  U_csc->syncData(ReSolve::memory::DEVICE);
   error_sum += matrix_handler->csc2csr(L_csc,L, ReSolve::memory::DEVICE);
   error_sum += matrix_handler->csc2csr(U_csc,U, ReSolve::memory::DEVICE);
 
@@ -197,6 +200,7 @@ int main(int argc, char *argv[])
     return -1;
   }
   ReSolve::io::updateMatrixFromFile(mat2, A);
+  A->syncData(ReSolve::memory::DEVICE);
   mat2.close();
 
   // Load the second rhs vector
