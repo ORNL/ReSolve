@@ -104,25 +104,25 @@ int main(int argc, char *argv[])
       ReSolve::io::updateMatrixFromFile(mat_file, A);
       ReSolve::io::updateArrayFromFile(rhs_file, &rhs);
     }
+    // Copy matrix data to device
+    A->syncData(ReSolve::memory::DEVICE);
+
     std::cout << "Finished reading the matrix and rhs, size: " << A->getNumRows() << " x "<< A->getNumColumns() 
               << ", nnz: "       << A->getNnz() 
               << ", symmetric? " << A->symmetric()
               << ", Expanded? "  << A->expanded() << std::endl;
     mat_file.close();
     rhs_file.close();
-    RESOLVE_RANGE_POP("Matrix Read");
 
     // Update host and device data.
-    RESOLVE_RANGE_PUSH("Convert to CSR");
     if (i < 2) { 
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
-      vec_rhs->setDataUpdated(ReSolve::memory::HOST);
     } else { 
-      A->syncData(ReSolve::memory::DEVICE);
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
     }
-    RESOLVE_RANGE_POP("Convert to CSR");
-    std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnz()<<std::endl;
+    RESOLVE_RANGE_POP("Matrix Read");
+    std::cout << "CSR matrix loaded. Expanded NNZ: " << A->getNnz() << std::endl;
+
     int status;
     real_type norm_b;
     if (i < 2) {
@@ -130,12 +130,12 @@ int main(int argc, char *argv[])
       KLU->setup(A);
       matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
       status = KLU->analyze();
-      std::cout<<"KLU analysis status: "<<status<<std::endl;
+      std::cout << "KLU analysis status: " << status << std::endl;
       status = KLU->factorize();
-      std::cout<<"KLU factorization status: "<<status<<std::endl;
+      std::cout << "KLU factorization status: " << status << std::endl;
 
       status = KLU->solve(vec_rhs, vec_x);
-      std::cout<<"KLU solve status: "<<status<<std::endl;      
+      std::cout << "KLU solve status: " << status << std::endl;      
       vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
       norm_b = vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE);
       norm_b = sqrt(norm_b);
@@ -155,18 +155,18 @@ int main(int argc, char *argv[])
         Rf->setSolveMode(1);
         Rf->setup(A, L, U, P, Q, vec_rhs);
         Rf->refactorize();
-        std::cout<<"about to set FGMRES" <<std::endl;
+        std::cout << "About to set FGMRES ..." << std::endl;
         FGMRES->setup(A); 
       }
       RESOLVE_RANGE_POP("KLU");
     } else {
       RESOLVE_RANGE_PUSH("RocSolver");
       //status =  KLU->refactorize();
-      std::cout<<"Using ROCSOLVER RF"<<std::endl;
+      std::cout << "Using ROCSOLVER RF" << std::endl;
       status = Rf->refactorize();
-      std::cout<<"ROCSOLVER RF refactorization status: "<<status<<std::endl;      
+      std::cout << "ROCSOLVER RF refactorization status: " << status << std::endl;      
       status = Rf->solve(vec_rhs, vec_x);
-      std::cout<<"ROCSOLVER RF solve status: "<<status<<std::endl;      
+      std::cout << "ROCSOLVER RF solve status: " << status << std::endl;      
       vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
       norm_b = vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE);
       norm_b = sqrt(norm_b);

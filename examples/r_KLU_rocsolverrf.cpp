@@ -15,7 +15,7 @@
 
 using namespace ReSolve::constants;
 
-int main(int argc, char *argv[] )
+int main(int argc, char *argv[])
 {
   // Use the same data types as those you specified in ReSolve build.
   using index_type = ReSolve::index_type;
@@ -27,8 +27,8 @@ int main(int argc, char *argv[] )
   std::string  rhsFileName = argv[2];
 
   index_type numSystems = atoi(argv[3]);
-  std::cout<<"Family mtx file name: "<< matrixFileName << ", total number of matrices: "<<numSystems<<std::endl;
-  std::cout<<"Family rhs file name: "<< rhsFileName << ", total number of RHSes: " << numSystems<<std::endl;
+  std::cout << "Family mtx file name: " << matrixFileName << ", total number of matrices: " << numSystems << std::endl;
+  std::cout << "Family rhs file name: " << rhsFileName << ", total number of RHSes: " << numSystems << std::endl;
 
   std::string fileId;
   std::string rhsId;
@@ -48,7 +48,7 @@ int main(int argc, char *argv[] )
   vector_type* vec_x;
   vector_type* vec_r;
 
-  real_type norm_A, norm_x, norm_r;//used for INF norm
+  real_type norm_A, norm_x, norm_r; //used for INF norm
   
   ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
   ReSolve::LinSolverDirectRocSolverRf* Rf = new ReSolve::LinSolverDirectRocSolverRf(workspace_HIP);
@@ -70,6 +70,7 @@ int main(int argc, char *argv[] )
     std::cout << "Reading: " << matrixFileNameFull << std::endl;
     std::cout << "========================================================================================================================"<<std::endl;
     std::cout << std::endl;
+
     // Read first matrix
     std::ifstream mat_file(matrixFileNameFull);
     if(!mat_file.is_open())
@@ -96,29 +97,34 @@ int main(int argc, char *argv[] )
       ReSolve::io::updateMatrixFromFile(mat_file, A);
       ReSolve::io::updateArrayFromFile(rhs_file, &rhs);
     }
-    std::cout<<"Finished reading the matrix and rhs, size: "<<A->getNumRows()<<" x "<<A->getNumColumns()<< ", nnz: "<< A->getNnz()<< ", symmetric? "<<A->symmetric()<< ", Expanded? "<<A->expanded()<<std::endl;
+    // Copy matrix data to device
+    A->syncData(ReSolve::memory::DEVICE);
+
+    std::cout << "Finished reading the matrix and rhs, size: " << A->getNumRows() << " x "<< A->getNumColumns() 
+              << ", nnz: "       << A->getNnz() 
+              << ", symmetric? " << A->symmetric()
+              << ", Expanded? "  << A->expanded() << std::endl;
     mat_file.close();
     rhs_file.close();
 
-    // Update host and device data.
+    // Update right-hand-side vector.
     if (i < 2) { 
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
-      vec_rhs->setDataUpdated(ReSolve::memory::HOST);
     } else { 
-      A->syncData(ReSolve::memory::DEVICE);
       vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
     }
-    std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnz()<<std::endl;
-    //Now call direct solver
+    std::cout << "CSR matrix loaded. Expanded NNZ: " << A->getNnz() << std::endl;
+
+    // Now call direct solver
     int status;
     if (i < 2) {
       KLU->setup(A);
       status = KLU->analyze();
-      std::cout<<"KLU analysis status: "<<status<<std::endl;
+      std::cout << "KLU analysis status: " << status << std::endl;
       status = KLU->factorize();
-      std::cout<<"KLU factorization status: "<<status<<std::endl;
+      std::cout << "KLU factorization status: " << status << std::endl;
       status = KLU->solve(vec_rhs, vec_x);
-      std::cout<<"KLU solve status: "<<status<<std::endl;      
+      std::cout << "KLU solve status: " << status << std::endl;      
       if (i == 1) {
         ReSolve::matrix::Csc* L = (ReSolve::matrix::Csc*) KLU->getLFactor();
         ReSolve::matrix::Csc* U = (ReSolve::matrix::Csc*) KLU->getUFactor();
@@ -128,13 +134,14 @@ int main(int argc, char *argv[] )
         Rf->setup(A, L, U, P, Q, vec_rhs); 
       }
     } else {
-      std::cout<<"Using rocsolver rf"<<std::endl;
+      std::cout << "Using rocsolver rf" << std::endl;
       status = Rf->refactorize();
-      std::cout<<"rocsolver rf refactorization status: "<<status<<std::endl;      
+      std::cout << "rocsolver rf refactorization status: " << status << std::endl;      
       status = Rf->solve(vec_rhs, vec_x);
-      std::cout<<"rocsolver rf solve status: "<<status<<std::endl;      
+      std::cout << "rocsolver rf solve status: " << status << std::endl;      
     }
 
+    // Check accuracy of the solution
     vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
     real_type bnorm = sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE));
     matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
@@ -154,7 +161,7 @@ int main(int argc, char *argv[] )
 
   } // for (int i = 0; i < numSystems; ++i)
 
-  //now DELETE
+  // now DELETE
   delete A;
   delete KLU;
   delete Rf;
