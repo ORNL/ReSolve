@@ -58,18 +58,28 @@ int main(int argc, char *argv[])
 
   // Create workspace and initialize its handles.
   workspace_type workspace;
+
+  // note: nvidia/amd gpu init
   workspace.initializeHandles();
 
   // Create linear algebra handlers
+
+  // note: numerical linalg ops
   ReSolve::MatrixHandler matrix_handler(&workspace);
   ReSolve::VectorHandler vector_handler(&workspace);
 
   // Create system solver
+  // :)
+  // user facing class
   ReSolve::SystemSolver solver(&workspace);
+  // solver multiplexes according to preprocessors above, which come from cmake
 
   // Configure solver (CUDA-based solver needs slightly different
   // settings than HIP-based one)
+  // cgs2 = classical Gram-Schmidt
   solver.setRefinementMethod("fgmres", "cgs2");
+  // builds Krylov subspace to project solution onto:
+  // cool!
   solver.getIterativeSolver().setRestart(100);
   if (memory_space == "hip") {
     solver.getIterativeSolver().setMaxit(200);
@@ -83,11 +93,16 @@ int main(int argc, char *argv[])
   const std::string data_path = (argc == 2) ? argv[1] : "./";
 
 
+  // rhs for rhs (solution b vector) ax = b, and first part is model (Texas grid)
   std::string matrixFileName1 = data_path + "data/matrix_ACTIVSg2000_AC_00.mtx";
   std::string matrixFileName2 = data_path + "data/matrix_ACTIVSg2000_AC_02.mtx";
 
+  // extension of "ones" just means vector of all ones
+  // so we are setting up A_above * x_unknown = rhs_below, 
   std::string rhsFileName1 = data_path + "data/rhs_ACTIVSg2000_AC_00.mtx.ones";
   std::string rhsFileName2 = data_path + "data/rhs_ACTIVSg2000_AC_02.mtx.ones";
+
+  // note: don't forget - this is RHS, not ones!!
 
 
   // Read first matrix
@@ -109,6 +124,8 @@ int main(int argc, char *argv[])
   real_type* rhs = ReSolve::io::createArrayFromFile(rhs1_file);
   rhs1_file.close();
 
+  // setup/allocate testing workspace phase:
+
   // Create rhs, solution and residual vectors
   vector_type* vec_rhs = new vector_type(A->getNumRows());
   vector_type* vec_x   = new vector_type(A->getNumRows());
@@ -120,7 +137,13 @@ int main(int argc, char *argv[])
 
   // Set RHS vector on CPU (update function allocates)
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
-  vec_rhs->setDataUpdated(ReSolve::memory::HOST);
+
+  // note: below is deleted and everything still works!
+  // this is not needed in this case because we went through the API
+  // this is a manual update for if you secretly change the underlying memory value unknown
+  // to the vector class ()
+
+  //vec_rhs->setDataUpdated(ReSolve::memory::HOST);
 
   // Add system matrix to the solver
   status = solver.setMatrix(A);
@@ -160,6 +183,11 @@ int main(int argc, char *argv[])
   real_type nsr_norm   = inf_norm_r / (inf_norm_A * inf_norm_x);
   real_type nsr_system = solver.getNormOfScaledResiduals(vec_rhs, vec_x);
   real_type error      = std::abs(nsr_system - nsr_norm)/nsr_norm;
+
+
+  // note: these norms above are testing that proper calculation happens in solver
+  // question: why is testing the norm functionality part of this test? Could it be a separate
+  // test focused only on norm calculation? <--- in the future look into this
 
   // Test norm of scaled residuals method in SystemSolver
   if (error > 10.0*std::numeric_limits<real_type>::epsilon()) {
@@ -213,6 +241,7 @@ int main(int argc, char *argv[])
   }
  
   // Print out the result summary
+  // track these
   std::cout << std::scientific << std::setprecision(16);
   std::cout << "Results (first matrix): \n\n";
   std::cout << "\t ||b-A*x||_2                 : " << normRmatrix1              << " (residual norm)" << std::endl;
@@ -223,9 +252,14 @@ int main(int argc, char *argv[])
   std::cout << "\t ||b-A*x_exact||_2           : " << exactSol_normRmatrix1     << " (control; residual norm with exact solution)\n\n";
 
 
+  // second section begins - needs the first section so that we can "refactorize"
+  // can't refactorize from scratch, so above section is necessary in this test
+
   // Now prepare the Rf solver
   status = solver.refactorizationSetup();
   error_sum += status;
+
+  // note: this tests a different I/O setup
 
   // Load the second matrix
   std::ifstream mat2(matrixFileName2);
@@ -255,6 +289,7 @@ int main(int argc, char *argv[])
   status = solver.solve(vec_rhs, vec_x);
   error_sum += status;
 
+  // does what is done manually in the first part of the code
   error_sum += testhelper.checkRefactorizationResult(*A, *vec_rhs, *vec_x, solver, "second matrix");
 
   if (!std::isfinite(normRmatrix1/normB1)) {//} || !std::isfinite(normRmatrix2/normB2)) {
@@ -279,5 +314,25 @@ int main(int argc, char *argv[])
   delete vec_test;
   delete vec_diff;
 
+  // if not zero, main() exits with problems
   return error_sum;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
