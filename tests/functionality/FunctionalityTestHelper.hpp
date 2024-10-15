@@ -45,12 +45,15 @@ namespace ReSolve {
 
           index_type n = A.getNumRows();
 
-          true_norm_ = sqrt(vh_->dot(&vec_x, &vec_x, DEVICE));
-
-          // Allocate vectors
+          // Instantiate vectors (not allocated at this time)
           ReSolve::vector::Vector vec_r(n);
           ReSolve::vector::Vector vec_diff(n);
           ReSolve::vector::Vector vec_test(n);
+
+          // Assumes exact solution is vector of all ones
+          // TODO: Add a method for setting arbitrary values to the solution vector
+          vec_diff.setToConst(1.0, DEVICE);
+          true_norm_ = sqrt(vh_->dot(&vec_diff, &vec_diff, DEVICE));
 
           // Compute residual norm for the second system
           vec_r.update(vec_rhs.getData(HOST), HOST, DEVICE);
