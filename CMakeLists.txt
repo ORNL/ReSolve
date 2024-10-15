@@ -59,10 +59,6 @@ set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib)
 # Add CMake sources from `cmake` dir
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
-# Including clang-format cmake files to do automatic checking of formating
-# TODO: Set up clang-format
-#include(./cmake/clang-format)
-
 # This will create target `doxygen` for building documentation locally.
 # For now, this target is intended only for developers who want to test
 # different documentation configurations. To have Doxygen configuration
