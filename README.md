@@ -1,6 +1,6 @@
 # Re::Solve
 
-[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](code_of_conduct.md)
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://github.com/ORNL/ReSolve/blob/develop/LICENSE)
 [![Documentation Status](https://readthedocs.org/projects/resolve/badge/?version=develop)](https://resolve.readthedocs.io/en/develop/?badge=develop)
 [![Spack CPU Build](https://github.com/ORNL/ReSolve/actions/workflows/spack_cpu_build.yaml/badge.svg?event=pull_request)](https://github.com/ORNL/ReSolve/actions)
