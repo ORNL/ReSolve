@@ -27,7 +27,9 @@ namespace ReSolve {
     class FunctionalityTestHelper
     {
       public:
-        FunctionalityTestHelper()
+        FunctionalityTestHelper( ReSolve::real_type tol_init = constants::DEFAULT_TOL )
+          :
+          tol_( tol_init )
         {
           workspace_.initializeHandles();
           mh_ = new ReSolve::MatrixHandler(&workspace_);
@@ -115,6 +117,8 @@ namespace ReSolve {
           real_type tol = solver.getIterativeSolver().getTol();
           index_type restart = solver.getIterativeSolver().getRestart();
           index_type maxit = solver.getIterativeSolver().getMaxit();
+
+          // note: these are the solver's tolerance, different from the testhelper's tolerance
 
           // Get solver stats
           index_type num_iter   = solver.getIterativeSolver().getNumIter();
