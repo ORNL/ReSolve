@@ -75,7 +75,7 @@ if(RESOLVE_USE_HIP)
   
     # System solver test with rocm rf and iterative refinement
     add_executable(sys_refactor_hip_test.exe testSysRefactor.cpp)
-    target_link_libraries(sys_refactor_hip_test.exe PRIVATE ReSolve)
+    target_link_libraries(sys_refactor_hip_test.exe PRIVATE ReSolve FunctionalityTestHelper )
   endif(RESOLVE_USE_KLU)
 
   # Build randSolver test
