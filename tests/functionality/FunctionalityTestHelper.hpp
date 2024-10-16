@@ -5,9 +5,7 @@ namespace ReSolve
     class FunctionalityTestHelper
     {
       public:
-
         FunctionalityTestHelper( ReSolve::real_type tol_init = constants::DEFAULT_TOL );
-
         ~FunctionalityTestHelper();
 
         int checkRefactorizationResult(ReSolve::matrix::Csr& A,

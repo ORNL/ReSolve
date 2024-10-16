@@ -17,7 +17,6 @@
 #include <resolve/LinSolverIterativeFGMRES.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 #include <resolve/SystemSolver.hpp>
-
 #if defined (RESOLVE_USE_CUDA)
 #include <resolve/LinSolverDirectCuSolverRf.hpp>
   using workspace_type = ReSolve::LinAlgWorkspaceCUDA;
@@ -30,7 +29,6 @@
   using workspace_type = ReSolve::LinAlgWorkspaceCpu;
   std::string memory_space("cpu");
 #endif
-
 #include "FunctionalityTestHelper.hpp"
 
 namespace ReSolve {
@@ -99,6 +97,7 @@ int FunctionalityTestHelper::checkRefactorizationResult(ReSolve::matrix::Csr& A,
     std::cout << "Result is not a finite number!\n";
     error_sum++;
   }
+
   if (residual_norm_/rhs_norm_ > tol_) {
     std::cout << "Result inaccurate!\n";
     error_sum++;
@@ -171,6 +170,7 @@ int FunctionalityTestHelper::checkNormOfScaledResiduals(ReSolve::matrix::Csr& A,
               << "\tNorm of scaled residuals (system): " << nsr_system << "\n\n";
     error_sum++;
   }
+
   return error_sum;
 }
 
@@ -197,5 +197,5 @@ int FunctionalityTestHelper::checkRelativeResidualNorm(ReSolve::vector::Vector& 
   return error_sum;
 }
 
-}
-}
+} //namespace tests
+} //namespace ReSolve
