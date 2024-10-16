@@ -1,6 +1,7 @@
 #include <string>
 #include <iostream>
 #include <iomanip>
+#include <cmath>
 
 #include <resolve/vector/Vector.hpp>
 #include <resolve/matrix/io.hpp>
@@ -9,7 +10,10 @@
 #include <resolve/matrix/Csc.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/VectorHandler.hpp>
+#if defined RESOLVE_USE_KLU
 #include <resolve/LinSolverDirectKLU.hpp>
+#endif
+#include "resolve/Common.hpp"
 #include <resolve/LinSolverIterativeFGMRES.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 #include <resolve/SystemSolver.hpp>
