@@ -14,6 +14,7 @@ namespace ReSolve {
 
   MatrixHandlerCpu::MatrixHandlerCpu()
   {
+    workspace_ = nullptr;
   }
 
   MatrixHandlerCpu::~MatrixHandlerCpu()

@@ -32,6 +32,7 @@ namespace ReSolve {
    */
   VectorHandlerHip::~VectorHandlerHip()
   {
+    workspace_ = nullptr;
     //delete the workspace TODO
   }
 

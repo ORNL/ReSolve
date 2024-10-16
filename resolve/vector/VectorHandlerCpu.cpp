@@ -29,6 +29,7 @@ namespace ReSolve {
    */
   VectorHandlerCpu::~VectorHandlerCpu()
   {
+    workspace_ = nullptr;
     //delete the workspace TODO
   }
 

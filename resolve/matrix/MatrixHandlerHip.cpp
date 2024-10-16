@@ -15,6 +15,7 @@ namespace ReSolve {
 
   MatrixHandlerHip::~MatrixHandlerHip()
   {
+    workspace_ = nullptr;
   }
 
   MatrixHandlerHip::MatrixHandlerHip(LinAlgWorkspaceHIP* new_workspace)
