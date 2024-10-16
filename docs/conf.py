@@ -134,6 +134,8 @@ html_css_files = [
     'theme_overrides.css',
 ]
 
+html_logo = "./images/ReSolve-Logo-Dark.png"
+
 # -- Options for LaTeX output ---------------------------------------------
 
 latex_elements = {
