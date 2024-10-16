@@ -51,7 +51,8 @@ namespace ReSolve {
                                       ReSolve::vector::Vector& vec_rhs,
                                       ReSolve::vector::Vector& vec_x,
                                       ReSolve::SystemSolver& solver,
-                                      std::string testname)
+                                      std::string testname);
+        /*
         {
           using namespace memory;
           using namespace ReSolve::constants;
@@ -117,6 +118,7 @@ namespace ReSolve {
 
           return error_sum;
         }
+        */
 
         void printIterativeSolverStats(SystemSolver& solver);
         /*
