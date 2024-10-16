@@ -1,4 +1,5 @@
-# Re::Solve
+
+# <img src="docs/images/ReSolve-Logo-Light.png?raw=true" width="250" valign="middle" alt="Re::Solve"/>
 
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://github.com/ORNL/ReSolve/blob/develop/LICENSE)
