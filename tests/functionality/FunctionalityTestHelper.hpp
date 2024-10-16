@@ -1,5 +1,7 @@
-namespace ReSolve {
-  namespace tests{
+namespace ReSolve 
+{
+  namespace tests
+  {
     class FunctionalityTestHelper
     {
       public:
