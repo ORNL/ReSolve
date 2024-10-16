@@ -16,6 +16,7 @@ namespace ReSolve {
 
   MatrixHandlerCuda::~MatrixHandlerCuda()
   {
+    workspace_ = nullptr;
   }
 
   MatrixHandlerCuda::MatrixHandlerCuda(LinAlgWorkspaceCUDA* new_workspace)

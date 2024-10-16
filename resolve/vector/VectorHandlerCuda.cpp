@@ -33,6 +33,7 @@ namespace ReSolve {
    */
   VectorHandlerCuda::~VectorHandlerCuda()
   {
+    workspace_ = nullptr;
     //delete the workspace TODO
   }
 
