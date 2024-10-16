@@ -118,7 +118,8 @@ namespace ReSolve {
           return error_sum;
         }
 
-        void printIterativeSolverStats(SystemSolver& solver)
+        void printIterativeSolverStats(SystemSolver& solver);
+        /*
         {
           // Get solver parameters
           real_type tol = solver.getIterativeSolver().getTol();
@@ -136,6 +137,7 @@ namespace ReSolve {
           std::cout << "\t IR starting res. norm       : " << init_rnorm  << "\n";
           std::cout << "\t IR final res. norm          : " << final_rnorm << " (tol " << std::setprecision(2) << tol << ")\n\n";
         }
+        */
 
         int checkNormOfScaledResiduals(ReSolve::matrix::Csr& A,
                                       ReSolve::vector::Vector& vec_rhs,

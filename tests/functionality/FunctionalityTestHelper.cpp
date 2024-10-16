@@ -48,6 +48,25 @@ FunctionalityTestHelper::~FunctionalityTestHelper()
   delete vh_;
 }
 
+void FunctionalityTestHelper::printIterativeSolverStats(SystemSolver& solver)
+{
+  // Get solver parameters
+  real_type tol = solver.getIterativeSolver().getTol();
+  index_type restart = solver.getIterativeSolver().getRestart();
+  index_type maxit = solver.getIterativeSolver().getMaxit();
+
+  // note: these are the solver's tolerance, different from the testhelper's tolerance
+
+  // Get solver stats
+  index_type num_iter   = solver.getIterativeSolver().getNumIter();
+  real_type init_rnorm  = solver.getIterativeSolver().getInitResidualNorm();
+  real_type final_rnorm = solver.getIterativeSolver().getFinalResidualNorm();
+  
+  std::cout << "\t IR iterations               : " << num_iter    << " (max " << maxit << ", restart " << restart << ")\n";
+  std::cout << "\t IR starting res. norm       : " << init_rnorm  << "\n";
+  std::cout << "\t IR final res. norm          : " << final_rnorm << " (tol " << std::setprecision(2) << tol << ")\n\n";
+}
+
 int FunctionalityTestHelper::checkNormOfScaledResiduals(ReSolve::matrix::Csr& A,
                               ReSolve::vector::Vector& vec_rhs,
                               ReSolve::vector::Vector& vec_x,
