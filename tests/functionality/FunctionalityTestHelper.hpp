@@ -1,27 +1,3 @@
-// Design requirement: minimize number of #include in the header
-
-// we are doing this because CUDA is a very clingy dependency and will invade this
-// declarative space unless we use forward declarations combined with CPP/source includes
-// CUDA deps handled at the linking stage instead of the building stage
-
-
-//#include <resolve/Common.hpp>
-#include <resolve/workspace/LinAlgWorkspace.hpp>
-// #include <resolve/SystemSolver.hpp>
-
-// #if defined (RESOLVE_USE_CUDA)
-// #include <resolve/LinSolverDirectCuSolverRf.hpp>
-//   using workspace_type = ReSolve::LinAlgWorkspaceCUDA;
-//   std::string memory_space("cuda");
-// #elif defined (RESOLVE_USE_HIP)
-// #include <resolve/LinSolverDirectRocSolverRf.hpp>
-//   using workspace_type = ReSolve::LinAlgWorkspaceHIP;
-//   std::string memory_space("hip");
-// #else
-//   using workspace_type = ReSolve::LinAlgWorkspaceCpu;
-//   std::string memory_space("cpu");
-// #endif
-
 namespace ReSolve {
   namespace tests{
     class FunctionalityTestHelper
