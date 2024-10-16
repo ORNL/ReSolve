@@ -166,7 +166,8 @@ namespace ReSolve {
                                       ReSolve::vector::Vector& vec_x,
                                       const real_type residual_norm,
                                       const real_type rhs_norm,
-                                      ReSolve::SystemSolver& solver)
+                                      ReSolve::SystemSolver& solver);
+        /*
         {
           using namespace memory;
           int error_sum = 0;
@@ -183,6 +184,7 @@ namespace ReSolve {
 
           return error_sum;
         }
+        */
 
       private:
         workspace_type workspace_;
