@@ -27,19 +27,26 @@ namespace ReSolve {
     class FunctionalityTestHelper
     {
       public:
-        FunctionalityTestHelper( ReSolve::real_type tol_init = constants::DEFAULT_TOL )
+
+        FunctionalityTestHelper( ReSolve::real_type tol_init = constants::DEFAULT_TOL );
+        /*
           :
-          tol_( tol_init )
+          tol_( tol_init );
         {
           workspace_.initializeHandles();
           mh_ = new ReSolve::MatrixHandler(&workspace_);
           vh_ = new ReSolve::VectorHandler(&workspace_);
         }
-        ~FunctionalityTestHelper()
+        */
+
+        ~FunctionalityTestHelper();
+        /*
         {
           delete mh_;
           delete vh_;
         }
+        */
+
         int checkRefactorizationResult(ReSolve::matrix::Csr& A,
                                       ReSolve::vector::Vector& vec_rhs,
                                       ReSolve::vector::Vector& vec_x,
@@ -134,7 +141,8 @@ namespace ReSolve {
                                       ReSolve::vector::Vector& vec_rhs,
                                       ReSolve::vector::Vector& vec_x,
                                       ReSolve::vector::Vector& vec_r,
-                                      ReSolve::SystemSolver& solver)
+                                      ReSolve::SystemSolver& solver);
+        /*
         {
           using namespace ReSolve::constants;
           using namespace memory;
@@ -161,6 +169,7 @@ namespace ReSolve {
           }
           return error_sum;
         }
+        */
 
         int checkRelativeResidualNorm(ReSolve::vector::Vector& vec_rhs,
                                       ReSolve::vector::Vector& vec_x,
