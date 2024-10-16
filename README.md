@@ -1,5 +1,9 @@
 
-# <img src="docs/images/ReSolve-Logo-Light.png?raw=true" width="250" valign="middle" alt="Re::Solve"/>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/ReSolve-Logo-Dark.png" width="400" valign="middle">
+  <source media="(prefers-color-scheme: light)" srcset="docs/images/ReSolve-Logo-Light.png" width="400" valign="middle">
+  <img alt="Re::Solve">
+</picture>
 
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://github.com/ORNL/ReSolve/blob/develop/LICENSE)
