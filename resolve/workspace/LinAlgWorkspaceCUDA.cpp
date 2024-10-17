@@ -4,27 +4,39 @@ namespace ReSolve
 {
   LinAlgWorkspaceCUDA::LinAlgWorkspaceCUDA()
   {
-    handle_cusolversp_ = nullptr;
-    handle_cusparse_   = nullptr;
-    handle_cublas_     = nullptr;
-    buffer_spmv_       = nullptr;
-    buffer_1norm_      = nullptr;    
-    d_r_               = nullptr;
-    d_r_size_          = 0; 
-    matvec_setup_done_ = false;
-    norm_buffer_ready_ = false;
   }
 
   LinAlgWorkspaceCUDA::~LinAlgWorkspaceCUDA()
   {
-    if (buffer_spmv_ != nullptr)  mem_.deleteOnDevice(buffer_spmv_);
-    if (d_r_size_ != 0)  mem_.deleteOnDevice(d_r_);
-    if (norm_buffer_ready_) mem_.deleteOnDevice(buffer_1norm_);
-    cusparseDestroy(handle_cusparse_);
-    cusolverSpDestroy(handle_cusolversp_);
+    // Delete handles
     cublasDestroy(handle_cublas_);
+    cusparseDestroy(handle_cusparse_);
+    if (handle_cusolversp_) {
+      cusolverSpDestroy(handle_cusolversp_);
+    }
+
+    // If for some reason mat_A_ is not deleted ...
+    // TODO: probably should print warning if true
     if (matvec_setup_done_) {
       cusparseDestroySpMat(mat_A_);
+    }
+
+    if (vec_x_) {
+      cusparseDestroyDnVec(vec_x_);
+    }
+    if (vec_y_) {
+      cusparseDestroyDnVec(vec_y_);
+    }
+
+    // Delete buffers
+    if (buffer_spmv_ != nullptr) {
+      mem_.deleteOnDevice(buffer_spmv_);
+    }
+    if (d_r_size_ != 0) {
+      mem_.deleteOnDevice(d_r_);
+    }
+    if (norm_buffer_ready_) {
+      mem_.deleteOnDevice(buffer_1norm_);
     }
   }
 

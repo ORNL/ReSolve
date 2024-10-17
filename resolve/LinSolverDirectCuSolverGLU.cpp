@@ -19,11 +19,16 @@ namespace ReSolve
 
   LinSolverDirectCuSolverGLU::~LinSolverDirectCuSolverGLU()
   {
-    mem_.deleteOnDevice(glu_buffer_);
+    delete M_;
+    M_ = nullptr;
     cusparseDestroyMatDescr(descr_M_);
     cusparseDestroyMatDescr(descr_A_);
+    cusolverSpDestroy(handle_cusolversp_);
+    handle_cusolversp_ = nullptr;
+    // handle_cusolversp_ is managed by workspace_ instance
+
+    mem_.deleteOnDevice(glu_buffer_);
     cusolverSpDestroyGluInfo(info_M_);
-    delete M_;
   }
 
   int LinSolverDirectCuSolverGLU::setup(matrix::Sparse* A,
@@ -35,10 +40,9 @@ namespace ReSolve
   {
     int error_sum = 0;
 
-    LinAlgWorkspaceCUDA* workspaceCUDA = workspace_;
-    //get the handle
-    handle_cusolversp_ = workspaceCUDA->getCusolverSpHandle();
-    A_ = (matrix::Csr*) A;
+    // Get the cusolverSp handle
+    handle_cusolversp_ = workspace_->getCusolverSpHandle();
+    A_ = dynamic_cast<matrix::Csr*>(A);
     index_type n = A_->getNumRows();
     index_type nnz = A_->getNnz();
     //create combined factor

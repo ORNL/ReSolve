@@ -49,26 +49,28 @@ namespace ReSolve
 
     private:
       //handles
-      cublasHandle_t handle_cublas_;
-      cusolverSpHandle_t handle_cusolversp_;//needed for 1-norm
-      cusparseHandle_t handle_cusparse_;
+      cublasHandle_t     handle_cublas_{nullptr};
+      cusparseHandle_t   handle_cusparse_{nullptr};
+      cusolverSpHandle_t handle_cusolversp_{nullptr}; // needed for 1-norm
 
       //matrix descriptors
-      cusparseSpMatDescr_t mat_A_; 
+      cusparseSpMatDescr_t mat_A_{nullptr};
 
       //vector descriptors
-      cusparseDnVecDescr_t vec_x_;
-      cusparseDnVecDescr_t vec_y_;
+      cusparseDnVecDescr_t vec_x_{nullptr};
+      cusparseDnVecDescr_t vec_y_{nullptr};
 
       //buffers
       void* buffer_spmv_{nullptr};
+      bool norm_buffer_ready_{false}; // to track if allocated 
+
       void* buffer_1norm_{nullptr};
 
-      bool matvec_setup_done_{false}; //check if setup is done for matvec i.e. if buffer is allocated, csr structure is set etc.
-      
       real_type* d_r_{nullptr}; // needed for one-norm
       index_type d_r_size_{0};
-      bool norm_buffer_ready_{false};// to track if allocated 
+
+      /// If setup is done for matvec i.e. if buffer is allocated, csr structure is set, etc.
+      bool matvec_setup_done_{false};
     
       MemoryHandler mem_;
   };

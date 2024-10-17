@@ -40,18 +40,26 @@ namespace ReSolve
                 vector_type* rhs = nullptr) override;
     
     private:
-      void addFactors(matrix::Sparse* L, matrix::Sparse* U);  ///< creates L+U from sepeate L, U factors
-      matrix::Sparse* M_; ///< the matrix that contains added factors
-      //note: we need cuSolver handle, we can copy it from the workspace to avoid double allocation
-      cusparseMatDescr_t descr_M_; //this is NOT sparse matrix descriptor
-      cusparseMatDescr_t descr_A_; //this is NOT sparse matrix descriptor
-      LinAlgWorkspaceCUDA* workspace_; ///< Workspace access so we can copy cusparse handle
-      cusolverSpHandle_t handle_cusolversp_; 
+      /// Creates M = L + U from sepeate L, U factors
+      void addFactors(matrix::Sparse* L, matrix::Sparse* U);
+
+      matrix::Sparse* M_{nullptr}; ///< the matrix that contains added factors
+
+      // NOTE: we need cuSolver handle, we can copy it from the workspace to avoid double allocation
+      cusparseMatDescr_t descr_M_{nullptr}; //this is NOT sparse matrix descriptor
+      cusparseMatDescr_t descr_A_{nullptr}; //this is NOT sparse matrix descriptor
+      cusolverSpHandle_t handle_cusolversp_{nullptr};
+
+      void* glu_buffer_{nullptr};
+
+      /// Workspace access so we can copy cusparse handle
+      LinAlgWorkspaceCUDA* workspace_{nullptr};
+
+      // Status flags
       cusolverStatus_t status_cusolver_;
-      cusparseStatus_t status_cusparse_;
-      csrgluInfo_t info_M_;
-      void* glu_buffer_;
-      double r_nrminf_;
+      csrgluInfo_t info_M_{nullptr};
+
+      double r_nrminf_{0.0};
       int ite_refine_succ_; 
 
       MemoryHandler mem_; ///< Device memory manager object

@@ -94,6 +94,20 @@ namespace ReSolve {
   {
     this->destroyMatrixData(memory::HOST);
     this->destroyMatrixData(memory::DEVICE);
+    if (h_row_data_) delete [] h_row_data_; h_row_data_ = nullptr; 
+    if (h_col_data_) delete [] h_col_data_; h_col_data_ = nullptr;
+    if (h_val_data_) delete [] h_val_data_; h_val_data_ = nullptr;
+    if (d_row_data_) mem_.deleteOnDevice(d_row_data_);
+    if (d_col_data_) mem_.deleteOnDevice(d_col_data_);
+    if (d_val_data_) mem_.deleteOnDevice(d_val_data_);
+    if (h_row_data_ ||
+        h_col_data_ ||
+        h_val_data_ ||
+        d_row_data_ ||
+        d_col_data_ ||
+        d_val_data_) {
+      out::error() << "We have a memory leak!!\n";
+    }
   }
 
   /** 
