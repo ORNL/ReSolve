@@ -158,8 +158,9 @@ int main(int argc, char *argv[])
   real_type normRmatrix1CPU = sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE));
 
   std::cout<<"Results (first matrix): "<<std::endl<<std::endl;
-  std::cout<<"\t ||b-A*x||_2                 : " << std::setprecision(16) << normRmatrix1    << " (residual norm)" << std::endl;
-  std::cout<<"\t ||b-A*x||_2  (CPU)          : " << std::setprecision(16) << normRmatrix1CPU << " (residual norm)" << std::endl;
+  std::cout << std::scientific << std::setprecision(16);
+  std::cout<<"\t ||b-A*x||_2                 : " << normRmatrix1    << " (residual norm)" << std::endl;
+  std::cout<<"\t ||b-A*x||_2  (CPU)          : " << normRmatrix1CPU << " (residual norm)" << std::endl;
   std::cout<<"\t ||b-A*x||_2/||b||_2         : " << normRmatrix1/normB1   << " (scaled residual norm)"             << std::endl;
   std::cout<<"\t ||x-x_true||_2              : " << normDiffMatrix1       << " (solution error)"                   << std::endl;
   std::cout<<"\t ||x-x_true||_2/||x_true||_2 : " << normDiffMatrix1/normXtrue << " (scaled solution error)"        << std::endl;
@@ -220,6 +221,7 @@ int main(int argc, char *argv[])
   real_type exactSol_normRmatrix2 = sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE));
 
   std::cout<<"Results (second matrix): "<<std::endl<<std::endl;
+  std::cout << std::scientific << std::setprecision(16);
   std::cout<<"\t ||b-A*x||_2                 : "<<normRmatrix2<<" (residual norm)"<<std::endl;
   std::cout<<"\t ||b-A*x||_2/||b||_2         : "<<normRmatrix2/normB2<<" (scaled residual norm)"<<std::endl;
   std::cout<<"\t ||x-x_true||_2              : "<<normDiffMatrix2<<" (solution error)"<<std::endl;
@@ -235,9 +237,9 @@ int main(int argc, char *argv[])
     error_sum++;
   }
   if (error_sum == 0) {
-    std::cout << "Test KLU with cuSolverGLU refactorization " << GREEN << "PASSED" << CLEAR << std::endl;
+    std::cout << "Test KLU with rocsolverRf refactorization " << GREEN << "PASSED" << CLEAR << std::endl;
   } else {
-    std::cout << "Test KLU with cuSolverGLU refactorization " << RED << "FAILED" << CLEAR
+    std::cout << "Test KLU with rocsolverRf refactorization " << RED << "FAILED" << CLEAR
               << ", error sum: " << error_sum << std::endl;
   }
 

@@ -142,7 +142,8 @@ int main(int argc, char* argv[])
   real_type exactSol_normRmatrix = sqrt(vector_handler.dot(&vec_r, &vec_r, ReSolve::memory::HOST));
 
   std::cout << "Results: \n";
-  std::cout << "\t ||b-A*x||_2                 : " << std::setprecision(16) << normRmatrix << " (residual norm)\n";
+  std::cout << std::scientific << std::setprecision(16);
+  std::cout << "\t ||b-A*x||_2                 : " << normRmatrix << " (residual norm)\n";
   std::cout << "\t ||b-A*x||_2/||b||_2         : " << normRmatrix / normB << " (scaled residual norm)\n";
   std::cout << "\t ||x-x_true||_2              : " << normDiffMatrix << " (solution error)\n";
   std::cout << "\t ||x-x_true||_2/||x_true||_2 : " << normDiffMatrix / normXtrue << " (scaled solution error)\n";
@@ -243,7 +244,8 @@ int main(int argc, char* argv[])
   exactSol_normRmatrix = sqrt(vector_handler.dot(&vec_r, &vec_r, ReSolve::memory::HOST));
 
   std::cout << "Results: \n";
-  std::cout << "\t ||b-A*x||_2                 : " << std::setprecision(16) << normRmatrix << " (residual norm)\n";
+  std::cout << std::scientific << std::setprecision(16);
+  std::cout << "\t ||b-A*x||_2                 : " << normRmatrix << " (residual norm)\n";
   std::cout << "\t ||b-A*x||_2/||b||_2         : " << normRmatrix / normB << " (scaled residual norm)\n";
   std::cout << "\t ||x-x_true||_2              : " << normDiffMatrix << " (solution error)\n";
   std::cout << "\t ||x-x_true||_2/||x_true||_2 : " << normDiffMatrix / normXtrue << " (scaled solution error)\n";
