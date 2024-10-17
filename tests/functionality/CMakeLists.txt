@@ -6,7 +6,6 @@
 
 ]]
 
-# Captain!
 # Create functionality test helper
 add_library( FunctionalityTestHelper SHARED FunctionalityTestHelper.cpp )
 target_link_libraries( FunctionalityTestHelper PRIVATE ReSolve )
@@ -41,7 +40,6 @@ if(RESOLVE_USE_CUDA)
     add_executable(klu_rf_fgmres_test.exe testKLU_Rf_FGMRES.cpp)
     target_link_libraries(klu_rf_fgmres_test.exe PRIVATE ReSolve)
 
-    # Captain!
     # System solver test with cusolver rf and iterative refinement
     add_executable(sys_refactor_cuda_test.exe testSysRefactor.cpp)
     target_link_libraries(sys_refactor_cuda_test.exe PRIVATE ReSolve FunctionalityTestHelper )
