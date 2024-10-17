@@ -137,7 +137,7 @@ int main(int argc, char *argv[])
   error_sum += status;
 
   // larger tolerance than default 1e-17 because iterative refinement is not applied here
-  ReSolve::tests::FunctionalityTestHelper testhelper( 1e-12 );
+  ReSolve::tests::FunctionalityTestHelper testhelper(1e-12);
 
   error_sum += 
   testhelper.checkRefactorizationResult(*A, *vec_rhs, *vec_x, solver, "first matrix");
