@@ -10,13 +10,13 @@
 #include <resolve/matrix/Csc.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/VectorHandler.hpp>
-#if defined RESOLVE_USE_KLU
-#include <resolve/LinSolverDirectKLU.hpp>
-#endif
 #include "resolve/Common.hpp"
 #include <resolve/LinSolverIterativeFGMRES.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 #include <resolve/SystemSolver.hpp>
+#if defined RESOLVE_USE_KLU
+#include <resolve/LinSolverDirectKLU.hpp>
+#endif
 #if defined (RESOLVE_USE_CUDA)
 #include <resolve/LinSolverDirectCuSolverRf.hpp>
   using workspace_type = ReSolve::LinAlgWorkspaceCUDA;

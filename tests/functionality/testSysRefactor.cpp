@@ -60,11 +60,6 @@ int main(int argc, char *argv[])
 
   workspace.initializeHandles();
 
-  // Create linear algebra handlers
-
-  ReSolve::MatrixHandler matrix_handler(&workspace);
-  ReSolve::VectorHandler vector_handler(&workspace);
-
   // Create system solver
   ReSolve::SystemSolver solver(&workspace);
 
@@ -141,6 +136,7 @@ int main(int argc, char *argv[])
   status = solver.solve(vec_rhs, vec_x);
   error_sum += status;
 
+  // larger tolerance than default 1e-17 because iterative refinement is not applied here
   ReSolve::tests::FunctionalityTestHelper testhelper( 1e-12 );
 
   error_sum += 

@@ -7,8 +7,8 @@
 ]]
 
 # Create functionality test helper
-add_library( FunctionalityTestHelper SHARED FunctionalityTestHelper.cpp )
-target_link_libraries( FunctionalityTestHelper PRIVATE ReSolve )
+add_library(FunctionalityTestHelper SHARED FunctionalityTestHelper.cpp)
+target_link_libraries(FunctionalityTestHelper PRIVATE ReSolve)
 
 # Build basic version test
 add_executable(version.exe testVersion.cpp) 
@@ -42,7 +42,7 @@ if(RESOLVE_USE_CUDA)
 
     # System solver test with cusolver rf and iterative refinement
     add_executable(sys_refactor_cuda_test.exe testSysRefactor.cpp)
-    target_link_libraries(sys_refactor_cuda_test.exe PRIVATE ReSolve FunctionalityTestHelper )
+    target_link_libraries(sys_refactor_cuda_test.exe PRIVATE ReSolve FunctionalityTestHelper)
 
     # Build KLU+GLU test
     add_executable(klu_glu_test.exe testKLU_GLU.cpp)
