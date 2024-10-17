@@ -68,6 +68,12 @@ namespace ReSolve
           out::error() << "Device data unexpectedly allocated. "
                        << "Possible bug in matrix::Sparse class.\n";
         }
+        d_row_data_ = nullptr;
+        d_col_data_ = nullptr;
+        d_val_data_ = nullptr;
+        d_data_updated_ = false;
+        owns_gpu_data_  = false;
+        owns_gpu_vals_  = false;
         // Hijack data from the source
         *rows = nullptr;
         *cols = nullptr;
@@ -81,6 +87,11 @@ namespace ReSolve
         d_data_updated_ = true;
         owns_gpu_vals_ = true;
         owns_gpu_data_  = true;
+        // Make sure there is no host data.
+        if (h_row_data_ || h_col_data_ || h_val_data_) {
+          out::error() << "Host data unexpectedly allocated. "
+                       << "Possible bug in matrix::Sparse class.\n";
+        }
         syncData(memspaceDst);
         // Hijack data from the source
         *rows = nullptr;
@@ -95,6 +106,11 @@ namespace ReSolve
         h_data_updated_ = true;
         owns_cpu_vals_ = true;
         owns_cpu_data_  = true;
+        // Sync device data
+        if (d_row_data_ || d_col_data_ || d_val_data_) {
+          out::error() << "Device data unexpectedly allocated. "
+                       << "Possible bug in matrix::Sparse class.\n";
+        }
         syncData(memspaceDst);
         // Hijack data from the source
         *rows = nullptr;
@@ -109,11 +125,17 @@ namespace ReSolve
         d_data_updated_ = true;
         owns_gpu_vals_ = true;
         owns_gpu_data_  = true;
-        // Make sure there is no device data.
+        // Make sure there is no host data.
         if (h_row_data_ || h_col_data_ || h_val_data_) {
           out::error() << "Host data unexpectedly allocated. "
                        << "Possible bug in matrix::Sparse class.\n";
         }
+        h_row_data_ = nullptr;
+        h_col_data_ = nullptr;
+        h_val_data_ = nullptr;
+        h_data_updated_ = false;
+        owns_cpu_data_  = false;
+        owns_cpu_vals_  = false;
         // Hijack data from the source
         *rows = nullptr;
         *cols = nullptr;
