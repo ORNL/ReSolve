@@ -14,7 +14,7 @@ namespace ReSolve
 
   LinSolverDirectCuSolverGLU::LinSolverDirectCuSolverGLU(LinAlgWorkspaceCUDA* workspace)
   {
-    this->workspace_ = workspace;
+    // this->workspace_ = workspace;
   }
 
   LinSolverDirectCuSolverGLU::~LinSolverDirectCuSolverGLU()
@@ -41,7 +41,8 @@ namespace ReSolve
     int error_sum = 0;
 
     // Get the cusolverSp handle
-    handle_cusolversp_ = workspace_->getCusolverSpHandle();
+    // handle_cusolversp_ = workspace_->getCusolverSpHandle();
+    cusolverSpCreate(&handle_cusolversp_);
     A_ = dynamic_cast<matrix::Csr*>(A);
     index_type n = A_->getNumRows();
     index_type nnz = A_->getNnz();
