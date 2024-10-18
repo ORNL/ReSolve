@@ -12,9 +12,8 @@ namespace ReSolve
   using vector_type = vector::Vector;
   using out = io::Logger;
 
-  LinSolverDirectCuSolverGLU::LinSolverDirectCuSolverGLU(LinAlgWorkspaceCUDA* workspace)
+  LinSolverDirectCuSolverGLU::LinSolverDirectCuSolverGLU(LinAlgWorkspaceCUDA* /* workspace */)
   {
-    // this->workspace_ = workspace;
   }
 
   LinSolverDirectCuSolverGLU::~LinSolverDirectCuSolverGLU()
@@ -22,13 +21,15 @@ namespace ReSolve
     delete M_;
     M_ = nullptr;
     cusparseDestroyMatDescr(descr_M_);
+    descr_M_ = nullptr;
     cusparseDestroyMatDescr(descr_A_);
+    descr_A_ = nullptr;
     cusolverSpDestroy(handle_cusolversp_);
     handle_cusolversp_ = nullptr;
-    // handle_cusolversp_ is managed by workspace_ instance
-
     mem_.deleteOnDevice(glu_buffer_);
+    glu_buffer_ = nullptr;
     cusolverSpDestroyGluInfo(info_M_);
+    info_M_ = nullptr;
   }
 
   int LinSolverDirectCuSolverGLU::setup(matrix::Sparse* A,
@@ -40,8 +41,6 @@ namespace ReSolve
   {
     int error_sum = 0;
 
-    // Get the cusolverSp handle
-    // handle_cusolversp_ = workspace_->getCusolverSpHandle();
     cusolverSpCreate(&handle_cusolversp_);
     A_ = dynamic_cast<matrix::Csr*>(A);
     index_type n = A_->getNumRows();

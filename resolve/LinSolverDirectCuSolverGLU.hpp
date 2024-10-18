@@ -25,7 +25,7 @@ namespace ReSolve
     using vector_type = vector::Vector;
     
     public:
-      LinSolverDirectCuSolverGLU(LinAlgWorkspaceCUDA* workspace);
+      LinSolverDirectCuSolverGLU(LinAlgWorkspaceCUDA* workspace = nullptr);
       ~LinSolverDirectCuSolverGLU();
 
       int refactorize() override;
@@ -51,9 +51,6 @@ namespace ReSolve
       cusolverSpHandle_t handle_cusolversp_{nullptr};
 
       void* glu_buffer_{nullptr};
-
-      /// Workspace access so we can copy cusparse handle
-      LinAlgWorkspaceCUDA* workspace_{nullptr};
 
       // Status flags
       cusolverStatus_t status_cusolver_;

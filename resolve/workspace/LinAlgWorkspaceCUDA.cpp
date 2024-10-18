@@ -11,9 +11,7 @@ namespace ReSolve
     // Delete handles
     cublasDestroy(handle_cublas_);
     cusparseDestroy(handle_cusparse_);
-    if (handle_cusolversp_) {
-      cusolverSpDestroy(handle_cusolversp_);
-    }
+    cusolverSpDestroy(handle_cusolversp_);
 
     // If for some reason mat_A_ is not deleted ...
     // TODO: probably should print warning if true
@@ -85,7 +83,7 @@ namespace ReSolve
     d_r_size_ = new_sz;
   }
   
-  void LinAlgWorkspaceCUDA::setDr(double* new_dr)
+  void LinAlgWorkspaceCUDA::setDr(real_type* new_dr)
   {
     d_r_ = new_dr;
   }
