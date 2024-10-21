@@ -170,6 +170,22 @@ void FunctionalityTestHelper::printNorms( std::string &testname )
             << " (control; residual norm with exact solution)\n";
 }
 
+int FunctionalityTestHelper::checkResidualNorm()
+{
+  int error_sum = 0;
+
+  if (!std::isfinite(residual_norm_/rhs_norm_)) {
+    std::cout << "Result is not a finite number!\n";
+    error_sum++;
+  }
+
+  if (residual_norm_/rhs_norm_ > tol_) {
+    std::cout << "Result inaccurate!\n";
+    error_sum++;
+  }
+
+  return error_sum;
+}
 
 int FunctionalityTestHelper::checkResultNorms(ReSolve::matrix::Csr& A,
     ReSolve::vector::Vector& vec_rhs,
@@ -209,15 +225,8 @@ int FunctionalityTestHelper::checkResultNorms(ReSolve::matrix::Csr& A,
   
   printIterativeSolverStats(solver);
 
-  if (!std::isfinite(residual_norm_/rhs_norm_)) {
-    std::cout << "Result is not a finite number!\n";
-    error_sum++;
-  }
-
-  if (residual_norm_/rhs_norm_ > tol_) {
-    std::cout << "Result inaccurate!\n";
-    error_sum++;
-  }
+  // Captain! move below into checkResidualNorm
+  error_sum += checkResidualNorm();
 
   return error_sum;
 }

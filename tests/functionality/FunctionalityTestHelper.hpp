@@ -36,6 +36,8 @@ namespace ReSolve
 
         real_type calculate_diff_norm( ReSolve::matrix::Csr& A, ReSolve::vector::Vector& vec_x );
 
+        int checkResidualNorm();
+
         real_type 
         calculate_true_norm( ReSolve::matrix::Csr& A, ReSolve::vector::Vector& vec_rhs );
 

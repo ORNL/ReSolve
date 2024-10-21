@@ -179,7 +179,7 @@ int main(int argc, char *argv[])
   error_sum += status;
 
   error_sum += 
-  testhelper.checkRefactorizationResult(*A, *vec_rhs, *vec_x, solver, "second matrix");
+  testhelper.checkResultNorms(*A, *vec_rhs, *vec_x, solver, "second matrix");
 
   if (error_sum == 0) {
     std::cout << "Test KLU with Rf solver + IR " << GREEN << "PASSED" << CLEAR <<std::endl<<std::endl;;
