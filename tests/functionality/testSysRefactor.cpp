@@ -67,10 +67,13 @@ int main(int argc, char *argv[])
   // settings than HIP-based one)
   // cgs2 = classical Gram-Schmidt
   solver.setRefinementMethod("fgmres", "cgs2");
+
   solver.getIterativeSolver().setRestart(100);
+
   if (memory_space == "hip") {
     solver.getIterativeSolver().setMaxit(200);
   }
+
   if (memory_space == "cuda") {
     solver.getIterativeSolver().setMaxit(400);
     solver.getIterativeSolver().setTol(1e-17);
@@ -144,10 +147,10 @@ int main(int argc, char *argv[])
 
   // Captain! redundant?
   // Verify relative residual norm computation in SystemSolver
-  error_sum += testhelper.checkRelativeResidualNorm( *vec_rhs, *vec_x, solver );
+  error_sum += testhelper.checkRelativeResidualNorm(*vec_rhs, *vec_x, solver);
 
   // Compute norm of scaled residuals
-  error_sum += testhelper.checkNormOfScaledResiduals( *A, *vec_rhs, *vec_x, solver );
+  error_sum += testhelper.checkNormOfScaledResiduals(*A, *vec_rhs, *vec_x, solver);
 
   // Now prepare the Rf solver
   status = solver.refactorizationSetup();
@@ -188,10 +191,10 @@ int main(int argc, char *argv[])
 
   // Captain! redundant?
   // Verify relative residual norm computation in SystemSolver
-  error_sum += testhelper.checkRelativeResidualNorm( *vec_rhs, *vec_x, solver );
+  error_sum += testhelper.checkRelativeResidualNorm(*vec_rhs, *vec_x, solver);
 
   // Compute norm of scaled residuals
-  error_sum += testhelper.checkNormOfScaledResiduals( *A, *vec_rhs, *vec_x, solver );
+  error_sum += testhelper.checkNormOfScaledResiduals(*A, *vec_rhs, *vec_x, solver);
 
   if (error_sum == 0) {
     std::cout << "Test KLU with Rf solver + IR " << GREEN << "PASSED" << CLEAR <<std::endl<<std::endl;;
