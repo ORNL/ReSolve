@@ -209,24 +209,23 @@ int FunctionalityTestHelper::checkResultNorms(ReSolve::matrix::Csr& A,
   //for testing only - control
   calculate_rhs_vector_norm( vec_rhs );
 
-  // Compute norm of scaled residuals:
-  // NSR = ||r||_inf / (||A||_inf * ||x||_inf)
-  error_sum += checkNormOfScaledResiduals(A, vec_rhs, vec_x, vec_r, solver);
-
   //compute ||x_diff|| = ||x - x_true|| norm
   calculate_diff_norm( A, vec_x );
 
   calculate_true_norm( A, vec_rhs );
 
-  // Verify relative residual norm computation in SystemSolver
-  error_sum += checkRelativeResidualNorm(vec_rhs, vec_x, residual_norm_, rhs_norm_, solver);
-
   printNorms( testname );
   
   printIterativeSolverStats(solver);
 
-  // Captain! move below into checkResidualNorm
   error_sum += checkResidualNorm();
+
+  // Compute norm of scaled residuals:
+  // NSR = ||r||_inf / (||A||_inf * ||x||_inf)
+  error_sum += checkNormOfScaledResiduals(A, vec_rhs, vec_x, vec_r, solver);
+
+  // Verify relative residual norm computation in SystemSolver
+  error_sum += checkRelativeResidualNorm(vec_rhs, vec_x, residual_norm_, rhs_norm_, solver);
 
   return error_sum;
 }
