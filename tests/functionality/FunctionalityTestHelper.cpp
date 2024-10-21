@@ -220,13 +220,6 @@ int FunctionalityTestHelper::checkResultNorms(ReSolve::matrix::Csr& A,
 
   error_sum += checkResidualNorm();
 
-  // Compute norm of scaled residuals:
-  // NSR = ||r||_inf / (||A||_inf * ||x||_inf)
-  error_sum += checkNormOfScaledResiduals(A, vec_rhs, vec_x, vec_r, solver);
-
-  // Verify relative residual norm computation in SystemSolver
-  error_sum += checkRelativeResidualNorm(vec_rhs, vec_x, residual_norm_, rhs_norm_, solver);
-
   return error_sum;
 }
 
@@ -268,12 +261,14 @@ void FunctionalityTestHelper::printIterativeSolverStats(SystemSolver& solver)
 int FunctionalityTestHelper::checkNormOfScaledResiduals(ReSolve::matrix::Csr& A,
                               ReSolve::vector::Vector& vec_rhs,
                               ReSolve::vector::Vector& vec_x,
-                              ReSolve::vector::Vector& vec_r,
                               ReSolve::SystemSolver& solver)
 {
   using namespace ReSolve::constants;
   using namespace memory;
   int error_sum = 0;
+
+  // Compute residual norm for the second system
+  ReSolve::vector::Vector vec_r = generate_residual_vector( A, vec_x, vec_rhs );
 
   // Compute norm of scaled residuals for the second system
   real_type inf_norm_A = 0.0;  
@@ -301,20 +296,24 @@ int FunctionalityTestHelper::checkNormOfScaledResiduals(ReSolve::matrix::Csr& A,
 
 int FunctionalityTestHelper::checkRelativeResidualNorm(ReSolve::vector::Vector& vec_rhs,
     ReSolve::vector::Vector& vec_x,
-    const real_type residual_norm,
-    const real_type rhs_norm,
     ReSolve::SystemSolver& solver)
 {
   using namespace memory;
+
   int error_sum = 0;
 
   real_type rel_residual_norm = solver.getResidualNorm(&vec_rhs, &vec_x);
-  real_type error = std::abs(rhs_norm * rel_residual_norm - residual_norm)/residual_norm;
+
+  real_type error = std::abs(rhs_norm_ * rel_residual_norm - residual_norm_)/residual_norm_;
+
   if (error > 10.0*std::numeric_limits<real_type>::epsilon()) {
+
     std::cout << "Relative residual norm computation failed:\n";
+
     std::cout << std::scientific << std::setprecision(16)
-      << "\tTest value            : " << residual_norm/rhs_norm << "\n"
+      << "\tTest value            : " << residual_norm_/rhs_norm_ << "\n"
       << "\tSystemSolver computed : " << rel_residual_norm   << "\n\n";
+
     error_sum++;
   }
 

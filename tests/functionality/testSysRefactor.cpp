@@ -96,7 +96,6 @@ int main(int argc, char *argv[])
     return -1;
   }
 
-  // Captain! A and rhs created - rhs is a raw pointer so has to be put in a vector
   ReSolve::matrix::Csr* A = ReSolve::io::createCsrFromFile(mat1, true);
   A->syncData(ReSolve::memory::DEVICE);
   mat1.close();
@@ -112,7 +111,6 @@ int main(int argc, char *argv[])
 
   // setup/allocate testing workspace phase:
 
-  // Captain! vec_x is the solution; what is vec_rhs used for?
   // Create rhs, solution and residual vectors
   vector_type* vec_rhs = new vector_type(A->getNumRows());
   vector_type* vec_x   = new vector_type(A->getNumRows());
@@ -143,6 +141,13 @@ int main(int argc, char *argv[])
 
   error_sum += 
   testhelper.checkResultNorms(*A, *vec_rhs, *vec_x, solver, "first matrix");
+
+  // Captain! redundant?
+  // Verify relative residual norm computation in SystemSolver
+  error_sum += testhelper.checkRelativeResidualNorm( *vec_rhs, *vec_x, solver );
+
+  // Compute norm of scaled residuals
+  error_sum += testhelper.checkNormOfScaledResiduals( *A, *vec_rhs, *vec_x, solver );
 
   // Now prepare the Rf solver
   status = solver.refactorizationSetup();
@@ -180,6 +185,13 @@ int main(int argc, char *argv[])
 
   error_sum += 
   testhelper.checkResultNorms(*A, *vec_rhs, *vec_x, solver, "second matrix");
+
+  // Captain! redundant?
+  // Verify relative residual norm computation in SystemSolver
+  error_sum += testhelper.checkRelativeResidualNorm( *vec_rhs, *vec_x, solver );
+
+  // Compute norm of scaled residuals
+  error_sum += testhelper.checkNormOfScaledResiduals( *A, *vec_rhs, *vec_x, solver );
 
   if (error_sum == 0) {
     std::cout << "Test KLU with Rf solver + IR " << GREEN << "PASSED" << CLEAR <<std::endl<<std::endl;;

@@ -19,13 +19,10 @@ namespace ReSolve
         int checkNormOfScaledResiduals(ReSolve::matrix::Csr& A,
                                       ReSolve::vector::Vector& vec_rhs,
                                       ReSolve::vector::Vector& vec_x,
-                                      ReSolve::vector::Vector& vec_r,
                                       ReSolve::SystemSolver& solver);
 
         int checkRelativeResidualNorm(ReSolve::vector::Vector& vec_rhs,
                                       ReSolve::vector::Vector& vec_x,
-                                      const real_type residual_norm,
-                                      const real_type rhs_norm,
                                       ReSolve::SystemSolver& solver);
 
         real_type calculate_solution_vector_norm( ReSolve::vector::Vector& vec_x );
