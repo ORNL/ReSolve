@@ -31,11 +31,14 @@
 #endif
 #include "FunctionalityTestHelper.hpp"
 
-namespace ReSolve {
-  namespace tests{
+namespace ReSolve
+{
+
+namespace tests
+{
 
 real_type FunctionalityTestHelper::
-calculate_solution_vector_norm( ReSolve::vector::Vector& vec_x )
+calculate_solution_vector_norm(ReSolve::vector::Vector& vec_x)
 {
   using namespace memory;
 
@@ -46,7 +49,7 @@ calculate_solution_vector_norm( ReSolve::vector::Vector& vec_x )
 }
 
 real_type FunctionalityTestHelper::
-calculate_rhs_vector_norm( ReSolve::vector::Vector& vec_rhs )
+calculate_rhs_vector_norm(ReSolve::vector::Vector& vec_rhs)
 {
   using namespace memory;
 
@@ -57,7 +60,7 @@ calculate_rhs_vector_norm( ReSolve::vector::Vector& vec_rhs )
 }
 
 real_type FunctionalityTestHelper::
-calculate_residual_norm( ReSolve::vector::Vector& vec_r )
+calculate_residual_norm(ReSolve::vector::Vector& vec_r)
 {
   using namespace memory;
 
@@ -68,7 +71,7 @@ calculate_residual_norm( ReSolve::vector::Vector& vec_r )
 }
 
 real_type FunctionalityTestHelper::
-calculate_diff_norm( ReSolve::matrix::Csr& A, ReSolve::vector::Vector& vec_x )
+calculate_diff_norm(ReSolve::matrix::Csr& A, ReSolve::vector::Vector& vec_x)
 {
   using namespace memory;
   using namespace ReSolve::constants;
@@ -88,7 +91,7 @@ calculate_diff_norm( ReSolve::matrix::Csr& A, ReSolve::vector::Vector& vec_x )
 }
 
 real_type FunctionalityTestHelper::
-calculate_true_norm( ReSolve::matrix::Csr& A, ReSolve::vector::Vector& vec_rhs )
+calculate_true_norm(ReSolve::matrix::Csr& A, ReSolve::vector::Vector& vec_rhs)
 {
   using namespace memory;
   using namespace ReSolve::constants;
@@ -103,8 +106,7 @@ calculate_true_norm( ReSolve::matrix::Csr& A, ReSolve::vector::Vector& vec_rhs )
   vec_tmp.update(vec_rhs.getData(HOST), HOST, DEVICE);
   int status = mh_->matvec(&A, &vec_test, &vec_tmp, &ONE, &MINUSONE, DEVICE); 
 
-  if( status != 0 )
-  {
+  if (status != 0) {
     std::cout << "matvec failed" << std::endl;
 
     std::exit( status );
@@ -116,9 +118,9 @@ calculate_true_norm( ReSolve::matrix::Csr& A, ReSolve::vector::Vector& vec_rhs )
 }
 
 ReSolve::vector::Vector FunctionalityTestHelper::
-generate_residual_vector( ReSolve::matrix::Csr& A,
-                          ReSolve::vector::Vector& vec_x,
-                          ReSolve::vector::Vector& vec_rhs )
+generate_residual_vector(ReSolve::matrix::Csr& A,
+                         ReSolve::vector::Vector& vec_x,
+                         ReSolve::vector::Vector& vec_rhs)
 {
   using namespace memory;
   using namespace ReSolve::constants;
@@ -133,17 +135,16 @@ generate_residual_vector( ReSolve::matrix::Csr& A,
 
   int status = mh_->matvec(&A, &vec_x, &vec_r, &ONE, &MINUSONE, DEVICE); 
 
-  if( status != 0 )
-  {
+  if (status != 0) {
     std::cout << "matvec from matrixhandler failed" << std::endl;
 
-    std::exit( status );
+    std::exit(status);
   }
 
   return vec_r;
 }
 
-void FunctionalityTestHelper::printNorms( std::string &testname )
+void FunctionalityTestHelper::printNorms(std::string &testname)
 {
   std::cout << "Results for " << testname << ":\n\n";
 
@@ -199,22 +200,22 @@ int FunctionalityTestHelper::checkResultNorms(ReSolve::matrix::Csr& A,
   int status = 0;
   int error_sum = 0;
 
-  calculate_solution_vector_norm( vec_x );
+  calculate_solution_vector_norm(vec_x);
 
   // Compute residual norm for the second system
-  ReSolve::vector::Vector vec_r = generate_residual_vector( A, vec_x, vec_rhs );
+  ReSolve::vector::Vector vec_r = generate_residual_vector(A, vec_x, vec_rhs);
 
-  calculate_residual_norm( vec_r );
+  calculate_residual_norm(vec_r);
 
   //for testing only - control
-  calculate_rhs_vector_norm( vec_rhs );
+  calculate_rhs_vector_norm(vec_rhs);
 
   //compute ||x_diff|| = ||x - x_true|| norm
-  calculate_diff_norm( A, vec_x );
+  calculate_diff_norm(A, vec_x);
 
-  calculate_true_norm( A, vec_rhs );
+  calculate_true_norm(A, vec_rhs);
 
-  printNorms( testname );
+  printNorms(testname);
   
   printIterativeSolverStats(solver);
 
@@ -224,18 +225,21 @@ int FunctionalityTestHelper::checkResultNorms(ReSolve::matrix::Csr& A,
 }
 
 FunctionalityTestHelper::FunctionalityTestHelper( 
-  ReSolve::real_type tol_init )
+  ReSolve::real_type tol_init)
   :
-  tol_( tol_init )
+  tol_(tol_init)
 {
   workspace_.initializeHandles();
+
   mh_ = new ReSolve::MatrixHandler(&workspace_);
+
   vh_ = new ReSolve::VectorHandler(&workspace_);
 }
 
 FunctionalityTestHelper::~FunctionalityTestHelper()
 {
   delete mh_;
+
   delete vh_;
 }
 
