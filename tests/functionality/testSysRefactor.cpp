@@ -84,7 +84,6 @@ int main(int argc, char *argv[])
   std::string matrixFileName1 = data_path + "data/matrix_ACTIVSg2000_AC_00.mtx";
   std::string matrixFileName2 = data_path + "data/matrix_ACTIVSg2000_AC_02.mtx";
 
-  // extension of "ones" just means vector of all ones
   // so we are setting up A_above * x_unknown = rhs_below, 
   std::string rhsFileName1 = data_path + "data/rhs_ACTIVSg2000_AC_00.mtx.ones";
   std::string rhsFileName2 = data_path + "data/rhs_ACTIVSg2000_AC_02.mtx.ones";
@@ -96,6 +95,8 @@ int main(int argc, char *argv[])
     std::cout << "Failed to open file " << matrixFileName1 << "\n";
     return -1;
   }
+
+  // Captain! A and rhs created - rhs is a raw pointer so has to be put in a vector
   ReSolve::matrix::Csr* A = ReSolve::io::createCsrFromFile(mat1, true);
   A->syncData(ReSolve::memory::DEVICE);
   mat1.close();
@@ -111,6 +112,7 @@ int main(int argc, char *argv[])
 
   // setup/allocate testing workspace phase:
 
+  // Captain! vec_x is the solution; what is vec_rhs used for?
   // Create rhs, solution and residual vectors
   vector_type* vec_rhs = new vector_type(A->getNumRows());
   vector_type* vec_x   = new vector_type(A->getNumRows());
@@ -140,7 +142,7 @@ int main(int argc, char *argv[])
   ReSolve::tests::FunctionalityTestHelper testhelper(1e-12);
 
   error_sum += 
-  testhelper.checkRefactorizationResult(*A, *vec_rhs, *vec_x, solver, "first matrix");
+  testhelper.checkResultNorms(*A, *vec_rhs, *vec_x, solver, "first matrix");
 
   // Now prepare the Rf solver
   status = solver.refactorizationSetup();
