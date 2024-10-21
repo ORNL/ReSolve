@@ -67,6 +67,54 @@ calculate_residual_norm( ReSolve::vector::Vector& vec_r )
   return residual_norm_;
 }
 
+real_type FunctionalityTestHelper::
+calculate_diff_norm( ReSolve::matrix::Csr& A, ReSolve::vector::Vector& vec_x )
+{
+  using namespace memory;
+  using namespace ReSolve::constants;
+
+  index_type n = A.getNumRows();
+
+  ReSolve::vector::Vector vec_diff(n);
+
+  vec_diff.setToConst(1.0, DEVICE);
+
+  // why does this not return an error status if it fails?
+  vh_->axpy(&MINUSONE, &vec_x, &vec_diff, DEVICE);
+
+  diff_norm_ = sqrt(vh_->dot(&vec_diff, &vec_diff, DEVICE));
+
+  return diff_norm_;
+}
+
+real_type FunctionalityTestHelper::
+calculate_true_norm( ReSolve::matrix::Csr& A, ReSolve::vector::Vector& vec_rhs )
+{
+  using namespace memory;
+  using namespace ReSolve::constants;
+
+  index_type n = A.getNumRows();
+
+  ReSolve::vector::Vector vec_test(n);
+  ReSolve::vector::Vector vec_tmp(n);
+
+  //compute the residual using exact solution
+  vec_test.setToConst(1.0, DEVICE);
+  vec_tmp.update(vec_rhs.getData(HOST), HOST, DEVICE);
+  int status = mh_->matvec(&A, &vec_test, &vec_tmp, &ONE, &MINUSONE, DEVICE); 
+
+  if( status != 0 )
+  {
+    std::cout << "matvec failed" << std::endl;
+
+    std::exit( status );
+  }
+
+  true_residual_norm_ = sqrt(vh_->dot(&vec_tmp, &vec_tmp, DEVICE));
+
+  return true_residual_norm_;
+}
+
 ReSolve::vector::Vector FunctionalityTestHelper::
 generate_residual_vector( ReSolve::matrix::Csr& A,
                           ReSolve::vector::Vector& vec_x,
@@ -93,6 +141,33 @@ generate_residual_vector( ReSolve::matrix::Csr& A,
   }
 
   return vec_r;
+}
+
+void FunctionalityTestHelper::printNorms( std::string &testname )
+{
+  std::cout << "Results for " << testname << ":\n\n";
+
+  std::cout << std::scientific << std::setprecision(16);
+
+  std::cout << "\t ||b-A*x||_2                 : " 
+            << residual_norm_           
+            << " (residual norm)\n";
+
+  std::cout << "\t ||b-A*x||_2/||b||_2         : " 
+            << residual_norm_/rhs_norm_ 
+            << " (relative residual norm)\n";
+
+  std::cout << "\t ||x-x_true||_2              : " 
+            << diff_norm_               
+            << " (solution error)\n";
+
+  std::cout << "\t ||x-x_true||_2/||x_true||_2 : " 
+            << diff_norm_/norm_solution_vector_    
+            << " (relative solution error)\n";
+
+  std::cout << "\t ||b-A*x_exact||_2           : " 
+            << true_residual_norm_      
+            << " (control; residual norm with exact solution)\n";
 }
 
 
@@ -122,36 +197,16 @@ int FunctionalityTestHelper::checkResultNorms(ReSolve::matrix::Csr& A,
   // NSR = ||r||_inf / (||A||_inf * ||x||_inf)
   error_sum += checkNormOfScaledResiduals(A, vec_rhs, vec_x, vec_r, solver);
 
-  // Allocate vectors
-  index_type n = A.getNumRows();
-  ReSolve::vector::Vector vec_diff(n);
-  ReSolve::vector::Vector vec_test(n);
-
   //compute ||x_diff|| = ||x - x_true|| norm
-  vec_diff.setToConst(1.0, DEVICE);
-  vh_->axpy(&MINUSONE, &vec_x, &vec_diff, DEVICE);
-  diff_norm_ = sqrt(vh_->dot(&vec_diff, &vec_diff, DEVICE));
+  calculate_diff_norm( A, vec_x );
 
-  //compute the residual using exact solution
-  vec_test.setToConst(1.0, DEVICE);
-  vec_r.update(vec_rhs.getData(HOST), HOST, DEVICE);
-  status = mh_->matvec(&A, &vec_test, &vec_r, &ONE, &MINUSONE, DEVICE); 
-  error_sum += status;
-  true_residual_norm_ = sqrt(vh_->dot(&vec_r, &vec_r, DEVICE));
+  calculate_true_norm( A, vec_rhs );
 
-  //! move this checkRelativeResidual function to the end for eventual migration
   // Verify relative residual norm computation in SystemSolver
   error_sum += checkRelativeResidualNorm(vec_rhs, vec_x, residual_norm_, rhs_norm_, solver);
 
-  // ! move this into a printNorms function
-  std::cout << "Results for " << testname << ":\n\n";
-  std::cout << std::scientific << std::setprecision(16);
-  std::cout << "\t ||b-A*x||_2                 : " << residual_norm_           << " (residual norm)\n";
-  std::cout << "\t ||b-A*x||_2/||b||_2         : " << residual_norm_/rhs_norm_ << " (relative residual norm)\n";
-  std::cout << "\t ||x-x_true||_2              : " << diff_norm_               << " (solution error)\n";
-  std::cout << "\t ||x-x_true||_2/||x_true||_2 : " << diff_norm_/norm_solution_vector_    << " (relative solution error)\n";
-  std::cout << "\t ||b-A*x_exact||_2           : " << true_residual_norm_      << " (control; residual norm with exact solution)\n";
-
+  printNorms( testname );
+  
   printIterativeSolverStats(solver);
 
   if (!std::isfinite(residual_norm_/rhs_norm_)) {

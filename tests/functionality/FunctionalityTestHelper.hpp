@@ -34,6 +34,13 @@ namespace ReSolve
 
         real_type calculate_residual_norm( ReSolve::vector::Vector& vec_r );
 
+        real_type calculate_diff_norm( ReSolve::matrix::Csr& A, ReSolve::vector::Vector& vec_x );
+
+        real_type 
+        calculate_true_norm( ReSolve::matrix::Csr& A, ReSolve::vector::Vector& vec_rhs );
+
+        void printNorms( std::string &testname );
+
         ReSolve::vector::Vector 
         generate_residual_vector( ReSolve::matrix::Csr& A,
                                   ReSolve::vector::Vector& vec_x,
