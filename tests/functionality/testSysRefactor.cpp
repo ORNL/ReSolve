@@ -142,7 +142,6 @@ int main(int argc, char *argv[])
   // larger tolerance than default 1e-17 because iterative refinement is not applied here
   ReSolve::tests::FunctionalityTestHelper testhelper(1e-12);
 
-  // Captain! calculate all norms below before checking anything!
   testhelper.calculateNorms( *A, *vec_rhs, *vec_x );
 
   // Verify relative residual norm computation in SystemSolver
@@ -188,7 +187,6 @@ int main(int argc, char *argv[])
   status = solver.solve(vec_rhs, vec_x);
   error_sum += status;
 
-  // Captain! calculate all norms below before checking anything!
   testhelper.calculateNorms( *A, *vec_rhs, *vec_x );
 
   // Verify relative residual norm computation in SystemSolver
