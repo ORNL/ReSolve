@@ -8,7 +8,7 @@ namespace ReSolve
         FunctionalityTestHelper(ReSolve::real_type tol_init = constants::DEFAULT_TOL);
         ~FunctionalityTestHelper();
 
-        int checkResultNorms(ReSolve::matrix::Csr& A,
+        int checkResult(ReSolve::matrix::Csr& A,
                                       ReSolve::vector::Vector& vec_rhs,
                                       ReSolve::vector::Vector& vec_x,
                                       ReSolve::SystemSolver& solver,

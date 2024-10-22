@@ -188,7 +188,7 @@ int FunctionalityTestHelper::checkResidualNorm()
   return error_sum;
 }
 
-int FunctionalityTestHelper::checkResultNorms(ReSolve::matrix::Csr& A,
+int FunctionalityTestHelper::checkResult(ReSolve::matrix::Csr& A,
     ReSolve::vector::Vector& vec_rhs,
     ReSolve::vector::Vector& vec_x,
     ReSolve::SystemSolver& solver,

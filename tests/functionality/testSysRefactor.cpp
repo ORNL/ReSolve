@@ -142,15 +142,14 @@ int main(int argc, char *argv[])
   // larger tolerance than default 1e-17 because iterative refinement is not applied here
   ReSolve::tests::FunctionalityTestHelper testhelper(1e-12);
 
-  error_sum += 
-  testhelper.checkResultNorms(*A, *vec_rhs, *vec_x, solver, "first matrix");
-
-  // Captain! redundant?
   // Verify relative residual norm computation in SystemSolver
   error_sum += testhelper.checkRelativeResidualNorm(*vec_rhs, *vec_x, solver);
 
   // Compute norm of scaled residuals
   error_sum += testhelper.checkNormOfScaledResiduals(*A, *vec_rhs, *vec_x, solver);
+
+  error_sum += 
+  testhelper.checkResult(*A, *vec_rhs, *vec_x, solver, "first matrix");
 
   // Now prepare the Rf solver
   status = solver.refactorizationSetup();
@@ -186,15 +185,14 @@ int main(int argc, char *argv[])
   status = solver.solve(vec_rhs, vec_x);
   error_sum += status;
 
-  error_sum += 
-  testhelper.checkResultNorms(*A, *vec_rhs, *vec_x, solver, "second matrix");
-
-  // Captain! redundant?
   // Verify relative residual norm computation in SystemSolver
   error_sum += testhelper.checkRelativeResidualNorm(*vec_rhs, *vec_x, solver);
 
   // Compute norm of scaled residuals
   error_sum += testhelper.checkNormOfScaledResiduals(*A, *vec_rhs, *vec_x, solver);
+
+  error_sum += 
+  testhelper.checkResult(*A, *vec_rhs, *vec_x, solver, "second matrix");
 
   if (error_sum == 0) {
     std::cout << "Test KLU with Rf solver + IR " << GREEN << "PASSED" << CLEAR <<std::endl<<std::endl;;
