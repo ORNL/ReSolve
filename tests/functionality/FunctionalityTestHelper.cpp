@@ -49,7 +49,7 @@ calculateSolutionVectorNorm(ReSolve::vector::Vector& vec_x)
 }
 
 real_type FunctionalityTestHelper::
-calculate_rhs_vector_norm(ReSolve::vector::Vector& vec_rhs)
+calculateRhsVectorNorm(ReSolve::vector::Vector& vec_rhs)
 {
   using namespace memory;
 
@@ -71,7 +71,7 @@ calculateResidualNorm(ReSolve::vector::Vector& vec_r)
 }
 
 real_type FunctionalityTestHelper::
-calculate_diff_norm(ReSolve::matrix::Csr& A, ReSolve::vector::Vector& vec_x)
+calculateDiffNorm(ReSolve::matrix::Csr& A, ReSolve::vector::Vector& vec_x)
 {
   using namespace memory;
   using namespace ReSolve::constants;
@@ -91,7 +91,7 @@ calculate_diff_norm(ReSolve::matrix::Csr& A, ReSolve::vector::Vector& vec_x)
 }
 
 real_type FunctionalityTestHelper::
-calculate_true_norm(ReSolve::matrix::Csr& A, ReSolve::vector::Vector& vec_rhs)
+calculateTrueNorm(ReSolve::matrix::Csr& A, ReSolve::vector::Vector& vec_rhs)
 {
   using namespace memory;
   using namespace ReSolve::constants;
@@ -206,12 +206,12 @@ void FunctionalityTestHelper::calculateNorms(
   calculateResidualNorm(vec_r);
 
   //for testing only - control
-  calculate_rhs_vector_norm(vec_rhs);
+  calculateRhsVectorNorm(vec_rhs);
 
   //compute ||x_diff|| = ||x - x_true|| norm
-  calculate_diff_norm(A, vec_x);
+  calculateDiffNorm(A, vec_x);
 
-  calculate_true_norm(A, vec_rhs);
+  calculateTrueNorm(A, vec_rhs);
 }
 
 int FunctionalityTestHelper::checkResult(

@@ -31,16 +31,16 @@ namespace ReSolve
 
         real_type calculateSolutionVectorNorm(ReSolve::vector::Vector& vec_x);
 
-        real_type calculate_rhs_vector_norm(ReSolve::vector::Vector& vec_x);
+        real_type calculateRhsVectorNorm(ReSolve::vector::Vector& vec_x);
 
         real_type calculateResidualNorm(ReSolve::vector::Vector& vec_r);
 
-        real_type calculate_diff_norm(ReSolve::matrix::Csr& A, ReSolve::vector::Vector& vec_x);
+        real_type calculateDiffNorm(ReSolve::matrix::Csr& A, ReSolve::vector::Vector& vec_x);
 
         int checkResidualNorm();
 
         real_type 
-        calculate_true_norm(ReSolve::matrix::Csr& A, ReSolve::vector::Vector& vec_rhs);
+        calculateTrueNorm(ReSolve::matrix::Csr& A, ReSolve::vector::Vector& vec_rhs);
 
         void printNorms(std::string &testname);
 
