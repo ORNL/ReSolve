@@ -60,7 +60,7 @@ calculate_rhs_vector_norm(ReSolve::vector::Vector& vec_rhs)
 }
 
 real_type FunctionalityTestHelper::
-calculate_residual_norm(ReSolve::vector::Vector& vec_r)
+calculateResidualNorm(ReSolve::vector::Vector& vec_r)
 {
   using namespace memory;
 
@@ -203,7 +203,7 @@ void FunctionalityTestHelper::calculateNorms(
   // Compute residual norm
   ReSolve::vector::Vector vec_r = generateResidualVector(A, vec_x, vec_rhs);
 
-  calculate_residual_norm(vec_r);
+  calculateResidualNorm(vec_r);
 
   //for testing only - control
   calculate_rhs_vector_norm(vec_rhs);
