@@ -118,7 +118,7 @@ calculate_true_norm(ReSolve::matrix::Csr& A, ReSolve::vector::Vector& vec_rhs)
 }
 
 ReSolve::vector::Vector FunctionalityTestHelper::
-generate_residual_vector(ReSolve::matrix::Csr& A,
+generateResidualVector(ReSolve::matrix::Csr& A,
                          ReSolve::vector::Vector& vec_x,
                          ReSolve::vector::Vector& vec_rhs)
 {
@@ -201,7 +201,7 @@ void FunctionalityTestHelper::calculateNorms(
   calculateSolutionVectorNorm(vec_x);
 
   // Compute residual norm
-  ReSolve::vector::Vector vec_r = generate_residual_vector(A, vec_x, vec_rhs);
+  ReSolve::vector::Vector vec_r = generateResidualVector(A, vec_x, vec_rhs);
 
   calculate_residual_norm(vec_r);
 
@@ -283,7 +283,7 @@ int FunctionalityTestHelper::checkNormOfScaledResiduals(ReSolve::matrix::Csr& A,
   int error_sum = 0;
 
   // Compute residual norm for the second system
-  ReSolve::vector::Vector vec_r = generate_residual_vector( A, vec_x, vec_rhs );
+  ReSolve::vector::Vector vec_r = generateResidualVector( A, vec_x, vec_rhs );
 
   // Compute norm of scaled residuals for the second system
   real_type inf_norm_A = 0.0;  

@@ -45,7 +45,7 @@ namespace ReSolve
         void printNorms(std::string &testname);
 
         ReSolve::vector::Vector 
-        generate_residual_vector(ReSolve::matrix::Csr& A,
+        generateResidualVector(ReSolve::matrix::Csr& A,
                                   ReSolve::vector::Vector& vec_x,
                                   ReSolve::vector::Vector& vec_rhs);
 
