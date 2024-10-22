@@ -38,7 +38,7 @@ namespace tests
 {
 
 real_type FunctionalityTestHelper::
-calculate_solution_vector_norm(ReSolve::vector::Vector& vec_x)
+calculateSolutionVectorNorm(ReSolve::vector::Vector& vec_x)
 {
   using namespace memory;
 
@@ -188,21 +188,19 @@ int FunctionalityTestHelper::checkResidualNorm()
   return error_sum;
 }
 
-int FunctionalityTestHelper::checkResult(ReSolve::matrix::Csr& A,
+void FunctionalityTestHelper::calculateNorms(
+    ReSolve::matrix::Csr& A,
     ReSolve::vector::Vector& vec_rhs,
-    ReSolve::vector::Vector& vec_x,
-    ReSolve::SystemSolver& solver,
-    std::string testname)
+    ReSolve::vector::Vector& vec_x )
 {
   using namespace memory;
   using namespace ReSolve::constants;
 
-  int status = 0;
   int error_sum = 0;
 
-  calculate_solution_vector_norm(vec_x);
+  calculateSolutionVectorNorm(vec_x);
 
-  // Compute residual norm for the second system
+  // Compute residual norm
   ReSolve::vector::Vector vec_r = generate_residual_vector(A, vec_x, vec_rhs);
 
   calculate_residual_norm(vec_r);
@@ -214,12 +212,25 @@ int FunctionalityTestHelper::checkResult(ReSolve::matrix::Csr& A,
   calculate_diff_norm(A, vec_x);
 
   calculate_true_norm(A, vec_rhs);
+}
+
+int FunctionalityTestHelper::checkResult(
+    ReSolve::matrix::Csr& A,
+    ReSolve::vector::Vector& vec_rhs,
+    ReSolve::vector::Vector& vec_x,
+    ReSolve::SystemSolver& solver,
+    std::string testname)
+{
+  using namespace memory;
+  using namespace ReSolve::constants;
+
+  int error_sum = 0;
+
+  error_sum += checkResidualNorm();
 
   printNorms(testname);
   
   printIterativeSolverStats(solver);
-
-  error_sum += checkResidualNorm();
 
   return error_sum;
 }

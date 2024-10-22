@@ -25,7 +25,11 @@ namespace ReSolve
                                       ReSolve::vector::Vector& vec_x,
                                       ReSolve::SystemSolver& solver);
 
-        real_type calculate_solution_vector_norm(ReSolve::vector::Vector& vec_x);
+        void calculateNorms( ReSolve::matrix::Csr& A,
+                             ReSolve::vector::Vector& vec_rhs,
+                             ReSolve::vector::Vector& vec_x );
+
+        real_type calculateSolutionVectorNorm(ReSolve::vector::Vector& vec_x);
 
         real_type calculate_rhs_vector_norm(ReSolve::vector::Vector& vec_x);
 
