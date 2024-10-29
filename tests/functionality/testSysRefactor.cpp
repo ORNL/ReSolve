@@ -64,9 +64,12 @@ int main(int argc, char *argv[])
   std::string rhsFileName2 = data_path + "data/rhs_ACTIVSg2000_AC_02.mtx.ones";
 
   // Captain! axb problem construction
-
   AxEqualsRhsProblem axb(matrixFileName1, rhsFileName1);
+  ReSolve::matrix::Csr* A = axb.getMatrix();
+  vector_type* vec_x   = axb.getVector();
+  vector_type* vec_rhs = axb.getRhs();
   // above replaces below
+  /*
 
   // Read first matrix
   std::ifstream mat1(matrixFileName1);
@@ -101,6 +104,7 @@ int main(int argc, char *argv[])
   // Set RHS vector on CPU (update function allocates)
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   // Captain! axb problem is now constructed 
+  */
 
   // Captain! begin solver creation
 
@@ -172,6 +176,10 @@ int main(int argc, char *argv[])
   status = solver.refactorizationSetup();
   error_sum += status;
 
+  axb.updateProblem( matrixFileName2, rhsFileName2 );
+  // Captain! begin updateProblem()
+  /*
+
   // note: this tests a different I/O setup than the first section above
 
   // Load the second matrix
@@ -194,11 +202,14 @@ int main(int argc, char *argv[])
   rhs2_file.close();
 
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+  */
+  // Captain! end updateProblem()
 
   status = solver.refactorize();
   error_sum += status;
   
-  vec_x->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+  // Captain! The below line should be in the commented block above - or is it needed at all?
+  //vec_x->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
   status = solver.solve(vec_rhs, vec_x);
   error_sum += status;
 
@@ -219,10 +230,10 @@ int main(int argc, char *argv[])
     std::cout << "Test KLU with Rf solver + IR " << RED << "FAILED" << CLEAR << ", error sum: "<<error_sum<<std::endl<<std::endl;;
   }
 
-  delete A;
-  delete [] rhs;
-  delete vec_x;
-  delete vec_rhs;
+  //delete A;
+  //delete [] rhs;
+  //delete vec_x;
+  //delete vec_rhs;
 
   // if not zero, main() exits with problems
   return error_sum;

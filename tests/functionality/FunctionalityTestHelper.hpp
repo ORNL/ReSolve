@@ -10,6 +10,14 @@ namespace ReSolve
         AxEqualsRhsProblem(std::string& matrix_filepath, std::string& rhs_filepath);
         ~AxEqualsRhsProblem();
 
+        ReSolve::matrix::Csr* getMatrix();
+        ReSolve::vector::Vector* getVector();
+        ReSolve::vector::Vector* getRhs();
+
+        void updateProblem(std::string& matrix_filepath, 
+                           std::string& rhs_filepath);
+
+
       private:
 
         ReSolve::matrix::Csr* A_;

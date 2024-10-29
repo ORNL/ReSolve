@@ -44,6 +44,59 @@ AxEqualsRhsProblem::~AxEqualsRhsProblem()
   delete vec_rhs_;
 }
 
+ReSolve::matrix::Csr* AxEqualsRhsProblem::getMatrix()
+{
+  return A_;
+}
+
+ReSolve::vector::Vector* AxEqualsRhsProblem::getVector()
+{
+  return vec_x_;
+}
+
+ReSolve::vector::Vector* AxEqualsRhsProblem::getRhs()
+{
+  return vec_rhs_;
+}
+
+void AxEqualsRhsProblem::updateProblem(std::string& matrix_filepath, 
+                                       std::string& rhs_filepath)
+{
+  // Load the second matrix
+  std::ifstream mat2(matrix_filepath);
+  if(!mat2.is_open()) {
+    std::cout << "Failed to open file " << matrix_filepath << "\n";
+    std::exit( 1 );
+  }
+
+  ReSolve::io::updateMatrixFromFile(mat2, A_);
+
+  A_->syncData(ReSolve::memory::DEVICE);
+
+  mat2.close();
+
+  // Load the second rhs vector
+  std::ifstream rhs2_file(rhs_filepath);
+  if(!rhs2_file.is_open()) {
+    std::cout << "Failed to open file " << rhs_filepath << "\n";
+    std::exit( 1 );
+  }
+
+  // Captain! This is clunky and needs to be fixed
+  real_type* rhs = ReSolve::io::createArrayFromFile(rhs2_file);
+
+  //ReSolve::io::updateArrayFromFile(rhs2_file, &rhs);
+
+  rhs2_file.close();
+
+  vec_rhs_->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+
+  // Captain! test out remove the below line
+  vec_x_->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+
+  delete[] rhs;
+}
+
 // note: in the future, this should permit updates with updateMatrix and updateVector etc
 AxEqualsRhsProblem::AxEqualsRhsProblem(std::string& matrix_filepath, 
                                        std::string& rhs_filepath)
@@ -80,6 +133,8 @@ AxEqualsRhsProblem::AxEqualsRhsProblem(std::string& matrix_filepath,
 
   // Set RHS vector on CPU (update function allocates)
   vec_rhs_->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+
+  delete[] rhs;
 }
 
 real_type FunctionalityTestHelper::
