@@ -8,6 +8,7 @@ namespace ReSolve
       public:
 
         AxEqualsRhsProblem(std::string& matrix_filepath, std::string& rhs_filepath);
+        ~AxEqualsRhsProblem();
 
       private:
 

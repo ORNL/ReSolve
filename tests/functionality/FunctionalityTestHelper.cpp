@@ -37,9 +37,16 @@ namespace ReSolve
 namespace tests
 {
 
-// Captain! Connect this to the member variables!
-AxEqualsRhsProblem::AxEqualsRhsProblem(std::string &matrix_filepath, 
-                                       std::string &rhs_filepath)
+AxEqualsRhsProblem::~AxEqualsRhsProblem()
+{
+  delete A_;
+  delete vec_x_;
+  delete vec_rhs_;
+}
+
+// note: in the future, this should permit updates with updateMatrix and updateVector etc
+AxEqualsRhsProblem::AxEqualsRhsProblem(std::string& matrix_filepath, 
+                                       std::string& rhs_filepath)
 {
   // Read first matrix
   std::ifstream mat1(matrix_filepath);
@@ -48,8 +55,8 @@ AxEqualsRhsProblem::AxEqualsRhsProblem(std::string &matrix_filepath,
     std::exit(1);
   }
 
-  ReSolve::matrix::Csr* A = ReSolve::io::createCsrFromFile(mat1, true);
-  A->syncData(ReSolve::memory::DEVICE);
+  A_ = ReSolve::io::createCsrFromFile(mat1, true);
+  A_->syncData(ReSolve::memory::DEVICE);
   mat1.close();
 
   // Read first rhs vector
@@ -63,17 +70,16 @@ AxEqualsRhsProblem::AxEqualsRhsProblem(std::string &matrix_filepath,
 
   // setup/allocate testing workspace phase:
 
-  // Captain! Memory leak! Please change all these to unique_ptrs.....
   // Create rhs, solution and residual vectors
-  ReSolve::vector::Vector* vec_rhs = new ReSolve::vector::Vector(A->getNumRows());
-  ReSolve::vector::Vector* vec_x   = new ReSolve::vector::Vector(A->getNumRows());
+  vec_rhs_ = new ReSolve::vector::Vector(A_->getNumRows());
+  vec_x_   = new ReSolve::vector::Vector(A_->getNumRows());
 
   // Allocate solution vector
-  vec_x->allocate(ReSolve::memory::HOST);  //for KLU
-  vec_x->allocate(ReSolve::memory::DEVICE);
+  vec_x_->allocate(ReSolve::memory::HOST);  //for KLU
+  vec_x_->allocate(ReSolve::memory::DEVICE);
 
   // Set RHS vector on CPU (update function allocates)
-  vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_rhs_->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
 }
 
 real_type FunctionalityTestHelper::

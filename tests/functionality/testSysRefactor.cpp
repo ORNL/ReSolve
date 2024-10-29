@@ -65,6 +65,9 @@ int main(int argc, char *argv[])
 
   // Captain! axb problem construction
 
+  AxEqualsRhsProblem axb(matrixFileName1, rhsFileName1);
+  // above replaces below
+
   // Read first matrix
   std::ifstream mat1(matrixFileName1);
   if(!mat1.is_open()) {
