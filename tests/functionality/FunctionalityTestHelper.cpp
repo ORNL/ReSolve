@@ -236,12 +236,12 @@ int FunctionalityTestHelper::checkResult(
 }
 
 FunctionalityTestHelper::FunctionalityTestHelper( 
-  ReSolve::real_type tol_init)
+  ReSolve::real_type tol_init,
+  workspace_type &workspace_init)
   :
-  tol_(tol_init)
+  tol_(tol_init),
+  workspace_(workspace_init)
 {
-  workspace_.initializeHandles();
-
   mh_ = new ReSolve::MatrixHandler(&workspace_);
 
   vh_ = new ReSolve::VectorHandler(&workspace_);
@@ -283,7 +283,7 @@ int FunctionalityTestHelper::checkNormOfScaledResiduals(ReSolve::matrix::Csr& A,
   int error_sum = 0;
 
   // Compute residual norm for the second system
-  ReSolve::vector::Vector vec_r = generateResidualVector( A, vec_x, vec_rhs );
+  ReSolve::vector::Vector vec_r = generateResidualVector(A, vec_x, vec_rhs);
 
   // Compute norm of scaled residuals for the second system
   real_type inf_norm_A = 0.0;  

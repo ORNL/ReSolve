@@ -5,7 +5,10 @@ namespace ReSolve
     class FunctionalityTestHelper
     {
       public:
-        FunctionalityTestHelper(ReSolve::real_type tol_init = constants::DEFAULT_TOL);
+
+        FunctionalityTestHelper(ReSolve::real_type tol_init,
+                                workspace_type &workspace_init );
+
         ~FunctionalityTestHelper();
 
         int checkResult(ReSolve::matrix::Csr& A,
@@ -50,7 +53,7 @@ namespace ReSolve
                                   ReSolve::vector::Vector& vec_rhs);
 
       private:
-        workspace_type workspace_;
+        workspace_type &workspace_;
         ReSolve::MatrixHandler* mh_{nullptr};
         ReSolve::VectorHandler* vh_{nullptr};
         ReSolve::real_type tol_{constants::DEFAULT_TOL};
