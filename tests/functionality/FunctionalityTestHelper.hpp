@@ -2,7 +2,7 @@ namespace ReSolve
 {
   namespace tests
   {
-    // Captain! Rename all these!
+    // rename these variables please
     class AxEqualsRhsProblem
     {
       public:

@@ -82,22 +82,19 @@ void AxEqualsRhsProblem::updateProblem(std::string& matrix_filepath,
     std::exit( 1 );
   }
 
-  // Captain! This is clunky and needs to be fixed
+  // note: This intermediate allocation is clunky and should not be here
+  // in the original test, it was updateArrayFromFile: but we should not have to
+  // hold onto the intermediate rhs since it is just a temporary construction artifact
   real_type* rhs = ReSolve::io::createArrayFromFile(rhs2_file);
-
   //ReSolve::io::updateArrayFromFile(rhs2_file, &rhs);
 
   rhs2_file.close();
 
   vec_rhs_->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
 
-  // Captain! test out remove the below line
-  vec_x_->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-
   delete[] rhs;
 }
 
-// note: in the future, this should permit updates with updateMatrix and updateVector etc
 AxEqualsRhsProblem::AxEqualsRhsProblem(std::string& matrix_filepath, 
                                        std::string& rhs_filepath)
 {
@@ -360,8 +357,6 @@ void FunctionalityTestHelper::printIterativeSolverStats(SystemSolver& solver)
   real_type tol = solver.getIterativeSolver().getTol();
   index_type restart = solver.getIterativeSolver().getRestart();
   index_type maxit = solver.getIterativeSolver().getMaxit();
-
-  // note: these are the solver's tolerance, different from the testhelper's tolerance
 
   // Get solver stats
   index_type num_iter   = solver.getIterativeSolver().getNumIter();
