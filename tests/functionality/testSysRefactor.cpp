@@ -50,34 +50,6 @@ int main(int argc, char *argv[])
   using real_type   = ReSolve::real_type;
   using vector_type = ReSolve::vector::Vector;
 
-  // Error sum needs to be 0 at the end for test to PASS.
-  // It is a FAIL otheriwse.
-  int error_sum = 0;
-  int status = 0;
-
-  // Create workspace and initialize its handles.
-  workspace_type workspace;
-
-  workspace.initializeHandles();
-
-  // Create system solver
-  ReSolve::SystemSolver solver(&workspace);
-
-  // Configure solver (CUDA-based solver needs slightly different
-  // settings than HIP-based one)
-  // cgs2 = classical Gram-Schmidt
-  solver.setRefinementMethod("fgmres", "cgs2");
-
-  solver.getIterativeSolver().setRestart(100);
-
-  if (memory_space == "hip") {
-    solver.getIterativeSolver().setMaxit(200);
-  }
-
-  if (memory_space == "cuda") {
-    solver.getIterativeSolver().setMaxit(400);
-    solver.getIterativeSolver().setTol(1e-17);
-  }
   
   // Captain! axb problem construction
   // Input to this code is location of `data` directory where matrix files are stored
@@ -127,6 +99,39 @@ int main(int argc, char *argv[])
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   // Captain! axb problem is now constructed 
 
+  // Captain! begin solver creation
+
+  // Error sum needs to be 0 at the end for test to PASS.
+  // It is a FAIL otheriwse.
+  int error_sum = 0;
+  int status = 0;
+
+  // Create workspace and initialize its handles.
+  workspace_type workspace;
+
+  workspace.initializeHandles();
+
+  // Create system solver
+  ReSolve::SystemSolver solver(&workspace);
+
+  // Configure solver (CUDA-based solver needs slightly different
+  // settings than HIP-based one)
+  // cgs2 = classical Gram-Schmidt
+  solver.setRefinementMethod("fgmres", "cgs2");
+
+  solver.getIterativeSolver().setRestart(100);
+
+  if (memory_space == "hip") {
+    solver.getIterativeSolver().setMaxit(200);
+  }
+
+  if (memory_space == "cuda") {
+    solver.getIterativeSolver().setMaxit(400);
+    solver.getIterativeSolver().setTol(1e-17);
+  }
+
+  // Captain! end solver creation
+
   // Add system matrix to the solver
   status = solver.setMatrix(A);
   error_sum += status;
@@ -141,10 +146,15 @@ int main(int argc, char *argv[])
   status = solver.solve(vec_rhs, vec_x);
   error_sum += status;
 
+  // Captain! construct testhelper here!
+
   // larger tolerance than default 1e-17 because iterative refinement is not applied here
   ReSolve::tests::FunctionalityTestHelper test_helper(1e-12, workspace);
 
-  test_helper.calculateNorms( *A, *vec_rhs, *vec_x );
+  // Captain! the below step should happen in a constructor, as it is extremely easy to forget...
+  // it should then be re-constructed a second time. No more memory allocations should happen...
+  // Q: is the norm calculation functionality the same in all the tests?
+  test_helper.calculateNorms(*A, *vec_rhs, *vec_x);
 
   // Verify relative residual norm computation in SystemSolver
   error_sum += test_helper.checkRelativeResidualNorm(*vec_rhs, *vec_x, solver);
