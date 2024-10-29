@@ -37,10 +37,43 @@ namespace ReSolve
 namespace tests
 {
 
+// Captain! Connect this to the member variables!
 AxEqualsRhsProblem::AxEqualsRhsProblem(std::string &matrix_filepath, 
                                        std::string &rhs_filepath)
 {
-  // Captain! Do nothing yet...
+  // Read first matrix
+  std::ifstream mat1(matrix_filepath);
+  if(!mat1.is_open()) {
+    std::cout << "Failed to open file " << matrix_filepath << "\n";
+    std::exit(1);
+  }
+
+  ReSolve::matrix::Csr* A = ReSolve::io::createCsrFromFile(mat1, true);
+  A->syncData(ReSolve::memory::DEVICE);
+  mat1.close();
+
+  // Read first rhs vector
+  std::ifstream rhs1_file(rhs_filepath);
+  if(!rhs1_file.is_open()) {
+    std::cout << "Failed to open file " << rhs_filepath << "\n";
+    std::exit(1);
+  }
+  real_type* rhs = ReSolve::io::createArrayFromFile(rhs1_file);
+  rhs1_file.close();
+
+  // setup/allocate testing workspace phase:
+
+  // Captain! Memory leak! Please change all these to unique_ptrs.....
+  // Create rhs, solution and residual vectors
+  ReSolve::vector::Vector* vec_rhs = new ReSolve::vector::Vector(A->getNumRows());
+  ReSolve::vector::Vector* vec_x   = new ReSolve::vector::Vector(A->getNumRows());
+
+  // Allocate solution vector
+  vec_x->allocate(ReSolve::memory::HOST);  //for KLU
+  vec_x->allocate(ReSolve::memory::DEVICE);
+
+  // Set RHS vector on CPU (update function allocates)
+  vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
 }
 
 real_type FunctionalityTestHelper::

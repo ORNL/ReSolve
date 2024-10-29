@@ -2,17 +2,18 @@ namespace ReSolve
 {
   namespace tests
   {
+    // Captain! Rename all these!
     class AxEqualsRhsProblem
     {
       public:
 
-        AxEqualsRhsProblem(std::string &matrix_filepath, std::string &rhs_filepath);
+        AxEqualsRhsProblem(std::string& matrix_filepath, std::string& rhs_filepath);
 
       private:
 
-        ReSolve::matrix::Csr* A;
-        ReSolve::vector::Vector *vec_x;
-        ReSolve::vector::Vector *vec_rhs;
+        ReSolve::matrix::Csr* A_;
+        ReSolve::vector::Vector* vec_x_;
+        ReSolve::vector::Vector* vec_rhs_;
     };
 
     class FunctionalityTestHelper
@@ -66,7 +67,7 @@ namespace ReSolve
                                   ReSolve::vector::Vector& vec_rhs);
 
       private:
-        workspace_type &workspace_;
+        workspace_type& workspace_;
         ReSolve::MatrixHandler* mh_{nullptr};
         ReSolve::VectorHandler* vh_{nullptr};
         ReSolve::real_type tol_{constants::DEFAULT_TOL};

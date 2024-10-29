@@ -51,10 +51,9 @@ int main(int argc, char *argv[])
   using vector_type = ReSolve::vector::Vector;
 
   
-  // Captain! axb problem construction
+
   // Input to this code is location of `data` directory where matrix files are stored
   const std::string data_path = (argc == 2) ? argv[1] : "./";
-
 
   // rhs for rhs (solution b vector) ax = b, and first part is model (Texas grid)
   std::string matrixFileName1 = data_path + "data/matrix_ACTIVSg2000_AC_00.mtx";
@@ -64,6 +63,7 @@ int main(int argc, char *argv[])
   std::string rhsFileName1 = data_path + "data/rhs_ACTIVSg2000_AC_00.mtx.ones";
   std::string rhsFileName2 = data_path + "data/rhs_ACTIVSg2000_AC_02.mtx.ones";
 
+  // Captain! axb problem construction
 
   // Read first matrix
   std::ifstream mat1(matrixFileName1);
