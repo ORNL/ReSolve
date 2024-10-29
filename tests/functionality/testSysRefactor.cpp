@@ -79,6 +79,7 @@ int main(int argc, char *argv[])
     solver.getIterativeSolver().setTol(1e-17);
   }
   
+  // Captain! axb problem construction
   // Input to this code is location of `data` directory where matrix files are stored
   const std::string data_path = (argc == 2) ? argv[1] : "./";
 
@@ -124,6 +125,7 @@ int main(int argc, char *argv[])
 
   // Set RHS vector on CPU (update function allocates)
   vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  // Captain! axb problem is now constructed 
 
   // Add system matrix to the solver
   status = solver.setMatrix(A);
