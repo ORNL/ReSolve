@@ -37,6 +37,12 @@ namespace ReSolve
 namespace tests
 {
 
+AxEqualsRhsProblem::AxEqualsRhsProblem(std::string &matrix_filepath, 
+                                       std::string &rhs_filepath)
+{
+  // Captain! Do nothing yet...
+}
+
 real_type FunctionalityTestHelper::
 calculateSolutionVectorNorm(ReSolve::vector::Vector& vec_x)
 {

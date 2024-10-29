@@ -2,6 +2,19 @@ namespace ReSolve
 {
   namespace tests
   {
+    class AxEqualsRhsProblem
+    {
+      public:
+
+        AxEqualsRhsProblem(std::string &matrix_filepath, std::string &rhs_filepath);
+
+      private:
+
+        ReSolve::matrix::Csr* A;
+        ReSolve::vector::Vector *vec_x;
+        ReSolve::vector::Vector *vec_rhs;
+    };
+
     class FunctionalityTestHelper
     {
       public:
