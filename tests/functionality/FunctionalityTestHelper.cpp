@@ -312,6 +312,7 @@ void FunctionalityTestHelper::calculateNorms( AxEqualsRhsProblem &problem )
   calculateTrueNorm(A, vec_rhs);
 }
 
+// Captain! this should be split into two functions for separate printing and checking
 int FunctionalityTestHelper::checkResult(
     ReSolve::matrix::Csr& A,
     ReSolve::vector::Vector& vec_rhs,
@@ -335,7 +336,8 @@ int FunctionalityTestHelper::checkResult(
 
 FunctionalityTestHelper::FunctionalityTestHelper( 
   ReSolve::real_type tol_init,
-  workspace_type &workspace_init)
+  workspace_type &workspace_init,
+  AxEqualsRhsProblem &problem)
   :
   tol_(tol_init),
   workspace_(workspace_init)
@@ -343,6 +345,8 @@ FunctionalityTestHelper::FunctionalityTestHelper(
   mh_ = new ReSolve::MatrixHandler(&workspace_);
 
   vh_ = new ReSolve::VectorHandler(&workspace_);
+
+  calculateNorms(problem);
 }
 
 FunctionalityTestHelper::~FunctionalityTestHelper()
@@ -413,6 +417,7 @@ int FunctionalityTestHelper::checkRelativeResidualNorm(ReSolve::vector::Vector& 
 
   int error_sum = 0;
 
+  // Captain! pass in the solver's residual norm only into this function
   real_type rel_residual_norm = solver.getResidualNorm(&vec_rhs, &vec_x);
 
   real_type error = std::abs(rhs_norm_ * rel_residual_norm - residual_norm_)/residual_norm_;

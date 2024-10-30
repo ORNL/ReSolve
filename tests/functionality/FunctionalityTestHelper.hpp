@@ -30,7 +30,8 @@ namespace ReSolve
       public:
 
         FunctionalityTestHelper(ReSolve::real_type tol_init,
-                                workspace_type &workspace_init );
+                                workspace_type &workspace_init,
+                                AxEqualsRhsProblem &problem);
 
         ~FunctionalityTestHelper();
 
@@ -51,7 +52,7 @@ namespace ReSolve
                                       ReSolve::vector::Vector& vec_x,
                                       ReSolve::SystemSolver& solver);
 
-        void calculateNorms( AxEqualsRhsProblem &problem );
+        void calculateNorms(AxEqualsRhsProblem &problem);
 
         real_type calculateSolutionVectorNorm(ReSolve::vector::Vector& vec_x);
 

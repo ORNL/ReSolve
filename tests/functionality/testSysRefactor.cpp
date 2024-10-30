@@ -114,13 +114,48 @@ int main(int argc, char *argv[])
 
   // construct test helper object
 
+  // Captain! refactorize the solver on a new ax=b and new testhelper. Only the solver
+  // Captain! testhelper should be in a scope, a new axb and a new testhelper per result
+  // one result, one axb problem, one testhelper.
+  // add axb move constructor to create new axb from the old one
+  // put testhelper in a function so the two are separated by scope
+  // what can this function look like?
+  /*
+
+    new code:
+
+    create axb
+
+    create solver
+
+    create workspace
+
+    set tolerance
+
+    test_factorize( axb, solver, workspace, tolerance ) --> internally constructs testhelper
+
+    move construct: new_axb( axb, matrix_file, vector_file )
+
+    test_refactorize( new_axb, solver, workspace, tolerance )
+
+    return error_sum
+
+
+
+
+  */
+
+  // put testhelper into a function scope - only solver should persist from one testhelper
+  // to the next
+
   // larger tolerance than default 1e-17 because iterative refinement is not applied here
-  ReSolve::tests::FunctionalityTestHelper test_helper(1e-12, workspace);
+  ReSolve::tests::FunctionalityTestHelper test_helper(1e-12, workspace, axb);
 
   // the below step should happen in a constructor, as it is extremely easy to forget...
   // it should then be re-constructed a second time. No more memory allocations should happen...
   // Q: is the norm calculation functionality the same in all the tests?
-  test_helper.calculateNorms(axb);
+  // Captain! moved this into the class
+  //test_helper.calculateNorms(axb);
 
   // Verify relative residual norm computation in SystemSolver
   error_sum += test_helper.checkRelativeResidualNorm(*vec_rhs, *vec_x, solver);
@@ -128,6 +163,7 @@ int main(int argc, char *argv[])
   // Compute norm of scaled residuals
   error_sum += test_helper.checkNormOfScaledResiduals(*A, *vec_rhs, *vec_x, solver);
 
+  // Captain! split this into residual checking and printing
   error_sum += 
   test_helper.checkResult(*A, *vec_rhs, *vec_x, solver, "first matrix");
 
@@ -144,6 +180,8 @@ int main(int argc, char *argv[])
   status = solver.solve(vec_rhs, vec_x);
   error_sum += status;
 
+  // Captain! create a new testhelper instead of using the same one here...
+  // Captain! can you also create a new testhelper instead?
   test_helper.calculateNorms(axb);
 
   // Verify relative residual norm computation in SystemSolver
