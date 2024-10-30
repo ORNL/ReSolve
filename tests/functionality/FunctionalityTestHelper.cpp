@@ -285,13 +285,14 @@ int FunctionalityTestHelper::checkResidualNorm()
   return error_sum;
 }
 
-void FunctionalityTestHelper::calculateNorms(
-    ReSolve::matrix::Csr& A,
-    ReSolve::vector::Vector& vec_rhs,
-    ReSolve::vector::Vector& vec_x )
+void FunctionalityTestHelper::calculateNorms( AxEqualsRhsProblem &problem )
 {
   using namespace memory;
   using namespace ReSolve::constants;
+
+  ReSolve::matrix::Csr& A = *problem.getMatrix();
+  ReSolve::vector::Vector& vec_x = *problem.getVector();
+  ReSolve::vector::Vector& vec_rhs = *problem.getRhs();
 
   int error_sum = 0;
 

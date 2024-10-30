@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
   // the below step should happen in a constructor, as it is extremely easy to forget...
   // it should then be re-constructed a second time. No more memory allocations should happen...
   // Q: is the norm calculation functionality the same in all the tests?
-  test_helper.calculateNorms(*A, *vec_rhs, *vec_x);
+  test_helper.calculateNorms(axb);
 
   // Verify relative residual norm computation in SystemSolver
   error_sum += test_helper.checkRelativeResidualNorm(*vec_rhs, *vec_x, solver);
@@ -135,7 +135,7 @@ int main(int argc, char *argv[])
   status = solver.refactorizationSetup();
   error_sum += status;
 
-  axb.updateProblem( matrixFileName2, rhsFileName2 );
+  axb.updateProblem(matrixFileName2, rhsFileName2);
 
   status = solver.refactorize();
 
@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
   status = solver.solve(vec_rhs, vec_x);
   error_sum += status;
 
-  test_helper.calculateNorms( *A, *vec_rhs, *vec_x );
+  test_helper.calculateNorms(axb);
 
   // Verify relative residual norm computation in SystemSolver
   error_sum += test_helper.checkRelativeResidualNorm(*vec_rhs, *vec_x, solver);
