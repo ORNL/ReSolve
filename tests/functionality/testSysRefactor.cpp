@@ -56,7 +56,7 @@ int verifyResult( AxEqualsRhsProblem &axb,
   vector_type* vec_rhs = axb.getRhs();
 
   // larger tolerance than default 1e-17 because iterative refinement is not applied here
-  ReSolve::tests::FunctionalityTestHelper test_helper(1e-12, workspace, axb);
+  ReSolve::tests::FunctionalityTestHelper test_helper(tolerance, workspace, axb);
 
   // Verify relative residual norm computation in SystemSolver
   error_sum += test_helper.checkRelativeResidualNorm(*vec_rhs, *vec_x, solver);
@@ -198,7 +198,7 @@ int main(int argc, char *argv[])
   
   error_sum += solver.solve(axb.getRhs(), axb.getVector());
 
-  error_sum += verifyResult(axb, solver, workspace, 1e-17);
+  error_sum += verifyResult(axb, solver, workspace, 1e-12);
 
   reportFinalResult(error_sum);
 
