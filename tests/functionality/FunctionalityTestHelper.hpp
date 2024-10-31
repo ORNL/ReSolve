@@ -7,19 +7,15 @@ namespace ReSolve
     {
       public:
 
-        AxEqualsRhsProblem(std::string& matrix_filepath, std::string& rhs_filepath);
+        AxEqualsRhsProblem(const std::string& matrix_filepath, const std::string& rhs_filepath);
         ~AxEqualsRhsProblem();
 
-        AxEqualsRhsProblem(AxEqualsRhsProblem &&problem,
-                           std::string& matrix_filepath, 
-                           std::string& rhs_filepath) noexcept;
+        ReSolve::matrix::Csr* getMatrix() const;
+        ReSolve::vector::Vector* getVector() const;
+        ReSolve::vector::Vector* getRhs() const;
 
-        ReSolve::matrix::Csr* getMatrix();
-        ReSolve::vector::Vector* getVector();
-        ReSolve::vector::Vector* getRhs();
-
-        void updateProblem(std::string& matrix_filepath, 
-                           std::string& rhs_filepath);
+        void updateProblem(const std::string& matrix_filepath, 
+                           const std::string& rhs_filepath);
 
 
       private:

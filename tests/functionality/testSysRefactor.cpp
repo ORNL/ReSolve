@@ -42,42 +42,90 @@
 using namespace ReSolve::constants;
 using namespace ReSolve::tests;
 using namespace ReSolve::colors;
+using real_type   = ReSolve::real_type;
+using vector_type = ReSolve::vector::Vector;
 
-
-int main(int argc, char *argv[])
+int verifyResult( AxEqualsRhsProblem &axb,
+                   ReSolve::SystemSolver &solver,
+                   workspace_type &workspace,
+                   double tolerance )
 {
-  using real_type   = ReSolve::real_type;
-  using vector_type = ReSolve::vector::Vector;
-
-  // Input to this code is location of `data` directory where matrix files are stored
-  const std::string data_path = (argc == 2) ? argv[1] : "./";
-
-  // rhs for rhs (solution b vector) ax = b, and first part is model (Texas grid)
-  std::string matrixFileName1 = data_path + "data/matrix_ACTIVSg2000_AC_00.mtx";
-  std::string matrixFileName2 = data_path + "data/matrix_ACTIVSg2000_AC_02.mtx";
-
-  // so we are setting up A_above * x_unknown = rhs_below, 
-  std::string rhsFileName1 = data_path + "data/rhs_ACTIVSg2000_AC_00.mtx.ones";
-  std::string rhsFileName2 = data_path + "data/rhs_ACTIVSg2000_AC_02.mtx.ones";
-
-  // axb problem construction
-  AxEqualsRhsProblem axb(matrixFileName1, rhsFileName1);
+  int error_sum = 0;
   ReSolve::matrix::Csr* A = axb.getMatrix();
   vector_type* vec_x   = axb.getVector();
   vector_type* vec_rhs = axb.getRhs();
 
-  // Error sum needs to be 0 at the end for test to PASS.
-  // It is a FAIL otheriwse.
-  int error_sum = 0;
-  int status = 0;
+  // larger tolerance than default 1e-17 because iterative refinement is not applied here
+  ReSolve::tests::FunctionalityTestHelper test_helper(1e-12, workspace, axb);
 
-  // workspace construction
-  workspace_type workspace;
+  // Verify relative residual norm computation in SystemSolver
+  error_sum += test_helper.checkRelativeResidualNorm(*vec_rhs, *vec_x, solver);
 
-  workspace.initializeHandles();
+  // Compute norm of scaled residuals
+  error_sum += test_helper.checkNormOfScaledResiduals(*A, *vec_rhs, *vec_x, solver);
 
-  // system solver construction uses workspace
-  ReSolve::SystemSolver solver(&workspace);
+  // Captain! split this into residual checking and printing
+  error_sum += 
+  test_helper.checkResult(*A, *vec_rhs, *vec_x, solver, "first matrix");
+
+  return error_sum;
+}
+
+void reportFinalResult(int const error_sum)
+{
+  if (error_sum == 0) {
+    std::cout << "Test KLU with Rf solver + IR " << GREEN << "PASSED" << CLEAR <<std::endl<<std::endl;;
+  } else {
+    std::cout << "Test KLU with Rf solver + IR " << RED << "FAILED" << CLEAR << ", error sum: "<<error_sum<<std::endl<<std::endl;;
+  }
+}
+
+class FileInputs
+{
+  public:
+
+  FileInputs(std::string const &data_path)
+    :
+  matrixFileName1_(data_path + "data/matrix_ACTIVSg2000_AC_00.mtx"),
+  matrixFileName2_(data_path + "data/matrix_ACTIVSg2000_AC_02.mtx"),
+  rhsFileName1_(data_path + "data/rhs_ACTIVSg2000_AC_00.mtx.ones"),
+  rhsFileName2_(data_path + "data/rhs_ACTIVSg2000_AC_02.mtx.ones")
+  {
+  }
+
+  std::string getMatrixFileName1() const
+  {
+    return  matrixFileName1_;
+  }
+
+  std::string getMatrixFileName2() const
+  {
+     return matrixFileName2_;
+  }
+
+  std::string getRhsFileName1() const
+  {
+     return rhsFileName1_;
+  }
+
+  std::string getRhsFileName2() const
+  {
+     return rhsFileName2_;
+  }
+
+  private:
+
+  // Texas model
+  std::string const matrixFileName1_;
+  std::string const rhsFileName1_;
+
+  std::string const matrixFileName2_;
+  std::string const rhsFileName2_;
+};
+
+ReSolve::SystemSolver generateSolver(workspace_type *workspace, const AxEqualsRhsProblem &axb)
+{
+  ReSolve::SystemSolver solver(workspace);
 
   // Configure solver (CUDA-based solver needs slightly different
   // settings than HIP-based one)
@@ -95,109 +143,64 @@ int main(int argc, char *argv[])
     solver.getIterativeSolver().setTol(1e-17);
   }
 
-  // end solver creation
-
   // next connect solver to problem:
+  int const status = solver.setMatrix(axb.getMatrix());
+  
+  if(status != 0) {
 
-  status = solver.setMatrix(A);
-  error_sum += status;
+    std::cout << "solver.setMatrix(axb.getMatrix()) failed!" << std::endl;
+    std::exit(status);
+  }
 
-  // Solve the first system using KLU
-  status = solver.analyze();
-  error_sum += status;
-
-  status = solver.factorize();
-  error_sum += status;
-
-  status = solver.solve(vec_rhs, vec_x);
-  error_sum += status;
-
-  // construct test helper object
-
-  // Captain! refactorize the solver on a new ax=b and new testhelper. Only the solver
-  // Captain! testhelper should be in a scope, a new axb and a new testhelper per result
-  // one result, one axb problem, one testhelper.
-  // add axb move constructor to create new axb from the old one
-  // put testhelper in a function so the two are separated by scope
-  // what can this function look like?
-  /*
-
-    new code:
-
-    create axb
-
-    create solver
-
-    create workspace
-
-    set tolerance
-
-    test_factorize( axb, solver, workspace, tolerance ) --> internally constructs testhelper
-
-    move construct: new_axb( axb, matrix_file, vector_file )
-
-    test_refactorize( new_axb, solver, workspace, tolerance )
-
-    return error_sum
-
-    note: leave the update() method in case move constructor method is not desired
+  return solver;
+}
 
 
-  */
+int main(int argc, char *argv[])
+{
+  // Input to this code is location of `data` directory where matrix files are stored
+  // build filenames for inputs
+  const std::string data_path = (argc == 2) ? argv[1] : "./";
 
-  // put testhelper into a function scope - only solver should persist from one testhelper
-  // to the next: function( workspace, problem, solver, tolerance ) <--- top-level function
+  FileInputs const fileInputs( data_path );
 
-  // larger tolerance than default 1e-17 because iterative refinement is not applied here
-  ReSolve::tests::FunctionalityTestHelper test_helper(1e-12, workspace, axb);
+  // axb problem construction
+  AxEqualsRhsProblem axb(fileInputs.getMatrixFileName1(), 
+                         fileInputs.getRhsFileName1());
 
-  // the below step should happen in a constructor, as it is extremely easy to forget...
-  // it should then be re-constructed a second time. No more memory allocations should happen...
-  // Q: is the norm calculation functionality the same in all the tests?
-  // Captain! moved this into the class
-  //test_helper.calculateNorms(axb);
+  // workspace construction
+  workspace_type workspace;
 
-  // Verify relative residual norm computation in SystemSolver
-  error_sum += test_helper.checkRelativeResidualNorm(*vec_rhs, *vec_x, solver);
+  workspace.initializeHandles();
 
-  // Compute norm of scaled residuals
-  error_sum += test_helper.checkNormOfScaledResiduals(*A, *vec_rhs, *vec_x, solver);
+  // solver construction
+  ReSolve::SystemSolver solver = generateSolver(&workspace, axb);
 
-  // Captain! split this into residual checking and printing
-  error_sum += 
-  test_helper.checkResult(*A, *vec_rhs, *vec_x, solver, "first matrix");
+  // Error sum must be 0 at the end for test to PASS.
+  int error_sum = 0;
+
+  // Solve the first system
+  error_sum += solver.analyze();
+
+  error_sum += solver.factorize();
+
+  error_sum += solver.solve(axb.getRhs(), axb.getVector());
+
+  error_sum += verifyResult(axb, solver, workspace, 1e-12);
 
   // Now prepare the Rf solver
-  status = solver.refactorizationSetup();
-  error_sum += status;
+  error_sum += solver.refactorizationSetup();
 
-  axb.updateProblem(matrixFileName2, rhsFileName2);
+  // update the Ax=b problem
+  axb.updateProblem(fileInputs.getMatrixFileName2(), fileInputs.getRhsFileName2());
 
-  status = solver.refactorize();
-
-  error_sum += status;
+  error_sum += solver.refactorize();
   
-  status = solver.solve(vec_rhs, vec_x);
-  error_sum += status;
+  error_sum += solver.solve(axb.getRhs(), axb.getVector());
 
-  // Captain! create a new testhelper instead of using the same one here...
-  // Captain! can you also create a new testhelper instead?
-  test_helper.calculateNorms(axb);
+  error_sum += verifyResult(axb, solver, workspace, 1e-17);
 
-  // Verify relative residual norm computation in SystemSolver
-  error_sum += test_helper.checkRelativeResidualNorm(*vec_rhs, *vec_x, solver);
-
-  // Compute norm of scaled residuals
-  error_sum += test_helper.checkNormOfScaledResiduals(*A, *vec_rhs, *vec_x, solver);
-
-  error_sum += 
-  test_helper.checkResult(*A, *vec_rhs, *vec_x, solver, "second matrix");
-
-  if (error_sum == 0) {
-    std::cout << "Test KLU with Rf solver + IR " << GREEN << "PASSED" << CLEAR <<std::endl<<std::endl;;
-  } else {
-    std::cout << "Test KLU with Rf solver + IR " << RED << "FAILED" << CLEAR << ", error sum: "<<error_sum<<std::endl<<std::endl;;
-  }
+  reportFinalResult(error_sum);
 
   // if not zero, main() exits with problems
   return error_sum;

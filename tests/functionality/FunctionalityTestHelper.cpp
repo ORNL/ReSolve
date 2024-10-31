@@ -45,23 +45,23 @@ AxEqualsRhsProblem::~AxEqualsRhsProblem()
   delete vec_rhs_;
 }
 
-ReSolve::matrix::Csr* AxEqualsRhsProblem::getMatrix()
+ReSolve::matrix::Csr* AxEqualsRhsProblem::getMatrix() const
 {
   return A_;
 }
 
-ReSolve::vector::Vector* AxEqualsRhsProblem::getVector()
+ReSolve::vector::Vector* AxEqualsRhsProblem::getVector() const
 {
   return vec_x_;
 }
 
-ReSolve::vector::Vector* AxEqualsRhsProblem::getRhs()
+ReSolve::vector::Vector* AxEqualsRhsProblem::getRhs() const
 {
   return vec_rhs_;
 }
 
-void AxEqualsRhsProblem::updateProblem(std::string& matrix_filepath, 
-                                       std::string& rhs_filepath)
+void AxEqualsRhsProblem::updateProblem(const std::string& matrix_filepath, 
+                                       const std::string& rhs_filepath)
 {
   // Load the second matrix
   std::ifstream mat2(matrix_filepath);
@@ -96,22 +96,9 @@ void AxEqualsRhsProblem::updateProblem(std::string& matrix_filepath,
   delete[] rhs;
 }
 
-AxEqualsRhsProblem::AxEqualsRhsProblem(AxEqualsRhsProblem &&problem,
-                   std::string& matrix_filepath, 
-                   std::string& rhs_filepath) noexcept
-
+AxEqualsRhsProblem::AxEqualsRhsProblem(const std::string& matrix_filepath, 
+                                       const std::string& rhs_filepath)
 {
-  std::cout << "Ahoy! move constructor called" << std::endl;
-
-  // what do we need to do here? still need createCSR from a file
-  // the only thing we'll do is move the vectors instead of the whole rhs thing?
-
-}
-
-AxEqualsRhsProblem::AxEqualsRhsProblem(std::string& matrix_filepath, 
-                                       std::string& rhs_filepath)
-{
-  std::cout << "Ahoy! regular constructor called" << std::endl;
   // Read first matrix
   std::ifstream mat1(matrix_filepath);
   if(!mat1.is_open()) {
