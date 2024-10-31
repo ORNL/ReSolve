@@ -2,6 +2,7 @@
 #include <iostream>
 #include <iomanip>
 #include <cmath>
+#include <memory>
 
 #include <resolve/vector/Vector.hpp>
 #include <resolve/matrix/io.hpp>
@@ -95,9 +96,22 @@ void AxEqualsRhsProblem::updateProblem(std::string& matrix_filepath,
   delete[] rhs;
 }
 
+AxEqualsRhsProblem::AxEqualsRhsProblem(AxEqualsRhsProblem &&problem,
+                   std::string& matrix_filepath, 
+                   std::string& rhs_filepath) noexcept
+
+{
+  std::cout << "Ahoy! move constructor called" << std::endl;
+
+  // what do we need to do here? still need createCSR from a file
+  // the only thing we'll do is move the vectors instead of the whole rhs thing?
+
+}
+
 AxEqualsRhsProblem::AxEqualsRhsProblem(std::string& matrix_filepath, 
                                        std::string& rhs_filepath)
 {
+  std::cout << "Ahoy! regular constructor called" << std::endl;
   // Read first matrix
   std::ifstream mat1(matrix_filepath);
   if(!mat1.is_open()) {
@@ -342,18 +356,20 @@ FunctionalityTestHelper::FunctionalityTestHelper(
   tol_(tol_init),
   workspace_(workspace_init)
 {
-  mh_ = new ReSolve::MatrixHandler(&workspace_);
+  //mh_ = new ReSolve::MatrixHandler(&workspace_);
+  mh_ = std::make_unique<ReSolve::MatrixHandler>(&workspace_);
 
-  vh_ = new ReSolve::VectorHandler(&workspace_);
+  vh_ = std::make_unique<ReSolve::VectorHandler>(&workspace_);
 
   calculateNorms(problem);
 }
 
 FunctionalityTestHelper::~FunctionalityTestHelper()
 {
-  delete mh_;
+  // no longer needed if mh_ is a unique_ptr, it will be deleted when out of scope
+  //delete mh_;
 
-  delete vh_;
+  //delete vh_;
 }
 
 void FunctionalityTestHelper::printIterativeSolverStats(SystemSolver& solver)
@@ -409,6 +425,7 @@ int FunctionalityTestHelper::checkNormOfScaledResiduals(ReSolve::matrix::Csr& A,
 }
 
 
+// Captain! pass rel_residual_norm in as a function parameter rather than calculate here
 int FunctionalityTestHelper::checkRelativeResidualNorm(ReSolve::vector::Vector& vec_rhs,
     ReSolve::vector::Vector& vec_x,
     ReSolve::SystemSolver& solver)
@@ -417,7 +434,6 @@ int FunctionalityTestHelper::checkRelativeResidualNorm(ReSolve::vector::Vector& 
 
   int error_sum = 0;
 
-  // Captain! pass in the solver's residual norm only into this function
   real_type rel_residual_norm = solver.getResidualNorm(&vec_rhs, &vec_x);
 
   real_type error = std::abs(rhs_norm_ * rel_residual_norm - residual_norm_)/residual_norm_;

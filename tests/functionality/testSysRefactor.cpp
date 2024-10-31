@@ -140,13 +140,13 @@ int main(int argc, char *argv[])
 
     return error_sum
 
-
+    note: leave the update() method in case move constructor method is not desired
 
 
   */
 
   // put testhelper into a function scope - only solver should persist from one testhelper
-  // to the next
+  // to the next: function( workspace, problem, solver, tolerance ) <--- top-level function
 
   // larger tolerance than default 1e-17 because iterative refinement is not applied here
   ReSolve::tests::FunctionalityTestHelper test_helper(1e-12, workspace, axb);

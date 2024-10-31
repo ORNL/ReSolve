@@ -10,6 +10,10 @@ namespace ReSolve
         AxEqualsRhsProblem(std::string& matrix_filepath, std::string& rhs_filepath);
         ~AxEqualsRhsProblem();
 
+        AxEqualsRhsProblem(AxEqualsRhsProblem &&problem,
+                           std::string& matrix_filepath, 
+                           std::string& rhs_filepath) noexcept;
+
         ReSolve::matrix::Csr* getMatrix();
         ReSolve::vector::Vector* getVector();
         ReSolve::vector::Vector* getRhs();
@@ -76,8 +80,8 @@ namespace ReSolve
 
       private:
         workspace_type& workspace_;
-        ReSolve::MatrixHandler* mh_{nullptr};
-        ReSolve::VectorHandler* vh_{nullptr};
+        std::unique_ptr<ReSolve::MatrixHandler> mh_{nullptr};
+        std::unique_ptr<ReSolve::VectorHandler> vh_{nullptr};
         ReSolve::real_type tol_{constants::DEFAULT_TOL};
         real_type residual_norm_{-1.0};
         real_type rhs_norm_{-1.0};
