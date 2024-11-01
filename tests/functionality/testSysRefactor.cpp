@@ -64,7 +64,6 @@ int verifyResult( AxEqualsRhsProblem &axb,
   // Compute norm of scaled residuals
   error_sum += test_helper.checkNormOfScaledResiduals(*A, *vec_rhs, *vec_x, solver);
 
-  // Captain! split this into residual checking and printing
   error_sum += 
   test_helper.checkResult(*A, *vec_rhs, *vec_x, solver, "first matrix");
 

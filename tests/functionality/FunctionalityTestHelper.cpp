@@ -313,7 +313,7 @@ void FunctionalityTestHelper::calculateNorms( AxEqualsRhsProblem &problem )
   calculateTrueNorm(A, vec_rhs);
 }
 
-// Captain! this should be split into two functions for separate printing and checking
+// note: this should be split into two functions for separate printing and checking
 int FunctionalityTestHelper::checkResult(
     ReSolve::matrix::Csr& A,
     ReSolve::vector::Vector& vec_rhs,
@@ -412,7 +412,7 @@ int FunctionalityTestHelper::checkNormOfScaledResiduals(ReSolve::matrix::Csr& A,
 }
 
 
-// Captain! pass rel_residual_norm in as a function parameter rather than calculate here
+// note: pass rel_residual_norm in as a function parameter rather than calculate here
 int FunctionalityTestHelper::checkRelativeResidualNorm(ReSolve::vector::Vector& vec_rhs,
     ReSolve::vector::Vector& vec_x,
     ReSolve::SystemSolver& solver)
