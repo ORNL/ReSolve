@@ -8,10 +8,12 @@
 
 set(ReSolve_CPU_SRC
     MemoryUtils.cpp
+    cpuHykktPermutationKernels.cpp
 )
 
 set(ReSolve_CPU_HEADER_INSTALL
     CpuMemory.hpp
+    cpuHykktPermutationKernels.hpp
 )
 
 # First create dummy backend
