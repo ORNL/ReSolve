@@ -2,7 +2,10 @@ namespace ReSolve
 {
   namespace tests
   {
-    // rename these variables please
+    /**
+     * @brief Class for compting and updating residual.
+     * 
+     */
     class AxEqualsRhsProblem
     {
       public:
@@ -25,6 +28,10 @@ namespace ReSolve
         ReSolve::vector::Vector* vec_rhs_;
     };
 
+    /**
+     * @brief Class with utility functions for verifying test results.
+     * 
+     */
     class FunctionalityTestHelper
     {
       public:
@@ -36,17 +43,17 @@ namespace ReSolve
         ~FunctionalityTestHelper();
 
         int checkResult(ReSolve::matrix::Csr& A,
-                                      ReSolve::vector::Vector& vec_rhs,
-                                      ReSolve::vector::Vector& vec_x,
-                                      ReSolve::SystemSolver& solver,
-                                      std::string testname);
+                        ReSolve::vector::Vector& vec_rhs,
+                        ReSolve::vector::Vector& vec_x,
+                        ReSolve::SystemSolver& solver,
+                        std::string testname);
 
         void printIterativeSolverStats(SystemSolver& solver);
 
         int checkNormOfScaledResiduals(ReSolve::matrix::Csr& A,
-                                      ReSolve::vector::Vector& vec_rhs,
-                                      ReSolve::vector::Vector& vec_x,
-                                      ReSolve::SystemSolver& solver);
+                                       ReSolve::vector::Vector& vec_rhs,
+                                       ReSolve::vector::Vector& vec_x,
+                                       ReSolve::SystemSolver& solver);
 
         int checkRelativeResidualNorm(ReSolve::vector::Vector& vec_rhs,
                                       ReSolve::vector::Vector& vec_x,
@@ -60,19 +67,17 @@ namespace ReSolve
 
         real_type calculateResidualNorm(ReSolve::vector::Vector& vec_r);
 
-        real_type calculateDiffNorm(ReSolve::matrix::Csr& A, ReSolve::vector::Vector& vec_x);
+        real_type calculateDiffNorm(ReSolve::vector::Vector& vec_x);
 
         int checkResidualNorm();
 
-        real_type 
-        calculateTrueNorm(ReSolve::matrix::Csr& A, ReSolve::vector::Vector& vec_rhs);
+        real_type calculateTrueNorm(ReSolve::matrix::Csr& A, ReSolve::vector::Vector& vec_rhs);
 
         void printNorms(std::string &testname);
 
-        ReSolve::vector::Vector 
-        generateResidualVector(ReSolve::matrix::Csr& A,
-                                  ReSolve::vector::Vector& vec_x,
-                                  ReSolve::vector::Vector& vec_rhs);
+        ReSolve::vector::Vector generateResidualVector(ReSolve::matrix::Csr& A,
+                                                       ReSolve::vector::Vector& vec_x,
+                                                       ReSolve::vector::Vector& vec_rhs);
 
       private:
         workspace_type& workspace_;

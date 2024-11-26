@@ -72,11 +72,13 @@ int verifyResult( AxEqualsRhsProblem &axb,
 
 void reportFinalResult(int const error_sum)
 {
+  std::cout << "Test KLU with Rf solver + IR ";
   if (error_sum == 0) {
-    std::cout << "Test KLU with Rf solver + IR " << GREEN << "PASSED" << CLEAR <<std::endl<<std::endl;;
+    std::cout << GREEN << "PASSED" << CLEAR;
   } else {
-    std::cout << "Test KLU with Rf solver + IR " << RED << "FAILED" << CLEAR << ", error sum: "<<error_sum<<std::endl<<std::endl;;
+    std::cout << RED << "FAILED" << CLEAR << ", error sum: "<< error_sum;
   }
+  std::cout << std::endl << std::endl;
 }
 
 class FileInputs
