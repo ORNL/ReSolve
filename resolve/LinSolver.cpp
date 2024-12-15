@@ -31,6 +31,15 @@ namespace ReSolve
     return 1.0;
   }
 
+  int LinSolver::getParamId(std::string id)
+  {
+    auto it = params_list_.find(id);
+    if (it == params_list_.end()) {
+      out::error() << "Unknown parameter " << id << ".\n";
+      return 999;
+    }
+    return (*it).second;
+  }
 }
 
 

@@ -79,7 +79,9 @@ namespace ReSolve
         return 1;
       }
         
-    protected:  
+    protected:
+      int getParamId(std::string id);
+
       matrix::Sparse* A_{nullptr};
 
       MatrixHandler* matrix_handler_{nullptr};

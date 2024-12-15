@@ -383,7 +383,7 @@ namespace ReSolve
 
   int LinSolverIterativeFGMRES::setCliParam(const std::string id, const std::string value)
   {
-    switch (params_list_[id])
+    switch (getParamId(id))
     {
       case TOL:
         setTol(atof(value.c_str()));
@@ -398,19 +398,20 @@ namespace ReSolve
         setConvCond(atoi(value.c_str()));
         break;
       case FLEXIBLE:
-        bool is_flexible = (value == "yes");
-        setFlexible(is_flexible);
+        setFlexible(value == "yes");
         break;
+      default:
+        std::cout << "Setting parameter failed!\n";
     }
     return 0;
   }
 
   int LinSolverIterativeFGMRES::getCliParam(const std::string id, std::string& /* value */)
   {
-    switch (params_list_[id])
+    switch (getParamId(id))
     {
       default:
-        out::error() << "Unknown string parameter " << id << "\n";
+        out::error() << "Trying to get unknown string parameter " << id << "\n";
         return 1;
     }
     return 0;
@@ -418,7 +419,7 @@ namespace ReSolve
 
   int LinSolverIterativeFGMRES::getCliParam(const std::string id, index_type& value)
   {
-    switch (params_list_[id])
+    switch (getParamId(id))
     {
       case MAXIT:
         value = getMaxit();
@@ -430,7 +431,7 @@ namespace ReSolve
         value = getConvCond();
         break;
       default:
-        out::error() << "Unknown integer parameter " << id << "\n";
+        out::error() << "Trying to get unknown integer parameter " << id << "\n";
         return 1;
     }
     return 0;
@@ -438,13 +439,13 @@ namespace ReSolve
 
   int LinSolverIterativeFGMRES::getCliParam(const std::string id, real_type& value)
   {
-    switch (params_list_[id])
+    switch (getParamId(id))
     {
       case TOL:
         value = getTol();
         break;
       default:
-        out::error() << "Unknown real parameter " << id << "\n";
+        out::error() << "Trying to get unknown real parameter " << id << "\n";
         return 1;
     }
     return 0;
@@ -452,13 +453,13 @@ namespace ReSolve
 
   int LinSolverIterativeFGMRES::getCliParam(const std::string id, bool& value)
   {
-    switch (params_list_[id])
+    switch (getParamId(id))
     {
       case FLEXIBLE:
         value = getFlexible();
         break;
       default:
-        out::error() << "Unknown boolean parameter " << id << "\n";
+        out::error() << "Trying to get unknown boolean parameter " << id << "\n";
         return 1;
     }
     return 0;
@@ -466,7 +467,7 @@ namespace ReSolve
 
   int LinSolverIterativeFGMRES::printCliParam(const std::string id)
   {
-    switch (params_list_[id])
+    switch (getParamId(id))
     {
     case TOL:
       std::cout << getTol() << "\n";
@@ -484,7 +485,7 @@ namespace ReSolve
       std::cout << getFlexible() << "\n";
       break;
     default:
-      out::error() << "Unknown parameter " << id << "\n";
+      out::error() << "Trying to print unknown parameter " << id << "\n";
       return 1;
     }
     return 0;
