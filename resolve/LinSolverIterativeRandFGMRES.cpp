@@ -503,6 +503,33 @@ namespace ReSolve
     return 0;
   }
 
+  /**
+   * @brief Set the convergence condition for GMRES solver
+   * 
+   * @param[in] conv_cond - Possible values: 0, 1, 2 
+   * @return int - error code, 0 if successful
+   */
+  int LinSolverIterativeRandFGMRES::setConvergenceCondition(index_type conv_cond)
+  {
+    conv_cond_ = conv_cond;
+    return 0;
+  }
+
+  index_type  LinSolverIterativeRandFGMRES::getRestart() const
+  {
+    return restart_;
+  }
+
+  index_type  LinSolverIterativeRandFGMRES::getConvCond() const
+  {
+    return conv_cond_;
+  }
+
+  bool  LinSolverIterativeRandFGMRES::getFlexible() const
+  {
+    return flexible_;
+  }
+
   int LinSolverIterativeRandFGMRES::setCliParam(const std::string id, const std::string value)
   {
     switch (getParamId(id))
@@ -517,7 +544,7 @@ namespace ReSolve
         setRestart(atoi(value.c_str()));
         break;
       case CONV_COND:
-        setConvCond(atoi(value.c_str()));
+        setConvergenceCondition(atoi(value.c_str()));
         break;
       case FLEXIBLE:
         setFlexible(value == "yes");

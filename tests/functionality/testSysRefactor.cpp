@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
   // Configure solver (CUDA-based solver needs slightly different
   // settings than HIP-based one)
   solver.setRefinementMethod("fgmres", "cgs2");
-  solver.getIterativeSolver().setRestart(100);
+  solver.getIterativeSolver().setCliParam("restart", "100");
   if (memory_space == "hip") {
     solver.getIterativeSolver().setMaxit(200);
   }
@@ -299,7 +299,8 @@ int main(int argc, char *argv[])
  
   // Get solver parameters
   real_type tol = solver.getIterativeSolver().getTol();
-  index_type restart = solver.getIterativeSolver().getRestart();
+  index_type restart = 0;
+  solver.getIterativeSolver().getCliParam("restart", restart);
   index_type maxit = solver.getIterativeSolver().getMaxit();
 
   // Get solver stats

@@ -64,8 +64,12 @@ namespace ReSolve
       int setupPreconditioner(std::string name, LinSolverDirect* LU_solver) override;
       int setOrthogonalization(GramSchmidt* gs) override;
 
-      int setRestart(index_type restart) override;
-      int setFlexible(bool is_flexible) override;
+      int setRestart(index_type restart);
+      int setFlexible(bool is_flexible);
+      int setConvergenceCondition(index_type conv_cond);
+      index_type getRestart() const;
+      index_type getConvCond() const;
+      bool getFlexible() const;
 
       index_type getKrand();
       int setSketchingMethod(SketchingMethod method);

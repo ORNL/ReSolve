@@ -59,21 +59,6 @@ namespace ReSolve
     return maxit_;
   }
 
-  index_type  LinSolverIterative::getRestart()
-  {
-    return restart_;
-  }
-
-  index_type  LinSolverIterative::getConvCond()
-  {
-    return conv_cond_;
-  }
-
-  bool  LinSolverIterative::getFlexible()
-  {
-    return flexible_;
-  }
-
   int LinSolverIterative::setOrthogonalization(GramSchmidt* /* gs */)
   {
     out::error() << "Solver does not implement setting orthogonalization.\n";
@@ -88,11 +73,6 @@ namespace ReSolve
   void  LinSolverIterative::setMaxit(index_type new_maxit)
   {
     this->maxit_ = new_maxit;
-  }
-
-  void  LinSolverIterative::setConvCond(index_type new_conv_cond)
-  {
-    this->conv_cond_ = new_conv_cond;
   }
 }
 

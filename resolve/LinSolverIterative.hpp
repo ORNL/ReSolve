@@ -33,15 +33,9 @@ namespace ReSolve
 
       real_type getTol();
       index_type getMaxit();
-      index_type getRestart();
-      index_type getConvCond();
-      bool getFlexible();
 
       void setTol(real_type new_tol);
       void setMaxit(index_type new_maxit);
-      virtual int setRestart(index_type new_restart) = 0;
-      void setConvCond(index_type new_conv_cond);
-      virtual int setFlexible(bool new_flexible) = 0;
 
     protected:
       real_type initial_residual_norm_;

@@ -36,7 +36,7 @@ using vector_type = ReSolve::vector::Vector;
 template <class T>
 static int test(int argc, char* argv[]);
 static void processInputs(std::string& method, std::string& gs, std::string& sketch);
-static std::string headerInfo(const std::string& method, const std::string& gs, const std::string& sketch, bool flexible);
+static std::string headerInfo(const std::string& method, const std::string& gs, const std::string& sketch, std::string flexible);
 static ReSolve::matrix::Csr* generateMatrix(const index_type N, ReSolve::memory::MemorySpace memspace);
 static ReSolve::vector::Vector* generateRhs(const index_type N, ReSolve::memory::MemorySpace memspace);
 
@@ -82,10 +82,7 @@ int test(int argc, char *argv[])
   std::string sketch = opt ? (*opt).second : "count";
 
   opt = options.getParamFromKey("-x");
-  bool flexible = true;
-  if(opt) {
-    flexible = !((*opt).second == "no");
-  }
+  std::string flexible = opt ? (*opt).second : "yes";
 
   processInputs(method, gs, sketch);
 
@@ -130,7 +127,8 @@ int test(int argc, char *argv[])
 
   // Set solver options
   //real_type tol = 1e-12;
-  solver.getIterativeSolver().setMaxit(2500);
+  // solver.getIterativeSolver().setMaxit(2500);
+  solver.getIterativeSolver().setCliParam("maxit", "2500");
   // solver.getIterativeSolver().setTol(tol);
   solver.getIterativeSolver().setCliParam("tol", "1e-12");
   real_type tol = 0.0;
@@ -149,7 +147,7 @@ int test(int argc, char *argv[])
   if (method == "randgmres") {
     solver.setSketchingMethod(sketch);
   }
-  solver.getIterativeSolver().setFlexible(flexible);
+  solver.getIterativeSolver().setCliParam("flexible", flexible);
 
   // Set preconditioner (default in this case ILU0)
   status = solver.preconditionerSetup();
@@ -222,12 +220,13 @@ void processInputs(std::string& method, std::string& gs, std::string& sketch)
   }
 }
 
-std::string headerInfo(const std::string& method, const std::string& gs, const std::string& sketch, bool flexible)
+std::string headerInfo(const std::string& method, const std::string& gs, const std::string& sketch, std::string flexible)
 {
+  bool is_flexible = !(flexible == "no");
   std::string header("Results for ");
   if (method == "randgmres") {
     header += "randomized ";
-    header += flexible ? "FGMRES" : "GMRES";
+    header += is_flexible ? "FGMRES" : "GMRES";
     header += " solver\n";
     header += "\t Sketching method:               ";
     if (sketch == "count") {
@@ -236,7 +235,7 @@ std::string headerInfo(const std::string& method, const std::string& gs, const s
       header += "fast Walsh-Hadamard transform\n";
     }
   } else if (method == "fgmres") {
-    header += flexible ? "FGMRES" : "GMRES";
+    header += is_flexible ? "FGMRES" : "GMRES";
     header += " solver\n";
   } else {
     return header + "unknown method\n";
