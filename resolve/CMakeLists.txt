@@ -29,6 +29,7 @@ set(ReSolve_LUSOL_SRC
   LinSolverDirectLUSOL.cpp
 )
 
+
 # C++ code that links to CUDA SDK libraries
 set(ReSolve_CUDASDK_SRC
     LinSolverDirectCuSolverGLU.cpp
@@ -113,6 +114,9 @@ if(RESOLVE_USE_LUSOL)
   list(APPEND ReSolve_HEADER_INSTALL ${ReSolve_LUSOL_HEADER_INSTALL})
   list(APPEND ReSolve_Targets_List lusol_lib)
 endif()
+
+add_subdirectory(hykkt/cpu)
+
 
 # If no GPU support is enabled, link to dummy device backend
 if(NOT RESOLVE_USE_GPU)

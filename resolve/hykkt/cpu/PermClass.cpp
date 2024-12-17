@@ -1,5 +1,5 @@
-#include "PermClass.hpp"
-#include "cpuHykktPermutationKernels.hpp"
+#include "resolve/hykkt/cpu/PermClass.hpp"
+#include "resolve/hykkt/cpu/cpuHykktPermutationKernels.hpp"
 #include <resolve/vector/Vector.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include "amd.h"
@@ -94,33 +94,23 @@ PermClass::PermClass(int n_h, int nnz_h, int nnz_j)
     switch(permutation)
     {
       case perm_v: 
-        fun_map_idx(n_h_, d_perm_, old_val, new_val);
+        cpu_map_idx(n_h_, perm_, old_val, new_val);
         break;
       case rev_perm_v: 
-        fun_map_idx(n_h_, d_rev_perm_, old_val, new_val);
+        cpu_map_idx(n_h_, rev_perm_, old_val, new_val);
         break;
       case perm_h_v: 
-        fun_map_idx(nnz_h_, d_perm_map_h_, old_val, new_val);
+        cpu_map_idx(nnz_h_, perm_map_h_, old_val, new_val);
         break;
       case perm_j_v: 
-        fun_map_idx(nnz_j_, d_perm_map_j_, old_val, new_val);
+        cpu_map_idx(nnz_j_, perm_map_j_, old_val, new_val);
         break;
       case perm_jt_v: 
-        fun_map_idx(nnz_j_, d_perm_map_jt_, old_val, new_val);
+        cpu_map_idx(nnz_j_, perm_map_jt_, old_val, new_val);
         break;
       default:
         printf("Valid arguments are perm_v, rev_perm_v, perm_h_v, perm_j_v, perm_jt_v\n");
     }
-  }
-
-  void PermClass::display_perm() const
-  {
-    displayDeviceVector(d_perm_,
-        n_h_,
-        0,
-        10,
-        "PERMUTATION"); 
-
   }
   
   void PermClass::allocate_workspace()
