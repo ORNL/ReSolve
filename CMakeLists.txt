@@ -22,7 +22,7 @@ if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
 endif()
 
 option(RESOLVE_TEST_WITH_BSUB "Use `jsrun` instead of `mpirun` commands when running tests" OFF)
-option(RESOLVE_USE_KLU  "Use KLU, AMD and COLAMD libraries from SuiteSparse" ON)
+option(RESOLVE_USE_KLU  "Use KLU, AMD and COLAMD libraries from SuiteSparse" OFF)
 option(RESOLVE_USE_LUSOL "Build the LUSOL library" OFF)
 option(RESOLVE_USE_CUDA "Use CUDA language and SDK" OFF)
 option(RESOLVE_USE_HIP  "Use HIP language and ROCm library" OFF)
@@ -32,7 +32,7 @@ option(RESOLVE_USE_GPU  "Use GPU device for computations" OFF)
 mark_as_advanced(FORCE RESOLVE_USE_GPU)
 
 option(RESOLVE_USE_ASAN "Use LLVM address sanitizer" OFF)
-option(RESOLVE_USE_DOXYGEN "Use Doxygen to generate Re::Solve documentation" ON)
+option(RESOLVE_USE_DOXYGEN "Use Doxygen to generate Re::Solve documentation" OFF)
 set(RESOLVE_CTEST_OUTPUT_DIR ${PROJECT_BINARY_DIR} CACHE PATH "Directory where CTest outputs are saved")
 
 # update this if more fortran code is added. this should be good enough for now though
@@ -73,10 +73,10 @@ endif()
 
 
 if (RESOLVE_USE_KLU)
-  include(FindKLU)
-  if(NOT KLU_LIBRARY)
+  include(FindSuiteSparse)
+  if(NOT SUITESPARSE_LIBRARY)
     message(STATUS "Cannot find KLU, disabling SuiteSparse module ...")
-    set(RESOLVE_USE_KLU OFF CACHE BOOL "Build without SuiteSparse AMD module." FORCE)
+    set(RESOLVE_USE_KLU OFF CACHE BOOL "Build without SuiteSparse module." FORCE)
   endif()
 else()
   message(STATUS "Not using SuiteSparse KLU")
