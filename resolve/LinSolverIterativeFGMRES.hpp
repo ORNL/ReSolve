@@ -63,6 +63,10 @@ namespace ReSolve
     private:
       enum ParamaterIDs {TOL=0, MAXIT, RESTART, CONV_COND, FLEXIBLE};
 
+      index_type restart_{10};  ///< GMRES restart
+      index_type conv_cond_{0}; ///< GMRES convergence condition
+      bool flexible_{true};     ///< If using flexible GMRES (FGMRES) algorithm
+
     private:
       int allocateSolverData();
       int freeSolverData();
