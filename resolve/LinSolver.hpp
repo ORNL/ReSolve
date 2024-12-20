@@ -32,8 +32,7 @@ namespace ReSolve
   // Forward declaration of MatrixHandler class
   class MatrixHandler;
 
-  class SolverParameters;
-  
+
   /**
    * @brief Base class for all linear solvers.
    * 
