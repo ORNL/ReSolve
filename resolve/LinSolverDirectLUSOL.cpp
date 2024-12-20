@@ -263,7 +263,8 @@ namespace ReSolve
     // NOTE: this is not one-indexed like the original is
     std::unique_ptr<index_type[]> pt = std::unique_ptr<index_type[]>(new index_type[m_]);
     for (index_type i = 0; i < m_; i++) {
-      pt[p_[i] - 1] = i;
+      size_t j = static_cast<size_t>(p_[i] - 1);
+      pt[j] = i;
     }
 
     // preprocessing since columns are stored unordered within lusol's workspace
@@ -274,7 +275,8 @@ namespace ReSolve
     for (index_type i = 0; i < initial_m; i++) {
       index_type column_nnz = lenc_[i];
       index_type column_nnz_end = offset - column_nnz;
-      index_type corresponding_column = pt[indr_[column_nnz_end + 1] - 1];
+      size_t j = static_cast<size_t>(indr_[column_nnz_end + 1] - 1);
+      index_type corresponding_column = pt[j];
 
       columns[corresponding_column + 1] = column_nnz;
       offset = column_nnz_end;
@@ -297,12 +299,14 @@ namespace ReSolve
 
     offset = lena_ - 1;
     for (index_type i = 0; i < initial_m; i++) {
-      index_type corresponding_column = pt[indr_[offset - lenc_[i] + 1] - 1];
+      size_t j = static_cast<size_t>(indr_[offset - lenc_[i] + 1] - 1);
+      index_type corresponding_column = pt[j];
 
       for (index_type destination_offset = columns[corresponding_column];
            destination_offset < columns[corresponding_column + 1] - 1;
            destination_offset++) {
-        index_type row = pt[indc_[offset] - 1];
+        size_t k = static_cast<size_t>(indc_[offset] - 1);
+        index_type row = pt[k];
 
         // closest position to the target row
         index_type* closest_position =
@@ -365,7 +369,8 @@ namespace ReSolve
     // NOTE: this is not one-indexed like the original is
     std::unique_ptr<index_type[]> qt = std::unique_ptr<index_type[]>(new index_type[n_]);
     for (index_type i = 0; i < n_; i++) {
-      qt[q_[i] - 1] = i;
+      size_t j = static_cast<size_t>(q_[i] - 1);
+      qt[j] = i;
     }
 
     // preprocessing since rows technically aren't ordered either
@@ -386,7 +391,8 @@ namespace ReSolve
       index_type offset = locr_[p_[row] - 1] - 1;
 
       for (index_type destination_offset = rows[row]; destination_offset < rows[row + 1]; destination_offset++) {
-        index_type column = qt[indr_[offset] - 1];
+        size_t j = static_cast<size_t>(indr_[offset] - 1);
+        index_type column = qt[j];
 
         // closest position to the target column
         index_type* closest_position =
