@@ -82,7 +82,6 @@ add_subdirectory(workspace)
 add_subdirectory(vector)
 add_subdirectory(matrix)
 add_subdirectory(random)
-#add_subdirectory(hykkt/cpu)
 
 # Build shared library ReSolve
 add_library(resolve_tpl INTERFACE)
@@ -139,6 +138,12 @@ if(RESOLVE_USE_HIP)
   list(APPEND ReSolve_Targets_List resolve_backend_hip)
   list(APPEND ReSolve_HEADER_INSTALL ${ReSolve_ROCM_HEADER_INSTALL})
 endif()
+
+# Add HyKKT solver
+add_subdirectory(hykkt)
+#list(APPEND ReSolve_Targets_List resolve_hykkt)
+
+
 
 # Set installable targets
 install(TARGETS ${ReSolve_Targets_List} EXPORT ReSolveTargets)

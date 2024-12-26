@@ -1,7 +1,9 @@
-#include "resolve/hykkt/cpu/PermClass.hpp"
-#include "resolve/hykkt/cpu/cpuHykktPermutationKernels.hpp"
-#include <resolve/vector/Vector.hpp>
-#include <resolve/matrix/Csr.hpp>
+#include "PermClass.hpp"
+#include "cpuHykktPermutationKernels.hpp"
+// #include <resolve/hykkt/PermClass.hpp>
+// #include <resolve/hykkt/cpuHykktPermutationKernels.hpp>
+// #include <resolve/vector/Vector.hpp>
+// #include <resolve/matrix/Csr.hpp>
 #include "amd.h"
 
 // Creates a class for the permutation of $H_\gamma$ in (6)

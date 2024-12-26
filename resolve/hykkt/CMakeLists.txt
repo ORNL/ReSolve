@@ -16,8 +16,10 @@ set (HyKKT_HEADER_INSTALL
     cpuHykktPermutationKernels.hpp
 )
 
-add_library(hyktt SHARED ${HyKKT_SRC})
-target_link_libraries(hyktt PUBLIC ReSolve)
+add_library(resolve_hyktt SHARED ${HyKKT_SRC})
+target_link_libraries(resolve_hyktt PRIVATE resolve_tpl)
+#target_include_directories(resolve_hykkt PRIVATE ${CMAKE_BINARY_DIR})
+
 # install include headers
 install(FILES ${HyKKT_HEADER_INSTALL} DESTINATION include/hykkt)
 
