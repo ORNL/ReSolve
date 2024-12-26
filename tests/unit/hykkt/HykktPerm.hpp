@@ -5,9 +5,8 @@
 #include <iterator>
 #include <algorithm>
 #include <tests/unit/TestBase.hpp>
-#include <resolve/matrix/Coo.hpp>
-#include <resolve/hykkt/cpu/PermClass.hpp>
-#include <resolve/hykkt/cpu/cpuHykktPermutationKernels.hpp>
+#include <resolve/hykkt/PermClass.hpp>
+#include <resolve/hykkt/cpuHykktPermutationKernels.hpp>
 namespace ReSolve { namespace tests {
 
 class HykktPerm : public TestBase
