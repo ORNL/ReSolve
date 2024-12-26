@@ -15,3 +15,5 @@ spack-configure-*
 docs/dox.warnings
 docs/@dox_output_dir@axom.tag
 docs/html
+resolve/hybrid
+
