@@ -190,7 +190,11 @@ namespace ReSolve
     }
   }
 
-  int matrix::Csr::updateData(index_type* row_data, index_type* col_data, real_type* val_data, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut)
+  int matrix::Csr::updateData(const index_type* row_data,
+                              const index_type* col_data,
+                              const real_type* val_data,
+                              memory::MemorySpace memspaceIn,
+                              memory::MemorySpace memspaceOut)
   {
     //four cases (for now)
     index_type nnz_current = nnz_;
@@ -266,12 +270,16 @@ namespace ReSolve
     return 0;
   } 
 
-  int matrix::Csr::updateData(index_type* row_data, index_type* col_data, real_type* val_data, index_type new_nnz, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut)
+  int matrix::Csr::updateData(const index_type* row_data,
+                              const index_type* col_data,
+                              const real_type* val_data,
+                              index_type new_nnz,
+                              memory::MemorySpace memspaceIn,
+                              memory::MemorySpace memspaceOut)
   {
-    this->destroyMatrixData(memspaceOut);
-    this->nnz_ = new_nnz;
-    int i = this->updateData(row_data, col_data, val_data, memspaceIn, memspaceOut);
-    return i;
+    destroyMatrixData(memspaceOut);
+    nnz_ = new_nnz;
+    return updateData(row_data, col_data, val_data, memspaceIn, memspaceOut);
   } 
 
   int matrix::Csr::allocateMatrixData(memory::MemorySpace memspace)
