@@ -42,11 +42,11 @@ namespace ReSolve {
     d_col_data_ = nullptr;
     d_val_data_ = nullptr;
     
-    owns_cpu_data_ = false;
-    owns_cpu_vals_ = false;
+    owns_cpu_sparsity_pattern_ = false;
+    owns_cpu_values_ = false;
     
-    owns_gpu_data_ = false;
-    owns_gpu_vals_ = false;
+    owns_gpu_sparsity_pattern_ = false;
+    owns_gpu_values_ = false;
   }
 
   /** 
@@ -80,11 +80,11 @@ namespace ReSolve {
     d_col_data_ = nullptr;
     d_val_data_ = nullptr;
 
-    owns_cpu_data_ = false;
-    owns_cpu_vals_ = false;
+    owns_cpu_sparsity_pattern_ = false;
+    owns_cpu_values_ = false;
     
-    owns_gpu_data_ = false;
-    owns_gpu_vals_ = false;
+    owns_gpu_sparsity_pattern_ = false;
+    owns_gpu_values_ = false;
   }
   
   /**
@@ -240,12 +240,12 @@ namespace ReSolve {
 
     switch (memspace) {
       case HOST:
-        if (owns_cpu_data_ && (h_row_data_ || h_col_data_)) {
+        if (owns_cpu_sparsity_pattern_ && (h_row_data_ || h_col_data_)) {
           out::error() << "Trying to set matrix host data, but the data already set!\n";
           out::error() << "Ignoring setDataPointers function call ...\n";
           return 1;
         }
-        if (owns_cpu_vals_ && h_val_data_) {
+        if (owns_cpu_values_ && h_val_data_) {
           out::error() << "Trying to set matrix host values, but the values already set!\n";
           out::error() << "Ignoring setValuesPointer function call ...\n";
           return 1;
@@ -254,16 +254,16 @@ namespace ReSolve {
         h_col_data_ = col_data;
         h_val_data_ = val_data;	
         h_data_updated_ = true;
-        owns_cpu_data_  = false;
-        owns_cpu_vals_  = false;
+        owns_cpu_sparsity_pattern_ = false;
+        owns_cpu_values_ = false;
         break;
       case DEVICE:
-        if (owns_gpu_data_ && (d_row_data_ || d_col_data_)) {
+        if (owns_gpu_sparsity_pattern_ && (d_row_data_ || d_col_data_)) {
           out::error() << "Trying to set matrix host data, but the data already set!\n";
           out::error() << "Ignoring setDataPointers function call ...\n";
           return 1;
         }
-        if (owns_gpu_vals_ && d_val_data_) {
+        if (owns_gpu_values_ && d_val_data_) {
           out::error() << "Trying to set matrix device values, but the values already set!\n";
           out::error() << "Ignoring setValuesPointer function call ...\n";
           return 1;
@@ -272,8 +272,8 @@ namespace ReSolve {
         d_col_data_ = col_data;
         d_val_data_ = val_data;	
         d_data_updated_ = true;
-        owns_gpu_data_  = false;
-        owns_gpu_vals_  = false;
+        owns_gpu_sparsity_pattern_ = false;
+        owns_gpu_values_ = false;
         break;
     }
     return 0;
@@ -293,25 +293,25 @@ namespace ReSolve {
     using namespace ReSolve::memory;
     switch (memspace) {
       case HOST:
-        if (owns_cpu_data_) {
+        if (owns_cpu_sparsity_pattern_) {
           delete [] h_row_data_;
           delete [] h_col_data_;
           h_row_data_ = nullptr;
           h_col_data_ = nullptr;
         }
-        if (owns_cpu_vals_) {
+        if (owns_cpu_values_) {
           delete [] h_val_data_;
           h_val_data_ = nullptr;
         }
         return 0;
       case DEVICE:
-        if (owns_gpu_data_) {
+        if (owns_gpu_sparsity_pattern_) {
           mem_.deleteOnDevice(d_row_data_);
           mem_.deleteOnDevice(d_col_data_);
           d_row_data_ = nullptr;
           d_col_data_ = nullptr;
         }
-        if (owns_gpu_vals_) {
+        if (owns_gpu_values_) {
           mem_.deleteOnDevice(d_val_data_);
           d_val_data_ = nullptr;
         }
@@ -351,7 +351,7 @@ namespace ReSolve {
       //check if cpu data allocated
       if (h_val_data_ == nullptr) {
         this->h_val_data_ = new real_type[nnz_current];
-        owns_cpu_vals_ = true;
+        owns_cpu_values_ = true;
       }
     }
 
@@ -359,7 +359,7 @@ namespace ReSolve {
       //check if cuda data allocated
       if (d_val_data_ == nullptr) {
         mem_.allocateArrayOnDevice(&d_val_data_, nnz_current); 
-        owns_gpu_vals_ = true;
+        owns_gpu_values_ = true;
       }
     }
 
@@ -406,24 +406,24 @@ namespace ReSolve {
 
     switch (memspace) {
       case HOST:
-        if (owns_cpu_vals_ && h_val_data_) {
+        if (owns_cpu_values_ && h_val_data_) {
           out::error() << "Trying to set matrix host values, but the values already set!\n";
           out::error() << "Ignoring setValuesPointer function call ...\n";
           return 1;
         }
         h_val_data_ = new_vals;	
         h_data_updated_ = true;
-        owns_cpu_vals_  = false;
+        owns_cpu_values_  = false;
         break;
       case DEVICE:
-        if (owns_gpu_vals_ && d_val_data_) {
+        if (owns_gpu_values_ && d_val_data_) {
           out::error() << "Trying to set matrix device values, but the values already set!\n";
           out::error() << "Ignoring setValuesPointer function call ...\n";
           return 1;
         }
         d_val_data_ = new_vals;	
         d_data_updated_ = true;
-        owns_gpu_vals_  = false;
+        owns_gpu_values_  = false;
         break;
       default:
         return -1;
