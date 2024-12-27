@@ -53,33 +53,33 @@ namespace ReSolve
         return 1;
       }
         
-      virtual int getCliParam(const std::string /* id */, std::string& /* value */)
+      virtual std::string getCliParamString(const std::string /* id */) const
       {
-        return 1;
+        return "";
       }
         
-      virtual int getCliParam(const std::string /* id */, index_type& /* value */)
+      virtual index_type getCliParamInt(const std::string /* id */) const
       {
-        return 1;
+        return -1;
       }
         
-      virtual int getCliParam(const std::string /* id */, real_type& /* value */)
+      virtual real_type getCliParamReal(const std::string /* id */) const
       {
-        return 1;
+        return 1.0;
       }
         
-      virtual int getCliParam(const std::string /* id */, bool& /* value */)
+      virtual bool getCliParamBool(const std::string /* id */) const
       {
-        return 1;
+        return false;
       }
         
-      virtual int printCliParam(const std::string /* id */)
+      virtual int printCliParam(const std::string /* id */) const
       {
         return 1;
       }
         
     protected:
-      int getParamId(std::string id);
+      int getParamId(std::string id) const;
 
       matrix::Sparse* A_{nullptr};
 

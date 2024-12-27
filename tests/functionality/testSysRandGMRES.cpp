@@ -150,8 +150,7 @@ int test(int argc, char *argv[])
   solver.getIterativeSolver().setCliParam("tol", "1e-12");
 
   // Tolerance value to output
-  real_type tol_out = 0.0;
-  solver.getIterativeSolver().getCliParam("tol", tol_out);
+  real_type tol_out = solver.getIterativeSolver().getCliParamReal("tol");
 
   matrix_handler.setValuesChanged(true, memspace);
 

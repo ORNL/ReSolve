@@ -555,66 +555,62 @@ namespace ReSolve
     return 0;
   }
 
-  int LinSolverIterativeRandFGMRES::getCliParam(const std::string id, std::string& /* value */)
+  std::string LinSolverIterativeRandFGMRES::getCliParamString(const std::string id) const
   {
     switch (getParamId(id))
     {
       default:
         out::error() << "Trying to get unknown string parameter " << id << "\n";
-        return 1;
     }
-    return 0;
+    return "";
   }
 
-  int LinSolverIterativeRandFGMRES::getCliParam(const std::string id, index_type& value)
+  index_type LinSolverIterativeRandFGMRES::getCliParamInt(const std::string id) const
   {
     switch (getParamId(id))
     {
       case MAXIT:
-        value = getMaxit();
+        return getMaxit();
         break;
       case RESTART:
-        value = getRestart();
+        return getRestart();
         break;
       case CONV_COND:
-        value = getConvCond();
+        return getConvCond();
         break;
       default:
         out::error() << "Trying to get unknown integer parameter " << id << "\n";
-        return 1;
     }
-    return 0;
+    return -1;
   }
 
-  int LinSolverIterativeRandFGMRES::getCliParam(const std::string id, real_type& value)
+  real_type LinSolverIterativeRandFGMRES::getCliParamReal(const std::string id) const
   {
     switch (getParamId(id))
     {
       case TOL:
-        value = getTol();
+        return getTol();
         break;
       default:
         out::error() << "Trying to get unknown real parameter " << id << "\n";
-        return 1;
     }
-    return 0;
+    return std::numeric_limits<real_type>::quiet_NaN();
   }
 
-  int LinSolverIterativeRandFGMRES::getCliParam(const std::string id, bool& value)
+  bool LinSolverIterativeRandFGMRES::getCliParamBool(const std::string id) const
   {
     switch (getParamId(id))
     {
       case FLEXIBLE:
-        value = getFlexible();
+        return getFlexible();
         break;
       default:
         out::error() << "Trying to get unknown boolean parameter " << id << "\n";
-        return 1;
     }
-    return 0;
+    return false;
   }
 
-  int LinSolverIterativeRandFGMRES::printCliParam(const std::string id)
+  int LinSolverIterativeRandFGMRES::printCliParam(const std::string id) const
   {
     switch (getParamId(id))
     {

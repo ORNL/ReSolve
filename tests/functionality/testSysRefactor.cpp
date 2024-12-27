@@ -299,8 +299,7 @@ int main(int argc, char *argv[])
  
   // Get solver parameters
   real_type tol = solver.getIterativeSolver().getTol();
-  index_type restart = 0;
-  solver.getIterativeSolver().getCliParam("restart", restart);
+  index_type restart = solver.getIterativeSolver().getCliParamInt("restart");
   index_type maxit = solver.getIterativeSolver().getMaxit();
 
   // Get solver stats

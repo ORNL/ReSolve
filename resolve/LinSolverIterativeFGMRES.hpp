@@ -54,11 +54,11 @@ namespace ReSolve
       bool getFlexible() const;
 
       int setCliParam(const std::string id, const std::string value) override;
-      int getCliParam(const std::string id, std::string& value) override;
-      int getCliParam(const std::string id, index_type& value) override;
-      int getCliParam(const std::string id, real_type& value) override;
-      int getCliParam(const std::string id, bool& value) override;
-      int printCliParam(const std::string id) override;
+      std::string getCliParamString(const std::string id) const override;
+      index_type getCliParamInt(const std::string id) const override;
+      real_type getCliParamReal(const std::string id) const override;
+      bool getCliParamBool(const std::string id) const override;
+      int printCliParam(const std::string id) const override;
 
     private:
       enum ParamaterIDs {TOL=0, MAXIT, RESTART, CONV_COND, FLEXIBLE};

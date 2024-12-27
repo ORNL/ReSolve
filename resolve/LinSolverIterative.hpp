@@ -31,8 +31,8 @@ namespace ReSolve
 
       virtual int setOrthogonalization(GramSchmidt* gs);
 
-      real_type getTol();
-      index_type getMaxit();
+      real_type getTol() const;
+      index_type getMaxit() const;
 
       void setTol(real_type new_tol);
       void setMaxit(index_type new_maxit);

@@ -49,12 +49,12 @@ namespace ReSolve
   }
 
 
-  real_type  LinSolverIterative::getTol()
+  real_type LinSolverIterative::getTol() const
   {
     return tol_;
   }
 
-  index_type  LinSolverIterative::getMaxit()
+  index_type LinSolverIterative::getMaxit() const
   {
     return maxit_;
   }

@@ -31,7 +31,7 @@ namespace ReSolve
     return 1.0;
   }
 
-  int LinSolver::getParamId(std::string id)
+  int LinSolver::getParamId(std::string id) const
   {
     auto it = params_list_.find(id);
     if (it == params_list_.end()) {

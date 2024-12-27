@@ -58,18 +58,12 @@ namespace ReSolve { namespace tests {
                                       &vector_handler,
                                       &gs);
 
-      index_type restart_out   = 0;
-      real_type  tol_out       = 0.0;
-      index_type maxit_out     = 0;
-      index_type conv_cond_out = 0;
-      bool       flexible_out  = false;
-
       // Use getters to read parameters set by the constructor
-      solver.getCliParam("restart",   restart_out  );
-      solver.getCliParam("tol",       tol_out      );
-      solver.getCliParam("maxit",     maxit_out    );
-      solver.getCliParam("conv_cond", conv_cond_out);
-      solver.getCliParam("flexible",  flexible_out );
+      index_type restart_out   = solver.getCliParamInt("restart");
+      real_type  tol_out       = solver.getCliParamReal("tol");
+      index_type maxit_out     = solver.getCliParamInt("maxit");
+      index_type conv_cond_out = solver.getCliParamInt("conv_cond");
+      bool       flexible_out  = solver.getCliParamBool("flexible");
 
       // Check getters
       success *= (restart == restart_out);
@@ -98,11 +92,11 @@ namespace ReSolve { namespace tests {
       solver.setCliParam("flexible",  flexible_in );
 
       // Read new values
-      solver.getCliParam("restart",   restart_out  );
-      solver.getCliParam("tol",       tol_out      );
-      solver.getCliParam("maxit",     maxit_out    );
-      solver.getCliParam("conv_cond", conv_cond_out);
-      solver.getCliParam("flexible",  flexible_out );
+      restart_out   = solver.getCliParamInt("restart");
+      tol_out       = solver.getCliParamReal("tol");
+      maxit_out     = solver.getCliParamInt("maxit");
+      conv_cond_out = solver.getCliParamInt("conv_cond");
+      flexible_out  = solver.getCliParamBool("flexible");
 
       // Check setters
       success *= (restart == restart_out);
