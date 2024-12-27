@@ -80,14 +80,16 @@ namespace ReSolve
 
           index_type* p_ordering = solver.getPOrdering();
 
-          for (index_type i = 0; i < A->getNumRows(); i++) {
-            status *= p_ordering[i] == reference_p_ordering_[i];
+          size_t n = static_cast<size_t>(A->getNumRows());
+          for (size_t i = 0; i < n; i++) {
+            status *= (p_ordering[i] == reference_p_ordering_[i]);
           }
 
           index_type* q_ordering = solver.getQOrdering();
 
-          for (index_type i = 0; i < A->getNumColumns(); i++) {
-            status *= q_ordering[i] == reference_q_ordering_[i];
+          size_t m = static_cast<size_t>(A->getNumColumns());
+          for (size_t i = 0; i < m; i++) {
+            status *= (q_ordering[i] == reference_q_ordering_[i]);
           }
 
           if (solver.solve(&rhs, &x) < 0) {
@@ -202,7 +204,7 @@ namespace ReSolve
                           const std::vector<real_type>& coo_answer_values)
         {
           bool status = true;
-          index_type i = 0;
+          size_t i = 0;
 
           index_type* rows = A.getRowData(memory::HOST);
           index_type* columns = A.getColData(memory::HOST);
@@ -266,7 +268,7 @@ namespace ReSolve
                           const std::vector<real_type>& coo_answer_values)
         {
           bool status = true;
-          index_type i = 0;
+          size_t i = 0;
 
           index_type* columns = A.getColData(memory::HOST);
           index_type* rows = A.getRowData(memory::HOST);
