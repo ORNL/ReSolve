@@ -1,7 +1,7 @@
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/ReSolve-Logo-Dark.png" width="400" valign="middle">
-  <source media="(prefers-color-scheme: light)" srcset="docs/images/ReSolve-Logo-Light.png" width="400" valign="middle">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/ReSolve-Logo-Dark-Border.svg" width="400" valign="middle">
+  <source media="(prefers-color-scheme: light)" srcset="docs/images/ReSolve-Logo-Light-Border.svg" width="400" valign="middle">
   <img alt="Re::Solve">
 </picture>
 
