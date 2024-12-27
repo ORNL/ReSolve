@@ -1,14 +1,17 @@
-
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/ReSolve-Logo-Dark-Border.svg" width="400" valign="middle">
-  <source media="(prefers-color-scheme: light)" srcset="docs/images/ReSolve-Logo-Light-Border.svg" width="400" valign="middle">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/ReSolve-Logo-Dark.png" width="350" valign="middle">
+  <source media="(prefers-color-scheme: light)" srcset="docs/images/ReSolve-Logo-Light.png" width="350" valign="middle">
   <img alt="Re::Solve">
 </picture>
+
+<h2>
 
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://github.com/ORNL/ReSolve/blob/develop/LICENSE)
 [![Documentation Status](https://readthedocs.org/projects/resolve/badge/?version=develop)](https://resolve.readthedocs.io/en/develop/?badge=develop)
 [![Spack CPU Build](https://github.com/ORNL/ReSolve/actions/workflows/spack_cpu_build.yaml/badge.svg?event=pull_request)](https://github.com/ORNL/ReSolve/actions)
+
+</h2>
 
 Re::Solve is a library of GPU-resident linear solvers. It contains iterative
 and direct solvers designed to run on NVIDIA and AMD GPUs, as well as on CPU
