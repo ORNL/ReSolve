@@ -247,7 +247,7 @@ namespace ReSolve {
         }
         if (owns_cpu_vals_ && h_val_data_) {
           out::error() << "Trying to set matrix host values, but the values already set!\n";
-          out::error() << "Ignoring setNewValues function call ...\n";
+          out::error() << "Ignoring setValuesPointer function call ...\n";
           return 1;
         }
         h_row_data_ = row_data;
@@ -265,7 +265,7 @@ namespace ReSolve {
         }
         if (owns_gpu_vals_ && d_val_data_) {
           out::error() << "Trying to set matrix device values, but the values already set!\n";
-          out::error() << "Ignoring setNewValues function call ...\n";
+          out::error() << "Ignoring setValuesPointer function call ...\n";
           return 1;
         }
         d_row_data_ = row_data;
@@ -387,16 +387,19 @@ namespace ReSolve {
   }
 
   /**
-   * @brief updata matrix values using the _new_values_ provided either as HOST or as DEVICE array.
+   * @brief updata matrix values using the _new_values_ provided either as
+   * HOST or as DEVICE array.
    * 
-   * This function only assigns a pointer, but does not copy. It sets update flags.
+   * This function only assigns a pointer, but does not copy. It sets update
+   * flags.
    *
    * @param[in] new_vals    - pointer to new values data (array of real numbers)
    * @param[in] memspace    - memory space (HOST or DEVICE) of _new_vals_
    *
    * @return 0 if successful, -1 if not.
    */  
-  int matrix::Sparse::setNewValues(real_type* new_vals, memory::MemorySpace memspace)
+  int matrix::Sparse::setValuesPointer(real_type* new_vals,
+                                       memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
     setNotUpdated();
@@ -405,7 +408,7 @@ namespace ReSolve {
       case HOST:
         if (owns_cpu_vals_ && h_val_data_) {
           out::error() << "Trying to set matrix host values, but the values already set!\n";
-          out::error() << "Ignoring setNewValues function call ...\n";
+          out::error() << "Ignoring setValuesPointer function call ...\n";
           return 1;
         }
         h_val_data_ = new_vals;	
@@ -415,7 +418,7 @@ namespace ReSolve {
       case DEVICE:
         if (owns_gpu_vals_ && d_val_data_) {
           out::error() << "Trying to set matrix device values, but the values already set!\n";
-          out::error() << "Ignoring setNewValues function call ...\n";
+          out::error() << "Ignoring setValuesPointer function call ...\n";
           return 1;
         }
         d_val_data_ = new_vals;	

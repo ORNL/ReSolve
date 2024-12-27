@@ -87,7 +87,8 @@ namespace ReSolve { namespace matrix {
                                memory::MemorySpace memspaceOut);
       
       //set new values just sets the pointer, use caution.   
-      virtual int setNewValues(real_type* new_vals, memory::MemorySpace memspace);
+      virtual int setValuesPointer(real_type* new_vals,
+                                   memory::MemorySpace memspace);
     
     protected:
       SparseFormat sparse_format_{NONE}; ///< Matrix format
