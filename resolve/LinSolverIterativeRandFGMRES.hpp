@@ -5,8 +5,10 @@
  * 
  */
 #pragma once
+
 #include "Common.hpp"
-#include "LinSolver.hpp"
+#include <resolve/LinSolverDirect.hpp>
+#include <resolve/LinSolverIterative.hpp>
 
 namespace ReSolve
 {
@@ -62,11 +64,29 @@ namespace ReSolve
       int setupPreconditioner(std::string name, LinSolverDirect* LU_solver) override;
       int setOrthogonalization(GramSchmidt* gs) override;
 
-      int setRestart(index_type restart) override;
-      int setFlexible(bool is_flexible) override;
+      int setRestart(index_type restart);
+      int setFlexible(bool is_flexible);
+      int setConvergenceCondition(index_type conv_cond);
+      index_type getRestart() const;
+      index_type getConvCond() const;
+      bool getFlexible() const;
 
       index_type getKrand();
       int setSketchingMethod(SketchingMethod method);
+
+      int setCliParam(const std::string id, const std::string value) override;
+      std::string getCliParamString(const std::string id) const override;
+      index_type getCliParamInt(const std::string id) const override;
+      real_type getCliParamReal(const std::string id) const override;
+      bool getCliParamBool(const std::string id) const override;
+      int printCliParam(const std::string id) const override;
+
+    private:
+      enum ParamaterIDs {TOL=0, MAXIT, RESTART, CONV_COND, FLEXIBLE};
+
+      index_type restart_{10};  ///< GMRES restart
+      index_type conv_cond_{0}; ///< GMRES convergence condition
+      bool flexible_{true};     ///< If using flexible GMRES (FGMRES) algorithm
 
     private:
       int allocateSolverData();
@@ -74,6 +94,7 @@ namespace ReSolve
       int allocateSketchingData();
       int freeSketchingData();
       void setMemorySpace();
+      void initParamList();
       void precV(vector_type* rhs, vector_type* x); ///< Apply preconditioner
 
       memory::MemorySpace memspace_;

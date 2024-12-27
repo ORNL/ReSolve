@@ -1,8 +1,10 @@
 #pragma once
-#include "Common.hpp"
-#include "LinSolver.hpp"
+
 #include "cusolverRf.h"
+
+#include "Common.hpp"
 #include <resolve/MemoryUtils.hpp>
+#include <resolve/LinSolverDirect.hpp>
 
 namespace ReSolve 
 {

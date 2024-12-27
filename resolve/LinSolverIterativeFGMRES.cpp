@@ -25,6 +25,7 @@ namespace ReSolve
     vector_handler_ = vector_handler;
     GS_ = gs;
     setMemorySpace();
+    initParamList();
   }
 
   LinSolverIterativeFGMRES::LinSolverIterativeFGMRES(index_type     restart,
@@ -46,6 +47,7 @@ namespace ReSolve
     vector_handler_ = vector_handler;
     GS_ = gs;
     setMemorySpace();
+    initParamList();
   }
 
   LinSolverIterativeFGMRES::~LinSolverIterativeFGMRES()
@@ -136,18 +138,21 @@ namespace ReSolve
           tolrel = 1e-16;
         }
       }
-      int exit_cond = 0;
-      if (conv_cond_ == 0) {
-        exit_cond =  ((std::abs(rnorm - ZERO) <= EPSILON));
-      } else {
-        if (conv_cond_ == 1) {
-          exit_cond =  ((std::abs(rnorm - ZERO) <= EPSILON) || (rnorm < tol_));
-        } else {
-          if (conv_cond_ == 2) {
-            exit_cond =  ((std::abs(rnorm - ZERO) <= EPSILON) || (rnorm < (tol_*bnorm)));
-          }
-        }
+
+      bool exit_cond = false;
+      switch (conv_cond_)
+      {
+        case 0:
+          exit_cond = ((std::abs(rnorm - ZERO) <= EPSILON));
+          break;
+        case 1:
+          exit_cond = ((std::abs(rnorm - ZERO) <= EPSILON) || (rnorm < tol_));
+          break;
+        case 2:
+          exit_cond = ((std::abs(rnorm - ZERO) <= EPSILON) || (rnorm < (tol_*bnorm)));
+          break;
       }
+
       if (exit_cond) {
         outer_flag = 0;
         final_residual_norm_ = rnorm;
@@ -376,6 +381,140 @@ namespace ReSolve
     return 0;
   }
 
+  /**
+   * @brief Set the convergence condition for GMRES solver
+   * 
+   * @param[in] conv_cond - Possible values: 0, 1, 2 
+   * @return int - error code, 0 if successful
+   */
+  int LinSolverIterativeFGMRES::setConvergenceCondition(index_type conv_cond)
+  {
+    conv_cond_ = conv_cond;
+    return 0;
+  }
+
+  index_type  LinSolverIterativeFGMRES::getRestart() const
+  {
+    return restart_;
+  }
+
+  index_type  LinSolverIterativeFGMRES::getConvCond() const
+  {
+    return conv_cond_;
+  }
+
+  bool  LinSolverIterativeFGMRES::getFlexible() const
+  {
+    return flexible_;
+  }
+
+
+  int LinSolverIterativeFGMRES::setCliParam(const std::string id, const std::string value)
+  {
+    switch (getParamId(id))
+    {
+      case TOL:
+        setTol(atof(value.c_str()));
+        break;
+      case MAXIT:
+        setMaxit(atoi(value.c_str()));
+        break;
+      case RESTART:
+        setRestart(atoi(value.c_str()));
+        break;
+      case CONV_COND:
+        setConvergenceCondition(atoi(value.c_str()));
+        break;
+      case FLEXIBLE:
+        setFlexible(value == "yes");
+        break;
+      default:
+        std::cout << "Setting parameter failed!\n";
+    }
+    return 0;
+  }
+
+  std::string LinSolverIterativeFGMRES::getCliParamString(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+      default:
+        out::error() << "Trying to get unknown string parameter " << id << "\n";
+    }
+    return "";
+  }
+
+  index_type LinSolverIterativeFGMRES::getCliParamInt(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+      case MAXIT:
+        return getMaxit();
+        break;
+      case RESTART:
+        return getRestart();
+        break;
+      case CONV_COND:
+        return getConvCond();
+        break;
+      default:
+        out::error() << "Trying to get unknown integer parameter " << id << "\n";
+    }
+    return -1;
+  }
+
+  real_type LinSolverIterativeFGMRES::getCliParamReal(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+      case TOL:
+        return getTol();
+        break;
+      default:
+        out::error() << "Trying to get unknown real parameter " << id << "\n";
+    }
+    return std::numeric_limits<real_type>::quiet_NaN();
+  }
+
+  bool LinSolverIterativeFGMRES::getCliParamBool(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+      case FLEXIBLE:
+        return getFlexible();
+        break;
+      default:
+        out::error() << "Trying to get unknown boolean parameter " << id << "\n";
+    }
+    return false;
+  }
+
+  int LinSolverIterativeFGMRES::printCliParam(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+    case TOL:
+      std::cout << getTol() << "\n";
+      break;
+    case MAXIT:
+      std::cout << getMaxit() << "\n";
+      break;
+    case RESTART:
+      std::cout << getRestart() << "\n";
+      break;
+    case CONV_COND:
+      std::cout << getConvCond() << "\n";
+      break;
+    case FLEXIBLE:
+      std::cout << getFlexible() << "\n";
+      break;
+    default:
+      out::error() << "Trying to print unknown parameter " << id << "\n";
+      return 1;
+    }
+    return 0;
+  }
+
   //
   // Private methods
   //
@@ -440,6 +579,15 @@ namespace ReSolve
     } else {
       memspace_ = memory::HOST;
     }
+  }
+
+  void LinSolverIterativeFGMRES::initParamList()
+  {
+    params_list_["tol"]       = TOL;
+    params_list_["maxit"]     = MAXIT;
+    params_list_["restart"]   = RESTART;
+    params_list_["conv_cond"] = CONV_COND;
+    params_list_["flexible"]  = FLEXIBLE;
   }
 
 } // namespace

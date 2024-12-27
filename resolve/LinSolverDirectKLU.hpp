@@ -1,7 +1,9 @@
 #pragma once
+
 #include "klu.h"
+
 #include "Common.hpp"
-#include "LinSolver.hpp"
+#include <resolve/LinSolverDirect.hpp>
 
 namespace ReSolve 
 {

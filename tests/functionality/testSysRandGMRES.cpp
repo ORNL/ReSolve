@@ -32,13 +32,29 @@ using real_type  = ReSolve::real_type;
 using index_type  = ReSolve::index_type;
 using vector_type = ReSolve::vector::Vector;
 
-// Forward declarations of helper functions that create test linear system
-template <class T>
+//
+// Forward declarations of helper test functions
+//
+
+/// Main test function
+template <class workspace_type>
 static int test(int argc, char* argv[]);
+
+/// Checks if inputs are valid, otherwise sets defaults
 static void processInputs(std::string& method, std::string& gs, std::string& sketch);
-static std::string headerInfo(const std::string& method, const std::string& gs, const std::string& sketch, bool flexible);
+
+/// Creates string with test description
+static std::string headerInfo(const std::string& method,
+                              const std::string& gs,
+                              const std::string& sketch,
+                              std::string flexible);
+
+/// Generates test system matrix
 static ReSolve::matrix::Csr* generateMatrix(const index_type N, ReSolve::memory::MemorySpace memspace);
+
+/// Generates system rhs vector
 static ReSolve::vector::Vector* generateRhs(const index_type N, ReSolve::memory::MemorySpace memspace);
+
 
 int main(int argc, char *argv[])
 {
@@ -57,7 +73,11 @@ int main(int argc, char *argv[])
   return error_sum;
 }
 
-template <class T>
+//
+// Test functions definitions
+//
+
+template <class workspace_type>
 int test(int argc, char *argv[])
 {
   // Error sum needs to be 0 at the end for test to PASS.
@@ -82,15 +102,12 @@ int test(int argc, char *argv[])
   std::string sketch = opt ? (*opt).second : "count";
 
   opt = options.getParamFromKey("-x");
-  bool flexible = true;
-  if(opt) {
-    flexible = !((*opt).second == "no");
-  }
+  std::string flexible = opt ? (*opt).second : "yes";
 
   processInputs(method, gs, sketch);
 
   // Create workspace and initialize its handles.
-  T workspace;
+  workspace_type workspace;
   workspace.initializeHandles();
 
   // Create linear algebra handlers
@@ -129,9 +146,11 @@ int test(int argc, char *argv[])
   real_type norm_b = 0.0;
 
   // Set solver options
-  real_type tol = 1e-12;
-  solver.getIterativeSolver().setMaxit(2500);
-  solver.getIterativeSolver().setTol(tol);
+  solver.getIterativeSolver().setCliParam("maxit", "2500");
+  solver.getIterativeSolver().setCliParam("tol", "1e-12");
+
+  // Tolerance value to output
+  real_type tol_out = solver.getIterativeSolver().getCliParamReal("tol");
 
   matrix_handler.setValuesChanged(true, memspace);
 
@@ -139,11 +158,12 @@ int test(int argc, char *argv[])
   status = solver.setMatrix(A);
   error_sum += status;
 
-  solver.getIterativeSolver().setRestart(200);
+  // Solver options can be changed even after solver workspace is allocated.
   if (method == "randgmres") {
     solver.setSketchingMethod(sketch);
   }
-  solver.getIterativeSolver().setFlexible(flexible);
+  solver.getIterativeSolver().setCliParam("flexible", flexible);
+  solver.getIterativeSolver().setCliParam("restart", "200");
 
   // Set preconditioner (default in this case ILU0)
   status = solver.preconditionerSetup();
@@ -160,7 +180,7 @@ int test(int argc, char *argv[])
   std::cout << std::defaultfloat
             << headerInfo(method, gs, sketch, flexible)
             << "\t Hardware backend:               " << hwbackend << "\n"
-            << "\t Solver tolerance:               " << tol       << "\n"
+            << "\t Solver tolerance:               " << tol_out   << "\n"
             << std::scientific << std::setprecision(16)
             << "\t Initial residual norm:          ||b-Ax_0||_2         : " 
             << solver.getIterativeSolver().getInitResidualNorm() << " \n"
@@ -177,7 +197,7 @@ int test(int argc, char *argv[])
     std::cout << "Result is not a finite number!\n";
     error_sum++;
   }
-  if (final_norm/norm_b > (10.0 * tol)) {
+  if (final_norm/norm_b > (10.0 * tol_out)) {
     std::cout << "Result inaccurate!\n";
     error_sum++;
   }
@@ -209,19 +229,27 @@ void processInputs(std::string& method, std::string& gs, std::string& sketch)
     method = "fgmres";
   }
 
-  if (gs != "cgs1" && gs != "cgs2" && gs != "mgs" && gs != "mgs_two_sync" && gs != "mgs_pm") {
+  if (gs != "cgs1" && 
+      gs != "cgs2" &&
+      gs != "mgs"  &&
+      gs != "mgs_two_sync" &&
+      gs != "mgs_pm") {
     std::cout << "Unknown orthogonalization " << gs << "\n";
     std::cout << "Setting orthogonalization to the default (CGS2).\n\n";
     gs = "cgs2";
   }
 }
 
-std::string headerInfo(const std::string& method, const std::string& gs, const std::string& sketch, bool flexible)
+std::string headerInfo(const std::string& method, 
+                       const std::string& gs,
+                       const std::string& sketch,
+                       std::string flexible)
 {
+  bool is_flexible = !(flexible == "no");
   std::string header("Results for ");
   if (method == "randgmres") {
     header += "randomized ";
-    header += flexible ? "FGMRES" : "GMRES";
+    header += is_flexible ? "FGMRES" : "GMRES";
     header += " solver\n";
     header += "\t Sketching method:               ";
     if (sketch == "count") {
@@ -230,7 +258,7 @@ std::string headerInfo(const std::string& method, const std::string& gs, const s
       header += "fast Walsh-Hadamard transform\n";
     }
   } else if (method == "fgmres") {
-    header += flexible ? "FGMRES" : "GMRES";
+    header += is_flexible ? "FGMRES" : "GMRES";
     header += " solver\n";
   } else {
     return header + "unknown method\n";
