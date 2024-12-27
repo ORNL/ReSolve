@@ -171,7 +171,7 @@ namespace ReSolve { namespace vector {
    *
    * @return 0 if successful, -1 otherwise.
    */
-  int Vector::update(real_type* data, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut)
+  int Vector::update(const real_type* data, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut)
   {
     int control=-1;
     if ((memspaceIn == memory::HOST)   && (memspaceOut == memory::HOST))  { control = 0;}
@@ -503,7 +503,8 @@ namespace ReSolve { namespace vector {
   }
 
   /** 
-   * @brief copy HOST or DEVICE data of a specified vector in a multivector to _dest_. 
+   * @brief copy HOST or DEVICE data of a specified vector in a multivector
+   * to _dest_. 
    * 
    * @param[out] dest      - Pointer to the memory to which data is copied
    * @param[in] i          - Index of a vector in a multivector
@@ -511,17 +512,21 @@ namespace ReSolve { namespace vector {
    *
    * @return 0 if successful, -1 otherwise.
    *
-   * @pre _i_ < _k_ i.e,, _i_ is smaller than the total number of vectors in multivector.
-   * @pre _dest_ is allocated, and the size of _dest_ is at least _n_ (lenght of a single vector in the multivector).
+   * @pre _i_ < _k_ i.e,, _i_ is smaller than the total number of vectors
+   * in multivector.
+   * @pre _dest_ is allocated, and the size of _dest_ is at least _n_ (lenght
+   * of a single vector in the multivector).
    */
-  int  Vector::deepCopyVectorData(real_type* dest, index_type i, memory::MemorySpace memspaceOut)
+  int  Vector::copyDataTo(real_type* dest,
+                          index_type i,
+                          memory::MemorySpace memspaceInOut)
   {
     using namespace ReSolve::memory;
     if (i > this->k_) {
       return -1;
     } else {
-      real_type* data = this->getData(i, memspaceOut);
-      switch (memspaceOut) {
+      real_type* data = this->getData(i, memspaceInOut);
+      switch (memspaceInOut) {
         case HOST:
           mem_.copyArrayHostToHost(dest, data, n_current_);
           break;
@@ -545,11 +550,11 @@ namespace ReSolve { namespace vector {
    *
    * @pre _dest_ is allocated, and the size of _dest_ is at least _k_ * _n_ .
    */
-  int  Vector::deepCopyVectorData(real_type* dest, memory::MemorySpace memspaceOut)
+  int  Vector::copyDataTo(real_type* dest, memory::MemorySpace memspaceInOut)
   {
     using namespace ReSolve::memory;
-    real_type* data = this->getData(memspaceOut);
-    switch (memspaceOut) {
+    real_type* data = this->getData(memspaceInOut);
+    switch (memspaceInOut) {
       case HOST:
         mem_.copyArrayHostToHost(dest, data, n_current_ * k_);
         break;

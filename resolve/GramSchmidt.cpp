@@ -178,7 +178,7 @@ namespace ReSolve
         // copy H_col to aux, we will need it later
         vec_Hcolumn_->setDataUpdated(memspace_);
         vec_Hcolumn_->setCurrentSize(i + 1);
-        vec_Hcolumn_->deepCopyVectorData(h_aux_, 0, memory::HOST);
+        vec_Hcolumn_->copyDataTo(h_aux_, 0, memory::HOST);
         mem_.deviceSynchronize();
 
         //Hcol = V(:,1:i)^T*V(:,i+1);
@@ -191,7 +191,7 @@ namespace ReSolve
 
         // copy H_col to H
         vec_Hcolumn_->setDataUpdated(memspace_);
-        vec_Hcolumn_->deepCopyVectorData(&H[ idxmap(i, 0, num_vecs_ + 1)], 0, memory::HOST);
+        vec_Hcolumn_->copyDataTo(&H[ idxmap(i, 0, num_vecs_ + 1)], 0, memory::HOST);
         mem_.deviceSynchronize();
 
         // add both pieces together (unstable otherwise, careful here!!)
@@ -225,7 +225,7 @@ namespace ReSolve
         vec_rv_->setDataUpdated(memspace_);
         vec_rv_->syncData(memory::HOST);
 
-        vec_rv_->deepCopyVectorData(&h_L_[idxmap(i, 0, num_vecs_ + 1)], 0, memory::HOST);
+        vec_rv_->copyDataTo(&h_L_[idxmap(i, 0, num_vecs_ + 1)], 0, memory::HOST);
         h_rv = vec_rv_->getVectorData(1, memory::HOST);
         
         for(int j=0; j<=i; ++j) {
@@ -273,7 +273,7 @@ namespace ReSolve
         vec_rv_->setDataUpdated(memspace_);
         vec_rv_->syncData(memory::HOST);
 
-        vec_rv_->deepCopyVectorData(&h_L_[idxmap(i, 0, num_vecs_ + 1)], 0, memory::HOST);
+        vec_rv_->copyDataTo(&h_L_[idxmap(i, 0, num_vecs_ + 1)], 0, memory::HOST);
         h_rv = vec_rv_->getVectorData(1, memory::HOST);
 
         for(int j = 0; j <= i; ++j) {
@@ -346,7 +346,7 @@ namespace ReSolve
         // copy H_col to H
         vec_Hcolumn_->setDataUpdated(memspace_);
         vec_Hcolumn_->setCurrentSize(i + 1);
-        vec_Hcolumn_->deepCopyVectorData(&H[ idxmap(i, 0, num_vecs_ + 1)], 0, memory::HOST);
+        vec_Hcolumn_->copyDataTo(&H[ idxmap(i, 0, num_vecs_ + 1)], 0, memory::HOST);
         mem_.deviceSynchronize();
 
         t = vector_handler_->dot(vec_v_, vec_v_, memspace_);  
