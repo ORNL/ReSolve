@@ -79,7 +79,9 @@ namespace ReSolve { namespace matrix {
 
       //update Values just updates values; it allocates if necessary.
       //values have the same dimensions between different formats 
-      virtual int updateValues(real_type* new_vals, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut);
+      virtual int updateValues(const real_type* new_vals,
+                               memory::MemorySpace memspaceIn,
+                               memory::MemorySpace memspaceOut);
       
       //set new values just sets the pointer, use caution.   
       virtual int setNewValues(real_type* new_vals, memory::MemorySpace memspace);

@@ -330,7 +330,9 @@ namespace ReSolve {
    *
    * @return 0 if successful, -1 if not.
    */  
-  int matrix::Sparse::updateValues(real_type* new_vals, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut)
+  int matrix::Sparse::updateValues(const real_type* new_vals,
+                                   memory::MemorySpace memspaceIn,
+                                   memory::MemorySpace memspaceOut)
   {
  
     index_type nnz_current = nnz_;
