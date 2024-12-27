@@ -129,7 +129,7 @@ namespace ReSolve
       /// @brief Number of entries in each row of U, stored in original order
       index_type* lenr_ = nullptr;
 
-      /// @brief Appears to be internal storage for LUSOL, used by the LU copyDataFrom routines
+      /// @brief Appears to be internal storage for LUSOL, used by the LU update routines
       index_type* locc_ = nullptr;
 
       /// @brief Points to the beginning of rows of U within a
