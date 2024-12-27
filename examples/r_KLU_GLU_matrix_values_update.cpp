@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
         ReSolve::io::updateMatrixFromFile(mat_file, A_exp);
       }
       std::cout<<"Updating values of A_coo!"<<std::endl; 
-      A->updateValues(A_exp->getValues(ReSolve::memory::HOST), ReSolve::memory::HOST, ReSolve::memory::HOST);
+      A->copyValues(A_exp->getValues(ReSolve::memory::HOST), ReSolve::memory::HOST, ReSolve::memory::HOST);
       //ReSolve::io::updateMatrixFromFile(mat_file, A);
       ReSolve::io::updateArrayFromFile(rhs_file, &rhs);
     }

@@ -333,9 +333,9 @@ namespace ReSolve {
    *
    * @return 0 if successful, -1 if not.
    */  
-  int matrix::Sparse::updateValues(const real_type* new_vals,
-                                   memory::MemorySpace memspaceIn,
-                                   memory::MemorySpace memspaceOut)
+  int matrix::Sparse::copyValues(const real_type* new_vals,
+                                 memory::MemorySpace memspaceIn,
+                                 memory::MemorySpace memspaceOut)
   {
  
     index_type nnz_current = nnz_;
@@ -393,8 +393,8 @@ namespace ReSolve {
    * This function only assigns a pointer, but does not copy. It sets update
    * flags.
    *
-   * @param[in] new_vals    - pointer to new values data (array of real numbers)
-   * @param[in] memspace    - memory space (HOST or DEVICE) of _new_vals_
+   * @param[in] new_vals - pointer to new values data (array of real numbers)
+   * @param[in] memspace - memory space (HOST or DEVICE) of _new_vals_
    *
    * @return 0 if successful, -1 if not.
    */  

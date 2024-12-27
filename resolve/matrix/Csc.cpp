@@ -73,11 +73,11 @@ namespace ReSolve
     }
   }
 
-  int matrix::Csc::updateData(const index_type* row_data,
-                              const index_type* col_data,
-                              const real_type* val_data,
-                              memory::MemorySpace memspaceIn,
-                              memory::MemorySpace memspaceOut)
+  int matrix::Csc::copyData(const index_type* row_data,
+                            const index_type* col_data,
+                            const real_type* val_data,
+                            memory::MemorySpace memspaceIn,
+                            memory::MemorySpace memspaceOut)
   {
     index_type nnz_current = nnz_;
 
@@ -92,7 +92,7 @@ namespace ReSolve
     if (memspaceOut == memory::HOST) {
       //check if cpu data allocated
       if ((h_row_data_ == nullptr) != (h_col_data_ == nullptr)) {
-        out::error() << "In Csc::updateData one of host row or column data is null!\n";
+        out::error() << "In Csc::copyData one of host row or column data is null!\n";
       }
       if ((h_col_data_ == nullptr) && (h_row_data_ == nullptr)) {
         this->h_col_data_ = new index_type[m_ + 1];
@@ -108,7 +108,7 @@ namespace ReSolve
     if (memspaceOut == memory::DEVICE) {
       //check if cuda data allocated
       if ((d_row_data_ == nullptr) != (d_col_data_ == nullptr)) {
-        out::error() << "In Csc::updateData one of device row or column data is null!\n";
+        out::error() << "In Csc::copyData one of device row or column data is null!\n";
       }
       if ((d_col_data_ == nullptr) && (d_row_data_ == nullptr)) {
         mem_.allocateArrayOnDevice(&d_col_data_, m_ + 1); 
@@ -153,16 +153,16 @@ namespace ReSolve
 
   } 
 
-  int matrix::Csc::updateData(const index_type* row_data,
-                              const index_type* col_data,
-                              const real_type* val_data,
-                              index_type new_nnz,
-                              memory::MemorySpace memspaceIn,
-                              memory::MemorySpace memspaceOut)
+  int matrix::Csc::copyData(const index_type* row_data,
+                            const index_type* col_data,
+                            const real_type* val_data,
+                            index_type new_nnz,
+                            memory::MemorySpace memspaceIn,
+                            memory::MemorySpace memspaceOut)
   {
     destroyMatrixData(memspaceOut);
     nnz_ = new_nnz;
-    return updateData(col_data, row_data, val_data, memspaceIn, memspaceOut);
+    return copyData(col_data, row_data, val_data, memspaceIn, memspaceOut);
   }
 
   int matrix::Csc::allocateMatrixData(memory::MemorySpace memspace)
