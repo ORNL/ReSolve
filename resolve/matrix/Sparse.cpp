@@ -229,7 +229,10 @@ namespace ReSolve {
    *
    * @return 0 if successful, 1 if not.
    */  
-  int matrix::Sparse::setMatrixData(index_type* row_data, index_type* col_data, real_type* val_data, memory::MemorySpace memspace)
+  int matrix::Sparse::setDataPointers(index_type* row_data,
+                                      index_type* col_data,
+                                      real_type*  val_data,
+                                      memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
 
@@ -239,7 +242,7 @@ namespace ReSolve {
       case HOST:
         if (owns_cpu_data_ && (h_row_data_ || h_col_data_)) {
           out::error() << "Trying to set matrix host data, but the data already set!\n";
-          out::error() << "Ignoring setMatrixData function call ...\n";
+          out::error() << "Ignoring setDataPointers function call ...\n";
           return 1;
         }
         if (owns_cpu_vals_ && h_val_data_) {
@@ -257,7 +260,7 @@ namespace ReSolve {
       case DEVICE:
         if (owns_gpu_data_ && (d_row_data_ || d_col_data_)) {
           out::error() << "Trying to set matrix host data, but the data already set!\n";
-          out::error() << "Ignoring setMatrixData function call ...\n";
+          out::error() << "Ignoring setDataPointers function call ...\n";
           return 1;
         }
         if (owns_gpu_vals_ && d_val_data_) {

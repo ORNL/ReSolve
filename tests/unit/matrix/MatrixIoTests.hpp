@@ -161,10 +161,10 @@ public:
 
     // Create the test COO matrix
     ReSolve::matrix::Coo A(N, M, NNZ, false, false);
-    A.setMatrixData(&rows[0],
-                    &cols[0],
-                    &vals[0],
-                    memory::HOST);
+    A.setDataPointers(&rows[0],
+                      &cols[0],
+                      &vals[0],
+                      memory::HOST);
 
     // Write the matrix to an ostream
     ReSolve::io::writeMatrixToFile(&A, buffer);
@@ -197,7 +197,7 @@ public:
 
     // Create the test CSR matrix
     ReSolve::matrix::Csr A(N, M, NNZ, false, false);
-    A.setMatrixData(&rows[0],
+    A.setDataPointers(&rows[0],
                     &cols[0],
                     &vals[0],
                     memory::HOST);

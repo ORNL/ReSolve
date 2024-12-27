@@ -68,7 +68,10 @@ namespace ReSolve { namespace matrix {
                              memory::MemorySpace memspaceOut) = 0;
 
       virtual int allocateMatrixData(memory::MemorySpace memspace) = 0;
-      int setMatrixData(index_type* row_data, index_type* col_data, real_type* val_data, memory::MemorySpace memspace);
+      int setDataPointers(index_type* row_data,
+                          index_type* col_data,
+                          real_type*  val_data,
+                          memory::MemorySpace memspace);
 
       int destroyMatrixData(memory::MemorySpace memspace);
 
