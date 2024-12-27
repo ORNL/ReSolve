@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
   rhs1_file.close();
 
   // Convert first matrix to CSR format
-  vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   vec_rhs->setDataUpdated(ReSolve::memory::HOST);
 
   // Solve the first system using KLU
@@ -95,8 +95,8 @@ int main(int argc, char *argv[])
   }
 
   vec_test->setData(x_data, ReSolve::memory::HOST);
-  vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
-  vec_diff->update(x_data, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_r->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_diff->copyDataFrom(x_data, ReSolve::memory::HOST, ReSolve::memory::HOST);
 
   // real_type normXmatrix1 = sqrt(vector_handler->dot(vec_test, vec_test, ReSolve::memory::HOST));
   matrix_handler->setValuesChanged(true, ReSolve::memory::HOST);
@@ -117,13 +117,13 @@ int main(int argc, char *argv[])
   real_type normDiffMatrix1 = sqrt(vector_handler->dot(vec_diff, vec_diff, ReSolve::memory::HOST));
  
   //compute the residual using exact solution
-  vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_r->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   status = matrix_handler->matvec(A, vec_test, vec_r, &ONE, &MINUSONE, ReSolve::memory::HOST); 
   error_sum += status;
   real_type exactSol_normRmatrix1 = sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::HOST));
   //evaluate the residual ON THE CPU using COMPUTED solution
  
-  vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_r->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
 
   status = matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, ReSolve::memory::HOST);
   error_sum += status;
@@ -158,7 +158,7 @@ int main(int argc, char *argv[])
   ReSolve::io::updateArrayFromFile(rhs2_file, &rhs);
   rhs2_file.close();
 
-  vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
 
   // and solve it too
   status =  KLU->refactorize();
@@ -167,7 +167,7 @@ int main(int argc, char *argv[])
   status = KLU->solve(vec_rhs, vec_x);
   error_sum += status;
 
-  vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_r->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   matrix_handler->setValuesChanged(true, ReSolve::memory::HOST);
 
   status = matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, ReSolve::memory::HOST); 
@@ -178,13 +178,13 @@ int main(int argc, char *argv[])
   //for testing only - control
   real_type normB2 = sqrt(vector_handler->dot(vec_rhs, vec_rhs, ReSolve::memory::HOST));
   //compute x-x_true
-  vec_diff->update(x_data, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_diff->copyDataFrom(x_data, ReSolve::memory::HOST, ReSolve::memory::HOST);
   vector_handler->axpy(&MINUSONE, vec_x, vec_diff, ReSolve::memory::HOST);
   //evaluate its norm
   real_type normDiffMatrix2 = sqrt(vector_handler->dot(vec_diff, vec_diff, ReSolve::memory::HOST));
  
   //compute the residual using exact solution
-  vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_r->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   status = matrix_handler->matvec(A, vec_test, vec_r, &ONE, &MINUSONE, ReSolve::memory::HOST); 
   error_sum += status;
   real_type exactSol_normRmatrix2 = sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::HOST));

@@ -302,7 +302,7 @@ namespace ReSolve
   int LinSolverDirectRocSolverRf::solve(vector_type* rhs, vector_type* x)
   {
     RESOLVE_RANGE_PUSH(__FUNCTION__);
-    x->update(rhs->getData(ReSolve::memory::DEVICE), ReSolve::memory::DEVICE, ReSolve::memory::DEVICE);
+    x->copyDataFrom(rhs->getData(ReSolve::memory::DEVICE), ReSolve::memory::DEVICE, ReSolve::memory::DEVICE);
     x->setDataUpdated(ReSolve::memory::DEVICE);
     int error_sum = 0;
     if (solve_mode_ == 0) {

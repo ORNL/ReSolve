@@ -111,9 +111,9 @@ int main(int argc, char *argv[])
 
     // Update host and device data.
     if (i < 2) { 
-      vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+      vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
     } else { 
-      vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+      vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
     }
     std::cout << "CSR matrix loaded. Expanded NNZ: " << A->getNnz() << std::endl;
 
@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
       std::cout<<"KLU factorization status: "<<status<<std::endl;
       status = KLU->solve(vec_rhs, vec_x);
       std::cout<<"KLU solve status: "<<status<<std::endl;      
-      vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+      vec_r->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
       norm_b = vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE);
       norm_b = sqrt(norm_b);
       matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
@@ -172,7 +172,7 @@ int main(int argc, char *argv[])
       status = Rf->solve(vec_rhs, vec_x);
       std::cout<<"CUSOLVER RF solve status: "<<status<<std::endl;      
 
-      vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+      vec_r->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
       norm_b = vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE);
       norm_b = sqrt(norm_b);
 
@@ -195,7 +195,7 @@ int main(int argc, char *argv[])
                 << sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE))/norm_b << "\n";
 
       matrix_handler->matrixInfNorm(A, &norm_A, ReSolve::memory::DEVICE); 
-      vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+      vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
       
       if(!std::isnan(norm_r) && !std::isinf(norm_r)) {
         FGMRES->solve(vec_rhs, vec_x);

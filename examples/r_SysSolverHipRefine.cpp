@@ -108,9 +108,9 @@ int main(int argc, char *argv[])
 
     // Update host and device data.
     if (i < 2) { 
-      vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+      vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
     } else { 
-      vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+      vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
     }
     std::cout << "CSR matrix loaded. Expanded NNZ: " << A->getNnz() << std::endl;
 
@@ -148,7 +148,7 @@ int main(int argc, char *argv[])
                 << solver->getNormOfScaledResiduals(vec_rhs, vec_x)
                 << "\n";
 
-      vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+      vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
       real_type norm_b = solver->getVectorNorm(vec_rhs);
       if (!std::isnan(rnrm) && !std::isinf(rnrm)) {
         std::cout << "FGMRES solve status: " << status << std::endl;      

@@ -109,9 +109,9 @@ int main(int argc, char *argv[])
 
     // Update right-hand-side vector.
     if (i < 2) { 
-      vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+      vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
     } else { 
-      vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+      vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
     }
     std::cout << "CSR matrix loaded. Expanded NNZ: " << A->getNnz() << std::endl;
 
@@ -130,7 +130,7 @@ int main(int argc, char *argv[])
         ReSolve::matrix::Csc* U = (ReSolve::matrix::Csc*) KLU->getUFactor();
         index_type* P = KLU->getPOrdering();
         index_type* Q = KLU->getQOrdering();
-        vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+        vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
         Rf->setup(A, L, U, P, Q, vec_rhs); 
       }
     } else {
@@ -142,7 +142,7 @@ int main(int argc, char *argv[])
     }
 
     // Check accuracy of the solution
-    vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+    vec_r->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
     real_type bnorm = sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE));
     matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
     matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, ReSolve::memory::DEVICE); 

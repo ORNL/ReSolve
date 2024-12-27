@@ -148,7 +148,7 @@ namespace ReSolve
   int LinSolverDirectKLU::solve(vector_type* rhs, vector_type* x) 
   {
     //copy the vector
-    x->update(rhs->getData(memory::HOST), memory::HOST, memory::HOST);
+    x->copyDataFrom(rhs->getData(memory::HOST), memory::HOST, memory::HOST);
     x->setDataUpdated(memory::HOST);
 
     int kluStatus = klu_solve(Symbolic_, Numeric_, A_->getNumRows(), 1, x->getData(memory::HOST), &Common_);

@@ -146,7 +146,7 @@ namespace ReSolve { namespace vector {
   }
 
   /** 
-   * @brief update vector values based on another vector data.  
+   * @brief Copy data from another vector.  
    * 
    * @param[in] v           - Vector, which data will be copied
    * @param[in] memspaceIn  - Memory space of the incoming data (HOST or DEVICE)  
@@ -154,14 +154,14 @@ namespace ReSolve { namespace vector {
    *
    * @pre   size of _v_ is equal or larger than the current vector size.
    */
-  int Vector::update(Vector* v, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut)
+  int Vector::copyDataFrom(Vector* v, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut)
   {
     real_type* data = v->getData(memspaceIn);
-    return update(data, memspaceIn, memspaceOut);
+    return copyDataFrom(data, memspaceIn, memspaceOut);
   }
 
   /** 
-   * @brief update vector data based on given input. 
+   * @brief Copy vector data from input array. 
    * 
    * This function allocates (if necessary) and copies the data. 
    * 
@@ -171,7 +171,7 @@ namespace ReSolve { namespace vector {
    *
    * @return 0 if successful, -1 otherwise.
    */
-  int Vector::update(const real_type* data, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut)
+  int Vector::copyDataFrom(const real_type* data, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut)
   {
     int control=-1;
     if ((memspaceIn == memory::HOST)   && (memspaceOut == memory::HOST))  { control = 0;}

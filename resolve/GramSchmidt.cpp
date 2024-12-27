@@ -241,7 +241,7 @@ namespace ReSolve
           H[ idxmap(i, j, num_vecs_ + 1) ] -= s; 
         }   // for j
         vec_Hcolumn_->setCurrentSize(i + 1);
-        vec_Hcolumn_->update(&H[ idxmap(i, 0, num_vecs_ + 1)], memory::HOST, memspace_); 
+        vec_Hcolumn_->copyDataFrom(&H[ idxmap(i, 0, num_vecs_ + 1)], memory::HOST, memspace_); 
         vector_handler_->massAxpy(n, vec_Hcolumn_, i + 1, V, vec_w_, memspace_);
 
         // normalize (second synch)
@@ -317,7 +317,7 @@ namespace ReSolve
         }
 
         vec_Hcolumn_->setCurrentSize(i + 1);
-        vec_Hcolumn_->update(&H[ idxmap(i, 0, num_vecs_ + 1)], memory::HOST, memspace_); 
+        vec_Hcolumn_->copyDataFrom(&H[ idxmap(i, 0, num_vecs_ + 1)], memory::HOST, memspace_); 
 
         vector_handler_->massAxpy(n, vec_Hcolumn_, i + 1, V,  vec_w_, memspace_);
         // normalize (second synch)

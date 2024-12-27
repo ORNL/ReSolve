@@ -117,9 +117,9 @@ int main(int argc, char *argv[])
 
     // Update host and device data.
     if (i < 1) { 
-      vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+      vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
     } else { 
-      vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+      vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
     }
     std::cout << "CSR matrix loaded. Expanded NNZ: " << A->getNnz() << std::endl;
 
@@ -149,7 +149,7 @@ int main(int argc, char *argv[])
       status = GLU->solve(vec_rhs, vec_x);
       std::cout<<"CUSOLVER GLU solve status: "<<status<<std::endl;      
     }
-    vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+    vec_r->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
 
 
     matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);

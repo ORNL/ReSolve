@@ -75,7 +75,7 @@ int main(int argc, char* argv[])
   vector_type vec_x(A->getNumRows());
   vector_type vec_r(A->getNumRows());
 
-  vec_rhs.update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_rhs.copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   vec_rhs.setDataUpdated(ReSolve::memory::HOST);
   vec_x.allocate(ReSolve::memory::HOST);
 
@@ -102,9 +102,9 @@ int main(int argc, char* argv[])
   real_type* x_data = new real_type[A->getNumRows()];
   std::fill_n(x_data, A->getNumRows(), 1.0);
 
-  vec_test.update(x_data, ReSolve::memory::HOST, ReSolve::memory::HOST);
-  vec_r.update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
-  vec_diff.update(x_data, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_test.copyDataFrom(x_data, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_r.copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_diff.copyDataFrom(x_data, ReSolve::memory::HOST, ReSolve::memory::HOST);
 
   // Matrix-vector product does not support COO format so we need to convert to CSR
   ReSolve::matrix::Csr A_csr(A->getNumRows(), A->getNumColumns(), A->getNnz(), A->symmetric(), A->expanded());
@@ -132,7 +132,7 @@ int main(int argc, char* argv[])
   real_type normDiffMatrix = sqrt(vector_handler.dot(&vec_diff, &vec_diff, ReSolve::memory::HOST));
 
   // Compute residual r := A*x - r using exact solution x
-  vec_r.update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_r.copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   error_sum += matrix_handler.matvec(&A_csr,
                                      &vec_test,
                                      &vec_r,
@@ -178,7 +178,7 @@ int main(int argc, char* argv[])
 
   x = new real_type[A->getNumRows()];
 
-  vec_rhs.update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_rhs.copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   vec_rhs.setDataUpdated(ReSolve::memory::HOST);
   vec_x.allocate(ReSolve::memory::HOST);
 
@@ -202,9 +202,9 @@ int main(int argc, char* argv[])
   x_data = new real_type[A->getNumRows()];
   std::fill_n(x_data, A->getNumRows(), 1.0);
 
-  vec_test.update(x_data, ReSolve::memory::HOST, ReSolve::memory::HOST);
-  vec_r.update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
-  vec_diff.update(x_data, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_test.copyDataFrom(x_data, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_r.copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_diff.copyDataFrom(x_data, ReSolve::memory::HOST, ReSolve::memory::HOST);
 
   // Matrix-vector product does not support COO format so we need to convert to CSR
   error_sum += coo2csr(A.get(), &A_csr, ReSolve::memory::HOST);
@@ -231,7 +231,7 @@ int main(int argc, char* argv[])
   normDiffMatrix = sqrt(vector_handler.dot(&vec_diff, &vec_diff, ReSolve::memory::HOST));
 
   // compute the residual using exact solution
-  vec_r.update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_r.copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   // Compute residual r := A*x - r using exact solution x
   error_sum += matrix_handler.matvec(&A_csr,
                                      &vec_test,

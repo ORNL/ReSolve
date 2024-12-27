@@ -166,7 +166,7 @@ namespace ReSolve
           kL++;
         }
       }  
-      //update row pointers
+      //copyDataFrom row pointers
       L_->getRowData(ReSolve::memory::HOST)[i + 1] = L_->getRowData(ReSolve::memory::HOST)[i] + kL; 
       U_->getRowData(ReSolve::memory::HOST)[i + 1] = U_->getRowData(ReSolve::memory::HOST)[i] + kU; 
     }
