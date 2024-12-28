@@ -2,7 +2,7 @@
 #include <resolve/hykkt/cpuHykktPermutationKernels.hpp>
 // #include <resolve/vector/Vector.hpp>
 // #include <resolve/matrix/Csr.hpp>
-
+#include <cstdio>
 #include "amd.h"
 
 // Creates a class for the permutation of $H_\gamma$ in (6)

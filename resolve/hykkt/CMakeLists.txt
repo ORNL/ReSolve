@@ -28,7 +28,8 @@ set(HyKKT_HEADER_INSTALL
 
 # Build shared library ReSolve::matrix
 add_library(resolve_hykkt SHARED ${HyKKT_SRC})
-target_link_libraries(resolve_hykkt PRIVATE resolve_logger resolve_vector resolve_tpl)
+target_link_libraries(resolve_hykkt PUBLIC resolve_logger resolve_vector ${suitesparse_amd})
+target_include_directories(resolve_hykkt PUBLIC ${SUITESPARSE_INCLUDE_DIR})
 
 # Link to CUDA ReSolve backend if CUDA is support enabled
 if (RESOLVE_USE_CUDA)
