@@ -96,7 +96,7 @@
  * LinAlgWorkspaceCUDA, LinAlgWorkspaceHip, and LinAlgWorkspaceCpu.
  * 
  * Each linear solver object owns one dedicated workspace, which is shared
- * with a matrix and a vector handler belonging to the solver.
+ * with a matrix and a vector handler belonging to the same solver.
  * 
  * @subsection backends_subsec Hardware Backends
  * 
@@ -104,5 +104,8 @@
  * has implementations in HIP and CUDA languages. 
  * 
  * @subsection utils_subsec Utilities
+ * 
+ * Re::Solve implements several utility classes for managing input and
+ * output. 
  * 
  */
