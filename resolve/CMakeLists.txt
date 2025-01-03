@@ -81,6 +81,7 @@ add_subdirectory(workspace)
 add_subdirectory(vector)
 add_subdirectory(matrix)
 add_subdirectory(random)
+add_subdirectory(hykkt/cpu)
 
 # Build shared library ReSolve
 add_library(resolve_tpl INTERFACE)
