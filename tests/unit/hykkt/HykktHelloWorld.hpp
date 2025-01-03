@@ -5,7 +5,7 @@
 #include <iterator>
 #include <algorithm>
 #include <tests/unit/TestBase.hpp>
-#include <resolve/matrix/Coo.hpp>
+// #include <resolve/matrix/Coo.hpp>
 
 namespace ReSolve { namespace tests {
 
