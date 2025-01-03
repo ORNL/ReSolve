@@ -18,10 +18,6 @@ target_link_libraries(runMatrixHandlerTests.exe PRIVATE ReSolve resolve_matrix)
 add_executable(runMatrixFactorizationTests.exe runMatrixFactorizationTests.cpp)
 target_link_libraries(runMatrixFactorizationTests.exe PRIVATE ReSolve resolve_matrix)
 
-# Build matrix Hello World tests
-add_executable(runMatrixHelloWorldTests.exe runMatrixHelloWorld.cpp)
-target_link_libraries(runMatrixHelloWorldTests.exe PRIVATE ReSolve resolve_matrix)
-
 # Build LUSOL-related tests
 if(RESOLVE_USE_LUSOL)
   add_executable(runLUSOLTests.exe runLUSOLTests.cpp)
@@ -39,7 +35,6 @@ install(TARGETS ${installable_tests}
 add_test(NAME matrix_test               COMMAND $<TARGET_FILE:runMatrixIoTests.exe>)
 add_test(NAME matrix_handler_test       COMMAND $<TARGET_FILE:runMatrixHandlerTests.exe>)
 add_test(NAME matrix_factorization_test COMMAND $<TARGET_FILE:runMatrixFactorizationTests.exe>)
-add_test(NAME matrix_hello_world_test   COMMAND $<TARGET_FILE:runMatrixHelloWorldTests.exe>)
 if(RESOLVE_USE_LUSOL)
   add_test(NAME lusol_factorization_test COMMAND $<TARGET_FILE:runLUSOLTests.exe>)
 endif()
