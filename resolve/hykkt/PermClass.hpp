@@ -1,7 +1,7 @@
 #pragma once
 
 
-enum Permutation_Type { perm_v, rev_perm_v, perm_h_v, perm_j_v, perm_jt_v }; 
+enum PermutationType { perm_v, rev_perm_v, perm_h_v, perm_j_v, perm_jt_v }; 
 
 class PermClass
 {
@@ -146,7 +146,7 @@ public:
    * 
    * @post new_val contains the permuted old_val
   */
-  void map_index(Permutation_Type permutation, 
+  void map_index(PermutationType permutation, 
       double* old_val, 
       double* new_val);
 

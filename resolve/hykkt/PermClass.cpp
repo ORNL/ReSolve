@@ -1,7 +1,5 @@
 #include <resolve/hykkt/PermClass.hpp>
 #include <resolve/hykkt/cpuHykktPermutationKernels.hpp>
-// #include <resolve/vector/Vector.hpp>
-// #include <resolve/matrix/Csr.hpp>
 #include <cstdio>
 #include "amd.h"
 
@@ -11,7 +9,7 @@ PermClass::PermClass(int n_h, int nnz_h, int nnz_j)
     nnz_h_(nnz_h),
     nnz_j_(nnz_j)
   {
-    allocate_workspace();
+    allocateWorkspace();
   }
 
   PermClass::~PermClass()
@@ -25,13 +23,13 @@ PermClass::PermClass(int n_h, int nnz_h, int nnz_j)
     delete [] perm_map_jt_;
   }
 
-  void PermClass::add_h_info(int* h_i, int* h_j)
+  void PermClass::addHInfo(int* h_i, int* h_j)
   {
     h_i_ = h_i;
     h_j_ = h_j;
   }
   
-  void PermClass::add_j_info(int* j_i, int* j_j, int n_j, int m_j)
+  void PermClass::addJInfo(int* j_i, int* j_j, int n_j, int m_j)
   {
     j_i_ = j_i;
     j_j_ = j_j;
@@ -39,20 +37,20 @@ PermClass::PermClass(int n_h, int nnz_h, int nnz_j)
     m_j_ = m_j;
   }
   
-  void PermClass::add_jt_info(int* jt_i, int* jt_j)
+  void PermClass::addJtInfo(int* jt_i, int* jt_j)
   {
     jt_i_ = jt_i;
     jt_j_ = jt_j;
   }
   
-  void PermClass::add_perm(int* custom_perm)
+  void PermClass::addPerm(int* custom_perm)
   {
     perm_is_default_ = false;
     perm_ = custom_perm;
   }
  
-// Symamd permutation of $H_\gamma$ in (6)
-  void PermClass::symamd()
+// symAmd permutation of $H_\gamma$ in (6)
+  void PermClass::symAmd()
   {
     double Control[AMD_CONTROL], Info[AMD_INFO];
 	
@@ -68,27 +66,27 @@ PermClass::PermClass(int n_h, int nnz_h, int nnz_j)
     }
   }
   
-  void PermClass::invert_perm()
+  void PermClass::invertPerm()
   {
     reverse_perm(n_h_, perm_, rev_perm_);
   }
 
-  void PermClass::vec_map_rc(int* b_i, int* b_j)
+  void PermClass::vecMapRC(int* b_i, int* b_j)
   {
-    make_vec_map_rc(n_h_, h_i_, h_j_, perm_, rev_perm_, b_i, b_j, perm_map_h_);
+    make_vecMapRC(n_h_, h_i_, h_j_, perm_, rev_perm_, b_i, b_j, perm_map_h_);
   }
 
-  void PermClass::vec_map_c(int* b_j)
+  void PermClass::vecMapC(int* b_j)
   {
-    make_vec_map_c(n_j_, j_i_, j_j_, rev_perm_, b_j, perm_map_j_);
+    make_vecMapC(n_j_, j_i_, j_j_, rev_perm_, b_j, perm_map_j_);
   }
 
-  void PermClass::vec_map_r(int* b_i, int* b_j)
+  void PermClass::vecMapR(int* b_i, int* b_j)
   {
-    make_vec_map_r(m_j_, jt_i_, jt_j_, perm_, b_i, b_j, perm_map_jt_);
+    make_vecMapR(m_j_, jt_i_, jt_j_, perm_, b_i, b_j, perm_map_jt_);
   }
   
-  void PermClass::map_index(Permutation_Type permutation,
+  void PermClass::map_index(PermutationType permutation,
       double* old_val,
       double* new_val)
   {
@@ -114,7 +112,7 @@ PermClass::PermClass(int n_h, int nnz_h, int nnz_j)
     }
   }
   
-  void PermClass::allocate_workspace()
+  void PermClass::allocateWorkspace()
   {
     perm_ = new int[n_h_];
     rev_perm_ = new int[n_h_];

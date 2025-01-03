@@ -37,14 +37,14 @@ public:
     bool flagc = false;
 
     PermClass pc(n, nnz, nnz);
-    pc.add_h_info(a_i, a_j);
-    pc.add_j_info(a_i, a_j, n, m);
-    pc.add_jt_info(a_i, a_j);
-    pc.add_perm(perm);
-    pc.invert_perm();
+    pc.addHInfo(a_i, a_j);
+    pc.addJInfo(a_i, a_j, n, m);
+    pc.addJtInfo(a_i, a_j);
+    pc.addPerm(perm);
+    pc.invertPerm();
 
     // Test RC permutation
-    pc.vec_map_rc(b_i, b_j);
+    pc.vecMapRC(b_i, b_j);
     printf("Comparing RC permutation\n");
     for (int i = 0; i < n + 1; i++) // Loop over row pointers (n+1)
     {
@@ -65,7 +65,7 @@ public:
     printf(flagrc ? "RC permutation failed\n" : "RC permutation passed\n");
 
     // Test R permutation
-    pc.vec_map_r(b_i, b_j);
+    pc.vecMapR(b_i, b_j);
     printf("Comparing R permutation\n");
     for (int i = 0; i < n + 1; i++)
     {
@@ -86,7 +86,7 @@ public:
     printf(flagr ? "R permutation failed\n" : "R permutation passed\n");
 
     // Test C permutation
-    pc.vec_map_c(b_j);
+    pc.vecMapC(b_j);
     printf("Comparing C permutation\n");
     for (int i = 0; i < n + 1; i++)
     {
