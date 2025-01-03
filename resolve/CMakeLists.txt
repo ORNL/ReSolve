@@ -82,7 +82,7 @@ add_subdirectory(workspace)
 add_subdirectory(vector)
 add_subdirectory(matrix)
 add_subdirectory(random)
-add_subdirectory(hykkt/cpu)
+#add_subdirectory(hykkt/cpu)
 
 # Build shared library ReSolve
 add_library(resolve_tpl INTERFACE)
@@ -114,8 +114,6 @@ if(RESOLVE_USE_LUSOL)
   list(APPEND ReSolve_HEADER_INSTALL ${ReSolve_LUSOL_HEADER_INSTALL})
   list(APPEND ReSolve_Targets_List lusol_lib)
 endif()
-
-add_subdirectory(hykkt/cpu)
 
 
 # If no GPU support is enabled, link to dummy device backend
