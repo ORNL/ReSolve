@@ -21,7 +21,7 @@ public:
    *
    * @post h_i_ set to h_i, h_j_ set to h_j
   */
-  void add_h_info(int* h_i, int* h_j);
+  void addHInfo(int* h_i, int* h_j);
 
   /*
    * @brief loads CSR structure for matrix J
@@ -32,7 +32,7 @@ public:
    *
    * @post j_i_ set to j_i, j_j_ set to j_j, n_j_ set to n_j, m_j_ set to m_j
   */
-  void add_j_info(int* j_i, int* j_j, int n_j, int m_j);
+  void addJInfo(int* j_i, int* j_j, int n_j, int m_j);
 
   /*
    * @brief loads CSR structure for matrix Jt
@@ -43,7 +43,7 @@ public:
    * @pre
    * @post jt_i_ set to jt_i, jt_j_ set to jt_j
   */
-  void add_jt_info(int* jt_i, int* jt_j);
+  void addJtInfo(int* jt_i, int* jt_j);
 
   /*
    * @brief sets custom permutation of matrix
@@ -56,7 +56,7 @@ public:
    *       set to false so that custom_perm not deleted twice in destructors,
    *       permutation vector copied onto device d_perm
   */
-  void add_perm(int* custom_perm);
+  void addPerm(int* custom_perm);
   
   /*
    * @brief Uses Symmetric Approximate Minimum Degree 
@@ -66,10 +66,10 @@ public:
    *      initialized to the dimensions of matrix H, the number 
    *      of nonzeros it has, its row offsets, and column arrays
    *
-   * @post perm is the perumation vector that implements symamd
+   * @post perm is the perumation vector that implements symAmd
    *       on the 2x2 system
   */
-  void symamd();
+  void symAmd();
 
   /*
    * @brief Creates reverse permutation of perm and copies onto device
@@ -80,7 +80,7 @@ public:
    * @post rev_perm is now the reverse permuation of perm and copied onto
    *       the device d_perm
   */
-  void invert_perm();
+  void invertPerm();
 
   /*
    * @brief Creates permutation of rows and columns of matrix
@@ -97,7 +97,7 @@ public:
    * @post perm_map_h is now permuted rows/columns of H and copied onto
    *       the device d_perm_map_h
   */
-  void vec_map_rc(int* b_i, int* b_j);
+  void vecMapRC(int* b_i, int* b_j);
 
   /*
    * @brief Creates the permutation of the columns of matrix J
@@ -112,7 +112,7 @@ public:
    * @post perm_map_j is now the column permutation and is copied onto
    *       the device d_perm_map_j
   */
-  void vec_map_c(int* b_j);
+  void vecMapC(int* b_j);
 
   /*
    * @brief Creates the permutation of the rows of matrix Jt
@@ -128,7 +128,7 @@ public:
    * @post perm_map_jt is now the permuations of the rows of J transpose
    *       and is copied onto the device d_perm_map_jt
   */
-  void vec_map_r(int* b_i, int* b_j);
+  void vecMapR(int* b_i, int* b_j);
 
   /*
    * @brief maps the permutated values of old_val to new_val
@@ -165,7 +165,7 @@ private:
  *       is now a vector with size nnz_h_, perm_map_j and perm_map_jt
  *       are now vectors with size nnz_j_
 */
-  void allocate_workspace();
+  void allocateWorkspace();
 
   // member variables
   bool perm_is_default_ = true; // boolean if perm set custom

@@ -68,22 +68,22 @@ PermClass::PermClass(int n_h, int nnz_h, int nnz_j)
   
   void PermClass::invertPerm()
   {
-    reverse_perm(n_h_, perm_, rev_perm_);
+    reversePerm(n_h_, perm_, rev_perm_);
   }
 
   void PermClass::vecMapRC(int* b_i, int* b_j)
   {
-    make_vecMapRC(n_h_, h_i_, h_j_, perm_, rev_perm_, b_i, b_j, perm_map_h_);
+    makeVecMapRC(n_h_, h_i_, h_j_, perm_, rev_perm_, b_i, b_j, perm_map_h_);
   }
 
   void PermClass::vecMapC(int* b_j)
   {
-    make_vecMapC(n_j_, j_i_, j_j_, rev_perm_, b_j, perm_map_j_);
+    makeVecMapC(n_j_, j_i_, j_j_, rev_perm_, b_j, perm_map_j_);
   }
 
   void PermClass::vecMapR(int* b_i, int* b_j)
   {
-    make_vecMapR(m_j_, jt_i_, jt_j_, perm_, b_i, b_j, perm_map_jt_);
+    makeVecMapR(m_j_, jt_i_, jt_j_, perm_, b_i, b_j, perm_map_jt_);
   }
   
   void PermClass::map_index(PermutationType permutation,
@@ -93,19 +93,19 @@ PermClass::PermClass(int n_h, int nnz_h, int nnz_j)
     switch(permutation)
     {
       case perm_v: 
-        cpu_map_idx(n_h_, perm_, old_val, new_val);
+        cpuMapIdx(n_h_, perm_, old_val, new_val);
         break;
       case rev_perm_v: 
-        cpu_map_idx(n_h_, rev_perm_, old_val, new_val);
+        cpuMapIdx(n_h_, rev_perm_, old_val, new_val);
         break;
       case perm_h_v: 
-        cpu_map_idx(nnz_h_, perm_map_h_, old_val, new_val);
+        cpuMapIdx(nnz_h_, perm_map_h_, old_val, new_val);
         break;
       case perm_j_v: 
-        cpu_map_idx(nnz_j_, perm_map_j_, old_val, new_val);
+        cpuMapIdx(nnz_j_, perm_map_j_, old_val, new_val);
         break;
       case perm_jt_v: 
-        cpu_map_idx(nnz_j_, perm_map_jt_, old_val, new_val);
+        cpuMapIdx(nnz_j_, perm_map_jt_, old_val, new_val);
         break;
       default:
         printf("Valid arguments are perm_v, rev_perm_v, perm_h_v, perm_j_v, perm_jt_v\n");

@@ -1,13 +1,13 @@
 #include "cpuHykktPermutationKernels.hpp"
 
-void cpu_map_idx(int n, int* perm, double* old_val, double* new_val)
+void cpuMapIdx(int n, int* perm, double* old_val, double* new_val)
 {
     for (int i = 0; i < n; i++) {
       new_val[i] = old_val[perm[i]];
     }
 }
 
-void selection_sort2(int len, int* arr1, int* arr2)
+void SelectionSort2(int len, int* arr1, int* arr2)
 {
   int min_ind;
   int temp;
@@ -64,7 +64,7 @@ void quickSort(int* arr1, int* arr2, int low, int high) {
   }
 }
 
-void insertion_sort(int n, int* arr1, int* arr2) 
+void InsertionSort(int n, int* arr1, int* arr2) 
 {
   int i, key1, key2, j;
   for (i = 1; i < n; i++)
@@ -85,7 +85,7 @@ void insertion_sort(int n, int* arr1, int* arr2)
   }
 }
 
-void make_vec_map_c(int n, 
+void makeVecMapC(int n, 
     int* rows, 
     int* cols, 
     int* rev_perm, 
@@ -104,15 +104,15 @@ void make_vec_map_c(int n,
       perm_cols[row_s + j] = rev_perm[cols[row_s + j]];
     }
 #if 0
-    selection_sort2(rowlen, &perm_cols[row_s], &perm_map[row_s]);
+    SelectionSort2(rowlen, &perm_cols[row_s], &perm_map[row_s]);
 #else
     //quickSort(&perm_cols[row_s], &perm_map[row_s], 0, rowlen-1);
-    insertion_sort(rowlen, &perm_cols[row_s], &perm_map[row_s]);
+    InsertionSort(rowlen, &perm_cols[row_s], &perm_map[row_s]);
 #endif
   }
 }
 
-void reverse_perm(int n, int* perm, int* rev_perm)
+void reversePerm(int n, int* perm, int* rev_perm)
 {
   for(int i = 0; i < n; i++)
   {
@@ -120,7 +120,7 @@ void reverse_perm(int n, int* perm, int* rev_perm)
   }
 }
 
-void make_vec_map_r(int n, 
+void makeVecMapR(int n, 
     int* rows, 
     int* cols, 
     int* perm, 
@@ -148,7 +148,7 @@ void make_vec_map_r(int n,
   }
 }
 
-void make_vec_map_rc(int n, 
+void makeVecMapRC(int n, 
     int* rows, 
     int* cols, 
     int* perm, 
@@ -174,10 +174,10 @@ void make_vec_map_rc(int n,
       perm_cols[count + j] = rev_perm[cols[row_s + j]];
     }
 #if 0
-    selection_sort2(rowlen, &perm_cols[count], &perm_map[count]);
+    SelectionSort2(rowlen, &perm_cols[count], &perm_map[count]);
 #else
     //quickSort(&perm_cols[count], &perm_map[count], 0, rowlen-1);
-    insertion_sort(rowlen, &perm_cols[count], &perm_map[count]);
+    InsertionSort(rowlen, &perm_cols[count], &perm_map[count]);
 #endif
     count += rowlen;
   }

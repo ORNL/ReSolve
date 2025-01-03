@@ -11,7 +11,7 @@
  *
  * @post:  new_val contains the permuted old_val
 */
-void cpu_map_idx(int n, int* perm, double* old_val, double* new_val);
+void cpuMapIdx(int n, int* perm, double* old_val, double* new_val);
 /*
  * @brief: Selection sorts arr1 and arr2 w/indices
  * based on increasing value in arr1
@@ -24,7 +24,7 @@ void cpu_map_idx(int n, int* perm, double* old_val, double* new_val);
  *
  * @post: arr1 and arr2 are sorted based on increasing values in arr1
 */
-void selection_sort2(int len, int* arr1, int* arr2);
+void SelectionSort2(int len, int* arr1, int* arr2);
 
 inline void swap(int* arr1, int* arr2, int i, int j);
 inline int partition(int* arr1, int* arr2, int low, int high);
@@ -42,7 +42,7 @@ void quickSort(int* arr1, int* arr2, int low, int high);
  *
  * @post: arr1 and arr2 are sorted based on increasing values in arr1
 */
-void insertion_sort(int len, int* arr1, int* arr2);
+void InsertionSort(int len, int* arr1, int* arr2);
 
 /*
  * @brief: Permutes the columns in a matrix represented by rows and cols
@@ -56,7 +56,7 @@ void insertion_sort(int len, int* arr1, int* arr2);
  * @post: perm_cols is now the permuted column array and perm_map stores
  * the corresponding indices to facilitate permuting the values
  */
-void make_vec_map_c(int n, 
+void makeVecMapC(int n, 
     int* rows, 
     int* cols, 
     int* rev_perm, 
@@ -72,7 +72,7 @@ void make_vec_map_c(int n,
  *
  * @post: rev_perm now contains the reverse permutation
  */
-void reverse_perm(int n, int* perm, int* rev_perm);
+void reversePerm(int n, int* perm, int* rev_perm);
 /*
  * @brief: Permutes the rows in a matrix represented by rows and cols
  *
@@ -85,7 +85,7 @@ void reverse_perm(int n, int* perm, int* rev_perm);
  * @post: perm_rows and perm_cols are now the permuted rows and column arrays,
  * perm_map stores the corresponding indices to facilitate permuting the values
 */
-void make_vec_map_r(int n, 
+void makeVecMapR(int n, 
     int* rows, 
     int* cols, 
     int* perm, 
@@ -105,7 +105,7 @@ void make_vec_map_r(int n,
  * @post: perm_rows and perm_cols are now the permuted rows and column arrays,
  * perm_map stores the corresponding indices to facilitate permuting the values
 */
-void make_vec_map_rc(int n, 
+void makeVecMapRC(int n, 
     int* rows, 
     int* cols, 
     int* perm, 
