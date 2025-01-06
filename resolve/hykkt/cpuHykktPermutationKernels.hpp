@@ -24,7 +24,7 @@ void cpuMapIdx(int n, int* perm, double* old_val, double* new_val);
  *
  * @post: arr1 and arr2 are sorted based on increasing values in arr1
 */
-void SelectionSort2(int len, int* arr1, int* arr2);
+void selectionSort2(int len, int* arr1, int* arr2);
 
 inline void swap(int* arr1, int* arr2, int i, int j);
 inline int partition(int* arr1, int* arr2, int low, int high);
