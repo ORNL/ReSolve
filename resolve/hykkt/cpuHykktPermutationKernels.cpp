@@ -7,7 +7,7 @@ void cpuMapIdx(int n, int* perm, double* old_val, double* new_val)
     }
 }
 
-void SelectionSort2(int len, int* arr1, int* arr2)
+void selectionSort2(int len, int* arr1, int* arr2)
 {
   int min_ind;
   int temp;
@@ -104,7 +104,7 @@ void makeVecMapC(int n,
       perm_cols[row_s + j] = rev_perm[cols[row_s + j]];
     }
 #if 0
-    SelectionSort2(rowlen, &perm_cols[row_s], &perm_map[row_s]);
+    selectionSort2(rowlen, &perm_cols[row_s], &perm_map[row_s]);
 #else
     //quickSort(&perm_cols[row_s], &perm_map[row_s], 0, rowlen-1);
     InsertionSort(rowlen, &perm_cols[row_s], &perm_map[row_s]);
@@ -174,7 +174,7 @@ void makeVecMapRC(int n,
       perm_cols[count + j] = rev_perm[cols[row_s + j]];
     }
 #if 0
-    SelectionSort2(rowlen, &perm_cols[count], &perm_map[count]);
+    selectionSort2(rowlen, &perm_cols[count], &perm_map[count]);
 #else
     //quickSort(&perm_cols[count], &perm_map[count], 0, rowlen-1);
     InsertionSort(rowlen, &perm_cols[count], &perm_map[count]);
