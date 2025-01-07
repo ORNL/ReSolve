@@ -47,7 +47,7 @@ namespace ReSolve { namespace tests {
       MatrixHandler matrix_handler(&workspace);
       VectorHandler vector_handler(&workspace);
 
-      GramSchmidt gs(&vector_handler, GramSchmidt::cgs2);
+      GramSchmidt gs(&vector_handler, GramSchmidt::CGS2);
 
       // Constructor sets parameters
       LinSolverIterativeFGMRES solver(restart,
