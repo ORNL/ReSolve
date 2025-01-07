@@ -508,7 +508,7 @@ namespace ReSolve { namespace vector {
    * 
    * @param[out] dest      - Pointer to the memory to which data is copied
    * @param[in] i          - Index of a vector in a multivector
-   * @param[in] memspace   - Memory space (HOST or DEVICE) to copy from
+   * @param[in] memspace   - Memory space (HOST or DEVICE) to copy from and to
    *
    * @return 0 if successful, -1 otherwise.
    *
@@ -516,6 +516,8 @@ namespace ReSolve { namespace vector {
    * in multivector.
    * @pre _dest_ is allocated, and the size of _dest_ is at least _n_ (lenght
    * of a single vector in the multivector).
+   * @pre _dest_ is allocated in memspaceInOut memory space.
+   * @post All elements of the vector _i_ are copied to the array _dest_.
    */
   int  Vector::copyDataTo(real_type* dest,
                           index_type i,
