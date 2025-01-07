@@ -1,14 +1,19 @@
 #pragma once
+
+#include <iostream>
+#include <cassert>
+
 #include "Common.hpp"
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/MemoryUtils.hpp>
-#include <iostream>
-#include <cassert>
+
 namespace ReSolve 
 {
   class GramSchmidt
   {
+    private:
       using vector_type = vector::Vector;
+
     public:
       enum GSVariant {MGS = 0, 
                       CGS2,
@@ -31,7 +36,7 @@ namespace ReSolve
       int freeGramSchmidtData();
     
       GSVariant variant_{MGS};
-      bool setup_complete_{false}; //to avoid double allocations and stuff
+      bool setup_complete_{false}; //to avoid double allocations
 
       index_type num_vecs_; //the same as restart  
       vector_type* vec_rv_{nullptr};
@@ -48,4 +53,4 @@ namespace ReSolve
       memory::MemorySpace memspace_;
   };
 
-}//namespace
+} // namespace ReSolve
