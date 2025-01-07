@@ -2,9 +2,10 @@
 #include <resolve/hykkt/cpuHykktPermutationKernels.hpp>
 #include <cstdio>
 #include "amd.h"
-
-// Creates a class for the permutation of $H_\gamma$ in (6)
-PermClass::PermClass(int n_h, int nnz_h, int nnz_j) 
+namespace ReSolve::Hykkt
+{
+  // Creates a class for the permutation of $H_\gamma$ in (6)
+  PermClass::PermClass(int n_h, int nnz_h, int nnz_j) 
   : n_h_(n_h),
     nnz_h_(nnz_h),
     nnz_j_(nnz_j)
@@ -92,23 +93,23 @@ PermClass::PermClass(int n_h, int nnz_h, int nnz_j)
   {
     switch(permutation)
     {
-      case perm_v: 
+      case PERM_V: 
         cpuMapIdx(n_h_, perm_, old_val, new_val);
         break;
-      case rev_perm_v: 
+      case REV_PERM_V: 
         cpuMapIdx(n_h_, rev_perm_, old_val, new_val);
         break;
-      case perm_h_v: 
+      case PERM_H_V: 
         cpuMapIdx(nnz_h_, perm_map_h_, old_val, new_val);
         break;
-      case perm_j_v: 
+      case PERM_J_V: 
         cpuMapIdx(nnz_j_, perm_map_j_, old_val, new_val);
         break;
-      case perm_jt_v: 
+      case PERM_JT_V: 
         cpuMapIdx(nnz_j_, perm_map_jt_, old_val, new_val);
         break;
       default:
-        printf("Valid arguments are perm_v, rev_perm_v, perm_h_v, perm_j_v, perm_jt_v\n");
+        printf("Valid arguments are PERM_V, REV_PERM_V, PERM_H_V, PERM_J_V, PERM_JT_V\n");
     }
   }
   
@@ -120,3 +121,4 @@ PermClass::PermClass(int n_h, int nnz_h, int nnz_j)
     perm_map_j_ = new int[nnz_j_];
     perm_map_jt_ = new int[nnz_j_];
   }
+}
