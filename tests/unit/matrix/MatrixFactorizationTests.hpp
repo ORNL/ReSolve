@@ -162,7 +162,7 @@ private:
     // Allocate NxN CSR matrix with NNZ nonzeros
     matrix::Csr* A = new matrix::Csr(N, N, NNZ);
     A->allocateMatrixData(memory::HOST);
-    A->copyData(&rowsA_[0], &colsA_[0], &valsA_[0], memory::HOST, memory::HOST);
+    A->copyDataFrom(&rowsA_[0], &colsA_[0], &valsA_[0], memory::HOST, memory::HOST);
 
     // A->print();
 

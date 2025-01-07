@@ -312,7 +312,7 @@ int coo2csr(ReSolve::matrix::Coo* A_coo, ReSolve::matrix::Csr* A_csr, ReSolve::m
     }
   }
   row_csr[n] = nnz;
-  A_csr->copyData(row_csr, cols_coo, vals_coo, ReSolve::memory::HOST, memspace);
+  A_csr->copyDataFrom(row_csr, cols_coo, vals_coo, ReSolve::memory::HOST, memspace);
 
   delete [] row_csr;
   

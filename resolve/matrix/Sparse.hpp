@@ -55,17 +55,17 @@ namespace ReSolve { namespace matrix {
       virtual index_type* getColData(memory::MemorySpace memspace) = 0;
       virtual real_type*  getValues( memory::MemorySpace memspace) = 0;
 
-      virtual int copyData(const index_type* row_data,
-                           const index_type* col_data,
-                           const real_type* val_data,
-                           memory::MemorySpace memspaceIn,
-                           memory::MemorySpace memspaceOut) = 0;
-      virtual int copyData(const index_type* row_data,
-                           const index_type* col_data,
-                           const real_type* val_data,
-                           index_type new_nnz,
-                           memory::MemorySpace memspaceIn,
-                           memory::MemorySpace memspaceOut) = 0;
+      virtual int copyDataFrom(const index_type* row_data,
+                               const index_type* col_data,
+                               const real_type* val_data,
+                               memory::MemorySpace memspaceIn,
+                               memory::MemorySpace memspaceOut) = 0;
+      virtual int copyDataFrom(const index_type* row_data,
+                               const index_type* col_data,
+                               const real_type* val_data,
+                               index_type new_nnz,
+                               memory::MemorySpace memspaceIn,
+                               memory::MemorySpace memspaceOut) = 0;
 
       virtual int allocateMatrixData(memory::MemorySpace memspace) = 0;
       int setDataPointers(index_type* row_data,
