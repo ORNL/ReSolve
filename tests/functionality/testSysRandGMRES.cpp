@@ -96,7 +96,7 @@ int test(int argc, char *argv[])
   std::string method = opt ? (*opt).second : "randgmres";
 
   opt = options.getParamFromKey("-g");
-  std::string gs = opt ? (*opt).second : "cgs2";
+  std::string gs = opt ? (*opt).second : "CGS2";
 
   opt = options.getParamFromKey("-s");
   std::string sketch = opt ? (*opt).second : "count";
@@ -228,15 +228,14 @@ void processInputs(std::string& method, std::string& gs, std::string& sketch)
     std::cout << "Setting iterative solver method to the default (FGMRES).\n\n";
     method = "fgmres";
   }
-
-  if (gs != "cgs1" && 
-      gs != "cgs2" &&
-      gs != "mgs"  &&
-      gs != "mgs_two_sync" &&
-      gs != "mgs_pm") {
+  if (gs != "CGS1" && 
+      gs != "CGS2" && 
+      gs != "MGS" && 
+      gs != "MGS_TWO_SYNC" 
+      && gs != "MGS_PM") {
     std::cout << "Unknown orthogonalization " << gs << "\n";
     std::cout << "Setting orthogonalization to the default (CGS2).\n\n";
-    gs = "cgs2";
+    gs = "CGS2";
   }
 }
 
@@ -265,17 +264,17 @@ std::string headerInfo(const std::string& method,
   }
 
   std::string withgs = "\t Orthogonalization method:       ";
-  if (gs == "cgs2") {
+  if (gs == "CGS2") {
     header += (withgs + "reorthogonalized classical Gram-Schmidt\n");
-  } else if (gs == "cgs1")  {
+  } else if (gs == "CGS1")  {
     header += (withgs + "classical Gram-Schmidt\n");
-  } else if (gs == "mgs") {
+  } else if (gs == "MGS") {
     header += (withgs + "modified Gram-Schmidt\n");    
-  } else if (gs == "mgs_two_sync") {
+  } else if (gs == "MGS_TWO_SYNC") {
     header += (withgs + "modified Gram-Schmidt 2-sync\n");    
-  } else if (gs == "mgs_pm") {
+  } else if (gs == "MGS_PM") {
     header += (withgs + "post-modern modified Gram-Schmidt\n");    
-  } else if (gs == "mgs") {
+  } else if (gs == "MGS") {
     header += (withgs + "modified Gram-Schmidt\n");    
   } else {
     // do nothing

@@ -10,12 +10,12 @@ namespace ReSolve
   {
       using vector_type = vector::Vector;
     public:
-      enum GSVariant {mgs = 0, 
-                      cgs2,
-                      mgs_two_sync, 
-                      mgs_pm,
-                      cgs1};
-
+      enum GSVariant {MGS = 0, 
+                      CGS2,
+                      MGS_TWO_SYNC, 
+                      MGS_PM,
+                      CGS1};
+      
       GramSchmidt() = delete;
       GramSchmidt(VectorHandler* vh, GSVariant variant);
       ~GramSchmidt();
@@ -30,7 +30,7 @@ namespace ReSolve
     private:
       int freeGramSchmidtData();
     
-      GSVariant variant_{mgs};
+      GSVariant variant_{MGS};
       bool setup_complete_{false}; //to avoid double allocations and stuff
 
       index_type num_vecs_; //the same as restart  

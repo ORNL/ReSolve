@@ -482,15 +482,15 @@ namespace ReSolve { namespace vector {
   }
 
   /** 
-   * @brief Set current lenght of the vector (use for vectors and multivectors
+   * @brief Set current length of the vector (use for vectors and multivectors
    * that change size throughout computation). Note: vector needs to be
-   * allocated using maximum expected lenght.
+   * allocated using maximum expected length.
    * 
-   * @param[in] new_n_current       - New vector lenght
+   * @param[in] new_n_current       - New vector length
    *
    * @return 0 if successful, -1 otherwise.
    *
-   * @pre   _new_n_current_ <= _n_ i.e,, _new_n_current_ is smaller than the allocated vector lenght.
+   * @pre   _new_n_current_ <= _n_ i.e,, _new_n_current_ is smaller than the allocated vector length.
    */
   int Vector::setCurrentSize(index_type new_n_current)
   {
@@ -512,10 +512,10 @@ namespace ReSolve { namespace vector {
    *
    * @return 0 if successful, -1 otherwise.
    *
-   * @pre _i_ < _k_ i.e,, _i_ is smaller than the total number of vectors
-   * in multivector.
-   * @pre _dest_ is allocated, and the size of _dest_ is at least _n_ (lenght
-   * of a single vector in the multivector).
+   * @pre _i_ < _k_ i.e,, _i_ is smaller than the total number of vectors in
+   * multivector.
+   * @pre _dest_ is allocated, and the size of _dest_ is at least _n_
+   * (length of a single vector in the multivector).
    * @pre _dest_ is allocated in memspaceInOut memory space.
    * @post All elements of the vector _i_ are copied to the array _dest_.
    */

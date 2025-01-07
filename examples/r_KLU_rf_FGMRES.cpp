@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
   vector_type* vec_r;
   real_type norm_A, norm_x, norm_r;//used for INF norm
   
-  ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::cgs2);
+  ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::CGS2);
   ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
   ReSolve::LinSolverDirectCuSolverRf* Rf = new ReSolve::LinSolverDirectCuSolverRf;
   ReSolve::LinSolverIterativeFGMRES* FGMRES = new ReSolve::LinSolverIterativeFGMRES(matrix_handler, vector_handler, GS);

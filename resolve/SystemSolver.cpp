@@ -771,20 +771,20 @@ namespace ReSolve
   {
     // Map string input to the Gram-Schmidt variant enum
     GramSchmidt::GSVariant gs_variant;
-    if (variant == "cgs2") {
-      gs_variant = GramSchmidt::cgs2;
-    } else if (variant == "mgs") {
-      gs_variant = GramSchmidt::mgs;
-    } else if (variant == "mgs_two_sync") {
-      gs_variant = GramSchmidt::mgs_two_sync;
-    } else if (variant == "mgs_pm") {
-      gs_variant = GramSchmidt::mgs_pm;
-    } else if (variant == "cgs1") {
-      gs_variant = GramSchmidt::cgs1;
+    if (variant == "CGS2") {
+      gs_variant = GramSchmidt::CGS2;
+    } else if (variant == "MGS") {
+      gs_variant = GramSchmidt::MGS;
+    } else if (variant == "MGS_TWO_SYNC") {
+      gs_variant = GramSchmidt::MGS_TWO_SYNC;
+    } else if (variant == "MGS_PM") {
+      gs_variant = GramSchmidt::MGS_PM;
+    } else if (variant == "CGS1") {
+      gs_variant = GramSchmidt::CGS1;
     } else {
       out::warning() << "Gram-Schmidt variant " << variant << " not recognized.\n";
-      out::warning() << "Using default cgs2 Gram-Schmidt variant.\n";
-      gs_variant = GramSchmidt::cgs2;
+      out::warning() << "Using default CGS2 Gram-Schmidt variant.\n";
+      gs_variant = GramSchmidt::CGS2;
     }
 
     if (gs_) {

@@ -10,9 +10,9 @@ namespace ReSolve
 {
   using out = io::Logger;
 
-  index_type idxmap(index_type i, index_type j, index_type col_lenght)
+  index_type idxmap(index_type i, index_type j, index_type col_length)
   {
-    return  i * (col_lenght) + j;
+    return  i * (col_length) + j;
   }
 
   GramSchmidt::GramSchmidt(VectorHandler* vh,  GSVariant variant)
@@ -98,7 +98,7 @@ namespace ReSolve
     vec_v_ = new vector_type(n);
 
     num_vecs_ = restart;
-    if((variant_ == mgs_two_sync) || (variant_ == mgs_pm)) {
+    if((variant_ == MGS_TWO_SYNC) || (variant_ == MGS_PM)) {
       h_L_  = new real_type[num_vecs_ * (num_vecs_ + 1)]();
 
       vec_rv_ = new vector_type(num_vecs_ + 1, 2);
@@ -111,7 +111,7 @@ namespace ReSolve
 
       setup_complete_ = true; 
     }
-    if(variant_ == cgs2) {
+    if(variant_ == CGS2) {
       h_aux_ = new real_type[num_vecs_ + 1]();
       vec_Hcolumn_ = new vector_type(num_vecs_ + 1);
       vec_Hcolumn_->allocate(memspace_);
@@ -119,14 +119,14 @@ namespace ReSolve
 
       setup_complete_ = true; 
     }
-    if(variant_ == cgs1) {
+    if(variant_ == CGS1) {
       vec_Hcolumn_ = new vector_type(num_vecs_ + 1);
       vec_Hcolumn_->allocate(memspace_);      
       vec_Hcolumn_->setToZero(memspace_);      
 
       setup_complete_ = true; 
     }
-    if(variant_ == mgs_pm) {
+    if(variant_ == MGS_PM) {
       h_aux_ = new real_type[num_vecs_ + 1]();
 
       setup_complete_ = true; 
@@ -144,7 +144,7 @@ namespace ReSolve
     real_type* h_rv = nullptr;
 
     switch (variant_) {
-      case mgs: 
+      case MGS: 
         vec_w_->setData(V->getVectorData(i + 1, memspace_), memspace_);
         for(int j = 0; j <= i; ++j) {
           t = 0.0;
@@ -168,7 +168,7 @@ namespace ReSolve
         }
         return 0;
 
-      case cgs2:
+      case CGS2:
         vec_v_->setData(V->getVectorData(i + 1, memspace_), memspace_);
         vector_handler_->gemv('T', n, i + 1, &ONE, &ZERO, V,  vec_v_, vec_Hcolumn_, memspace_);
         // V(:,i+1) = V(:, i+1) -  V(:,1:i)*Hcol
@@ -214,7 +214,7 @@ namespace ReSolve
         }
         return 0;
 
-      case mgs_two_sync:
+      case MGS_TWO_SYNC:
         // V[1:i]^T[V[i] w]
         vec_v_->setData(V->getVectorData(i, memspace_), memspace_);
         vec_w_->setData(V->getVectorData(i + 1, memspace_), memspace_);
@@ -264,7 +264,7 @@ namespace ReSolve
         h_rv = nullptr;
         return 0;
 
-      case mgs_pm:
+      case MGS_PM:
         vec_v_->setData(V->getVectorData(i, memspace_), memspace_);
         vec_w_->setData(V->getVectorData(i + 1, memspace_), memspace_);
         vec_rv_->setCurrentSize(i + 1);
@@ -335,7 +335,7 @@ namespace ReSolve
         h_rv = nullptr;
         return 0;
 
-      case cgs1:
+      case CGS1:
         vec_v_->setData(V->getVectorData(i + 1, memspace_), memspace_);
         //Hcol = V(:,1:i)^T*V(:,i+1);
         vector_handler_->gemv('T', n, i + 1, &ONE, &ZERO, V,  vec_v_, vec_Hcolumn_, memspace_);
@@ -376,7 +376,7 @@ namespace ReSolve
 
   int GramSchmidt::freeGramSchmidtData()
   {
-    if(variant_ == mgs_two_sync || variant_ == mgs_pm) {    
+    if(variant_ == MGS_TWO_SYNC || variant_ == MGS_PM) {    
       delete h_L_;
       h_L_ = nullptr;
 
@@ -386,19 +386,19 @@ namespace ReSolve
       vec_Hcolumn_ = nullptr;
     }
 
-    if (variant_ == cgs2) {
+    if (variant_ == CGS2) {
       delete h_aux_;
       h_aux_ = nullptr;
       delete vec_Hcolumn_;    
       vec_Hcolumn_ = nullptr;
     }    
 
-    if (variant_ == cgs1) {
+    if (variant_ == CGS1) {
       delete vec_Hcolumn_;    
       vec_Hcolumn_ = nullptr;
     }    
 
-    if (variant_ == mgs_pm) {
+    if (variant_ == MGS_PM) {
       delete h_aux_;
       h_aux_ = nullptr;
     }
