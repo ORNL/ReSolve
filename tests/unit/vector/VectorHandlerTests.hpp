@@ -51,7 +51,7 @@ namespace ReSolve {
           for (int i = 0; i < N; ++i) {
             data[i] = 0.1 * (real_type) i;
           }
-          x.update(data, memory::HOST, memspace_);
+          x.copyDataFrom(data, memory::HOST, memspace_);
 
           real_type result = handler_.infNorm(&x, memspace_);
           real_type answer = static_cast<real_type>(N - 1) * 0.1;

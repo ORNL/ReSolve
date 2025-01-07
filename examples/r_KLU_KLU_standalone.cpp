@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
   mat_file.close();
   rhs_file.close();
 
-  vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   vec_rhs->setDataUpdated(ReSolve::memory::HOST);
   std::cout << "COO to CSR completed. Expanded NNZ: " << A->getNnz() << std::endl;
   //Now call direct solver
@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
   std::cout << "KLU factorization status: " << status << std::endl;
   status = KLU->solve(vec_rhs, vec_x);
   std::cout << "KLU solve status: " << status << std::endl;      
-  vec_r->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_r->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
 
   matrix_handler->setValuesChanged(true, ReSolve::memory::HOST);
 

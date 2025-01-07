@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
   mat_file.close();
   rhs_file.close();
 
-  vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   //Now call direct solver
   real_type norm_b;
   matrix_handler->setValuesChanged(true, ReSolve::memory::HOST);
@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
   FGMRES->setupPreconditioner("LU", Rf);
   FGMRES->setFlexible(1); 
 
-  vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   FGMRES->solve(vec_rhs, vec_x);
 
   norm_b = vector_handler->dot(vec_rhs, vec_rhs, ReSolve::memory::HOST);

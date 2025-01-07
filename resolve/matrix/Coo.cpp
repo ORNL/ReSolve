@@ -61,8 +61,8 @@ namespace ReSolve
         h_col_data_ = *cols;
         h_val_data_ = *vals;
         h_data_updated_ = true;
-        owns_cpu_vals_ = true;
-        owns_cpu_data_  = true;
+        owns_cpu_values_ = true;
+        owns_cpu_sparsity_pattern_ = true;
         // Make sure there is no device data.
         if (d_row_data_ || d_col_data_ || d_val_data_) {
           out::error() << "Device data unexpectedly allocated. "
@@ -79,8 +79,8 @@ namespace ReSolve
         d_col_data_ = *cols;
         d_val_data_ = *vals;
         d_data_updated_ = true;
-        owns_gpu_vals_ = true;
-        owns_gpu_data_  = true;
+        owns_gpu_values_ = true;
+        owns_gpu_sparsity_pattern_ = true;
         syncData(memspaceDst);
         // Hijack data from the source
         *rows = nullptr;
@@ -93,8 +93,8 @@ namespace ReSolve
         h_col_data_ = *cols;
         h_val_data_ = *vals;
         h_data_updated_ = true;
-        owns_cpu_vals_ = true;
-        owns_cpu_data_  = true;
+        owns_cpu_values_ = true;
+        owns_cpu_sparsity_pattern_ = true;
         syncData(memspaceDst);
         // Hijack data from the source
         *rows = nullptr;
@@ -107,8 +107,8 @@ namespace ReSolve
         d_col_data_ = *cols;
         d_val_data_ = *vals;
         d_data_updated_ = true;
-        owns_gpu_vals_ = true;
-        owns_gpu_data_  = true;
+        owns_gpu_values_ = true;
+        owns_gpu_sparsity_pattern_ = true;
         // Make sure there is no device data.
         if (h_row_data_ || h_col_data_ || h_val_data_) {
           out::error() << "Host data unexpectedly allocated. "
@@ -172,11 +172,11 @@ namespace ReSolve
     }
   }
 
-  int matrix::Coo::updateData(index_type* row_data,
-                              index_type* col_data,
-                              real_type* val_data,
-                              memory::MemorySpace memspaceIn,
-                              memory::MemorySpace memspaceOut)
+  int matrix::Coo::copyDataFrom(const index_type* row_data,
+                                const index_type* col_data,
+                                const real_type* val_data,
+                                memory::MemorySpace memspaceIn,
+                                memory::MemorySpace memspaceOut)
   {
 
     //four cases (for now)
@@ -191,32 +191,32 @@ namespace ReSolve
     if (memspaceOut == memory::HOST) {
       //check if cpu data allocated	
       if ((h_row_data_ == nullptr) != (h_col_data_ == nullptr)) {
-        out::error() << "In Coo::updateData one of host row or column data is null!\n";
+        out::error() << "In Coo::copyDataFrom one of host row or column data is null!\n";
       }
       if ((h_row_data_ == nullptr) && (h_col_data_ == nullptr)) {
         this->h_row_data_ = new index_type[nnz_current];
         this->h_col_data_ = new index_type[nnz_current];
-        owns_cpu_data_ = true;
+        owns_cpu_sparsity_pattern_ = true;
       }
       if (h_val_data_ == nullptr) {
         this->h_val_data_ = new real_type[nnz_current];
-        owns_cpu_vals_ = true;
+        owns_cpu_values_ = true;
       }
     }
 
     if (memspaceOut == memory::DEVICE) {
       //check if cuda data allocated
       if ((d_row_data_ == nullptr) != (d_col_data_ == nullptr)) {
-        out::error() << "In Coo::updateData one of device row or column data is null!\n";
+        out::error() << "In Coo::copyDataFrom one of device row or column data is null!\n";
       }
       if ((d_row_data_ == nullptr) && (d_col_data_ == nullptr)) {
         mem_.allocateArrayOnDevice(&d_row_data_, nnz_current);
         mem_.allocateArrayOnDevice(&d_col_data_, nnz_current);
-        owns_gpu_data_ = true;
+        owns_gpu_sparsity_pattern_ = true;
       }
       if (d_val_data_ == nullptr) {
         mem_.allocateArrayOnDevice(&d_val_data_, nnz_current);
-        owns_gpu_vals_ = true;
+        owns_gpu_values_ = true;
       }
     }
 
@@ -251,12 +251,16 @@ namespace ReSolve
     return 0;
   } 
 
-  int matrix::Coo::updateData(index_type* row_data, index_type* col_data, real_type* val_data, index_type new_nnz, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut)
+  int matrix::Coo::copyDataFrom(const index_type* row_data,
+                                const index_type* col_data,
+                                const real_type* val_data,
+                                index_type new_nnz,
+                                memory::MemorySpace memspaceIn,
+                                memory::MemorySpace memspaceOut)
   {
-    this->destroyMatrixData(memspaceOut);
-    this->nnz_ = new_nnz;
-    int i = this->updateData(row_data, col_data, val_data, memspaceIn, memspaceOut);
-    return i;
+    destroyMatrixData(memspaceOut);
+    nnz_ = new_nnz;
+    return copyDataFrom(row_data, col_data, val_data, memspaceIn, memspaceOut);
   } 
 
   int matrix::Coo::allocateMatrixData(memory::MemorySpace memspace)
@@ -271,8 +275,8 @@ namespace ReSolve
       std::fill(h_col_data_, h_col_data_ + nnz_current, 0);  
       this->h_val_data_ = new real_type[nnz_current];
       std::fill(h_val_data_, h_val_data_ + nnz_current, 0.0);  
-      owns_cpu_data_ = true;
-      owns_cpu_vals_ = true;
+      owns_cpu_sparsity_pattern_ = true;
+      owns_cpu_values_ = true;
       return 0;
     }
 
@@ -280,8 +284,8 @@ namespace ReSolve
       mem_.allocateArrayOnDevice(&d_row_data_, nnz_current); 
       mem_.allocateArrayOnDevice(&d_col_data_, nnz_current); 
       mem_.allocateArrayOnDevice(&d_val_data_, nnz_current); 
-      owns_gpu_data_ = true;
-      owns_gpu_vals_ = true;
+      owns_gpu_sparsity_pattern_ = true;
+      owns_gpu_values_ = true;
       return 0;
     }
     return -1;
@@ -317,11 +321,11 @@ namespace ReSolve
         if ((h_row_data_ == nullptr) && (h_col_data_ == nullptr)) {
           h_row_data_ = new index_type[nnz_];      
           h_col_data_ = new index_type[nnz_];      
-          owns_cpu_data_ = true;
+          owns_cpu_sparsity_pattern_ = true;
         }
         if (h_val_data_ == nullptr) {
           h_val_data_ = new real_type[nnz_];      
-          owns_cpu_vals_ = true;
+          owns_cpu_values_ = true;
         }
         mem_.copyArrayDeviceToHost(h_row_data_, d_row_data_, nnz_);
         mem_.copyArrayDeviceToHost(h_col_data_, d_col_data_, nnz_);
@@ -343,11 +347,11 @@ namespace ReSolve
         if ((d_row_data_ == nullptr) && (d_col_data_ == nullptr)) {
           mem_.allocateArrayOnDevice(&d_row_data_, nnz_);
           mem_.allocateArrayOnDevice(&d_col_data_, nnz_);
-          owns_gpu_data_ = true;
+          owns_gpu_sparsity_pattern_ = true;
         }
         if (d_val_data_ == nullptr) {
           mem_.allocateArrayOnDevice(&d_val_data_, nnz_);
-          owns_gpu_vals_ = true;
+          owns_gpu_values_ = true;
         }
         mem_.copyArrayHostToDevice(d_row_data_, h_row_data_, nnz_);
         mem_.copyArrayHostToDevice(d_col_data_, h_col_data_, nnz_);

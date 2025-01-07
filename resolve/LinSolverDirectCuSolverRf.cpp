@@ -133,7 +133,7 @@ namespace ReSolve
 
   int LinSolverDirectCuSolverRf::solve(vector_type* rhs, vector_type* x)
   {
-    x->update(rhs->getData(memory::DEVICE), memory::DEVICE, memory::DEVICE);
+    x->copyDataFrom(rhs->getData(memory::DEVICE), memory::DEVICE, memory::DEVICE);
     x->setDataUpdated(memory::DEVICE);
     status_cusolverrf_ =  cusolverRfSolve(handle_cusolverrf_,
                                           d_P_,

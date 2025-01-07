@@ -129,8 +129,8 @@ namespace ReSolve
 
           for (index_type i = 0; i < K; ++i) {
             for (index_type j = 0; j < K; ++j) {
-              a.update(x.getVectorData(i, memspace_), memspace_, memory::HOST);
-              b.update(x.getVectorData(j, memspace_), memspace_, memory::HOST);
+              a.copyDataFrom(x.getVectorData(i, memspace_), memspace_, memory::HOST);
+              b.copyDataFrom(x.getVectorData(j, memspace_), memspace_, memory::HOST);
               ip = handler_.dot(&a, &b, memory::HOST);
               if ( (i != j) && !isEqual(ip, 0.0)) {
                 status = false;

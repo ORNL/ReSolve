@@ -55,11 +55,23 @@ namespace ReSolve { namespace matrix {
       virtual index_type* getColData(memory::MemorySpace memspace) = 0;
       virtual real_type*  getValues( memory::MemorySpace memspace) = 0;
 
-      virtual int updateData(index_type* row_data, index_type* col_data, real_type* val_data, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut) = 0;
-      virtual int updateData(index_type* row_data, index_type* col_data, real_type* val_data, index_type new_nnz, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut) = 0;
+      virtual int copyDataFrom(const index_type* row_data,
+                               const index_type* col_data,
+                               const real_type* val_data,
+                               memory::MemorySpace memspaceIn,
+                               memory::MemorySpace memspaceOut) = 0;
+      virtual int copyDataFrom(const index_type* row_data,
+                               const index_type* col_data,
+                               const real_type* val_data,
+                               index_type new_nnz,
+                               memory::MemorySpace memspaceIn,
+                               memory::MemorySpace memspaceOut) = 0;
 
       virtual int allocateMatrixData(memory::MemorySpace memspace) = 0;
-      int setMatrixData(index_type* row_data, index_type* col_data, real_type* val_data, memory::MemorySpace memspace);
+      int setDataPointers(index_type* row_data,
+                          index_type* col_data,
+                          real_type*  val_data,
+                          memory::MemorySpace memspace);
 
       int destroyMatrixData(memory::MemorySpace memspace);
 
@@ -70,10 +82,13 @@ namespace ReSolve { namespace matrix {
 
       //update Values just updates values; it allocates if necessary.
       //values have the same dimensions between different formats 
-      virtual int updateValues(real_type* new_vals, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut);
+      virtual int copyValues(const real_type* new_vals,
+                             memory::MemorySpace memspaceIn,
+                             memory::MemorySpace memspaceOut);
       
       //set new values just sets the pointer, use caution.   
-      virtual int setNewValues(real_type* new_vals, memory::MemorySpace memspace);
+      virtual int setValuesPointer(real_type* new_vals,
+                                   memory::MemorySpace memspace);
     
     protected:
       SparseFormat sparse_format_{NONE}; ///< Matrix format
@@ -99,11 +114,11 @@ namespace ReSolve { namespace matrix {
       void setNotUpdated();
       
       // Data ownership flags
-      bool owns_cpu_data_{false}; ///< for row/col data
-      bool owns_cpu_vals_{false}; ///< for values
+      bool owns_cpu_sparsity_pattern_{false}; ///< for row/col data
+      bool owns_cpu_values_{false};           ///< for nonzero values
 
-      bool owns_gpu_data_{false}; ///< for row/col data
-      bool owns_gpu_vals_{false}; ///< for values
+      bool owns_gpu_sparsity_pattern_{false}; ///< for row/col data
+      bool owns_gpu_values_{false};           ///< for nonzero values
 
       MemoryHandler mem_; ///< Device memory manager object
   };

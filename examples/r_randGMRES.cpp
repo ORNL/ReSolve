@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
   rhs_file.close();
 
   A->syncData(ReSolve::memory::DEVICE);
-  vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+  vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
 
   //Now call the solver
   real_type norm_b;
@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
   FGMRES->setupPreconditioner("LU", Rf);
   FGMRES->setFlexible(1); 
 
-  vec_rhs->update(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+  vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
   FGMRES->solve(vec_rhs, vec_x);
 
   norm_b = vector_handler->dot(vec_rhs, vec_rhs, ReSolve::memory::DEVICE);
