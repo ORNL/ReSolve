@@ -140,7 +140,9 @@ if(RESOLVE_USE_HIP)
 endif()
 
 # Add HyKKT solver
-add_subdirectory(hykkt)
+if(RESOLVE_USE_KLU)
+  add_subdirectory(hykkt)
+endif()
 #list(APPEND ReSolve_Targets_List resolve_hykkt)
 
 
