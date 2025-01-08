@@ -24,7 +24,7 @@ void cpuMapIdx(int n, int* perm, double* old_val, double* new_val);
  *
  * @post: arr1 and arr2 are sorted based on increasing values in arr1
 */
-void selectionSort2(int len, int* arr1, int* arr2);
+void selectionSort(int len, int* arr1, int* arr2);
 
 inline void swap(int* arr1, int* arr2, int i, int j);
 inline int partition(int* arr1, int* arr2, int low, int high);
@@ -42,7 +42,7 @@ void quickSort(int* arr1, int* arr2, int low, int high);
  *
  * @post: arr1 and arr2 are sorted based on increasing values in arr1
 */
-void InsertionSort(int len, int* arr1, int* arr2);
+void insertionSort(int len, int* arr1, int* arr2);
 
 /*
  * @brief: Permutes the columns in a matrix represented by rows and cols

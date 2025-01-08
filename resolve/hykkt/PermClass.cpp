@@ -5,10 +5,10 @@
 namespace ReSolve::Hykkt
 {
   // Creates a class for the permutation of $H_\gamma$ in (6)
-  PermClass::PermClass(int n_h, int nnz_h, int nnz_j) 
-  : n_h_(n_h),
-    nnz_h_(nnz_h),
-    nnz_j_(nnz_j)
+  PermClass::PermClass(int n_hes, int nnz_hes, int nnz_jac) 
+  : n_hes_(n_hes),
+    nnz_hes_(nnz_hes),
+    nnz_jac_(nnz_jac)
   {
     allocateWorkspace();
   }
@@ -19,29 +19,29 @@ namespace ReSolve::Hykkt
       delete [] perm_;
     }
     delete [] rev_perm_;
-    delete [] perm_map_h_;
-    delete [] perm_map_j_;
-    delete [] perm_map_jt_;
+    delete [] perm_map_hes_;
+    delete [] perm_map_jac_;
+    delete [] perm_map_jac_tr_;
   }
 
-  void PermClass::addHInfo(int* h_i, int* h_j)
+  void PermClass::addHInfo(int* hes_i, int* hes_j)
   {
-    h_i_ = h_i;
-    h_j_ = h_j;
+    hes_i_ = hes_i;
+    hes_j_ = hes_j;
   }
   
-  void PermClass::addJInfo(int* j_i, int* j_j, int n_j, int m_j)
+  void PermClass::addJInfo(int* jac_i, int* jac_j, int n_jac, int m_jac)
   {
-    j_i_ = j_i;
-    j_j_ = j_j;
-    n_j_ = n_j;
-    m_j_ = m_j;
+    jac_i_ = jac_i;
+    jac_j_ = jac_j;
+    n_jac_ = n_jac;
+    m_jac_ = m_jac;
   }
   
-  void PermClass::addJtInfo(int* jt_i, int* jt_j)
+  void PermClass::addJtInfo(int* jac_tr_i, int* jac_tr_j)
   {
-    jt_i_ = jt_i;
-    jt_j_ = jt_j;
+    jac_tr_i_ = jac_tr_i;
+    jac_tr_j_ = jac_tr_j;
   }
   
   void PermClass::addPerm(int* custom_perm)
@@ -58,7 +58,7 @@ namespace ReSolve::Hykkt
     amd_defaults(Control);
     amd_control(Control);
 	
-    int result = amd_order(n_h_, h_i_, h_j_, perm_, Control, Info);
+    int result = amd_order(n_hes_, hes_i_, hes_j_, perm_, Control, Info);
 	
     if (result != AMD_OK)
     {
@@ -69,22 +69,22 @@ namespace ReSolve::Hykkt
   
   void PermClass::invertPerm()
   {
-    reversePerm(n_h_, perm_, rev_perm_);
+    reversePerm(n_hes_, perm_, rev_perm_);
   }
 
-  void PermClass::vecMapRC(int* b_i, int* b_j)
+  void PermClass::vecMapRC(int* rhs_i, int* rhs_j)
   {
-    makeVecMapRC(n_h_, h_i_, h_j_, perm_, rev_perm_, b_i, b_j, perm_map_h_);
+    makeVecMapRC(n_hes_, hes_i_, hes_j_, perm_, rev_perm_, rhs_i, rhs_j, perm_map_hes_);
   }
 
-  void PermClass::vecMapC(int* b_j)
+  void PermClass::vecMapC(int* rhs_j)
   {
-    makeVecMapC(n_j_, j_i_, j_j_, rev_perm_, b_j, perm_map_j_);
+    makeVecMapC(n_jac_, jac_i_, jac_j_, rev_perm_, rhs_j, perm_map_jac_);
   }
 
-  void PermClass::vecMapR(int* b_i, int* b_j)
+  void PermClass::vecMapR(int* rhs_i, int* rhs_j)
   {
-    makeVecMapR(m_j_, jt_i_, jt_j_, perm_, b_i, b_j, perm_map_jt_);
+    makeVecMapR(m_jac_, jac_tr_i_, jac_tr_j_, perm_, rhs_i, rhs_j, perm_map_jac_tr_);
   }
   
   void PermClass::map_index(PermutationType permutation,
@@ -94,19 +94,19 @@ namespace ReSolve::Hykkt
     switch(permutation)
     {
       case PERM_V: 
-        cpuMapIdx(n_h_, perm_, old_val, new_val);
+        cpuMapIdx(n_hes_, perm_, old_val, new_val);
         break;
       case REV_PERM_V: 
-        cpuMapIdx(n_h_, rev_perm_, old_val, new_val);
+        cpuMapIdx(n_hes_, rev_perm_, old_val, new_val);
         break;
-      case PERM_H_V: 
-        cpuMapIdx(nnz_h_, perm_map_h_, old_val, new_val);
+      case PERM_HES_V: 
+        cpuMapIdx(nnz_hes_, perm_map_hes_, old_val, new_val);
         break;
-      case PERM_J_V: 
-        cpuMapIdx(nnz_j_, perm_map_j_, old_val, new_val);
+      case PERM_JAC_V: 
+        cpuMapIdx(nnz_jac_, perm_map_jac_, old_val, new_val);
         break;
-      case PERM_JT_V: 
-        cpuMapIdx(nnz_j_, perm_map_jt_, old_val, new_val);
+      case PERM_JAC_TR_V: 
+        cpuMapIdx(nnz_jac_, perm_map_jac_tr_, old_val, new_val);
         break;
       default:
         printf("Valid arguments are PERM_V, REV_PERM_V, PERM_H_V, PERM_J_V, PERM_JT_V\n");
@@ -115,10 +115,10 @@ namespace ReSolve::Hykkt
   
   void PermClass::allocateWorkspace()
   {
-    perm_ = new int[n_h_];
-    rev_perm_ = new int[n_h_];
-    perm_map_h_ = new int[nnz_h_];
-    perm_map_j_ = new int[nnz_j_];
-    perm_map_jt_ = new int[nnz_j_];
+    perm_ = new int[n_hes_];
+    rev_perm_ = new int[n_hes_];
+    perm_map_hes_ = new int[nnz_hes_];
+    perm_map_jac_ = new int[nnz_jac_];
+    perm_map_jac_tr_ = new int[nnz_jac_];
   }
 }
