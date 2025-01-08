@@ -153,6 +153,17 @@ namespace ReSolve::Hykkt
     void display_perm() const;
 
   private:
+  
+  /*
+  * @brief deletes memory allocated for permutation vectors
+  *
+  * @pre perm_, rev_perm_, perm_map_h, perm_map_jac, perm_map_jac_tr
+  *  are allocated memory
+  * 
+  * @post memory allocated for perm_, rev_perm_, perm_map_h, perm_map_jac,
+  *      perm_map_jac_tr is deleted
+  */
+  void deleteWorkspace();
 
   /*
   * @brief allocates memory on host for permutation vectors

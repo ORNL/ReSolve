@@ -113,6 +113,15 @@ namespace ReSolve::Hykkt
     }
   }
   
+  void PermClass::deleteWorkspace()
+  {
+    delete [] perm_;
+    delete [] rev_perm_;
+    delete [] perm_map_hes_;
+    delete [] perm_map_jac_;
+    delete [] perm_map_jac_tr_;
+  }
+
   void PermClass::allocateWorkspace()
   {
     perm_ = new int[n_hes_];

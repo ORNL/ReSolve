@@ -57,11 +57,11 @@ void insertionSort(int len, int* arr1, int* arr2);
  * the corresponding indices to facilitate permuting the values
  */
 void makeVecMapC(int n, 
-    int* rows, 
-    int* cols, 
-    int* rev_perm, 
-    int* perm_cols, 
-    int* perm_map);
+                 int* rows, 
+                 int* cols, 
+                 int* rev_perm, 
+                 int* perm_cols, 
+                 int* perm_map);
 /*
  *
  * @brief: Creates a reverse permutation based on a given permutation
@@ -86,12 +86,12 @@ void reversePerm(int n, int* perm, int* rev_perm);
  * perm_map stores the corresponding indices to facilitate permuting the values
 */
 void makeVecMapR(int n, 
-    int* rows, 
-    int* cols, 
-    int* perm, 
-    int* perm_rows, 
-    int* perm_cols, 
-    int* perm_map);
+                 int* rows, 
+                 int* cols, 
+                 int* perm, 
+                 int* perm_rows, 
+                 int* perm_cols, 
+                 int* perm_map);
 /*
  * @brief: Permutes the rows and columns in a matrix represented by rows and cols
  * 
@@ -106,10 +106,10 @@ void makeVecMapR(int n,
  * perm_map stores the corresponding indices to facilitate permuting the values
 */
 void makeVecMapRC(int n, 
-    int* rows, 
-    int* cols, 
-    int* perm, 
-    int* rev_perm, 
-    int* perm_rows,
-    int* perm_cols, 
-    int* perm_map);
+                  int* rows, 
+                  int* cols, 
+                  int* perm, 
+                  int* rev_perm, 
+                  int* perm_rows,
+                  int* perm_cols, 
+                  int* perm_map);
