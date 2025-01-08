@@ -1,5 +1,5 @@
 #pragma once
-namespace ReSolve::Hykkt
+namespace ReSolve { namespace hykkt 
 {
   enum PermutationType { PERM_V, REV_PERM_V, PERM_HES_V, PERM_JAC_V, PERM_JAC_TR_V };
 
@@ -207,5 +207,5 @@ namespace ReSolve::Hykkt
     double* rhs1_; // first block in vector
     double* rhs2_; // second block in vector
   };
-}
+}}// namespace hykkt // namespace ReSolve
 

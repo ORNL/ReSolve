@@ -2,8 +2,7 @@
 #include <resolve/hykkt/cpuHykktPermutationKernels.hpp>
 #include <cstdio>
 #include "amd.h"
-namespace ReSolve::Hykkt
-{
+namespace ReSolve { namespace hykkt {
   // Creates a class for the permutation of $H_\gamma$ in (6)
   PermClass::PermClass(int n_hes, int nnz_hes, int nnz_jac) 
   : n_hes_(n_hes),
@@ -130,4 +129,4 @@ namespace ReSolve::Hykkt
     perm_map_jac_ = new int[nnz_jac_];
     perm_map_jac_tr_ = new int[nnz_jac_];
   }
-}
+}}// namespace hykkt //  namespace ReSolve

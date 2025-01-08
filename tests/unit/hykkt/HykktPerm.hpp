@@ -36,7 +36,7 @@ public:
     bool flagr = false;
     bool flagc = false;
 
-    ReSolve::Hykkt::PermClass pc(n, nnz, nnz);
+    ReSolve::hykkt::PermClass pc(n, nnz, nnz);
     pc.addHInfo(a_i, a_j);
     pc.addJInfo(a_i, a_j, n, m);
     pc.addJtInfo(a_i, a_j);
