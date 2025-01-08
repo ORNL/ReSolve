@@ -35,8 +35,8 @@ namespace ReSolve
           TestStatus status;
 
           VectorHandler vh;
-          GramSchmidt gs2(&vh, GramSchmidt::mgs_pm);
-          status *= (gs2.getVariant() == GramSchmidt::mgs_pm);
+          GramSchmidt gs2(&vh, GramSchmidt::MGS_PM);
+          status *= (gs2.getVariant() == GramSchmidt::MGS_PM);
 
           return status.report(__func__);
         }
@@ -48,20 +48,20 @@ namespace ReSolve
           std::string testname(__func__);
           switch(var)
           {
-            case GramSchmidt::mgs:
+            case GramSchmidt::MGS:
               testname += " (Modified Gram-Schmidt)";
               break;
-            case GramSchmidt::mgs_two_sync:
+            case GramSchmidt::MGS_TWO_SYNC:
               testname += " (Modified Gram-Schmidt 2-Sync)";
               break;
-            case GramSchmidt::mgs_pm:
+            case GramSchmidt::MGS_PM:
               testname += " (Post-Modern Modified Gram-Schmidt)";
               break;
-            case GramSchmidt::cgs1:
+            case GramSchmidt::CGS1:
               testname += " (Classical Gram-Schmidt)";
               status.expectFailure();
               break;
-            case GramSchmidt::cgs2:
+            case GramSchmidt::CGS2:
               testname += " (Reorthogonalized Classical Gram-Schmidt)";
               break;
           }

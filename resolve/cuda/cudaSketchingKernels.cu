@@ -229,11 +229,11 @@ namespace ReSolve
     /**
      * @brief Kernel wrapper for 
      * 
-     * @param[in]  n      - (unsketched ) vector lenght
-     * @param[in]  k      - sketched vector lenght (_n_ >> _k_)
-     * @param[in]  labels - array of lenght _n_, containing integers with values between 0 and  k-1 
+     * @param[in]  n      - (unsketched ) vector length
+     * @param[in]  k      - sketched vector length (_n_ >> _k_)
+     * @param[in]  labels - array of length _n_, containing integers with values between 0 and  k-1 
      * @param[in]  flip   - array with values 1 and -1 
-     * @param[in]  input  - input vector, lenght _n_
+     * @param[in]  input  - input vector, length _n_
      * @param[out] output - output vector, length _k_ -1 
      * 
      * @todo Decide how to allow user to configure grid and block sizes.

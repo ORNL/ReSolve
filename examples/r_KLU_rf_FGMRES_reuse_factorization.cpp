@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
   vector_type* vec_x;
   vector_type* vec_r;
 
-  ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::cgs2);
+  ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::CGS2);
   
   ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
   ReSolve::LinSolverDirectCuSolverRf* Rf = new ReSolve::LinSolverDirectCuSolverRf;

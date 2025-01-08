@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
   ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(workspace_HIP);
   ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(workspace_HIP);
 
-  ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::cgs2);
+  ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::CGS2);
 
   auto* Rf = new ReSolve::LinSolverDirectRocSparseILU0(workspace_HIP);
   auto* FGMRES = new ReSolve::LinSolverIterativeRandFGMRES(matrix_handler, vector_handler,ReSolve::LinSolverIterativeRandFGMRES::cs, GS);

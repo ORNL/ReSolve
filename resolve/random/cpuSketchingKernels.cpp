@@ -19,8 +19,8 @@ namespace ReSolve
      * @param[in]  k      - output vector size
      * @param[in]  labels - vector of non-negative ints from 0 to k-1, length n
      * @param[in]  flip   - vector of 1s and -1s, length n
-     * @param[in]  input  - vector of lenghts n
-     * @param[out] output - vector of lenght k
+     * @param[in]  input  - vector of lengths n
+     * @param[out] output - vector of length k
      * 
      * @todo Decide how to allow user to configure grid and block sizes.
      */

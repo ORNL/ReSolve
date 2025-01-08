@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
   real_type norm_x;
   real_type norm_r;
 
-  ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::cgs2);
+  ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::CGS2);
   ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
   ReSolve::LinSolverDirectRocSolverRf* Rf = new ReSolve::LinSolverDirectRocSolverRf(workspace_HIP);
   ReSolve::LinSolverIterativeFGMRES* FGMRES = new ReSolve::LinSolverIterativeFGMRES(matrix_handler, vector_handler, GS);
