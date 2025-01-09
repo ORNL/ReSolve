@@ -192,8 +192,23 @@ namespace ReSolve
 
   int LinSolverDirectLUSOL::solve(vector_type* rhs, vector_type* x)
   {
-    if (rhs->getSize() != m_ || x->getSize() != n_ || !is_factorized_) {
+    if (rhs->getSize() != m_ || x->getSize() != n_) {
       return -1;
+    }
+
+    if (!is_factorized_) {
+      out::warning() << "LinSolverDirect::solve(vector_type*, vector_type*) "
+                     << "called on LinSolverDirectLUSOL without factorizing "
+                     << "first!\n";
+
+      if (m_ == 0) {
+        return -1;
+      }
+
+      index_type inform = factorize();
+      if (inform < 0) {
+        return inform;
+      }
     }
 
     index_type mode = 5;
@@ -480,7 +495,7 @@ namespace ReSolve
   int LinSolverDirectLUSOL::allocateSolverData()
   {
     // LUSOL does not do symbolic analysis to determine workspace size to store
-    // L and U factors, so we have to guess something. See documentation for 
+    // L and U factors, so we have to guess something. See documentation for
     // lena_ in resolve/lusol/lusol.f90 file.
     lena_ = std::max({20 * nelem_, 10 * m_, 10 * n_, 10000});
 
