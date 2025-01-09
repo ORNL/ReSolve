@@ -1,11 +1,12 @@
+#pragma once
 /**
  * @file Permutation.hpp
- * @author your name (you@domain.com)
- * @brief 
+ * @author Shaked Regev (regevs@ornl.gov)
+ * @brief Prototype of class which creates a permutation of the 2x2 system,
+ * based on the Symmetric Approximate Minimum Degree algorithm to minimize 
+ * fill in for H and maps the permutation to the matrices H, J, and J transpose
  * 
  */
-#pragma once
-
 namespace ReSolve
 {
   namespace hykkt 
@@ -28,9 +29,9 @@ namespace ReSolve
         void addPerm(int* custom_perm);
         void symAmd();
         void invertPerm();
-        void vecMapRC(int* rhs_i, int* rhs_j);
-        void vecMapC(int* rhs_j);
-        void vecMapR(int* rhs_i, int* rhs_j);
+        void vecMapRC(int* perm_i, int* perm_j);
+        void vecMapC(int* perm_j);
+        void vecMapR(int* perm_i, int* perm_j);
         void map_index(PermutationType permutation, 
                       double* old_val, 
                       double* new_val);

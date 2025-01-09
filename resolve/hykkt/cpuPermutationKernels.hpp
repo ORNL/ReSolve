@@ -1,6 +1,6 @@
 /**
  * @file cpuPermutationKernels.hpp
- * @author Shaked Regev (you@domain.com)
+ * @author Shaked Regev (regevs@ornl.gov)
  * @brief Prototypes of kernels for matrix and vector permutations
  * 
  */

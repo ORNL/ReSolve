@@ -1,7 +1,7 @@
 /**
  * @file cpuPermutationKernels.cpp
- * @author your name (you@domain.com)
- * @brief 
+ * @author Shaked Regev (regevs@ornl.gov)
+ * @brief Kernels for matrix and vector permutations
  * 
  */
 #include "cpuPermutationKernels.hpp"
@@ -14,9 +14,9 @@ namespace ReSolve
      * @brief maps the values in old_val to new_val based on perm
      * 
      * @param[in] n - matrix size
-     * @param[] perm - desired permutation
-     * @param[] old_val - the array to be permuted
-     * @param[] new_val - the permuted array
+     * @param[in] perm - desired permutation
+     * @param[in] old_val - the array to be permuted
+     * @param[out] new_val - the permuted array
      * 
      * @pre n is a positive integer, perm is an array of 0 to n-1
      * (in some order), old_val is initialized
@@ -34,8 +34,8 @@ namespace ReSolve
      * @brief Selection sorts arr1 and arr2 w/indices
      * 
      * @param[in] len  - Size n of the matrix,
-     * @param[] arr1 - the array that determines the sorting order, 
-     * @param[] arr2 - sorted based on arr1
+     * @param[in,out] arr1 - the array that determines the sorting order, 
+     * @param[in,out] arr2 - sorted based on arr1
      * 
      * @pre arr1 and arr2 are arrays of length n
      *
@@ -66,10 +66,10 @@ namespace ReSolve
     /**
      * @brief 
      * 
-     * @param[] arr1 
-     * @param[] arr2 
-     * @param[] i 
-     * @param[] j 
+     * @param[in,out] arr1 
+     * @param[in,out] arr2 
+     * @param[in] i 
+     * @param[in] j 
      */
     inline void swap(int* arr1, int* arr2, int i, int j)
     {
@@ -85,10 +85,10 @@ namespace ReSolve
     /**
      * @brief 
      * 
-     * @param[] arr1 
-     * @param[] arr2 
-     * @param[] low 
-     * @param[] high 
+     * @param[in,out] arr1 
+     * @param[in,out] arr2 
+     * @param[in] low 
+     * @param[in] high 
      * @return int 
      */
     inline int partition(int* arr1, int* arr2, int low, int high)
@@ -108,10 +108,10 @@ namespace ReSolve
     /**
      * @brief 
      * 
-     * @param[] arr1 
-     * @param[] arr2 
-     * @param[] low 
-     * @param[] high 
+     * @param[in,out] arr1 
+     * @param[in,out] arr2 
+     * @param[in] low 
+     * @param[in] high 
      */
     void quickSort(int* arr1, int* arr2, int low, int high)
     {
@@ -126,9 +126,9 @@ namespace ReSolve
      * @brief Insertion sorts arr1 and arr2 w/indices
      * based on increasing value in arr1
      * 
-     * @param[] n    - Size of the matrix,
-     * @param[] arr1 - the array that determines the sorting order, 
-     * @param[] arr2 - sorted based on arr1 
+     * @param[in] n    - Size of the matrix,
+     * @param[in,out] arr1 - the array that determines the sorting order, 
+     * @param[in,out] arr2 - sorted based on arr1 
      *
      * @pre arr1 and arr2 are arrays of length n
      *
@@ -156,12 +156,12 @@ namespace ReSolve
     /**
      * @brief Permutes the columns in a matrix represented by rows and cols
      * 
-     * @param[] n 
-     * @param[] rows 
-     * @param[] cols 
-     * @param[] rev_perm 
-     * @param[] perm_cols 
-     * @param[] perm_map 
+     * @param[in] n 
+     * @param[in] rows 
+     * @param[in] cols 
+     * @param[in] rev_perm 
+     * @param[out] perm_cols 
+     * @param[out] perm_map 
      *
      * @pre rev_perm has integers 0 to n-1 (permuted), 
      * rows and cols present valid csr storage array
@@ -198,9 +198,9 @@ namespace ReSolve
     /**
      * @brief Creates a reverse permutation based on a given permutation
      * 
-     * @param[] n 
-     * @param[] perm 
-     * @param[] rev_perm 
+     * @param[in] n 
+     * @param[in] perm 
+     * @param[out] rev_perm 
      *
      * @pre perm has integers 0 to n-1 (permuted), 
      *
@@ -216,13 +216,13 @@ namespace ReSolve
     /**
      * @brief Permutes the rows in a matrix represented by rows and cols
      * 
-     * @param[] n 
-     * @param[] rows 
-     * @param[] cols 
-     * @param[] perm 
-     * @param[] perm_rows 
-     * @param[] perm_cols 
-     * @param[] perm_map 
+     * @param[in] n 
+     * @param[in] rows 
+     * @param[in] cols 
+     * @param[in] perm 
+     * @param[out] perm_rows 
+     * @param[out] perm_cols 
+     * @param[out] perm_map 
      * 
      * @pre perm has integers 0 to n-1 (permuted), 
      * rows and cols present valid csr storage array
@@ -261,14 +261,14 @@ namespace ReSolve
      * @brief Permutes the rows and columns in a matrix represented by rows
      * and cols
      * 
-     * @param[] n 
-     * @param[] rows 
-     * @param[] cols 
-     * @param[] perm 
-     * @param[] rev_perm 
-     * @param[] perm_rows 
-     * @param[] perm_cols 
-     * @param[] perm_map
+     * @param[in] n 
+     * @param[in] rows 
+     * @param[in] cols 
+     * @param[in] perm 
+     * @param[in] rev_perm 
+     * @param[out] perm_rows 
+     * @param[out] perm_cols 
+     * @param[out] perm_map
      * 
      * @pre perm and rev_perm have corresponding integers 0 to n-1 (permuted), 
      * rows and cols present valid csr storage array

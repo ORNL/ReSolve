@@ -1,7 +1,10 @@
 /**
  * @file Permutation.cpp
- * @author your name (you@domain.com)
- * @brief 
+ * @author Shaked Regev (regevs@ornl.gov)
+ * @brief Class which creates a permutation of the 2x2 system,
+ * based on the Symmetric Approximate Minimum Degree algorithm to minimize 
+ * fill in for H and maps the permutation to the matrices H, J, and J transpose
+ * 
  * 
  */
 #include <cstdio>
@@ -39,8 +42,8 @@ namespace ReSolve
     /**
      * @brief loads CSR structure for matrix H
      *
-     * @param[] hes_i - Row offsets for H
-     * @param[] hes_j - Column indices for H
+     * @param[in] hes_i - Row offsets for H
+     * @param[in] hes_j - Column indices for H
      *
      * @post hes_i_ set to hes_i, hes_j_ set to hes_j
      */
@@ -53,10 +56,10 @@ namespace ReSolve
     /**
      * @brief loads CSR structure for matrix J
      * 
-     * @param[] jac_i - Row offsets for J 
-     * @param[] jac_j - Column indices for j 
-     * @param[] n_jac - number of rows of J 
-     * @param[] m_jac - number of columns of J 
+     * @param[in] jac_i - Row offsets for J 
+     * @param[in] jac_j - Column indices for j 
+     * @param[in] n_jac - number of rows of J 
+     * @param[in] m_jac - number of columns of J 
      * 
      * @post jac_i_ set to jac_i, jac_j_ set to jac_j, n_jac_ set to n_jac,
      * m_jac_ set to m_jac
@@ -72,8 +75,8 @@ namespace ReSolve
     /**
      * @brief loads CSR structure for matrix Jt
      *
-     * @param[] jac_tr_i - Row offsets for Jt
-     * @param[] jac_tr_j - Column indices for Jt
+     * @param[in] jac_tr_i - Row offsets for Jt
+     * @param[in] jac_tr_j - Column indices for Jt
      *
      * @pre
      * @post jac_tr_i_ set to jac_tr_i, jac_tr_j_ set to jac_tr_j
@@ -87,7 +90,7 @@ namespace ReSolve
     /**
      * @brief sets custom permutation of matrix
      *
-     * @param[] custom_perm - custom permutation vector
+     * @param[in] custom_perm - custom permutation vector
      *
      * @pre Member variable n_hes_ initialized to dimension of matrix
      *
@@ -146,8 +149,8 @@ namespace ReSolve
      * @brief Creates permutation of rows and columns of matrix
      * and copies onto device
      *
-     * @param[] rhs_i - row offsets of permutation
-     * @param[] rhs_j - column indices of permutation
+     * @param[out] perm_i - row offsets of permutation
+     * @param[out] perm_j - column indices of permutation
      *
      * @pre Member variables n_hes_, nnz_hes_, hes_i_, hes_j_, perm, rev_perm
      *      initialized to the dimension of matrix H, number of nonzeros
@@ -157,16 +160,16 @@ namespace ReSolve
      * @post perm_map_h is now permuted rows/columns of H and copied onto
      *       the device d_perm_map_h
      */
-    void Permutation::vecMapRC(int* rhs_i, int* rhs_j)
+    void Permutation::vecMapRC(int* perm_i, int* perm_j)
     {
-      makeVecMapRC(n_hes_, hes_i_, hes_j_, perm_, rev_perm_, rhs_i, rhs_j, perm_map_hes_);
+      makeVecMapRC(n_hes_, hes_i_, hes_j_, perm_, rev_perm_, perm_i, perm_j, perm_map_hes_);
     }
 
     /**
      * @brief Creates the permutation of the columns of matrix J
      * and copies onto device
      *
-     * @param[] rhs_j - column indices of permutation
+     * @param[out] perm_j - column indices of permutation
      *
      * @pre Member variables n_jac_, nnz_jac_, jac_i_, jac_j_, rev_perm initialized
      *      to the dimension of matrix J, number of nonzeros in J, row
@@ -175,17 +178,17 @@ namespace ReSolve
      * @post perm_map_jac is now the column permutation and is copied onto
      *       the device d_perm_map_jac
      */
-    void Permutation::vecMapC(int* rhs_j)
+    void Permutation::vecMapC(int* perm_j)
     {
-      makeVecMapC(n_jac_, jac_i_, jac_j_, rev_perm_, rhs_j, perm_map_jac_);
+      makeVecMapC(n_jac_, jac_i_, jac_j_, rev_perm_, perm_j, perm_map_jac_);
     }
 
     /**
      * @brief Creates the permutation of the rows of matrix Jt
      * and copies onto device
      *
-     * @param[] rhs_i - row offsets of permutation
-     * @param[] rhs_j - column indices of permutation
+     * @param[out] perm_i - row offsets of permutation
+     * @param[out] perm_j - column indices of permutation
      *
      * @pre Member variables m_jac_, nnz_jac_, jac_tr_i_, jac_tr_j_, initialized to
      *      the dimension of matrix J, the number of nonzeros in J, the
@@ -194,17 +197,17 @@ namespace ReSolve
      * @post perm_map_jac_tr is now the permuations of the rows of J transpose
      *       and is copied onto the device d_perm_map_jac_tr
      */
-    void Permutation::vecMapR(int* rhs_i, int* rhs_j)
+    void Permutation::vecMapR(int* perm_i, int* perm_j)
     {
-      makeVecMapR(m_jac_, jac_tr_i_, jac_tr_j_, perm_, rhs_i, rhs_j, perm_map_jac_tr_);
+      makeVecMapR(m_jac_, jac_tr_i_, jac_tr_j_, perm_, perm_i, perm_j, perm_map_jac_tr_);
     }
     
     /**
      * @brief maps the permutated values of old_val to new_val
      *
-     * @param[] permutation - the type of permutation of the 2x2 system 
-     * @param[] old_val     - the old values in the matrix
-     * @param[] new_val     - the permuted values
+     * @param[in] permutation - the type of permutation of the 2x2 system 
+     * @param[in] old_val     - the old values in the matrix
+     * @param[out] new_val     - the permuted values
      *
      * @pre Member variables n_hes_, nnz_hes_, nnz_jac_, d_perm, d_rev_perm,
      *      d_perm_map_h, d_perm_map_jac, d_perm_map_jac_tr initialized to
