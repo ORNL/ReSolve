@@ -5,8 +5,8 @@
 #include <iterator>
 #include <algorithm>
 #include <tests/unit/TestBase.hpp>
-#include <resolve/hykkt/PermClass.hpp>
-#include <resolve/hykkt/cpuHykktPermutationKernels.hpp>
+#include <resolve/hykkt/Permutation.hpp>
+#include <resolve/hykkt/cpuPermutationKernels.hpp>
 namespace ReSolve { namespace tests {
 
 class HykktPerm : public TestBase
@@ -36,7 +36,7 @@ public:
     bool flagr = false;
     bool flagc = false;
 
-    ReSolve::hykkt::PermClass pc(n, nnz, nnz);
+    ReSolve::hykkt::Permutation pc(n, nnz, nnz);
     pc.addHInfo(a_i, a_j);
     pc.addJInfo(a_i, a_j, n, m);
     pc.addJtInfo(a_i, a_j);
