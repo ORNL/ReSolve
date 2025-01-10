@@ -1,9 +1,7 @@
 /**
  * @file Permutation.cpp
  * @author Shaked Regev (regevs@ornl.gov)
- * @brief Class which creates a permutation of the 2x2 system,
- * based on the Symmetric Approximate Minimum Degree algorithm to minimize 
- * fill in for H and maps the permutation to the matrices H, J, and J transpose
+ * @brief Implementation of the Permutation class.
  * 
  * 
  */

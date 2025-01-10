@@ -2,9 +2,7 @@
 /**
  * @file Permutation.hpp
  * @author Shaked Regev (regevs@ornl.gov)
- * @brief Prototype of class which creates a permutation of the 2x2 system,
- * based on the Symmetric Approximate Minimum Degree algorithm to minimize 
- * fill in for H and maps the permutation to the matrices H, J, and J transpose
+ * @brief Declaration of hykkt::Permutation class
  * 
  */
 namespace ReSolve
@@ -13,6 +11,18 @@ namespace ReSolve
   {
     enum PermutationType { PERM_V, REV_PERM_V, PERM_HES_V, PERM_JAC_V, PERM_JAC_TR_V };
 
+    /**
+     * @class Permutation
+     * 
+     * @brief Creates a permutation of the 2x2 system.
+     * 
+     * This class creates a permutation of the 2x2 system, which is obtained
+     * by block-Gauss elimination in the 4x4 system. The permutation is
+     * based on the Symmetric Approximate Minimum Degree algorithm to minimize
+     * fill in for H and maps the permutation to the matrices H, J, and J
+     * transpose.
+     * 
+     */
     class Permutation
     {
       public:
