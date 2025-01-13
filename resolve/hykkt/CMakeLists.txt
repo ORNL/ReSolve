@@ -8,8 +8,8 @@
 
 # C++ code
 set(HyKKT_SRC
-    PermClass.cpp
-    cpuHykktPermutationKernels.cpp
+    Permutation.cpp
+    cpuPermutationKernels.cpp
 )
 
 # C++ code that depends on CUDA SDK libraries
@@ -22,8 +22,8 @@ set(HyKKT_ROCM_SRC
 
 # Header files to be installed
 set(HyKKT_HEADER_INSTALL
-    PermClass.hpp
-    cpuHykktPermutationKernels.hpp
+    Permutation.hpp
+    cpuPermutationKernels.hpp
 )
 
 # Build shared library ReSolve::matrix
