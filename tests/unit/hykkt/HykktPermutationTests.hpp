@@ -1,7 +1,7 @@
 /**
  * @file HykktPermutationTests.hpp
- * @author your name (you@domain.com)
- * @brief 
+ * @author Shaked Regev (regevs@ornl.gov)
+ * @brief Implementation of tests for class hykkt::Permutation
  * 
  */
 #pragma once

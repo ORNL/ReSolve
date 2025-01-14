@@ -1,7 +1,7 @@
 /**
- * @file runHykktPermutationTests.cpp
- * @author your name (you@domain.com)
- * @brief 
+ * @file HykktPermutationTests.hpp
+ * @author Shaked Regev (regevs@ornl.gov)
+ * @brief Tests for class hykkt::Permutation
  * 
  */
 #include <string>

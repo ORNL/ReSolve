@@ -33,6 +33,10 @@ namespace ReSolve
     /**
      * @brief Selection sorts arr1 and arr2 w/indices
      * 
+     * The complexity of selection sort is O(n^2) in all cases. 
+     * In the future the user will be given the option to choose between 
+     * selection sort, insertion sort, and quicksort.
+     * 
      * @param[in] len  - Size n of the matrix,
      * @param[in,out] arr1 - the array that determines the sorting order, 
      * @param[in,out] arr2 - sorted based on arr1
@@ -64,7 +68,7 @@ namespace ReSolve
     }
 
     /**
-     * @brief 
+     * @brief swaps arr1[i] with arr1[j] and arr2[i] with arr2[j]
      * 
      * @param[in,out] arr1 
      * @param[in,out] arr2 
@@ -83,7 +87,7 @@ namespace ReSolve
     }
 
     /**
-     * @brief 
+     * @brief helper function for quicksort
      * 
      * @param[in,out] arr1 
      * @param[in,out] arr2 
@@ -106,7 +110,14 @@ namespace ReSolve
     }
 
     /**
-     * @brief 
+     * @brief quicksorts arr1 and arr2 between indices low and high
+     * 
+     * The complexity of quicksort is O(n log n) in the average case,
+     * but O(n^2) in the worst case. For our test cases, n is small, 
+     * so quicksort is not a good choice, therefore we use insertion sort.
+     * In the future the user will be given the option to choose between 
+     * selection sort, insertion sort, and quicksort.
+     * 
      * 
      * @param[in,out] arr1 
      * @param[in,out] arr2 
@@ -125,6 +136,11 @@ namespace ReSolve
     /**
      * @brief Insertion sorts arr1 and arr2 w/indices
      * based on increasing value in arr1
+     * 
+     * The complexity of insertion sort is O(n^2) in the worst case.
+     * It is chosen here because it is simple and efficient for small n.
+     * In the future the user will be given the option to choose between
+     * selection sort, insertion sort, and quicksort.
      * 
      * @param[in] n    - Size of the matrix,
      * @param[in,out] arr1 - the array that determines the sorting order, 
@@ -156,12 +172,12 @@ namespace ReSolve
     /**
      * @brief Permutes the columns in a matrix represented by rows and cols
      * 
-     * @param[in] n 
-     * @param[in] rows 
-     * @param[in] cols 
-     * @param[in] rev_perm 
-     * @param[out] perm_cols 
-     * @param[out] perm_map 
+     * @param[in] n - size of the matrix
+     * @param[in] rows - row offsets of matrix
+     * @param[in] cols - column indices of matrix
+     * @param[in] rev_perm - reverse permutation
+     * @param[out] perm_cols - permuted column array
+     * @param[out] perm_map - corresponding indices to facilitate permuting the values
      *
      * @pre rev_perm has integers 0 to n-1 (permuted), 
      * rows and cols present valid csr storage array
@@ -185,22 +201,16 @@ namespace ReSolve
           perm_map[row_s + j]  = row_s + j;
           perm_cols[row_s + j] = rev_perm[cols[row_s + j]];
         }
-    // TODO: Find a way to select sorting mechanism at runtime
-#if 0
-        selectionSort(rowlen, &perm_cols[row_s], &perm_map[row_s]);
-#else
-        //quickSort(&perm_cols[row_s], &perm_map[row_s], 0, rowlen-1);
         insertionSort(rowlen, &perm_cols[row_s], &perm_map[row_s]);
-#endif
       }
     }
 
     /**
      * @brief Creates a reverse permutation based on a given permutation
      * 
-     * @param[in] n 
-     * @param[in] perm 
-     * @param[out] rev_perm 
+     * @param[in] n - size of the permutation
+     * @param[in] perm - permutation array
+     * @param[out] rev_perm - reversed permutation array
      *
      * @pre perm has integers 0 to n-1 (permuted), 
      *
@@ -216,13 +226,13 @@ namespace ReSolve
     /**
      * @brief Permutes the rows in a matrix represented by rows and cols
      * 
-     * @param[in] n 
-     * @param[in] rows 
-     * @param[in] cols 
-     * @param[in] perm 
-     * @param[out] perm_rows 
-     * @param[out] perm_cols 
-     * @param[out] perm_map 
+     * @param[in] n - size of the matrix
+     * @param[in] rows - row offsets of matrix
+     * @param[in] cols - column indices of matrix
+     * @param[in] perm - permutation array
+     * @param[out] perm_rows - row offsets of permuted matrix
+     * @param[out] perm_cols - column indices of permuted matrix
+     * @param[out] perm_map - corresponding indices to facilitate permuting the values
      * 
      * @pre perm has integers 0 to n-1 (permuted), 
      * rows and cols present valid csr storage array
@@ -231,12 +241,12 @@ namespace ReSolve
      * perm_map stores the corresponding indices to facilitate permuting the values
      */
     void makeVecMapR(int n, 
-                    const int* rows, 
-                    const int* cols, 
-                    const int* perm, 
-                    int* perm_rows, 
-                    int* perm_cols, 
-                    int* perm_map)
+                     const int* rows, 
+                     const int* cols, 
+                     const int* perm, 
+                     int* perm_rows, 
+                     int* perm_cols, 
+                     int* perm_map)
     {
       perm_rows[0] = 0;
       int count    = 0;
@@ -261,14 +271,14 @@ namespace ReSolve
      * @brief Permutes the rows and columns in a matrix represented by rows
      * and cols
      * 
-     * @param[in] n 
-     * @param[in] rows 
-     * @param[in] cols 
-     * @param[in] perm 
-     * @param[in] rev_perm 
-     * @param[out] perm_rows 
-     * @param[out] perm_cols 
-     * @param[out] perm_map
+     * @param[in] n - size of the matrix 
+     * @param[in] rows - row offsets of matrix
+     * @param[in] cols - column indices of matrix
+     * @param[in] perm - permutation array
+     * @param[in] rev_perm - reverse permutation array
+     * @param[out] perm_rows - row offsets of permuted matrix
+     * @param[out] perm_cols - column indices of permuted matrix
+     * @param[out] perm_map - corresponding indices to facilitate permuting the values
      * 
      * @pre perm and rev_perm have corresponding integers 0 to n-1 (permuted), 
      * rows and cols present valid csr storage array
@@ -302,13 +312,7 @@ namespace ReSolve
           perm_map[count + j]  = row_s + j;
           perm_cols[count + j] = rev_perm[cols[row_s + j]];
         }
-    // TODO: Find a way to select sorting mechanism at runtime
-#if 0
-        selectionSort(rowlen, &perm_cols[count], &perm_map[count]);
-#else
-        //quickSort(&perm_cols[count], &perm_map[count], 0, rowlen-1);
         insertionSort(rowlen, &perm_cols[count], &perm_map[count]);
-#endif
         count += rowlen;
       }
     }

@@ -28,13 +28,7 @@ namespace ReSolve
     /// Permutation destructor
     Permutation::~Permutation()
     {
-      if(perm_is_default_){
-        delete [] perm_;
-      }
-      delete [] rev_perm_;
-      delete [] perm_map_hes_;
-      delete [] perm_map_jac_;
-      delete [] perm_map_jac_tr_;
+      deleteWorkspace();
     }
 
     /**
@@ -253,7 +247,9 @@ namespace ReSolve
      */
     void Permutation::deleteWorkspace()
     {
-      delete [] perm_;
+      if(perm_is_default_){
+        delete [] perm_;
+      }
       delete [] rev_perm_;
       delete [] perm_map_hes_;
       delete [] perm_map_jac_;

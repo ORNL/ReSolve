@@ -23,20 +23,7 @@ namespace ReSolve
                      const int* rev_perm, 
                      int* perm_cols, 
                      int* perm_map);
-    /*
-    *
-    * @brief: 
-    *
-    * @params: Size n of the vector, perm - original permutation
-    */
     void reversePerm(int n, const int* perm, int* rev_perm);
-    /*
-    * @brief: 
-    *
-    * @params: Size n of the matrix, rows and cols - representing the matrix,
-    * perm - the permutation to be applied
-    *
-    */
     void makeVecMapR(int n, 
                      const int* rows, 
                      const int* cols, 
@@ -44,14 +31,6 @@ namespace ReSolve
                      int* perm_rows, 
                      int* perm_cols, 
                      int* perm_map);
-    /*
-    * @brief: 
-    * 
-    * @params: Size n of the matrix, rows and cols - representing the matrix,
-    * perm - the permutation to be applied on the rows, 
-    * rev_perm - the permutation to be applied on the columns
-    * 
-    */
     void makeVecMapRC(int n, 
                       const int* rows, 
                       const int* cols, 
