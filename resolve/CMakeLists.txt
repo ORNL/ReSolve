@@ -164,6 +164,15 @@ if(RESOLVE_USE_KLU)
 endif()
 #list(APPEND ReSolve_Targets_List resolve_hykkt)
 
+# Add HyKKT solver
+if(RESOLVE_USE_KLU)
+  add_subdirectory(hykkt)
+endif()
+#list(APPEND ReSolve_Targets_List resolve_hykkt)
+
+
+
+>>>>>>> 9ffc2ee (Added the permutation class from hykkt, along with tests.)
 # Set installable targets
 install(TARGETS ${ReSolve_Targets_List} EXPORT ReSolveTargets)
 
