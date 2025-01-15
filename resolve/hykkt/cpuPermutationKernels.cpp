@@ -70,10 +70,10 @@ namespace ReSolve
     /**
      * @brief swaps arr1[i] with arr1[j] and arr2[i] with arr2[j]
      * 
-     * @param[in,out] arr1 
-     * @param[in,out] arr2 
-     * @param[in] i 
-     * @param[in] j 
+     * @param[in,out] arr1 - first array to have values swapped
+     * @param[in,out] arr2 - second array to have values swapped
+     * @param[in] i - index of first value to be swapped
+     * @param[in] j - index of second value to be swapped
      */
     inline void swap(int* arr1, int* arr2, int i, int j)
     {
@@ -89,11 +89,11 @@ namespace ReSolve
     /**
      * @brief helper function for quicksort
      * 
-     * @param[in,out] arr1 
-     * @param[in,out] arr2 
-     * @param[in] low 
-     * @param[in] high 
-     * @return int 
+     * @param[in,out] arr1 - array to be sorted based on itself
+     * @param[in,out] arr2 - array to be sorted based on other array
+     * @param[in] low - lower index bound of array slice
+     * @param[in] high - higher index bound of array slice
+     * @return int - index of the pivot
      */
     inline int partition(int* arr1, int* arr2, int low, int high)
     {
@@ -119,10 +119,10 @@ namespace ReSolve
      * selection sort, insertion sort, and quicksort.
      * 
      * 
-     * @param[in,out] arr1 
-     * @param[in,out] arr2 
-     * @param[in] low 
-     * @param[in] high 
+     * @param[in,out] arr1 - input array to be sorted
+     * @param[in,out] arr2 - array to be sorted based on other array
+     * @param[in] low - lower index bound of array slice
+     * @param[in] high - higher index bound of array slice
      */
     void quickSort(int* arr1, int* arr2, int low, int high)
     {
