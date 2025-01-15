@@ -22,10 +22,10 @@ find_library(SUITESPARSE_LIBRARY
   ${SUITESPARSE_DIR} $ENV{SUITESPARSE_DIR} ${SUITESPARSE_ROOT_DIR}
   ENV LD_LIBRARY_PATH ENV DYLD_LIBRARY_PATH
   PATH_SUFFIXES
-  lib64 lib)
+  lib/x86_64-linux-gnu lib64 lib)
 
 if(SUITESPARSE_LIBRARY)
-  set(SUITESPARSE_LIBRARY CACHE FILEPATH "Path to Suitesparse library")
+  set(SUITESPARSE_LIBRARY CACHE FILEPATH "File path to Suitesparse library")
   get_filename_component(SUITESPARSE_LIBRARY_DIR ${SUITESPARSE_LIBRARY} DIRECTORY CACHE "Suitesparse library directory")
   message(STATUS "Found Suitesparse libraries in: " ${SUITESPARSE_LIBRARY_DIR})
   mark_as_advanced(SUITESPARSE_LIBRARY SUITESPARSE_LIBRARY_DIR)
@@ -44,8 +44,12 @@ find_path(SUITESPARSE_INCLUDE_DIR
   PATHS
   ${SUITESPARSE_DIR} $ENV{SUITESPARSE_DIR} ${SUITESPARSE_ROOT_DIR} ${SUITESPARSE_LIBRARY_DIR}/..
   PATH_SUFFIXES
+<<<<<<< HEAD
   include
   include/suitesparse)
+=======
+  include include/suitesparse)
+>>>>>>> dfca733 (Added the permutation class from hykkt, along with tests.)
 
 if(SUITESPARSE_LIBRARY)
   message(STATUS "Found Suitesparse include: ${SUITESPARSE_INCLUDE_DIR}")
@@ -76,6 +80,6 @@ else()
     message(STATUS "Suitesparse library not found! Please provide correct filepath.")
   endif()
   if(SUITESPARSE_ROOT_DIR AND NOT SUITESPARSE_INCLUDE_DIR)
-    message(STATUS "Suitesparse include dir not found! Please provide correct filepath.")
+    message(STATUS "Suitesparse include dir not found! Please provide correct path.")
   endif()
 endif()
