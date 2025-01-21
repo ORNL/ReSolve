@@ -6,6 +6,8 @@
 
 namespace ReSolve 
 {
+  using out = io::Logger;
+
   LinSolverDirectRocSolverRf::LinSolverDirectRocSolverRf(LinAlgWorkspaceHIP* workspace)
   {
     workspace_ = workspace;
@@ -377,6 +379,71 @@ namespace ReSolve
     return solve_mode_;
   }
 
+  int LinSolverDirectRocSolverRf::setCliParam(const std::string id, const std::string value)
+  {
+    switch (getParamId(id))
+    {
+      default:
+        std::cout << "Setting parameter failed!\n";
+    }
+    return 0;
+  }
+
+  std::string LinSolverDirectRocSolverRf::getCliParamString(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+      default:
+        out::error() << "Trying to get unknown string parameter " << id << "\n";
+    }
+    return "";
+  }
+
+  index_type LinSolverDirectRocSolverRf::getCliParamInt(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+      default:
+        out::error() << "Trying to get unknown integer parameter " << id << "\n";
+    }
+    return -1;
+  }
+
+  real_type LinSolverDirectRocSolverRf::getCliParamReal(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+      default:
+        out::error() << "Trying to get unknown real parameter " << id << "\n";
+    }
+    return std::numeric_limits<real_type>::quiet_NaN();
+  }
+
+  bool LinSolverDirectRocSolverRf::getCliParamBool(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+      default:
+        out::error() << "Trying to get unknown boolean parameter " << id << "\n";
+    }
+    return false;
+  }
+
+  int LinSolverDirectRocSolverRf::printCliParam(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+    default:
+      out::error() << "Trying to print unknown parameter " << id << "\n";
+      return 1;
+    }
+    return 0;
+  }
+
+  //
+  // Private methods
+  //
+  
   void LinSolverDirectRocSolverRf::addFactors(matrix::Sparse* L, matrix::Sparse* U)
   {
     // L and U need to be in CSC format

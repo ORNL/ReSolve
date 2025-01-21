@@ -47,6 +47,13 @@ namespace ReSolve
       int setSolveMode(int mode); // should probably be enum 
       int getSolveMode(); //should be enum too
 
+      int setCliParam(const std::string id, const std::string value) override;
+      std::string getCliParamString(const std::string id) const override;
+      index_type getCliParamInt(const std::string id) const override;
+      real_type getCliParamReal(const std::string id) const override;
+      bool getCliParamBool(const std::string id) const override;
+      int printCliParam(const std::string id) const override;
+
     private:
       rocblas_status status_rocblas_; 
       rocsparse_status status_rocsparse_;

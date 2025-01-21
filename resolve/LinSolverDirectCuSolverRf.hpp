@@ -42,8 +42,17 @@ namespace ReSolve
       int solve(vector_type* rhs, vector_type* x) override;
       int solve(vector_type* rhs) override; // rhs overwritten by solution
 
-      void setAlgorithms(cusolverRfFactorization_t fact_alg,  cusolverRfTriangularSolve_t solve_alg);
-      int setNumericalProperties(double nzero, double nboost);//these two NEED TO BE DOUBLE
+      void setAlgorithms(cusolverRfFactorization_t fact_alg,
+                        cusolverRfTriangularSolve_t solve_alg);
+      int setNumericalProperties(real_type nzero, real_type nboost);
+
+      int setCliParam(const std::string id, const std::string value) override;
+      std::string getCliParamString(const std::string id) const override;
+      index_type getCliParamInt(const std::string id) const override;
+      real_type getCliParamReal(const std::string id) const override;
+      bool getCliParamBool(const std::string id) const override;
+      int printCliParam(const std::string id) const override;
+
     private:
       cusolverRfHandle_t handle_cusolverrf_;
       cusolverStatus_t status_cusolverrf_;
@@ -52,6 +61,9 @@ namespace ReSolve
       index_type* d_Q_{nullptr};
       real_type* d_T_{nullptr};
       bool setup_completed_{false};
+
+      real_type zero_pivot_{0.0}; ///< The value below which zero pivot is flagged. 
+      real_type pivot_boost_{0.0}; ///< The value which is substituted for zero pivot.
       
       MemoryHandler mem_; ///< Device memory manager object
   };

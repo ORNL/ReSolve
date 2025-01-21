@@ -16,6 +16,8 @@
 
 namespace ReSolve 
 {
+  using out = io::Logger;
+
   LinSolverDirectCpuILU0::LinSolverDirectCpuILU0(LinAlgWorkspaceCpu* /* workspace */)
     // : workspace_(workspace)
   {
@@ -342,6 +344,67 @@ namespace ReSolve
   int LinSolverDirectCpuILU0::setZeroDiagonal(real_type z)
   {
     zero_diagonal_ = z;
+    return 0;
+  }
+
+  int LinSolverDirectCpuILU0::setCliParam(const std::string id, const std::string value)
+  {
+    switch (getParamId(id))
+    {
+      default:
+        std::cout << "Setting parameter failed!\n";
+    }
+    return 0;
+  }
+
+  std::string LinSolverDirectCpuILU0::getCliParamString(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+      default:
+        out::error() << "Trying to get unknown string parameter " << id << "\n";
+    }
+    return "";
+  }
+
+  index_type LinSolverDirectCpuILU0::getCliParamInt(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+      default:
+        out::error() << "Trying to get unknown integer parameter " << id << "\n";
+    }
+    return -1;
+  }
+
+  real_type LinSolverDirectCpuILU0::getCliParamReal(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+      default:
+        out::error() << "Trying to get unknown real parameter " << id << "\n";
+    }
+    return std::numeric_limits<real_type>::quiet_NaN();
+  }
+
+  bool LinSolverDirectCpuILU0::getCliParamBool(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+      default:
+        out::error() << "Trying to get unknown boolean parameter " << id << "\n";
+    }
+    return false;
+  }
+
+  int LinSolverDirectCpuILU0::printCliParam(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+    default:
+      out::error() << "Trying to print unknown parameter " << id << "\n";
+      return 1;
+    }
     return 0;
   }
 

@@ -286,4 +286,66 @@ namespace ReSolve
     klu_rcond(Symbolic_, Numeric_, &Common_);
     return Common_.rcond;
   }
+
+  int LinSolverDirectKLU::setCliParam(const std::string id, const std::string value)
+  {
+    switch (getParamId(id))
+    {
+      default:
+        std::cout << "Setting parameter failed!\n";
+    }
+    return 0;
+  }
+
+  std::string LinSolverDirectKLU::getCliParamString(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+      default:
+        out::error() << "Trying to get unknown string parameter " << id << "\n";
+    }
+    return "";
+  }
+
+  index_type LinSolverDirectKLU::getCliParamInt(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+      default:
+        out::error() << "Trying to get unknown integer parameter " << id << "\n";
+    }
+    return -1;
+  }
+
+  real_type LinSolverDirectKLU::getCliParamReal(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+      default:
+        out::error() << "Trying to get unknown real parameter " << id << "\n";
+    }
+    return std::numeric_limits<real_type>::quiet_NaN();
+  }
+
+  bool LinSolverDirectKLU::getCliParamBool(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+      default:
+        out::error() << "Trying to get unknown boolean parameter " << id << "\n";
+    }
+    return false;
+  }
+
+  int LinSolverDirectKLU::printCliParam(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+    default:
+      out::error() << "Trying to print unknown parameter " << id << "\n";
+      return 1;
+    }
+    return 0;
+  }
+
 } // namespace ReSolve

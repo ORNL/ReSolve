@@ -5,6 +5,8 @@
 
 namespace ReSolve 
 {
+  using out = io::Logger;
+
   LinSolverDirectCuSparseILU0::LinSolverDirectCuSparseILU0(LinAlgWorkspaceCUDA* workspace)
   {
     workspace_ = workspace;
@@ -309,6 +311,67 @@ namespace ReSolve
     cusparseDestroyDnVec(vec_Y_);
 
     return error_sum;
+  }
+
+  int LinSolverDirectCuSparseILU0::setCliParam(const std::string id, const std::string value)
+  {
+    switch (getParamId(id))
+    {
+      default:
+        std::cout << "Setting parameter failed!\n";
+    }
+    return 0;
+  }
+
+  std::string LinSolverDirectCuSparseILU0::getCliParamString(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+      default:
+        out::error() << "Trying to get unknown string parameter " << id << "\n";
+    }
+    return "";
+  }
+
+  index_type LinSolverDirectCuSparseILU0::getCliParamInt(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+      default:
+        out::error() << "Trying to get unknown integer parameter " << id << "\n";
+    }
+    return -1;
+  }
+
+  real_type LinSolverDirectCuSparseILU0::getCliParamReal(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+      default:
+        out::error() << "Trying to get unknown real parameter " << id << "\n";
+    }
+    return std::numeric_limits<real_type>::quiet_NaN();
+  }
+
+  bool LinSolverDirectCuSparseILU0::getCliParamBool(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+      default:
+        out::error() << "Trying to get unknown boolean parameter " << id << "\n";
+    }
+    return false;
+  }
+
+  int LinSolverDirectCuSparseILU0::printCliParam(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+    default:
+      out::error() << "Trying to print unknown parameter " << id << "\n";
+      return 1;
+    }
+    return 0;
   }
 
 } // namespace resolve

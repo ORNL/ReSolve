@@ -44,6 +44,12 @@ namespace ReSolve
       int solve(vector_type* rhs, vector_type* x) override;
       int solve(vector_type* rhs) override; // the solution is returned IN RHS (rhs is overwritten)
     
+      int setCliParam(const std::string id, const std::string value) override;
+      std::string getCliParamString(const std::string id) const override;
+      index_type getCliParamInt(const std::string id) const override;
+      real_type getCliParamReal(const std::string id) const override;
+      bool getCliParamBool(const std::string id) const override;
+      int printCliParam(const std::string id) const override;
 
     private:
       rocsparse_status status_rocsparse_;

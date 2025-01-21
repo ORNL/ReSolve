@@ -4,6 +4,8 @@
 
 namespace ReSolve 
 {
+  using out = io::Logger;
+
   LinSolverDirectCuSolverRf::LinSolverDirectCuSolverRf(LinAlgWorkspaceCUDA* /* workspace */)
   {
     cusolverRfCreate(&handle_cusolverrf_);
@@ -92,7 +94,8 @@ namespace ReSolve
     return error_sum;
   }
 
-  void LinSolverDirectCuSolverRf::setAlgorithms(cusolverRfFactorization_t fact_alg,  cusolverRfTriangularSolve_t solve_alg)
+  void LinSolverDirectCuSolverRf::setAlgorithms(cusolverRfFactorization_t fact_alg,
+                                                cusolverRfTriangularSolve_t solve_alg)
   {
     cusolverRfSetAlgs(handle_cusolverrf_, fact_alg, solve_alg);
   }
@@ -146,9 +149,77 @@ namespace ReSolve
     return status_cusolverrf_;
   }
 
-  int LinSolverDirectCuSolverRf::setNumericalProperties(double nzero, double nboost)
+  int LinSolverDirectCuSolverRf::setNumericalProperties(real_type nzero,
+                                                        real_type nboost)
   {
-    status_cusolverrf_ = cusolverRfSetNumericProperties(handle_cusolverrf_, nzero, nboost);
+    // Zero flagging threshold and boost NEED TO BE DOUBLE!
+    double zero = static_cast<double>(nzero);
+    double boost = static_cast<double>(nboost);
+    status_cusolverrf_ = cusolverRfSetNumericProperties(handle_cusolverrf_,
+                                                        nzero,
+                                                        nboost);
     return status_cusolverrf_;
   }
+
+  int LinSolverDirectCuSolverRf::setCliParam(const std::string id, const std::string value)
+  {
+    switch (getParamId(id))
+    {
+      default:
+        std::cout << "Setting parameter failed!\n";
+    }
+    return 0;
+  }
+
+  std::string LinSolverDirectCuSolverRf::getCliParamString(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+      default:
+        out::error() << "Trying to get unknown string parameter " << id << "\n";
+    }
+    return "";
+  }
+
+  index_type LinSolverDirectCuSolverRf::getCliParamInt(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+      default:
+        out::error() << "Trying to get unknown integer parameter " << id << "\n";
+    }
+    return -1;
+  }
+
+  real_type LinSolverDirectCuSolverRf::getCliParamReal(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+      default:
+        out::error() << "Trying to get unknown real parameter " << id << "\n";
+    }
+    return std::numeric_limits<real_type>::quiet_NaN();
+  }
+
+  bool LinSolverDirectCuSolverRf::getCliParamBool(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+      default:
+        out::error() << "Trying to get unknown boolean parameter " << id << "\n";
+    }
+    return false;
+  }
+
+  int LinSolverDirectCuSolverRf::printCliParam(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+    default:
+      out::error() << "Trying to print unknown parameter " << id << "\n";
+      return 1;
+    }
+    return 0;
+  }
+
 }// namespace resolve
