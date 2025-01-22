@@ -287,7 +287,7 @@ namespace ReSolve
     return Common_.rcond;
   }
 
-  int LinSolverDirectKLU::setCliParam(const std::string id, const std::string value)
+  int LinSolverDirectKLU::setCliParam(const std::string id, const std::string /* value */)
   {
     switch (getParamId(id))
     {

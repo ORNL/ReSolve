@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
   std::string matrixFileNameFull;
   std::string rhsFileNameFull;
 
-  ReSolve::matrix::Csr* A;
+  ReSolve::matrix::Csr* A = nullptr;
 
   ReSolve::LinAlgWorkspaceCUDA* workspace_CUDA = new ReSolve::LinAlgWorkspaceCUDA;
   workspace_CUDA->initializeHandles();
@@ -46,9 +46,9 @@ int main(int argc, char *argv[])
   real_type* rhs = nullptr;
   real_type* x   = nullptr;
 
-  vector_type* vec_rhs;
-  vector_type* vec_x;
-  vector_type* vec_r;
+  vector_type* vec_rhs = nullptr;
+  vector_type* vec_x   = nullptr;
+  vector_type* vec_r   = nullptr;
 
   ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::CGS2);
   
@@ -121,8 +121,8 @@ int main(int argc, char *argv[])
     }
     std::cout << "CSR matrix loaded. Expanded NNZ: " << A->getNnz() << std::endl;
 
-    //Now call direct solver
-    int status;
+    // Now call direct solver
+    int status = 0;
     real_type norm_b;
     if (i < 2){
       KLU->setup(A);

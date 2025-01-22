@@ -313,7 +313,7 @@ namespace ReSolve
     return error_sum;
   }
 
-  int LinSolverDirectCuSparseILU0::setCliParam(const std::string id, const std::string value)
+  int LinSolverDirectCuSparseILU0::setCliParam(const std::string id, const std::string /* value */)
   {
     switch (getParamId(id))
     {

@@ -347,7 +347,7 @@ namespace ReSolve
     return 0;
   }
 
-  int LinSolverDirectCpuILU0::setCliParam(const std::string id, const std::string value)
+  int LinSolverDirectCpuILU0::setCliParam(const std::string id, const std::string /* value */)
   {
     switch (getParamId(id))
     {

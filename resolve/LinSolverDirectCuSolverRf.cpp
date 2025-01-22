@@ -156,12 +156,12 @@ namespace ReSolve
     double zero = static_cast<double>(nzero);
     double boost = static_cast<double>(nboost);
     status_cusolverrf_ = cusolverRfSetNumericProperties(handle_cusolverrf_,
-                                                        nzero,
-                                                        nboost);
+                                                        zero,
+                                                        boost);
     return status_cusolverrf_;
   }
 
-  int LinSolverDirectCuSolverRf::setCliParam(const std::string id, const std::string value)
+  int LinSolverDirectCuSolverRf::setCliParam(const std::string id, const std::string /* value */)
   {
     switch (getParamId(id))
     {
