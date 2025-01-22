@@ -168,15 +168,16 @@ int main(int argc, char *argv[])
 
   // Now prepare the Rf solver
 
-  ReSolve::matrix::Csc* L = (ReSolve::matrix::Csc*) KLU->getLFactor();
-  ReSolve::matrix::Csc* U = (ReSolve::matrix::Csc*) KLU->getUFactor();
+  ReSolve::matrix::Csc* L = static_cast<ReSolve::matrix::Csc*>(KLU->getLFactor());
+  ReSolve::matrix::Csc* U = static_cast<ReSolve::matrix::Csc*>(KLU->getUFactor());
 
   if (L == nullptr) {
     printf("ERROR");
   }
   index_type* P = KLU->getPOrdering();
   index_type* Q = KLU->getQOrdering();
-  Rf->setSolveMode(1);
+  Rf->setCliParam("solve_mode", "rocsparse_trisolve");
+  // Rf->setCliParam("solve_mode", "default");
   vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
   error_sum += Rf->setup(A, L, U, P, Q, vec_rhs); 
   FGMRES->setMaxit(200); 
@@ -261,14 +262,14 @@ int main(int argc, char *argv[])
     error_sum++;
   }
   // TODO: 1e-9 is too lose acuracy!
-  if ((normRmatrix1/normB1 > 1e-12 ) || (normRmatrix2/normB2 > 1e-9)) {
+  if ((normRmatrix1/normB1 > 1e-12 ) || (normRmatrix2/normB2 > 1e-12)) {
     std::cout << "Result inaccurate!\n";
     error_sum++;
   }
   if (error_sum == 0) {
-    std::cout << "Test KLU with cuSolverGLU refactorization " << GREEN << "PASSED" << CLEAR << std::endl;
+    std::cout << "Test KLU with Rf refactorization and IR " << GREEN << "PASSED" << CLEAR << std::endl;
   } else {
-    std::cout << "Test KLU with cuSolverGLU refactorization " << RED << "FAILED" << CLEAR
+    std::cout << "Test KLU with Rf refactorization and IR " << RED << "FAILED" << CLEAR
               << ", error sum: " << error_sum << std::endl;
   }
 

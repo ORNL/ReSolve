@@ -12,7 +12,8 @@ namespace ReSolve
   {
     workspace_ = workspace;
     infoM_ = nullptr;
-    solve_mode_ = 1; //solve mode - fast mode is default
+    solve_mode_ = 1; //solve mode - 1: use rocsparse trisolve
+    initParamList();
   }
 
   LinSolverDirectRocSolverRf::~LinSolverDirectRocSolverRf()
@@ -35,19 +36,24 @@ namespace ReSolve
                                         vector_type* rhs)
   {
     RESOLVE_RANGE_PUSH(__FUNCTION__);
-    //remember - P and Q are generally CPU variables
+
     int error_sum = 0;
-    this->A_ = (matrix::Csr*) A;
+
+    assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW &&
+           "Matrix has to be in CSR format for rocsolverRf.\n");
+    A_ = A;
     index_type n = A_->getNumRows();
+
     //set matrix info
     rocsolver_create_rfinfo(&infoM_, workspace_->getRocblasHandle()); 
-    //create combined factor
 
+    // Combine factors L and U into matrix M_
     addFactors(L, U);
 
     M_->setUpdated(ReSolve::memory::HOST);
     M_->syncData(ReSolve::memory::DEVICE);
 
+    //remember - P and Q are generally CPU variables
     if (d_P_ == nullptr) {
       mem_.allocateArrayOnDevice(&d_P_, n); 
     }
@@ -374,7 +380,7 @@ namespace ReSolve
     return 0;
   }
 
-  int LinSolverDirectRocSolverRf::getSolveMode()
+  int LinSolverDirectRocSolverRf::getSolveMode() const
   {
     return solve_mode_;
   }
@@ -383,6 +389,15 @@ namespace ReSolve
   {
     switch (getParamId(id))
     {
+      case SOLVE_MODE:
+        if (value == "rocsparse_trisolve") {
+          // use rocsparse triangular solver
+          setSolveMode(1);
+        } else {
+          // use default
+          setSolveMode(0);
+        }
+        break;
       default:
         std::cout << "Setting parameter failed!\n";
     }
@@ -391,12 +406,23 @@ namespace ReSolve
 
   std::string LinSolverDirectRocSolverRf::getCliParamString(const std::string id) const
   {
+    std::string value("");
     switch (getParamId(id))
     {
+      case SOLVE_MODE:
+        switch (getSolveMode())
+        {
+          case 0:
+            value = "default";
+            break;
+          case 1:
+            value = "rocsparse_trisolve";
+            break;
+        }
       default:
         out::error() << "Trying to get unknown string parameter " << id << "\n";
     }
-    return "";
+    return value;
   }
 
   index_type LinSolverDirectRocSolverRf::getCliParamInt(const std::string id) const
@@ -503,4 +529,9 @@ namespace ReSolve
       }
     }
   } // LinSolverDirectRocSolverRf::addFactors
+
+  void LinSolverDirectRocSolverRf::initParamList()
+  {
+    params_list_["solve_mode"] = SOLVE_MODE;
+  }
 } // namespace resolve
