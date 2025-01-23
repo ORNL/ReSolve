@@ -49,10 +49,10 @@ namespace ReSolve
       real_type evaluateResidual();
 
       virtual int setCliParam(const std::string /* id */, const std::string /* value */) = 0;        
-      virtual std::string getCliParamString(const std::string /* id */) const = "";        
+      virtual std::string getCliParamString(const std::string /* id */) const = 0;   
       virtual index_type getCliParamInt(const std::string /* id */) const = 0;
-      virtual real_type getCliParamReal(const std::string /* id */) const = 0.0;
-      virtual bool getCliParamBool(const std::string /* id */) const = false;
+      virtual real_type getCliParamReal(const std::string /* id */) const = 0;
+      virtual bool getCliParamBool(const std::string /* id */) const = 0;
       virtual int printCliParam(const std::string /* id */) const = 0;
         
     protected:
