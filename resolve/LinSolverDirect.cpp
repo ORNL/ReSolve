@@ -76,25 +76,4 @@ namespace ReSolve
     return nullptr;
   }
 
-  void LinSolverDirect::setPivotThreshold(real_type tol)
-  {
-    pivot_threshold_tol_ = tol;
-  }
-
-  void LinSolverDirect::setOrdering(int ordering)
-  {
-    ordering_ = ordering;
-  }
-
-  void LinSolverDirect::setHaltIfSingular(bool is_halt)
-  {
-    halt_if_singular_ = is_halt;
-  }
-
-  real_type LinSolverDirect::getMatrixConditionNumber()
-  {
-    out::error() << "Solver does not implement returning system matrix condition number.\n";
-    return -1.0;
-  }
-
 } // namespace ReSolve

@@ -24,6 +24,9 @@ namespace ReSolve
     Common_.tol = pivot_threshold_tol_;
     Common_.halt_if_singular = halt_if_singular_;
 
+    // Register configurable parameters
+    initParamList();
+
     out::summary() << "KLU solver set with parameters:\n"
                    << "\tbtf              = " << Common_.btf              << "\n"
                    << "\tscale            = " << Common_.scale            << "\n"
@@ -65,8 +68,10 @@ namespace ReSolve
     if (Symbolic_ != nullptr) {
       klu_free_symbolic(&Symbolic_, &Common_);
     }
-    Symbolic_ = klu_analyze(A_->getNumRows(), A_->getRowData(memory::HOST), A_->getColData(memory::HOST), &Common_) ;
-
+    Symbolic_ = klu_analyze(A_->getNumRows(),
+                            A_->getRowData(memory::HOST),
+                            A_->getColData(memory::HOST),
+                            &Common_);
     factors_extracted_ = false;
     
     if (L_ != nullptr) {
@@ -80,7 +85,7 @@ namespace ReSolve
     }
 
     if (Symbolic_ == nullptr) {
-      out::error() << "Symbolic_ factorization crashed with Common_.status = "
+      out::error() << "Symbolic_ factorization failed with Common_.status = "
                    << Common_.status << "\n";
       return 1;
     }
@@ -287,10 +292,19 @@ namespace ReSolve
     return Common_.rcond;
   }
 
-  int LinSolverDirectKLU::setCliParam(const std::string id, const std::string /* value */)
+  int LinSolverDirectKLU::setCliParam(const std::string id, const std::string value)
   {
     switch (getParamId(id))
     {
+      case PIVOT_TOL:
+        setPivotThreshold(atof(value.c_str()));
+        break;
+      case ORDERING:
+        setOrdering(atoi(value.c_str()));
+        break;
+      case HALT_IF_SINGULAR:
+        setHaltIfSingular(value == "yes");
+        break;
       default:
         std::cout << "Setting parameter failed!\n";
     }
@@ -311,6 +325,8 @@ namespace ReSolve
   {
     switch (getParamId(id))
     {
+      case ORDERING:
+        return ordering_;
       default:
         out::error() << "Trying to get unknown integer parameter " << id << "\n";
     }
@@ -321,6 +337,8 @@ namespace ReSolve
   {
     switch (getParamId(id))
     {
+      case PIVOT_TOL:
+        return pivot_threshold_tol_;
       default:
         out::error() << "Trying to get unknown real parameter " << id << "\n";
     }
@@ -331,6 +349,8 @@ namespace ReSolve
   {
     switch (getParamId(id))
     {
+      case HALT_IF_SINGULAR:
+        return halt_if_singular_;
       default:
         out::error() << "Trying to get unknown boolean parameter " << id << "\n";
     }
@@ -341,11 +361,31 @@ namespace ReSolve
   {
     switch (getParamId(id))
     {
-    default:
-      out::error() << "Trying to print unknown parameter " << id << "\n";
-      return 1;
+      case PIVOT_TOL:
+        std::cout << pivot_threshold_tol_ << "\n";
+        break;
+      case ORDERING:
+        std::cout << ordering_ << "\n";
+        break;
+      case HALT_IF_SINGULAR:
+        std::cout << halt_if_singular_ << "\n";
+        break;
+      default:
+        out::error() << "Trying to print unknown parameter " << id << "\n";
+        return 1;
     }
     return 0;
+  }
+
+  //
+  // Private methods
+  //
+
+  void LinSolverDirectKLU::initParamList()
+  {
+    params_list_["pivot_tol"]        = PIVOT_TOL;
+    params_list_["ordering"]         = ORDERING;
+    params_list_["halt_if_singular"] = HALT_IF_SINGULAR;
   }
 
 } // namespace ReSolve
