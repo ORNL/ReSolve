@@ -43,7 +43,7 @@ namespace ReSolve
     luparm_[2] = 5;
 
     // Pivoting type
-    // luparm_[5] = 0    =>  TPP: Threshold Partial   Pivoting.        0
+    // luparm_[5] = 0    =>  TPP: Threshold Partial   Pivoting.
     //            = 1    =>  TRP: Threshold Rook      Pivoting.
     //            = 2    =>  TCP: Threshold Complete  Pivoting.
     //            = 3    =>  TSP: Threshold Symmetric Pivoting.
@@ -446,31 +446,6 @@ namespace ReSolve
     }
 
     return Q_;
-  }
-
-  void LinSolverDirectLUSOL::setPivotThreshold(real_type /* _ */)
-  {
-    out::error() << "LinSolverDirect::setPivotThreshold(real_type) called on "
-                    "LinSolverDirectLUSOL on which it is irrelevant!\n";
-  }
-
-  void LinSolverDirectLUSOL::setOrdering(int /* _ */)
-  {
-    out::error() << "LinSolverDirect::setOrdering(int) called on "
-                    "LinSolverDirectLUSOL on which it is irrelevant!\n";
-  }
-
-  void LinSolverDirectLUSOL::setHaltIfSingular(bool /* _ */)
-  {
-    out::error() << "LinSolverDirect::setHaltIfSingular(bool) called on "
-                    "LinSolverDirectLUSOL on which it is irrelevant!\n";
-  }
-
-  real_type LinSolverDirectLUSOL::getMatrixConditionNumber()
-  {
-    out::error() << "LinSolverDirect::getMatrixConditionNumber() called on "
-                    "LinSolverDirectLUSOL which is unimplemented!\n";
-    return 0;
   }
 
   int LinSolverDirectLUSOL::setCliParam(const std::string id, const std::string /* value */)
