@@ -54,6 +54,13 @@ namespace ReSolve
       int printCliParam(const std::string id) const override;
 
     private:
+      enum ParamaterIDs {ZERO_PIVOT=0, PIVOT_BOOST};
+      real_type zero_pivot_{0.0};  ///< The value below which zero pivot is flagged. 
+      real_type pivot_boost_{0.0}; ///< The value which is substituted for zero pivot.
+      
+    private:
+      void initParamList();
+
       cusolverRfHandle_t handle_cusolverrf_;
       cusolverStatus_t status_cusolverrf_;
       
@@ -62,9 +69,6 @@ namespace ReSolve
       real_type* d_T_{nullptr};
       bool setup_completed_{false};
 
-      real_type zero_pivot_{0.0}; ///< The value below which zero pivot is flagged. 
-      real_type pivot_boost_{0.0}; ///< The value which is substituted for zero pivot.
-      
       MemoryHandler mem_; ///< Device memory manager object
   };
 }

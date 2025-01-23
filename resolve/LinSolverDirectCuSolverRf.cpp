@@ -10,6 +10,7 @@ namespace ReSolve
   {
     cusolverRfCreate(&handle_cusolverrf_);
     setup_completed_ = false;
+    initParamList();
   }
 
   LinSolverDirectCuSolverRf::~LinSolverDirectCuSolverRf()
@@ -161,10 +162,18 @@ namespace ReSolve
     return status_cusolverrf_;
   }
 
-  int LinSolverDirectCuSolverRf::setCliParam(const std::string id, const std::string /* value */)
+  int LinSolverDirectCuSolverRf::setCliParam(const std::string id, const std::string value)
   {
     switch (getParamId(id))
     {
+      case ZERO_PIVOT:
+        zero_pivot_ = atof(value.c_str());
+        setNumericalProperties(zero_pivot_, pivot_boost_);
+        break;
+      case PIVOT_BOOST:
+        pivot_boost_ = atof(value.c_str());
+        setNumericalProperties(zero_pivot_, pivot_boost_);
+        break;
       default:
         std::cout << "Setting parameter failed!\n";
     }
@@ -195,6 +204,10 @@ namespace ReSolve
   {
     switch (getParamId(id))
     {
+      case ZERO_PIVOT:
+        return zero_pivot_;
+      case PIVOT_BOOST:
+        return pivot_boost_;
       default:
         out::error() << "Trying to get unknown real parameter " << id << "\n";
     }
@@ -215,11 +228,27 @@ namespace ReSolve
   {
     switch (getParamId(id))
     {
-    default:
-      out::error() << "Trying to print unknown parameter " << id << "\n";
-      return 1;
+      case ZERO_PIVOT:
+        std::cout << zero_pivot_ << "\n";
+        break;
+      case PIVOT_BOOST:
+        std::cout << pivot_boost_ << "\n";
+        break;
+      default:
+        out::error() << "Trying to print unknown parameter " << id << "\n";
+        return 1;
     }
     return 0;
   }
 
-}// namespace resolve
+  //
+  // Private methods
+  //
+
+  void LinSolverDirectCuSolverRf::initParamList()
+  {
+    params_list_["zero_pivot"]  = ZERO_PIVOT;
+    params_list_["pivot_boost"] = PIVOT_BOOST;
+  }
+
+} // namespace resolve
