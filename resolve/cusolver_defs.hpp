@@ -93,7 +93,7 @@ extern "C" {
                       void* workspace);
 
   cusolverStatus_t CUSOLVERAPI 
-    cusolverSpDnrm_inf(cusolverSpHandle_t handle,
+    cusolverSpDnrminf(cusolverSpHandle_t handle,
                       int n,
                       const double *x,
                       double* result, /* |x|_inf, host */
