@@ -43,7 +43,7 @@ namespace ReSolve
       int solve(vector_type* rhs) override; // rhs overwritten by solution
 
       void setAlgorithms(cusolverRfFactorization_t fact_alg,
-                        cusolverRfTriangularSolve_t solve_alg);
+                         cusolverRfTriangularSolve_t solve_alg);
       int setNumericalProperties(real_type nzero, real_type nboost);
 
       int setCliParam(const std::string id, const std::string value) override;
