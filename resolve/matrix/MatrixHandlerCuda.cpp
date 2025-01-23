@@ -173,7 +173,7 @@ namespace ReSolve {
                     A->getValues(memory::DEVICE),
                     d_r);
 
-    int status = cusolverSpDnrminf(workspace_->getCusolverSpHandle(),
+    int status = cusolverSpDnrm_inf(workspace_->getCusolverSpHandle(),
                                    A->getNumRows(),
                                    d_r,
                                    norm,

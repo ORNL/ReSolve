@@ -88,12 +88,12 @@ extern "C" {
                       const double* d_b0, /* right hand side */
                       double* d_x, /* left hand side */
                       int* ite_refine_succ,
-                      double* r_nrminf_ptr,
+                      double* r_nrm_inf_ptr,
                       csrgluInfo_t info,
                       void* workspace);
 
   cusolverStatus_t CUSOLVERAPI 
-    cusolverSpDnrminf(cusolverSpHandle_t handle,
+    cusolverSpDnrm_inf(cusolverSpHandle_t handle,
                       int n,
                       const double *x,
                       double* result, /* |x|_inf, host */

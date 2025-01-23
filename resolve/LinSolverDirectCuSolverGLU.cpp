@@ -187,7 +187,7 @@ namespace ReSolve
                                             rhs->getData(memory::DEVICE),/* right hand side */
                                             x->getData(memory::DEVICE),  /* left hand side */
                                             &ite_refine_succ_,
-                                            &r_nrminf_,
+                                            &r_nrm_inf_,
                                             info_M_,
                                             glu_buffer_);
     return status_cusolver_; 
