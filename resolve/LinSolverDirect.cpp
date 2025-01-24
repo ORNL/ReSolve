@@ -1,5 +1,5 @@
 /**
- * @file LinSolverIterative.cpp
+ * @file LinSolverDirect.cpp
  * @author Kasia Swirydowicz (kasia.swirydowicz@pnnl.gov)
  * @author Slaven Peles (peless@ornl.gov)
  * @brief Implementation of direct solver base class.

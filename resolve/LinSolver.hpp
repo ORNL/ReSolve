@@ -1,5 +1,5 @@
 /**
- * @file LinSolverIterative.hpp
+ * @file LinSolver.hpp
  * @author Kasia Swirydowicz (kasia.swirydowicz@pnnl.gov)
  * @author Slaven Peles (peless@ornl.gov)
  * @brief Declaration of linear solver base class.
