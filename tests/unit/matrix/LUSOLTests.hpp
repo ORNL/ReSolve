@@ -43,7 +43,7 @@ namespace ReSolve
           return status.report(__func__);
         }
 
-        TestOutcome automaticFactorization()
+        TestOutcome automaticFactorizationSolve()
         {
           TestStatus status;
 
