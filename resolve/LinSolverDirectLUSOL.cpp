@@ -448,6 +448,16 @@ namespace ReSolve
     return Q_;
   }
 
+  /**
+   * @brief Placeholder function for now.
+   * 
+   * The following switch (getParamId(Id)) cases always run the default and
+   * are currently redundant code (like an if (true)).
+   * In the future, they will be expanded to include more options.
+   * 
+   * @param id - string ID for parameter to set.
+   * @return int Error code.
+   */
   int LinSolverDirectLUSOL::setCliParam(const std::string id, const std::string /* value */)
   {
     switch (getParamId(id))
@@ -458,6 +468,16 @@ namespace ReSolve
     return 0;
   }
 
+  /**
+   * @brief Placeholder function for now.
+   * 
+   * The following switch (getParamId(Id)) cases always run the default and
+   * are currently redundant code (like an if (true)).
+   * In the future, they will be expanded to include more options.
+   * 
+   * @param id - string ID for parameter to get.
+   * @return std::string Value of the string parameter to return.
+   */
   std::string LinSolverDirectLUSOL::getCliParamString(const std::string id) const
   {
     switch (getParamId(id))
@@ -468,6 +488,16 @@ namespace ReSolve
     return "";
   }
 
+  /**
+   * @brief Placeholder function for now.
+   * 
+   * The following switch (getParamId(Id)) cases always run the default and
+   * are currently redundant code (like an if (true)).
+   * In the future, they will be expanded to include more options.
+   * 
+   * @param id - string ID for parameter to get.
+   * @return int Value of the int parameter to return.
+   */
   index_type LinSolverDirectLUSOL::getCliParamInt(const std::string id) const
   {
     switch (getParamId(id))
@@ -478,6 +508,16 @@ namespace ReSolve
     return -1;
   }
 
+  /**
+   * @brief Placeholder function for now.
+   * 
+   * The following switch (getParamId(Id)) cases always run the default and
+   * are currently redundant code (like an if (true)).
+   * In the future, they will be expanded to include more options.
+   * 
+   * @param id - string ID for parameter to get.
+   * @return real_type Value of the real_type parameter to return.
+   */
   real_type LinSolverDirectLUSOL::getCliParamReal(const std::string id) const
   {
     switch (getParamId(id))
@@ -488,6 +528,16 @@ namespace ReSolve
     return std::numeric_limits<real_type>::quiet_NaN();
   }
 
+  /**
+   * @brief Placeholder function for now.
+   * 
+   * The following switch (getParamId(Id)) cases always run the default and
+   * are currently redundant code (like an if (true)).
+   * In the future, they will be expanded to include more options.
+   * 
+   * @param id - string ID for parameter to get.
+   * @return bool Value of the bool parameter to return.
+   */
   bool LinSolverDirectLUSOL::getCliParamBool(const std::string id) const
   {
     switch (getParamId(id))
