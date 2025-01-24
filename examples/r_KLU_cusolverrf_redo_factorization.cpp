@@ -35,7 +35,7 @@ int main(int argc, char *argv[] )
   std::string matrixFileNameFull;
   std::string rhsFileNameFull;
 
-  ReSolve::matrix::Csr* A;
+  ReSolve::matrix::Csr* A = nullptr;
 
   ReSolve::LinAlgWorkspaceCUDA* workspace_CUDA = new ReSolve::LinAlgWorkspaceCUDA;
   workspace_CUDA->initializeHandles();
@@ -44,15 +44,15 @@ int main(int argc, char *argv[] )
   real_type* rhs = nullptr;
   real_type* x   = nullptr;
 
-  vector_type* vec_rhs;
-  vector_type* vec_x;
-  vector_type* vec_r;
+  vector_type* vec_rhs = nullptr;
+  vector_type* vec_x   = nullptr;
+  vector_type* vec_r   = nullptr;
 
   ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
   ReSolve::LinSolverDirectCuSolverRf* Rf = new ReSolve::LinSolverDirectCuSolverRf();
 
-  real_type res_nrm;
-  real_type b_nrm;
+  real_type res_nrm = 0.0;
+  real_type b_nrm = 0.0;
 
   // We need them. They hold a POINTER. Don't delete them here. KLU deletes them.
   ReSolve::matrix::Csc* L_csc;
@@ -60,7 +60,7 @@ int main(int argc, char *argv[] )
   index_type* P;
   index_type* Q;
 
-  int status;
+  int status = 0;
   int status_refactor = 0;
   for (int i = 0; i < numSystems; ++i)
   {

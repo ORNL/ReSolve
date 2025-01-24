@@ -38,16 +38,31 @@ namespace ReSolve
                 matrix::Sparse* U,
                 index_type*     P,
                 index_type*     Q,
-                vector_type*  rhs);
+                vector_type*  rhs) override;
        
-      int refactorize();
-      int solve(vector_type* rhs, vector_type* x);
-      int solve(vector_type* rhs);// the solution is returned IN RHS (rhs is overwritten)
+      int refactorize() override;
+      int solve(vector_type* rhs, vector_type* x) override;
+      int solve(vector_type* rhs) override; // the solution overwrites rhs
     
       int setSolveMode(int mode); // should probably be enum 
-      int getSolveMode(); //should be enum too
+      int getSolveMode() const; //should be enum too
+
+      int setCliParam(const std::string id, const std::string value) override;
+      std::string getCliParamString(const std::string id) const override;
+      index_type getCliParamInt(const std::string id) const override;
+      real_type getCliParamReal(const std::string id) const override;
+      bool getCliParamBool(const std::string id) const override;
+      int printCliParam(const std::string id) const override;
 
     private:
+      enum ParamaterIDs {SOLVE_MODE=0};
+      int solve_mode_{0}; // 0 - default; 1 - use rocparse trisolver
+
+    private:
+      // to be exported to matrix handler in a later time
+      void addFactors(matrix::Sparse* L, matrix::Sparse* U); //create L+U from separate L, U factors
+      void initParamList();
+
       rocblas_status status_rocblas_; 
       rocsparse_status status_rocsparse_;
       index_type* d_P_{nullptr};
@@ -56,11 +71,8 @@ namespace ReSolve
       MemoryHandler mem_; ///< Device memory manager object
       LinAlgWorkspaceHIP* workspace_; 
 
-      // to be exported to matrix handler in a later time
-      void addFactors(matrix::Sparse* L, matrix::Sparse* U); //create L+U from sepeate L, U factors
       rocsolver_rfinfo infoM_;
       matrix::Sparse* M_{nullptr};//the matrix that contains added factors
-      int solve_mode_; // 0 is default and 1 is fast
 
       // not used by default - for fast solve
       rocsparse_mat_descr descr_L_{nullptr};

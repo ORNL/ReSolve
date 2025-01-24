@@ -58,11 +58,12 @@ namespace ReSolve
       index_type* getPOrdering() override;
       index_type* getQOrdering() override;
 
-      virtual void setPivotThreshold(real_type tol) override;
-      virtual void setOrdering(int ordering) override;
-      virtual void setHaltIfSingular(bool isHalt) override;
-
-      virtual real_type getMatrixConditionNumber() override;
+      int setCliParam(const std::string id, const std::string value) override;
+      std::string getCliParamString(const std::string id) const override;
+      index_type getCliParamInt(const std::string id) const override;
+      real_type getCliParamReal(const std::string id) const override;
+      bool getCliParamBool(const std::string id) const override;
+      int printCliParam(const std::string id) const override;
 
     private:
       int allocateSolverData();

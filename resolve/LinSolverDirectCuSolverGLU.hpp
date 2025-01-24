@@ -42,8 +42,15 @@ namespace ReSolve
                 index_type*     Q,
                 vector_type* rhs = nullptr) override;
     
+      int setCliParam(const std::string id, const std::string value) override;
+      std::string getCliParamString(const std::string id) const override;
+      index_type getCliParamInt(const std::string id) const override;
+      real_type getCliParamReal(const std::string id) const override;
+      bool getCliParamBool(const std::string id) const override;
+      int printCliParam(const std::string id) const override;
+
     private:
-      void addFactors(matrix::Sparse* L, matrix::Sparse* U);  ///< creates L+U from sepeate L, U factors
+      void addFactors(matrix::Sparse* L, matrix::Sparse* U);  ///< creates L+U from separate L, U factors
       matrix::Sparse* M_; ///< the matrix that contains added factors
       //note: we need cuSolver handle, we can copy it from the workspace to avoid double allocation
       cusparseMatDescr_t descr_M_; //this is NOT sparse matrix descriptor
@@ -54,8 +61,8 @@ namespace ReSolve
       cusparseStatus_t status_cusparse_;
       csrgluInfo_t info_M_;
       void* glu_buffer_;
-      double r_nrminf_;
-      int ite_refine_succ_; 
+      double r_nrm_inf_; ///< Error norm of the solution
+      int ite_refine_succ_; ///< Stores return value of cusolverSpDgluSolve
 
       MemoryHandler mem_; ///< Device memory manager object
   };

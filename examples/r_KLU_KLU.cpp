@@ -35,16 +35,16 @@ int main(int argc, char *argv[])
   std::string matrixFileNameFull;
   std::string rhsFileNameFull;
 
-  ReSolve::matrix::Csr* A;
+  ReSolve::matrix::Csr* A = nullptr;
   ReSolve::LinAlgWorkspaceCpu* workspace = new ReSolve::LinAlgWorkspaceCpu();
   ReSolve::MatrixHandler* matrix_handler = new ReSolve::MatrixHandler(workspace);
   ReSolve::VectorHandler* vector_handler = new ReSolve::VectorHandler(workspace);
   real_type* rhs = nullptr;
   real_type* x   = nullptr;
 
-  vector_type* vec_rhs;
-  vector_type* vec_x;
-  vector_type* vec_r;
+  vector_type* vec_rhs = nullptr;
+  vector_type* vec_x   = nullptr;
+  vector_type* vec_r   = nullptr;
   real_type norm_A, norm_x, norm_r;//used for INF norm
   
   ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;

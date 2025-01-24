@@ -1,5 +1,5 @@
 /**
- * @file LinSolverIterative.cpp
+ * @file LinSolver.cpp
  * @author Kasia Swirydowicz (kasia.swirydowicz@pnnl.gov)
  * @author Slaven Peles (peless@ornl.gov)
  * @brief Implementation of linear solver base class.

@@ -1,5 +1,5 @@
 /**
- * @file LinSolverIterative.cpp
+ * @file LinSolverDirect.cpp
  * @author Kasia Swirydowicz (kasia.swirydowicz@pnnl.gov)
  * @author Slaven Peles (peless@ornl.gov)
  * @brief Implementation of direct solver base class.
@@ -74,27 +74,6 @@ namespace ReSolve
   index_type*  LinSolverDirect::getQOrdering()
   {
     return nullptr;
-  }
-
-  void LinSolverDirect::setPivotThreshold(real_type tol)
-  {
-    pivot_threshold_tol_ = tol;
-  }
-
-  void LinSolverDirect::setOrdering(int ordering)
-  {
-    ordering_ = ordering;
-  }
-
-  void LinSolverDirect::setHaltIfSingular(bool is_halt)
-  {
-    halt_if_singular_ = is_halt;
-  }
-
-  real_type LinSolverDirect::getMatrixConditionNumber()
-  {
-    out::error() << "Solver does not implement returning system matrix condition number.\n";
-    return -1.0;
   }
 
 } // namespace ReSolve

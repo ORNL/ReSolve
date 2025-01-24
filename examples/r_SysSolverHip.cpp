@@ -36,7 +36,7 @@ int main(int argc, char *argv[] )
   std::string matrixFileNameFull;
   std::string rhsFileNameFull;
 
-  ReSolve::matrix::Csr* A;
+  ReSolve::matrix::Csr* A = nullptr;
 
   ReSolve::LinAlgWorkspaceHIP* workspace_HIP = new ReSolve::LinAlgWorkspaceHIP();
   workspace_HIP->initializeHandles();

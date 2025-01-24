@@ -43,7 +43,7 @@ namespace ReSolve
     luparm_[2] = 5;
 
     // Pivoting type
-    // luparm_[5] = 0    =>  TPP: Threshold Partial   Pivoting.        0
+    // luparm_[5] = 0    =>  TPP: Threshold Partial   Pivoting.
     //            = 1    =>  TRP: Threshold Rook      Pivoting.
     //            = 2    =>  TCP: Threshold Complete  Pivoting.
     //            = 3    =>  TSP: Threshold Symmetric Pivoting.
@@ -448,28 +448,114 @@ namespace ReSolve
     return Q_;
   }
 
-  void LinSolverDirectLUSOL::setPivotThreshold(real_type /* _ */)
+  /**
+   * @brief Placeholder function for now.
+   * 
+   * The following switch (getParamId(Id)) cases always run the default and
+   * are currently redundant code (like an if (true)).
+   * In the future, they will be expanded to include more options.
+   * 
+   * @param id - string ID for parameter to set.
+   * @return int Error code.
+   */
+  int LinSolverDirectLUSOL::setCliParam(const std::string id, const std::string /* value */)
   {
-    out::error() << "LinSolverDirect::setPivotThreshold(real_type) called on "
-                    "LinSolverDirectLUSOL on which it is irrelevant!\n";
+    switch (getParamId(id))
+    {
+      default:
+        std::cout << "Setting parameter failed!\n";
+    }
+    return 0;
   }
 
-  void LinSolverDirectLUSOL::setOrdering(int /* _ */)
+  /**
+   * @brief Placeholder function for now.
+   * 
+   * The following switch (getParamId(Id)) cases always run the default and
+   * are currently redundant code (like an if (true)).
+   * In the future, they will be expanded to include more options.
+   * 
+   * @param id - string ID for parameter to get.
+   * @return std::string Value of the string parameter to return.
+   */
+  std::string LinSolverDirectLUSOL::getCliParamString(const std::string id) const
   {
-    out::error() << "LinSolverDirect::setOrdering(int) called on "
-                    "LinSolverDirectLUSOL on which it is irrelevant!\n";
+    switch (getParamId(id))
+    {
+      default:
+        out::error() << "Trying to get unknown string parameter " << id << "\n";
+    }
+    return "";
   }
 
-  void LinSolverDirectLUSOL::setHaltIfSingular(bool /* _ */)
+  /**
+   * @brief Placeholder function for now.
+   * 
+   * The following switch (getParamId(Id)) cases always run the default and
+   * are currently redundant code (like an if (true)).
+   * In the future, they will be expanded to include more options.
+   * 
+   * @param id - string ID for parameter to get.
+   * @return int Value of the int parameter to return.
+   */
+  index_type LinSolverDirectLUSOL::getCliParamInt(const std::string id) const
   {
-    out::error() << "LinSolverDirect::setHaltIfSingular(bool) called on "
-                    "LinSolverDirectLUSOL on which it is irrelevant!\n";
+    switch (getParamId(id))
+    {
+      default:
+        out::error() << "Trying to get unknown integer parameter " << id << "\n";
+    }
+    return -1;
   }
 
-  real_type LinSolverDirectLUSOL::getMatrixConditionNumber()
+  /**
+   * @brief Placeholder function for now.
+   * 
+   * The following switch (getParamId(Id)) cases always run the default and
+   * are currently redundant code (like an if (true)).
+   * In the future, they will be expanded to include more options.
+   * 
+   * @param id - string ID for parameter to get.
+   * @return real_type Value of the real_type parameter to return.
+   */
+  real_type LinSolverDirectLUSOL::getCliParamReal(const std::string id) const
   {
-    out::error() << "LinSolverDirect::getMatrixConditionNumber() called on "
-                    "LinSolverDirectLUSOL which is unimplemented!\n";
+    switch (getParamId(id))
+    {
+      default:
+        out::error() << "Trying to get unknown real parameter " << id << "\n";
+    }
+    return std::numeric_limits<real_type>::quiet_NaN();
+  }
+
+  /**
+   * @brief Placeholder function for now.
+   * 
+   * The following switch (getParamId(Id)) cases always run the default and
+   * are currently redundant code (like an if (true)).
+   * In the future, they will be expanded to include more options.
+   * 
+   * @param id - string ID for parameter to get.
+   * @return bool Value of the bool parameter to return.
+   */
+  bool LinSolverDirectLUSOL::getCliParamBool(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+      default:
+        out::error() << "Trying to get unknown boolean parameter " << id << "\n";
+    }
+    return false;
+  }
+
+  int LinSolverDirectLUSOL::printCliParam(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+    default:
+      out::error() << "Trying to print unknown parameter " << id << "\n";
+      return 1;
+    }
     return 0;
   }
 

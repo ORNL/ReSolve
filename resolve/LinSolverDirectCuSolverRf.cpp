@@ -4,10 +4,13 @@
 
 namespace ReSolve 
 {
+  using out = io::Logger;
+
   LinSolverDirectCuSolverRf::LinSolverDirectCuSolverRf(LinAlgWorkspaceCUDA* /* workspace */)
   {
     cusolverRfCreate(&handle_cusolverrf_);
     setup_completed_ = false;
+    initParamList();
   }
 
   LinSolverDirectCuSolverRf::~LinSolverDirectCuSolverRf()
@@ -92,7 +95,8 @@ namespace ReSolve
     return error_sum;
   }
 
-  void LinSolverDirectCuSolverRf::setAlgorithms(cusolverRfFactorization_t fact_alg,  cusolverRfTriangularSolve_t solve_alg)
+  void LinSolverDirectCuSolverRf::setAlgorithms(cusolverRfFactorization_t fact_alg,
+                                                cusolverRfTriangularSolve_t solve_alg)
   {
     cusolverRfSetAlgs(handle_cusolverrf_, fact_alg, solve_alg);
   }
@@ -146,9 +150,135 @@ namespace ReSolve
     return status_cusolverrf_;
   }
 
-  int LinSolverDirectCuSolverRf::setNumericalProperties(double nzero, double nboost)
+  int LinSolverDirectCuSolverRf::setNumericalProperties(real_type nzero,
+                                                        real_type nboost)
   {
-    status_cusolverrf_ = cusolverRfSetNumericProperties(handle_cusolverrf_, nzero, nboost);
+    // Zero flagging threshold and boost NEED TO BE DOUBLE!
+    double zero = static_cast<double>(nzero);
+    double boost = static_cast<double>(nboost);
+    status_cusolverrf_ = cusolverRfSetNumericProperties(handle_cusolverrf_,
+                                                        zero,
+                                                        boost);
     return status_cusolverrf_;
   }
-}// namespace resolve
+
+  int LinSolverDirectCuSolverRf::setCliParam(const std::string id, const std::string value)
+  {
+    switch (getParamId(id))
+    {
+      case ZERO_PIVOT:
+        zero_pivot_ = atof(value.c_str());
+        setNumericalProperties(zero_pivot_, pivot_boost_);
+        break;
+      case PIVOT_BOOST:
+        pivot_boost_ = atof(value.c_str());
+        setNumericalProperties(zero_pivot_, pivot_boost_);
+        break;
+      default:
+        std::cout << "Setting parameter failed!\n";
+    }
+    return 0;
+  }
+
+  /**
+   * @brief Placeholder function for now.
+   * 
+   * The following switch (getParamId(Id)) cases always run the default and
+   * are currently redundant code (like an if (true)).
+   * In the future, they will be expanded to include more options.
+   * 
+   * @param id - string ID for parameter to get.
+   * @return std::string Value of the string parameter to return.
+   */
+  std::string LinSolverDirectCuSolverRf::getCliParamString(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+      default:
+        out::error() << "Trying to get unknown string parameter " << id << "\n";
+    }
+    return "";
+  }
+
+  /**
+   * @brief Placeholder function for now.
+   * 
+   * The following switch (getParamId(Id)) cases always run the default and
+   * are currently redundant code (like an if (true)).
+   * In the future, they will be expanded to include more options.
+   * 
+   * @param id - string ID for parameter to get.
+   * @return int Value of the int parameter to return.
+   */
+  index_type LinSolverDirectCuSolverRf::getCliParamInt(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+      default:
+        out::error() << "Trying to get unknown integer parameter " << id << "\n";
+    }
+    return -1;
+  }
+
+  real_type LinSolverDirectCuSolverRf::getCliParamReal(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+      case ZERO_PIVOT:
+        return zero_pivot_;
+      case PIVOT_BOOST:
+        return pivot_boost_;
+      default:
+        out::error() << "Trying to get unknown real parameter " << id << "\n";
+    }
+    return std::numeric_limits<real_type>::quiet_NaN();
+  }
+
+  /**
+   * @brief Placeholder function for now.
+   * 
+   * The following switch (getParamId(Id)) cases always run the default and
+   * are currently redundant code (like an if (true)).
+   * In the future, they will be expanded to include more options.
+   * 
+   * @param id - string ID for parameter to get.
+   * @return bool Value of the bool parameter to return.
+   */
+  bool LinSolverDirectCuSolverRf::getCliParamBool(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+      default:
+        out::error() << "Trying to get unknown boolean parameter " << id << "\n";
+    }
+    return false;
+  }
+
+  int LinSolverDirectCuSolverRf::printCliParam(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+      case ZERO_PIVOT:
+        std::cout << zero_pivot_ << "\n";
+        break;
+      case PIVOT_BOOST:
+        std::cout << pivot_boost_ << "\n";
+        break;
+      default:
+        out::error() << "Trying to print unknown parameter " << id << "\n";
+        return 1;
+    }
+    return 0;
+  }
+
+  //
+  // Private methods
+  //
+
+  void LinSolverDirectCuSolverRf::initParamList()
+  {
+    params_list_["zero_pivot"]  = ZERO_PIVOT;
+    params_list_["pivot_boost"] = PIVOT_BOOST;
+  }
+
+} // namespace resolve

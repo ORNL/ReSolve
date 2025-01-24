@@ -107,12 +107,12 @@ namespace ReSolve {
     assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW &&
            "Matrix has to be in CSR format for matrix-vector product.\n");
 
-    real_type sum, nrm;
-    index_type i, j;
+    real_type sum = 0.0;
+    real_type nrm = 0.0;
 
-    for (i = 0; i < A->getNumRows(); ++i) {
+    for (index_type i = 0; i < A->getNumRows(); ++i) {
       sum = 0.0; 
-      for (j  = A->getRowData(memory::HOST)[i]; j < A->getRowData(memory::HOST)[i+1]; ++j) {
+      for (index_type j  = A->getRowData(memory::HOST)[i]; j < A->getRowData(memory::HOST)[i+1]; ++j) {
         sum += std::abs(A->getValues(memory::HOST)[j]);
       }
       if (i == 0) {

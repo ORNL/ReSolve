@@ -5,6 +5,8 @@
 
 namespace ReSolve 
 {
+  using out = io::Logger;
+
   LinSolverDirectCuSparseILU0::LinSolverDirectCuSparseILU0(LinAlgWorkspaceCUDA* workspace)
   {
     workspace_ = workspace;
@@ -309,6 +311,117 @@ namespace ReSolve
     cusparseDestroyDnVec(vec_Y_);
 
     return error_sum;
+  }
+
+  /**
+   * @brief Placeholder function for now.
+   * 
+   * The following switch (getParamId(Id)) cases always run the default and
+   * are currently redundant code (like an if (true)).
+   * In the future, they will be expanded to include more options.
+   * 
+   * @param id - string ID for parameter to set.
+   * @return int Error code.
+   */
+  int LinSolverDirectCuSparseILU0::setCliParam(const std::string id, const std::string /* value */)
+  {
+    switch (getParamId(id))
+    {
+      default:
+        std::cout << "Setting parameter failed!\n";
+    }
+    return 0;
+  }
+
+  /**
+   * @brief Placeholder function for now.
+   * 
+   * The following switch (getParamId(Id)) cases always run the default and
+   * are currently redundant code (like an if (true)).
+   * In the future, they will be expanded to include more options.
+   * 
+   * @param id - string ID for parameter to get.
+   * @return std::string Value of the string parameter to return.
+   */
+  std::string LinSolverDirectCuSparseILU0::getCliParamString(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+      default:
+        out::error() << "Trying to get unknown string parameter " << id << "\n";
+    }
+    return "";
+  }
+
+  /**
+   * @brief Placeholder function for now.
+   * 
+   * The following switch (getParamId(Id)) cases always run the default and
+   * are currently redundant code (like an if (true)).
+   * In the future, they will be expanded to include more options.
+   * 
+   * @param id - string ID for parameter to get.
+   * @return int Value of the int parameter to return.
+   */
+  index_type LinSolverDirectCuSparseILU0::getCliParamInt(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+      default:
+        out::error() << "Trying to get unknown integer parameter " << id << "\n";
+    }
+    return -1;
+  }
+
+  /**
+   * @brief Placeholder function for now.
+   * 
+   * The following switch (getParamId(Id)) cases always run the default and
+   * are currently redundant code (like an if (true)).
+   * In the future, they will be expanded to include more options.
+   * 
+   * @param id - string ID for parameter to get.
+   * @return real_type Value of the real_type parameter to return.
+   */
+  real_type LinSolverDirectCuSparseILU0::getCliParamReal(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+      default:
+        out::error() << "Trying to get unknown real parameter " << id << "\n";
+    }
+    return std::numeric_limits<real_type>::quiet_NaN();
+  }
+
+  /**
+   * @brief Placeholder function for now.
+   * 
+   * The following switch (getParamId(Id)) cases always run the default and
+   * are currently redundant code (like an if (true)).
+   * In the future, they will be expanded to include more options.
+   * 
+   * @param id - string ID for parameter to get.
+   * @return bool Value of the bool parameter to return.
+   */
+  bool LinSolverDirectCuSparseILU0::getCliParamBool(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+      default:
+        out::error() << "Trying to get unknown boolean parameter " << id << "\n";
+    }
+    return false;
+  }
+
+  int LinSolverDirectCuSparseILU0::printCliParam(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+    default:
+      out::error() << "Trying to print unknown parameter " << id << "\n";
+      return 1;
+    }
+    return 0;
   }
 
 } // namespace resolve

@@ -180,7 +180,8 @@ int main(int argc, char *argv[])
   real_type rel_residual_norm = solver.getResidualNorm(vec_rhs, vec_x);
   error = std::abs(normB1 * rel_residual_norm - normRmatrix1)/normRmatrix1;
   if (error > 10.0*std::numeric_limits<real_type>::epsilon()) {
-    std::cout << "Relative residual norm computation failed:\n" << std::setprecision(16)
+    std::cout << "Relative residual norm computation failed:\n"
+              << std::scientific << std::setprecision(16)
               << "\tTest value            : " << normRmatrix1/normB1 << "\n"
               << "\tSystemSolver computed : " << rel_residual_norm   << "\n\n";
     error_sum++;
@@ -271,13 +272,15 @@ int main(int argc, char *argv[])
   rel_residual_norm = solver.getResidualNorm(vec_rhs, vec_x);
   error = std::abs(normB2 * rel_residual_norm - normRmatrix2)/normRmatrix2;
   if (error > 10.0*std::numeric_limits<real_type>::epsilon()) {
-    std::cout << "Relative residual norm computation failed:\n" << std::setprecision(16)
+    std::cout << "Relative residual norm computation failed:\n"
+              << std::scientific << std::setprecision(16)
               << "\tTest value            : " << normRmatrix2/normB2 << "\n"
               << "\tSystemSolver computed : " << rel_residual_norm   << "\n\n";
     error_sum++;
   }
  
   std::cout << "Results (second matrix): " << std::endl << std::endl;
+  std::cout << std::scientific << std::setprecision(16);
   std::cout << "\t ||b-A*x||_2                 : " << normRmatrix2              << " (residual norm)\n";
   std::cout << "\t ||b-A*x||_2/||b||_2         : " << normRmatrix2/normB2       << " (relative residual norm)\n";
   std::cout << "\t ||b-A*x||/(||A||*||x||)     : " << nsr_norm                  << " (norm of scaled residuals)\n";

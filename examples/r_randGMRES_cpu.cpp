@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
   std::string  matrixFileName = argv[1];
   std::string  rhsFileName = argv[2];
 
-  ReSolve::matrix::Csr* A;
+  ReSolve::matrix::Csr* A = nullptr;
   ReSolve::LinAlgWorkspaceCpu* workspace_Cpu = new ReSolve::LinAlgWorkspaceCpu();
   workspace_Cpu->initializeHandles();
   ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(workspace_Cpu);
@@ -33,9 +33,9 @@ int main(int argc, char *argv[])
   real_type* rhs = nullptr;
   real_type* x   = nullptr;
 
-  vector_type* vec_rhs;
-  vector_type* vec_x;
-  vector_type* vec_r;
+  vector_type* vec_rhs = nullptr;
+  vector_type* vec_x   = nullptr;
+  vector_type* vec_r   = nullptr;
 
   ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::MGS);
 

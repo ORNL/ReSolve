@@ -6,11 +6,14 @@
 
 namespace ReSolve 
 {
+  using out = io::Logger;
+
   LinSolverDirectRocSolverRf::LinSolverDirectRocSolverRf(LinAlgWorkspaceHIP* workspace)
   {
     workspace_ = workspace;
     infoM_ = nullptr;
-    solve_mode_ = 1; //solve mode - fast mode is default
+    solve_mode_ = 1; //solve mode - 1: use rocsparse trisolve
+    initParamList();
   }
 
   LinSolverDirectRocSolverRf::~LinSolverDirectRocSolverRf()
@@ -33,19 +36,24 @@ namespace ReSolve
                                         vector_type* rhs)
   {
     RESOLVE_RANGE_PUSH(__FUNCTION__);
-    //remember - P and Q are generally CPU variables
+
     int error_sum = 0;
-    this->A_ = (matrix::Csr*) A;
+
+    assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW &&
+           "Matrix has to be in CSR format for rocsolverRf.\n");
+    A_ = A;
     index_type n = A_->getNumRows();
+
     //set matrix info
     rocsolver_create_rfinfo(&infoM_, workspace_->getRocblasHandle()); 
-    //create combined factor
 
+    // Combine factors L and U into matrix M_
     addFactors(L, U);
 
     M_->setUpdated(ReSolve::memory::HOST);
     M_->syncData(ReSolve::memory::DEVICE);
 
+    //remember - P and Q are generally CPU variables
     if (d_P_ == nullptr) {
       mem_.allocateArrayOnDevice(&d_P_, n); 
     }
@@ -372,11 +380,136 @@ namespace ReSolve
     return 0;
   }
 
-  int LinSolverDirectRocSolverRf::getSolveMode()
+  int LinSolverDirectRocSolverRf::getSolveMode() const
   {
     return solve_mode_;
   }
 
+  int LinSolverDirectRocSolverRf::setCliParam(const std::string id, const std::string value)
+  {
+    switch (getParamId(id))
+    {
+      case SOLVE_MODE:
+        if (value == "rocsparse_trisolve") {
+          // use rocsparse triangular solver
+          setSolveMode(1);
+        } else {
+          // use default
+          setSolveMode(0);
+        }
+        break;
+      default:
+        std::cout << "Setting parameter failed!\n";
+    }
+    return 0;
+  }
+
+  /**
+   * @brief Placeholder function for now.
+   * 
+   * The following switch (getParamId(Id)) cases always run the default and
+   * are currently redundant code (like an if (true)).
+   * In the future, they will be expanded to include more options.
+   * 
+   * @param id - string ID for parameter to get.
+   * @return std::string Value of the string parameter to return.
+   */
+  std::string LinSolverDirectRocSolverRf::getCliParamString(const std::string id) const
+  {
+    std::string value("");
+    switch (getParamId(id))
+    {
+      case SOLVE_MODE:
+        switch (getSolveMode())
+        {
+          case 0:
+            value = "default";
+            break;
+          case 1:
+            value = "rocsparse_trisolve";
+            break;
+        }
+      default:
+        out::error() << "Trying to get unknown string parameter " << id << "\n";
+    }
+    return value;
+  }
+
+  /**
+   * @brief Placeholder function for now.
+   * 
+   * The following switch (getParamId(Id)) cases always run the default and
+   * are currently redundant code (like an if (true)).
+   * In the future, they will be expanded to include more options.
+   * 
+   * @param id - string ID for parameter to get.
+   * @return int Value of the int parameter to return.
+   */
+  index_type LinSolverDirectRocSolverRf::getCliParamInt(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+      default:
+        out::error() << "Trying to get unknown integer parameter " << id << "\n";
+    }
+    return -1;
+  }
+
+  /**
+   * @brief Placeholder function for now.
+   * 
+   * The following switch (getParamId(Id)) cases always run the default and
+   * are currently redundant code (like an if (true)).
+   * In the future, they will be expanded to include more options.
+   * 
+   * @param id - string ID for parameter to get.
+   * @return real_type Value of the real_type parameter to return.
+   */
+  real_type LinSolverDirectRocSolverRf::getCliParamReal(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+      default:
+        out::error() << "Trying to get unknown real parameter " << id << "\n";
+    }
+    return std::numeric_limits<real_type>::quiet_NaN();
+  }
+
+  /**
+   * @brief Placeholder function for now.
+   * 
+   * The following switch (getParamId(Id)) cases always run the default and
+   * are currently redundant code (like an if (true)).
+   * In the future, they will be expanded to include more options.
+   * 
+   * @param id - string ID for parameter to get.
+   * @return bool Value of the bool parameter to return.
+   */
+  bool LinSolverDirectRocSolverRf::getCliParamBool(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+      default:
+        out::error() << "Trying to get unknown boolean parameter " << id << "\n";
+    }
+    return false;
+  }
+
+  int LinSolverDirectRocSolverRf::printCliParam(const std::string id) const
+  {
+    switch (getParamId(id))
+    {
+    default:
+      out::error() << "Trying to print unknown parameter " << id << "\n";
+      return 1;
+    }
+    return 0;
+  }
+
+  //
+  // Private methods
+  //
+  
   void LinSolverDirectRocSolverRf::addFactors(matrix::Sparse* L, matrix::Sparse* U)
   {
     // L and U need to be in CSC format
@@ -436,4 +569,9 @@ namespace ReSolve
       }
     }
   } // LinSolverDirectRocSolverRf::addFactors
+
+  void LinSolverDirectRocSolverRf::initParamList()
+  {
+    params_list_["solve_mode"] = SOLVE_MODE;
+  }
 } // namespace resolve

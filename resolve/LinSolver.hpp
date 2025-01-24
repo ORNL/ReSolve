@@ -1,5 +1,5 @@
 /**
- * @file LinSolverIterative.hpp
+ * @file LinSolver.hpp
  * @author Kasia Swirydowicz (kasia.swirydowicz@pnnl.gov)
  * @author Slaven Peles (peless@ornl.gov)
  * @brief Declaration of linear solver base class.
@@ -48,35 +48,12 @@ namespace ReSolve
 
       real_type evaluateResidual();
 
-      virtual int setCliParam(const std::string /* id */, const std::string /* value */)
-      {
-        return 1;
-      }
-        
-      virtual std::string getCliParamString(const std::string /* id */) const
-      {
-        return "";
-      }
-        
-      virtual index_type getCliParamInt(const std::string /* id */) const
-      {
-        return -1;
-      }
-        
-      virtual real_type getCliParamReal(const std::string /* id */) const
-      {
-        return 1.0;
-      }
-        
-      virtual bool getCliParamBool(const std::string /* id */) const
-      {
-        return false;
-      }
-        
-      virtual int printCliParam(const std::string /* id */) const
-      {
-        return 1;
-      }
+      virtual int setCliParam(const std::string /* id */, const std::string /* value */) = 0;        
+      virtual std::string getCliParamString(const std::string /* id */) const = 0;   
+      virtual index_type getCliParamInt(const std::string /* id */) const = 0;
+      virtual real_type getCliParamReal(const std::string /* id */) const = 0;
+      virtual bool getCliParamBool(const std::string /* id */) const = 0;
+      virtual int printCliParam(const std::string /* id */) const = 0;
         
     protected:
       int getParamId(std::string id) const;
