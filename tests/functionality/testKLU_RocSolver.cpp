@@ -16,7 +16,10 @@
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
 #include <resolve/LinSolverDirectRocSolverRf.hpp>
+#include <resolve/GramSchmidt.hpp>
+#include <resolve/LinSolverIterativeFGMRES.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
+#include <resolve/utilities/params/CliOptions.hpp>
 
 #include "TestHelper.hpp"
 
@@ -40,14 +43,38 @@ int runTest(int argc, char *argv[])
   int error_sum = 0;
   int status = 0;
 
-  std::cout << "REFACTORING IN PROGRESS!\n";
+  // Collect all CLI
+  // ReSolve::CliOptions options(argc, argv);
+  // ReSolve::CliOptions::Option* opt = nullptr;
 
-  ReSolve::LinAlgWorkspaceHIP workspace_HIP;
-  workspace_HIP.initializeHandles();
+  // opt = options.getParamFromKey("-d");
+  // std::string data_path = opt ? (*opt).second : "./";
 
+  // opt = options.getParamFromKey("-g");
+  // std::string gs = opt ? (*opt).second : "CGS2";
+
+  // opt = options.getParamFromKey("-s");
+  // std::string sketch = opt ? (*opt).second : "count";
+
+  // opt = options.getParamFromKey("-x");
+  // std::string flexible = opt ? (*opt).second : "yes";
+
+  // Create workspace
+  ReSolve::LinAlgWorkspaceHIP workspace;
+  workspace.initializeHandles();
+
+  // Create direct solvers
   ReSolve::LinSolverDirectKLU KLU;
-  ReSolve::LinSolverDirectRocSolverRf Rf(&workspace_HIP);
+  ReSolve::LinSolverDirectRocSolverRf Rf(&workspace);
   Rf.setSolveMode(0);
+
+  // Create iterative solver
+  ReSolve::MatrixHandler matrix_handler(&workspace);
+  ReSolve::VectorHandler vector_handler(&workspace);
+  ReSolve::GramSchmidt GS(&vector_handler, ReSolve::GramSchmidt::CGS2);
+  ReSolve::LinSolverIterativeFGMRES FGMRES(&matrix_handler, &vector_handler, &GS);
+  FGMRES.setMaxit(200); 
+  FGMRES.setRestart(100); 
 
   // Input to this code is location of `data` directory where matrix files are stored
   const std::string data_path = (argc == 2) ? argv[1] : "./";
@@ -118,8 +145,17 @@ int runTest(int argc, char *argv[])
   status = Rf.solve(&vec_rhs, &vec_x);
   error_sum += status;
 
+  status =  FGMRES.setup(A); 
+  error_sum += status;
+
+  status = FGMRES.setupPreconditioner("LU", &Rf);
+  error_sum += status;
+
+  status = FGMRES.solve(&vec_rhs, &vec_x);
+  error_sum += status;
+
   // Setup test helper
-  TestHelper<ReSolve::LinAlgWorkspaceHIP> th(A, &vec_rhs, &vec_x, workspace_HIP);
+  TestHelper<ReSolve::LinAlgWorkspaceHIP> th(A, &vec_rhs, &vec_x, workspace);
 
   // Print result summary and check solution
   std::cout << "Results (first matrix): \n\n";
@@ -152,7 +188,14 @@ int runTest(int argc, char *argv[])
   error_sum += status;
   std::cout << "rocSolverRf refactorization status: " << status << std::endl;      
   
-  status = Rf.solve(&vec_rhs, &vec_x);
+  // status = Rf.solve(&vec_rhs, &vec_x);
+  // error_sum += status;
+
+  FGMRES.resetMatrix(A);
+  status = FGMRES.setupPreconditioner("LU", &Rf);
+  error_sum += status;
+
+  status = FGMRES.solve(&vec_rhs, &vec_x);
   error_sum += status;
 
   th.resetSystem(A, &vec_rhs, &vec_x);
