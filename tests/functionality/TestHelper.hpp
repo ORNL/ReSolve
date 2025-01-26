@@ -2,6 +2,20 @@
 
 #include <iostream>
 
+void isTestPass(int error_sum)
+{
+  using namespace ReSolve::colors;
+
+  if (error_sum == 0) {
+    std::cout << "Test KLU with rocsolverRf refactorization "
+              << GREEN << "PASSED" << CLEAR << std::endl;
+  } else {
+    std::cout << "Test KLU with rocsolverRf refactorization "
+              << RED << "FAILED" << CLEAR
+              << ", error sum: " << error_sum << std::endl;
+  }
+}
+
 /**
  * @brief Test helper class template
  * 
@@ -99,6 +113,23 @@ class TestHelper
       std::cout << "\t ||x-x_true||            : " << getNormDiff()           << " (solution error)\n";
       std::cout << "\t ||x-x_true||/||x_true|| : " << getNormDiffScaled()     << " (scaled solution error)\n";
       std::cout << "\t ||b-A*x_true||          : " << getNormResidualTrue()   << " (residual norm with exact solution)\n\n";
+    }
+
+    int checkResult(ReSolve::real_type tolerance)
+    {
+      int error_sum = 0;
+      ReSolve::real_type norm = norm_res_/norm_rhs_;
+
+      if (!std::isfinite(norm)) {
+        std::cout << "Result is not a finite number!\n";
+        error_sum++;
+      }
+      if (norm > tolerance) {
+        std::cout << "Result inaccurate!\n";
+        error_sum++;
+      }
+
+      return error_sum;
     }
 
   private:

@@ -20,9 +20,6 @@
 
 #include "TestHelper.hpp"
 
-using namespace ReSolve::constants;
-using namespace ReSolve::colors;
-
 
 static int runTest(int argc, char *argv[]);
 
@@ -39,9 +36,7 @@ int runTest(int argc, char *argv[])
   using vector_type = ReSolve::vector::Vector;
   using matrix_type = ReSolve::matrix::Sparse;
 
-  //we want error sum to be 0 at the end
-  //that means PASS.
-  //otheriwse it is a FAIL.
+  // Error sum needs to be zero at the end for test to pass.
   int error_sum = 0;
   int status = 0;
 
@@ -52,6 +47,7 @@ int runTest(int argc, char *argv[])
 
   ReSolve::LinSolverDirectKLU KLU;
   ReSolve::LinSolverDirectRocSolverRf Rf(&workspace_HIP);
+  Rf.setSolveMode(0);
 
   // Input to this code is location of `data` directory where matrix files are stored
   const std::string data_path = (argc == 2) ? argv[1] : "./";
@@ -102,17 +98,13 @@ int runTest(int argc, char *argv[])
   status = KLU.factorize();
   error_sum += status;
 
-  status = KLU.solve(&vec_rhs, &vec_x);
-  error_sum += status;
+  std::cout << "KLU factorize status: " << status <<std::endl;      
 
-  std::cout << "KLU solve status: " << status <<std::endl;      
-  TestHelper<ReSolve::LinAlgWorkspaceHIP> th(A, &vec_rhs, &vec_x, workspace_HIP);
+  // status = KLU.solve(&vec_rhs, &vec_x);
+  // error_sum += status;
 
   matrix_type* L = KLU.getLFactor();
   matrix_type* U = KLU.getUFactor();
-  if (L == nullptr) {
-    std::cout << "ERROR";
-  }
   index_type* P = KLU.getPOrdering();
   index_type* Q = KLU.getQOrdering();
 
@@ -123,17 +115,16 @@ int runTest(int argc, char *argv[])
   status = Rf.refactorize();
   error_sum += status;
 
+  status = Rf.solve(&vec_rhs, &vec_x);
+  error_sum += status;
+
+  // Setup test helper
+  TestHelper<ReSolve::LinAlgWorkspaceHIP> th(A, &vec_rhs, &vec_x, workspace_HIP);
+
   // Print result summary and check solution
   std::cout << "Results (first matrix): \n\n";
   th.printSummary();
-  if (!std::isfinite(th.getNormResidualScaled())) {
-    std::cout << "Result is not a finite number!\n";
-    error_sum++;
-  }
-  if ((th.getNormResidualScaled() > 1e-16 )) {
-    std::cout << "Result inaccurate!\n";
-    error_sum++;
-  }
+  error_sum += th.checkResult(1e-16);
 
   // Load the second matrix
   std::ifstream mat2(matrixFileName2);
@@ -166,24 +157,11 @@ int runTest(int argc, char *argv[])
 
   th.resetSystem(A, &vec_rhs, &vec_x);
 
-  std::cout<<"Results (second matrix): "<<std::endl<<std::endl;
+  std::cout << "Results (second matrix): \n\n";
   th.printSummary();
+  error_sum += th.checkResult(1e-16);
 
-  if (!std::isfinite(th.getNormResidualScaled())) {
-    std::cout << "Result is not a finite number!\n";
-    error_sum++;
-  }
-  if ((th.getNormResidualScaled() > 1e-16 )) {
-    std::cout << "Result inaccurate!\n";
-    error_sum++;
-  }
-
-  if (error_sum == 0) {
-    std::cout << "Test KLU with rocsolverRf refactorization " << GREEN << "PASSED" << CLEAR << std::endl;
-  } else {
-    std::cout << "Test KLU with rocsolverRf refactorization " << RED << "FAILED" << CLEAR
-              << ", error sum: " << error_sum << std::endl;
-  }
+  isTestPass(error_sum);
 
   // delete data on the heap
   delete A;
