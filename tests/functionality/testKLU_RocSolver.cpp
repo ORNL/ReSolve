@@ -33,6 +33,8 @@ int main(int argc, char *argv[])
 
 int runTest(int argc, char *argv[])
 {
+  std::string test_name("Test KLU with rocsolverRf");
+
   // Use ReSolve data types.
   using index_type = ReSolve::index_type;
   using real_type  = ReSolve::real_type;
@@ -44,20 +46,21 @@ int runTest(int argc, char *argv[])
   int status = 0;
 
   // Collect all CLI
-  // ReSolve::CliOptions options(argc, argv);
-  // ReSolve::CliOptions::Option* opt = nullptr;
+  ReSolve::CliOptions options(argc, argv);
+  ReSolve::CliOptions::Option* opt = nullptr;
 
-  // opt = options.getParamFromKey("-d");
-  // std::string data_path = opt ? (*opt).second : "./";
+  opt = options.getParamFromKey("-d");
+  std::string data_path = opt ? (*opt).second : "./";
 
-  // opt = options.getParamFromKey("-g");
-  // std::string gs = opt ? (*opt).second : "CGS2";
+  int mode = 0;
+  opt = options.getParamFromKey("-m");
+  if (opt) {
+    mode = 1;
+    test_name += " (mode 1)";
+  }
 
-  // opt = options.getParamFromKey("-s");
-  // std::string sketch = opt ? (*opt).second : "count";
-
-  // opt = options.getParamFromKey("-x");
-  // std::string flexible = opt ? (*opt).second : "yes";
+  opt = options.getParamFromKey("-i");
+  bool is_ir = opt ? true : false;
 
   // Create workspace
   ReSolve::LinAlgWorkspaceHIP workspace;
@@ -66,7 +69,7 @@ int runTest(int argc, char *argv[])
   // Create direct solvers
   ReSolve::LinSolverDirectKLU KLU;
   ReSolve::LinSolverDirectRocSolverRf Rf(&workspace);
-  Rf.setSolveMode(0);
+  Rf.setSolveMode(mode);
 
   // Create iterative solver
   ReSolve::MatrixHandler matrix_handler(&workspace);
@@ -76,21 +79,18 @@ int runTest(int argc, char *argv[])
   FGMRES.setMaxit(200); 
   FGMRES.setRestart(100); 
 
-  // Input to this code is location of `data` directory where matrix files are stored
-  const std::string data_path = (argc == 2) ? argv[1] : "./";
 
+  std::string matrix_file_name_1 = data_path + "data/matrix_ACTIVSg200_AC_10.mtx";
+  std::string matrix_file_name_2 = data_path + "data/matrix_ACTIVSg200_AC_11.mtx";
 
-  std::string matrixFileName1 = data_path + "data/matrix_ACTIVSg200_AC_10.mtx";
-  std::string matrixFileName2 = data_path + "data/matrix_ACTIVSg200_AC_11.mtx";
-
-  std::string rhsFileName1 = data_path + "data/rhs_ACTIVSg200_AC_10.mtx.ones";
-  std::string rhsFileName2 = data_path + "data/rhs_ACTIVSg200_AC_11.mtx.ones";
+  std::string rhs_file_name_1 = data_path + "data/rhs_ACTIVSg200_AC_10.mtx.ones";
+  std::string rhs_file_name_2 = data_path + "data/rhs_ACTIVSg200_AC_11.mtx.ones";
 
   // Read first matrix
-  std::ifstream mat1(matrixFileName1);
+  std::ifstream mat1(matrix_file_name_1);
   if(!mat1.is_open())
   {
-    std::cout << "Failed to open file " << matrixFileName1 << "\n";
+    std::cout << "Failed to open file " << matrix_file_name_1 << "\n";
     return -1;
   }
   ReSolve::matrix::Csr* A = ReSolve::io::createCsrFromFile(mat1);
@@ -98,10 +98,10 @@ int runTest(int argc, char *argv[])
   mat1.close();
 
   // Read first rhs vector
-  std::ifstream rhs1_file(rhsFileName1);
+  std::ifstream rhs1_file(rhs_file_name_1);
   if(!rhs1_file.is_open())
   {
-    std::cout << "Failed to open file " << rhsFileName1 << "\n";
+    std::cout << "Failed to open file " << rhs_file_name_1 << "\n";
     return -1;
   }
   real_type* rhs = ReSolve::io::createArrayFromFile(rhs1_file);
@@ -145,28 +145,37 @@ int runTest(int argc, char *argv[])
   status = Rf.solve(&vec_rhs, &vec_x);
   error_sum += status;
 
-  status =  FGMRES.setup(A); 
-  error_sum += status;
+  if (is_ir) {
+    test_name += " + IR";
 
-  status = FGMRES.setupPreconditioner("LU", &Rf);
-  error_sum += status;
+    status =  FGMRES.setup(A); 
+    error_sum += status;
 
-  status = FGMRES.solve(&vec_rhs, &vec_x);
-  error_sum += status;
+    status = FGMRES.setupPreconditioner("LU", &Rf);
+    error_sum += status;
+
+    status = FGMRES.solve(&vec_rhs, &vec_x);
+    error_sum += status;
+  }
 
   // Setup test helper
   TestHelper<ReSolve::LinAlgWorkspaceHIP> th(A, &vec_rhs, &vec_x, workspace);
 
   // Print result summary and check solution
-  std::cout << "Results (first matrix): \n\n";
+  std::cout << "\nResults (first matrix): \n\n";
   th.printSummary();
+  if (is_ir) {
+    std::cout<<"\t IR iterations           : " << FGMRES.getNumIter() << " (max 200, restart 100)\n";
+    std::cout<<"\t IR starting res. norm   : " << FGMRES.getInitResidualNorm() << "\n";
+    std::cout<<"\t IR final res. norm      : " << FGMRES.getFinalResidualNorm() << " (tol 1e-14) \n";
+  }
   error_sum += th.checkResult(1e-16);
 
   // Load the second matrix
-  std::ifstream mat2(matrixFileName2);
+  std::ifstream mat2(matrix_file_name_2);
   if(!mat2.is_open())
   {
-    std::cout << "Failed to open file " << matrixFileName2 << "\n";
+    std::cout << "Failed to open file " << matrix_file_name_2 << "\n";
     return -1;
   }
   ReSolve::io::updateMatrixFromFile(mat2, A);
@@ -174,10 +183,10 @@ int runTest(int argc, char *argv[])
   mat2.close();
 
   // Load the second rhs vector
-  std::ifstream rhs2_file(rhsFileName2);
+  std::ifstream rhs2_file(rhs_file_name_2);
   if(!rhs2_file.is_open())
   {
-    std::cout << "Failed to open file " << rhsFileName2 << "\n";
+    std::cout << "Failed to open file " << rhs_file_name_2 << "\n";
     return -1;
   }
   ReSolve::io::updateArrayFromFile(rhs2_file, &rhs);
@@ -188,23 +197,30 @@ int runTest(int argc, char *argv[])
   error_sum += status;
   std::cout << "rocSolverRf refactorization status: " << status << std::endl;      
   
-  // status = Rf.solve(&vec_rhs, &vec_x);
-  // error_sum += status;
+  if (is_ir) {
+    FGMRES.resetMatrix(A);
+    status = FGMRES.setupPreconditioner("LU", &Rf);
+    error_sum += status;
 
-  FGMRES.resetMatrix(A);
-  status = FGMRES.setupPreconditioner("LU", &Rf);
-  error_sum += status;
-
-  status = FGMRES.solve(&vec_rhs, &vec_x);
-  error_sum += status;
+    status = FGMRES.solve(&vec_rhs, &vec_x);
+    error_sum += status;
+  } else {
+    status = Rf.solve(&vec_rhs, &vec_x);
+    error_sum += status;
+  }
 
   th.resetSystem(A, &vec_rhs, &vec_x);
 
-  std::cout << "Results (second matrix): \n\n";
+  std::cout << "\nResults (second matrix): \n\n";
   th.printSummary();
+  if (is_ir) {
+    std::cout<<"\t IR iterations           : " << FGMRES.getNumIter() << " (max 200, restart 100)\n";
+    std::cout<<"\t IR starting res. norm   : " << FGMRES.getInitResidualNorm() << "\n";
+    std::cout<<"\t IR final res. norm      : " << FGMRES.getFinalResidualNorm() << " (tol 1e-14) \n";
+  }
   error_sum += th.checkResult(1e-16);
 
-  isTestPass(error_sum);
+  isTestPass(error_sum, test_name);
 
   // delete data on the heap
   delete A;

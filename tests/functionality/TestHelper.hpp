@@ -2,17 +2,17 @@
 
 #include <iostream>
 
-void isTestPass(int error_sum)
+void isTestPass(int error_sum, const std::string& test_name)
 {
   using namespace ReSolve::colors;
 
   if (error_sum == 0) {
-    std::cout << "Test KLU with rocsolverRf refactorization "
-              << GREEN << "PASSED" << CLEAR << std::endl;
+    std::cout << std::endl << test_name
+              << GREEN << " PASSED" << CLEAR << std::endl << std::endl;
   } else {
-    std::cout << "Test KLU with rocsolverRf refactorization "
-              << RED << "FAILED" << CLEAR
-              << ", error sum: " << error_sum << std::endl;
+    std::cout << std::endl << test_name
+              << RED << " FAILED" << CLEAR
+              << ", error sum: " << error_sum << std::endl << std::endl;
   }
 }
 
@@ -72,6 +72,11 @@ class TestHelper
       computeNorms();
     }
 
+    void setTestName(const std::string& name)
+    {
+      test_name_ += name;
+    }
+
     ReSolve::real_type getNormResidual()
     {
       return norm_res_;
@@ -112,7 +117,7 @@ class TestHelper
       std::cout << "\t ||b-A*x||/||b||         : " << getNormResidualScaled() << " (scaled residual norm)\n";
       std::cout << "\t ||x-x_true||            : " << getNormDiff()           << " (solution error)\n";
       std::cout << "\t ||x-x_true||/||x_true|| : " << getNormDiffScaled()     << " (scaled solution error)\n";
-      std::cout << "\t ||b-A*x_true||          : " << getNormResidualTrue()   << " (residual norm with exact solution)\n\n";
+      std::cout << "\t ||b-A*x_true||          : " << getNormResidualTrue()   << " (residual norm with exact solution)\n";
     }
 
     int checkResult(ReSolve::real_type tolerance)
@@ -221,6 +226,8 @@ class TestHelper
     ReSolve::matrix::Sparse* A_;
     ReSolve::vector::Vector* r_;
     ReSolve::vector::Vector* x_;
+
+    std::string test_name_{"Test "};
 
     ReSolve::MatrixHandler mh_;
     ReSolve::VectorHandler vh_;
