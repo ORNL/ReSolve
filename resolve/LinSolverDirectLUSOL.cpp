@@ -146,10 +146,17 @@ namespace ReSolve
 
   int LinSolverDirectLUSOL::factorize()
   {
-    // NOTE: this is probably good enough as far as checking goes
-    if (a_ == nullptr || indc_ == nullptr || indr_ == nullptr) {
-      out::error() << "LUSOL workspace not allocated!\n";
-      return -1;
+    if (!is_solver_data_allocated_) {
+      out::warning() << "LinSolverDirect::factorize() called on "
+                     << "LinSolverDirectLUSOL without allocating the "
+                     << "workspace first!\n";
+
+      // it isn't possible for this to error in any recoverable way
+      // but we'll check anyway
+      int inform = analyze();
+      if (inform < 0) {
+        return inform;
+      }
     }
 
     index_type inform = 0;
@@ -180,7 +187,7 @@ namespace ReSolve
 
     // TODO: consider handling inform = 7
 
-    return inform;
+    return static_cast<int>(inform);
   }
 
   int LinSolverDirectLUSOL::refactorize()
@@ -192,23 +199,19 @@ namespace ReSolve
 
   int LinSolverDirectLUSOL::solve(vector_type* rhs, vector_type* x)
   {
-    if (rhs->getSize() != m_ || x->getSize() != n_) {
-      return -1;
-    }
-
     if (!is_factorized_) {
       out::warning() << "LinSolverDirect::solve(vector_type*, vector_type*) "
                      << "called on LinSolverDirectLUSOL without factorizing "
                      << "first!\n";
 
-      if (m_ == 0) {
-        return -1;
-      }
-
-      index_type inform = factorize();
+      int inform = factorize();
       if (inform < 0) {
         return inform;
       }
+    }
+
+    if (m_ == 0 || rhs->getSize() != m_ || x->getSize() != n_) {
+      return -1;
     }
 
     index_type mode = 5;
@@ -233,7 +236,7 @@ namespace ReSolve
            locr_,
            &inform);
 
-    return inform;
+    return static_cast<int>(inform);
   }
 
   int LinSolverDirectLUSOL::solve(vector_type* /* x */)
