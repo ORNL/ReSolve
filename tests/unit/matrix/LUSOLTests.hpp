@@ -43,6 +43,63 @@ namespace ReSolve
           return status.report(__func__);
         }
 
+        TestOutcome automaticAllocationSolve()
+        {
+          TestStatus status;
+
+          LinSolverDirectLUSOL solver;
+          matrix::Coo* A = createMatrix();
+
+          vector::Vector rhs(A->getNumRows());
+          rhs.setToConst(constants::ONE, memory::HOST);
+
+          vector::Vector x(A->getNumColumns());
+          x.allocate(memory::HOST);
+
+          if (solver.setup(A) < 0) {
+            status *= false;
+          }
+          if (solver.solve(&rhs, &x) < 0) {
+            status *= false;
+          }
+
+          status *= verifyAnswer(x, solX_);
+
+          delete A;
+
+          return status.report(__func__);
+        }
+
+        TestOutcome automaticFactorizationSolve()
+        {
+          TestStatus status;
+
+          LinSolverDirectLUSOL solver;
+          matrix::Coo* A = createMatrix();
+
+          vector::Vector rhs(A->getNumRows());
+          rhs.setToConst(constants::ONE, memory::HOST);
+
+          vector::Vector x(A->getNumColumns());
+          x.allocate(memory::HOST);
+
+          if (solver.setup(A) < 0) {
+            status *= false;
+          }
+          if (solver.analyze() < 0) {
+            status *= false;
+          }
+          if (solver.solve(&rhs, &x) < 0) {
+            status *= false;
+          }
+
+          status *= verifyAnswer(x, solX_);
+
+          delete A;
+
+          return status.report(__func__);
+        }
+
         TestOutcome simpleSolve()
         {
           TestStatus status;

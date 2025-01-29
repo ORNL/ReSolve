@@ -11,6 +11,8 @@ int main(int, char**)
     ReSolve::tests::LUSOLTests test;
 
     result += test.lusolConstructor();
+    result += test.automaticAllocationSolve();
+    result += test.automaticFactorizationSolve();
     result += test.simpleSolve();
 
     std::cout << "\n";
