@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <resolve/LinSolverIterative.hpp>
 
 void isTestPass(int error_sum, const std::string& test_name)
 {
@@ -118,6 +119,13 @@ class TestHelper
       std::cout << "\t ||x-x_true||            : " << getNormDiff()           << " (solution error)\n";
       std::cout << "\t ||x-x_true||/||x_true|| : " << getNormDiffScaled()     << " (scaled solution error)\n";
       std::cout << "\t ||b-A*x_true||          : " << getNormResidualTrue()   << " (residual norm with exact solution)\n";
+    }
+
+    void printIrSummary(ReSolve::LinSolverIterative* ls)
+    {
+      std::cout<<"\t IR iterations           : " << ls->getNumIter() << " (max 200, restart 100)\n";
+      std::cout<<"\t IR starting res. norm   : " << ls->getInitResidualNorm() << "\n";
+      std::cout<<"\t IR final res. norm      : " << ls->getFinalResidualNorm() << " (tol 1e-14) \n";
     }
 
     int checkResult(ReSolve::real_type tolerance)

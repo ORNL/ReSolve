@@ -181,9 +181,7 @@ int runTest(int argc, char *argv[])
   std::cout << "\nResults (first matrix): \n\n";
   th.printSummary();
   if (is_ir) {
-    std::cout<<"\t IR iterations           : " << FGMRES.getNumIter() << " (max 200, restart 100)\n";
-    std::cout<<"\t IR starting res. norm   : " << FGMRES.getInitResidualNorm() << "\n";
-    std::cout<<"\t IR final res. norm      : " << FGMRES.getFinalResidualNorm() << " (tol 1e-14) \n";
+    th.printIrSummary(&FGMRES);
   }
   error_sum += th.checkResult(1e-16);
 
@@ -230,9 +228,7 @@ int runTest(int argc, char *argv[])
   std::cout << "\nResults (second matrix): \n\n";
   th.printSummary();
   if (is_ir) {
-    std::cout<<"\t IR iterations           : " << FGMRES.getNumIter() << " (max 200, restart 100)\n";
-    std::cout<<"\t IR starting res. norm   : " << FGMRES.getInitResidualNorm() << "\n";
-    std::cout<<"\t IR final res. norm      : " << FGMRES.getFinalResidualNorm() << " (tol 1e-14) \n";
+    th.printIrSummary(&FGMRES);
   }
   error_sum += th.checkResult(1e-16);
 
