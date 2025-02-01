@@ -1,3 +1,5 @@
+#include <cassert>
+
 #include <resolve/vector/Vector.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include "LinSolverDirectCuSolverRf.hpp"
@@ -25,16 +27,19 @@ namespace ReSolve
                                        index_type* Q,
                                        vector_type* /* rhs */)
   {
+    assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW &&
+           "Matrix A has to be in CSR format for cusolverRf input.\n");
+    int error_sum = 0;
+    this->A_ = A;
+    index_type n = A_->getNumRows();
+
     //remember - P and Q are generally CPU variables
-    // factorization data is stored in the handle. If function is called again, destroy the old handle to get rid of old data. 
+    // factorization data is stored in the handle. 
+    // If function is called again, destroy the old handle to get rid of old data. 
     if (setup_completed_) {
       cusolverRfDestroy(handle_cusolverrf_);
       cusolverRfCreate(&handle_cusolverrf_);
     }
-
-    int error_sum = 0;
-    this->A_ = (matrix::Csr*) A;
-    index_type n = A_->getNumRows();
 
     if (d_P_ == nullptr){
       mem_.allocateArrayOnDevice(&d_P_, n);
@@ -77,9 +82,6 @@ namespace ReSolve
     mem_.deviceSynchronize();
     status_cusolverrf_ = cusolverRfAnalyze(handle_cusolverrf_);
     error_sum += status_cusolverrf_;
-
-    this->A_ = A;
-    //default
 
     const cusolverRfFactorization_t fact_alg =
       CUSOLVERRF_FACTORIZATION_ALG0;  // 0 - default, 1 or 2
