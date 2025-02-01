@@ -131,14 +131,8 @@ int runTest(int argc, char *argv[])
   // status = KLU.solve(&vec_rhs, &vec_x);
   // error_sum += status;
 
-  auto* L_csc = static_cast<ReSolve::matrix::Csc*>(KLU.getLFactor());
-  auto* U_csc = static_cast<ReSolve::matrix::Csc*>(KLU.getUFactor());
-  L_csc->syncData(ReSolve::memory::DEVICE);
-  U_csc->syncData(ReSolve::memory::DEVICE);
-  auto* L = new ReSolve::matrix::Csr(L_csc->getNumRows(), L_csc->getNumColumns(), L_csc->getNnz());
-  auto* U = new ReSolve::matrix::Csr(U_csc->getNumRows(), U_csc->getNumColumns(), U_csc->getNnz());
-  error_sum += matrix_handler.csc2csr(L_csc,L, ReSolve::memory::DEVICE);
-  error_sum += matrix_handler.csc2csr(U_csc,U, ReSolve::memory::DEVICE);
+  matrix_type* L = KLU.getLFactor();
+  matrix_type* U = KLU.getUFactor();
   if (L == nullptr || U == nullptr) {
     std::cout << "ERROR!\n";
   }
@@ -149,10 +143,6 @@ int runTest(int argc, char *argv[])
   status = Rf.setup(A, L, U, P, Q, &vec_rhs);
   error_sum += status;
   std::cout << "Rf setup status: " << status << std::endl;
-
-  // Remove temporary storage for CSR factors
-  delete L;
-  delete U;
 
   status = Rf.refactorize();
   error_sum += status;

@@ -18,6 +18,8 @@ namespace ReSolve
   namespace matrix
   {
     class Sparse;
+    class Csr;
+    class Csc;
   }
 
   // Forward declaration of ReSolve handlers workspace
@@ -44,7 +46,10 @@ namespace ReSolve
 
       void setAlgorithms(cusolverRfFactorization_t fact_alg,  cusolverRfTriangularSolve_t solve_alg);
       int setNumericalProperties(double nzero, double nboost);//these two NEED TO BE DOUBLE
+
     private:
+      int csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr);
+
       cusolverRfHandle_t handle_cusolverrf_;
       cusolverStatus_t status_cusolverrf_;
       
