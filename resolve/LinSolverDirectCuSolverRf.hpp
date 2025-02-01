@@ -18,6 +18,8 @@ namespace ReSolve
   namespace matrix
   {
     class Sparse;
+    class Csr;
+    class Csc;
   }
 
   // Forward declaration of ReSolve handlers workspace
@@ -54,13 +56,14 @@ namespace ReSolve
       int printCliParam(const std::string id) const override;
 
     private:
+      void initParamList();
+      int csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr);
+
+    private:
       enum ParamaterIDs {ZERO_PIVOT=0, PIVOT_BOOST};
       real_type zero_pivot_{0.0};  ///< The value below which zero pivot is flagged. 
       real_type pivot_boost_{0.0}; ///< The value which is substituted for zero pivot.
       
-    private:
-      void initParamList();
-
       cusolverRfHandle_t handle_cusolverrf_;
       cusolverStatus_t status_cusolverrf_;
       

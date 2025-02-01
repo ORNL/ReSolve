@@ -388,17 +388,7 @@ namespace ReSolve
       status += refactorizationSolver_->setup(A_, L_, U_, P_, Q_);
     }
     if (refactorizationMethod_ == "cusolverrf") {
-      matrix::Csc* L_csc = dynamic_cast<matrix::Csc*>(L_);
-      matrix::Csc* U_csc = dynamic_cast<matrix::Csc*>(U_);
-      L_csc->syncData(memory::DEVICE);
-      U_csc->syncData(memory::DEVICE);
-      matrix::Csr* L_csr = new matrix::Csr(L_csc->getNumRows(), L_csc->getNumColumns(), L_csc->getNnz());
-      matrix::Csr* U_csr = new matrix::Csr(U_csc->getNumRows(), U_csc->getNumColumns(), U_csc->getNnz());
-      matrixHandler_->csc2csr(L_csc, L_csr, memory::DEVICE);
-      matrixHandler_->csc2csr(U_csc, U_csr, memory::DEVICE);
-      status += refactorizationSolver_->setup(A_, L_csr, U_csr, P_, Q_);
-      delete L_csr;
-      delete U_csr;
+      status += refactorizationSolver_->setup(A_, L_, U_, P_, Q_);
 
       LinSolverDirectCuSolverRf* Rf = dynamic_cast<LinSolverDirectCuSolverRf*>(refactorizationSolver_);
       Rf->setNumericalProperties(1e-14, 1e-1);

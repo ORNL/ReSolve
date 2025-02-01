@@ -2,6 +2,7 @@
 
 #include <resolve/vector/Vector.hpp>
 #include <resolve/matrix/Csr.hpp>
+#include <resolve/matrix/Csc.hpp>
 #include "LinSolverDirectCuSolverRf.hpp"
 
 namespace ReSolve 
@@ -32,6 +33,9 @@ namespace ReSolve
   {
     assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW &&
            "Matrix A has to be in CSR format for cusolverRf input.\n");
+    assert(L->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_COLUMN &&
+           "Matrix L has to be in CSC format for cusolverRf input.\n");
+
     int error_sum = 0;
     this->A_ = A;
     index_type n = A_->getNumRows();
@@ -43,6 +47,15 @@ namespace ReSolve
       cusolverRfDestroy(handle_cusolverrf_);
       cusolverRfCreate(&handle_cusolverrf_);
     }
+
+    auto* L_csc = static_cast<matrix::Csc*>(L);
+    auto* U_csc = static_cast<matrix::Csc*>(U);
+    auto* L_csr = new ReSolve::matrix::Csr(L_csc->getNumRows(), L_csc->getNumColumns(), L_csc->getNnz());
+    auto* U_csr = new ReSolve::matrix::Csr(U_csc->getNumRows(), U_csc->getNumColumns(), U_csc->getNnz());
+    csc2csr(L_csc, L_csr);
+    csc2csr(U_csc, U_csr);
+    L_csr->syncData(ReSolve::memory::DEVICE);
+    U_csr->syncData(ReSolve::memory::DEVICE);
 
     if (d_P_ == nullptr){
       mem_.allocateArrayOnDevice(&d_P_, n);
@@ -69,14 +82,14 @@ namespace ReSolve
                                                A_->getRowData(memory::DEVICE),
                                                A_->getColData(memory::DEVICE),
                                                A_->getValues( memory::DEVICE),
-                                               L->getNnz(),
-                                               L->getRowData(memory::DEVICE),
-                                               L->getColData(memory::DEVICE),
-                                               L->getValues( memory::DEVICE),
-                                               U->getNnz(),
-                                               U->getRowData(memory::DEVICE),
-                                               U->getColData(memory::DEVICE),
-                                               U->getValues( memory::DEVICE),
+                                               L_csr->getNnz(),
+                                               L_csr->getRowData(memory::DEVICE),
+                                               L_csr->getColData(memory::DEVICE),
+                                               L_csr->getValues( memory::DEVICE),
+                                               U_csr->getNnz(),
+                                               U_csr->getRowData(memory::DEVICE),
+                                               U_csr->getColData(memory::DEVICE),
+                                               U_csr->getValues( memory::DEVICE),
                                                d_P_,
                                                d_Q_,
                                                handle_cusolverrf_);
@@ -93,6 +106,8 @@ namespace ReSolve
     this->setAlgorithms(fact_alg, solve_alg);
     
     setup_completed_ = true;
+    delete L_csr;
+    delete U_csr;
     
     return error_sum;
   }
@@ -281,6 +296,92 @@ namespace ReSolve
   {
     params_list_["zero_pivot"]  = ZERO_PIVOT;
     params_list_["pivot_boost"] = PIVOT_BOOST;
+  }
+  
+  /**
+   * @brief Convert CSC to CSR matrix on the host
+   * 
+   * @authors Slaven Peles <peless@ornl.gov>, Daniel Reynolds (SMU), and
+   * David Gardner and Carol Woodward (LLNL)
+   */
+  int LinSolverDirectCuSolverRf::csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr)
+  {
+    // int error_sum = 0; TODO: Collect error output!
+    assert(A_csc->getNnz() == A_csr->getNnz());
+    assert(A_csc->getNumRows() == A_csr->getNumColumns());
+    assert(A_csr->getNumRows() == A_csc->getNumColumns());
+
+    A_csr->allocateMatrixData(memory::HOST);
+
+    index_type nnz = A_csc->getNnz();
+    index_type n   = A_csc->getNumColumns();
+
+    index_type* rowIdxCsc = A_csc->getRowData(memory::HOST);
+    index_type* colPtrCsc = A_csc->getColData(memory::HOST);
+    real_type*  valuesCsc = A_csc->getValues( memory::HOST);
+
+    index_type* rowPtrCsr = A_csr->getRowData(memory::HOST);
+    index_type* colIdxCsr = A_csr->getColData(memory::HOST);
+    real_type*  valuesCsr = A_csr->getValues( memory::HOST);
+
+    // Set all CSR row pointers to zero
+    for (index_type i = 0; i <= n; ++i) {
+      rowPtrCsr[i] = 0;
+    }
+
+    // Set all CSR values and column indices to zero
+    for (index_type i = 0; i < nnz; ++i) {
+      colIdxCsr[i] = 0;
+      valuesCsr[i] = 0.0;
+    }
+
+    // Compute number of entries per row
+    for (index_type i = 0; i < nnz; ++i) {
+      rowPtrCsr[rowIdxCsc[i]]++;
+    }
+
+    // Compute cumualtive sum of nnz per row
+    for (index_type row = 0, rowsum = 0; row < n; ++row)
+    {
+      // Store value in row pointer to temp
+      index_type temp  = rowPtrCsr[row];
+
+      // Copy cumulative sum to the row pointer
+      rowPtrCsr[row] = rowsum;
+
+      // Update row sum
+      rowsum += temp;
+    }
+    rowPtrCsr[n] = nnz;
+
+    for (index_type col = 0; col < n; ++col)
+    {
+      // Compute positions of column indices and values in CSR matrix and store them there
+      // Overwrites CSR row pointers in the process
+      for (index_type jj = colPtrCsc[col]; jj < colPtrCsc[col+1]; jj++)
+      {
+          index_type row  = rowIdxCsc[jj];
+          index_type dest = rowPtrCsr[row];
+
+          colIdxCsr[dest] = col;
+          valuesCsr[dest] = valuesCsc[jj];
+
+          rowPtrCsr[row]++;
+      }
+    }
+
+    // Restore CSR row pointer values
+    for (index_type row = 0, last = 0; row <= n; row++)
+    {
+        index_type temp  = rowPtrCsr[row];
+        rowPtrCsr[row] = last;
+        last    = temp;
+    }
+
+    // Mark data on the host as updated
+    A_csr->setUpdated(memory::HOST);
+
+    return 0;
   }
 
 } // namespace resolve
