@@ -250,7 +250,7 @@ namespace ReSolve
         // std::cout << line << std::endl;
       }
       ss << line;
-      ss >> n >> m ;
+      ss >> n >> m;
 
       real_type* vec = new real_type[n];
       real_type a;
@@ -258,6 +258,38 @@ namespace ReSolve
         vec[i] = a;
         i++;
       }
+      return vec;
+    }
+
+    vector::Vector* createVectorFromFile(std::istream& file)
+    {
+      if(!file) {
+        Logger::error() << "Empty input to " << __func__ << " function ... \n" << std::endl;
+        return nullptr;
+      }
+
+      std::stringstream ss;
+      std::string line;
+      index_type i = 0;
+      index_type n, m;
+
+      std::getline(file, line);
+      while (line.at(0) == '%') {
+        std::getline(file, line); 
+        // std::cout << line << std::endl;
+      }
+      ss << line;
+      ss >> n >> m;
+
+      vector::Vector* vec = new vector::Vector(n);
+      vec->allocate(memory::HOST);
+      // real_type* vec = new real_type[n];
+      real_type a;
+      while (file >> a) {
+        vec->getData(memory::HOST)[i] = a;
+        i++;
+      }
+      vec->setDataUpdated(memory::HOST);
       return vec;
     }
 
@@ -278,7 +310,7 @@ namespace ReSolve
      */
     void updateMatrixFromFile(std::istream& file, matrix::Coo* A)
     {
-      if(!file) {
+      if (!file) {
         Logger::error() << "Empty input to createCooFromFile function ..." << std::endl;
         return;
       }
@@ -350,7 +382,7 @@ namespace ReSolve
         // std::cout<<line<<std::endl;
       }
       ss << line;
-      ss >> n >> m ;
+      ss >> n >> m;
 
       if (rhs == nullptr) {
         // std::cout << "Allocating array of size " << n << "\n";
@@ -363,6 +395,42 @@ namespace ReSolve
         // std::cout << i << ": " << a << "\n";
         i++;
       }
+    }
+
+    void updateVectorFromFile(std::istream& file, vector::Vector* vec_rhs) 
+    {
+      if (!file) {
+        Logger::error() << "Empty input to updateArrayFromFile function ..." << std::endl;
+        return;
+      }
+
+      std::stringstream ss;
+      std::string line;
+      index_type n, m;
+
+      std::getline(file, line);
+      while (line.at(0) == '%') {
+        std::getline(file, line); 
+        // std::cout<<line<<std::endl;
+      }
+      ss << line;
+      ss >> n >> m;
+
+      if (n != vec_rhs->getSize()) {
+        Logger::error() << "File data does not match the vector size.\n"
+                        << "Vector not updated!\n";
+        return;
+      }
+
+      real_type* rhs = vec_rhs->getData(memory::HOST);
+      real_type a = 0.0;
+      index_type i = 0;
+      while (file >> a) {
+        rhs[i] = a;
+        // std::cout << i << ": " << a << "\n";
+        i++;
+      }
+      vec_rhs->setDataUpdated(memory::HOST);
     }
 
     /**
