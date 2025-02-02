@@ -111,21 +111,22 @@ class TestHelper
     void printSummary()
     {
       std::cout << std::setprecision(16) << std::scientific;
-      std::cout << "\t ||b-A*x||               : " << getNormResidual()       << " (residual norm)\n";
+      std::cout << "\t Residual norm           ||b-A*x||               : " << getNormResidual()       << "\n";
       if (memspace_ == ReSolve::memory::DEVICE) {
-        std::cout << "\t ||b-A*x|| (CPU)         : " << getNormResidualCpu()    << " (residual norm on CPU)\n";
+        std::cout << "\t Residual norm on CPU    ||b-A*x|| (CPU)         : " << getNormResidualCpu()    << "\n";
       }
-      std::cout << "\t ||b-A*x||/||b||         : " << getNormResidualScaled() << " (scaled residual norm)\n";
-      std::cout << "\t ||x-x_true||            : " << getNormDiff()           << " (solution error)\n";
-      std::cout << "\t ||x-x_true||/||x_true|| : " << getNormDiffScaled()     << " (scaled solution error)\n";
-      std::cout << "\t ||b-A*x_true||          : " << getNormResidualTrue()   << " (residual norm with exact solution)\n";
+      std::cout << "\t Relative residual norm  ||b-A*x||/||b||         : " << getNormResidualScaled() << "\n";
+      std::cout << "\t Error norm              ||x-x_true||            : " << getNormDiff()           << "\n";
+      std::cout << "\t Relative error norm     ||x-x_true||/||x_true|| : " << getNormDiffScaled()     << "\n";
+      std::cout << "\t Exact solution residual ||b-A*x_true||          : " << getNormResidualTrue()   << "\n";
     }
 
     void printIrSummary(ReSolve::LinSolverIterative* ls)
     {
-      std::cout<<"\t IR iterations           : " << ls->getNumIter() << " (max 200, restart 100)\n";
-      std::cout<<"\t IR starting res. norm   : " << ls->getInitResidualNorm() << "\n";
-      std::cout<<"\t IR final res. norm      : " << ls->getFinalResidualNorm() << " (tol 1e-14) \n";
+      std::cout << "\t IR iterations                                   : " << ls->getNumIter() << "\n";
+      std::cout << "\t IR initial residual norm ||b-A*x||              : " << ls->getInitResidualNorm() << "\n";
+      // std::cout<<"\t IR initial relative residual norm ||b-A*x||/||b|| : " << ls->getInitResidualNorm() << "\n";
+      std::cout << "\t IR final residual norm   ||b-A*x||              : " << ls->getFinalResidualNorm() << "\n";
     }
 
     int checkResult(ReSolve::real_type tolerance)
