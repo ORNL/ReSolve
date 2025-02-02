@@ -316,12 +316,12 @@ public:
     std::istringstream file(general_vector_file_);
 
     // Create rhs vector and load its data from the input file
-    vector::Vector* rhs = ReSolve::io::createVectorFromFile(file);
+    vector::Vector rhs = ReSolve::io::createVectorFromFile(file);
 
     // Check if the matrix data was correctly loaded
     status = true;
 
-    const real_type* rhs_data = rhs->getData(memory::HOST);
+    const real_type* rhs_data = rhs.getData(memory::HOST);
     for (size_t i = 0; i < general_vector_vals_.size(); ++i) {
       if (!isEqual(rhs_data[i], general_vector_vals_[i]))
       {
@@ -332,8 +332,25 @@ public:
       // std::cout << i << ": " << rhs[i] << "\n";
     }
 
-    // Delete test vector
-    delete rhs;
+    // // Create rhs vector and load its data from the input file
+    // vector::Vector* rhs = ReSolve::io::createVectorFromFile(file);
+
+    // // Check if the matrix data was correctly loaded
+    // status = true;
+
+    // const real_type* rhs_data = rhs->getData(memory::HOST);
+    // for (size_t i = 0; i < general_vector_vals_.size(); ++i) {
+    //   if (!isEqual(rhs_data[i], general_vector_vals_[i]))
+    //   {
+    //     std::cout << "Incorrect vector value at storage element " << i << ".\n";
+    //     status = false;
+    //     break;
+    //   }
+    //   // std::cout << i << ": " << rhs[i] << "\n";
+    // }
+
+    // // Delete test vector
+    // delete rhs;
 
     return status.report(__func__);
   }
@@ -405,7 +422,7 @@ public:
     vec_rhs.allocate(memory::HOST);
 
     // Update vector vec_rhs with data from the matrix market file
-    ReSolve::io::updateVectorFromFile(file, &vec_rhs);
+    ReSolve::io::updateVectorFromFile(file, vec_rhs);
 
     // Check if the vector data was correctly loaded
     status = true;

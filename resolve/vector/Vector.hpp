@@ -28,6 +28,8 @@ namespace ReSolve { namespace vector {
     public:
       Vector(index_type n);
       Vector(index_type n, index_type k);
+      Vector(Vector&& v);
+      Vector& operator=(Vector&& v);
       ~Vector();
 
       int copyDataFrom(const real_type* data, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut);

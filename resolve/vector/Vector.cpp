@@ -43,6 +43,72 @@ namespace ReSolve { namespace vector {
   {
   }
 
+  Vector::Vector(Vector&& v)
+  {
+    // Set vector parameters
+    n_ = v.n_;
+    k_ = v.k_;
+    n_current_ = v.n_current_;
+    gpu_updated_ = v.gpu_updated_;
+    cpu_updated_ = v.cpu_updated_;
+    owns_gpu_data_ = v.owns_gpu_data_;
+    owns_cpu_data_ = v.owns_cpu_data_;
+
+    // Move data
+    if (d_data_ != v.d_data_) {
+      if (d_data_) {
+        delete [] d_data_;
+      }
+      d_data_ = v.d_data_;
+      v.d_data_ = nullptr;
+    }
+    if (h_data_ != v.h_data_) {
+      if(h_data_) {
+        delete [] h_data_
+      }
+      h_data_ = v.h_data_;
+      v.h_data_ = nullptr;
+    }
+
+    // Set v
+    v.n_ = 0;
+    v.k_ = 0;
+    v.n_current_ = 0;
+    v.gpu_updated_ = false;
+    v.cpu_updated_ = false;
+    v.owns_gpu_data_ = false;
+    v.owns_cpu_data_ = false;
+  }
+
+  Vector& Vector::operator=(Vector&& v)
+  {
+    // Set vector parameters
+    n_ = v.n_;
+    k_ = v.k_;
+    n_current_ = v.n_current_;
+    gpu_updated_ = v.gpu_updated_;
+    cpu_updated_ = v.cpu_updated_;
+    owns_gpu_data_ = v.owns_gpu_data_;
+    owns_cpu_data_ = v.owns_cpu_data_;
+
+    // Move data
+    d_data_ = v.d_data_;
+    h_data_ = v.h_data_;
+    v.d_data_ = nullptr;
+    v.h_data_ = nullptr;
+
+    // Set v
+    v.n_ = 0;
+    v.k_ = 0;
+    v.n_current_ = 0;
+    v.gpu_updated_ = false;
+    v.cpu_updated_ = false;
+    v.owns_gpu_data_ = false;
+    v.owns_cpu_data_ = false;
+
+    return *this;
+  }
+
   /** 
    * @brief destructor.
    * 
