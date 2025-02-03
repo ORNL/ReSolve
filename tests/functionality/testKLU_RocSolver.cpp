@@ -15,22 +15,41 @@
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
-#include <resolve/LinSolverDirectRocSolverRf.hpp>
 #include <resolve/GramSchmidt.hpp>
 #include <resolve/LinSolverIterativeFGMRES.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 #include <resolve/utilities/params/CliOptions.hpp>
 
+#ifdef RESOLVE_USE_HIP
+#include <resolve/LinSolverDirectRocSolverRf.hpp>
+#endif
+
+#ifdef RESOLVE_USE_CUDA
+#include <resolve/LinSolverDirectRocSolverRf.hpp>
+#endif
+
 #include "TestHelper.hpp"
 
-
+template <class workspace_type>
 static int runTest(int argc, char *argv[]);
 
 int main(int argc, char *argv[])
 {
-  return runTest(argc, argv);
+  using namespace ReSolve;
+  int error_sum = 0;
+
+#ifdef RESOLVE_USE_HIP
+  error_sum += runTest<LinAlgWorkspaceHIP>(argc, argv);
+#endif
+
+#ifdef RESOLVE_USE_CUDA
+  error_sum += runTest<LinAlgWorkspaceCUDA>(argc, argv);
+#endif
+
+  return error_sum;
 }
 
+template <class workspace_type>
 int runTest(int argc, char *argv[])
 {
   std::string test_name("Test KLU with rocsolverRf");
@@ -49,9 +68,12 @@ int runTest(int argc, char *argv[])
   ReSolve::CliOptions options(argc, argv);
   ReSolve::CliOptions::Option* opt = nullptr;
 
+  // Get directory with input files
   opt = options.getParamFromKey("-d");
   std::string data_path = opt ? (*opt).second : "./";
 
+  // Change Rf solver mode (only for rocsolverRf)
+  // Mode 1 uses rocSPARSE triangular solver instead of rocSOLVER default
   int mode = 0;
   opt = options.getParamFromKey("-m");
   if (opt) {
@@ -59,17 +81,35 @@ int runTest(int argc, char *argv[])
     test_name += " (mode 1)";
   }
 
+  // // Select GLU or Rf solver (only for cusolverRf)
+  // // Possible options are `rf` and `glu`.
+  // std::string rf_solver;
+  // opt = options.getParamFromKey("-s");
+  // std::string rf_solver = opt ? (*opt).second : "glu";
+  // if (rf_solver != "glu" && rf_solver != "rf") {
+  //   std::cout << "Unrecognized refactorization solver " << rf_solver << " ...\n";
+  //   std::cout << "Possible options are 'rf' and 'glu'.\n";
+  //   std::cout << "Using default (glu) instead!\n";
+  //   rf_solver = "glu";
+  // }
+
+  // Whether to use iterative refinement
   opt = options.getParamFromKey("-i");
   bool is_ir = opt ? true : false;
 
   // Create workspace
-  ReSolve::LinAlgWorkspaceHIP workspace;
+  workspace_type workspace;
   workspace.initializeHandles();
 
   // Create direct solvers
   ReSolve::LinSolverDirectKLU KLU;
+#ifdef RESOLVE_USE_HIP
   ReSolve::LinSolverDirectRocSolverRf Rf(&workspace);
   Rf.setSolveMode(mode);
+#endif
+#ifdef RESOLVE_USE_CUDA
+  ReSolve::LinSolverDirectCuSolverRf Rf(&workspace); 
+#endif
 
   // Create iterative solver
   ReSolve::MatrixHandler matrix_handler(&workspace);
@@ -159,7 +199,7 @@ int runTest(int argc, char *argv[])
   }
 
   // Setup test helper
-  TestHelper<ReSolve::LinAlgWorkspaceHIP> th(A, &vec_rhs, &vec_x, workspace);
+  TestHelper<workspace_type> th(A, &vec_rhs, &vec_x, workspace);
 
   // Print result summary and check solution
   std::cout << "\nResults (first matrix): \n\n";
