@@ -50,12 +50,12 @@ namespace ReSolve
 
     auto* L_csc = static_cast<matrix::Csc*>(L);
     auto* U_csc = static_cast<matrix::Csc*>(U);
-    auto* L_csr = new ReSolve::matrix::Csr(L_csc->getNumRows(), L_csc->getNumColumns(), L_csc->getNnz());
-    auto* U_csr = new ReSolve::matrix::Csr(U_csc->getNumRows(), U_csc->getNumColumns(), U_csc->getNnz());
+    auto* L_csr = new matrix::Csr(L_csc->getNumRows(), L_csc->getNumColumns(), L_csc->getNnz());
+    auto* U_csr = new matrix::Csr(U_csc->getNumRows(), U_csc->getNumColumns(), U_csc->getNnz());
     csc2csr(L_csc, L_csr);
     csc2csr(U_csc, U_csr);
-    L_csr->syncData(ReSolve::memory::DEVICE);
-    U_csr->syncData(ReSolve::memory::DEVICE);
+    L_csr->syncData(memory::DEVICE);
+    U_csr->syncData(memory::DEVICE);
 
     if (d_P_ == nullptr){
       mem_.allocateArrayOnDevice(&d_P_, n);

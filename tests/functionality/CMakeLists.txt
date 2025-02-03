@@ -40,6 +40,10 @@ if(RESOLVE_USE_CUDA)
     add_executable(klu_glu_test.exe testKLU_GLU.cpp)
     target_link_libraries(klu_glu_test.exe PRIVATE ReSolve)
     
+    # Build KLU+Rf/GLU test
+    add_executable(klu_rfglu_test.exe testKLU_RocSolver.cpp)
+    target_link_libraries(klu_rfglu_test.exe PRIVATE ReSolve)
+    
     # System solver test with GLU
     add_executable(sys_glu_test.exe testSysGLU.cpp)
     target_link_libraries(sys_glu_test.exe PRIVATE ReSolve)
@@ -86,6 +90,7 @@ if(RESOLVE_USE_CUDA)
     list(APPEND installable_tests klu_rf_test.exe
                                   sys_refactor_cuda_test.exe
                                   klu_glu_test.exe
+                                  klu_rfglu_test.exe
                                   sys_glu_test.exe)
   endif()
   list(APPEND installable_tests rand_gmres_cuda_test.exe)
@@ -151,6 +156,9 @@ if(RESOLVE_USE_CUDA)
     add_test(NAME klu_rf_ir_test  COMMAND $<TARGET_FILE:klu_rf_test.exe> "-d" "${test_data_dir}" "-i")
     add_test(NAME sys_refactor_cuda_test COMMAND $<TARGET_FILE:sys_refactor_cuda_test.exe> "${test_data_dir}")
     add_test(NAME klu_glu_test COMMAND $<TARGET_FILE:klu_glu_test.exe> "${test_data_dir}")
+    add_test(NAME klu_rf_cuda_test COMMAND $<TARGET_FILE:klu_rfglu_test.exe> "-d" "${test_data_dir}")
+    add_test(NAME klu_rf_ir_cuda_test COMMAND $<TARGET_FILE:klu_rfglu_test.exe> "-d" "${test_data_dir}" "-i")
+    add_test(NAME klu_glu_cuda_test COMMAND $<TARGET_FILE:klu_rfglu_test.exe> "-d" "${test_data_dir}" "-s" "glu")
     add_test(NAME sys_glu_test COMMAND $<TARGET_FILE:sys_glu_test.exe> "${test_data_dir}")
   endif(RESOLVE_USE_KLU)
   add_test(NAME rand_gmres_cuda_test COMMAND $<TARGET_FILE:rand_gmres_cuda_test.exe>)

@@ -25,34 +25,54 @@
 #endif
 
 #ifdef RESOLVE_USE_CUDA
-#include <resolve/LinSolverDirectRocSolverRf.hpp>
+#include <resolve/LinSolverDirectCuSolverRf.hpp>
+#include <resolve/LinSolverDirectCuSolverGLU.hpp>
 #endif
 
 #include "TestHelper.hpp"
 
-template <class workspace_type>
-static int runTest(int argc, char *argv[]);
+template <class workspace_type, class solver_type>
+static int runTest(int argc, char *argv[], std::string& solver_name);
 
 int main(int argc, char *argv[])
 {
   using namespace ReSolve;
   int error_sum = 0;
 
+  ReSolve::CliOptions options(argc, argv);
+  ReSolve::CliOptions::Option* opt = nullptr;
+
 #ifdef RESOLVE_USE_HIP
-  error_sum += runTest<LinAlgWorkspaceHIP>(argc, argv);
+  std::string solver_name("rocsolverRf");
+  error_sum += runTest<LinAlgWorkspaceHIP, LinSolverDirectRocSolverRf>(argc, argv);
 #endif
 
 #ifdef RESOLVE_USE_CUDA
-  error_sum += runTest<LinAlgWorkspaceCUDA>(argc, argv);
+  opt = options.getParamFromKey("-s");
+  std::string rf_solver = opt ? (*opt).second : "rf";
+  if (rf_solver != "glu" && rf_solver != "rf") {
+    std::cout << "Unrecognized refactorization solver " << rf_solver << " ...\n";
+    std::cout << "Possible options are 'rf' and 'glu'.\n";
+    std::cout << "Using default (rf) instead!\n";
+    rf_solver = "rf";
+  }
+  if (rf_solver == "rf") {
+    std::string solver_name("cusolverRf");
+    error_sum += runTest<LinAlgWorkspaceCUDA, LinSolverDirectCuSolverRf>(argc, argv, solver_name);
+  } else {
+    std::string solver_name("cusolverGLU");
+    error_sum += runTest<LinAlgWorkspaceCUDA, LinSolverDirectCuSolverGLU>(argc, argv, solver_name);
+  }
 #endif
 
   return error_sum;
 }
 
-template <class workspace_type>
-int runTest(int argc, char *argv[])
+template <class workspace_type, class solver_type>
+int runTest(int argc, char *argv[], std::string& solver_name)
 {
-  std::string test_name("Test KLU with rocsolverRf");
+  std::string test_name("Test KLU with ");
+  test_name += solver_name;
 
   // Use ReSolve data types.
   using index_type = ReSolve::index_type;
@@ -83,7 +103,6 @@ int runTest(int argc, char *argv[])
 
   // // Select GLU or Rf solver (only for cusolverRf)
   // // Possible options are `rf` and `glu`.
-  // std::string rf_solver;
   // opt = options.getParamFromKey("-s");
   // std::string rf_solver = opt ? (*opt).second : "glu";
   // if (rf_solver != "glu" && rf_solver != "rf") {
@@ -103,13 +122,8 @@ int runTest(int argc, char *argv[])
 
   // Create direct solvers
   ReSolve::LinSolverDirectKLU KLU;
-#ifdef RESOLVE_USE_HIP
-  ReSolve::LinSolverDirectRocSolverRf Rf(&workspace);
-  Rf.setSolveMode(mode);
-#endif
-#ifdef RESOLVE_USE_CUDA
-  ReSolve::LinSolverDirectCuSolverRf Rf(&workspace); 
-#endif
+  solver_type Rf(&workspace);
+  // Rf.setSolveMode(mode);
 
   // Create iterative solver
   ReSolve::MatrixHandler matrix_handler(&workspace);
@@ -181,9 +195,11 @@ int runTest(int argc, char *argv[])
 
   status = Rf.refactorize();
   error_sum += status;
+  std::cout << "Rf refactorize status: " << status << std::endl;      
 
   status = Rf.solve(&vec_rhs, &vec_x);
   error_sum += status;
+  std::cout << "Rf solve status: " << status << std::endl;      
 
   if (is_ir) {
     test_name += " + IR";
