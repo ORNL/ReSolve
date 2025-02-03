@@ -39,15 +39,16 @@ int main(int argc, char *argv[])
   using namespace ReSolve;
   int error_sum = 0;
 
-  ReSolve::CliOptions options(argc, argv);
-  ReSolve::CliOptions::Option* opt = nullptr;
-
 #ifdef RESOLVE_USE_HIP
   std::string solver_name("rocsolverRf");
-  error_sum += runTest<LinAlgWorkspaceHIP, LinSolverDirectRocSolverRf>(argc, argv);
+  error_sum += runTest<LinAlgWorkspaceHIP,
+                       LinSolverDirectRocSolverRf>(argc, argv, solver_name);
 #endif
 
 #ifdef RESOLVE_USE_CUDA
+  ReSolve::CliOptions options(argc, argv);
+  ReSolve::CliOptions::Option* opt = nullptr;
+
   opt = options.getParamFromKey("-s");
   std::string rf_solver = opt ? (*opt).second : "rf";
   if (rf_solver != "glu" && rf_solver != "rf") {
@@ -58,10 +59,12 @@ int main(int argc, char *argv[])
   }
   if (rf_solver == "rf") {
     std::string solver_name("cusolverRf");
-    error_sum += runTest<LinAlgWorkspaceCUDA, LinSolverDirectCuSolverRf>(argc, argv, solver_name);
+    error_sum += runTest<LinAlgWorkspaceCUDA,
+                         LinSolverDirectCuSolverRf>(argc, argv, solver_name);
   } else {
     std::string solver_name("cusolverGLU");
-    error_sum += runTest<LinAlgWorkspaceCUDA, LinSolverDirectCuSolverGLU>(argc, argv, solver_name);
+    error_sum += runTest<LinAlgWorkspaceCUDA,
+                         LinSolverDirectCuSolverGLU>(argc, argv, solver_name);
   }
 #endif
 
@@ -100,17 +103,6 @@ int runTest(int argc, char *argv[], std::string& solver_name)
     mode = 1;
     test_name += " (mode 1)";
   }
-
-  // // Select GLU or Rf solver (only for cusolverRf)
-  // // Possible options are `rf` and `glu`.
-  // opt = options.getParamFromKey("-s");
-  // std::string rf_solver = opt ? (*opt).second : "glu";
-  // if (rf_solver != "glu" && rf_solver != "rf") {
-  //   std::cout << "Unrecognized refactorization solver " << rf_solver << " ...\n";
-  //   std::cout << "Possible options are 'rf' and 'glu'.\n";
-  //   std::cout << "Using default (glu) instead!\n";
-  //   rf_solver = "glu";
-  // }
 
   // Whether to use iterative refinement
   opt = options.getParamFromKey("-i");
