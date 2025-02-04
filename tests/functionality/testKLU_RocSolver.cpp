@@ -1,6 +1,7 @@
 /**
  * @file testKLU_RocSolver.cpp
  * @author Kasia Swirydowicz (kasia.swirydowicz@amd.com)
+ * @author Slaven Peles (peless@ornl.gov)
  * @brief Functionality test for rocsolver_rf.
  * 
  */
@@ -31,7 +32,7 @@
 
 #include "TestHelper.hpp"
 
-template <class workspace_type, class solver_type>
+template <class workspace_type, class refactorization_type>
 static int runTest(int argc, char *argv[], std::string& solver_name);
 
 int main(int argc, char *argv[])
@@ -71,7 +72,7 @@ int main(int argc, char *argv[])
   return error_sum;
 }
 
-template <class workspace_type, class solver_type>
+template <class workspace_type, class refactorization_type>
 int runTest(int argc, char *argv[], std::string& solver_name)
 {
   std::string test_name("Test KLU with ");
@@ -87,21 +88,25 @@ int runTest(int argc, char *argv[], std::string& solver_name)
   int error_sum = 0;
   int status = 0;
 
-  // Collect all CLI
+  // Collect all command line options
   ReSolve::CliOptions options(argc, argv);
   ReSolve::CliOptions::Option* opt = nullptr;
 
   // Get directory with input files
   opt = options.getParamFromKey("-d");
-  std::string data_path = opt ? (*opt).second : "./";
+  std::string data_path = opt ? (*opt).second : ".";
 
   // Change Rf solver mode (only for rocsolverRf)
-  // Mode 1 uses rocSPARSE triangular solver instead of rocSOLVER default
-  int mode = 0;
+  std::string mode("default");
   opt = options.getParamFromKey("-m");
   if (opt) {
-    mode = 1;
-    test_name += " (mode 1)";
+    if (opt->second != "default" && opt->second != "rocsparse_trisolve") {
+      std::cout << "Invalid rocSOLVER mode option.\n"
+                << "Available modes are 'default' and 'rocsparse_trisolve'.\n"
+                << "Setting mode to default ...\n";
+    } else {
+      mode = opt->second;
+    }
   }
 
   // Whether to use iterative refinement
@@ -114,8 +119,10 @@ int runTest(int argc, char *argv[], std::string& solver_name)
 
   // Create direct solvers
   ReSolve::LinSolverDirectKLU KLU;
-  solver_type Rf(&workspace);
-  // Rf.setSolveMode(mode);
+  refactorization_type Rf(&workspace);
+  if (solver_name == "rocsolverRf") {
+    Rf.setCliParam("solve_mode", mode);
+  }
 
   // Create iterative solver
   ReSolve::MatrixHandler matrix_handler(&workspace);
@@ -126,11 +133,11 @@ int runTest(int argc, char *argv[], std::string& solver_name)
   FGMRES.setRestart(100); 
 
 
-  std::string matrix_file_name_1 = data_path + "data/matrix_ACTIVSg200_AC_10.mtx";
-  std::string matrix_file_name_2 = data_path + "data/matrix_ACTIVSg200_AC_11.mtx";
+  std::string matrix_file_name_1 = data_path + "/data/matrix_ACTIVSg200_AC_10.mtx";
+  std::string matrix_file_name_2 = data_path + "/data/matrix_ACTIVSg200_AC_11.mtx";
 
-  std::string rhs_file_name_1 = data_path + "data/rhs_ACTIVSg200_AC_10.mtx.ones";
-  std::string rhs_file_name_2 = data_path + "data/rhs_ACTIVSg200_AC_11.mtx.ones";
+  std::string rhs_file_name_1 = data_path + "/data/rhs_ACTIVSg200_AC_10.mtx.ones";
+  std::string rhs_file_name_2 = data_path + "/data/rhs_ACTIVSg200_AC_11.mtx.ones";
 
   // Read first matrix
   std::ifstream mat1(matrix_file_name_1);
