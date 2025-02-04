@@ -17,10 +17,18 @@
 #include <resolve/matrix/io.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/VectorHandler.hpp>
-#include <resolve/LinSolverDirectCuSparseILU0.hpp>
+#include <resolve/LinSolverDirectCpuILU0.hpp>
 #include <resolve/LinSolverIterativeRandFGMRES.hpp>
 #include <resolve/GramSchmidt.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
+
+#ifdef RESOLVE_USE_CUDA
+#include <resolve/LinSolverDirectCuSparseILU0.hpp>
+#endif
+
+#ifdef RESOLVE_USE_HIP
+#include <resolve/LinSolverDirectRocSparseILU0.hpp>
+#endif
 
 using namespace ReSolve::constants;
 using namespace ReSolve::colors;
@@ -28,35 +36,64 @@ using real_type  = ReSolve::real_type;
 using index_type  = ReSolve::index_type;
 using vector_type = ReSolve::vector::Vector;
 
-static ReSolve::matrix::Csr* generateMatrix(const index_type N);
-static ReSolve::vector::Vector* generateRhs(const index_type N);
+static ReSolve::matrix::Csr* generateMatrix(const index_type N, ReSolve::memory::MemorySpace memspace);
+static ReSolve::vector::Vector* generateRhs(const index_type N, ReSolve::memory::MemorySpace memspace);
+
+template <class workspace_type, class preconditioner_type>
+static int runTest(int argc, char *argv[], std::string solver_name);
 
 int main(int argc, char *argv[])
 {
   int error_sum = 0; // If error sum is 0, test passes; fails otherwise
+
+  error_sum += runTest<ReSolve::LinAlgWorkspaceCpu,
+                       ReSolve::LinSolverDirectCpuILU0>(argc, argv, "CPU");
+ 
+#ifdef RESOLVE_USE_CUDA
+  error_sum += runTest<ReSolve::LinAlgWorkspaceCUDA,
+                       ReSolve::LinSolverDirectCuSparseILU0>(argc, argv, "CUDA");
+#endif
+
+#ifdef RESOLVE_USE_HIP
+  error_sum += runTest<ReSolve::LinAlgWorkspaceHIP,
+                       ReSolve::LinSolverDirectRocSparseILU0>(argc, argv, "HIP");
+#endif
+
+  return error_sum;
+}
+
+template <class workspace_type, class preconditioner_type>
+int runTest(int argc, char *argv[], std::string solver_name)
+{
+  int error_sum = 0; // If error sum is 0, test passes; fails otherwise
   int status;
 
-  const index_type N = (argc == 2) ? atoi(argv[1]) : 10000;
-  ReSolve::matrix::Csr* A = generateMatrix(N);
-  vector_type* vec_rhs = generateRhs(N);
+  ReSolve::memory::MemorySpace memspace = ReSolve::memory::DEVICE;
+  if (solver_name == "CPU") {
+    memspace = ReSolve::memory::HOST;
+  }
 
-  ReSolve::LinAlgWorkspaceCUDA* workspace_CUDA = new ReSolve::LinAlgWorkspaceCUDA();
-  workspace_CUDA->initializeHandles();
-  ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(workspace_CUDA);
-  ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(workspace_CUDA);
+  const index_type N = (argc == 2) ? atoi(argv[1]) : 10000;
+  ReSolve::matrix::Csr* A = generateMatrix(N, memspace);
+  vector_type* vec_rhs = generateRhs(N, memspace);
+
+  workspace_type* workspace = new workspace_type();
+  workspace->initializeHandles();
+  ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(workspace);
+  ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(workspace);
 
   ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::CGS2);
 
-  auto* Rf = new ReSolve::LinSolverDirectCuSparseILU0(workspace_CUDA);
+  preconditioner_type* Rf = new preconditioner_type(workspace);
   auto* FGMRES = new ReSolve::LinSolverIterativeRandFGMRES(matrix_handler, vector_handler, ReSolve::LinSolverIterativeRandFGMRES::cs, GS);
 
   vector_type* vec_x = new vector_type(A->getNumRows());
   vec_x->allocate(ReSolve::memory::HOST);
-  vec_x->allocate(ReSolve::memory::DEVICE);
-  vec_x->setToZero(ReSolve::memory::DEVICE);
+  vec_x->allocate(memspace);
+  vec_x->setToZero(memspace);
 
   real_type norm_b;
-  matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
+  matrix_handler->setValuesChanged(true, memspace);
 
   real_type tol = 1e-12;
 
@@ -80,10 +117,12 @@ int main(int argc, char *argv[])
   status = FGMRES->solve(vec_rhs, vec_x);
   error_sum += status;
 
-  norm_b = vector_handler->dot(vec_rhs, vec_rhs, ReSolve::memory::DEVICE);
+  norm_b = vector_handler->dot(vec_rhs, vec_rhs, memspace);
   norm_b = std::sqrt(norm_b);
   real_type final_norm_first =  FGMRES->getFinalResidualNorm();
   std::cout << "Randomized FGMRES results (first run): \n"
+            << "\t Hardware backend:                                    : "
+            << solver_name << "\n" 
             << "\t Sketching method:                                    : CountSketch\n" 
             << "\t Initial residual norm:          ||b-Ax_0||_2         : " 
             << std::scientific << std::setprecision(16) 
@@ -105,12 +144,14 @@ int main(int argc, char *argv[])
   FGMRES->setTol(tol);
   FGMRES->resetMatrix(A);
 
-  vec_x->setToZero(ReSolve::memory::DEVICE);
+  vec_x->setToZero(memspace);
   status = FGMRES->solve(vec_rhs, vec_x);
   error_sum += status;
 
   real_type final_norm_second = FGMRES->getFinalResidualNorm();
   std::cout << "Randomized FGMRES results (second run): \n"
+            << "\t Hardware backend:                                    : "
+            << solver_name << "\n" 
             << "\t Sketching method:                                    : FWHT\n" 
             << "\t Initial residual norm:          ||b-Ax_0||_2         : " 
             << std::scientific << std::setprecision(16) 
@@ -145,17 +186,17 @@ int main(int argc, char *argv[])
   delete GS;
   delete matrix_handler;
   delete vector_handler;
-  delete workspace_CUDA;
+  delete workspace;
 
   return error_sum;
 }
 
 
-ReSolve::vector::Vector* generateRhs(const index_type N)
+ReSolve::vector::Vector* generateRhs(const index_type N, 
+                                     ReSolve::memory::MemorySpace memspace)
 {
   vector_type* vec_rhs = new vector_type(N);
   vec_rhs->allocate(ReSolve::memory::HOST);
-  vec_rhs->allocate(ReSolve::memory::DEVICE);
 
   real_type* data = vec_rhs->getData(ReSolve::memory::HOST);
   for (int i = 0; i < N; ++i) {
@@ -167,11 +208,14 @@ ReSolve::vector::Vector* generateRhs(const index_type N)
     }
   }
   vec_rhs->setDataUpdated(ReSolve::memory::HOST);
-  vec_rhs->syncData(ReSolve::memory::DEVICE);
+  if (memspace != ReSolve::memory::HOST) {
+    vec_rhs->syncData(memspace);
+  }
   return vec_rhs;
 } 
 
-ReSolve::matrix::Csr* generateMatrix(const index_type N)
+ReSolve::matrix::Csr* generateMatrix(const index_type N, 
+                                     ReSolve::memory::MemorySpace memspace)
 {
   std::vector<real_type> r1 = {1., 5., 7., 8., 3., 2., 4.}; // sum 30
   std::vector<real_type> r2 = {1., 3., 2., 2., 1., 6., 7., 3., 2., 3.}; // sum 30
@@ -181,8 +225,6 @@ ReSolve::matrix::Csr* generateMatrix(const index_type N)
 
 
   const std::vector<std::vector<real_type> > data = {r1, r2, r3, r4, r5};
-
-  // std::cout << N << "\n";
 
   // First compute number of nonzeros
   index_type NNZ = 0;
@@ -230,6 +272,8 @@ ReSolve::matrix::Csr* generateMatrix(const index_type N)
 
 
   A->setUpdated(ReSolve::memory::HOST);
-  A->syncData(ReSolve::memory::DEVICE);
+  if (memspace != ReSolve::memory::HOST) {
+    A->syncData(memspace);
+  }
   return A;
 }
