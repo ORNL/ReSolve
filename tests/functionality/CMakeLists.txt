@@ -16,7 +16,7 @@ target_link_libraries(sys_rand_gmres_test.exe PRIVATE ReSolve)
 
 if(RESOLVE_USE_KLU)
   # Build KLU+KLU test
-  add_executable(klu_klu_test.exe testKLU.cpp)
+  add_executable(klu_klu_test.exe klu_klu_test.cpp) #testKLU.cpp)
   target_link_libraries(klu_klu_test.exe PRIVATE ReSolve)
 endif(RESOLVE_USE_KLU)
 
@@ -115,7 +115,8 @@ set(test_data_dir ${CMAKE_SOURCE_DIR}/tests/functionality/)
 add_test(NAME version COMMAND $<TARGET_FILE:version.exe> "${test_data_dir}")
 
 if(RESOLVE_USE_KLU)
-  add_test(NAME klu_klu_test COMMAND $<TARGET_FILE:klu_klu_test.exe> "${test_data_dir}")
+  add_test(NAME klu_klu_test    COMMAND $<TARGET_FILE:klu_klu_test.exe> "${test_data_dir}" "-d" "${test_data_dir}")
+  add_test(NAME klu_klu_ir_test COMMAND $<TARGET_FILE:klu_klu_test.exe> "${test_data_dir}" "-d" "${test_data_dir}" "-i")
 endif()
 
 if(RESOLVE_USE_LUSOL)
