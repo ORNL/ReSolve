@@ -27,15 +27,32 @@ class TestHelper
 {    
   public:
     /**
-     * @brief Test Helper constructor
+     * @brief Default constructor
+     * 
+     * Initializes matrix and vector handlers.
+     * 
+     * @param[in,out] workspace - workspace for matrix and vector handlers
+     */
+    TestHelper(workspace_type& workspace)
+      : mh_(&workspace),
+        vh_(&workspace)
+    {
+      if (mh_.getIsCudaEnabled() || mh_.getIsHipEnabled()) {
+        memspace_ = ReSolve::memory::DEVICE;
+      }
+    }
+
+    /**
+     * @brief TestHelper constructor
      * 
      * @param A 
      * @param r 
      * @param x 
-     * @param workspace
+     * @param[in,out] workspace - workspace for matrix and vector handlers
      * 
      * @pre The linear solver has solved system A * x = r.
      * @pre A, r, and x are all in the same memory space as the workspace.
+     * @pre Workspace handles are initialized
      */
     TestHelper(ReSolve::matrix::Sparse* A,
                ReSolve::vector::Vector* r,
@@ -46,8 +63,8 @@ class TestHelper
         x_(x),
         mh_(&workspace),
         vh_(&workspace),
-        res_(A->getNumRows()),
-        x_true_(A->getNumRows())
+        res_(new ReSolve::vector::Vector(A->getNumRows())),
+        x_true_(new ReSolve::vector::Vector(A->getNumRows()))
     {
       if (mh_.getIsCudaEnabled() || mh_.getIsHipEnabled()) {
         memspace_ = ReSolve::memory::DEVICE;
@@ -60,6 +77,20 @@ class TestHelper
     ~TestHelper()
     {
       // empty
+    }
+
+    void setSystem(ReSolve::matrix::Sparse* A,
+                   ReSolve::vector::Vector* r,
+                   ReSolve::vector::Vector* x)
+    {
+      assert((res_ == nullptr) && (x_true_ == nullptr));
+      A_ = A;
+      r_ = r;
+      x_ = x;
+      res_ = new ReSolve::vector::Vector(A->getNumRows());
+      x_true_ = new ReSolve::vector::Vector(A->getNumRows());
+      setSolutionVector();
+      computeNorms();
     }
 
     void resetSystem(ReSolve::matrix::Sparse* A,
@@ -154,35 +185,35 @@ class TestHelper
       }
 
       // Compute rs and residual norms
-      res_.copyDataFrom(r_, memspace_, memspace_);
+      res_->copyDataFrom(r_, memspace_, memspace_);
       norm_rhs_ = norm2(*r_, memspace_);
-      norm_res_ = computeResidualNorm(*A_, *x_, res_, memspace_);
+      norm_res_ = computeResidualNorm(*A_, *x_, *res_, memspace_);
 
       // Compute residual norm w.r.t. true solution
-      res_.copyDataFrom(r_, memspace_, memspace_);
-      norm_res_true_ = computeResidualNorm(*A_, x_true_, res_, memspace_);
+      res_->copyDataFrom(r_, memspace_, memspace_);
+      norm_res_true_ = computeResidualNorm(*A_, *x_true_, *res_, memspace_);
 
       // Compute residual norm on CPU
       if (memspace_ == ReSolve::memory::DEVICE) {
         A_->syncData(ReSolve::memory::HOST);
         r_->syncData(ReSolve::memory::HOST);
         x_->syncData(ReSolve::memory::HOST);
-        res_.copyDataFrom(r_, memspace_, ReSolve::memory::HOST);
-        norm_res_cpu_ = computeResidualNorm(*A_, *x_, res_, ReSolve::memory::HOST);
+        res_->copyDataFrom(r_, memspace_, ReSolve::memory::HOST);
+        norm_res_cpu_ = computeResidualNorm(*A_, *x_, *res_, ReSolve::memory::HOST);
       }
 
       // Compute vector difference norm
-      res_.copyDataFrom(x_, memspace_, memspace_);
-      norm_diff_ = computeDiffNorm(x_true_, res_, memspace_);
+      res_->copyDataFrom(x_, memspace_, memspace_);
+      norm_diff_ = computeDiffNorm(*x_true_, *res_, memspace_);
     }
 
     void setSolutionVector()
     {
-      x_true_.allocate(memspace_);
-      x_true_.setToConst(static_cast<ReSolve::real_type>(1.0), memspace_);
-      x_true_.setDataUpdated(memspace_);
-      x_true_.syncData(ReSolve::memory::HOST);
-      norm_true_ = norm2(x_true_, memspace_);
+      x_true_->allocate(memspace_);
+      x_true_->setToConst(static_cast<ReSolve::real_type>(1.0), memspace_);
+      x_true_->setDataUpdated(memspace_);
+      x_true_->syncData(ReSolve::memory::HOST);
+      norm_true_ = norm2(*x_true_, memspace_);
       solution_set_ = true;
     }
 
@@ -241,8 +272,8 @@ class TestHelper
     ReSolve::MatrixHandler mh_;
     ReSolve::VectorHandler vh_;
 
-    ReSolve::vector::Vector res_;
-    ReSolve::vector::Vector x_true_;
+    ReSolve::vector::Vector* res_{nullptr};
+    ReSolve::vector::Vector* x_true_{nullptr};
 
     ReSolve::real_type norm_rhs_{0.0};
     ReSolve::real_type norm_res_{0.0};

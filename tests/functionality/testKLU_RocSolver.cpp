@@ -117,6 +117,9 @@ int runTest(int argc, char *argv[], std::string& solver_name)
   workspace_type workspace;
   workspace.initializeHandles();
 
+  // Create test helper
+  TestHelper<workspace_type> th(workspace);
+
   // Create direct solvers
   ReSolve::LinSolverDirectKLU KLU;
   refactorization_type Rf(&workspace);
@@ -129,10 +132,8 @@ int runTest(int argc, char *argv[], std::string& solver_name)
   ReSolve::VectorHandler vector_handler(&workspace);
   ReSolve::GramSchmidt GS(&vector_handler, ReSolve::GramSchmidt::CGS2);
   ReSolve::LinSolverIterativeFGMRES FGMRES(&matrix_handler, &vector_handler, &GS);
-  FGMRES.setMaxit(200); 
-  FGMRES.setRestart(100); 
 
-
+  // Input data
   std::string matrix_file_name_1 = data_path + "/data/matrix_ACTIVSg200_AC_10.mtx";
   std::string matrix_file_name_2 = data_path + "/data/matrix_ACTIVSg200_AC_11.mtx";
 
@@ -180,9 +181,6 @@ int runTest(int argc, char *argv[], std::string& solver_name)
 
   std::cout << "KLU factorize status: " << status <<std::endl;      
 
-  // status = KLU.solve(&vec_rhs, &vec_x);
-  // error_sum += status;
-
   matrix_type* L = KLU.getLFactor();
   matrix_type* U = KLU.getUFactor();
   index_type* P = KLU.getPOrdering();
@@ -213,8 +211,8 @@ int runTest(int argc, char *argv[], std::string& solver_name)
     error_sum += status;
   }
 
-  // Setup test helper
-  TestHelper<workspace_type> th(A, &vec_rhs, &vec_x, workspace);
+  // Compute error norms for the system
+  th.setSystem(A, &vec_rhs, &vec_x);
 
   // Print result summary and check solution
   std::cout << "\nResults (first matrix): \n\n";
