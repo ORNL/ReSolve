@@ -154,10 +154,20 @@ class TestHelper
 
     void printIrSummary(ReSolve::LinSolverIterative* ls)
     {
+      std::cout << std::setprecision(16) << std::scientific;
       std::cout << "\t IR iterations                                   : " << ls->getNumIter() << "\n";
       std::cout << "\t IR initial residual norm ||b-A*x||              : " << ls->getInitResidualNorm() << "\n";
-      // std::cout<<"\t IR initial relative residual norm ||b-A*x||/||b|| : " << ls->getInitResidualNorm() << "\n";
       std::cout << "\t IR final residual norm   ||b-A*x||              : " << ls->getFinalResidualNorm() << "\n";
+    }
+
+    void printIterativeSolverSummary(ReSolve::LinSolverIterative* ls)
+    {
+      std::cout << std::setprecision(16) << std::scientific;
+      std::cout << "\t IR initial residual norm          ||b-A*x||       : " << ls->getInitResidualNorm() << "\n";
+      std::cout << "\t IR initial relative residual norm ||b-A*x||/||b|| : " << ls->getInitResidualNorm()/norm_rhs_ << "\n";
+      std::cout << "\t IR final residual norm            ||b-A*x||       : " << ls->getFinalResidualNorm() << "\n";
+      std::cout << "\t IR final relative residual norm   ||b-A*x||/||b|| : " << ls->getFinalResidualNorm()/norm_rhs_ << "\n";
+      std::cout << "\t IR iterations                                     : " << ls->getNumIter() << "\n";
     }
 
     int checkResult(ReSolve::real_type tolerance)

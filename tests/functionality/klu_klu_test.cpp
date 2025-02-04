@@ -45,10 +45,8 @@ int runTest(int argc, char *argv[], std::string& solver_name)
   test_name += solver_name;
 
   // Use ReSolve data types.
-  using index_type = ReSolve::index_type;
   using real_type  = ReSolve::real_type;
   using vector_type = ReSolve::vector::Vector;
-  using matrix_type = ReSolve::matrix::Sparse;
 
   // Error sum needs to be zero at the end for test to pass.
   int error_sum = 0;
