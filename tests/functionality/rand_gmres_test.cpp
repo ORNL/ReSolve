@@ -164,7 +164,7 @@ int runTest(int argc, char *argv[], std::string solver_name)
             << FGMRES->getFinalResidualNorm()/norm_b <<" \n"
             << "\t Number of iterations                                 : " << FGMRES->getNumIter() << "\n";
 
-  if (!isfinite(final_norm_first) || !isfinite(final_norm_second)) {
+  if (!std::isfinite(final_norm_first) || !std::isfinite(final_norm_second)) {
     std::cout << "Result is not a finite number!\n";
     error_sum++;
   }
