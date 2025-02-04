@@ -33,18 +33,10 @@ endif()
 if(RESOLVE_USE_CUDA)
         
   if(RESOLVE_USE_KLU)
-    # Build KLU+Rf test
-    # add_executable(klu_rf_test.exe testKLU_cusolverRf.cpp)
-    # target_link_libraries(klu_rf_test.exe PRIVATE ReSolve)
-
     # System solver test with cusolver rf and iterative refinement
     add_executable(sys_refactor_cuda_test.exe testSysRefactor.cpp)
     target_link_libraries(sys_refactor_cuda_test.exe PRIVATE ReSolve)
 
-    # Build KLU+GLU test
-    add_executable(klu_glu_test.exe testKLU_GLU.cpp)
-    target_link_libraries(klu_glu_test.exe PRIVATE ReSolve)
-    
     # System solver test with GLU
     add_executable(sys_glu_test.exe testSysGLU.cpp)
     target_link_libraries(sys_glu_test.exe PRIVATE ReSolve)
@@ -88,8 +80,6 @@ endif()
 if(RESOLVE_USE_CUDA)
   if(RESOLVE_USE_KLU)
     list(APPEND installable_tests sys_refactor_cuda_test.exe
-                                  klu_glu_test.exe
-                                  #klu_rfglu_test.exe
                                   sys_glu_test.exe)
   endif()
   list(APPEND installable_tests rand_gmres_cuda_test.exe)
@@ -112,6 +102,7 @@ set(test_data_dir ${CMAKE_SOURCE_DIR}/tests/functionality/)
 
 add_test(NAME version COMMAND $<TARGET_FILE:version.exe> "${test_data_dir}")
 
+# Test with KLU as refactoring solver
 if(RESOLVE_USE_KLU)
   add_test(NAME klu_klu_test    COMMAND $<TARGET_FILE:klu_klu_test.exe> "${test_data_dir}" "-d" "${test_data_dir}")
   add_test(NAME klu_klu_ir_test COMMAND $<TARGET_FILE:klu_klu_test.exe> "${test_data_dir}" "-d" "${test_data_dir}" "-i")
@@ -149,12 +140,10 @@ add_test(NAME sys_gmres_MGS_test      COMMAND $<TARGET_FILE:sys_rand_gmres_test.
 add_test(NAME sys_gmres_MGS2sync_test COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-x" "no" "-i" "fgmres" "-g" "MGS_TWO_SYNC")
 add_test(NAME sys_gmres_MGSpm_test    COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-x" "no" "-i" "fgmres" "-g" "MGS_PM")
 
+# CUDA-SDK specific tests
 if(RESOLVE_USE_CUDA)
   if(RESOLVE_USE_KLU)
-    # add_test(NAME klu_rf_test    COMMAND $<TARGET_FILE:klu_rf_test.exe> "-d" "${test_data_dir}")
-    # add_test(NAME klu_rf_ir_test COMMAND $<TARGET_FILE:klu_rf_test.exe> "-d" "${test_data_dir}" "-i")
     add_test(NAME sys_refactor_cuda_test COMMAND $<TARGET_FILE:sys_refactor_cuda_test.exe> "${test_data_dir}")
-    add_test(NAME klu_glu_test COMMAND $<TARGET_FILE:klu_glu_test.exe> "${test_data_dir}")
     add_test(NAME klu_rf_cuda_test    COMMAND $<TARGET_FILE:klu_rf_test.exe> "-d" "${test_data_dir}")
     add_test(NAME klu_rf_ir_cuda_test COMMAND $<TARGET_FILE:klu_rf_test.exe> "-d" "${test_data_dir}" "-i")
     add_test(NAME klu_glu_cuda_test   COMMAND $<TARGET_FILE:klu_rf_test.exe> "-d" "${test_data_dir}" "-s" "glu")
@@ -163,6 +152,7 @@ if(RESOLVE_USE_CUDA)
   add_test(NAME rand_gmres_cuda_test COMMAND $<TARGET_FILE:rand_gmres_cuda_test.exe>)
 endif(RESOLVE_USE_CUDA)
 
+# ROCm specific tests
 if(RESOLVE_USE_HIP)
   if(RESOLVE_USE_KLU)
     add_test(NAME rocsolver_rf_test       COMMAND $<TARGET_FILE:klu_rf_test.exe> "-d" "${test_data_dir}")

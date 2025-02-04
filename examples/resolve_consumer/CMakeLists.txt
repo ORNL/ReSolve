@@ -18,4 +18,4 @@ target_link_libraries(consume.exe PRIVATE ReSolve::ReSolve)
 enable_testing()
 
 # RESOLVE_DATA is set in test.sh and is the file path the matrix data files used in the testKLU_Rf_FGMRES
-add_test(NAME resolve_consumer COMMAND $<TARGET_FILE:consume.exe> "${RESOLVE_DATA}")
+add_test(NAME resolve_consumer COMMAND $<TARGET_FILE:consume.exe> "-d" "${RESOLVE_DATA}" "-i")

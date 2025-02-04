@@ -10,6 +10,7 @@ add_subdirectory(utilities)
 
 # C++ files
 set(ReSolve_SRC
+    Common.hpp
     LinSolver.cpp
     LinSolverDirect.cpp
     LinSolverIterative.cpp
@@ -175,4 +176,8 @@ install(TARGETS ReSolve
         LIBRARY DESTINATION lib)
 
 # install include headers
-install(FILES ${ReSolve_HEADER_INSTALL} DESTINATION include/resolve)
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/resolve/ # source directory
+        DESTINATION include/resolve # target directory
+        FILES_MATCHING # install only matched files
+        PATTERN "*.hpp" # select header files
+)
