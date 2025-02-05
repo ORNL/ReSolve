@@ -401,7 +401,8 @@ public:
     std::istringstream file(general_vector_file_);
 
     // For now let's test only the case when `updateArrayFromFile` does not allocate rhs
-    vector::Vector vec_rhs(general_vector_vals_.size());
+    index_type N = static_cast<index_type>(general_vector_vals_.size());
+    vector::Vector vec_rhs(N);
     vec_rhs.allocate(memory::HOST);
 
     // Update vector vec_rhs with data from the matrix market file

@@ -303,7 +303,7 @@ namespace ReSolve
    * @param id - string ID for parameter to get.
    * @return int Value of the int parameter to return.
    */
-  int LinSolverDirectRocSparseILU0::setCliParam(const std::string id, const std::string value)
+  int LinSolverDirectRocSparseILU0::setCliParam(const std::string id, const std::string /* value */)
   {
     switch (getParamId(id))
     {

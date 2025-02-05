@@ -23,25 +23,36 @@
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 #include <resolve/SystemSolver.hpp>
 
-#if defined (RESOLVE_USE_CUDA)
+#ifdef RESOLVE_USE_CUDA
 #include <resolve/LinSolverDirectCuSolverRf.hpp>
-  using workspace_type = ReSolve::LinAlgWorkspaceCUDA;
-  std::string memory_space("cuda");
-#elif defined (RESOLVE_USE_HIP)
+#endif
+
+#ifdef RESOLVE_USE_HIP
 #include <resolve/LinSolverDirectRocSolverRf.hpp>
-  using workspace_type = ReSolve::LinAlgWorkspaceHIP;
-  std::string memory_space("hip");
-#else
-  using workspace_type = ReSolve::LinAlgWorkspaceCpu;
-  std::string memory_space("cpu");
 #endif
 
 #include "TestHelper.hpp"
 
-using namespace ReSolve::constants;
-using namespace ReSolve::colors;
+template <class workspace_type>
+static int runTest(int argc, char *argv[], std::string memspace);
 
 int main(int argc, char *argv[])
+{
+  int error_sum = 0;
+
+#ifdef RESOLVE_USE_CUDA
+  error_sum += runTest<ReSolve::LinAlgWorkspaceCUDA>(argc, argv, "cuda");
+#endif
+
+#ifdef RESOLVE_USE_HIP
+  error_sum += runTest<ReSolve::LinAlgWorkspaceHIP>(argc, argv, "hip");
+#endif
+
+  return error_sum;
+}
+
+template <class workspace_type>
+static int runTest(int argc, char *argv[], std::string memory_space)
 {
   // Use ReSolve data types.
   using real_type   = ReSolve::real_type;
@@ -60,12 +71,21 @@ int main(int argc, char *argv[])
   // Create test helper
   TestHelper<workspace_type> th(workspace);
 
-  // Create linear algebra handlers
-  ReSolve::MatrixHandler matrix_handler(&workspace);
-  ReSolve::VectorHandler vector_handler(&workspace);
-
   // Create system solver
-  ReSolve::SystemSolver solver(&workspace);
+  std::string refactor("none");
+  if (memory_space == "cuda") {
+    refactor = "cusolverrf";
+  } else if (memory_space == "hip") {
+    refactor = "rocsolverrf";
+  } else {
+    refactor = "klu";
+  }
+  ReSolve::SystemSolver solver(&workspace,
+                               "klu",    // factorization
+                               refactor, // refactorization
+                               refactor, // triangular solve
+                               "none",   // preconditioner (always 'none' here)
+                               "none");  // iterative refinement
 
   // Configure solver (CUDA-based solver needs slightly different
   // settings than HIP-based one)
