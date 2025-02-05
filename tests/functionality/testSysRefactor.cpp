@@ -40,6 +40,7 @@ int main(int argc, char *argv[])
 {
   int error_sum = 0;
 
+  // Refactorization on CPU not currently supported in SystemSolver class
   // error_sum += runTest<ReSolve::LinAlgWorkspaceCpu>(argc, argv, "cpu");
 
 #ifdef RESOLVE_USE_CUDA
@@ -77,7 +78,7 @@ static int runTest(int argc, char *argv[], std::string backend)
   workspace.initializeHandles();
 
   // Create test helper
-  TestHelper<workspace_type> th(workspace);
+  TestHelper<workspace_type> helper(workspace);
 
   // Create system solver
   std::string refactor("none");
@@ -97,17 +98,15 @@ static int runTest(int argc, char *argv[], std::string backend)
 
   // Configure solver (CUDA-based solver needs slightly different
   // settings than HIP-based one)
-  // if (backend != "cpu") {
-    solver.setRefinementMethod("fgmres", "CGS2");
-    solver.getIterativeSolver().setCliParam("restart", "100");
-    if (backend == "hip") {
-      solver.getIterativeSolver().setMaxit(200);
-    }
-    if (backend == "cuda") {
-      solver.getIterativeSolver().setMaxit(400);
-      solver.getIterativeSolver().setTol(1e-17);
-    }
-  // }
+  solver.setRefinementMethod("fgmres", "CGS2");
+  solver.getIterativeSolver().setCliParam("restart", "100");
+  if (backend == "hip") {
+    solver.getIterativeSolver().setMaxit(200);
+  }
+  if (backend == "cuda") {
+    solver.getIterativeSolver().setMaxit(400);
+    solver.getIterativeSolver().setTol(1e-17);
+  }
 
   // Input to this code is location of `data` directory where matrix files are stored
   const std::string data_path = (argc == 2) ? argv[1] : ".";
@@ -139,20 +138,16 @@ static int runTest(int argc, char *argv[], std::string backend)
   real_type* rhs = ReSolve::io::createArrayFromFile(rhs1_file);
   rhs1_file.close();
 
-  // Create rhs, solution and residual vectors
-  vector_type* vec_rhs = new vector_type(A->getNumRows());
-  vector_type* vec_x   = new vector_type(A->getNumRows());
-  vector_type* vec_r   = new vector_type(A->getNumRows());
+  // Create and set residual vector
+  vector_type vec_rhs = (A->getNumRows());
+  vec_rhs.copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
 
-  // Allocate solution vector
+  // Create and allocate solution vector
+  vector_type vec_x(A->getNumRows());
   if (memspace != memory::HOST) {
-    vec_x->allocate(ReSolve::memory::HOST);  //for KLU
+    vec_x.allocate(ReSolve::memory::HOST);  //for KLU
   }
-  vec_x->allocate(memspace);
-
-  // Set RHS vector on CPU (copyDataFrom function allocates)
-  vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
-  vec_rhs->setDataUpdated(ReSolve::memory::HOST);
+  vec_x.allocate(memspace);
 
   // Add system matrix to the solver
   status = solver.setMatrix(A);
@@ -165,26 +160,24 @@ static int runTest(int argc, char *argv[], std::string backend)
   status = solver.factorize();
   error_sum += status;
 
-  status = solver.solve(vec_rhs, vec_x);
+  status = solver.solve(&vec_rhs, &vec_x);
   error_sum += status;
 
   // Compute error norms for the system
-  th.setSystem(A, vec_rhs, vec_x);
+  helper.setSystem(A, &vec_rhs, &vec_x);
 
   // Print result summary and check solution
   std::cout << "\nResults (first matrix): \n\n";
-  th.printSummary();
-  // th.printIrSummary(&(solver.getIterativeSolver()));
-  error_sum += th.checkResult(1e-12);
+  helper.printSummary();
+  error_sum += helper.checkResult(1e-12);
 
   // Verify norm of scaled residuals calculation in SystemSolver class
-  real_type nsr_system = solver.getNormOfScaledResiduals(vec_rhs, vec_x);
-  error_sum += th.checkNormOfScaledResiduals(nsr_system);
+  real_type nsr_system = solver.getNormOfScaledResiduals(&vec_rhs, &vec_x);
+  error_sum += helper.checkNormOfScaledResiduals(nsr_system);
 
   // Verify relative residual norm computation in SystemSolver
-  real_type rel_residual_norm = solver.getResidualNorm(vec_rhs, vec_x);
-  error_sum += th.checkRelativeResidualNorm(rel_residual_norm);
-
+  real_type rel_residual_norm = solver.getResidualNorm(&vec_rhs, &vec_x);
+  error_sum += helper.checkRelativeResidualNorm(rel_residual_norm);
 
   // Now prepare the Rf solver
   status = solver.refactorizationSetup();
@@ -211,32 +204,32 @@ static int runTest(int argc, char *argv[], std::string backend)
   ReSolve::io::updateArrayFromFile(rhs2_file, &rhs);
   rhs2_file.close();
 
-  vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, memspace);
+  vec_rhs.copyDataFrom(rhs, ReSolve::memory::HOST, memspace);
 
+  // Refactorize matrix
   status = solver.refactorize();
   error_sum += status;
-  std::cout << "Refactorization status: " << status << "\n";
   
-  vec_x->copyDataFrom(rhs, ReSolve::memory::HOST, memspace);
-  status = solver.solve(vec_rhs, vec_x);
+  // Solve system
+  status = solver.solve(&vec_rhs, &vec_x);
   error_sum += status;
   
   // Compute error norms for the system
-  th.resetSystem(A, vec_rhs, vec_x);
+  helper.resetSystem(A, &vec_rhs, &vec_x);
 
   // Print result summary and check solution
   std::cout << "\nResults (second matrix): \n\n";
-  th.printSummary();
-  th.printIrSummary(&(solver.getIterativeSolver()));
-  error_sum += th.checkResult(1e-15); // Why does test not pass with 1e-16?
+  helper.printSummary();
+  helper.printIrSummary(&(solver.getIterativeSolver()));
+  error_sum += helper.checkResult(1e-15); // Why does test not pass with 1e-16?
 
   // Verify norm of scaled residuals calculation in SystemSolver class
-  nsr_system = solver.getNormOfScaledResiduals(vec_rhs, vec_x);
-  error_sum += th.checkNormOfScaledResiduals(nsr_system);
+  nsr_system = solver.getNormOfScaledResiduals(&vec_rhs, &vec_x);
+  error_sum += helper.checkNormOfScaledResiduals(nsr_system);
 
   // Verify relative residual norm computation in SystemSolver
-  rel_residual_norm = solver.getResidualNorm(vec_rhs, vec_x);
-  error_sum += th.checkRelativeResidualNorm(rel_residual_norm);
+  rel_residual_norm = solver.getResidualNorm(&vec_rhs, &vec_x);
+  error_sum += helper.checkRelativeResidualNorm(rel_residual_norm);
  
   // Add one output specific to GMRES
   index_type restart = solver.getIterativeSolver().getCliParamInt("restart");
@@ -246,8 +239,6 @@ static int runTest(int argc, char *argv[], std::string backend)
 
   delete A;
   delete [] rhs;
-  delete vec_r;
-  delete vec_x;
 
   return error_sum;
 }
