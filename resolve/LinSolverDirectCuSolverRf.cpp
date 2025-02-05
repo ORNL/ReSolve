@@ -33,8 +33,8 @@ namespace ReSolve
   {
     assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW &&
            "Matrix A has to be in CSR format for cusolverRf input.\n");
-    assert(L->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_COLUMN &&
-           "Matrix L has to be in CSC format for cusolverRf input.\n");
+    assert(L->getSparseFormat() == U->getSparseFormat() &&
+           "Matrices L and U have to be in the same format for cusolverRf input.\n");
 
     int error_sum = 0;
     this->A_ = A;
@@ -48,14 +48,35 @@ namespace ReSolve
       cusolverRfCreate(&handle_cusolverrf_);
     }
 
-    auto* L_csc = static_cast<matrix::Csc*>(L);
-    auto* U_csc = static_cast<matrix::Csc*>(U);
-    auto* L_csr = new matrix::Csr(L_csc->getNumRows(), L_csc->getNumColumns(), L_csc->getNnz());
-    auto* U_csr = new matrix::Csr(U_csc->getNumRows(), U_csc->getNumColumns(), U_csc->getNnz());
-    csc2csr(L_csc, L_csr);
-    csc2csr(U_csc, U_csr);
-    L_csr->syncData(memory::DEVICE);
-    U_csr->syncData(memory::DEVICE);
+    matrix::Csc* L_csc = nullptr;
+    matrix::Csc* U_csc = nullptr;
+    matrix::Csr* L_csr = nullptr;
+    matrix::Csr* U_csr = nullptr;
+
+    matrix::Sparse::SparseFormat matrix_format = L->getSparseFormat();
+    // std::cout << "Matrix format is " << matrix_format << "\n";
+
+    switch (L->getSparseFormat()) {
+      case matrix::Sparse::COMPRESSED_SPARSE_COLUMN:
+        // std::cout << "converting L and U factors from CSC to CSR format ...\n";
+        L_csc = static_cast<matrix::Csc*>(L);
+        U_csc = static_cast<matrix::Csc*>(U);
+        L_csr = new matrix::Csr(L_csc->getNumRows(), L_csc->getNumColumns(), L_csc->getNnz());
+        U_csr = new matrix::Csr(U_csc->getNumRows(), U_csc->getNumColumns(), U_csc->getNnz());
+        csc2csr(L_csc, L_csr);
+        csc2csr(U_csc, U_csr);
+        L_csr->syncData(memory::DEVICE);
+        U_csr->syncData(memory::DEVICE);
+        break;
+      case matrix::Sparse::COMPRESSED_SPARSE_ROW:
+        L_csr = dynamic_cast<matrix::Csr*>(L);
+        U_csr = dynamic_cast<matrix::Csr*>(U);
+        break;
+      default:
+        out::error() << "Matrix type for L and U factors not recognized!\n";
+        out::error() << "Refactorization not completed.\n";
+        return 1;
+    }
 
     if (d_P_ == nullptr){
       mem_.allocateArrayOnDevice(&d_P_, n);
@@ -106,8 +127,28 @@ namespace ReSolve
     this->setAlgorithms(fact_alg, solve_alg);
     
     setup_completed_ = true;
-    delete L_csr;
-    delete U_csr;
+
+    // Remove temporary objects upon setup completion
+    switch (L->getSparseFormat()) {
+      case matrix::Sparse::COMPRESSED_SPARSE_COLUMN:
+        delete L_csr;
+        delete U_csr;
+        L_csr = nullptr;
+        U_csr = nullptr;
+        L_csc = nullptr;
+        U_csc = nullptr;
+        break;
+      case matrix::Sparse::COMPRESSED_SPARSE_ROW:
+        L_csr = nullptr;
+        U_csr = nullptr;
+        L_csc = nullptr;
+        U_csc = nullptr;
+        break;
+      default:
+        break;
+    }
+    // delete L_csr;
+    // delete U_csr;
     
     return error_sum;
   }

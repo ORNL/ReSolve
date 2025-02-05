@@ -16,13 +16,14 @@ namespace ReSolve
 
   matrix::Csc::Csc(index_type n, index_type m, index_type nnz) : Sparse(n, m, nnz)
   {
+    sparse_format_ = COMPRESSED_SPARSE_COLUMN;
   }
   
   matrix::Csc::Csc(index_type n, 
-                       index_type m, 
-                       index_type nnz,
-                       bool symmetric,
-                       bool expanded) : Sparse(n, m, nnz, symmetric, expanded)
+                   index_type m, 
+                   index_type nnz,
+                   bool symmetric,
+                   bool expanded) : Sparse(n, m, nnz, symmetric, expanded)
   {
     sparse_format_ = COMPRESSED_SPARSE_COLUMN;
   }
