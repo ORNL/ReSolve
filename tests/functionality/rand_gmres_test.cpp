@@ -30,74 +30,84 @@
 #include <resolve/LinSolverDirectRocSparseILU0.hpp>
 #endif
 
-using namespace ReSolve::constants;
-using namespace ReSolve::colors;
 using real_type  = ReSolve::real_type;
 using index_type  = ReSolve::index_type;
 using vector_type = ReSolve::vector::Vector;
+using MemorySpace = ReSolve::memory::MemorySpace;
 
 #include "TestHelper.hpp"
 
-static ReSolve::matrix::Csr* generateMatrix(const index_type N, ReSolve::memory::MemorySpace memspace);
-static ReSolve::vector::Vector* generateRhs(const index_type N, ReSolve::memory::MemorySpace memspace);
+static ReSolve::matrix::Csr* generateMatrix(const index_type N, MemorySpace memspace);
+static ReSolve::vector::Vector* generateRhs(const index_type N, MemorySpace memspace);
 
 template <class workspace_type, class preconditioner_type>
-static int runTest(int argc, char *argv[], std::string solver_name);
+static int runTest(int argc, char *argv[]);
 
 int main(int argc, char *argv[])
 {
   int error_sum = 0; // If error sum is 0, test passes; fails otherwise
 
   error_sum += runTest<ReSolve::LinAlgWorkspaceCpu,
-                       ReSolve::LinSolverDirectCpuILU0>(argc, argv, "CPU");
+                       ReSolve::LinSolverDirectCpuILU0>(argc, argv);
  
 #ifdef RESOLVE_USE_CUDA
   error_sum += runTest<ReSolve::LinAlgWorkspaceCUDA,
-                       ReSolve::LinSolverDirectCuSparseILU0>(argc, argv, "CUDA");
+                       ReSolve::LinSolverDirectCuSparseILU0>(argc, argv);
 #endif
 
 #ifdef RESOLVE_USE_HIP
   error_sum += runTest<ReSolve::LinAlgWorkspaceHIP,
-                       ReSolve::LinSolverDirectRocSparseILU0>(argc, argv, "HIP");
+                       ReSolve::LinSolverDirectRocSparseILU0>(argc, argv);
 #endif
 
   return error_sum;
 }
 
 template <class workspace_type, class preconditioner_type>
-int runTest(int argc, char *argv[], std::string solver_name)
+int runTest(int argc, char *argv[])
 {
+  using namespace ReSolve;
   int error_sum = 0; // If error sum is 0, test passes; fails otherwise
   int status;
-
-  ReSolve::memory::MemorySpace memspace = ReSolve::memory::DEVICE;
-  if (solver_name == "CPU") {
-    memspace = ReSolve::memory::HOST;
-  }
-
-  const index_type N = (argc == 2) ? atoi(argv[1]) : 10000;
-  ReSolve::matrix::Csr* A = generateMatrix(N, memspace);
-  vector_type* vec_rhs = generateRhs(N, memspace);
 
   workspace_type workspace;
   workspace.initializeHandles();
 
   // Create test helper
-  TestHelper<workspace_type> th(workspace);
+  TestHelper<workspace_type> helper(workspace);
 
-  ReSolve::MatrixHandler matrix_handler(&workspace);
-  ReSolve::VectorHandler vector_handler(&workspace);
+  MatrixHandler matrix_handler(&workspace);
+  VectorHandler vector_handler(&workspace);
 
-  ReSolve::GramSchmidt GS(&vector_handler, ReSolve::GramSchmidt::CGS2);
+  // Set memory space where to run tests
+  std::string hwbackend = "CPU";
+  memory::MemorySpace memspace = memory::HOST;
+  if (matrix_handler.getIsCudaEnabled()) {
+    memspace = memory::DEVICE;
+    hwbackend = "CUDA";
+  }
+  if (matrix_handler.getIsHipEnabled()) {
+    memspace = memory::DEVICE;
+    hwbackend = "HIP";
+  }
 
-  preconditioner_type Rf(&workspace);
-  ReSolve::LinSolverIterativeRandFGMRES FGMRES(&matrix_handler,
+  // Create iterative solver
+  GramSchmidt GS(&vector_handler, GramSchmidt::CGS2);
+  preconditioner_type ILU(&workspace);
+  LinSolverIterativeRandFGMRES::SketchingMethod sketching =
+    LinSolverIterativeRandFGMRES::cs;
+  LinSolverIterativeRandFGMRES FGMRES(&matrix_handler,
                                                &vector_handler,
-                                               ReSolve::LinSolverIterativeRandFGMRES::cs,
+                                               sketching,
                                                &GS);
 
+  // Create test linear system (default size 10,000)
+  const index_type N = (argc == 2) ? atoi(argv[1]) : 10000;
+  matrix::Csr* A = generateMatrix(N, memspace);
+  vector_type* vec_rhs = generateRhs(N, memspace);
+
   vector_type vec_x(A->getNumRows());
-  vec_x.allocate(ReSolve::memory::HOST);
+  vec_x.allocate(memory::HOST);
   vec_x.allocate(memspace);
   vec_x.setToZero(memspace);
 
@@ -105,9 +115,11 @@ int runTest(int argc, char *argv[], std::string solver_name)
 
   real_type tol = 1e-12;
 
-  status = Rf.setup(A);
+  // Configure preconditioner 
+  status = ILU.setup(A);
   error_sum += status;
 
+  // Set solver parameters
   FGMRES.setMaxit(2500);
   FGMRES.setTol(tol);
   FGMRES.setup(A);
@@ -115,9 +127,9 @@ int runTest(int argc, char *argv[], std::string solver_name)
   // Typically, you would want these settings _before_ matrix A setup, but here we test
   // flexibility of Re::Solve configuration options
   FGMRES.setRestart(200);
-  FGMRES.setSketchingMethod(ReSolve::LinSolverIterativeRandFGMRES::cs);
+  FGMRES.setSketchingMethod(LinSolverIterativeRandFGMRES::cs);
 
-  status = FGMRES.setupPreconditioner("LU", &Rf);
+  status = FGMRES.setupPreconditioner("LU", &ILU);
   error_sum += status;
 
   FGMRES.setFlexible(true); 
@@ -126,19 +138,19 @@ int runTest(int argc, char *argv[], std::string solver_name)
   error_sum += status;
 
   // Compute error norms for the system
-  th.setSystem(A, vec_rhs, &vec_x);
+  helper.setSystem(A, vec_rhs, &vec_x);
 
   // Print result summary and check solution
   std::cout << "\nRandomized FGMRES results: \n"
-            << "\t Hardware backend:                                 : "
-            << solver_name << "\n" 
-            << "\t Sketching method:                                 : "
+            << "\t Hardware backend:                              : "
+            << hwbackend << "\n" 
+            << "\t Sketching method:                              : "
             << "CountSketch\n";
-  th.printIterativeSolverSummary(&FGMRES);
-  error_sum += th.checkResult(10*tol);
+  helper.printIterativeSolverSummary(&FGMRES);
+  error_sum += helper.checkResult(10*tol);
 
   // Change sketching method for the existing randomized GMRES solver
-  FGMRES.setSketchingMethod(ReSolve::LinSolverIterativeRandFGMRES::fwht);
+  FGMRES.setSketchingMethod(LinSolverIterativeRandFGMRES::fwht);
   FGMRES.setRestart(150);
   FGMRES.setMaxit(2500);
   FGMRES.setTol(tol);
@@ -150,14 +162,14 @@ int runTest(int argc, char *argv[], std::string solver_name)
 
   // Print result summary and check solution
   std::cout << "\nRandomized FGMRES results: \n"
-            << "\t Hardware backend:                                 : "
-            << solver_name << "\n" 
-            << "\t Sketching method:                                 : "
+            << "\t Hardware backend:                              : "
+            << hwbackend << "\n" 
+            << "\t Sketching method:                              : "
             << "FWHT\n";
-  th.printIterativeSolverSummary(&FGMRES);
-  error_sum += th.checkResult(10*tol);
+  helper.printIterativeSolverSummary(&FGMRES);
+  error_sum += helper.checkResult(10*tol);
 
-  isTestPass(error_sum, "Test Randomized GMRES");
+  isTestPass(error_sum, "Test Randomized GMRES on " + hwbackend + " device");
 
   delete A;
   delete vec_rhs;
