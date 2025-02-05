@@ -154,10 +154,17 @@ class TestHelper
 
     void printIrSummary(ReSolve::LinSolverIterative* ls)
     {
+      using namespace ReSolve;
+
+      real_type tol = ls->getTol();
+      index_type maxit = ls->getMaxit();
+
       std::cout << std::setprecision(16) << std::scientific;
-      std::cout << "\t IR iterations                                   : " << ls->getNumIter() << "\n";
       std::cout << "\t IR initial residual norm ||b-A*x||              : " << ls->getInitResidualNorm() << "\n";
       std::cout << "\t IR final residual norm   ||b-A*x||              : " << ls->getFinalResidualNorm() << "\n";
+      std::cout << "\t IR iterations                                   : " << ls->getNumIter() << "\n";
+      std::cout << "\t IR tolerance                                    : " << std::setprecision(2) << tol << "\n";
+      std::cout << "\t IR max iterations                               : " << maxit << "\n";
     }
 
     void printIterativeSolverSummary(ReSolve::LinSolverIterative* ls)
@@ -187,6 +194,57 @@ class TestHelper
       return error_sum;
     }
 
+    int checkNormOfScaledResiduals(ReSolve::real_type nsr_system)
+    {
+      using namespace ReSolve;
+      int error_sum = 0;
+      
+      // Compute residual norm to get updated vector res_
+      res_->copyDataFrom(r_, memspace_, memspace_);
+      norm_res_ = computeResidualNorm(*A_, *x_, *res_, memspace_);
+
+      // Compute norm of scaled residuals
+      real_type inf_norm_A = 0.0;
+      mh_.matrixInfNorm(A_, &inf_norm_A, memspace_); 
+      real_type inf_norm_x = vh_.infNorm(x_, memspace_);
+      real_type inf_norm_res = vh_.infNorm(res_, memspace_);
+      real_type nsr_norm   = inf_norm_res / (inf_norm_A * inf_norm_x);
+      real_type error      = std::abs(nsr_system - nsr_norm)/nsr_norm;
+
+      // Test norm of scaled residuals method in SystemSolver
+      if (error > 10.0*std::numeric_limits<real_type>::epsilon()) 
+      {
+        std::cout << "Norm of scaled residuals computation failed:\n";
+        std::cout << std::scientific << std::setprecision(16)
+                  << "\tMatrix inf  norm                 : " << inf_norm_A << "\n"
+                  << "\tResidual inf norm                : " << inf_norm_res << "\n"  
+                  << "\tSolution inf norm                : " << inf_norm_x << "\n"  
+                  << "\tNorm of scaled residuals         : " << nsr_norm   << "\n"
+                  << "\tNorm of scaled residuals (system): " << nsr_system << "\n\n";
+      }
+      return error_sum;
+    }
+
+    int checkRelativeResidualNorm(ReSolve::real_type rrn_system)
+    {
+      using namespace ReSolve;
+      int error_sum = 0;
+      
+      // Compute residual norm
+      res_->copyDataFrom(r_, memspace_, memspace_);
+      norm_res_ = computeResidualNorm(*A_, *x_, *res_, memspace_);
+
+      real_type error = std::abs(norm_rhs_ * rrn_system - norm_res_)/norm_res_;
+      if (error > 10.0*std::numeric_limits<real_type>::epsilon()) {
+        std::cout << "Relative residual norm computation failed:\n";
+        std::cout << std::scientific << std::setprecision(16)
+                  << "\tTest value            : " << norm_res_/norm_rhs_ << "\n"
+                  << "\tSystemSolver computed : " << rrn_system        << "\n\n";
+        error_sum++;
+      }
+      return error_sum;
+    }
+
   private:
     void computeNorms()
     {
@@ -194,7 +252,7 @@ class TestHelper
         setSolutionVector();
       }
 
-      // Compute rs and residual norms
+      // Compute rhs and residual norms
       res_->copyDataFrom(r_, memspace_, memspace_);
       norm_rhs_ = norm2(*r_, memspace_);
       norm_res_ = computeResidualNorm(*A_, *x_, *res_, memspace_);
