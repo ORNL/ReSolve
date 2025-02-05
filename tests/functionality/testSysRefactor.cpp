@@ -34,11 +34,13 @@
 #include "TestHelper.hpp"
 
 template <class workspace_type>
-static int runTest(int argc, char *argv[], std::string memspace);
+static int runTest(int argc, char *argv[], std::string backend);
 
 int main(int argc, char *argv[])
 {
   int error_sum = 0;
+
+  // error_sum += runTest<ReSolve::LinAlgWorkspaceCpu>(argc, argv, "cpu");
 
 #ifdef RESOLVE_USE_CUDA
   error_sum += runTest<ReSolve::LinAlgWorkspaceCUDA>(argc, argv, "cuda");
@@ -52,9 +54,10 @@ int main(int argc, char *argv[])
 }
 
 template <class workspace_type>
-static int runTest(int argc, char *argv[], std::string memory_space)
+static int runTest(int argc, char *argv[], std::string backend)
 {
   // Use ReSolve data types.
+  using namespace ReSolve;
   using real_type   = ReSolve::real_type;
   using index_type  = ReSolve::index_type;
   using vector_type = ReSolve::vector::Vector;
@@ -63,6 +66,11 @@ static int runTest(int argc, char *argv[], std::string memory_space)
   // It is a FAIL otheriwse.
   int error_sum = 0;
   int status = 0;
+
+  memory::MemorySpace memspace = memory::HOST;
+  if (backend != "cpu") {
+    memspace = memory::DEVICE;
+  }
 
   // Create workspace and initialize its handles.
   workspace_type workspace;
@@ -73,9 +81,9 @@ static int runTest(int argc, char *argv[], std::string memory_space)
 
   // Create system solver
   std::string refactor("none");
-  if (memory_space == "cuda") {
+  if (backend == "cuda") {
     refactor = "cusolverrf";
-  } else if (memory_space == "hip") {
+  } else if (backend == "hip") {
     refactor = "rocsolverrf";
   } else {
     refactor = "klu";
@@ -89,25 +97,27 @@ static int runTest(int argc, char *argv[], std::string memory_space)
 
   // Configure solver (CUDA-based solver needs slightly different
   // settings than HIP-based one)
-  solver.setRefinementMethod("fgmres", "CGS2");
-  solver.getIterativeSolver().setCliParam("restart", "100");
-  if (memory_space == "hip") {
-    solver.getIterativeSolver().setMaxit(200);
-  }
-  if (memory_space == "cuda") {
-    solver.getIterativeSolver().setMaxit(400);
-    solver.getIterativeSolver().setTol(1e-17);
-  }
-  
+  // if (backend != "cpu") {
+    solver.setRefinementMethod("fgmres", "CGS2");
+    solver.getIterativeSolver().setCliParam("restart", "100");
+    if (backend == "hip") {
+      solver.getIterativeSolver().setMaxit(200);
+    }
+    if (backend == "cuda") {
+      solver.getIterativeSolver().setMaxit(400);
+      solver.getIterativeSolver().setTol(1e-17);
+    }
+  // }
+
   // Input to this code is location of `data` directory where matrix files are stored
-  const std::string data_path = (argc == 2) ? argv[1] : "./";
+  const std::string data_path = (argc == 2) ? argv[1] : ".";
 
 
-  std::string matrixFileName1 = data_path + "data/matrix_ACTIVSg2000_AC_00.mtx";
-  std::string matrixFileName2 = data_path + "data/matrix_ACTIVSg2000_AC_02.mtx";
+  std::string matrixFileName1 = data_path + "/data/matrix_ACTIVSg2000_AC_00.mtx";
+  std::string matrixFileName2 = data_path + "/data/matrix_ACTIVSg2000_AC_02.mtx";
 
-  std::string rhsFileName1 = data_path + "data/rhs_ACTIVSg2000_AC_00.mtx.ones";
-  std::string rhsFileName2 = data_path + "data/rhs_ACTIVSg2000_AC_02.mtx.ones";
+  std::string rhsFileName1 = data_path + "/data/rhs_ACTIVSg2000_AC_00.mtx.ones";
+  std::string rhsFileName2 = data_path + "/data/rhs_ACTIVSg2000_AC_02.mtx.ones";
 
 
   // Read first matrix
@@ -117,7 +127,7 @@ static int runTest(int argc, char *argv[], std::string memory_space)
     return -1;
   }
   ReSolve::matrix::Csr* A = ReSolve::io::createCsrFromFile(mat1, true);
-  A->syncData(ReSolve::memory::DEVICE);
+  A->syncData(memspace);
   mat1.close();
 
   // Read first rhs vector
@@ -135,8 +145,10 @@ static int runTest(int argc, char *argv[], std::string memory_space)
   vector_type* vec_r   = new vector_type(A->getNumRows());
 
   // Allocate solution vector
-  vec_x->allocate(ReSolve::memory::HOST);  //for KLU
-  vec_x->allocate(ReSolve::memory::DEVICE);
+  if (memspace != memory::HOST) {
+    vec_x->allocate(ReSolve::memory::HOST);  //for KLU
+  }
+  vec_x->allocate(memspace);
 
   // Set RHS vector on CPU (copyDataFrom function allocates)
   vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
@@ -185,7 +197,9 @@ static int runTest(int argc, char *argv[], std::string memory_space)
     return -1;
   }
   ReSolve::io::updateMatrixFromFile(mat2, A);
-  A->syncData(ReSolve::memory::DEVICE);
+  if (memspace != memory::HOST) {
+    A->syncData(memspace);
+  }
   mat2.close();
 
   // Load the second rhs vector
@@ -197,12 +211,13 @@ static int runTest(int argc, char *argv[], std::string memory_space)
   ReSolve::io::updateArrayFromFile(rhs2_file, &rhs);
   rhs2_file.close();
 
-  vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+  vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, memspace);
 
   status = solver.refactorize();
   error_sum += status;
+  std::cout << "Refactorization status: " << status << "\n";
   
-  vec_x->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+  vec_x->copyDataFrom(rhs, ReSolve::memory::HOST, memspace);
   status = solver.solve(vec_rhs, vec_x);
   error_sum += status;
   
