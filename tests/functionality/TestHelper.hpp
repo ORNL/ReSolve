@@ -170,11 +170,11 @@ class TestHelper
     void printIterativeSolverSummary(ReSolve::LinSolverIterative* ls)
     {
       std::cout << std::setprecision(16) << std::scientific;
-      std::cout << "\t IR initial residual norm          ||b-A*x||       : " << ls->getInitResidualNorm() << "\n";
-      std::cout << "\t IR initial relative residual norm ||b-A*x||/||b|| : " << ls->getInitResidualNorm()/norm_rhs_ << "\n";
-      std::cout << "\t IR final residual norm            ||b-A*x||       : " << ls->getFinalResidualNorm() << "\n";
-      std::cout << "\t IR final relative residual norm   ||b-A*x||/||b|| : " << ls->getFinalResidualNorm()/norm_rhs_ << "\n";
-      std::cout << "\t IR iterations                                     : " << ls->getNumIter() << "\n";
+      std::cout << "\t Initial residual norm          ||b-A*x||       : " << ls->getInitResidualNorm() << "\n";
+      std::cout << "\t Initial relative residual norm ||b-A*x||/||b|| : " << ls->getInitResidualNorm()/norm_rhs_ << "\n";
+      std::cout << "\t Final residual norm            ||b-A*x||       : " << ls->getFinalResidualNorm() << "\n";
+      std::cout << "\t Final relative residual norm   ||b-A*x||/||b|| : " << ls->getFinalResidualNorm()/norm_rhs_ << "\n";
+      std::cout << "\t Number of iterations                           : " << ls->getNumIter() << "\n";
     }
 
     int checkResult(ReSolve::real_type tolerance)
@@ -240,6 +240,26 @@ class TestHelper
         std::cout << std::scientific << std::setprecision(16)
                   << "\tTest value            : " << norm_res_/norm_rhs_ << "\n"
                   << "\tSystemSolver computed : " << rrn_system        << "\n\n";
+        error_sum++;
+      }
+      return error_sum;
+    }
+
+    int checkResidualNorm(ReSolve::real_type rn_system)
+    {
+      using namespace ReSolve;
+      int error_sum = 0;
+      
+      // Compute residual norm
+      res_->copyDataFrom(r_, memspace_, memspace_);
+      norm_res_ = computeResidualNorm(*A_, *x_, *res_, memspace_);
+
+      real_type error = std::abs(rn_system - norm_res_)/norm_res_;
+      if (error > 10.0*std::numeric_limits<real_type>::epsilon()) {
+        std::cout << "Residual norm computation failed:\n";
+        std::cout << std::scientific << std::setprecision(16)
+                  << "\tTest value            : " << norm_res_ << "\n"
+                  << "\tSystemSolver computed : " << rn_system << "\n\n";
         error_sum++;
       }
       return error_sum;
