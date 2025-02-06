@@ -135,14 +135,14 @@ install(PROGRAMS test.sh DESTINATION ${CONSUMER_PATH})
 # Select consumer app
 if(RESOLVE_USE_KLU)
   if(RESOLVE_USE_CUDA)
-    set(RESOLVE_CONSUMER_APP "klu_rf_test.cpp")
+    set(RESOLVE_CONSUMER_APP "testRefactor.cpp")
   elseif(RESOLVE_USE_HIP)
-    set(RESOLVE_CONSUMER_APP "klu_rf_test.cpp")
+    set(RESOLVE_CONSUMER_APP "testRefactor.cpp")
   else()
-    set(RESOLVE_CONSUMER_APP "klu_klu_test.cpp")
+    set(RESOLVE_CONSUMER_APP "testKlu.cpp")
   endif()
 else(RESOLVE_USE_KLU)
-  set(RESOLVE_CONSUMER_APP "testSysRandGMRES.cpp")
+  set(RESOLVE_CONSUMER_APP "testSysGmres.cpp")
 endif(RESOLVE_USE_KLU)
 
 # Install directory with example on how to consume ReSolve
