@@ -300,7 +300,8 @@ namespace ReSolve
    * are currently redundant code (like an if (true)).
    * In the future, they will be expanded to include more options.
    * 
-   * @param id - string ID for parameter to get.
+   * @param[in] id - string ID for parameter to get.
+   * @param[in] value unused/ignored
    * @return int Value of the int parameter to return.
    */
   int LinSolverDirectRocSparseILU0::setCliParam(const std::string id, const std::string /* value */)
