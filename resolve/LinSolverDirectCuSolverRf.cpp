@@ -399,6 +399,7 @@ namespace ReSolve
     {
       // Compute positions of column indices and values in CSR matrix and store them there
       // Overwrites CSR row pointers in the process
+      // adding to them the number of elements in that row
       for (index_type jj = colPtrCsc[col]; jj < colPtrCsc[col+1]; jj++)
       {
           index_type row  = rowIdxCsc[jj];
