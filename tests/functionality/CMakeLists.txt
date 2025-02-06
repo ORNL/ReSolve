@@ -11,19 +11,19 @@ add_executable(version.exe testVersion.cpp)
 target_link_libraries(version.exe PRIVATE ReSolve)
 
 # Build test for Krylov solvers
-add_executable(rand_gmres_test.exe rand_gmres_test.cpp)
+add_executable(rand_gmres_test.exe testRandGmres.cpp)
 target_link_libraries(rand_gmres_test.exe PRIVATE ReSolve)
 
-add_executable(sys_rand_gmres_test.exe testSysRandGMRES.cpp)
+add_executable(sys_rand_gmres_test.exe testSysGmres.cpp)
 target_link_libraries(sys_rand_gmres_test.exe PRIVATE ReSolve)
 
 if(RESOLVE_USE_KLU)
   # Build KLU+KLU test
-  add_executable(klu_klu_test.exe klu_klu_test.cpp)
+  add_executable(klu_klu_test.exe testKlu.cpp)
   target_link_libraries(klu_klu_test.exe PRIVATE ReSolve)
   if(RESOLVE_USE_GPU)
     # Build KLU+Rf tests
-    add_executable(klu_rf_test.exe klu_rf_test.cpp)
+    add_executable(klu_rf_test.exe testRefactor.cpp)
     target_link_libraries(klu_rf_test.exe PRIVATE ReSolve)
 
     # System solver test with cusolver rf and iterative refinement
