@@ -203,7 +203,7 @@ namespace ReSolve {
                     size,       // m
                     1,          // n
                     k,      // k
-                    &MINUSONE, // alpha
+                    &MINUS_ONE, // alpha
                     x->getData(memory::DEVICE), // A
                     size,       // lda
                     alpha->getData(memory::DEVICE), // B

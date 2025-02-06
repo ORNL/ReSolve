@@ -671,7 +671,7 @@ namespace ReSolve
       return -1.0;
     }
     matrixHandler_->setValuesChanged(true, ms);
-    matrixHandler_->matvec(A_, x, resVector_, &ONE, &MINUSONE, ms);
+    matrixHandler_->matvec(A_, x, resVector_, &ONE, &MINUS_ONE, ms);
     resnorm = std::sqrt(vectorHandler_->dot(resVector_, resVector_, ms));
     return resnorm/norm_b;
   }
@@ -700,7 +700,7 @@ namespace ReSolve
       return -1.0;
     }
     matrixHandler_->setValuesChanged(true, ms);
-    matrixHandler_->matvec(A_, x, resVector_, &ONE, &MINUSONE, ms);
+    matrixHandler_->matvec(A_, x, resVector_, &ONE, &MINUS_ONE, ms);
     resnorm = vectorHandler_->infNorm(resVector_, ms);
     norm_x  = vectorHandler_->infNorm(x, ms);
     matrixHandler_->matrixInfNorm(A_, &norm_A, ms);
@@ -765,7 +765,7 @@ namespace ReSolve
       gs_variant = GramSchmidt::CGS2;
     } else if (variant == "mgs") {
       gs_variant = GramSchmidt::MGS;
-    } else if (variant == "mgs_two_sync") {
+    } else if (variant == "mgs2_sync") {
       gs_variant = GramSchmidt::MGS_TWO_SYNC;
     } else if (variant == "mgs_pm") {
       gs_variant = GramSchmidt::MGS_PM;

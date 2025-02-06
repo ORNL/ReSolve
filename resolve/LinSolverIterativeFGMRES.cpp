@@ -119,7 +119,7 @@ namespace ReSolve
     vec_V_->setToZero(memspace_);
 
     rhs->copyDataTo(vec_V_->getData(memspace_), 0, memspace_);  
-    matrix_handler_->matvec(A_, x, vec_V_, &MINUSONE, &ONE, memspace_); 
+    matrix_handler_->matvec(A_, x, vec_V_, &MINUS_ONE, &ONE, memspace_); 
     rnorm = 0.0;
     bnorm = vector_handler_->dot(rhs, rhs, memspace_);
     rnorm = vector_handler_->dot(vec_V_, vec_V_, memspace_);
@@ -272,7 +272,7 @@ namespace ReSolve
       }
 
       rhs->copyDataTo(vec_V_->getData(memspace_), 0, memspace_);  
-      matrix_handler_->matvec(A_, x, vec_V_, &MINUSONE, &ONE, memspace_); 
+      matrix_handler_->matvec(A_, x, vec_V_, &MINUS_ONE, &ONE, memspace_); 
       rnorm = vector_handler_->dot(vec_V_, vec_V_, memspace_);
       // rnorm = ||V_1||
       rnorm = std::sqrt(rnorm);

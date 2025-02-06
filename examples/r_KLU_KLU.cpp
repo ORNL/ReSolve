@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
 
     matrix_handler->setValuesChanged(true, ReSolve::memory::HOST);
 
-    matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, ReSolve::memory::HOST); 
+    matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUS_ONE, ReSolve::memory::HOST); 
     norm_r = vector_handler->infNorm(vec_r, ReSolve::memory::HOST);
 
     std::cout << "\t2-Norm of the residual: " 

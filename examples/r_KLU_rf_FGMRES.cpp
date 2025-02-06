@@ -133,7 +133,7 @@ int main(int argc, char *argv[])
       norm_b = vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE);
       norm_b = sqrt(norm_b);
       matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
-      matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, ReSolve::memory::DEVICE); 
+      matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUS_ONE, ReSolve::memory::DEVICE); 
     
       matrix_handler->matrixInfNorm(A, &norm_A, ReSolve::memory::DEVICE); 
       norm_x = vector_handler->infNorm(vec_x, ReSolve::memory::DEVICE);
@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
       FGMRES->resetMatrix(A);
       FGMRES->setupPreconditioner("LU", Rf);
       
-      matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, ReSolve::memory::DEVICE); 
+      matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUS_ONE, ReSolve::memory::DEVICE); 
 
       matrix_handler->matrixInfNorm(A, &norm_A, ReSolve::memory::DEVICE); 
       norm_x = vector_handler->infNorm(vec_x, ReSolve::memory::DEVICE);

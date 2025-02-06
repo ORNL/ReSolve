@@ -148,7 +148,7 @@ namespace ReSolve
     vec_V_->setToZero(memspace_);
 
     rhs->copyDataTo(vec_V_->getData(memspace_), 0, memspace_);  
-    matrix_handler_->matvec(A_, x, vec_V_, &MINUSONE, &ONE, memspace_); 
+    matrix_handler_->matvec(A_, x, vec_V_, &MINUS_ONE, &ONE, memspace_); 
 
     vec_v->setData(vec_V_->getVectorData(0, memspace_), memspace_);
     vec_s->setData(vec_S_->getVectorData(0, memspace_), memspace_);
@@ -250,7 +250,7 @@ namespace ReSolve
         vec_z->setCurrentSize(i + 1);
         // V(:, i+1) = w - V(:, 1:i)*d_H_col = V(:, i+1) - d_H_col*V(:,1:i); 
 
-        vector_handler_->gemv('N', n_, i + 1, &MINUSONE, &ONE, vec_V_, vec_z, vec_v, memspace_ );  
+        vector_handler_->gemv('N', n_, i + 1, &MINUS_ONE, &ONE, vec_V_, vec_z, vec_v, memspace_ );  
 
         vec_z->setCurrentSize(n_);
         t = 1.0 / h_H_[i * (restart_ + 1) + i + 1];
@@ -338,7 +338,7 @@ namespace ReSolve
       }
 
       rhs->copyDataTo(vec_V_->getData(memspace_), 0, memspace_);  
-      matrix_handler_->matvec(A_, x, vec_V_, &MINUSONE, &ONE, memspace_); 
+      matrix_handler_->matvec(A_, x, vec_V_, &MINUS_ONE, &ONE, memspace_); 
       if (outer_flag) {
 
         sketching_handler_->reset();

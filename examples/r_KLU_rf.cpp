@@ -155,7 +155,7 @@ int main(int argc, char *argv[] )
 
     matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
 
-    matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, ReSolve::memory::DEVICE); 
+    matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUS_ONE, ReSolve::memory::DEVICE); 
 
     std::cout << "\t 2-Norm of the residual: " 
               << std::scientific << std::setprecision(16) 

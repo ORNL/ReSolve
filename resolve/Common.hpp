@@ -21,7 +21,7 @@ namespace ReSolve {
   {
     constexpr real_type ZERO = 0.0;
     constexpr real_type ONE = 1.0;
-    constexpr real_type MINUSONE = -1.0;
+    constexpr real_type MINUS_ONE = -1.0;
     constexpr real_type DEFAULT_TOL = 100*std::numeric_limits<real_type>::epsilon();
   }
 

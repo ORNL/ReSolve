@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
   // Compute residual on device
   vec_r->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
   matrix_handler.setValuesChanged(true, ReSolve::memory::DEVICE);
-  status = matrix_handler.matvec(A, vec_x, vec_r, &ONE, &MINUSONE, ReSolve::memory::DEVICE); 
+  status = matrix_handler.matvec(A, vec_x, vec_r, &ONE, &MINUS_ONE, ReSolve::memory::DEVICE); 
   error_sum += status;
   
   // Compute residual norm
@@ -160,19 +160,19 @@ int main(int argc, char *argv[])
 
   //compute ||x_diff|| = ||x - x_true|| norm
   vec_diff->copyDataFrom(x_data_ref, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-  vector_handler.axpy(&MINUSONE, vec_x, vec_diff, ReSolve::memory::DEVICE);
+  vector_handler.axpy(&MINUS_ONE, vec_x, vec_diff, ReSolve::memory::DEVICE);
   real_type normDiffMatrix1 = sqrt(vector_handler.dot(vec_diff, vec_diff, ReSolve::memory::DEVICE));
  
   // Compute residual norm ON THE GPU using REFERENCE solution
   vec_r->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-  status = matrix_handler.matvec(A, vec_test, vec_r, &ONE, &MINUSONE, ReSolve::memory::DEVICE); 
+  status = matrix_handler.matvec(A, vec_test, vec_r, &ONE, &MINUS_ONE, ReSolve::memory::DEVICE); 
   error_sum += status;
   real_type exactSol_normRmatrix1 = sqrt(vector_handler.dot(vec_r, vec_r, ReSolve::memory::DEVICE));
 
   // Compute residual norm ON THE CPU using COMPUTED solution
   vec_x->copyDataFrom(vec_x->getData(ReSolve::memory::DEVICE), ReSolve::memory::DEVICE, ReSolve::memory::HOST);
   vec_r->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
-  status = matrix_handler.matvec(A, vec_x, vec_r, &ONE, &MINUSONE, ReSolve::memory::HOST);
+  status = matrix_handler.matvec(A, vec_x, vec_r, &ONE, &MINUS_ONE, ReSolve::memory::HOST);
   error_sum += status;
   real_type normRmatrix1CPU = sqrt(vector_handler.dot(vec_r, vec_r, ReSolve::memory::HOST));
 
@@ -230,7 +230,7 @@ int main(int argc, char *argv[])
   // Compute residual norm for the second system
   vec_r->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
   matrix_handler.setValuesChanged(true, ReSolve::memory::DEVICE);
-  status = matrix_handler.matvec(A, vec_x, vec_r, &ONE, &MINUSONE, ReSolve::memory::DEVICE); 
+  status = matrix_handler.matvec(A, vec_x, vec_r, &ONE, &MINUS_ONE, ReSolve::memory::DEVICE); 
   error_sum += status;
   real_type normRmatrix2 = sqrt(vector_handler.dot(vec_r, vec_r, ReSolve::memory::DEVICE));
   
@@ -259,12 +259,12 @@ int main(int argc, char *argv[])
 
   //compute ||x_diff|| = ||x - x_true|| norm
   vec_diff->copyDataFrom(x_data_ref, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-  vector_handler.axpy(&MINUSONE, vec_x, vec_diff, ReSolve::memory::DEVICE);
+  vector_handler.axpy(&MINUS_ONE, vec_x, vec_diff, ReSolve::memory::DEVICE);
   real_type normDiffMatrix2 = sqrt(vector_handler.dot(vec_diff, vec_diff, ReSolve::memory::DEVICE));
  
   //compute the residual using exact solution
   vec_r->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-  status = matrix_handler.matvec(A, vec_test, vec_r, &ONE, &MINUSONE, ReSolve::memory::DEVICE); 
+  status = matrix_handler.matvec(A, vec_test, vec_r, &ONE, &MINUS_ONE, ReSolve::memory::DEVICE); 
   error_sum += status;
   real_type exactSol_normRmatrix2 = sqrt(vector_handler.dot(vec_r, vec_r, ReSolve::memory::DEVICE));
   
