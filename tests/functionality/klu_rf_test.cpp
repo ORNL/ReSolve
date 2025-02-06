@@ -118,7 +118,7 @@ int runTest(int argc, char *argv[], std::string& solver_name)
   workspace.initializeHandles();
 
   // Create test helper
-  TestHelper<workspace_type> th(workspace);
+  TestHelper<workspace_type> helper(workspace);
 
   // Create direct solvers
   ReSolve::LinSolverDirectKLU KLU;
@@ -179,8 +179,7 @@ int runTest(int argc, char *argv[], std::string& solver_name)
   status = KLU.factorize();
   error_sum += status;
 
-  std::cout << "KLU factorize status: " << status <<std::endl;      
-
+  // Extract factors and setup factorization
   matrix_type* L = KLU.getLFactor();
   matrix_type* U = KLU.getUFactor();
   index_type* P = KLU.getPOrdering();
@@ -188,16 +187,16 @@ int runTest(int argc, char *argv[], std::string& solver_name)
 
   status = Rf.setup(A, L, U, P, Q, &vec_rhs); 
   error_sum += status;
-  std::cout << "Rf setup status: " << status << std::endl;      
 
+  // Refactorize (on device where available)
   status = Rf.refactorize();
   error_sum += status;
-  std::cout << "Rf refactorize status: " << status << std::endl;      
 
+  // Solve system (on device where available)
   status = Rf.solve(&vec_rhs, &vec_x);
   error_sum += status;
-  std::cout << "Rf solve status: " << status << std::endl;      
 
+  // Refine solutions
   if (is_ir) {
     test_name += " + IR";
 
@@ -212,15 +211,15 @@ int runTest(int argc, char *argv[], std::string& solver_name)
   }
 
   // Compute error norms for the system
-  th.setSystem(A, &vec_rhs, &vec_x);
+  helper.setSystem(A, &vec_rhs, &vec_x);
 
   // Print result summary and check solution
   std::cout << "\nResults (first matrix): \n\n";
-  th.printSummary();
+  helper.printSummary();
   if (is_ir) {
-    th.printIrSummary(&FGMRES);
+    helper.printIrSummary(&FGMRES);
   }
-  error_sum += th.checkResult(1e-16);
+  error_sum += helper.checkResult(1e-16);
 
   // Load the second matrix
   std::ifstream mat2(matrix_file_name_2);
@@ -244,10 +243,11 @@ int runTest(int argc, char *argv[], std::string& solver_name)
   rhs2_file.close();
   vec_rhs.copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
 
+  // Refactorize second matrix
   status = Rf.refactorize();
   error_sum += status;
-  std::cout << "rocSolverRf refactorization status: " << status << std::endl;      
   
+  // Solve system (now one can go directly to IR when enabled)
   if (is_ir) {
     FGMRES.resetMatrix(A);
     status = FGMRES.setupPreconditioner("LU", &Rf);
@@ -260,14 +260,15 @@ int runTest(int argc, char *argv[], std::string& solver_name)
     error_sum += status;
   }
 
-  th.resetSystem(A, &vec_rhs, &vec_x);
+  // Recompute error norms for the second system and print summary
+  helper.resetSystem(A, &vec_rhs, &vec_x);
 
   std::cout << "\nResults (second matrix): \n\n";
-  th.printSummary();
+  helper.printSummary();
   if (is_ir) {
-    th.printIrSummary(&FGMRES);
+    helper.printIrSummary(&FGMRES);
   }
-  error_sum += th.checkResult(1e-16);
+  error_sum += helper.checkResult(1e-16);
 
   isTestPass(error_sum, test_name);
 
