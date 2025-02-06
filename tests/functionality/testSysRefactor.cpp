@@ -98,7 +98,7 @@ static int runTest(int argc, char *argv[], std::string backend)
 
   // Configure solver (CUDA-based solver needs slightly different
   // settings than HIP-based one)
-  solver.setRefinementMethod("fgmres", "CGS2");
+  solver.setRefinementMethod("fgmres", "cgs2");
   solver.getIterativeSolver().setCliParam("restart", "100");
   if (backend == "hip") {
     solver.getIterativeSolver().setMaxit(200);

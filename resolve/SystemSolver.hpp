@@ -83,7 +83,7 @@ namespace ReSolve
       void setFactorizationMethod(std::string method);
       void setRefactorizationMethod(std::string method);
       int setSolveMethod(std::string method);
-      void setRefinementMethod(std::string method, std::string gs = "CGS2");
+      void setRefinementMethod(std::string method, std::string gs = "cgs2");
       int setSketchingMethod(std::string method);
       int setGramSchmidtMethod(std::string gs_method);
 
@@ -121,7 +121,7 @@ namespace ReSolve
       std::string solveMethod_{"none"};
       std::string precondition_method_{"none"};
       std::string irMethod_{"none"};
-      std::string gsMethod_{"CGS2"};
+      std::string gsMethod_{"cgs2"};
       std::string sketching_method_{"count"}; ///< @todo move this to LinSolverIterative class
 
       std::string memspace_;
