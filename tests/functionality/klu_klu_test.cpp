@@ -69,7 +69,7 @@ int runTest(int argc, char *argv[], std::string& solver_name)
   workspace.initializeHandles();
 
   // Create test helper
-  TestHelper<workspace_type> th(workspace);
+  TestHelper<workspace_type> helper(workspace);
 
   // Create direct solvers
   ReSolve::LinSolverDirectKLU KLU;
@@ -145,15 +145,15 @@ int runTest(int argc, char *argv[], std::string& solver_name)
   }
 
   // Compute error norms for the system
-  th.setSystem(A, &vec_rhs, &vec_x);
+  helper.setSystem(A, &vec_rhs, &vec_x);
 
   // Print result summary and check solution
   std::cout << "\nResults (first matrix): \n\n";
-  th.printSummary();
+  helper.printSummary();
   if (is_ir) {
-    th.printIrSummary(&FGMRES);
+    helper.printIrSummary(&FGMRES);
   }
-  error_sum += th.checkResult(1e-16);
+  error_sum += helper.checkResult(1e-16);
 
   // Load the second matrix
   std::ifstream mat2(matrix_file_name_2);
@@ -193,14 +193,14 @@ int runTest(int argc, char *argv[], std::string& solver_name)
     error_sum += status;
   }
 
-  th.resetSystem(A, &vec_rhs, &vec_x);
+  helper.resetSystem(A, &vec_rhs, &vec_x);
 
   std::cout << "\nResults (second matrix): \n\n";
-  th.printSummary();
+  helper.printSummary();
   if (is_ir) {
-    th.printIrSummary(&FGMRES);
+    helper.printIrSummary(&FGMRES);
   }
-  error_sum += th.checkResult(1e-16);
+  error_sum += helper.checkResult(1e-16);
 
   isTestPass(error_sum, test_name);
 
