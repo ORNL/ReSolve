@@ -24,13 +24,13 @@
 #include <resolve/SystemSolver.hpp>
 #include <resolve/utilities/params/CliOptions.hpp>
 
-using namespace ReSolve::constants;
-using namespace ReSolve::colors;
+#include "TestHelper.hpp"
 
 // Use ReSolve data types.
-using real_type  = ReSolve::real_type;
+using real_type   = ReSolve::real_type;
 using index_type  = ReSolve::index_type;
 using vector_type = ReSolve::vector::Vector;
+using MemorySpace = ReSolve::memory::MemorySpace;
 
 //
 // Forward declarations of helper test functions
@@ -50,10 +50,10 @@ static std::string headerInfo(const std::string& method,
                               std::string flexible);
 
 /// Generates test system matrix
-static ReSolve::matrix::Csr* generateMatrix(const index_type N, ReSolve::memory::MemorySpace memspace);
+static ReSolve::matrix::Csr* generateMatrix(const index_type N, MemorySpace memspace);
 
 /// Generates system rhs vector
-static ReSolve::vector::Vector* generateRhs(const index_type N, ReSolve::memory::MemorySpace memspace);
+static vector_type* generateRhs(const index_type N, MemorySpace memspace);
 
 
 int main(int argc, char *argv[])
@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
 }
 
 //
-// Test functions definitions
+// Test function definition
 //
 
 template <class workspace_type>
@@ -96,7 +96,7 @@ int test(int argc, char *argv[])
   std::string method = opt ? (*opt).second : "randgmres";
 
   opt = options.getParamFromKey("-g");
-  std::string gs = opt ? (*opt).second : "CGS2";
+  std::string gs = opt ? (*opt).second : "cgs2";
 
   opt = options.getParamFromKey("-s");
   std::string sketch = opt ? (*opt).second : "count";
@@ -109,6 +109,8 @@ int test(int argc, char *argv[])
   // Create workspace and initialize its handles.
   workspace_type workspace;
   workspace.initializeHandles();
+
+  TestHelper<workspace_type> helper(workspace);
 
   // Create linear algebra handlers
   ReSolve::MatrixHandler matrix_handler(&workspace);
@@ -142,9 +144,6 @@ int test(int argc, char *argv[])
   vec_x.allocate(memspace);
   vec_x.setToZero(memspace);
 
-  // Norm of rhs vector
-  real_type norm_b = 0.0;
-
   // Set solver options
   solver.getIterativeSolver().setCliParam("maxit", "2500");
   solver.getIterativeSolver().setCliParam("tol", "1e-12");
@@ -173,45 +172,28 @@ int test(int argc, char *argv[])
   status = solver.solve(vec_rhs, &vec_x);
   error_sum += status;
 
-  // Get residual norm
-  norm_b = vector_handler.dot(vec_rhs, vec_rhs, memspace);
-  norm_b = std::sqrt(norm_b);
-  real_type final_norm = solver.getIterativeSolver().getFinalResidualNorm();
+  // Check results and print summary
+  helper.setSystem(A, vec_rhs, &vec_x);
+
   std::cout << std::defaultfloat
             << headerInfo(method, gs, sketch, flexible)
             << "\t Hardware backend:               " << hwbackend << "\n"
-            << "\t Solver tolerance:               " << tol_out   << "\n"
-            << std::scientific << std::setprecision(16)
-            << "\t Initial residual norm:          ||b-Ax_0||_2         : " 
-            << solver.getIterativeSolver().getInitResidualNorm() << " \n"
-            << "\t Initial relative residual norm: ||b-Ax_0||_2/||b||_2 : "
-            << solver.getIterativeSolver().getInitResidualNorm()/norm_b <<  " \n"
-            << "\t Final residual norm:            ||b-Ax||_2           : " 
-            << solver.getIterativeSolver().getFinalResidualNorm() << " \n"
-            << "\t Final relative residual norm:   ||b-Ax||_2/||b||_2   : " 
-            << solver.getIterativeSolver().getFinalResidualNorm()/norm_b << " \n"
-            << "\t Number of iterations                                 : " 
-            << solver.getIterativeSolver().getNumIter() << "\n";
+            << "\t Solver tolerance:               " << tol_out   << "\n";
+  helper.printIterativeSolverSummary(&(solver.getIterativeSolver()));
 
-  if (!std::isfinite(final_norm/norm_b)) {
-    std::cout << "Result is not a finite number!\n";
-    error_sum++;
-  }
-  if (final_norm/norm_b > (10.0 * tol_out)) {
-    std::cout << "Result inaccurate!\n";
-    error_sum++;
-  }
-  if (error_sum == 0) {
-    std::cout << "Test " << GREEN << "PASSED" << CLEAR << "\n\n";
-  } else {
-    std::cout << "Test " << RED << "FAILED" << CLEAR << ", error sum: " << error_sum << "\n\n";
-  }
+  error_sum += helper.checkResidualNorm(solver.getIterativeSolver().getFinalResidualNorm());
+  error_sum += helper.checkResult(10.0 * tol_out);
+  isTestPass(error_sum, "Test");
 
   delete A;
   delete vec_rhs;
 
   return error_sum;
 }
+
+//
+// Definitions of helper functions
+//
 
 void processInputs(std::string& method, std::string& gs, std::string& sketch)
 {
@@ -228,14 +210,14 @@ void processInputs(std::string& method, std::string& gs, std::string& sketch)
     std::cout << "Setting iterative solver method to the default (FGMRES).\n\n";
     method = "fgmres";
   }
-  if (gs != "CGS1" && 
-      gs != "CGS2" && 
-      gs != "MGS" && 
-      gs != "MGS_TWO_SYNC" 
-      && gs != "MGS_PM") {
+  if (gs != "cgs1" && 
+      gs != "cgs2" && 
+      gs != "mgs" && 
+      gs != "mgs_two_sync" 
+      && gs != "mgs_pm") {
     std::cout << "Unknown orthogonalization " << gs << "\n";
     std::cout << "Setting orthogonalization to the default (CGS2).\n\n";
-    gs = "CGS2";
+    gs = "cgs2";
   }
 }
 
@@ -264,18 +246,16 @@ std::string headerInfo(const std::string& method,
   }
 
   std::string withgs = "\t Orthogonalization method:       ";
-  if (gs == "CGS2") {
+  if (gs == "cgs2") {
     header += (withgs + "reorthogonalized classical Gram-Schmidt\n");
-  } else if (gs == "CGS1")  {
+  } else if (gs == "cgs1")  {
     header += (withgs + "classical Gram-Schmidt\n");
-  } else if (gs == "MGS") {
+  } else if (gs == "mgs") {
     header += (withgs + "modified Gram-Schmidt\n");    
-  } else if (gs == "MGS_TWO_SYNC") {
+  } else if (gs == "mgs_two_sync") {
     header += (withgs + "modified Gram-Schmidt 2-sync\n");    
-  } else if (gs == "MGS_PM") {
+  } else if (gs == "mgs_pm") {
     header += (withgs + "post-modern modified Gram-Schmidt\n");    
-  } else if (gs == "MGS") {
-    header += (withgs + "modified Gram-Schmidt\n");    
   } else {
     // do nothing
   }
@@ -314,8 +294,6 @@ ReSolve::matrix::Csr* generateMatrix(const index_type N, ReSolve::memory::Memory
 
   const std::vector<std::vector<real_type> > data = {r1, r2, r3, r4, r5};
 
-  // std::cout << N << "\n";
-
   // First compute number of nonzeros
   index_type NNZ = 0;
   for (index_type i = 0; i < N; ++i)
@@ -352,14 +330,13 @@ ReSolve::matrix::Csr* generateMatrix(const index_type N, ReSolve::memory::Memory
         what = 4.;
       } else {
         where =  (j - rowptr[i]) * N/nnz_per_row + (N%(N/nnz_per_row));
+        // evenly distribute nonzeros ^^^^             ^^^^^^^^ perturb offset
         what = row_sample[static_cast<size_t>(j - rowptr[i])];
       } 
       colidx[j] = where;
-      // evenly distribute nonzeros ^^^^             ^^^^^^^^ perturb offset
       val[j] = what;
     }
   }
-
 
   A->setUpdated(ReSolve::memory::HOST);
   A->syncData(memspace);

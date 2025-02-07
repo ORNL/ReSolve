@@ -151,7 +151,6 @@ namespace ReSolve
         Mshifts[row]++;
       }
     }
-    //Mshifts.~vector(); 
   }
 
   int LinSolverDirectCuSolverGLU::refactorize()
@@ -190,6 +189,7 @@ namespace ReSolve
                                             &r_nrm_inf_,
                                             info_M_,
                                             glu_buffer_);
+    x->setDataUpdated(memory::DEVICE);
     return status_cusolver_; 
   }
 

@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
   vector_type* vec_x   = nullptr;
 
   ReSolve::SystemSolver* solver = new ReSolve::SystemSolver(workspace_HIP);
-  solver->setRefinementMethod("fgmres", "CGS2");
+  solver->setRefinementMethod("fgmres", "cgs2");
 
   for (int i = 0; i < numSystems; ++i)
   {

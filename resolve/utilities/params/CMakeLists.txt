@@ -24,4 +24,4 @@ target_include_directories(resolve_options PUBLIC
     $<INSTALL_INTERFACE:include>
 )
 
-install(FILES ${Options_HEADER_INSTALL} DESTINATION include/resolve/utilities/options)
+install(FILES ${Options_HEADER_INSTALL} DESTINATION include/resolve/utilities/params)

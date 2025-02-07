@@ -17,7 +17,9 @@ int main(int, char**)
   result += test.csrMatrixExport();
   result += test.cooMatrixReadAndUpdate();
   result += test.csrMatrixReadAndUpdate();
+  result += test.rhsArrayReadFromFile();
   result += test.rhsVectorReadFromFile();
+  result += test.rhsArrayReadAndUpdate();
   result += test.rhsVectorReadAndUpdate();
 
   return result.summary();

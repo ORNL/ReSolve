@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <tests/unit/TestBase.hpp>
 #include <resolve/matrix/Coo.hpp>
+#include <resolve/vector/Vector.hpp>
 
 namespace ReSolve { namespace tests {
 
@@ -299,12 +300,45 @@ public:
       status = false;
     }
 
-    status *= verifyAnswer(A, symmetric_expanded_csr_matrix_rows_, symmetric_expanded_csr_matrix_cols_, symmetric_expanded_csr_matrix_vals_);
+    status *= verifyAnswer(A,
+                           symmetric_expanded_csr_matrix_rows_,
+                           symmetric_expanded_csr_matrix_cols_,
+                           symmetric_expanded_csr_matrix_vals_);
 
     return status.report(__func__);
   }
 
   TestOutcome rhsVectorReadFromFile()
+  {
+    TestStatus status;
+
+    // Read string into istream and status it to `createCooFromFile` function.
+    std::istringstream file(general_vector_file_);
+
+    // Create rhs vector and load its data from the input file
+    vector::Vector* rhs = ReSolve::io::createVectorFromFile(file);
+
+    // Check if the matrix data was correctly loaded
+    status = true;
+
+    const real_type* rhs_data = rhs->getData(memory::HOST);
+    for (size_t i = 0; i < general_vector_vals_.size(); ++i) {
+      if (!isEqual(rhs_data[i], general_vector_vals_[i]))
+      {
+        std::cout << "Incorrect vector value at storage element " << i << ".\n";
+        status = false;
+        break;
+      }
+      // std::cout << i << ": " << rhs[i] << "\n";
+    }
+
+    // Delete test vector
+    delete rhs;
+
+    return status.report(__func__);
+  }
+
+  TestOutcome rhsArrayReadFromFile()
   {
     TestStatus status;
 
@@ -330,7 +364,7 @@ public:
     return status.report(__func__);
   }
 
-  TestOutcome rhsVectorReadAndUpdate()
+  TestOutcome rhsArrayReadAndUpdate()
   {
     TestStatus status;
 
@@ -346,6 +380,38 @@ public:
     // Check if the matrix data was correctly loaded
     status = true;
 
+    for (size_t i = 0; i < general_vector_vals_.size(); ++i) {
+      if (!isEqual(rhs[i], general_vector_vals_[i]))
+      {
+        std::cout << "Incorrect vector value at storage element " << i << ".\n";
+        status = false;
+        break;
+      }
+      // std::cout << i << ": " << rhs[i] << "\n";
+    }
+
+    return status.report(__func__);
+  }
+
+  TestOutcome rhsVectorReadAndUpdate()
+  {
+    TestStatus status;
+
+    // Read string into istream and status it to `createCooFromFile` function.
+    std::istringstream file(general_vector_file_);
+
+    // For now let's test only the case when `updateArrayFromFile` does not allocate rhs
+    index_type N = static_cast<index_type>(general_vector_vals_.size());
+    vector::Vector vec_rhs(N);
+    vec_rhs.allocate(memory::HOST);
+
+    // Update vector vec_rhs with data from the matrix market file
+    ReSolve::io::updateVectorFromFile(file, &vec_rhs);
+
+    // Check if the vector data was correctly loaded
+    status = true;
+
+    real_type* rhs = vec_rhs.getData(memory::HOST);
     for (size_t i = 0; i < general_vector_vals_.size(); ++i) {
       if (!isEqual(rhs[i], general_vector_vals_[i]))
       {
