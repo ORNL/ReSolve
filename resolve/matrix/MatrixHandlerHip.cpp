@@ -176,15 +176,15 @@ namespace ReSolve {
     rocsparse_status status;
     
     A_csr->allocateMatrixData(memory::DEVICE);
+    index_type m = A_csc->getNumCols();
     index_type n = A_csc->getNumRows();
-    index_type m = A_csc->getNumRows();
     index_type nnz = A_csc->getNnz();
     size_t bufferSize;
     void* d_work;
 
     status = rocsparse_csr2csc_buffer_size(workspace_->getRocsparseHandle(),
-                                           n,
                                            m,
+                                           n,
                                            nnz,
                                            A_csc->getColData(memory::DEVICE), 
                                            A_csc->getRowData(memory::DEVICE), 
@@ -195,8 +195,8 @@ namespace ReSolve {
     mem_.allocateBufferOnDevice(&d_work, bufferSize);
     
     status = rocsparse_dcsr2csc(workspace_->getRocsparseHandle(),
-                                n,
                                 m,
+                                n,
                                 nnz,
                                 A_csc->getValues( memory::DEVICE), 
                                 A_csc->getColData(memory::DEVICE), 

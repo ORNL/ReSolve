@@ -137,11 +137,12 @@ namespace ReSolve {
   {
     // int error_sum = 0; TODO: Collect error output!
     assert(A_csc->getNnz() == A_csr->getNnz());
-    assert(A_csc->getNumRows() == A_csr->getNumColumns());
-    assert(A_csr->getNumRows() == A_csc->getNumColumns());
+    assert(A_csc->getNumRows() == A_csr->getNumRows());
+    assert(A_csc->getNumColumns() == A_csr->getNumColumns());
 
     index_type nnz = A_csc->getNnz();
-    index_type n   = A_csc->getNumColumns();
+    index_type n   = A_csc->getNumRows();
+    index_type m   = A_csc->getNumColumns();
 
     index_type* rowIdxCsc = A_csc->getRowData(memory::HOST);
     index_type* colPtrCsc = A_csc->getColData(memory::HOST);
@@ -181,7 +182,7 @@ namespace ReSolve {
     }
     rowPtrCsr[n] = nnz;
 
-    for (index_type col = 0; col < n; ++col)
+    for (index_type col = 0; col < m; ++col)
     {
       // Compute positions of column indices and values in CSR matrix and store them there
       // Overwrites CSR row pointers in the process

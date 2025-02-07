@@ -190,14 +190,14 @@ namespace ReSolve {
     index_type error_sum = 0;
 
     A_csr->allocateMatrixData(memory::DEVICE);
+    index_type m = A_csc->getNumCols();
     index_type n = A_csc->getNumRows();
-    index_type m = A_csc->getNumRows();
     index_type nnz = A_csc->getNnz();
     size_t bufferSize;
     void* d_work;
     cusparseStatus_t status = cusparseCsr2cscEx2_bufferSize(workspace_->getCusparseHandle(),
-                                                            n, 
                                                             m, 
+                                                            n, 
                                                             nnz, 
                                                             A_csc->getValues( memory::DEVICE), 
                                                             A_csc->getColData(memory::DEVICE), 
@@ -213,8 +213,8 @@ namespace ReSolve {
     error_sum += status;
     mem_.allocateBufferOnDevice(&d_work, bufferSize);
     status = cusparseCsr2cscEx2(workspace_->getCusparseHandle(),
-                                n, 
                                 m, 
+                                n, 
                                 nnz, 
                                 A_csc->getValues( memory::DEVICE), 
                                 A_csc->getColData(memory::DEVICE), 
