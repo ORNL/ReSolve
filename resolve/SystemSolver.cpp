@@ -765,7 +765,7 @@ namespace ReSolve
       gs_variant = GramSchmidt::CGS2;
     } else if (variant == "mgs") {
       gs_variant = GramSchmidt::MGS;
-    } else if (variant == "mgs2_sync") {
+    } else if (variant == "mgs_two_sync") {
       gs_variant = GramSchmidt::MGS_TWO_SYNC;
     } else if (variant == "mgs_pm") {
       gs_variant = GramSchmidt::MGS_PM;
