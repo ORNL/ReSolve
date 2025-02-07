@@ -413,6 +413,8 @@ namespace ReSolve
     }
 
     // Restore CSR row pointer values
+    // All values in rowPtrCsr have shifted by the number of elements in that row
+    // for i>=1: new rowPtrCsr[i] = old rowPtrCsr[i-1] and new rowPtrCsr[0]=0 
     for (index_type row = 0, last = 0; row <= n; row++)
     {
         index_type temp  = rowPtrCsr[row];
