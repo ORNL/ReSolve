@@ -294,8 +294,6 @@ ReSolve::matrix::Csr* generateMatrix(const index_type N, ReSolve::memory::Memory
 
   const std::vector<std::vector<real_type> > data = {r1, r2, r3, r4, r5};
 
-  // std::cout << N << "\n";
-
   // First compute number of nonzeros
   index_type NNZ = 0;
   for (index_type i = 0; i < N; ++i)

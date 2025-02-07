@@ -349,8 +349,8 @@ namespace ReSolve
   {
     // int error_sum = 0; TODO: Collect error output!
     assert(A_csc->getNnz() == A_csr->getNnz());
-    assert(A_csc->getNumRows() == A_csr->getNumColumns());
-    assert(A_csr->getNumRows() == A_csc->getNumColumns());
+    assert(A_csc->getNumRows() == A_csr->getNumRows());
+    assert(A_csr->getNumColumns() == A_csc->getNumColumns());
 
     A_csr->allocateMatrixData(memory::HOST);
 

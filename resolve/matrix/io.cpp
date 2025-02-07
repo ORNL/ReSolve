@@ -247,7 +247,6 @@ namespace ReSolve
       std::getline(file, line);
       while (line.at(0) == '%') {
         std::getline(file, line); 
-        // std::cout << line << std::endl;
       }
       ss << line;
       ss >> n >> m;
@@ -264,7 +263,7 @@ namespace ReSolve
     vector::Vector* createVectorFromFile(std::istream& file)
     {
       if(!file) {
-        Logger::error() << "Empty input to " << __func__ << " function ... \n" << std::endl;
+        Logger::error() << "Empty input to " << __func__ << " function ... \n";
         return nullptr;
       }
 
@@ -276,14 +275,12 @@ namespace ReSolve
       std::getline(file, line);
       while (line.at(0) == '%') {
         std::getline(file, line); 
-        // std::cout << line << std::endl;
       }
       ss << line;
       ss >> n >> m;
 
       vector::Vector* vec = new vector::Vector(n);
       vec->allocate(memory::HOST);
-      // real_type* vec = new real_type[n];
       real_type a;
       while (file >> a) {
         vec->getData(memory::HOST)[i] = a;
@@ -379,20 +376,17 @@ namespace ReSolve
       std::getline(file, line);
       while (line.at(0) == '%') {
         std::getline(file, line); 
-        // std::cout<<line<<std::endl;
       }
       ss << line;
       ss >> n >> m;
 
       if (rhs == nullptr) {
-        // std::cout << "Allocating array of size " << n << "\n";
         rhs = new real_type[n];
       } 
       real_type a;
       index_type i = 0;
       while (file >> a) {
         rhs[i] = a;
-        // std::cout << i << ": " << a << "\n";
         i++;
       }
     }
@@ -614,7 +608,6 @@ namespace ReSolve
       // Skip the header comments
       while (line.at(0) == '%') {
         std::getline(file, line); 
-        //  std::cout << line << std::endl;
       }
 
       // Read the first line with matrix sizes
@@ -666,7 +659,9 @@ namespace ReSolve
      * @post `tmp` list is overwritten with matrix elements read from the input
      * stream.
      */
-    int loadToList(std::istream& file, bool is_expand_symmetric, std::list<MatrixElementTriplet>& tmp)
+    int loadToList(std::istream& file,
+                   bool is_expand_symmetric,
+                   std::list<MatrixElementTriplet>& tmp)
     {
       index_type i, j;
       real_type v;

@@ -3,6 +3,12 @@
 #include <iostream>
 #include <resolve/LinSolverIterative.hpp>
 
+/**
+ * @brief Checks the error code and prints pass/fail message.
+ * 
+ * @param error_sum - error code: 0 = pass, otherwise fail
+ * @param test_name - test name to be displayed with pass/fail message
+ */
 void isTestPass(int error_sum, const std::string& test_name)
 {
   using namespace ReSolve::colors;
@@ -20,6 +26,10 @@ void isTestPass(int error_sum, const std::string& test_name)
 /**
  * @brief Test helper class template
  * 
+ * This is header-only implementation of several utility functions used by
+ * multiple functionality tests, such as error norm calculations. To use,
+ * simply include this header in the test.
+ * 
  * @tparam workspace_type 
  */
 template <class workspace_type>
@@ -32,6 +42,11 @@ class TestHelper
      * Initializes matrix and vector handlers.
      * 
      * @param[in,out] workspace - workspace for matrix and vector handlers
+     * 
+     * @pre Workspace handles are initialized
+     * 
+     * @post Handlers are instantiated.
+     * allocated
      */
     TestHelper(workspace_type& workspace)
       : mh_(&workspace),
@@ -45,14 +60,20 @@ class TestHelper
     /**
      * @brief TestHelper constructor
      * 
-     * @param A 
-     * @param r 
-     * @param x 
+     * @param A[in] - Linear system matrix
+     * @param r[in] - Linear system right-hand side
+     * @param x[in] - Computed solution of the linear system
      * @param[in,out] workspace - workspace for matrix and vector handlers
      * 
      * @pre The linear solver has solved system A * x = r.
      * @pre A, r, and x are all in the same memory space as the workspace.
      * @pre Workspace handles are initialized
+     * 
+     * @post Handlers are instantiated and vectors res_ and x_true_ are
+     * allocated
+     * @post Solution vector x_true_ elements are all set to 1.
+     * @post Solution error with respect to x_true_ and residual norms
+     * are computed.
      */
     TestHelper(ReSolve::matrix::Sparse* A,
                ReSolve::vector::Vector* r,
@@ -74,11 +95,34 @@ class TestHelper
       computeNorms();
     }
 
+    /**
+     * @brief Destroy the TestHelper object
+     * 
+     * @post Vectors res_ and x_true_ are deleted.
+     * 
+     */
     ~TestHelper()
     {
-      // empty
+      if (res_) {
+        delete res_;
+        res_ = nullptr;
+      }
+      if (x_true_) {
+        delete x_true_;
+        x_true_ = nullptr;
+      }
     }
 
+    /**
+     * @brief Set the new linear system together with its computed solution
+     * and compute solution error and residual norms.
+     * 
+     * This will set the new system A*x = r and compute related error norms.
+     * 
+     * @param A[in] - Linear system matrix
+     * @param r[in] - Linear system right-hand side
+     * @param x[in] - Computed solution of the linear system
+     */
     void setSystem(ReSolve::matrix::Sparse* A,
                    ReSolve::vector::Vector* r,
                    ReSolve::vector::Vector* x)
@@ -93,6 +137,18 @@ class TestHelper
       computeNorms();
     }
 
+    /**
+     * @brief Set the new linear system together with its computed solution
+     * and compute solution error and residual norms.
+     * 
+     * This is to be used after values in A and r are updated.
+     * 
+     * @todo This method probably does not need any input parameters.
+     * 
+     * @param A[in] - Linear system matrix
+     * @param r[in] - Linear system right-hand side
+     * @param x[in] - Computed solution of the linear system
+     */
     void resetSystem(ReSolve::matrix::Sparse* A,
                      ReSolve::vector::Vector* r,
                      ReSolve::vector::Vector* x)
@@ -104,41 +160,50 @@ class TestHelper
       computeNorms();
     }
 
+    /// Set the name of the test to `name`.
     void setTestName(const std::string& name)
     {
       test_name_ += name;
     }
 
+    /// Return L2 norm of the linear system residual.
     ReSolve::real_type getNormResidual()
     {
       return norm_res_;
     }
 
+    /// Return relative residual norm.
     ReSolve::real_type getNormResidualScaled()
     {
       return norm_res_/norm_rhs_;
     }
 
+    /// Return L2 residual norm computed on the host.
     ReSolve::real_type getNormResidualCpu()
     {
       return norm_res_cpu_;
     }
 
+    /// Return L2 norm of the residual computed with the "exact" solution.
     ReSolve::real_type getNormResidualTrue()
     {
       return norm_res_true_;
     }
 
+    /// Return L2 norm of difference between computed and the "exact" solution.
     ReSolve::real_type getNormDiff()
     {
       return norm_diff_;
     }
 
+    /// Return L2 norm of relative difference between computed and the "exact"
+    /// solution.
     ReSolve::real_type getNormDiffScaled()
     {
       return norm_diff_/norm_true_;
     }
 
+    /// Summary of error norms for a direct solver test.
     void printSummary()
     {
       std::cout << std::setprecision(16) << std::scientific;
@@ -152,6 +217,7 @@ class TestHelper
       std::cout << "\t Exact solution residual ||b-A*x_true||          : " << getNormResidualTrue()   << "\n";
     }
 
+    /// Summary of error norms for an iterative refinement test.
     void printIrSummary(ReSolve::LinSolverIterative* ls)
     {
       using namespace ReSolve;
@@ -167,6 +233,7 @@ class TestHelper
       std::cout << "\t IR max iterations                               : " << maxit << "\n";
     }
 
+    /// Summary of error norms for an iterative solver test.
     void printIterativeSolverSummary(ReSolve::LinSolverIterative* ls)
     {
       std::cout << std::setprecision(16) << std::scientific;
@@ -177,6 +244,7 @@ class TestHelper
       std::cout << "\t Number of iterations                           : " << ls->getNumIter() << "\n";
     }
 
+    /// Check the relative residual norm against `tolerance`.
     int checkResult(ReSolve::real_type tolerance)
     {
       int error_sum = 0;
@@ -194,6 +262,16 @@ class TestHelper
       return error_sum;
     }
 
+    /**
+     * @brief Verify the computation of the norm of scaled residuals.
+     * 
+     * The norm value is provided as the input. This function computes 
+     * the norm of scaled residuals for the system that has been set
+     * by the constructor or (re)setSystem functions.
+     * 
+     * @param nsr_system - norm of scaled residuals value to be verified 
+     * @return int - 0 if the result is correct, error code otherwise
+     */
     int checkNormOfScaledResiduals(ReSolve::real_type nsr_system)
     {
       using namespace ReSolve;
@@ -225,6 +303,16 @@ class TestHelper
       return error_sum;
     }
 
+    /**
+     * @brief Verify the computation of the relative residual norm.
+     * 
+     * The norm value is provided as the input. This function computes 
+     * the relative residual norm for the system that has been set
+     * by the constructor or (re)setSystem functions.
+     * 
+     * @param rrn_system - relative residual norm value to be verified 
+     * @return int - 0 if the result is correct, error code otherwise
+     */
     int checkRelativeResidualNorm(ReSolve::real_type rrn_system)
     {
       using namespace ReSolve;
@@ -245,6 +333,16 @@ class TestHelper
       return error_sum;
     }
 
+    /**
+     * @brief Verify the computation of the residual norm.
+     * 
+     * The norm value is provided as the input. This function computes 
+     * the residual norm for the system that has been set by the constructor
+     * or (re)setSystem functions.
+     * 
+     * @param rrn_system - residual norm value to be verified 
+     * @return int - 0 if the result is correct, error code otherwise
+     */
     int checkResidualNorm(ReSolve::real_type rn_system)
     {
       using namespace ReSolve;
@@ -266,6 +364,7 @@ class TestHelper
     }
 
   private:
+    /// Compute error norms.
     void computeNorms()
     {
       if (!solution_set_) {
@@ -295,6 +394,7 @@ class TestHelper
       norm_diff_ = computeDiffNorm(*x_true_, *res_, memspace_);
     }
 
+    /// Sets all elements of the solution vector to 1. 
     void setSolutionVector()
     {
       x_true_->allocate(memspace_);
@@ -308,9 +408,10 @@ class TestHelper
     /**
      * @brief Computes residual norm = || A * x - r ||_2
      * 
-     * @param[in]     A 
-     * @param[in]     x 
-     * @param[in,out] r 
+     * @param[in]     A - system matrix 
+     * @param[in]     x - computed solution of the system
+     * @param[in,out] r - system right-hand side, residual vector
+     * @param[in]     memspace memory space where to computate the norm
      * @return ReSolve::real_type 
      * 
      * @post r is overwritten with residual values
@@ -328,9 +429,9 @@ class TestHelper
     /**
      * @brief Compute vector difference norm = || x - x_true ||_2
      * 
-     * @param[in]     x_true 
-     * @param[in,out] x 
-     * @param[in]     memspace 
+     * @param[in]     x_true - The "exact" solution
+     * @param[in,out] x      - Computed solution, difference vector
+     * @param[in]     memspace memory space where to computate the norm
      * @return ReSolve::real_type
      * 
      * @post x is overwritten with difference value
@@ -344,6 +445,7 @@ class TestHelper
       return norm2(x, memspace);
     }
 
+    /// Compute L2 norm of vector `r` in memory space `memspace`.
     ReSolve::real_type norm2(ReSolve::vector::Vector& r,
                              ReSolve::memory::MemorySpace memspace)
     {
@@ -351,26 +453,26 @@ class TestHelper
     }
 
   private:
-    ReSolve::matrix::Sparse* A_;
-    ReSolve::vector::Vector* r_;
-    ReSolve::vector::Vector* x_;
+    ReSolve::matrix::Sparse* A_; ///< pointer to system matrix
+    ReSolve::vector::Vector* r_; ///< pointer to system right-hand side
+    ReSolve::vector::Vector* x_; ///< pointer to the computed solution
 
-    std::string test_name_{"Test "};
+    std::string test_name_{"Test "}; ///< test name
 
-    ReSolve::MatrixHandler mh_;
-    ReSolve::VectorHandler vh_;
+    ReSolve::MatrixHandler mh_; ///< matrix handler instance
+    ReSolve::VectorHandler vh_; ///< vector handler instance
 
-    ReSolve::vector::Vector* res_{nullptr};
-    ReSolve::vector::Vector* x_true_{nullptr};
+    ReSolve::vector::Vector* res_{nullptr};    ///< pointer to residual vector
+    ReSolve::vector::Vector* x_true_{nullptr}; ///< pointer to solution error vector
 
-    ReSolve::real_type norm_rhs_{0.0};
-    ReSolve::real_type norm_res_{0.0};
-    ReSolve::real_type norm_res_cpu_{0.0};
-    ReSolve::real_type norm_res_true_{0.0};
-    ReSolve::real_type norm_true_{0.0};
-    ReSolve::real_type norm_diff_{0.0};
+    ReSolve::real_type norm_rhs_{0.0}; ///< right-hand side vector norm
+    ReSolve::real_type norm_res_{0.0}; ///< residual vector norm
+    ReSolve::real_type norm_res_cpu_{0.0}; ///< residual vector norm (on host)
+    ReSolve::real_type norm_res_true_{0.0}; ///< residual norm for "exact" solution
+    ReSolve::real_type norm_true_{0.0}; ///< norm of the "exact" solution
+    ReSolve::real_type norm_diff_{0.0}; ///< norm of solution error
 
-    bool solution_set_{false};
+    bool solution_set_{false}; ///< if exact solution is set
 
     ReSolve::memory::MemorySpace memspace_{ReSolve::memory::HOST};
 };

@@ -36,12 +36,6 @@ if(RESOLVE_USE_KLU)
     add_executable(sys_glu_test.exe testSysGLU.cpp)
     target_link_libraries(sys_glu_test.exe PRIVATE ReSolve)
   endif(RESOLVE_USE_CUDA)
-
-  if(RESOLVE_USE_HIP)
-    # System solver test with rocm rf and iterative refinement
-    # add_executable(sys_refactor_hip_test.exe testSysRefactor.cpp)
-    # target_link_libraries(sys_refactor_hip_test.exe PRIVATE ReSolve)
-  endif(RESOLVE_USE_HIP)
 endif(RESOLVE_USE_KLU)
 
 if(RESOLVE_USE_LUSOL)
@@ -65,10 +59,6 @@ if(RESOLVE_USE_KLU)
   if(RESOLVE_USE_CUDA)
     list(APPEND installable_tests sys_glu_test.exe)
   endif(RESOLVE_USE_CUDA)
-
-  if(RESOLVE_USE_HIP)
-    # list(APPEND installable_tests sys_refactor_hip_test.exe)
-  endif(RESOLVE_USE_HIP)
 endif()
 
 if(RESOLVE_USE_LUSOL)

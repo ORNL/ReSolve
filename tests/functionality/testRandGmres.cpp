@@ -37,8 +37,8 @@ using MemorySpace = ReSolve::memory::MemorySpace;
 
 #include "TestHelper.hpp"
 
-static ReSolve::matrix::Csr* generateMatrix(const index_type N, MemorySpace memspace);
-static ReSolve::vector::Vector* generateRhs(const index_type N, MemorySpace memspace);
+static ReSolve::matrix::Csr* generateMatrix(const index_type n, MemorySpace memspace);
+static ReSolve::vector::Vector* generateRhs(const index_type n, MemorySpace memspace);
 
 template <class workspace_type, class preconditioner_type>
 static int runTest(int argc, char *argv[]);
@@ -102,9 +102,9 @@ int runTest(int argc, char *argv[])
                                                &GS);
 
   // Create test linear system (default size 10,000)
-  const index_type N = (argc == 2) ? atoi(argv[1]) : 10000;
-  matrix::Csr* A = generateMatrix(N, memspace);
-  vector_type* vec_rhs = generateRhs(N, memspace);
+  const index_type n = (argc == 2) ? atoi(argv[1]) : 10000;
+  matrix::Csr* A = generateMatrix(n, memspace);
+  vector_type* vec_rhs = generateRhs(n, memspace);
 
   vector_type vec_x(A->getNumRows());
   vec_x.allocate(memory::HOST);
@@ -113,7 +113,8 @@ int runTest(int argc, char *argv[])
 
   matrix_handler.setValuesChanged(true, memspace);
 
-  real_type tol = 1e-12;
+  real_type tol = 1e-12; // iterative solver tolerance
+  real_type test_pass_tol = 10.0*tol; // test results tolerance
 
   // Configure preconditioner 
   status = ILU.setup(A);
@@ -147,7 +148,7 @@ int runTest(int argc, char *argv[])
             << "\t Sketching method:                              : "
             << "CountSketch\n";
   helper.printIterativeSolverSummary(&FGMRES);
-  error_sum += helper.checkResult(10*tol);
+  error_sum += helper.checkResult(test_pass_tol);
 
   // Change sketching method for the existing randomized GMRES solver
   FGMRES.setSketchingMethod(LinSolverIterativeRandFGMRES::fwht);
@@ -167,7 +168,7 @@ int runTest(int argc, char *argv[])
             << "\t Sketching method:                              : "
             << "FWHT\n";
   helper.printIterativeSolverSummary(&FGMRES);
-  error_sum += helper.checkResult(10*tol);
+  error_sum += helper.checkResult(test_pass_tol);
 
   isTestPass(error_sum, "Test Randomized GMRES on " + hwbackend + " device");
 
@@ -178,14 +179,14 @@ int runTest(int argc, char *argv[])
 }
 
 
-ReSolve::vector::Vector* generateRhs(const index_type N, 
+ReSolve::vector::Vector* generateRhs(const index_type n, 
                                      ReSolve::memory::MemorySpace memspace)
 {
-  vector_type* vec_rhs = new vector_type(N);
+  vector_type* vec_rhs = new vector_type(n);
   vec_rhs->allocate(ReSolve::memory::HOST);
 
   real_type* data = vec_rhs->getData(ReSolve::memory::HOST);
-  for (int i = 0; i < N; ++i) {
+  for (int i = 0; i < n; ++i) {
     if (i % 2) {
       data[i] = 1.0;
     } else {
@@ -200,7 +201,7 @@ ReSolve::vector::Vector* generateRhs(const index_type N,
   return vec_rhs;
 } 
 
-ReSolve::matrix::Csr* generateMatrix(const index_type N, 
+ReSolve::matrix::Csr* generateMatrix(const index_type n, 
                                      ReSolve::memory::MemorySpace memspace)
 {
   std::vector<real_type> r1 = {1., 5., 7., 8., 3., 2., 4.}; // sum 30
@@ -213,26 +214,26 @@ ReSolve::matrix::Csr* generateMatrix(const index_type N,
   const std::vector<std::vector<real_type> > data = {r1, r2, r3, r4, r5};
 
   // First compute number of nonzeros
-  index_type NNZ = 0;
-  for (index_type i = 0; i < N; ++i)
+  index_type nnz = 0;
+  for (index_type i = 0; i < n; ++i)
   {
     size_t reminder = static_cast<size_t>(i%5);
-    NNZ += static_cast<index_type>(data[reminder].size());
+    nnz += static_cast<index_type>(data[reminder].size());
   }
 
-  // Allocate NxN CSR matrix with NNZ nonzeros
-  ReSolve::matrix::Csr* A = new ReSolve::matrix::Csr(N, N, NNZ);
+  // Allocate NxN CSR matrix with nnz nonzeros
+  ReSolve::matrix::Csr* A = new ReSolve::matrix::Csr(n, n, nnz);
   A->allocateMatrixData(ReSolve::memory::HOST);
 
   index_type* rowptr = A->getRowData(ReSolve::memory::HOST);
   index_type* colidx = A->getColData(ReSolve::memory::HOST);
   real_type* val     = A->getValues(ReSolve::memory::HOST); 
 
-  // Populate CSR matrix using same row pattern as for NNZ calculation
+  // Populate CSR matrix using same row pattern as for nnz calculation
   rowptr[0] = 0;
   index_type where;
   real_type what;
-  for (index_type i=0; i < N; ++i)
+  for (index_type i=0; i < n; ++i)
   {
     size_t reminder = static_cast<size_t>(i%5);
     const std::vector<real_type>& row_sample = data[reminder];
@@ -242,16 +243,16 @@ ReSolve::matrix::Csr* generateMatrix(const index_type N,
     bool c = false;
     for (index_type j = rowptr[i]; j < rowptr[i+1]; ++j)
     {
-      if (((!c) && (((j - rowptr[i]) * N/nnz_per_row + (N%(N/nnz_per_row))) >= i)) || ((!c) && (j == (rowptr[i+1] - 1)) )) {
+      if (((!c) && (((j - rowptr[i]) * n/nnz_per_row + (n%(n/nnz_per_row))) >= i)) || ((!c) && (j == (rowptr[i+1] - 1)) )) {
         c = true;
         where = i;
         what = 4.;
       } else {
-        where =  (j - rowptr[i]) * N/nnz_per_row + (N%(N/nnz_per_row));
+        where =  (j - rowptr[i]) * n/nnz_per_row + (n%(n/nnz_per_row));
+        // evenly distribute nonzeros ^^^^             ^^^^^^^^ perturb offset
         what = row_sample[static_cast<size_t>(j - rowptr[i])];
       } 
       colidx[j] = where;
-      // evenly distribute nonzeros ^^^^             ^^^^^^^^ perturb offset
       val[j] = what;
     }
   }

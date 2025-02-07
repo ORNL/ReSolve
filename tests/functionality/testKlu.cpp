@@ -114,7 +114,6 @@ int runTest(int argc, char *argv[], std::string& solver_name)
   // Allocate the solution vector
   vector_type vec_x(A->getNumRows());
   vec_x.allocate(ReSolve::memory::HOST); //for KLU
-  vec_x.allocate(ReSolve::memory::DEVICE);
 
   // Solve the first system using KLU
   status = KLU.setup(A);
