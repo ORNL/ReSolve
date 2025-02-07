@@ -35,7 +35,9 @@ int main(int, char**)
     result += test.matrixHandlerConstructor();
     result += test.matrixInfNorm(1000000);
     result += test.matVec(50);
-
+    result += test.csc2csr(2,3);
+    result += test.csc2csr(3,2);
+    result += test.csc2csr(3,3);
     std::cout << "\n";
   }
 #endif
@@ -57,3 +59,4 @@ int main(int, char**)
 #endif
   return result.summary();
 }
+

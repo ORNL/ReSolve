@@ -79,6 +79,28 @@ public:
     return status.report(__func__);
   }
 
+  TestOutcome csc2csr(index_type N, index_type M)
+  {
+    TestStatus status=0;
+    matrix::Csr* A = createRectangularCsrMatrix(N, M);
+    matrix::Csc* A_csc = new matrix::Csc(N, M, 2*std::min(N,M));
+    A_csc->allocateMatrixData(memory::HOST);
+
+    handler_.csc2csr(A, A_csc, memspace_);
+
+    status *= (A->getNumRows() == A_csc->getNumRows());
+    status *= (A->getNumColumns() == A_csc->getNumColumns());
+
+    // verify the second and second to last entry in the column and value arrays
+
+
+
+    delete A;
+    delete A_csc;
+
+    return status.report(__func__);
+  }
+
 private:
   ReSolve::MatrixHandler& handler_;
   memory::MemorySpace memspace_{memory::HOST};
@@ -101,7 +123,95 @@ private:
     }
     return status;
   }
+  /** 
+   * @brief Create a rectangular CSR matrix
+   * 
+   * The sparisty structure is lower bidiagonal if N==M, with an extra entry on the first row.
+   * If N>M an entry is nonzero iff i==j, or i+M==j+N 
+   * if N<M an entry is nonzero iff i==j, or i+N==j+M
+   * The values increase with a counter from 1.0
+   * 
+   * @param[in] N number of rows
+   * @param[in] M number of columns
+   * 
+   * @return matrix::Csr* 
+  */
+  
+  matrix::Csr* createRectangularCsrMatrix(const index_type N, const index_type M)
+  {
+    // Allocate NxM CSR matrix with NNZ nonzeros
+    index_type NNZ = 2*std::min(N,M);
+    matrix::Csr* A = new matrix::Csr(N, M, NNZ);
+    A->allocateMatrixData(memory::HOST);
 
+    index_type* rowptr = A->getRowData(memory::HOST);
+    index_type* colidx = A->getColData(memory::HOST);
+    real_type* val     = A->getValues( memory::HOST);
+
+    real_type counter = 1.0;
+
+    if(N==M) //square case
+    {
+      rowptr[0] = 0;
+      for (index_type i=0; i < N; ++i)
+      {
+        rowptr[i+1] = rowptr[i] + 2;
+        if(i==0) //first row
+        {
+          colidx[rowptr[i]] = i;
+          val[rowptr[i]] = counter++;
+          colidx[rowptr[i]+1] = M/2;
+          val[rowptr[i]+1] = counter++;
+        }
+        else
+        {
+          colidx[rowptr[i]] = i-1;
+          val[rowptr[i]] = counter++;
+          colidx[rowptr[i]+1] = i;
+          val[rowptr[i]+1] = counter++;
+        }
+      }
+    }
+    else if (N>M)
+    {
+      rowptr[0] = 0;
+      for (index_type i=0; i < N; ++i)
+      {
+        rowptr[i+1] = rowptr[i];
+        if(i>=N-M) //off diagonal
+        {
+          colidx[rowptr[i+1]] = i-N+M;
+          val[rowptr[i+1]] = counter++;
+          rowptr[i+1] ++;
+        }
+        if(i<M) //main diagonal
+        {
+          colidx[rowptr[i+1]] = i;
+          val[rowptr[i+1]] = counter++;
+          rowptr[i+1] ++;
+        }
+      }
+    }
+    else //N<M
+    {
+      rowptr[0] = 0;
+      for (index_type i=0; i < N; ++i)
+      {
+        rowptr[i+1] = rowptr[i]+2;
+        colidx[rowptr[i]] = i;
+        val[rowptr[i]] = counter++;
+        colidx[rowptr[i]+1] = i+M-N;
+        val[rowptr[i]+1] = counter++;
+      }
+    }
+    A->setUpdated(memory::HOST);
+
+    if (memspace_ == memory::DEVICE) {
+      A->syncData(memspace_);
+    }
+
+    return A;        
+  }
   matrix::Csr* createCsrMatrix(const index_type N)
   {
     std::vector<real_type> r1 = {1., 5., 7., 8., 3., 2., 4.}; // sum 30

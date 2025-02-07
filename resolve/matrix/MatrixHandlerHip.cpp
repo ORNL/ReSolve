@@ -176,7 +176,7 @@ namespace ReSolve {
     rocsparse_status status;
     
     A_csr->allocateMatrixData(memory::DEVICE);
-    index_type m = A_csc->getNumCols();
+    index_type m = A_csc->getNumColumns();
     index_type n = A_csc->getNumRows();
     index_type nnz = A_csc->getNnz();
     size_t bufferSize;
