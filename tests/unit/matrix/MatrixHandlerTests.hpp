@@ -5,6 +5,7 @@
 #include <iterator>
 #include <algorithm>
 #include <resolve/matrix/Csr.hpp>
+#include <resolve/matrix/Csc.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/Vector.hpp>
@@ -82,20 +83,27 @@ public:
   TestOutcome csc2csr(index_type N, index_type M)
   {
     TestStatus status=0;
-    matrix::Csr* A = createRectangularCsrMatrix(N, M);
-    matrix::Csc* A_csc = new matrix::Csc(N, M, 2*std::min(N,M));
-    A_csc->allocateMatrixData(memory::HOST);
+    matrix::Csc* A_csc = createRectangularCscMatrix(N, M);
+    matrix::Csr* A_csr = new matrix::Csr(N, M, 2*std::min(N,M));
+    A_csr->allocateMatrixData(memory::HOST);
 
-    handler_.csc2csr(A, A_csc, memspace_);
+    handler_.csc2csr(A_csc, A_csr, memspace_);
 
-    status *= (A->getNumRows() == A_csc->getNumRows());
-    status *= (A->getNumColumns() == A_csc->getNumColumns());
+    status *= (A_csr->getNumRows() == A_csc->getNumRows());
+    status *= (A_csr->getNumColumns() == A_csc->getNumColumns());
+    status *= (A_csr->getNnz() == A_csc->getNnz());
 
-    // verify the second and second to last entry in the column and value arrays
+    index_type* rowptr_csr = A_csr->getRowData(memory::HOST);
+    index_type* colidx_csr = A_csr->getColData(memory::HOST);
+    real_type* val_csr     = A_csr->getValues( memory::HOST);
+
+    index_type* colptr_csc = A_csc->getRowData(memory::HOST);
+    index_type* rowidx_csc = A_csc->getColData(memory::HOST);
+    real_type* val_csc     = A_csc->getValues( memory::HOST);
 
 
 
-    delete A;
+    delete A_csr;
     delete A_csc;
 
     return status.report(__func__);
@@ -137,71 +145,71 @@ private:
    * @return matrix::Csr* 
   */
   
-  matrix::Csr* createRectangularCsrMatrix(const index_type N, const index_type M)
+  matrix::Csc* createRectangularCscMatrix(const index_type N, const index_type M)
   {
     // Allocate NxM CSR matrix with NNZ nonzeros
     index_type NNZ = 2*std::min(N,M);
-    matrix::Csr* A = new matrix::Csr(N, M, NNZ);
+    matrix::Csc* A = new matrix::Csc(M, N, NNZ); //indices are deliberately swapped so N+1 is the length of the pointer array
     A->allocateMatrixData(memory::HOST);
 
-    index_type* rowptr = A->getRowData(memory::HOST);
-    index_type* colidx = A->getColData(memory::HOST);
+    index_type* colptr = A->getRowData(memory::HOST);
+    index_type* rowidx = A->getColData(memory::HOST);
     real_type* val     = A->getValues( memory::HOST);
 
     real_type counter = 1.0;
 
     if(N==M) //square case
     {
-      rowptr[0] = 0;
+      colptr[0] = 0;
       for (index_type i=0; i < N; ++i)
       {
-        rowptr[i+1] = rowptr[i] + 2;
+        colptr[i+1] = colptr[i] + 2;
         if(i==0) //first row
         {
-          colidx[rowptr[i]] = i;
-          val[rowptr[i]] = counter++;
-          colidx[rowptr[i]+1] = M/2;
-          val[rowptr[i]+1] = counter++;
+          rowidx[colptr[i]] = i;
+          val[colptr[i]] = counter++;
+          rowidx[colptr[i]+1] = M/2;
+          val[colptr[i]+1] = counter++;
         }
         else
         {
-          colidx[rowptr[i]] = i-1;
-          val[rowptr[i]] = counter++;
-          colidx[rowptr[i]+1] = i;
-          val[rowptr[i]+1] = counter++;
+          rowidx[colptr[i]] = i-1;
+          val[colptr[i]] = counter++;
+          rowidx[colptr[i]+1] = i;
+          val[colptr[i]+1] = counter++;
         }
       }
     }
     else if (N>M)
     {
-      rowptr[0] = 0;
+      colptr[0] = 0;
       for (index_type i=0; i < N; ++i)
       {
-        rowptr[i+1] = rowptr[i];
+        colptr[i+1] = colptr[i];
         if(i>=N-M) //off diagonal
         {
-          colidx[rowptr[i+1]] = i-N+M;
-          val[rowptr[i+1]] = counter++;
-          rowptr[i+1] ++;
+          rowidx[colptr[i+1]] = i-N+M;
+          val[colptr[i+1]] = counter++;
+          colptr[i+1] ++;
         }
         if(i<M) //main diagonal
         {
-          colidx[rowptr[i+1]] = i;
-          val[rowptr[i+1]] = counter++;
-          rowptr[i+1] ++;
+          rowidx[colptr[i+1]] = i;
+          val[colptr[i+1]] = counter++;
+          colptr[i+1] ++;
         }
       }
     }
     else //N<M
     {
-      rowptr[0] = 0;
+      colptr[0] = 0;
       for (index_type i=0; i < N; ++i)
       {
-        rowptr[i+1] = rowptr[i]+2;
-        colidx[rowptr[i]] = i;
-        val[rowptr[i]] = counter++;
-        colidx[rowptr[i]+1] = i+M-N;
-        val[rowptr[i]+1] = counter++;
+        colptr[i+1] = colptr[i]+2;
+        rowidx[colptr[i]] = i;
+        val[colptr[i]] = counter++;
+        rowidx[colptr[i]+1] = i+M-N;
+        val[colptr[i]+1] = counter++;
       }
     }
     A->setUpdated(memory::HOST);
