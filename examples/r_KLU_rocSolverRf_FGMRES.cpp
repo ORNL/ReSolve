@@ -233,6 +233,9 @@ int example(int argc, char *argv[])
       status = Rf->refactorize();
       std::cout << "ROCSOLVER RF refactorization status: " << status << std::endl;      
       status = Rf->solve(vec_rhs, vec_x);
+
+      helper.resetSystem(A, vec_rhs, vec_x);
+
       std::cout << "ROCSOLVER RF solve status: " << status << std::endl;      
       vec_r->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
       norm_b = vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE);
@@ -242,32 +245,36 @@ int example(int argc, char *argv[])
       FGMRES->resetMatrix(A);
       FGMRES->setupPreconditioner("LU", Rf);
 
+      helper.printSummary();
+
       matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, ReSolve::memory::DEVICE); 
       real_type rnrm = sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE));
-      std::cout << "\t 2-Norm of the residual (before IR): " 
-        << std::scientific << std::setprecision(16) 
-        << rnrm/norm_b << "\n";
+      // std::cout << "\t 2-Norm of the residual (before IR): " 
+      //   << std::scientific << std::setprecision(16) 
+      //   << rnrm/norm_b << "\n";
 
       matrix_handler->matrixInfNorm(A, &norm_A, ReSolve::memory::DEVICE); 
       norm_x = vector_handler->infNorm(vec_x, ReSolve::memory::DEVICE);
       norm_r = vector_handler->infNorm(vec_r, ReSolve::memory::DEVICE);
-      std::cout << std::scientific << std::setprecision(16)
-                << "\t Matrix inf  norm: "         << norm_A << "\n"
-                << "\t Residual inf norm: "        << norm_r << "\n"  
-                << "\t Solution inf norm: "        << norm_x << "\n"  
-                << "\t Norm of scaled residuals: " << norm_r / (norm_A * norm_x) << "\n";
+      // std::cout << std::scientific << std::setprecision(16)
+      //           << "\t Matrix inf  norm: "         << norm_A << "\n"
+      //           << "\t Residual inf norm: "        << norm_r << "\n"  
+      //           << "\t Solution inf norm: "        << norm_x << "\n"  
+      //           << "\t Norm of scaled residuals: " << norm_r / (norm_A * norm_x) << "\n";
 
       vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
       // vec_rhs->syncData(memory::DEVICE);
       if(!std::isnan(rnrm) && !std::isinf(rnrm)) {
         FGMRES->solve(vec_rhs, vec_x);
 
-        std::cout << "FGMRES: init nrm: " 
-                  << std::scientific << std::setprecision(16) 
-                  << FGMRES->getInitResidualNorm()/norm_b
-                  << " final nrm: "
-                  << FGMRES->getFinalResidualNorm()/norm_b
-                  << " iter: " << FGMRES->getNumIter() << "\n";
+        helper.printIrSummary(FGMRES);
+
+        // std::cout << "FGMRES: init nrm: " 
+        //           << std::scientific << std::setprecision(16) 
+        //           << FGMRES->getInitResidualNorm()/norm_b
+        //           << " final nrm: "
+        //           << FGMRES->getFinalResidualNorm()/norm_b
+        //           << " iter: " << FGMRES->getNumIter() << "\n";
       }
       RESOLVE_RANGE_POP("RocSolver");
     }
