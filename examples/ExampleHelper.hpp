@@ -136,7 +136,6 @@ namespace ReSolve
           r_ = r;
           x_ = x;
           res_ = new ReSolve::vector::Vector(A->getNumRows());
-          x_true_ = new ReSolve::vector::Vector(A->getNumRows());
           computeNorms();
         }
 
@@ -156,10 +155,14 @@ namespace ReSolve
                          ReSolve::vector::Vector* r,
                          ReSolve::vector::Vector* x)
         {
-          assert(A_->getNumRows() == A->getNumRows());
+          // assert(A_->getNumRows() == A->getNumRows());
           A_ = A;
           r_ = r;
           x_ = x;
+          if(res_ == nullptr) {
+            res_ = new ReSolve::vector::Vector(A->getNumRows());
+          }
+
           computeNorms();
         }
 
@@ -181,21 +184,29 @@ namespace ReSolve
           return norm_res_/norm_rhs_;
         }
 
+        /// Summary of direct solve
+        void printSummary()
+        {
+          std::cout << "\t 2-Norm of the residual (before IR): " 
+                    << std::scientific << std::setprecision(16) 
+                    << getNormResidualScaled() << "\n";
+
+          std::cout << std::scientific << std::setprecision(16)
+                    << "\t Matrix inf  norm: "         << inf_norm_A_   << "\n"
+                    << "\t Residual inf norm: "        << inf_norm_res_ << "\n"  
+                    << "\t Solution inf norm: "        << inf_norm_x_   << "\n"  
+                    << "\t Norm of scaled residuals: " << nsr_norm_     << "\n";
+        }
 
         /// Summary of error norms for an iterative refinement test.
         void printIrSummary(ReSolve::LinSolverIterative* ls)
         {
-          using namespace ReSolve;
-
-          real_type tol = ls->getTol();
-          index_type maxit = ls->getMaxit();
-
-          std::cout << std::setprecision(16) << std::scientific;
-          std::cout << "\t IR initial residual norm ||b-A*x||              : " << ls->getInitResidualNorm() << "\n";
-          std::cout << "\t IR final residual norm   ||b-A*x||              : " << ls->getFinalResidualNorm() << "\n";
-          std::cout << "\t IR iterations                                   : " << ls->getNumIter() << "\n";
-          std::cout << "\t IR tolerance                                    : " << std::setprecision(2) << tol << "\n";
-          std::cout << "\t IR max iterations                               : " << maxit << "\n";
+          std::cout << "FGMRES: init nrm: " 
+                    << std::scientific << std::setprecision(16) 
+                    << ls->getInitResidualNorm()/norm_rhs_
+                    << " final nrm: "
+                    << ls->getFinalResidualNorm()/norm_rhs_
+                    << " iter: " << ls->getNumIter() << "\n";
         }
 
         /// Summary of error norms for an iterative solver test.
