@@ -62,7 +62,7 @@ public:
     vector::Vector y(N);
     x.allocate(memspace_);
     if (x.getData(memspace_) == NULL) 
-      std::cout << "Oups we have an issue \n";
+      std::cout << "The memory space was not allocated \n" << std::endl;
     y.allocate(memspace_);
 
     x.setToConst(1.0, memspace_);
@@ -75,7 +75,7 @@ public:
 
     status *= verifyAnswer(y, 4.0);
 
-    delete A;
+    //delete A;
 
     return status.report(__func__);
   }
@@ -84,7 +84,8 @@ public:
   {
     TestStatus status=0;
     matrix::Csc* A_csc = createRectangularCscMatrix(N, M);
-    matrix::Csr* A_csr = new matrix::Csr(N, M, 2*std::min(N,M));
+    std::cout << "N: " << N << " M: " << M << "\n";
+    matrix::Csr* A_csr = new matrix::Csr(M, N, 2*std::min(N,M));
     A_csr->allocateMatrixData(memory::HOST);
 
     handler_.csc2csr(A_csc, A_csr, memspace_);
@@ -152,19 +153,19 @@ private:
     matrix::Csc* A = new matrix::Csc(M, N, NNZ); //indices are deliberately swapped so N+1 is the length of the pointer array
     A->allocateMatrixData(memory::HOST);
 
-    index_type* colptr = A->getRowData(memory::HOST);
-    index_type* rowidx = A->getColData(memory::HOST);
+    index_type* colptr = A->getColData(memory::HOST);
+    index_type* rowidx = A->getRowData(memory::HOST);
     real_type* val     = A->getValues( memory::HOST);
 
     real_type counter = 1.0;
-
+    colptr[0] = 0;
+    std::cout << "N: " << N << " M: " << M << "\n";
     if(N==M) //square case
     {
-      colptr[0] = 0;
       for (index_type i=0; i < N; ++i)
       {
         colptr[i+1] = colptr[i] + 2;
-        if(i==0) //first row
+        if(i==0) //first column
         {
           rowidx[colptr[i]] = i;
           val[colptr[i]] = counter++;
@@ -182,7 +183,6 @@ private:
     }
     else if (N>M)
     {
-      colptr[0] = 0;
       for (index_type i=0; i < N; ++i)
       {
         colptr[i+1] = colptr[i];
@@ -202,7 +202,6 @@ private:
     }
     else //N<M
     {
-      colptr[0] = 0;
       for (index_type i=0; i < N; ++i)
       {
         colptr[i+1] = colptr[i]+2;

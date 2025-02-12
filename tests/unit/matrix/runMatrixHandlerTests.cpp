@@ -29,6 +29,9 @@ int main(int, char**)
   result += test.matrixHandlerConstructor();
   result += test.matrixInfNorm(1000000);
   result += test.matVec(50);
+  result += test.csc2csr(1024, 1024);
+  result += test.csc2csr(1024, 2048);
+  result += test.csc2csr(2048, 1024);
   std::cout << "\n";
   return result.summary();
 }

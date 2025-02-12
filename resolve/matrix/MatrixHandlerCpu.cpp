@@ -136,10 +136,10 @@ namespace ReSolve {
   int MatrixHandlerCpu::csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr)
   {
     // int error_sum = 0; TODO: Collect error output!
+    std::cout << "N: " << A_csc->getNumRows() << " M: " << A_csc->getNumColumns() << "\n";
     assert(A_csc->getNnz() == A_csr->getNnz());
     assert(A_csc->getNumRows() == A_csr->getNumRows());
     assert(A_csc->getNumColumns() == A_csr->getNumColumns());
-
     index_type nnz = A_csc->getNnz();
     index_type n   = A_csc->getNumRows();
     index_type m   = A_csc->getNumColumns();

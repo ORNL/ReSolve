@@ -193,6 +193,10 @@ namespace ReSolve {
     index_type m = A_csc->getNumColumns();
     index_type n = A_csc->getNumRows();
     index_type nnz = A_csc->getNnz();
+    
+    // check dimensions of A_csc and A_csr
+    assert(A_csc->getNumRows() == A_csr->getNumRows() && "Number of rows in A_csc must be equal to number of rows in A_csr");
+
     size_t bufferSize;
     void* d_work;
     cusparseStatus_t status = cusparseCsr2cscEx2_bufferSize(workspace_->getCusparseHandle(),
