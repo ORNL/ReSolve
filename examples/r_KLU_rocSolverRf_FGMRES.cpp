@@ -14,79 +14,143 @@
 #include <resolve/LinSolverIterativeFGMRES.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 #include <resolve/Profiling.hpp>
+#include <resolve/utilities/params/CliOptions.hpp>
 
-using namespace ReSolve::constants;
+#include "ExampleHelper.hpp"
+
+void printUsage(const std::string& name)
+{
+  std::cout << "\nLoads from files and solves a series of linear systems.\n\n";
+  std::cout << "System matrices are in files with names <pathname>XX.mtx, where XX are\n";
+  std::cout << "consecutive integer numbers 00, 01, 02, ...\n\n";
+  std::cout << "System right hand side vectors are stored in files with matching numbering.\n";
+  std::cout << "and file extension.\n\n";
+  std::cout << "Usage:\n\t./" << name;
+  std::cout << " -m <matrix pathname> -r <rhs pathname> -n <number of systems>\n\n";
+  std::cout << "Optional features:\n\t-h\tPrints this message.\n\n";
+}
+
+template <class workspace_type>
+static int example(int argc, char *argv[]);
 
 int main(int argc, char *argv[])
 {
+  return example<ReSolve::LinAlgWorkspaceHIP>(argc, argv);
+}
+
+template <class workspace_type>
+int example(int argc, char *argv[])
+{
   // Use the same data types as those you specified in ReSolve build.
+  using namespace ReSolve::constants;
+  using namespace ReSolve::examples;
+  using namespace ReSolve;
   using index_type = ReSolve::index_type;
   using real_type  = ReSolve::real_type;
   using vector_type = ReSolve::vector::Vector;
 
-  (void) argc; // TODO: Check if the number of input parameters is correct.
-  std::string  matrixFileName = argv[1];
-  std::string  rhsFileName = argv[2];
+  const std::string example_name("klu_rocsolverrf_fgmres.exe");
 
-  index_type numSystems = atoi(argv[3]);
-  std::cout << "Family mtx file name: " << matrixFileName << ", total number of matrices: " << numSystems << std::endl;
-  std::cout << "Family rhs file name: " << rhsFileName    << ", total number of RHSes: "    << numSystems << std::endl;
+  CliOptions options(argc, argv);
+  CliOptions::Option* opt = nullptr;
 
-  std::string fileId;
-  std::string rhsId;
-  std::string matrixFileNameFull;
-  std::string rhsFileNameFull;
+  bool is_help = options.hasKey("-h");
+  if (is_help) {
+    printUsage(example_name);
+    return 0;
+  }
 
-  ReSolve::matrix::Csr* A = nullptr;
-  ReSolve::LinAlgWorkspaceHIP* workspace_HIP = new ReSolve::LinAlgWorkspaceHIP();
+  index_type num_systems = 0;
+  opt = options.getParamFromKey("-n");
+  if (opt) {
+    num_systems = atoi((opt->second).c_str());
+  } else {
+    std::cout << "Incorrect input!\n";
+    printUsage(example_name);
+  }
+
+  std::string matrix_pathname("");
+  opt = options.getParamFromKey("-m");
+  if (opt) {
+    matrix_pathname = opt->second;
+  } else {
+    std::cout << "Incorrect input!\n";
+    printUsage(example_name);
+  }
+
+  std::string rhs_pathname("");
+  opt = options.getParamFromKey("-r");
+  if (opt) {
+    rhs_pathname = opt->second;
+  } else {
+    std::cout << "Incorrect input!\n";
+    printUsage(example_name);
+  }
+
+  std::cout << "Family mtx file name: " << matrix_pathname << ", total number of matrices: " << num_systems << "\n";
+  std::cout << "Family rhs file name: " << rhs_pathname    << ", total number of RHSes: "    << num_systems << "\n";
+
+  // Workspace
+  workspace_type* workspace_HIP = new ReSolve::LinAlgWorkspaceHIP();
   workspace_HIP->initializeHandles();
+
+  // Example helper
+  ExampleHelper<workspace_type> helper(*workspace_HIP);
+
+  // Matrix and vector handlers
   ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(workspace_HIP);
   ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(workspace_HIP);
-  real_type* rhs = nullptr;
-  real_type* x   = nullptr;
 
-  vector_type* vec_rhs = nullptr;
-  vector_type* vec_x   = nullptr;
-  vector_type* vec_r   = nullptr;
-  real_type norm_A;
-  real_type norm_x;
-  real_type norm_r;
-
-  ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::CGS2);
+  // Direct solvers instantiation  
   ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
   ReSolve::LinSolverDirectRocSolverRf* Rf = new ReSolve::LinSolverDirectRocSolverRf(workspace_HIP);
+
+  // Iterative solver instantiation
+  ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::CGS2);
   ReSolve::LinSolverIterativeFGMRES* FGMRES = new ReSolve::LinSolverIterativeFGMRES(matrix_handler, vector_handler, GS);
 
+  // Linear system matrix and vectors
+  ReSolve::matrix::Csr* A = nullptr;
+  real_type* rhs = nullptr;
+  real_type* x   = nullptr;
+  vector_type* vec_rhs = nullptr;
+  vector_type* vec_x   = nullptr;
+
+  // Auxilliary objects for error estimates
+  vector_type* vec_r   = nullptr;
+  real_type norm_A{0.0};
+  real_type norm_x{0.0};
+  real_type norm_r{0.0};
+
   RESOLVE_RANGE_PUSH(__FUNCTION__);
-  for (int i = 0; i < numSystems; ++i)
+  for (int i = 0; i < num_systems; ++i)
   {
     RESOLVE_RANGE_PUSH("Matrix Read");
-    index_type j = 4 + i * 2;
-    fileId = argv[j];
-    rhsId = argv[j + 1];
 
-    matrixFileNameFull = "";
-    rhsFileNameFull = "";
+    std::ostringstream matname;
+    std::ostringstream rhsname;
+    matname << matrix_pathname << std::setfill('0') << std::setw(2) << i << ".mtx";
+    rhsname << rhs_pathname    << std::setfill('0') << std::setw(2) << i << ".mtx";
+    std::string matrix_pathname_full = matname.str();
+    std::string rhs_pathname_full    = rhsname.str();
 
     // Read matrix first
-    matrixFileNameFull = matrixFileName + fileId + ".mtx";
-    rhsFileNameFull = rhsFileName + rhsId + ".mtx";
     std::cout << std::endl << std::endl << std::endl;
     std::cout << "========================================================================================================================"<<std::endl;
-    std::cout << "Reading: " << matrixFileNameFull << std::endl;
+    std::cout << "Reading: " << matrix_pathname_full << std::endl;
     std::cout << "========================================================================================================================"<<std::endl;
     std::cout << std::endl;
     // Read first matrix
-    std::ifstream mat_file(matrixFileNameFull);
+    std::ifstream mat_file(matrix_pathname_full);
     if(!mat_file.is_open())
     {
-      std::cout << "Failed to open file " << matrixFileNameFull << "\n";
+      std::cout << "Failed to open file " << matrix_pathname_full << "\n";
       return -1;
     }
-    std::ifstream rhs_file(rhsFileNameFull);
+    std::ifstream rhs_file(rhs_pathname_full);
     if(!rhs_file.is_open())
     {
-      std::cout << "Failed to open file " << rhsFileNameFull << "\n";
+      std::cout << "Failed to open file " << rhs_pathname_full << "\n";
       return -1;
     }
     bool is_expand_symmetric = true;
@@ -94,6 +158,7 @@ int main(int argc, char *argv[])
       A = ReSolve::io::createCsrFromFile(mat_file, is_expand_symmetric);
 
       rhs = ReSolve::io::createArrayFromFile(rhs_file);
+      // vec_rhs = io::createVectorFromFile(rhs_file);
       x = new real_type[A->getNumRows()];
       vec_rhs = new vector_type(A->getNumRows());
       vec_x = new vector_type(A->getNumRows());
@@ -103,6 +168,7 @@ int main(int argc, char *argv[])
     } else {
       ReSolve::io::updateMatrixFromFile(mat_file, A);
       ReSolve::io::updateArrayFromFile(rhs_file, &rhs);
+      // io::updateVectorFromFile(rhs_file, vec_rhs);
     }
     // Copy matrix data to device
     A->syncData(ReSolve::memory::DEVICE);
@@ -119,6 +185,7 @@ int main(int argc, char *argv[])
       vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
     } else { 
       vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+      // vec_rhs->syncData(memory::DEVICE);
     }
     RESOLVE_RANGE_POP("Matrix Read");
     std::cout << "CSR matrix loaded. Expanded NNZ: " << A->getNnz() << std::endl;
@@ -191,6 +258,7 @@ int main(int argc, char *argv[])
                 << "\t Norm of scaled residuals: " << norm_r / (norm_A * norm_x) << "\n";
 
       vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+      // vec_rhs->syncData(memory::DEVICE);
       if(!std::isnan(rnrm) && !std::isinf(rnrm)) {
         FGMRES->solve(vec_rhs, vec_x);
 
@@ -204,7 +272,7 @@ int main(int argc, char *argv[])
       RESOLVE_RANGE_POP("RocSolver");
     }
 
-  } // for (int i = 0; i < numSystems; ++i)
+  } // for (int i = 0; i < num_systems; ++i)
   RESOLVE_RANGE_POP(__FUNCTION__);
 
   delete A;
