@@ -96,7 +96,6 @@ namespace ReSolve
             memspace_ = ReSolve::memory::DEVICE;
           }
 
-          setSolutionVector();
           computeNorms();
         }
 
@@ -129,8 +128,8 @@ namespace ReSolve
          * @param x[in] - Computed solution of the linear system
          */
         void setSystem(ReSolve::matrix::Sparse* A,
-                      ReSolve::vector::Vector* r,
-                      ReSolve::vector::Vector* x)
+                       ReSolve::vector::Vector* r,
+                       ReSolve::vector::Vector* x)
         {
           assert((res_ == nullptr) && (x_true_ == nullptr));
           A_ = A;
@@ -138,7 +137,6 @@ namespace ReSolve
           x_ = x;
           res_ = new ReSolve::vector::Vector(A->getNumRows());
           x_true_ = new ReSolve::vector::Vector(A->getNumRows());
-          setSolutionVector();
           computeNorms();
         }
 
@@ -155,8 +153,8 @@ namespace ReSolve
          * @param x[in] - Computed solution of the linear system
          */
         void resetSystem(ReSolve::matrix::Sparse* A,
-                        ReSolve::vector::Vector* r,
-                        ReSolve::vector::Vector* x)
+                         ReSolve::vector::Vector* r,
+                         ReSolve::vector::Vector* x)
         {
           assert(A_->getNumRows() == A->getNumRows());
           A_ = A;
@@ -183,44 +181,6 @@ namespace ReSolve
           return norm_res_/norm_rhs_;
         }
 
-        /// Return L2 residual norm computed on the host.
-        ReSolve::real_type getNormResidualCpu()
-        {
-          return norm_res_cpu_;
-        }
-
-        /// Return L2 norm of the residual computed with the "exact" solution.
-        ReSolve::real_type getNormResidualTrue()
-        {
-          return norm_res_true_;
-        }
-
-        /// Return L2 norm of difference between computed and the "exact" solution.
-        ReSolve::real_type getNormDiff()
-        {
-          return norm_diff_;
-        }
-
-        /// Return L2 norm of relative difference between computed and the "exact"
-        /// solution.
-        ReSolve::real_type getNormDiffScaled()
-        {
-          return norm_diff_/norm_true_;
-        }
-
-        /// Summary of error norms for a direct solver test.
-        void printSummary()
-        {
-          std::cout << std::setprecision(16) << std::scientific;
-          std::cout << "\t Residual norm           ||b-A*x||               : " << getNormResidual()       << "\n";
-          if (memspace_ == ReSolve::memory::DEVICE) {
-            std::cout << "\t Residual norm on CPU    ||b-A*x|| (CPU)         : " << getNormResidualCpu()    << "\n";
-          }
-          std::cout << "\t Relative residual norm  ||b-A*x||/||b||         : " << getNormResidualScaled() << "\n";
-          std::cout << "\t Error norm              ||x-x_true||            : " << getNormDiff()           << "\n";
-          std::cout << "\t Relative error norm     ||x-x_true||/||x_true|| : " << getNormDiffScaled()     << "\n";
-          std::cout << "\t Exact solution residual ||b-A*x_true||          : " << getNormResidualTrue()   << "\n";
-        }
 
         /// Summary of error norms for an iterative refinement test.
         void printIrSummary(ReSolve::LinSolverIterative* ls)
@@ -372,42 +332,16 @@ namespace ReSolve
         /// Compute error norms.
         void computeNorms()
         {
-          if (!solution_set_) {
-            setSolutionVector();
-          }
-
           // Compute rhs and residual norms
           res_->copyDataFrom(r_, memspace_, memspace_);
           norm_rhs_ = norm2(*r_, memspace_);
           norm_res_ = computeResidualNorm(*A_, *x_, *res_, memspace_);
 
-          // Compute residual norm w.r.t. true solution
-          res_->copyDataFrom(r_, memspace_, memspace_);
-          norm_res_true_ = computeResidualNorm(*A_, *x_true_, *res_, memspace_);
-
-          // Compute residual norm on CPU
-          if (memspace_ == ReSolve::memory::DEVICE) {
-            A_->syncData(ReSolve::memory::HOST);
-            r_->syncData(ReSolve::memory::HOST);
-            x_->syncData(ReSolve::memory::HOST);
-            res_->copyDataFrom(r_, memspace_, ReSolve::memory::HOST);
-            norm_res_cpu_ = computeResidualNorm(*A_, *x_, *res_, ReSolve::memory::HOST);
-          }
-
-          // Compute vector difference norm
-          res_->copyDataFrom(x_, memspace_, memspace_);
-          norm_diff_ = computeDiffNorm(*x_true_, *res_, memspace_);
-        }
-
-        /// Sets all elements of the solution vector to 1. 
-        void setSolutionVector()
-        {
-          x_true_->allocate(memspace_);
-          x_true_->setToConst(static_cast<ReSolve::real_type>(1.0), memspace_);
-          x_true_->setDataUpdated(memspace_);
-          x_true_->syncData(ReSolve::memory::HOST);
-          norm_true_ = norm2(*x_true_, memspace_);
-          solution_set_ = true;
+          // Compute norm of scaled residuals
+          mh_.matrixInfNorm(A_, &inf_norm_A_, memspace_); 
+          inf_norm_x_   = vh_.infNorm(x_, memspace_);
+          inf_norm_res_ = vh_.infNorm(res_, memspace_);
+          nsr_norm_     = inf_norm_res_ / (inf_norm_A_ * inf_norm_x_);
         }
 
         /**
@@ -422,9 +356,9 @@ namespace ReSolve
          * @post r is overwritten with residual values
          */
         ReSolve::real_type computeResidualNorm(ReSolve::matrix::Sparse& A,
-                                              ReSolve::vector::Vector& x,
-                                              ReSolve::vector::Vector& r,
-                                              ReSolve::memory::MemorySpace memspace)
+                                               ReSolve::vector::Vector& x,
+                                               ReSolve::vector::Vector& r,
+                                               ReSolve::memory::MemorySpace memspace)
         {
           using namespace ReSolve::constants;
           mh_.matvec(&A, &x, &r, &ONE, &MINUSONE, memspace); // r := A * x - r
@@ -442,8 +376,8 @@ namespace ReSolve
          * @post x is overwritten with difference value
          */
         ReSolve::real_type computeDiffNorm(ReSolve::vector::Vector& x_true,
-                                          ReSolve::vector::Vector& x,
-                                          ReSolve::memory::MemorySpace memspace)
+                                           ReSolve::vector::Vector& x,
+                                           ReSolve::memory::MemorySpace memspace)
         {
           using namespace ReSolve::constants;
           vh_.axpy(&MINUSONE, &x_true, &x, memspace); // x := -x_true + x
@@ -452,7 +386,7 @@ namespace ReSolve
 
         /// Compute L2 norm of vector `r` in memory space `memspace`.
         ReSolve::real_type norm2(ReSolve::vector::Vector& r,
-                                ReSolve::memory::MemorySpace memspace)
+                                 ReSolve::memory::MemorySpace memspace)
         {
           return std::sqrt(vh_.dot(&r, &r, memspace));
         }
@@ -472,15 +406,16 @@ namespace ReSolve
 
         ReSolve::real_type norm_rhs_{0.0}; ///< right-hand side vector norm
         ReSolve::real_type norm_res_{0.0}; ///< residual vector norm
-        ReSolve::real_type norm_res_cpu_{0.0}; ///< residual vector norm (on host)
-        ReSolve::real_type norm_res_true_{0.0}; ///< residual norm for "exact" solution
-        ReSolve::real_type norm_true_{0.0}; ///< norm of the "exact" solution
-        ReSolve::real_type norm_diff_{0.0}; ///< norm of solution error
+
+        real_type inf_norm_A_{0.0};   ///< infinity norm of matrix A
+        real_type inf_norm_x_{0.0};   ///< infinity norm of solution x
+        real_type inf_norm_res_{0.0}; ///< infinity norm of res = A*x - r
+        real_type nsr_norm_{0.0};     ///< norm of scaled residuals
 
         bool solution_set_{false}; ///< if exact solution is set
 
         ReSolve::memory::MemorySpace memspace_{ReSolve::memory::HOST};
     };
 
-  }
-}
+  } // namespace examples
+} // namespace ReSolve
