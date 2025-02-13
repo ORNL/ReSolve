@@ -328,15 +328,22 @@ namespace ReSolve
       case HOST:
         //check if we need to copy or not
         if (h_data_updated_) {
-          out::misc() << "In Csr::syncData trying to sync host, but host already up to date!\n";
+          out::misc() << "WARNING: In Csr::syncData trying to sync host, but host already up to date! This line is ignored. (Perhaps you meant to sync device\n";
           return 0;
         }
         if (!d_data_updated_) {
-          out::error() << "In Csr::syncData trying to sync host with device, but device is out of date!\n";
+          out::error() << "In Csr::syncData trying to sync host with device, but device is out of date! 
+          If you have changed the data on purpose, update the device with "variableName->setUpdated(memory::DEVICE)". 
+          If you did not mean to change the data on the device, check your code. \n";
           assert(d_data_updated_);
         }
         if ((h_row_data_ == nullptr) != (h_col_data_ == nullptr)) {
-          out::error() << "In Csr::syncData one of host row or column data is null!\n";
+          if(h_row_data_ == nullptr) {
+            out::error() << "In Csr::syncData host row data is null, but col data is set!\n";
+          }
+          else {
+            out::error() << "In Csr::syncData host col data is null, but row data is set!\n";
+          }
         }
         if ((h_row_data_ == nullptr) && (h_col_data_ == nullptr)) {
           h_row_data_ = new index_type[n_ + 1];
