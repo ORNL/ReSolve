@@ -7,8 +7,6 @@ find_package(hip REQUIRED)
 find_package(rocblas REQUIRED)
 find_package(rocsparse REQUIRED)
 find_package(rocsolver REQUIRED)
-find_package(rocprofiler-sdk REQUIRED)
-find_package(rocprofiler-sdk-roctx REQUIRED)
 
 target_link_libraries(resolve_hip INTERFACE 
   hip::host 
@@ -17,6 +15,15 @@ target_link_libraries(resolve_hip INTERFACE
   roc::rocsparse
   roc::rocsolver
 )
+
+if(RESOLVE_USE_PROFILING)
+  find_package(rocprofiler-sdk REQUIRED)
+  find_package(rocprofiler-sdk-roctx REQUIRED)
+  target_link_libraries(resolve_hip INTERFACE
+    rocprofiler-sdk::rocprofiler-sdk
+    rocprofiler-sdk-roctx::rocprofiler-sdk-roctx
+  )
+endif()
 
 # HIP/ROCm targets still don't have include directories set correctly
 # We need this little hack for now :/

@@ -154,10 +154,6 @@ target_link_libraries(ReSolve PRIVATE ${ReSolve_Object_List})
 
 if(RESOLVE_USE_PROFILING)
   if(RESOLVE_USE_HIP)
-    # Roctracer does not provide CMake target, so we use this hack here.
-    # The assumption is roctracer lib and headers are installed at the same
-    # place as the rest of ROCm.
-    target_link_libraries(ReSolve PUBLIC "rocprofiler-sdk-roctx::rocprofiler-sdk-roctx")
   elseif(RESOLVE_USE_CUDA)
     # Nothing to do for CUDA profiling for now.
     message(NOTICE "Profiling support enabled, but Re::Solve does not create tracer annotations for CUDA.")
