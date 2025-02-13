@@ -276,15 +276,10 @@ void verifyCsrMatrix(matrix::Csr* A, TestStatus& status)
     real_type off_val = N-M+1.0;
     for (index_type i = 0; i < M; ++i) {
       status *= (rowptr_csr[i+1] == rowptr_csr[i] + 2); // all rows should have two values
-      std::cout << "rowptr_csr[" << i+1 << "] = " << rowptr_csr[i+1] << "\n";
       status *= (colidx_csr[rowptr_csr[i]] == main_diag_ind++);
-      std::cout << "colidx_csr[" << rowptr_csr[i] << "] = " << colidx_csr[rowptr_csr[i]] << "main_diag_ind = " << main_diag_ind << "\n";
       status *= (colidx_csr[rowptr_csr[i]+1] == off_diag_ind++);
-      std::cout << "colidx_csr[" << rowptr_csr[i]+1 << "] = " << colidx_csr[rowptr_csr[i]+1] << "off_diag_ind = " << off_diag_ind << "\n";
       status *= (val_csr[rowptr_csr[i]] == main_val++);
-      std::cout << "val_csr[" << rowptr_csr[i] << "] = " << val_csr[rowptr_csr[i]] << "main_val = " << main_val << "\n";
       status *= (val_csr[rowptr_csr[i]+1] == off_val++);
-      std::cout << "val_csr[" << rowptr_csr[i]+1 << "] = " << val_csr[rowptr_csr[i]+1] << "off_val = " << off_val << "\n";
       if (i>=N-M-1)
       {
         main_val++;
@@ -295,6 +290,39 @@ void verifyCsrMatrix(matrix::Csr* A, TestStatus& status)
       }
       
     }
+  }
+  else // M>N
+  {
+    real_type main_val = 1.0;
+    real_type off_val = 2.0;
+    for (index_type i = 0; i < M; ++i) {
+      if(i<N && i<M-N) // only main diagonal
+      {
+        status *= (rowptr_csr[i+1] == rowptr_csr[i] + 1); 
+        status *= (colidx_csr[rowptr_csr[i]] == i);
+        status *= (val_csr[rowptr_csr[i]] == main_val);
+        main_val+=2.0;
+      }
+      else if (i<N && i>=M-N)
+      {
+        status *= (rowptr_csr[i+1] == rowptr_csr[i] + 2); 
+        status *= (colidx_csr[rowptr_csr[i]+1] == i);
+        status *= (colidx_csr[rowptr_csr[i]] == i+N-M);
+        status *= (val_csr[rowptr_csr[i]+1] == main_val);
+        status *= (val_csr[rowptr_csr[i]] == off_val);
+        main_val+=2.0;
+        off_val+=2.0;
+      }
+      else
+      {
+        status *= (rowptr_csr[i+1] == rowptr_csr[i] + 1); 
+        status *= (colidx_csr[rowptr_csr[i]] == i+N-M);
+        status *= (val_csr[rowptr_csr[i]] == off_val);
+        off_val+=2.0;
+      }
+      
+    }
+
   }
 }
 

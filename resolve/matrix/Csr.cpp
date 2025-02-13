@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <cassert>
 #include <iomanip>
-#include "Sparse.hpp"
+
 #include "Csr.hpp"
 #include "Coo.hpp"
 #include <resolve/utilities/logger/Logger.hpp>
