@@ -196,6 +196,7 @@ namespace ReSolve {
     
     // check dimensions of A_csc and A_csr
     assert(A_csc->getNumRows() == A_csr->getNumRows() && "Number of rows in A_csc must be equal to number of rows in A_csr");
+    assert(A_csc->getNumColumns() == A_csr->getNumColumns() && "Number of columns in A_csc must be equal to number of columns in A_csr");
 
     size_t bufferSize;
     void* d_work;
@@ -215,6 +216,7 @@ namespace ReSolve {
                                                             CUSPARSE_CSR2CSC_ALG1, 
                                                             &bufferSize);
     error_sum += status;
+    std::cout << "bufferSize: " << bufferSize << " status " << status << "\n";
     mem_.allocateBufferOnDevice(&d_work, bufferSize);
     status = cusparseCsr2cscEx2(workspace_->getCusparseHandle(),
                                 m, 
@@ -232,6 +234,9 @@ namespace ReSolve {
                                 CUSPARSE_CSR2CSC_ALG1,
                                 d_work);
     error_sum += status;
+    if (status)
+      out::error() << "CSC2CSR status: "   << status                    << ". "
+                   << "Last error code: " << mem_.getLastDeviceError() << ".\n";
     return error_sum;
     mem_.deleteOnDevice(d_work);
   }

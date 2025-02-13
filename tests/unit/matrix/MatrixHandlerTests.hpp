@@ -94,73 +94,20 @@ public:
     status *= (A_csr->getNumColumns() == A_csc->getNumColumns());
     status *= (A_csr->getNnz() == A_csc->getNnz());
 
+
+    if (memspace_ == memory::DEVICE) {
+      A_csr->copyDataFrom(A_csr->getRowData(memory::DEVICE),
+                          A_csr->getColData(memory::DEVICE),
+                          A_csr->getValues(memory::DEVICE),
+                          memory::DEVICE,
+                          memory::HOST);
+    }
+
     index_type* rowptr_csr = A_csr->getRowData(memory::HOST);
     index_type* colidx_csr = A_csr->getColData(memory::HOST);
     real_type* val_csr     = A_csr->getValues( memory::HOST);
 
-    index_type* colptr_csc = A_csc->getColData(memory::HOST);
-    index_type* rowidx_csc = A_csc->getRowData(memory::HOST);
-    real_type* val_csc     = A_csc->getValues(memory::HOST);
-
-    // check dimensions
-    status *= (A_csr->getNumRows() == A_csc->getNumRows());
-    status *= (A_csr->getNumColumns() == A_csc->getNumColumns());
-    status *= (A_csr->getNnz() == A_csc->getNnz());
-    
-    // print the matrix
-    for (index_type i=0; i < M; ++i)
-    {
-      std::cout << "rowptr_csr[" << i << "] = " << rowptr_csr[i] << "\n";
-      for (index_type j = rowptr_csr[i]; j < rowptr_csr[i+1]; ++j)
-      {
-        std::cout << "colidx_csr[" << j << "] = " << colidx_csr[j] << " val_csr[" << j << "] = " << val_csr[j] << "\n";
-      }
-    }
-
-    if(N==M)
-    {
-      for (index_type i = 0; i < A_csr->getNumRows(); ++i) {
-        if (i==N-1) //last row should have one value
-        {
-          status *= (rowptr_csr[i+1] == rowptr_csr[i] + 1);
-          std::cout << "rowptr_csr[" << i+1 << "] = " << rowptr_csr[i+1] << "\n";
-          status *= (colidx_csr[rowptr_csr[i]] == N-1);
-          std::cout << "colidx_csr[" << rowptr_csr[i] << "] = " << colidx_csr[rowptr_csr[i]] << "\n";
-          status *= (val_csr[rowptr_csr[i]] == 2.0*N);
-          std::cout << "val_csr[" << rowptr_csr[i] << "] = " << val_csr[rowptr_csr[i]] << "\n";
-        }
-        else if(i==N/2) //this row should have 3 values
-        {
-          status *= (rowptr_csr[i+1] == rowptr_csr[i] + 3);
-          status *= (colidx_csr[rowptr_csr[i]] == 0);
-          status *= (val_csr[rowptr_csr[i]] == 2.0);
-          status *= (colidx_csr[rowptr_csr[i]+1] == N/2);
-          status *= (colidx_csr[rowptr_csr[i]+2] == N/2+1);
-          status *= (val_csr[rowptr_csr[i]+1] == 2.0*(N/2)+2);
-          status *= (val_csr[rowptr_csr[i]+2] == 2.0*(N/2)+3);
-        }
-        else // all other rows have two values
-        {
-          status *= (rowptr_csr[i+1] == rowptr_csr[i] + 2);
-          status *= (colidx_csr[rowptr_csr[i]] == i);
-          status *= (colidx_csr[rowptr_csr[i]+1] == i+1);
-          if(i==0)
-          {
-            status *= (val_csr[rowptr_csr[i]] == 1.0);
-            status *= (val_csr[rowptr_csr[i]+1] == 3.0);
-          }
-          else
-          {
-            status *= (val_csr[rowptr_csr[i]] == 2.0*(i+1));
-            status *= (val_csr[rowptr_csr[i]+1] == 2.0*(i+1)+1.0);
-          }
-
-        }
-      }
-    }
-
-
-
+    verifyCsrMatrix(A_csr, status);
 
     delete A_csr;
     delete A_csc;
@@ -206,7 +153,7 @@ private:
   
   matrix::Csc* createRectangularCscMatrix(const index_type N, const index_type M)
   {
-    // Allocate NxM CSR matrix with NNZ nonzeros
+    // Allocate MXN CSR matrix with NNZ nonzeros
     index_type NNZ = 2*std::min(N,M);
     matrix::Csc* A = new matrix::Csc(M, N, NNZ); //indices are deliberately swapped so N+1 is the length of the pointer array
     A->allocateMatrixData(memory::HOST);
@@ -239,7 +186,7 @@ private:
         }
       }
     }
-    else if (N>M)
+    else if (N>M) // nonzero diagonal from main diagonal and thhe one starting in the lower right corner
     {
       for (index_type i=0; i < N; ++i)
       {
@@ -270,21 +217,87 @@ private:
       }
     }
     A->setUpdated(memory::HOST);
-    // // print the matrix
-    // for (index_type i=0; i < M; ++i)
-    // {
-    //   std::cout << "colptr[" << i << "] = " << colptr[i] << "\n";
-    //   for (index_type j = colptr[i]; j < colptr[i+1]; ++j)
-    //   {
-    //     std::cout << "rowidx[" << j << "] = " << rowidx[j] << " val[" << j << "] = " << val[j] << "\n";
-    //   }
-    // }
     if (memspace_ == memory::DEVICE) {
       A->syncData(memspace_);
     }
-
     return A;        
   }
+
+void verifyCsrMatrix(matrix::Csr* A, TestStatus& status)
+{
+  index_type* rowptr_csr = A->getRowData(memory::HOST);
+  index_type* colidx_csr = A->getColData(memory::HOST);
+  real_type* val_csr     = A->getValues( memory::HOST);
+  index_type N = A->getNumColumns();
+  index_type M = A->getNumRows();
+  real_type counter = 1.0;
+  if(N==M)
+  {
+    for (index_type i = 0; i < M; ++i) {
+      if (i==M-1) //last row should have one value
+      {
+        status *= (rowptr_csr[i+1] == rowptr_csr[i] + 1);
+        std::cout << "rowptr_csr[" << i+1 << "] = " << rowptr_csr[i+1] << "\n";
+        status *= (colidx_csr[rowptr_csr[i]] == N-1);
+        std::cout << "colidx_csr[" << rowptr_csr[i] << "] = " << colidx_csr[rowptr_csr[i]] << "\n";
+        status *= (val_csr[rowptr_csr[i]] == 2.0*N);
+        std::cout << "val_csr[" << rowptr_csr[i] << "] = " << val_csr[rowptr_csr[i]] << "\n";
+      }
+      else if(i==M/2) //this row should have 3 values
+      {
+        status *= (rowptr_csr[i+1] == rowptr_csr[i] + 3);
+        status *= (colidx_csr[rowptr_csr[i]] == 0);
+        status *= (val_csr[rowptr_csr[i]] == 2.0);
+        status *= (colidx_csr[rowptr_csr[i]+1] == N/2);
+        status *= (colidx_csr[rowptr_csr[i]+2] == N/2+1);
+        status *= (val_csr[rowptr_csr[i]+1] == 2.0*(N/2)+2);
+        status *= (val_csr[rowptr_csr[i]+2] == 2.0*(N/2)+3);
+      }
+      else // all other rows have two values
+      {
+        status *= (rowptr_csr[i+1] == rowptr_csr[i] + 2);
+        status *= (colidx_csr[rowptr_csr[i]] == i);
+        status *= (colidx_csr[rowptr_csr[i]+1] == i+1);
+        if(i==0)
+        {
+          status *= (val_csr[rowptr_csr[i]] == 1.0);
+          status *= (val_csr[rowptr_csr[i]+1] == 3.0);
+        }
+        else
+        {
+          status *= (val_csr[rowptr_csr[i]] == 2.0*(i+1));
+          status *= (val_csr[rowptr_csr[i]+1] == 2.0*(i+1)+1.0);
+        }
+
+      }
+    }
+  }
+  // else if (N>M)
+  // {
+
+  //   for (index_type i = 0; i < M; ++i) {
+  //     status *= (rowptr_csr[i+1] == rowptr_csr[i] + 2); // all rows should have two values
+  //     if(i>=M-N) //off diagonal
+  //     {
+  //       status *= (colidx_csr[rowptr_csr[i]] == i-N+M);
+  //       status *= (val_csr[rowptr_csr[i]] == 1.0+2.0*(i-N+M));
+  //       status *= (colidx_csr[rowptr_csr[i]+1] == i);
+  //       status *= (val_csr[rowptr_csr[i]+1] == 1.0+2.0*i);
+  //     }
+  //   }
+  // }
+  // else //N<M
+  // {
+  //   for (index_type i = 0; i < N; ++i) {
+  //     status *= (rowptr_csr[i+1] == rowptr_csr[i] + 2);
+  //     status *= (colidx_csr[rowptr_csr[i]] == i);
+  //     status *= (val_csr[rowptr_csr[i]] == 1.0+2.0*i);
+  //     status *= (colidx_csr[rowptr_csr[i]+1] == i+M-N);
+  //     status *= (val_csr[rowptr_csr[i]+1] == 1.0+2.0*(i+M-N));
+  //   }
+  // }
+}
+
   matrix::Csr* createCsrMatrix(const index_type N)
   {
     std::vector<real_type> r1 = {1., 5., 7., 8., 3., 2., 4.}; // sum 30
