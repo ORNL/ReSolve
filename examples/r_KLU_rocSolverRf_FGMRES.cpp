@@ -180,13 +180,10 @@ int example(int argc, char *argv[])
     mat_file.close();
     rhs_file.close();
 
-    // Update host and device data.
-    if (i < 2) { 
-      vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
-    } else { 
-      vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-      // vec_rhs->syncData(memory::DEVICE);
-    }
+    // Update host and device rhs.
+    vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+    vec_rhs->syncData(memory::DEVICE);
+
     RESOLVE_RANGE_POP("Matrix Read");
     std::cout << "CSR matrix loaded. Expanded NNZ: " << A->getNnz() << std::endl;
 
@@ -202,15 +199,21 @@ int example(int argc, char *argv[])
       std::cout << "KLU factorization status: " << status << std::endl;
 
       status = KLU->solve(vec_rhs, vec_x);
-      std::cout << "KLU solve status: " << status << std::endl;      
+      std::cout << "KLU solve status: " << status << std::endl;
+
+      // helper.resetSystem(A, vec_rhs, vec_x);
+      // helper.printShortSummary();
+
       vec_r->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
       norm_b = vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE);
       norm_b = sqrt(norm_b);
+
       matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
       matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, ReSolve::memory::DEVICE); 
       std::cout << "\t2-Norm of the residual: "
         << std::scientific << std::setprecision(16) 
         << sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE))/norm_b << "\n";
+
       if (i == 1) {
         ReSolve::matrix::Csc* L = (ReSolve::matrix::Csc*) KLU->getLFactor();
         ReSolve::matrix::Csc* U = (ReSolve::matrix::Csc*) KLU->getUFactor();
@@ -233,13 +236,9 @@ int example(int argc, char *argv[])
       status = Rf->refactorize();
       std::cout << "ROCSOLVER RF refactorization status: " << status << std::endl;      
       status = Rf->solve(vec_rhs, vec_x);
+      std::cout << "ROCSOLVER RF solve status: " << status << std::endl;      
 
       helper.resetSystem(A, vec_rhs, vec_x);
-
-      std::cout << "ROCSOLVER RF solve status: " << status << std::endl;      
-      vec_r->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-      norm_b = vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE);
-      norm_b = sqrt(norm_b);
 
       //matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
       FGMRES->resetMatrix(A);
@@ -247,34 +246,10 @@ int example(int argc, char *argv[])
 
       helper.printSummary();
 
-      matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, ReSolve::memory::DEVICE); 
-      real_type rnrm = sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE));
-      // std::cout << "\t 2-Norm of the residual (before IR): " 
-      //   << std::scientific << std::setprecision(16) 
-      //   << rnrm/norm_b << "\n";
-
-      matrix_handler->matrixInfNorm(A, &norm_A, ReSolve::memory::DEVICE); 
-      norm_x = vector_handler->infNorm(vec_x, ReSolve::memory::DEVICE);
-      norm_r = vector_handler->infNorm(vec_r, ReSolve::memory::DEVICE);
-      // std::cout << std::scientific << std::setprecision(16)
-      //           << "\t Matrix inf  norm: "         << norm_A << "\n"
-      //           << "\t Residual inf norm: "        << norm_r << "\n"  
-      //           << "\t Solution inf norm: "        << norm_x << "\n"  
-      //           << "\t Norm of scaled residuals: " << norm_r / (norm_A * norm_x) << "\n";
-
-      vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-      // vec_rhs->syncData(memory::DEVICE);
-      if(!std::isnan(rnrm) && !std::isinf(rnrm)) {
+      if (std::isfinite(helper.getNormRelativeResidual())) {
         FGMRES->solve(vec_rhs, vec_x);
 
         helper.printIrSummary(FGMRES);
-
-        // std::cout << "FGMRES: init nrm: " 
-        //           << std::scientific << std::setprecision(16) 
-        //           << FGMRES->getInitResidualNorm()/norm_b
-        //           << " final nrm: "
-        //           << FGMRES->getFinalResidualNorm()/norm_b
-        //           << " iter: " << FGMRES->getNumIter() << "\n";
       }
       RESOLVE_RANGE_POP("RocSolver");
     }

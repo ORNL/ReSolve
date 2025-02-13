@@ -179,9 +179,17 @@ namespace ReSolve
         }
 
         /// Return relative residual norm.
-        ReSolve::real_type getNormResidualScaled()
+        ReSolve::real_type getNormRelativeResidual()
         {
           return norm_res_/norm_rhs_;
+        }
+
+        /// Minimalistic summary
+        void printShortSummary()
+        {
+          std::cout << "\t2-Norm of the residual: "
+            << std::scientific << std::setprecision(16) 
+            << getNormRelativeResidual() << "\n";
         }
 
         /// Summary of direct solve
@@ -189,7 +197,7 @@ namespace ReSolve
         {
           std::cout << "\t 2-Norm of the residual (before IR): " 
                     << std::scientific << std::setprecision(16) 
-                    << getNormResidualScaled() << "\n";
+                    << getNormRelativeResidual() << "\n";
 
           std::cout << std::scientific << std::setprecision(16)
                     << "\t Matrix inf  norm: "         << inf_norm_A_   << "\n"
@@ -376,25 +384,6 @@ namespace ReSolve
           return norm2(r, memspace);
         }
 
-        /**
-         * @brief Compute vector difference norm = || x - x_true ||_2
-         * 
-         * @param[in]     x_true - The "exact" solution
-         * @param[in,out] x      - Computed solution, difference vector
-         * @param[in]     memspace memory space where to computate the norm
-         * @return ReSolve::real_type
-         * 
-         * @post x is overwritten with difference value
-         */
-        ReSolve::real_type computeDiffNorm(ReSolve::vector::Vector& x_true,
-                                           ReSolve::vector::Vector& x,
-                                           ReSolve::memory::MemorySpace memspace)
-        {
-          using namespace ReSolve::constants;
-          vh_.axpy(&MINUSONE, &x_true, &x, memspace); // x := -x_true + x
-          return norm2(x, memspace);
-        }
-
         /// Compute L2 norm of vector `r` in memory space `memspace`.
         ReSolve::real_type norm2(ReSolve::vector::Vector& r,
                                  ReSolve::memory::MemorySpace memspace)
@@ -422,8 +411,6 @@ namespace ReSolve
         real_type inf_norm_x_{0.0};   ///< infinity norm of solution x
         real_type inf_norm_res_{0.0}; ///< infinity norm of res = A*x - r
         real_type nsr_norm_{0.0};     ///< norm of scaled residuals
-
-        bool solution_set_{false}; ///< if exact solution is set
 
         ReSolve::memory::MemorySpace memspace_{ReSolve::memory::HOST};
     };
