@@ -96,11 +96,9 @@ public:
 
 
     if (memspace_ == memory::DEVICE) {
-      A_csr->copyDataFrom(A_csr->getRowData(memory::DEVICE),
-                          A_csr->getColData(memory::DEVICE),
-                          A_csr->getValues(memory::DEVICE),
-                          memory::DEVICE,
-                          memory::HOST);
+      //update the data on the device
+      A_csr->setUpdated(memory::DEVICE);
+      A_csr->syncData(memory::HOST);
     }
 
     index_type* rowptr_csr = A_csr->getRowData(memory::HOST);
@@ -127,7 +125,6 @@ private:
     }
 
     for (index_type i = 0; i < x.getSize(); ++i) {
-      // std::cout << x.getData(memory::HOST)[i] << "\n";
       if (!isEqual(x.getData(memory::HOST)[i], answer)) {
         status = false;
         std::cout << "Solution vector element x[" << i << "] = " << x.getData(memory::HOST)[i]
@@ -230,7 +227,6 @@ void verifyCsrMatrix(matrix::Csr* A, TestStatus& status)
   real_type* val_csr     = A->getValues( memory::HOST);
   index_type N = A->getNumColumns();
   index_type M = A->getNumRows();
-  real_type counter = 1.0;
   if(N==M)
   {
     for (index_type i = 0; i < M; ++i) {
@@ -272,30 +268,34 @@ void verifyCsrMatrix(matrix::Csr* A, TestStatus& status)
       }
     }
   }
-  // else if (N>M)
-  // {
-
-  //   for (index_type i = 0; i < M; ++i) {
-  //     status *= (rowptr_csr[i+1] == rowptr_csr[i] + 2); // all rows should have two values
-  //     if(i>=M-N) //off diagonal
-  //     {
-  //       status *= (colidx_csr[rowptr_csr[i]] == i-N+M);
-  //       status *= (val_csr[rowptr_csr[i]] == 1.0+2.0*(i-N+M));
-  //       status *= (colidx_csr[rowptr_csr[i]+1] == i);
-  //       status *= (val_csr[rowptr_csr[i]+1] == 1.0+2.0*i);
-  //     }
-  //   }
-  // }
-  // else //N<M
-  // {
-  //   for (index_type i = 0; i < N; ++i) {
-  //     status *= (rowptr_csr[i+1] == rowptr_csr[i] + 2);
-  //     status *= (colidx_csr[rowptr_csr[i]] == i);
-  //     status *= (val_csr[rowptr_csr[i]] == 1.0+2.0*i);
-  //     status *= (colidx_csr[rowptr_csr[i]+1] == i+M-N);
-  //     status *= (val_csr[rowptr_csr[i]+1] == 1.0+2.0*(i+M-N));
-  //   }
-  // }
+  else if (N>M)
+  {
+    index_type main_diag_ind = 0;
+    index_type off_diag_ind = N-M;
+    real_type main_val = 1.0;
+    real_type off_val = N-M+1.0;
+    for (index_type i = 0; i < M; ++i) {
+      status *= (rowptr_csr[i+1] == rowptr_csr[i] + 2); // all rows should have two values
+      std::cout << "rowptr_csr[" << i+1 << "] = " << rowptr_csr[i+1] << "\n";
+      status *= (colidx_csr[rowptr_csr[i]] == main_diag_ind++);
+      std::cout << "colidx_csr[" << rowptr_csr[i] << "] = " << colidx_csr[rowptr_csr[i]] << "main_diag_ind = " << main_diag_ind << "\n";
+      status *= (colidx_csr[rowptr_csr[i]+1] == off_diag_ind++);
+      std::cout << "colidx_csr[" << rowptr_csr[i]+1 << "] = " << colidx_csr[rowptr_csr[i]+1] << "off_diag_ind = " << off_diag_ind << "\n";
+      status *= (val_csr[rowptr_csr[i]] == main_val++);
+      std::cout << "val_csr[" << rowptr_csr[i] << "] = " << val_csr[rowptr_csr[i]] << "main_val = " << main_val << "\n";
+      status *= (val_csr[rowptr_csr[i]+1] == off_val++);
+      std::cout << "val_csr[" << rowptr_csr[i]+1 << "] = " << val_csr[rowptr_csr[i]+1] << "off_val = " << off_val << "\n";
+      if (i>=N-M-1)
+      {
+        main_val++;
+      }
+      if(i<2*M-N)
+      {
+        off_val++;
+      }
+      
+    }
+  }
 }
 
   matrix::Csr* createCsrMatrix(const index_type N)
