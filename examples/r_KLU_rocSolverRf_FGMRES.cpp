@@ -17,18 +17,7 @@
 
 #include "ExampleHelper.hpp"
 
-void printUsage(const std::string& name)
-{
-  std::cout << "\nLoads from files and solves a series of linear systems.\n\n";
-  std::cout << "System matrices are in files with names <pathname>XX.mtx, where XX are\n";
-  std::cout << "consecutive integer numbers 00, 01, 02, ...\n\n";
-  std::cout << "System right hand side vectors are stored in files with matching numbering.\n";
-  std::cout << "and file extension.\n\n";
-  std::cout << "Usage:\n\t./" << name;
-  std::cout << " -m <matrix pathname> -r <rhs pathname> -n <number of systems>\n\n";
-  std::cout << "Optional features:\n\t-h\tPrints this message.\n\n";
-}
-
+/// Prototype of the example main function 
 template <class workspace_type>
 static int example(int argc, char *argv[]);
 
@@ -37,6 +26,7 @@ int main(int argc, char *argv[])
   return example<ReSolve::LinAlgWorkspaceHIP>(argc, argv);
 }
 
+/// Example implementation
 template <class workspace_type>
 int example(int argc, char *argv[])
 {
@@ -52,7 +42,7 @@ int example(int argc, char *argv[])
 
   bool is_help = options.hasKey("-h");
   if (is_help) {
-    printUsage(example_name);
+    printUsageSystemSeries(example_name);
     return 0;
   }
 
@@ -62,7 +52,7 @@ int example(int argc, char *argv[])
     num_systems = atoi((opt->second).c_str());
   } else {
     std::cout << "Incorrect input!\n";
-    printUsage(example_name);
+    printUsageSystemSeries(example_name);
   }
 
   std::string matrix_pathname("");
@@ -71,7 +61,7 @@ int example(int argc, char *argv[])
     matrix_pathname = opt->second;
   } else {
     std::cout << "Incorrect input!\n";
-    printUsage(example_name);
+    printUsageSystemSeries(example_name);
   }
 
   std::string rhs_pathname("");
@@ -80,20 +70,22 @@ int example(int argc, char *argv[])
     rhs_pathname = opt->second;
   } else {
     std::cout << "Incorrect input!\n";
-    printUsage(example_name);
+    printUsageSystemSeries(example_name);
   }
 
-  std::cout << "Family mtx file name: " << matrix_pathname << ", total number of matrices: " << num_systems << "\n";
-  std::cout << "Family rhs file name: " << rhs_pathname    << ", total number of RHSes: "    << num_systems << "\n";
+  std::cout << "Family mtx file name: "       << matrix_pathname
+            << ", total number of matrices: " << num_systems << "\n"
+            << "Family rhs file name: "       << rhs_pathname
+            << ", total number of RHSes: "    << num_systems << "\n";
 
-  // Workspace
+  // Create workspace
   workspace_type workspace;
   workspace.initializeHandles();
 
-  // Example helper
+  // Create a helper object (computing errors, printing summaries, etc.)
   ExampleHelper<workspace_type> helper(workspace);
 
-  // Matrix and vector handlers
+  // Create matrix and vector handlers
   MatrixHandler matrix_handler(&workspace);
   VectorHandler vector_handler(&workspace);
 
@@ -105,7 +97,7 @@ int example(int argc, char *argv[])
   GramSchmidt GS(&vector_handler, GramSchmidt::CGS2);
   LinSolverIterativeFGMRES FGMRES(&matrix_handler, &vector_handler, &GS);
 
-  // Linear system matrix and vectors
+  // Pointers to matrix and vectors defining the linear system
   matrix::Csr* A = nullptr;
   vector_type* vec_rhs = nullptr;
   vector_type* vec_x   = nullptr;
@@ -172,20 +164,29 @@ int example(int argc, char *argv[])
 
     if (i < 2) {
       RESOLVE_RANGE_PUSH("KLU");
+
+      // Setup factorization solver
       KLU.setup(A);
       matrix_handler.setValuesChanged(true, memory::DEVICE);
+
+      // Analysis (symbolic factorization)
       status = KLU.analyze();
       std::cout << "KLU analysis status: " << status << std::endl;
+
+      // Numeric factorization
       status = KLU.factorize();
       std::cout << "KLU factorization status: " << status << std::endl;
 
+      // Triangular solve
       status = KLU.solve(vec_rhs, vec_x);
       std::cout << "KLU solve status: " << status << std::endl;
 
+      // Print summary of results
       helper.resetSystem(A, vec_rhs, vec_x);
       helper.printShortSummary();
 
       if (i == 1) {
+        // Extract factors and configure refactorization solver
         matrix::Csc* L = (matrix::Csc*) KLU.getLFactor();
         matrix::Csc* U = (matrix::Csc*) KLU.getUFactor();
         if (L == nullptr) {
@@ -195,31 +196,42 @@ int example(int argc, char *argv[])
         index_type* Q = KLU.getQOrdering();
         Rf.setSolveMode(1);
         Rf.setup(A, L, U, P, Q, vec_rhs);
+
+        // Refactorization
         Rf.refactorize();
+
+        // Setup iterative refinement solver
         std::cout << "About to set FGMRES ..." << std::endl;
         FGMRES.setup(A); 
       }
       RESOLVE_RANGE_POP("KLU");
     } else {
       RESOLVE_RANGE_PUSH("RocSolver");
-      //status =  KLU.refactorize();
       std::cout << "Using ROCSOLVER RF" << std::endl;
+
+      // Refactorize on the device
       status = Rf.refactorize();
       std::cout << "ROCSOLVER RF refactorization status: " << status << std::endl;      
+
+      // Triangular solve on the device
       status = Rf.solve(vec_rhs, vec_x);
       std::cout << "ROCSOLVER RF solve status: " << status << std::endl;      
 
+      // Print summary of the results
       helper.resetSystem(A, vec_rhs, vec_x);
+      helper.printSummary();
 
-      //matrix_handler->setValuesChanged(true, memory::DEVICE);
+      //matrix_handler->setValuesChanged(true, memory::DEVICE); // ???
+
+      // Setup iterative refinement
       FGMRES.resetMatrix(A);
       FGMRES.setupPreconditioner("LU", &Rf);
 
-      helper.printSummary();
-
+      // If refactorization produced finite solution do iterative refinement
       if (std::isfinite(helper.getNormRelativeResidual())) {
         FGMRES.solve(vec_rhs, vec_x);
 
+        // Print summary
         helper.printIrSummary(&FGMRES);
       }
       RESOLVE_RANGE_POP("RocSolver");
