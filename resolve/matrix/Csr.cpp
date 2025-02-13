@@ -209,10 +209,10 @@ namespace ReSolve
       //check if cpu data allocated
       if ((h_row_data_ == nullptr) != (h_col_data_ == nullptr)) {
         if(h_row_data_ == nullptr) {
-          out::error() << "In Csr::syncData host row data is null, but col data is set!\n";
+          out::error() << "In Csr::copyDataFrom host row data is null, but col data is set!\n";
         }
         else {
-          out::error() << "In Csr::syncData host col data is null, but row data is set!\n";
+          out::error() << "In Csr::copyDataFrom host col data is null, but row data is set!\n";
         }
       }
       if ((h_row_data_ == nullptr) && (h_col_data_ == nullptr)) {
@@ -230,10 +230,10 @@ namespace ReSolve
       //check if cuda data allocated
       if ((d_row_data_ == nullptr) != (d_col_data_ == nullptr)) {
         if(d_row_data_ == nullptr) {
-          out::error() << "In Csr::syncData device row data is null, but col data is set!\n";
+          out::error() << "In Csr::copyDataFrom device row data is null, but col data is set!\n";
         }
         else {
-          out::error() << "In Csr::syncData device col data is null, but row data is set!\n";
+          out::error() << "In Csr::copyDataFrom device col data is null, but row data is set!\n";
         }
       }
       if ((d_row_data_ == nullptr) && (d_col_data_ == nullptr)) {
@@ -371,11 +371,13 @@ namespace ReSolve
         return 0;
       case DEVICE:
         if (d_data_updated_) {
-          out::misc() << "In Csr::syncData trying to sync device, but device already up to date!\n";
+          out::misc() << "WARNING: In Csr::syncData trying to sync device, but device already up to date! This line is ignored. (Perhaps you meant to sync host)\n";
           return 0;
         }
         if (!h_data_updated_) {
-          out::error() << "In Csr::syncData trying to sync device with host, but host is out of date!\n";
+          out::error() << "In Csr::syncData trying to sync device with host, but host is out of date!" <<
+          "If you have changed the data on purpose, update the host with: variableName->setUpdated(memory::HOST)."
+          << "If you did not mean to change the data on the host, check your code. \n";
           assert(h_data_updated_);
         }
         if ((d_row_data_ == nullptr) != (d_col_data_ == nullptr)) {
