@@ -6,6 +6,7 @@
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 #include <resolve/utilities/logger/Logger.hpp>
 #include "LinSolverDirectCuSolverGLU.hpp"
+#include <resolve/Profiling.hpp>
 
 namespace ReSolve
 {
@@ -33,6 +34,7 @@ namespace ReSolve
                                         index_type* Q,
                                         vector_type* /* rhs */)
   {
+    RESOLVE_RANGE_PUSH(__FUNCTION__);
     int error_sum = 0;
 
     LinAlgWorkspaceCUDA* workspaceCUDA = workspace_;
@@ -95,6 +97,7 @@ namespace ReSolve
     status_cusolver_ = cusolverSpDgluFactor(handle_cusolversp_, info_M_, glu_buffer_);
     error_sum += status_cusolver_; 
 
+    RESOLVE_RANGE_POP(__FUNCTION__);
     return error_sum;
   }
 
@@ -155,6 +158,7 @@ namespace ReSolve
 
   int LinSolverDirectCuSolverGLU::refactorize()
   {
+    RESOLVE_RANGE_PUSH(__FUNCTION__);
     int error_sum = 0;
     status_cusolver_ =  cusolverSpDgluReset(handle_cusolversp_, 
                                             A_->getNumRows(),
@@ -170,11 +174,13 @@ namespace ReSolve
     status_cusolver_ =  cusolverSpDgluFactor(handle_cusolversp_, info_M_, glu_buffer_);
     error_sum += status_cusolver_;
 
+    RESOLVE_RANGE_POP(__FUNCTION__);
     return error_sum;
   }
 
   int LinSolverDirectCuSolverGLU::solve(vector_type* rhs, vector_type* x)
   {
+    RESOLVE_RANGE_PUSH(__FUNCTION__);
     status_cusolver_ =  cusolverSpDgluSolve(handle_cusolversp_,
                                             A_->getNumRows(),
                                             /* A is original matrix */
@@ -190,6 +196,7 @@ namespace ReSolve
                                             info_M_,
                                             glu_buffer_);
     x->setDataUpdated(memory::DEVICE);
+    RESOLVE_RANGE_POP(__FUNCTION__);
     return status_cusolver_; 
   }
 
