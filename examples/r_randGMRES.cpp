@@ -13,45 +13,59 @@
 #include <resolve/LinSolverIterativeRandFGMRES.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 
-using namespace ReSolve::constants;
+
+#include "ExampleHelper.hpp"
+
+/// Prototype of the example main function 
+template <class workspace_type>
+static int example(int argc, char *argv[]);
 
 int main(int argc, char *argv[])
 {
+  return example<ReSolve::LinAlgWorkspaceHIP>(argc, argv);
+}
+
+/// Example implementation
+template <class workspace_type>
+int example(int argc, char *argv[])
+{
   // Use the same data types as those you specified in ReSolve build.
+  using namespace ReSolve;
+  using namespace ReSolve::constants;
+  using namespace ReSolve::examples;
   using real_type  = ReSolve::real_type;
   using vector_type = ReSolve::vector::Vector;
 
   (void) argc; // TODO: Check if the number of input parameters is correct.
-  std::string  matrixFileName = argv[1];
+  std::string  matrix_filename = argv[1];
   std::string  rhsFileName = argv[2];
 
 
-  ReSolve::matrix::Csr* A = nullptr;
-  ReSolve::LinAlgWorkspaceHIP* workspace_HIP = new ReSolve::LinAlgWorkspaceHIP();
-  workspace_HIP->initializeHandles();
-  ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(workspace_HIP);
-  ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(workspace_HIP);
+  workspace_type* workspace = new workspace_type();
+  workspace->initializeHandles();
+
+  // Create a helper object (computing errors, printing summaries, etc.)
+  ExampleHelper<workspace_type> helper(*workspace);
+
+  MatrixHandler* matrix_handler =  new MatrixHandler(workspace);
+  VectorHandler* vector_handler =  new VectorHandler(workspace);
   real_type* rhs = nullptr;
   real_type* x   = nullptr;
 
+  matrix::Csr* A = nullptr;
   vector_type* vec_rhs = nullptr;
   vector_type* vec_x   = nullptr;
-  vector_type* vec_r   = nullptr;
+  // vector_type* vec_r   = nullptr;
 
-  ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::CGS2);
+  GramSchmidt* GS = new GramSchmidt(vector_handler, GramSchmidt::CGS2);
 
-  ReSolve::LinSolverDirectRocSparseILU0* Rf = new ReSolve::LinSolverDirectRocSparseILU0(workspace_HIP);
-  ReSolve::LinSolverIterativeRandFGMRES* FGMRES = new ReSolve::LinSolverIterativeRandFGMRES(matrix_handler, vector_handler,ReSolve::LinSolverIterativeRandFGMRES::cs, GS);
+  LinSolverDirectRocSparseILU0* Rf = new LinSolverDirectRocSparseILU0(workspace);
+  LinSolverIterativeRandFGMRES* FGMRES = new LinSolverIterativeRandFGMRES(matrix_handler, vector_handler,LinSolverIterativeRandFGMRES::cs, GS);
 
-  std::cout << std::endl << std::endl << std::endl;
-  std::cout << "========================================================================================================================"<<std::endl;
-  std::cout << "Reading: " << matrixFileName<< std::endl;
-  std::cout << "========================================================================================================================"<<std::endl;
-  std::cout << std::endl;
-  std::ifstream mat_file(matrixFileName);
+  std::ifstream mat_file(matrix_filename);
   if(!mat_file.is_open())
   {
-    std::cout << "Failed to open file " << matrixFileName << "\n";
+    std::cout << "Failed to open file " << matrix_filename << "\n";
     return -1;
   }
   std::ifstream rhs_file(rhsFileName);
@@ -61,30 +75,29 @@ int main(int argc, char *argv[])
     return -1;
   }
   bool is_expand_symmetric = true;
-  A = ReSolve::io::createCsrFromFile(mat_file, is_expand_symmetric);
+  A = io::createCsrFromFile(mat_file, is_expand_symmetric);
 
-  rhs = ReSolve::io::createArrayFromFile(rhs_file);
+  rhs = io::createArrayFromFile(rhs_file);
   x = new real_type[A->getNumRows()];
   vec_rhs = new vector_type(A->getNumRows());
   vec_x = new vector_type(A->getNumRows());
-  vec_x->allocate(ReSolve::memory::HOST);
+  vec_x->allocate(memory::HOST);
   //iinit guess is 0U
-  vec_x->allocate(ReSolve::memory::DEVICE);
-  vec_x->setToZero(ReSolve::memory::DEVICE);
-  vec_r = new vector_type(A->getNumRows());
-  std::cout << "Finished reading the matrix and rhs, size: " << A->getNumRows() << " x "<< A->getNumColumns() 
-            << ", nnz: "       << A->getNnz() 
-            << ", symmetric? " << A->symmetric()
-            << ", Expanded? "  << A->expanded() << std::endl;
+  vec_x->allocate(memory::DEVICE);
+  vec_x->setToZero(memory::DEVICE);
+  // vec_r = new vector_type(A->getNumRows());
+
   mat_file.close();
   rhs_file.close();
 
-  A->syncData(ReSolve::memory::DEVICE);
-  vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+  A->syncData(memory::DEVICE);
+  vec_rhs->copyDataFrom(rhs, memory::HOST, memory::DEVICE);
+
+  printSystemInfo(matrix_filename, A);
 
   //Now call the solver
-  real_type norm_b;
-  matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
+  // real_type norm_b;
+  matrix_handler->setValuesChanged(true, memory::DEVICE);
 
   Rf->setup(A);
   FGMRES->setRestart(150);
@@ -93,30 +106,25 @@ int main(int argc, char *argv[])
   FGMRES->setup(A);
   GS->setup(FGMRES->getKrand(), FGMRES->getRestart()); 
 
-  //matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
+  //matrix_handler->setValuesChanged(true, memory::DEVICE);
   FGMRES->resetMatrix(A);
   FGMRES->setupPreconditioner("LU", Rf);
   FGMRES->setFlexible(1); 
 
-  vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+  vec_rhs->copyDataFrom(rhs, memory::HOST, memory::DEVICE);
   FGMRES->solve(vec_rhs, vec_x);
 
-  norm_b = vector_handler->dot(vec_rhs, vec_rhs, ReSolve::memory::DEVICE);
-  norm_b = sqrt(norm_b);
-  std::cout << "FGMRES: init nrm: " 
-    << std::scientific << std::setprecision(16) 
-    << FGMRES->getInitResidualNorm()/norm_b
-    << " final nrm: "
-    << FGMRES->getFinalResidualNorm()/norm_b
-    << " iter: " << FGMRES->getNumIter() << "\n";
+  // Print summary of results
+  helper.resetSystem(A, vec_rhs, vec_x);
+  helper.printIrSummary(FGMRES);
 
   delete A;
   delete Rf;
   delete [] x;
   delete [] rhs;
-  delete vec_r;
+  delete vec_rhs;
   delete vec_x;
-  delete workspace_HIP;
+  delete workspace;
   delete matrix_handler;
   delete vector_handler;
 
