@@ -114,13 +114,6 @@ int example(int argc, char *argv[])
     std::string matrix_pathname_full = matname.str();
     std::string rhs_pathname_full    = rhsname.str();
 
-    // Read matrix first
-    std::cout << std::endl << std::endl << std::endl;
-    std::cout << "========================================================================================================================"<<std::endl;
-    std::cout << "Reading: " << matrix_pathname_full << std::endl;
-    std::cout << "========================================================================================================================"<<std::endl;
-    std::cout << std::endl;
-
     // Read matrix and right-hand-side vector
     std::ifstream mat_file(matrix_pathname_full);
     if(!mat_file.is_open())
@@ -152,10 +145,7 @@ int example(int argc, char *argv[])
     A->syncData(memory::DEVICE);
     vec_rhs->syncData(memory::DEVICE);
 
-    std::cout << "Finished reading the matrix and rhs, size: " << A->getNumRows() << " x "<< A->getNumColumns() 
-              << ", nnz: "       << A->getNnz() 
-              << ", symmetric? " << A->symmetric()
-              << ", Expanded? "  << A->expanded() << std::endl;
+    printSystemInfo(matrix_pathname_full, A);
 
     RESOLVE_RANGE_POP("Matrix Read");
     std::cout << "CSR matrix loaded. Expanded NNZ: " << A->getNnz() << std::endl;

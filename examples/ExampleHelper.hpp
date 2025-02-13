@@ -29,6 +29,26 @@ namespace ReSolve
     }
 
     /**
+     * @brief Prints linear system info.
+     * 
+     * @param name - pathname of the system matrix
+     * @param A    - pointer to the system matrix
+     */
+    void printSystemInfo(const std::string& matrix_pathname, matrix::Sparse* A)
+    {
+      std::cout << std::endl << std::endl << std::endl;
+      std::cout << "========================================================================================================================\n";
+      std::cout << "Reading: " << matrix_pathname << std::endl;
+      std::cout << "========================================================================================================================\n";
+      std::cout << std::endl;
+
+      std::cout << "Finished reading the matrix and rhs, size: " << A->getNumRows() << " x "<< A->getNumColumns() 
+                << ", nnz: "       << A->getNnz() 
+                << ", symmetric? " << A->symmetric()
+                << ", Expanded? "  << A->expanded() << std::endl;
+    }
+
+    /**
      * @brief Test helper class template
      * 
      * This is header-only implementation of several utility functions used by
