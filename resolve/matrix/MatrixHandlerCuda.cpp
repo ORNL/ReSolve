@@ -216,7 +216,6 @@ namespace ReSolve {
                                                             CUSPARSE_CSR2CSC_ALG1, 
                                                             &bufferSize);
     error_sum += status;
-    std::cout << "bufferSize: " << bufferSize << " status " << status << "\n";
     mem_.allocateBufferOnDevice(&d_work, bufferSize);
     status = cusparseCsr2cscEx2(workspace_->getCusparseHandle(),
                                 m, 
