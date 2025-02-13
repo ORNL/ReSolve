@@ -98,9 +98,67 @@ public:
     index_type* colidx_csr = A_csr->getColData(memory::HOST);
     real_type* val_csr     = A_csr->getValues( memory::HOST);
 
-    index_type* colptr_csc = A_csc->getRowData(memory::HOST);
-    index_type* rowidx_csc = A_csc->getColData(memory::HOST);
-    real_type* val_csc     = A_csc->getValues( memory::HOST);
+    index_type* colptr_csc = A_csc->getColData(memory::HOST);
+    index_type* rowidx_csc = A_csc->getRowData(memory::HOST);
+    real_type* val_csc     = A_csc->getValues(memory::HOST);
+
+    // check dimensions
+    status *= (A_csr->getNumRows() == A_csc->getNumRows());
+    status *= (A_csr->getNumColumns() == A_csc->getNumColumns());
+    status *= (A_csr->getNnz() == A_csc->getNnz());
+    
+    // print the matrix
+    for (index_type i=0; i < M; ++i)
+    {
+      std::cout << "rowptr_csr[" << i << "] = " << rowptr_csr[i] << "\n";
+      for (index_type j = rowptr_csr[i]; j < rowptr_csr[i+1]; ++j)
+      {
+        std::cout << "colidx_csr[" << j << "] = " << colidx_csr[j] << " val_csr[" << j << "] = " << val_csr[j] << "\n";
+      }
+    }
+
+    if(N==M)
+    {
+      for (index_type i = 0; i < A_csr->getNumRows(); ++i) {
+        if (i==N-1) //last row should have one value
+        {
+          status *= (rowptr_csr[i+1] == rowptr_csr[i] + 1);
+          std::cout << "rowptr_csr[" << i+1 << "] = " << rowptr_csr[i+1] << "\n";
+          status *= (colidx_csr[rowptr_csr[i]] == N-1);
+          std::cout << "colidx_csr[" << rowptr_csr[i] << "] = " << colidx_csr[rowptr_csr[i]] << "\n";
+          status *= (val_csr[rowptr_csr[i]] == 2.0*N);
+          std::cout << "val_csr[" << rowptr_csr[i] << "] = " << val_csr[rowptr_csr[i]] << "\n";
+        }
+        else if(i==N/2) //this row should have 3 values
+        {
+          status *= (rowptr_csr[i+1] == rowptr_csr[i] + 3);
+          status *= (colidx_csr[rowptr_csr[i]] == 0);
+          status *= (val_csr[rowptr_csr[i]] == 2.0);
+          status *= (colidx_csr[rowptr_csr[i]+1] == N/2);
+          status *= (colidx_csr[rowptr_csr[i]+2] == N/2+1);
+          status *= (val_csr[rowptr_csr[i]+1] == 2.0*(N/2)+2);
+          status *= (val_csr[rowptr_csr[i]+2] == 2.0*(N/2)+3);
+        }
+        else // all other rows have two values
+        {
+          status *= (rowptr_csr[i+1] == rowptr_csr[i] + 2);
+          status *= (colidx_csr[rowptr_csr[i]] == i);
+          status *= (colidx_csr[rowptr_csr[i]+1] == i+1);
+          if(i==0)
+          {
+            status *= (val_csr[rowptr_csr[i]] == 1.0);
+            status *= (val_csr[rowptr_csr[i]+1] == 3.0);
+          }
+          else
+          {
+            status *= (val_csr[rowptr_csr[i]] == 2.0*(i+1));
+            status *= (val_csr[rowptr_csr[i]+1] == 2.0*(i+1)+1.0);
+          }
+
+        }
+      }
+    }
+
 
 
 
@@ -212,7 +270,15 @@ private:
       }
     }
     A->setUpdated(memory::HOST);
-
+    // // print the matrix
+    // for (index_type i=0; i < M; ++i)
+    // {
+    //   std::cout << "colptr[" << i << "] = " << colptr[i] << "\n";
+    //   for (index_type j = colptr[i]; j < colptr[i+1]; ++j)
+    //   {
+    //     std::cout << "rowidx[" << j << "] = " << rowidx[j] << " val[" << j << "] = " << val[j] << "\n";
+    //   }
+    // }
     if (memspace_ == memory::DEVICE) {
       A->syncData(memspace_);
     }

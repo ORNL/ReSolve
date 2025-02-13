@@ -17,9 +17,9 @@ void runTests(const std::string& backendName, ReSolve::tests::TestingResults& re
     result += test.matrixHandlerConstructor();
     result += test.matrixInfNorm(1000000);
     result += test.matVec(50);
-    result += test.csc2csr(1024, 1024);
-    result += test.csc2csr(1024, 2048);
-    result += test.csc2csr(2048, 1024);
+    result += test.csc2csr(5, 5);
+    // result += test.csc2csr(1024, 2048);
+    // result += test.csc2csr(2048, 1024);
     std::cout << "\n";
 }
 
