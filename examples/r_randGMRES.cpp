@@ -2,31 +2,53 @@
 #include <iostream>
 #include <iomanip>
 
-#include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/matrix/io.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/GramSchmidt.hpp>
-#include <resolve/LinSolverDirectRocSparseILU0.hpp>
 #include <resolve/LinSolverIterativeRandFGMRES.hpp>
+#include <resolve/LinSolverDirectCpuILU0.hpp>
+#include <resolve/LinSolverDirectSerialILU0.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
-
 
 #include "ExampleHelper.hpp"
 
+#ifdef RESOLVE_USE_HIP
+#include <resolve/LinSolverDirectRocSparseILU0.hpp>
+#endif
+
+#ifdef RESOLVE_USE_CUDA
+#include <resolve/LinSolverDirectCuSparseILU0.hpp>
+#endif
+
 /// Prototype of the example main function 
-template <class workspace_type>
+template <class workspace_type, class precon_type>
 static int example(int argc, char *argv[]);
 
 int main(int argc, char *argv[])
 {
-  return example<ReSolve::LinAlgWorkspaceHIP>(argc, argv);
+  int status = 0;
+
+  status += example<ReSolve::LinAlgWorkspaceCpu,
+                    ReSolve::LinSolverDirectCpuILU0>(argc, argv);
+
+#ifdef RESOLVE_USE_HIP
+  status += example<ReSolve::LinAlgWorkspaceHIP,
+                    ReSolve::LinSolverDirectRocSparseILU0>(argc, argv);
+#endif
+
+#ifdef RESOLVE_USE_CUDA
+  status += example<ReSolve::LinAlgWorkspaceCUDA,
+                    ReSolve::LinSolverDirectCuSparseILU0>(argc, argv);
+#endif
+
+  return status;
 }
 
 /// Example implementation
-template <class workspace_type>
+template <class workspace_type, class precon_type>
 int example(int argc, char *argv[])
 {
   // Use the same data types as those you specified in ReSolve build.
@@ -49,17 +71,29 @@ int example(int argc, char *argv[])
   MatrixHandler matrix_handler(&workspace);
   VectorHandler vector_handler(&workspace);
 
-  matrix::Csr* A = nullptr;
-  vector_type* vec_rhs = nullptr;
-  vector_type* vec_x   = nullptr;
-
   GramSchmidt GS(&vector_handler, GramSchmidt::CGS2);
 
-  LinSolverDirectRocSparseILU0 Precond(&workspace);
+  precon_type Precond(&workspace);
   LinSolverIterativeRandFGMRES FGMRES(&matrix_handler,
                                       &vector_handler,
                                       LinSolverIterativeRandFGMRES::cs,
                                       &GS);
+
+  // Set memory space where to run tests
+  std::string hwbackend = "CPU";
+  memory::MemorySpace memspace = memory::HOST;
+  if (matrix_handler.getIsCudaEnabled()) {
+    memspace = memory::DEVICE;
+    hwbackend = "CUDA";
+  }
+  if (matrix_handler.getIsHipEnabled()) {
+    memspace = memory::DEVICE;
+    hwbackend = "HIP";
+  }
+
+  matrix::Csr* A = nullptr;
+  vector_type* vec_rhs = nullptr;
+  vector_type* vec_x   = nullptr;
 
   std::ifstream mat_file(matrix_filename);
   if(!mat_file.is_open())
@@ -80,13 +114,13 @@ int example(int argc, char *argv[])
   rhs_file.close();
 
   vec_x = new vector_type(A->getNumRows());
-  vec_x->allocate(memory::DEVICE);
-  A->syncData(memory::DEVICE);
-  vec_rhs->syncData(memory::DEVICE);
+  vec_x->allocate(memspace);
+  A->syncData(memspace);
+  vec_rhs->syncData(memspace);
 
   printSystemInfo(matrix_filename, A);
 
-  matrix_handler.setValuesChanged(true, memory::DEVICE);
+  matrix_handler.setValuesChanged(true, memspace);
 
   Precond.setup(A);
   FGMRES.setRestart(150);
@@ -103,6 +137,8 @@ int example(int argc, char *argv[])
 
   // Print summary of results
   helper.resetSystem(A, vec_rhs, vec_x);
+  std::cout << "\nRandomized GMRES result on " << hwbackend << "\n";
+  std::cout << "---------------------------------\n";
   helper.printIrSummary(&FGMRES);
 
   delete A;
