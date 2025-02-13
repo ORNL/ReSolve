@@ -84,7 +84,9 @@ public:
   {
     TestStatus status=0;
     matrix::Csc* A_csc = createRectangularCscMatrix(N, M);
+    // printMatrix(A_csc, "CSC matrix");
     std::cout << "N: " << N << " M: " << M << "\n";
+
     matrix::Csr* A_csr = new matrix::Csr(M, N, 2*std::min(N,M));
     A_csr->allocateMatrixData(memory::HOST);
 
@@ -93,7 +95,6 @@ public:
     status *= (A_csr->getNumRows() == A_csc->getNumRows());
     status *= (A_csr->getNumColumns() == A_csc->getNumColumns());
     status *= (A_csr->getNnz() == A_csc->getNnz());
-
 
     if (memspace_ == memory::DEVICE) {
       //update the data on the device
@@ -161,7 +162,6 @@ private:
 
     real_type counter = 1.0;
     colptr[0] = 0;
-    std::cout << "N: " << N << " M: " << M << "\n";
     if(N==M) //square case
     {
       for (index_type i=0; i < N; ++i)
@@ -233,11 +233,8 @@ void verifyCsrMatrix(matrix::Csr* A, TestStatus& status)
       if (i==M-1) //last row should have one value
       {
         status *= (rowptr_csr[i+1] == rowptr_csr[i] + 1);
-        std::cout << "rowptr_csr[" << i+1 << "] = " << rowptr_csr[i+1] << "\n";
         status *= (colidx_csr[rowptr_csr[i]] == N-1);
-        std::cout << "colidx_csr[" << rowptr_csr[i] << "] = " << colidx_csr[rowptr_csr[i]] << "\n";
         status *= (val_csr[rowptr_csr[i]] == 2.0*N);
-        std::cout << "val_csr[" << rowptr_csr[i] << "] = " << val_csr[rowptr_csr[i]] << "\n";
       }
       else if(i==M/2) //this row should have 3 values
       {

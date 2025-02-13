@@ -236,8 +236,8 @@ namespace ReSolve {
     if (status)
       out::error() << "CSC2CSR status: "   << status                    << ". "
                    << "Last error code: " << mem_.getLastDeviceError() << ".\n";
-    return error_sum;
     mem_.deleteOnDevice(d_work);
+    return error_sum;
   }
 
 } // namespace ReSolve

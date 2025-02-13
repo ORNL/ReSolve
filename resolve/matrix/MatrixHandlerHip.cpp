@@ -202,14 +202,14 @@ namespace ReSolve {
                                 A_csc->getColData(memory::DEVICE), 
                                 A_csc->getRowData(memory::DEVICE), 
                                 A_csr->getValues( memory::DEVICE), 
-                                A_csr->getRowData(memory::DEVICE),
-                                A_csr->getColData(memory::DEVICE), 
+                                A_csr->getColData(memory::DEVICE),
+                                A_csr->getRowData(memory::DEVICE), 
                                 rocsparse_action_numeric,
                                 rocsparse_index_base_zero,
                                 d_work);
     error_sum += status;
-    return error_sum;
     mem_.deleteOnDevice(d_work);
+    return error_sum;
   }
 
 } // namespace ReSolve
