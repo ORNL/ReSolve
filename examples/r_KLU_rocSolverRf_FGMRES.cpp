@@ -2,7 +2,6 @@
 #include <iostream>
 #include <iomanip>
 
-#include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/Csc.hpp>
 #include <resolve/vector/Vector.hpp>
@@ -41,12 +40,9 @@ int main(int argc, char *argv[])
 template <class workspace_type>
 int example(int argc, char *argv[])
 {
-  // Use the same data types as those you specified in ReSolve build.
-  using namespace ReSolve::constants;
   using namespace ReSolve::examples;
   using namespace ReSolve;
   using index_type = ReSolve::index_type;
-  using real_type  = ReSolve::real_type;
   using vector_type = ReSolve::vector::Vector;
 
   const std::string example_name("klu_rocsolverrf_fgmres.exe");
@@ -91,36 +87,28 @@ int example(int argc, char *argv[])
   std::cout << "Family rhs file name: " << rhs_pathname    << ", total number of RHSes: "    << num_systems << "\n";
 
   // Workspace
-  workspace_type* workspace_HIP = new ReSolve::LinAlgWorkspaceHIP();
-  workspace_HIP->initializeHandles();
+  workspace_type workspace;
+  workspace.initializeHandles();
 
   // Example helper
-  ExampleHelper<workspace_type> helper(*workspace_HIP);
+  ExampleHelper<workspace_type> helper(workspace);
 
   // Matrix and vector handlers
-  ReSolve::MatrixHandler* matrix_handler =  new ReSolve::MatrixHandler(workspace_HIP);
-  ReSolve::VectorHandler* vector_handler =  new ReSolve::VectorHandler(workspace_HIP);
+  MatrixHandler matrix_handler(&workspace);
+  VectorHandler vector_handler(&workspace);
 
   // Direct solvers instantiation  
-  ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
-  ReSolve::LinSolverDirectRocSolverRf* Rf = new ReSolve::LinSolverDirectRocSolverRf(workspace_HIP);
+  LinSolverDirectKLU KLU;
+  LinSolverDirectRocSolverRf Rf(&workspace);
 
   // Iterative solver instantiation
-  ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::CGS2);
-  ReSolve::LinSolverIterativeFGMRES* FGMRES = new ReSolve::LinSolverIterativeFGMRES(matrix_handler, vector_handler, GS);
+  GramSchmidt GS(&vector_handler, GramSchmidt::CGS2);
+  LinSolverIterativeFGMRES FGMRES(&matrix_handler, &vector_handler, &GS);
 
   // Linear system matrix and vectors
-  ReSolve::matrix::Csr* A = nullptr;
-  real_type* rhs = nullptr;
-  real_type* x   = nullptr;
+  matrix::Csr* A = nullptr;
   vector_type* vec_rhs = nullptr;
   vector_type* vec_x   = nullptr;
-
-  // Auxilliary objects for error estimates
-  vector_type* vec_r   = nullptr;
-  real_type norm_A{0.0};
-  real_type norm_x{0.0};
-  real_type norm_r{0.0};
 
   RESOLVE_RANGE_PUSH(__FUNCTION__);
   for (int i = 0; i < num_systems; ++i)
@@ -140,7 +128,8 @@ int example(int argc, char *argv[])
     std::cout << "Reading: " << matrix_pathname_full << std::endl;
     std::cout << "========================================================================================================================"<<std::endl;
     std::cout << std::endl;
-    // Read first matrix
+
+    // Read matrix and right-hand-side vector
     std::ifstream mat_file(matrix_pathname_full);
     if(!mat_file.is_open())
     {
@@ -155,101 +144,83 @@ int example(int argc, char *argv[])
     }
     bool is_expand_symmetric = true;
     if (i == 0) {
-      A = ReSolve::io::createCsrFromFile(mat_file, is_expand_symmetric);
-
-      rhs = ReSolve::io::createArrayFromFile(rhs_file);
-      // vec_rhs = io::createVectorFromFile(rhs_file);
-      x = new real_type[A->getNumRows()];
-      vec_rhs = new vector_type(A->getNumRows());
+      A = io::createCsrFromFile(mat_file, is_expand_symmetric);
+      vec_rhs = io::createVectorFromFile(rhs_file);
       vec_x = new vector_type(A->getNumRows());
-      vec_x->allocate(ReSolve::memory::HOST);//for KLU
-      vec_x->allocate(ReSolve::memory::DEVICE);
-      vec_r = new vector_type(A->getNumRows());
+      vec_x->allocate(memory::HOST);//for KLU
+      vec_x->allocate(memory::DEVICE);
     } else {
-      ReSolve::io::updateMatrixFromFile(mat_file, A);
-      ReSolve::io::updateArrayFromFile(rhs_file, &rhs);
-      // io::updateVectorFromFile(rhs_file, vec_rhs);
+      io::updateMatrixFromFile(mat_file, A);
+      io::updateVectorFromFile(rhs_file, vec_rhs);
     }
-    // Copy matrix data to device
-    A->syncData(ReSolve::memory::DEVICE);
+    mat_file.close();
+    rhs_file.close();
+
+    // Copy data to device
+    A->syncData(memory::DEVICE);
+    vec_rhs->syncData(memory::DEVICE);
 
     std::cout << "Finished reading the matrix and rhs, size: " << A->getNumRows() << " x "<< A->getNumColumns() 
               << ", nnz: "       << A->getNnz() 
               << ", symmetric? " << A->symmetric()
               << ", Expanded? "  << A->expanded() << std::endl;
-    mat_file.close();
-    rhs_file.close();
-
-    // Update host and device rhs.
-    vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
-    vec_rhs->syncData(memory::DEVICE);
 
     RESOLVE_RANGE_POP("Matrix Read");
     std::cout << "CSR matrix loaded. Expanded NNZ: " << A->getNnz() << std::endl;
 
-    int status;
-    real_type norm_b;
+    int status = 0;
+
     if (i < 2) {
       RESOLVE_RANGE_PUSH("KLU");
-      KLU->setup(A);
-      matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
-      status = KLU->analyze();
+      KLU.setup(A);
+      matrix_handler.setValuesChanged(true, memory::DEVICE);
+      status = KLU.analyze();
       std::cout << "KLU analysis status: " << status << std::endl;
-      status = KLU->factorize();
+      status = KLU.factorize();
       std::cout << "KLU factorization status: " << status << std::endl;
 
-      status = KLU->solve(vec_rhs, vec_x);
+      status = KLU.solve(vec_rhs, vec_x);
       std::cout << "KLU solve status: " << status << std::endl;
 
-      // helper.resetSystem(A, vec_rhs, vec_x);
-      // helper.printShortSummary();
-
-      vec_r->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-      norm_b = vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE);
-      norm_b = sqrt(norm_b);
-
-      matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
-      matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, ReSolve::memory::DEVICE); 
-      std::cout << "\t2-Norm of the residual: "
-        << std::scientific << std::setprecision(16) 
-        << sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE))/norm_b << "\n";
+      helper.resetSystem(A, vec_rhs, vec_x);
+      helper.printShortSummary();
 
       if (i == 1) {
-        ReSolve::matrix::Csc* L = (ReSolve::matrix::Csc*) KLU->getLFactor();
-        ReSolve::matrix::Csc* U = (ReSolve::matrix::Csc*) KLU->getUFactor();
+        matrix::Csc* L = (matrix::Csc*) KLU.getLFactor();
+        matrix::Csc* U = (matrix::Csc*) KLU.getUFactor();
         if (L == nullptr) {
           std::cout << "ERROR\n";
         }
-        index_type* P = KLU->getPOrdering();
-        index_type* Q = KLU->getQOrdering();
-        Rf->setSolveMode(1);
-        Rf->setup(A, L, U, P, Q, vec_rhs);
-        Rf->refactorize();
+        index_type* P = KLU.getPOrdering();
+        index_type* Q = KLU.getQOrdering();
+        Rf.setSolveMode(1);
+        Rf.setup(A, L, U, P, Q, vec_rhs);
+        Rf.refactorize();
         std::cout << "About to set FGMRES ..." << std::endl;
-        FGMRES->setup(A); 
+        FGMRES.setup(A); 
       }
       RESOLVE_RANGE_POP("KLU");
     } else {
       RESOLVE_RANGE_PUSH("RocSolver");
-      //status =  KLU->refactorize();
+      //status =  KLU.refactorize();
       std::cout << "Using ROCSOLVER RF" << std::endl;
-      status = Rf->refactorize();
+      status = Rf.refactorize();
       std::cout << "ROCSOLVER RF refactorization status: " << status << std::endl;      
-      status = Rf->solve(vec_rhs, vec_x);
+      status = Rf.solve(vec_rhs, vec_x);
       std::cout << "ROCSOLVER RF solve status: " << status << std::endl;      
 
       helper.resetSystem(A, vec_rhs, vec_x);
 
-      //matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
-      FGMRES->resetMatrix(A);
-      FGMRES->setupPreconditioner("LU", Rf);
+      //matrix_handler->setValuesChanged(true, memory::DEVICE);
+      FGMRES.resetMatrix(A);
+      FGMRES.setupPreconditioner("LU", &Rf);
 
       helper.printSummary();
 
       if (std::isfinite(helper.getNormRelativeResidual())) {
-        FGMRES->solve(vec_rhs, vec_x);
+        FGMRES.solve(vec_rhs, vec_x);
 
-        helper.printIrSummary(FGMRES);
+        helper.printIrSummary(&FGMRES);
       }
       RESOLVE_RANGE_POP("RocSolver");
     }
@@ -258,15 +229,8 @@ int example(int argc, char *argv[])
   RESOLVE_RANGE_POP(__FUNCTION__);
 
   delete A;
-  delete KLU;
-  delete Rf;
-  delete [] x;
-  delete [] rhs;
-  delete vec_r;
   delete vec_x;
-  delete workspace_HIP;
-  delete matrix_handler;
-  delete vector_handler;
+  delete vec_rhs;
 
   return 0;
 }
