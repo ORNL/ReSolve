@@ -7,25 +7,25 @@ namespace ReSolve
 {
   namespace examples
   {
-
     /**
-     * @brief Checks the error code and prints pass/fail message.
+     * @brief Print usage help.
      * 
-     * @param error_sum - error code: 0 = pass, otherwise fail
-     * @param test_name - test name to be displayed with pass/fail message
+     * Describes usage of examples, which solve series of similar
+     * linear systems emulating operating environment of the linear
+     * solver.
+     * 
+     * @param name - The name of the example
      */
-    void isTestPass(int error_sum, const std::string& test_name)
+    void printUsageSystemSeries(const std::string& name)
     {
-      using namespace ReSolve::colors;
-
-      if (error_sum == 0) {
-        std::cout << std::endl << test_name
-                  << GREEN << " PASSED" << CLEAR << std::endl << std::endl;
-      } else {
-        std::cout << std::endl << test_name
-                  << RED << " FAILED" << CLEAR
-                  << ", error sum: " << error_sum << std::endl << std::endl;
-      }
+      std::cout << "\nLoads from files and solves a series of linear systems.\n\n";
+      std::cout << "System matrices are in files with names <pathname>XX.mtx, where XX are\n";
+      std::cout << "consecutive integer numbers 00, 01, 02, ...\n\n";
+      std::cout << "System right hand side vectors are stored in files with matching numbering.\n";
+      std::cout << "and file extension.\n\n";
+      std::cout << "Usage:\n\t./" << name;
+      std::cout << " -m <matrix pathname> -r <rhs pathname> -n <number of systems>\n\n";
+      std::cout << "Optional features:\n\t-h\tPrints this message.\n\n";
     }
 
     /**
@@ -60,43 +60,6 @@ namespace ReSolve
           if (mh_.getIsCudaEnabled() || mh_.getIsHipEnabled()) {
             memspace_ = ReSolve::memory::DEVICE;
           }
-        }
-
-        /**
-         * @brief ExampleHelper constructor
-         * 
-         * @param A[in] - Linear system matrix
-         * @param r[in] - Linear system right-hand side
-         * @param x[in] - Computed solution of the linear system
-         * @param[in,out] workspace - workspace for matrix and vector handlers
-         * 
-         * @pre The linear solver has solved system A * x = r.
-         * @pre A, r, and x are all in the same memory space as the workspace.
-         * @pre Workspace handles are initialized
-         * 
-         * @post Handlers are instantiated and vectors res_ and x_true_ are
-         * allocated
-         * @post Solution vector x_true_ elements are all set to 1.
-         * @post Solution error with respect to x_true_ and residual norms
-         * are computed.
-         */
-        ExampleHelper(matrix::Sparse* A,
-                      vector::Vector* r,
-                      vector::Vector* x,
-                      workspace_type& workspace)
-          : A_(A),
-            r_(r),
-            x_(x),
-            mh_(&workspace),
-            vh_(&workspace),
-            res_(new ReSolve::vector::Vector(A->getNumRows())),
-            x_true_(new ReSolve::vector::Vector(A->getNumRows()))
-        {
-          if (mh_.getIsCudaEnabled() || mh_.getIsHipEnabled()) {
-            memspace_ = ReSolve::memory::DEVICE;
-          }
-
-          computeNorms();
         }
 
         /**
@@ -164,12 +127,6 @@ namespace ReSolve
           }
 
           computeNorms();
-        }
-
-        /// Set the name of the test to `name`.
-        void setTestName(const std::string& name)
-        {
-          test_name_ += name;
         }
 
         /// Return L2 norm of the linear system residual.
@@ -395,8 +352,6 @@ namespace ReSolve
         ReSolve::matrix::Sparse* A_; ///< pointer to system matrix
         ReSolve::vector::Vector* r_; ///< pointer to system right-hand side
         ReSolve::vector::Vector* x_; ///< pointer to the computed solution
-
-        std::string test_name_{"Test "}; ///< test name
 
         ReSolve::MatrixHandler mh_; ///< matrix handler instance
         ReSolve::VectorHandler vh_; ///< vector handler instance
