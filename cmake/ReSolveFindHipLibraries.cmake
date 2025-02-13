@@ -7,6 +7,8 @@ find_package(hip REQUIRED)
 find_package(rocblas REQUIRED)
 find_package(rocsparse REQUIRED)
 find_package(rocsolver REQUIRED)
+find_package(rocprofiler-sdk REQUIRED)
+find_package(rocprofiler-sdk-roctx REQUIRED)
 
 target_link_libraries(resolve_hip INTERFACE 
   hip::host 
