@@ -99,7 +99,7 @@ if(RESOLVE_USE_HIP)
   endif(RESOLVE_USE_KLU)
   
   # Rand GMRES test with rocsparse
-  add_executable(gmres_rocsparse_rand.exe r_randGMRES.cpp)
+  add_executable(gmres_rocsparse_rand.exe randGmres.cpp)
   target_link_libraries(gmres_rocsparse_rand.exe PRIVATE ReSolve)
 
 endif(RESOLVE_USE_HIP)
