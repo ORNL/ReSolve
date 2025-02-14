@@ -338,7 +338,8 @@ namespace ReSolve
       case HOST:
         //check if we need to copy or not
         if (h_data_updated_) {
-          out::misc() << "WARNING: In Csr::syncData trying to sync host, but host already up to date! This line is ignored. (Perhaps you meant to sync device)\n";
+          out::misc() << "WARNING: In Csr::syncData trying to sync host, but host already up to date!"
+          << "This line is ignored. (Perhaps you meant to sync device)\n";
           return 0;
         }
         if (!d_data_updated_) {
@@ -371,7 +372,8 @@ namespace ReSolve
         return 0;
       case DEVICE:
         if (d_data_updated_) {
-          out::misc() << "WARNING: In Csr::syncData trying to sync device, but device already up to date! This line is ignored. (Perhaps you meant to sync host)\n";
+          out::misc() << "WARNING: In Csr::syncData trying to sync device, but device already up to date!"
+          << "This line is ignored. (Perhaps you meant to sync host)\n";
           return 0;
         }
         if (!h_data_updated_) {
