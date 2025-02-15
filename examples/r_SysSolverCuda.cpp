@@ -45,7 +45,12 @@ int main(int argc, char *argv[])
   vector_type* vec_rhs = nullptr;
   vector_type* vec_x   = nullptr;
 
-  ReSolve::SystemSolver* solver = new ReSolve::SystemSolver(workspace_CUDA);
+  ReSolve::SystemSolver* solver = new ReSolve::SystemSolver(workspace_CUDA,
+                                                            "klu",
+                                                            "glu",
+                                                            "glu",
+                                                            "none",
+                                                            "none");
 
   for (int i = 0; i < numSystems; ++i)
   {
@@ -57,8 +62,8 @@ int main(int argc, char *argv[])
     rhsFileNameFull = "";
 
     // Read matrix first
-    matrixFileNameFull = matrixFileName + fileId + ".mtx";
-    rhsFileNameFull = rhsFileName + rhsId + ".mtx";
+    matrixFileNameFull = matrixFileName + fileId + ".mm";
+    rhsFileNameFull = rhsFileName + rhsId + ".mm";
     std::cout << std::endl << std::endl << std::endl;
     std::cout << "========================================================================================================================"<<std::endl;
     std::cout << "Reading: " << matrixFileNameFull << std::endl;
@@ -102,7 +107,8 @@ int main(int argc, char *argv[])
     // Update host and device data.
     if (i < 1) { 
       vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
-      vec_rhs->setDataUpdated(ReSolve::memory::HOST);
+      vec_rhs->syncData(ReSolve::memory::DEVICE);
+      A->syncData(ReSolve::memory::DEVICE);
     } else { 
       A->syncData(ReSolve::memory::DEVICE);
       vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
