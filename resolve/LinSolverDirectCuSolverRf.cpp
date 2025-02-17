@@ -167,6 +167,22 @@ namespace ReSolve
   int LinSolverDirectCuSolverRf::refactorize()
   {
     int error_sum = 0;
+    // check A_->getValues(memory::DEVICE) for nullptr
+        // Check if matrix A data is valid
+    assert(A_ != nullptr && "Matrix A is null!");
+    assert(A_->getNumRows() > 0 && "Matrix A must have positive row count!");
+    assert(A_->getNnz() > 0 && "Matrix A must have positive nonzero count!");
+    assert(A_->getRowData(memory::DEVICE) != nullptr && "Row data is not on the device!");
+    assert(A_->getColData(memory::DEVICE) != nullptr && "Column data is not on the device!");
+    assert(A_->getValues(memory::DEVICE) != nullptr && "Matrix A values are not on the device!");
+
+    // Check permutation vectors
+    assert(d_P_ != nullptr && "Permutation vector d_P_ is null!");
+    assert(d_Q_ != nullptr && "Permutation vector d_Q_ is null!");
+
+    // Check solver handle
+    assert(handle_cusolverrf_ != nullptr && "cuSolverRf handle is null!");
+
     status_cusolverrf_ = cusolverRfResetValues(A_->getNumRows(), 
                                                A_->getNnz(), 
                                                A_->getRowData(memory::DEVICE),

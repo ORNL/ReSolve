@@ -11,8 +11,12 @@
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
-//#include <resolve/LinSolverDirectRocSolverRf.hpp>
-#include <resolve/LinSolverDirectCuSolverRf.hpp>
+#ifdef RESOLVE_USE_CUDA
+  #include <resolve/LinSolverDirectCuSolverRf.hpp>
+#endif
+#ifdef RESOLVE_USE_HIP
+  #include <resolve/LinSolverDirectRocSolverRf.hpp>
+#endif
 #include <resolve/LinSolverIterativeFGMRES.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 #include <resolve/Profiling.hpp>
@@ -108,8 +112,12 @@ int gpuRefactor(const std::string backendName, int argc, char *argv[])
 
   // Direct solvers instantiation  
   LinSolverDirectKLU KLU;
-  LinSolverDirectCuSolverRf Rf(&workspace);
-
+  #ifdef RESOLVE_USE_CUDA
+    LinSolverDirectCuSolverRf Rf(&workspace);
+  #endif
+  #ifdef RESOLVE_USE_HIP
+    LinSolverDirectRocSolverRf Rf(&workspace);
+  #endif
   // Iterative solver instantiation
   GramSchmidt GS(&vector_handler, GramSchmidt::CGS2);
   LinSolverIterativeFGMRES FGMRES(&matrix_handler, &vector_handler, &GS);
@@ -169,8 +177,6 @@ int gpuRefactor(const std::string backendName, int argc, char *argv[])
       std::cerr << "Null pointer encountered at iteration " << i << std::endl;
       return -1;
     }
-    std::cout << "Matrix A: " << A->getNumRows() << "x" << vec_rhs->getSize()
-          << ", NNZ: " << A->getNnz() << std::endl;
 
     RESOLVE_RANGE_POP("Matrix Read");
     std::cout << "CSR matrix loaded. Expanded NNZ: " << A->getNnz() << std::endl;
@@ -212,12 +218,11 @@ int gpuRefactor(const std::string backendName, int argc, char *argv[])
         if (backendName == "HIP") {
           Rf.setSolveMode(1);
         }
-        std::cout << "About to set factors ...\n";
+        Rf.setup(A, L, U, P, Q);
         // Refactorization
         Rf.refactorize();
 
         // Setup iterative refinement solver
-        std::cout << "About to set FGMRES ..." << std::endl;
         FGMRES.setup(A); 
       }
       RESOLVE_RANGE_POP("KLU");
@@ -227,17 +232,13 @@ int gpuRefactor(const std::string backendName, int argc, char *argv[])
 
       // Refactorize on the device
       status = Rf.refactorize();
-      std::cout << solverName.c_str() << " RF refactorization status: " << status << std::endl;    
 
       // Triangular solve on the device
       status = Rf.solve(vec_rhs, vec_x);
-      std::cout << solverName.c_str() << " RF solve status: " << status << std::endl;      
 
       // Print summary of the results
       helper.resetSystem(A, vec_rhs, vec_x);
       helper.printSummary();
-
-      //matrix_handler->setValuesChanged(true, memory::DEVICE); // ???
 
       // Setup iterative refinement
       FGMRES.resetMatrix(A);
