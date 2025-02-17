@@ -13,13 +13,6 @@
 namespace ReSolve 
 {
   using out = io::Logger;
-  // template <class workspace_type>
-  // LinSolverDirect<workspace_type>::LinSolverDirect(workspace_type* workspace)
-  // {
-  //   workspace_ = workspace;
-
-  // }
-
   LinSolverDirect::LinSolverDirect()
   {
     L_ = nullptr;

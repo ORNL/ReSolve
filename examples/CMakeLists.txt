@@ -82,9 +82,7 @@ if(RESOLVE_USE_HIP)
     add_executable(klu_rocsolverrf.exe r_KLU_rocsolverrf.cpp)
     target_link_libraries(klu_rocsolverrf.exe PRIVATE ReSolve)
   
-    # Build example with KLU factorization, rocsolver Rf refactorization, and FGMRES iterative refinement
-    # add_executable(klu_rocsolverrf_fgmres.exe gpuRefactor.cpp)
-    # target_link_libraries(klu_rocsolverrf_fgmres.exe PRIVATE ReSolve)
+
     
     # Example in which factorization is redone if solution is bad
     add_executable(klu_rocsolverrf_check_redo.exe r_KLU_rocsolverrf_redo_factorization.cpp)
@@ -125,7 +123,7 @@ endif(RESOLVE_USE_CUDA)
 
 if(RESOLVE_USE_HIP)
   if(RESOLVE_USE_KLU)
-    list(APPEND installable_executables klu_rocsolverrf.exe klu_rocsolverrf_fgmres.exe klu_rocsolverrf_check_redo.exe)
+    list(APPEND installable_executables klu_rocsolverrf.exe klu_rocsolverrf_check_redo.exe)
   endif()
   list(APPEND installable_executables gmres_rocsparse_rand.exe)
 endif(RESOLVE_USE_HIP)
