@@ -26,10 +26,10 @@ static int gpuRefactor(const std::string backendName, int argc, char *argv[]);
 
 int main(int argc, char *argv[])
 {
-  #ifdef RESOLVE_WITH_CUDA
+  #ifdef RESOLVE_USE_CUDA
     return gpuRefactor<ReSolve::LinAlgWorkspaceCUDA>("CUDA", argc, argv);
   #endif
-  #ifdef RESOLVE_WITH_HIP
+  #ifdef RESOLVE_USE_HIP
     return gpuRefactor<ReSolve::LinAlgWorkspaceHIP>("HIP", argc, argv);
   #endif
 }
@@ -52,7 +52,7 @@ int gpuRefactor(const std::string backendName, int argc, char *argv[])
   using index_type = ReSolve::index_type;
   using vector_type = ReSolve::vector::Vector;
 
-  const std::string example_name("gpu_refactor.exe");
+  const std::string example_name("gpuRefactor.exe");
 
   CliOptions options(argc, argv);
   CliOptions::Option* opt = nullptr;
@@ -122,6 +122,7 @@ int gpuRefactor(const std::string backendName, int argc, char *argv[])
   RESOLVE_RANGE_PUSH(__FUNCTION__);
   for (int i = 0; i < num_systems; ++i)
   {
+    std::cout << "System " << i << ":\n";
     RESOLVE_RANGE_PUSH("Matrix Read");
 
     std::ostringstream matname;
@@ -155,6 +156,7 @@ int gpuRefactor(const std::string backendName, int argc, char *argv[])
       io::updateMatrixFromFile(mat_file, A);
       io::updateVectorFromFile(rhs_file, vec_rhs);
     }
+
     mat_file.close();
     rhs_file.close();
 
@@ -163,6 +165,12 @@ int gpuRefactor(const std::string backendName, int argc, char *argv[])
     vec_rhs->syncData(memory::DEVICE);
 
     printSystemInfo(matrix_pathname_full, A);
+    if (!A || !vec_rhs || !vec_x) {
+      std::cerr << "Null pointer encountered at iteration " << i << std::endl;
+      return -1;
+    }
+    std::cout << "Matrix A: " << A->getNumRows() << "x" << vec_rhs->getSize()
+          << ", NNZ: " << A->getNnz() << std::endl;
 
     RESOLVE_RANGE_POP("Matrix Read");
     std::cout << "CSR matrix loaded. Expanded NNZ: " << A->getNnz() << std::endl;
@@ -204,6 +212,7 @@ int gpuRefactor(const std::string backendName, int argc, char *argv[])
         if (backendName == "HIP") {
           Rf.setSolveMode(1);
         }
+        std::cout << "About to set factors ...\n";
         // Refactorization
         Rf.refactorize();
 
