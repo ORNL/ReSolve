@@ -19,6 +19,12 @@ if(RESOLVE_USE_KLU)
   # Build example with a configurable system solver
   add_executable(system.exe r_SysSolver.cpp)
   target_link_libraries(system.exe PRIVATE ReSolve)
+
+  if(RESOLVE_USE_CUDA OR RESOLVE_USE_HIP)
+    add_executable(gpuRefactor.exe gpuRefactor.cpp)
+    target_link_libraries(gpuRefactor.exe PRIVATE ReSolve)
+  endif(RESOLVE_USE_CUDA OR RESOLVE_USE_HIP)
+
 endif(RESOLVE_USE_KLU)
 
 # Build rand example, CPU ONLY  r_randGMRES_cpu
@@ -105,6 +111,9 @@ set(installable_executables "")
 # Install all examples in bin directory
 if(RESOLVE_USE_KLU)
   list(APPEND installable_executables klu_klu.exe klu_klu_standalone.exe system.exe)
+  if(RESOLVE_USE_CUDA OR RESOLVE_USE_HIP)
+    list(APPEND installable_executables gpuRefactor.exe)
+  endif(RESOLVE_USE_CUDA OR RESOLVE_USE_HIP)
 endif()
 
 if(RESOLVE_USE_CUDA)

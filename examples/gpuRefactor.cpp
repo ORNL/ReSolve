@@ -1,5 +1,7 @@
+
 #include <string>
 #include <iostream>
+#include <sstream>
 #include <iomanip>
 
 #include <resolve/matrix/Csr.hpp>
@@ -9,7 +11,8 @@
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
-#include <resolve/LinSolverDirectRocSolverRf.hpp>
+//#include <resolve/LinSolverDirectRocSolverRf.hpp>
+#include <resolve/LinSolverDirectCuSolverRf.hpp>
 #include <resolve/LinSolverIterativeFGMRES.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 #include <resolve/Profiling.hpp>
@@ -19,23 +22,37 @@
 
 /// Prototype of the example main function 
 template <class workspace_type>
-static int example(int argc, char *argv[]);
+static int gpuRefactor(const std::string backendName, int argc, char *argv[]);
 
 int main(int argc, char *argv[])
 {
-  return example<ReSolve::LinAlgWorkspaceHIP>(argc, argv);
+  #ifdef RESOLVE_WITH_CUDA
+    return gpuRefactor<ReSolve::LinAlgWorkspaceCUDA>("CUDA", argc, argv);
+  #endif
+  #ifdef RESOLVE_WITH_HIP
+    return gpuRefactor<ReSolve::LinAlgWorkspaceHIP>("HIP", argc, argv);
+  #endif
 }
 
 /// Example implementation
 template <class workspace_type>
-int example(int argc, char *argv[])
+int gpuRefactor(const std::string backendName, int argc, char *argv[])
 {
+  std::cout << "gpuRefactor" << " with " << backendName << " backend\n";
+  std::string solverName;
+  if (backendName == "CUDA") {
+    solverName = "CuSolver";
+  } else if (backendName == "HIP")
+  {
+    solverName = "RocSolver";
+  }
+  
   using namespace ReSolve::examples;
   using namespace ReSolve;
   using index_type = ReSolve::index_type;
   using vector_type = ReSolve::vector::Vector;
 
-  const std::string example_name("klu_rocsolverrf_fgmres.exe");
+  const std::string example_name("gpu_refactor.exe");
 
   CliOptions options(argc, argv);
   CliOptions::Option* opt = nullptr;
@@ -91,7 +108,7 @@ int example(int argc, char *argv[])
 
   // Direct solvers instantiation  
   LinSolverDirectKLU KLU;
-  LinSolverDirectRocSolverRf Rf(&workspace);
+  LinSolverDirectCuSolverRf Rf(&workspace);
 
   // Iterative solver instantiation
   GramSchmidt GS(&vector_handler, GramSchmidt::CGS2);
@@ -184,9 +201,9 @@ int example(int argc, char *argv[])
         }
         index_type* P = KLU.getPOrdering();
         index_type* Q = KLU.getQOrdering();
-        Rf.setSolveMode(1);
-        Rf.setup(A, L, U, P, Q, vec_rhs);
-
+        if (backendName == "HIP") {
+          Rf.setSolveMode(1);
+        }
         // Refactorization
         Rf.refactorize();
 
@@ -196,16 +213,16 @@ int example(int argc, char *argv[])
       }
       RESOLVE_RANGE_POP("KLU");
     } else {
-      RESOLVE_RANGE_PUSH("RocSolver");
-      std::cout << "Using ROCSOLVER RF" << std::endl;
+      RESOLVE_RANGE_PUSH(solverName.c_str());
+      std::cout << "Using " << solverName.c_str() << " RF\n";
 
       // Refactorize on the device
       status = Rf.refactorize();
-      std::cout << "ROCSOLVER RF refactorization status: " << status << std::endl;      
+      std::cout << solverName.c_str() << " RF refactorization status: " << status << std::endl;    
 
       // Triangular solve on the device
       status = Rf.solve(vec_rhs, vec_x);
-      std::cout << "ROCSOLVER RF solve status: " << status << std::endl;      
+      std::cout << solverName.c_str() << " RF solve status: " << status << std::endl;      
 
       // Print summary of the results
       helper.resetSystem(A, vec_rhs, vec_x);
@@ -224,7 +241,7 @@ int example(int argc, char *argv[])
         // Print summary
         helper.printIrSummary(&FGMRES);
       }
-      RESOLVE_RANGE_POP("RocSolver");
+      RESOLVE_RANGE_POP(solverName.c_str());
     }
 
   } // for (int i = 0; i < num_systems; ++i)

@@ -43,6 +43,8 @@ namespace ReSolve
       int refactorize() override;
       int solve(vector_type* rhs, vector_type* x) override;
       int solve(vector_type* rhs) override; // rhs overwritten by solution
+      int setSolveMode(int mode); // this does nothing for CuSolverRf
+
 
       void setAlgorithms(cusolverRfFactorization_t fact_alg,
                          cusolverRfTriangularSolve_t solve_alg);

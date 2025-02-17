@@ -153,6 +153,11 @@ namespace ReSolve
     return error_sum;
   }
 
+  int LinSolverDirectCuSolverRf::setSolveMode(int mode)
+  {
+    return 0;
+  }
+
   void LinSolverDirectCuSolverRf::setAlgorithms(cusolverRfFactorization_t fact_alg,
                                                 cusolverRfTriangularSolve_t solve_alg)
   {
