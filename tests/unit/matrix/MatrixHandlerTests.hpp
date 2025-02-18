@@ -136,15 +136,15 @@ private:
     return status;
   }
   /** 
-   * @brief Create a rectangular CSR matrix
+   * @brief Create a rectangular CSC matrix with preset sparsity structure
    * 
-   * The sparisty structure is lower bidiagonal if N==M, with an extra entry on the first row.
+   * The sparisty structure is upper bidiagonal if N==M, with an extra entry in the first column
    * If N>M an entry is nonzero iff i==j, or i+M==j+N 
    * if N<M an entry is nonzero iff i==j, or i+N==j+M
-   * The values increase with a counter from 1.0
+   * The values increase with a counter from 1.0 in column major order.
    * 
-   * @param[in] N number of rows
-   * @param[in] M number of columns
+   * @param[in] N number of columns
+   * @param[in] M number of rows
    * 
    * @return matrix::Csr* 
   */
@@ -219,6 +219,22 @@ private:
     }
     return A;        
   }
+
+/*
+  * @brief Verify structure of a CSR matrix with preset pattern.
+  * 
+  * The sparsity structure corresponds to the CSR representation of a rectangular matrix
+  * created by createRectangularCscMatrix.
+  * The sparisty structure is upper bidiagonal if N==M, 
+  * with an extra entry in the first column.
+  * If N>M an entry is nonzero iff i==j, or i+M==j+N 
+  * if N<M an entry is nonzero iff i==j, or i+N==j+M
+  * The values increase with a counter from 1.0 in column major order.
+  * 
+  * @param[in] A matrix::Csr* pointer to the matrix to be verified
+  * @param[out] status TestStatus& reference to the status of the test
+  */
+
 
 void verifyCsrMatrix(matrix::Csr* A, TestStatus& status)
 {
