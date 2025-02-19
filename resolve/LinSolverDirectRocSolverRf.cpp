@@ -7,7 +7,13 @@
 namespace ReSolve 
 {
   using out = io::Logger;
-
+  /*
+    * @brief Constructor for LinSolverDirectRocSolverRf
+    * 
+    * @param[in] workspace - pointer to LinAlgWorkspaceHIP
+    * 
+    * @post solve_mode_ is set to 1 or -1
+    */
   LinSolverDirectRocSolverRf::LinSolverDirectRocSolverRf(LinAlgWorkspaceHIP* workspace)
   {
     workspace_ = workspace;
@@ -16,6 +22,13 @@ namespace ReSolve
     initParamList();
   }
 
+  /*
+    * @brief Destructor for LinSolverDirectRocSolverRf
+    * 
+    * @pre d_P_, d_Q_, d_aux1_, d_aux2_, L_csr_, U_csr_, allocated on device
+    * 
+    * @post All memory allocated on the device is freed
+    */
   LinSolverDirectRocSolverRf::~LinSolverDirectRocSolverRf()
   {
     mem_.deleteOnDevice(d_P_);
@@ -28,6 +41,18 @@ namespace ReSolve
     delete U_csr_;
   }
 
+  /*
+  * @brief Setup function for LinSolverDirectRocSolverRf
+  *
+  * @param[in] A - matrix::Sparse* - matrix to solve
+  * @param[in] L - matrix::Sparse* - lower triangular factor
+  * @param[in] U - matrix::Sparse* - upper triangular factor
+  * @param[in] P - index_type* - permutation vector P
+  * @param[in] Q - index_type* - permutation vector Q
+  * @param[in] rhs - vector_type* - right hand side
+  * 
+  * @param[out] error_sum - int - sum of errors from setup
+  */
   int LinSolverDirectRocSolverRf::setup(matrix::Sparse* A,
                                         matrix::Sparse* L,
                                         matrix::Sparse* U,
@@ -48,7 +73,7 @@ namespace ReSolve
     rocsolver_create_rfinfo(&infoM_, workspace_->getRocblasHandle()); 
 
     // Combine factors L and U into matrix M_
-    addFactors(L, U);
+    combineFactors(L, U);
 
     M_->setUpdated(ReSolve::memory::HOST);
     M_->syncData(ReSolve::memory::DEVICE);
@@ -495,6 +520,9 @@ namespace ReSolve
     return false;
   }
 
+  /*
+  * @brief Placeholder function that shouldn't be called.
+  */
   int LinSolverDirectRocSolverRf::printCliParam(const std::string id) const
   {
     switch (getParamId(id))
@@ -510,7 +538,18 @@ namespace ReSolve
   // Private methods
   //
   
-  void LinSolverDirectRocSolverRf::addFactors(matrix::Sparse* L, matrix::Sparse* U)
+  /**
+   * @brief Combine L and U factors into a single matrix M
+   * 
+   * M = [L U], where L and U are lower and upper triangular factors
+   * The implicit identity diagonal of L is not included in M
+   * 
+   * @param[in] L - matrix::Sparse* - lower triangular factor
+   * @param[in] U - matrix::Sparse* - upper triangular factor
+   * 
+   * @post M_ is allocated and filled with L and U factors
+   */
+  void LinSolverDirectRocSolverRf::combineFactors(matrix::Sparse* L, matrix::Sparse* U)
   {
     // L and U need to be in CSC format
     index_type n = L->getNumRows();
@@ -568,8 +607,13 @@ namespace ReSolve
         Mshifts[static_cast<size_t>(row)]++;
       }
     }
-  } // LinSolverDirectRocSolverRf::addFactors
+  } // LinSolverDirectRocSolverRf::combineFactors
 
+  /*
+  * @brief initialize the parameter list for LinSolverDirectRocSolverRf
+  *
+  * currently only "solve_mode" is supported
+  */
   void LinSolverDirectRocSolverRf::initParamList()
   {
     params_list_["solve_mode"] = SOLVE_MODE;

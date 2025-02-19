@@ -60,7 +60,7 @@ namespace ReSolve
 
     private:
       // to be exported to matrix handler in a later time
-      void addFactors(matrix::Sparse* L, matrix::Sparse* U); //create L+U from separate L, U factors
+      void combineFactors(matrix::Sparse* L, matrix::Sparse* U); //create L+U from separate L, U factors
       void initParamList();
 
       rocblas_status status_rocblas_; 

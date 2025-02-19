@@ -38,7 +38,15 @@ int main(int argc, char *argv[])
   #endif
 }
 
-/// Example implementation
+/*
+* @brief Example usage function for the gpuRefactor
+*
+* @tparam workspace_type - Type of the workspace to use
+* @param[in] backendName - Name of the backend to use
+* @param[in] argc - Number of command line arguments
+* @param[in] argv - Command line arguments
+* @return 0 if the example ran successfully, -1 otherwise
+*/
 template <class workspace_type>
 int gpuRefactor(const std::string backendName, int argc, char *argv[])
 {

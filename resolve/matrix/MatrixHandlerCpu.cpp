@@ -11,20 +11,30 @@
 namespace ReSolve {
   // Create a shortcut name for Logger static class
   using out = io::Logger;
-
+  /*
+  * @brief Empty constructor for MatrixHandlerCpu class.
+  */
   MatrixHandlerCpu::MatrixHandlerCpu()
   {
   }
-
+  /*
+  * @brief Empty destructor for MatrixHandlerCpu class.
+  */
   MatrixHandlerCpu::~MatrixHandlerCpu()
   {
   }
-
+  /*
+  * @brief Constructor for MatrixHandlerCpu class.
+  * @param[in] new_workspace - pointer to LinAlgWorkspaceCpu object
+  */
   MatrixHandlerCpu::MatrixHandlerCpu(LinAlgWorkspaceCpu* new_workspace)
   {
     workspace_ = new_workspace;
   }
-
+  /*
+  * @brief Marks when values have changed in MatrixHandlerCpu class.
+  * @param[in] values_changed - boolean value indicating if values have changed
+  */
   void MatrixHandlerCpu::setValuesChanged(bool values_changed)
   {
     values_changed_ = values_changed;

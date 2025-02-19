@@ -42,7 +42,7 @@ namespace ReSolve
     index_type n = A_->getNumRows();
     index_type nnz = A_->getNnz();
     //create combined factor
-    addFactors(L,U);
+    combineFactors(L,U);
 
     //set up descriptors
     cusparseCreateMatDescr(&descr_M_);
@@ -98,7 +98,7 @@ namespace ReSolve
     return error_sum;
   }
 
-  void LinSolverDirectCuSolverGLU::addFactors(matrix::Sparse* L, matrix::Sparse* U)
+  void LinSolverDirectCuSolverGLU::combineFactors(matrix::Sparse* L, matrix::Sparse* U)
   {
     // L and U need to be in CSC format
     index_type n = L->getNumRows();
