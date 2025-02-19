@@ -5,6 +5,17 @@
 #include <resolve/matrix/io.hpp>
 #include "MatrixHandlerTests.hpp"
 
+
+/*
+* @brief run tests with a given backend
+*
+* Checks correctness of the constructor, matrixInfNorm, matVec, csc2csr
+* CPU, CUDA and HIP backends are supported
+*
+* @tparam WorkspaceType workspace type LinAlgWorkspace{Cpu, CUDA, HIP} supported
+* @param[in] backendName - name of the backend
+* @param[out] result - test results
+*/
 template<typename WorkspaceType>
 void runTests(const std::string& backendName, ReSolve::tests::TestingResults& result) {
     std::cout << "Running tests with " << backendName << ":\n";
