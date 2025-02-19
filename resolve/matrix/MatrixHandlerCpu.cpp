@@ -132,6 +132,9 @@ namespace ReSolve {
    * 
    * @authors Slaven Peles <peless@ornl.gov>, Daniel Reynolds (SMU), and
    * David Gardner and Carol Woodward (LLNL)
+   * 
+   * @param[in]  A_csc - input CSC matrix
+   * @param[out] A_csr - output CSR matrix
    */
   int MatrixHandlerCpu::csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr)
   {

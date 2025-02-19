@@ -169,6 +169,13 @@ namespace ReSolve {
     return 0;
   }
 
+/*
+* @brief convert a CSC matrix to a CSR matrix in HIP
+* 
+* @param[in]  A_csc - input CSC matrix
+* @param[out] A_csr - output CSR matrix
+* @return int error_sum, 0 if successful
+*/
   int MatrixHandlerHip::csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr)
   {
     index_type error_sum = 0;
