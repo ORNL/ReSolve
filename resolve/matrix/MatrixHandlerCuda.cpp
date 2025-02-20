@@ -14,20 +14,32 @@ namespace ReSolve {
   // Create a shortcut name for Logger static class
   using out = io::Logger;
 
+  /**
+   * @brief Empty constructor for MatrixHandlerCuda object
+   */
   MatrixHandlerCuda::~MatrixHandlerCuda()
   {
   }
 
+  /**
+   * @brief Constructor for MatrixHandlerCuda object
+   * 
+   * @param[in] new_workspace - pointer to the workspace object
+   */
   MatrixHandlerCuda::MatrixHandlerCuda(LinAlgWorkspaceCUDA* new_workspace)
   {
     workspace_ = new_workspace;
   }
 
+  /**
+   * @brief Set values changed flag
+   * 
+   * @param[in] values_changed - flag indicating if values have changed
+   */
   void MatrixHandlerCuda::setValuesChanged(bool values_changed)
   {
     values_changed_ = values_changed;
   }
-
 
   /**
    * @brief result := alpha * A * x + beta * result
@@ -184,13 +196,13 @@ namespace ReSolve {
     }
     return status;
   }
-  /*
-  * @brief convert a CSC matrix to a CSR matrix in CUDA
-  *
-  * @param[in]  A_csc - input CSC matrix
-  * @param[out] A_csr - output CSR matrix
-  * @return int error_sum, 0 if successful
-  */
+  /**
+    * @brief convert a CSC matrix to a CSR matrix in CUDA
+    *
+    * @param[in]  A_csc - input CSC matrix
+    * @param[out] A_csr - output CSR matrix
+    * @return int error_sum, 0 if successful
+    */
   int MatrixHandlerCuda::csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr)
   {
     index_type error_sum = 0;
@@ -239,9 +251,10 @@ namespace ReSolve {
                                 CUSPARSE_CSR2CSC_ALG1,
                                 d_work);
     error_sum += status;
-    if (status)
+    if (status) {
       out::error() << "CSC2CSR status: "   << status                    << ". "
                    << "Last error code: " << mem_.getLastDeviceError() << ".\n";
+    }
     mem_.deleteOnDevice(d_work);
     return error_sum;
   }

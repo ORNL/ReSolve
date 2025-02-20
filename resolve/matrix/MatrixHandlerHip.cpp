@@ -13,15 +13,28 @@ namespace ReSolve {
   // Create a shortcut name for Logger static class
   using out = io::Logger;
 
+  /**
+   * @brief Empty constructor for MatrixHandlerHip object
+   */
   MatrixHandlerHip::~MatrixHandlerHip()
   {
   }
 
+  /**
+   * @brief Constructor for MatrixHandlerHip object
+   * 
+   * @param[in] new_workspace - pointer to the workspace object
+   */
   MatrixHandlerHip::MatrixHandlerHip(LinAlgWorkspaceHIP* new_workspace)
   {
     workspace_ = new_workspace;
   }
 
+  /**
+   * @brief Set values changed flag
+   * 
+   * @param[in] values_changed - flag indicating if values have changed
+   */
   void MatrixHandlerHip::setValuesChanged(bool values_changed)
   {
     values_changed_ = values_changed;
@@ -108,9 +121,10 @@ namespace ReSolve {
 
     error_sum += status;
     mem_.deviceSynchronize();
-    if (status)
+    if (status) {
       out::error() << "Matvec status: "   << status                    << ". "
                    << "Last error code: " << mem_.getLastDeviceError() << ".\n";
+    }
     vec_result->setDataUpdated(memory::DEVICE);
 
     return error_sum;

@@ -11,20 +11,36 @@
 namespace ReSolve {
   // Create a shortcut name for Logger static class
   using out = io::Logger;
-
+  
+  /**
+   * @brief Empty constructor for MatrixHandlerCpu object
+   */
   MatrixHandlerCpu::MatrixHandlerCpu()
   {
   }
 
+  /**
+   * @brief DEmpty dstructor for MatrixHandlerCpu object
+   */
   MatrixHandlerCpu::~MatrixHandlerCpu()
   {
   }
 
+  /**
+   * @brief Constructor for MatrixHandlerCpu object
+   * 
+   * @param[in] new_workspace - pointer to the workspace object
+   */
   MatrixHandlerCpu::MatrixHandlerCpu(LinAlgWorkspaceCpu* new_workspace)
   {
     workspace_ = new_workspace;
   }
 
+  /**
+   * @brief Set values changed flag
+   * 
+   * @param[in] values_changed - flag indicating if values have changed
+   */
   void MatrixHandlerCpu::setValuesChanged(bool values_changed)
   {
     values_changed_ = values_changed;
@@ -115,13 +131,9 @@ namespace ReSolve {
       for (index_type j  = A->getRowData(memory::HOST)[i]; j < A->getRowData(memory::HOST)[i+1]; ++j) {
         sum += std::abs(A->getValues(memory::HOST)[j]);
       }
-      if (i == 0) {
+      if (i == 0 || sum > nrm) { 
         nrm = sum;
-      } else {
-        if (sum > nrm) {
-          nrm = sum;
-        } 
-      }
+      } 
     }
     *norm = nrm;
     return 0;
@@ -172,8 +184,7 @@ namespace ReSolve {
     }
 
     // Compute cumualtive sum of nnz per row
-    for (index_type row = 0, rowsum = 0; row < n; ++row)
-    {
+    for (index_type row = 0, rowsum = 0; row < n; ++row) {
       // Store value in row pointer to temp
       index_type temp  = rowPtrCsr[row];
 
@@ -185,12 +196,10 @@ namespace ReSolve {
     }
     rowPtrCsr[n] = nnz;
 
-    for (index_type col = 0; col < m; ++col)
-    {
+    for (index_type col = 0; col < m; ++col) {
       // Compute positions of column indices and values in CSR matrix and store them there
       // Overwrites CSR row pointers in the process
-      for (index_type jj = colPtrCsc[col]; jj < colPtrCsc[col+1]; jj++)
-      {
+      for (index_type jj = colPtrCsc[col]; jj < colPtrCsc[col+1]; jj++) {
           index_type row  = rowIdxCsc[jj];
           index_type dest = rowPtrCsr[row];
 
@@ -202,13 +211,11 @@ namespace ReSolve {
     }
 
     // Restore CSR row pointer values
-    for (index_type row = 0, last = 0; row <= n; row++)
-    {
+    for (index_type row = 0, last = 0; row <= n; row++) {
         index_type temp  = rowPtrCsr[row];
         rowPtrCsr[row] = last;
         last    = temp;
     }
-
     return 0;
   }
 
