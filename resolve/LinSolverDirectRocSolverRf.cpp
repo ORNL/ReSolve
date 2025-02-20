@@ -196,7 +196,9 @@ namespace ReSolve
                                                     rocsparse_solve_policy_auto,
                                                     L_buffer_);
       error_sum += status_rocsparse_;
-      if (status_rocsparse_!=0)printf("status after analysis 1 %d \n", status_rocsparse_);
+      if (status_rocsparse_!=0) {
+        printf("status after analysis 1 %d \n", status_rocsparse_);
+      }
       status_rocsparse_ = rocsparse_dcsrsv_analysis(workspace_->getRocsparseHandle(), 
                                                     rocsparse_operation_none, 
                                                     n, 
@@ -210,7 +212,9 @@ namespace ReSolve
                                                     rocsparse_solve_policy_auto,
                                                     U_buffer_);
       error_sum += status_rocsparse_;
-      if (status_rocsparse_!=0)printf("status after analysis 2 %d \n", status_rocsparse_);
+      if (status_rocsparse_!=0) {
+        printf("status after analysis 2 %d \n", status_rocsparse_);
+      }
       //allocate aux data
       if (d_aux1_ == nullptr) {
         mem_.allocateArrayOnDevice(&d_aux1_,n); 

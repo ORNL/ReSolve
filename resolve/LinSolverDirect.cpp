@@ -11,7 +11,6 @@
 
 namespace ReSolve 
 
-
 {
   using out = io::Logger;
   /**

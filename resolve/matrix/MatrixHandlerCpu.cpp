@@ -183,8 +183,7 @@ namespace ReSolve {
     }
 
     // Compute cumualtive sum of nnz per row
-    for (index_type row = 0, rowsum = 0; row < n; ++row)
-    {
+    for (index_type row = 0, rowsum = 0; row < n; ++row) {
       // Store value in row pointer to temp
       index_type temp  = rowPtrCsr[row];
 
@@ -196,12 +195,10 @@ namespace ReSolve {
     }
     rowPtrCsr[n] = nnz;
 
-    for (index_type col = 0; col < n; ++col)
-    {
+    for (index_type col = 0; col < n; ++col) {
       // Compute positions of column indices and values in CSR matrix and store them there
       // Overwrites CSR row pointers in the process
-      for (index_type jj = colPtrCsc[col]; jj < colPtrCsc[col+1]; jj++)
-      {
+      for (index_type jj = colPtrCsc[col]; jj < colPtrCsc[col+1]; jj++) {
           index_type row  = rowIdxCsc[jj];
           index_type dest = rowPtrCsr[row];
 
@@ -213,13 +210,11 @@ namespace ReSolve {
     }
 
     // Restore CSR row pointer values
-    for (index_type row = 0, last = 0; row <= n; row++)
-    {
+    for (index_type row = 0, last = 0; row <= n; row++) {
         index_type temp  = rowPtrCsr[row];
         rowPtrCsr[row] = last;
         last    = temp;
     }
-
     return 0;
   }
 
