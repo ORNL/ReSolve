@@ -226,7 +226,7 @@ int gpuRefactor(const std::string backendName, int argc, char *argv[])
         if (backendName == "HIP") {
           Rf.setSolveMode(1);
         }
-        Rf.setup(A, L, U, P, Q);
+        Rf.setup(A, L, U, P, Q, vec_rhs);
         // Refactorization
         Rf.refactorize();
 
