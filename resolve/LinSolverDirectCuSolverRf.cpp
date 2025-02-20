@@ -8,11 +8,11 @@
 namespace ReSolve 
 {
   using out = io::Logger;
-  /*
-  * @brief Placeholder constructor for LinSolverDirectCuSolverRf
-  * 
-  * @param workspace - pointer to the LinAlgWorkspaceCUDA object (not used)
-  */
+  /**
+   * @brief Placeholder constructor for LinSolverDirectCuSolverRf
+   * 
+   * @param workspace - pointer to the LinAlgWorkspaceCUDA object (not used)
+   */
   LinSolverDirectCuSolverRf::LinSolverDirectCuSolverRf(LinAlgWorkspaceCUDA* /* workspace */)
   {
     cusolverRfCreate(&handle_cusolverrf_);
@@ -20,20 +20,20 @@ namespace ReSolve
     initParamList();
   }
 
-  /*
-  * @brief Destructor for LinSolverDirectCuSolverRf
-  *
-  * Destroys the cuSolverRf handle and deletes the permutation vectors
-  * from the device memory.
-  * 
-  * @pre The cuSolverRf handle has been created.
-  * @post The cuSolverRf handle is destroyed.
-  * 
-  * @pre The permutation vectors are allocated on the device.
-  * @post The permutation vectors are deleted from the device.
-  * 
-  * @note The permutation vectors are not deleted from the host memory.
-  */
+  /**
+   * @brief Destructor for LinSolverDirectCuSolverRf
+   *
+   * Destroys the cuSolverRf handle and deletes the permutation vectors
+   * from the device memory.
+   * 
+   * @pre The cuSolverRf handle has been created.
+   * @post The cuSolverRf handle is destroyed.
+   * 
+   * @pre The permutation vectors are allocated on the device.
+   * @post The permutation vectors are deleted from the device.
+   * 
+   * @note The permutation vectors are not deleted from the host memory.
+   */
   LinSolverDirectCuSolverRf::~LinSolverDirectCuSolverRf()
   {
     cusolverRfDestroy(handle_cusolverrf_);
@@ -42,21 +42,21 @@ namespace ReSolve
     mem_.deleteOnDevice(d_T_);
   }
 
-  /*
-  * @brief Setup the cuSolverRf factorization
-  *
-  * Sets up the cuSolverRf factorization for the given matrix A and its
-  * L and U factors. The permutation vectors P and Q are also set up.
-  * 
-  * @param[in] A - pointer to the matrix A
-  * @param[in] L - pointer to the lower triangular factor L
-  * @param[in] U - pointer to the upper triangular factor U
-  * @param[in] P - pointer to the permutation vector P
-  * @param[in] Q - pointer to the permutation vector Q
-  * @param[in] rhs - pointer to the right-hand side vector (optional)
-  * 
-  * @pre The matrix A is in CSR format.
-  */
+  /**
+   * @brief Setup the cuSolverRf factorization
+   *
+   * Sets up the cuSolverRf factorization for the given matrix A and its
+   * L and U factors. The permutation vectors P and Q are also set up.
+   * 
+   * @param[in] A - pointer to the matrix A
+   * @param[in] L - pointer to the lower triangular factor L
+   * @param[in] U - pointer to the upper triangular factor U
+   * @param[in] P - pointer to the permutation vector P
+   * @param[in] Q - pointer to the permutation vector Q
+   * @param[in] rhs - pointer to the right-hand side vector (optional)
+   * 
+   * @pre The matrix A is in CSR format.
+   */
   int LinSolverDirectCuSolverRf::setup(matrix::Sparse* A,
                                        matrix::Sparse* L,
                                        matrix::Sparse* U,
@@ -186,46 +186,46 @@ namespace ReSolve
     return error_sum;
   }
  
-  /*
-  * @brief Placeholder function for LinSolverDirectCuSolverRf
-  *
-  * This function only exists to satisfy 
-  * the interface requirements of RocSolver.
-  */
+  /**
+   * @brief Placeholder function for LinSolverDirectCuSolverRf
+   *
+   * This function only exists to satisfy 
+   * the interface requirements of RocSolver.
+   */
   int LinSolverDirectCuSolverRf::setSolveMode(int /* mode */)
   {
     return 0;
   }
 
-  /*
-  * @brief Sets factorization and triangular solve algorithms
-  *
-  * @param[in] fact_alg - factorization algorithm
-  * @param[in] solve_alg - triangular solve algorithm
-  * 
-  * @pre The cuSolverRf handle has been created.
-  * @post The factorization and triangular solve algorithms are set.
-  */
+  /**
+   * @brief Sets factorization and triangular solve algorithms
+   *
+   * @param[in] fact_alg - factorization algorithm
+   * @param[in] solve_alg - triangular solve algorithm
+   * 
+   * @pre The cuSolverRf handle has been created.
+   * @post The factorization and triangular solve algorithms are set.
+   */
   void LinSolverDirectCuSolverRf::setAlgorithms(cusolverRfFactorization_t fact_alg,
                                                 cusolverRfTriangularSolve_t solve_alg)
   {
     cusolverRfSetAlgs(handle_cusolverrf_, fact_alg, solve_alg);
   }
 
-  /*
-  * @brief Refactorizes the matrix A
-  *
-  * Refactorizes the matrix A using the cuSolverRf handle.
-  * 
-  * @pre The cuSolverRf handle has been created.
-  * @pre The matrix A is in CSR format.
-  * @pre The permutation vectors P and Q are allocated on the device.
-  * @pre Matrix A's data is on the device.
-  * 
-  * @post The matrix A is refactorized.
-  * 
-  * @return 0 if successful, 1 otherwise
-  */
+  /**
+   * @brief Refactorizes the matrix A
+   *
+   * Refactorizes the matrix A using the cuSolverRf handle.
+   * 
+   * @pre The cuSolverRf handle has been created.
+   * @pre The matrix A is in CSR format.
+   * @pre The permutation vectors P and Q are allocated on the device.
+   * @pre Matrix A's data is on the device.
+   * 
+   * @post The matrix A is refactorized.
+   * 
+   * @return 0 if successful, 1 otherwise
+   */
   int LinSolverDirectCuSolverRf::refactorize()
   {
     int error_sum = 0;
@@ -262,16 +262,16 @@ namespace ReSolve
     return error_sum; 
   }
 
-  /*
-  * @brief Solves the system of equations Ax=rhs
-  *
-  * Solves the system of equations Ax=rhs using the cuSolverRf handle.
-  * The solution overwrites the right-hand side vector.
-  * 
-  * @param[in,out] rhs - pointer to right-hand side vector, changes to solution
-  * 
-  * @return 0 if successful, 1 otherwise
-  */
+  /**
+   * @brief Solves the system of equations Ax=rhs
+   *
+   * Solves the system of equations Ax=rhs using the cuSolverRf handle.
+   * The solution overwrites the right-hand side vector.
+   * 
+   * @param[in,out] rhs - pointer to right-hand side vector, changes to solution
+   * 
+   * @return 0 if successful, 1 otherwise
+   */
   int LinSolverDirectCuSolverRf::solve(vector_type* rhs)
   {
     status_cusolverrf_ =  cusolverRfSolve(handle_cusolverrf_,
@@ -285,17 +285,17 @@ namespace ReSolve
     return status_cusolverrf_;
   }
 
-  /*
-  * @brief solves the system of equations Ax=rhs
-  *
-  * Solves the system of equations Ax=rhs using the cuSolverRf handle.
-  * The solution is stored in x.
-  * 
-  * @param[in] rhs - pointer to right-hand side vector
-  * @param[out] x - pointer to solution vector
-  * 
-  * @return 0 if successful, 1 otherwise
-  */
+  /**
+   * @brief solves the system of equations Ax=rhs
+   *
+   * Solves the system of equations Ax=rhs using the cuSolverRf handle.
+   * The solution is stored in x.
+   * 
+   * @param[in] rhs - pointer to right-hand side vector
+   * @param[out] x - pointer to solution vector
+   * 
+   * @return 0 if successful, 1 otherwise
+   */
   int LinSolverDirectCuSolverRf::solve(vector_type* rhs, vector_type* x)
   {
     x->copyDataFrom(rhs->getData(memory::DEVICE), memory::DEVICE, memory::DEVICE);
@@ -310,16 +310,16 @@ namespace ReSolve
                                           A_->getNumRows());
     return status_cusolverrf_;
   }
-  /*
-  * @brief Sets a flag threshold for zero pivots and a boost factor
-  *
-  * Sets the zero flagging threshold and boost factor for the cuSolverRf handle.
-  * 
-  * @param[in] nzero - zero flagging threshold
-  * @param[in] nboost - boost factor
-  * 
-  * @return 0 if successful, 1 otherwise
-  */
+  /**
+   * @brief Sets a flag threshold for zero pivots and a boost factor
+   *
+   * Sets the zero flagging threshold and boost factor for the cuSolverRf handle.
+   * 
+   * @param[in] nzero - zero flagging threshold
+   * @param[in] nboost - boost factor
+   * 
+   * @return 0 if successful, 1 otherwise
+   */
   int LinSolverDirectCuSolverRf::setNumericalProperties(real_type nzero,
                                                         real_type nboost)
   {
@@ -332,14 +332,14 @@ namespace ReSolve
     return status_cusolverrf_;
   }
 
-  /*
-  * @brief Sets the paramters from Cli to the cuSolverRf handle
-  *
-  * @param[in] id - string ID for the parameter to set
-  * @param[in] value - string value for the parameter to set
-  * 
-  * @return 0 if successful, 1 otherwise
-  */
+  /**
+   * @brief Sets the paramters from Cli to the cuSolverRf handle
+   *
+   * @param[in] id - string ID for the parameter to set
+   * @param[in] value - string value for the parameter to set
+   * 
+   * @return 0 if successful, 1 otherwise
+   */
   int LinSolverDirectCuSolverRf::setCliParam(const std::string id, const std::string value)
   {
     switch (getParamId(id))
@@ -432,9 +432,9 @@ namespace ReSolve
     return false;
   }
 
-  /*
-  * @brief Prints the parameters from Cli to the console
-  */
+  /**
+   * @brief Prints the parameters from Cli to the console
+   */
   int LinSolverDirectCuSolverRf::printCliParam(const std::string id) const
   {
     switch (getParamId(id))
@@ -456,9 +456,9 @@ namespace ReSolve
   // Private methods
   //
 
-  /*
-  * @brief Set the zero pivot and pivot boost parameters
-  */
+  /**
+   * @brief Set the zero pivot and pivot boost parameters
+   */
   void LinSolverDirectCuSolverRf::initParamList()
   {
     params_list_["zero_pivot"]  = ZERO_PIVOT;

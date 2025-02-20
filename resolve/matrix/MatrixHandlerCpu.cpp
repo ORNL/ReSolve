@@ -11,30 +11,30 @@
 namespace ReSolve {
   // Create a shortcut name for Logger static class
   using out = io::Logger;
-  /*
-  * @brief Empty constructor for MatrixHandlerCpu class.
-  */
+  /**
+   * @brief Empty constructor for MatrixHandlerCpu class.
+   */
   MatrixHandlerCpu::MatrixHandlerCpu()
   {
   }
-  /*
-  * @brief Empty destructor for MatrixHandlerCpu class.
-  */
+  /**
+   * @brief Empty destructor for MatrixHandlerCpu class.
+   */
   MatrixHandlerCpu::~MatrixHandlerCpu()
   {
   }
-  /*
-  * @brief Constructor for MatrixHandlerCpu class.
-  * @param[in] new_workspace - pointer to LinAlgWorkspaceCpu object
-  */
+  /**
+   * @brief Constructor for MatrixHandlerCpu class.
+   * @param[in] new_workspace - pointer to LinAlgWorkspaceCpu object
+   */
   MatrixHandlerCpu::MatrixHandlerCpu(LinAlgWorkspaceCpu* new_workspace)
   {
     workspace_ = new_workspace;
   }
-  /*
-  * @brief Marks when values have changed in MatrixHandlerCpu class.
-  * @param[in] values_changed - boolean value indicating if values have changed
-  */
+  /**
+   * @brief Marks when values have changed in MatrixHandlerCpu class.
+   * @param[in] values_changed - boolean value indicating if values have changed
+   */
   void MatrixHandlerCpu::setValuesChanged(bool values_changed)
   {
     values_changed_ = values_changed;
@@ -142,6 +142,11 @@ namespace ReSolve {
    * 
    * @authors Slaven Peles <peless@ornl.gov>, Daniel Reynolds (SMU), and
    * David Gardner and Carol Woodward (LLNL)
+   * 
+   * @param[in] A_csc - pointer to the CSC matrix
+   * @param[out] A_csr - pointer to an empty, allocated CSR matrix 
+   * 
+   * @return 0 if successful, 1 otherwise
    */
   int MatrixHandlerCpu::csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr)
   {

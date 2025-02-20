@@ -14,11 +14,11 @@ namespace ReSolve
 
 {
   using out = io::Logger;
-  /*
-  * @brief Constructor for LinSolverDirect class.
-  *
-  * Initializes pointers to L, U, P, and Q to nullptr.
-  */
+  /**
+   * @brief Constructor for LinSolverDirect class.
+   *
+   * Initializes pointers to L, U, P, and Q to nullptr.
+   */
   LinSolverDirect::LinSolverDirect()
   {
     L_ = nullptr;
@@ -27,25 +27,25 @@ namespace ReSolve
     Q_ = nullptr;
   }
 
-  /*
-  * @brief Empty destructor for LinSolverDirect class.
-  */
+  /**
+   * @brief Empty destructor for LinSolverDirect class.
+   */
   LinSolverDirect::~LinSolverDirect()
   {
   }
 
-  /*
-  * @brief Setup function for LinSolverDirect class.
-  *
-  * @param[in] A - matrix to be solved
-  * @param[in] L - optional lower triangular factor 
-  * @param[in] U - optional upper triangular factor
-  * @param[in] P - optional row permutation vector
-  * @param[in] Q - optional column permutation vector
-  * @param[in] rhs - optional right-hand side vector
-  * 
-  * @return int - error code, 0 if successful
-  */
+  /**
+   * @brief Setup function for LinSolverDirect class.
+   *
+   * @param[in] A - matrix to be solved
+   * @param[in] L - optional lower triangular factor 
+   * @param[in] U - optional upper triangular factor
+   * @param[in] P - optional row permutation vector
+   * @param[in] Q - optional column permutation vector
+   * @param[in] rhs - optional right-hand side vector
+   * 
+   * @return int - error code, 0 if successful
+   */
   int LinSolverDirect::setup(matrix::Sparse* A,
                              matrix::Sparse* /* L */,
                              matrix::Sparse* /* U */,
@@ -59,54 +59,54 @@ namespace ReSolve
     A_ = A;
     return 0;
   }
-  /*
-  * @brief Placeholder function for symbolic factorization.
-  */
+  /**
+   * @brief Placeholder function for symbolic factorization.
+   */
   int LinSolverDirect::analyze()
   {
     return 1;
   }
-  /*
-  * @brief Placeholder function for numeric factorization.
-  */
+  /**
+   * @brief Placeholder function for numeric factorization.
+   */
   int LinSolverDirect::factorize()
   {
     return 1;
   }
-  /*
-  * @brief Placeholder function for refactorization.
-  */
+  /**
+   * @brief Placeholder function for refactorization.
+   */
   int LinSolverDirect::refactorize()
   {
     return 1;
   }
-  /*
-  * @brief Placeholder function for lower triangular factor.
-  */
+  /**
+   * @brief Placeholder function for lower triangular factor.
+   */
   matrix::Sparse* LinSolverDirect::getLFactor()
   {
     return nullptr;
   } 
   
-  /*
-  * @brief Placeholder function for upper triangular factor.
-  */
+  /**
+   * @brief Placeholder function for upper triangular factor.
+   */
   matrix::Sparse* LinSolverDirect::getUFactor()
   {
     return nullptr;
   } 
   
-  /*
-  * @brief Placeholder function for row permutation vector.
-  */
+  /**
+   * @brief Placeholder function for row permutation vector.
+   */
   index_type*  LinSolverDirect::getPOrdering()
   {
     return nullptr;
   } 
   
-  /*
-  * @brief Placeholder function for column permutation vector.
-  */
+  /**
+   * @brief Placeholder function for column permutation vector.
+   */
   index_type*  LinSolverDirect::getQOrdering()
   {
     return nullptr;
