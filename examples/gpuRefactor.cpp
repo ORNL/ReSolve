@@ -24,7 +24,7 @@
 
 #include "ExampleHelper.hpp"
 
-/// Prototype of the example main function 
+/// Prototype of the example main function
 template <class workspace_type>
 static int gpuRefactor(const std::string backendName, int argc, char *argv[]);
 
@@ -58,7 +58,7 @@ int gpuRefactor(const std::string backendName, int argc, char *argv[])
   {
     solverName = "RocSolver";
   }
-  
+
   using namespace ReSolve::examples;
   using namespace ReSolve;
   using index_type = ReSolve::index_type;
@@ -118,7 +118,7 @@ int gpuRefactor(const std::string backendName, int argc, char *argv[])
   MatrixHandler matrix_handler(&workspace);
   VectorHandler vector_handler(&workspace);
 
-  // Direct solvers instantiation  
+  // Direct solvers instantiation
   LinSolverDirectKLU KLU;
   #ifdef RESOLVE_USE_CUDA
     LinSolverDirectCuSolverRf Rf(&workspace);
@@ -222,15 +222,13 @@ int gpuRefactor(const std::string backendName, int argc, char *argv[])
         }
         index_type* P = KLU.getPOrdering();
         index_type* Q = KLU.getQOrdering();
-        if (backendName == "HIP") {
-          Rf.setSolveMode(1);
-        }
+
         Rf.setup(A, L, U, P, Q, vec_rhs);
         // Refactorization
         Rf.refactorize();
 
         // Setup iterative refinement solver
-        FGMRES.setup(A); 
+        FGMRES.setup(A);
       }
       RESOLVE_RANGE_POP("KLU");
     } else {
