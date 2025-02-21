@@ -234,9 +234,6 @@ namespace ReSolve
     assert(A_ != nullptr && "Matrix A is null!");
     assert(A_->getNumRows() > 0 && "Matrix A must have positive row count!");
     assert(A_->getNnz() > 0 && "Matrix A must have positive nonzero count!");
-    assert(A_->getRowData(memory::DEVICE) != nullptr && "Row data is not on the device!");
-    assert(A_->getColData(memory::DEVICE) != nullptr && "Column data is not on the device!");
-    assert(A_->getValues(memory::DEVICE) != nullptr && "Matrix A values are not on the device!");
 
     // Check permutation vectors
     assert(d_P_ != nullptr && "Permutation vector d_P_ is null!");
