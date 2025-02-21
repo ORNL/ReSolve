@@ -213,7 +213,7 @@ namespace ReSolve
                                                     U_buffer_);
       error_sum += status_rocsparse_;
       if (status_rocsparse_!=0) {
-        printf("status after analysis 2 %d \n", status_rocsparse_);
+        out::error() << "status after analysis 2: " << status_rocsparse_ << "\n";
       }
       //allocate aux data
       if (d_aux1_ == nullptr) {
