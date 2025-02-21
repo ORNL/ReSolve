@@ -8,23 +8,40 @@
 #include <resolve/matrix/Csr.hpp>
 #include "MatrixHandlerCpu.hpp"
 
-namespace ReSolve {
+namespace ReSolve
+{
   // Create a shortcut name for Logger static class
   using out = io::Logger;
-
+  
+  /**
+   * @brief Empty constructor for MatrixHandlerCpu object
+   */
   MatrixHandlerCpu::MatrixHandlerCpu()
   {
   }
 
+  /**
+   * @brief Empty dstructor for MatrixHandlerCpu object
+   */
   MatrixHandlerCpu::~MatrixHandlerCpu()
   {
   }
 
+  /**
+   * @brief Constructor for MatrixHandlerCpu object
+   * 
+   * @param[in] new_workspace - pointer to the workspace object
+   */
   MatrixHandlerCpu::MatrixHandlerCpu(LinAlgWorkspaceCpu* new_workspace)
   {
     workspace_ = new_workspace;
   }
 
+  /**
+   * @brief Set values changed flag
+   * 
+   * @param[in] values_changed - flag indicating if values have changed
+   */
   void MatrixHandlerCpu::setValuesChanged(bool values_changed)
   {
     values_changed_ = values_changed;
@@ -70,7 +87,7 @@ namespace ReSolve {
     real_type t;
     real_type c;
 
-    //Kahan algorithm for stability; Kahan-Babushka version didnt make a difference   
+    // Kahan algorithm for stability
     for (int i = 0; i < A->getNumRows(); ++i) {
       sum = 0.0;
       c = 0.0;
@@ -79,7 +96,7 @@ namespace ReSolve {
         t = sum + y;
         c = (t - sum) - y;
         sum = t;
-        //  sum += ( a[j] * x_data[ja[j]]);
+        //  sum += (a[j] * x_data[ja[j]]);
       }
       sum *= (*alpha);
       result_data[i] = result_data[i]*(*beta) + sum;
@@ -104,6 +121,7 @@ namespace ReSolve {
    */
   int MatrixHandlerCpu::matrixInfNorm(matrix::Sparse* A, real_type* norm)
   {
+    using memory::HOST;
     assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW &&
            "Matrix has to be in CSR format for matrix-vector product.\n");
 
@@ -112,16 +130,12 @@ namespace ReSolve {
 
     for (index_type i = 0; i < A->getNumRows(); ++i) {
       sum = 0.0; 
-      for (index_type j  = A->getRowData(memory::HOST)[i]; j < A->getRowData(memory::HOST)[i+1]; ++j) {
-        sum += std::abs(A->getValues(memory::HOST)[j]);
+      for (index_type j  = A->getRowData(HOST)[i]; j < A->getRowData(HOST)[i+1]; ++j) {
+        sum += std::abs(A->getValues(HOST)[j]);
       }
-      if (i == 0) {
+      if (i == 0 || sum > nrm) { 
         nrm = sum;
-      } else {
-        if (sum > nrm) {
-          nrm = sum;
-        } 
-      }
+      } 
     }
     *norm = nrm;
     return 0;
@@ -132,16 +146,18 @@ namespace ReSolve {
    * 
    * @authors Slaven Peles <peless@ornl.gov>, Daniel Reynolds (SMU), and
    * David Gardner and Carol Woodward (LLNL)
+   * 
+   * @param[in]  A_csc - input CSC matrix
+   * @param[out] A_csr - output CSR matrix
    */
   int MatrixHandlerCpu::csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr)
   {
-    // int error_sum = 0; TODO: Collect error output!
     assert(A_csc->getNnz() == A_csr->getNnz());
-    assert(A_csc->getNumRows() == A_csr->getNumColumns());
-    assert(A_csr->getNumRows() == A_csc->getNumColumns());
-
+    assert(A_csc->getNumRows() == A_csr->getNumRows());
+    assert(A_csc->getNumColumns() == A_csr->getNumColumns());
     index_type nnz = A_csc->getNnz();
-    index_type n   = A_csc->getNumColumns();
+    index_type n   = A_csc->getNumRows();
+    index_type m   = A_csc->getNumColumns();
 
     index_type* rowIdxCsc = A_csc->getRowData(memory::HOST);
     index_type* colPtrCsc = A_csc->getColData(memory::HOST);
@@ -168,8 +184,7 @@ namespace ReSolve {
     }
 
     // Compute cumualtive sum of nnz per row
-    for (index_type row = 0, rowsum = 0; row < n; ++row)
-    {
+    for (index_type row = 0, rowsum = 0; row < n; ++row) {
       // Store value in row pointer to temp
       index_type temp  = rowPtrCsr[row];
 
@@ -181,29 +196,29 @@ namespace ReSolve {
     }
     rowPtrCsr[n] = nnz;
 
-    for (index_type col = 0; col < n; ++col)
-    {
+    for (index_type col = 0; col < m; ++col) {
       // Compute positions of column indices and values in CSR matrix and store them there
       // Overwrites CSR row pointers in the process
-      for (index_type jj = colPtrCsc[col]; jj < colPtrCsc[col+1]; jj++)
-      {
-          index_type row  = rowIdxCsc[jj];
-          index_type dest = rowPtrCsr[row];
+      for (index_type jj = colPtrCsc[col]; jj < colPtrCsc[col+1]; jj++) {
+        index_type row  = rowIdxCsc[jj];
+        index_type dest = rowPtrCsr[row];
 
-          colIdxCsr[dest] = col;
-          valuesCsr[dest] = valuesCsc[jj];
+        colIdxCsr[dest] = col;
+        valuesCsr[dest] = valuesCsc[jj];
 
-          rowPtrCsr[row]++;
+        rowPtrCsr[row]++;
       }
     }
 
     // Restore CSR row pointer values
-    for (index_type row = 0, last = 0; row <= n; row++)
-    {
+    for (index_type row = 0, last = 0; row <= n; row++) {
         index_type temp  = rowPtrCsr[row];
         rowPtrCsr[row] = last;
         last    = temp;
     }
+
+    // Values on the host are updated now -- mark them as such!
+    A_csr->setUpdated(memory::HOST);
 
     return 0;
   }

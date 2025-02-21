@@ -13,15 +13,28 @@ namespace ReSolve {
   // Create a shortcut name for Logger static class
   using out = io::Logger;
 
+  /**
+   * @brief Empty constructor for MatrixHandlerHip object
+   */
   MatrixHandlerHip::~MatrixHandlerHip()
   {
   }
 
+  /**
+   * @brief Constructor for MatrixHandlerHip object
+   * 
+   * @param[in] new_workspace - pointer to the workspace object
+   */
   MatrixHandlerHip::MatrixHandlerHip(LinAlgWorkspaceHIP* new_workspace)
   {
     workspace_ = new_workspace;
   }
 
+  /**
+   * @brief Set values changed flag
+   * 
+   * @param[in] values_changed - flag indicating if values have changed
+   */
   void MatrixHandlerHip::setValuesChanged(bool values_changed)
   {
     values_changed_ = values_changed;
@@ -81,7 +94,7 @@ namespace ReSolve {
                                           descrA,
                                           A->getValues( memory::DEVICE), 
                                           A->getRowData(memory::DEVICE),
-                                          A->getColData(memory::DEVICE), // cuda is used as "device"
+                                          A->getColData(memory::DEVICE),
                                           infoA);
       error_sum += status;
       mem_.deviceSynchronize();
@@ -108,9 +121,10 @@ namespace ReSolve {
 
     error_sum += status;
     mem_.deviceSynchronize();
-    if (status)
+    if (status) {
       out::error() << "Matvec status: "   << status                    << ". "
                    << "Last error code: " << mem_.getLastDeviceError() << ".\n";
+    }
     vec_result->setDataUpdated(memory::DEVICE);
 
     return error_sum;
@@ -169,6 +183,13 @@ namespace ReSolve {
     return 0;
   }
 
+  /**
+   * @brief convert a CSC matrix to a CSR matrix in HIP
+   * 
+   * @param[in]  A_csc - input CSC matrix
+   * @param[out] A_csr - output CSR matrix
+   * @return int error_sum, 0 if successful
+   */
   int MatrixHandlerHip::csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr)
   {
     index_type error_sum = 0;
@@ -176,15 +197,15 @@ namespace ReSolve {
     rocsparse_status status;
     
     A_csr->allocateMatrixData(memory::DEVICE);
+    index_type m = A_csc->getNumColumns();
     index_type n = A_csc->getNumRows();
-    index_type m = A_csc->getNumRows();
     index_type nnz = A_csc->getNnz();
     size_t bufferSize;
     void* d_work;
 
     status = rocsparse_csr2csc_buffer_size(workspace_->getRocsparseHandle(),
-                                           n,
                                            m,
+                                           n,
                                            nnz,
                                            A_csc->getColData(memory::DEVICE), 
                                            A_csc->getRowData(memory::DEVICE), 
@@ -195,21 +216,25 @@ namespace ReSolve {
     mem_.allocateBufferOnDevice(&d_work, bufferSize);
     
     status = rocsparse_dcsr2csc(workspace_->getRocsparseHandle(),
-                                n,
                                 m,
+                                n,
                                 nnz,
                                 A_csc->getValues( memory::DEVICE), 
                                 A_csc->getColData(memory::DEVICE), 
                                 A_csc->getRowData(memory::DEVICE), 
                                 A_csr->getValues( memory::DEVICE), 
-                                A_csr->getRowData(memory::DEVICE),
-                                A_csr->getColData(memory::DEVICE), 
+                                A_csr->getColData(memory::DEVICE),
+                                A_csr->getRowData(memory::DEVICE), 
                                 rocsparse_action_numeric,
                                 rocsparse_index_base_zero,
                                 d_work);
     error_sum += status;
-    return error_sum;
     mem_.deleteOnDevice(d_work);
+
+    // Values on the device are updated now -- mark them as such!
+    A_csr->setUpdated(memory::DEVICE);
+
+    return error_sum;
   }
 
 } // namespace ReSolve

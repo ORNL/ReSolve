@@ -5,55 +5,54 @@
 #include <resolve/matrix/io.hpp>
 #include "MatrixHandlerTests.hpp"
 
+
+/** 
+ * @brief run tests with a given backend
+ *
+ * Checks correctness of the constructor, matrixInfNorm, matVec, csc2csr
+ * CPU, CUDA and HIP backends are supported
+ *
+ * @tparam WorkspaceType workspace type LinAlgWorkspace{Cpu, CUDA, HIP} supported
+ * @param[in] backend - name of the hardware backend
+ * @param[out] result - test results
+ */
+template<typename WorkspaceType>
+void runTests(const std::string& backend, ReSolve::tests::TestingResults& result)
+{
+  std::cout << "Running tests on " << backend << " device:\n";
+  
+  WorkspaceType workspace;
+  workspace.initializeHandles();
+  ReSolve::MatrixHandler handler(&workspace);
+
+  ReSolve::tests::MatrixHandlerTests test(handler);
+  result += test.matrixHandlerConstructor();
+  result += test.matrixInfNorm(10000);
+  result += test.matVec(50);
+  result += test.csc2csr(3, 3);
+  result += test.csc2csr(5, 3);
+  result += test.csc2csr(3, 5);
+  result += test.csc2csr(1024, 1024);
+  result += test.csc2csr(1024, 2048);
+  result += test.csc2csr(2048, 1024);
+  result += test.csc2csr(1024, 1200);
+  result += test.csc2csr(1200, 1024);
+  std::cout << "\n";
+}
+
 int main(int, char**)
 {
-  ReSolve::tests::TestingResults result; 
-
-  {
-    std::cout << "Running tests on CPU:\n";
-
-    ReSolve::LinAlgWorkspaceCpu workspace;
-    workspace.initializeHandles();
-    ReSolve::MatrixHandler handler(&workspace);
-
-    ReSolve::tests::MatrixHandlerTests test(handler);
-    result += test.matrixHandlerConstructor();
-    result += test.matrixInfNorm(10000);
-    result += test.matVec(50);
-
-    std::cout << "\n";
-  }
+  ReSolve::tests::TestingResults result;
+  runTests<ReSolve::LinAlgWorkspaceCpu>("CPU", result);
 
 #ifdef RESOLVE_USE_CUDA
-  {
-    std::cout << "Running tests with CUDA backend:\n";
-    ReSolve::LinAlgWorkspaceCUDA workspace;
-    workspace.initializeHandles();
-    ReSolve::MatrixHandler handler(&workspace);
-
-    ReSolve::tests::MatrixHandlerTests test(handler);
-    result += test.matrixHandlerConstructor();
-    result += test.matrixInfNorm(1000000);
-    result += test.matVec(50);
-
-    std::cout << "\n";
-  }
+  runTests<ReSolve::LinAlgWorkspaceCUDA>("CUDA", result);
 #endif
 
 #ifdef RESOLVE_USE_HIP
-  {
-    std::cout << "Running tests with HIP backend:\n";
-    ReSolve::LinAlgWorkspaceHIP workspace;
-    workspace.initializeHandles();
-    ReSolve::MatrixHandler handler(&workspace);
-
-    ReSolve::tests::MatrixHandlerTests test(handler);
-    result += test.matrixHandlerConstructor();
-    result += test.matrixInfNorm(1000000);
-    result += test.matVec(50);
-
-    std::cout << "\n";
-  }
+  runTests<ReSolve::LinAlgWorkspaceHIP>("HIP", result);
 #endif
+
   return result.summary();
 }
+

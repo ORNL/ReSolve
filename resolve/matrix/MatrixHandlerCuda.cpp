@@ -14,20 +14,32 @@ namespace ReSolve {
   // Create a shortcut name for Logger static class
   using out = io::Logger;
 
+  /**
+   * @brief Empty constructor for MatrixHandlerCuda object
+   */
   MatrixHandlerCuda::~MatrixHandlerCuda()
   {
   }
 
+  /**
+   * @brief Constructor for MatrixHandlerCuda object
+   * 
+   * @param[in] new_workspace - pointer to the workspace object
+   */
   MatrixHandlerCuda::MatrixHandlerCuda(LinAlgWorkspaceCUDA* new_workspace)
   {
     workspace_ = new_workspace;
   }
 
+  /**
+   * @brief Set values changed flag
+   * 
+   * @param[in] values_changed - flag indicating if values have changed
+   */
   void MatrixHandlerCuda::setValuesChanged(bool values_changed)
   {
     values_changed_ = values_changed;
   }
-
 
   /**
    * @brief result := alpha * A * x + beta * result
@@ -184,20 +196,31 @@ namespace ReSolve {
     }
     return status;
   }
-
+  /**
+    * @brief convert a CSC matrix to a CSR matrix in CUDA
+    *
+    * @param[in]  A_csc - input CSC matrix
+    * @param[out] A_csr - output CSR matrix
+    * @return int error_sum, 0 if successful
+    */
   int MatrixHandlerCuda::csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr)
   {
     index_type error_sum = 0;
 
     A_csr->allocateMatrixData(memory::DEVICE);
+    index_type m = A_csc->getNumColumns();
     index_type n = A_csc->getNumRows();
-    index_type m = A_csc->getNumRows();
     index_type nnz = A_csc->getNnz();
+    
+    // check dimensions of A_csc and A_csr
+    assert(A_csc->getNumRows() == A_csr->getNumRows() && "Number of rows in A_csc must be equal to number of rows in A_csr");
+    assert(A_csc->getNumColumns() == A_csr->getNumColumns() && "Number of columns in A_csc must be equal to number of columns in A_csr");
+
     size_t bufferSize;
     void* d_work;
     cusparseStatus_t status = cusparseCsr2cscEx2_bufferSize(workspace_->getCusparseHandle(),
-                                                            n, 
                                                             m, 
+                                                            n, 
                                                             nnz, 
                                                             A_csc->getValues( memory::DEVICE), 
                                                             A_csc->getColData(memory::DEVICE), 
@@ -213,8 +236,8 @@ namespace ReSolve {
     error_sum += status;
     mem_.allocateBufferOnDevice(&d_work, bufferSize);
     status = cusparseCsr2cscEx2(workspace_->getCusparseHandle(),
-                                n, 
                                 m, 
+                                n, 
                                 nnz, 
                                 A_csc->getValues( memory::DEVICE), 
                                 A_csc->getColData(memory::DEVICE), 
@@ -228,8 +251,16 @@ namespace ReSolve {
                                 CUSPARSE_CSR2CSC_ALG1,
                                 d_work);
     error_sum += status;
-    return error_sum;
+    if (status) {
+      out::error() << "CSC2CSR status: "   << status                    << ". "
+                   << "Last error code: " << mem_.getLastDeviceError() << ".\n";
+    }
     mem_.deleteOnDevice(d_work);
+
+    // Values on the device are updated now -- mark them as such!
+    A_csr->setUpdated(memory::DEVICE);
+
+    return error_sum;
   }
 
 } // namespace ReSolve
