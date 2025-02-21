@@ -115,7 +115,8 @@ namespace ReSolve
       is_sketching_set_ = true;
     }
 
-    GS_->setup(n_, restart_);
+    GS_->setup(k_rand_, restart_);
+    // GS_->setup(n_, restart_);
 
     return 0;
   }

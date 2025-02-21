@@ -36,7 +36,7 @@ namespace ReSolve
      */
     void printSystemInfo(const std::string& matrix_pathname, matrix::Sparse* A)
     {
-      std::cout << std::endl << std::endl << std::endl;
+      std::cout << std::endl;// << std::endl << std::endl;
       std::cout << "========================================================================================================================\n";
       std::cout << "Reading: " << matrix_pathname << std::endl;
       std::cout << "========================================================================================================================\n";
