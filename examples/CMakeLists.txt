@@ -20,10 +20,10 @@ if(RESOLVE_USE_KLU)
   add_executable(system.exe r_SysSolver.cpp)
   target_link_libraries(system.exe PRIVATE ReSolve)
 
-  if(RESOLVE_USE_CUDA OR RESOLVE_USE_HIP)
+  if(RESOLVE_USE_GPU)
     add_executable(gpuRefactor.exe gpuRefactor.cpp)
     target_link_libraries(gpuRefactor.exe PRIVATE ReSolve)
-  endif(RESOLVE_USE_CUDA OR RESOLVE_USE_HIP)
+  endif(RESOLVE_USE_GPU)
 
 endif(RESOLVE_USE_KLU)
 
