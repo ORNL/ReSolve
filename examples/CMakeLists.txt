@@ -109,9 +109,9 @@ set(installable_executables "")
 # Install all examples in bin directory
 if(RESOLVE_USE_KLU)
   list(APPEND installable_executables klu_klu.exe klu_klu_standalone.exe system.exe)
-  if(RESOLVE_USE_CUDA OR RESOLVE_USE_HIP)
+  if(RESOLVE_USE_GPU)
     list(APPEND installable_executables gpuRefactor.exe)
-  endif(RESOLVE_USE_CUDA OR RESOLVE_USE_HIP)
+  endif(RESOLVE_USE_GPU)
 endif()
 
 if(RESOLVE_USE_CUDA)
