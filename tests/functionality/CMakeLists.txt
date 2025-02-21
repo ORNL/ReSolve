@@ -101,10 +101,10 @@ add_test(NAME sys_rand_count_gmres_mgspm_test    COMMAND $<TARGET_FILE:sys_rand_
 add_test(NAME sys_rand_fwht_gmres_cgs2_test      COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-x" "no" "-i" "randgmres" "-g" "cgs2" "-s" "fwht")
 add_test(NAME sys_rand_fwht_gmres_mgs_test       COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-x" "no" "-i" "randgmres" "-g" "mgs" "-s" "fwht")
 add_test(NAME sys_rand_fwht_gmres_mgs2sync_test  COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-x" "no" "-i" "randgmres" "-g" "mgs_two_sync" "-s" "fwht")
-add_test(NAME sys_rand_fwht_gmres_mgspm_test     COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-x" "no" "-i" "randgmres" "-g" "mgs_pm" "-s" "fwht")
+add_test(NAME sys_rand_fwht_gmres_mgs_pm_test     COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-x" "no" "-i" "randgmres" "-g" "mgs_pm" "-s" "fwht")
 add_test(NAME sys_gmres_cgs2_test     COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-x" "no" "-i" "fgmres" "-g" "cgs2")
 add_test(NAME sys_gmres_mgs_test      COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-x" "no" "-i" "fgmres" "-g" "mgs")
-add_test(NAME sys_gmres_mgs2sync_test COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-x" "no" "-i" "fgmres" "-g" "mgs_two_sync")
+add_test(NAME sys_gmres_mgs_two_sync_test COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-x" "no" "-i" "fgmres" "-g" "mgs_two_sync")
 add_test(NAME sys_gmres_mgspm_test    COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-x" "no" "-i" "fgmres" "-g" "mgs_pm")
 
 # Randomized GMRES solvers tested without SystemSolver class

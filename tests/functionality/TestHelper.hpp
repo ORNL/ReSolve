@@ -422,7 +422,7 @@ class TestHelper
                                            ReSolve::memory::MemorySpace memspace)
     {
       using namespace ReSolve::constants;
-      mh_.matvec(&A, &x, &r, &ONE, &MINUSONE, memspace); // r := A * x - r
+      mh_.matvec(&A, &x, &r, &ONE, &MINUS_ONE, memspace); // r := A * x - r
       return norm2(r, memspace);
     }
 
@@ -441,7 +441,7 @@ class TestHelper
                                        ReSolve::memory::MemorySpace memspace)
     {
       using namespace ReSolve::constants;
-      vh_.axpy(&MINUSONE, &x_true, &x, memspace); // x := -x_true + x
+      vh_.axpy(&MINUS_ONE, &x_true, &x, memspace); // x := -x_true + x
       return norm2(x, memspace);
     }
 

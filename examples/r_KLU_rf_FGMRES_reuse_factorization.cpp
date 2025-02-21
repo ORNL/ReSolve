@@ -137,7 +137,7 @@ int main(int argc, char *argv[])
       norm_b = vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE);
       norm_b = sqrt(norm_b);
       matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
-      matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, ReSolve::memory::DEVICE); 
+      matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUS_ONE, ReSolve::memory::DEVICE); 
       std::cout << "\t 2-Norm of the residual : " 
                 << std::scientific << std::setprecision(16) 
                 << sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE))/norm_b << "\n";
@@ -189,7 +189,7 @@ int main(int argc, char *argv[])
       matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
       FGMRES->resetMatrix(A);
       
-      matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, ReSolve::memory::DEVICE); 
+      matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUS_ONE, ReSolve::memory::DEVICE); 
 
       std::cout << "\t 2-Norm of the residual (before IR): " 
                 << std::scientific << std::setprecision(16) 

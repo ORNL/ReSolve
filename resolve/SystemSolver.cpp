@@ -671,7 +671,7 @@ namespace ReSolve
       return -1.0;
     }
     matrixHandler_->setValuesChanged(true, ms);
-    matrixHandler_->matvec(A_, x, resVector_, &ONE, &MINUSONE, ms);
+    matrixHandler_->matvec(A_, x, resVector_, &ONE, &MINUS_ONE, ms);
     resnorm = std::sqrt(vectorHandler_->dot(resVector_, resVector_, ms));
     return resnorm/norm_b;
   }
@@ -700,7 +700,7 @@ namespace ReSolve
       return -1.0;
     }
     matrixHandler_->setValuesChanged(true, ms);
-    matrixHandler_->matvec(A_, x, resVector_, &ONE, &MINUSONE, ms);
+    matrixHandler_->matvec(A_, x, resVector_, &ONE, &MINUS_ONE, ms);
     resnorm = vectorHandler_->infNorm(resVector_, ms);
     norm_x  = vectorHandler_->infNorm(x, ms);
     matrixHandler_->matrixInfNorm(A_, &norm_A, ms);
