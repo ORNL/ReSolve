@@ -94,7 +94,7 @@ namespace ReSolve {
                                           descrA,
                                           A->getValues( memory::DEVICE), 
                                           A->getRowData(memory::DEVICE),
-                                          A->getColData(memory::DEVICE), // cuda is used as "device"
+                                          A->getColData(memory::DEVICE),
                                           infoA);
       error_sum += status;
       mem_.deviceSynchronize();
@@ -183,13 +183,13 @@ namespace ReSolve {
     return 0;
   }
 
-/*
-* @brief convert a CSC matrix to a CSR matrix in HIP
-* 
-* @param[in]  A_csc - input CSC matrix
-* @param[out] A_csr - output CSR matrix
-* @return int error_sum, 0 if successful
-*/
+  /**
+   * @brief convert a CSC matrix to a CSR matrix in HIP
+   * 
+   * @param[in]  A_csc - input CSC matrix
+   * @param[out] A_csr - output CSR matrix
+   * @return int error_sum, 0 if successful
+   */
   int MatrixHandlerHip::csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr)
   {
     index_type error_sum = 0;
@@ -230,6 +230,10 @@ namespace ReSolve {
                                 d_work);
     error_sum += status;
     mem_.deleteOnDevice(d_work);
+
+    // Values on the device are updated now -- mark them as such!
+    A_csr->setUpdated(memory::DEVICE);
+
     return error_sum;
   }
 

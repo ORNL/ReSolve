@@ -256,6 +256,10 @@ namespace ReSolve {
                    << "Last error code: " << mem_.getLastDeviceError() << ".\n";
     }
     mem_.deleteOnDevice(d_work);
+
+    // Values on the device are updated now -- mark them as such!
+    A_csr->setUpdated(memory::DEVICE);
+
     return error_sum;
   }
 
