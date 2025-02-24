@@ -243,8 +243,6 @@ namespace ReSolve {
    * @param[in]  A - Sparse matrix
    * @param[out] At - Transposed matrix
    * @return int error_sum, 0 if successful
-   *
-   * @warning This method works only for `real_type == double`.
    */
   int MatrixHandlerHip::transpose(matrix::Csr* A, matrix::Csr* At)
   {
