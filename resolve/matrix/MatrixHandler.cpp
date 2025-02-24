@@ -214,38 +214,18 @@ namespace ReSolve {
    *
    * @return 0 if successful, 1 otherwise
    */
-  int MatrixHandler::transpose(matrix::Csr* A, matrix::Csr* At, memory::MemorySpace memspace, bool allocated)
+  int MatrixHandler::transpose(matrix::Csr* A, matrix::Csr* At, memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
     switch (memspace) {
       case HOST:
-        return cpuImpl_->transpose(A, At, allocated);
+        return cpuImpl_->transpose(A, At);
         break;
       case DEVICE:
-        return devImpl_->transpose(A, At, allocated);
+        return devImpl_->transpose(A, At);
         break;
     }
     return 1;
-  }
-
-  /**
-   * @brief Add a constant to the nonzero values of a csr matrix.
-   * @param[in,out] A - Sparse matrix
-   * @param[in] alpha - scalar parameter
-   * @param[in] memspace - Device where the operation is computed
-   * @return 0 if successful, 1 otherwise
-   */
-  void MatrixHandler::addConstantToNonzeroValues(matrix::Sparse* A, real_type alpha, memory::MemorySpace memspace)
-  {
-    using namespace ReSolve::memory;
-    switch (memspace) {
-      case HOST:
-        cpuImpl_->addConstantToNonzeroValues(A, alpha);
-        break;
-      case DEVICE:
-        devImpl_->addConstantToNonzeroValues(A, alpha);
-        break;
-    }
   }
 
   /**
