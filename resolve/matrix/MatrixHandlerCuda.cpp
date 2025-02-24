@@ -275,8 +275,8 @@ namespace ReSolve {
     index_type error_sum = 0;
 
     At->allocateMatrixData(memory::DEVICE);
-    index_type m = A->getNumRows();
-    index_type n = A->getNumColumns();
+    index_type m = A->getNumColumns();
+    index_type n = A->getNumRows();
     index_type nnz = A->getNnz();
 
     // check dimensions of A and At
@@ -290,11 +290,11 @@ namespace ReSolve {
                                                             n,
                                                             nnz,
                                                             A->getValues( memory::DEVICE),
-                                                            A->getRowData(memory::DEVICE),
                                                             A->getColData(memory::DEVICE),
+                                                            A->getRowData(memory::DEVICE),
                                                             At->getValues( memory::DEVICE),
-                                                            At->getRowData(memory::DEVICE),
                                                             At->getColData(memory::DEVICE),
+                                                            At->getRowData(memory::DEVICE),
                                                             CUDA_R_64F,
                                                             CUSPARSE_ACTION_NUMERIC,
                                                             CUSPARSE_INDEX_BASE_ZERO,
@@ -302,17 +302,16 @@ namespace ReSolve {
                                                             &bufferSize);
     error_sum += status;
     mem_.allocateBufferOnDevice(&d_work, bufferSize);
-
     status = cusparseCsr2cscEx2(workspace_->getCusparseHandle(),
                                 m,
                                 n,
                                 nnz,
                                 A->getValues( memory::DEVICE),
-                                A->getRowData(memory::DEVICE),
                                 A->getColData(memory::DEVICE),
+                                A->getRowData(memory::DEVICE),
                                 At->getValues( memory::DEVICE),
-                                At->getRowData(memory::DEVICE),
                                 At->getColData(memory::DEVICE),
+                                At->getRowData(memory::DEVICE),
                                 CUDA_R_64F,
                                 CUSPARSE_ACTION_NUMERIC,
                                 CUSPARSE_INDEX_BASE_ZERO,
@@ -329,7 +328,6 @@ namespace ReSolve {
     At->setUpdated(memory::DEVICE);
 
     return error_sum;
-
   }
 
 } // namespace ReSolve
