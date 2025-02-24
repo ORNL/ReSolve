@@ -117,6 +117,7 @@ public:
     TestStatus status;
     std::string testname(__func__);
     std::stringstream matrix_size;
+    matrix_size << " for " << n << " x " << m << " matrix";
     testname += matrix_size.str();
     matrix::Csr* A = createRectangularCsrMatrix(n, m);
     matrix::Csr* At = new matrix::Csr(m, n, A->getNnz());
