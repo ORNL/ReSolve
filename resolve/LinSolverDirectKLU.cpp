@@ -7,7 +7,11 @@
 namespace ReSolve 
 {
   using out = io::Logger;
-
+  /**
+   * @brief Constructor for LinSolverDirectKLU
+   * 
+   * Initializes the KLU solver with default parameters.
+   */
   LinSolverDirectKLU::LinSolverDirectKLU()
   {
     Symbolic_ = nullptr;
@@ -35,6 +39,16 @@ namespace ReSolve
                    << "\thalt if singular = " << Common_.halt_if_singular << "\n";
   } 
 
+  /**
+   * @brief Destructor for LinSolverDirectKLU
+   *
+   * Frees memory allocated for the KLU solver.
+   * Deletes factors L_, U_, and permutation vectors P_ and Q_ 
+   * if factors have been extracted.
+   * Frees memory allocated for Symbolic_ and Numeric_.
+   * @post All memory allocated for KLU solver is freed.
+   * @post All pointers are set to nullptr.
+   */
   LinSolverDirectKLU::~LinSolverDirectKLU()
   {
     if (factors_extracted_) {
@@ -51,6 +65,16 @@ namespace ReSolve
     klu_free_numeric(&Numeric_, &Common_);
   }
 
+  /**
+   * @brief Setup the KLU solver with the matrix A.
+   *
+   * @param[in] A   - matrix to solve
+   * @param[in] L   - optional lower triangular factor
+   * @param[in] U   - optional upper triangular factor
+   * @param[in] P   - optional row permutation vector
+   * @param[in] Q   - optional column permutation vector
+   * @param[in] rhs - optional right-hand side vector
+   */
   int LinSolverDirectKLU::setup(matrix::Sparse* A,
                                 matrix::Sparse* /* L */,
                                 matrix::Sparse* /* U */,
@@ -62,6 +86,11 @@ namespace ReSolve
     return 0;
   }
 
+  /**
+   * @brief Analyze the matrix A and compute symbolic factorization.
+   * 
+   * @return 0 if successful, 1 otherwise
+   */
   int LinSolverDirectKLU::analyze() 
   {
     // in case we called this function AGAIN 
@@ -91,7 +120,11 @@ namespace ReSolve
     }
     return 0;
   }
-
+  /**
+   * @brief Factorize the matrix A.
+   *
+   * @return 0 if successful, 1 otherwise
+   */
   int LinSolverDirectKLU::factorize() 
   {
     if (Numeric_ != nullptr) {
@@ -122,6 +155,11 @@ namespace ReSolve
     return 0;
   }
 
+  /**
+   * @brief Update the factorization of the matrix A.
+   *
+   * @return 0 if successful, 1 otherwise
+   */
   int  LinSolverDirectKLU::refactorize() 
   {
     int kluStatus = klu_refactor(A_->getRowData(memory::HOST),
@@ -150,6 +188,15 @@ namespace ReSolve
     return 0;
   }
 
+  /**
+   * @brief Solves a system of equations A*x = rhs.
+   * 
+   * @param[in] rhs - right-hand side vector
+   * @param[out] x   - solution vector
+   * 
+   * @return 0 if successful, 1 otherwise
+   */
+
   int LinSolverDirectKLU::solve(vector_type* rhs, vector_type* x) 
   {
     //copy the vector
@@ -164,6 +211,9 @@ namespace ReSolve
     return 0;
   }
 
+  /**
+   * @brief Generic solver with matrix A with unspecified rhs (not implemented).
+   */
   int LinSolverDirectKLU::solve(vector_type* )
   {
     out::error() << "Function solve(Vector* x) not implemented in LinSolverDirectKLU!\n"
@@ -171,6 +221,11 @@ namespace ReSolve
     return 1;
   }
 
+  /**
+   * @brief Get the lower triangular factor L.
+   *
+   * @return L factor
+   */
   matrix::Sparse* LinSolverDirectKLU::getLFactor()
   {
     if (!factors_extracted_) {
@@ -206,7 +261,11 @@ namespace ReSolve
     }
     return L_;
   }
-
+  /**
+   * @brief Get the upper triangular factor U.
+   * 
+   * @return U factor
+   */
   matrix::Sparse* LinSolverDirectKLU::getUFactor()
   {
     if (!factors_extracted_) {
@@ -242,7 +301,11 @@ namespace ReSolve
     }
     return U_;
   }
-
+  /**
+   * @brief Get the permutation vector P.
+   *
+   * @return P permutation vector
+   */
   index_type* LinSolverDirectKLU::getPOrdering()
   {
     if (Numeric_ != nullptr) {
@@ -255,7 +318,11 @@ namespace ReSolve
     }
   }
 
-
+  /**
+   * @brief Get the permutation vector Q.
+   *
+   * @return Q permutation vector
+   */
   index_type* LinSolverDirectKLU::getQOrdering()
   {
     if (Numeric_ != nullptr) {
@@ -268,17 +335,39 @@ namespace ReSolve
     }
   }
 
+  /**
+   * @brief Set the pivot threshold for the KLU solver.
+   *
+   * @param[in] tol - pivot threshold
+   * 
+   * @post Common_.tol is set to tol
+   */
   void LinSolverDirectKLU::setPivotThreshold(real_type tol)
   {
     pivot_threshold_tol_ = tol;
     Common_.tol = tol;    
   }
 
+  /**
+   * @brief Set the ordering for the KLU solver.
+   *
+   * @param[in] ordering - ordering method
+   * 
+   * @post Common_.ordering is set to ordering
+   */
   void LinSolverDirectKLU::setOrdering(int ordering)
   {
     ordering_ = ordering;
     Common_.ordering = ordering;
   }
+
+  /**
+   * @brief Set the halt if singular flag for the KLU solver.
+   *
+   * Tells the solver to halt if a singular matrix is detected.
+   * 
+   * @param[in] isHalt - halt if singular flag
+   */
 
   void LinSolverDirectKLU::setHaltIfSingular(bool isHalt)
   {
@@ -286,12 +375,27 @@ namespace ReSolve
     Common_.halt_if_singular = isHalt;
   }
 
+  /**
+   * @brief Get the condition number of the matrix A.
+   *
+   * @return condition number of the matrix A
+   */
   real_type LinSolverDirectKLU::getMatrixConditionNumber()
   {
     klu_rcond(Symbolic_, Numeric_, &Common_);
     return Common_.rcond;
   }
 
+  /**
+   * @brief set Cli parameters for KLU solver.
+   *
+   * @param[in] id    - string ID for parameter to set
+   * @param[in] value - string value for parameter to set
+   * 
+   * @post KLU solver parameters id is set to value
+   * 
+   * @return 0 if successful, 1 otherwise
+   */
   int LinSolverDirectKLU::setCliParam(const std::string id, const std::string value)
   {
     switch (getParamId(id))
@@ -331,6 +435,15 @@ namespace ReSolve
     return "";
   }
 
+  /**
+   * @brief Get the integer parameter for the KLU solver.
+   *
+   * Currently, the only integer parameter is the ordering method.
+   * 
+   * @param[in] id - string ID for parameter to get
+   * 
+   * @return index_type - represents the ordering method
+   */
   index_type LinSolverDirectKLU::getCliParamInt(const std::string id) const
   {
     switch (getParamId(id))
@@ -365,6 +478,15 @@ namespace ReSolve
     return std::numeric_limits<real_type>::quiet_NaN();
   }
 
+  /**
+   * @brief Get the boolean parameter for the KLU solver.
+   *
+   * Currently, the only boolean parameter is the halt if singular flag.
+   * 
+   * @param[in] id - string ID for parameter to get
+   * 
+   * @return bool - true if halt if singular flag is set to true, false otherwise
+   */
   bool LinSolverDirectKLU::getCliParamBool(const std::string id) const
   {
     switch (getParamId(id))
@@ -377,6 +499,13 @@ namespace ReSolve
     return false;
   }
 
+  /**
+   * @brief Print the KLU solver Cli parameters.
+   *
+   * @param[in] id - string ID for parameter to print
+   * 
+   * @return 0 if successful, 1 otherwise
+   */
   int LinSolverDirectKLU::printCliParam(const std::string id) const
   {
     switch (getParamId(id))
@@ -400,7 +529,14 @@ namespace ReSolve
   //
   // Private methods
   //
-
+  /**
+   * @brief Initialize the parameter list for KLU solver.
+   *
+   * @post params_list_ is populated with the KLU solver parameters:
+   * - pivot_tol
+   * - ordering
+   * - halt_if_singular
+   */
   void LinSolverDirectKLU::initParamList()
   {
     params_list_["pivot_tol"]        = PIVOT_TOL;

@@ -31,7 +31,7 @@ namespace ReSolve
                                         matrix::Sparse* U,
                                         index_type* P,
                                         index_type* Q,
-                                        vector_type* /* rhs */)
+                                        vector_type* /** rhs */)
   {
     int error_sum = 0;
 
@@ -42,7 +42,7 @@ namespace ReSolve
     index_type n = A_->getNumRows();
     index_type nnz = A_->getNnz();
     //create combined factor
-    addFactors(L,U);
+    combineFactors(L,U);
 
     //set up descriptors
     cusparseCreateMatDescr(&descr_M_);
@@ -61,9 +61,9 @@ namespace ReSolve
                                            descr_A_, 
                                            A_->getRowData(memory::HOST),
                                            A_->getColData(memory::HOST),
-                                           P,   /* base-0 */
-                                           Q,   /* base-0 */
-                                           M_->getNnz(),    /* nnzM */
+                                           P,   /** base-0 */
+                                           Q,   /** base-0 */
+                                           M_->getNnz(),    /** nnzM */
                                            descr_M_, 
                                            M_->getRowData(memory::HOST), 
                                            M_->getColData(memory::HOST), 
@@ -83,7 +83,7 @@ namespace ReSolve
 
     status_cusolver_ = cusolverSpDgluReset(handle_cusolversp_, 
                                            n,
-                                           /* A is original matrix */
+                                           /** A is original matrix */
                                            nnz, 
                                            descr_A_, 
                                            A_->getValues( memory::DEVICE),
@@ -98,7 +98,7 @@ namespace ReSolve
     return error_sum;
   }
 
-  void LinSolverDirectCuSolverGLU::addFactors(matrix::Sparse* L, matrix::Sparse* U)
+  void LinSolverDirectCuSolverGLU::combineFactors(matrix::Sparse* L, matrix::Sparse* U)
   {
     // L and U need to be in CSC format
     index_type n = L->getNumRows();
@@ -158,7 +158,7 @@ namespace ReSolve
     int error_sum = 0;
     status_cusolver_ =  cusolverSpDgluReset(handle_cusolversp_, 
                                             A_->getNumRows(),
-                                            /* A is original matrix */
+                                            /** A is original matrix */
                                             A_->getNnz(),
                                             descr_A_,
                                             A_->getValues( memory::DEVICE),
@@ -177,14 +177,14 @@ namespace ReSolve
   {
     status_cusolver_ =  cusolverSpDgluSolve(handle_cusolversp_,
                                             A_->getNumRows(),
-                                            /* A is original matrix */
+                                            /** A is original matrix */
                                             A_->getNnz(),
                                             descr_A_,
                                             A_->getValues( memory::DEVICE),
                                             A_->getRowData(memory::DEVICE),
                                             A_->getColData(memory::DEVICE),
-                                            rhs->getData(memory::DEVICE),/* right hand side */
-                                            x->getData(memory::DEVICE),  /* left hand side */
+                                            rhs->getData(memory::DEVICE),/** right hand side */
+                                            x->getData(memory::DEVICE),  /** left hand side */
                                             &ite_refine_succ_,
                                             &r_nrm_inf_,
                                             info_M_,
@@ -200,7 +200,7 @@ namespace ReSolve
     return 1;
   }
 
-  /**
+  /***
    * @brief Placeholder function for now.
    * 
    * The following switch (getParamId(Id)) cases always run the default and
@@ -210,7 +210,7 @@ namespace ReSolve
    * @param id - string ID for parameter to set.
    * @return int Error code.
    */
-  int LinSolverDirectCuSolverGLU::setCliParam(const std::string id, const std::string /* value */)
+  int LinSolverDirectCuSolverGLU::setCliParam(const std::string id, const std::string /** value */)
   {
     switch (getParamId(id))
     {
@@ -220,7 +220,7 @@ namespace ReSolve
     return 0;
   }
 
-  /**
+  /***
    * @brief Placeholder function for now.
    * 
    * The following switch (getParamId(Id)) cases always run the default and
@@ -240,7 +240,7 @@ namespace ReSolve
     return "";
   }
 
-  /**
+  /***
    * @brief Placeholder function for now.
    * 
    * The following switch (getParamId(Id)) cases always run the default and
@@ -260,7 +260,7 @@ namespace ReSolve
     return -1;
   }
 
-  /**
+  /***
    * @brief Placeholder function for now.
    * 
    * The following switch (getParamId(Id)) cases always run the default and
@@ -280,7 +280,7 @@ namespace ReSolve
     return std::numeric_limits<real_type>::quiet_NaN();
   }
 
-  /**
+  /***
    * @brief Placeholder function for now.
    * 
    * The following switch (getParamId(Id)) cases always run the default and
