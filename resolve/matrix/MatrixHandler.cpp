@@ -95,6 +95,12 @@ namespace ReSolve {
     isHipEnabled_ = true;
   }
 #endif
+  /**
+   * @brief Set the flag indicating that the matrix values have changed.
+   *
+   * @param[in] isValuesChanged - true if the values have changed, false otherwise
+   * @param[in] memspace - Device where the flag is set
+   */
   void MatrixHandler::setValuesChanged(bool isValuesChanged, memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
@@ -117,7 +123,9 @@ namespace ReSolve {
    * @param[in]  alpha - scalar parameter
    * @param[in]  beta  - scalar parameter
    * @param[in]  memspace     - Device where the product is computed
-   * @return result := alpha * A * x + beta * result
+   * @param[out] result := alpha * A * x + beta * result
+   *
+   * @return 0 if successful, 1 otherwise
    */
   int MatrixHandler::matvec(matrix::Sparse* A,
                             vector_type* vec_x,
@@ -145,7 +153,7 @@ namespace ReSolve {
    * @param[out] norm - Maximum absolute row sum
    * @param[in]  memspace - Device where the norm is computed
    *
-   * @return Maximum absolute row sum
+   * @return 0 if successful, 1 otherwise
    */
   int MatrixHandler::matrixInfNorm(matrix::Sparse *A, real_type* norm, memory::MemorySpace memspace)
   {
@@ -168,7 +176,7 @@ namespace ReSolve {
    * @param[out] A_csr - CSR matrix
    * @param[in]  memspace - Device where the conversion is computed
    *
-   * @return 0 if successful
+   * @return 0 if successful, 1 otherwise
    */
   int MatrixHandler::csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr, memory::MemorySpace memspace)
   {
