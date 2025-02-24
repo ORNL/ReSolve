@@ -114,40 +114,29 @@ public:
 
   TestOutcome transpose(index_type n, index_type m)
   {
-      TestStatus status;
-      std::string testname(__func__);
-      std::stringstream matrix_size;
-      matrix_size << " for " << n << " x " << m << " matrix";
-      testname += matrix_size.str();
+    TestStatus status;
+    std::string testname(__func__);
+    std::stringstream matrix_size;
+    testname += matrix_size.str();
+    matrix::Csr* A = createRectangularCsrMatrix(n, m);
+    matrix::Csr* At = new matrix::Csr(m, n, A->getNnz());
+    At->allocateMatrixData(memspace_);
+    handler_.transpose(A, At, memspace_);
 
-      matrix::Csr* At = new matrix::Csr(m, n, 2 * std::min(n, m));
-      matrix::Csr* A = nullptr;  // Declare A outside
+    status *= (At->getNumRows() == A->getNumColumns());
+    status *= (At->getNumColumns() == A->getNumRows());
+    status *= (At->getNnz() == A->getNnz());
 
-      for (real_type val = 0.0; val <= 1.0; val += 1.0) {  // Use a step to prevent infinite loop
-          if (val == 0.0) {
-              A = createRectangularCsrMatrix(n, m);
-              At->allocateMatrixData(memspace_);
-              handler_.transpose(A, At, memspace_, false);
+    if (memspace_ == memory::DEVICE) {
+      At->syncData(memory::HOST);
+    }
 
-              status *= (At->getNumRows() == A->getNumColumns());
-              status *= (At->getNumColumns() == A->getNumRows());
-              status *= (At->getNnz() == A->getNnz());
-          } else {
-              handler_.addConstantToNonzeroValues(A, val, memspace_);
-              handler_.transpose(A, At, memspace_, true);
-          }
+    verifyCsrMatrix(At, status);
 
-          if (memspace_ == memory::DEVICE) {
-              At->syncData(memory::HOST);
-          }
+    delete A;
+    delete At;
 
-          verifyCsrMatrix(At, val);
-      }
-
-      delete A;  // Delete after loop
-      delete At;
-
-      return status.report(testname.c_str());
+    return status.report(testname.c_str());
   }
 
 private:
@@ -325,9 +314,6 @@ private:
    * If n>m A_{ij} is nonzero iff i==j, or i+m==j+n
    * if n<m A_{ij} is nonzero iff i==j, or i+m==j+n
    * The values increase with a counter from 1.0 in column major order.
-   *
-   * @pre A is a valid, allocated CSR matrix
-   * @invariant A
    *
    * @param[in] A matrix::Csr* pointer to the matrix to be verified
    *

@@ -231,30 +231,26 @@ namespace ReSolve
    *
    * @return 0 if successful, 1 otherwise
    */
-  int MatrixHanlderCpu::transpose(matrix::Csr* A, matrix::Csr* At)
+  int MatrixHandlerCpu::transpose(matrix::Csr* A, matrix::Csr* At)
   {
+    assert(A->getNnz() == At->getNnz());
     assert(A->getNumRows() == At->getNumColumns());
     assert(A->getNumColumns() == At->getNumRows());
-    assert(A->getNnz() == At->getNnz());
-
-    index_type* rowPtrA = A->getRowData(memory::HOST);
-    index_type* colIdxA = A->getColData(memory::HOST);
-    real_type*  valuesA = A->getValues(memory::HOST);
-
-    index_type* rowPtrAt = At->getRowData(memory::HOST);
-    index_type* colIdxAt = At->getColData(memory::HOST);
-    real_type*  valuesAt = At->getValues(memory::HOST);
 
     index_type n = A->getNumRows();
     index_type m = A->getNumColumns();
     index_type nnz = A->getNnz();
-
-    // Set all At row pointers to zero
+    index_type* rowPtrA = A->getRowData(memory::HOST);
+    index_type* colIdxA = A->getColData(memory::HOST);
+    real_type*  valuesA = A->getValues( memory::HOST);
+    index_type* rowPtrAt = At->getRowData(memory::HOST);
+    index_type* colIdxAt = At->getColData(memory::HOST);
+    real_type*  valuesAt = At->getValues( memory::HOST);
+    // Set all CSR row pointers to zero
     for (index_type i = 0; i <= m; ++i) {
       rowPtrAt[i] = 0;
     }
-
-    // Set all At values and column indices to zero
+    // Set all CSR values and column indices to zero
     for (index_type i = 0; i < nnz; ++i) {
       colIdxAt[i] = 0;
       valuesAt[i] = 0.0;
@@ -264,7 +260,7 @@ namespace ReSolve
     for (index_type i = 0; i < nnz; ++i) {
       rowPtrAt[colIdxA[i]]++;
     }
-
+    std::cout << "Computed number of entries per row\n";
     // Compute cumualtive sum of nnz per row
     for (index_type row = 0, rowsum = 0; row < m; ++row) {
       // Store value in row pointer to temp
@@ -277,30 +273,31 @@ namespace ReSolve
       rowsum += temp;
     }
     rowPtrAt[m] = nnz;
-
+    std::cout << "Resulting rowPtrAt: \n";
     for (index_type col = 0; col < n; ++col) {
       // Compute positions of column indices and values in CSR matrix and store them there
       // Overwrites CSR row pointers in the process
       for (index_type jj = rowPtrA[col]; jj < rowPtrA[col+1]; jj++) {
         index_type row  = colIdxA[jj];
         index_type dest = rowPtrAt[row];
+
         colIdxAt[dest] = col;
         valuesAt[dest] = valuesA[jj];
+
         rowPtrAt[row]++;
       }
     }
-
+    std::cout<< "Resulting rowPtrAt: \n";
     // Restore CSR row pointer values
     for (index_type row = 0, last = 0; row <= m; row++) {
         index_type temp  = rowPtrAt[row];
         rowPtrAt[row] = last;
         last    = temp;
     }
-
+    std::cout << "Transposed matrix:\n";
     // Values on the host are updated now -- mark them as such!
     At->setUpdated(memory::HOST);
 
     return 0;
   }
-
 } // namespace ReSolve
