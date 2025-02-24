@@ -19,6 +19,12 @@ if(RESOLVE_USE_KLU)
   # Build example with a configurable system solver
   add_executable(system.exe r_SysSolver.cpp)
   target_link_libraries(system.exe PRIVATE ReSolve)
+
+  if(RESOLVE_USE_GPU)
+    add_executable(gpuRefactor.exe gpuRefactor.cpp)
+    target_link_libraries(gpuRefactor.exe PRIVATE ReSolve)
+  endif(RESOLVE_USE_GPU)
+
 endif(RESOLVE_USE_KLU)
 
 # Build rand example, CPU ONLY  r_randGMRES_cpu
@@ -76,9 +82,7 @@ if(RESOLVE_USE_HIP)
     add_executable(klu_rocsolverrf.exe r_KLU_rocsolverrf.cpp)
     target_link_libraries(klu_rocsolverrf.exe PRIVATE ReSolve)
   
-    # Build example with KLU factorization, rocsolver Rf refactorization, and FGMRES iterative refinement
-    add_executable(klu_rocsolverrf_fgmres.exe gpuRefactor.cpp)
-    target_link_libraries(klu_rocsolverrf_fgmres.exe PRIVATE ReSolve)
+
     
     # Example in which factorization is redone if solution is bad
     add_executable(klu_rocsolverrf_check_redo.exe r_KLU_rocsolverrf_redo_factorization.cpp)
@@ -105,6 +109,9 @@ set(installable_executables "")
 # Install all examples in bin directory
 if(RESOLVE_USE_KLU)
   list(APPEND installable_executables klu_klu.exe klu_klu_standalone.exe system.exe)
+  if(RESOLVE_USE_GPU)
+    list(APPEND installable_executables gpuRefactor.exe)
+  endif(RESOLVE_USE_GPU)
 endif()
 
 if(RESOLVE_USE_CUDA)
@@ -116,7 +123,7 @@ endif(RESOLVE_USE_CUDA)
 
 if(RESOLVE_USE_HIP)
   if(RESOLVE_USE_KLU)
-    list(APPEND installable_executables klu_rocsolverrf.exe klu_rocsolverrf_fgmres.exe klu_rocsolverrf_check_redo.exe)
+    list(APPEND installable_executables klu_rocsolverrf.exe klu_rocsolverrf_check_redo.exe)
   endif()
   list(APPEND installable_executables gmres_rocsparse_rand.exe)
 endif(RESOLVE_USE_HIP)
