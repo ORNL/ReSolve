@@ -8,7 +8,7 @@ Error handling
 ~~~~~~~~~~~~~~
 
 Return values of member functions should be of type ``int`` and used for
-error handling. Functions return 0 if no error is encounter, return
+error handling. Functions return 0 if no error is encountered, return
 positive value for warnings and recoverable error, and negative value
 for irrecoverable errors.
 
@@ -22,6 +22,11 @@ space before and after each ``<<``.
 .. code:: cpp
 
    std::cout << "index out of bounds. Row " << i << " starts at: " << start << " and ends at " << end << std::endl;
+
+General naming conventions
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Do not include words like "function", "variable", "const" or "class" in names. It is clear what they are based on the naming conventions.
 
 Member variable naming
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -38,7 +43,7 @@ trailing underscore ``_``.
 Function names
 ~~~~~~~~~~~~~~
 
-Use lowercase camel format for function names.
+Use lowercase camel format (camelCase), with no underscore, for function names.
 
 .. code:: cpp
 
@@ -49,8 +54,8 @@ Use lowercase camel format for function names.
 Class names
 ~~~~~~~~~~~
 
-Class names should start with a capital letter. For instance, ``Vector``
-and ``Matrix`` are valid class names, while ``point`` is not.
+Class names should follow uppercase camel format (CamelCase), with no underscore. 
+For instance, `Vector` and `CsrMatrix` are valid class names, while `cartesianPoint` is not.
 
 Enums (enumerated types)
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -69,20 +74,33 @@ Constants
 ~~~~~~~~~
 
 If a constant is used in more than one file, define it in ``Common.h``.
-Constants names should be capitalized.
+Constants names should be capitalized and words separated by underscores.
 
 .. code:: cpp
 
       constexpr double Pi = 3.1415; // No, it should be all caps
-      constexpr double SQRT_TWO = 1.4142 // No, there is an underscore
-      constexpr double SQRTTWO_ = 1.4142 // No, there is an underscore
-      constexpr double EXP = 2.7183 // Yes   
+      constexpr double SQRT_TWO = 1.4142 // Yes
+      constexpr double SQRTTWO_ = 1.4142 // No, there is a trailing underscore
+      constexpr double EXP = 2.7183 // Yes  
+
+Exceptions to naming conventions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The following are exceptions to the naming conventions:
+Always capitalize `ReSolve` in this manner. There may be additional words
+where capitalization is important and it is preserved similarly.
+
+Capitalize variables refering to a matrix `A`
+such as `A`, `At`, `A_csc`, and `A_csr`.
+This is due to the equation $Ax=b$ and the Householder convention where
+uppercase letters represent matrices and lowercase letter represent vectors
 
 Pointers and references
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 The pointer ``*`` or reference ``&`` belong to the type and there should
 be no space between them and the type name.
+Declare each variable on a different line.
 
 .. code:: cpp
 
@@ -94,6 +112,8 @@ be no space between them and the type name.
 Indentation
 ~~~~~~~~~~~
 
+When writing a function header over multiple lines, 
+indenting of subsequent variables should mimic the first variable.
 Use only spaces for indentation, not tabs. Indent size is 2 spaces.
 
 When defining a class, the code blocks after ``private``, ``public`` and
@@ -243,3 +263,48 @@ additional namespaces inside ``ReSolve``.
    { 
       // matrix code
    };
+
+Writing comments
+~~~~~~~~~~~~~~~~
+
+Use ``//`` for comments in the code. Do not use ``/* */``.
+
+Put Doxygen comments in the file where the function is implemented
+(which may be different from where it's declared).
+
+Use this format for comments:
+.. code:: cpp
+
+   /**
+    *
+    */
+
+Write a brief description of the function using ``@brief``.
+Add a longer description below, if needed.
+
+Explain which parameters are in, out or in,out using 
+``@param[in]``, ``@param[out]`` and ``@param[in,out]``.
+
+Explain the return value using ``@return``.
+
+Overall, the comment should look like this:
+.. code:: cpp
+
+   /**
+    * @brief This function does something
+    *
+    * This function does something with the input parameters
+    *
+    * @param[in] x The input parameter
+    * @param[out] y The output parameter
+    * @param[in,out] z The input/output parameter
+    *
+    * @return 0 if no error, positive value for warnings and recoverable error, negative value for irrecoverable errors
+    */
+   void someFunction(int x, int& y, int* z)
+   {
+     // some code
+   }
+
+Do not leave commented code used for debugging (or for other purposes).
+Remove it before committing the code.
