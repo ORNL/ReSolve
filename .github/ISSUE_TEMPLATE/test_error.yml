@@ -1,0 +1,37 @@
+name: "\U0001F4A5 Tests error"
+description: Some ReSolve tests are failing
+title: "Testing issue: "
+labels: [test-error]
+body:
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Failed test outputs or steps to reproduce the failure(s)
+      description: |
+        Fill in the failing test output, errors,
+        or steps to reproduce the failure(s).
+      value: |
+        ```console
+        $ make test
+        ...
+        ```
+    validations:
+      required: true
+  - type: textarea
+    id: information
+    attributes:
+      label: Information on your system or the test runner
+      description: Please include your system information, including backend
+      (CPU, CUDA, ROCm, etc.), and required package versions.
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        If you have any relevant configuration detail (custom `packages.yaml` or `modules.yaml`, etc.) you can add that here as well.
+  - type: textarea
+    id: additional_information
+    attributes:
+      label: Additional information
+      description: |
+        Please upload test logs or any additional information about the problem.
