@@ -100,7 +100,7 @@ namespace ReSolve {
    *
    * If set to true, next invocation of `matvec` method will trigger re-allocation of the
    * matrix descriptor object. Use if the matrix changes or if matrix object internal pointers
-   * to the raw matrix data change. This method has no effect if you are using CPU backend. 
+   * to the raw matrix data change. This method has no effect if you are using CPU backend.
    *
    * @warning This is an expert-level method. Use only if you know what you are doing.
    *
@@ -181,6 +181,20 @@ namespace ReSolve {
    * @param[in]  A_csc - CSC matrix
    * @param[out] A_csr - CSR matrix
    * @param[in]  memspace - Device where the conversion is computed
+   *
+   * @pre A_csc is allocated, prefilled on the host and has the correct CSC format:
+   * @pre A_csc->getColumnData() is an increasing index_type array of size A_csc->getNumColumns() + 1
+   * @pre A_csc->getRowData() is an index_type array of size A_csc->getNnz()
+   * @pre A_csc->getValues() is a real_type array of size A_csc->getNnz()
+   * @pre A_csr is allocated (but not prefilled) on the host and has the correct CSR format:
+   * @pre A_csr->getRowData() is an index_type array of size A_csr->getNumRows() + 1
+   * @pre A_csr->getColData() is an index_type array of size A_csr->getNnz()
+   * @pre A_csr->getValues() is a real_type array of size A_csr->getNnz()
+   * @pre A_csc->getNumRows() == A_csr->getNumRows()
+   * @pre A_csc->getNumColumns() == A_csr->getNumColumns()
+   * @pre A_csc->getNnz() == A_csr->getNnz()
+   *
+   * @post A_csr is filled with the values from A_csc
    *
    * @return 0 if successful, 1 otherwise
    */
