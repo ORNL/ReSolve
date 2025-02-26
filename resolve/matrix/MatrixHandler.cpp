@@ -123,7 +123,7 @@ namespace ReSolve {
    * @param[in]  alpha - scalar parameter
    * @param[in]  beta  - scalar parameter
    * @param[in]  memspace     - Device where the product is computed
-   * @param[out] result := alpha * A * x + beta * result
+   * @param[in,out] result := alpha * A * x + beta * result
    *
    * @return 0 if successful, 1 otherwise
    */
