@@ -31,6 +31,11 @@ Pull Requests (PR)s
 When opening a PR, make sure to select the correct base branch.
 If there are merge conflicts, resolve them before requesting a review.
 
+Detail changes made in your PR in the description.
+1. What new features were added?
+2. What bugs were fixed?
+3. What tests were added?
+
 When reviewing a PR consider the following:
 1. Does the PR address the issue? (if applicable)
 2. Do existing and new tests pass? (Run the code on different machines)
