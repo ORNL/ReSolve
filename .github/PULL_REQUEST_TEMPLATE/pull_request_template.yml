@@ -1,0 +1,36 @@
+name: ReSolve Pull Request Template
+
+description: Standard template for pull requests in ReSolve
+
+body:
+  - type: textarea
+    id: bug_or_feature
+    attributes:
+      label: "Bug or Feature"
+      description: "Describe the bug being fixed or the feature being added."
+    validations:
+      required: true
+
+  - type: textarea
+    id: details
+    attributes:
+      label: "Details"
+      description: "Provide details on the changes made, implementation, and any relevant context."
+    validations:
+      required: true
+
+  - type: input
+    id: reviewers
+    attributes:
+      label: "Suggested Reviewers"
+      description: "Tag the appropriate reviewers (e.g., @username)."
+    validations:
+      required: true
+
+  - type: input
+    id: issue
+    attributes:
+      label: "Related Issue"
+      description: "Link to the issue this PR addresses (if applicable)."
+    validations:
+      required: false
