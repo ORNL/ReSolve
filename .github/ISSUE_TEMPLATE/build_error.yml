@@ -20,8 +20,8 @@ body:
     id: information
     attributes:
       label: Information on your system or the test runner
-      description: Please include your system information, including backend
-      (CPU, CUDA, ROCm, etc.), and required package versions.
+      description: Please include your system information, including operating system,
+      compilers, hardware backends (CUDA, HIP), dependencies, and required package versions.
     validations:
       required: true
   - type: markdown
