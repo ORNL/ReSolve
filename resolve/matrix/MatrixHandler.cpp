@@ -98,8 +98,14 @@ namespace ReSolve {
   /**
    * @brief Set the flag indicating that the matrix values have changed.
    *
+   * If set to true, next invocation of `matvec` method will trigger re-allocation of the
+   * matrix descriptor object. Use if the matrix changes or if matrix object internal pointers
+   * to the raw matrix data change. This method has no effect if you are using CPU backend. 
+   *
+   * @warning This is an expert-level method. Use only if you know what you are doing.
+   *
    * @param[in] isValuesChanged - true if the values have changed, false otherwise
-   * @param[in] memspace - Device where the flag is set
+   * @param[in] memspace - Memory where values have changed
    */
   void MatrixHandler::setValuesChanged(bool isValuesChanged, memory::MemorySpace memspace)
   {
