@@ -144,6 +144,7 @@ public:
           }
 
           verifyCsrMatrix(At, status, val);
+          std::cout << "Transpose test passed for val = " << val << "\n";
       }
 
       delete A;  // Delete after loop
