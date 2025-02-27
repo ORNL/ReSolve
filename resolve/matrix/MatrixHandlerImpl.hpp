@@ -34,7 +34,7 @@ namespace ReSolve {
 
       virtual int csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr) = 0;
 
-      virtual int transpose(matrix::Csr* A, matrix::Csr* At) = 0;
+      virtual int transpose(matrix::Csr* A, matrix::Csr* At, bool allocated = false) = 0;
 
       virtual int matvec(matrix::Sparse* A,
                          vector_type* vec_x,

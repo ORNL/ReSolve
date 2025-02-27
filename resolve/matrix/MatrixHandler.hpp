@@ -54,7 +54,7 @@ namespace ReSolve {
 
       int csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr, memory::MemorySpace memspace);
 
-      int transpose(matrix::Csr* A, matrix::Csr* At, memory::MemorySpace memspace);
+      int transpose(matrix::Csr* A, matrix::Csr* At, memory::MemorySpace memspace, bool allocated = false);
 
       /// Should compute vec_result := alpha*A*vec_x + beta*vec_result, but at least on cpu alpha and beta are flipped
       int matvec(matrix::Sparse* A,
