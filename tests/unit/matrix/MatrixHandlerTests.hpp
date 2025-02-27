@@ -134,7 +134,7 @@ public:
               status *= (At->getNnz() == A->getNnz());
           } else {
               for (index_type i = 0; i < A->getNnz(); ++i) {
-                  A->getValues(memory::HOST)[i] += val;
+                  A->getValues(memspace_)[i] += val;
               }
               handler_.transpose(A, At, memspace_, true);
           }
@@ -144,7 +144,6 @@ public:
           }
 
           verifyCsrMatrix(At, status, val);
-          std::cout << "Transpose test passed for val = " << val << "\n";
       }
 
       delete A;  // Delete after loop
