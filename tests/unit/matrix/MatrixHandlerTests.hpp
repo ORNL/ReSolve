@@ -114,30 +114,42 @@ public:
 
   TestOutcome transpose(index_type n, index_type m)
   {
-    TestStatus status;
-    std::string testname(__func__);
-    std::stringstream matrix_size;
-    matrix_size << " for " << n << " x " << m << " matrix";
-    testname += matrix_size.str();
-    matrix::Csr* A = createRectangularCsrMatrix(n, m);
-    matrix::Csr* At = new matrix::Csr(m, n, A->getNnz());
-    At->allocateMatrixData(memspace_);
-    handler_.transpose(A, At, memspace_);
+      TestStatus status;
+      std::string testname(__func__);
+      std::stringstream matrix_size;
+      matrix_size << " for " << n << " x " << m << " matrix";
+      testname += matrix_size.str();
 
-    status *= (At->getNumRows() == A->getNumColumns());
-    status *= (At->getNumColumns() == A->getNumRows());
-    status *= (At->getNnz() == A->getNnz());
+      matrix::Csr* At = new matrix::Csr(m, n, 2 * std::min(n, m));
+      matrix::Csr* A = nullptr;  // Declare A outside
 
-    if (memspace_ == memory::DEVICE) {
-      At->syncData(memory::HOST);
-    }
+      for (real_type val = 0.0; val <= 1.0; val += 1.0) {  // Use a step to prevent infinite loop
+          if (val == 0.0) {
+              A = createRectangularCsrMatrix(n, m);
+              At->allocateMatrixData(memspace_);
+              handler_.transpose(A, At, memspace_, false);
 
-    verifyCsrMatrix(At);
+              status *= (At->getNumRows() == A->getNumColumns());
+              status *= (At->getNumColumns() == A->getNumRows());
+              status *= (At->getNnz() == A->getNnz());
+          } else {
+              for (index_type i = 0; i < A->getNnz(); ++i) {
+                  A->getValues(memory::HOST)[i] += val;
+              }
+              handler_.transpose(A, At, memspace_, true);
+          }
 
-    delete A;
-    delete At;
+          if (memspace_ == memory::DEVICE) {
+              At->syncData(memory::HOST);
+          }
 
-    return status.report(testname.c_str());
+          verifyCsrMatrix(At, status, val);
+      }
+
+      delete A;  // Delete after loop
+      delete At;
+
+      return status.report(testname.c_str());
   }
 
 private:
@@ -323,13 +335,84 @@ private:
    *
    * @return bool true if the matrix is valid, false otherwise
    */
-  bool verifyCsrMatrix(matrix::Csr* A)
+  void verifyCsrMatrix(matrix::Csr* A, TestStatus& status, real_type val = 0.0)
   {
     index_type* rowptr_csr = A->getRowData(memory::HOST);
     index_type* colidx_csr = A->getColData(memory::HOST);
     real_type* val_csr = A->getValues(memory::HOST);
     index_type n = A->getNumColumns();
     index_type m = A->getNumRows();
+    if (n == m) {
+      for (index_type i = 0; i < m; ++i) {
+        if (i == m - 1) {
+          status *= (rowptr_csr[i + 1] == rowptr_csr[i] + 1);
+          status *= (colidx_csr[rowptr_csr[i]] == n - 1);
+          status *= (val_csr[rowptr_csr[i]] == 2.0 * n + val);
+        } else if (i == m / 2) {
+          status *= (rowptr_csr[i + 1] == rowptr_csr[i] + 3);
+          status *= (colidx_csr[rowptr_csr[i]] == 0);
+          status *= (val_csr[rowptr_csr[i]] == 2.0 + val);
+          status *= (colidx_csr[rowptr_csr[i] + 1] == n / 2);
+          status *= (colidx_csr[rowptr_csr[i] + 2] == n / 2 + 1);
+          status *= (val_csr[rowptr_csr[i] + 1] == 2.0 * (n / 2) + 2 + val);
+          status *= (val_csr[rowptr_csr[i] + 2] == 2.0 * (n / 2) + 3 + val);
+        } else {
+          status *= (rowptr_csr[i + 1] == rowptr_csr[i] + 2);
+          status *= (colidx_csr[rowptr_csr[i]] == i);
+          status *= (colidx_csr[rowptr_csr[i] + 1] == i + 1);
+          if (i == 0) {
+            status *= (val_csr[rowptr_csr[i]] == 1.0 + val);
+            status *= (val_csr[rowptr_csr[i] + 1] == 3.0 + val);
+          } else {
+            status *= (val_csr[rowptr_csr[i]] == 2.0 * (i + 1) + val);
+            status *= (val_csr[rowptr_csr[i] + 1] == 2.0 * (i + 1) + 1.0 + val);
+          }
+        }
+      }
+    } else if (n > m) {
+      index_type main_diag_ind = 0;
+      index_type off_diag_ind = n - m;
+      real_type main_val = 1.0 + val;
+      real_type off_val = n - m + 1.0 + val;
+      for (index_type i = 0; i < m; ++i) {
+        status *= (rowptr_csr[i + 1] == rowptr_csr[i] + 2);
+        status *= (colidx_csr[rowptr_csr[i]] == main_diag_ind++);
+        status *= (colidx_csr[rowptr_csr[i] + 1] == off_diag_ind++);
+        status *= (val_csr[rowptr_csr[i]] == main_val++);
+        status *= (val_csr[rowptr_csr[i] + 1] == off_val++);
+        if (i >= n - m - 1) {
+            main_val++;
+        }
+        if (i < 2 * m - n) {
+            off_val++;
+        }
+      }
+    } else {
+      real_type main_val = 1.0 + val;
+      real_type off_val = 2.0 + val;
+      for (index_type i = 0; i < m; ++i) {
+        if (i < n && i < m - n) {
+          status *= (rowptr_csr[i + 1] == rowptr_csr[i] + 1);
+          status *= (colidx_csr[rowptr_csr[i]] == i);
+          status *= (val_csr[rowptr_csr[i]] == main_val);
+          main_val += 2.0;
+        } else if (i < n && i >= m - n) {
+          status *= (rowptr_csr[i + 1] == rowptr_csr[i] + 2);
+          status *= (colidx_csr[rowptr_csr[i] + 1] == i);
+          status *= (colidx_csr[rowptr_csr[i]] == i + n - m);
+          status *= (val_csr[rowptr_csr[i] + 1] == main_val);
+          status *= (val_csr[rowptr_csr[i]] == off_val);
+          main_val += 2.0;
+          off_val += 2.0;
+        } else {
+          status *= (rowptr_csr[i + 1] == rowptr_csr[i] + 1);
+          status *= (colidx_csr[rowptr_csr[i]] == i + n - m);
+          status *= (val_csr[rowptr_csr[i]] == off_val);
+          off_val += 2.0;
+        }
+      }
+    }
+  }
 
     if (n == m) {
         for (index_type i = 0; i < m; ++i) {

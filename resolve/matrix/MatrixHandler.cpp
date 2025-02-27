@@ -214,15 +214,15 @@ namespace ReSolve {
    *
    * @return 0 if successful, 1 otherwise
    */
-  int MatrixHandler::transpose(matrix::Csr* A, matrix::Csr* At, memory::MemorySpace memspace)
+  int MatrixHandler::transpose(matrix::Csr* A, matrix::Csr* At, memory::MemorySpace memspace, bool allocated)
   {
     using namespace ReSolve::memory;
     switch (memspace) {
       case HOST:
-        return cpuImpl_->transpose(A, At);
+        return cpuImpl_->transpose(A, At, allocated);
         break;
       case DEVICE:
-        return devImpl_->transpose(A, At);
+        return devImpl_->transpose(A, At, allocated);
         break;
     }
     return 1;
