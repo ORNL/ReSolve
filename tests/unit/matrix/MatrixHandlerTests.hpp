@@ -19,7 +19,7 @@ namespace ReSolve { namespace tests {
 class MatrixHandlerTests : TestBase
 {
 public:
-  MatrixHandlerTests(ReSolve::MatrixHandler& handler) : handler_(handler) 
+  MatrixHandlerTests(ReSolve::MatrixHandler& handler) : handler_(handler)
   {
     if (handler_.getIsCudaEnabled() || handler_.getIsHipEnabled()) {
       memspace_ = memory::DEVICE;
@@ -35,7 +35,7 @@ public:
   {
     TestStatus status;
     status.skipTest();
-    
+
     return status.report(__func__);
   }
 
@@ -46,8 +46,8 @@ public:
     matrix::Csr* A = createCsrMatrix(n);
     real_type norm;
     handler_.matrixInfNorm(A, &norm, memspace_);
-    status *= (norm == 30.0); 
-    
+    status *= (norm == 30.0);
+
     delete A;
 
     return status.report(__func__);
@@ -61,7 +61,7 @@ public:
     vector::Vector x(n);
     vector::Vector y(n);
     x.allocate(memspace_);
-    if (x.getData(memspace_) == NULL) 
+    if (x.getData(memspace_) == NULL)
       std::cout << "The memory space was not allocated \n" << std::endl;
     y.allocate(memspace_);
 
@@ -86,7 +86,7 @@ public:
 
     std::string testname(__func__);
     std::stringstream matrix_size;
-    matrix_size << " for " << n << " x " << m << " matrix";
+    matrix_size << " for " << m << " x " << n << " matrix";
     testname += matrix_size.str();
 
     matrix::Csc* A_csc = createRectangularCscMatrix(n, m);
@@ -112,6 +112,34 @@ public:
     return status.report(testname.c_str());
   }
 
+  TestOutcome transpose(index_type n, index_type m)
+  {
+    TestStatus status;
+    std::string testname(__func__);
+    std::stringstream matrix_size;
+    matrix_size << " for " << n << " x " << m << " matrix";
+    testname += matrix_size.str();
+    matrix::Csr* A = createRectangularCsrMatrix(n, m);
+    matrix::Csr* At = new matrix::Csr(m, n, A->getNnz());
+    At->allocateMatrixData(memspace_);
+    handler_.transpose(A, At, memspace_);
+
+    status *= (At->getNumRows() == A->getNumColumns());
+    status *= (At->getNumColumns() == A->getNumRows());
+    status *= (At->getNnz() == A->getNnz());
+
+    if (memspace_ == memory::DEVICE) {
+      At->syncData(memory::HOST);
+    }
+
+    verifyCsrMatrix(At, status);
+
+    delete A;
+    delete At;
+
+    return status.report(testname.c_str());
+  }
+
 private:
   ReSolve::MatrixHandler& handler_;
   memory::MemorySpace memspace_{memory::HOST};
@@ -128,24 +156,24 @@ private:
         status = false;
         std::cout << "Solution vector element x[" << i << "] = " << x.getData(memory::HOST)[i]
                   << ", expected: " << answer << "\n";
-        break; 
+        break;
       }
     }
     return status;
   }
 
-  /** 
+  /**
    * @brief Create a rectangular CSC matrix with preset sparsity structure
-   * 
+   *
    * The sparisty structure is upper bidiagonal if n==m, with an extra entry in the first column
-   * If n>m an entry is nonzero iff i==j, or i+m==j+n 
-   * if n<m an entry is nonzero iff i==j, or i+n==j+m
+   * If n>m A_{ij} is nonzero iff i==j, or i+m==j+n
+   * if n<m A_{ij} is nonzero iff i==j, or i+m==j+n
    * The values increase with a counter from 1.0 in column major order.
-   * 
+   *
    * @param[in] n number of columns
    * @param[in] m number of rows
-   * 
-   * @return matrix::Csr* 
+   *
+   * @return matrix::Csc*
    */
   matrix::Csc* createRectangularCscMatrix(const index_type n, const index_type m)
   {
@@ -202,19 +230,92 @@ private:
       A->syncData(memspace_);
     }
     return A;
-}
+  }
+
+  /**
+   * @brief Create a rectangular CSR matrix with preset sparsity structure
+   *
+   * The sparisty structure is lower bidiagonal if n==m, with an extra entry in the first row
+   * If n>m A_{ij} is nonzero iff i==j, or i+m==j+n
+   * if n<m A_{ij} is nonzero iff i==j, or i+m==j+n
+   *
+   * The values increase with a counter from 1.0 in row major order.
+   *
+   * @param[in] n number of rows
+   * @param[in] m number of columns
+   *
+   * @return matrix::Csr*
+   */
+
+  matrix::Csr* createRectangularCsrMatrix(const index_type n, const index_type m)
+  {
+    index_type nnz = 2 * std::min(n, m);
+    matrix::Csr* A = new matrix::Csr(n, m, nnz);
+    A->allocateMatrixData(memory::HOST);
+
+    index_type* rowptr = A->getRowData(memory::HOST);
+    index_type* colidx = A->getColData(memory::HOST);
+    real_type* val = A->getValues(memory::HOST);
+
+    real_type counter = 1.0;
+    rowptr[0] = 0;
+    if (n == m) {
+      for (index_type i = 0; i < n; ++i) {
+        rowptr[i + 1] = rowptr[i] + 2;
+        if (i == 0) {
+          colidx[rowptr[i]] = i;
+          val[rowptr[i]] = counter++;
+          colidx[rowptr[i] + 1] = n / 2;
+          val[rowptr[i] + 1] = counter++;
+        } else {
+          colidx[rowptr[i]] = i - 1;
+          val[rowptr[i]] = counter++;
+          colidx[rowptr[i] + 1] = i;
+          val[rowptr[i] + 1] = counter++;
+        }
+      }
+    } else if (n > m) {
+      for (index_type i = 0; i < n; ++i) {
+        rowptr[i + 1] = rowptr[i];
+        if (i >= n - m) {
+          colidx[rowptr[i + 1]] = i - n + m;
+          val[rowptr[i + 1]] = counter++;
+          rowptr[i + 1]++;
+        }
+        if (i < m) {
+          colidx[rowptr[i + 1]] = i;
+          val[rowptr[i + 1]] = counter++;
+          rowptr[i + 1]++;
+        }
+      }
+    } else {
+      for (index_type i = 0; i < n; ++i) {
+        rowptr[i + 1] = rowptr[i] + 2;
+        colidx[rowptr[i]] = i;
+        val[rowptr[i]] = counter++;
+        colidx[rowptr[i] + 1] = i + m - n;
+        val[rowptr[i] + 1] = counter++;
+      }
+    }
+
+    A->setUpdated(memory::HOST);
+    if (memspace_ == memory::DEVICE) {
+      A->syncData(memspace_);
+    }
+    return A;
+  }
 
   /**
    * @brief Verify structure of a CSR matrix with preset pattern.
-   * 
+   *
    * The sparsity structure corresponds to the CSR representation of a rectangular matrix
    * created by createRectangularCscMatrix.
-   * The sparisty structure is upper bidiagonal if n==m, 
+   * The sparisty structure is upper bidiagonal if n==m,
    * with an extra entry in the first column.
-   * If n>m an entry is nonzero iff i==j, or i+m==j+n 
-   * if n<m an entry is nonzero iff i==j, or i+n==j+m
+   * If n>m A_{ij} is nonzero iff i==j, or i+m==j+n
+   * if n<m A_{ij} is nonzero iff i==j, or i+m==j+n
    * The values increase with a counter from 1.0 in column major order.
-   * 
+   *
    * @param[in] A matrix::Csr* pointer to the matrix to be verified
    * @param[out] status TestStatus& reference to the status of the test
    */
@@ -299,13 +400,13 @@ private:
 
   /**
    * @brief Create a CSR matrix with preset sparsity structure
-   * 
+   *
    * The sparisty structure is such that each row has a different number of nonzeros
    * The values are chosen so that the sum of each row is 30
-   * 
+   *
    * @param[in] n number of rows and columns
-   * 
-   * @return matrix::Csr* 
+   *
+   * @return matrix::Csr*
    */
   matrix::Csr* createCsrMatrix(const index_type n)
   {

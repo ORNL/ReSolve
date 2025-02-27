@@ -237,4 +237,58 @@ namespace ReSolve {
     return error_sum;
   }
 
+  /**
+   * @brief Transpose a sparse CSR matrix in HIP
+   *
+   * @param[in]  A - Sparse matrix
+   * @param[out] At - Transposed matrix
+   * @return int error_sum, 0 if successful
+   */
+  int MatrixHandlerHip::transpose(matrix::Csr* A, matrix::Csr* At)
+  {
+    index_type error_sum = 0;
+
+    rocsparse_status status;
+    
+    At->allocateMatrixData(memory::DEVICE);
+    index_type m = A->getNumRows();
+    index_type n = A->getNumColumns();
+    index_type nnz = A->getNnz();
+    size_t bufferSize;
+    void* d_work;
+
+    status = rocsparse_csr2csc_buffer_size(workspace_->getRocsparseHandle(),
+                                           m,
+                                           n,
+                                           nnz,
+                                           A->getRowData(memory::DEVICE), 
+                                           A->getColData(memory::DEVICE), 
+                                           rocsparse_action_numeric,
+                                           &bufferSize);
+
+    error_sum += status;
+    mem_.allocateBufferOnDevice(&d_work, bufferSize);
+    
+    status = rocsparse_dcsr2csc(workspace_->getRocsparseHandle(),
+                                m,
+                                n,
+                                nnz,
+                                A->getValues( memory::DEVICE), 
+                                A->getRowData(memory::DEVICE), 
+                                A->getColData(memory::DEVICE), 
+                                At->getValues( memory::DEVICE), 
+                                At->getColData(memory::DEVICE),
+                                At->getRowData(memory::DEVICE), 
+                                rocsparse_action_numeric,
+                                rocsparse_index_base_zero,
+                                d_work);
+    error_sum += status;
+    mem_.deleteOnDevice(d_work);
+
+    // Values on the device are updated now -- mark them as such!
+    At->setUpdated(memory::DEVICE);
+
+    return error_sum;
+  }
+
 } // namespace ReSolve

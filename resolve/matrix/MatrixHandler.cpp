@@ -22,10 +22,10 @@ namespace ReSolve {
 
   /**
    * @brief Default constructor
-   * 
-   * @post Instantiates CPU and CUDA matrix handlers, but does not 
+   *
+   * @post Instantiates CPU and CUDA matrix handlers, but does not
    * create a workspace.
-   * 
+   *
    * @todo There is little utility for the default constructor. Rethink its purpose.
    * Consider making it private method.
    */
@@ -37,7 +37,7 @@ namespace ReSolve {
 
   /**
    * @brief Destructor
-   * 
+   *
    */
   MatrixHandler::~MatrixHandler()
   {
@@ -49,7 +49,7 @@ namespace ReSolve {
 
   /**
    * @brief Constructor taking pointer to the workspace as its parameter.
-   * 
+   *
    * @note The CPU implementation currently does not require a workspace.
    * The workspace pointer parameter is provided for forward compatibility.
    */
@@ -63,10 +63,10 @@ namespace ReSolve {
 #ifdef RESOLVE_USE_CUDA
   /**
    * @brief Constructor taking pointer to the CUDA workspace as its parameter.
-   * 
+   *
    * @post A CPU implementation instance is created because it is cheap and
    * it does not require a workspace.
-   * 
+   *
    * @post A CUDA implementation instance is created with supplied workspace.
    */
   MatrixHandler::MatrixHandler(LinAlgWorkspaceCUDA* new_workspace)
@@ -81,10 +81,10 @@ namespace ReSolve {
 #ifdef RESOLVE_USE_HIP
   /**
    * @brief Constructor taking pointer to the CUDA workspace as its parameter.
-   * 
+   *
    * @post A CPU implementation instance is created because it is cheap and
    * it does not require a workspace.
-   * 
+   *
    * @post A HIP implementation instance is created with supplied workspace.
    */
   MatrixHandler::MatrixHandler(LinAlgWorkspaceHIP* new_workspace)
@@ -110,7 +110,7 @@ namespace ReSolve {
 
   /**
    * @brief Matrix vector product: result = alpha * A * x + beta * result
-   * 
+   *
    * @param[in]  A - Sparse matrix
    * @param[in]  vec_x - Vector multiplied by the matrix
    * @param[out] vec_result - Vector where the result is stored
@@ -119,10 +119,10 @@ namespace ReSolve {
    * @param[in]  memspace     - Device where the product is computed
    * @return result := alpha * A * x + beta * result
    */
-  int MatrixHandler::matvec(matrix::Sparse* A, 
-                            vector_type* vec_x, 
-                            vector_type* vec_result, 
-                            const real_type* alpha, 
+  int MatrixHandler::matvec(matrix::Sparse* A,
+                            vector_type* vec_x,
+                            vector_type* vec_result,
+                            const real_type* alpha,
                             const real_type* beta,
                             memory::MemorySpace memspace)
   {
@@ -167,10 +167,33 @@ namespace ReSolve {
   }
 
   /**
+   * @brief Transpose a sparse CSR matrix.
+   *
+   * @param[in]  A - Sparse matrix
+   * @param[out] At - Transposed matrix
+   * @param[in]  memspace - Device where the transpose is computed
+   *
+   * @return 0 if successful, 1 otherwise
+   */
+  int MatrixHandler::transpose(matrix::Csr* A, matrix::Csr* At, memory::MemorySpace memspace)
+  {
+    using namespace ReSolve::memory;
+    switch (memspace) {
+      case HOST:
+        return cpuImpl_->transpose(A, At);
+        break;
+      case DEVICE:
+        return devImpl_->transpose(A, At);
+        break;
+    }
+    return 1;
+  }
+
+  /**
    * @brief If CUDA support is enabled in the handler.
-   * 
-   * @return true 
-   * @return false 
+   *
+   * @return true
+   * @return false
    */
   bool MatrixHandler::getIsCudaEnabled() const
   {
@@ -179,9 +202,9 @@ namespace ReSolve {
 
   /**
    * @brief If HIP support is enabled in the handler.
-   * 
-   * @return true 
-   * @return false 
+   *
+   * @return true
+   * @return false
    */
   bool MatrixHandler::getIsHipEnabled() const
   {
