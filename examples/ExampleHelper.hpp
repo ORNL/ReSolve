@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <cmath>
 #include <resolve/LinSolverIterative.hpp>
 
 namespace ReSolve

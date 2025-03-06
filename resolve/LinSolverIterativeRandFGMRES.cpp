@@ -116,7 +116,6 @@ namespace ReSolve
     }
 
     GS_->setup(k_rand_, restart_);
-    // GS_->setup(n_, restart_);
 
     return 0;
   }
