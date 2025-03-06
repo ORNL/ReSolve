@@ -101,29 +101,23 @@ Any arguments that the executable takes can be simply added as when the
 executable is called locally. Similar script could be written for LSF or MOAB
 scheduler.
 
-###########
-ROCProfiler
-###########
+###############
+AMD ROCProfiler
+###############
 
-Unlike HPCToolkit, `ROCProfiler <https://rocm.docs.amd.com/projects/rocprofiler/en/latest/rocprof.html>`_
-requires code to be instrumented using `ROC Tracer <https://rocm.docs.amd.com/projects/roctracer/en/latest/>`_
-library. Both, ROCProfiler and ROC Tracer are part of the ROCm library, so
-no additional software needs to be installed once you obtain ROCm. 
+To profile GPU kernels in the HIP backend, we recommend using AMD tools. Since ``ROCm 6.2``, 
+the recommended approach is `ROCprofiler-SDK <https://github.com/rocm/rocprofiler-sdk>`_. 
+ROCprofiler-SDK is part of the ROCm library, so no additional software needs to be installed 
+once you obtain ROCm. 
 
-First, you need to make sure your Re::Solve library was built with ROC Tracer
-support, i.e. the build was configured with CMake boolean flag
-``RESOLVE_USE_PROFILING`` set to ``On``. Note that ROC Tracer annotation will
-be enabled only if Re::Solve is built with HIP support.
-
-Next, you need to annotate events you want to trace in your code execution.
-This could be done in a straightforward manner using ROC Tracer push and pop
-commands:
+ROCTX annotations are useful to place kernel execution in the context of CPU code execution. 
+These can be added as follow:
 
 .. code:: c++
 
   // some include files ...
 
-  #include <roctracer/roctx.h>
+  #include <rocprofiler-sdk-roctx/roctx.h>
 
   // some code ...
 
@@ -136,16 +130,17 @@ commands:
 
 The string label is an optional argument to the annotation code.
 
-.. note:: At this time, current Re::Solve code does not have any profiling
-          annotations. If you want to profile it, you need to add annotations
-          to Re::Solve sources relevant to your profiling and rebuild the code.
+At this time, Re::Solve implements the macros ``RESOLVE_RANGE_PUSH`` and ``RESOLVE_RANGE_POP`` 
+to select ``NVTX`` or ``ROCTX`` with the appropriate ``nvtxRangePush`` or ``roctxRangePush``, 
+respectively, depending on the active backend. Make sure your Re::Solve library was built with 
+profiling support, i.e. the build was configured with CMake boolean flag ``RESOLVE_USE_PROFILING`` 
+set to ``On``. The appropriate profiling library will be linked depending on the backend selected.
 
-Once your instrumented code is built, it can be profiled by calling the
-``rocprof`` tool like this:
+Once your instrumented code is built, it can be profiled as follows:
 
 .. code:: shell
 
-  rocprof --stats --hip-trace --roctx-trace -o out.csv ./my_executable.exe
+  rocprofv3 --stats --hip-trace --roctx-trace -o out.csv ./my_executable.exe
 
 In this example
 
@@ -179,9 +174,43 @@ to write a profiling script. Here is an example for a SLURM scheduler:
   
   echo "`date` Starting run"
   srun -N 1 -n 1 -c 1 -G 1 \
-    rocprof --stats --hip-trace --roctx-trace -o ${OUT}.csv \
+    rocprofv3 --stats --hip-trace --roctx-trace -o ${OUT}.csv \
     ${EXE} ${ARGS}
   echo "`date` Finished run"
 
+#####################
+NVIDIA Nsight Systems
+#####################
+Similar to ROCTX annotations, `NVTX <https://github.com/NVIDIA/NVTX>`_ annotations are useful 
+to place kernel execution in the context of CPU code execution when using the CUDA backend.
 
+You can annotate events you want to trace in your code execution as follows:
 
+.. code:: c++
+
+  // some include files ...
+
+  #include <nvToolsExt.h>
+
+  // some code ...
+
+  nvtxRangePush("My Event");
+
+  // my event code ...
+
+  nvtxRangePop();
+  nvtxMarkA("My Event");
+
+Multiple tools support NVTX annotations. We recommend 
+`Nsight Systems <https://developer.nvidia.com/nsight-systems>`_ for a high level profile. 
+It can be used as follows:
+
+.. code:: shell
+
+  nsys profile --stats=true --trace=cuda,nvtx ./my_executable.exe
+
+This will generate a text output with high level execution statistics (time spent in kernels, 
+NVTX ranges, memory)  as well as ``*.nsys-rep`` and ``*.sqlite`` files. The ``*nsys-rep`` 
+can be opened in the Nsight System graphical user interface to visualize the timeline. 
+You will need to download the file to a local machine if you are profiling on the remote 
+system that does not support graphical user interfaces.

@@ -12,4 +12,10 @@ target_link_libraries(resolve_cuda INTERFACE
   CUDA::cudart
   )
 
+if(RESOLVE_USE_PROFILING)
+  target_link_libraries(resolve_cuda INTERFACE
+    CUDA::nvToolsExt
+  )
+endif()
+
 install(TARGETS resolve_cuda EXPORT ReSolveTargets)
