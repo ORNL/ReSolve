@@ -28,8 +28,6 @@ if(RESOLVE_USE_KLU)
     target_link_libraries(gpuRefactor.exe PRIVATE ReSolve)
   endif(RESOLVE_USE_GPU)
 
-endif(RESOLVE_USE_KLU)
-
   # Create KLU+CUDA examples
   if(RESOLVE_USE_CUDA)
 
