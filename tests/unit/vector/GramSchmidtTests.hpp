@@ -67,7 +67,7 @@ namespace ReSolve
           }
 
           vector::Vector V(N, 3); // we will be using a space of 3 vectors
-          real_type* H = new real_type[9]; // In this case, Hessenberg matrix is NOT 3 x 2 ???
+          real_type* H = new real_type[6]; // In this case, Hessenberg matrix is NOT 3 x 2 ???
           real_type* aux_data = nullptr; // needed for setup
 
           V.allocate(memspace_);
@@ -76,7 +76,7 @@ namespace ReSolve
           }
 
           ReSolve::GramSchmidt GS(&handler_, var);
-          GS.setup(N, 3);
+          GS.setup(N, 2);
           
           //fill 2nd and 3rd vector with values
           aux_data = V.getVectorData(1, memory::HOST);
