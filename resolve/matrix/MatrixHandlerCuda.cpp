@@ -326,7 +326,11 @@ namespace ReSolve {
 
     return error_sum;
   }
-
-
-
+  int MatrixHandlerCuda::addConstantToNonzeroValues(matrix::Sparse* A, real_type alpha)
+  {
+    // real_type* values = A->getValues(memory::DEVICE);
+    // index_type nnz = A->getNnz();
+    // addConstantToNonzeroValuesKernel<<<(nnz + 255) / 256, 256>>>(values, alpha, nnz);
+    return 0;
+  }
 } // namespace ReSolve
