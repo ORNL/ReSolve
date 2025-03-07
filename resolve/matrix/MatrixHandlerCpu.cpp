@@ -303,4 +303,21 @@ namespace ReSolve
     At->setUpdated(memory::HOST);
     return 0;
   }
+
+  /**
+   * @brief Add a constant to the nonzero values of a matrix
+   *
+   * @param[in, out] A - matrix
+   * @param[in] alpha - constant to add
+   */
+  int MatrixHandlerCpu::addConstantToNonzeroValues(matrix::Sparse* A, real_type alpha)
+  {
+    using memory::HOST;
+    real_type* values = A->getValues(HOST);
+    for (index_type i = 0; i < A->getNnz(); ++i) {
+      values[i] += alpha;
+    }
+    A->setUpdated(HOST);
+    return 0;
+  }
 } // namespace ReSolve
