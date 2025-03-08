@@ -113,9 +113,10 @@ namespace ReSolve
           nrm = 1.0 / nrm;
           handler_.scal(&nrm, &V, memspace_);
 
+          // Orthogonalize system and verify result
           GS.orthogonalize(N, &V, H, 0); 
           GS.orthogonalize(N, &V, H, 1); 
-          status *= verifyAnswer(V, 3);
+          status *= verifyAnswer(V, restart + 1);
 
           delete [] H;
           
