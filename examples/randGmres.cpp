@@ -35,26 +35,26 @@ static void printUsage()
 
 /// Prototype of the example main function 
 template <class workspace_type, class precon_type>
-static int example(int argc, char *argv[]);
+static int runGmresExample(int argc, char *argv[]);
 
 int main(int argc, char *argv[])
 {
   int status = 0;
 
   std::cout << "\n\nRunning randomized GMRES solver on CPU ...\n";
-  status += example<ReSolve::LinAlgWorkspaceCpu,
-                    ReSolve::LinSolverDirectCpuILU0>(argc, argv);
+  status += runGmresExample<ReSolve::LinAlgWorkspaceCpu,
+                            ReSolve::LinSolverDirectCpuILU0>(argc, argv);
 
 #ifdef RESOLVE_USE_HIP
   std::cout << "\n\nRunning randomized GMRES solver on HIP device ...\n";
-  status += example<ReSolve::LinAlgWorkspaceHIP,
-                    ReSolve::LinSolverDirectRocSparseILU0>(argc, argv);
+  status += runGmresExample<ReSolve::LinAlgWorkspaceHIP,
+                            ReSolve::LinSolverDirectRocSparseILU0>(argc, argv);
 #endif
 
 #ifdef RESOLVE_USE_CUDA
   std::cout << "\n\nRunning randomized GMRES solver on CUDA device ...\n";
-  status += example<ReSolve::LinAlgWorkspaceCUDA,
-                    ReSolve::LinSolverDirectCuSparseILU0>(argc, argv);
+  status += runGmresExample<ReSolve::LinAlgWorkspaceCUDA,
+                            ReSolve::LinSolverDirectCuSparseILU0>(argc, argv);
 #endif
 
   return status;
@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
 
 /// Example implementation
 template <class workspace_type, class precon_type>
-int example(int argc, char *argv[])
+int runGmresExample(int argc, char *argv[])
 {
   // Use the same data types as those you specified in ReSolve build.
   using namespace ReSolve;
@@ -99,24 +99,6 @@ int example(int argc, char *argv[])
     printUsage();
     return 1;
   }
-
-  // opt = options.getParamFromKey("-m");
-  // std::string method = opt ? (*opt).second : "randgmres";
-
-  // opt = options.getParamFromKey("-g");
-  // std::string gs = opt ? (*opt).second : "cgs2";
-
-  // opt = options.getParamFromKey("-s");
-  // std::string sketch = opt ? (*opt).second : "count";
-
-  // opt = options.getParamFromKey("-x");
-  // std::string flexible = opt ? (*opt).second : "yes";
-
-
-  // (void) argc; // TODO: Check if the number of input parameters is correct.
-  // std::string  matrix_pathname = argv[1];
-  // std::string  rhs_pathname = argv[2];
-
 
   workspace_type workspace;
   workspace.initializeHandles();
@@ -183,7 +165,6 @@ int example(int argc, char *argv[])
   FGMRES.setMaxit(2500);
   FGMRES.setTol(1e-12);
   FGMRES.setup(A);
-  // GS.setup(FGMRES.getKrand(), FGMRES.getRestart()); 
 
   FGMRES.resetMatrix(A);
   FGMRES.setupPreconditioner("LU", &Precond);

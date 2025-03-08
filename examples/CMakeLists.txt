@@ -111,7 +111,6 @@ if(RESOLVE_USE_KLU)
 
   if(RESOLVE_USE_HIP)
     list(APPEND installable_executables klu_rocsolverrf.exe
-                                        klu_rocsolverrf_fgmres.exe
                                         klu_rocsolverrf_check_redo.exe)
   endif(RESOLVE_USE_HIP)
 endif(RESOLVE_USE_KLU)
