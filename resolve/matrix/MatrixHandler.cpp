@@ -182,19 +182,12 @@ namespace ReSolve {
    * @param[out] A_csr - CSR matrix
    * @param[in]  memspace - Device where the conversion is computed
    *
-   * @pre A_csc is allocated, prefilled on the host and has the correct CSC format:
-   * @pre A_csc->getColumnData() is an increasing index_type array of size A_csc->getNumColumns() + 1
-   * @pre A_csc->getRowData() is an index_type array of size A_csc->getNnz()
-   * @pre A_csc->getValues() is a real_type array of size A_csc->getNnz()
-   * @pre A_csr is allocated (but not prefilled) on the host and has the correct CSR format:
-   * @pre A_csr->getRowData() is an index_type array of size A_csr->getNumRows() + 1
-   * @pre A_csr->getColData() is an index_type array of size A_csr->getNnz()
-   * @pre A_csr->getValues() is a real_type array of size A_csr->getNnz()
-   * @pre A_csc->getNumRows() == A_csr->getNumRows()
-   * @pre A_csc->getNumColumns() == A_csr->getNumColumns()
-   * @pre A_csc->getNnz() == A_csr->getNnz()
-   *
-   * @post A_csr is filled with the values from A_csc
+   * @pre `A_csc` is allocated, prefilled and has the correct CSC format.
+   * @pre `A_csr` is allocated (but not prefilled) and has the correct CSR format.
+   * @pre `A_csc` and `A_csr` are of the same size and have the same number of
+   * nonzeros.
+   * 
+   * @post `A_csr` is filled with the values from `A_csc`
    *
    * @return 0 if successful, 1 otherwise
    */
