@@ -1,6 +1,11 @@
 ## :confetti_ball: New feature
 
-_Describe new functionality added by this pull request._
+_Describe new functionality added by this pull request. Reference related
+issues. For example:_
+
+_Closes #0,
+Related to #0._
+
 
 ## Proposed changes
 
@@ -18,10 +23,13 @@ to help! This is simply a reminder of what we are going to look for before
 merging your code._
 
 - [ ] I have read the [Contributing Guide](https://resolve.readthedocs.io/en/latest/sphinx/developer_guide/index.html)
-- [ ] Functionality and unit tests pass locally with my changes.
+- [ ] I have added unit tests that verify the new feature.
+- [ ] Functionality and unit tests pass locally with my changes. Tests ran on
+    - [ ] CPU backend
+    - [ ] CUDA backend
+    - [ ] HIP backend
 - [ ] The code builds with flags `-Wall -Wconversion -Wextra` without any
       compiler warnings. 
-- [ ] I have added unit tests that verify the new feature.
 - [ ] I have documented the new feature.
 
 ## Further comments
