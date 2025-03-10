@@ -11,7 +11,10 @@ When you don't expect changes on your branch to clash with other changes,
 branch off the main development branch (usually `develop`). 
 Otherwise, branch off the feature branch that you are working on.
 
-Name the branch: <your_name> `/` <short_description>. e.g. `jane_doe/typo_fix`.
+Name the branch: 
+``<your_name>/<short_description>`` 
+e.g. 
+``jane_doe/typo_fix``
 
 When working on a large feature, create a feature development branch.
 Then break it down into smaller tasks and create a branch for each task
@@ -32,14 +35,16 @@ When opening a PR, make sure to select the correct base branch.
 If there are merge conflicts, resolve them before requesting a review.
 
 Detail changes made in your PR in the description.
+------------
 1. What new features were added?
 2. What bugs were fixed?
 3. What tests were added?
 
 When reviewing a PR consider the following:
+------------
 1. Does the PR address the issue? (if applicable)
 2. Do existing and new tests pass? (Run the code on different machines)
-3. Is the code clean, readable, and have proper comments?
+3. Is the code clean, readable, and does it have proper comments?
 4. Are the changes consistent with the coding guidelines?
 
 Minor concerns:
