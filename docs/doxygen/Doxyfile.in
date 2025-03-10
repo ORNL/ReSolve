@@ -2793,3 +2793,5 @@ OUTPUT_DIRECTORY=../_readthedocs/html/doxygen
 OUTPUT_DIRECTORY=../_readthedocs/html/doxygen
 OUTPUT_DIRECTORY=../_readthedocs/html/doxygen
 OUTPUT_DIRECTORY=../_readthedocs/html/doxygen
+OUTPUT_DIRECTORY=../_readthedocs/html/doxygen
+OUTPUT_DIRECTORY=../_readthedocs/html/doxygen

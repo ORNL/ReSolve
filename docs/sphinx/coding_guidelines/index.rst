@@ -275,7 +275,7 @@ Put Doxygen comments for classes in their header file.
 Use this format for comments:
 
 .. code:: cpp
-
+   
    /**
     *
     */
@@ -289,23 +289,24 @@ Explain which parameters are in, out or in,out using
 Explain the return value using ``@return``.
 
 Overall, the comment should look like this:
+
 .. code:: cpp
 
-   /**
-    * @brief This function does something
-    *
-    * This function does something with the input parameters
-    *
-    * @param[in] x The input parameter
-    * @param[out] y The output parameter
-    * @param[in,out] z The input/output parameter
-    *
-    * @return 0 if no error, positive value for warnings and recoverable error, negative value for irrecoverable errors
-    */
-   void someFunction(int x, int& y, int* z)
-   {
-     // some code
-   }
+      /**
+      * @brief This function does something
+      *
+      * This function does something with the input parameters
+      *
+      * @param[in] x The input parameter
+      * @param[out] y The output parameter
+      * @param[in,out] z The input/output parameter
+      *
+      * @return 0 if no error, positive value for warnings and recoverable error, negative value for irrecoverable errors
+      */
+      void someFunction(int x, int& y, int* z)
+      {
+      // some code
+      }
 
 Do not leave commented code used for debugging (or for other purposes).
 Remove it before committing the code.
