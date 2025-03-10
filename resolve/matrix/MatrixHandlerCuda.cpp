@@ -266,8 +266,12 @@ namespace ReSolve {
   /**
    * @brief Transpose a sparse CSR matrix.
    *
-   * @param[in]  A - Sparse matrix
+   * Transpose a sparse CSR matrix A. Only allocates At if not already allocated.
+   * 
+   * @param[in, out]  A - Sparse matrix
    * @param[out] At - Transposed matrix
+   * @param[in]  allocated - flag indicating if At is already allocated
+   * 
    * @return int error_sum, 0 if successful
    */
   int MatrixHandlerCuda::transpose(matrix::Csr* A, matrix::Csr* At, bool allocated)
@@ -326,6 +330,15 @@ namespace ReSolve {
 
     return error_sum;
   }
+
+  /**
+   * @brief Add a constant to all nonzero values in the matrix
+   * 
+   * @param[in, out] A - matrix
+   * @param[in] alpha - constant to be added
+   * 
+   * @return int error code, 0 if successful
+   */
   int MatrixHandlerCuda::addConstantToNonzeroValues(matrix::Sparse* A, real_type alpha)
   {
     real_type* values = A->getValues(memory::DEVICE);

@@ -238,28 +238,34 @@ namespace ReSolve {
   }
 
   /**
-   * @brief Transpose a sparse CSR matrix in HIP
-   *
-   * @param[in]  A - Sparse matrix
-   * @param[out] At - Transposed matrix
+   * @brief Transpose a sparse CSR matrix.
+   * 
+   * Transpose a sparse CSR matrix A. Only allocates At if not already allocated.
+   * 
+   * @param[in, out]  A - Sparse matrix
+   * @param[out]      At - Transposed matrix
+   * @param[in]       allocated - flag indicating if At is already allocated
+   * 
    * @return int error_sum, 0 if successful
    *
    * @warning This method works only for `real_type == double`.
    */
-  int MatrixHandlerHip::transpose(matrix::Csr* A, matrix::Csr* At)
+  int MatrixHandlerHip::transpose(matrix::Csr* A, matrix::Csr* At, bool allocated)
   {
     index_type error_sum = 0;
-
-    rocsparse_status status;
-    
-    At->allocateMatrixData(memory::DEVICE);
     index_type m = A->getNumRows();
     index_type n = A->getNumColumns();
     index_type nnz = A->getNnz();
-    size_t bufferSize;
-    void* d_work;
+    rocsparse_status status;
+    if (!allocated) {
+      // check dimensions of A and At
+      assert(A->getNumRows() == At->getNumColumns() && "Number of rows in A must be equal to number of columns in At");
+      assert(A->getNumColumns() == At->getNumRows() && "Number of columns in A must be equal to number of rows in At");
 
-    status = rocsparse_csr2csc_buffer_size(workspace_->getRocsparseHandle(),
+      At->allocateMatrixData(memory::DEVICE);
+
+      size_t bufferSize;
+      status = rocsparse_csr2csc_buffer_size(workspace_->getRocsparseHandle(),
                                            m,
                                            n,
                                            nnz,
@@ -267,10 +273,9 @@ namespace ReSolve {
                                            A->getColData(memory::DEVICE), 
                                            rocsparse_action_numeric,
                                            &bufferSize);
-
-    error_sum += status;
-    mem_.allocateBufferOnDevice(&d_work, bufferSize);
-    
+      error_sum += status;
+      mem_.allocateBufferOnDevice(&transpose_workspace_, bufferSize);
+    }
     status = rocsparse_dcsr2csc(workspace_->getRocsparseHandle(),
                                 m,
                                 n,
@@ -283,14 +288,28 @@ namespace ReSolve {
                                 At->getRowData(memory::DEVICE), 
                                 rocsparse_action_numeric,
                                 rocsparse_index_base_zero,
-                                d_work);
+                                transpose_workspace_);
     error_sum += status;
-    mem_.deleteOnDevice(d_work);
-
     // Values on the device are updated now -- mark them as such!
     At->setUpdated(memory::DEVICE);
 
     return error_sum;
+  }
+
+  /**
+   * @brief Add a constant to all nonzero values in the matrix
+   * 
+   * @param[in, out] A - matrix
+   * @param[in] alpha - constant to be added
+   * 
+   * @return int error code, 0 if successful
+   */
+  int MatrixHandlerHip::addConstantToNonzeroValues(matrix::Sparse* A, real_type alpha)
+  {
+    real_type* values = A->getValues(memory::DEVICE);
+    index_type nnz = A->getNnz();
+    hipAddConst(values, alpha, nnz);
+    return 0;
   }
 
 } // namespace ReSolve
