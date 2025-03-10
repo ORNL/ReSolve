@@ -273,6 +273,7 @@ Put Doxygen comments for functions in their source file.
 Put Doxygen comments for classes in their header file.
 
 Use this format for comments:
+
 .. code:: cpp
 
    /**

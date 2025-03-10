@@ -40,6 +40,7 @@ from (in alphabetic order):
 * Ryan Danehy (PNNL)
 * Nicholson Koukpaizan (ORNL)
 * Jaelyn Litzinger (PNNL)
+* Shaked Regev (ORNL)
 * Phil Roth (ORNL)
 * Cameron Rutherford (PNNL)
 
