@@ -1,9 +1,9 @@
 /**
  * @file cudaVectorKernels.cu
- * @author Slaven Peles (peless@ornl.gov)
+ * @author Slaven Peles (peless@ornl.gov), Shaked Regev (regevs@ornl.gov)
  * @brief Contains implementation of CUDA vector kernels and their wrappers.
  * @date 2023-12-08
- * 
+ *
  * @note Kernel wrappers implemented here are intended for use in hardware
  * agnostic code.
  */
@@ -23,7 +23,7 @@ namespace ReSolve
      * @param[in]  n   - length of the array
      * @param[in]  val - the value the array is set to
      * @param[out] arr - a pointer to the array
-     * 
+     *
      * @pre  `arr` is allocated to size `n`
      * @post `arr` elements are set to `val`
      */
@@ -36,6 +36,25 @@ namespace ReSolve
       }
     }
 
+    /**
+     * @brief CUDA kernel that adds a constant to each element of an array.
+     *
+     * @param[in, out]  arr - a pointer to the array
+     * @param[in]       val - the value to add to each element
+     * @param[in]       n   - length of the array
+     *
+     * @pre  `arr` is allocated to size `n`
+     * @post `val` is added to each element of `arr`
+     */
+    __global__ void addConst(real_type* arr, real_type val, index_type n)
+    {
+      index_type i = blockIdx.x * blockDim.x + threadIdx.x;
+      if(i < n)
+      {
+        arr[i] += val;
+      }
+    }
+
   } // namespace kernels
 
   void cuda_set_array_const(index_type n, real_type val, real_type* arr)
@@ -44,5 +63,13 @@ namespace ReSolve
     index_type block_size = 512;
     num_blocks = (n + block_size - 1) / block_size;
     kernels::set_const<<<num_blocks, block_size>>>(n, val, arr);
+  }
+
+  void cudaAddConst(real_type* arr, real_type val, index_type n)
+  {
+    index_type num_blocks;
+    index_type block_size = 512;
+    num_blocks = (n + block_size - 1) / block_size;
+    kernels::addConst<<<num_blocks, block_size>>>(arr, val, n);
   }
 } // namespace ReSolve

@@ -133,9 +133,7 @@ public:
               status *= (At->getNumColumns() == A->getNumRows());
               status *= (At->getNnz() == A->getNnz());
           } else {
-              for (index_type i = 0; i < A->getNnz(); ++i) {
-                  A->getValues(memspace_)[i] += val;
-              }
+              handler_.addConstantToNonzeroValues(A, val, memspace_);
               handler_.transpose(A, At, memspace_, true);
           }
 
