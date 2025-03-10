@@ -45,6 +45,7 @@ namespace ReSolve
         {
           TestStatus status;
 
+          // Set test name
           std::string testname(__func__);
           switch(var)
           {
@@ -66,22 +67,29 @@ namespace ReSolve
               break;
           }
 
-          vector::Vector V(N, 3); // we will be using a space of 3 vectors
-          real_type* H = new real_type[9]; // In this case, Hessenberg matrix is NOT 3 x 2 ???
-          real_type* aux_data = nullptr; // needed for setup
+          // Answer key designed for restart = 2
+          index_type restart = 2;
+          
+          // Krylov space spanned by 3 vectors
+          vector::Vector V(N, restart + 1);
+          
+          // Hessenberg matrix size is 2 x 3
+          real_type* H = new real_type[restart * (restart + 1)];
 
+          // Allocate Krylov subspace
           V.allocate(memspace_);
           if (memspace_ == memory::DEVICE) {
             V.allocate(memory::HOST);
           }
 
+          // Create and allocate Gram-Schmidt orthogonalization
           ReSolve::GramSchmidt GS(&handler_, var);
-          GS.setup(N, 3);
+          GS.setup(N, restart);
           
-          //fill 2nd and 3rd vector with values
-          aux_data = V.getVectorData(1, memory::HOST);
+          // Fill 2nd and 3rd vector with values
+          real_type* aux_data = V.getVectorData(1, memory::HOST);
           for (int i = 0; i < N; ++i) {
-            if ( i % 2 == 0) {         
+            if (i % 2 == 0) {         
               aux_data[i] = constants::ONE;
             } else {
               aux_data[i] = var1;
@@ -89,7 +97,7 @@ namespace ReSolve
           }
           aux_data = V.getVectorData(2, memory::HOST);
           for (int i = 0; i < N; ++i) {
-            if ( i % 3 > 0) {         
+            if (i % 3 > 0) {         
               aux_data[i] = constants::ZERO;
             } else {
               aux_data[i] = var2;
@@ -98,16 +106,17 @@ namespace ReSolve
           V.setDataUpdated(memory::HOST); 
           V.syncData(memspace_);
 
-          //set the first vector to all 1s, normalize 
+          // Set the first vector to all 1s and normalize it. 
           V.setToConst(0, 1.0, memspace_);
           real_type nrm = handler_.dot(&V, &V, memspace_);
           nrm = sqrt(nrm);
           nrm = 1.0 / nrm;
           handler_.scal(&nrm, &V, memspace_);
 
+          // Orthogonalize system and verify result
           GS.orthogonalize(N, &V, H, 0); 
           GS.orthogonalize(N, &V, H, 1); 
-          status *= verifyAnswer(V, 3);
+          status *= verifyAnswer(V, restart + 1);
 
           delete [] H;
           
