@@ -269,8 +269,8 @@ Writing comments
 
 Use ``//`` for comments in the code. Do not use ``/* */``.
 
-Put Doxygen comments in the file where the function is implemented
-(which may be different from where it's declared).
+Put Doxygen comments for functions in their source file. 
+Put Doxygen comments for classes in their header file.
 
 Use this format for comments:
 .. code:: cpp
