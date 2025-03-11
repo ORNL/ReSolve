@@ -64,12 +64,6 @@ if(RESOLVE_USE_KLU)
   # Create KLU+HIP examples
   if(RESOLVE_USE_HIP)
 
-    # Build example with KLU factorization and rocsolver Rf refactorization
-    add_executable(klu_rocsolverrf.exe r_KLU_rocsolverrf.cpp)
-    target_link_libraries(klu_rocsolverrf.exe PRIVATE ReSolve)
-  
-
-    
     # Example in which factorization is redone if solution is bad
     add_executable(klu_rocsolverrf_check_redo.exe r_KLU_rocsolverrf_redo_factorization.cpp)
     target_link_libraries(klu_rocsolverrf_check_redo.exe PRIVATE ReSolve)
@@ -110,8 +104,7 @@ if(RESOLVE_USE_KLU)
   endif(RESOLVE_USE_CUDA)
 
   if(RESOLVE_USE_HIP)
-    list(APPEND installable_executables klu_rocsolverrf.exe
-                                        klu_rocsolverrf_check_redo.exe)
+    list(APPEND installable_executables klu_rocsolverrf_check_redo.exe)
   endif(RESOLVE_USE_HIP)
 endif(RESOLVE_USE_KLU)
 

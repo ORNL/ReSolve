@@ -9,27 +9,6 @@ namespace ReSolve
   namespace examples
   {
     /**
-     * @brief Print usage help.
-     * 
-     * Describes usage of examples, which solve series of similar
-     * linear systems emulating operating environment of the linear
-     * solver.
-     * 
-     * @param name - The name of the example
-     */
-    void printUsageSystemSeries(const std::string& name)
-    {
-      std::cout << "\nLoads from files and solves a series of linear systems.\n\n";
-      std::cout << "System matrices are in files with names <pathname>XX.mtx, where XX are\n";
-      std::cout << "consecutive integer numbers 00, 01, 02, ...\n\n";
-      std::cout << "System right hand side vectors are stored in files with matching numbering.\n";
-      std::cout << "and file extension.\n\n";
-      std::cout << "Usage:\n\t./" << name;
-      std::cout << " -m <matrix pathname> -r <rhs pathname> -n <number of systems>\n\n";
-      std::cout << "Optional features:\n\t-h\tPrints this message.\n\n";
-    }
-
-    /**
      * @brief Prints linear system info.
      * 
      * @param name - pathname of the system matrix
@@ -78,8 +57,14 @@ namespace ReSolve
           : mh_(&workspace),
             vh_(&workspace)
         {
-          if (mh_.getIsCudaEnabled() || mh_.getIsHipEnabled()) {
-            memspace_ = ReSolve::memory::DEVICE;
+          memspace_ = ReSolve::memory::DEVICE;
+          if (mh_.getIsCudaEnabled()) {
+            hardware_backend_ = "CUDA";
+          } else if (mh_.getIsHipEnabled()) {
+            hardware_backend_ = "HIP";
+          } else {
+            hardware_backend_ = "CPU";
+            memspace_ = ReSolve::memory::HOST;
           }
         }
 
@@ -99,6 +84,11 @@ namespace ReSolve
             delete x_true_;
             x_true_ = nullptr;
           }
+        }
+
+        std::string getHardwareBackend() const
+        {
+          return hardware_backend_;
         }
 
         /**
@@ -389,6 +379,7 @@ namespace ReSolve
         real_type nsr_norm_{0.0};     ///< norm of scaled residuals
 
         ReSolve::memory::MemorySpace memspace_{ReSolve::memory::HOST};
+        std::string hardware_backend_{"NONE"};
     };
 
   } // namespace examples
