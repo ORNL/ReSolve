@@ -80,7 +80,7 @@ Constants names should be capitalized and words separated by underscores.
 
       constexpr double Pi = 3.1415; // No, it should be all caps
       constexpr double SQRT_TWO = 1.4142 // Yes
-      constexpr double SQRTTWO_ = 1.4142 // No, there is a trailing underscore
+      constexpr double SQRTTWO_ = 1.4142 // No, there is a trailing underscore but not between words
       constexpr double EXP = 2.7183 // Yes  
 
 Exceptions to naming conventions
