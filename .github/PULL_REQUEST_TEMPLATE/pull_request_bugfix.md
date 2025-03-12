@@ -23,6 +23,9 @@ merging your code._
 
 - [ ] I have read the [Contributing Guide](https://resolve.readthedocs.io/en/latest/sphinx/developer_guide/index.html)
 - [ ] Functionality and unit tests pass locally with my changes
+    - [ ] CPU backend
+    - [ ] CUDA backend
+    - [ ] HIP backend
 - [ ] The code builds with flags `-Wall -Wconversion -Wextra` without any
       compiler warnings 
 - [ ] I have added regression tests that prove my fix is effective.

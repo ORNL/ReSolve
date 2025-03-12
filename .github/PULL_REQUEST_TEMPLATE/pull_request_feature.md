@@ -10,7 +10,7 @@ Related to #0._
 ## Proposed changes
 
 _Describe how the proposed changes fit in the development roadmap and justify
-why the maintainers should accept this pull request. Description should
+why the maintainers should accept this pull request. The description should
 include what unit tests were created to verify the new feature and how the new
 feature is documented._
 
