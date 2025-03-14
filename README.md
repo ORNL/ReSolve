@@ -131,6 +131,7 @@ Re::Solve project would not be possible without significant contributions from
 - Ryan Danehy
 - Nicholson Koukpaizan
 - Jaelyn Litzinger
+- Shaked Regev
 - Phil Roth
 - Cameron Rutherford
 

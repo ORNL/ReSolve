@@ -40,6 +40,7 @@ from (in alphabetic order):
 * Ryan Danehy (PNNL)
 * Nicholson Koukpaizan (ORNL)
 * Jaelyn Litzinger (PNNL)
+* Shaked Regev (ORNL)
 * Phil Roth (ORNL)
 * Cameron Rutherford (PNNL)
 
@@ -81,7 +82,8 @@ Copyright © 2023, UT-Battelle, LLC, and Battelle Memorial Institute.
    :hidden:
    :caption: Developer Resources
 
-   sphinx/coding_guidelines/index
    doxygen/index
    sphinx/developer_guide/index
    sphinx/developer_guide/profiling
+   sphinx/developer_guide/git_guidelines
+   sphinx/developer_guide/coding_guidelines
