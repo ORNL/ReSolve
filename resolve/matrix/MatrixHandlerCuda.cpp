@@ -23,7 +23,7 @@ namespace ReSolve {
 
   /**
    * @brief Constructor for MatrixHandlerCuda object
-   * 
+   *
    * @param[in] new_workspace - pointer to the workspace object
    */
   MatrixHandlerCuda::MatrixHandlerCuda(LinAlgWorkspaceCUDA* new_workspace)
@@ -33,7 +33,7 @@ namespace ReSolve {
 
   /**
    * @brief Set values changed flag
-   * 
+   *
    * @param[in] values_changed - flag indicating if values have changed
    */
   void MatrixHandlerCuda::setValuesChanged(bool values_changed)
@@ -43,26 +43,26 @@ namespace ReSolve {
 
   /**
    * @brief result := alpha * A * x + beta * result
-   * 
+   *
    * @param[in]     A - matrix
    * @param[in]     vec_x - vector multiplied by A
    * @param[in,out] vec_result - resulting vector
    * @param[in]     alpha - matrix-vector multiplication factor
    * @param[in]     beta - sum into result factor
    * @return int    error code, 0 if successful
-   * 
+   *
    * @pre Matrix `A` is in CSR format.
-   * 
+   *
    * @note If we decide to implement this function for different matrix
    * format, the check for CSR matrix will be replaced with a switch
    * statement to select implementation for recognized input matrix
    * format.
    */
-  int MatrixHandlerCuda::matvec(matrix::Sparse* A, 
-                                vector_type* vec_x, 
-                                vector_type* vec_result, 
-                                const real_type* alpha, 
-                                const real_type* beta) 
+  int MatrixHandlerCuda::matvec(matrix::Sparse* A,
+                                vector_type* vec_x,
+                                vector_type* vec_result,
+                                const real_type* alpha,
+                                const real_type* beta)
   {
     using namespace constants;
 
@@ -84,14 +84,14 @@ namespace ReSolve {
     void* buffer_spmv = workspace_->getSpmvBuffer();
     cusparseHandle_t handle_cusparse = workspace_->getCusparseHandle();
     if (values_changed_) {
-      status = cusparseCreateCsr(&matA, 
+      status = cusparseCreateCsr(&matA,
                                  A->getNumRows(),
                                  A->getNumColumns(),
                                  A->getNnz(),
                                  A->getRowData(memory::DEVICE),
                                  A->getColData(memory::DEVICE),
-                                 A->getValues( memory::DEVICE), 
-                                 CUSPARSE_INDEX_32I, 
+                                 A->getValues( memory::DEVICE),
+                                 CUSPARSE_INDEX_32I,
                                  CUSPARSE_INDEX_32I,
                                  CUSPARSE_INDEX_BASE_ZERO,
                                  CUDA_R_64F);
@@ -102,7 +102,7 @@ namespace ReSolve {
       //setup first, allocate, etc.
       size_t bufferSize = 0;
 
-      status = cusparseSpMV_bufferSize(handle_cusparse, 
+      status = cusparseSpMV_bufferSize(handle_cusparse,
                                        CUSPARSE_OPERATION_NON_TRANSPOSE,
                                        &MINUSONE,
                                        matA,
@@ -110,7 +110,7 @@ namespace ReSolve {
                                        &ONE,
                                        vecAx,
                                        CUDA_R_64F,
-                                       CUSPARSE_SPMV_CSR_ALG2, 
+                                       CUSPARSE_SPMV_CSR_ALG2,
                                        &bufferSize);
       error_sum += status;
       mem_.deviceSynchronize();
@@ -119,17 +119,17 @@ namespace ReSolve {
       workspace_->setSpmvBuffer(buffer_spmv);
 
       workspace_->matvecSetupDone();
-    } 
+    }
 
     status = cusparseSpMV(handle_cusparse,
-                          CUSPARSE_OPERATION_NON_TRANSPOSE,       
-                          alpha, 
-                          matA, 
-                          vecx, 
-                          beta, 
-                          vecAx, 
+                          CUSPARSE_OPERATION_NON_TRANSPOSE,
+                          alpha,
+                          matA,
+                          vecx,
+                          beta,
+                          vecAx,
                           CUDA_R_64F,
-                          CUSPARSE_SPMV_CSR_ALG2, 
+                          CUSPARSE_SPMV_CSR_ALG2,
                           buffer_spmv);
     error_sum += status;
     mem_.deviceSynchronize();
@@ -145,13 +145,13 @@ namespace ReSolve {
 
   /**
    * @brief Matrix infinity norm
-   * 
+   *
    * @param[in]  A - matrix
    * @param[out] norm - matrix norm
    * @return int error code, 0 if successful
-   * 
+   *
    * @pre Matrix `A` is in CSR format.
-   * 
+   *
    * @note If we decide to implement this function for different matrix
    * format, the check for CSR matrix will be replaced with a switch
    * statement to select implementation for recognized input matrix
@@ -162,7 +162,7 @@ namespace ReSolve {
     assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW &&
            "Matrix has to be in CSR format for matrix-vector product.\n");
 
-    if (workspace_->getNormBufferState() == false) { // not allocated  
+    if (workspace_->getNormBufferState() == false) { // not allocated
       real_type* buffer;
       mem_.allocateArrayOnDevice(&buffer, 1024);
       workspace_->setNormBuffer(buffer);
@@ -192,7 +192,7 @@ namespace ReSolve {
                                    workspace_->getNormBuffer()  /* at least 8192 bytes */);
 
     if (status != 0) {
-      io::Logger::warning() << "Vector inf nrm returned "<<status<<"\n"; 
+      io::Logger::warning() << "Vector inf nrm returned "<<status<<"\n";
     }
     return status;
   }
@@ -211,7 +211,7 @@ namespace ReSolve {
     index_type m = A_csc->getNumColumns();
     index_type n = A_csc->getNumRows();
     index_type nnz = A_csc->getNnz();
-    
+
     // check dimensions of A_csc and A_csr
     assert(A_csc->getNumRows() == A_csr->getNumRows() && "Number of rows in A_csc must be equal to number of rows in A_csr");
     assert(A_csc->getNumColumns() == A_csr->getNumColumns() && "Number of columns in A_csc must be equal to number of columns in A_csr");
@@ -219,32 +219,32 @@ namespace ReSolve {
     size_t bufferSize;
     void* d_work;
     cusparseStatus_t status = cusparseCsr2cscEx2_bufferSize(workspace_->getCusparseHandle(),
-                                                            m, 
-                                                            n, 
-                                                            nnz, 
-                                                            A_csc->getValues( memory::DEVICE), 
-                                                            A_csc->getColData(memory::DEVICE), 
-                                                            A_csc->getRowData(memory::DEVICE), 
-                                                            A_csr->getValues( memory::DEVICE), 
+                                                            m,
+                                                            n,
+                                                            nnz,
+                                                            A_csc->getValues( memory::DEVICE),
+                                                            A_csc->getColData(memory::DEVICE),
+                                                            A_csc->getRowData(memory::DEVICE),
+                                                            A_csr->getValues( memory::DEVICE),
                                                             A_csr->getRowData(memory::DEVICE),
-                                                            A_csr->getColData(memory::DEVICE), 
-                                                            CUDA_R_64F, 
+                                                            A_csr->getColData(memory::DEVICE),
+                                                            CUDA_R_64F,
                                                             CUSPARSE_ACTION_NUMERIC,
-                                                            CUSPARSE_INDEX_BASE_ZERO, 
-                                                            CUSPARSE_CSR2CSC_ALG1, 
+                                                            CUSPARSE_INDEX_BASE_ZERO,
+                                                            CUSPARSE_CSR2CSC_ALG1,
                                                             &bufferSize);
     error_sum += status;
     mem_.allocateBufferOnDevice(&d_work, bufferSize);
     status = cusparseCsr2cscEx2(workspace_->getCusparseHandle(),
-                                m, 
-                                n, 
-                                nnz, 
-                                A_csc->getValues( memory::DEVICE), 
-                                A_csc->getColData(memory::DEVICE), 
-                                A_csc->getRowData(memory::DEVICE), 
-                                A_csr->getValues( memory::DEVICE), 
+                                m,
+                                n,
+                                nnz,
+                                A_csc->getValues( memory::DEVICE),
+                                A_csc->getColData(memory::DEVICE),
+                                A_csc->getRowData(memory::DEVICE),
+                                A_csr->getValues( memory::DEVICE),
                                 A_csr->getRowData(memory::DEVICE),
-                                A_csr->getColData(memory::DEVICE), 
+                                A_csr->getColData(memory::DEVICE),
                                 CUDA_R_64F,
                                 CUSPARSE_ACTION_NUMERIC,
                                 CUSPARSE_INDEX_BASE_ZERO,
@@ -261,6 +261,75 @@ namespace ReSolve {
     A_csr->setUpdated(memory::DEVICE);
 
     return error_sum;
+  }
+
+  /**
+   * @brief Transpose a sparse CSR matrix.
+   *
+   * @param[in]  A - Sparse matrix
+   * @param[out] At - Transposed matrix
+   * @return int error_sum, 0 if successful
+   */
+  int MatrixHandlerCuda::transpose(matrix::Csr* A, matrix::Csr* At)
+  {
+    index_type error_sum = 0;
+
+    At->allocateMatrixData(memory::DEVICE);
+    index_type m = A->getNumRows();
+    index_type n = A->getNumColumns();
+    index_type nnz = A->getNnz();
+
+    // check dimensions of A and At
+    assert(A->getNumRows() == At->getNumColumns() && "Number of rows in A must be equal to number of columns in At");
+    assert(A->getNumColumns() == At->getNumRows() && "Number of columns in A must be equal to number of rows in At");
+
+    size_t bufferSize;
+    void* d_work;
+    cusparseStatus_t status = cusparseCsr2cscEx2_bufferSize(workspace_->getCusparseHandle(),
+                                                            m,
+                                                            n,
+                                                            nnz,
+                                                            A->getValues( memory::DEVICE),
+                                                            A->getRowData(memory::DEVICE),
+                                                            A->getColData(memory::DEVICE),
+                                                            At->getValues( memory::DEVICE),
+                                                            At->getRowData(memory::DEVICE),
+                                                            At->getColData(memory::DEVICE),
+                                                            CUDA_R_64F,
+                                                            CUSPARSE_ACTION_NUMERIC,
+                                                            CUSPARSE_INDEX_BASE_ZERO,
+                                                            CUSPARSE_CSR2CSC_ALG1,
+                                                            &bufferSize);
+    error_sum += status;
+    mem_.allocateBufferOnDevice(&d_work, bufferSize);
+
+    status = cusparseCsr2cscEx2(workspace_->getCusparseHandle(),
+                                m,
+                                n,
+                                nnz,
+                                A->getValues( memory::DEVICE),
+                                A->getRowData(memory::DEVICE),
+                                A->getColData(memory::DEVICE),
+                                At->getValues( memory::DEVICE),
+                                At->getRowData(memory::DEVICE),
+                                At->getColData(memory::DEVICE),
+                                CUDA_R_64F,
+                                CUSPARSE_ACTION_NUMERIC,
+                                CUSPARSE_INDEX_BASE_ZERO,
+                                CUSPARSE_CSR2CSC_ALG1,
+                                d_work);
+    error_sum += status;
+    if (status) {
+      out::error() << "Transpose status: "   << status                    << ". "
+                   << "Last error code: " << mem_.getLastDeviceError() << ".\n";
+    }
+    mem_.deleteOnDevice(d_work);
+
+    // Values on the device are updated now -- mark them as such!
+    At->setUpdated(memory::DEVICE);
+
+    return error_sum;
+
   }
 
 } // namespace ReSolve

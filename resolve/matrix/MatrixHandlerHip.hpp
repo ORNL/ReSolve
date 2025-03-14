@@ -36,6 +36,8 @@ namespace ReSolve {
       virtual ~MatrixHandlerHip();
 
       int csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr);
+
+      int transpose(matrix::Csr* A, matrix::Csr* At);
       
       virtual int matvec(matrix::Sparse* A,
                          vector_type* vec_x,

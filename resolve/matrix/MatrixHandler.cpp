@@ -206,6 +206,29 @@ namespace ReSolve {
   }
 
   /**
+   * @brief Transpose a sparse CSR matrix.
+   *
+   * @param[in]  A - Sparse matrix
+   * @param[out] At - Transposed matrix
+   * @param[in]  memspace - Device where the transpose is computed
+   *
+   * @return 0 if successful, 1 otherwise
+   */
+  int MatrixHandler::transpose(matrix::Csr* A, matrix::Csr* At, memory::MemorySpace memspace)
+  {
+    using namespace ReSolve::memory;
+    switch (memspace) {
+      case HOST:
+        return cpuImpl_->transpose(A, At);
+        break;
+      case DEVICE:
+        return devImpl_->transpose(A, At);
+        break;
+    }
+    return 1;
+  }
+
+  /**
    * @brief If CUDA support is enabled in the handler.
    *
    * @return true

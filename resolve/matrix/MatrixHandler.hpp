@@ -4,7 +4,7 @@
 
 
 namespace ReSolve
-{ 
+{
   namespace vector
   {
     class Vector;
@@ -26,25 +26,25 @@ namespace ReSolve
 namespace ReSolve {
 
   /**
-   * @brief this class encapsulates various matrix manipulation operations, 
-   * commonly required by linear solvers. 
-   * 
+   * @brief this class encapsulates various matrix manipulation operations,
+   * commonly required by linear solvers.
+   *
    * This includes:
    *  - Matrix format conversion: coo2csr, csr2csc
    *  - Matrix vector product (SpMV)
    *  - Matrix Inf-norm
-   * 
+   *
    * The class uses pointer to implementation (PIMPL) idiom to create
    * multiple matrix operation implementations running on CUDA and HIP devices
    * as well as on CPU.
-   * 
+   *
    * @author Kasia Swirydowicz <kasia.swirydowicz@pnnl.gov>
    * @author Slaven Peles <peless@ornl.gov>
    */
   class MatrixHandler
   {
     using vector_type = vector::Vector;
-    
+
     public:
       MatrixHandler();
       MatrixHandler(LinAlgWorkspaceCpu* workspace);
@@ -54,6 +54,8 @@ namespace ReSolve {
 
       int csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr, memory::MemorySpace memspace);
 
+      int transpose(matrix::Csr* A, matrix::Csr* At, memory::MemorySpace memspace);
+
       /// Should compute vec_result := alpha*A*vec_x + beta*vec_result, but at least on cpu alpha and beta are flipped
       int matvec(matrix::Sparse* A,
                  vector_type* vec_x,
@@ -62,12 +64,12 @@ namespace ReSolve {
                  const real_type* beta,
                  memory::MemorySpace memspace);
       int matrixInfNorm(matrix::Sparse *A, real_type* norm, memory::MemorySpace memspace);
-      void setValuesChanged(bool toWhat, memory::MemorySpace memspace); 
-    
+      void setValuesChanged(bool toWhat, memory::MemorySpace memspace);
+
       bool getIsCudaEnabled() const;
       bool getIsHipEnabled()  const;
 
-    private: 
+    private:
       bool new_matrix_{true};  ///< if the structure changed, you need a new handler.
 
       MatrixHandlerImpl* cpuImpl_{nullptr}; ///< Pointer to host implementation

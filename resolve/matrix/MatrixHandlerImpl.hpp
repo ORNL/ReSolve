@@ -1,7 +1,7 @@
 #pragma once
 
 namespace ReSolve
-{ 
+{
   namespace vector
   {
     class Vector;
@@ -19,13 +19,13 @@ namespace ReSolve
 namespace ReSolve {
   /**
    * @class MatrixHandlerImpl
-   * 
+   *
    * @brief Base class for different matrix handler implementations.
    */
   class MatrixHandlerImpl
   {
     using vector_type = vector::Vector;
-    
+
     public:
       MatrixHandlerImpl()
       {}
@@ -34,6 +34,8 @@ namespace ReSolve {
 
       virtual int csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr) = 0;
 
+      virtual int transpose(matrix::Csr* A, matrix::Csr* At) = 0;
+
       virtual int matvec(matrix::Sparse* A,
                          vector_type* vec_x,
                          vector_type* vec_result,
@@ -41,7 +43,7 @@ namespace ReSolve {
                          const real_type* beta) = 0;
       virtual int matrixInfNorm(matrix::Sparse* A, real_type* norm) = 0;
 
-      virtual void setValuesChanged(bool isValuesChanged) = 0;    
+      virtual void setValuesChanged(bool isValuesChanged) = 0;
   };
 
 } // namespace ReSolve
