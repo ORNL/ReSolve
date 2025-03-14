@@ -132,7 +132,7 @@ public:
       At->syncData(memory::HOST);
     }
 
-    verifyCsrMatrix(At, status);
+    verifyCsrMatrix(At);
 
     delete A;
     delete At;
@@ -315,6 +315,9 @@ private:
    * If n>m A_{ij} is nonzero iff i==j, or i+m==j+n
    * if n<m A_{ij} is nonzero iff i==j, or i+m==j+n
    * The values increase with a counter from 1.0 in column major order.
+   *
+   * @pre A is a valid, allocated CSR matrix
+   * @invariant A
    *
    * @param[in] A matrix::Csr* pointer to the matrix to be verified
    *
