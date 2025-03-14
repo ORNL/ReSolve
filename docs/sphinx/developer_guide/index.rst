@@ -1,4 +1,4 @@
-Developer Guide
+Building Re::Solve
 ====================
 
 CMake Build System
