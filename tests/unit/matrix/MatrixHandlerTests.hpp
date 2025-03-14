@@ -141,7 +141,7 @@ public:
               At->syncData(memory::HOST);
           }
 
-          verifyCsrMatrix(At, status, val);
+          verifyCsrMatrix(At, val);
       }
 
       delete A;  // Delete after loop
@@ -333,101 +333,30 @@ private:
    *
    * @return bool true if the matrix is valid, false otherwise
    */
-  void verifyCsrMatrix(matrix::Csr* A, TestStatus& status, real_type val = 0.0)
+  bool verifyCsrMatrix(matrix::Csr* A, real_type val = 0.0)
   {
     index_type* rowptr_csr = A->getRowData(memory::HOST);
     index_type* colidx_csr = A->getColData(memory::HOST);
     real_type* val_csr = A->getValues(memory::HOST);
     index_type n = A->getNumColumns();
     index_type m = A->getNumRows();
-    if (n == m) {
-      for (index_type i = 0; i < m; ++i) {
-        if (i == m - 1) {
-          status *= (rowptr_csr[i + 1] == rowptr_csr[i] + 1);
-          status *= (colidx_csr[rowptr_csr[i]] == n - 1);
-          status *= (val_csr[rowptr_csr[i]] == 2.0 * n + val);
-        } else if (i == m / 2) {
-          status *= (rowptr_csr[i + 1] == rowptr_csr[i] + 3);
-          status *= (colidx_csr[rowptr_csr[i]] == 0);
-          status *= (val_csr[rowptr_csr[i]] == 2.0 + val);
-          status *= (colidx_csr[rowptr_csr[i] + 1] == n / 2);
-          status *= (colidx_csr[rowptr_csr[i] + 2] == n / 2 + 1);
-          status *= (val_csr[rowptr_csr[i] + 1] == 2.0 * (n / 2) + 2 + val);
-          status *= (val_csr[rowptr_csr[i] + 2] == 2.0 * (n / 2) + 3 + val);
-        } else {
-          status *= (rowptr_csr[i + 1] == rowptr_csr[i] + 2);
-          status *= (colidx_csr[rowptr_csr[i]] == i);
-          status *= (colidx_csr[rowptr_csr[i] + 1] == i + 1);
-          if (i == 0) {
-            status *= (val_csr[rowptr_csr[i]] == 1.0 + val);
-            status *= (val_csr[rowptr_csr[i] + 1] == 3.0 + val);
-          } else {
-            status *= (val_csr[rowptr_csr[i]] == 2.0 * (i + 1) + val);
-            status *= (val_csr[rowptr_csr[i] + 1] == 2.0 * (i + 1) + 1.0 + val);
-          }
-        }
-      }
-    } else if (n > m) {
-      index_type main_diag_ind = 0;
-      index_type off_diag_ind = n - m;
-      real_type main_val = 1.0 + val;
-      real_type off_val = n - m + 1.0 + val;
-      for (index_type i = 0; i < m; ++i) {
-        status *= (rowptr_csr[i + 1] == rowptr_csr[i] + 2);
-        status *= (colidx_csr[rowptr_csr[i]] == main_diag_ind++);
-        status *= (colidx_csr[rowptr_csr[i] + 1] == off_diag_ind++);
-        status *= (val_csr[rowptr_csr[i]] == main_val++);
-        status *= (val_csr[rowptr_csr[i] + 1] == off_val++);
-        if (i >= n - m - 1) {
-            main_val++;
-        }
-        if (i < 2 * m - n) {
-            off_val++;
-        }
-      }
-    } else {
-      real_type main_val = 1.0 + val;
-      real_type off_val = 2.0 + val;
-      for (index_type i = 0; i < m; ++i) {
-        if (i < n && i < m - n) {
-          status *= (rowptr_csr[i + 1] == rowptr_csr[i] + 1);
-          status *= (colidx_csr[rowptr_csr[i]] == i);
-          status *= (val_csr[rowptr_csr[i]] == main_val);
-          main_val += 2.0;
-        } else if (i < n && i >= m - n) {
-          status *= (rowptr_csr[i + 1] == rowptr_csr[i] + 2);
-          status *= (colidx_csr[rowptr_csr[i] + 1] == i);
-          status *= (colidx_csr[rowptr_csr[i]] == i + n - m);
-          status *= (val_csr[rowptr_csr[i] + 1] == main_val);
-          status *= (val_csr[rowptr_csr[i]] == off_val);
-          main_val += 2.0;
-          off_val += 2.0;
-        } else {
-          status *= (rowptr_csr[i + 1] == rowptr_csr[i] + 1);
-          status *= (colidx_csr[rowptr_csr[i]] == i + n - m);
-          status *= (val_csr[rowptr_csr[i]] == off_val);
-          off_val += 2.0;
-        }
-      }
-    }
-  }
 
     if (n == m) {
         for (index_type i = 0; i < m; ++i) {
             if (i == m - 1) {
                 if (rowptr_csr[i + 1] != rowptr_csr[i] + 1 ||
                     colidx_csr[rowptr_csr[i]] != n - 1 ||
-                    val_csr[rowptr_csr[i]] != 2.0 * n) {
+                    val_csr[rowptr_csr[i]] != 2.0 * n + val) {
                     return false;
                 }
             } else if (i == m / 2) {
                 if (rowptr_csr[i + 1] != rowptr_csr[i] + 3 ||
                     colidx_csr[rowptr_csr[i]] != 0 ||
-                    val_csr[rowptr_csr[i]] != 2.0 ||
+                    val_csr[rowptr_csr[i]] != 2.0 + val ||
                     colidx_csr[rowptr_csr[i] + 1] != n / 2 ||
                     colidx_csr[rowptr_csr[i] + 2] != n / 2 + 1 ||
-                    val_csr[rowptr_csr[i] + 1] != 2.0 * (n / 2) + 2 ||
-                    val_csr[rowptr_csr[i] + 2] != 2.0 * (n / 2) + 3) {
+                    val_csr[rowptr_csr[i] + 1] != 2.0 * (n / 2) + 2 + val ||
+                    val_csr[rowptr_csr[i] + 2] != 2.0 * (n / 2) + 3 + val) {
                     return false;
                 }
             } else {
@@ -437,12 +366,12 @@ private:
                     return false;
                 }
                 if (i == 0) {
-                    if (val_csr[rowptr_csr[i]] != 1.0 || val_csr[rowptr_csr[i] + 1] != 3.0) {
+                    if (val_csr[rowptr_csr[i]] != 1.0 + val || val_csr[rowptr_csr[i] + 1] != 3.0 + val) {
                         return false;
                     }
                 } else {
-                    if (val_csr[rowptr_csr[i]] != 2.0 * (i + 1) ||
-                        val_csr[rowptr_csr[i] + 1] != 2.0 * (i + 1) + 1.0) {
+                    if (val_csr[rowptr_csr[i]] != 2.0 * (i + 1) + val ||
+                        val_csr[rowptr_csr[i] + 1] != 2.0 * (i + 1) + 1.0 + val) {
                         return false;
                     }
                 }
@@ -451,8 +380,8 @@ private:
     } else if (n > m) {
         index_type main_diag_ind = 0;
         index_type off_diag_ind = n - m;
-        real_type main_val = 1.0;
-        real_type off_val = n - m + 1.0;
+        real_type main_val = 1.0 + val;
+        real_type off_val = n - m + 1.0 + val;
         for (index_type i = 0; i < m; ++i) {
             if (rowptr_csr[i + 1] != rowptr_csr[i] + 2 ||
                 colidx_csr[rowptr_csr[i]] != main_diag_ind++ ||
@@ -465,8 +394,8 @@ private:
             if (i < 2 * m - n) off_val++;
         }
     } else {
-        real_type main_val = 1.0;
-        real_type off_val = 2.0;
+        real_type main_val = 1.0 + val;
+        real_type off_val = 2.0 + val;
         for (index_type i = 0; i < m; ++i) {
             if (i < n && i < m - n) {
                 if (rowptr_csr[i + 1] != rowptr_csr[i] + 1 ||
@@ -497,6 +426,8 @@ private:
     }
     return true;
   }
+
+
   /**
    * @brief Create a CSR matrix with preset sparsity structure
    *
