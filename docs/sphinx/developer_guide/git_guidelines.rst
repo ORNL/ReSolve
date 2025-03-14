@@ -32,7 +32,7 @@ Pull Requests (PR)s
 ============
 
 When opening a PR, make sure to select the correct base branch.
-If there are merge conflicts, resolve them before requesting a review.
+If there are merge conflicts, use ``git rebase`` to resolve them before requesting a review.
 
 Detail changes made in your PR in the description.
 ------------
