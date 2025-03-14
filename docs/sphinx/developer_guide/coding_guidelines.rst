@@ -283,6 +283,9 @@ Use this format for comments:
 Write a brief description of the function using ``@brief``.
 Add a longer description below, if needed.
 
+Define conditions for 
+
+For each parameter, use ``@param`` to describe it.
 Explain which parameters are in, out or in,out using 
 ``@param[in]``, ``@param[out]`` and ``@param[in,out]``.
 
@@ -293,19 +296,25 @@ Overall, the comment should look like this:
 .. code:: cpp
 
       /**
-       * @brief This function does something
+       * @brief This computes the logarithm of x
        *
-       * This function does something with the input parameters
-       *
+       * The function stores the logarithm of x in y and adds it to z.
+       * 
+       * @pre x > 0
+       * @post y = log(x)
+       * @post z = z + y
+       * @invariant x
+       * 
        * @param[in] x The input parameter
        * @param[out] y The output parameter
        * @param[in,out] z The input/output parameter
        *
        * @return 0 if no error, positive value for warnings and recoverable error, negative value for irrecoverable errors
       */
-      void someFunction(int x, int& y, int* z)
+      void logAdd(const real_type x, real_type& y, real_type* z)
       {
-      // some code
+        y = log(x);
+        *z += y;
       }
 
 Do not leave commented code used for debugging (or for other purposes).
