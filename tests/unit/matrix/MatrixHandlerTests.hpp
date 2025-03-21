@@ -127,14 +127,14 @@ public:
           if (val == 0.0) {
               A = createRectangularCsrMatrix(n, m);
               At->allocateMatrixData(memspace_);
-              handler_.transpose(A, At, memspace_, false);
+              handler_.transpose(A, At, memspace_);
 
               status *= (At->getNumRows() == A->getNumColumns());
               status *= (At->getNumColumns() == A->getNumRows());
               status *= (At->getNnz() == A->getNnz());
           } else {
               handler_.addConstantToNonzeroValues(A, val, memspace_);
-              handler_.transpose(A, At, memspace_, true);
+              handler_.transpose(A, At, memspace_);
           }
 
           if (memspace_ == memory::DEVICE) {

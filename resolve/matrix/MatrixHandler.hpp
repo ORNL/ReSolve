@@ -54,7 +54,7 @@ namespace ReSolve {
 
       int csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr, memory::MemorySpace memspace);
 
-      int transpose(matrix::Csr* A, matrix::Csr* At, memory::MemorySpace memspace, bool allocated = false);
+      int transpose(matrix::Csr* A, matrix::Csr* At, memory::MemorySpace memspace);
 
       void addConstantToNonzeroValues(matrix::Sparse* A, real_type alpha, memory::MemorySpace memspace);
 

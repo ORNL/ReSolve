@@ -13,6 +13,7 @@ namespace ReSolve
     norm_buffer_       = nullptr;
     norm_buffer_ready_ = false;
     transpose_workspace_ = nullptr;
+    transpose_workspace_ready_ = false;
   }
 
   LinAlgWorkspaceHIP::~LinAlgWorkspaceHIP()
@@ -125,5 +126,15 @@ namespace ReSolve
   void*  LinAlgWorkspaceHIP::getTransposeWorkspace()
   {
     return transpose_workspace_;
+  }
+
+  bool LinAlgWorkspaceHIP::isTransposeAllocated()
+  {
+    return transpose_workspace_ready_;
+  }
+
+  void LinAlgWorkspaceHIP::setTransposeAllocated()
+  {
+    transpose_workspace_ready_ = true;
   }
 } // namespace ReSolve

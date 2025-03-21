@@ -244,13 +244,12 @@ namespace ReSolve {
    *
    * @param[in, out]  A - Sparse matrix
    * @param[out]      At - Transposed matrix
-   * @param[in]       allocated - flag indicating if At is already allocated
    *
    * @return int error_sum, 0 if successful
    *
    * @warning This method works only for `real_type == double`.
    */
-  int MatrixHandlerHip::transpose(matrix::Csr* A, matrix::Csr* At, bool allocated)
+  int MatrixHandlerHip::transpose(matrix::Csr* A, matrix::Csr* At)
   {
     index_type error_sum = 0;
     index_type m = A->getNumRows();
@@ -258,6 +257,7 @@ namespace ReSolve {
     index_type nnz = A->getNnz();
     rocsparse_status status;
     void* buffer_transpose = workspace_->getTransposeWorkspace();
+    bool allocated = workspace_->isTransposeAllocated();
     if (!allocated) {
       // check dimensions of A and At
       assert(A->getNumRows() == At->getNumColumns() && "Number of rows in A must be equal to number of columns in At");
@@ -276,6 +276,7 @@ namespace ReSolve {
                                            &bufferSize);
       error_sum += status;
       mem_.allocateBufferOnDevice(&buffer_transpose, bufferSize);
+      workspace_->setTransposeAllocated();
     }
     status = rocsparse_dcsr2csc(workspace_->getRocsparseHandle(),
                                 m,

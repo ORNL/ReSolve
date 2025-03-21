@@ -34,7 +34,7 @@ namespace ReSolve {
 
       virtual int csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr) = 0;
 
-      virtual int transpose(matrix::Csr* A, matrix::Csr* At, bool allocated = false) = 0;
+      virtual int transpose(matrix::Csr* A, matrix::Csr* At) = 0;
 
       virtual int addConstantToNonzeroValues(matrix::Sparse* A, real_type alpha) = 0;
 

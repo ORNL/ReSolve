@@ -270,17 +270,17 @@ namespace ReSolve {
    *
    * @param[in, out]  A - Sparse matrix
    * @param[out] At - Transposed matrix
-   * @param[in]  allocated - flag indicating if At is already allocated
    *
    * @return int error_sum, 0 if successful
    */
-  int MatrixHandlerCuda::transpose(matrix::Csr* A, matrix::Csr* At, bool allocated)
+  int MatrixHandlerCuda::transpose(matrix::Csr* A, matrix::Csr* At)
   {
     index_type error_sum = 0;
     index_type m = A->getNumRows();
     index_type n = A->getNumColumns();
     index_type nnz = A->getNnz();
     cusparseStatus_t status;
+    bool allocated = workspace_->isTransposeAllocated();
     void* buffer_transpose = workspace_->getTransposeWorkspace();
     if (!allocated) {
       // check dimensions of A and At
@@ -309,6 +309,7 @@ namespace ReSolve {
                                              &bufferSize);
       error_sum += status;
       mem_.allocateBufferOnDevice(&buffer_transpose, bufferSize);
+      workspace_->setTransposeAllocated();
     }
     status = cusparseCsr2cscEx2(workspace_->getCusparseHandle(),
                                 m,

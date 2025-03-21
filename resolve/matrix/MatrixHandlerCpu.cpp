@@ -231,93 +231,87 @@ namespace ReSolve
    *
    * @return 0 if successful, 1 otherwise
    */
-  int MatrixHandlerCpu::transpose(matrix::Csr* A, matrix::Csr* At, bool allocated)
+  int MatrixHandlerCpu::transpose(matrix::Csr* A, matrix::Csr* At)
   {
-    if (!allocated) {
-      assert(A->getNnz() == At->getNnz());
-      assert(A->getNumRows() == At->getNumColumns());
-      assert(A->getNumColumns() == At->getNumRows());
-    }
+    assert(A->getNnz() == At->getNnz());
+    assert(A->getNumRows() == At->getNumColumns());
+    assert(A->getNumColumns() == At->getNumRows());
 
     index_type n = A->getNumRows();
     index_type m = A->getNumColumns();
     index_type nnz = A->getNnz();
-
     index_type* rowPtrA = A->getRowData(memory::HOST);
     index_type* colIdxA = A->getColData(memory::HOST);
-    real_type* valuesA = A->getValues(memory::HOST);
-
+    real_type*  valuesA = A->getValues( memory::HOST);
     index_type* rowPtrAt = At->getRowData(memory::HOST);
     index_type* colIdxAt = At->getColData(memory::HOST);
-    real_type* valuesAt = At->getValues(memory::HOST);
-
-    if (!allocated) {
-        // Set all CSR row pointers to zero
-        for (index_type i = 0; i <= m; ++i) {
-            rowPtrAt[i] = 0;
-        }
-
-        // Set all CSR values and column indices to zero
-        for (index_type i = 0; i < nnz; ++i) {
-            colIdxAt[i] = 0;
-            valuesAt[i] = 0.0;
-        }
-
-        // Compute number of entries per row
-        for (index_type i = 0; i < nnz; ++i) {
-            rowPtrAt[colIdxA[i]]++;
-        }
-
-        // Compute cumulative sum of nnz per row
-        for (index_type row = 0, rowsum = 0; row < m; ++row) {
-            // Store value in row pointer to temp
-            index_type temp = rowPtrAt[row];
-            // Copy cumulative sum to the row pointer
-            rowPtrAt[row] = rowsum;
-            // Update row sum
-            rowsum += temp;
-        }
-        rowPtrAt[m] = nnz;
-    }
-
-    // Create a copy of rowPtrAt for iterating through the matrix
-    std::vector<index_type> rowPtrCopy(m + 1);
+    real_type*  valuesAt = At->getValues( memory::HOST);
+    // Set all CSR row pointers to zero
     for (index_type i = 0; i <= m; ++i) {
-        rowPtrCopy[i] = rowPtrAt[i];
+      rowPtrAt[i] = 0;
+    }
+    // Set all CSR values and column indices to zero
+    for (index_type i = 0; i < nnz; ++i) {
+      colIdxAt[i] = 0;
+      valuesAt[i] = 0.0;
     }
 
+    // Compute number of entries per row
+    for (index_type i = 0; i < nnz; ++i) {
+      rowPtrAt[colIdxA[i]]++;
+    }
+    // Compute cumualtive sum of nnz per row
+    for (index_type row = 0, rowsum = 0; row < m; ++row) {
+      // Store value in row pointer to temp
+      index_type temp  = rowPtrAt[row];
+
+      // Copy cumulative sum to the row pointer
+      rowPtrAt[row] = rowsum;
+
+      // Update row sum
+      rowsum += temp;
+    }
+    rowPtrAt[m] = nnz;
     for (index_type col = 0; col < n; ++col) {
-        // Compute positions of column indices and values in CSR matrix and store them there
-        for (index_type jj = rowPtrA[col]; jj < rowPtrA[col+1]; jj++) {
-            index_type row = colIdxA[jj];
-            index_type dest = rowPtrCopy[row];
-            if (!allocated) {
-              colIdxAt[dest] = col;
-            }
-            valuesAt[dest] = valuesA[jj];
-            rowPtrCopy[row]++;
-        }
-    }
+      // Compute positions of column indices and values in CSR matrix and store them there
+      // Overwrites CSR row pointers in the process
+      for (index_type jj = rowPtrA[col]; jj < rowPtrA[col+1]; jj++) {
+        index_type row  = colIdxA[jj];
+        index_type dest = rowPtrAt[row];
 
+        colIdxAt[dest] = col;
+        valuesAt[dest] = valuesA[jj];
+
+        rowPtrAt[row]++;
+      }
+    }
+    // Restore CSR row pointer values
+    for (index_type row = 0, last = 0; row <= m; row++) {
+        index_type temp  = rowPtrAt[row];
+        rowPtrAt[row] = last;
+        last    = temp;
+    }
     // Values on the host are updated now -- mark them as such!
     At->setUpdated(memory::HOST);
+
     return 0;
   }
 
   /**
-   * @brief Add a constant to the nonzero values of a matrix
+   * @brief Add a constant to all nonzero values in the matrix
    *
    * @param[in, out] A - matrix
-   * @param[in] alpha - constant to add
+   * @param[in] alpha - constant to be added
+   *
+   * @return int error code, 0 if successful
    */
   int MatrixHandlerCpu::addConstantToNonzeroValues(matrix::Sparse* A, real_type alpha)
   {
-    using memory::HOST;
-    real_type* values = A->getValues(HOST);
-    for (index_type i = 0; i < A->getNnz(); ++i) {
+    real_type* values = A->getValues(memory::HOST);
+    index_type nnz = A->getNnz();
+    for (index_type i = 0; i < nnz; ++i) {
       values[i] += alpha;
     }
-    A->setUpdated(HOST);
     return 0;
   }
 } // namespace ReSolve
