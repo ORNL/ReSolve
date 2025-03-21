@@ -35,7 +35,7 @@ namespace ReSolve {
       virtual ~MatrixHandlerCuda();
 
       int csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr);
-      int transpose(matrix::Csr* A, matrix::Csr* At, bool allocated = false) override;
+      int transpose(matrix::Csr* A, matrix::Csr* At) override;
       int addConstantToNonzeroValues(matrix::Sparse* A, real_type alpha);
       virtual int matvec(matrix::Sparse* A,
                  vector_type* vec_x,
@@ -50,7 +50,7 @@ namespace ReSolve {
       bool values_changed_{true}; ///< needed for matvec
 
       MemoryHandler mem_; ///< Device memory manager object
-      void* transpose_workspace_{nullptr};
+
 
   };
 
