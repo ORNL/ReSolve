@@ -68,7 +68,7 @@ namespace ReSolve
       bool matvec_setup_done_{false}; //check if setup is done for matvec i.e. if buffer is allocated, csr structure is set etc.
 
       void* transpose_workspace_{nullptr}; // needed for transpose
-      bool transpose_allocated_{false}; // to track if allocated
+      bool transpose_buffer_ready_{false}; // to track if allocated
 
       real_type* d_r_{nullptr}; // needed for one-norm
       index_type d_r_size_{0};

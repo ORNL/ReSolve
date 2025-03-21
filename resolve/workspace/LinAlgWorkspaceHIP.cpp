@@ -9,9 +9,10 @@ namespace ReSolve
 
     matvec_setup_done_ = false;
     d_r_               = nullptr;
-    d_r_size_          = 0; 
+    d_r_size_          = 0;
     norm_buffer_       = nullptr;
     norm_buffer_ready_ = false;
+    transpose_workspace_ = nullptr;
   }
 
   LinAlgWorkspaceHIP::~LinAlgWorkspaceHIP()
@@ -69,22 +70,22 @@ namespace ReSolve
   {
     d_r_size_ = new_sz;
   }
-  
+
   void LinAlgWorkspaceHIP::setDr(double* new_dr)
   {
     d_r_ = new_dr;
   }
-  
+
   void LinAlgWorkspaceHIP::setNormBuffer(double* nb)
   {
     norm_buffer_ = nb;
   }
-  
+
   void LinAlgWorkspaceHIP::setNormBufferState(bool r)
   {
     norm_buffer_ready_ = r;
   }
-  
+
   bool LinAlgWorkspaceHIP::matvecSetup()
   {
     return matvec_setup_done_;
@@ -100,7 +101,7 @@ namespace ReSolve
     rocsparse_create_handle(&handle_rocsparse_);
     rocblas_create_handle(&handle_rocblas_);
   }
-  
+
   index_type  LinAlgWorkspaceHIP::getDrSize()
   {
     return d_r_size_;
@@ -110,14 +111,19 @@ namespace ReSolve
   {
     return d_r_;
   }
-  
+
   bool  LinAlgWorkspaceHIP::getNormBufferState()
   {
     return norm_buffer_ready_;
   }
-  
+
   real_type*  LinAlgWorkspaceHIP::getNormBuffer()
   {
     return norm_buffer_;
+  }
+
+  real_type*  LinAlgWorkspaceHIP::getTransposeWorkspace()
+  {
+    return transpose_workspace_;
   }
 } // namespace ReSolve
