@@ -14,5 +14,5 @@
 namespace ReSolve
 {
   void cuda_set_array_const(index_type n, real_type val, real_type* arr);
-  void cudaAddConst(real_type* arr, real_type val, index_type n);
+  void cudaAddConst(index_type n, real_type val, real_type* arr);
 }
