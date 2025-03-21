@@ -281,6 +281,7 @@ namespace ReSolve {
     index_type n = A->getNumColumns();
     index_type nnz = A->getNnz();
     cusparseStatus_t status;
+    void* buffer_transpose = workspace_->getTransposeWorkspace();
     if (!allocated) {
       // check dimensions of A and At
       assert(A->getNumRows() == At->getNumColumns() && "Number of rows in A must be equal to number of columns in At");
@@ -307,7 +308,7 @@ namespace ReSolve {
                                              CUSPARSE_CSR2CSC_ALG1,
                                              &bufferSize);
       error_sum += status;
-      mem_.allocateBufferOnDevice(&transpose_workspace_, bufferSize);
+      mem_.allocateBufferOnDevice(&buffer_transpose, bufferSize);
     }
     status = cusparseCsr2cscEx2(workspace_->getCusparseHandle(),
                                 m,
@@ -323,7 +324,7 @@ namespace ReSolve {
                                 CUSPARSE_ACTION_NUMERIC,
                                 CUSPARSE_INDEX_BASE_ZERO,
                                 CUSPARSE_CSR2CSC_ALG1,
-                                transpose_workspace_);
+                                buffer_transpose);
     error_sum += status;
     // Values on the device are updated now -- mark them as such!
     At->setUpdated(memory::DEVICE);
