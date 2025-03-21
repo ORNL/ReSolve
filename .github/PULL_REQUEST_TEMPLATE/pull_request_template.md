@@ -1,7 +1,7 @@
 ## Description
  
  _Please describe the issue that is addressed (bug, new feature,
- documentation, etc.). Please also include relevant motivation and
+ documentation, enhancement, etc.). Please also include relevant motivation and
  context. List any dependencies that are required for this change._
  
  _Closes # (issue)_
