@@ -56,7 +56,6 @@ namespace ReSolve {
       bool values_changed_{true}; ///< needed for matvec
 
       MemoryHandler mem_; ///< Device memory manager object
-      void* transpose_workspace_{nullptr};
   };
 
 } // namespace ReSolve

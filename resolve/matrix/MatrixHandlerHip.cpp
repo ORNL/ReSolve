@@ -257,6 +257,7 @@ namespace ReSolve {
     index_type n = A->getNumColumns();
     index_type nnz = A->getNnz();
     rocsparse_status status;
+    void* buffer_transpose = workspace_->getTransposeWorkspace();
     if (!allocated) {
       // check dimensions of A and At
       assert(A->getNumRows() == At->getNumColumns() && "Number of rows in A must be equal to number of columns in At");
@@ -274,7 +275,7 @@ namespace ReSolve {
                                            rocsparse_action_numeric,
                                            &bufferSize);
       error_sum += status;
-      mem_.allocateBufferOnDevice(&transpose_workspace_, bufferSize);
+      mem_.allocateBufferOnDevice(&buffer_transpose, bufferSize);
     }
     status = rocsparse_dcsr2csc(workspace_->getRocsparseHandle(),
                                 m,
@@ -288,7 +289,7 @@ namespace ReSolve {
                                 At->getRowData(memory::DEVICE),
                                 rocsparse_action_numeric,
                                 rocsparse_index_base_zero,
-                                transpose_workspace_);
+                                buffer_transpose);
     error_sum += status;
     // Values on the device are updated now -- mark them as such!
     At->setUpdated(memory::DEVICE);

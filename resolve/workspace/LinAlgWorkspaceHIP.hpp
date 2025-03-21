@@ -23,6 +23,7 @@ namespace ReSolve
       index_type getDrSize();
       real_type* getDr();
       real_type* getNormBuffer();
+      void* getTransposeWorkspace();
       bool getNormBufferState();
 
       void setRocblasHandle(rocblas_handle handle);
