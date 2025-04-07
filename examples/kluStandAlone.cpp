@@ -52,8 +52,10 @@ int kluStandAlone(int argc, char *argv[])
   using real_type  = ReSolve::real_type;
   using vector_type = ReSolve::vector::Vector;
 
-  (void) argc; // TODO: Check if the number of input parameters is correct.
-  std::string  matrixFileName = argv[1];
+  if (argc < 3) {
+      std::cerr << "Usage: " << argv[0] << " <matrixFileName> <rhsFileName>" << std::endl;
+      return -1;
+  }
   std::string  rhsFileName = argv[2];
 
   std::cout<<"Family mtx file name: "<< matrixFileName << std::endl;
