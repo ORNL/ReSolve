@@ -54,7 +54,10 @@ int kluRefactor(int argc, char *argv[])
   using real_type  = ReSolve::real_type;
   using vector_type = ReSolve::vector::Vector;
 
-  (void) argc; // TODO: Check if the number of input parameters is correct.
+  if (argc < 4) {
+    std::cerr << "Error: Not enough input parameters. Expected 3 parameters: <matrixFileName> <rhsFileName> <numSystems>" << std::endl;
+    return -1;
+  }
   std::string  matrixFileName = argv[1];
   std::string  rhsFileName = argv[2];
 
