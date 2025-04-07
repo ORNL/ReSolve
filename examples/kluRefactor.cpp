@@ -72,7 +72,7 @@ int kluRefactor(int argc, char *argv[])
   workspace.initializeHandles();
   // Create a helper object (computing errors, printing summaries, etc.)
   ReSolve::examples::ExampleHelper<workspace_type> helper(workspace);
-  std::cout << "sysRefactor with " << helper.getHardwareBackend() << " backend\n";
+  std::cout << "kluRefactor with " << helper.getHardwareBackend() << " backend\n";
 
   ReSolve::MatrixHandler matrix_handler(&workspace);
   ReSolve::VectorHandler vector_handler(&workspace);

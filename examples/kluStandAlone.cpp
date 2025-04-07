@@ -56,6 +56,7 @@ int kluStandAlone(int argc, char *argv[])
       std::cerr << "Usage: " << argv[0] << " <matrixFileName> <rhsFileName>" << std::endl;
       return -1;
   }
+  std::string  matrixFileName = argv[1];
   std::string  rhsFileName = argv[2];
 
   std::cout<<"Family mtx file name: "<< matrixFileName << std::endl;
@@ -69,7 +70,7 @@ int kluStandAlone(int argc, char *argv[])
   workspace.initializeHandles();
   // Create a helper object (computing errors, printing summaries, etc.)
   ReSolve::examples::ExampleHelper<workspace_type> helper(workspace);
-  std::cout << "sysRefactor with " << helper.getHardwareBackend() << " backend\n";
+  std::cout << "kluStandAlone with " << helper.getHardwareBackend() << " backend\n";
 
   ReSolve::MatrixHandler matrix_handler(&workspace);
   ReSolve::VectorHandler vector_handler(&workspace);
