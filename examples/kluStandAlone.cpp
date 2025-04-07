@@ -12,7 +12,6 @@
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
-#include <resolve/workspace/LinAlgWorkspace.hpp>
 #include "ExampleHelper.hpp"
 using namespace ReSolve::constants;
 /// Prototype of the example function
