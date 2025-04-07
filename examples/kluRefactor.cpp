@@ -58,7 +58,7 @@ int kluRefactor(int argc, char *argv[])
   std::string  matrixFileName = argv[1];
   std::string  rhsFileName = argv[2];
 
-  index_type numSystems = atoi(argv[3]);
+  index_type numSystems = std::stoi(argv[3]);
   std::cout<<"Family mtx file name: "<< matrixFileName << ", total number of matrices: "<<numSystems<<std::endl;
   std::cout<<"Family rhs file name: "<< rhsFileName << ", total number of RHSes: " << numSystems<<std::endl;
 
@@ -84,7 +84,7 @@ int kluRefactor(int argc, char *argv[])
   vector_type* vec_r   = nullptr;
   real_type norm_A, norm_x, norm_r;//used for INF norm
 
-  ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
+  refactor_type* KLU = new refactor_type;
 
   for (int i = 0; i < numSystems; ++i)
   {
@@ -107,13 +107,13 @@ int kluRefactor(int argc, char *argv[])
     std::ifstream mat_file(matrixFileNameFull);
     if(!mat_file.is_open())
     {
-      std::cout << "Failed to open file " << matrixFileNameFull << "\n";
+      std::cerr << "Failed to open file " << matrixFileNameFull << "\n";
       return -1;
     }
     std::ifstream rhs_file(rhsFileNameFull);
     if(!rhs_file.is_open())
     {
-      std::cout << "Failed to open file " << rhsFileNameFull << "\n";
+      std::cerr << "Failed to open file " << rhsFileNameFull << "\n";
       return -1;
     }
     bool is_expand_symmetric = true;
