@@ -12,10 +12,42 @@
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
-
+#include <resolve/workspace/LinAlgWorkspace.hpp>
+#include "ExampleHelper.hpp"
 using namespace ReSolve::constants;
+/// Prototype of the example function
+template <class workspace_type, class solve_type>
+static int kluStandAlone(int argc, char *argv[]);
 
+/// Main function selects example to be run.
 int main(int argc, char *argv[])
+{
+  kluStandAlone<ReSolve::LinAlgWorkspaceCpu,
+             ReSolve::LinSolverDirectKLU>(argc, argv);
+  #ifdef RESOLVE_USE_CUDA
+    kluStandAlone<ReSolve::LinAlgWorkspaceCUDA,
+               ReSolve::LinSolverDirectKLU>(argc, argv);
+  #endif
+
+  #ifdef RESOLVE_USE_HIP
+    kluStandAlone<ReSolve::LinAlgWorkspaceHIP,
+                ReSolve::LinSolverDirectKLU>(argc, argv);
+  #endif
+
+  return 0;
+}
+
+
+/**
+ * @brief Example of using a stand alone solve on for KLU
+ *
+ * @tparam workspace_type - Type of the workspace to use
+ * @param[in] argc - Number of command line arguments
+ * @param[in] argv - Command line arguments
+ * @return 0 if the example ran successfully, -1 otherwise
+ */
+template <class workspace_type, class solve_type>
+int kluStandAlone(int argc, char *argv[])
 {
   // Use the same data types as those you specified in ReSolve build.
   using real_type  = ReSolve::real_type;
@@ -32,17 +64,23 @@ int main(int argc, char *argv[])
   std::string rhsId;
 
   ReSolve::matrix::Csr* A = nullptr;
-  ReSolve::LinAlgWorkspaceCpu* workspace = new ReSolve::LinAlgWorkspaceCpu();
-  ReSolve::MatrixHandler* matrix_handler = new ReSolve::MatrixHandler(workspace);
-  ReSolve::VectorHandler* vector_handler = new ReSolve::VectorHandler(workspace);
+  workspace_type workspace;
+  workspace.initializeHandles();
+  // Create a helper object (computing errors, printing summaries, etc.)
+  ReSolve::examples::ExampleHelper<workspace_type> helper(workspace);
+  std::cout << "sysRefactor with " << helper.getHardwareBackend() << " backend\n";
+
+  ReSolve::MatrixHandler matrix_handler(&workspace);
+  ReSolve::VectorHandler vector_handler(&workspace);
   real_type* rhs = nullptr;
   real_type* x   = nullptr;
 
   vector_type* vec_rhs = nullptr;
   vector_type* vec_x   = nullptr;
   vector_type* vec_r   = nullptr;
+  real_type norm_A, norm_x, norm_r;//used for INF norm
 
-  ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
+  solve_type* KLU = new solve_type;
 
 
 
@@ -87,16 +125,16 @@ int main(int argc, char *argv[])
   status = KLU->factorize();
   std::cout << "KLU factorization status: " << status << std::endl;
   status = KLU->solve(vec_rhs, vec_x);
-  std::cout << "KLU solve status: " << status << std::endl;      
+  std::cout << "KLU solve status: " << status << std::endl;
   vec_r->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
 
-  matrix_handler->setValuesChanged(true, ReSolve::memory::HOST);
+  matrix_handler.setValuesChanged(true, ReSolve::memory::HOST);
 
-  matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, ReSolve::memory::HOST); 
+  matrix_handler.matvec(A, vec_x, vec_r, &ONE, &MINUSONE, ReSolve::memory::HOST);
 
-  std::cout << "\t 2-Norm of the residual: " 
-            << std::scientific << std::setprecision(16) 
-            << sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::HOST)) << "\n";
+  std::cout << "\t 2-Norm of the residual: "
+            << std::scientific << std::setprecision(16)
+            << sqrt(vector_handler.dot(vec_r, vec_r, ReSolve::memory::HOST)) << "\n";
 
 
 
@@ -107,8 +145,6 @@ int main(int argc, char *argv[])
   delete [] rhs;
   delete vec_r;
   delete vec_x;
-  delete matrix_handler;
-  delete vector_handler;
 
   return 0;
 }

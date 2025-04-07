@@ -24,6 +24,10 @@ if(RESOLVE_USE_KLU)
   add_executable(klu_klu_standalone.exe r_KLU_KLU_standalone.cpp)
   target_link_libraries(klu_klu_standalone.exe PRIVATE ReSolve)
 
+  # Read ONE matrix,solve with KLU
+  add_executable(kluStandAlone.exe kluStandAlone.cpp)
+  target_link_libraries(kluStandAlone.exe PRIVATE ReSolve)
+
   # Build a CPU example with a configurable system solver
   add_executable(system.exe r_SysSolver.cpp)
   target_link_libraries(system.exe PRIVATE ReSolve)
@@ -102,7 +106,12 @@ if(RESOLVE_USE_KLU)
   list(APPEND installable_executables kluRefactor.exe
                                       klu_klu.exe
                                       klu_klu_standalone.exe
+<<<<<<< HEAD
                                       sysRefactor.exe)
+=======
+                                      kluStandAlone.exe
+                                      system.exe)
+>>>>>>> 955e4a6 (cpu and cuda tests pass)
 
   if(RESOLVE_USE_GPU)
     list(APPEND installable_executables gpuRefactor.exe)
