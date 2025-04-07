@@ -107,7 +107,7 @@ namespace ReSolve
       out::summary() << "Matrix A is in CSR format.\n";
     } else {
       out::error() << "Matrix A is not in CSC or CSR format!\n";
-      std::cout << "Matrix A sparse format is wrong!" << std::endl;
+      out::error() << "Matrix A sparse format is wrong!" << std::endl;
       return 1;
     }
     this->A_ = A;
