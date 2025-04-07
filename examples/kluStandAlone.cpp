@@ -144,6 +144,7 @@ int kluStandAlone(int argc, char *argv[])
   delete [] rhs;
   delete vec_r;
   delete vec_x;
+  delete vec_rhs;
 
   return 0;
 }
