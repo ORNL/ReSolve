@@ -18,22 +18,19 @@
 using namespace ReSolve::constants;
 
 /// Prototype of the example function
-template <class workspace_type, class refactor_type>
+template <class workspace_type>
 static int sysRefactor(int argc, char *argv[]);
 
 /// Main function selects example to be run.
 int main(int argc, char *argv[])
 {
-  sysRefactor<ReSolve::LinAlgWorkspaceCpu,
-              ReSolve::LinSolverDirectKLU>(argc, argv);
+  sysRefactor<ReSolve::LinAlgWorkspaceCpu>(argc, argv);
   #ifdef RESOLVE_USE_CUDA
-    sysRefactor<ReSolve::LinAlgWorkspaceCUDA,
-               ReSolve::LinSolverDirectKLU>(argc, argv);
+    sysRefactor<ReSolve::LinAlgWorkspaceCUDA>(argc, argv);
   #endif
 
   #ifdef RESOLVE_USE_HIP
-    sysRefactor<ReSolve::LinAlgWorkspaceHIP,
-                ReSolve::LinSolverDirectKLU>(argc, argv);
+    sysRefactor<ReSolve::LinAlgWorkspaceHIP>(argc, argv);
   #endif
 
   return 0;
@@ -47,7 +44,7 @@ int main(int argc, char *argv[])
  * @param[in] argv - Command line arguments
  * @return 0 if the example ran successfully, -1 otherwise
  */
-template <class workspace_type, class refactor_type>
+template <class workspace_type>
 int sysRefactor(int argc, char *argv[])
 {
   // Use the same data types as those you specified in ReSolve build.
@@ -59,7 +56,7 @@ int sysRefactor(int argc, char *argv[])
   std::string  matrixFileName = argv[1];
   std::string  rhsFileName = argv[2];
 
-  index_type numSystems = atoi(argv[3]);
+  index_type numSystems = std::stoi(argv[3]);
   std::cout<<"Family mtx file name: "<< matrixFileName << ", total number of matrices: "<<numSystems<<std::endl;
   std::cout<<"Family rhs file name: "<< rhsFileName << ", total number of RHSes: " << numSystems<<std::endl;
 
@@ -110,13 +107,13 @@ int sysRefactor(int argc, char *argv[])
     std::ifstream mat_file(matrixFileNameFull);
     if(!mat_file.is_open())
     {
-      std::cout << "Failed to open file " << matrixFileNameFull << "\n";
+      std::cerr << "Failed to open file " << matrixFileNameFull << std::endl;
       return -1;
     }
     std::ifstream rhs_file(rhsFileNameFull);
     if(!rhs_file.is_open())
     {
-      std::cout << "Failed to open file " << rhsFileNameFull << "\n";
+      std::cerr << "Failed to open file " << rhsFileNameFull << std::endl;
       return -1;
     }
     bool is_expand_symmetric = true;
