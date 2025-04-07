@@ -1,5 +1,5 @@
 // Matrix utilities
-// Mirroring memory approach 
+// Mirroring memory approach
 #pragma once
 #include <string>
 #include <functional>
@@ -10,8 +10,8 @@
 namespace ReSolve { namespace matrix {
 
   /**
-   * @brief This class implements basic sparse matrix interface. 
-   * 
+   * @brief This class implements basic sparse matrix interface.
+   *
    * Most of sparse matrix formats store information about matrix rows and
    * columns as integers and nonzero element values as real numbers.
    * This class is virtual and implements only what is common for all basic
@@ -21,7 +21,7 @@ namespace ReSolve { namespace matrix {
    *
    * @author Kasia Swirydowicz <kasia.swirydowicz@pnnl.gov>
    */
-  class Sparse 
+  class Sparse
   {
     public:
       /// Supported sparse matrix formats
@@ -31,8 +31,8 @@ namespace ReSolve { namespace matrix {
       //basic constructor
       Sparse();
       Sparse(index_type n, index_type m, index_type nnz);
-      Sparse(index_type n, 
-             index_type m, 
+      Sparse(index_type n,
+             index_type m,
              index_type nnz,
              bool symmetric,
              bool expanded);
@@ -44,7 +44,7 @@ namespace ReSolve { namespace matrix {
       index_type getNnz();
       SparseFormat getSparseFormat() const;
 
-      bool symmetric(); 
+      bool symmetric();
       bool expanded();
       void setSymmetric(bool symmetric);
       void setExpanded(bool expanded);
@@ -81,15 +81,15 @@ namespace ReSolve { namespace matrix {
 
 
       //update Values just updates values; it allocates if necessary.
-      //values have the same dimensions between different formats 
+      //values have the same dimensions between different formats
       virtual int copyValues(const real_type* new_vals,
                              memory::MemorySpace memspaceIn,
                              memory::MemorySpace memspaceOut);
-      
-      //set new values just sets the pointer, use caution.   
+
+      //set new values just sets the pointer, use caution.
       virtual int setValuesPointer(real_type* new_vals,
                                    memory::MemorySpace memspace);
-    
+
     protected:
       SparseFormat sparse_format_{NONE}; ///< Matrix format
       index_type n_{0}; ///< number of rows
@@ -112,7 +112,7 @@ namespace ReSolve { namespace matrix {
       bool d_data_updated_{false}; ///< DEVICE update flag
 
       void setNotUpdated();
-      
+
       // Data ownership flags
       bool owns_cpu_sparsity_pattern_{false}; ///< for row/col data
       bool owns_cpu_values_{false};           ///< for nonzero values
