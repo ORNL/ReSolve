@@ -3,7 +3,7 @@
  * @author Kasia Swirydowicz (kasia.swirydowicz@amd.com)
  * @author Slaven Peles (peless@ornl.gov)
  * @brief Functionality test for rocsolver_rf.
- * 
+ *
  */
 #include <string>
 #include <iostream>
@@ -20,7 +20,7 @@
 #include <resolve/LinSolverIterativeFGMRES.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 #include <resolve/utilities/params/CliOptions.hpp>
-
+#include <resolve/Common.hpp>
 #include "TestHelper.hpp"
 
 template <class workspace_type, class refactorization_type>
@@ -125,7 +125,7 @@ int runTest(int argc, char *argv[], std::string& solver_name)
   status = KLU.factorize();
   error_sum += status;
 
-  std::cout << "KLU factorize status: " << status <<std::endl;      
+  std::cout << "KLU factorize status: " << status <<std::endl;
 
   status = KLU.solve(&vec_rhs, &vec_x);
   error_sum += status;
@@ -133,7 +133,7 @@ int runTest(int argc, char *argv[], std::string& solver_name)
   if (is_ir) {
     test_name += " + IR";
 
-    status =  FGMRES.setup(A); 
+    status =  FGMRES.setup(A);
     error_sum += status;
 
     status = FGMRES.setupPreconditioner("LU", &KLU);
@@ -152,7 +152,7 @@ int runTest(int argc, char *argv[], std::string& solver_name)
   if (is_ir) {
     helper.printIrSummary(&FGMRES);
   }
-  error_sum += helper.checkResult(1e-16);
+  error_sum += helper.checkResult(ReSolve::EPSMAC);
 
   // Load the second matrix
   std::ifstream mat2(matrix_file_name_2);
@@ -178,8 +178,8 @@ int runTest(int argc, char *argv[], std::string& solver_name)
 
   status = KLU.refactorize();
   error_sum += status;
-  std::cout << "KLU refactorization status: " << status << std::endl;      
-  
+  std::cout << "KLU refactorization status: " << status << std::endl;
+
   if (is_ir) {
     FGMRES.resetMatrix(A);
     status = FGMRES.setupPreconditioner("LU", &KLU);
@@ -199,7 +199,7 @@ int runTest(int argc, char *argv[], std::string& solver_name)
   if (is_ir) {
     helper.printIrSummary(&FGMRES);
   }
-  error_sum += helper.checkResult(1e-16);
+  error_sum += helper.checkResult(ReSolve::EPSMAC);
 
   isTestPass(error_sum, test_name);
 

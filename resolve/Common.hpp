@@ -10,7 +10,7 @@ namespace ReSolve {
 
   // TODO: these should be dropped
   constexpr double EPSILON = 1.0e-18;
-  constexpr double EPSMAC  = 1.0e-16;
+  constexpr double EPSMAC  = 1.11e-16;
 
 
   /// @todo Provide CMake option to se these types at config time
