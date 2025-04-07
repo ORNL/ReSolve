@@ -20,6 +20,10 @@ if(RESOLVE_USE_KLU)
   target_link_libraries(klu_klu_standalone.exe PRIVATE ReSolve)
 
   # Build a CPU example with a configurable system solver
+  add_executable(system.exe r_SysSolver.cpp)
+  target_link_libraries(system.exe PRIVATE ReSolve)
+
+  # Build a CPU example with a configurable system solver
   add_executable(sysRefactor.exe sysRefactor.cpp)
   target_link_libraries(sysRefactor.exe PRIVATE ReSolve)
 
@@ -47,6 +51,10 @@ if(RESOLVE_USE_KLU)
     add_executable(klu_rf_fgmres_reuse_refactorization.exe r_KLU_rf_FGMRES_reuse_factorization.cpp)
     target_link_libraries(klu_rf_fgmres_reuse_refactorization.exe PRIVATE ReSolve)
 
+    # Build example with a configurable system solver
+    add_executable(system_cuda.exe r_SysSolverCuda.cpp)
+    target_link_libraries(system_cuda.exe PRIVATE ReSolve)
+
     # Build example where matrix data is updated
     add_executable(klu_glu_values_update.exe r_KLU_GLU_matrix_values_update.cpp)
     target_link_libraries(klu_glu_values_update.exe PRIVATE ReSolve)
@@ -64,6 +72,13 @@ if(RESOLVE_USE_KLU)
     add_executable(klu_rocsolverrf_check_redo.exe r_KLU_rocsolverrf_redo_factorization.cpp)
     target_link_libraries(klu_rocsolverrf_check_redo.exe PRIVATE ReSolve)
 
+    # Build example with a configurable system solver
+    add_executable(system_hip.exe r_SysSolverHip.cpp)
+    target_link_libraries(system_hip.exe PRIVATE ReSolve)
+
+    # Build example with a configurable system solver
+    add_executable(system_hip_fgmres.exe r_SysSolverHipRefine.cpp)
+    target_link_libraries(system_hip_fgmres.exe PRIVATE ReSolve)
   endif(RESOLVE_USE_HIP)
 
 endif(RESOLVE_USE_KLU)

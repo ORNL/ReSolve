@@ -13,42 +13,10 @@
 #include <resolve/LinSolverDirectKLU.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 #include <resolve/SystemSolver.hpp>
-#include "ExampleHelper.hpp"
 
 using namespace ReSolve::constants;
 
-/// Prototype of the example function
-template <class workspace_type, class refactor_type>
-static int sysRefactor(int argc, char *argv[]);
-
-/// Main function selects example to be run.
 int main(int argc, char *argv[])
-{
-  sysRefactor<ReSolve::LinAlgWorkspaceCpu,
-              ReSolve::LinSolverDirectKLU>(argc, argv);
-  #ifdef RESOLVE_USE_CUDA
-    sysRefactor<ReSolve::LinAlgWorkspaceCUDA,
-               ReSolve::LinSolverDirectKLU>(argc, argv);
-  #endif
-
-  #ifdef RESOLVE_USE_HIP
-    sysRefactor<ReSolve::LinAlgWorkspaceHIP,
-                ReSolve::LinSolverDirectKLU>(argc, argv);
-  #endif
-
-  return 0;
-}
-
-/**
- * @brief Example of using system solvers on GPU
- *
- * @tparam workspace_type - Type of the workspace to use
- * @param[in] argc - Number of command line arguments
- * @param[in] argv - Command line arguments
- * @return 0 if the example ran successfully, -1 otherwise
- */
-template <class workspace_type, class refactor_type>
-int sysRefactor(int argc, char *argv[])
 {
   // Use the same data types as those you specified in ReSolve build.
   using index_type = ReSolve::index_type;
@@ -69,16 +37,9 @@ int sysRefactor(int argc, char *argv[])
   std::string rhsFileNameFull;
 
   ReSolve::matrix::Csr* A = nullptr;
-  workspace_type workspace;
-  workspace.initializeHandles();
-
-  // Create a helper object (computing errors, printing summaries, etc.)
-  ReSolve::examples::ExampleHelper<workspace_type> helper(workspace);
-  std::cout << "sysRefactor with " << helper.getHardwareBackend() << " backend\n";
-
-  ReSolve::MatrixHandler matrix_handler(&workspace);
-  ReSolve::VectorHandler vector_handler(&workspace);
-
+  ReSolve::LinAlgWorkspaceCpu* workspace = new ReSolve::LinAlgWorkspaceCpu();
+  ReSolve::MatrixHandler* matrix_handler = new ReSolve::MatrixHandler(workspace);
+  ReSolve::VectorHandler* vector_handler = new ReSolve::VectorHandler(workspace);
   real_type* rhs = nullptr;
   real_type* x   = nullptr;
 
@@ -86,8 +47,7 @@ int sysRefactor(int argc, char *argv[])
   vector_type* vec_x   = nullptr;
   vector_type* vec_r   = nullptr;
 
-  ReSolve::SystemSolver* solver = new ReSolve::SystemSolver(&workspace);
-  solver->setRefinementMethod("fgmres", "cgs2");
+  ReSolve::SystemSolver* solver = new ReSolve::SystemSolver(workspace);
 
   for (int i = 0; i < numSystems; ++i)
   {
@@ -141,10 +101,10 @@ int sysRefactor(int argc, char *argv[])
     rhs_file.close();
 
     // Update data.
-    if (i < 2) {
+    if (i < 2) { 
       vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
       vec_rhs->setDataUpdated(ReSolve::memory::HOST);
-    } else {
+    } else { 
       vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
     }
     std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnz()<<std::endl;
@@ -158,23 +118,22 @@ int sysRefactor(int argc, char *argv[])
       status = solver->factorize();
       std::cout<<"solver factorization status: "<<status<<std::endl;
       status = solver->solve(vec_rhs, vec_x);
-      std::cout<<"solver solve status: "<<status<<std::endl;
+      std::cout<<"solver solve status: "<<status<<std::endl;      
     } else {
       status =  solver->refactorize();
       std::cout<<"solver re-factorization status: "<<status<<std::endl;
       status = solver->solve(vec_rhs, vec_x);
-      std::cout<<"solver solve status: "<<status<<std::endl;
+      std::cout<<"solver solve status: "<<status<<std::endl;      
     }
     vec_r->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
 
-    matrix_handler.setValuesChanged(true, ReSolve::memory::HOST);
+    matrix_handler->setValuesChanged(true, ReSolve::memory::HOST);
 
-    matrix_handler.matvec(A, vec_x, vec_r, &ONE, &MINUSONE, ReSolve::memory::HOST);
+    matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, ReSolve::memory::HOST); 
 
-    // Print summary of results
-    helper.resetSystem(A, vec_rhs, vec_x);
-    helper.printShortSummary();
-
+    std::cout << "\t 2-Norm of the residual: " 
+              << std::scientific << std::setprecision(16) 
+              << sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::HOST)) << "\n";
   }
 
   //now DELETE
@@ -184,7 +143,8 @@ int sysRefactor(int argc, char *argv[])
   delete [] rhs;
   delete vec_r;
   delete vec_x;
-  delete vec_rhs;
+  delete matrix_handler;
+  delete vector_handler;
 
   return 0;
 }
