@@ -3,6 +3,7 @@
 #include <iostream>
 #include <cmath>
 #include <resolve/LinSolverIterative.hpp>
+#include <cassert>
 
 namespace ReSolve
 {
@@ -10,7 +11,7 @@ namespace ReSolve
   {
     /**
      * @brief Prints linear system info.
-     * 
+     *
      * @param name - pathname of the system matrix
      * @param A    - pointer to the system matrix
      */
@@ -22,34 +23,34 @@ namespace ReSolve
       std::cout << "========================================================================================================================\n";
       std::cout << std::endl;
 
-      std::cout << "Finished reading the matrix and rhs, size: " << A->getNumRows() << " x "<< A->getNumColumns() 
-                << ", nnz: "       << A->getNnz() 
+      std::cout << "Finished reading the matrix and rhs, size: " << A->getNumRows() << " x "<< A->getNumColumns()
+                << ", nnz: "       << A->getNnz()
                 << ", symmetric? " << A->symmetric()
                 << ", Expanded? "  << A->expanded() << std::endl;
     }
 
     /**
      * @brief Test helper class template
-     * 
+     *
      * This is header-only implementation of several utility functions used by
      * multiple functionality tests, such as error norm calculations. To use,
      * simply include this header in the test.
-     * 
-     * @tparam workspace_type 
+     *
+     * @tparam workspace_type
      */
     template <class workspace_type>
     class ExampleHelper
-    {    
+    {
       public:
         /**
          * @brief Default constructor
-         * 
+         *
          * Initializes matrix and vector handlers.
-         * 
+         *
          * @param[in,out] workspace - workspace for matrix and vector handlers
-         * 
+         *
          * @pre Workspace handles are initialized
-         * 
+         *
          * @post Handlers are instantiated.
          * allocated
          */
@@ -70,9 +71,9 @@ namespace ReSolve
 
         /**
          * @brief Destroy the ExampleHelper object
-         * 
+         *
          * @post Vectors res_ and x_true_ are deleted.
-         * 
+         *
          */
         ~ExampleHelper()
         {
@@ -94,9 +95,9 @@ namespace ReSolve
         /**
          * @brief Set the new linear system together with its computed solution
          * and compute solution error and residual norms.
-         * 
+         *
          * This will set the new system A*x = r and compute related error norms.
-         * 
+         *
          * @param A[in] - Linear system matrix
          * @param r[in] - Linear system right-hand side
          * @param x[in] - Computed solution of the linear system
@@ -116,11 +117,11 @@ namespace ReSolve
         /**
          * @brief Set the new linear system together with its computed solution
          * and compute solution error and residual norms.
-         * 
+         *
          * This is to be used after values in A and r are updated.
-         * 
+         *
          * @todo This method probably does not need any input parameters.
-         * 
+         *
          * @param A[in] - Linear system matrix
          * @param r[in] - Linear system right-hand side
          * @param x[in] - Computed solution of the linear system
@@ -156,29 +157,29 @@ namespace ReSolve
         void printShortSummary()
         {
           std::cout << "\t2-Norm of the residual: "
-            << std::scientific << std::setprecision(16) 
+            << std::scientific << std::setprecision(16)
             << getNormRelativeResidual() << "\n";
         }
 
         /// Summary of direct solve
         void printSummary()
         {
-          std::cout << "\t 2-Norm of the residual (before IR): " 
-                    << std::scientific << std::setprecision(16) 
+          std::cout << "\t 2-Norm of the residual (before IR): "
+                    << std::scientific << std::setprecision(16)
                     << getNormRelativeResidual() << "\n";
 
           std::cout << std::scientific << std::setprecision(16)
                     << "\t Matrix inf  norm: "         << inf_norm_A_   << "\n"
-                    << "\t Residual inf norm: "        << inf_norm_res_ << "\n"  
-                    << "\t Solution inf norm: "        << inf_norm_x_   << "\n"  
+                    << "\t Residual inf norm: "        << inf_norm_res_ << "\n"
+                    << "\t Solution inf norm: "        << inf_norm_x_   << "\n"
                     << "\t Norm of scaled residuals: " << nsr_norm_     << "\n";
         }
 
         /// Summary of error norms for an iterative refinement test.
         void printIrSummary(ReSolve::LinSolverIterative* ls)
         {
-          std::cout << "FGMRES: init nrm: " 
-                    << std::scientific << std::setprecision(16) 
+          std::cout << "FGMRES: init nrm: "
+                    << std::scientific << std::setprecision(16)
                     << ls->getInitResidualNorm()/norm_rhs_
                     << " final nrm: "
                     << ls->getFinalResidualNorm()/norm_rhs_
@@ -216,39 +217,39 @@ namespace ReSolve
 
         /**
          * @brief Verify the computation of the norm of scaled residuals.
-         * 
-         * The norm value is provided as the input. This function computes 
+         *
+         * The norm value is provided as the input. This function computes
          * the norm of scaled residuals for the system that has been set
          * by the constructor or (re)setSystem functions.
-         * 
-         * @param nsr_system - norm of scaled residuals value to be verified 
+         *
+         * @param nsr_system - norm of scaled residuals value to be verified
          * @return int - 0 if the result is correct, error code otherwise
          */
         int checkNormOfScaledResiduals(ReSolve::real_type nsr_system)
         {
           using namespace ReSolve;
           int error_sum = 0;
-          
+
           // Compute residual norm to get updated vector res_
           res_->copyDataFrom(r_, memspace_, memspace_);
           norm_res_ = computeResidualNorm(*A_, *x_, *res_, memspace_);
 
           // Compute norm of scaled residuals
           real_type inf_norm_A = 0.0;
-          mh_.matrixInfNorm(A_, &inf_norm_A, memspace_); 
+          mh_.matrixInfNorm(A_, &inf_norm_A, memspace_);
           real_type inf_norm_x = vh_.infNorm(x_, memspace_);
           real_type inf_norm_res = vh_.infNorm(res_, memspace_);
           real_type nsr_norm   = inf_norm_res / (inf_norm_A * inf_norm_x);
           real_type error      = std::abs(nsr_system - nsr_norm)/nsr_norm;
 
           // Test norm of scaled residuals method in SystemSolver
-          if (error > 10.0*std::numeric_limits<real_type>::epsilon()) 
+          if (error > 10.0*std::numeric_limits<real_type>::epsilon())
           {
             std::cout << "Norm of scaled residuals computation failed:\n";
             std::cout << std::scientific << std::setprecision(16)
                       << "\tMatrix inf  norm                 : " << inf_norm_A << "\n"
-                      << "\tResidual inf norm                : " << inf_norm_res << "\n"  
-                      << "\tSolution inf norm                : " << inf_norm_x << "\n"  
+                      << "\tResidual inf norm                : " << inf_norm_res << "\n"
+                      << "\tSolution inf norm                : " << inf_norm_x << "\n"
                       << "\tNorm of scaled residuals         : " << nsr_norm   << "\n"
                       << "\tNorm of scaled residuals (system): " << nsr_system << "\n\n";
           }
@@ -257,19 +258,19 @@ namespace ReSolve
 
         /**
          * @brief Verify the computation of the relative residual norm.
-         * 
-         * The norm value is provided as the input. This function computes 
+         *
+         * The norm value is provided as the input. This function computes
          * the relative residual norm for the system that has been set
          * by the constructor or (re)setSystem functions.
-         * 
-         * @param rrn_system - relative residual norm value to be verified 
+         *
+         * @param rrn_system - relative residual norm value to be verified
          * @return int - 0 if the result is correct, error code otherwise
          */
         int checkRelativeResidualNorm(ReSolve::real_type rrn_system)
         {
           using namespace ReSolve;
           int error_sum = 0;
-          
+
           // Compute residual norm
           res_->copyDataFrom(r_, memspace_, memspace_);
           norm_res_ = computeResidualNorm(*A_, *x_, *res_, memspace_);
@@ -287,19 +288,19 @@ namespace ReSolve
 
         /**
          * @brief Verify the computation of the residual norm.
-         * 
-         * The norm value is provided as the input. This function computes 
+         *
+         * The norm value is provided as the input. This function computes
          * the residual norm for the system that has been set by the constructor
          * or (re)setSystem functions.
-         * 
-         * @param rrn_system - residual norm value to be verified 
+         *
+         * @param rrn_system - residual norm value to be verified
          * @return int - 0 if the result is correct, error code otherwise
          */
         int checkResidualNorm(ReSolve::real_type rn_system)
         {
           using namespace ReSolve;
           int error_sum = 0;
-          
+
           // Compute residual norm
           res_->copyDataFrom(r_, memspace_, memspace_);
           norm_res_ = computeResidualNorm(*A_, *x_, *res_, memspace_);
@@ -325,7 +326,7 @@ namespace ReSolve
           norm_res_ = computeResidualNorm(*A_, *x_, *res_, memspace_);
 
           // Compute norm of scaled residuals
-          mh_.matrixInfNorm(A_, &inf_norm_A_, memspace_); 
+          mh_.matrixInfNorm(A_, &inf_norm_A_, memspace_);
           inf_norm_x_   = vh_.infNorm(x_, memspace_);
           inf_norm_res_ = vh_.infNorm(res_, memspace_);
           nsr_norm_     = inf_norm_res_ / (inf_norm_A_ * inf_norm_x_);
@@ -333,13 +334,13 @@ namespace ReSolve
 
         /**
          * @brief Computes residual norm = || A * x - r ||_2
-         * 
-         * @param[in]     A - system matrix 
+         *
+         * @param[in]     A - system matrix
          * @param[in]     x - computed solution of the system
          * @param[in,out] r - system right-hand side, residual vector
          * @param[in]     memspace memory space where to computate the norm
-         * @return ReSolve::real_type 
-         * 
+         * @return ReSolve::real_type
+         *
          * @post r is overwritten with residual values
          */
         ReSolve::real_type computeResidualNorm(ReSolve::matrix::Sparse& A,
