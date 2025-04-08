@@ -13,95 +13,81 @@
 #include <resolve/LinSolverDirectKLU.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 #include "ExampleHelper.hpp"
+#include <resolve/utilities/params/CliOptions.hpp>
+
 using namespace ReSolve::constants;
-/// Prototype of the example function
-template <class workspace_type, class solve_type>
-static int kluStandAlone(int argc, char *argv[]);
 
-/// Main function selects example to be run.
-int main(int argc, char *argv[])
+/// Prints help message describing system usage.
+void printHelpInfo()
 {
-  kluStandAlone<ReSolve::LinAlgWorkspaceCpu,
-             ReSolve::LinSolverDirectKLU>(argc, argv);
-  #ifdef RESOLVE_USE_CUDA
-    kluStandAlone<ReSolve::LinAlgWorkspaceCUDA,
-               ReSolve::LinSolverDirectKLU>(argc, argv);
-  #endif
-
-  #ifdef RESOLVE_USE_HIP
-    kluStandAlone<ReSolve::LinAlgWorkspaceHIP,
-                ReSolve::LinSolverDirectKLU>(argc, argv);
-  #endif
-
-  return 0;
+  std::cout << "\nLoads from files and solves a linear system.\n\n";
+  std::cout << "System matrix is in a file with name <matrix file name>\n";
+  std::cout << "System right hand side vector is stored in a file with name <rhs file name>\n\n";
+  std::cout << "kluStandAlone.exe -m <matrix file name> -r <rhs file name> \n\n";
+  std::cout << "Optional features:\n\t-h\tPrints this message.\n";
+  std::cout << "\t-i\tEnables iterative refinement.\n\n";
 }
 
-
-/**
- * @brief Example of using a stand alone solve on for KLU
- *
- * @tparam workspace_type - Type of the workspace to use
- * @param[in] argc - Number of command line arguments
- * @param[in] argv - Command line arguments
- * @return 0 if the example ran successfully, -1 otherwise
- */
-template <class workspace_type, class solve_type>
-int kluStandAlone(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
   // Use the same data types as those you specified in ReSolve build.
   using real_type  = ReSolve::real_type;
   using vector_type = ReSolve::vector::Vector;
 
-  if (argc < 3) {
-      std::cerr << "Usage: " << argv[0] << " <matrixFileName> <rhsFileName>" << std::endl;
-      return -1;
+  ReSolve::CliOptions options(argc, argv);
+  ReSolve::CliOptions::Option* opt = nullptr;
+
+  bool is_help = options.hasKey("-h");
+  if (is_help) {
+    printHelpInfo();
+    return 0;
   }
-  std::string  matrixFileName = argv[1];
-  std::string  rhsFileName = argv[2];
 
-  std::cout<<"Family mtx file name: "<< matrixFileName << std::endl;
-  std::cout<<"Family rhs file name: "<< rhsFileName << std::endl;
+  bool is_iterative_refinement = options.hasKey("-i");
 
-  std::string fileId;
-  std::string rhsId;
+  std::string matrix_file_name("");
+  opt = options.getParamFromKey("-m");
+  if (opt) {
+    matrix_file_name = opt->second;
+  } else {
+    std::cout << "Incorrect input!\n";
+    printHelpInfo();
+  }
+
+  std::string rhs_file_name("");
+  opt = options.getParamFromKey("-r");
+  if (opt) {
+    rhs_file_name = opt->second;
+  } else {
+    std::cout << "Incorrect input!\n";
+    printHelpInfo();
+  }
 
   ReSolve::matrix::Csr* A = nullptr;
-  workspace_type workspace;
-  workspace.initializeHandles();
-  // Create a helper object (computing errors, printing summaries, etc.)
-  ReSolve::examples::ExampleHelper<workspace_type> helper(workspace);
-  std::cout << "kluStandAlone with " << helper.getHardwareBackend() << " backend\n";
-
-  ReSolve::MatrixHandler matrix_handler(&workspace);
-  ReSolve::VectorHandler vector_handler(&workspace);
+  ReSolve::LinAlgWorkspaceCpu* workspace = new ReSolve::LinAlgWorkspaceCpu();
+  ReSolve::MatrixHandler* matrix_handler = new ReSolve::MatrixHandler(workspace);
+  ReSolve::VectorHandler* vector_handler = new ReSolve::VectorHandler(workspace);
   real_type* rhs = nullptr;
   real_type* x   = nullptr;
 
   vector_type* vec_rhs = nullptr;
   vector_type* vec_x   = nullptr;
   vector_type* vec_r   = nullptr;
-  real_type norm_A, norm_x, norm_r;//used for INF norm
 
-  solve_type* KLU = new solve_type;
+  ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
+  // Create a helper object (computing errors, printing summaries, etc.)
+  ReSolve::examples::ExampleHelper<ReSolve::LinAlgWorkspaceCpu> helper(*workspace);
 
-
-
-  // Read matrix first
-  std::cout << "========================================================================================================================"<<std::endl;
-  std::cout << "Reading: " << matrixFileName << std::endl;
-  std::cout << "========================================================================================================================"<<std::endl;
-  std::cout << std::endl;
-  // Read first matrix
-  std::ifstream mat_file(matrixFileName);
+  std::ifstream mat_file(matrix_file_name);
   if(!mat_file.is_open())
   {
-    std::cout << "Failed to open file " << matrixFileName << "\n";
+    std::cout << "Failed to open file " << matrix_file_name<< "\n";
     return -1;
   }
-  std::ifstream rhs_file(rhsFileName);
+  std::ifstream rhs_file(rhs_file_name);
   if(!rhs_file.is_open())
   {
-    std::cout << "Failed to open file " << rhsFileName << "\n";
+    std::cout << "Failed to open file " << rhs_file_name << "\n";
     return -1;
   }
   bool is_expand_symmetric = true;
@@ -112,7 +98,7 @@ int kluStandAlone(int argc, char *argv[])
   vec_rhs = new vector_type(A->getNumRows());
   vec_x = new vector_type(A->getNumRows());
   vec_r = new vector_type(A->getNumRows());
-  std::cout<<"Finished reading the matrix and rhs, size: "<<A->getNumRows()<<" x "<<A->getNumColumns()<< ", nnz: "<< A->getNnz()<< ", symmetric? "<<A->symmetric()<< ", Expanded? "<<A->expanded()<<std::endl;
+  helper.resetSystem(A, vec_rhs, vec_x);
   mat_file.close();
   rhs_file.close();
 
@@ -130,15 +116,11 @@ int kluStandAlone(int argc, char *argv[])
   std::cout << "KLU solve status: " << status << std::endl;
   vec_r->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
 
-  matrix_handler.setValuesChanged(true, ReSolve::memory::HOST);
+  matrix_handler->setValuesChanged(true, ReSolve::memory::HOST);
 
-  matrix_handler.matvec(A, vec_x, vec_r, &ONE, &MINUSONE, ReSolve::memory::HOST);
+  matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, ReSolve::memory::HOST);
 
-  std::cout << "\t 2-Norm of the residual: "
-            << std::scientific << std::setprecision(16)
-            << sqrt(vector_handler.dot(vec_r, vec_r, ReSolve::memory::HOST)) << "\n";
-
-
+  helper.printShortSummary();
 
   //now DELETE
   delete A;
@@ -147,7 +129,8 @@ int kluStandAlone(int argc, char *argv[])
   delete [] rhs;
   delete vec_r;
   delete vec_x;
-  delete vec_rhs;
+  delete matrix_handler;
+  delete vector_handler;
 
   return 0;
 }
