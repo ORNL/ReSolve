@@ -176,11 +176,7 @@ int sysRefactor(int argc, char *argv[])
       ReSolve::io::updateMatrixFromFile(mat_file, A);
       ReSolve::io::updateArrayFromFile(rhs_file, &rhs);
     }
-    std::cout << "Finished reading the matrix and rhs, size: " << A->getNumRows()
-              << " x "           << A->getNumColumns()
-              << ", nnz: "       << A->getNnz()
-              << ", symmetric? " << A->symmetric()
-              << ", Expanded? "  << A->expanded() << std::endl;
+    printSystemInfo(matrix_pathname_full, A);
     mat_file.close();
     rhs_file.close();
 
