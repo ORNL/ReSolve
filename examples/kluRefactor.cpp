@@ -2,7 +2,7 @@
 #include <iostream>
 #include <iomanip>
 #include <cmath>
-
+#include <sstream>
 #include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/Csc.hpp>
@@ -37,9 +37,10 @@ int main(int argc, char *argv[])
   using index_type = ReSolve::index_type;
   using real_type  = ReSolve::real_type;
   using vector_type = ReSolve::vector::Vector;
-
-  ReSolve::CliOptions options(argc, argv);
-  ReSolve::CliOptions::Option* opt = nullptr;
+  using namespace ReSolve::examples;
+  using namespace ReSolve;
+  CliOptions options(argc, argv);
+  CliOptions::Option* opt = nullptr;
 
   bool is_help = options.hasKey("-h");
   if (is_help) {
@@ -78,48 +79,41 @@ int main(int argc, char *argv[])
 
   std::string fileId;
   std::string rhsId;
-  std::string matrixFileNameFull;
-  std::string rhsFileNameFull;
+  std::string matrix_file_name_full;
+  std::string rhs_file_name_full;
 
-  ReSolve::matrix::Csr* A = nullptr;
-  ReSolve::LinAlgWorkspaceCpu workspace;
-  ReSolve::examples::ExampleHelper<ReSolve::LinAlgWorkspaceCpu> helper(workspace);
-  ReSolve::MatrixHandler* matrix_handler = new ReSolve::MatrixHandler(&workspace);
-  ReSolve::VectorHandler* vector_handler = new ReSolve::VectorHandler(&workspace);
+  matrix::Csr* A = nullptr;
+  LinAlgWorkspaceCpu workspace;
+  ExampleHelper<LinAlgWorkspaceCpu> helper(workspace);
+  MatrixHandler* matrix_handler = new MatrixHandler(&workspace);
+  VectorHandler* vector_handler = new VectorHandler(&workspace);
   real_type* rhs = nullptr;
   real_type* x   = nullptr;
 
   vector_type* vec_rhs = nullptr;
   vector_type* vec_x   = nullptr;
   vector_type* vec_r   = nullptr;
-  real_type norm_A, norm_x, norm_r;//used for INF norm
 
-  ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
+  LinSolverDirectKLU* KLU = new LinSolverDirectKLU;
 
   for (int i = 0; i < num_systems; ++i)
   {
-    index_type j = 4 + i * 2;
-    fileId = argv[j];
-    rhsId = argv[j + 1];
+    std::cout << "System " << i << ":\n";
 
-    matrixFileNameFull = "";
-    rhsFileNameFull = "";
-
-    // Read matrix first
-    matrixFileNameFull = matrix_path_name + fileId + ".mtx";
-    rhsFileNameFull = rhs_path_name  + rhsId + ".mtx";
-    helper.resetSystem(A, vec_rhs, vec_x);
-    helper.printShortSummary();
-    std::ifstream mat_file(matrixFileNameFull);
+    std::ostringstream matname;
+    std::ostringstream rhsname;
+    matname << matrix_path_name << std::setfill('0') << std::setw(2) << i << ".mtx";
+    rhsname << rhs_path_name    << std::setfill('0') << std::setw(2) << i << ".mtx";
+    std::ifstream mat_file(matrix_file_name_full);
     if(!mat_file.is_open())
     {
-      std::cout << "Failed to open file " << matrixFileNameFull << "\n";
+      std::cout << "Failed to open file " << matrix_file_name_full << "\n";
       return -1;
     }
-    std::ifstream rhs_file(rhsFileNameFull);
+    std::ifstream rhs_file(rhs_file_name_full);
     if(!rhs_file.is_open())
     {
-      std::cout << "Failed to open file " << rhsFileNameFull << "\n";
+      std::cout << "Failed to open file " << rhs_file_name_full << "\n";
       return -1;
     }
     bool is_expand_symmetric = true;
@@ -135,11 +129,7 @@ int main(int argc, char *argv[])
       ReSolve::io::updateMatrixFromFile(mat_file, A);
       ReSolve::io::updateArrayFromFile(rhs_file, &rhs);
     }
-    std::cout << "Finished reading the matrix and rhs, size: " << A->getNumRows()
-              << " x "           << A->getNumColumns()
-              << ", nnz: "       << A->getNnz()
-              << ", symmetric? " << A->symmetric()
-              << ", Expanded? "  << A->expanded() << std::endl;
+    printSystemInfo(matrix_file_name_full, A);
     mat_file.close();
     rhs_file.close();
 
@@ -171,17 +161,9 @@ int main(int argc, char *argv[])
     matrix_handler->setValuesChanged(true, ReSolve::memory::HOST);
 
     matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, ReSolve::memory::HOST);
-    norm_r = vector_handler->infNorm(vec_r, ReSolve::memory::HOST);
 
-    std::cout << "\t2-Norm of the residual: "
-              << std::scientific << std::setprecision(16)
-              << sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::HOST)) << "\n";
-    matrix_handler->matrixInfNorm(A, &norm_A, ReSolve::memory::HOST);
-    norm_x = vector_handler->infNorm(vec_x, ReSolve::memory::HOST);
-    std::cout << "\tMatrix inf  norm: " << std::scientific << std::setprecision(16) << norm_A<<"\n"
-              << "\tResidual inf norm: " << norm_r <<"\n"
-              << "\tSolution inf norm: " << norm_x <<"\n"
-              << "\tNorm of scaled residuals: "<< norm_r / (norm_A * norm_x) << "\n";
+    helper.resetSystem(A, vec_rhs, vec_x);
+    helper.printShortSummary();
   }
 
   //now DELETE

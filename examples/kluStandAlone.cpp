@@ -33,9 +33,10 @@ int main(int argc, char *argv[])
   // Use the same data types as those you specified in ReSolve build.
   using real_type  = ReSolve::real_type;
   using vector_type = ReSolve::vector::Vector;
-
-  ReSolve::CliOptions options(argc, argv);
-  ReSolve::CliOptions::Option* opt = nullptr;
+  using namespace ReSolve::examples;
+  using namespace ReSolve;
+  CliOptions options(argc, argv);
+  CliOptions::Option* opt = nullptr;
 
   bool is_help = options.hasKey("-h");
   if (is_help) {
@@ -63,10 +64,10 @@ int main(int argc, char *argv[])
     printHelpInfo();
   }
 
-  ReSolve::matrix::Csr* A = nullptr;
-  ReSolve::LinAlgWorkspaceCpu* workspace = new ReSolve::LinAlgWorkspaceCpu();
-  ReSolve::MatrixHandler* matrix_handler = new ReSolve::MatrixHandler(workspace);
-  ReSolve::VectorHandler* vector_handler = new ReSolve::VectorHandler(workspace);
+  matrix::Csr* A = nullptr;
+  LinAlgWorkspaceCpu* workspace = new LinAlgWorkspaceCpu();
+  MatrixHandler* matrix_handler = new MatrixHandler(workspace);
+  VectorHandler* vector_handler = new VectorHandler(workspace);
   real_type* rhs = nullptr;
   real_type* x   = nullptr;
 
@@ -74,9 +75,9 @@ int main(int argc, char *argv[])
   vector_type* vec_x   = nullptr;
   vector_type* vec_r   = nullptr;
 
-  ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
+  LinSolverDirectKLU* KLU = new LinSolverDirectKLU;
   // Create a helper object (computing errors, printing summaries, etc.)
-  ReSolve::examples::ExampleHelper<ReSolve::LinAlgWorkspaceCpu> helper(*workspace);
+  examples::ExampleHelper<LinAlgWorkspaceCpu> helper(*workspace);
 
   std::ifstream mat_file(matrix_file_name);
   if(!mat_file.is_open())
@@ -99,6 +100,7 @@ int main(int argc, char *argv[])
   vec_x = new vector_type(A->getNumRows());
   vec_r = new vector_type(A->getNumRows());
   helper.resetSystem(A, vec_rhs, vec_x);
+  printSystemInfo(matrix_file_name, A);
   mat_file.close();
   rhs_file.close();
 
