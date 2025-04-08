@@ -2,7 +2,8 @@
 #include <iostream>
 #include <iomanip>
 #include <cmath>
-
+#include <sstream>
+#include <string>
 #include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/Csc.hpp>
@@ -14,6 +15,22 @@
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 #include <resolve/SystemSolver.hpp>
 #include "ExampleHelper.hpp"
+#include <resolve/utilities/params/CliOptions.hpp>
+
+/// Prints help message describing system usage.
+void printHelpInfo()
+{
+  std::cout << "\nLoads from files and solves a series of linear systems.\n\n";
+  std::cout << "System matrices are in files with names <pathname>XX.mtx, where XX are\n";
+  std::cout << "consecutive integer numbers 00, 01, 02, ...\n\n";
+  std::cout << "System right hand side vectors are stored in files with matching numbering.\n";
+  std::cout << "and file extension.\n\n";
+  std::cout << "Usage:\n\t./";
+  std::cout << "gpuRefactor.exe -m <matrix pathname> -r <rhs pathname> -n <number of systems>\n\n";
+  std::cout << "Optional features:\n\t-h\tPrints this message.\n";
+  std::cout << "\t-i\tEnables iterative refinement.\n\n";
+}
+
 
 using namespace ReSolve::constants;
 
@@ -48,33 +65,70 @@ template <class workspace_type>
 int sysRefactor(int argc, char *argv[])
 {
   // Use the same data types as those you specified in ReSolve build.
+  using namespace ReSolve::examples;
+  using namespace ReSolve;
   using index_type = ReSolve::index_type;
   using real_type  = ReSolve::real_type;
   using vector_type = ReSolve::vector::Vector;
 
-  (void) argc; // TODO: Check if the number of input parameters is correct.
-  std::string  matrixFileName = argv[1];
-  std::string  rhsFileName = argv[2];
+  CliOptions options(argc, argv);
+  CliOptions::Option* opt = nullptr;
 
-  index_type numSystems = std::stoi(argv[3]);
-  std::cout<<"Family mtx file name: "<< matrixFileName << ", total number of matrices: "<<numSystems<<std::endl;
-  std::cout<<"Family rhs file name: "<< rhsFileName << ", total number of RHSes: " << numSystems<<std::endl;
+  bool is_help = options.hasKey("-h");
+  if (is_help) {
+    printHelpInfo();
+    return 0;
+  }
 
-  std::string fileId;
-  std::string rhsId;
-  std::string matrixFileNameFull;
-  std::string rhsFileNameFull;
+  bool is_iterative_refinement = options.hasKey("-i");
 
-  ReSolve::matrix::Csr* A = nullptr;
+  index_type num_systems = 0;
+  opt = options.getParamFromKey("-n");
+  if (opt) {
+    num_systems = atoi((opt->second).c_str());
+  } else {
+    std::cout << "Incorrect input!\n";
+    printHelpInfo();
+  }
+
+  std::string matrix_pathname("");
+  opt = options.getParamFromKey("-m");
+  if (opt) {
+    matrix_pathname = opt->second;
+  } else {
+    std::cout << "Incorrect input!\n";
+    printHelpInfo();
+  }
+
+  std::string rhs_pathname("");
+  opt = options.getParamFromKey("-r");
+  if (opt) {
+    rhs_pathname = opt->second;
+  } else {
+    std::cout << "Incorrect input!\n";
+    printHelpInfo();
+  }
+
+  std::cout << "Family mtx file name: "       << matrix_pathname
+            << ", total number of matrices: " << num_systems << "\n"
+            << "Family rhs file name: "       << rhs_pathname
+            << ", total number of RHSes: "    << num_systems << "\n";
+
+  std::string filed_id;
+  std::string rhs_id;
+  std::string matrix_file_name_full;
+  std::string rhs_file_name_full;
+
+  matrix::Csr* A = nullptr;
   workspace_type workspace;
   workspace.initializeHandles();
 
   // Create a helper object (computing errors, printing summaries, etc.)
-  ReSolve::examples::ExampleHelper<workspace_type> helper(workspace);
+  ExampleHelper<workspace_type> helper(workspace);
   std::cout << "sysRefactor with " << helper.getHardwareBackend() << " backend\n";
 
-  ReSolve::MatrixHandler matrix_handler(&workspace);
-  ReSolve::VectorHandler vector_handler(&workspace);
+  MatrixHandler matrix_handler(&workspace);
+  VectorHandler vector_handler(&workspace);
 
   real_type* rhs = nullptr;
   real_type* x   = nullptr;
@@ -83,37 +137,30 @@ int sysRefactor(int argc, char *argv[])
   vector_type* vec_x   = nullptr;
   vector_type* vec_r   = nullptr;
 
-  ReSolve::SystemSolver* solver = new ReSolve::SystemSolver(&workspace);
+  SystemSolver* solver = new SystemSolver(&workspace);
   solver->setRefinementMethod("fgmres", "cgs2");
 
-  for (int i = 0; i < numSystems; ++i)
+  for (int i = 0; i < num_systems; ++i)
   {
-    index_type j = 4 + i * 2;
-    fileId = argv[j];
-    rhsId = argv[j + 1];
+    std::cout << "System " << i << ":\n";
+    std::ostringstream matname;
+    std::ostringstream rhsname;
+    matname << matrix_pathname << std::setfill('0') << std::setw(2) << i << ".mtx";
+    rhsname << rhs_pathname    << std::setfill('0') << std::setw(2) << i << ".mtx";
+    std::string matrix_pathname_full = matname.str();
+    std::string rhs_pathname_full    = rhsname.str();
 
-    matrixFileNameFull = "";
-    rhsFileNameFull = "";
-
-    // Read matrix first
-    matrixFileNameFull = matrixFileName + fileId + ".mtx";
-    rhsFileNameFull = rhsFileName + rhsId + ".mtx";
-    std::cout << std::endl << std::endl << std::endl;
-    std::cout << "========================================================================================================================"<<std::endl;
-    std::cout << "Reading: " << matrixFileNameFull << std::endl;
-    std::cout << "========================================================================================================================"<<std::endl;
-    std::cout << std::endl;
-    // Read first matrix
-    std::ifstream mat_file(matrixFileNameFull);
+    // Read matrix and right-hand-side vector
+    std::ifstream mat_file(matrix_pathname_full);
     if(!mat_file.is_open())
     {
-      std::cerr << "Failed to open file " << matrixFileNameFull << std::endl;
+      std::cout << "Failed to open file " << matrix_pathname_full << "\n";
       return -1;
     }
-    std::ifstream rhs_file(rhsFileNameFull);
+    std::ifstream rhs_file(rhs_pathname_full);
     if(!rhs_file.is_open())
     {
-      std::cerr << "Failed to open file " << rhsFileNameFull << std::endl;
+      std::cout << "Failed to open file " << rhs_pathname_full << "\n";
       return -1;
     }
     bool is_expand_symmetric = true;
