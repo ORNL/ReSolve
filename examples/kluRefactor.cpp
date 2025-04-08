@@ -13,57 +13,68 @@
 #include <resolve/LinSolverDirectKLU.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 #include "ExampleHelper.hpp"
+#include <resolve/utilities/params/CliOptions.hpp>
 
 using namespace ReSolve::constants;
 
-/// Prototype of the example function
-template <class workspace_type, class refactor_type>
-static int kluRefactor(int argc, char *argv[]);
-
-/// Main function selects example to be run.
-int main(int argc, char *argv[])
+/// Prints help message describing system usage.
+void printHelpInfo()
 {
-  kluRefactor<ReSolve::LinAlgWorkspaceCpu,
-             ReSolve::LinSolverDirectKLU>(argc, argv);
-  #ifdef RESOLVE_USE_CUDA
-    kluRefactor<ReSolve::LinAlgWorkspaceCUDA,
-               ReSolve::LinSolverDirectKLU>(argc, argv);
-  #endif
-
-  #ifdef RESOLVE_USE_HIP
-    kluRefactor<ReSolve::LinAlgWorkspaceHIP,
-                ReSolve::LinSolverDirectKLU>(argc, argv);
-  #endif
-
-  return 0;
+  std::cout << "\nLoads from files and solves a series of linear systems.\n\n";
+  std::cout << "System matrices are in files with names <pathname>XX.mtx, where XX are\n";
+  std::cout << "consecutive integer numbers 00, 01, 02, ...\n\n";
+  std::cout << "System right hand side vectors are stored in files with matching numbering.\n";
+  std::cout << "and file extension.\n\n";
+  std::cout << "Usage:\n\t./";
+  std::cout << "kluRefactor.exe -m <matrix pathname> -r <rhs pathname> -n <number of systems>\n\n";
+  std::cout << "Optional features:\n\t-h\tPrints this message.\n";
+  std::cout << "\t-i\tEnables iterative refinement.\n\n";
 }
 
-/**
- * @brief Example of using refactorization solvers on for KLU
- *
- * @tparam workspace_type - Type of the workspace to use
- * @param[in] argc - Number of command line arguments
- * @param[in] argv - Command line arguments
- * @return 0 if the example ran successfully, -1 otherwise
- */
-template <class workspace_type, class refactor_type>
-int kluRefactor(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
   // Use the same data types as those you specified in ReSolve build.
   using index_type = ReSolve::index_type;
   using real_type  = ReSolve::real_type;
   using vector_type = ReSolve::vector::Vector;
 
-  if (argc < 4) {
-    std::cerr << "Error: Not enough input parameters. Expected 3 parameters: <matrixFileName> <rhsFileName> <numSystems>" << std::endl;
-    return -1;
-  }
-  std::string  matrixFileName = argv[1];
-  std::string  rhsFileName = argv[2];
+  ReSolve::CliOptions options(argc, argv);
+  ReSolve::CliOptions::Option* opt = nullptr;
 
-  index_type numSystems = std::stoi(argv[3]);
-  std::cout<<"Family mtx file name: "<< matrixFileName << ", total number of matrices: "<<numSystems<<std::endl;
-  std::cout<<"Family rhs file name: "<< rhsFileName << ", total number of RHSes: " << numSystems<<std::endl;
+  bool is_help = options.hasKey("-h");
+  if (is_help) {
+    printHelpInfo();
+    return 0;
+  }
+
+  bool is_iterative_refinement = options.hasKey("-i");
+
+  index_type num_systems = 0;
+  opt = options.getParamFromKey("-n");
+  if (opt) {
+    num_systems = std::stoi((opt->second).c_str());
+  } else {
+    std::cout << "Incorrect input!\n";
+    printHelpInfo();
+  }
+
+  std::string matrix_path_name("");
+  opt = options.getParamFromKey("-m");
+  if (opt) {
+    matrix_path_name = opt->second;
+  } else {
+    std::cout << "Incorrect input!\n";
+    printHelpInfo();
+  }
+
+  std::string rhs_path_name("");
+  opt = options.getParamFromKey("-r");
+  if (opt) {
+    rhs_path_name = opt->second;
+  } else {
+    std::cout << "Incorrect input!\n";
+    printHelpInfo();
+  }
 
   std::string fileId;
   std::string rhsId;
@@ -71,14 +82,10 @@ int kluRefactor(int argc, char *argv[])
   std::string rhsFileNameFull;
 
   ReSolve::matrix::Csr* A = nullptr;
-  workspace_type workspace;
-  workspace.initializeHandles();
-  // Create a helper object (computing errors, printing summaries, etc.)
-  ReSolve::examples::ExampleHelper<workspace_type> helper(workspace);
-  std::cout << "kluRefactor with " << helper.getHardwareBackend() << " backend\n";
-
-  ReSolve::MatrixHandler matrix_handler(&workspace);
-  ReSolve::VectorHandler vector_handler(&workspace);
+  ReSolve::LinAlgWorkspaceCpu workspace;
+  ReSolve::examples::ExampleHelper<ReSolve::LinAlgWorkspaceCpu> helper(workspace);
+  ReSolve::MatrixHandler* matrix_handler = new ReSolve::MatrixHandler(&workspace);
+  ReSolve::VectorHandler* vector_handler = new ReSolve::VectorHandler(&workspace);
   real_type* rhs = nullptr;
   real_type* x   = nullptr;
 
@@ -87,9 +94,9 @@ int kluRefactor(int argc, char *argv[])
   vector_type* vec_r   = nullptr;
   real_type norm_A, norm_x, norm_r;//used for INF norm
 
-  refactor_type* KLU = new refactor_type;
+  ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
 
-  for (int i = 0; i < numSystems; ++i)
+  for (int i = 0; i < num_systems; ++i)
   {
     index_type j = 4 + i * 2;
     fileId = argv[j];
@@ -99,24 +106,20 @@ int kluRefactor(int argc, char *argv[])
     rhsFileNameFull = "";
 
     // Read matrix first
-    matrixFileNameFull = matrixFileName + fileId + ".mtx";
-    rhsFileNameFull = rhsFileName + rhsId + ".mtx";
-    std::cout << std::endl << std::endl << std::endl;
-    std::cout << "========================================================================================================================"<<std::endl;
-    std::cout << "Reading: " << matrixFileNameFull << std::endl;
-    std::cout << "========================================================================================================================"<<std::endl;
-    std::cout << std::endl;
-    // Read first matrix
+    matrixFileNameFull = matrix_path_name + fileId + ".mtx";
+    rhsFileNameFull = rhs_path_name  + rhsId + ".mtx";
+    helper.resetSystem(A, vec_rhs, vec_x);
+    helper.printShortSummary();
     std::ifstream mat_file(matrixFileNameFull);
     if(!mat_file.is_open())
     {
-      std::cerr << "Failed to open file " << matrixFileNameFull << "\n";
+      std::cout << "Failed to open file " << matrixFileNameFull << "\n";
       return -1;
     }
     std::ifstream rhs_file(rhsFileNameFull);
     if(!rhs_file.is_open())
     {
-      std::cerr << "Failed to open file " << rhsFileNameFull << "\n";
+      std::cout << "Failed to open file " << rhsFileNameFull << "\n";
       return -1;
     }
     bool is_expand_symmetric = true;
@@ -157,26 +160,24 @@ int kluRefactor(int argc, char *argv[])
       std::cout<<"KLU analysis status: "<<status<<std::endl;
       status = KLU->factorize();
       std::cout<<"KLU factorization status: "<<status<<std::endl;
-      status = KLU->solve(vec_rhs, vec_x);
-      std::cout<<"KLU solve status: "<<status<<std::endl;
     } else {
       status =  KLU->refactorize();
       std::cout<<"KLU re-factorization status: "<<status<<std::endl;
-      status = KLU->solve(vec_rhs, vec_x);
-      std::cout<<"KLU solve status: "<<status<<std::endl;
     }
+    status = KLU->solve(vec_rhs, vec_x);
+    std::cout<<"KLU solve status: "<<status<<std::endl;
     vec_r->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
 
-    matrix_handler.setValuesChanged(true, ReSolve::memory::HOST);
+    matrix_handler->setValuesChanged(true, ReSolve::memory::HOST);
 
-    matrix_handler.matvec(A, vec_x, vec_r, &ONE, &MINUSONE, ReSolve::memory::HOST);
-    norm_r = vector_handler.infNorm(vec_r, ReSolve::memory::HOST);
+    matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, ReSolve::memory::HOST);
+    norm_r = vector_handler->infNorm(vec_r, ReSolve::memory::HOST);
 
     std::cout << "\t2-Norm of the residual: "
               << std::scientific << std::setprecision(16)
-              << sqrt(vector_handler.dot(vec_r, vec_r, ReSolve::memory::HOST)) << "\n";
-    matrix_handler.matrixInfNorm(A, &norm_A, ReSolve::memory::HOST);
-    norm_x = vector_handler.infNorm(vec_x, ReSolve::memory::HOST);
+              << sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::HOST)) << "\n";
+    matrix_handler->matrixInfNorm(A, &norm_A, ReSolve::memory::HOST);
+    norm_x = vector_handler->infNorm(vec_x, ReSolve::memory::HOST);
     std::cout << "\tMatrix inf  norm: " << std::scientific << std::setprecision(16) << norm_A<<"\n"
               << "\tResidual inf norm: " << norm_r <<"\n"
               << "\tSolution inf norm: " << norm_x <<"\n"
@@ -190,7 +191,8 @@ int kluRefactor(int argc, char *argv[])
   delete [] rhs;
   delete vec_r;
   delete vec_x;
-  delete vec_rhs;
+  delete matrix_handler;
+  delete vector_handler;
 
   return 0;
 }
