@@ -25,8 +25,12 @@ void printHelpInfo()
   std::cout << "consecutive integer numbers 00, 01, 02, ...\n\n";
   std::cout << "System right hand side vectors are stored in files with matching numbering.\n";
   std::cout << "and file extension.\n\n";
+  std::cout << "Backend can be specified with -b option.\n";
+  std::cout << "Backend options:\n\t-cpu\tCPU backend (default)\n";
+  std::cout << "\t-cuda\tCUDA backend\n";
+  std::cout << "\t-hip\tHIP backend\n\n";
   std::cout << "Usage:\n\t./";
-  std::cout << "gpuRefactor.exe -m <matrix pathname> -r <rhs pathname> -n <number of systems>\n\n";
+  std::cout << "sysRefactor.exe -m <matrix pathname> -r <rhs pathname> -n <number of systems> -b <backend>\n\n";
   std::cout << "Optional features:\n\t-h\tPrints this message.\n";
   std::cout << "\t-i\tEnables iterative refinement.\n\n";
 }
@@ -41,14 +45,41 @@ static int sysRefactor(int argc, char *argv[]);
 /// Main function selects example to be run.
 int main(int argc, char *argv[])
 {
-  sysRefactor<ReSolve::LinAlgWorkspaceCpu>(argc, argv);
-  #ifdef RESOLVE_USE_CUDA
-    sysRefactor<ReSolve::LinAlgWorkspaceCUDA>(argc, argv);
-  #endif
-
-  #ifdef RESOLVE_USE_HIP
-    sysRefactor<ReSolve::LinAlgWorkspaceHIP>(argc, argv);
-  #endif
+  // Check the backend command line argument and set the
+  // corresponding backend for the example
+  // Default backend is CPU
+  ReSolve::CliOptions options(argc, argv);
+  ReSolve::CliOptions::Option* opt = nullptr;
+  // Check if the user has provided the backend option
+  if (!options.hasKey("-b")) {
+    std::cout << "No backend option provided. Defaulting to CPU.\n";
+    sysRefactor<ReSolve::LinAlgWorkspaceCpu>(argc, argv);
+    return 0;
+  }
+  std::string backend_option = options.getParamFromKey("-b")->second;
+  if (backend_option == "cuda") {
+    #ifdef RESOLVE_USE_CUDA
+        sysRefactor<ReSolve::LinAlgWorkspaceCUDA>(argc, argv);
+    #else
+        std::cout << "CUDA backend requested, but ReSolve is not built with CUDA support.\n";
+        return -1;
+    #endif
+  }
+  else if (backend_option == "hip") {
+    #ifdef RESOLVE_USE_HIP
+      sysRefactor<ReSolve::LinAlgWorkspaceHIP>(argc, argv);
+    #else
+      std::cout << "HIP backend requested, but ReSolve is not built with HIP support.\n";
+      return -1;
+    #endif
+  }
+  else if (backend_option == "cpu") {
+    sysRefactor<ReSolve::LinAlgWorkspaceCpu>(argc, argv);
+  }
+  else {
+    std::cout << "Invalid backend option. Use -b cpu, -b cuda, or -b hip.\n";
+    return -1;
+  }
 
   return 0;
 }
@@ -138,7 +169,10 @@ int sysRefactor(int argc, char *argv[])
   vector_type* vec_r   = nullptr;
 
   SystemSolver* solver = new SystemSolver(&workspace);
-  solver->setRefinementMethod("fgmres", "cgs2");
+  if (is_iterative_refinement && workspace_type!=LinAlgWorkspaceCpu) {
+    solver->setIterativeRefinement(true);
+    solver->setRefinementMethod("fgmres", "cgs2");
+  }
 
   for (int i = 0; i < num_systems; ++i)
   {
