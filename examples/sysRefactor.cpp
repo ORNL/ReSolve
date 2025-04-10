@@ -4,6 +4,7 @@
 #include <cmath>
 #include <sstream>
 #include <string>
+#include <resolve/Profiling.hpp>
 #include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/Csc.hpp>
@@ -172,9 +173,11 @@ int sysRefactor(int argc, char *argv[])
       solver->setRefinementMethod("fgmres", "cgs2");
   }
 
+  RESOLVE_RANGE_PUSH(__FUNCTION__);
   for (int i = 0; i < num_systems; ++i)
   {
     std::cout << "System " << i << ":\n";
+    RESOLVE_RANGE_PUSH("File input");
     std::ostringstream matname;
     std::ostringstream rhsname;
     matname << matrix_pathname << std::setfill('0') << std::setw(2) << i << ".mtx";
@@ -237,9 +240,7 @@ int sysRefactor(int argc, char *argv[])
     // Print summary of results
     helper.resetSystem(A, vec_rhs, vec_x);
     helper.printShortSummary();
-
   }
-
   //now DELETE
   delete A;
   delete solver;
