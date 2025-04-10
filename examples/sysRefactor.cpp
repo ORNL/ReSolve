@@ -208,14 +208,24 @@ int sysRefactor(int argc, char *argv[])
 
       vec_rhs = ReSolve::io::createVectorFromFile(rhs_file);
       vec_x = new vector_type(A->getNumRows());
+      vec_x->allocate(memory::HOST);
+      if (backend_option == "cuda" || backend_option == "hip") {
+        vec_x->allocate(memory::DEVICE);
+      }
+      std::cout << "vec_x size: " << vec_x->getSize() << std::endl;
       vec_r = new vector_type(A->getNumRows());
     } else {
       ReSolve::io::updateMatrixFromFile(mat_file, A);
       ReSolve::io::updateVectorFromFile(rhs_file, vec_rhs);
     }
+    std::cout << "Matrix loaded. Expanded NNZ: " << A->getNnz() << std::endl;
     printSystemInfo(matrix_pathname_full, A);
     mat_file.close();
     rhs_file.close();
+    if(backend_option == "cuda" || backend_option == "hip") {
+      A->syncData(memory::DEVICE);
+      vec_rhs->syncData(memory::DEVICE);
+    }
 
     std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnz()<<std::endl;
     //Now call direct solver
