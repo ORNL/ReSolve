@@ -230,7 +230,7 @@ int sysRefactor(int argc, char *argv[])
     std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnz()<<std::endl;
     //Now call direct solver
     int status;
-    if (i < 2 ){
+    if (i < 1 ){
       //solver->setup(A);
       solver->setMatrix(A);
       matrix_handler.setValuesChanged(true, memory_space);
