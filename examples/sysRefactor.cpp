@@ -140,6 +140,8 @@ int sysRefactor(int argc, char *argv[])
     printHelpInfo();
   }
 
+  std::string backend_option = options.getParamFromKey("-b")->second;
+
   std::cout << "Family mtx file name: "       << matrix_pathname
             << ", total number of matrices: " << num_systems << "\n"
             << "Family rhs file name: "       << rhs_pathname
@@ -169,9 +171,8 @@ int sysRefactor(int argc, char *argv[])
   vector_type* vec_r   = nullptr;
 
   SystemSolver* solver = new SystemSolver(&workspace);
-  if (is_iterative_refinement && workspace_type!=LinAlgWorkspaceCpu) {
-    solver->setIterativeRefinement(true);
-    solver->setRefinementMethod("fgmres", "cgs2");
+  if (is_iterative_refinement && backend_option != "cpu") {
+      solver->setRefinementMethod("fgmres", "cgs2");
   }
 
   for (int i = 0; i < num_systems; ++i)
