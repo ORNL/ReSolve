@@ -169,7 +169,7 @@ int sysRefactor(int argc, char *argv[])
 
   memory::MemorySpace memory_space = memory::HOST;
   if (backend_option == "cuda" || backend_option == "hip") {
-  memory_space = memory::DEVICE;
+    memory_space = memory::DEVICE;
   }
 
   SystemSolver* solver = new SystemSolver(&workspace);
