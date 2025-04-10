@@ -236,9 +236,12 @@ int sysRefactor(int argc, char *argv[])
       matrix_handler.setValuesChanged(true, memory_space);
       status = solver->analyze();
       std::cout<<"solver analysis status: "<<status<<std::endl;
+      status = solver->factorize();
+    } else {
+      //solver->setup(A);
+      status = solver->refactorize();
+      std::cout<<"solver factorization status: "<<status<<std::endl;
     }
-    status = solver->factorize();
-    std::cout<<"solver factorization status: "<<status<<std::endl;
     status = solver->solve(vec_rhs, vec_x);
     std::cout<<"solver solve status: "<<status<<std::endl;
     vec_r->copyDataFrom(vec_rhs, memory::HOST, memory_space);
