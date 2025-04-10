@@ -163,9 +163,6 @@ int sysRefactor(int argc, char *argv[])
   MatrixHandler matrix_handler(&workspace);
   VectorHandler vector_handler(&workspace);
 
-  real_type* rhs = nullptr;
-  real_type* x   = nullptr;
-
   vector_type* vec_rhs = nullptr;
   vector_type* vec_x   = nullptr;
   vector_type* vec_r   = nullptr;
@@ -202,26 +199,17 @@ int sysRefactor(int argc, char *argv[])
     if (i == 0) {
       A = ReSolve::io::createCsrFromFile(mat_file, is_expand_symmetric);
 
-      rhs = ReSolve::io::createArrayFromFile(rhs_file);
-      x = new real_type[A->getNumRows()];
-      vec_rhs = new vector_type(A->getNumRows());
+      vec_rhs = ReSolve::io::createVectorFromFile(rhs_file);
       vec_x = new vector_type(A->getNumRows());
       vec_r = new vector_type(A->getNumRows());
     } else {
       ReSolve::io::updateMatrixFromFile(mat_file, A);
-      ReSolve::io::updateArrayFromFile(rhs_file, &rhs);
+      ReSolve::io::updateVectorFromFile(rhs_file, vec_rhs);
     }
     printSystemInfo(matrix_pathname_full, A);
     mat_file.close();
     rhs_file.close();
 
-    // Update data.
-    if (i < 2) {
-      vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
-      vec_rhs->setDataUpdated(ReSolve::memory::HOST);
-    } else {
-      vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
-    }
     std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnz()<<std::endl;
     //Now call direct solver
     solver->setMatrix(A);
@@ -240,7 +228,7 @@ int sysRefactor(int argc, char *argv[])
       status = solver->solve(vec_rhs, vec_x);
       std::cout<<"solver solve status: "<<status<<std::endl;
     }
-    vec_r->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+    vec_r->copyDataFrom(vec_rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
 
     matrix_handler.setValuesChanged(true, ReSolve::memory::HOST);
 
@@ -255,8 +243,6 @@ int sysRefactor(int argc, char *argv[])
   //now DELETE
   delete A;
   delete solver;
-  delete [] x;
-  delete [] rhs;
   delete vec_r;
   delete vec_x;
   delete vec_rhs;
