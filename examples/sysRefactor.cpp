@@ -100,7 +100,6 @@ int sysRefactor(int argc, char *argv[])
   using namespace ReSolve::examples;
   using namespace ReSolve;
   using index_type = ReSolve::index_type;
-  using real_type  = ReSolve::real_type;
   using vector_type = ReSolve::vector::Vector;
 
   CliOptions options(argc, argv);
@@ -168,6 +167,11 @@ int sysRefactor(int argc, char *argv[])
   vector_type* vec_x   = nullptr;
   vector_type* vec_r   = nullptr;
 
+  memory::MemorySpace memory_space = memory::HOST;
+  if (backend_option == "cuda" || backend_option == "hip") {
+  memory_space = memory::DEVICE;
+  }
+
   SystemSolver* solver = new SystemSolver(&workspace);
   if (is_iterative_refinement && backend_option != "cpu") {
       solver->setRefinementMethod("fgmres", "cgs2");
@@ -231,11 +235,11 @@ int sysRefactor(int argc, char *argv[])
       status = solver->solve(vec_rhs, vec_x);
       std::cout<<"solver solve status: "<<status<<std::endl;
     }
-    vec_r->copyDataFrom(vec_rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+    vec_r->copyDataFrom(vec_rhs, memory_space, memory_space);
 
-    matrix_handler.setValuesChanged(true, ReSolve::memory::HOST);
+    matrix_handler.setValuesChanged(true, memory_space);
 
-    matrix_handler.matvec(A, vec_x, vec_r, &ONE, &MINUSONE, ReSolve::memory::HOST);
+    matrix_handler.matvec(A, vec_x, vec_r, &ONE, &MINUSONE, memory_space);
 
     // Print summary of results
     helper.resetSystem(A, vec_rhs, vec_x);
