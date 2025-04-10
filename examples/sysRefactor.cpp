@@ -176,7 +176,7 @@ int sysRefactor(int argc, char *argv[])
   if (is_iterative_refinement && backend_option != "cpu") {
       solver->setRefinementMethod("fgmres", "cgs2");
   }
-
+  bool is_expand_symmetric = true;
   RESOLVE_RANGE_PUSH(__FUNCTION__);
   for (int i = 0; i < num_systems; ++i)
   {
@@ -202,7 +202,7 @@ int sysRefactor(int argc, char *argv[])
       std::cout << "Failed to open file " << rhs_pathname_full << "\n";
       return -1;
     }
-    bool is_expand_symmetric = true;
+
     if (i == 0) {
       A = ReSolve::io::createCsrFromFile(mat_file, is_expand_symmetric);
 
@@ -229,10 +229,11 @@ int sysRefactor(int argc, char *argv[])
 
     std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnz()<<std::endl;
     //Now call direct solver
-    solver->setMatrix(A);
     int status;
-    if (i < 2){
-      // solver->setup(A);
+    if (i < 2 ){
+      //solver->setup(A);
+      solver->setMatrix(A);
+      matrix_handler.setValuesChanged(true, memory_space);
       status = solver->analyze();
       std::cout<<"solver analysis status: "<<status<<std::endl;
       status = solver->factorize();
@@ -240,14 +241,12 @@ int sysRefactor(int argc, char *argv[])
       status = solver->solve(vec_rhs, vec_x);
       std::cout<<"solver solve status: "<<status<<std::endl;
     } else {
-      status =  solver->refactorize();
+      status =  solver->factorize();
       std::cout<<"solver re-factorization status: "<<status<<std::endl;
       status = solver->solve(vec_rhs, vec_x);
       std::cout<<"solver solve status: "<<status<<std::endl;
     }
-    vec_r->copyDataFrom(vec_rhs, memory_space, memory_space);
-
-    matrix_handler.setValuesChanged(true, memory_space);
+    vec_r->copyDataFrom(vec_rhs, memory::HOST, memory_space);
 
     matrix_handler.matvec(A, vec_x, vec_r, &ONE, &MINUSONE, memory_space);
 
