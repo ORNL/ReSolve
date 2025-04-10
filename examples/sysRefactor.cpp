@@ -230,22 +230,18 @@ int sysRefactor(int argc, char *argv[])
     std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnz()<<std::endl;
     //Now call direct solver
     int status;
-    if (i < 1 ){
+    if (i == 0 ){
       //solver->setup(A);
       solver->setMatrix(A);
       matrix_handler.setValuesChanged(true, memory_space);
       status = solver->analyze();
       std::cout<<"solver analysis status: "<<status<<std::endl;
-      status = solver->factorize();
-      std::cout<<"solver factorization status: "<<status<<std::endl;
-      status = solver->solve(vec_rhs, vec_x);
-      std::cout<<"solver solve status: "<<status<<std::endl;
-    } else {
-      status =  solver->factorize();
-      std::cout<<"solver re-factorization status: "<<status<<std::endl;
-      status = solver->solve(vec_rhs, vec_x);
-      std::cout<<"solver solve status: "<<status<<std::endl;
+
     }
+    status = solver->factorize();
+    std::cout<<"solver factorization status: "<<status<<std::endl;
+    status = solver->solve(vec_rhs, vec_x);
+    std::cout<<"solver solve status: "<<status<<std::endl;
     vec_r->copyDataFrom(vec_rhs, memory::HOST, memory_space);
 
     matrix_handler.matvec(A, vec_x, vec_r, &ONE, &MINUSONE, memory_space);
