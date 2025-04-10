@@ -165,7 +165,6 @@ int sysRefactor(int argc, char *argv[])
 
   vector_type* vec_rhs = nullptr;
   vector_type* vec_x   = nullptr;
-  vector_type* vec_r   = nullptr;
 
   memory::MemorySpace memory_space = memory::HOST;
   if (backend_option == "cuda" || backend_option == "hip") {
@@ -213,7 +212,6 @@ int sysRefactor(int argc, char *argv[])
         vec_x->allocate(memory::DEVICE);
       }
       std::cout << "vec_x size: " << vec_x->getSize() << std::endl;
-      vec_r = new vector_type(A->getNumRows());
     } else {
       ReSolve::io::updateMatrixFromFile(mat_file, A);
       ReSolve::io::updateVectorFromFile(rhs_file, vec_rhs);
@@ -229,23 +227,22 @@ int sysRefactor(int argc, char *argv[])
 
     std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnz()<<std::endl;
     //Now call direct solver
+    solver->setMatrix(A);
     int status;
-    if (i == 0 ){
+    if (i <2 ){
       //solver->setup(A);
-      solver->setMatrix(A);
+
       matrix_handler.setValuesChanged(true, memory_space);
       status = solver->analyze();
       std::cout<<"solver analysis status: "<<status<<std::endl;
       status = solver->factorize();
     } else {
-      //solver->setup(A);
+      //solver->setup(A);ß
       status = solver->refactorize();
       std::cout<<"solver factorization status: "<<status<<std::endl;
     }
     status = solver->solve(vec_rhs, vec_x);
     std::cout<<"solver solve status: "<<status<<std::endl;
-    vec_r->copyDataFrom(vec_rhs, memory::HOST, memory_space);
-    matrix_handler.matvec(A, vec_x, vec_r, &ONE, &MINUSONE, memory_space);
 
     // Print summary of results
     helper.resetSystem(A, vec_rhs, vec_x);
@@ -254,7 +251,6 @@ int sysRefactor(int argc, char *argv[])
   //now DELETE
   delete A;
   delete solver;
-  delete vec_r;
   delete vec_x;
   delete vec_rhs;
 
