@@ -170,10 +170,31 @@ int sysRefactor(int argc, char *argv[])
   if (backend_option == "cuda" || backend_option == "hip") {
     memory_space = memory::DEVICE;
   }
-
-  SystemSolver* solver = new SystemSolver(&workspace);
+  // Create system solver
+  std::string refactor("none");
+  if (backend_option == "cuda") {
+    refactor = "cusolverrf";
+  } else if (backend_option == "hip") {
+    refactor = "rocsolverrf";
+  } else {
+    refactor = "klu";
+  }
+  ReSolve::SystemSolver solver(&workspace,
+                               "klu",    // factorization
+                               refactor, // refactorization
+                               refactor, // triangular solve
+                               "none",   // preconditioner (always 'none' here)
+                               "none");  // iterative refinement
   if (is_iterative_refinement && backend_option != "cpu") {
-      solver->setRefinementMethod("fgmres", "cgs2");
+    solver.setRefinementMethod("fgmres", "cgs2");
+    solver.getIterativeSolver().setCliParam("restart", "100");
+    if (backend_option == "hip") {
+      solver.getIterativeSolver().setMaxit(200);
+    }
+    if (backend_option == "cuda") {
+      solver.getIterativeSolver().setMaxit(400);
+      solver.getIterativeSolver().setTol(1e-17);
+    }
   }
   bool is_expand_symmetric = true;
   RESOLVE_RANGE_PUSH(__FUNCTION__);
@@ -227,21 +248,21 @@ int sysRefactor(int argc, char *argv[])
 
     std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnz()<<std::endl;
     //Now call direct solver
-    solver->setMatrix(A);
+    solver.setMatrix(A);
     int status;
     if (i <2 ){
-      //solver->setup(A);
+      //solver.setup(A);
 
       matrix_handler.setValuesChanged(true, memory_space);
-      status = solver->analyze();
+      status = solver.analyze();
       std::cout<<"solver analysis status: "<<status<<std::endl;
-      status = solver->factorize();
+      status = solver.factorize();
     } else {
-      //solver->setup(A);ß
-      status = solver->refactorize();
+      //solver.setup(A);ß
+      status = solver.refactorize();
       std::cout<<"solver factorization status: "<<status<<std::endl;
     }
-    status = solver->solve(vec_rhs, vec_x);
+    status = solver.solve(vec_rhs, vec_x);
     std::cout<<"solver solve status: "<<status<<std::endl;
 
     // Print summary of results
@@ -250,7 +271,6 @@ int sysRefactor(int argc, char *argv[])
   }
   //now DELETE
   delete A;
-  delete solver;
   delete vec_x;
   delete vec_rhs;
 
