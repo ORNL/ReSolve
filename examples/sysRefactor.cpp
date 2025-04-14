@@ -36,7 +36,6 @@ void printHelpInfo()
   std::cout << "\t-i\tEnables iterative refinement.\n\n";
 }
 
-
 using namespace ReSolve::constants;
 
 /// Prototype of the example function
@@ -152,7 +151,7 @@ int sysRefactor(int argc, char *argv[])
   std::string matrix_file_name_full;
   std::string rhs_file_name_full;
 
-  matrix::Csr* A = nullptr;
+  matrix::Csr* A = nullptr; // Pointer to the matrix
   workspace_type workspace;
   workspace.initializeHandles();
 
@@ -163,8 +162,8 @@ int sysRefactor(int argc, char *argv[])
   MatrixHandler matrix_handler(&workspace);
   VectorHandler vector_handler(&workspace);
 
-  vector_type* vec_rhs = nullptr;
-  vector_type* vec_x   = nullptr;
+  vector_type* vec_rhs = nullptr; // Pointer for the right hand side vector
+  vector_type* vec_x   = nullptr; // Pointer for the solution vector
 
   memory::MemorySpace memory_space = memory::HOST;
   if (backend_option == "cuda" || backend_option == "hip") {
@@ -179,12 +178,14 @@ int sysRefactor(int argc, char *argv[])
   } else {
     refactor = "klu";
   }
+
   ReSolve::SystemSolver solver(&workspace,
                                "klu",    // factorization
                                refactor, // refactorization
                                refactor, // triangular solve
                                "none",   // preconditioner (always 'none' here)
                                "none");  // iterative refinement
+
   if (is_iterative_refinement && backend_option != "cpu") {
     solver.setRefinementMethod("fgmres", "cgs2");
     solver.getIterativeSolver().setCliParam("restart", "100");
@@ -197,6 +198,7 @@ int sysRefactor(int argc, char *argv[])
     }
   }
   bool is_expand_symmetric = true;
+  int status;
   RESOLVE_RANGE_PUSH(__FUNCTION__);
   for (int i = 0; i < num_systems; ++i)
   {
@@ -225,9 +227,9 @@ int sysRefactor(int argc, char *argv[])
 
     if (i == 0) {
       A = ReSolve::io::createCsrFromFile(mat_file, is_expand_symmetric);
-
+      status = solver.setMatrix(A);
       vec_rhs = ReSolve::io::createVectorFromFile(rhs_file);
-      vec_x = new vector_type(A->getNumRows());
+      vec_x = new vector_type(A->getNumRows()); // Allocate space for vec_x
       vec_x->allocate(memory::HOST);
       if (backend_option == "cuda" || backend_option == "hip") {
         vec_x->allocate(memory::DEVICE);
@@ -247,18 +249,16 @@ int sysRefactor(int argc, char *argv[])
     }
 
     std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnz()<<std::endl;
-    //Now call direct solver
-    solver.setMatrix(A);
-    int status;
-    if (i <2 ){
-      //solver.setup(A);
 
+    // Now call direct solver
+    if (i < 2 ){
       matrix_handler.setValuesChanged(true, memory_space);
       status = solver.analyze();
       std::cout<<"solver analysis status: "<<status<<std::endl;
       status = solver.factorize();
     } else {
-      //solver.setup(A);ß
+
+      matrix_handler.setValuesChanged(true, memory_space);
       status = solver.refactorize();
       std::cout<<"solver factorization status: "<<status<<std::endl;
     }
@@ -269,10 +269,10 @@ int sysRefactor(int argc, char *argv[])
     helper.resetSystem(A, vec_rhs, vec_x);
     helper.printShortSummary();
   }
-  //now DELETE
+  // Now DELETE
   delete A;
-  delete vec_x;
-  delete vec_rhs;
+  delete vec_x; // Delete the solution vector
+  delete vec_rhs; // Delete the RHS vector
 
   return 0;
 }
