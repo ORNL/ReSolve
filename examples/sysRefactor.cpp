@@ -227,7 +227,6 @@ int sysRefactor(int argc, char *argv[])
 
     if (i == 0) {
       A = ReSolve::io::createCsrFromFile(mat_file, is_expand_symmetric);
-      status = solver.setMatrix(A);
       vec_rhs = ReSolve::io::createVectorFromFile(rhs_file);
       vec_x = new vector_type(A->getNumRows()); // Allocate space for vec_x
       vec_x->allocate(memory::HOST);
@@ -235,6 +234,13 @@ int sysRefactor(int argc, char *argv[])
         vec_x->allocate(memory::DEVICE);
       }
       std::cout << "vec_x size: " << vec_x->getSize() << std::endl;
+
+      // Set matrix in solver after the initial matrix is loaded
+      status = solver.setMatrix(A);
+      if (status != 0) {
+        std::cout << "Failed to set matrix in solver. Status: " << status << std::endl;
+        return -1;
+      }
     } else {
       ReSolve::io::updateMatrixFromFile(mat_file, A);
       ReSolve::io::updateVectorFromFile(rhs_file, vec_rhs);
@@ -243,25 +249,36 @@ int sysRefactor(int argc, char *argv[])
     printSystemInfo(matrix_pathname_full, A);
     mat_file.close();
     rhs_file.close();
+
+    // Ensure matrix data is synced to the device before any GPU operations
     if(backend_option == "cuda" || backend_option == "hip") {
       A->syncData(memory::DEVICE);
       vec_rhs->syncData(memory::DEVICE);
     }
 
+
     std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnz()<<std::endl;
 
     // Now call direct solver
-    if (i < 2 ){
+    if (i == 0) {
+      // First system: do full analysis and factorization
       matrix_handler.setValuesChanged(true, memory_space);
       status = solver.analyze();
       std::cout<<"solver analysis status: "<<status<<std::endl;
       status = solver.factorize();
+      std::cout<<"solver factorization status: "<<status<<std::endl;
+    } else if (i == 1) {
+      // Second system: do factorization with the same structure
+      matrix_handler.setValuesChanged(true, memory_space);
+      status = solver.factorize();
+      std::cout<<"solver factorization status: "<<status<<std::endl;
     } else {
-
+      // Subsequent systems: do refactorization
       matrix_handler.setValuesChanged(true, memory_space);
       status = solver.refactorize();
-      std::cout<<"solver factorization status: "<<status<<std::endl;
+      std::cout<<"solver refactorization status: "<<status<<std::endl;
     }
+
     status = solver.solve(vec_rhs, vec_x);
     std::cout<<"solver solve status: "<<status<<std::endl;
 
