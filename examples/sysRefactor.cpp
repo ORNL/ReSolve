@@ -276,12 +276,14 @@ int sysRefactor(int argc, char *argv[])
       // Subsequent systems: do refactorization
       matrix_handler.setValuesChanged(true, memory_space);
       status = solver.refactorize();
-      std::cout<<"solver refactorization status: "<<status<<std::endl;
     }
 
     status = solver.solve(vec_rhs, vec_x);
     std::cout<<"solver solve status: "<<status<<std::endl;
-
+    if (i==1){
+      std::cout<<"solver refactorization status: "<<status<<std::endl;
+      status = solver.refactorizationSetup();
+    }
     // Print summary of results
     helper.resetSystem(A, vec_rhs, vec_x);
     helper.printShortSummary();
