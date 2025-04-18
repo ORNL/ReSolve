@@ -152,7 +152,6 @@ int sysRefactor(int argc, char *argv[])
 
   int status = 0;
 
-  matrix::Csr* A = nullptr; // Pointer to the matrix
   workspace_type workspace;
   workspace.initializeHandles();
 
@@ -164,6 +163,8 @@ int sysRefactor(int argc, char *argv[])
   MatrixHandler matrix_handler(&workspace);
   VectorHandler vector_handler(&workspace);
 
+  // Pointers to the linear system
+  matrix::Csr* A       = nullptr; // Pointer to the system matrix
   vector_type* vec_rhs = nullptr; // Pointer for the right hand side vector
   vector_type* vec_x   = nullptr; // Pointer for the solution vector
 
@@ -184,14 +185,15 @@ int sysRefactor(int argc, char *argv[])
                                "none",   // preconditioner (always 'none' here)
                                "none");  // iterative refinement
 
-  if (is_iterative_refinement && hw_backend != "CPU") {
+  // Disable iterative refinement temporarily for CPU backend
+  if (hw_backend == "CPU") {
+    is_iterative_refinement = false;
+  }
+
+  if (is_iterative_refinement) {
     solver.setRefinementMethod("fgmres", "cgs2");
     solver.getIterativeSolver().setCliParam("restart", "100");
-    if (hw_backend == "HIP") {
-      solver.getIterativeSolver().setMaxit(200);
-    }
     if (hw_backend == "CUDA") {
-      solver.getIterativeSolver().setMaxit(400);
       solver.getIterativeSolver().setTol(1e-17);
     }
   }
@@ -294,7 +296,7 @@ int sysRefactor(int argc, char *argv[])
     }
   }
 
-  // Now DELETE
+  // Delete objects created on heap
   delete A;
   delete vec_x;   // Delete the solution vector
   delete vec_rhs; // Delete the RHS vector
