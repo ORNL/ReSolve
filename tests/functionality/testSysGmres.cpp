@@ -279,7 +279,9 @@ ReSolve::vector::Vector* generateRhs(const index_type N, ReSolve::memory::Memory
     }
   }
   vec_rhs->setDataUpdated(ReSolve::memory::HOST);
-  vec_rhs->syncData(memspace);
+  if (memspace != ReSolve::memory::HOST) {
+    vec_rhs->syncData(memspace);
+  }
   return vec_rhs;
 } 
 
@@ -339,6 +341,8 @@ ReSolve::matrix::Csr* generateMatrix(const index_type N, ReSolve::memory::Memory
   }
 
   A->setUpdated(ReSolve::memory::HOST);
-  A->syncData(memspace);
+  if (memspace != ReSolve::memory::HOST) {
+    A->syncData(memspace);
+  }
   return A;
 }
