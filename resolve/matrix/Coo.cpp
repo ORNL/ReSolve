@@ -297,9 +297,10 @@ namespace ReSolve
    * @param memspace - memory space to be synced up (HOST or DEVICE)
    * @return int - 0 if successful, error code otherwise
    * 
-   * @todo Handle case when neither memory space is updated. Currently,
-   * this function does nothing in that situation, quitely ignoring
-   * the sync call.
+   * @pre The memory space other than `memspace` must be up-to-date. Otherwise,
+   * this function will return an error.
+   * 
+   * @see Sparse::setUpdated
    */
   int matrix::Coo::syncData(memory::MemorySpace memspace)
   {
@@ -308,7 +309,7 @@ namespace ReSolve
     switch (memspace) {
       case HOST:
         assert(((h_row_data_ == nullptr) != (h_col_data_ == nullptr)) &&
-        "In Coo::syncData one of host row or column data is null!\n");
+               "In Coo::syncData one of host row or column data is null!\n");
 
         if (h_data_updated_) {
           out::warning() << "Coo::syncData is trying to sync host, but host already up to date!\n"
