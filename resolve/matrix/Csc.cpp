@@ -210,16 +210,18 @@ namespace ReSolve
 
     switch(memspace) {
       case HOST:
+        assert(((h_row_data_ == nullptr) != (h_col_data_ == nullptr)) &&
+        "In Csc::syncData one of host row or column data is null!\n");
+
         if (h_data_updated_) {
-          out::misc() << "In Csc::syncData trying to sync host, but host already up to date!\n";
+          out::warning() << "Csc::syncData is trying to sync host, but host already up to date!\n"
+                        << "Function call ignored!\n";
           return 0;
         }
         if (!d_data_updated_) {
-          out::error() << "In Csc::syncData trying to sync host with device, but device is out of date!\n";
+          out::error() << "Csc::syncData is trying to sync host with device, but device is out of date!\n"
+                      << "See Csc::syncData documentation\n."
           assert(d_data_updated_);
-        }
-        if ((h_row_data_ == nullptr) != (h_col_data_ == nullptr)) {
-          out::error() << "In Csc::syncData one of host row or column data is null!\n";
         }
         if ((h_col_data_ == nullptr) && (h_row_data_ == nullptr)) {
           h_col_data_ = new index_type[m_ + 1];      
@@ -236,16 +238,18 @@ namespace ReSolve
         h_data_updated_ = true;
         return 0;   
       case DEVICE:
+        assert(((d_row_data_ == nullptr) != (d_col_data_ == nullptr)) &&
+        "In Csc::syncData one of device row or column data is null!\n");
+
         if (d_data_updated_) {
-          out::misc() << "In Csc::syncData trying to sync device, but device already up to date!\n";
+          out::warning() << "Csc::syncData is trying to sync device, but device already up to date!\n"
+                         << "Function call ignored!\n";
           return 0;
         }
         if (!h_data_updated_) {
-          out::error() << "In Csc::syncData trying to sync device with host, but host is out of date!\n";
+          out::error() << "Csc::syncData is trying to sync device with host, but host is out of date!\n"
+                       << "See Csc::syncData documentation\n."
           assert(h_data_updated_);
-        }
-        if ((d_row_data_ == nullptr) != (d_col_data_ == nullptr)) {
-          out::error() << "In Csc::syncData one of device row or column data is null!\n";
         }
         if ((d_col_data_ == nullptr) && (d_row_data_ == nullptr)) {
           mem_.allocateArrayOnDevice(&d_col_data_, m_ + 1); 

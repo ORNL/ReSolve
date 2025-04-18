@@ -239,7 +239,7 @@ namespace ReSolve
         mem_.copyArrayHostToDevice(d_val_data_, val_data, nnz_current);
         d_data_updated_ = true;
         break;
-      case 3://gpu->gpua
+      case 3://gpu->gpu
         mem_.copyArrayDeviceToDevice(d_row_data_, row_data, nnz_current);
         mem_.copyArrayDeviceToDevice(d_col_data_, col_data, nnz_current);
         mem_.copyArrayDeviceToDevice(d_val_data_, val_data, nnz_current);
@@ -307,16 +307,18 @@ namespace ReSolve
 
     switch (memspace) {
       case HOST:
+        assert(((h_row_data_ == nullptr) != (h_col_data_ == nullptr)) &&
+        "In Coo::syncData one of host row or column data is null!\n");
+
         if (h_data_updated_) {
-          out::misc() << "In Coo::syncData trying to sync host, but host already up to date!\n";
+          out::warning() << "Coo::syncData is trying to sync host, but host already up to date!\n"
+                         << "Function call ignored!\n";
           return 0;
         }
         if (!d_data_updated_) {
-          out::error() << "In Coo::syncData trying to sync host with device, but device is out of date!\n";
+          out::error() << "Coo::syncData is trying to sync host with device, but device is out of date!\n"
+                       << "See Coo::syncData documentation\n."
           assert(d_data_updated_);
-        }
-        if ((h_row_data_ == nullptr) != (h_col_data_ == nullptr)) {
-          out::error() << "In Coo::syncData one of host row or column data is null!\n";
         }
         if ((h_row_data_ == nullptr) && (h_col_data_ == nullptr)) {
           h_row_data_ = new index_type[nnz_];      
@@ -333,16 +335,18 @@ namespace ReSolve
         h_data_updated_ = true;
         return 0;
       case DEVICE:
+        assert(((d_row_data_ == nullptr) != (d_col_data_ == nullptr)) &&
+               "In Coo::syncData one of device row or column data is null!\n");
+
         if (d_data_updated_) {
-          out::misc() << "In Coo::syncData trying to sync device, but device already up to date!\n";
+          out::warning() << "Coo::syncData is trying to sync device, but device already up to date!\n"
+                         << "Function call ignored!\n";
           return 0;
         }
         if (!h_data_updated_) {
-          out::error() << "In Coo::syncData trying to sync device with host, but host is out of date!\n";
+          out::error() << "Coo::syncData is trying to sync device with host, but host is out of date!\n"
+                       << "See Coo::syncData documentation\n."
           assert(h_data_updated_);
-        }
-        if ((d_row_data_ == nullptr) != (d_col_data_ == nullptr)) {
-          out::error() << "In Coo::syncData one of device row or column data is null!\n";
         }
         if ((d_row_data_ == nullptr) && (d_col_data_ == nullptr)) {
           mem_.allocateArrayOnDevice(&d_row_data_, nnz_);
