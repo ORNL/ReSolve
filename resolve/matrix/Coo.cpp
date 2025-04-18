@@ -190,9 +190,9 @@ namespace ReSolve
 
     if (memspaceOut == memory::HOST) {
       //check if cpu data allocated	
-      if ((h_row_data_ == nullptr) != (h_col_data_ == nullptr)) {
-        out::error() << "In Coo::copyDataFrom one of host row or column data is null!\n";
-      }
+      assert(((h_row_data_ == nullptr) == (h_col_data_ == nullptr)) &&
+             "In Coo::copyDataFrom one of host row or column data is null!\n");
+
       if ((h_row_data_ == nullptr) && (h_col_data_ == nullptr)) {
         this->h_row_data_ = new index_type[nnz_current];
         this->h_col_data_ = new index_type[nnz_current];
@@ -206,9 +206,9 @@ namespace ReSolve
 
     if (memspaceOut == memory::DEVICE) {
       //check if cuda data allocated
-      if ((d_row_data_ == nullptr) != (d_col_data_ == nullptr)) {
-        out::error() << "In Coo::copyDataFrom one of device row or column data is null!\n";
-      }
+      assert(((d_row_data_ == nullptr) == (d_col_data_ == nullptr)) &&
+             "In Coo::copyDataFrom one of device row or column data is null!\n");
+
       if ((d_row_data_ == nullptr) && (d_col_data_ == nullptr)) {
         mem_.allocateArrayOnDevice(&d_row_data_, nnz_current);
         mem_.allocateArrayOnDevice(&d_col_data_, nnz_current);
