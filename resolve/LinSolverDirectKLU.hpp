@@ -5,7 +5,7 @@
 #include "Common.hpp"
 #include <resolve/LinSolverDirect.hpp>
 
-namespace ReSolve 
+namespace ReSolve
 {
   // Forward declaration of vector::Vector class
   namespace vector
@@ -19,10 +19,10 @@ namespace ReSolve
     class Sparse;
   }
 
-  class LinSolverDirectKLU : public LinSolverDirect 
+  class LinSolverDirectKLU : public LinSolverDirect
   {
     using vector_type = vector::Vector;
-    
+
     public:
       LinSolverDirectKLU();
       ~LinSolverDirectKLU();
@@ -33,15 +33,15 @@ namespace ReSolve
                 index_type*     P = nullptr,
                 index_type*     Q = nullptr,
                 vector_type*  rhs = nullptr) override;
-     
+
       int analyze() override; //the same as symbolic factorization
       int factorize() override;
       int refactorize() override;
       int solve(vector_type* rhs, vector_type* x) override;
       int solve(vector_type* x) override;
-    
-      matrix::Sparse* getLFactor() override; 
-      matrix::Sparse* getUFactor() override; 
+
+      matrix::Sparse* getLFactor() override;
+      matrix::Sparse* getUFactor() override;
       index_type*  getPOrdering() override;
       index_type*  getQOrdering() override;
 
@@ -63,16 +63,16 @@ namespace ReSolve
 
       /**
        * @brief Ordering type (during the analysis)
-       * 
+       *
        * Available values are  0 = AMD, 1 = COLAMD, 2 = user provided P, Q.
-       * 
+       *
        * Default is COLAMD.
        */
       int ordering_{1};
 
       /**
        * @brief Partial pivoing tolerance.
-       * 
+       *
        * If the diagonal entry has a magnitude greater than or equal to tol
        * times the largest magnitude of entries in the pivot column, then the
        * diagonal entry is chosen.
@@ -81,12 +81,12 @@ namespace ReSolve
 
       /**
        * @brief Halt if matrix is singular.
-       * 
+       *
        * If false: keep going. Return a Numeric object with a zero U(k,k).
        * A divide-by-zero may occur when computing L(:,k). The Numeric object
        * can be passed to klu_solve (a divide-by-zero will occur). It can
        * also be safely passed to refactorization methods.
-       * 
+       *
        * If true: stop quickly. klu_factor will free the partially-constructed
        * Numeric object. klu_refactor will not free it, but will leave the
        * numerical values only partially defined.
@@ -98,6 +98,6 @@ namespace ReSolve
       bool factors_extracted_{false};
       klu_common Common_; //settings
       klu_symbolic* Symbolic_{nullptr};
-      klu_numeric* Numeric_{nullptr}; 
+      klu_numeric* Numeric_{nullptr};
   };
 }
