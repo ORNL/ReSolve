@@ -172,6 +172,7 @@ namespace ReSolve
       resVector_->allocate(memory::HOST);
     } else {
       resVector_->allocate(memory::DEVICE);
+      matrixHandler_->setValuesChanged(true, memory::DEVICE);
     }
 
     // If we use iterative solver, we can set it up here

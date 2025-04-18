@@ -15,8 +15,9 @@
 #include <resolve/LinSolverDirectKLU.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 #include <resolve/SystemSolver.hpp>
-#include "ExampleHelper.hpp"
 #include <resolve/utilities/params/CliOptions.hpp>
+
+#include "ExampleHelper.hpp"
 
 /// Prints help message describing system usage.
 void printHelpInfo()
@@ -26,13 +27,12 @@ void printHelpInfo()
   std::cout << "consecutive integer numbers 00, 01, 02, ...\n\n";
   std::cout << "System right hand side vectors are stored in files with matching numbering.\n";
   std::cout << "and file extension.\n\n";
-  std::cout << "Backend can be specified with -b option.\n";
-  std::cout << "Backend options:\n\t-cpu\tCPU backend (default)\n";
-  std::cout << "\t-cuda\tCUDA backend\n";
-  std::cout << "\t-hip\tHIP backend\n\n";
   std::cout << "Usage:\n\t./";
-  std::cout << "sysRefactor.exe -m <matrix pathname> -r <rhs pathname> -n <number of systems> -b <backend>\n\n";
-  std::cout << "Optional features:\n\t-h\tPrints this message.\n";
+  std::cout << "sysRefactor.exe -m <matrix pathname> -r <rhs pathname> -n <number of systems>\n\n";
+  std::cout << "Optional features:\n";
+  std::cout << "\t-b <cpu|cuda|hip> \tSelects hardware backend.\n";
+  std::cout << "\t-e <ext> \tSelects custom extension for input files (default 'mtx').\n";
+  std::cout << "\t-h\tPrints this message.\n";
   std::cout << "\t-i\tEnables iterative refinement.\n\n";
 }
 
@@ -45,40 +45,44 @@ static int sysRefactor(int argc, char *argv[]);
 /// Main function selects example to be run.
 int main(int argc, char *argv[])
 {
-  // Check the backend command line argument and set the
-  // corresponding backend for the example
-  // Default backend is CPU
   ReSolve::CliOptions options(argc, argv);
-  ReSolve::CliOptions::Option* opt = nullptr;
-  // Check if the user has provided the backend option
-  if (!options.hasKey("-b")) {
+
+  // If help flag is passed, print help message and return
+  bool is_help = options.hasKey("-h");
+  if (is_help) {
+    printHelpInfo();
+    return 0;
+  }
+
+  // Select hardware backend, default to CPU if no -b option is passed
+  ReSolve::CliOptions::Option* opt = options.getParamFromKey("-b");
+  if (!opt)
+  {
     std::cout << "No backend option provided. Defaulting to CPU.\n";
     sysRefactor<ReSolve::LinAlgWorkspaceCpu>(argc, argv);
     return 0;
   }
-  std::string backend_option = options.getParamFromKey("-b")->second;
-  if (backend_option == "cuda") {
-    #ifdef RESOLVE_USE_CUDA
-        sysRefactor<ReSolve::LinAlgWorkspaceCUDA>(argc, argv);
-    #else
-        std::cout << "CUDA backend requested, but ReSolve is not built with CUDA support.\n";
-        return -1;
-    #endif
+#ifdef RESOLVE_USE_CUDA
+  else if (opt->second == "cuda")
+  {
+    sysRefactor<ReSolve::LinAlgWorkspaceCUDA>(argc, argv);
   }
-  else if (backend_option == "hip") {
-    #ifdef RESOLVE_USE_HIP
-      sysRefactor<ReSolve::LinAlgWorkspaceHIP>(argc, argv);
-    #else
-      std::cout << "HIP backend requested, but ReSolve is not built with HIP support.\n";
-      return -1;
-    #endif
+#endif
+#ifdef RESOLVE_USE_HIP
+  else if (opt->second == "hip")
+  {
+    sysRefactor<ReSolve::LinAlgWorkspaceHIP>(argc, argv);
   }
-  else if (backend_option == "cpu") {
+#endif
+  else if (opt->second == "cpu")
+  {
     sysRefactor<ReSolve::LinAlgWorkspaceCpu>(argc, argv);
-  }
-  else {
-    std::cout << "Invalid backend option. Use -b cpu, -b cuda, or -b hip.\n";
-    return -1;
+  } 
+  else
+  {
+    std::cout << "Re::Solve is not built with support for " << opt->second;
+    std::cout << "backend.\n";
+    return 1;
   }
 
   return 0;
@@ -103,12 +107,6 @@ int sysRefactor(int argc, char *argv[])
 
   CliOptions options(argc, argv);
   CliOptions::Option* opt = nullptr;
-
-  bool is_help = options.hasKey("-h");
-  if (is_help) {
-    printHelpInfo();
-    return 0;
-  }
 
   bool is_iterative_refinement = options.hasKey("-i");
 
@@ -139,17 +137,20 @@ int sysRefactor(int argc, char *argv[])
     printHelpInfo();
   }
 
-  std::string backend_option = options.getParamFromKey("-b")->second;
+  std::string file_extension("");
+  opt = options.getParamFromKey("-e");
+  if (opt) {
+    file_extension = opt->second;
+  } else {
+    file_extension = "mtx";
+  }
 
-  std::cout << "Family mtx file name: "       << matrix_pathname
+  std::cout << "Family matrix file name: "    << matrix_pathname
             << ", total number of matrices: " << num_systems << "\n"
             << "Family rhs file name: "       << rhs_pathname
             << ", total number of RHSes: "    << num_systems << "\n";
 
-  std::string filed_id;
-  std::string rhs_id;
-  std::string matrix_file_name_full;
-  std::string rhs_file_name_full;
+  int status = 0;
 
   matrix::Csr* A = nullptr; // Pointer to the matrix
   workspace_type workspace;
@@ -157,7 +158,8 @@ int sysRefactor(int argc, char *argv[])
 
   // Create a helper object (computing errors, printing summaries, etc.)
   ExampleHelper<workspace_type> helper(workspace);
-  std::cout << "sysRefactor with " << helper.getHardwareBackend() << " backend\n";
+  std::string hw_backend = helper.getHardwareBackend();
+  std::cout << "sysRefactor with " << hw_backend << " backend\n";
 
   MatrixHandler matrix_handler(&workspace);
   VectorHandler vector_handler(&workspace);
@@ -165,15 +167,11 @@ int sysRefactor(int argc, char *argv[])
   vector_type* vec_rhs = nullptr; // Pointer for the right hand side vector
   vector_type* vec_x   = nullptr; // Pointer for the solution vector
 
-  memory::MemorySpace memory_space = memory::HOST;
-  if (backend_option == "cuda" || backend_option == "hip") {
-    memory_space = memory::DEVICE;
-  }
   // Create system solver
   std::string refactor("none");
-  if (backend_option == "cuda") {
+  if (hw_backend == "CUDA") {
     refactor = "cusolverrf";
-  } else if (backend_option == "hip") {
+  } else if (hw_backend == "HIP") {
     refactor = "rocsolverrf";
   } else {
     refactor = "klu";
@@ -186,19 +184,18 @@ int sysRefactor(int argc, char *argv[])
                                "none",   // preconditioner (always 'none' here)
                                "none");  // iterative refinement
 
-  if (is_iterative_refinement && backend_option != "cpu") {
+  if (is_iterative_refinement && hw_backend != "CPU") {
     solver.setRefinementMethod("fgmres", "cgs2");
     solver.getIterativeSolver().setCliParam("restart", "100");
-    if (backend_option == "hip") {
+    if (hw_backend == "HIP") {
       solver.getIterativeSolver().setMaxit(200);
     }
-    if (backend_option == "cuda") {
+    if (hw_backend == "CUDA") {
       solver.getIterativeSolver().setMaxit(400);
       solver.getIterativeSolver().setTol(1e-17);
     }
   }
-  bool is_expand_symmetric = true;
-  int status;
+
   RESOLVE_RANGE_PUSH(__FUNCTION__);
   for (int i = 0; i < num_systems; ++i)
   {
@@ -206,8 +203,8 @@ int sysRefactor(int argc, char *argv[])
     RESOLVE_RANGE_PUSH("File input");
     std::ostringstream matname;
     std::ostringstream rhsname;
-    matname << matrix_pathname << std::setfill('0') << std::setw(2) << i << ".mtx";
-    rhsname << rhs_pathname    << std::setfill('0') << std::setw(2) << i << ".mtx";
+    matname << matrix_pathname << std::setfill('0') << std::setw(2) << i << "." << file_extension;
+    rhsname << rhs_pathname    << std::setfill('0') << std::setw(2) << i << "." << file_extension;
     std::string matrix_pathname_full = matname.str();
     std::string rhs_pathname_full    = rhsname.str();
 
@@ -216,81 +213,90 @@ int sysRefactor(int argc, char *argv[])
     if(!mat_file.is_open())
     {
       std::cout << "Failed to open file " << matrix_pathname_full << "\n";
-      return -1;
+      return 1;
     }
     std::ifstream rhs_file(rhs_pathname_full);
     if(!rhs_file.is_open())
     {
       std::cout << "Failed to open file " << rhs_pathname_full << "\n";
-      return -1;
+      return 1;
     }
 
+    // Refactorization is LU-based, so need to expand symmetric matrices
+    bool is_expand_symmetric = true;
     if (i == 0) {
       A = ReSolve::io::createCsrFromFile(mat_file, is_expand_symmetric);
       vec_rhs = ReSolve::io::createVectorFromFile(rhs_file);
-      vec_x = new vector_type(A->getNumRows()); // Allocate space for vec_x
+      vec_x = new vector_type(A->getNumRows());
       vec_x->allocate(memory::HOST);
-      if (backend_option == "cuda" || backend_option == "hip") {
+      if (hw_backend == "CUDA" || hw_backend == "HIP") {
         vec_x->allocate(memory::DEVICE);
-      }
-      std::cout << "vec_x size: " << vec_x->getSize() << std::endl;
-
-      // Set matrix in solver after the initial matrix is loaded
-      status = solver.setMatrix(A);
-      if (status != 0) {
-        std::cout << "Failed to set matrix in solver. Status: " << status << std::endl;
-        return -1;
       }
     } else {
       ReSolve::io::updateMatrixFromFile(mat_file, A);
       ReSolve::io::updateVectorFromFile(rhs_file, vec_rhs);
     }
-    std::cout << "Matrix loaded. Expanded NNZ: " << A->getNnz() << std::endl;
-    printSystemInfo(matrix_pathname_full, A);
+
     mat_file.close();
     rhs_file.close();
 
     // Ensure matrix data is synced to the device before any GPU operations
-    if(backend_option == "cuda" || backend_option == "hip") {
+    if (hw_backend == "CUDA" || hw_backend == "HIP") {
       A->syncData(memory::DEVICE);
       vec_rhs->syncData(memory::DEVICE);
     }
 
-
-    std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnz()<<std::endl;
+    std::cout << "CSR matrix loaded. Expanded NNZ: " << A->getNnz() << std::endl;
+    printSystemInfo(matrix_pathname_full, A);
 
     // Now call direct solver
     if (i == 0) {
-      // First system: do full analysis and factorization
-      matrix_handler.setValuesChanged(true, memory_space);
+      // Set matrix in solver after the initial matrix is loaded
+      status = solver.setMatrix(A);
+      if (status != 0) {
+        std::cout << "Failed to set matrix in solver. Status: " << status << std::endl;
+        return 1;
+      }
+
+      // Analysis (symbolic factorization)
       status = solver.analyze();
-      std::cout<<"solver analysis status: "<<status<<std::endl;
+      std::cout << "Analysis on the host status: " << status << std::endl;
+
+      // Numeric factorization on the host
       status = solver.factorize();
-      std::cout<<"solver factorization status: "<<status<<std::endl;
+      std::cout << "Numeric factorization on the host status: " << status << std::endl;
     } else if (i == 1) {
-      // Second system: do factorization with the same structure
-      matrix_handler.setValuesChanged(true, memory_space);
+      // Numeric factorization on the host
       status = solver.factorize();
-      std::cout<<"solver factorization status: "<<status<<std::endl;
-    } else {
-      // Subsequent systems: do refactorization
-      matrix_handler.setValuesChanged(true, memory_space);
+      std::cout << "Numeric factorization on the host status: " << status << std::endl;
+
+      // Set up refactorization solver
+      status = solver.refactorizationSetup();
+      std::cout << "Refactorization setup status: " << status << std::endl;
+
+      // Refactorize on the device
       status = solver.refactorize();
+      std::cout << "Refactorization on the device status: " << status << std::endl;
+    } else {
+      // Refactorize on the device
+      status = solver.refactorize();
+      std::cout << "Refactorization on the device status: " << status << std::endl;
     }
 
     status = solver.solve(vec_rhs, vec_x);
-    std::cout<<"solver solve status: "<<status<<std::endl;
-    if (i==1){
-      std::cout<<"solver refactorization status: "<<status<<std::endl;
-      status = solver.refactorizationSetup();
-    }
+    std::cout << "Triangular solve status: " << status << std::endl;
+
     // Print summary of results
     helper.resetSystem(A, vec_rhs, vec_x);
     helper.printShortSummary();
+    if ((i > 1) && is_iterative_refinement) {
+      helper.printIrSummary(&(solver.getIterativeSolver()));
+    }
   }
+
   // Now DELETE
   delete A;
-  delete vec_x; // Delete the solution vector
+  delete vec_x;   // Delete the solution vector
   delete vec_rhs; // Delete the RHS vector
 
   return 0;
