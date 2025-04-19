@@ -229,14 +229,33 @@ namespace ReSolve { namespace vector {
    * 
    * @param[in] memspace  - Memory space of the pointer (HOST or DEVICE)  
    *
-   * @return pointer to the vector data (HOST or DEVICE). In case of multivectors, vectors are stored column-wise.
+   * @return pointer to the vector data (HOST or DEVICE). If this is
+   * a multivector, individual vectors are stored column-wise.
    * 
-   * @note This function gives you access to the pointer, not to a copy.
-   * If you change the values using the pointer, the vector values will change too. 
+   * @note This function returns non-constant pointer to the vector data,
+   * not a copy of the vector data. If you change the values accessed through
+   * this pointer, you change the vector data.
    */
   real_type* Vector::getData(memory::MemorySpace memspace)
   {
-    return this->getData(0, memspace);
+    if ((memspace == memory::HOST) && (cpu_updated_[0] == false) && (gpu_updated_[0] == true )) {
+      syncData(memspace);  
+    } 
+
+    if ((memspace == memory::DEVICE) && (gpu_updated_[0] == false) && (cpu_updated_[0] == true )) {
+      syncData(memspace);
+    }
+
+    switch (memspace) {
+      case memory::HOST:
+        return &h_data_[0];
+        break;
+      case memory::DEVICE:
+        return &d_data_[0];
+        break;
+      default:
+        return nullptr;
+    }
   }
 
   /** 
