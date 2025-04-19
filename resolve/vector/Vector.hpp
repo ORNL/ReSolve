@@ -58,8 +58,8 @@ namespace ReSolve { namespace vector {
       index_type n_current_; ///< if vectors dynamically changes size, "current n_" keeps track of this. Needed for some solver implementations. 
       real_type* d_data_{nullptr}; ///< DEVICE data array
       real_type* h_data_{nullptr}; ///< HOST data array
-      bool gpu_updated_; ///< DEVICE data flag (updated or not)
-      bool cpu_updated_; ///< HOST data flag (updated or not)
+      bool* gpu_updated_{nullptr}; ///< DEVICE data flags (updated or not)
+      bool* cpu_updated_{nullptr}; ///< HOST data flags (updated or not)
 
       bool owns_gpu_data_{false}; ///< data owneship flag for DEVICE data
       bool owns_cpu_data_{false}; ///< data ownership flag for HOST data
