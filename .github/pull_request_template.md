@@ -6,7 +6,9 @@
  
  _Closes # (issue)_
  
+ _Mentions @(user)_
  
+
  ## Proposed changes
  
  _Describe how your changes here address the issue and why the proposed changes
@@ -19,18 +21,19 @@
  to help! This is simply a reminder of what we are going to look for before
  merging your code._
  
- - [ ] I have read the [Contributing Guide](CONTRIBUTING.md)
- - [ ] Functionality and unit tests pass locally with my changes
+- [ ] All tests pass. Code tested on
      - [ ] CPU backend
      - [ ] CUDA backend
      - [ ] HIP backend
- - [ ] The code builds with flags `-Wall -Wconversion -Wextra` without any
-       compiler warnings 
- - [ ] I have added regression tests that prove my fix is effective.
- - [ ] I have updated the documentation (if appropriate)
+- [ ] Code compiles cleanly with flags `-Wall -Wpedantic -Wconversion -Wextra`.
+- [ ] The new code follows Re::Solve style guidelines.
+- [ ] There are unit tests for the new code.
+- [ ] The new code is documented.
+- [ ] The feature branch is rebased with respect to the target branch.
+ 
  
  ## Further comments
  
  _If this is a relatively large or complex change, kick off the discussion by explaining
- why you chose the solution you did and what alternatives you considered, etc..._
+ why you chose the solution you did and what alternatives you considered, etc._
 
