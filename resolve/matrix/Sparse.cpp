@@ -197,10 +197,10 @@ namespace ReSolve {
    *
    * @return 0 if successful, -1 if not.
    * 
-   * The method sets boolean flag indicating that the `memspace` is updated.
+   * The method sets the boolean flag indicating that the `memspace` is updated.
    * It automatically sets the other data mirror to non-updated. You would
    * use this function if you update matrix data by accessing its raw pointers.
-   * In such case, matrix has no way of knowing which data is most recent, so
+   * In such case, the matrix has no way of knowing which data is most recent, so
    * you have to tell it.
    * 
    * @warning This is expert-level function. Use only if you know what you are
