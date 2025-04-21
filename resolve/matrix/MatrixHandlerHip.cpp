@@ -238,7 +238,7 @@ namespace ReSolve {
   }
 
   /**
-   * @brief Transpose a sparse CSR matrix.
+   * @brief Transpose a sparse CSR matrix (HIP backend).
    *
    * Transpose a sparse CSR matrix A. Only allocates At if not already allocated.
    *
