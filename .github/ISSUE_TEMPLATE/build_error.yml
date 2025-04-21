@@ -1,18 +1,29 @@
 name: "\U0001F4A5 Build error"
-description: "Unable to build ReSolve"
+description: "Unable to build Re::Solve"
 title: "Build issue: "
-labels: [build-error]
+labels: [cmake]
 body:
   - type: textarea
     id: reproduce
     attributes:
-      label: "CMake error message(s)"
-      description: "Fill in the console output when you try to build."
+      label: "Build error message(s)"
+      description: "Instructions how to reproduce build failure and the error output."
       value: |
+        <!-- Include build output (from cmake, make or ninja commands). -->        
         ```console
         $ make
-        ...
+        ( some output ...)
         ```
+    validations:
+      required: true
+
+  - type: input
+    id: resolve-version
+    attributes:
+      label: "Re::Solve version"
+      description: |
+        Please include the version of Re::Solve which demonstrates the problem.
+        If building from source on a non-tagged version, please include the commit hash.
     validations:
       required: true
 
@@ -22,20 +33,15 @@ body:
       label: "System and environment details"
       description: |
         Please include details about your system, such as:
+        - Dependencies and their versions  
         - Operating system  
-        - Compilers  
+        - Compiler(s)  
         - Hardware backends (CUDA, HIP)  
-        - Dependencies and package versions  
     validations:
       required: true
-
-  - type: markdown
-    attributes:
-      value: |
-        If you have relevant configuration details (e.g., custom `packages.yaml` or `modules.yaml`), you can add them below.
 
   - type: textarea
     id: additional_information
     attributes:
       label: "Additional information"
-      description: "Upload test logs or provide any additional context about the issue."
+      description: "Upload build logs or provide any additional context about the issue."

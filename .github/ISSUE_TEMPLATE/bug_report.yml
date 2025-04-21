@@ -1,21 +1,29 @@
-name: "\U0001F4A5 Tests error"
-description: "Some Re::Solve tests are failing"
-title: "Testing issue: "
-labels: [testing]
+name: "\U0001FAB2 Bug report"
+description: "Bug in Re::Solve code"
+title: "Bug: "
+labels: [bug]
 body:
   - type: textarea
     id: reproduce
     attributes:
-      label: "Failed test outputs or steps to reproduce the failure(s)"
-      description: |
-        Fill in the failing test output, errors,  
-        or steps to reproduce the failure(s).
+      label: "Description how to reproduce the bug"
+      description: "Please provide launch command and the output when you encounter bug."
       value: |
-        <!-- Include output of `ctest -VV --rerun-failed`. -->        
-        ```console
-        $ ctest -VV --rerun-failed
-        ( failed tests output ...)
+        <!-- Include short error output as needed, see example below. -->        
         ```
+        $ ./resolve_app
+        ( your output ...)
+        ```
+        <!-- If the error output is long, attach a file or include it in
+             a block that can be closed, see below. -->
+        <details>
+        
+        ```
+        $ ./resolve_app
+        ( your output ...)
+        ```
+
+        </details>
     validations:
       required: true
 
@@ -30,7 +38,7 @@ body:
       required: true
 
   - type: textarea
-    id: information
+    id: sys-info
     attributes:
       label: "System and environment details"
       description: |
@@ -47,4 +55,4 @@ body:
     id: additional_information
     attributes:
       label: "Additional information"
-      description: "Upload test logs or provide any additional context about the issue."
+      description: "Upload additional debugging information, such as backtrace."
