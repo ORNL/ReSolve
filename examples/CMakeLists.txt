@@ -68,10 +68,6 @@ if(RESOLVE_USE_KLU)
     add_executable(system_cuda.exe r_SysSolverCuda.cpp)
     target_link_libraries(system_cuda.exe PRIVATE ReSolve)
 
-    # Build example where matrix data is updated
-    add_executable(klu_glu_values_update.exe r_KLU_GLU_matrix_values_update.cpp)
-    target_link_libraries(klu_glu_values_update.exe PRIVATE ReSolve)
-
     # Example in which factorization is redone if solution is bad
     add_executable(klu_cusolverrf_check_redo.exe r_KLU_cusolverrf_redo_factorization.cpp)
     target_link_libraries(klu_cusolverrf_check_redo.exe PRIVATE ReSolve)
@@ -106,12 +102,9 @@ if(RESOLVE_USE_KLU)
   list(APPEND installable_executables kluRefactor.exe
                                       klu_klu.exe
                                       klu_klu_standalone.exe
-<<<<<<< HEAD
-                                      sysRefactor.exe)
-=======
+                                      sysRefactor.exe
                                       kluStandAlone.exe
                                       system.exe)
->>>>>>> 955e4a6 (cpu and cuda tests pass)
 
   if(RESOLVE_USE_GPU)
     list(APPEND installable_executables gpuRefactor.exe)
