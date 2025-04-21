@@ -191,7 +191,7 @@ namespace ReSolve {
   }
 
   /**
-   * @brief Tags `memsapce` as updated.
+   * @brief Tags `memspace` as updated.
    *
    * @param[in] memspace - memory space (HOST or DEVICE) to set to "updated"
    *
