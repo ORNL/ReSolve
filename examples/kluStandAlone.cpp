@@ -1,17 +1,15 @@
 #include <string>
 #include <iostream>
 #include <iomanip>
-#include <cmath>
-
-#include <resolve/matrix/Coo.hpp>
+#include <sstream>
 #include <resolve/matrix/Csr.hpp>
-#include <resolve/matrix/Csc.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/matrix/io.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
+#include <resolve/LinSolverIterativeFGMRES.hpp>
 #include "ExampleHelper.hpp"
 #include <resolve/utilities/params/CliOptions.hpp>
 
@@ -21,20 +19,19 @@ using namespace ReSolve::constants;
 void printHelpInfo()
 {
   std::cout << "\nLoads from files and solves a linear system.\n\n";
-  std::cout << "System matrix is in a file with name <matrix file name>\n";
-  std::cout << "System right hand side vector is stored in a file with name <rhs file name>\n\n";
-  std::cout << "kluStandAlone.exe -m <matrix file name> -r <rhs file name> \n\n";
+  std::cout << "Usage:\n\t./kluStandAlone.exe -m <matrix pathname> -r <rhs pathname>\n\n";
   std::cout << "Optional features:\n\t-h\tPrints this message.\n";
   std::cout << "\t-i\tEnables iterative refinement.\n\n";
 }
 
 int main(int argc, char *argv[])
 {
-  // Use the same data types as those you specified in ReSolve build.
+  using index_type = ReSolve::index_type;
   using real_type  = ReSolve::real_type;
   using vector_type = ReSolve::vector::Vector;
-  using namespace ReSolve::examples;
   using namespace ReSolve;
+  using namespace ReSolve::examples;
+
   CliOptions options(argc, argv);
   CliOptions::Option* opt = nullptr;
 
@@ -46,93 +43,96 @@ int main(int argc, char *argv[])
 
   bool is_iterative_refinement = options.hasKey("-i");
 
-  std::string matrix_file_name("");
+  std::string matrix_path_name("");
   opt = options.getParamFromKey("-m");
   if (opt) {
-    matrix_file_name = opt->second;
+    matrix_path_name = opt->second;
   } else {
     std::cout << "Incorrect input!\n";
     printHelpInfo();
+    return 1;
   }
 
-  std::string rhs_file_name("");
+  std::string rhs_path_name("");
   opt = options.getParamFromKey("-r");
   if (opt) {
-    rhs_file_name = opt->second;
+    rhs_path_name = opt->second;
   } else {
     std::cout << "Incorrect input!\n";
     printHelpInfo();
+    return 1;
   }
 
   matrix::Csr* A = nullptr;
-  LinAlgWorkspaceCpu* workspace = new LinAlgWorkspaceCpu();
-  MatrixHandler* matrix_handler = new MatrixHandler(workspace);
-  VectorHandler* vector_handler = new VectorHandler(workspace);
-  real_type* rhs = nullptr;
-  real_type* x   = nullptr;
-
+  LinAlgWorkspaceCpu workspace;
+  ExampleHelper<LinAlgWorkspaceCpu> helper(workspace);
+  MatrixHandler matrix_handler(&workspace);
+  VectorHandler vector_handler(&workspace);
   vector_type* vec_rhs = nullptr;
-  vector_type* vec_x   = nullptr;
-  vector_type* vec_r   = nullptr;
+  vector_type* vec_x = nullptr;
 
   LinSolverDirectKLU* KLU = new LinSolverDirectKLU;
-  // Create a helper object (computing errors, printing summaries, etc.)
-  examples::ExampleHelper<LinAlgWorkspaceCpu> helper(*workspace);
 
-  std::ifstream mat_file(matrix_file_name);
+  // Load the system
+  std::cout << "Solving the system:\n";
+
+  std::ifstream mat_file(matrix_path_name);
   if(!mat_file.is_open())
   {
-    std::cout << "Failed to open file " << matrix_file_name<< "\n";
-    return -1;
+    std::cout << "Failed to open file " << matrix_path_name << "\n";
+    return 1;
   }
-  std::ifstream rhs_file(rhs_file_name);
+
+  std::ifstream rhs_file(rhs_path_name);
   if(!rhs_file.is_open())
   {
-    std::cout << "Failed to open file " << rhs_file_name << "\n";
-    return -1;
+    std::cout << "Failed to open file " << rhs_path_name << "\n";
+    return 1;
   }
+
   bool is_expand_symmetric = true;
   A = ReSolve::io::createCsrFromFile(mat_file, is_expand_symmetric);
-
-  rhs = ReSolve::io::createArrayFromFile(rhs_file);
-  x = new real_type[A->getNumRows()];
-  vec_rhs = new vector_type(A->getNumRows());
+  vec_rhs = ReSolve::io::createVectorFromFile(rhs_file);
   vec_x = new vector_type(A->getNumRows());
-  vec_r = new vector_type(A->getNumRows());
-  helper.resetSystem(A, vec_rhs, vec_x);
-  printSystemInfo(matrix_file_name, A);
+
+  printSystemInfo(matrix_path_name, A);
   mat_file.close();
   rhs_file.close();
 
-  vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   vec_rhs->setDataUpdated(ReSolve::memory::HOST);
   std::cout << "COO to CSR completed. Expanded NNZ: " << A->getNnz() << std::endl;
-  //Now call direct solver
+
+  // Direct solver
   int status;
   KLU->setup(A);
   status = KLU->analyze();
-  std::cout<<"KLU analysis status: "<<status<<std::endl;
+  std::cout << "KLU analysis status: " << status << std::endl;
   status = KLU->factorize();
   std::cout << "KLU factorization status: " << status << std::endl;
+
+  // Solve the system
   status = KLU->solve(vec_rhs, vec_x);
   std::cout << "KLU solve status: " << status << std::endl;
-  vec_r->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
 
-  matrix_handler->setValuesChanged(true, ReSolve::memory::HOST);
-
-  matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, ReSolve::memory::HOST);
-
+  helper.resetSystem(A, vec_rhs, vec_x);
   helper.printShortSummary();
+  if (is_iterative_refinement) {
+    GramSchmidt GS(&vector_handler, GramSchmidt::CGS2);
+    LinSolverIterativeFGMRES FGMRES(&matrix_handler, &vector_handler, &GS);
+    // Setup iterative refinement
+    FGMRES.setup(A);
+    FGMRES.setupPreconditioner("LU", KLU);
+    // If refactorization produced finite solution do iterative refinement
+    if (std::isfinite(helper.getNormRelativeResidual())) {
+      FGMRES.solve(vec_rhs, vec_x);
+      helper.printIrSummary(&FGMRES);
+    }
+  }
 
-  //now DELETE
+  // Cleanup
   delete A;
   delete KLU;
-  delete [] x;
-  delete [] rhs;
-  delete vec_r;
+  delete vec_rhs;
   delete vec_x;
-  delete matrix_handler;
-  delete vector_handler;
-
   return 0;
 }
