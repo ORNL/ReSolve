@@ -203,7 +203,7 @@ namespace ReSolve {
    * In such case, the matrix has no way of knowing which data is most recent, so
    * you have to tell it.
    * 
-   * @warning This is expert-level function. Use only if you know what you are
+   * @warning This is an expert-level function. Use only if you know what you are
    * doing.
    * 
    * @note If you want to set both DEVICE and HOST memory to the same value
