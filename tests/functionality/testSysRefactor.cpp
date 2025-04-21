@@ -126,7 +126,9 @@ static int runTest(int argc, char *argv[], std::string backend)
     return -1;
   }
   ReSolve::matrix::Csr* A = ReSolve::io::createCsrFromFile(mat1, true);
-  A->syncData(memspace);
+  if (memspace != memory::HOST) {
+    A->syncData(memspace);
+  }
   mat1.close();
 
   // Read first rhs vector

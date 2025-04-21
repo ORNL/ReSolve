@@ -191,13 +191,23 @@ namespace ReSolve {
   }
 
   /**
-   * @brief Set the data to be updated on HOST or DEVICE. 
+   * @brief Tags `memspace` as updated.
    *
-   * @param[in] memspace - memory space (HOST or DEVICE) of data that is set to "updated"
+   * @param[in] memspace - memory space (HOST or DEVICE) to set to "updated"
    *
    * @return 0 if successful, -1 if not.
    * 
-   * @note The method automatically sets the other mirror data to non-updated (but it does not copy).
+   * The method sets the boolean flag indicating that the `memspace` is updated.
+   * It automatically sets the other data mirror to non-updated. You would
+   * use this function if you update matrix data by accessing its raw pointers.
+   * In such case, the matrix has no way of knowing which data is most recent, so
+   * you have to tell it.
+   * 
+   * @warning This is an expert-level function. Use only if you know what you are
+   * doing.
+   * 
+   * @note If you want to set both DEVICE and HOST memory to the same value
+   * use syncData function.
    */  
   int matrix::Sparse::setUpdated(memory::MemorySpace memspace)
   {

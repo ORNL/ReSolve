@@ -207,9 +207,9 @@ namespace ReSolve
 
     if (memspaceOut == memory::HOST) {
       //check if cpu data allocated
-      if ((h_row_data_ == nullptr) != (h_col_data_ == nullptr)) {
-        out::error() << "In Csr::copyDataFrom one of host row or column data is null!\n";
-      }
+      assert(((h_row_data_ == nullptr) == (h_col_data_ == nullptr)) &&
+             "In Csr::copyDataFrom one of host row or column data is null!\n");
+
       if ((h_row_data_ == nullptr) && (h_col_data_ == nullptr)) {
         this->h_row_data_ = new index_type[n_ + 1];
         this->h_col_data_ = new index_type[nnz_current];
@@ -223,9 +223,9 @@ namespace ReSolve
 
     if (memspaceOut == memory::DEVICE) {
       //check if cuda data allocated
-      if ((d_row_data_ == nullptr) != (d_col_data_ == nullptr)) {
-        out::error() << "In Csr::copyDataFrom one of device row or column data is null!\n";
-      }
+      assert(((d_row_data_ == nullptr) == (d_col_data_ == nullptr)) &&
+             "In Csr::copyDataFrom one of device row or column data is null!\n");
+
       if ((d_row_data_ == nullptr) && (d_col_data_ == nullptr)) {
         mem_.allocateArrayOnDevice(&d_row_data_, n_ + 1); 
         mem_.allocateArrayOnDevice(&d_col_data_, nnz_current);
@@ -316,9 +316,10 @@ namespace ReSolve
    * @param memspace - memory space to be synced up (HOST or DEVICE)
    * @return int - 0 if successful, error code otherwise
    * 
-   * @todo Handle case when neither memory space is updated. Currently,
-   * this function does nothing in that situation, quitely ignoring
-   * the sync call.
+   * @pre The memory space other than `memspace` must be up-to-date. Otherwise,
+   * this function will return an error.
+   * 
+   * @see Sparse::setUpdated
    */
   int matrix::Csr::syncData(memory::MemorySpace memspace)
   {
@@ -327,16 +328,18 @@ namespace ReSolve
     switch (memspace) {
       case HOST:
         //check if we need to copy or not
+        assert(((h_row_data_ == nullptr) != (h_col_data_ == nullptr)) &&
+               "In Csr::syncData one of host row or column data is null!\n");
+
         if (h_data_updated_) {
-          out::misc() << "In Csr::syncData trying to sync host, but host already up to date!\n";
+          out::misc() << "Csr::syncData is trying to sync host, but host already up to date!\n"
+                      << "Function call ignored!\n";
           return 0;
         }
         if (!d_data_updated_) {
-          out::error() << "In Csr::syncData trying to sync host with device, but device is out of date!\n";
+          out::error() << "Csr::syncData is trying to sync host with device, but device is out of date!\n"
+                       << "See Csr::syncData documentation\n.";
           assert(d_data_updated_);
-        }
-        if ((h_row_data_ == nullptr) != (h_col_data_ == nullptr)) {
-          out::error() << "In Csr::syncData one of host row or column data is null!\n";
         }
         if ((h_row_data_ == nullptr) && (h_col_data_ == nullptr)) {
           h_row_data_ = new index_type[n_ + 1];
@@ -353,16 +356,18 @@ namespace ReSolve
         h_data_updated_ = true;
         return 0;
       case DEVICE:
+        assert(((d_row_data_ == nullptr) != (d_col_data_ == nullptr)) &&
+               "In Csr::syncData one of device row or column data is null!\n");
+
         if (d_data_updated_) {
-          out::misc() << "In Csr::syncData trying to sync device, but device already up to date!\n";
+          out::misc() << "Csr::syncData is trying to sync device, but device already up to date!\n"
+                      << "Function call ignored!\n";
           return 0;
         }
         if (!h_data_updated_) {
-          out::error() << "In Csr::syncData trying to sync device with host, but host is out of date!\n";
+          out::error() << "Csr::syncData is trying to sync device with host, but host is out of date!\n"
+                       << "See Csr::syncData documentation\n.";
           assert(h_data_updated_);
-        }
-        if ((d_row_data_ == nullptr) != (d_col_data_ == nullptr)) {
-          out::error() << "In Csr::syncData one of device row or column data is null!\n";
         }
         if ((d_row_data_ == nullptr) && (d_col_data_ == nullptr)) {
           mem_.allocateArrayOnDevice(&d_row_data_, n_ + 1); 
