@@ -1,6 +1,7 @@
 /**
  * @file hipVectorKernels.hip
- * @author Slaven Peles (peless@ornl.gov), Shaked Regev (regevs@ornl.gov)
+ * @author Slaven Peles (peless@ornl.gov)
+ * @author Shaked Regev (regevs@ornl.gov)
  * @brief Contains implementation of HIP vector kernels.
  * @date 2023-12-08
  *
