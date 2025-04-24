@@ -1,5 +1,5 @@
 #include <algorithm>
-
+#include <cassert>
 #include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/matrix/Coo.hpp>
@@ -222,6 +222,22 @@ namespace ReSolve {
         return cpuImpl_->transpose(A, At);
         break;
       case DEVICE:
+            // check dimensions of A and At and if both are allocated
+        assert(A->getNumRows() == At->getNumColumns() && "Number of rows in A must be equal to number of columns in At");
+        assert(A->getNumColumns() == At->getNumRows() && "Number of columns in A must be equal to number of rows in At");
+        assert(A->getNnz() == At->getNnz() && "Number of nonzeros in A must be equal to number of nonzeros in At");
+        assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW &&
+              "Matrix has to be in CSR format for transpose.\n");
+        assert(At->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW &&
+              "Matrix has to be in CSR format for transpose.\n");
+        if(A->getValues(memory::DEVICE) == nullptr) {
+          out::error() << "In MatrixHandlerCuda::transpose, A->getValues(memory::DEVICE) is null!\n";
+          return 1;
+        }
+        if(At->getValues(memory::DEVICE) == nullptr) {
+          out::error() << "In MatrixHandlerCuda::transpose, At->getValues(memory::DEVICE) is null!\n";
+          return 1;
+        }
         return devImpl_->transpose(A, At);
         break;
     }

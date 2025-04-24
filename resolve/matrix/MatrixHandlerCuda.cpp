@@ -287,11 +287,7 @@ namespace ReSolve {
       assert(A->getNumRows() == At->getNumColumns() && "Number of rows in A must be equal to number of columns in At");
       assert(A->getNumColumns() == At->getNumRows() && "Number of columns in A must be equal to number of rows in At");
 
-      At->allocateMatrixData(memory::DEVICE);
-
       size_t bufferSize;
-
-
       status = cusparseCsr2cscEx2_bufferSize(workspace_->getCusparseHandle(),
                                              m,
                                              n,

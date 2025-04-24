@@ -263,8 +263,6 @@ namespace ReSolve {
       assert(A->getNumRows() == At->getNumColumns() && "Number of rows in A must be equal to number of columns in At");
       assert(A->getNumColumns() == At->getNumRows() && "Number of columns in A must be equal to number of rows in At");
 
-      At->allocateMatrixData(memory::DEVICE);
-
       size_t bufferSize;
       status = rocsparse_csr2csc_buffer_size(workspace_->getRocsparseHandle(),
                                            m,

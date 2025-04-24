@@ -233,10 +233,6 @@ namespace ReSolve
    */
   int MatrixHandlerCpu::transpose(matrix::Csr* A, matrix::Csr* At)
   {
-    assert(A->getNnz() == At->getNnz());
-    assert(A->getNumRows() == At->getNumColumns());
-    assert(A->getNumColumns() == At->getNumRows());
-
     index_type n = A->getNumRows();
     index_type m = A->getNumColumns();
     index_type nnz = A->getNnz();
