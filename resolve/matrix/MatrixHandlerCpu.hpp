@@ -39,7 +39,7 @@ namespace ReSolve {
 
       int transpose(matrix::Csr* A, matrix::Csr* At) override;
 
-      int addConstantToNonzeroValues(matrix::Sparse* A, real_type alpha);
+      int addConst(matrix::Sparse* A, real_type alpha);
 
       virtual int matvec(matrix::Sparse* A,
                  vector_type* vec_x,

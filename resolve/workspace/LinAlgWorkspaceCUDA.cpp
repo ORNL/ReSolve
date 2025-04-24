@@ -46,7 +46,7 @@ namespace ReSolve
     return transpose_workspace_;
   }
 
-  bool LinAlgWorkspaceCUDA::isTransposeAllocated()
+  bool LinAlgWorkspaceCUDA::isTransposeBufferAllocated()
   {
     return transpose_workspace_ready_;
   }

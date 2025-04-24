@@ -305,7 +305,7 @@ namespace ReSolve
    *
    * @return int error code, 0 if successful
    */
-  int MatrixHandlerCpu::addConstantToNonzeroValues(matrix::Sparse* A, real_type alpha)
+  int MatrixHandlerCpu::addConst(matrix::Sparse* A, real_type alpha)
   {
     real_type* values = A->getValues(memory::HOST);
     index_type nnz = A->getNnz();

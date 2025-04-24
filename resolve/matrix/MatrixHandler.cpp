@@ -186,7 +186,7 @@ namespace ReSolve {
    * @pre `A_csr` is allocated (but not prefilled) and has the correct CSR format.
    * @pre `A_csc` and `A_csr` are of the same size and have the same number of
    * nonzeros.
-   * 
+   *
    * @post `A_csr` is filled with the values from `A_csc`
    *
    * @return 0 if successful, 1 otherwise
@@ -235,15 +235,15 @@ namespace ReSolve {
    * @param[in] memspace - Device where the operation is computed
    * @return 0 if successful, 1 otherwise
    */
-  void MatrixHandler::addConstantToNonzeroValues(matrix::Sparse* A, real_type alpha, memory::MemorySpace memspace)
+  void MatrixHandler::addConst(matrix::Sparse* A, real_type alpha, memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
     switch (memspace) {
       case HOST:
-        cpuImpl_->addConstantToNonzeroValues(A, alpha);
+        cpuImpl_->addConst(A, alpha);
         break;
       case DEVICE:
-        devImpl_->addConstantToNonzeroValues(A, alpha);
+        devImpl_->addConst(A, alpha);
         break;
     }
   }

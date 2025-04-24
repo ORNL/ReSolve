@@ -128,7 +128,7 @@ namespace ReSolve
     return transpose_workspace_;
   }
 
-  bool LinAlgWorkspaceHIP::isTransposeAllocated()
+  bool LinAlgWorkspaceHIP::isTransposeBufferAllocated()
   {
     return transpose_workspace_ready_;
   }

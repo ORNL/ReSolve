@@ -280,7 +280,7 @@ namespace ReSolve {
     index_type n = A->getNumColumns();
     index_type nnz = A->getNnz();
     cusparseStatus_t status;
-    bool allocated = workspace_->isTransposeAllocated();
+    bool allocated = workspace_->isTransposeBufferAllocated();
     void* buffer_transpose = workspace_->getTransposeWorkspace();
     if (!allocated) {
       // check dimensions of A and At
@@ -341,7 +341,7 @@ namespace ReSolve {
    *
    * @return int error code, 0 if successful
    */
-  int MatrixHandlerCuda::addConstantToNonzeros(matrix::Sparse* A, real_type alpha)
+  int MatrixHandlerCuda::addConst(matrix::Sparse* A, real_type alpha)
   {
     real_type* values = A->getValues(memory::DEVICE);
     index_type nnz = A->getNnz();

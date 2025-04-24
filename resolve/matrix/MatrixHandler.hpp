@@ -56,7 +56,7 @@ namespace ReSolve {
 
       int transpose(matrix::Csr* A, matrix::Csr* At, memory::MemorySpace memspace);
 
-      void addConstantToNonzeroValues(matrix::Sparse* A, real_type alpha, memory::MemorySpace memspace);
+      void addConst(matrix::Sparse* A, real_type alpha, memory::MemorySpace memspace);
 
       /// Should compute vec_result := alpha*A*vec_x + beta*vec_result, but at least on cpu alpha and beta are flipped
       int matvec(matrix::Sparse* A,

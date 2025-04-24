@@ -257,7 +257,7 @@ namespace ReSolve {
     index_type nnz = A->getNnz();
     rocsparse_status status;
     void* buffer_transpose = workspace_->getTransposeWorkspace();
-    bool allocated = workspace_->isTransposeAllocated();
+    bool allocated = workspace_->isTransposeBufferAllocated();
     if (!allocated) {
       // check dimensions of A and At
       assert(A->getNumRows() == At->getNumColumns() && "Number of rows in A must be equal to number of columns in At");
@@ -306,7 +306,7 @@ namespace ReSolve {
    *
    * @return int error code, 0 if successful
    */
-  int MatrixHandlerHip::addConstantToNonzeroValues(matrix::Sparse* A, real_type alpha)
+  int MatrixHandlerHip::addConst(matrix::Sparse* A, real_type alpha)
   {
     real_type* values = A->getValues(memory::DEVICE);
     index_type nnz = A->getNnz();
