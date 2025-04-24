@@ -41,7 +41,7 @@ namespace ReSolve
     return buffer_1norm_;
   }
 
-  void* LinAlgWorkspaceCUDA::getTransposeWorkspace()
+  void* LinAlgWorkspaceCUDA::getTransposeBufferWorkspace()
   {
     return transpose_workspace_;
   }

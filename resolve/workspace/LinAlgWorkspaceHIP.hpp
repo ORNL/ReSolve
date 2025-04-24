@@ -23,7 +23,7 @@ namespace ReSolve
       index_type getDrSize();
       real_type* getDr();
       real_type* getNormBuffer();
-      void* getTransposeWorkspace();
+      void* getTransposeBufferWorkspace();
       bool getNormBufferState();
       bool isTransposeBufferAllocated();
       void setTransposeAllocated();

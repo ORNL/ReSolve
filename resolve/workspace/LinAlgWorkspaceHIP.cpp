@@ -123,7 +123,7 @@ namespace ReSolve
     return norm_buffer_;
   }
 
-  void*  LinAlgWorkspaceHIP::getTransposeWorkspace()
+  void*  LinAlgWorkspaceHIP::getTransposeBufferWorkspace()
   {
     return transpose_workspace_;
   }

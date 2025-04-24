@@ -281,7 +281,7 @@ namespace ReSolve {
     index_type nnz = A->getNnz();
     cusparseStatus_t status;
     bool allocated = workspace_->isTransposeBufferAllocated();
-    void* buffer_transpose = workspace_->getTransposeWorkspace();
+    void* buffer_transpose = workspace_->getTransposeBufferWorkspace();
     if (!allocated) {
       // check dimensions of A and At
       assert(A->getNumRows() == At->getNumColumns() && "Number of rows in A must be equal to number of columns in At");
