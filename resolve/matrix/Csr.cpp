@@ -7,7 +7,7 @@
 #include "Coo.hpp"
 #include <resolve/utilities/logger/Logger.hpp>
 
-namespace ReSolve 
+namespace ReSolve
 {
   using out = io::Logger;
 
@@ -20,9 +20,9 @@ namespace ReSolve
   {
     sparse_format_ = COMPRESSED_SPARSE_ROW;
   }
-  
-  matrix::Csr::Csr(index_type n, 
-                   index_type m, 
+
+  matrix::Csr::Csr(index_type n,
+                   index_type m,
                    index_type nnz,
                    bool symmetric,
                    bool expanded) : Sparse(n, m, nnz, symmetric, expanded)
@@ -32,20 +32,20 @@ namespace ReSolve
 
   /**
    * @brief Hijacking constructor
-   * 
-   * @param[in] n 
-   * @param[in] m 
-   * @param[in] nnz 
-   * @param[in] symmetric 
-   * @param[in] expanded 
-   * @param[in,out] rows 
-   * @param[in,out] cols 
-   * @param[in,out] vals 
-   * @param[in] memspaceSrc 
-   * @param[in] memspaceDst 
+   *
+   * @param[in] n
+   * @param[in] m
+   * @param[in] nnz
+   * @param[in] symmetric
+   * @param[in] expanded
+   * @param[in,out] rows
+   * @param[in,out] cols
+   * @param[in,out] vals
+   * @param[in] memspaceSrc
+   * @param[in] memspaceDst
    */
-  matrix::Csr::Csr(index_type n, 
-                   index_type m, 
+  matrix::Csr::Csr(index_type n,
+                   index_type m,
                    index_type nnz,
                    bool symmetric,
                    bool expanded,
@@ -214,7 +214,7 @@ namespace ReSolve
         this->h_row_data_ = new index_type[n_ + 1];
         this->h_col_data_ = new index_type[nnz_current];
         owns_cpu_sparsity_pattern_ = true;
-      } 
+      }
       if (h_val_data_ == nullptr) {
         this->h_val_data_ = new real_type[nnz_current];
         owns_cpu_values_ = true;
@@ -227,18 +227,18 @@ namespace ReSolve
              "In Csr::copyDataFrom one of device row or column data is null!\n");
 
       if ((d_row_data_ == nullptr) && (d_col_data_ == nullptr)) {
-        mem_.allocateArrayOnDevice(&d_row_data_, n_ + 1); 
+        mem_.allocateArrayOnDevice(&d_row_data_, n_ + 1);
         mem_.allocateArrayOnDevice(&d_col_data_, nnz_current);
         owns_gpu_values_ = true;
       }
       if (d_val_data_ == nullptr) {
-        mem_.allocateArrayOnDevice(&d_val_data_, nnz_current); 
+        mem_.allocateArrayOnDevice(&d_val_data_, nnz_current);
         owns_gpu_sparsity_pattern_ = true;
       }
     }
 
 
-    //copy	
+    //copy
     switch(control)  {
       case 0: //cpu->cpu
         mem_.copyArrayHostToHost(h_row_data_, row_data,      n_ + 1);
@@ -268,7 +268,7 @@ namespace ReSolve
         return -1;
     }
     return 0;
-  } 
+  }
 
   int matrix::Csr::copyDataFrom(const index_type* row_data,
                                 const index_type* col_data,
@@ -280,7 +280,7 @@ namespace ReSolve
     destroyMatrixData(memspaceOut);
     nnz_ = new_nnz;
     return copyDataFrom(row_data, col_data, val_data, memspaceIn, memspaceOut);
-  } 
+  }
 
   int matrix::Csr::allocateMatrixData(memory::MemorySpace memspace)
   {
@@ -289,36 +289,36 @@ namespace ReSolve
 
     if (memspace == memory::HOST) {
       this->h_row_data_ = new index_type[n_ + 1];
-      std::fill(h_row_data_, h_row_data_ + n_ + 1, 0);  
+      std::fill(h_row_data_, h_row_data_ + n_ + 1, 0);
       this->h_col_data_ = new index_type[nnz_current];
-      std::fill(h_col_data_, h_col_data_ + nnz_current, 0);  
+      std::fill(h_col_data_, h_col_data_ + nnz_current, 0);
       this->h_val_data_ = new real_type[nnz_current];
-      std::fill(h_val_data_, h_val_data_ + nnz_current, 0.0);  
+      std::fill(h_val_data_, h_val_data_ + nnz_current, 0.0);
       owns_cpu_sparsity_pattern_ = true;
       owns_cpu_values_ = true;
-      return 0;   
+      return 0;
     }
 
     if (memspace == memory::DEVICE) {
-      mem_.allocateArrayOnDevice(&d_row_data_,      n_ + 1); 
-      mem_.allocateArrayOnDevice(&d_col_data_, nnz_current); 
-      mem_.allocateArrayOnDevice(&d_val_data_, nnz_current); 
+      mem_.allocateArrayOnDevice(&d_row_data_,      n_ + 1);
+      mem_.allocateArrayOnDevice(&d_col_data_, nnz_current);
+      mem_.allocateArrayOnDevice(&d_val_data_, nnz_current);
       owns_gpu_sparsity_pattern_ = true;
       owns_gpu_values_ = true;
-      return 0;  
+      return 0;
     }
     return -1;
   }
 
   /**
    * @brief Sync data in memspace with the updated memory space.
-   * 
+   *
    * @param memspace - memory space to be synced up (HOST or DEVICE)
    * @return int - 0 if successful, error code otherwise
-   * 
+   *
    * @pre The memory space other than `memspace` must be up-to-date. Otherwise,
    * this function will return an error.
-   * 
+   *
    * @see Sparse::setUpdated
    */
   int matrix::Csr::syncData(memory::MemorySpace memspace)
@@ -328,7 +328,7 @@ namespace ReSolve
     switch (memspace) {
       case HOST:
         //check if we need to copy or not
-        assert(((h_row_data_ == nullptr) != (h_col_data_ == nullptr)) &&
+        assert(((h_row_data_ == nullptr) == (h_col_data_ == nullptr)) &&
                "In Csr::syncData one of host row or column data is null!\n");
 
         if (h_data_updated_) {
@@ -343,11 +343,11 @@ namespace ReSolve
         }
         if ((h_row_data_ == nullptr) && (h_col_data_ == nullptr)) {
           h_row_data_ = new index_type[n_ + 1];
-          h_col_data_ = new index_type[nnz_];      
+          h_col_data_ = new index_type[nnz_];
           owns_cpu_sparsity_pattern_ = true;
         }
         if (h_val_data_ == nullptr) {
-          h_val_data_ = new real_type[nnz_];      
+          h_val_data_ = new real_type[nnz_];
           owns_cpu_values_ = true;
         }
         mem_.copyArrayDeviceToHost(h_row_data_, d_row_data_, n_ + 1);
@@ -356,7 +356,7 @@ namespace ReSolve
         h_data_updated_ = true;
         return 0;
       case DEVICE:
-        assert(((d_row_data_ == nullptr) != (d_col_data_ == nullptr)) &&
+        assert(((d_row_data_ == nullptr) == (d_col_data_ == nullptr)) &&
                "In Csr::syncData one of device row or column data is null!\n");
 
         if (d_data_updated_) {
@@ -370,12 +370,12 @@ namespace ReSolve
           assert(h_data_updated_);
         }
         if ((d_row_data_ == nullptr) && (d_col_data_ == nullptr)) {
-          mem_.allocateArrayOnDevice(&d_row_data_, n_ + 1); 
-          mem_.allocateArrayOnDevice(&d_col_data_, nnz_); 
+          mem_.allocateArrayOnDevice(&d_row_data_, n_ + 1);
+          mem_.allocateArrayOnDevice(&d_col_data_, nnz_);
           owns_gpu_sparsity_pattern_ = true;
         }
         if (d_val_data_ == nullptr) {
-          mem_.allocateArrayOnDevice(&d_val_data_, nnz_); 
+          mem_.allocateArrayOnDevice(&d_val_data_, nnz_);
           owns_gpu_values_ = true;
         }
         mem_.copyArrayHostToDevice(d_row_data_, h_row_data_, n_ + 1);
@@ -391,7 +391,7 @@ namespace ReSolve
 
   /**
    * @brief Prints matrix data.
-   * 
+   *
    * @param out - Output stream where the matrix data is printed
    */
   void matrix::Csr::print(std::ostream& out, index_type indexing_base)
@@ -399,11 +399,11 @@ namespace ReSolve
     out << std::scientific << std::setprecision(std::numeric_limits<real_type>::digits10);
     for(index_type i = 0; i < n_; ++i) {
       for (index_type j = h_row_data_[i]; j < h_row_data_[i+1]; ++j) {
-        out << i              + indexing_base << " " 
+        out << i              + indexing_base << " "
             << h_col_data_[j] + indexing_base << " "
             << h_val_data_[j] << "\n";
       }
     }
   }
-} // namespace ReSolve 
+} // namespace ReSolve
 
