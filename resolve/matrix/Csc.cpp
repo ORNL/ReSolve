@@ -5,7 +5,7 @@
 #include <resolve/utilities/logger/Logger.hpp>
 #include "Csc.hpp"
 
-namespace ReSolve 
+namespace ReSolve
 {
   using out = io::Logger;
 
@@ -18,9 +18,9 @@ namespace ReSolve
   {
     sparse_format_ = COMPRESSED_SPARSE_COLUMN;
   }
-  
-  matrix::Csc::Csc(index_type n, 
-                   index_type m, 
+
+  matrix::Csc::Csc(index_type n,
+                   index_type m,
                    index_type nnz,
                    bool symmetric,
                    bool expanded) : Sparse(n, m, nnz, symmetric, expanded)
@@ -99,7 +99,7 @@ namespace ReSolve
         this->h_col_data_ = new index_type[m_ + 1];
         this->h_row_data_ = new index_type[nnz_current];
         owns_cpu_sparsity_pattern_ = true;
-      } 
+      }
       if (h_val_data_ == nullptr) {
         this->h_val_data_ = new real_type[nnz_current];
         owns_cpu_values_ = true;
@@ -112,12 +112,12 @@ namespace ReSolve
              "In Csc::copyDataFrom one of device row or column data is null!\n");
 
       if ((d_col_data_ == nullptr) && (d_row_data_ == nullptr)) {
-        mem_.allocateArrayOnDevice(&d_col_data_, m_ + 1); 
+        mem_.allocateArrayOnDevice(&d_col_data_, m_ + 1);
         mem_.allocateArrayOnDevice(&d_row_data_, nnz_current);
         owns_gpu_sparsity_pattern_ = true;
       }
       if (d_val_data_ == nullptr) {
-        mem_.allocateArrayOnDevice(&d_val_data_, nnz_current); 
+        mem_.allocateArrayOnDevice(&d_val_data_, nnz_current);
         owns_gpu_values_ = true;
       }
     }
@@ -152,7 +152,7 @@ namespace ReSolve
     }
     return 0;
 
-  } 
+  }
 
   int matrix::Csc::copyDataFrom(const index_type* row_data,
                                 const index_type* col_data,
@@ -173,36 +173,36 @@ namespace ReSolve
 
     if (memspace == memory::HOST) {
       this->h_col_data_ = new index_type[m_ + 1];
-      std::fill(h_col_data_, h_col_data_ + m_ + 1, 0);  
+      std::fill(h_col_data_, h_col_data_ + m_ + 1, 0);
       this->h_row_data_ = new index_type[nnz_current];
-      std::fill(h_row_data_, h_row_data_ + nnz_current, 0);  
+      std::fill(h_row_data_, h_row_data_ + nnz_current, 0);
       this->h_val_data_ = new real_type[nnz_current];
-      std::fill(h_val_data_, h_val_data_ + nnz_current, 0.0);  
+      std::fill(h_val_data_, h_val_data_ + nnz_current, 0.0);
       owns_cpu_sparsity_pattern_ = true;
       owns_cpu_values_ = true;
       return 0;
     }
 
     if (memspace == memory::DEVICE) {
-      mem_.allocateArrayOnDevice(&d_col_data_,      m_ + 1); 
-      mem_.allocateArrayOnDevice(&d_row_data_, nnz_current); 
-      mem_.allocateArrayOnDevice(&d_val_data_, nnz_current); 
+      mem_.allocateArrayOnDevice(&d_col_data_,      m_ + 1);
+      mem_.allocateArrayOnDevice(&d_row_data_, nnz_current);
+      mem_.allocateArrayOnDevice(&d_val_data_, nnz_current);
       owns_gpu_sparsity_pattern_ = true;
       owns_gpu_values_ = true;
-      return 0;   
+      return 0;
     }
     return -1;
   }
 
   /**
    * @brief Sync data in memspace with the updated memory space.
-   * 
+   *
    * @param memspace - memory space to be synced up (HOST or DEVICE)
    * @return int - 0 if successful, error code otherwise
-   * 
+   *
    * @pre The memory space other than `memspace` must be up-to-date. Otherwise,
    * this function will return an error.
-   * 
+   *
    * @see Sparse::setUpdated
    */
   int matrix::Csc::syncData(memory::MemorySpace memspace)
@@ -211,7 +211,7 @@ namespace ReSolve
 
     switch(memspace) {
       case HOST:
-        assert(((h_row_data_ == nullptr) != (h_col_data_ == nullptr)) &&
+        assert(((h_row_data_ == nullptr) == (h_col_data_ == nullptr)) &&
                "In Csc::syncData one of host row or column data is null!\n");
 
         if (h_data_updated_) {
@@ -225,21 +225,21 @@ namespace ReSolve
           assert(d_data_updated_);
         }
         if ((h_col_data_ == nullptr) && (h_row_data_ == nullptr)) {
-          h_col_data_ = new index_type[m_ + 1];      
-          h_row_data_ = new index_type[nnz_];      
+          h_col_data_ = new index_type[m_ + 1];
+          h_row_data_ = new index_type[nnz_];
           owns_cpu_sparsity_pattern_ = true;
         }
         if (h_val_data_ == nullptr) {
-          h_val_data_ = new real_type[nnz_];      
+          h_val_data_ = new real_type[nnz_];
           owns_cpu_values_ = true;
         }
         mem_.copyArrayDeviceToHost(h_col_data_, d_col_data_, m_ + 1);
         mem_.copyArrayDeviceToHost(h_row_data_, d_row_data_,   nnz_);
         mem_.copyArrayDeviceToHost(h_val_data_, d_val_data_,   nnz_);
         h_data_updated_ = true;
-        return 0;   
+        return 0;
       case DEVICE:
-        assert(((d_row_data_ == nullptr) != (d_col_data_ == nullptr)) &&
+        assert(((d_row_data_ == nullptr) == (d_col_data_ == nullptr)) &&
                "In Csc::syncData one of device row or column data is null!\n");
 
         if (d_data_updated_) {
@@ -253,7 +253,7 @@ namespace ReSolve
           assert(h_data_updated_);
         }
         if ((d_col_data_ == nullptr) && (d_row_data_ == nullptr)) {
-          mem_.allocateArrayOnDevice(&d_col_data_, m_ + 1); 
+          mem_.allocateArrayOnDevice(&d_col_data_, m_ + 1);
           mem_.allocateArrayOnDevice(&d_row_data_,   nnz_);
           owns_gpu_sparsity_pattern_ = true;
         }
@@ -273,7 +273,7 @@ namespace ReSolve
 
   /**
    * @brief Prints matrix data.
-   * 
+   *
    * @param out - Output stream where the matrix data is printed
    */
   void matrix::Csc::print(std::ostream& out, index_type indexing_base)
