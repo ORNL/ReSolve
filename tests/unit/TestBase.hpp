@@ -232,8 +232,8 @@ public:
   }
 protected:
   /// Returns true if two real numbers are equal within tolerance
-  [[nodiscard]] static
-  bool isEqual(const real_type a, const real_type b)
+  [[nodiscard]] 
+  static bool isEqual(const real_type a, const real_type b)
   {
     return (std::abs(a - b)/(1.0 + std::abs(b)) < eps);
   }
