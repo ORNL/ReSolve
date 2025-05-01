@@ -11,6 +11,11 @@ add_executable(rand_gmres.exe randGmres.cpp)
 target_link_libraries(rand_gmres.exe PRIVATE ReSolve)
 
 if(RESOLVE_USE_KLU)
+
+  # Build example with KLU factorization and KLU refactorization
+  add_executable(kluRefactor.exe kluRefactor.cpp)
+  target_link_libraries(kluRefactor.exe PRIVATE ReSolve)
+
   # Build example with KLU factorization and KLU refactorization
   add_executable(klu_klu.exe r_KLU_KLU.cpp)
   target_link_libraries(klu_klu.exe PRIVATE ReSolve)
@@ -18,6 +23,10 @@ if(RESOLVE_USE_KLU)
   # Read ONE matrix,solve with KLU
   add_executable(klu_klu_standalone.exe r_KLU_KLU_standalone.cpp)
   target_link_libraries(klu_klu_standalone.exe PRIVATE ReSolve)
+
+  # Read ONE matrix,solve with KLU
+  add_executable(kluStandAlone.exe kluStandAlone.cpp)
+  target_link_libraries(kluStandAlone.exe PRIVATE ReSolve)
 
   # Build a CPU example with a configurable system solver
   add_executable(system.exe r_SysSolver.cpp)
@@ -51,13 +60,13 @@ if(RESOLVE_USE_KLU)
     add_executable(klu_rf_fgmres_reuse_refactorization.exe r_KLU_rf_FGMRES_reuse_factorization.cpp)
     target_link_libraries(klu_rf_fgmres_reuse_refactorization.exe PRIVATE ReSolve)
 
-    # Build example with a configurable system solver
-    add_executable(system_cuda.exe r_SysSolverCuda.cpp)
-    target_link_libraries(system_cuda.exe PRIVATE ReSolve)
-
     # Build example where matrix data is updated
     add_executable(klu_glu_values_update.exe r_KLU_GLU_matrix_values_update.cpp)
     target_link_libraries(klu_glu_values_update.exe PRIVATE ReSolve)
+
+    # Build example with a configurable system solver
+    add_executable(system_cuda.exe r_SysSolverCuda.cpp)
+    target_link_libraries(system_cuda.exe PRIVATE ReSolve)
 
     # Example in which factorization is redone if solution is bad
     add_executable(klu_cusolverrf_check_redo.exe r_KLU_cusolverrf_redo_factorization.cpp)
@@ -90,9 +99,12 @@ set(installable_executables "")
 list(APPEND installable_executables  rand_gmres.exe)
 
 if(RESOLVE_USE_KLU)
-  list(APPEND installable_executables klu_klu.exe
+  list(APPEND installable_executables kluRefactor.exe
+                                      klu_klu.exe
                                       klu_klu_standalone.exe
-                                      sysRefactor.exe)
+                                      sysRefactor.exe
+                                      kluStandAlone.exe
+                                      system.exe)
 
   if(RESOLVE_USE_GPU)
     list(APPEND installable_executables gpuRefactor.exe)
