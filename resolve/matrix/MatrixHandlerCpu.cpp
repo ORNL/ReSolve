@@ -233,6 +233,8 @@ namespace ReSolve
    */
   int MatrixHandlerCpu::transpose(matrix::Csr* A, matrix::Csr* At)
   {
+    assert(A->getValues(memory::HOST) != nullptr && "Matrix A is not allocated on host.\n");
+    assert(At->getValues(memory::HOST) != nullptr && "Matrix At is not allocated on host.\n");
     index_type n = A->getNumRows();
     index_type m = A->getNumColumns();
     index_type nnz = A->getNnz();
@@ -242,6 +244,10 @@ namespace ReSolve
     index_type* rowPtrAt = At->getRowData(memory::HOST);
     index_type* colIdxAt = At->getColData(memory::HOST);
     real_type*  valuesAt = At->getValues( memory::HOST);
+    // Check dimensions of A and At
+    assert(A->getNumRows() == At->getNumColumns() && "Number of rows in A must be equal to number of columns in At");
+    assert(A->getNumColumns() == At->getNumRows() && "Number of columns in A must be equal to number of rows in At");
+    assert(A->getNnz() == At->getNnz() && "Number of nonzeros in A must be equal to number of nonzeros in At");
     // Set all CSR row pointers to zero
     for (index_type i = 0; i <= m; ++i) {
       rowPtrAt[i] = 0;

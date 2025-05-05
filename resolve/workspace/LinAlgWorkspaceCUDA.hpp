@@ -20,9 +20,8 @@ namespace ReSolve
       void* getSpmvBuffer();
       void* getNormBuffer();
       void* getTransposeBufferWorkspace();
+      void setTransposeBufferWorkspace(size_t bufferSize);
       bool isTransposeBufferAllocated();
-      void setTransposeAllocated();
-
       void setSpmvBuffer(void* buffer);
       void setNormBuffer(void* buffer);
 

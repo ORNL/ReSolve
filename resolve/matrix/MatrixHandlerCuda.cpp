@@ -275,13 +275,18 @@ namespace ReSolve {
    */
   int MatrixHandlerCuda::transpose(matrix::Csr* A, matrix::Csr* At)
   {
+    assert(A->getValues(memory::DEVICE) != nullptr && "Matrix A is not allocated on device.\n");
+    assert(At->getValues(memory::DEVICE) != nullptr && "Matrix At is not allocated on device.\n");
     index_type error_sum = 0;
     index_type m = A->getNumRows();
     index_type n = A->getNumColumns();
     index_type nnz = A->getNnz();
     cusparseStatus_t status;
     bool allocated = workspace_->isTransposeBufferAllocated();
-    void* buffer_transpose = workspace_->getTransposeBufferWorkspace();
+    // check dimensions of A and At
+    assert(A->getNumRows() == At->getNumColumns() && "Number of rows in A must be equal to number of columns in At");
+    assert(A->getNumColumns() == At->getNumRows() && "Number of columns in A must be equal to number of rows in At");
+    assert(A->getNnz() == At->getNnz() && "Number of nonzeros in A must be equal to number of nonzeros in At");
     if (!allocated) {
       // check dimensions of A and At
       assert(A->getNumRows() == At->getNumColumns() && "Number of rows in A must be equal to number of columns in At");
@@ -304,8 +309,7 @@ namespace ReSolve {
                                              CUSPARSE_CSR2CSC_ALG1,
                                              &bufferSize);
       error_sum += status;
-      mem_.allocateBufferOnDevice(&buffer_transpose, bufferSize);
-      workspace_->setTransposeAllocated();
+      workspace_->setTransposeBufferWorkspace(bufferSize);
     }
     status = cusparseCsr2cscEx2(workspace_->getCusparseHandle(),
                                 m,
@@ -321,7 +325,7 @@ namespace ReSolve {
                                 CUSPARSE_ACTION_NUMERIC,
                                 CUSPARSE_INDEX_BASE_ZERO,
                                 CUSPARSE_CSR2CSC_ALG1,
-                                buffer_transpose);
+                                workspace_->getTransposeBufferWorkspace());
     error_sum += status;
     // Values on the device are updated now -- mark them as such!
     At->setUpdated(memory::DEVICE);

@@ -46,14 +46,20 @@ namespace ReSolve
     return transpose_workspace_;
   }
 
+  void LinAlgWorkspaceCUDA::setTransposeBufferWorkspace(size_t bufferSize)
+  {
+    if (transpose_workspace_ != nullptr) {
+      mem_.deleteOnDevice(transpose_workspace_);
+    }
+      mem_.allocateBufferOnDevice(&transpose_workspace_, bufferSize);
+      transpose_workspace_ready_ = true;
+    return;
+  }
+
+
   bool LinAlgWorkspaceCUDA::isTransposeBufferAllocated()
   {
     return transpose_workspace_ready_;
-  }
-
-  void LinAlgWorkspaceCUDA::setTransposeAllocated()
-  {
-    transpose_workspace_ready_ = true;
   }
 
   bool  LinAlgWorkspaceCUDA::getNormBufferState()
