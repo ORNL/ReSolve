@@ -24,9 +24,9 @@ namespace ReSolve
       real_type* getDr();
       real_type* getNormBuffer();
       void* getTransposeBufferWorkspace();
+      void setTransposeBufferWorkspace(size_t bufferSize);
       bool getNormBufferState();
       bool isTransposeBufferAllocated();
-      void setTransposeAllocated();
 
       void setRocblasHandle(rocblas_handle handle);
       void setRocsparseHandle(rocsparse_handle handle);

@@ -128,13 +128,17 @@ namespace ReSolve
     return transpose_workspace_;
   }
 
+  void LinAlgWorkspaceHIP::setTransposeBufferWorkspace(size_t bufferSize)
+  {
+    if (transpose_workspace_ != nullptr) {
+      mem_.deleteOnDevice(transpose_workspace_);
+    }
+    mem_.allocateBufferOnDevice(&transpose_workspace_, bufferSize);
+    transpose_workspace_ready_ = true;
+  }
+
   bool LinAlgWorkspaceHIP::isTransposeBufferAllocated()
   {
     return transpose_workspace_ready_;
-  }
-
-  void LinAlgWorkspaceHIP::setTransposeAllocated()
-  {
-    transpose_workspace_ready_ = true;
   }
 } // namespace ReSolve

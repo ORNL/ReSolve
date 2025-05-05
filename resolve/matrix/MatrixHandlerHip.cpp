@@ -251,6 +251,8 @@ namespace ReSolve {
    */
   int MatrixHandlerHip::transpose(matrix::Csr* A, matrix::Csr* At)
   {
+    assert(A->getValues(memory::DEVICE) != nullptr && "Matrix A is not allocated on device.\n");
+    assert(At->getValues(memory::DEVICE) != nullptr && "Matrix At is not allocated on device.\n");
     index_type error_sum = 0;
     index_type m = A->getNumRows();
     index_type n = A->getNumColumns();
@@ -258,11 +260,12 @@ namespace ReSolve {
     rocsparse_status status;
     void* buffer_transpose = workspace_->getTransposeBufferWorkspace();
     bool allocated = workspace_->isTransposeBufferAllocated();
+    // check dimensions of A and At
+    assert(A->getNumRows() == At->getNumColumns() && "Number of rows in A must be equal to number of columns in At");
+    assert(A->getNumColumns() == At->getNumRows() && "Number of columns in A must be equal to number of rows in At");
+    assert(A->getNnz() == At->getNnz() && "Number of nonzeros in A must be equal to number of nonzeros in At");
     if (!allocated) {
-      // check dimensions of A and At
-      assert(A->getNumRows() == At->getNumColumns() && "Number of rows in A must be equal to number of columns in At");
-      assert(A->getNumColumns() == At->getNumRows() && "Number of columns in A must be equal to number of rows in At");
-
+      // allocate transpose buffer
       size_t bufferSize;
       status = rocsparse_csr2csc_buffer_size(workspace_->getRocsparseHandle(),
                                            m,
@@ -273,8 +276,7 @@ namespace ReSolve {
                                            rocsparse_action_numeric,
                                            &bufferSize);
       error_sum += status;
-      mem_.allocateBufferOnDevice(&buffer_transpose, bufferSize);
-      workspace_->setTransposeAllocated();
+      workspace_->setTransposeBufferWorkspace(bufferSize);
     }
     status = rocsparse_dcsr2csc(workspace_->getRocsparseHandle(),
                                 m,
@@ -288,7 +290,7 @@ namespace ReSolve {
                                 At->getRowData(memory::DEVICE),
                                 rocsparse_action_numeric,
                                 rocsparse_index_base_zero,
-                                buffer_transpose);
+                                workspace_->getTransposeBufferWorkspace());
     error_sum += status;
     // Values on the device are updated now -- mark them as such!
     At->setUpdated(memory::DEVICE);
