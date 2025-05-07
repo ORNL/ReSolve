@@ -29,6 +29,9 @@ namespace ReSolve
     if (matvec_setup_done_) {
       cusparseDestroySpMat(mat_A_);
     }
+    if (transpose_workspace_ready_) {
+      mem_.deleteOnDevice(transpose_workspace_);
+    }
   }
 
   void* LinAlgWorkspaceCUDA::getSpmvBuffer()
@@ -55,7 +58,7 @@ namespace ReSolve
       transpose_workspace_ready_ = true;
     return;
   }
-  
+
   bool LinAlgWorkspaceCUDA::isTransposeBufferAllocated()
   {
     return transpose_workspace_ready_;

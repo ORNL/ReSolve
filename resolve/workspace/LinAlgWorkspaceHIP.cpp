@@ -23,8 +23,15 @@ namespace ReSolve
     if (matvec_setup_done_) {
       rocsparse_destroy_mat_descr(mat_A_);
     }
-    if (d_r_size_ != 0)  mem_.deleteOnDevice(d_r_);
-    if (norm_buffer_ready_ == true)  mem_.deleteOnDevice(norm_buffer_);
+    if (d_r_size_ != 0) {
+      mem_.deleteOnDevice(d_r_);
+    }
+    if (norm_buffer_ready_ == true) {
+      mem_.deleteOnDevice(norm_buffer_);
+    }
+    if (transpose_workspace_ready_) {
+      mem_.deleteOnDevice(transpose_workspace_);
+    }
   }
 
   rocsparse_handle LinAlgWorkspaceHIP::getRocsparseHandle()
