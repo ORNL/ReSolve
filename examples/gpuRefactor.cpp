@@ -193,9 +193,8 @@ int gpuRefactor(int argc, char *argv[])
 
     int status = 0;
 
-    if (i < 2) {
+    if (i == 0) {
       RESOLVE_RANGE_PUSH("KLU");
-
       // Setup factorization solver
       KLU.setup(A);
       matrix_handler.setValuesChanged(true, memory::DEVICE);
@@ -203,7 +202,9 @@ int gpuRefactor(int argc, char *argv[])
       // Analysis (symbolic factorization)
       status = KLU.analyze();
       std::cout << "KLU analysis status: " << status << std::endl;
+    }
 
+    if (i < 2) {
       // Numeric factorization
       status = KLU.factorize();
       std::cout << "KLU factorization status: " << status << std::endl;
@@ -227,8 +228,6 @@ int gpuRefactor(int argc, char *argv[])
         index_type* Q = KLU.getQOrdering();
 
         Rf.setup(A, L, U, P, Q, vec_rhs);
-        // Refactorization
-        Rf.refactorize();
 
         // Setup iterative refinement solver
         if (is_iterative_refinement) {

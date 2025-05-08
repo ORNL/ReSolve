@@ -332,6 +332,7 @@ namespace ReSolve
   int SystemSolver::factorize()
   {
     if (factorizationMethod_ == "klu") {
+      is_solve_on_device_ = false;
       return factorizationSolver_->factorize();
     } 
     return 1;
@@ -346,7 +347,8 @@ namespace ReSolve
     if (refactorizationMethod_ == "glu" || 
         refactorizationMethod_ == "cusolverrf" || 
         refactorizationMethod_ == "rocsolverrf") {
-      return refactorizationSolver_->refactorize();
+          is_solve_on_device_ = true;
+          return refactorizationSolver_->refactorize();
     }
 
     return 1;
@@ -385,7 +387,7 @@ namespace ReSolve
 
 #ifdef RESOLVE_USE_CUDA
     if (refactorizationMethod_ == "glu") {
-      isSolveOnDevice_ = true;
+      is_solve_on_device_ = true;
       status += refactorizationSolver_->setup(A_, L_, U_, P_, Q_);
     }
     if (refactorizationMethod_ == "cusolverrf") {
@@ -394,13 +396,13 @@ namespace ReSolve
       LinSolverDirectCuSolverRf* Rf = dynamic_cast<LinSolverDirectCuSolverRf*>(refactorizationSolver_);
       Rf->setNumericalProperties(1e-14, 1e-1);
 
-      isSolveOnDevice_ = true;
+      is_solve_on_device_ = false;
     }
 #endif
 
 #ifdef RESOLVE_USE_HIP
     if (refactorizationMethod_ == "rocsolverrf") {
-      isSolveOnDevice_ = true;
+      is_solve_on_device_ = false;
       auto* Rf = dynamic_cast<LinSolverDirectRocSolverRf*>(refactorizationSolver_);
       Rf->setSolveMode(1);
       status += refactorizationSolver_->setup(A_, L_, U_, P_, Q_, resVector_);
@@ -444,7 +446,7 @@ namespace ReSolve
     } 
 
     if (solveMethod_ == "glu" || solveMethod_ == "cusolverrf" || solveMethod_ == "rocsolverrf") {
-      if (isSolveOnDevice_) {
+      if (is_solve_on_device_) {
         status += refactorizationSolver_->solve(rhs, x);
       } else {
         status += factorizationSolver_->solve(rhs, x);
@@ -452,7 +454,7 @@ namespace ReSolve
     } 
 
     if (irMethod_ == "fgmres") {
-      if (isSolveOnDevice_) {
+      if (is_solve_on_device_) {
         status += refine(rhs, x);
       }
     }
@@ -465,7 +467,7 @@ namespace ReSolve
     if (precondition_method_ == "ilu0") {
       status += preconditioner_->setup(A_);
       if (memspace_ != "cpu") {
-        isSolveOnDevice_ = true;
+        is_solve_on_device_ = true;
       }
       iterativeSolver_->setupPreconditioner("LU", preconditioner_);
     }
@@ -632,7 +634,7 @@ namespace ReSolve
       norm_b = std::sqrt(vectorHandler_->dot(rhs, rhs, memory::HOST));
 #if defined(RESOLVE_USE_HIP) || defined(RESOLVE_USE_CUDA)
     } else if (memspace_ == "cuda" || memspace_ == "hip") {
-      if (isSolveOnDevice_) {
+      if (is_solve_on_device_) {
         norm_b = std::sqrt(vectorHandler_->dot(rhs, rhs, memory::DEVICE));
       } else {
         norm_b = std::sqrt(vectorHandler_->dot(rhs, rhs, memory::HOST));
@@ -657,7 +659,7 @@ namespace ReSolve
       norm_b = std::sqrt(vectorHandler_->dot(resVector_, resVector_, memory::HOST));
 #if defined(RESOLVE_USE_HIP) || defined(RESOLVE_USE_CUDA)
     } else if (memspace_ == "cuda" || memspace_ == "hip") {
-      if (isSolveOnDevice_) {
+      if (is_solve_on_device_) {
         resVector_->copyDataFrom(rhs, memory::DEVICE, memory::DEVICE);
         norm_b = std::sqrt(vectorHandler_->dot(resVector_, resVector_, memory::DEVICE));
       } else {
@@ -689,7 +691,7 @@ namespace ReSolve
       resVector_->copyDataFrom(rhs, memory::HOST, memory::HOST);
 #if defined(RESOLVE_USE_HIP) || defined(RESOLVE_USE_CUDA)
     } else if (memspace_ == "cuda" || memspace_ == "hip") {
-      if (isSolveOnDevice_) {
+      if (is_solve_on_device_) {
         resVector_->copyDataFrom(rhs, memory::DEVICE, memory::DEVICE);
       } else {
         resVector_->copyDataFrom(rhs, memory::HOST, memory::DEVICE);

@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
   else if (opt->second == "cpu")
   {
     sysRefactor<ReSolve::LinAlgWorkspaceCpu>(argc, argv);
-  } 
+  }
   else
   {
     std::cout << "Re::Solve is not built with support for " << opt->second;
@@ -107,6 +107,12 @@ int sysRefactor(int argc, char *argv[])
 
   CliOptions options(argc, argv);
   CliOptions::Option* opt = nullptr;
+
+  bool is_help = options.hasKey("-h");
+  if (is_help) {
+    printHelpInfo();
+    return 0;
+  }
 
   bool is_iterative_refinement = options.hasKey("-i");
 
@@ -171,7 +177,7 @@ int sysRefactor(int argc, char *argv[])
   // Create system solver
   std::string refactor("none");
   if (hw_backend == "CUDA") {
-    refactor = "cusolverrf";
+    refactor = "glu";
   } else if (hw_backend == "HIP") {
     refactor = "rocsolverrf";
   } else {
@@ -276,9 +282,6 @@ int sysRefactor(int argc, char *argv[])
       status = solver.refactorizationSetup();
       std::cout << "Refactorization setup status: " << status << std::endl;
 
-      // Refactorize on the device
-      status = solver.refactorize();
-      std::cout << "Refactorization on the device status: " << status << std::endl;
     } else {
       // Refactorize on the device
       status = solver.refactorize();
