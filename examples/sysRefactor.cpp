@@ -282,9 +282,6 @@ int sysRefactor(int argc, char *argv[])
       status = solver.refactorizationSetup();
       std::cout << "Refactorization setup status: " << status << std::endl;
 
-      // Refactorize on the device
-      status = solver.refactorize();
-      std::cout << "Refactorization on the device status: " << status << std::endl;
     } else {
       // Refactorize on the device
       status = solver.refactorize();

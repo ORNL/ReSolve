@@ -228,8 +228,6 @@ int gpuRefactor(int argc, char *argv[])
         index_type* Q = KLU.getQOrdering();
 
         Rf.setup(A, L, U, P, Q, vec_rhs);
-        // Refactorization
-        // Rf.refactorize();
 
         // Setup iterative refinement solver
         if (is_iterative_refinement) {
