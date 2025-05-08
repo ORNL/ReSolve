@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
   else if (opt->second == "cpu")
   {
     sysRefactor<ReSolve::LinAlgWorkspaceCpu>(argc, argv);
-  } 
+  }
   else
   {
     std::cout << "Re::Solve is not built with support for " << opt->second;

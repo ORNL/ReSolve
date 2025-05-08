@@ -134,18 +134,16 @@ int main(int argc, char *argv[])
     mat_file.close();
     rhs_file.close();
 
-    // Update data.
-    if (i < 2) {
-      vec_rhs->setDataUpdated(ReSolve::memory::HOST);
-    }
     std::cout<<"COO to CSR completed. Expanded NNZ: "<< A->getNnz()<<std::endl;
     //Now call direct solver
     int status;
-
-    if (i < 2){
+    if (i==0) {
+      vec_rhs->setDataUpdated(ReSolve::memory::HOST);
       KLU->setup(A);
       status = KLU->analyze();
       std::cout<<"KLU analysis status: "<<status<<std::endl;
+    }
+    if (i < 2){
       status = KLU->factorize();
       std::cout<<"KLU factorization status: "<<status<<std::endl;
     } else {
