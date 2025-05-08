@@ -108,6 +108,12 @@ int sysRefactor(int argc, char *argv[])
   CliOptions options(argc, argv);
   CliOptions::Option* opt = nullptr;
 
+  bool is_help = options.hasKey("-h");
+  if (is_help) {
+    printHelpInfo();
+    return 0;
+  }
+
   bool is_iterative_refinement = options.hasKey("-i");
 
   index_type num_systems = 0;
@@ -171,7 +177,7 @@ int sysRefactor(int argc, char *argv[])
   // Create system solver
   std::string refactor("none");
   if (hw_backend == "CUDA") {
-    refactor = "cusolverrf";
+    refactor = "glu";
   } else if (hw_backend == "HIP") {
     refactor = "rocsolverrf";
   } else {
