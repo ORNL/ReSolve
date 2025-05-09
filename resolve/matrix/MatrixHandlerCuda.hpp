@@ -35,7 +35,7 @@ namespace ReSolve {
       virtual ~MatrixHandlerCuda();
 
       int csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr);
-      int transpose(matrix::Csr* A, matrix::Csr* At) override;
+      int transpose(matrix::Csr* A, matrix::Csr* At);
       int addConst(matrix::Sparse* A, real_type alpha);
       virtual int matvec(matrix::Sparse* A,
                  vector_type* vec_x,
