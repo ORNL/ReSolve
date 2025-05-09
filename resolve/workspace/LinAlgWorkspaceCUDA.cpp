@@ -50,9 +50,9 @@ namespace ReSolve
 
   void LinAlgWorkspaceCUDA::setTransposeBufferWorkspace(size_t bufferSize)
   {
-    if (transpose_workspace_ != nullptr) {
-      mem_.deleteOnDevice(transpose_workspace_);
-    }
+      if (transpose_workspace_ready_) {
+        mem_.deleteOnDevice(transpose_workspace_);
+      }
       mem_.allocateBufferOnDevice(&transpose_workspace_, bufferSize);
       transpose_workspace_ready_ = true;
     return;
