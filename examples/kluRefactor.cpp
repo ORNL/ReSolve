@@ -14,6 +14,7 @@
  */
 #include <iostream>
 #include <iomanip>
+#include <sstream>
 
 #include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/Csr.hpp>
@@ -93,6 +94,14 @@ int main(int argc, char *argv[])
     return 1;
   }
 
+  std::string file_extension("");
+  opt = options.getParamFromKey("-e");
+  if (opt) {
+    file_extension = opt->second;
+  } else {
+    file_extension = "mtx";
+  }
+
   std::string fileId;
   std::string rhsId;
   std::string matrix_file_name_full;
@@ -116,8 +125,8 @@ int main(int argc, char *argv[])
 
     std::ostringstream matname;
     std::ostringstream rhsname;
-    matname << matrix_path_name << std::setfill('0') << std::setw(2) << i << ".mtx";
-    rhsname << rhs_path_name    << std::setfill('0') << std::setw(2) << i << ".mtx";
+    matname << matrix_path_name << std::setfill('0') << std::setw(2) << i << "." << file_extension;
+    rhsname << rhs_path_name    << std::setfill('0') << std::setw(2) << i << "." << file_extension;
     matrix_file_name_full = matname.str();
     rhs_file_name_full = rhsname.str();
     std::ifstream mat_file(matrix_file_name_full);

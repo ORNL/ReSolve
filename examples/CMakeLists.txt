@@ -40,6 +40,10 @@ if(RESOLVE_USE_KLU)
     add_executable(klu_glu.exe r_KLU_GLU.cpp)
     target_link_libraries(klu_glu.exe PRIVATE ReSolve)
 
+    # Build example with KLU factorization and GLU refactorization
+    add_executable(gluRefactor.exe gluRefactor.cpp)
+    target_link_libraries(gluRefactor.exe PRIVATE ReSolve)
+
     # Build example with KLU factorization and Rf refactorization
     add_executable(klu_rf.exe r_KLU_rf.cpp)
     target_link_libraries(klu_rf.exe PRIVATE ReSolve)
@@ -103,6 +107,7 @@ if(RESOLVE_USE_KLU)
   if(RESOLVE_USE_CUDA)
     list(APPEND installable_executables klu_glu.exe
                                         klu_rf.exe
+                                        gluRefactor.exe
                                         klu_rf_fgmres.exe
                                         klu_glu_values_update.exe
                                         klu_cusolverrf_check_redo.exe)

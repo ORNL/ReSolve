@@ -16,6 +16,7 @@
 #include <string>
 #include <iostream>
 #include <iomanip>
+#include <sstream>
 
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/Csc.hpp>
@@ -73,7 +74,7 @@ int main(int argc, char *argv[])
  * @param[in] argv - Command line arguments
  * @return 0 if the example ran successfully, -1 otherwise
  */
-template <class workspace_type, class refactor_type>
+template <class workspace_type>
 int gluRefactor(int argc, char *argv[])
 {
   using namespace ReSolve::examples;
@@ -89,8 +90,6 @@ int gluRefactor(int argc, char *argv[])
     printHelpInfo();
     return 0;
   }
-
-  bool is_iterative_refinement = options.hasKey("-i");
 
   index_type num_systems = 0;
   opt = options.getParamFromKey("-n");
@@ -143,10 +142,6 @@ int gluRefactor(int argc, char *argv[])
   ExampleHelper<workspace_type> helper(workspace);
   std::cout << "gluRefactor with " << helper.getHardwareBackend() << " backend\n";
 
-  // Create matrix and vector handlers
-  MatrixHandler matrix_handler(&workspace);
-  VectorHandler vector_handler(&workspace);
-
   // Direct solvers instantiation
   LinSolverDirectKLU KLU;
   LinSolverDirectCuSolverGLU Rf(&workspace);
@@ -163,8 +158,8 @@ int gluRefactor(int argc, char *argv[])
     RESOLVE_RANGE_PUSH("File input");
     std::ostringstream matname;
     std::ostringstream rhsname;
-    matname << matrix_pathname << std::setfill('0') << std::setw(2) << i << ".mtx";
-    rhsname << rhs_pathname    << std::setfill('0') << std::setw(2) << i << ".mtx";
+    matname << matrix_pathname << std::setfill('0') << std::setw(2) << i << "." << file_extension;
+    rhsname << rhs_pathname    << std::setfill('0') << std::setw(2) << i << "." << file_extension;
     std::string matrix_pathname_full = matname.str();
     std::string rhs_pathname_full    = rhsname.str();
 
@@ -206,18 +201,15 @@ int gluRefactor(int argc, char *argv[])
 
     int status = 0;
 
-    if (i == 0) {
+    if (i < 1) {
       RESOLVE_RANGE_PUSH("KLU");
       // Setup factorization solver
       KLU.setup(A);
-      matrix_handler.setValuesChanged(true, memory::DEVICE);
 
       // Analysis (symbolic factorization)
       status = KLU.analyze();
       std::cout << "KLU analysis status: " << status << std::endl;
-    }
 
-    if (i < 2) {
       // Numeric factorization
       status = KLU.factorize();
       std::cout << "KLU factorization status: " << status << std::endl;
@@ -226,38 +218,35 @@ int gluRefactor(int argc, char *argv[])
       status = KLU.solve(vec_rhs, vec_x);
       std::cout << "KLU solve status: " << status << std::endl;
 
-      // Print summary of results
-      helper.resetSystem(A, vec_rhs, vec_x);
-      helper.printShortSummary();
-
-      if (i == 1) {
-        // Extract factors and configure refactorization solver
-        matrix::Csc* L = (matrix::Csc*) KLU.getLFactor();
-        matrix::Csc* U = (matrix::Csc*) KLU.getUFactor();
-        if (L == nullptr || U == nullptr) {
-          std::cout << "Factor extraction from KLU failed!\n";
-        }
-        index_type* P = KLU.getPOrdering();
-        index_type* Q = KLU.getQOrdering();
-
-        Rf.setup(A, L, U, P, Q);
+      // Extract factors and configure refactorization solver
+      matrix::Csc* L = (matrix::Csc*) KLU.getLFactor();
+      matrix::Csc* U = (matrix::Csc*) KLU.getUFactor();
+      if (L == nullptr || U == nullptr) {
+        std::cout << "Factor extraction from KLU failed!\n";
       }
+      index_type* P = KLU.getPOrdering();
+      index_type* Q = KLU.getQOrdering();
+
+      status = Rf.setup(A, L, U, P, Q);
+
       RESOLVE_RANGE_POP("KLU");
     } else {
-      std::cout << "Using refactorization\n";
-
       RESOLVE_RANGE_PUSH("Refactorization");
+
       // Refactorize on the device
       status = Rf.refactorize();
 
-      // Triangular solve on the device
-      status = Rf.solve(vec_rhs, vec_x);
       RESOLVE_RANGE_POP("Refactorization");
-
-      // Print summary of the results
-      helper.resetSystem(A, vec_rhs, vec_x);
-      helper.printSummary();
     }
+
+    RESOLVE_RANGE_PUSH("Triangular solve");
+    // Triangular solve on the device
+    status = Rf.solve(vec_rhs, vec_x);
+    RESOLVE_RANGE_POP("Triangular solve");
+
+    // Print summary of the results
+    helper.resetSystem(A, vec_rhs, vec_x);
+    helper.printSummary();
 
   } // for (int i = 0; i < num_systems; ++i)
   RESOLVE_RANGE_POP(__FUNCTION__);

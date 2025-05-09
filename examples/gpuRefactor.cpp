@@ -18,6 +18,7 @@
 #include <string>
 #include <iostream>
 #include <iomanip>
+#include <sstream>
 
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/Csc.hpp>
@@ -132,6 +133,14 @@ int gpuRefactor(int argc, char *argv[])
     return 1;
   }
 
+  std::string file_extension("");
+  opt = options.getParamFromKey("-e");
+  if (opt) {
+    file_extension = opt->second;
+  } else {
+    file_extension = "mtx";
+  }
+
   std::cout << "Family mtx file name: "       << matrix_pathname
             << ", total number of matrices: " << num_systems << "\n"
             << "Family rhs file name: "       << rhs_pathname
@@ -169,8 +178,8 @@ int gpuRefactor(int argc, char *argv[])
     RESOLVE_RANGE_PUSH("File input");
     std::ostringstream matname;
     std::ostringstream rhsname;
-    matname << matrix_pathname << std::setfill('0') << std::setw(2) << i << ".mtx";
-    rhsname << rhs_pathname    << std::setfill('0') << std::setw(2) << i << ".mtx";
+    matname << matrix_pathname << std::setfill('0') << std::setw(2) << i << "." << file_extension;
+    rhsname << rhs_pathname    << std::setfill('0') << std::setw(2) << i << "." << file_extension;
     std::string matrix_pathname_full = matname.str();
     std::string rhs_pathname_full    = rhsname.str();
 
