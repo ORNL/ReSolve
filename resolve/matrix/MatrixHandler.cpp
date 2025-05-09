@@ -217,19 +217,27 @@ namespace ReSolve {
   int MatrixHandler::transpose(matrix::Csr* A, matrix::Csr* At, memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
+    // check dimensions of A and At and if both are allocated
+    assert(A->getNumRows() == At->getNumColumns() && "Number of rows in A must be equal to number of columns in At");
+    assert(A->getNumColumns() == At->getNumRows() && "Number of columns in A must be equal to number of rows in At");
+    assert(A->getNnz() == At->getNnz() && "Number of nonzeros in A must be equal to number of nonzeros in At");
+    assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW &&
+          "Matrix has to be in CSR format for transpose.\n");
+    assert(At->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW &&
+          "Matrix has to be in CSR format for transpose.\n");
     switch (memspace) {
       case HOST:
+        if(A->getValues(memory::HOST) == nullptr) {
+          out::error() << "In MatrixHandler::transpose, A->getValues(memory::HOST) is null!\n";
+          return 1;
+        }
+        if(At->getValues(memory::HOST) == nullptr) {
+          out::error() << "In MatrixHandler::transpose, At->getValues(memory::HOST) is null!\n";
+          return 1;
+        }
         return cpuImpl_->transpose(A, At);
         break;
       case DEVICE:
-            // check dimensions of A and At and if both are allocated
-        assert(A->getNumRows() == At->getNumColumns() && "Number of rows in A must be equal to number of columns in At");
-        assert(A->getNumColumns() == At->getNumRows() && "Number of columns in A must be equal to number of rows in At");
-        assert(A->getNnz() == At->getNnz() && "Number of nonzeros in A must be equal to number of nonzeros in At");
-        assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW &&
-              "Matrix has to be in CSR format for transpose.\n");
-        assert(At->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW &&
-              "Matrix has to be in CSR format for transpose.\n");
         if(A->getValues(memory::DEVICE) == nullptr) {
           out::error() << "In MatrixHandlerCuda::transpose, A->getValues(memory::DEVICE) is null!\n";
           return 1;

@@ -275,8 +275,6 @@ namespace ReSolve {
    */
   int MatrixHandlerCuda::transpose(matrix::Csr* A, matrix::Csr* At)
   {
-    assert(A->getValues(memory::DEVICE) != nullptr && "Matrix A is not allocated on device.\n");
-    assert(At->getValues(memory::DEVICE) != nullptr && "Matrix At is not allocated on device.\n");
     index_type error_sum = 0;
     index_type m = A->getNumRows();
     index_type n = A->getNumColumns();
@@ -284,9 +282,6 @@ namespace ReSolve {
     cusparseStatus_t status;
     bool allocated = workspace_->isTransposeBufferAllocated();
     // check dimensions of A and At
-    assert(A->getNumRows() == At->getNumColumns() && "Number of rows in A must be equal to number of columns in At");
-    assert(A->getNumColumns() == At->getNumRows() && "Number of columns in A must be equal to number of rows in At");
-    assert(A->getNnz() == At->getNnz() && "Number of nonzeros in A must be equal to number of nonzeros in At");
     if (!allocated) {
       // allocate transpose buffer
       size_t bufferSize;
