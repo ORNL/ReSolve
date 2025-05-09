@@ -1,7 +1,22 @@
-
+/**
+ * @file gpuRefactor.cpp
+ * @author Slaven Peles (peless@ornl.gov)
+ * @author Kasia Swirydowicz (kasia.swirydowicz@amd.com)
+ * 
+ * @brief Example of solving linear systems using refactorization on a GPU.
+ * 
+ * A series of linear systems is read from files specified at command line
+ * input and solved with refactorization approach on GPU. Initially, system(s)
+ * are solved with KLU solver on CPU, using full factorization, and the
+ * subsequent systems are solved with refactorization solver on GPU. If the
+ * example is built with CUDA, cusolverRf is used for refactorization. For HIP
+ * builds, rocsolverRf is used. It is assumed that all systems in the series
+ * have the same sparsity pattern, so the analysis is done only once for the
+ * entire series.
+ * 
+ */
 #include <string>
 #include <iostream>
-#include <sstream>
 #include <iomanip>
 
 #include <resolve/matrix/Csr.hpp>
@@ -28,14 +43,15 @@
 /// Prints help message describing system usage.
 void printHelpInfo()
 {
-  std::cout << "\nLoads from files and solves a series of linear systems.\n\n";
+  std::cout << "\ngpuRefactor.exe loads from files and solves a series of linear systems.\n\n";
   std::cout << "System matrices are in files with names <pathname>XX.mtx, where XX are\n";
   std::cout << "consecutive integer numbers 00, 01, 02, ...\n\n";
-  std::cout << "System right hand side vectors are stored in files with matching numbering.\n";
+  std::cout << "System right hand side vectors are stored in files with matching numbering\n";
   std::cout << "and file extension.\n\n";
   std::cout << "Usage:\n\t./";
   std::cout << "gpuRefactor.exe -m <matrix pathname> -r <rhs pathname> -n <number of systems>\n\n";
-  std::cout << "Optional features:\n\t-h\tPrints this message.\n";
+  std::cout << "Optional features:\n";
+  std::cout << "\t-h\tPrints this message.\n";
   std::cout << "\t-i\tEnables iterative refinement.\n\n";
 }
 
@@ -91,8 +107,9 @@ int gpuRefactor(int argc, char *argv[])
   if (opt) {
     num_systems = atoi((opt->second).c_str());
   } else {
-    std::cout << "Incorrect input!\n";
+    std::cout << "Incorrect input!\n\n";
     printHelpInfo();
+    return 1;
   }
 
   std::string matrix_pathname("");
@@ -100,8 +117,9 @@ int gpuRefactor(int argc, char *argv[])
   if (opt) {
     matrix_pathname = opt->second;
   } else {
-    std::cout << "Incorrect input!\n";
+    std::cout << "Incorrect input!\n\n";
     printHelpInfo();
+    return 1;
   }
 
   std::string rhs_pathname("");
@@ -109,8 +127,9 @@ int gpuRefactor(int argc, char *argv[])
   if (opt) {
     rhs_pathname = opt->second;
   } else {
-    std::cout << "Incorrect input!\n";
+    std::cout << "Incorrect input!\n\n";
     printHelpInfo();
+    return 1;
   }
 
   std::cout << "Family mtx file name: "       << matrix_pathname
@@ -173,7 +192,7 @@ int gpuRefactor(int argc, char *argv[])
       A = io::createCsrFromFile(mat_file, is_expand_symmetric);
       vec_rhs = io::createVectorFromFile(rhs_file);
       vec_x = new vector_type(A->getNumRows());
-      vec_x->allocate(memory::HOST);//for KLU
+      vec_x->allocate(memory::HOST);
       vec_x->allocate(memory::DEVICE);
     } else {
       io::updateMatrixFromFile(mat_file, A);
