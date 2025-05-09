@@ -4,6 +4,7 @@
 #include <cmath>
 #include <sstream>
 #include <string>
+
 #include <resolve/Profiling.hpp>
 #include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/Csr.hpp>
@@ -22,10 +23,10 @@
 /// Prints help message describing system usage.
 void printHelpInfo()
 {
-  std::cout << "\nLoads from files and solves a series of linear systems.\n\n";
+  std::cout << "\nsysRefactor.exe loads from files and solves a series of linear systems.\n\n";
   std::cout << "System matrices are in files with names <pathname>XX.mtx, where XX are\n";
   std::cout << "consecutive integer numbers 00, 01, 02, ...\n\n";
-  std::cout << "System right hand side vectors are stored in files with matching numbering.\n";
+  std::cout << "System right hand side vectors are stored in files with matching numbering\n";
   std::cout << "and file extension.\n\n";
   std::cout << "Usage:\n\t./";
   std::cout << "sysRefactor.exe -m <matrix pathname> -r <rhs pathname> -n <number of systems>\n\n";
@@ -177,7 +178,7 @@ int sysRefactor(int argc, char *argv[])
   // Create system solver
   std::string refactor("none");
   if (hw_backend == "CUDA") {
-    refactor = "glu";
+    refactor = "cusolverrf";
   } else if (hw_backend == "HIP") {
     refactor = "rocsolverrf";
   } else {

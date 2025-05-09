@@ -20,10 +20,6 @@ if(RESOLVE_USE_KLU)
   add_executable(kluRefactor.exe kluRefactor.cpp)
   target_link_libraries(kluRefactor.exe PRIVATE ReSolve)
 
-  # Build a CPU example with a configurable system solver
-  add_executable(system.exe r_SysSolver.cpp)
-  target_link_libraries(system.exe PRIVATE ReSolve)
-
   # Build an example with a configurable and portable system solver
   add_executable(sysRefactor.exe sysRefactor.cpp)
   target_link_libraries(sysRefactor.exe PRIVATE ReSolve)
@@ -41,23 +37,7 @@ if(RESOLVE_USE_KLU)
     add_executable(gluRefactor.exe gluRefactor.cpp)
     target_link_libraries(gluRefactor.exe PRIVATE ReSolve)
 
-    # Build example with a configurable system solver
-    add_executable(system_cuda.exe r_SysSolverCuda.cpp)
-    target_link_libraries(system_cuda.exe PRIVATE ReSolve)
-
   endif(RESOLVE_USE_CUDA)
-
-  # Create KLU+HIP examples
-  if(RESOLVE_USE_HIP)
-
-    # Build example with a configurable system solver
-    add_executable(system_hip.exe r_SysSolverHip.cpp)
-    target_link_libraries(system_hip.exe PRIVATE ReSolve)
-
-    # Build example with a configurable system solver
-    add_executable(system_hip_fgmres.exe r_SysSolverHipRefine.cpp)
-    target_link_libraries(system_hip_fgmres.exe PRIVATE ReSolve)
-  endif(RESOLVE_USE_HIP)
 
 endif(RESOLVE_USE_KLU)
 
@@ -70,8 +50,7 @@ list(APPEND installable_executables  rand_gmres.exe)
 if(RESOLVE_USE_KLU)
   list(APPEND installable_executables kluFactor.exe
                                       kluRefactor.exe
-                                      sysRefactor.exe
-                                      system.exe)
+                                      sysRefactor.exe)
 
   if(RESOLVE_USE_GPU)
     list(APPEND installable_executables gpuRefactor.exe)
@@ -81,9 +60,6 @@ if(RESOLVE_USE_KLU)
     list(APPEND installable_executables gluRefactor.exe)
   endif(RESOLVE_USE_CUDA)
 
-  if(RESOLVE_USE_HIP)
-    list(APPEND installable_executables klu_rocsolverrf_check_redo.exe)
-  endif(RESOLVE_USE_HIP)
 endif(RESOLVE_USE_KLU)
 
 install(TARGETS ${installable_executables}
