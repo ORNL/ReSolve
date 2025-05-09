@@ -1,5 +1,5 @@
 #include <algorithm>
-
+#include <cassert>
 #include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/matrix/Coo.hpp>
@@ -186,7 +186,7 @@ namespace ReSolve {
    * @pre `A_csr` is allocated (but not prefilled) and has the correct CSR format.
    * @pre `A_csc` and `A_csr` are of the same size and have the same number of
    * nonzeros.
-   * 
+   *
    * @post `A_csr` is filled with the values from `A_csc`
    *
    * @return 0 if successful, 1 otherwise
@@ -217,15 +217,59 @@ namespace ReSolve {
   int MatrixHandler::transpose(matrix::Csr* A, matrix::Csr* At, memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
+    // check dimensions of A and At and if both are allocated
+    assert(A->getNumRows() == At->getNumColumns() && "Number of rows in A must be equal to number of columns in At");
+    assert(A->getNumColumns() == At->getNumRows() && "Number of columns in A must be equal to number of rows in At");
+    assert(A->getNnz() == At->getNnz() && "Number of nonzeros in A must be equal to number of nonzeros in At");
+    assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW &&
+          "Matrix has to be in CSR format for transpose.\n");
+    assert(At->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW &&
+          "Matrix has to be in CSR format for transpose.\n");
     switch (memspace) {
       case HOST:
+        if(A->getValues(memory::HOST) == nullptr) {
+          out::error() << "In MatrixHandler::transpose, A->getValues(memory::HOST) is null!\n";
+          return 1;
+        }
+        if(At->getValues(memory::HOST) == nullptr) {
+          out::error() << "In MatrixHandler::transpose, At->getValues(memory::HOST) is null!\n";
+          return 1;
+        }
         return cpuImpl_->transpose(A, At);
         break;
       case DEVICE:
+        if(A->getValues(memory::DEVICE) == nullptr) {
+          out::error() << "In MatrixHandlerCuda::transpose, A->getValues(memory::DEVICE) is null!\n";
+          return 1;
+        }
+        if(At->getValues(memory::DEVICE) == nullptr) {
+          out::error() << "In MatrixHandlerCuda::transpose, At->getValues(memory::DEVICE) is null!\n";
+          return 1;
+        }
         return devImpl_->transpose(A, At);
         break;
     }
     return 1;
+  }
+
+  /**
+   * @brief Add a constant to the nonzero values of a csr matrix.
+   * @param[in,out] A - Sparse matrix
+   * @param[in] alpha - scalar parameter
+   * @param[in] memspace - Device where the operation is computed
+   * @return 0 if successful, 1 otherwise
+   */
+  void MatrixHandler::addConst(matrix::Sparse* A, real_type alpha, memory::MemorySpace memspace)
+  {
+    using namespace ReSolve::memory;
+    switch (memspace) {
+      case HOST:
+        cpuImpl_->addConst(A, alpha);
+        break;
+      case DEVICE:
+        devImpl_->addConst(A, alpha);
+        break;
+    }
   }
 
   /**

@@ -36,6 +36,7 @@ namespace ReSolve {
 
       int csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr);
       int transpose(matrix::Csr* A, matrix::Csr* At);
+      int addConst(matrix::Sparse* A, real_type alpha);
       virtual int matvec(matrix::Sparse* A,
                  vector_type* vec_x,
                  vector_type* vec_result,
@@ -49,6 +50,8 @@ namespace ReSolve {
       bool values_changed_{true}; ///< needed for matvec
 
       MemoryHandler mem_; ///< Device memory manager object
+
+
   };
 
 } // namespace ReSolve

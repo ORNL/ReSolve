@@ -19,13 +19,15 @@ namespace ReSolve
       //accessors
       void* getSpmvBuffer();
       void* getNormBuffer();
-
+      void* getTransposeBufferWorkspace();
+      void setTransposeBufferWorkspace(size_t bufferSize);
+      bool isTransposeBufferAllocated();
       void setSpmvBuffer(void* buffer);
       void setNormBuffer(void* buffer);
 
       cublasHandle_t getCublasHandle();
       cusolverSpHandle_t getCusolverSpHandle(); //needed for 1-norms etc
-      cusparseHandle_t getCusparseHandle();      
+      cusparseHandle_t getCusparseHandle();
       cusparseSpMatDescr_t getSpmvMatrixDescriptor();
       cusparseDnVecDescr_t getVecX();
       cusparseDnVecDescr_t  getVecY();
@@ -54,7 +56,7 @@ namespace ReSolve
       cusparseHandle_t handle_cusparse_;
 
       //matrix descriptors
-      cusparseSpMatDescr_t mat_A_; 
+      cusparseSpMatDescr_t mat_A_;
 
       //vector descriptors
       cusparseDnVecDescr_t vec_x_;
@@ -65,11 +67,14 @@ namespace ReSolve
       void* buffer_1norm_{nullptr};
 
       bool matvec_setup_done_{false}; //check if setup is done for matvec i.e. if buffer is allocated, csr structure is set etc.
-      
+
+      void* transpose_workspace_{nullptr}; // needed for transpose
+      bool transpose_workspace_ready_{false}; // to track if allocated
+
       real_type* d_r_{nullptr}; // needed for one-norm
       index_type d_r_size_{0};
-      bool norm_buffer_ready_{false};// to track if allocated 
-    
+      bool norm_buffer_ready_{false};// to track if allocated
+
       MemoryHandler mem_;
   };
 

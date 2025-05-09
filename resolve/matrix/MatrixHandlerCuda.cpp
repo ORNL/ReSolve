@@ -266,43 +266,43 @@ namespace ReSolve {
   /**
    * @brief Transpose a sparse CSR matrix.
    *
-   * @param[in]  A - Sparse matrix
+   * Transpose a sparse CSR matrix A. Only allocates At if not already allocated.
+   *
+   * @param[in, out]  A - Sparse matrix
    * @param[out] At - Transposed matrix
+   *
    * @return int error_sum, 0 if successful
    */
   int MatrixHandlerCuda::transpose(matrix::Csr* A, matrix::Csr* At)
   {
     index_type error_sum = 0;
-
-    At->allocateMatrixData(memory::DEVICE);
     index_type m = A->getNumRows();
     index_type n = A->getNumColumns();
     index_type nnz = A->getNnz();
-
+    cusparseStatus_t status;
+    bool allocated = workspace_->isTransposeBufferAllocated();
     // check dimensions of A and At
-    assert(A->getNumRows() == At->getNumColumns() && "Number of rows in A must be equal to number of columns in At");
-    assert(A->getNumColumns() == At->getNumRows() && "Number of columns in A must be equal to number of rows in At");
-
-    size_t bufferSize;
-    void* d_work;
-    cusparseStatus_t status = cusparseCsr2cscEx2_bufferSize(workspace_->getCusparseHandle(),
-                                                            m,
-                                                            n,
-                                                            nnz,
-                                                            A->getValues( memory::DEVICE),
-                                                            A->getRowData(memory::DEVICE),
-                                                            A->getColData(memory::DEVICE),
-                                                            At->getValues( memory::DEVICE),
-                                                            At->getRowData(memory::DEVICE),
-                                                            At->getColData(memory::DEVICE),
-                                                            CUDA_R_64F,
-                                                            CUSPARSE_ACTION_NUMERIC,
-                                                            CUSPARSE_INDEX_BASE_ZERO,
-                                                            CUSPARSE_CSR2CSC_ALG1,
-                                                            &bufferSize);
-    error_sum += status;
-    mem_.allocateBufferOnDevice(&d_work, bufferSize);
-
+    if (!allocated) {
+      // allocate transpose buffer
+      size_t bufferSize;
+      status = cusparseCsr2cscEx2_bufferSize(workspace_->getCusparseHandle(),
+                                             m,
+                                             n,
+                                             nnz,
+                                             A->getValues( memory::DEVICE),
+                                             A->getRowData(memory::DEVICE),
+                                             A->getColData(memory::DEVICE),
+                                             At->getValues( memory::DEVICE),
+                                             At->getRowData(memory::DEVICE),
+                                             At->getColData(memory::DEVICE),
+                                             CUDA_R_64F,
+                                             CUSPARSE_ACTION_NUMERIC,
+                                             CUSPARSE_INDEX_BASE_ZERO,
+                                             CUSPARSE_CSR2CSC_ALG1,
+                                             &bufferSize);
+      error_sum += status;
+      workspace_->setTransposeBufferWorkspace(bufferSize);
+    }
     status = cusparseCsr2cscEx2(workspace_->getCusparseHandle(),
                                 m,
                                 n,
@@ -317,19 +317,27 @@ namespace ReSolve {
                                 CUSPARSE_ACTION_NUMERIC,
                                 CUSPARSE_INDEX_BASE_ZERO,
                                 CUSPARSE_CSR2CSC_ALG1,
-                                d_work);
+                                workspace_->getTransposeBufferWorkspace());
     error_sum += status;
-    if (status) {
-      out::error() << "Transpose status: "   << status                    << ". "
-                   << "Last error code: " << mem_.getLastDeviceError() << ".\n";
-    }
-    mem_.deleteOnDevice(d_work);
-
     // Values on the device are updated now -- mark them as such!
     At->setUpdated(memory::DEVICE);
 
     return error_sum;
-
   }
 
+  /**
+   * @brief Add a constant to all nonzero values in the matrix
+   *
+   * @param[in, out] A - matrix
+   * @param[in] alpha - constant to be added
+   *
+   * @return int error code, 0 if successful
+   */
+  int MatrixHandlerCuda::addConst(matrix::Sparse* A, real_type alpha)
+  {
+    real_type* values = A->getValues(memory::DEVICE);
+    index_type nnz = A->getNnz();
+    cudaAddConst(nnz, alpha, values);
+    return 0;
+  }
 } // namespace ReSolve

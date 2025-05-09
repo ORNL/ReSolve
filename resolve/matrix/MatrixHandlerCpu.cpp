@@ -233,10 +233,8 @@ namespace ReSolve
    */
   int MatrixHandlerCpu::transpose(matrix::Csr* A, matrix::Csr* At)
   {
-    assert(A->getNnz() == At->getNnz());
-    assert(A->getNumRows() == At->getNumColumns());
-    assert(A->getNumColumns() == At->getNumRows());
-
+    assert(A->getValues(memory::HOST) != nullptr && "Matrix A is not allocated on host.\n");
+    assert(At->getValues(memory::HOST) != nullptr && "Matrix At is not allocated on host.\n");
     index_type n = A->getNumRows();
     index_type m = A->getNumColumns();
     index_type nnz = A->getNnz();
@@ -294,6 +292,24 @@ namespace ReSolve
     // Values on the host are updated now -- mark them as such!
     At->setUpdated(memory::HOST);
 
+    return 0;
+  }
+
+  /**
+   * @brief Add a constant to all nonzero values in the matrix
+   *
+   * @param[in, out] A - matrix
+   * @param[in] alpha - constant to be added
+   *
+   * @return int error code, 0 if successful
+   */
+  int MatrixHandlerCpu::addConst(matrix::Sparse* A, real_type alpha)
+  {
+    real_type* values = A->getValues(memory::HOST);
+    index_type nnz = A->getNnz();
+    for (index_type i = 0; i < nnz; ++i) {
+      values[i] += alpha;
+    }
     return 0;
   }
 } // namespace ReSolve

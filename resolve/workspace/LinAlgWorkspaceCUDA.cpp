@@ -8,9 +8,11 @@ namespace ReSolve
     handle_cusparse_   = nullptr;
     handle_cublas_     = nullptr;
     buffer_spmv_       = nullptr;
-    buffer_1norm_      = nullptr;    
+    buffer_1norm_      = nullptr;
+    transpose_workspace_ = nullptr;
+    transpose_workspace_ready_ = false;
     d_r_               = nullptr;
-    d_r_size_          = 0; 
+    d_r_size_          = 0;
     matvec_setup_done_ = false;
     norm_buffer_ready_ = false;
   }
@@ -26,6 +28,9 @@ namespace ReSolve
     if (matvec_setup_done_) {
       cusparseDestroySpMat(mat_A_);
     }
+    if (transpose_workspace_ready_) {
+      mem_.deleteOnDevice(transpose_workspace_);
+    }
   }
 
   void* LinAlgWorkspaceCUDA::getSpmvBuffer()
@@ -37,7 +42,27 @@ namespace ReSolve
   {
     return buffer_1norm_;
   }
-  
+
+  void* LinAlgWorkspaceCUDA::getTransposeBufferWorkspace()
+  {
+    return transpose_workspace_;
+  }
+
+  void LinAlgWorkspaceCUDA::setTransposeBufferWorkspace(size_t bufferSize)
+  {
+      if (transpose_workspace_ready_) {
+        mem_.deleteOnDevice(transpose_workspace_);
+      }
+      mem_.allocateBufferOnDevice(&transpose_workspace_, bufferSize);
+      transpose_workspace_ready_ = true;
+    return;
+  }
+
+  bool LinAlgWorkspaceCUDA::isTransposeBufferAllocated()
+  {
+    return transpose_workspace_ready_;
+  }
+
   bool  LinAlgWorkspaceCUDA::getNormBufferState()
   {
     return norm_buffer_ready_;
@@ -52,7 +77,7 @@ namespace ReSolve
   {
     buffer_1norm_ =  buffer;
   }
-  
+
   void LinAlgWorkspaceCUDA::setNormBufferState(bool r)
   {
     norm_buffer_ready_ = r;
@@ -72,7 +97,7 @@ namespace ReSolve
   {
     d_r_size_ = new_sz;
   }
-  
+
   void LinAlgWorkspaceCUDA::setDr(double* new_dr)
   {
     d_r_ = new_dr;
