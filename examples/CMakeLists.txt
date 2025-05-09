@@ -1,18 +1,18 @@
 #[[
 
-@brief Build ReSolve examples
+@brief Build Re::Solve examples
 
 @author Slaven Peles <peless@ornl.gov>
 
 ]]
 
-# Build randomized GMRES example
+# Build portable randomized GMRES example
 add_executable(rand_gmres.exe randGmres.cpp)
 target_link_libraries(rand_gmres.exe PRIVATE ReSolve)
 
 if(RESOLVE_USE_KLU)
 
-  # Build example with KLU factorization
+  # Build example with KLU factorization on CPU
   add_executable(kluFactor.exe kluFactor.cpp)
   target_link_libraries(kluFactor.exe PRIVATE ReSolve)
 
@@ -24,11 +24,12 @@ if(RESOLVE_USE_KLU)
   add_executable(system.exe r_SysSolver.cpp)
   target_link_libraries(system.exe PRIVATE ReSolve)
 
-  # Build a CPU example with a configurable system solver
+  # Build an example with a configurable and portable system solver
   add_executable(sysRefactor.exe sysRefactor.cpp)
   target_link_libraries(sysRefactor.exe PRIVATE ReSolve)
 
   if(RESOLVE_USE_GPU)
+    # Build an example with refactorization on GPU
     add_executable(gpuRefactor.exe gpuRefactor.cpp)
     target_link_libraries(gpuRefactor.exe PRIVATE ReSolve)
   endif(RESOLVE_USE_GPU)
@@ -37,20 +38,8 @@ if(RESOLVE_USE_KLU)
   if(RESOLVE_USE_CUDA)
 
     # Build example with KLU factorization and GLU refactorization
-    add_executable(klu_glu.exe r_KLU_GLU.cpp)
-    target_link_libraries(klu_glu.exe PRIVATE ReSolve)
-
-    # Build example with KLU factorization and GLU refactorization
     add_executable(gluRefactor.exe gluRefactor.cpp)
     target_link_libraries(gluRefactor.exe PRIVATE ReSolve)
-
-    # Build example with KLU factorization and Rf refactorization
-    add_executable(klu_rf.exe r_KLU_rf.cpp)
-    target_link_libraries(klu_rf.exe PRIVATE ReSolve)
-
-    # Build example with KLU factorization, Rf refactorization, and FGMRES iterative refinement
-    add_executable(klu_rf_fgmres.exe r_KLU_rf_FGMRES.cpp)
-    target_link_libraries(klu_rf_fgmres.exe PRIVATE ReSolve)
 
     # Build example where matrix is factorized once, refactorized once and then the preconditioner is REUSED
     add_executable(klu_rf_fgmres_reuse_refactorization.exe r_KLU_rf_FGMRES_reuse_factorization.cpp)
@@ -105,10 +94,7 @@ if(RESOLVE_USE_KLU)
   endif(RESOLVE_USE_GPU)
 
   if(RESOLVE_USE_CUDA)
-    list(APPEND installable_executables klu_glu.exe
-                                        klu_rf.exe
-                                        gluRefactor.exe
-                                        klu_rf_fgmres.exe
+    list(APPEND installable_executables gluRefactor.exe
                                         klu_glu_values_update.exe
                                         klu_cusolverrf_check_redo.exe)
   endif(RESOLVE_USE_CUDA)
