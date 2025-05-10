@@ -27,34 +27,42 @@ namespace ReSolve {
 
         TestOutcome vectorConstructor()
         {
-          TestStatus status;
-          status.skipTest();
+          TestStatus success;
+          success = true;
 
-          return status.report(__func__);
+          index_type vector_size = 4;
+          index_type number_vectors = 3;
+
+          vector::Vector x(vector_size, number_vectors);
+
+          success *= (vector_size == x.getSize());
+          success *= (number_vectors == x.getNumVectors());
+
+          return success.report(__func__);
         }
 
         TestOutcome vectorSetToConstTest(index_type N)
         {
-          TestStatus status;
-          status = true;
+          TestStatus success;
+          success = true;
 
-          return status.report(__func__);
+          return success.report(__func__);
         }
 
         TestOutcome vectorSyncDataTest(index_type N)
         {
-          TestStatus status;
+          TestStatus success;
 
-          return status.report(__func__);
+          return success.report(__func__);
         }    
 
         TestOutcome vectorGetDataTest(index_type N)
         {
-          TestStatus status;
-          status = true;
+          TestStatus success;
+          success = true;
 
 
-          return status.report(__func__);
+          return success.report(__func__);
         }    
 
       private:
@@ -63,7 +71,7 @@ namespace ReSolve {
         // we can verify through norm but that would defeat the purpose of testing vector handler ...
         bool verifyAnswer(vector::Vector& x, real_type answer)
         {
-          bool status = true;
+          bool success = true;
 
           if (memspace_ == memory::DEVICE) {
             x.syncData(memory::HOST);
@@ -73,13 +81,13 @@ namespace ReSolve {
             // std::cout << x->getData("cpu")[i] << "\n";
             if (!isEqual(x.getData(memory::HOST)[i], answer)) {
               std::cout << std::setprecision(16);
-              status = false;
+              success = false;
               std::cout << "Solution vector element x[" << i << "] = " << x.getData(memory::HOST)[i]
                 << ", expected: " << answer << "\n";
               break; 
             }
           }
-          return status;
+          return success;
         }
     };//class
   } // namespace tests
