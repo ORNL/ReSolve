@@ -18,8 +18,8 @@ and direct solvers designed to run on NVIDIA and AMD GPUs, as well as on CPU
 devices.
 
 The User Guide and developer's documentation is available
-[online](https://resolve.readthedocs.io/), including Doxygen-generated
-[source code documentation](https://resolve.readthedocs.io/en/develop/doxygen/html/index.html).
+[online](https://resolve.readthedocs.io/en/frontmatter-dev/) (**update link before merging**), including Doxygen-generated
+[source code documentation](https://resolve.readthedocs.io/en/frontmatter-dev/doxygen/html/index.html) (**update link before merging**).
 
 
 ## Getting started
