@@ -1,6 +1,8 @@
 #pragma once
 
 #include <iostream>
+#include <cmath>
+#include <limits>
 #include <resolve/LinSolverIterative.hpp>
 
 /**

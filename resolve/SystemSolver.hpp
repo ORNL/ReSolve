@@ -103,7 +103,7 @@ namespace ReSolve
       MatrixHandler* matrixHandler_{nullptr};
       VectorHandler* vectorHandler_{nullptr};
 
-      bool isSolveOnDevice_{false};
+      bool is_solve_on_device_{false};
 
       matrix_type* L_{nullptr};
       matrix_type* U_{nullptr};

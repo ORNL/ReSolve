@@ -6,7 +6,7 @@
 #include <resolve/MemoryUtils.hpp>
 #include <resolve/LinSolverDirect.hpp>
 
-namespace ReSolve 
+namespace ReSolve
 {
   // Forward declaration of vector::Vector class
   namespace vector
@@ -25,21 +25,21 @@ namespace ReSolve
   // Forward declaration of ReSolve handlers workspace
   class LinAlgWorkspaceCUDA;
 
-  class LinSolverDirectCuSolverRf : public LinSolverDirect 
+  class LinSolverDirectCuSolverRf : public LinSolverDirect
   {
     using vector_type = vector::Vector;
-    
-    public: 
+
+    public:
       LinSolverDirectCuSolverRf(LinAlgWorkspaceCUDA* workspace = nullptr);
       ~LinSolverDirectCuSolverRf();
-      
+
       int setup(matrix::Sparse* A,
                 matrix::Sparse* L,
                 matrix::Sparse* U,
                 index_type*     P,
                 index_type*     Q,
                 vector_type* rhs = nullptr) override;
-      
+
       int refactorize() override;
       int solve(vector_type* rhs, vector_type* x) override;
       int solve(vector_type* rhs) override; // rhs overwritten by solution
@@ -61,12 +61,12 @@ namespace ReSolve
 
     private:
       enum ParamaterIDs {ZERO_PIVOT=0, PIVOT_BOOST};
-      real_type zero_pivot_{0.0};  ///< The value below which zero pivot is flagged. 
+      real_type zero_pivot_{0.0};  ///< The value below which zero pivot is flagged.
       real_type pivot_boost_{0.0}; ///< The value which is substituted for zero pivot.
-      
+
       cusolverRfHandle_t handle_cusolverrf_;
       cusolverStatus_t status_cusolverrf_;
-      
+
       index_type* d_P_{nullptr};
       index_type* d_Q_{nullptr};
       real_type* d_T_{nullptr};
