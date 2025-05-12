@@ -218,8 +218,8 @@ namespace ReSolve
   int LinSolverDirectCuSolverRf::refactorize()
   {
     int error_sum = 0;
-    // check A_->getValues(memory::DEVICE) for nullptr
-        // Check if matrix A data is valid
+    
+    // Check if matrix A data is valid
     assert(A_ != nullptr && "Matrix A is null!");
     assert(A_->getNumRows() > 0 && "Matrix A must have positive row count!");
     assert(A_->getNnz() > 0 && "Matrix A must have positive nonzero count!");

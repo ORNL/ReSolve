@@ -130,7 +130,6 @@ namespace ReSolve
                          ReSolve::vector::Vector* r,
                          ReSolve::vector::Vector* x)
         {
-          // assert(A_->getNumRows() == A->getNumRows());
           A_ = A;
           r_ = r;
           x_ = x;
