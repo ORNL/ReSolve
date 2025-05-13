@@ -319,3 +319,15 @@ Overall, the comment should look like this:
 
 Do not leave commented code used for debugging (or for other purposes).
 Remove it before committing the code.
+
+At the developer's and reviewer's discretion, trivial functions can have one
+line documentation with "//" or none at all. Examples of trivial functions
+are getters and setters, or functions that are self-explanatory.
+For example a getter function can be documented as follows:
+.. code:: cpp
+
+   // This function returns the x coordinate - this line can be omitted
+   double getX() const 
+   { 
+     return x_; 
+   } 
