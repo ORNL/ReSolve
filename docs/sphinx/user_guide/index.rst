@@ -37,8 +37,8 @@ In the directory where you built the library run
 
 To change the install location please use the CMAkePresets.json file as mentioned in `test and deploy <#test-and-deploy>`__
 
-To run it, download `test linear systems <https://github.com/NREL/opf_matrices/tree/master/acopf/activsg10k>`__ 
-and then edit script |runResolve|_ 
+To run it, download `test linear systems <https://github.com/NREL/opf_matrices/tree/master/acopf/activsg10k>`__
+and then edit script |runResolve|_
 to match locations of your linear systems and binary installation.
 The script will emulate nonlinear solver calling the linear solver repeatedly.
 
@@ -54,12 +54,12 @@ Below is an example CMakeList.txt file to use ReSolve library in your project
    cmake_minimum_required(VERSION 3.20)
    project(my_app LANGUAGES CXX)
 
-   find_package(ReSolve CONFIG 
+   find_package(ReSolve CONFIG
      PATHS ${ReSolve_DIR} ${ReSolve_DIR}/share/resolve/cmake
      ENV LD_LIBRARY_PATH ENV DYLD_LIBRARY_PATH
      REQUIRED)
 
-   # Build your executable 
+   # Build your executable
    add_executable(my_app my_app.cpp)
    target_link_libraries(my_app PRIVATE ReSolve::ReSolve)
 
@@ -119,7 +119,7 @@ which allows for easy switching between different CMake Configs. To
 create your own CMake Configuration we encourage you to utlize a
 CmakeUserPresets.json file. To learn more about cmake-presets please
 checkout the cmake
-`docs <https://cmake.org/cmake/help/latest/manual/cmake-presets.7.html>`__
+`docs <https://cmake.org/cmake/help/latest/manual/cmake-presets.7.html>`__.
 
 For example if you wanted to build and install ReSolve on a High
 Performance Computing Cluster such as PNNL’s Deception or ORNL’s Ascent
