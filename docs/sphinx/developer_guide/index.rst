@@ -11,7 +11,7 @@ Our ``cmake`` folder contains some basic CMake modules that help manage resolve:
 * ``cmake/ReSolveFindCudaLibraries.cmake``: Our custom find module for CUDA libraries that we maintain to link in subset of cuda needed
 * ``cmake/ReSolveFindHipLibraries.cmake``: Our custom find module for HIP/ROCm libraries that we maintain to link in subset of hip needed
 
-Apart from that check out our main ``CMakeLists.txt`` file for our remaining build configuration. 
+Apart from that check out our main ``CMakeLists.txt`` file for our remaining build configuration.
 
 We also export under the ``ReSolve::`` namespace in our installed CMake configuration for use with ``find_package`` as documented in our main ``README.md``.
 
@@ -27,12 +27,12 @@ submodule located in ``buildsystem/spack/spack``. This is used to build
 Re::Solve on CI platforms, as well as support development of the spack package
 as neccessary.
 
-See the Quik-How-To section below for more information on how to update the
+See the Quick How-To section below for more information on how to update the
 spack package and typical workflows for building Re::Solve with spack on CI
 platforms for testing.
 
 
-GitHub Actions 
+GitHub Actions
 ----------------
 
 This is a quick summary of the workflows performed in each GitHub Action. For more information see the ``.github/workflows`` folder where each file is located.
@@ -63,12 +63,12 @@ This is a quick summary of the workflows performed in each GitLab Pipeline. For 
 ``ornl/crusher.gitlab-ci.yml``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Defines CI/CD for Crusher at ORNL
+Defines CI/CD for Crusher at ORNL.
 
 ``.gitlab-ci.yml``
 ~~~~~~~~~~~~~~~~~~~~
 
-Located in the root git directory, this defines the CI/CD pipelines for Ascent at ORNL
+Located in the root git directory, this defines the CI/CD pipelines for Ascent at ORNL.
 
 ``pnnl/.gitlab-ci.yml``
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -99,14 +99,14 @@ documentation on your local machine use e.g. ``pip`` tool to install following
 Python packages:
 
 .. code:: shell
-    
+
     pip install sphinx docutils sphinx_rtd_theme sphinxcontrib-jquery m2r2
 
-If you prefer using Anaconda utilities, getting these packages is 
+If you prefer using Anaconda utilities, getting these packages is
 slightly different:
 
 .. code:: shell
-    
+
     conda install sphinx docutils sphinx_rtd_theme
     conda install -c conda-forge sphinxcontrib-jquery m2r2
 
@@ -119,7 +119,7 @@ Once you have all the required packages, you can build the HTML docs by
   sphinx-build -M html ReSolve/docs/ ./build
 
 This will generate HTML documentation and place it in ``build``
-subdirectory in your current directory. 
+subdirectory in your current directory.
 
 
 Using Dev Container for Writing Documentation
@@ -145,7 +145,7 @@ The build info for this container is in `.devcontainer/`. There is a Dockerfile 
 json file associated with the configuration.
 
 #. if connected, disconnect from the PNNL VPN
-#. launch the container build  
+#. launch the container build
 
     * `cmd shift p` to open the command pallette in vscode
     * click `> Dev Container: rebuild and reopen container`
