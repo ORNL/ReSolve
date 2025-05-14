@@ -36,10 +36,10 @@ namespace ReSolve
 
   /**
    * @brief Sets/changes Gram-Schmidt variant
-   * 
+   *
    * This function should leave Gram-Schmidt class instance in the same state
    * as it found it only with different implementation of the orthogonalization.
-   * 
+   *
    * @param[in] variant - Gram-Schmidt orthogonalization variant
    */
   int GramSchmidt::setVariant(GSVariant variant)
@@ -67,17 +67,17 @@ namespace ReSolve
     setup(n, num_vecs_);
     setup_complete_ = true;
 
-    return 0;  
+    return 0;
   }
 
   GramSchmidt::GSVariant GramSchmidt::getVariant()
   {
-    return variant_;  
+    return variant_;
   }
 
   real_type* GramSchmidt::getL()
   {
-    return h_L_;  
+    return h_L_;
   }
 
   bool GramSchmidt::isSetupComplete()
@@ -106,30 +106,30 @@ namespace ReSolve
       vec_rv_->setToZero(memspace_);
 
       vec_Hcolumn_ = new vector_type(num_vecs_ + 1);
-      vec_Hcolumn_->allocate(memspace_);      
+      vec_Hcolumn_->allocate(memspace_);
       vec_Hcolumn_->setToZero(memspace_);
 
-      setup_complete_ = true; 
+      setup_complete_ = true;
     }
     if(variant_ == CGS2) {
       h_aux_ = new real_type[num_vecs_ + 1]();
       vec_Hcolumn_ = new vector_type(num_vecs_ + 1);
       vec_Hcolumn_->allocate(memspace_);
-      vec_Hcolumn_->setToZero(memspace_);      
+      vec_Hcolumn_->setToZero(memspace_);
 
-      setup_complete_ = true; 
+      setup_complete_ = true;
     }
     if(variant_ == CGS1) {
       vec_Hcolumn_ = new vector_type(num_vecs_ + 1);
-      vec_Hcolumn_->allocate(memspace_);      
-      vec_Hcolumn_->setToZero(memspace_);      
+      vec_Hcolumn_->allocate(memspace_);
+      vec_Hcolumn_->setToZero(memspace_);
 
-      setup_complete_ = true; 
+      setup_complete_ = true;
     }
     if(variant_ == MGS_PM) {
       h_aux_ = new real_type[num_vecs_ + 1]();
 
-      setup_complete_ = true; 
+      setup_complete_ = true;
     }
 
     return setup_complete_ ? 0 : 1;
@@ -144,24 +144,24 @@ namespace ReSolve
     real_type* h_rv = nullptr;
 
     switch (variant_) {
-      case MGS: 
+      case MGS:
         vec_w_->setData(V->getVectorData(i + 1, memspace_), memspace_);
         for(int j = 0; j <= i; ++j) {
           t = 0.0;
           vec_v_->setData( V->getVectorData(j, memspace_), memspace_);
-          t = vector_handler_->dot(vec_v_, vec_w_, memspace_);  
-          H[ idxmap(i, j, num_vecs_ + 1) ] = t; 
+          t = vector_handler_->dot(vec_v_, vec_w_, memspace_);
+          H[ idxmap(i, j, num_vecs_ + 1) ] = t;
           t *= -1.0;
-          vector_handler_->axpy(&t, vec_v_, vec_w_, memspace_);  
+          vector_handler_->axpy(&t, vec_v_, vec_w_, memspace_);
         }
         t = 0.0;
         t = vector_handler_->dot(vec_w_, vec_w_, memspace_);
         //set the last entry in Hessenberg matrix
         t = std::sqrt(t);
         H[ idxmap(i, i + 1, num_vecs_ + 1) ] = t;
-        if(std::abs(t) > EPSILON) {
+        if(std::abs(t) > MACHINE_EPSILON) {
           t = 1.0/t;
-          vector_handler_->scal(&t, vec_w_, memspace_);  
+          vector_handler_->scal(&t, vec_w_, memspace_);
         } else {
           assert(0 && "Gram-Schmidt failed, vector with ZERO norm\n");
           return 1;
@@ -172,9 +172,9 @@ namespace ReSolve
         vec_v_->setData(V->getVectorData(i + 1, memspace_), memspace_);
         vector_handler_->gemv('T', n, i + 1, &ONE, &ZERO, V,  vec_v_, vec_Hcolumn_, memspace_);
         // V(:,i+1) = V(:, i+1) -  V(:,1:i)*Hcol
-        vector_handler_->gemv('N', n, i + 1, &ONE, &MINUSONE, V, vec_Hcolumn_, vec_v_, memspace_ );  
+        vector_handler_->gemv('N', n, i + 1, &ONE, &MINUSONE, V, vec_Hcolumn_, vec_v_, memspace_ );
         mem_.deviceSynchronize();
-        
+
         // copy H_col to aux, we will need it later
         vec_Hcolumn_->setDataUpdated(memspace_);
         vec_Hcolumn_->setCurrentSize(i + 1);
@@ -186,7 +186,7 @@ namespace ReSolve
         mem_.deviceSynchronize();
 
         // V(:,i+1) = V(:, i+1) -  V(:,1:i)*Hcol
-        vector_handler_->gemv('N', n, i + 1, &ONE, &MINUSONE, V, vec_Hcolumn_, vec_v_, memspace_ );  
+        vector_handler_->gemv('N', n, i + 1, &ONE, &MINUSONE, V, vec_Hcolumn_, vec_v_, memspace_ );
         mem_.deviceSynchronize();
 
         // copy H_col to H
@@ -200,14 +200,14 @@ namespace ReSolve
           H[ idxmap(i, j, num_vecs_ + 1)] += h_aux_[j];
         }
 
-        t = vector_handler_->dot(vec_v_, vec_v_, memspace_);  
+        t = vector_handler_->dot(vec_v_, vec_v_, memspace_);
         //set the last entry in Hessenberg matrix
         t = std::sqrt(t);
-        H[ idxmap(i, i + 1, num_vecs_ + 1) ] = t; 
+        H[ idxmap(i, i + 1, num_vecs_ + 1) ] = t;
 
-        if(std::abs(t) > EPSILON) {
+        if(std::abs(t) > MACHINE_EPSILON) {
           t = 1.0/t;
-          vector_handler_->scal(&t, vec_v_, memspace_);  
+          vector_handler_->scal(&t, vec_v_, memspace_);
         } else {
           assert(0 && "Gram-Schmidt failed, vector with ZERO norm\n");
           return 1;
@@ -227,7 +227,7 @@ namespace ReSolve
 
         vec_rv_->copyDataTo(&h_L_[idxmap(i, 0, num_vecs_ + 1)], 0, memory::HOST);
         h_rv = vec_rv_->getVectorData(1, memory::HOST);
-        
+
         for(int j=0; j<=i; ++j) {
           H[ idxmap(i, j, num_vecs_ + 1) ] = 0.0;
         }
@@ -238,25 +238,25 @@ namespace ReSolve
           for(int k = 0; k < j; ++k) {
             s += h_L_[ idxmap(j, k, num_vecs_ + 1) ] * H[ idxmap(i, k, num_vecs_ + 1) ];
           } // for k
-          H[ idxmap(i, j, num_vecs_ + 1) ] -= s; 
+          H[ idxmap(i, j, num_vecs_ + 1) ] -= s;
         }   // for j
         vec_Hcolumn_->setCurrentSize(i + 1);
-        vec_Hcolumn_->copyDataFrom(&H[ idxmap(i, 0, num_vecs_ + 1)], memory::HOST, memspace_); 
+        vec_Hcolumn_->copyDataFrom(&H[ idxmap(i, 0, num_vecs_ + 1)], memory::HOST, memspace_);
         vector_handler_->massAxpy(n, vec_Hcolumn_, i + 1, V, vec_w_, memspace_);
 
         // normalize (second synch)
-        t = vector_handler_->dot(vec_w_, vec_w_, memspace_);  
+        t = vector_handler_->dot(vec_w_, vec_w_, memspace_);
         //set the last entry in Hessenberg matrix
         t = std::sqrt(t);
-        H[ idxmap(i, i + 1, num_vecs_ + 1)] = t;    
-        if(std::abs(t) > EPSILON) {
+        H[ idxmap(i, i + 1, num_vecs_ + 1)] = t;
+        if(std::abs(t) > MACHINE_EPSILON) {
           t = 1.0 / t;
-          vector_handler_->scal(&t, vec_w_, memspace_);  
+          vector_handler_->scal(&t, vec_w_, memspace_);
           for (int ii=0; ii<=i; ++ii)
           {
             vec_v_->setData(V->getVectorData(ii, memspace_), memspace_);
             vec_w_->setData(V->getVectorData(i + 1, memspace_), memspace_);
-          }        
+          }
         } else {
           assert(0 && "Iterative refinement failed, Krylov vector with ZERO norm\n");
           return 1;
@@ -317,17 +317,17 @@ namespace ReSolve
         }
 
         vec_Hcolumn_->setCurrentSize(i + 1);
-        vec_Hcolumn_->copyDataFrom(&H[ idxmap(i, 0, num_vecs_ + 1)], memory::HOST, memspace_); 
+        vec_Hcolumn_->copyDataFrom(&H[ idxmap(i, 0, num_vecs_ + 1)], memory::HOST, memspace_);
 
         vector_handler_->massAxpy(n, vec_Hcolumn_, i + 1, V,  vec_w_, memspace_);
         // normalize (second synch)
-        t = vector_handler_->dot(vec_w_, vec_w_, memspace_);  
+        t = vector_handler_->dot(vec_w_, vec_w_, memspace_);
         //set the last entry in Hessenberg matrix
         t = std::sqrt(t);
-        H[ idxmap(i, i + 1, num_vecs_ + 1) ] = t;    
-        if(std::abs(t) > EPSILON) {
+        H[ idxmap(i, i + 1, num_vecs_ + 1) ] = t;
+        if(std::abs(t) > MACHINE_EPSILON) {
           t = 1.0 / t;
-          vector_handler_->scal(&t, vec_w_, memspace_);  
+          vector_handler_->scal(&t, vec_w_, memspace_);
         } else {
           assert(0 && "Iterative refinement failed, Krylov vector with ZERO norm\n");
           return 1;
@@ -340,28 +340,28 @@ namespace ReSolve
         //Hcol = V(:,1:i)^T*V(:,i+1);
         vector_handler_->gemv('T', n, i + 1, &ONE, &ZERO, V,  vec_v_, vec_Hcolumn_, memspace_);
         // V(:,i+1) = V(:, i+1) -  V(:,1:i)*Hcol
-        vector_handler_->gemv('N', n, i + 1, &ONE, &MINUSONE, V, vec_Hcolumn_, vec_v_, memspace_ );  
+        vector_handler_->gemv('N', n, i + 1, &ONE, &MINUSONE, V, vec_Hcolumn_, vec_v_, memspace_ );
         mem_.deviceSynchronize();
-        
+
         // copy H_col to H
         vec_Hcolumn_->setDataUpdated(memspace_);
         vec_Hcolumn_->setCurrentSize(i + 1);
         vec_Hcolumn_->copyDataTo(&H[ idxmap(i, 0, num_vecs_ + 1)], 0, memory::HOST);
         mem_.deviceSynchronize();
 
-        t = vector_handler_->dot(vec_v_, vec_v_, memspace_);  
+        t = vector_handler_->dot(vec_v_, vec_v_, memspace_);
         //set the last entry in Hessenberg matrix
         t = std::sqrt(t);
-        H[ idxmap(i, i + 1, num_vecs_ + 1) ] = t; 
-        if(std::abs(t) > EPSILON) {
+        H[ idxmap(i, i + 1, num_vecs_ + 1) ] = t;
+        if(std::abs(t) > MACHINE_EPSILON) {
           t = 1.0/t;
-          vector_handler_->scal(&t, vec_v_, memspace_);  
+          vector_handler_->scal(&t, vec_v_, memspace_);
         } else {
           assert(0 && "Gram-Schmidt failed, vector with ZERO norm\n");
           return 1;
         }
         return 0;
-        
+
       default:
         assert(0 && "Iterative refinement failed, wrong orthogonalization.\n");
         return 1;
@@ -376,7 +376,7 @@ namespace ReSolve
 
   int GramSchmidt::freeGramSchmidtData()
   {
-    if(variant_ == MGS_TWO_SYNC || variant_ == MGS_PM) {    
+    if(variant_ == MGS_TWO_SYNC || variant_ == MGS_PM) {
       delete h_L_;
       h_L_ = nullptr;
 
@@ -389,14 +389,14 @@ namespace ReSolve
     if (variant_ == CGS2) {
       delete h_aux_;
       h_aux_ = nullptr;
-      delete vec_Hcolumn_;    
+      delete vec_Hcolumn_;
       vec_Hcolumn_ = nullptr;
-    }    
+    }
 
     if (variant_ == CGS1) {
-      delete vec_Hcolumn_;    
+      delete vec_Hcolumn_;
       vec_Hcolumn_ = nullptr;
-    }    
+    }
 
     if (variant_ == MGS_PM) {
       delete h_aux_;

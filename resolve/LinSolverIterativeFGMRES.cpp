@@ -2,7 +2,7 @@
  * @file LinSolverIterativeFGMRES.cpp
  * @author Kasia Swirydowicz (kasia.swirydowicz@pnnl.gov)
  * @brief Implementation of LinSolverIterativeFGMRES class
- * 
+ *
  */
 #include <iostream>
 #include <cassert>
@@ -37,8 +37,8 @@ namespace ReSolve
                                                      GramSchmidt*   gs)
   {
     // Base class settings here (to be removed when solver parameter settings are implemented)
-    tol_ = tol; 
-    maxit_= maxit; 
+    tol_ = tol;
+    maxit_= maxit;
     restart_ = restart;
     conv_cond_ = conv_cond;
     flexible_ = true;
@@ -59,13 +59,13 @@ namespace ReSolve
 
   /**
    * @brief Set pointer to system matrix and allocate solver data.
-   * 
+   *
    * @param[in] A - Sparse system matrix
-   * 
+   *
    * @pre A is a valid sparse matrix
-   * 
+   *
    * @post A_ == A
-   * @post Solver data allocated. 
+   * @post Solver data allocated.
    */
   int LinSolverIterativeFGMRES::setup(matrix::Sparse* A)
   {
@@ -98,9 +98,9 @@ namespace ReSolve
     using namespace constants;
 
     //io::Logger::setVerbosity(io::Logger::EVERYTHING);
-    
+
     int outer_flag = 1;
-    int notconv = 1; 
+    int notconv = 1;
     int i  = 0;
     int it = 0;
     int j  = 0;
@@ -118,8 +118,8 @@ namespace ReSolve
     vec_Z_->setToZero(memspace_);
     vec_V_->setToZero(memspace_);
 
-    rhs->copyDataTo(vec_V_->getData(memspace_), 0, memspace_);  
-    matrix_handler_->matvec(A_, x, vec_V_, &MINUSONE, &ONE, memspace_); 
+    rhs->copyDataTo(vec_V_->getData(memspace_), 0, memspace_);
+    matrix_handler_->matvec(A_, x, vec_V_, &MINUSONE, &ONE, memspace_);
     rnorm = 0.0;
     bnorm = vector_handler_->dot(rhs, rhs, memspace_);
     rnorm = vector_handler_->dot(vec_V_, vec_V_, memspace_);
@@ -127,7 +127,7 @@ namespace ReSolve
     rnorm = std::sqrt(rnorm);
     bnorm = std::sqrt(bnorm);
     io::Logger::misc() << "it 0: norm of residual "
-                       << std::scientific << std::setprecision(16) 
+                       << std::scientific << std::setprecision(16)
                        << rnorm << " Norm of rhs: " << bnorm << "\n";
     initial_residual_norm_ = rnorm;
     while(outer_flag) {
@@ -143,13 +143,13 @@ namespace ReSolve
       switch (conv_cond_)
       {
         case 0:
-          exit_cond = ((std::abs(rnorm - ZERO) <= EPSILON));
+          exit_cond = ((std::abs(rnorm - ZERO) <= MACHINE_EPSILON));
           break;
         case 1:
-          exit_cond = ((std::abs(rnorm - ZERO) <= EPSILON) || (rnorm < tol_));
+          exit_cond = ((std::abs(rnorm - ZERO) <= MACHINE_EPSILON) || (rnorm < tol_));
           break;
         case 2:
-          exit_cond = ((std::abs(rnorm - ZERO) <= EPSILON) || (rnorm < (tol_*bnorm)));
+          exit_cond = ((std::abs(rnorm - ZERO) <= MACHINE_EPSILON) || (rnorm < (tol_*bnorm)));
           break;
       }
 
@@ -187,7 +187,7 @@ namespace ReSolve
 
         vec_v->setData( vec_V_->getVectorData(i + 1, memspace_), memspace_);
 
-        matrix_handler_->matvec(A_, vec_z, vec_v, &ONE, &ZERO, memspace_); 
+        matrix_handler_->matvec(A_, vec_z, vec_v, &ONE, &ZERO, memspace_);
 
         // orthogonalize V[i+1], form a column of h_H_
 
@@ -204,8 +204,8 @@ namespace ReSolve
         real_type Hii1 = h_H_[(i) * (restart_ + 1) + i + 1];
         real_type gam = std::sqrt(Hii * Hii + Hii1 * Hii1);
 
-        if(std::abs(gam - ZERO) <= EPSILON) {
-          gam = EPSMAC;
+        if(std::abs(gam - ZERO) <= MACHINE_EPSILON) {
+          gam = MACHINE_EPSILON;
         }
 
         /* next Given's rotation */
@@ -260,7 +260,7 @@ namespace ReSolve
 
         vec_v->setData( vec_V_->getData(memspace_), memspace_);
         this->precV(vec_z, vec_v);
-        // and add to x 
+        // and add to x
         vector_handler_->axpy(&ONE, vec_v, x, memspace_);
       }
 
@@ -271,8 +271,8 @@ namespace ReSolve
         outer_flag = 0;
       }
 
-      rhs->copyDataTo(vec_V_->getData(memspace_), 0, memspace_);  
-      matrix_handler_->matvec(A_, x, vec_V_, &MINUSONE, &ONE, memspace_); 
+      rhs->copyDataTo(vec_V_->getData(memspace_), 0, memspace_);
+      matrix_handler_->matvec(A_, x, vec_V_, &MINUSONE, &ONE, memspace_);
       rnorm = vector_handler_->dot(vec_V_, vec_V_, memspace_);
       // rnorm = ||V_1||
       rnorm = std::sqrt(rnorm);
@@ -294,7 +294,7 @@ namespace ReSolve
       out::warning() << "Only LU-type solve can be used as a preconditioner at this time." << std::endl;
       return 1;
     } else {
-      LU_solver_ = LU_solver;  
+      LU_solver_ = LU_solver;
       return 0;
     }
 
@@ -309,7 +309,7 @@ namespace ReSolve
 
   /**
    * @brief Sets pointer to Gram-Schmidt (re)orthogonalization.
-   * 
+   *
    * @param[in] gs - pointer to Gram-Schmidt class instance.
    * @return 0 if successful, error code otherwise.
    */
@@ -321,13 +321,13 @@ namespace ReSolve
 
   /**
    * @brief Set/change GMRES restart value
-   * 
+   *
    * This function should leave solver instance in the same state but with
    * the new restart value.
-   * 
-   * @param[in] restart - the restart value 
+   *
+   * @param[in] restart - the restart value
    * @return 0 if successful, error code otherwise.
-   * 
+   *
    * @todo Consider not setting up GS, if it was not previously set up.
    */
   int LinSolverIterativeFGMRES::setRestart(index_type restart)
@@ -359,7 +359,7 @@ namespace ReSolve
 
   /**
    * @brief Switches between flexible and standard GMRES
-   * 
+   *
    * @param is_flexible - true means set flexible GMRES
    * @return 0 if successful, error code otherwise.
    */
@@ -374,7 +374,7 @@ namespace ReSolve
         // otherwise Z is just a one vector, not multivector and we dont keep it
         vec_Z_ = new vector_type(n_);
       }
-      vec_Z_->allocate(memspace_); 
+      vec_Z_->allocate(memspace_);
     }
     flexible_ = is_flexible;
     matrix_handler_->setValuesChanged(true, memspace_);
@@ -383,8 +383,8 @@ namespace ReSolve
 
   /**
    * @brief Set the convergence condition for GMRES solver
-   * 
-   * @param[in] conv_cond - Possible values: 0, 1, 2 
+   *
+   * @param[in] conv_cond - Possible values: 0, 1, 2
    * @return int - error code, 0 if successful
    */
   int LinSolverIterativeFGMRES::setConvergenceCondition(index_type conv_cond)
@@ -522,7 +522,7 @@ namespace ReSolve
   int LinSolverIterativeFGMRES::allocateSolverData()
   {
     vec_V_ = new vector_type(n_, restart_ + 1);
-    vec_V_->allocate(memspace_);      
+    vec_V_->allocate(memspace_);
     if (flexible_) {
       vec_Z_ = new vector_type(n_, restart_ + 1);
     } else {
@@ -544,7 +544,7 @@ namespace ReSolve
     delete [] h_c_ ;
     delete [] h_s_ ;
     delete [] h_rs_;
-    delete vec_V_;   
+    delete vec_V_;
     delete vec_Z_;
 
     h_H_  = nullptr;
@@ -558,7 +558,7 @@ namespace ReSolve
   }
 
   void LinSolverIterativeFGMRES::precV(vector_type* rhs, vector_type* x)
-  { 
+  {
     LU_solver_->solve(rhs, x);
   }
 
@@ -569,9 +569,9 @@ namespace ReSolve
     bool is_vector_handler_cuda = matrix_handler_->getIsCudaEnabled();
     bool is_vector_handler_hip  = matrix_handler_->getIsHipEnabled();
 
-    if ((is_matrix_handler_cuda != is_vector_handler_cuda) || 
+    if ((is_matrix_handler_cuda != is_vector_handler_cuda) ||
         (is_matrix_handler_hip  != is_vector_handler_hip )) {
-      out::error() << "Matrix and vector handler backends are incompatible!\n";  
+      out::error() << "Matrix and vector handler backends are incompatible!\n";
     }
 
     if (is_matrix_handler_cuda || is_matrix_handler_hip) {
