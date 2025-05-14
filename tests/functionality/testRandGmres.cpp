@@ -2,8 +2,8 @@
  * @file testRandGMRES.cpp
  * @author Kasia Swirydowicz (kasia.swirydowicz@pnnl.gov)
  * @author Slaven Peles (peless@ornl.gov)
- * @brief Functionality test for randomized GMRES class with CUDA backend. 
- * 
+ * @brief Functionality test for randomized GMRES class with CUDA backend.
+ *
  */
 #include <string>
 #include <iostream>
@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
 
   error_sum += runTest<ReSolve::LinAlgWorkspaceCpu,
                        ReSolve::LinSolverDirectCpuILU0>(argc, argv);
- 
+
 #ifdef RESOLVE_USE_CUDA
   error_sum += runTest<ReSolve::LinAlgWorkspaceCUDA,
                        ReSolve::LinSolverDirectCuSparseILU0>(argc, argv);
@@ -113,10 +113,10 @@ int runTest(int argc, char *argv[])
 
   matrix_handler.setValuesChanged(true, memspace);
 
-  real_type tol = 1e-12; // iterative solver tolerance
+  real_type tol = constants::LOOSE_TOL;
   real_type test_pass_tol = 10.0*tol; // test results tolerance
 
-  // Configure preconditioner 
+  // Configure preconditioner
   status = ILU.setup(A);
   error_sum += status;
 
@@ -133,7 +133,7 @@ int runTest(int argc, char *argv[])
   status = FGMRES.setupPreconditioner("LU", &ILU);
   error_sum += status;
 
-  FGMRES.setFlexible(true); 
+  FGMRES.setFlexible(true);
 
   status = FGMRES.solve(vec_rhs, &vec_x);
   error_sum += status;
@@ -144,7 +144,7 @@ int runTest(int argc, char *argv[])
   // Print result summary and check solution
   std::cout << "\nRandomized FGMRES results: \n"
             << "\t Hardware backend:                              : "
-            << hwbackend << "\n" 
+            << hwbackend << "\n"
             << "\t Sketching method:                              : "
             << "CountSketch\n";
   helper.printIterativeSolverSummary(&FGMRES);
@@ -164,7 +164,7 @@ int runTest(int argc, char *argv[])
   // Print result summary and check solution
   std::cout << "\nRandomized FGMRES results: \n"
             << "\t Hardware backend:                              : "
-            << hwbackend << "\n" 
+            << hwbackend << "\n"
             << "\t Sketching method:                              : "
             << "FWHT\n";
   helper.printIterativeSolverSummary(&FGMRES);
@@ -179,7 +179,7 @@ int runTest(int argc, char *argv[])
 }
 
 
-ReSolve::vector::Vector* generateRhs(const index_type n, 
+ReSolve::vector::Vector* generateRhs(const index_type n,
                                      ReSolve::memory::MemorySpace memspace)
 {
   vector_type* vec_rhs = new vector_type(n);
@@ -199,9 +199,9 @@ ReSolve::vector::Vector* generateRhs(const index_type n,
     vec_rhs->syncData(memspace);
   }
   return vec_rhs;
-} 
+}
 
-ReSolve::matrix::Csr* generateMatrix(const index_type n, 
+ReSolve::matrix::Csr* generateMatrix(const index_type n,
                                      ReSolve::memory::MemorySpace memspace)
 {
   std::vector<real_type> r1 = {1., 5., 7., 8., 3., 2., 4.}; // sum 30
@@ -227,7 +227,7 @@ ReSolve::matrix::Csr* generateMatrix(const index_type n,
 
   index_type* rowptr = A->getRowData(ReSolve::memory::HOST);
   index_type* colidx = A->getColData(ReSolve::memory::HOST);
-  real_type* val     = A->getValues(ReSolve::memory::HOST); 
+  real_type* val     = A->getValues(ReSolve::memory::HOST);
 
   // Populate CSR matrix using same row pattern as for nnz calculation
   rowptr[0] = 0;
@@ -251,7 +251,7 @@ ReSolve::matrix::Csr* generateMatrix(const index_type n,
         where =  (j - rowptr[i]) * n/nnz_per_row + (n%(n/nnz_per_row));
         // evenly distribute nonzeros ^^^^             ^^^^^^^^ perturb offset
         what = row_sample[static_cast<size_t>(j - rowptr[i])];
-      } 
+      }
       colidx[j] = where;
       val[j] = what;
     }
