@@ -201,7 +201,7 @@ int sysRefactor(int argc, char *argv[])
     solver.setRefinementMethod("fgmres", "cgs2");
     solver.getIterativeSolver().setCliParam("restart", "100");
     if (hw_backend == "CUDA") {
-      solver.getIterativeSolver().setTol(1e-17);
+      solver.getIterativeSolver().setTol(constants::MACHINE_EPSILON);
     }
   }
 

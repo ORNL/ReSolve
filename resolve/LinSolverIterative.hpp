@@ -3,18 +3,18 @@
  * @author Kasia Swirydowicz (kasia.swirydowicz@pnnl.gov)
  * @author Slaven Peles (peless@ornl.gov)
  * @brief Declaration of iterative solver base class.
- * 
+ *
  */
 #pragma once
 
 #include <string>
 #include <resolve/LinSolver.hpp>
 
-namespace ReSolve 
+namespace ReSolve
 {
   class GramSchmidt;
 
-  class LinSolverIterative : public LinSolver 
+  class LinSolverIterative : public LinSolver
   {
     public:
       LinSolverIterative();
@@ -43,7 +43,7 @@ namespace ReSolve
       index_type total_iters_;
 
       // Parameters common for all iterative solvers
-      real_type tol_{1e-14};  ///< Solver tolerance
+      real_type tol_{constants::DEFAULT_TOL};  ///< Solver tolerance
       index_type maxit_{100}; ///< Maximum solver iterations
   };
 }

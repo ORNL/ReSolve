@@ -5,7 +5,7 @@
 
 #include <resolve/utilities/logger/Logger.hpp>
 
-namespace ReSolve 
+namespace ReSolve
 {
   using out = io::Logger;
 
@@ -40,7 +40,7 @@ namespace ReSolve
     h_ILU_vals_ = new real_type[nnz];
     h_aux1_ = new real_type[n];
 
-    index_type zero_pivot = 0; // no zero pivot 
+    index_type zero_pivot = 0; // no zero pivot
 
     //copy A values to a buffer first
     for (index_type i = 0; i < nnz; ++i) {
@@ -52,7 +52,7 @@ namespace ReSolve
     index_type* ja_mapper = new index_type[n];
 
     // aux scalars for indexing etc
-    index_type k, j,  jw, j1, j2;    
+    index_type k, j,  jw, j1, j2;
 
     for (index_type i = 0; i < n; ++i) {
       j1 = A_->getRowData(ReSolve::memory::HOST)[i];
@@ -60,7 +60,7 @@ namespace ReSolve
       for (index_type j = j1; j < j2; ++j) {
         ja_mapper[A_->getColData(ReSolve::memory::HOST)[j]] = j;
       }
-      // IJK ILU 
+      // IJK ILU
       j = j1;
       while ( j < j2) {
         k = A_->getColData(ReSolve::memory::HOST)[j];
@@ -69,16 +69,16 @@ namespace ReSolve
           for (index_type jj = u_ptr[k] + 1; jj < A_->getRowData(ReSolve::memory::HOST)[k + 1]; ++jj) {
             jw = ja_mapper[A_->getColData(ReSolve::memory::HOST)[jj]];
             if (jw != 0) {
-              h_ILU_vals_[jw] -= h_ILU_vals_[j] * h_ILU_vals_[jj];   
+              h_ILU_vals_[jw] -= h_ILU_vals_[j] * h_ILU_vals_[jj];
             }
-          }   
+          }
         } else {
           break;
         }
-        j++;    
+        j++;
       }
       u_ptr[i] = j;
-      if ((k != i) || (fabs(h_ILU_vals_[j]) < 1e-16)) {
+      if ((k != i) || (fabs(h_ILU_vals_[j]) < constants::MACHINE_EPSILON)) {
         zero_pivot = -1; // zero pivot is in place (i,i) on the diagonal
         return zero_pivot;
       }
@@ -112,7 +112,7 @@ namespace ReSolve
           // lower part
           nnzL++;
         }
-      }  
+      }
     }
     // TODO: What is the purpose of nnzL and nnzU if they are not used after this?
     // allocate L and U
@@ -121,9 +121,9 @@ namespace ReSolve
     U_ = new matrix::Csr(n, n, nnzU, false, true);
     owns_factors_ = true;
 
-    L_->allocateMatrixData(ReSolve::memory::HOST);  
-    U_->allocateMatrixData(ReSolve::memory::HOST);  
-    index_type lit = 0, uit = 0, kL, kU; 
+    L_->allocateMatrixData(ReSolve::memory::HOST);
+    U_->allocateMatrixData(ReSolve::memory::HOST);
+    index_type lit = 0, uit = 0, kL, kU;
     L_->getRowData(ReSolve::memory::HOST)[0] = 0;
     U_->getRowData(ReSolve::memory::HOST)[0] = 0;
 
@@ -152,7 +152,7 @@ namespace ReSolve
         if (A->getColData(ReSolve::memory::HOST)[j] > i) {
           // upper part
 
-          U_->getValues(ReSolve::memory::HOST) [uit] = h_ILU_vals_[j]; 
+          U_->getValues(ReSolve::memory::HOST) [uit] = h_ILU_vals_[j];
           U_->getColData(ReSolve::memory::HOST)[uit] = A_->getColData(ReSolve::memory::HOST)[j]; ;
 
           uit++;
@@ -161,18 +161,18 @@ namespace ReSolve
 
         if (A->getColData(ReSolve::memory::HOST)[j] < i) {
           // lower part
-          L_->getValues(ReSolve::memory::HOST) [lit] =  h_ILU_vals_[j]; 
-          L_->getColData(ReSolve::memory::HOST)[lit] = A_->getColData(ReSolve::memory::HOST)[j]; 
+          L_->getValues(ReSolve::memory::HOST) [lit] =  h_ILU_vals_[j];
+          L_->getColData(ReSolve::memory::HOST)[lit] = A_->getColData(ReSolve::memory::HOST)[j];
 
           lit++;
           kL++;
         }
-      }  
+      }
       // update row pointers (offsets)
-      L_->getRowData(ReSolve::memory::HOST)[i + 1] = L_->getRowData(ReSolve::memory::HOST)[i] + kL; 
-      U_->getRowData(ReSolve::memory::HOST)[i + 1] = U_->getRowData(ReSolve::memory::HOST)[i] + kU; 
+      L_->getRowData(ReSolve::memory::HOST)[i + 1] = L_->getRowData(ReSolve::memory::HOST)[i] + kL;
+      U_->getRowData(ReSolve::memory::HOST)[i + 1] = U_->getRowData(ReSolve::memory::HOST)[i] + kU;
     }
-   
+
     return zero_pivot;
   }
 
@@ -190,7 +190,7 @@ namespace ReSolve
       h_aux1_[i] = rhs->getData(ReSolve::memory::HOST)[i];
       for (index_type j = L_->getRowData(ReSolve::memory::HOST)[i]; j < L_->getRowData(ReSolve::memory::HOST)[i + 1] - 1; ++j) {
         index_type col = L_->getColData(ReSolve::memory::HOST)[j];
-        h_aux1_[i] -= L_->getValues(ReSolve::memory::HOST)[j] * h_aux1_[col]; 
+        h_aux1_[i] -= L_->getValues(ReSolve::memory::HOST)[j] * h_aux1_[col];
       }
       h_aux1_[i] /= L_->getValues(ReSolve::memory::HOST)[L_->getRowData(ReSolve::memory::HOST)[i + 1] - 1];
     }
@@ -214,17 +214,17 @@ namespace ReSolve
     //printf("solve t 2i, L has %d rows, U has %d rows \n", L_->getNumRows(), U_->getNumRows());
     int error_sum = 0;
     // h_aux1 = L^{-1} rhs
-      //for (int ii=0; ii<10; ++ii) printf("y[%d] = %16.16f \n ", ii,   rhs->getData(ReSolve::memory::HOST)[ii]); 
+      //for (int ii=0; ii<10; ++ii) printf("y[%d] = %16.16f \n ", ii,   rhs->getData(ReSolve::memory::HOST)[ii]);
     for (index_type i = 0; i < L_->getNumRows(); ++i) {
       h_aux1_[i] = rhs->getData(ReSolve::memory::HOST)[i];
       for (index_type j = L_->getRowData(ReSolve::memory::HOST)[i]; j < L_->getRowData(ReSolve::memory::HOST)[i + 1] - 1; ++j) {
         index_type col = L_->getColData(ReSolve::memory::HOST)[j];
-        h_aux1_[i] -= L_->getValues(ReSolve::memory::HOST)[j] * h_aux1_[col]; 
+        h_aux1_[i] -= L_->getValues(ReSolve::memory::HOST)[j] * h_aux1_[col];
       }
       h_aux1_[i] /= L_->getValues(ReSolve::memory::HOST)[L_->getRowData(ReSolve::memory::HOST)[i + 1] - 1];
     }
 
-    //for (int ii=0; ii<10; ++ii) printf("(L)^{-1}y[%d] = %16.16f \n ", ii,  h_aux1_[ii]); 
+    //for (int ii=0; ii<10; ++ii) printf("(L)^{-1}y[%d] = %16.16f \n ", ii,  h_aux1_[ii]);
     // x = U^{-1} h_aux1
 
     for (index_type i = U_->getNumRows() - 1; i >= 0; --i) {
@@ -235,17 +235,17 @@ namespace ReSolve
       }
       x->getData(ReSolve::memory::HOST)[i] /= U_->getValues(ReSolve::memory::HOST)[U_->getRowData(ReSolve::memory::HOST)[i]]; //divide by the diagonal entry
     }
-    //for (int ii=0; ii<10; ++ii) printf("(LU)^{-1}y[%d] = %16.16f \n ", ii,  x->getData(ReSolve::memory::HOST)[ii]); 
+    //for (int ii=0; ii<10; ++ii) printf("(LU)^{-1}y[%d] = %16.16f \n ", ii,  x->getData(ReSolve::memory::HOST)[ii]);
    return error_sum;
   }
 
   /**
    * @brief Placeholder function for now.
-   * 
+   *
    * The following switch (getParamId(Id)) cases always run the default and
    * are currently redundant code (like an if (true)).
    * In the future, they will be expanded to include more options.
-   * 
+   *
    * @param id - string ID for parameter to set.
    * @return int Error code.
    */
@@ -261,11 +261,11 @@ namespace ReSolve
 
   /**
    * @brief Placeholder function for now.
-   * 
+   *
    * The following switch (getParamId(Id)) cases always run the default and
    * are currently redundant code (like an if (true)).
    * In the future, they will be expanded to include more options.
-   * 
+   *
    * @param id - string ID for parameter to get.
    * @return std::string Value of the string parameter to return.
    */
@@ -281,11 +281,11 @@ namespace ReSolve
 
   /**
    * @brief Placeholder function for now.
-   * 
+   *
    * The following switch (getParamId(Id)) cases always run the default and
    * are currently redundant code (like an if (true)).
    * In the future, they will be expanded to include more options.
-   * 
+   *
    * @param id - string ID for parameter to get.
    * @return int Value of the int parameter to return.
    */
@@ -301,11 +301,11 @@ namespace ReSolve
 
   /**
    * @brief Placeholder function for now.
-   * 
+   *
    * The following switch (getParamId(Id)) cases always run the default and
    * are currently redundant code (like an if (true)).
    * In the future, they will be expanded to include more options.
-   * 
+   *
    * @param id - string ID for parameter to get.
    * @return real_type Value of the real_type parameter to return.
    */
@@ -321,11 +321,11 @@ namespace ReSolve
 
   /**
    * @brief Placeholder function for now.
-   * 
+   *
    * The following switch (getParamId(Id)) cases always run the default and
    * are currently redundant code (like an if (true)).
    * In the future, they will be expanded to include more options.
-   * 
+   *
    * @param id - string ID for parameter to get.
    * @return bool Value of the bool parameter to return.
    */
