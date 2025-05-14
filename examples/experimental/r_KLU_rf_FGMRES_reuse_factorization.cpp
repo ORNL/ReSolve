@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
   vector_type* vec_r   = nullptr;
 
   ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::CGS2);
-  
+
   ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
   ReSolve::LinSolverDirectCuSolverRf* Rf = new ReSolve::LinSolverDirectCuSolverRf;
   ReSolve::LinSolverIterativeFGMRES* FGMRES = new ReSolve::LinSolverIterativeFGMRES(matrix_handler, vector_handler, GS);
@@ -104,18 +104,18 @@ int main(int argc, char *argv[])
     // Copy matrix data to device
     A->syncData(ReSolve::memory::DEVICE);
 
-    std::cout << "Finished reading the matrix and rhs, size: " << A->getNumRows() << " x "<< A->getNumColumns() 
-              << ", nnz: "       << A->getNnz() 
+    std::cout << "Finished reading the matrix and rhs, size: " << A->getNumRows() << " x "<< A->getNumColumns()
+              << ", nnz: "       << A->getNnz()
               << ", symmetric? " << A->symmetric()
               << ", Expanded? "  << A->expanded() << std::endl;
     mat_file.close();
     rhs_file.close();
 
     // Update host and device data.
-    if (i < 2) { 
+    if (i < 2) {
       vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
       vec_rhs->setDataUpdated(ReSolve::memory::HOST);
-    } else { 
+    } else {
       A->syncData(ReSolve::memory::DEVICE);
       vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
     }
@@ -132,14 +132,14 @@ int main(int argc, char *argv[])
       status = KLU->factorize();
       std::cout<<"KLU factorization status: "<<status<<std::endl;
       status = KLU->solve(vec_rhs, vec_x);
-      std::cout<<"KLU solve status: "<<status<<std::endl;      
+      std::cout<<"KLU solve status: "<<status<<std::endl;
       vec_r->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
       norm_b = vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE);
       norm_b = sqrt(norm_b);
       matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
-      matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, ReSolve::memory::DEVICE); 
-      std::cout << "\t 2-Norm of the residual : " 
-                << std::scientific << std::setprecision(16) 
+      matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUS_ONE, ReSolve::memory::DEVICE);
+      std::cout << "\t 2-Norm of the residual : "
+                << std::scientific << std::setprecision(16)
                 << sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE))/norm_b << "\n";
       if (i == 1) {
         ReSolve::matrix::Csc* L_csc = (ReSolve::matrix::Csc*) KLU->getLFactor();
@@ -158,7 +158,7 @@ int main(int argc, char *argv[])
         index_type* Q = KLU->getQOrdering();
         Rf->setup(A, L, U, P, Q);
         std::cout<<"about to set FGMRES" <<std::endl;
-        FGMRES->setRestart(1000); 
+        FGMRES->setRestart(1000);
         FGMRES->setMaxit(2000);
         FGMRES->setup(A);
       }
@@ -169,18 +169,18 @@ int main(int argc, char *argv[])
       {
         status = Rf->refactorize();
         std::cout << "CUSOLVER RF, using REAL refactorization, refactorization status: "
-                  << status << std::endl;    
+                  << status << std::endl;
         vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
         status = Rf->solve(vec_rhs, vec_x);
         FGMRES->setupPreconditioner("LU", Rf);
       }
       //if (i%2!=0)  vec_x->setToZero(ReSolve::memory::DEVICE);
       real_type norm_x =  vector_handler->dot(vec_x, vec_x, ReSolve::memory::DEVICE);
-      std::cout << "Norm of x (before solve): " 
-                << std::scientific << std::setprecision(16) 
+      std::cout << "Norm of x (before solve): "
+                << std::scientific << std::setprecision(16)
                 << sqrt(norm_x) << "\n";
-      std::cout<<"CUSOLVER RF solve status: "<<status<<std::endl;      
-      
+      std::cout<<"CUSOLVER RF solve status: "<<status<<std::endl;
+
       vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
       vec_r->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
       norm_b = vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE);
@@ -188,28 +188,28 @@ int main(int argc, char *argv[])
 
       matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
       FGMRES->resetMatrix(A);
-      
-      matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, ReSolve::memory::DEVICE); 
 
-      std::cout << "\t 2-Norm of the residual (before IR): " 
-                << std::scientific << std::setprecision(16) 
+      matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUS_ONE, ReSolve::memory::DEVICE);
+
+      std::cout << "\t 2-Norm of the residual (before IR): "
+                << std::scientific << std::setprecision(16)
                 << sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE))/norm_b << "\n";
-      std::cout << "\t 2-Norm of the RIGHT HAND SIDE: " 
-                << std::scientific << std::setprecision(16) 
+      std::cout << "\t 2-Norm of the RIGHT HAND SIDE: "
+                << std::scientific << std::setprecision(16)
                 << norm_b << "\n";
 
       vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
       FGMRES->solve(vec_rhs, vec_x);
 
-      std::cout << "FGMRES: init nrm: " 
-                << std::scientific << std::setprecision(16) 
+      std::cout << "FGMRES: init nrm: "
+                << std::scientific << std::setprecision(16)
                 << FGMRES->getInitResidualNorm()/norm_b
                 << " final nrm: "
                 << FGMRES->getFinalResidualNorm()/norm_b
                 << " iter: " << FGMRES->getNumIter() << "\n";
       norm_x = vector_handler->dot(vec_x, vec_x, ReSolve::memory::DEVICE);
-      std::cout << "Norm of x (after IR): " 
-                << std::scientific << std::setprecision(16) 
+      std::cout << "Norm of x (after IR): "
+                << std::scientific << std::setprecision(16)
                 << sqrt(norm_x) << "\n";
     }
 

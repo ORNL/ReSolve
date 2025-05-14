@@ -3,7 +3,7 @@
  * @author Slaven Peles (peless@ornl.gov)
  * @author Kaleb Brunhoeber
  * @brief Functionality test for LUSOL direct solver
- * 
+ *
  */
 #include <algorithm>
 #include <cmath>
@@ -118,7 +118,7 @@ int main(int argc, char* argv[])
                                      &vec_x,
                                      &vec_r,
                                      &ONE,
-                                     &MINUSONE,
+                                     &MINUS_ONE,
                                      ReSolve::memory::HOST);
 
   // Compute vector norms
@@ -127,7 +127,7 @@ int main(int argc, char* argv[])
   real_type normB = sqrt(vector_handler.dot(&vec_rhs, &vec_rhs, ReSolve::memory::HOST));
 
   // Compute vec_diff := vec_diff - vec_x
-  vector_handler.axpy(&MINUSONE, &vec_x, &vec_diff, ReSolve::memory::HOST);
+  vector_handler.axpy(&MINUS_ONE, &vec_x, &vec_diff, ReSolve::memory::HOST);
   // Compute norm of vec_diff
   real_type normDiffMatrix = sqrt(vector_handler.dot(&vec_diff, &vec_diff, ReSolve::memory::HOST));
 
@@ -137,7 +137,7 @@ int main(int argc, char* argv[])
                                      &vec_test,
                                      &vec_r,
                                      &ONE,
-                                     &MINUSONE,
+                                     &MINUS_ONE,
                                      ReSolve::memory::HOST);
   real_type exactSol_normRmatrix = sqrt(vector_handler.dot(&vec_r, &vec_r, ReSolve::memory::HOST));
 
@@ -218,7 +218,7 @@ int main(int argc, char* argv[])
                                      &vec_x,
                                      &vec_r,
                                      &ONE,
-                                     &MINUSONE,
+                                     &MINUS_ONE,
                                      ReSolve::memory::HOST);
 
   // Compute vector norms
@@ -227,7 +227,7 @@ int main(int argc, char* argv[])
   normB = sqrt(vector_handler.dot(&vec_rhs, &vec_rhs, ReSolve::memory::HOST));
 
   // Compute vec_diff := vec_diff - vec_x
-  vector_handler.axpy(&MINUSONE, &vec_x, &vec_diff, ReSolve::memory::HOST);
+  vector_handler.axpy(&MINUS_ONE, &vec_x, &vec_diff, ReSolve::memory::HOST);
   // Compute norm of vec_diff
   normDiffMatrix = sqrt(vector_handler.dot(&vec_diff, &vec_diff, ReSolve::memory::HOST));
 
@@ -238,9 +238,9 @@ int main(int argc, char* argv[])
                                      &vec_test,
                                      &vec_r,
                                      &ONE,
-                                     &MINUSONE,
+                                     &MINUS_ONE,
                                      ReSolve::memory::HOST);
-  // Compute residual error norm                                     
+  // Compute residual error norm
   exactSol_normRmatrix = sqrt(vector_handler.dot(&vec_r, &vec_r, ReSolve::memory::HOST));
 
   std::cout << "Results: \n";
@@ -274,13 +274,13 @@ int main(int argc, char* argv[])
 }
 
 /**
- * @brief 
- * 
+ * @brief
+ *
  * @param A_coo - Input COO matrix without duplicates sorted in row-major order
  * @param A_csr - Output CSR matrix
  * @param memspace - memory space in the output matrix where the data is copied
  * @return int
- * 
+ *
  * @pre A_coo and A_csr matrices must be of the same size and type.
  */
 int coo2csr(ReSolve::matrix::Coo* A_coo, ReSolve::matrix::Csr* A_csr, ReSolve::memory::MemorySpace memspace)
@@ -317,7 +317,7 @@ int coo2csr(ReSolve::matrix::Coo* A_coo, ReSolve::matrix::Csr* A_csr, ReSolve::m
   A_csr->copyDataFrom(row_csr, cols_coo, vals_coo, ReSolve::memory::HOST, memspace);
 
   delete [] row_csr;
-  
+
   return 0;
 }
 
