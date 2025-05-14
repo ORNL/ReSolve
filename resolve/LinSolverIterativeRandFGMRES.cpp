@@ -173,8 +173,8 @@ namespace ReSolve
       // check if maybe residual is already small enough?
       if (it == 0) {
         tolrel = tol_ * rnorm;
-        if (std::abs(tolrel) < 1e-16) {
-          tolrel = 1e-16;
+        if (std::abs(tolrel) < MACHINE_EPSILON) {
+          tolrel = MACHINE_EPSILON;
         }
       }
 
