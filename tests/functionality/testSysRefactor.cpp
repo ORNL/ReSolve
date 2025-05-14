@@ -4,8 +4,8 @@
  * @author Slaven Peles (peless@ornl.gov)
  * @brief Functionality test for SystemSolver class
  * @date 2023-12-14
- * 
- * 
+ *
+ *
  */
 #include <string>
 #include <iostream>
@@ -105,7 +105,7 @@ static int runTest(int argc, char *argv[], std::string backend)
   }
   if (backend == "cuda") {
     solver.getIterativeSolver().setMaxit(400);
-    solver.getIterativeSolver().setTol(1e-17);
+    solver.getIterativeSolver().setTol(ReSolve::constants::LOOSE_TOL);
   }
 
   // Input to this code is location of `data` directory where matrix files are stored
@@ -171,7 +171,7 @@ static int runTest(int argc, char *argv[], std::string backend)
   // Print result summary and check solution
   std::cout << "\nResults (first matrix): \n\n";
   helper.printSummary();
-  error_sum += helper.checkResult(1e-12);
+  error_sum += helper.checkResult(ReSolve::constants::LOOSE_TOL);
 
   // Verify norm of scaled residuals calculation in SystemSolver class
   real_type nsr_system = solver.getNormOfScaledResiduals(&vec_rhs, &vec_x);
@@ -211,11 +211,11 @@ static int runTest(int argc, char *argv[], std::string backend)
   // Refactorize matrix
   status = solver.refactorize();
   error_sum += status;
-  
+
   // Solve system
   status = solver.solve(&vec_rhs, &vec_x);
   error_sum += status;
-  
+
   // Compute error norms for the system
   helper.resetSystem(A, &vec_rhs, &vec_x);
 
@@ -223,7 +223,7 @@ static int runTest(int argc, char *argv[], std::string backend)
   std::cout << "\nResults (second matrix): \n\n";
   helper.printSummary();
   helper.printIrSummary(&(solver.getIterativeSolver()));
-  error_sum += helper.checkResult(1e-15); // Why does test not pass with 1e-16?
+  error_sum += helper.checkResult(ReSolve::constants::DEFAULT_TOL);
 
   // Verify norm of scaled residuals calculation in SystemSolver class
   nsr_system = solver.getNormOfScaledResiduals(&vec_rhs, &vec_x);
@@ -232,7 +232,7 @@ static int runTest(int argc, char *argv[], std::string backend)
   // Verify relative residual norm computation in SystemSolver
   rel_residual_norm = solver.getResidualNorm(&vec_rhs, &vec_x);
   error_sum += helper.checkRelativeResidualNorm(rel_residual_norm);
- 
+
   // Add one output specific to GMRES
   index_type restart = solver.getIterativeSolver().getCliParamInt("restart");
   std::cout << "\t IR GMRES restart                                : " << restart << "\n";

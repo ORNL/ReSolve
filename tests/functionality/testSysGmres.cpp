@@ -12,6 +12,8 @@
 #include <iomanip>
 #include <vector>
 #include <cmath>
+#include <sstream>
+
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/Csc.hpp>
 #include <resolve/vector/Vector.hpp>
@@ -23,6 +25,7 @@
 #include <resolve/GramSchmidt.hpp>
 #include <resolve/SystemSolver.hpp>
 #include <resolve/utilities/params/CliOptions.hpp>
+
 
 #include "TestHelper.hpp"
 
@@ -146,7 +149,14 @@ int test(int argc, char *argv[])
 
   // Set solver options
   solver.getIterativeSolver().setCliParam("maxit", "2500");
-  solver.getIterativeSolver().setCliParam("tol", "1e-12");
+  //solver.getIterativeSolver().setCliParam("tol", "1e-12");
+  //solver.getIterativeSolver().setCliParam("tol", std::to_string(ReSolve::constants::SPECIAL_TOL));
+  std::ostringstream oss;
+  oss << std::scientific << ReSolve::constants::SPECIAL_TOL;
+  solver.getIterativeSolver().setCliParam("tol", oss.str());
+
+
+
 
   // Tolerance value to output
   real_type tol_out = solver.getIterativeSolver().getCliParamReal("tol");
