@@ -3,7 +3,7 @@
  * @author Kasia Swirydowicz (kasia.swirydowicz@amd.com)
  * @author Slaven Peles (peless@ornl.gov)
  * @brief Functionality test for rocsolver_rf.
- * 
+ *
  */
 #include <string>
 #include <iostream>
@@ -185,7 +185,7 @@ int runTest(int argc, char *argv[], std::string& solver_name)
   index_type* P = KLU.getPOrdering();
   index_type* Q = KLU.getQOrdering();
 
-  status = Rf.setup(A, L, U, P, Q, &vec_rhs); 
+  status = Rf.setup(A, L, U, P, Q, &vec_rhs);
   error_sum += status;
 
   // Refactorize (on device where available)
@@ -200,7 +200,7 @@ int runTest(int argc, char *argv[], std::string& solver_name)
   if (is_ir) {
     test_name += " + IR";
 
-    status =  FGMRES.setup(A); 
+    status =  FGMRES.setup(A);
     error_sum += status;
 
     status = FGMRES.setupPreconditioner("LU", &Rf);
@@ -219,7 +219,7 @@ int runTest(int argc, char *argv[], std::string& solver_name)
   if (is_ir) {
     helper.printIrSummary(&FGMRES);
   }
-  error_sum += helper.checkResult(1e-16);
+  error_sum += helper.checkResult(ReSolve::constants::MACHINE_EPSILON);
 
   // Load the second matrix
   std::ifstream mat2(matrix_file_name_2);
@@ -246,7 +246,7 @@ int runTest(int argc, char *argv[], std::string& solver_name)
   // Refactorize second matrix
   status = Rf.refactorize();
   error_sum += status;
-  
+
   // Solve system (now one can go directly to IR when enabled)
   if (is_ir) {
     FGMRES.resetMatrix(A);
@@ -268,8 +268,7 @@ int runTest(int argc, char *argv[], std::string& solver_name)
   if (is_ir) {
     helper.printIrSummary(&FGMRES);
   }
-  error_sum += helper.checkResult(1e-16);
-
+  error_sum += helper.checkResult(ReSolve::constants::MACHINE_EPSILON);
   isTestPass(error_sum, test_name);
 
   // delete data on the heap
