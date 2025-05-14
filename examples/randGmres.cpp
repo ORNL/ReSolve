@@ -33,7 +33,7 @@ static void printUsage()
   std::cout << "\t -h\tPrints this message.\n\n";
 }
 
-/// Prototype of the example main function 
+/// Prototype of the example main function
 template <class workspace_type, class precon_type>
 static int runGmresExample(int argc, char *argv[]);
 
@@ -163,12 +163,12 @@ int runGmresExample(int argc, char *argv[])
   Precond.setup(A);
   FGMRES.setRestart(150);
   FGMRES.setMaxit(2500);
-  FGMRES.setTol(1e-12);
+  FGMRES.setTol(constants::LOOSE_TOL);
   FGMRES.setup(A);
 
   FGMRES.resetMatrix(A);
   FGMRES.setupPreconditioner("LU", &Precond);
-  FGMRES.setFlexible(1); 
+  FGMRES.setFlexible(1);
 
   FGMRES.solve(vec_rhs, vec_x);
 
