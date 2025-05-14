@@ -18,8 +18,9 @@ namespace ReSolve {
     constexpr real_type MINUSONE = -1.0;
     constexpr real_type MACHINE_EPSILON  = std::numeric_limits<real_type>::epsilon();
     constexpr real_type DEFAULT_TOL = 100 * MACHINE_EPSILON;
-    constexpr real_type SPECIAL_TOL = 1e-12;
     constexpr real_type LOOSE_TOL = 100 * DEFAULT_TOL;
+    constexpr real_type REDO_FACTOR_TOL = 1e-7;
+    constexpr real_type DEFAULT_ZERO_DIAGONAL = 1e-6;
   }
 
   namespace colors

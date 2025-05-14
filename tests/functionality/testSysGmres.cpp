@@ -149,10 +149,8 @@ int test(int argc, char *argv[])
 
   // Set solver options
   solver.getIterativeSolver().setCliParam("maxit", "2500");
-  //solver.getIterativeSolver().setCliParam("tol", "1e-12");
-  //solver.getIterativeSolver().setCliParam("tol", std::to_string(ReSolve::constants::SPECIAL_TOL));
   std::ostringstream oss;
-  oss << std::scientific << ReSolve::constants::SPECIAL_TOL;
+  oss << std::scientific << ReSolve::constants::LOOSE_TOL;
   solver.getIterativeSolver().setCliParam("tol", oss.str());
 
 

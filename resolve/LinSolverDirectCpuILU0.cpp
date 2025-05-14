@@ -2,8 +2,8 @@
  * @file LinSolverDirectCpuILU0.cpp
  * @author Slaven Peles (peless@ornl.gov)
  * @brief Contains definition of a class for incomplete LU factorization on CPU
- * 
- * 
+ *
+ *
  */
 #include <cassert>
 
@@ -14,7 +14,7 @@
 
 #include "LinSolverDirectCpuILU0.hpp"
 
-namespace ReSolve 
+namespace ReSolve
 {
   using out = io::Logger;
 
@@ -25,7 +25,7 @@ namespace ReSolve
 
   /**
    * @brief Destructor
-   * 
+   *
    * @todo Address how L and U factors are deleted (currently base class does that).
    */
   LinSolverDirectCpuILU0::~LinSolverDirectCpuILU0()
@@ -75,7 +75,7 @@ namespace ReSolve
 
     // Update values in L and U factors
     const index_type N = A_->getNumRows();
-    index_type acount = 0; 
+    index_type acount = 0;
     for (index_type i = 0; i < N; ++i) {
       for (index_type j = rowsL[i]; j < rowsL[i+1]; ++j) {
           valsL[j] = valsA[acount];
@@ -151,7 +151,7 @@ namespace ReSolve
 
     // Set data for L and U
     index_type lcount = 0;
-    index_type ucount = 0; 
+    index_type ucount = 0;
     for (index_type i = 0; i < N; ++i) {
       colsU[ucount] = i;
       valsU[ucount] = diagU_[i];
@@ -161,7 +161,7 @@ namespace ReSolve
           colsL[lcount] = colsA[j];
           valsL[lcount] = valsA[j];
           ++lcount;
-        } 
+        }
         if (colsA[j] > i) {
           colsU[ucount] = colsA[j];
           valsU[ucount] = valsA[j];
@@ -235,7 +235,7 @@ namespace ReSolve
 
   /**
    * @brief Triangular solve
-   * 
+   *
    * @param[in,out] rhs_vec - right-hand-side vector
    * @return int - error code
    */
@@ -277,8 +277,8 @@ namespace ReSolve
 
   /**
    * @brief Triangular solve
-   * 
-   * @param[in]  rhs_vec - right-hand-side vector 
+   *
+   * @param[in]  rhs_vec - right-hand-side vector
    * @param[out] x_vec   - solution vector
    * @return int - status code
    */
@@ -333,11 +333,11 @@ namespace ReSolve
 
   /**
    * @brief Sets approximation to zero on matrix diagonal.
-   * 
+   *
    * If the original matrix has structural zeros on the diagonal, the ILU0
    * analysis will add diagonal elements and set them to `zero_diagonal_`
-   * value. The default is 1e-6, this function allows user to change that.
-   * 
+   * value. The default is set in `Common.hpp`. This function allows user to change that.
+   *
    * @param z - small value approximating zero
    * @return int - returns status code
    */
@@ -349,11 +349,11 @@ namespace ReSolve
 
   /**
    * @brief Placeholder function for now.
-   * 
+   *
    * The following switch (getParamId(Id)) cases always run the default and
    * are currently redundant code (like an if (true)).
    * In the future, they will be expanded to include more options.
-   * 
+   *
    * @param id - string ID for parameter to set.
    * @return int Error code.
    */
@@ -369,11 +369,11 @@ namespace ReSolve
 
   /**
    * @brief Placeholder function for now.
-   * 
+   *
    * The following switch (getParamId(Id)) cases always run the default and
    * are currently redundant code (like an if (true)).
    * In the future, they will be expanded to include more options.
-   * 
+   *
    * @param id - string ID for parameter to get.
    * @return std::string Value of the string parameter to return.
    */
@@ -389,11 +389,11 @@ namespace ReSolve
 
   /**
    * @brief Placeholder function for now.
-   * 
+   *
    * The following switch (getParamId(Id)) cases always run the default and
    * are currently redundant code (like an if (true)).
    * In the future, they will be expanded to include more options.
-   * 
+   *
    * @param id - string ID for parameter to get.
    * @return int Value of the int parameter to return.
    */
@@ -409,11 +409,11 @@ namespace ReSolve
 
   /**
    * @brief Placeholder function for now.
-   * 
+   *
    * The following switch (getParamId(Id)) cases always run the default and
    * are currently redundant code (like an if (true)).
    * In the future, they will be expanded to include more options.
-   * 
+   *
    * @param id - string ID for parameter to get.
    * @return real_type Value of the real_type parameter to return.
    */
@@ -429,11 +429,11 @@ namespace ReSolve
 
   /**
    * @brief Placeholder function for now.
-   * 
+   *
    * The following switch (getParamId(Id)) cases always run the default and
    * are currently redundant code (like an if (true)).
    * In the future, they will be expanded to include more options.
-   * 
+   *
    * @param id - string ID for parameter to get.
    * @return bool Value of the bool parameter to return.
    */
