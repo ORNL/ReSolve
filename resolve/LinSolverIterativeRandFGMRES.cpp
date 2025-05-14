@@ -27,7 +27,7 @@ namespace ReSolve
                                                              SketchingMethod rand_method,
                                                              GramSchmidt*    gs)
   {
-    tol_ = 1e-14; //default
+    tol_ = constants::DEFAULT_TOL;
     maxit_= 100; //default
     restart_ = 10;
     conv_cond_ = 0;//default
