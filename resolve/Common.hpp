@@ -7,12 +7,6 @@
 
 namespace ReSolve {
 
-
-  // TODO: these should be dropped
-  constexpr double EPSILON = 1.0e-18;
-  constexpr double EPSMAC  = 1.0e-16;
-
-
   /// @todo Provide CMake option to se these types at config time
   using real_type = double;
   using index_type = std::int32_t;
@@ -22,7 +16,7 @@ namespace ReSolve {
     constexpr real_type ZERO = 0.0;
     constexpr real_type ONE = 1.0;
     constexpr real_type MINUS_ONE = -1.0;
-    constexpr real_type DEFAULT_TOL = 100*std::numeric_limits<real_type>::epsilon();
+    constexpr real_type MACHINE_EPSILON = std::numeric_limits<real_type>::epsilon();
   }
 
   namespace colors

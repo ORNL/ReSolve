@@ -159,7 +159,7 @@ namespace ReSolve
         //set the last entry in Hessenberg matrix
         t = std::sqrt(t);
         H[ idxmap(i, i + 1, num_vecs_ + 1) ] = t;
-        if(std::abs(t) > EPSILON) {
+        if(std::abs(t) > MACHINE_EPSILON) {
           t = 1.0/t;
           vector_handler_->scal(&t, vec_w_, memspace_);
         } else {
@@ -205,7 +205,7 @@ namespace ReSolve
         t = std::sqrt(t);
         H[ idxmap(i, i + 1, num_vecs_ + 1) ] = t;
 
-        if(std::abs(t) > EPSILON) {
+        if(std::abs(t) > MACHINE_EPSILON) {
           t = 1.0/t;
           vector_handler_->scal(&t, vec_v_, memspace_);
         } else {
@@ -249,7 +249,7 @@ namespace ReSolve
         //set the last entry in Hessenberg matrix
         t = std::sqrt(t);
         H[ idxmap(i, i + 1, num_vecs_ + 1)] = t;
-        if(std::abs(t) > EPSILON) {
+        if(std::abs(t) > MACHINE_EPSILON) {
           t = 1.0 / t;
           vector_handler_->scal(&t, vec_w_, memspace_);
           for (int ii=0; ii<=i; ++ii)
@@ -325,7 +325,7 @@ namespace ReSolve
         //set the last entry in Hessenberg matrix
         t = std::sqrt(t);
         H[ idxmap(i, i + 1, num_vecs_ + 1) ] = t;
-        if(std::abs(t) > EPSILON) {
+        if(std::abs(t) > MACHINE_EPSILON) {
           t = 1.0 / t;
           vector_handler_->scal(&t, vec_w_, memspace_);
         } else {
@@ -353,7 +353,7 @@ namespace ReSolve
         //set the last entry in Hessenberg matrix
         t = std::sqrt(t);
         H[ idxmap(i, i + 1, num_vecs_ + 1) ] = t;
-        if(std::abs(t) > EPSILON) {
+        if(std::abs(t) > MACHINE_EPSILON) {
           t = 1.0/t;
           vector_handler_->scal(&t, vec_v_, memspace_);
         } else {

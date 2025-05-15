@@ -134,8 +134,8 @@ namespace ReSolve
       // check if maybe residual is already small enough?
       if (it == 0) {
         tolrel = tol_ * rnorm;
-        if (std::abs(tolrel) < 1e-16) {
-          tolrel = 1e-16;
+        if (std::abs(tolrel) < MACHINE_EPSILON) {
+          tolrel = MACHINE_EPSILON;
         }
       }
 
@@ -143,13 +143,13 @@ namespace ReSolve
       switch (conv_cond_)
       {
         case 0:
-          exit_cond = ((std::abs(rnorm - ZERO) <= EPSILON));
+          exit_cond = ((std::abs(rnorm - ZERO) <= MACHINE_EPSILON));
           break;
         case 1:
-          exit_cond = ((std::abs(rnorm - ZERO) <= EPSILON) || (rnorm < tol_));
+          exit_cond = ((std::abs(rnorm - ZERO) <= MACHINE_EPSILON) || (rnorm < tol_));
           break;
         case 2:
-          exit_cond = ((std::abs(rnorm - ZERO) <= EPSILON) || (rnorm < (tol_*bnorm)));
+          exit_cond = ((std::abs(rnorm - ZERO) <= MACHINE_EPSILON) || (rnorm < (tol_*bnorm)));
           break;
       }
 
@@ -204,8 +204,8 @@ namespace ReSolve
         real_type Hii1 = h_H_[(i) * (restart_ + 1) + i + 1];
         real_type gam = std::sqrt(Hii * Hii + Hii1 * Hii1);
 
-        if(std::abs(gam - ZERO) <= EPSILON) {
-          gam = EPSMAC;
+        if(std::abs(gam - ZERO) <= MACHINE_EPSILON) {
+          gam = MACHINE_EPSILON;
         }
 
         /* next Given's rotation */
