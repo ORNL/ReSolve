@@ -43,7 +43,7 @@ namespace ReSolve
       index_type total_iters_;
 
       // Parameters common for all iterative solvers
-      real_type tol_{constants::DEFAULT_TOL};  ///< Solver tolerance
+      real_type tol_{100 * constants::MACHINE_EPSILON}; ///< Convergence tolerance
       index_type maxit_{100}; ///< Maximum solver iterations
   };
 }

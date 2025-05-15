@@ -2,7 +2,7 @@
  * @file LinSolverIterativeRandFGMRES.hpp
  * @author Kasia Swirydowicz (kasia.swirydowicz@pnnl.gov)
  * @brief Declaration of LinSolverIterativeRandFGMRES class
- * 
+ *
  */
 #pragma once
 
@@ -26,12 +26,12 @@ namespace ReSolve
 
   /**
    * @brief Randomized (F)GMRES
-   * 
+   *
    * @author Kasia Swirydowicz (kasia.swirydowicz@pnnl.gov)
-   * 
+   *
    * @note Pointers to MatrixHandler and VectorHandler objects are inherited from
    * LinSolver base class.
-   * 
+   *
    */
   class LinSolverIterativeRandFGMRES : public LinSolverIterative
   {
@@ -39,12 +39,12 @@ namespace ReSolve
       using vector_type = vector::Vector;
 
     public:
-      enum SketchingMethod {cs = 0, // count sketch 
+      enum SketchingMethod {cs = 0, // count sketch
                             fwht};  // fast Walsh-Hadamard transform
-    
+
       LinSolverIterativeRandFGMRES(MatrixHandler* matrix_handler,
                                    VectorHandler* vector_handler,
-                                   SketchingMethod rand_method, 
+                                   SketchingMethod rand_method,
                                    GramSchmidt*   gs);
 
       LinSolverIterativeRandFGMRES(index_type restart,
@@ -52,15 +52,15 @@ namespace ReSolve
                                    index_type maxit,
                                    index_type conv_cond,
                                    MatrixHandler* matrix_handler,
-                                   VectorHandler* vector_handler, 
-                                   SketchingMethod rand_method, 
+                                   VectorHandler* vector_handler,
+                                   SketchingMethod rand_method,
                                    GramSchmidt*   gs);
 
       ~LinSolverIterativeRandFGMRES();
 
       int solve(vector_type* rhs, vector_type* x) override;
       int setup(matrix::Sparse* A) override;
-      int resetMatrix(matrix::Sparse* new_A) override; 
+      int resetMatrix(matrix::Sparse* new_A) override;
       int setupPreconditioner(std::string name, LinSolverDirect* LU_solver) override;
       int setOrthogonalization(GramSchmidt* gs) override;
 
@@ -87,6 +87,8 @@ namespace ReSolve
       index_type restart_{10};  ///< GMRES restart
       index_type conv_cond_{0}; ///< GMRES convergence condition
       bool flexible_{true};     ///< If using flexible GMRES (FGMRES) algorithm
+      real_type tol_{100 * constants::MACHINE_EPSILON}; ///< Convergence tolerance
+      index_type maxit_{100}; ///< Maximum number of iterations
 
     private:
       int allocateSolverData();
