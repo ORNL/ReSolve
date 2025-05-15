@@ -100,13 +100,6 @@ static int runTest(int argc, char *argv[], std::string backend)
   // settings than HIP-based one)
   solver.setRefinementMethod("fgmres", "cgs2");
   solver.getIterativeSolver().setCliParam("restart", "100");
-  if (backend == "hip") {
-    solver.getIterativeSolver().setMaxit(200);
-  }
-  if (backend == "cuda") {
-    solver.getIterativeSolver().setMaxit(400);
-    solver.getIterativeSolver().setTol(ReSolve::constants::LOOSE_TOL);
-  }
 
   // Input to this code is location of `data` directory where matrix files are stored
   const std::string data_path = (argc == 2) ? argv[1] : ".";
@@ -171,7 +164,7 @@ static int runTest(int argc, char *argv[], std::string backend)
   // Print result summary and check solution
   std::cout << "\nResults (first matrix): \n\n";
   helper.printSummary();
-  error_sum += helper.checkResult(ReSolve::constants::LOOSE_TOL);
+  error_sum += helper.checkResult(1e-12);
 
   // Verify norm of scaled residuals calculation in SystemSolver class
   real_type nsr_system = solver.getNormOfScaledResiduals(&vec_rhs, &vec_x);
@@ -223,7 +216,7 @@ static int runTest(int argc, char *argv[], std::string backend)
   std::cout << "\nResults (second matrix): \n\n";
   helper.printSummary();
   helper.printIrSummary(&(solver.getIterativeSolver()));
-  error_sum += helper.checkResult(ReSolve::constants::DEFAULT_TOL);
+  error_sum += helper.checkResult(1e-15);
 
   // Verify norm of scaled residuals calculation in SystemSolver class
   nsr_system = solver.getNormOfScaledResiduals(&vec_rhs, &vec_x);
