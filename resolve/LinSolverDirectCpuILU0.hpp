@@ -83,6 +83,6 @@ namespace ReSolve
       index_type* idxmap_{nullptr}; ///< Mapping for matrix column indices
       bool owns_factors_{false};    ///< If the class owns L and U factors
 
-      real_type zero_diagonal_{constants::DEFAULT_ZERO_DIAGONAL}; ///< Value to replace zero diagonal elements
+      real_type zero_diagonal_{1e-6}; ///< Value to replace zero diagonal elements
   };
 } // namespace ReSolve

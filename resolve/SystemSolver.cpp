@@ -394,7 +394,6 @@ namespace ReSolve
       status += refactorizationSolver_->setup(A_, L_, U_, P_, Q_);
 
       LinSolverDirectCuSolverRf* Rf = dynamic_cast<LinSolverDirectCuSolverRf*>(refactorizationSolver_);
-      Rf->setNumericalProperties(constants::DEFAULT_TOL, 1e-1);
 
       is_solve_on_device_ = false;
     }
