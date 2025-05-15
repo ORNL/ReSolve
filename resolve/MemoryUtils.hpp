@@ -64,26 +64,10 @@ namespace ReSolve
       ///
 
       template <typename I, typename T>
-      int allocateArrayOnHost(T** v, I n)
-      {
-        std::size_t arraysize = static_cast<std::size_t>(n) * sizeof(T);
-        *v = new T[arraysize];
-        return *v == nullptr ? 1 : 0;
-      }
-
-      template <typename I, typename T>
       int copyArrayHostToHost(T* dst, const T* src, I n)
       {
         std::size_t arraysize = static_cast<std::size_t>(n) * sizeof(T);
         memcpy(dst, src, arraysize);
-        return 0;
-      }
-
-      template <typename T>
-      int deleteOnHost(T* v)
-      {
-        delete [] v;
-        v = nullptr;
         return 0;
       }
 
