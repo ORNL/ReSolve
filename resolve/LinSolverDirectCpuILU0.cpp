@@ -336,7 +336,7 @@ namespace ReSolve
    *
    * If the original matrix has structural zeros on the diagonal, the ILU0
    * analysis will add diagonal elements and set them to `zero_diagonal_`
-   * value. The default is set in `Common.hpp`. This function allows user to change that.
+   * value. The default is 1e-6, this function allows user to change that.
    *
    * @param z - small value approximating zero
    * @return int - returns status code
