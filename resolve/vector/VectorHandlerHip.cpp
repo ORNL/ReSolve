@@ -10,37 +10,37 @@
 namespace ReSolve {
   using out = io::Logger;
 
-  /** 
-   * @brief empty constructor that does absolutely nothing        
+  /**
+   * @brief empty constructor that does absolutely nothing
    */
   VectorHandlerHip::VectorHandlerHip()
   {
   }
 
-  /** 
+  /**
    * @brief constructor
-   * 
-   * @param new_workspace - workspace to be set     
+   *
+   * @param new_workspace - workspace to be set
    */
   VectorHandlerHip:: VectorHandlerHip(LinAlgWorkspaceHIP* new_workspace)
   {
     workspace_ = new_workspace;
   }
 
-  /** 
-   * @brief destructor     
+  /**
+   * @brief destructor
    */
   VectorHandlerHip::~VectorHandlerHip()
   {
     //delete the workspace TODO
   }
 
-  /** 
+  /**
    * @brief dot product of two vectors i.e, a = x^Ty
-   * 
+   *
    * @param[in] x The first vector
    * @param[in] y The second vector
-   * 
+   *
    * @return dot product (real number) of _x_ and _y_
    */
 
@@ -49,60 +49,60 @@ namespace ReSolve {
     rocblas_handle handle_rocblas = workspace_->getRocblasHandle();
     double nrm = 0.0;
     rocblas_status st= rocblas_ddot (handle_rocblas,  x->getSize(), x->getData(memory::DEVICE), 1, y->getData(memory::DEVICE), 1, &nrm);
-    
+
     if (st!=0) {printf("dot product crashed with code %d \n", st);}
     return nrm;
   }
 
-  /** 
+  /**
    * @brief scale a vector by a constant i.e, x = alpha*x where alpha is a constant
-   * 
+   *
    * @param[in] alpha The constant
    * @param[in,out] x The vector
-   * 
+   *
    */
   void VectorHandlerHip::scal(const real_type* alpha, vector::Vector* x)
   {
     rocblas_handle handle_rocblas =  workspace_->getRocblasHandle();
     rocblas_status st = rocblas_dscal(handle_rocblas, x->getSize(), alpha, x->getData(memory::DEVICE), 1);
-    
+
     if (st!=0) {
       ReSolve::io::Logger::error() << "scal crashed with code " << st << "\n";
     }
   }
 
-  /** 
+  /**
    * @brief compute infinity norm of a vector (i.e., find an entry with largest absolute value)
-   * 
+   *
    * @param[in] The vector
    *
    * @return infinity norm (real number) of _x_
-   * 
+   *
    */
   real_type VectorHandlerHip::infNorm(vector::Vector* x)
   {
 
-    if (workspace_->getNormBufferState() == false) { // not allocated  
+    if (workspace_->getNormBufferState() == false) { // not allocated
       real_type* buffer;
       mem_.allocateArrayOnDevice(&buffer, 1024);
       workspace_->setNormBuffer(buffer);
       workspace_->setNormBufferState(true);
     }
     real_type norm;
-    vector_inf_norm(x->getSize(),  
-                    x->getData(memory::DEVICE), 
+    vector_inf_norm(x->getSize(),
+                    x->getData(memory::DEVICE),
                     workspace_->getNormBuffer(),
                     &norm);
     return norm;
   }
 
-  /** 
+  /**
    * @brief axpy i.e, y = alpha*x + y where alpha is a constant
-   * 
+   *
    * @param[in] alpha The constant
    * @param[in] x The first vector
    * @param[in,out] y The second vector (result is return in y)
-   * 
+   *
    */
   void VectorHandlerHip::axpy(const  real_type* alpha, vector::Vector* x, vector::Vector* y)
   {
@@ -114,16 +114,16 @@ namespace ReSolve {
                   1,
                   y->getData(memory::DEVICE),
                   1);
-    
+
   }
 
-  /** 
+  /**
    * @brief gemv computes matrix-vector product where both matrix and vectors are dense.
    *        i.e., x = beta*x +  alpha*V*y
    *
    * @param[in] Transpose - yes (T) or no (N)
    * @param[in] n Number of rows in (non-transposed) matrix
-   * @param[in] k Number of columns in (non-transposed)   
+   * @param[in] k Number of columns in (non-transposed)
    * @param[in] alpha Constant real number
    * @param[in] beta Constant real number
    * @param[in] V Multivector containing the matrix, organized columnwise
@@ -131,8 +131,8 @@ namespace ReSolve {
    * @param[in,out] x Vector, n x 1 if N and k x 1 if T
    *
    * @pre   V is stored colum-wise, _n_ > 0, _k_ > 0
-   * 
-   */  
+   *
+   */
   void VectorHandlerHip::gemv(char transpose,
                               index_type n,
                               index_type k,
@@ -178,9 +178,9 @@ namespace ReSolve {
     }
   }
 
-  /** 
+  /**
    * @brief mass (bulk) axpy i.e, y = y - x*alpha where  alpha is a vector
-   * 
+   *
    * @param[in] size number of elements in y
    * @param[in] alpha vector size k x 1
    * @param[in] x (multi)vector size size x k
@@ -194,7 +194,7 @@ namespace ReSolve {
     using namespace constants;
     if (k < 200) {
       mass_axpy(size, k, x->getData(memory::DEVICE), y->getData(memory::DEVICE),alpha->getData(memory::DEVICE));
-    
+
     } else {
       rocblas_handle handle_rocblas =  workspace_->getRocblasHandle();
       rocblas_dgemm(handle_rocblas,
@@ -203,23 +203,23 @@ namespace ReSolve {
                     size,       // m
                     1,          // n
                     k,      // k
-                    &MINUSONE, // alpha
+                    &MINUS_ONE, // alpha
                     x->getData(memory::DEVICE), // A
                     size,       // lda
                     alpha->getData(memory::DEVICE), // B
                     k,      // ldb
                     &ONE,
                     y->getData(memory::DEVICE),          // c
-                    size);      // ldc     
-    
+                    size);      // ldc
+
     }
   }
 
-  /** 
+  /**
    * @brief mass (bulk) dot product i.e,  V^T x, where V is n x k dense multivector
    * (a dense multivector consisting of k vectors size n) and x is k x 2 dense
    * multivector (a multivector consisiting of two vectors size n each)
-   * 
+   *
    * @param[in] size Number of elements in a single vector in V
    * @param[in] V Multivector; k vectors size n x 1 each
    * @param[in] k Number of vectors in V
@@ -250,8 +250,8 @@ namespace ReSolve {
                     size,    //ldb
                     &ZERO,
                     res->getData(memory::DEVICE),     //c
-                    k);  //ldc 
-    
+                    k);  //ldc
+
     }
   }
 

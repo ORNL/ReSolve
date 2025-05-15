@@ -12,7 +12,7 @@
 #include <resolve/LinSolverDirectCuSolverGLU.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 
-// this updates the matrix values to simulate what CFD/optimization software does. 
+// this updates the matrix values to simulate what CFD/optimization software does.
 
 using namespace ReSolve::constants;
 
@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
       } else {
         ReSolve::io::updateMatrixFromFile(mat_file, A_exp);
       }
-      std::cout<<"Updating values of A_coo!"<<std::endl; 
+      std::cout<<"Updating values of A_coo!"<<std::endl;
       A->copyValues(A_exp->getValues(ReSolve::memory::HOST), ReSolve::memory::HOST, ReSolve::memory::HOST);
       //ReSolve::io::updateMatrixFromFile(mat_file, A);
       ReSolve::io::updateArrayFromFile(rhs_file, &rhs);
@@ -108,17 +108,17 @@ int main(int argc, char *argv[])
     // Copy matrix data to device
     A->syncData(ReSolve::memory::DEVICE);
 
-    std::cout << "Finished reading the matrix and rhs, size: " << A->getNumRows() << " x "<< A->getNumColumns() 
-              << ", nnz: "       << A->getNnz() 
+    std::cout << "Finished reading the matrix and rhs, size: " << A->getNumRows() << " x "<< A->getNumColumns()
+              << ", nnz: "       << A->getNnz()
               << ", symmetric? " << A->symmetric()
               << ", Expanded? "  << A->expanded() << std::endl;
     mat_file.close();
     rhs_file.close();
 
     // Update host and device data.
-    if (i < 1) { 
+    if (i < 1) {
       vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
-    } else { 
+    } else {
       vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
     }
     std::cout << "CSR matrix loaded. Expanded NNZ: " << A->getNnz() << std::endl;
@@ -136,27 +136,27 @@ int main(int argc, char *argv[])
       if (L == nullptr) {printf("ERROR");}
       index_type* P = KLU->getPOrdering();
       index_type* Q = KLU->getQOrdering();
-      GLU->setup(A, L, U, P, Q); 
+      GLU->setup(A, L, U, P, Q);
       status = GLU->solve(vec_rhs, vec_x);
-      std::cout<<"GLU solve status: "<<status<<std::endl;      
+      std::cout<<"GLU solve status: "<<status<<std::endl;
       //      status = KLU->solve(vec_rhs, vec_x);
-      //    std::cout<<"KLU solve status: "<<status<<std::endl;      
+      //    std::cout<<"KLU solve status: "<<status<<std::endl;
     } else {
       //status =  KLU->refactorize();
       std::cout<<"Using CUSOLVER GLU"<<std::endl;
       status = GLU->refactorize();
-      std::cout<<"CUSOLVER GLU refactorization status: "<<status<<std::endl;      
+      std::cout<<"CUSOLVER GLU refactorization status: "<<status<<std::endl;
       status = GLU->solve(vec_rhs, vec_x);
-      std::cout<<"CUSOLVER GLU solve status: "<<status<<std::endl;      
+      std::cout<<"CUSOLVER GLU solve status: "<<status<<std::endl;
     }
     vec_r->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
 
 
     matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
-    matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, ReSolve::memory::DEVICE); 
+    matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUS_ONE, ReSolve::memory::DEVICE);
 
-    std::cout << "\t 2-Norm of the residual: " 
-              << std::scientific << std::setprecision(16) 
+    std::cout << "\t 2-Norm of the residual: "
+              << std::scientific << std::setprecision(16)
               << sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE)) << "\n";
   }
 

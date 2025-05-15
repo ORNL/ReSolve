@@ -50,7 +50,7 @@ int main(int argc, char *argv[] )
 
   ReSolve::LinSolverDirectKLU* KLU = new ReSolve::LinSolverDirectKLU;
   ReSolve::LinSolverDirectRocSolverRf* Rf = new ReSolve::LinSolverDirectRocSolverRf(workspace_HIP);
-  
+
   real_type res_nrm;
   real_type b_nrm;
 
@@ -100,17 +100,17 @@ int main(int argc, char *argv[] )
     // Copy matrix data to device
     A->syncData(ReSolve::memory::DEVICE);
 
-    std::cout << "Finished reading the matrix and rhs, size: " << A->getNumRows() << " x "<< A->getNumColumns() 
-              << ", nnz: "       << A->getNnz() 
+    std::cout << "Finished reading the matrix and rhs, size: " << A->getNumRows() << " x "<< A->getNumColumns()
+              << ", nnz: "       << A->getNnz()
               << ", symmetric? " << A->symmetric()
               << ", Expanded? "  << A->expanded() << std::endl;
     mat_file.close();
     rhs_file.close();
 
     // Update host and device data.
-    if (i < 2) { 
+    if (i < 2) {
       vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
-    } else { 
+    } else {
       vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
     }
     std::cout << "CSR matrix loaded. Expanded NNZ: " << A->getNnz() << std::endl;
@@ -124,66 +124,66 @@ int main(int argc, char *argv[] )
       status = KLU->factorize();
       std::cout << "KLU factorization status: " << status << std::endl;
       status = KLU->solve(vec_rhs, vec_x);
-      std::cout << "KLU solve status: " << status << std::endl;      
+      std::cout << "KLU solve status: " << status << std::endl;
       if (i == 1) {
         ReSolve::matrix::Csc* L = (ReSolve::matrix::Csc*) KLU->getLFactor();
         ReSolve::matrix::Csc* U = (ReSolve::matrix::Csc*) KLU->getUFactor();
         index_type* P = KLU->getPOrdering();
         index_type* Q = KLU->getQOrdering();
         vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-        Rf->setup(A, L, U, P, Q, vec_rhs); 
+        Rf->setup(A, L, U, P, Q, vec_rhs);
         Rf->refactorize();
       }
     } else {
       std::cout << "Using rocsolver rf" << std::endl;
       status = Rf->refactorize();
-      std::cout << "rocsolver rf refactorization status: " << status << std::endl;      
+      std::cout << "rocsolver rf refactorization status: " << status << std::endl;
       status = Rf->solve(vec_rhs, vec_x);
-      std::cout << "rocsolver rf solve status: " << status << std::endl;      
+      std::cout << "rocsolver rf solve status: " << status << std::endl;
     }
 
     // Check accuracy of the solution
     vec_r->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
     matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
-    matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, ReSolve::memory::DEVICE); 
+    matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUS_ONE, ReSolve::memory::DEVICE);
     res_nrm = sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE));
     b_nrm = sqrt(vector_handler->dot(vec_rhs, vec_rhs, ReSolve::memory::DEVICE));
-    std::cout << "\t 2-Norm of the residual: " 
-              << std::scientific << std::setprecision(16) 
+    std::cout << "\t 2-Norm of the residual: "
+              << std::scientific << std::setprecision(16)
               << res_nrm/b_nrm << "\n";
     if (!isnan(res_nrm)) {
        if (res_nrm/b_nrm > 1e-7 ) {
          std::cout << "\n \t !!! ALERT !!! Residual norm is too large; "
                    << "redoing KLU symbolic and numeric factorization. !!! ALERT !!! \n\n";
-       
+
          KLU->setup(A);
          status = KLU->analyze();
          std::cout << "KLU analysis status: " << status << std::endl;
          status = KLU->factorize();
          std::cout << "KLU factorization status: " << status << std::endl;
          status = KLU->solve(vec_rhs, vec_x);
-         std::cout << "KLU solve status: " << status << std::endl;      
-         
+         std::cout << "KLU solve status: " << status << std::endl;
+
          vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
          vec_r->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
 
          matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
 
-         matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUSONE, ReSolve::memory::DEVICE); 
+         matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUS_ONE, ReSolve::memory::DEVICE);
          res_nrm = sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE));
-         
+
          std::cout << "\t New residual norm: "
            << std::scientific << std::setprecision(16)
            << res_nrm/b_nrm << "\n";
 
 
-         ReSolve::matrix::Csc* L = (ReSolve::matrix::Csc*) KLU->getLFactor();         
+         ReSolve::matrix::Csc* L = (ReSolve::matrix::Csc*) KLU->getLFactor();
          ReSolve::matrix::Csc* U = (ReSolve::matrix::Csc*) KLU->getUFactor();
 
          index_type* P = KLU->getPOrdering();
          index_type* Q = KLU->getQOrdering();
 
-         Rf->setup(A, L, U, P, Q, vec_rhs); 
+         Rf->setup(A, L, U, P, Q, vec_rhs);
        }
     }
 

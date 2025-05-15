@@ -104,7 +104,7 @@ namespace ReSolve {
 
       status = cusparseSpMV_bufferSize(handle_cusparse,
                                        CUSPARSE_OPERATION_NON_TRANSPOSE,
-                                       &MINUSONE,
+                                       &MINUS_ONE,
                                        matA,
                                        vecx,
                                        &ONE,

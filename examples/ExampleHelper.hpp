@@ -348,7 +348,7 @@ namespace ReSolve
                                                ReSolve::memory::MemorySpace memspace)
         {
           using namespace ReSolve::constants;
-          mh_.matvec(&A, &x, &r, &ONE, &MINUSONE, memspace); // r := A * x - r
+          mh_.matvec(&A, &x, &r, &ONE, &MINUS_ONE, memspace); // r := A * x - r
           return norm2(r, memspace);
         }
 
