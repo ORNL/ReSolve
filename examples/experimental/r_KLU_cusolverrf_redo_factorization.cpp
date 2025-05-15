@@ -168,8 +168,8 @@ int main(int argc, char *argv[] )
     std::cout << "\t2-Norm of the residual: "
               << std::scientific << std::setprecision(16)
               << res_nrm/b_nrm << "\n";
-    if (((res_nrm/b_nrm > REDO_FACTOR_TOL) && (!std::isnan(res_nrm))) || (status_refactor != 0 )) {
-      if ((res_nrm/b_nrm > REDO_FACTOR_TOL )) {
+    if (((res_nrm/b_nrm > 1e-7) && (!std::isnan(res_nrm))) || (status_refactor != 0 )) {
+      if ((res_nrm/b_nrm > 1e-7 )) {
         std::cout << "\n \t !!! ALERT !!! Residual norm is too large; redoing KLU symbolic and numeric factorization. !!! ALERT !!! \n \n";
       } else {
         std::cout << "\n \t !!! ALERT !!! cuSolverRf crashed; redoing KLU symbolic and numeric factorization. !!! ALERT !!! \n \n";

@@ -152,7 +152,7 @@ int main(int argc, char *argv[] )
               << std::scientific << std::setprecision(16)
               << res_nrm/b_nrm << "\n";
     if (!isnan(res_nrm)) {
-       if (res_nrm/b_nrm > REDO_FACTOR_TOL) {
+       if (res_nrm/b_nrm > 1e-7) {
          std::cout << "\n \t !!! ALERT !!! Residual norm is too large; "
                    << "redoing KLU symbolic and numeric factorization. !!! ALERT !!! \n\n";
 

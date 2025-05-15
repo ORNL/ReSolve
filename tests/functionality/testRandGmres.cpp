@@ -113,7 +113,7 @@ int runTest(int argc, char *argv[])
 
   matrix_handler.setValuesChanged(true, memspace);
 
-  real_type tol = constants::LOOSE_TOL;
+  real_type tol = 1000*constants::MACHINE_EPSILON;
   real_type test_pass_tol = 10.0*tol; // test results tolerance
 
   // Configure preconditioner
