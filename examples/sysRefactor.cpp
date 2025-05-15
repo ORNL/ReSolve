@@ -200,9 +200,6 @@ int sysRefactor(int argc, char *argv[])
   if (is_iterative_refinement) {
     solver.setRefinementMethod("fgmres", "cgs2");
     solver.getIterativeSolver().setCliParam("restart", "100");
-    if (hw_backend == "CUDA") {
-      solver.getIterativeSolver().setTol(constants::MACHINE_EPSILON);
-    }
   }
 
   RESOLVE_RANGE_PUSH(__FUNCTION__);
