@@ -35,20 +35,20 @@ namespace ReSolve {
       MatrixHandlerHip(LinAlgWorkspaceHIP* workspace);
       virtual ~MatrixHandlerHip();
 
-      int csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr);
+      int csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr) override;
 
-      int transpose(matrix::Csr* A, matrix::Csr* At);
+      int transpose(matrix::Csr* A, matrix::Csr* At) override;
 
-      int addConst(matrix::Sparse* A, real_type alpha);
+      int addConst(matrix::Sparse* A, real_type alpha) override;
       virtual int matvec(matrix::Sparse* A,
                          vector_type* vec_x,
                          vector_type* vec_result,
                          const real_type* alpha,
-                         const real_type* beta);
+                         const real_type* beta) override;
 
-      virtual int matrixInfNorm(matrix::Sparse *A, real_type* norm);
+      virtual int matrixInfNorm(matrix::Sparse *A, real_type* norm) override;
 
-      void setValuesChanged(bool isValuesChanged);
+      void setValuesChanged(bool isValuesChanged) override;
 
     private:
 

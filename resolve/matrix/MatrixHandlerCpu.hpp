@@ -35,19 +35,19 @@ namespace ReSolve {
       MatrixHandlerCpu(LinAlgWorkspaceCpu* workspace);
       virtual ~MatrixHandlerCpu();
 
-      int csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr);
+      int csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr) override;
 
       int transpose(matrix::Csr* A, matrix::Csr* At) override;
 
-      int addConst(matrix::Sparse* A, real_type alpha);
+      int addConst(matrix::Sparse* A, real_type alpha) override;
 
       virtual int matvec(matrix::Sparse* A,
                  vector_type* vec_x,
                  vector_type* vec_result,
                  const real_type* alpha,
-                 const real_type* beta);
-      virtual int matrixInfNorm(matrix::Sparse *A, real_type* norm);
-      void setValuesChanged(bool isValuesChanged);
+                 const real_type* beta) override;
+      virtual int matrixInfNorm(matrix::Sparse *A, real_type* norm) override;
+      void setValuesChanged(bool isValuesChanged) override;
 
     private:
       LinAlgWorkspaceCpu* workspace_{nullptr};
