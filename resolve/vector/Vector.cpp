@@ -19,8 +19,8 @@ namespace ReSolve { namespace vector {
     h_data_(nullptr),
     gpu_updated_(false),
     cpu_updated_(false),
-    owns_gpu_data_(false),
-    owns_cpu_data_(false)
+    owns_gpu_data_(true),
+    owns_cpu_data_(true)
   {
   }
 
@@ -38,8 +38,8 @@ namespace ReSolve { namespace vector {
       h_data_(nullptr),
       gpu_updated_(false),
       cpu_updated_(false),
-      owns_gpu_data_(false),
-      owns_cpu_data_(false)
+      owns_gpu_data_(true),
+      owns_cpu_data_(true)
   {
   }
 
@@ -494,8 +494,15 @@ namespace ReSolve { namespace vector {
    */
   int Vector::setCurrentSize(index_type new_n_current)
   {
+    assert(owns_cpu_data_ && owns_gpu_data_ 
+           && "Cannot resize if not owning the data.");
+    if (!owns_cpu_data_ || !owns_gpu_data_) {
+      out::error() << "Cannot resize if not owning the data.\n";
+    }
     if (new_n_current > n_) {
-      return -1;
+      out::error() << "Trying to resize vector to " << new_n_current 
+                   << " elements but memory allocated only for " << n_ << "\n";
+      return 1;
     } else {
       n_current_ = new_n_current;
       return 0;
