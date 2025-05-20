@@ -108,7 +108,7 @@ namespace ReSolve
       real_type* h_c_{nullptr};
       real_type* h_s_{nullptr};
       real_type* h_rs_{nullptr};
-      real_type* d_aux_{nullptr};
+      vector_type* vec_aux_{nullptr};
 
       GramSchmidt* GS_{nullptr};
       LinSolverDirect* LU_solver_{nullptr};

@@ -241,18 +241,11 @@ namespace ReSolve
         mem_.deviceSynchronize();
         GS_->orthogonalize(k_rand_, vec_S_, h_H_, i);
         // now post-process
-        if (memspace_ == memory::DEVICE) {
-          mem_.copyArrayHostToDevice(d_aux_, &h_H_[i * (restart_ + 1)], i + 2);
-        } else {
-          mem_.copyArrayHostToHost(d_aux_, &h_H_[i * (restart_ + 1)], i + 2);
-        }
-        vec_z->setData(d_aux_, memspace_);
-        vec_z->setCurrentSize(i + 1);
+        vec_aux_->copyDataFrom(&h_H_[i * (restart_ + 1)], memory::HOST, memspace_);
+
         // V(:, i+1) = w - V(:, 1:i)*d_H_col = V(:, i+1) - d_H_col*V(:,1:i);
+        vector_handler_->gemv('N', n_, i + 1, &MINUS_ONE, &ONE, vec_V_, vec_aux_, vec_v, memspace_ );
 
-        vector_handler_->gemv('N', n_, i + 1, &MINUS_ONE, &ONE, vec_V_, vec_z, vec_v, memspace_ );
-
-        vec_z->setCurrentSize(n_);
         t = 1.0 / h_H_[i * (restart_ + 1) + i + 1];
         vector_handler_->scal(&t, vec_v, memspace_);
         mem_.deviceSynchronize();
@@ -645,15 +638,14 @@ namespace ReSolve
       vec_Z_ = new vector_type(n_);
     }
     vec_Z_->allocate(memspace_);
+    vec_aux_ = new vector_type(restart_ + 1);
+    vec_aux_->allocate(memspace_);
+
     h_H_  = new real_type[restart_ * (restart_ + 1)];
     h_c_  = new real_type[restart_];      // needed for givens
     h_s_  = new real_type[restart_];      // same
     h_rs_ = new real_type[restart_ + 1];  // for residual norm history
-    if (memspace_ == memory::DEVICE) {
-      mem_.allocateArrayOnDevice(&d_aux_, restart_ + 1);
-    } else {
-      d_aux_  = new real_type[restart_ + 1];
-    }
+
     return 0;
   }
 
@@ -663,21 +655,17 @@ namespace ReSolve
     delete [] h_c_ ;
     delete [] h_s_ ;
     delete [] h_rs_;
-    if (memspace_ == memory::DEVICE) {
-      mem_.deleteOnDevice(d_aux_);
-    } else {
-      delete [] d_aux_;
-    }
     delete vec_V_;
     delete vec_Z_;
+    delete vec_aux_;
 
     h_H_   = nullptr;
     h_c_   = nullptr;
     h_s_   = nullptr;
     h_rs_  = nullptr;
-    d_aux_ = nullptr;
     vec_V_   = nullptr;
     vec_Z_   = nullptr;
+    vec_aux_ = nullptr;
 
     return 0;
   }
