@@ -260,7 +260,8 @@ int main(int argc, char* argv[])
     std::cout << "Result is not a finite number!\n";
     error_sum++;
   }
-  if ((scaled_residual_norm_one > DEFAULT_TOL) || (scaled_residual_norm_two > DEFAULT_TOL)) {
+  real_type tol = 100 * ReSolve::constants::MACHINE_EPSILON;
+  if ((scaled_residual_norm_one > tol) || (scaled_residual_norm_two > tol)) {
     std::cout << "Result inaccurate!\n";
     error_sum++;
   }
