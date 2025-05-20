@@ -120,6 +120,16 @@ namespace ReSolve
     return 0;
   }
 
+  /**
+   * @brief Solve linear system A * x = rhs
+   * 
+   * @param rhs - right hand side vector
+   * @param x   - solution vector
+   * @return int - zero if successful, error code otherwise
+   * 
+   * @invariant rhs vector is unchanged.
+   * @post x is overwritten with the solution to the linear system.
+   */
   int  LinSolverIterativeRandFGMRES::solve(vector_type* rhs, vector_type* x)
   {
     using namespace constants;
@@ -137,7 +147,6 @@ namespace ReSolve
     real_type t;
     real_type rnorm;
     real_type bnorm;
-    // real_type rnorm_aux;
     real_type tolrel;
     vector_type* vec_v = new vector_type(n_);
     vector_type* vec_z = new vector_type(n_);
@@ -206,6 +215,7 @@ namespace ReSolve
       vector_handler_->scal(&t, vec_S_, memspace_);
 
       mem_.deviceSynchronize();
+
       // initialize norm history
       h_rs_[0] = rnorm;
       i = -1;
@@ -240,7 +250,9 @@ namespace ReSolve
         }
         mem_.deviceSynchronize();
         GS_->orthogonalize(k_rand_, vec_S_, h_H_, i);
+
         // now post-process
+        vec_aux_->setCurrentSize(i + 1);
         vec_aux_->copyDataFrom(&h_H_[i * (restart_ + 1)], memory::HOST, memspace_);
 
         // V(:, i+1) = w - V(:, 1:i)*d_H_col = V(:, i+1) - d_H_col*V(:,1:i);
@@ -326,7 +338,6 @@ namespace ReSolve
 
       /* test solution */
       if(rnorm <= tolrel || it >= maxit_) {
-        // rnorm_aux = rnorm;
         outer_flag = 0;
       }
 
