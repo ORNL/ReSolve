@@ -256,7 +256,6 @@ namespace ReSolve {
     index_type n = A->getNumColumns();
     index_type nnz = A->getNnz();
     rocsparse_status status;
-    void* buffer_transpose = workspace_->getTransposeBufferWorkspace();
     bool allocated = workspace_->isTransposeBufferAllocated();
     if (!allocated) {
       // allocate transpose buffer
