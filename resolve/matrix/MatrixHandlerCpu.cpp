@@ -140,10 +140,10 @@ namespace ReSolve
    *
    * @authors Slaven Peles <peless@ornl.gov>, Daniel Reynolds (SMU), and
    * David Gardner and Carol Woodward (LLNL)
-   * 
+   *
    * @param[in]  A_csc - pointer to the CSC matrix
-   * @param[out] A_csr - pointer to an allocated CSR matrix 
-   * 
+   * @param[out] A_csr - pointer to an allocated CSR matrix
+   *
    * @return 0 if successful, 1 otherwise
    */
   int MatrixHandlerCpu::csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr)
@@ -291,6 +291,59 @@ namespace ReSolve
     return 0;
   }
 
+  /**
+   * @brief Left diagonal scaling of a sparse CSR matrix
+   *
+   * @param[in]  diag - vector representing the diagonal matrix
+   * @param[in, out]  A - Sparse CSR matrix
+   *
+   * @pre The diagonal vector must be of the same size as the number of rows in the matrix.
+   * @pre A is unscaled and allocated
+   * @post A is scaled
+   * @invariant diag
+   *
+   * @return 0 if successful, 1 otherwise
+   */
+  int MatrixHandlerCpu::leftDiagonalScale(vector_type* diag, matrix::Csr* A)
+  {
+    real_type* diag_data = diag->getData(memory::HOST);
+    index_type* rowPtrA = A->getRowData(memory::HOST);
+    real_type*  valuesA = A->getValues( memory::HOST);
+
+    for (index_type i = 0; i < A->getNumRows(); ++i) {
+      for (index_type j = rowPtrA[i]; j < rowPtrA[i+1]; ++j) {
+        valuesA[j] *= diag_data[i];
+      }
+    }
+    return 0;
+  }
+
+  /**
+   * @brief Right diagonal scaling of a sparse CSR matrix
+   *
+   * @param[in]  A - Sparse CSR matrix
+   * @param[in]  diag - vector representing the diagonal matrix
+   *
+   * @pre The diagonal vector must be of the same size as the number of columns in the matrix.
+   * @pre A is unscaled
+   * @post A is scaled
+   * @invariant diag
+   *
+   * @return 0 if successful, 1 otherwise
+   */
+  int MatrixHandlerCpu::rightDiagonalScale(matrix::Csr* A, vector_type* diag)
+  {
+    real_type* diag_data = diag->getData(memory::HOST);
+    index_type* rowPtrA = A->getRowData(memory::HOST);
+    index_type* colIdxA = A->getColData(memory::HOST);
+    real_type*  valuesA = A->getValues( memory::HOST);
+
+    for (index_type i = 0; i < A->getNumRows(); ++i) {
+      for (index_type j = rowPtrA[i]; j < rowPtrA[i+1]; ++j) {
+        valuesA[j] *= diag_data[colIdxA[j]];
+      }
+    }
+  }
   /**
    * @brief Add a constant to all nonzero values in the matrix
    *
