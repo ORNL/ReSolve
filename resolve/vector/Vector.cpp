@@ -460,7 +460,7 @@ namespace ReSolve { namespace vector {
    * @param[in] i          - Index of a vector in a multivector
    * @param[in] memspace   - Memory space of the pointer (HOST or DEVICE)  
    *
-   * @return pointer to the `i`th vector data (HOST or DEVICE).
+   * @return A pointer to the `i`th vector data (HOST or DEVICE).
    *
    * @pre `i` < `k_`, i.e. `i` is smaller than the total number of vectors in multivector.
    * 
