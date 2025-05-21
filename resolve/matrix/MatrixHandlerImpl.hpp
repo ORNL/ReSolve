@@ -36,6 +36,10 @@ namespace ReSolve {
 
       virtual int transpose(matrix::Csr* A, matrix::Csr* At) = 0;
 
+      virtual int leftDiagonalScale(vector_type* diag, matrix::Csr* A) = 0;
+
+      virtual int rightDiagonalScale(matrix::Csr* A, vector_type* diag) = 0;
+
       virtual int addConst(matrix::Sparse* A, real_type alpha) = 0;
 
       virtual int matvec(matrix::Sparse* A,

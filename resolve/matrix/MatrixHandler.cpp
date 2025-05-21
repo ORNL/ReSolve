@@ -253,6 +253,72 @@ namespace ReSolve {
   }
 
   /**
+   * @brief Left diagonal scaling of a sparse CSR matrix
+   *
+   * @param[in]  A - Sparse CSR matrix
+   * @param[in]  diag - vector representing the diagonal matrix
+   * @param[in]  memspace - Device where the operation is computed
+   *
+   * @pre The diagonal vector must be of the same size as the number of rows in the matrix.
+   * @pre A is unscaled and allocated
+   * @post A is scaled
+   * @invariant diag
+   *
+   * @return 0 if successful, 1 otherwise
+   */
+  int MatrixHandler::leftDiagonalScale(vector_type* diag, matrix::Csr* A, memory::MemorySpace memspace)
+  {
+    assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW &&
+           "Matrix has to be in CSR format for left diagonal scaling.\n");
+    assert(diag->getSize() == A->getNumRows() && "Diagonal vector must be of the same size as the number of rows in the matrix.");
+    assert(A->getValues(memspace) != nullptr && "Matrix values are null!\n");
+    assert(diag->getData(memspace) != nullptr && "Diagonal vector data is null!\n");
+    using namespace ReSolve::memory;
+    switch (memspace) {
+      case HOST:
+        return cpuImpl_->leftDiagonalScale(diag, A);
+        break;
+      case DEVICE:
+        return devImpl_->leftDiagonalScale(diag, A);
+        break;
+    }
+    return 1;
+  }
+
+  /**
+   * @brief Right diagonal scaling of a sparse CSR matrix
+   *
+   * @param[in]  A - Sparse CSR matrix
+   * @param[in]  diag - vector representing the diagonal matrix
+   * @param[in]  memspace - Device where the operation is computed
+   *
+   * @pre The diagonal vector must be of the same size as the number of columns in the matrix.
+   * @pre A is unscaled and allocated
+   * @post A is scaled
+   * @invariant diag
+   *
+   * @return 0 if successful, 1 otherwise
+   */
+  int MatrixHandler::rightDiagonalScale(matrix::Csr* A, vector_type* diag, memory::MemorySpace memspace)
+  {
+    assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW &&
+           "Matrix has to be in CSR format for right diagonal scaling.\n");
+    assert(diag->getSize() == A->getNumColumns() && "Diagonal vector must be of the same size as the number of columns in the matrix.");
+    assert(A->getValues(memspace) != nullptr && "Matrix values are null!\n");
+    assert(diag->getData(memspace) != nullptr && "Diagonal vector data is null!\n");
+    using namespace ReSolve::memory;
+    switch (memspace) {
+      case HOST:
+        return cpuImpl_->rightDiagonalScale(A, diag);
+        break;
+      case DEVICE:
+        return devImpl_->rightDiagonalScale(A, diag);
+        break;
+    }
+    return 1;
+  }
+
+  /**
    * @brief Add a constant to the nonzero values of a csr matrix.
    * @param[in,out] A - Sparse matrix
    * @param[in] alpha - scalar parameter
