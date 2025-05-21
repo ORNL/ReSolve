@@ -60,7 +60,7 @@ namespace ReSolve { namespace vector {
    * @brief get the number of elements in a single vector.
    * 
    * For vectors with changing sizes, set the vector capacity to
-   * maximum expected size.
+   * the maximum expected size.
    * 
    * @return `n_size_` number of elements currently in the vector.
    */
