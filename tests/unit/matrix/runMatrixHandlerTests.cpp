@@ -45,6 +45,7 @@ void runTests(const std::string& backend, ReSolve::tests::TestingResults& result
   result += test.transpose(2048, 1024);
   result += test.transpose(1024, 1200);
   result += test.transpose(1200, 1024);
+  result += test.leftDiagScale(2, 2);
   std::cout << "\n";
 }
 
