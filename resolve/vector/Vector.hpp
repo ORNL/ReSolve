@@ -35,9 +35,9 @@ namespace ReSolve { namespace vector {
       real_type* getData(memory::MemorySpace memspace);
       real_type* getData(index_type i, memory::MemorySpace memspace); // get pointer to i-th vector in multivector
 
+      index_type getCapacity() const;
       index_type getSize() const;
-      index_type getCurrentSize();
-      index_type getNumVectors();
+      index_type getNumVectors() const;
 
       void setDataUpdated(memory::MemorySpace memspace);
       int setData(real_type* data, memory::MemorySpace memspace);
@@ -47,22 +47,22 @@ namespace ReSolve { namespace vector {
       void setToConst(real_type C, memory::MemorySpace memspace);
       void setToConst(index_type i, real_type C, memory::MemorySpace memspace); // set i-th vector to C  - needed for unit tests, Gram Schmidt tests
       int syncData(memory::MemorySpace memspaceOut); 
-      int setCurrentSize(index_type new_n_current);
+      int resize(index_type new_n_current);
       real_type* getVectorData(index_type i, memory::MemorySpace memspace); // get ith vector data out of multivector   
       int copyDataTo(real_type* dest, index_type i, memory::MemorySpace memspace);  
       int copyDataTo(real_type* dest, memory::MemorySpace memspace);  //copy FULL multivector 
     
     private:
-      index_type n_{0}; ///< size
+      index_type n_capacity_{0}; ///< vector capacity
       index_type k_{0}; ///< k_ = 1 for vectors and k_>1 for multivectors (multivectors are accessed column-wise). 
-      index_type n_current_; ///< if vectors dynamically changes size, "current n_" keeps track of this. Needed for some solver implementations. 
+      index_type n_size_; ///< actual size of the vector
       real_type* d_data_{nullptr}; ///< DEVICE data array
       real_type* h_data_{nullptr}; ///< HOST data array
       bool gpu_updated_; ///< DEVICE data flag (updated or not)
       bool cpu_updated_; ///< HOST data flag (updated or not)
 
-      bool owns_gpu_data_{false}; ///< data owneship flag for DEVICE data
-      bool owns_cpu_data_{false}; ///< data ownership flag for HOST data
+      bool owns_gpu_data_{true}; ///< data owneship flag for DEVICE data
+      bool owns_cpu_data_{true}; ///< data ownership flag for HOST data
 
       MemoryHandler mem_; ///< Device memory manager object
   };

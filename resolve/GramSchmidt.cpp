@@ -177,7 +177,7 @@ namespace ReSolve
 
         // copy H_col to aux, we will need it later
         vec_Hcolumn_->setDataUpdated(memspace_);
-        vec_Hcolumn_->setCurrentSize(i + 1);
+        vec_Hcolumn_->resize(i + 1);
         vec_Hcolumn_->copyDataTo(h_aux_, 0, memory::HOST);
         mem_.deviceSynchronize();
 
@@ -218,7 +218,7 @@ namespace ReSolve
         // V[1:i]^T[V[i] w]
         vec_v_->setData(V->getVectorData(i, memspace_), memspace_);
         vec_w_->setData(V->getVectorData(i + 1, memspace_), memspace_);
-        vec_rv_->setCurrentSize(i + 1);
+        vec_rv_->resize(i + 1);
 
         // vector_handler_->massDot2Vec(n, V, i + 1, vec_v_, vec_rv_, memspace_);
         vector_handler_->massDot2Vec(n, V, i + 1, vec_v_, vec_rv_, memspace_);
@@ -240,7 +240,7 @@ namespace ReSolve
           } // for k
           H[ idxmap(i, j, num_vecs_ + 1) ] -= s;
         }   // for j
-        vec_Hcolumn_->setCurrentSize(i + 1);
+        vec_Hcolumn_->resize(i + 1);
         vec_Hcolumn_->copyDataFrom(&H[ idxmap(i, 0, num_vecs_ + 1)], memory::HOST, memspace_);
         vector_handler_->massAxpy(n, vec_Hcolumn_, i + 1, V, vec_w_, memspace_);
 
@@ -267,7 +267,7 @@ namespace ReSolve
       case MGS_PM:
         vec_v_->setData(V->getVectorData(i, memspace_), memspace_);
         vec_w_->setData(V->getVectorData(i + 1, memspace_), memspace_);
-        vec_rv_->setCurrentSize(i + 1);
+        vec_rv_->resize(i + 1);
 
         vector_handler_->massDot2Vec(n, V, i + 1, vec_v_, vec_rv_, memspace_);
         vec_rv_->setDataUpdated(memspace_);
@@ -316,7 +316,7 @@ namespace ReSolve
           H[ idxmap(i, j, num_vecs_ + 1) ] -= h_aux_[j];
         }
 
-        vec_Hcolumn_->setCurrentSize(i + 1);
+        vec_Hcolumn_->resize(i + 1);
         vec_Hcolumn_->copyDataFrom(&H[ idxmap(i, 0, num_vecs_ + 1)], memory::HOST, memspace_);
 
         vector_handler_->massAxpy(n, vec_Hcolumn_, i + 1, V,  vec_w_, memspace_);
@@ -345,7 +345,7 @@ namespace ReSolve
 
         // copy H_col to H
         vec_Hcolumn_->setDataUpdated(memspace_);
-        vec_Hcolumn_->setCurrentSize(i + 1);
+        vec_Hcolumn_->resize(i + 1);
         vec_Hcolumn_->copyDataTo(&H[ idxmap(i, 0, num_vecs_ + 1)], 0, memory::HOST);
         mem_.deviceSynchronize();
 

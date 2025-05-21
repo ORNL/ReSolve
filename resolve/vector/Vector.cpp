@@ -12,9 +12,9 @@ namespace ReSolve { namespace vector {
    * @param[in] n - Number of elements in the vector    
    */
   Vector::Vector(index_type n):
-    n_(n),
+    n_capacity_(n),
     k_(1),
-    n_current_(n_),
+    n_size_(n),
     d_data_(nullptr),
     h_data_(nullptr),
     gpu_updated_(false),
@@ -31,9 +31,9 @@ namespace ReSolve { namespace vector {
    * @param[in] k - Number of vectors in multivector    
    */
   Vector::Vector(index_type n, index_type k)
-    : n_(n),
+    : n_capacity_(n),
       k_(k),
-      n_current_(n_),
+      n_size_(n),
       d_data_(nullptr),
       h_data_(nullptr),
       gpu_updated_(false),
@@ -55,32 +55,38 @@ namespace ReSolve { namespace vector {
 
 
   /** 
+   * @brief Get capacity of a single vector.
+   * 
+   * Vector memory is allocated to `n_capacity_*k_`. This is the maximum
+   * size of elements that (multi)vector can hold.
+   * 
+   * @return `n_capacity_` maximum number of elements in the vector.
+   */
+  index_type Vector::getCapacity() const
+  {
+    return n_capacity_;
+  }
+
+  /** 
    * @brief get the number of elements in a single vector.
    * 
-   * @return _n_, number of elements in the vector.
+   * For vectors with changing sizes, set the vector capacity to
+   * maximum expected size.
+   * 
+   * @return `n_size_` number of elements currently in the vector.
    */
   index_type Vector::getSize() const
   {
-    return n_;
+    return n_size_;
   }
 
   /** 
-   * @brief get the current number of elements in a single vector 
-   * (use only for vectors with changing sizes, allocate for maximum expected size).
+   * @brief Get the number of vectors in multivector.
    * 
-   * @return _n_current_, number of elements currently in thr vector.
+   * @return _k_, number of vectors in multivector, or 1 if the vector is not
+   * a multivector.
    */
-  index_type Vector::getCurrentSize()
-  {
-    return n_current_;
-  }
-
-  /** 
-   * @brief get the total number of vectors in multivector.
-   * 
-   * @return _k_, number of vectors in multivector, or 1 if the vector is not a multivector.
-   */
-  index_type Vector::getNumVectors()
+  index_type Vector::getNumVectors() const
   {
     return k_;
   }
@@ -181,33 +187,33 @@ namespace ReSolve { namespace vector {
 
     if ((memspaceOut == memory::HOST) && (h_data_ == nullptr)) {
       //allocate first
-      h_data_ = new real_type[n_ * k_]; 
+      h_data_ = new real_type[n_capacity_ * k_]; 
       owns_cpu_data_ = true;
     }
     if ((memspaceOut == memory::DEVICE) && (d_data_ == nullptr)) {
       //allocate first
-      mem_.allocateArrayOnDevice(&d_data_, n_ * k_);
+      mem_.allocateArrayOnDevice(&d_data_, n_capacity_ * k_);
       owns_gpu_data_ = true;
     } 
 
     switch(control)  {
       case 0: //cpu->cpu
-        mem_.copyArrayHostToHost(h_data_, data, n_current_ * k_);
+        mem_.copyArrayHostToHost(h_data_, data, n_size_ * k_);
         cpu_updated_ = true;
         gpu_updated_ = false;
         break;
       case 2: //gpu->cpu
-        mem_.copyArrayDeviceToHost(h_data_, data, n_current_ * k_);
+        mem_.copyArrayDeviceToHost(h_data_, data, n_size_ * k_);
         cpu_updated_ = true;
         gpu_updated_ = false;
         break;
       case 1: //cpu->gpu
-        mem_.copyArrayHostToDevice(d_data_, data, n_current_ * k_);
+        mem_.copyArrayHostToDevice(d_data_, data, n_size_ * k_);
         gpu_updated_ = true;
         cpu_updated_ = false;
         break;
       case 3: //gpu->gpu
-        mem_.copyArrayDeviceToDevice(d_data_, data, n_current_ * k_);
+        mem_.copyArrayDeviceToDevice(d_data_, data, n_size_ * k_);
         gpu_updated_ = true;
         cpu_updated_ = false;
         break;
@@ -257,10 +263,10 @@ namespace ReSolve { namespace vector {
       owns_gpu_data_ = true;
     }
     if (memspace == memory::HOST) {
-      return &h_data_[i * n_current_];
+      return &h_data_[i * n_size_];
     } else {
       if (memspace == memory::DEVICE){
-        return &d_data_[i * n_current_];
+        return &d_data_[i * n_size_];
       } else {
         return nullptr;
       }
@@ -291,10 +297,10 @@ namespace ReSolve { namespace vector {
         }
         if (d_data_ == nullptr) {
           //allocate first
-          mem_.allocateArrayOnDevice(&d_data_, n_ * k_);
+          mem_.allocateArrayOnDevice(&d_data_, n_capacity_ * k_);
           owns_gpu_data_ = true;
         } 
-        mem_.copyArrayHostToDevice(d_data_, h_data_, n_current_ * k_);
+        mem_.copyArrayHostToDevice(d_data_, h_data_, n_size_ * k_);
         gpu_updated_ = true;
         break;
       case HOST: //cuda->cpu
@@ -307,10 +313,10 @@ namespace ReSolve { namespace vector {
         }
         if (h_data_ == nullptr) {
           //allocate first
-          h_data_ = new real_type[n_ * k_];
+          h_data_ = new real_type[n_capacity_ * k_];
           owns_cpu_data_ = true;
         }
-        mem_.copyArrayDeviceToHost(h_data_, d_data_, n_current_ * k_);
+        mem_.copyArrayDeviceToHost(h_data_, d_data_, n_size_ * k_);
         cpu_updated_ = true;
         break;
       default:
@@ -331,12 +337,12 @@ namespace ReSolve { namespace vector {
     switch (memspace) {
       case HOST:
         delete [] h_data_;
-        h_data_ = new real_type[n_ * k_]; 
+        h_data_ = new real_type[n_capacity_ * k_]; 
         owns_cpu_data_ = true;
         break;
       case DEVICE:
         mem_.deleteOnDevice(d_data_);
-        mem_.allocateArrayOnDevice(&d_data_, n_ * k_);
+        mem_.allocateArrayOnDevice(&d_data_, n_capacity_ * k_);
         owns_gpu_data_ = true;
         break;
     }
@@ -354,17 +360,17 @@ namespace ReSolve { namespace vector {
     switch (memspace) {
       case HOST:
         if (h_data_ == nullptr) {
-          h_data_ = new real_type[n_ * k_]; 
+          h_data_ = new real_type[n_capacity_ * k_]; 
           owns_cpu_data_ = true;
         }
-        mem_.setZeroArrayOnHost(h_data_, n_ * k_);
+        mem_.setZeroArrayOnHost(h_data_, n_capacity_ * k_);
         break;
       case DEVICE:
         if (d_data_ == nullptr) {
-          mem_.allocateArrayOnDevice(&d_data_, n_ * k_);
+          mem_.allocateArrayOnDevice(&d_data_, n_capacity_ * k_);
           owns_gpu_data_ = true;
         }
-        mem_.setZeroArrayOnDevice(d_data_, n_ * k_);
+        mem_.setZeroArrayOnDevice(d_data_, n_capacity_ * k_);
         break;
     }
   }
@@ -383,18 +389,18 @@ namespace ReSolve { namespace vector {
     switch (memspace) {
       case HOST:
         if (h_data_ == nullptr) {
-          h_data_ = new real_type[n_ * k_]; 
+          h_data_ = new real_type[n_capacity_ * k_]; 
           owns_cpu_data_ = true;
         }
-        mem_.setZeroArrayOnHost(&h_data_[j * n_current_], n_current_);
+        mem_.setZeroArrayOnHost(&h_data_[j * n_size_], n_size_);
         break;
       case DEVICE:
         if (d_data_ == nullptr) {
-          mem_.allocateArrayOnDevice(&d_data_, n_ * k_);
+          mem_.allocateArrayOnDevice(&d_data_, n_capacity_ * k_);
           owns_gpu_data_ = true;
         }
         // TODO: We should not need to access raw data in this class
-        mem_.setZeroArrayOnDevice(&d_data_[j * n_current_], n_current_);
+        mem_.setZeroArrayOnDevice(&d_data_[j * n_size_], n_size_);
         break;
     }
   }
@@ -414,17 +420,17 @@ namespace ReSolve { namespace vector {
     switch (memspace) {
       case HOST:
         if (h_data_ == nullptr) {
-          h_data_ = new real_type[n_ * k_]; 
+          h_data_ = new real_type[n_capacity_ * k_]; 
           owns_cpu_data_ = true;
         }
-        mem_.setArrayToConstOnHost(h_data_, C, n_ * k_);
+        mem_.setArrayToConstOnHost(h_data_, C, n_capacity_ * k_);
         break;
       case DEVICE:
         if (d_data_ == nullptr) {
-          mem_.allocateArrayOnDevice(&d_data_, n_ * k_);
+          mem_.allocateArrayOnDevice(&d_data_, n_capacity_ * k_);
           owns_gpu_data_ = true;
         }
-        mem_.setArrayToConstOnDevice(d_data_, C, n_ * k_);
+        mem_.setArrayToConstOnDevice(d_data_, C, n_capacity_ * k_);
         break;
     }
   }
@@ -444,17 +450,17 @@ namespace ReSolve { namespace vector {
     switch (memspace) {
       case HOST:
         if (h_data_ == nullptr) {
-          h_data_ = new real_type[n_ * k_]; 
+          h_data_ = new real_type[n_capacity_ * k_]; 
           owns_cpu_data_ = true;
         }
-        mem_.setArrayToConstOnHost(&h_data_[n_current_ * j], C, n_current_);
+        mem_.setArrayToConstOnHost(&h_data_[n_size_ * j], C, n_size_);
         break;
       case DEVICE:
         if (d_data_ == nullptr) {
-          mem_.allocateArrayOnDevice(&d_data_, n_ * k_);
+          mem_.allocateArrayOnDevice(&d_data_, n_capacity_ * k_);
           owns_gpu_data_ = true;
         }
-        mem_.setArrayToConstOnDevice(&d_data_[n_current_ * j], C, n_current_);
+        mem_.setArrayToConstOnDevice(&d_data_[n_size_ * j], C, n_size_);
         break;
     }
   }
@@ -482,29 +488,31 @@ namespace ReSolve { namespace vector {
   }
 
   /** 
-   * @brief Set current length of the vector (use for vectors and multivectors
-   * that change size throughout computation). Note: vector needs to be
-   * allocated using maximum expected length.
+   * @brief Resize vector to `new_n_size`.
    * 
-   * @param[in] new_n_current       - New vector length
+   * Use for vectors and multivectors that change size throughout computation.
+   * 
+   * @note Vector needs to have capacity set to maximum expected size.
+   * 
+   * @param[in] new_n_size - New vector length
    *
    * @return 0 if successful, -1 otherwise.
    *
-   * @pre   _new_n_current_ <= _n_ i.e,, _new_n_current_ is smaller than the allocated vector length.
+   * @pre `new_n_size` <= `n_capacity_`
    */
-  int Vector::setCurrentSize(index_type new_n_current)
+  int Vector::resize(index_type new_n_size)
   {
     assert(owns_cpu_data_ && owns_gpu_data_ 
            && "Cannot resize if not owning the data.");
-    if (!owns_cpu_data_ || !owns_gpu_data_) {
-      out::error() << "Cannot resize if not owning the data.\n";
-    }
-    if (new_n_current > n_) {
-      out::error() << "Trying to resize vector to " << new_n_current 
-                   << " elements but memory allocated only for " << n_ << "\n";
+    // if (!owns_cpu_data_ || !owns_gpu_data_) {
+    //   out::error() << "Cannot resize if not owning the data.\n";
+    // }
+    if (new_n_size > n_capacity_) {
+      out::error() << "Trying to resize vector to " << new_n_size 
+                   << " elements but memory allocated only for " << n_capacity_ << "\n";
       return 1;
     } else {
-      n_current_ = new_n_current;
+      n_size_ = new_n_size;
       return 0;
     }
   }
@@ -537,10 +545,10 @@ namespace ReSolve { namespace vector {
       real_type* data = this->getData(i, memspaceInOut);
       switch (memspaceInOut) {
         case HOST:
-          mem_.copyArrayHostToHost(dest, data, n_current_);
+          mem_.copyArrayHostToHost(dest, data, n_size_);
           break;
         case DEVICE:
-          mem_.copyArrayDeviceToDevice(dest, data, n_current_);
+          mem_.copyArrayDeviceToDevice(dest, data, n_size_);
           break;
       }
       return 0;
@@ -565,10 +573,10 @@ namespace ReSolve { namespace vector {
     real_type* data = this->getData(memspaceInOut);
     switch (memspaceInOut) {
       case HOST:
-        mem_.copyArrayHostToHost(dest, data, n_current_ * k_);
+        mem_.copyArrayHostToHost(dest, data, n_size_ * k_);
         break;
       case DEVICE:
-        mem_.copyArrayDeviceToDevice(dest, data, n_current_ * k_);
+        mem_.copyArrayDeviceToDevice(dest, data, n_size_ * k_);
         break;
     }
     return 0;
