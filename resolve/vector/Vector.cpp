@@ -47,7 +47,7 @@ namespace ReSolve { namespace vector {
    * @brief Get capacity of a single vector.
    * 
    * Vector memory is allocated to `n_capacity_*k_`. This is the maximum
-   * size of elements that (multi)vector can hold.
+   * number of elements that the (multi)vector can hold.
    * 
    * @return `n_capacity_` maximum number of elements in the vector.
    */
