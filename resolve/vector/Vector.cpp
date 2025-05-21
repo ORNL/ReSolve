@@ -72,8 +72,8 @@ namespace ReSolve { namespace vector {
   /** 
    * @brief Get the number of vectors in multivector.
    * 
-   * @return _k_, number of vectors in multivector, or 1 if the vector is not
-   * a multivector.
+   * @return _k_, number of vectors in the multivector, 
+   * or 1 if the vector is not a multivector.
    */
   index_type Vector::getNumVectors() const
   {
