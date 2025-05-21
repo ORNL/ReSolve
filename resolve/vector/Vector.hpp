@@ -58,8 +58,8 @@ namespace ReSolve { namespace vector {
       index_type n_size_; ///< actual size of the vector
       real_type* d_data_{nullptr}; ///< DEVICE data array
       real_type* h_data_{nullptr}; ///< HOST data array
-      bool gpu_updated_; ///< DEVICE data flag (updated or not)
-      bool cpu_updated_; ///< HOST data flag (updated or not)
+      bool gpu_updated_{false}; ///< DEVICE data flag (updated or not)
+      bool cpu_updated_{false}; ///< HOST data flag (updated or not)
 
       bool owns_gpu_data_{true}; ///< data owneship flag for DEVICE data
       bool owns_cpu_data_{true}; ///< data ownership flag for HOST data

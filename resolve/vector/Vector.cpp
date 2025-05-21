@@ -1,4 +1,5 @@
 #include <cstring>
+#include <cassert>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/utilities/logger/Logger.hpp>
 
@@ -7,25 +8,19 @@ namespace ReSolve { namespace vector {
   using out = ReSolve::io::Logger;
 
   /** 
-   * @brief basic constructor.
+   * @brief Single vector constructor.
    * 
    * @param[in] n - Number of elements in the vector    
    */
   Vector::Vector(index_type n):
     n_capacity_(n),
     k_(1),
-    n_size_(n),
-    d_data_(nullptr),
-    h_data_(nullptr),
-    gpu_updated_(false),
-    cpu_updated_(false),
-    owns_gpu_data_(true),
-    owns_cpu_data_(true)
+    n_size_(n)
   {
   }
 
   /** 
-   * @brief multivector constructor.
+   * @brief Multivector constructor.
    * 
    * @param[in] n - Number of elements in the vector    
    * @param[in] k - Number of vectors in multivector    
@@ -33,13 +28,7 @@ namespace ReSolve { namespace vector {
   Vector::Vector(index_type n, index_type k)
     : n_capacity_(n),
       k_(k),
-      n_size_(n),
-      d_data_(nullptr),
-      h_data_(nullptr),
-      gpu_updated_(false),
-      cpu_updated_(false),
-      owns_gpu_data_(true),
-      owns_cpu_data_(true)
+      n_size_(n)
   {
   }
 
@@ -235,7 +224,7 @@ namespace ReSolve { namespace vector {
    */
   real_type* Vector::getData(memory::MemorySpace memspace)
   {
-    return this->getData(0, memspace);
+    return getData(0, memspace);
   }
 
   /** 
@@ -253,29 +242,29 @@ namespace ReSolve { namespace vector {
    */
   real_type* Vector::getData(index_type i, memory::MemorySpace memspace)
   {
-    if ((memspace == memory::HOST) && (cpu_updated_ == false) && (gpu_updated_ == true )) {
-      syncData(memspace);  
-      owns_cpu_data_ = true;
-    } 
+    using memory::HOST;
+    using memory::DEVICE;
 
-    if ((memspace == memory::DEVICE) && (gpu_updated_ == false) && (cpu_updated_ == true )) {
-      syncData(memspace);
-      owns_gpu_data_ = true;
-    }
-    if (memspace == memory::HOST) {
+    switch (memspace)
+    {
+    case HOST:
+      if ((cpu_updated_ == false) && (gpu_updated_ == true )) {
+        syncData(memspace);  
+      } 
       return &h_data_[i * n_size_];
-    } else {
-      if (memspace == memory::DEVICE){
-        return &d_data_[i * n_size_];
-      } else {
-        return nullptr;
+    case DEVICE:
+      if ((gpu_updated_ == false) && (cpu_updated_ == true )) {
+        syncData(memspace);
       }
+      return &d_data_[i * n_size_];
+    default:
+      return nullptr;
     }
   }
 
 
   /** 
-   * @brief copy internal vector data from HOST to DEVICE or from DEVICE to HOST 
+   * @brief Copy internal vector data from HOST to DEVICE or from DEVICE to HOST 
    * 
    * @param[in] memspaceOut  - Memory space to sync
    *
@@ -466,14 +455,14 @@ namespace ReSolve { namespace vector {
   }
 
   /** 
-   * @brief get a pointer to HOST or DEVICE data of a specified vector in a multivector.
+   * @brief Get a pointer to HOST or DEVICE data of a specified vector in a multivector.
    * 
    * @param[in] i          - Index of a vector in a multivector
    * @param[in] memspace   - Memory space of the pointer (HOST or DEVICE)  
    *
-   * @return pointer to the _i_ th vector data (HOST or DEVICE). e
+   * @return pointer to the `i`th vector data (HOST or DEVICE).
    *
-   * @pre   _i_ < _k_ i.e,, _i_ is smaller than the total number of vectors in multivector.
+   * @pre `i` < `k_`, i.e. `i` is smaller than the total number of vectors in multivector.
    * 
    * @note This function gives you access to the pointer, not to a copy.
    * If you change the values using the pointer, the vector values will change too. 
@@ -503,7 +492,7 @@ namespace ReSolve { namespace vector {
   int Vector::resize(index_type new_n_size)
   {
     assert(owns_cpu_data_ && owns_gpu_data_ 
-           && "Cannot resize if not owning the data.");
+           && "Cannot resize if vector is not owning the data.");
     // if (!owns_cpu_data_ || !owns_gpu_data_) {
     //   out::error() << "Cannot resize if not owning the data.\n";
     // }
