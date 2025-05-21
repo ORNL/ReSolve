@@ -150,6 +150,19 @@ public:
       return status.report(testname.c_str());
   }
 
+  TestOutcome leftDiagScale(index_type n, index_type m)
+  {
+    TestStatus status;
+    std::string testname(__func__);
+    matrix::Csr* A = createRectangularCsrMatrix(n, m);
+    vector::Vector* diag = createIncrementingVector(n);
+    handler_.leftDiagonalScale(diag, A, memspace_);
+    status *= verifyCsrMatrix(A, 2.0);
+    delete A;
+    delete diag;
+    return status.report(testname.c_str());
+  }
+
 private:
   ReSolve::MatrixHandler& handler_;
   memory::MemorySpace memspace_{memory::HOST};
@@ -480,6 +493,28 @@ private:
     }
 
     return A;
+  }
+
+  /**
+   * @brief create a vector with increasing values, starting with 1.0
+   *
+   * The values are set to 1.0, 2.0, ..., n
+   *
+   * @param[in] n number of elements
+   */
+  vector::Vector* createIncrementingVector(const index_type n)
+  {
+    vector::Vector* vec = new vector::Vector(n);
+    vec->allocate(memory::HOST);
+    real_type* data = vec->getData(memory::HOST);
+    for (index_type i = 0; i < n; ++i) {
+      data[i] = static_cast<real_type>(i + 1.0);
+    }
+    vec->setDataUpdated(memory::HOST);
+    if (memspace_ == memory::DEVICE) {
+      vec->syncData(memspace_);
+    }
+    return vec;
   }
 }; // class MatrixHandlerTests
 
