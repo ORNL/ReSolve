@@ -482,6 +482,8 @@ namespace ReSolve { namespace vector {
    * Use for vectors and multivectors that change size throughout computation.
    * 
    * @note Vector needs to have capacity set to maximum expected size.
+   * @warning This method is not to be used in vectors who do not own their
+   * data.
    * 
    * @param[in] new_n_size - New vector length
    *
@@ -493,9 +495,7 @@ namespace ReSolve { namespace vector {
   {
     assert(owns_cpu_data_ && owns_gpu_data_ 
            && "Cannot resize if vector is not owning the data.");
-    // if (!owns_cpu_data_ || !owns_gpu_data_) {
-    //   out::error() << "Cannot resize if not owning the data.\n";
-    // }
+
     if (new_n_size > n_capacity_) {
       out::error() << "Trying to resize vector to " << new_n_size 
                    << " elements but memory allocated only for " << n_capacity_ << "\n";
