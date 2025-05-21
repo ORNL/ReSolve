@@ -49,7 +49,7 @@ namespace ReSolve { namespace vector {
    * Vector memory is allocated to `n_capacity_*k_`. This is the maximum
    * number of elements that the (multi)vector can hold.
    * 
-   * @return `n_capacity_` maximum number of elements in the vector.
+   * @return `n_capacity_` the maximum number of elements in the vector.
    */
   index_type Vector::getCapacity() const
   {
