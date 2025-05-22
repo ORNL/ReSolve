@@ -307,9 +307,8 @@ namespace ReSolve {
   {
 
     // Define block size and number of blocks
-    const int blockSize = 256;
+    const int blockSize = 1;
     int numBlocks = (n + blockSize - 1) / blockSize;
-
     // Launch the kernel
     kernels::leftDiagScale<<<numBlocks, blockSize>>>(n, a_row_ptr, a_val, d_val);
   }
