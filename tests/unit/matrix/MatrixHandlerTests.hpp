@@ -157,6 +157,9 @@ public:
     matrix::Csr* A = createRectangularCsrMatrix(n, m);
     vector::Vector* diag = createIncrementingVector(n);
     handler_.leftDiagonalScale(diag, A, memspace_);
+    if (memspace_ == memory::DEVICE) {
+      A->syncData(memory::HOST);
+    }
     status *= verifyLeftScaledCsrMatrix(A);
     delete A;
     delete diag;
