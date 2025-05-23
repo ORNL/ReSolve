@@ -22,7 +22,7 @@ namespace ReSolve {
 
   void mass_axpy(index_type n, index_type i, const real_type* x, real_type* y, const real_type* alpha);
 
-  void LeftDiagScale(index_type n,
+  void leftDiagScale(index_type n,
                       const index_type* a_row_ptr,
                       real_type* a_val,
                       const real_type* diag);
