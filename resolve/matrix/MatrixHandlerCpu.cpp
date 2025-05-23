@@ -343,6 +343,7 @@ namespace ReSolve
         valuesA[j] *= diag_data[colIdxA[j]];
       }
     }
+    return 0;
   }
   /**
    * @brief Add a constant to all nonzero values in the matrix

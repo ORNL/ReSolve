@@ -500,7 +500,7 @@ namespace ReSolve { namespace vector {
 
     if (new_n_size > n_capacity_) {
       out::error() << "Trying to resize vector to " << new_n_size 
-                   << " elements but memory allocated only for " << n_capacity_ << " elements. \n";
+                   << " elements but memory allocated only for " << n_capacity_ << "elements." << "\n";
       return 1;
     } else {
       n_size_ = new_n_size;

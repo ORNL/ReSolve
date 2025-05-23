@@ -166,6 +166,23 @@ public:
     return status.report(testname.c_str());
   }
 
+  TestOutcome rightDiagScale(index_type n, index_type m)
+  {
+    std::cout << "Right diagonal scale test\n";
+    TestStatus status;
+    std::string testname(__func__);
+    matrix::Csr* A = createRectangularCsrMatrix(n, m);
+    vector::Vector* diag = createIncrementingVector(m);
+    handler_.rightDiagonalScale(A, diag, memspace_);
+    if (memspace_ == memory::DEVICE) {
+      A->syncData(memory::HOST);
+    }
+    status *= verifyRightScaledCsrMatrix(A);
+    delete A;
+    delete diag;
+    return status.report(testname.c_str());
+  }
+
 private:
   ReSolve::MatrixHandler& handler_;
   memory::MemorySpace memspace_{memory::HOST};
@@ -588,6 +605,83 @@ private:
 
     return true;
   }
+
+  /**
+   * @brief Verify structure of a CSR matrix with preset pattern that is right-scaled
+   *
+   * The sparsity structure corresponds to the CSR representation of a rectangular matrix
+   * created by createRectangularCsrMatrix, right-scaled by a diagonal matrix
+   * represented by a vector with values 1.0, 2.0, ..., m
+   *
+   * @pre A is a valid, allocated CSR matrix
+   * @invariant A
+   *
+   * @param[in] A matrix::Csr* pointer to the matrix to be verified
+   *
+   * @return bool true if the matrix is valid, false otherwise
+   */
+  bool verifyRightScaledCsrMatrix(matrix::Csr* A)
+  {
+    // Check if the matrix is valid
+    if (A == nullptr) {
+      return false;
+    }
+
+    // Get matrix dimensions
+    const index_type n = A->getNumRows();
+    const index_type m = A->getNumColumns();
+
+    // Create the original unscaled matrix to compare against
+    matrix::Csr* originalA = createRectangularCsrMatrix(n, m);
+
+    // Get data from both matrices
+    index_type* origRowptr = originalA->getRowData(memory::HOST);
+    index_type* origColidx = originalA->getColData(memory::HOST);
+    real_type* origVal = originalA->getValues(memory::HOST);
+
+    index_type* scaledRowptr = A->getRowData(memory::HOST);
+    index_type* scaledColidx = A->getColData(memory::HOST);
+    real_type* scaledVal = A->getValues(memory::HOST);
+
+    // Verify that row pointers and column indices are the same
+    for (index_type i = 0; i <= n; ++i) {
+      if (origRowptr[i] != scaledRowptr[i]) {
+        delete originalA;
+        return false;
+      }
+    }
+
+    for (index_type i = 0; i < A->getNnz(); ++i) {
+      if (origColidx[i] != scaledColidx[i]) {
+        delete originalA;
+        return false;
+      }
+    }
+
+    // Verify values - each element A[i,j] should be scaled by (j+1.0)
+    for (index_type i = 0; i < n; ++i) {
+      for (index_type j = origRowptr[i]; j < origRowptr[i + 1]; ++j) {
+        index_type col = origColidx[j];
+        real_type colScale = static_cast<real_type>(col + 1);
+        real_type expected = origVal[j] * colScale;
+        // For integer values, exact comparison is sufficient
+        if (scaledVal[j] != expected) {
+          std::cout << "Mismatch at row " << i << ", col " << col << ", index " << j
+                    << ": scaledVal = " << scaledVal[j]
+                    << ", origVal = " << origVal[j]
+                    << ", colScale = " << colScale
+                    << ", expected = " << expected << "\n";
+          delete originalA;
+          return false;
+        }
+      }
+    }
+
+    // Clean up the original matrix
+    delete originalA;
+    return true;
+  }
+
 }; // class MatrixHandlerTests
 
 }} // namespace ReSolve::tests
