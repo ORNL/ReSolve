@@ -558,7 +558,7 @@ namespace ReSolve {
    *
    * @todo Decide how to allow user to configure grid and block sizes.
    */
-  void hipRightDiagScale(index_type n,
+  void rightDiagScale(index_type n,
                        const index_type* a_row_ptr,
                        const index_type* a_col_ind,
                        real_type* a_val,
