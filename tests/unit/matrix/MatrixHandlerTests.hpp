@@ -558,49 +558,49 @@ private:
     const index_type m = A->getNumColumns();
 
     // Create the original unscaled matrix to compare against
-    matrix::Csr* originalA = createRectangularCsrMatrix(n, m);
+    matrix::Csr* original_A = createRectangularCsrMatrix(n, m);
 
     // Get data from both matrices
-    index_type* origRowptr = originalA->getRowData(memory::HOST);
-    index_type* origColidx = originalA->getColData(memory::HOST);
-    real_type* origVal = originalA->getValues(memory::HOST);
+    index_type* original_row_ptr = original_A->getRowData(memory::HOST);
+    index_type* original_col_idx = original_A->getColData(memory::HOST);
+    real_type* original_value = original_A->getValues(memory::HOST);
 
-    index_type* scaledRowptr = A->getRowData(memory::HOST);
-    index_type* scaledColidx = A->getColData(memory::HOST);
-    real_type* scaledVal = A->getValues(memory::HOST);
+    index_type* scaled_row_ptr = A->getRowData(memory::HOST);
+    index_type* scaled__col_idx = A->getColData(memory::HOST);
+    real_type* scaled_value = A->getValues(memory::HOST);
 
     // Verify that row pointers and column indices are the same
     for (index_type i = 0; i <= n; ++i) {
-      if (origRowptr[i] != scaledRowptr[i]) {
-        delete originalA;
+      if (original_row_ptr[i] != scaled_row_ptr[i]) {
+        delete original_A;
         return false;
       }
     }
 
     for (index_type i = 0; i < A->getNnz(); ++i) {
-      if (origColidx[i] != scaledColidx[i]) {
-        delete originalA;
+      if (original_col_idx[i] != scaled__col_idx[i]) {
+        delete original_A;
         return false;
       }
     }
 
     // Verify values - each element in row i should be scaled by (i+1.0)
     for (index_type i = 0; i < n; ++i) {
-      real_type rowScale = static_cast<real_type>(i + 1);
-      for (index_type j = origRowptr[i]; j < origRowptr[i + 1]; ++j) {
+      real_type row_scale = static_cast<real_type>(i + 1);
+      for (index_type j = original_row_ptr[i]; j < original_row_ptr[i + 1]; ++j) {
         // For integer values, exact comparison is sufficient
-        if (scaledVal[j] != origVal[j] * rowScale) {
+        if (scaled_value[j] != original_value[j] * row_scale) {
           std::cout << "Mismatch at row " << i << ", index " << j
-                    << ": scaledVal = " << scaledVal[j]
-                    << ", expected = " << origVal[j] * rowScale << "\n";
-          delete originalA;
+                    << ": scaled_value = " << scaled_value[j]
+                    << ", expected = " << original_value[j] * row_scale << "\n";
+          delete original_A;
           return false;
         }
       }
     }
 
     // Clean up the original matrix
-    delete originalA;
+    delete original_A;
 
     return true;
   }
@@ -631,53 +631,53 @@ private:
     const index_type m = A->getNumColumns();
 
     // Create the original unscaled matrix to compare against
-    matrix::Csr* originalA = createRectangularCsrMatrix(n, m);
+    matrix::Csr* original_A = createRectangularCsrMatrix(n, m);
 
     // Get data from both matrices
-    index_type* origRowptr = originalA->getRowData(memory::HOST);
-    index_type* origColidx = originalA->getColData(memory::HOST);
-    real_type* origVal = originalA->getValues(memory::HOST);
+    index_type* original_row_ptr = original_A->getRowData(memory::HOST);
+    index_type* original_col_idx = original_A->getColData(memory::HOST);
+    real_type* original_value = original_A->getValues(memory::HOST);
 
-    index_type* scaledRowptr = A->getRowData(memory::HOST);
-    index_type* scaledColidx = A->getColData(memory::HOST);
-    real_type* scaledVal = A->getValues(memory::HOST);
+    index_type* scaled_row_ptr = A->getRowData(memory::HOST);
+    index_type* scaled__col_idx = A->getColData(memory::HOST);
+    real_type* scaled_value = A->getValues(memory::HOST);
 
     // Verify that row pointers and column indices are the same
     for (index_type i = 0; i <= n; ++i) {
-      if (origRowptr[i] != scaledRowptr[i]) {
-        delete originalA;
+      if (original_row_ptr[i] != scaled_row_ptr[i]) {
+        delete original_A;
         return false;
       }
     }
 
     for (index_type i = 0; i < A->getNnz(); ++i) {
-      if (origColidx[i] != scaledColidx[i]) {
-        delete originalA;
+      if (original_col_idx[i] != scaled__col_idx[i]) {
+        delete original_A;
         return false;
       }
     }
 
     // Verify values - each element A[i,j] should be scaled by (j+1.0)
     for (index_type i = 0; i < n; ++i) {
-      for (index_type j = origRowptr[i]; j < origRowptr[i + 1]; ++j) {
-        index_type col = origColidx[j];
-        real_type colScale = static_cast<real_type>(col + 1);
-        real_type expected = origVal[j] * colScale;
+      for (index_type j = original_row_ptr[i]; j < original_row_ptr[i + 1]; ++j) {
+        index_type col = original_col_idx[j];
+        real_type col_scale = static_cast<real_type>(col + 1);
+        real_type expected = original_value[j] * col_scale;
         // For integer values, exact comparison is sufficient
-        if (scaledVal[j] != expected) {
+        if (scaled_value[j] != expected) {
           std::cout << "Mismatch at row " << i << ", col " << col << ", index " << j
-                    << ": scaledVal = " << scaledVal[j]
-                    << ", origVal = " << origVal[j]
-                    << ", colScale = " << colScale
+                    << ": scaled_value = " << scaled_value[j]
+                    << ", original_value = " << original_value[j]
+                    << ", col_scale = " << col_scale
                     << ", expected = " << expected << "\n";
-          delete originalA;
+          delete original_A;
           return false;
         }
       }
     }
 
     // Clean up the original matrix
-    delete originalA;
+    delete original_A;
     return true;
   }
 
