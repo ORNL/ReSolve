@@ -301,6 +301,7 @@ namespace ReSolve {
    */
   int MatrixHandler::rightDiagonalScale(matrix::Csr* A, vector_type* diag, memory::MemorySpace memspace)
   {
+    std::cout << "MatrixHandler::rightDiagonalScale\n";
     assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW &&
            "Matrix has to be in CSR format for right diagonal scaling.\n");
     assert(diag->getSize() == A->getNumColumns() && "Diagonal vector must be of the same size as the number of columns in the matrix.");
