@@ -345,7 +345,7 @@ namespace ReSolve {
     real_type*  a_vals = A->getValues( memory::DEVICE);
     index_type n = A->getNumRows();
     // check values in A and diag
-    cudaLeftDiagScale(n, a_row_ptr, a_vals, diag_data);
+    leftDiagScale(n, a_row_ptr, a_vals, diag_data);
     A->setUpdated(memory::DEVICE);
     return 0;
   }
@@ -370,7 +370,7 @@ namespace ReSolve {
     index_type* a_col_idx = A->getColData(memory::DEVICE);
     real_type*  a_vals = A->getValues( memory::DEVICE);
     index_type n = A->getNumRows();
-    cudaRightDiagScale(n, a_row_ptr, a_col_idx, a_vals, diag_data);
+    cudaDiagScale(n, a_row_ptr, a_col_idx, a_vals, diag_data);
     return 0;
   }
 

@@ -168,7 +168,6 @@ public:
 
   TestOutcome rightDiagScale(index_type n, index_type m)
   {
-    std::cout << "Right diagonal scale test\n";
     TestStatus status;
     std::string testname(__func__);
     matrix::Csr* A = createRectangularCsrMatrix(n, m);
