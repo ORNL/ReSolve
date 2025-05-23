@@ -300,6 +300,73 @@ namespace ReSolve {
       }
     }
 
+    /**
+     * @brief Scales a csr matrix on the left by a diagonal matrix
+     *
+     * @param[in]  n      - number of rows in the matrix
+     * @param[in]  a_row_ptr - row pointers (CSR storage)
+     * @param[in, out]  a_val    - values (CSR storage). Changes in place.
+     * @param[in]  d_val    - diagonal values
+     *
+     * @todo Decide how to allow user to configure grid and block sizes.
+     */
+    __global__ void leftDiagScale(index_type n,
+                      const index_type* a_row_ptr,
+                      real_type* a_val,
+                      const real_type* d_val)
+    {
+      // Get row index from thread and block indices
+      index_type row = blockIdx.x * blockDim.x + threadIdx.x;
+
+      // Check if the thread's row is within matrix bounds
+      if (row < n) {
+        // Get the start and end positions for this row in the CSR format
+        index_type row_start = a_row_ptr[row];
+        index_type row_end = a_row_ptr[row + 1];
+
+        // Get the scaling factor for this row from the diagonal matrix
+        real_type scale = d_val[row];
+
+        // Scale all non-zero elements in this row
+        for (index_type i = row_start; i < row_end; i++) {
+          a_val[i] *= scale;
+        }
+      }
+    }
+
+    /**
+     * @brief Scales a csr matrix on the right by a diagonal matrix
+     *
+     * @param[in]  n      - number of rows in the matrix
+     * @param[in]  a_row_ptr - row pointers (CSR storage)
+     * @param[in]  a_col_ind - column indices (CSR storage)
+     * @param[in, out]  a_val    - values (CSR storage). Changes in place.
+     * @param[in]  d_val    - diagonal values
+     *
+     * @todo Decide how to allow user to configure grid and block sizes.
+     */
+    __global__ void rightDiagScale(index_type n,
+                      const index_type* a_row_ptr,
+                      const index_type* a_col_ind,
+                      real_type* a_val,
+                      const real_type* d_val)
+    {
+      // Get row index from thread and block indices
+      index_type row = blockIdx.x * blockDim.x + threadIdx.x;
+
+      // Check if the thread's row is within matrix bounds
+      if (row < n) {
+        // Get the start and end positions for this row in the CSR format
+        index_type row_start = a_row_ptr[row];
+        index_type row_end = a_row_ptr[row + 1];
+
+        // Scale all non-zero elements in this row
+        for (index_type i = row_start; i < row_end; i++) {
+          a_val[i] *= d_val[a_col_ind[i]];
+        }
+      }
+    }
+
 
 
   } // namespace kernels
@@ -386,6 +453,8 @@ namespace ReSolve {
     hipLaunchKernelGGL(kernels::matrixInfNormPart1, dim3(1000), dim3(1024), 0, 0, n, nnz, a_ia, a_val, result);
   }
 
+  
+
   /**
    * @brief
    *
@@ -453,6 +522,53 @@ namespace ReSolve {
                        perm_vector,
                        vec_in,
                        vec_out);
+  }
+
+  /**
+   * @brief Wrapper that scales a csr matrix on the left by a diagonal matrix
+   *
+   * @param[in]  n      - number of rows in the matrix
+   * @param[in]  a_row_ptr - row pointers (CSR storage)
+   * @param[in, out]  a_val    - values (CSR storage). Changes in place.
+   * @param[in]  d_val    - diagonal values
+   *
+   * @todo Decide how to allow user to configure grid and block sizes.
+   */
+  void hipLeftDiagScale(index_type n,
+                       const index_type* a_row_ptr,
+                       real_type* a_val,
+                       const real_type* d_val)
+  {
+
+    // Define block size and number of blocks
+    const int blockSize = 1;
+    int numBlocks = (n + blockSize - 1) / blockSize;
+    // Launch the kernel
+    kernels::leftDiagScale<<<numBlocks, blockSize>>>(n, a_row_ptr, a_val, d_val);
+  }
+
+  /**
+   * @brief Wrapper that scales a csr matrix on the right by a diagonal matrix
+   *
+   * @param[in]  n      - number of rows in the matrix
+   * @param[in]  a_row_ptr - row pointers (CSR storage)
+   * @param[in]  a_col_ind - column indices (CSR storage)
+   * @param[in, out]  a_val    - values (CSR storage). Changes in place.
+   * @param[in]  d_val    - diagonal values
+   *
+   * @todo Decide how to allow user to configure grid and block sizes.
+   */
+  void hipRightDiagScale(index_type n,
+                       const index_type* a_row_ptr,
+                       const index_type* a_col_ind,
+                       real_type* a_val,
+                       const real_type* d_val)
+  {
+    // Define block size and number of blocks
+    const int blockSize = 256;
+    int numBlocks = (n + blockSize - 1) / blockSize;
+    // Launch the kernel
+    kernels::rightDiagScale<<<numBlocks, blockSize>>>(n, a_row_ptr, a_col_ind, a_val, d_val);
   }
 
 
