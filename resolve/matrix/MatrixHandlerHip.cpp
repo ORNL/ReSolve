@@ -307,4 +307,54 @@ namespace ReSolve {
     return 0;
   }
 
+  /**
+   * @brief Left diagonal scaling of a sparse CSR matrix in HIP
+   *
+   * @param[in]  diag - vector representing the diagonal matrix
+   * @param[in, out]  A - Sparse CSR matrix
+   *
+   * @pre The diagonal vector must be of the same size as the number of rows in the matrix.
+   * @pre A is unscaled and allocated
+   * @post A is scaled
+   * @invariant diag
+   *
+   * @return 0 if successful, 1 otherwise
+   */
+  int MatrixHandlerHip::leftDiagonalScale(vector_type* diag, matrix::Csr* A)
+  {
+    real_type* diag_data = diag->getData(memory::DEVICE);
+    index_type* a_row_ptr = A->getRowData(memory::DEVICE);
+    real_type*  a_vals = A->getValues( memory::DEVICE);
+    index_type n = A->getNumRows();
+    // check values in A and diag
+    hipLeftDiagScale(n, a_row_ptr, a_vals, diag_data);
+    A->setUpdated(memory::DEVICE);
+    return 0;
+  }
+
+  /**
+   * @brief Right diagonal scaling of a sparse CSR matrix in HIP
+   *
+   * @param[in]  A - Sparse CSR matrix
+   * @param[in]  diag - vector representing the diagonal matrix
+   *
+   * @pre The diagonal vector must be of the same size as the number of columns in the matrix.
+   * @pre A is unscaled
+   * @post A is scaled
+   * @invariant diag
+   *
+   * @return 0 if successful, 1 otherwise
+   */
+  int MatrixHandlerHip::rightDiagonalScale(matrix::Csr* A, vector_type* diag)
+  {
+    real_type* diag_data = diag->getData(memory::DEVICE);
+    index_type* a_row_ptr = A->getRowData(memory::DEVICE);
+    index_type* a_col_idx = A->getColData(memory::DEVICE);
+    real_type*  a_vals = A->getValues( memory::DEVICE);
+    index_type n = A->getNumRows();
+    hipRightDiagScale(n, a_row_ptr, a_col_idx, a_vals, diag_data);
+    A->setUpdated(memory::DEVICE);
+    return 0;
+  }
+
 } // namespace ReSolve
