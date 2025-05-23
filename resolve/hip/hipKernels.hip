@@ -453,7 +453,7 @@ namespace ReSolve {
     hipLaunchKernelGGL(kernels::matrixInfNormPart1, dim3(1000), dim3(1024), 0, 0, n, nnz, a_ia, a_val, result);
   }
 
-  
+
 
   /**
    * @brief
@@ -534,7 +534,7 @@ namespace ReSolve {
    *
    * @todo Decide how to allow user to configure grid and block sizes.
    */
-  void hipLeftDiagScale(index_type n,
+  void leftDiagScale(index_type n,
                        const index_type* a_row_ptr,
                        real_type* a_val,
                        const real_type* d_val)
