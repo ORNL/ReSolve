@@ -384,9 +384,9 @@ class TestHelper
 
       // Compute residual norm on CPU
       if (memspace_ == ReSolve::memory::DEVICE) {
-        A_->syncData(ReSolve::memory::HOST);
-        r_->syncData(ReSolve::memory::HOST);
-        x_->syncData(ReSolve::memory::HOST);
+        // A_->syncData(ReSolve::memory::HOST);
+        // r_->syncData(ReSolve::memory::HOST);
+        // x_->syncData(ReSolve::memory::HOST);
         res_->copyDataFrom(r_, memspace_, ReSolve::memory::HOST);
         norm_res_cpu_ = computeResidualNorm(*A_, *x_, *res_, ReSolve::memory::HOST);
       }
@@ -402,7 +402,9 @@ class TestHelper
       x_true_->allocate(memspace_);
       x_true_->setToConst(static_cast<ReSolve::real_type>(1.0), memspace_);
       x_true_->setDataUpdated(memspace_);
-      x_true_->syncData(ReSolve::memory::HOST);
+      if (memspace_ == ReSolve::memory::DEVICE) {
+        x_true_->syncData(ReSolve::memory::HOST);
+      }
       norm_true_ = norm2(*x_true_, memspace_);
       solution_set_ = true;
     }

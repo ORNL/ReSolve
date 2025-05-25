@@ -278,7 +278,8 @@ namespace ReSolve { namespace vector {
     switch(memspaceOut)  {
       case DEVICE: // cpu->gpu
         if (gpu_updated_) {
-          out::misc() << "Trying to sync device, but device already up to date!\n";
+          out::error() << "Trying to sync device, but device already up to date!\n";
+          assert(!gpu_updated_);
           return 0;
         }
         if (!cpu_updated_) {
@@ -294,7 +295,8 @@ namespace ReSolve { namespace vector {
         break;
       case HOST: //cuda->cpu
         if (cpu_updated_) {
-          out::misc() << "Trying to sync host, but host already up to date!\n";
+          out::error() << "Trying to sync host, but host already up to date!\n";
+          assert(!cpu_updated_);
           return 0;
         }
         if (!gpu_updated_) {
@@ -498,7 +500,7 @@ namespace ReSolve { namespace vector {
 
     if (new_n_size > n_capacity_) {
       out::error() << "Trying to resize vector to " << new_n_size 
-                   << " elements but memory allocated only for " << n_capacity_ << elements. << "\n";
+                   << " elements but memory allocated only for " << n_capacity_ << " elements. \n";
       return 1;
     } else {
       n_size_ = new_n_size;
