@@ -312,9 +312,10 @@ namespace ReSolve
                "In Coo::syncData one of host row or column data is null!\n");
 
         if (h_data_updated_) {
-          out::misc() << "Coo::syncData is trying to sync host, but host already up to date!\n"
+          out::error() << "Coo::syncData is trying to sync host, but host already up to date!\n"
                       << "Function call ignored!\n";
-          return 0;
+          assert(!h_data_updated_);
+          return 1;
         }
         if (!d_data_updated_) {
           out::error() << "Coo::syncData is trying to sync host with device, but device is out of date!\n"
@@ -340,9 +341,10 @@ namespace ReSolve
                "In Coo::syncData one of device row or column data is null!\n");
 
         if (d_data_updated_) {
-          out::misc() << "Coo::syncData is trying to sync device, but device already up to date!\n"
+          out::error() << "Coo::syncData is trying to sync device, but device already up to date!\n"
                       << "Function call ignored!\n";
-          return 0;
+          assert(!d_data_updated_);
+          return 1;
         }
         if (!h_data_updated_) {
           out::error() << "Coo::syncData is trying to sync device with host, but host is out of date!\n"

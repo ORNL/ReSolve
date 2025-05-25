@@ -280,7 +280,7 @@ namespace ReSolve { namespace vector {
         if (gpu_updated_) {
           out::error() << "Trying to sync device, but device already up to date!\n";
           assert(!gpu_updated_);
-          return 0;
+          return 1;
         }
         if (!cpu_updated_) {
           out::error() << "Trying to sync device with host, but host is out of date!\n";
@@ -297,7 +297,7 @@ namespace ReSolve { namespace vector {
         if (cpu_updated_) {
           out::error() << "Trying to sync host, but host already up to date!\n";
           assert(!cpu_updated_);
-          return 0;
+          return 1;
         }
         if (!gpu_updated_) {
           out::error() << "Trying to sync host with device, but device is out of date!\n";
