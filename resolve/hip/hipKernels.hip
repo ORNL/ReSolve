@@ -1,10 +1,10 @@
 /**
  * @file hipKernels.hip
  * @author Kasia Swirydowicz (kasia.swirydowicz@pnnl.gov)
- * @brief 
+ * @brief
  * @date 2023-12-08
- * 
- * 
+ *
+ *
  */
 
 #include "hipKernels.h"
@@ -18,9 +18,9 @@ namespace ReSolve {
     /**
      * @brief Computes v^T * [u1 u2] where v is n x k multivector
      * and u1 and u2 are n x 1 vectors.
-     * 
+     *
      * @tparam Tv5 - Size of shared memory
-     *  
+     *
      * @param[in] u1      - (n x 1) vector
      * @param[in] u2      - (n x 1) vector
      * @param[in] v       - (n x k) multivector
@@ -29,11 +29,11 @@ namespace ReSolve {
      * @param[in] N       - size of vectors u1, u2
      */
     template <size_t Tv5 = 1024>
-    __global__ void MassIPTwoVec_kernel(const real_type* __restrict__ u1, 
-                                        const real_type* __restrict__ u2, 
-                                        const real_type* __restrict__ v, 
+    __global__ void MassIPTwoVec_kernel(const real_type* __restrict__ u1,
+                                        const real_type* __restrict__ u2,
+                                        const real_type* __restrict__ v,
                                         real_type* result,
-                                        const index_type k, 
+                                        const index_type k,
                                         const index_type N)
     {
       index_type t = threadIdx.x;
@@ -120,9 +120,9 @@ namespace ReSolve {
 
     /**
      * @brief AXPY y = y - x*alpha where alpha is [k x 1], needed in 1 and 2 synch GMRES
-     * 
-     * @tparam Tmaxk 
-     * 
+     *
+     * @tparam Tmaxk
+     *
      * @param[in]  N      -
      * @param[in]  k      -
      * @param[in]  x_data -
@@ -156,17 +156,17 @@ namespace ReSolve {
 
     /**
      * @brief Pass through matrix rows and sum each as \sum_{j=1}^m abs(a_{ij})
-     * 
+     *
      * @param[in]  n      -
      * @param[in]  nnz    -
      * @param[in]  a_ia   -
      * @param[in]  a_val  -
      * @param[out] result -
      */
-    __global__ void matrixInfNormPart1(const index_type n, 
-                                       const index_type nnz, 
+    __global__ void matrixInfNormPart1(const index_type n,
+                                       const index_type nnz,
                                        const index_type* a_ia,
-                                       const real_type* a_val, 
+                                       const real_type* a_val,
                                        real_type* result)
     {
       index_type idx = blockIdx.x*blockDim.x + threadIdx.x;
@@ -181,14 +181,14 @@ namespace ReSolve {
     }
 
     /**
-     * @brief 
-     * 
+     * @brief
+     *
      * @param[in]  n      - vector size
      * @param[in]  input  -
-     * @param[out] result - 
+     * @param[out] result -
      */
-    __global__ void vectorInfNorm(const index_type n, 
-                                  const real_type* input, 
+    __global__ void vectorInfNorm(const index_type n,
+                                  const real_type* input,
                                   real_type* result)
     {
 
@@ -203,7 +203,7 @@ namespace ReSolve {
       }
 
       idx += (blockDim.x*gridDim.x);
-      
+
       while (idx < n) {
         local_max = fmax(fabs(input[idx]), local_max);
         idx += (blockDim.x * gridDim.x);
@@ -259,16 +259,16 @@ namespace ReSolve {
 
 
     /**
-     * @brief 
-     * 
+     * @brief
+     *
      * @param n           - vector size
      * @param perm_vector - permutation map
      * @param vec_in      - input vector
      * @param vec_out     - permuted vector
      */
-    __global__ void permuteVectorP_kernel(const index_type n, 
+    __global__ void permuteVectorP_kernel(const index_type n,
                                           const index_type* perm_vector,
-                                          const real_type* vec_in, 
+                                          const real_type* vec_in,
                                           real_type* vec_out)
     {
       //one thread per vector entry, pass through rows
@@ -280,16 +280,16 @@ namespace ReSolve {
     }
 
     /**
-     * @brief 
-     * 
+     * @brief
+     *
      * @param n           - vector size
      * @param perm_vector - permutation map
      * @param vec_in      - input vector
      * @param vec_out     - permuted vector
      */
-    __global__ void permuteVectorQ_kernel(const index_type n, 
+    __global__ void permuteVectorQ_kernel(const index_type n,
                                           const index_type* perm_vector,
-                                          const real_type* vec_in, 
+                                          const real_type* vec_in,
                                           real_type* vec_out)
     {
       //one thread per vector entry, pass through rows
@@ -300,6 +300,72 @@ namespace ReSolve {
       }
     }
 
+    /**
+     * @brief Scales a csr matrix on the left by a diagonal matrix
+     *
+     * @param[in]  n      - number of rows in the matrix
+     * @param[in]  a_row_ptr - row pointers (CSR storage)
+     * @param[in, out]  a_val    - values (CSR storage). Changes in place.
+     * @param[in]  d_val    - diagonal values
+     *
+     * @todo Decide how to allow user to configure grid and block sizes.
+     */
+    __global__ void leftDiagScale(index_type n,
+                                  const index_type* a_row_ptr,
+                                  real_type* a_val,
+                                  const real_type* d_val)
+    {
+      // Get row index from thread and block indices
+      index_type row = blockIdx.x * blockDim.x + threadIdx.x;
+
+      // Check if the thread's row is within matrix bounds
+      if (row < n) {
+        // Get the start and end positions for this row in the CSR format
+        index_type row_start = a_row_ptr[row];
+        index_type row_end = a_row_ptr[row + 1];
+
+        // Get the scaling factor for this row from the diagonal matrix
+        real_type scale = d_val[row];
+
+        // Scale all non-zero elements in this row
+        for (index_type i = row_start; i < row_end; i++) {
+          a_val[i] *= scale;
+        }
+      }
+    }
+
+    /**
+     * @brief Scales a csr matrix on the right by a diagonal matrix
+     *
+     * @param[in]  n      - number of rows in the matrix
+     * @param[in]  a_row_ptr - row pointers (CSR storage)
+     * @param[in]  a_col_ind - column indices (CSR storage)
+     * @param[in, out]  a_val    - values (CSR storage). Changes in place.
+     * @param[in]  d_val    - diagonal values
+     *
+     * @todo Decide how to allow user to configure grid and block sizes.
+     */
+    __global__ void rightDiagScale(index_type n,
+                                   const index_type* a_row_ptr,
+                                   const index_type* a_col_ind,
+                                   real_type* a_val,
+                                   const real_type* d_val)
+    {
+      // Get row index from thread and block indices
+      index_type row = blockIdx.x * blockDim.x + threadIdx.x;
+
+      // Check if the thread's row is within matrix bounds
+      if (row < n) {
+        // Get the start and end positions for this row in the CSR format
+        index_type row_start = a_row_ptr[row];
+        index_type row_end = a_row_ptr[row + 1];
+
+        // Scale all non-zero elements in this row
+        for (index_type i = row_start; i < row_end; i++) {
+          a_val[i] *= d_val[a_col_ind[i]];
+        }
+      }
+    }
 
   } // namespace kernels
 
@@ -309,24 +375,24 @@ namespace ReSolve {
 
   /**
    * @brief Computes result = mvec^T * [vec1 vec2]
-   * 
+   *
    * @param n      - size of vectors vec1, vec2
-   * @param i      - 
-   * @param vec1   - (n x 1) vector 
+   * @param i      -
+   * @param vec1   - (n x 1) vector
    * @param vec2   - (n x 1) vector
    * @param mvec   - (n x (i+1)) multivector
    * @param result - ((i+1) x 2) multivector
-   * 
+   *
    * @todo Input data should be `const`.
    * @todo Is it coincidence that the block size is equal to the default
    * value of Tv5?
    * @todo Should we use dynamic shared memory here instead?
    */
-  void mass_inner_product_two_vectors(index_type n, 
-                                      index_type i, 
-                                      real_type* vec1, 
-                                      real_type* vec2, 
-                                      real_type* mvec, 
+  void mass_inner_product_two_vectors(index_type n,
+                                      index_type i,
+                                      real_type* vec1,
+                                      real_type* vec2,
+                                      real_type* mvec,
                                       real_type* result)
   {
     hipLaunchKernelGGL(kernels::MassIPTwoVec_kernel,
@@ -344,10 +410,10 @@ namespace ReSolve {
 
   /**
    * @brief Computes y := y - x*alpha
-   * 
+   *
    * @param[in]  n     - vector size
    * @param[in]  i     - number of vectors in the multivector
-   * @param[in]  x     - (n x (i+1)) multivector 
+   * @param[in]  x     - (n x (i+1)) multivector
    * @param[out] y     - (n x (i+1)) multivector
    * @param[in]  alpha - ((i+1) x 1) vector
    */
@@ -366,38 +432,38 @@ namespace ReSolve {
   }
 
   /**
-   * @brief 
-   * 
+   * @brief
+   *
    * @param[in]  n      -
    * @param[in]  nnz    -
-   * @param[in]  a_ia   - 
+   * @param[in]  a_ia   -
    * @param[in]  a_val  -
    * @param[out] result -
-   * 
+   *
    * @todo Decide how to allow user to configure grid and block sizes.
    */
-  void matrix_row_sums(index_type n, 
-                       index_type nnz, 
+  void matrix_row_sums(index_type n,
+                       index_type nnz,
                        index_type* a_ia,
-                       real_type* a_val, 
+                       real_type* a_val,
                        real_type* result)
   {
     hipLaunchKernelGGL(kernels::matrixInfNormPart1, dim3(1000), dim3(1024), 0, 0, n, nnz, a_ia, a_val, result);
   }
 
   /**
-   * @brief 
-   * 
+   * @brief
+   *
    * @param n      -
    * @param input  -
-   * @param buffer - 
-   * @param result - 
-   * 
+   * @param buffer -
+   * @param result -
+   *
    * @todo Decide how to allow user to configure grid and block sizes.
    */
-  void vector_inf_norm(index_type n,  
+  void vector_inf_norm(index_type n,
                        real_type* input,
-                       real_type* buffer, 
+                       real_type* buffer,
                        real_type* result)
   {
     hipLaunchKernelGGL(kernels::vectorInfNorm, dim3(1024), dim3(1024), 0, 0, n, input, buffer);
@@ -407,16 +473,16 @@ namespace ReSolve {
   }
 
   /**
-   * @brief 
-   * 
+   * @brief
+   *
    * @param n           - vector size
    * @param perm_vector - permutation map
    * @param vec_in      - input vector
    * @param vec_out     - permuted vector
    */
-  void permuteVectorP(index_type n, 
+  void permuteVectorP(index_type n,
                       index_type* perm_vector,
-                      real_type* vec_in, 
+                      real_type* vec_in,
                       real_type* vec_out)
   {
     hipLaunchKernelGGL(kernels::permuteVectorP_kernel,
@@ -431,16 +497,16 @@ namespace ReSolve {
   }
 
   /**
-   * @brief 
-   * 
+   * @brief
+   *
    * @param n           - vector size
    * @param perm_vector - permutation map
    * @param vec_in      - input vector
    * @param vec_out     - permuted vector
    */
-  void permuteVectorQ(index_type n, 
+  void permuteVectorQ(index_type n,
                       index_type* perm_vector,
-                      real_type* vec_in, 
+                      real_type* vec_in,
                       real_type* vec_out)
   {
     hipLaunchKernelGGL(kernels::permuteVectorQ_kernel,
@@ -454,5 +520,50 @@ namespace ReSolve {
                        vec_out);
   }
 
+  /**
+   * @brief Wrapper that scales a csr matrix on the left by a diagonal matrix
+   *
+   * @param[in]  n      - number of rows in the matrix
+   * @param[in]  a_row_ptr - row pointers (CSR storage)
+   * @param[in, out]  a_val    - values (CSR storage). Changes in place.
+   * @param[in]  d_val    - diagonal values
+   *
+   * @todo Decide how to allow user to configure grid and block sizes.
+   */
+  void leftDiagScale(index_type n,
+                     const index_type* a_row_ptr,
+                     real_type* a_val,
+                     const real_type* d_val)
+  {
+    // Define block size and number of blocks
+    const int blockSize = 1;
+    int numBlocks = (n + blockSize - 1) / blockSize;
+    // Launch the kernel
+    kernels::leftDiagScale<<<numBlocks, blockSize>>>(n, a_row_ptr, a_val, d_val);
+  }
+
+  /**
+   * @brief Wrapper that scales a csr matrix on the right by a diagonal matrix
+   *
+   * @param[in]  n      - number of rows in the matrix
+   * @param[in]  a_row_ptr - row pointers (CSR storage)
+   * @param[in]  a_col_ind - column indices (CSR storage)
+   * @param[in, out]  a_val    - values (CSR storage). Changes in place.
+   * @param[in]  d_val    - diagonal values
+   *
+   * @todo Decide how to allow user to configure grid and block sizes.
+   */
+  void rightDiagScale(index_type n,
+                      const index_type* a_row_ptr,
+                      const index_type* a_col_ind,
+                      real_type* a_val,
+                      const real_type* d_val)
+  {
+    // Define block size and number of blocks
+    const int blockSize = 256;
+    int numBlocks = (n + blockSize - 1) / blockSize;
+    // Launch the kernel
+    kernels::rightDiagScale<<<numBlocks, blockSize>>>(n, a_row_ptr, a_col_ind, a_val, d_val);
+  }
 
 } // namespace ReSolve

@@ -39,6 +39,10 @@ namespace ReSolve {
 
       int transpose(matrix::Csr* A, matrix::Csr* At) override;
 
+      int leftDiagonalScale(vector_type* diag, matrix::Csr* A) override;
+
+      int rightDiagonalScale(matrix::Csr* A, vector_type* diag) override;
+
       int addConst(matrix::Sparse* A, real_type alpha) override;
 
       virtual int matvec(matrix::Sparse* A,
@@ -46,7 +50,9 @@ namespace ReSolve {
                  vector_type* vec_result,
                  const real_type* alpha,
                  const real_type* beta) override;
+
       virtual int matrixInfNorm(matrix::Sparse *A, real_type* norm) override;
+
       void setValuesChanged(bool isValuesChanged) override;
 
     private:
