@@ -50,6 +50,7 @@ namespace ReSolve {
                  const real_type* alpha,
                  const real_type* beta) override;
       virtual int matrixInfNorm(matrix::Sparse* A, real_type* norm) override;
+
       void setValuesChanged(bool isValuesChanged) override;
 
     private:
