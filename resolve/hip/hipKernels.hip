@@ -311,9 +311,9 @@ namespace ReSolve {
      * @todo Decide how to allow user to configure grid and block sizes.
      */
     __global__ void leftDiagScale(index_type n,
-                      const index_type* a_row_ptr,
-                      real_type* a_val,
-                      const real_type* d_val)
+                                  const index_type* a_row_ptr,
+                                  real_type* a_val,
+                                  const real_type* d_val)
     {
       // Get row index from thread and block indices
       index_type row = blockIdx.x * blockDim.x + threadIdx.x;
@@ -346,10 +346,10 @@ namespace ReSolve {
      * @todo Decide how to allow user to configure grid and block sizes.
      */
     __global__ void rightDiagScale(index_type n,
-                      const index_type* a_row_ptr,
-                      const index_type* a_col_ind,
-                      real_type* a_val,
-                      const real_type* d_val)
+                                   const index_type* a_row_ptr,
+                                   const index_type* a_col_ind,
+                                   real_type* a_val,
+                                   const real_type* d_val)
     {
       // Get row index from thread and block indices
       index_type row = blockIdx.x * blockDim.x + threadIdx.x;
@@ -366,8 +366,6 @@ namespace ReSolve {
         }
       }
     }
-
-
 
   } // namespace kernels
 
@@ -453,8 +451,6 @@ namespace ReSolve {
     hipLaunchKernelGGL(kernels::matrixInfNormPart1, dim3(1000), dim3(1024), 0, 0, n, nnz, a_ia, a_val, result);
   }
 
-
-
   /**
    * @brief
    *
@@ -535,11 +531,10 @@ namespace ReSolve {
    * @todo Decide how to allow user to configure grid and block sizes.
    */
   void leftDiagScale(index_type n,
-                       const index_type* a_row_ptr,
-                       real_type* a_val,
-                       const real_type* d_val)
+                     const index_type* a_row_ptr,
+                     real_type* a_val,
+                     const real_type* d_val)
   {
-
     // Define block size and number of blocks
     const int blockSize = 1;
     int numBlocks = (n + blockSize - 1) / blockSize;
@@ -559,10 +554,10 @@ namespace ReSolve {
    * @todo Decide how to allow user to configure grid and block sizes.
    */
   void rightDiagScale(index_type n,
-                       const index_type* a_row_ptr,
-                       const index_type* a_col_ind,
-                       real_type* a_val,
-                       const real_type* d_val)
+                      const index_type* a_row_ptr,
+                      const index_type* a_col_ind,
+                      real_type* a_val,
+                      const real_type* d_val)
   {
     // Define block size and number of blocks
     const int blockSize = 256;
@@ -570,6 +565,5 @@ namespace ReSolve {
     // Launch the kernel
     kernels::rightDiagScale<<<numBlocks, blockSize>>>(n, a_row_ptr, a_col_ind, a_val, d_val);
   }
-
 
 } // namespace ReSolve

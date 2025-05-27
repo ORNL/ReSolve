@@ -211,6 +211,7 @@ namespace ReSolve {
         }
       }
     }
+
     /**
      * @brief Scales a csr matrix on the right by a diagonal matrix
      *
@@ -243,9 +244,7 @@ namespace ReSolve {
         }
       }
     }
-
   } // namespace kernels
-
 
   //
   // Kernel wrappers
@@ -301,9 +300,9 @@ namespace ReSolve {
    * @todo Decide how to allow user to configure grid and block sizes.
    */
   void leftDiagScale(index_type n,
-                       const index_type* a_row_ptr,
-                       real_type* a_val,
-                       const real_type* d_val)
+                     const index_type* a_row_ptr,
+                     real_type* a_val,
+                     const real_type* d_val)
   {
 
     // Define block size and number of blocks
@@ -325,10 +324,10 @@ namespace ReSolve {
    * @todo Decide how to allow user to configure grid and block sizes.
    */
   void rightDiagScale(index_type n,
-                       const index_type* a_row_ptr,
-                       const index_type* a_col_ind,
-                       real_type* a_val,
-                       const real_type* d_val)
+                      const index_type* a_row_ptr,
+                      const index_type* a_col_ind,
+                      real_type* a_val,
+                      const real_type* d_val)
   {
     // Define block size and number of blocks
     const int blockSize = 256;

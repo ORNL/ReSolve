@@ -23,15 +23,15 @@ namespace ReSolve {
   void mass_axpy(index_type n, index_type i, const real_type* x, real_type* y, const real_type* alpha);
 
   void leftDiagScale(index_type n,
-                      const index_type* a_row_ptr,
-                      real_type* a_val,
-                      const real_type* diag);
+                     const index_type* a_row_ptr,
+                     real_type* a_val,
+                     const real_type* diag);
 
   void rightDiagScale(index_type n,
-                       const index_type* a_row_ptr,
-                       const index_type* a_col_idx,
-                       real_type* a_val,
-                       const real_type* diag);
+                      const index_type* a_row_ptr,
+                      const index_type* a_col_idx,
+                      real_type* a_val,
+                      const real_type* diag);
 
   //needed for matrix inf nrm
   void matrix_row_sums(index_type n,
