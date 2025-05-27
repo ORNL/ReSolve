@@ -340,8 +340,7 @@ namespace ReSolve
                "In Coo::syncData one of device row or column data is null!\n");
 
         if (d_data_updated_) {
-          out::error() << "Coo::syncData is trying to sync device, but device already up to date!\n"
-                      << "Function call ignored!\n";
+          out::error() << "Coo::syncData is trying to sync device, but device already up to date!\n";
           assert(!d_data_updated_);
           return 1;
         }
