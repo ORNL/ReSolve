@@ -103,8 +103,10 @@ namespace ReSolve
               aux_data[i] = var2;
             }
           }
-          V.setDataUpdated(memory::HOST); 
-          V.syncData(memspace_);
+          V.setDataUpdated(memory::HOST);
+          if (memspace_ == memory::DEVICE) {
+            V.syncData(memspace_);
+          }
 
           // Set the first vector to all 1s and normalize it. 
           V.setToConst(0, 1.0, memspace_);
