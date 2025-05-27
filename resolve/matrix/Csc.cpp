@@ -215,8 +215,7 @@ namespace ReSolve
                "In Csc::syncData one of host row or column data is null!\n");
 
         if (h_data_updated_) {
-          out::error() << "Csc::syncData is trying to sync host, but host already up to date!\n"
-                       << "Function call ignored!\n";
+          out::error() << "Csc::syncData is trying to sync host, but host already up to date!\n";
           assert(!h_data_updated_);
           return 1;
         }
