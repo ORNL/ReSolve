@@ -270,7 +270,8 @@ namespace ReSolve {
   {
     assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW &&
            "Matrix has to be in CSR format for left diagonal scaling.\n");
-    assert(diag->getSize() == A->getNumRows() && "Diagonal vector must be of the same size as the number of rows in the matrix.");
+    assert(diag->getSize() == A->getNumRows() && 
+           "Diagonal vector must be of the same size as the number of rows in the matrix.");
     assert(A->getValues(memspace) != nullptr && "Matrix values are null!\n");
     assert(diag->getData(memspace) != nullptr && "Diagonal vector data is null!\n");
     using namespace ReSolve::memory;
