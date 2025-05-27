@@ -360,8 +360,7 @@ namespace ReSolve
                "In Csr::syncData one of device row or column data is null!\n");
 
         if (d_data_updated_) {
-          out::error() << "Csr::syncData is trying to sync device, but device already up to date!\n"
-                       << "Function call ignored!\n";
+          out::error() << "Csr::syncData is trying to sync device, but device already up to date!\n";
           assert(!d_data_updated_);
           return 1;
         }
