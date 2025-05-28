@@ -107,7 +107,6 @@ int runTest(int argc, char *argv[])
   vector_type* vec_rhs = generateRhs(n, memspace);
 
   vector_type vec_x(A->getNumRows());
-  vec_x.allocate(memory::HOST);
   vec_x.allocate(memspace);
   vec_x.setToZero(memspace);
 

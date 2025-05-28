@@ -61,7 +61,7 @@ namespace ReSolve { namespace vector {
       bool gpu_updated_{false}; ///< DEVICE data flag (updated or not)
       bool cpu_updated_{false}; ///< HOST data flag (updated or not)
 
-      bool owns_gpu_data_{true}; ///< data owneship flag for DEVICE data
+      bool owns_gpu_data_{false}; ///< data owneship flag for DEVICE data
       bool owns_cpu_data_{true}; ///< data ownership flag for HOST data
 
       MemoryHandler mem_; ///< Device memory manager object

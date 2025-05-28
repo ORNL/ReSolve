@@ -497,7 +497,7 @@ namespace ReSolve
       if (is_flexible) {
         vec_Z_ = new vector_type(n_, restart_ + 1);
       } else {
-        // otherwise Z is just a one vector, not multivector and we dont keep it
+        // otherwise Z is just one vector, not a multivector and we don't keep it
         vec_Z_ = new vector_type(n_);
       }
       vec_Z_->allocate(memspace_);
