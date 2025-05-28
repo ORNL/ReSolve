@@ -1,6 +1,7 @@
 #pragma once
-
+#include <cassert>
 #include <resolve/utilities/logger/Logger.hpp>
+
 
 namespace ReSolve
 {
@@ -43,6 +44,7 @@ namespace ReSolve
       static int deleteOnDevice(void* /* v */)
       {
         ReSolve::io::Logger::error() << "Trying to delete on a GPU device, but GPU support not available.\n";
+        assert(false && "Trying to delete on a GPU device, but GPU support not available.");
         return -1;
       }
 
