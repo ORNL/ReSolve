@@ -1,0 +1,132 @@
+#pragma once
+#include <string>
+#include <vector>
+#include <iomanip>
+#include <sstream>
+#include <iterator>
+#include <algorithm>
+#include <resolve/vector/Vector.hpp>
+#include <resolve/vector/VectorHandler.hpp>
+#include <tests/unit/TestBase.hpp>
+#include <resolve/workspace/LinAlgWorkspace.hpp>
+
+namespace ReSolve { 
+  namespace tests {
+    /**
+     * @class Tests for vector operations.
+     *
+     */
+    class VectorTests : TestBase
+    {
+      public:
+        VectorTests(ReSolve::VectorHandler& handler): handler_(handler) 
+        {
+          if (handler_.getIsCudaEnabled() || handler_.getIsHipEnabled()) {
+            memspace_ = memory::DEVICE;
+          } else {
+            memspace_ = memory::HOST;
+          }
+        }
+
+        virtual ~VectorTests()
+        {
+        }
+
+        TestOutcome vectorConstructor()
+        {
+          TestStatus status;
+          status.skipTest();
+
+          return status.report(__func__);
+        }
+        
+        TestOutcome dimensions(index_type N, index_type k)
+        {
+          TestStatus status;
+          status = true;
+
+          vector::Vector x(N, k);
+
+          if (x.getCapacity() != N) {
+            std::cout << "The capacity of the vector is " << x.getCapacity() 
+                    << ", expected: " << N << "\n";
+            status *= false;
+          }
+
+          if (x.getSize() != N) {
+            std::cout << "The size of the vector is " << x.getSize()
+                    << ", expected: " << N << "\n";
+            status *= false;
+          }
+
+          if (x.getNumVectors() != k) {
+            std::cout << "The number of vectors in the multivector is " << x.getNumVectors()
+                    << ", expected: " << k << "\n";
+            status *= false;
+          }
+
+          return status.report(__func__);
+        }
+
+        TestOutcome setData(index_type N)
+        {
+          TestStatus status;
+          status = true;
+          
+          vector::Vector x(N);
+
+          real_type* data = new real_type[N];
+          for (int i = 0; i < N; ++i) {
+            data[i] = 0.1 * (real_type) i;
+          }
+          x.setData(data, memspace_);
+
+          real_type* x_data = x.getData(memspace_);
+          
+          if (x_data == nullptr) {
+            std::cout << "The data pointer is null after setting.\n";
+            status *= false;
+          } else {
+            for (int i = 0; i < N; ++i) {
+              if (!isEqual(x_data[i], data[i])) {
+                std::cout << "The data in the vector is incorrect at index " << i 
+                          << ", expected: " << data[i] 
+                          << ", got: " << x_data[i] << "\n";
+                status *= false;
+                break;
+              }
+            }
+          }
+
+          return status.report(__func__);
+        }
+
+      private:
+        ReSolve::VectorHandler& handler_;
+        ReSolve::memory::MemorySpace memspace_{memory::HOST};
+
+        // we can verify through norm but that would defeat the purpose of testing vector handler ...
+        bool verifyAnswer(vector::Vector& x, real_type answer)
+        {
+          bool status = true;
+
+          if (memspace_ == memory::DEVICE) {
+            x.syncData(memory::HOST);
+          }
+
+          for (index_type i = 0; i < x.getSize(); ++i) {
+            // std::cout << x->getData("cpu")[i] << "\n";
+            if (!isEqual(x.getData(memory::HOST)[i], answer)) {
+              std::cout << std::setprecision(16);
+              status = false;
+              std::cout << "Solution vector element x[" << i << "] = " << x.getData(memory::HOST)[i]
+                << ", expected: " << answer << "\n";
+              break; 
+            }
+          }
+          return status;
+        }
+    };//class
+  } // namespace tests
+} //namespace ReSolve
+
