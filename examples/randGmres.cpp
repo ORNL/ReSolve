@@ -153,8 +153,11 @@ int runGmresExample(int argc, char *argv[])
 
   vec_x = new vector_type(A->getNumRows());
   vec_x->allocate(memspace);
-  A->syncData(memspace);
-  vec_rhs->syncData(memspace);
+  if (memspace == memory::DEVICE) {
+    A->syncData(memspace);
+    vec_rhs->syncData(memspace);
+  }
+
 
   printSystemInfo(matrix_pathname, A);
 
