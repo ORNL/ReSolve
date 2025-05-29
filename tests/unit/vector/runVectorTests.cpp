@@ -3,33 +3,59 @@
 #include <fstream>
 #include "VectorTests.hpp"
 
-int main(int, char**)
+/**
+ * @brief run vector tests with a given backend
+ *
+ * @tparam WorkspaceType workspace type LinAlgWorkspace{Cpu, CUDA, HIP} supported
+ * @param[in] backend - name of the hardware backend
+ * @param[out] result - test results
+ */
+template<typename WorkspaceType>
+void runTests(const std::string& backend, ReSolve::tests::TestingResults& result)
 {
-  ReSolve::tests::TestingResults result; 
+  std::cout << "Running tests on " << backend << " device:\n";
 
-  {
-    std::cout << "Running tests on CPU:\n";
+  ReSolve::LinAlgWorkspaceCpu workspace;
+  workspace.initializeHandles();
+  ReSolve::VectorHandler handler(&workspace);
 
-    ReSolve::LinAlgWorkspaceCpu workspace;
-    workspace.initializeHandles();
-    ReSolve::VectorHandler handler(&workspace);
+  ReSolve::tests::VectorTests test;
+  
+  result += test.vectorConstructor(50, 5);
+  result += test.vectorConstructor(50);
+  
+  result += test.setData(50);
+  
+  result += test.copyDataFromArray(50);
+  result += test.copyDataFromVector(50);
+  result += test.copyDataToArray(50);
+  result += test.copyDataToVector(50);
 
-    ReSolve::tests::VectorTests test;
-    result += test.vectorConstructor(50, 5);
-    result += test.vectorConstructor(50);
-    result += test.setData(50);
-    result += test.copyDataFromArray(50);
-    result += test.copyDataFromVector(50);
-    result += test.copyDataToArray(50);
-    result += test.copyDataToVector(50);
-    result += test.resize(100, 50);
+  result += test.resize(100, 50);
+  
+  result += test.setToConst(50, 0.0);
+  result += test.setToConst(50, 5.0);
+
+  if (backend != "CPU") {
     result += test.syncData(50, ReSolve::memory::HOST);
     result += test.syncData(50, ReSolve::memory::DEVICE);
-    result += test.setToConst(50, 0.0);
-    result += test.setToConst(50, 5.0);
-
-    std::cout << "\n";
   }
+
+  std::cout << "\n";
+}
+
+int main(int, char**)
+{
+  ReSolve::tests::TestingResults result;
+  runTests<ReSolve::LinAlgWorkspaceCpu>("CPU", result);
+
+#ifdef RESOLVE_USE_CUDA
+  runTests<ReSolve::LinAlgWorkspaceCUDA>("CUDA", result);
+#endif
+
+#ifdef RESOLVE_USE_HIP
+  runTests<ReSolve::LinAlgWorkspaceHIP>("HIP", result);
+#endif
 
   return result.summary();
 }
