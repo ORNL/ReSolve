@@ -100,6 +100,10 @@ namespace ReSolve {
 
           return status.report(__func__);
         }
+
+      private:
+        ReSolve::VectorHandler& handler_;
+        ReSolve::memory::MemorySpace memspace_{memory::HOST};
     };//class
   } // namespace tests
 } //namespace ReSolve
