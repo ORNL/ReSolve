@@ -9,6 +9,7 @@
 #include <resolve/vector/VectorHandler.hpp>
 #include <tests/unit/TestBase.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
+#include <resolve/MemoryUtils.hpp>
 
 namespace ReSolve { 
   namespace tests {
@@ -65,7 +66,7 @@ namespace ReSolve {
           return vectorConstructor(N, 1);
         }
 
-        TestOutcome resize(index_type N, index_type newN)
+        TestOutcome resize(index_type N, index_type new_N)
         {
           TestStatus status;
           status = true;
@@ -73,11 +74,11 @@ namespace ReSolve {
           vector::Vector x(N);
           x.allocate(memspace_);
           
-          x.resize(newN);
+          x.resize(new_N);
 
-          if (x.getSize() != newN) {
+          if (x.getSize() != new_N) {
             std::cout << "The size of the vector after resizing is " << x.getSize()
-                    << ", expected: " << newN << "\n";
+                    << ", expected: " << new_N << "\n";
             status *= false;
           }
 
@@ -117,7 +118,7 @@ namespace ReSolve {
           return status.report(__func__);
         }
 
-        TestOutcome copyDataFromArray(index_type N)
+        TestOutcome copyDataFrom(index_type N)
         {
           TestStatus status;
           status = true;
@@ -128,66 +129,28 @@ namespace ReSolve {
             data[i] = 0.1 * (real_type) i;
           }
           
+          // array -> memspace
           x.copyDataFrom(data, memory::HOST, memspace_);
 
-          // Modify the original vector to verify that copied data does not change
-          for (int i = 0; i < N; ++i) {
-            data[i] = 0.2 * (real_type) i;
-          }
-
-          real_type* x_data = x.getData(memspace_);
-
-          if (x_data == nullptr) {
-            std::cout << "The data pointer is null after copying.\n";
-            status *= false;
-          } else {
-            for (int i = 0; i < N; ++i) {
-              if (!isEqual(x_data[i], 0.1 * (real_type) i)) {
-                std::cout << "The data in the vector is incorrect at index " << i 
-                          << ", expected: " << 0.1 * (real_type) i
-                          << ", got: " << x_data[i] << "\n";
-                status *= false;
-                break;
-              }
-            }
-          }
-
-          return status.report(__func__);
-        }
-
-        TestOutcome copyDataFromVector(index_type N, memory::MemorySpace memoryTo)
-        {
-          TestStatus status;
-          status = true;
-
-          vector::Vector x(N);
-          real_type* data = new real_type[N];
-          for (int i = 0; i < N; ++i) {
-            data[i] = 0.1 * (real_type) i;
-          }
-          
-          x.copyDataFrom(data, memory::HOST, memoryTo);
-
-          // Create another vector and copy data from the first one
+          // memspace -> memspace
           vector::Vector y(N);
-          y.copyDataFrom(&x, memoryTo, memspace_);
+          y.copyDataFrom(&x, memspace_, memspace_);
 
-          // Modify the original vector to verify that copied data does not change
-          for (int i = 0; i < N; ++i) {
-            data[i] = 0.2 * (real_type) i;
-          }
+          // memspace -> host
+          vector::Vector z(N);
+          z.copyDataFrom(&y, memspace_, memory::HOST);
 
-          real_type* y_data = y.getData(memoryTo);
+          real_type* z_data = z.getData(memory::HOST);
 
-          if (y_data == nullptr) {
+          if (z_data == nullptr) {
             std::cout << "The data pointer is null after copying from vector.\n";
             status *= false;
           } else {
             for (int i = 0; i < N; ++i) {
-              if (!isEqual(y_data[i], 0.1 * (real_type) i)) {
+              if (!isEqual(z_data[i], data[i])) {
                 std::cout << "The data in the copied vector is incorrect at index " << i 
-                          << ", expected: " << 0.1 * (real_type) i
-                          << ", got: " << y_data[i] << "\n";
+                          << ", expected: " << data[i]
+                          << ", got: " << z_data[i] << "\n";
                 status *= false;
                 break;
               }
@@ -197,7 +160,7 @@ namespace ReSolve {
           return status.report(__func__);
         }
 
-        TestOutcome copyDataToArray(index_type N)
+        TestOutcome copyDataTo(index_type N)
         {
           TestStatus status;
           status = true;
@@ -210,60 +173,33 @@ namespace ReSolve {
 
           x.copyDataFrom(data, memory::HOST, memspace_);
 
-          // Copy data to an array
+          // Copy data to an array on current memspace
           real_type* dest = new real_type[N];
+          // second argument is in/out
           x.copyDataTo(dest, memspace_);
+
+          // Copy to host to verify
+          real_type* dest_h = new real_type[N];
+          if (memspace_ == memory::DEVICE) {
+            mem_.copyArrayDeviceToHost(dest_h, dest, N);
+            dest = dest_h;
+          } else {
+            // If we are on HOST, we can use dest directly
+            dest_h = dest;
+          }
 
           // Verify the copied data
           for (int i = 0; i < N; ++i) {
-            if (!isEqual(dest[i], 0.1 * (real_type) i)) {
+            if (!isEqual(dest_h[i], data[i])) {
               std::cout << "The data in the destination array is incorrect at index " << i 
-                        << ", expected: " << 0.1 * (real_type) i
-                        << ", got: " << dest[i] << "\n";
+                        << ", expected: " << data[i]
+                        << ", got: " << dest_h[i] << "\n";
               status *= false;
               break;
             }
           }
 
           delete[] dest;
-          return status.report(__func__);
-        }
-
-        TestOutcome copyDataToVector(index_type N, memory::MemorySpace memoryTo)
-        {
-          TestStatus status;
-          status = true;
-
-          vector::Vector x(N);
-          real_type* data = new real_type[N];
-          for (int i = 0; i < N; ++i) {
-            data[i] = 0.1 * (real_type) i;
-          }
-
-          x.copyDataFrom(data, memory::HOST, memspace_);
-
-          // Copy data to another vector
-          vector::Vector y(N);
-          y.copyDataFrom(&x, memspace_, memoryTo);
-
-          // Verify the copied data
-          real_type* y_data = y.getData(memoryTo);
-
-          if (y_data == nullptr) {
-            std::cout << "The data pointer is null after copying to vector.\n";
-            status *= false;
-          } else {
-            for (int i = 0; i < N; ++i) {
-              if (!isEqual(y_data[i], 0.1 * (real_type) i)) {
-                std::cout << "The data in the copied vector is incorrect at index " << i 
-                          << ", expected: " << 0.1 * (real_type) i
-                          << ", got: " << y_data[i] << "\n";
-                status *= false;
-                break;
-              }
-            }
-          }
-
           return status.report(__func__);
         }
 
@@ -337,9 +273,9 @@ namespace ReSolve {
           } else {
             // Verify that the data is correctly synced
             for (int i = 0; i < N; ++i) {
-              if (!isEqual(x_d_data[i], 0.1 * (real_type) i)) {
+              if (!isEqual(x_d_data[i], data[i])) {
                 std::cout << "The data in the vector after sync is incorrect at index " << i 
-                          << ", expected: " << 0.1 * (real_type) i
+                          << ", expected: " << data[i]
                           << ", got: " << x_d_data[i] << "\n";
                 status *= false;
                 break;
@@ -353,6 +289,7 @@ namespace ReSolve {
       private:
         ReSolve::VectorHandler& handler_;
         ReSolve::memory::MemorySpace memspace_;
+        MemoryHandler mem_;
     };//class
   } // namespace tests
 } //namespace ReSolve
