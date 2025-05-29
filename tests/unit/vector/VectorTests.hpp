@@ -19,13 +19,8 @@ namespace ReSolve {
     class VectorTests : TestBase
     {
       public:
-        VectorTests(ReSolve::VectorHandler& handler): handler_(handler) 
+        VectorTests()
         {
-          if (handler_.getIsCudaEnabled() || handler_.getIsHipEnabled()) {
-            memspace_ = memory::DEVICE;
-          } else {
-            memspace_ = memory::HOST;
-          }
         }
 
         virtual ~VectorTests()
@@ -74,7 +69,7 @@ namespace ReSolve {
           status = true;
 
           vector::Vector x(N);
-          x.allocate(memspace_);
+          x.allocate(memory::HOST);
           
           x.resize(newN);
 
@@ -98,9 +93,9 @@ namespace ReSolve {
           for (int i = 0; i < N; ++i) {
             data[i] = 0.1 * (real_type) i;
           }
-          x.setData(data, memspace_);
+          x.setData(data, memory::HOST);
 
-          real_type* x_data = x.getData(memspace_);
+          real_type* x_data = x.getData(memory::HOST);
           
           if (x_data == nullptr) {
             std::cout << "The data pointer is null after setting.\n";
@@ -131,14 +126,14 @@ namespace ReSolve {
             data[i] = 0.1 * (real_type) i;
           }
           
-          x.copyDataFrom(data, memory::HOST, memspace_);
+          x.copyDataFrom(data, memory::HOST, memory::HOST);
 
           // Modify the original vector to verify that copied data does not change
           for (int i = 0; i < N; ++i) {
             data[i] = 0.2 * (real_type) i;
           }
           
-          real_type* x_data = x.getData(memspace_);
+          real_type* x_data = x.getData(memory::HOST);
           
           if (x_data == nullptr) {
             std::cout << "The data pointer is null after copying.\n";
@@ -169,18 +164,18 @@ namespace ReSolve {
             data[i] = 0.1 * (real_type) i;
           }
           
-          x.copyDataFrom(data, memory::HOST, memspace_);
+          x.copyDataFrom(data, memory::HOST, memory::HOST);
 
           // Create another vector and copy data from the first one
           vector::Vector y(N);
-          y.copyDataFrom(&x, memory::HOST, memspace_);
+          y.copyDataFrom(&x, memory::HOST, memory::HOST);
 
           // Modify the original vector to verify that copied data does not change
           for (int i = 0; i < N; ++i) {
             data[i] = 0.2 * (real_type) i;
           }
 
-          real_type* y_data = y.getData(memspace_);
+          real_type* y_data = y.getData(memory::HOST);
           
           if (y_data == nullptr) {
             std::cout << "The data pointer is null after copying from vector.\n";
@@ -211,11 +206,11 @@ namespace ReSolve {
             data[i] = 0.1 * (real_type) i;
           }
           
-          x.copyDataFrom(data, memory::HOST, memspace_);
+          x.copyDataFrom(data, memory::HOST, memory::HOST);
 
           // Copy data to an array
           real_type* dest = new real_type[N];
-          x.copyDataTo(dest, memspace_);
+          x.copyDataTo(dest, memory::HOST);
 
           // Verify the copied data
           for (int i = 0; i < N; ++i) {
@@ -243,14 +238,14 @@ namespace ReSolve {
             data[i] = 0.1 * (real_type) i;
           }
           
-          x.copyDataFrom(data, memory::HOST, memspace_);
+          x.copyDataFrom(data, memory::HOST, memory::HOST);
 
           // Copy data to another vector
           vector::Vector y(N);
-          y.copyDataFrom(&x, memory::HOST, memspace_);
+          y.copyDataFrom(&x, memory::HOST, memory::HOST);
 
           // Verify the copied data
-          real_type* y_data = y.getData(memspace_);
+          real_type* y_data = y.getData(memory::HOST);
           
           if (y_data == nullptr) {
             std::cout << "The data pointer is null after copying to vector.\n";
@@ -270,9 +265,49 @@ namespace ReSolve {
           return status.report(__func__);
         }
 
-      private:
-        ReSolve::VectorHandler& handler_;
-        ReSolve::memory::MemorySpace memspace_{memory::HOST};
+        /**
+         * @brief Sync data between HOST and DEVICE memory spaces.
+         *
+         * Creates a vector allocated in the specified memory space, then sync
+         * to the other memory space and verify that the data is synced correctly.
+         *
+         * @param N Number of elements in the vector.
+         * @param memspaceFrom Memory space from which to sync data (HOST or DEVICE).
+         * @return TestOutcome indicating the result of the test.
+         */
+        TestOutcome syncData(index_type N, memory::MemorySpace memspaceFrom) {
+          using namespace ReSolve::memory;
+          memory::MemorySpace memspaceTo = (memspaceFrom == memory::HOST) ? memory::DEVICE : memory::HOST;
+
+          TestStatus status;
+          status = true;
+
+          vector::Vector x(N);
+          x.allocate(memspaceFrom);
+          
+          real_type* data = new real_type[N];
+          for (int i = 0; i < N; ++i) {
+            data[i] = 0.1 * (real_type) i;
+          }
+          x.copyDataFrom(data, memory::HOST, memspaceFrom);
+
+          // Sync data between host and device
+          x.syncData(memspaceTo);
+
+          real_type* x_d_data = x.getData(memspaceTo);
+
+          for (int i = 0; i < N; ++i) {
+            if (!isEqual(x_d_data[i], 0.1 * (real_type) i)) {
+              std::cout << "The data in the vector after sync is incorrect at index " << i 
+                        << ", expected: " << 0.1 * (real_type) i
+                        << ", got: " << x_d_data[i] << "\n";
+              status *= false;
+              break;
+            }
+          }
+
+          return status.report(__func__);
+        }
     };//class
   } // namespace tests
 } //namespace ReSolve

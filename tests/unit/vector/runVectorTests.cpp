@@ -14,7 +14,7 @@ int main(int, char**)
     workspace.initializeHandles();
     ReSolve::VectorHandler handler(&workspace);
 
-    ReSolve::tests::VectorTests test(handler);
+    ReSolve::tests::VectorTests test;
     result += test.vectorConstructor();
     result += test.dimensions(50, 5);
     result += test.setData(50);
@@ -23,6 +23,8 @@ int main(int, char**)
     result += test.copyDataToArray(50);
     result += test.copyDataToVector(50);
     result += test.resize(100, 50);
+    result += test.syncData(50, ReSolve::memory::HOST);
+    result += test.syncData(50, ReSolve::memory::DEVICE);
 
     std::cout << "\n";
   }
