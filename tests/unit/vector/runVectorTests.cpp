@@ -18,6 +18,11 @@ int main(int, char**)
     result += test.vectorConstructor();
     result += test.dimensions(50, 5);
     result += test.setData(50);
+    result += test.copyDataFromArray(50);
+    result += test.copyDataFromVector(50);
+    result += test.copyDataToArray(50);
+    result += test.copyDataToVector(50);
+    result += test.resize(100, 50);
 
     std::cout << "\n";
   }
