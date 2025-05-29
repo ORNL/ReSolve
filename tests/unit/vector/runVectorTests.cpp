@@ -15,8 +15,8 @@ int main(int, char**)
     ReSolve::VectorHandler handler(&workspace);
 
     ReSolve::tests::VectorTests test;
-    result += test.vectorConstructor();
-    result += test.dimensions(50, 5);
+    result += test.vectorConstructor(50, 5);
+    result += test.vectorConstructor(50);
     result += test.setData(50);
     result += test.copyDataFromArray(50);
     result += test.copyDataFromVector(50);

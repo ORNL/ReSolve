@@ -27,15 +27,7 @@ namespace ReSolve {
         {
         }
 
-        TestOutcome vectorConstructor()
-        {
-          TestStatus status;
-          status.skipTest();
-
-          return status.report(__func__);
-        }
-        
-        TestOutcome dimensions(index_type N, index_type k)
+        TestOutcome vectorConstructor(index_type N, index_type k)
         {
           TestStatus status;
           status = true;
@@ -61,6 +53,10 @@ namespace ReSolve {
           }
 
           return status.report(__func__);
+        }
+
+        TestOutcome vectorConstructor(index_type N) {
+          return vectorConstructor(N, 1);
         }
 
         TestOutcome resize(index_type N, index_type newN)
@@ -276,7 +272,6 @@ namespace ReSolve {
          * @return TestOutcome indicating the result of the test.
          */
         TestOutcome syncData(index_type N, memory::MemorySpace memspaceFrom) {
-          using namespace ReSolve::memory;
           memory::MemorySpace memspaceTo = (memspaceFrom == memory::HOST) ? memory::DEVICE : memory::HOST;
 
           TestStatus status;
@@ -296,13 +291,19 @@ namespace ReSolve {
 
           real_type* x_d_data = x.getData(memspaceTo);
 
-          for (int i = 0; i < N; ++i) {
-            if (!isEqual(x_d_data[i], 0.1 * (real_type) i)) {
-              std::cout << "The data in the vector after sync is incorrect at index " << i 
-                        << ", expected: " << 0.1 * (real_type) i
-                        << ", got: " << x_d_data[i] << "\n";
-              status *= false;
-              break;
+          if (x_d_data == nullptr) {
+            std::cout << "The data pointer is null after syncing.\n";
+            status *= false;
+          } else {
+            // Verify that the data is correctly synced
+            for (int i = 0; i < N; ++i) {
+              if (!isEqual(x_d_data[i], 0.1 * (real_type) i)) {
+                std::cout << "The data in the vector after sync is incorrect at index " << i 
+                          << ", expected: " << 0.1 * (real_type) i
+                          << ", got: " << x_d_data[i] << "\n";
+                status *= false;
+                break;
+              }
             }
           }
 
