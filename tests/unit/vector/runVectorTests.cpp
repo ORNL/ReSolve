@@ -19,7 +19,7 @@ void runTests(const std::string& backend, ReSolve::tests::TestingResults& result
   workspace.initializeHandles();
   ReSolve::VectorHandler handler(&workspace);
 
-  ReSolve::tests::VectorTests test;
+  ReSolve::tests::VectorTests test(handler);
   
   result += test.vectorConstructor(50, 5);
   result += test.vectorConstructor(50);
@@ -27,9 +27,13 @@ void runTests(const std::string& backend, ReSolve::tests::TestingResults& result
   result += test.setData(50);
   
   result += test.copyDataFromArray(50);
-  result += test.copyDataFromVector(50);
   result += test.copyDataToArray(50);
-  result += test.copyDataToVector(50);
+  result += test.copyDataFromVector(50, ReSolve::memory::HOST);  
+  result += test.copyDataToVector(50, ReSolve::memory::HOST);
+  if (backend != "CPU") {
+    result += test.copyDataFromVector(50, ReSolve::memory::DEVICE);
+    result += test.copyDataToVector(50, ReSolve::memory::DEVICE);
+  }
 
   result += test.resize(100, 50);
   
