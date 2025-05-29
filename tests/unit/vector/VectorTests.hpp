@@ -261,6 +261,40 @@ namespace ReSolve {
           return status.report(__func__);
         }
 
+        TestOutcome setToConst(index_type N, real_type constValue) {
+          TestStatus status;
+          status = true;
+
+          vector::Vector x(N);
+          x.allocate(memory::HOST);
+
+          // Set all elements to a constant value
+          if (isEqual(constValue, (real_type) 0.0)) {
+            x.setToZero(memory::HOST);
+          } else {
+            x.setToConst(constValue, memory::HOST);
+          }
+
+          real_type* x_data = x.getData(memory::HOST);
+          
+          if (x_data == nullptr) {
+            std::cout << "The data pointer is null after setting to constant.\n";
+            status *= false;
+          } else {
+            for (int i = 0; i < N; ++i) {
+              if (!isEqual(x_data[i], constValue)) {
+                std::cout << "The data in the vector is incorrect at index " << i 
+                          << ", expected: " << constValue 
+                          << ", got: " << x_data[i] << "\n";
+                status *= false;
+                break;
+              }
+            }
+          }
+
+          return status.report(__func__);
+        }
+
         /**
          * @brief Sync data between HOST and DEVICE memory spaces.
          *

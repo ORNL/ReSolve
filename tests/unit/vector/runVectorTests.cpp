@@ -25,6 +25,8 @@ int main(int, char**)
     result += test.resize(100, 50);
     result += test.syncData(50, ReSolve::memory::HOST);
     result += test.syncData(50, ReSolve::memory::DEVICE);
+    result += test.setToConst(50, 0.0);
+    result += test.setToConst(50, 5.0);
 
     std::cout << "\n";
   }
