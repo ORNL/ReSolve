@@ -2,7 +2,6 @@
 #include <cassert>
 #include <resolve/utilities/logger/Logger.hpp>
 
-
 namespace ReSolve
 {
   namespace memory
