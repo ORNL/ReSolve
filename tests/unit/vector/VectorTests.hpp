@@ -265,20 +265,22 @@ namespace ReSolve {
           // Sync data between host and device
           x.syncData(memspaceTo);
 
-          real_type* x_d_data = x.getData(memspaceTo);
+          // Bring back to host to verify
+          vector::Vector x_host(N);
+          x_host.copyDataFrom(&x, memspaceTo, memory::HOST);
 
-          if (x_d_data == nullptr) {
+          real_type* x_synced_data = x_host.getData(memory::HOST);
+
+          if (x_synced_data == nullptr) {
             std::cout << "The data pointer is null after syncing.\n";
             status *= false;
           } else {
-            // Verify that the data is correctly synced
             for (int i = 0; i < N; ++i) {
-              if (!isEqual(x_d_data[i], data[i])) {
+              if (!isEqual(x_synced_data[i], data[i])) {
                 std::cout << "The data in the vector after sync is incorrect at index " << i 
                           << ", expected: " << data[i]
-                          << ", got: " << x_d_data[i] << "\n";
+                          << ", got: " << x_synced_data[i] << "\n";
                 status *= false;
-                break;
               }
             }
           }
