@@ -37,8 +37,8 @@ namespace ReSolve {
         /**
          * @brief Test vector constructor with specified size and number of vectors.
          *
-         * @param N Number of elements in the vector.
-         * @param k Number of vectors in the multivector.
+         * @param[in] N Number of elements in the vector.
+         * @param[in] k Number of vectors in the multivector.
          * @return TestOutcome indicating the result of the test.
          */
         TestOutcome vectorConstructor(index_type N, index_type k)
