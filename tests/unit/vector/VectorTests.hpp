@@ -34,6 +34,13 @@ namespace ReSolve {
         {
         }
 
+        /**
+         * @brief Test vector constructor with specified size and number of vectors.
+         *
+         * @param N Number of elements in the vector.
+         * @param k Number of vectors in the multivector.
+         * @return TestOutcome indicating the result of the test.
+         */
         TestOutcome vectorConstructor(index_type N, index_type k)
         {
           TestStatus status;
@@ -62,10 +69,23 @@ namespace ReSolve {
           return status.report(__func__);
         }
 
+        /**
+         * @brief Test vector constructor with specified size and default number of vectors (1).
+         *
+         * @param N Number of elements in the vector.
+         * @return TestOutcome indicating the result of the test.
+         */
         TestOutcome vectorConstructor(index_type N) {
           return vectorConstructor(N, 1);
         }
 
+        /**
+         * @brief Test resizing a vector to a new size.
+         *
+         * @param N Current size of the vector.
+         * @param new_N New size to which the vector should be resized.
+         * @return TestOutcome indicating the result of the test.
+         */
         TestOutcome resize(index_type N, index_type new_N)
         {
           TestStatus status;
@@ -85,6 +105,12 @@ namespace ReSolve {
           return status.report(__func__);
         }
       
+        /**
+         * @brief Test setting data in a vector from array.
+         *
+         * @param N Number of elements in the vector.
+         * @return TestOutcome indicating the result of the test.
+         */
         TestOutcome setData(index_type N)
         {
           TestStatus status;
@@ -118,6 +144,17 @@ namespace ReSolve {
           return status.report(__func__);
         }
 
+        /**
+         * @brief Test copying data between vector-array and vector-vector.
+         * 
+         * This creates an array, copies it to a vector in the current memory space, then
+         * copies it to another vector in the same memory space, and finally back to a third on the
+         * HOST. Then, it verifies the content of the final vector. This test only passes if all
+         * copies are successful.
+         *
+         * @param N Number of elements in the vector.
+         * @return TestOutcome indicating the result of the test.
+         */
         TestOutcome copyDataFrom(index_type N)
         {
           TestStatus status;
@@ -160,6 +197,16 @@ namespace ReSolve {
           return status.report(__func__);
         }
 
+        /**
+         * @brief Test copying data from vector to an array.
+         *
+         * This creates a vector, copies data to it, and then copies the data to an array
+         * in the current memory space. Finally, it uses the MemoryHandler to copy the data
+         * to HOST for verification.
+         *
+         * @param N Number of elements in the vector.
+         * @return TestOutcome indicating the result of the test.
+         */
         TestOutcome copyDataTo(index_type N)
         {
           TestStatus status;
@@ -203,6 +250,13 @@ namespace ReSolve {
           return status.report(__func__);
         }
 
+        /**
+         * @brief Test setting all elements of a vector to a constant value.
+         *
+         * @param N Number of elements in the vector.
+         * @param constValue The constant value to set all elements to.
+         * @return TestOutcome indicating the result of the test.
+         */
         TestOutcome setToConst(index_type N, real_type constValue) {
           TestStatus status;
           status = true;

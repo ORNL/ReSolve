@@ -4,7 +4,7 @@
 #include "VectorTests.hpp"
 
 /**
- * @brief run vector tests with a given backend
+ * @brief Run vector tests with a given backend
  *
  * @tparam WorkspaceType workspace type LinAlgWorkspace{Cpu, CUDA, HIP} supported
  * @param[in] backend - name of the hardware backend
