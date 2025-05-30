@@ -495,7 +495,7 @@ namespace ReSolve { namespace vector {
    */
   int Vector::resize(index_type new_n_size)
   {
-    assert(owns_cpu_data_ || owns_gpu_data_ 
+    assert(owns_cpu_data_ && owns_gpu_data_ 
            && "Cannot resize if vector is not owning the data.");
 
     if (new_n_size > n_capacity_) {
