@@ -95,7 +95,6 @@ int runTest(int argc, char *argv[], std::string& solver_name)
     return -1;
   }
   ReSolve::matrix::Csr* A = ReSolve::io::createCsrFromFile(mat1);
-  A->syncData(ReSolve::memory::DEVICE);
   mat1.close();
 
   // Read first rhs vector
@@ -108,7 +107,6 @@ int runTest(int argc, char *argv[], std::string& solver_name)
   real_type* rhs = ReSolve::io::createArrayFromFile(rhs1_file);
   vector_type vec_rhs(A->getNumRows());
   vec_rhs.copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
-  vec_rhs.syncData(ReSolve::memory::DEVICE);
   rhs1_file.close();
 
   // Allocate the solution vector
@@ -162,7 +160,6 @@ int runTest(int argc, char *argv[], std::string& solver_name)
     return -1;
   }
   ReSolve::io::updateMatrixFromFile(mat2, A);
-  A->syncData(ReSolve::memory::DEVICE);
   mat2.close();
 
   // Load the second rhs vector
@@ -174,7 +171,7 @@ int runTest(int argc, char *argv[], std::string& solver_name)
   }
   ReSolve::io::updateArrayFromFile(rhs2_file, &rhs);
   rhs2_file.close();
-  vec_rhs.copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+  vec_rhs.copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
 
   status = KLU.refactorize();
   error_sum += status;
