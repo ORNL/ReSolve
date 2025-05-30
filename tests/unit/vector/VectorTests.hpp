@@ -15,7 +15,6 @@ namespace ReSolve {
   namespace tests {
     /**
      * @class Tests for vector operations.
-     *
      */
     class VectorTests : TestBase
     {
@@ -39,7 +38,6 @@ namespace ReSolve {
          *
          * @param[in] N Number of elements in the vector.
          * @param[in] k Number of vectors in the multivector.
-         * @return TestOutcome indicating the result of the test.
          */
         TestOutcome vectorConstructor(index_type N, index_type k)
         {
@@ -72,8 +70,7 @@ namespace ReSolve {
         /**
          * @brief Test vector constructor with specified size and default number of vectors (1).
          *
-         * @param N Number of elements in the vector.
-         * @return TestOutcome indicating the result of the test.
+         * @param[in] N Number of elements in the vector.
          */
         TestOutcome vectorConstructor(index_type N) {
           return vectorConstructor(N, 1);
@@ -82,9 +79,8 @@ namespace ReSolve {
         /**
          * @brief Test resizing a vector to a new size.
          *
-         * @param N Current size of the vector.
-         * @param new_N New size to which the vector should be resized.
-         * @return TestOutcome indicating the result of the test.
+         * @param[in] N Current size of the vector.
+         * @param[in] new_N New size to which the vector should be resized.
          */
         TestOutcome resize(index_type N, index_type new_N)
         {
@@ -108,8 +104,7 @@ namespace ReSolve {
         /**
          * @brief Test setting data in a vector from array.
          *
-         * @param N Number of elements in the vector.
-         * @return TestOutcome indicating the result of the test.
+         * @param[in] N Number of elements in the vector.
          */
         TestOutcome setData(index_type N)
         {
@@ -152,8 +147,7 @@ namespace ReSolve {
          * HOST. Then, it verifies the content of the final vector. This test only passes if all
          * copies are successful.
          *
-         * @param N Number of elements in the vector.
-         * @return TestOutcome indicating the result of the test.
+         * @param[in] N Number of elements in the vector.
          */
         TestOutcome copyDataFrom(index_type N)
         {
@@ -204,8 +198,7 @@ namespace ReSolve {
          * in the current memory space. Finally, it uses the MemoryHandler to copy the data
          * to HOST for verification.
          *
-         * @param N Number of elements in the vector.
-         * @return TestOutcome indicating the result of the test.
+         * @param[in] N Number of elements in the vector.
          */
         TestOutcome copyDataTo(index_type N)
         {
@@ -253,9 +246,8 @@ namespace ReSolve {
         /**
          * @brief Test setting all elements of a vector to a constant value.
          *
-         * @param N Number of elements in the vector.
-         * @param constValue The constant value to set all elements to.
-         * @return TestOutcome indicating the result of the test.
+         * @param[in] N Number of elements in the vector.
+         * @param[in] constValue The constant value to set all elements to.
          */
         TestOutcome setToConst(index_type N, real_type constValue) {
           TestStatus status;
@@ -297,9 +289,8 @@ namespace ReSolve {
          * Creates a vector allocated in the specified memory space, then sync
          * to the other memory space and verify that the data is synced correctly.
          *
-         * @param N Number of elements in the vector.
-         * @param memspaceFrom Memory space from which to sync data (HOST or DEVICE).
-         * @return TestOutcome indicating the result of the test.
+         * @param[in] N Number of elements in the vector.
+         * @param[in] memspaceFrom Memory space from which to sync data (HOST or DEVICE).
          */
         TestOutcome syncData(index_type N, memory::MemorySpace memspaceFrom) {
           memory::MemorySpace memspaceTo = (memspaceFrom == memory::HOST) ? memory::DEVICE : memory::HOST;
