@@ -38,8 +38,8 @@ namespace ReSolve { namespace vector {
    */
   Vector::~Vector()
   {
-    if (owns_cpu_data_) delete [] h_data_;
-    if (owns_gpu_data_) mem_.deleteOnDevice(d_data_);
+    if (owns_cpu_data_ && h_data_) delete [] h_data_;
+    if (owns_gpu_data_ && d_data_) mem_.deleteOnDevice(d_data_);
   }
 
 

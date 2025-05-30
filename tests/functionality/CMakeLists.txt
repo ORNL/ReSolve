@@ -112,8 +112,8 @@ add_test(NAME rand_gmres_test    COMMAND $<TARGET_FILE:rand_gmres_test.exe>)
 
 if(RESOLVE_USE_KLU)
   # Using KLU as refactorization solver
-  add_test(NAME klu_klu_test    COMMAND $<TARGET_FILE:klu_klu_test.exe> "${test_data_dir}" "-d" "${test_data_dir}")
-  add_test(NAME klu_klu_ir_test COMMAND $<TARGET_FILE:klu_klu_test.exe> "${test_data_dir}" "-d" "${test_data_dir}" "-i")
+  add_test(NAME klu_klu_test    COMMAND $<TARGET_FILE:klu_klu_test.exe> "-d" "${test_data_dir}")
+  add_test(NAME klu_klu_ir_test COMMAND $<TARGET_FILE:klu_klu_test.exe> "-d" "${test_data_dir}" "-i")
 
   # CUDA-SDK specific tests
   if(RESOLVE_USE_CUDA)
