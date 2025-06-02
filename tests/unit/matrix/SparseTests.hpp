@@ -4,11 +4,12 @@
 #include <sstream>
 #include <iterator>
 #include <algorithm>
+#include <cassert>
 #include <tests/unit/TestBase.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
-#include <cassert>
+#include <resolve/MemoryUtils.hpp>
 
 namespace ReSolve { namespace tests {
   class SparseTests : TestBase
@@ -81,17 +82,35 @@ namespace ReSolve { namespace tests {
 
       ReSolve::matrix::Csr A(n, m, nnz);
 
-      index_type* row_data = new index_type[n + 1];
+      index_type* h_row_data = new index_type[n + 1];
       for (index_type i = 0; i <= n; ++i) {
-        row_data[i] = i * (nnz / n); // Simple pattern for row pointers
+        h_row_data[i] = i * (nnz / n); // Simple pattern for row pointers
       }
-      index_type* col_data = new index_type[nnz];
+      index_type* h_col_data = new index_type[nnz];
       for (index_type i = 0; i < nnz; ++i) {
-        col_data[i] = i % m; // Simple pattern for column indices
+        h_col_data[i] = i % m; // Simple pattern for column indices
       }
-      real_type* val_data = new real_type[nnz];
+      real_type* h_val_data = new real_type[nnz];
       for (index_type i = 0; i < nnz; ++i) {
-        val_data[i] = static_cast<real_type>(i + 1);
+        h_val_data[i] = static_cast<real_type>(i + 1);
+      }
+
+      // If on device, allocate and copy data
+      index_type* row_data;
+      index_type* col_data;
+      real_type* val_data;
+
+      if (memspace_ == memory::HOST) {
+        row_data = h_row_data;
+        col_data = h_col_data;
+        val_data = h_val_data;
+      } else {
+        mem_.allocateArrayOnDevice(&row_data, n + 1);
+        mem_.allocateArrayOnDevice(&col_data, nnz);
+        mem_.allocateArrayOnDevice(&val_data, nnz);
+        mem_.copyArrayHostToDevice(row_data, h_row_data, n + 1);
+        mem_.copyArrayHostToDevice(col_data, h_col_data, nnz);
+        mem_.copyArrayHostToDevice(val_data, h_val_data, nnz);
       }
 
       if (A.setDataPointers(row_data, col_data, val_data, memspace_) != 0) {
@@ -334,12 +353,13 @@ namespace ReSolve { namespace tests {
         std::cout << "Matrix data pointers are not null after destruction.\n";
         status = false;
       }
-      
+
       return status.report(__func__);
     }
 
     private:
       ReSolve::MatrixHandler& handler_;
       memory::MemorySpace memspace_;
+      MemoryHandler mem_;
   }; // class SparseTests
 }} // namespace ReSolve::tests
