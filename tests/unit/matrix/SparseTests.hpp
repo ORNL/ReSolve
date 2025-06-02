@@ -113,9 +113,9 @@ namespace ReSolve { namespace tests {
      * Sets the values pointer for the sparse matrix and checks if the pointer
      * points to the expected values.
      * 
-     * @param n - number of rows
-     * @param m - number of columns
-     * @param nnz - number of non-zeros
+     * @param[in] n - number of rows
+     * @param[in] m - number of columns
+     * @param[in] nnz - number of non-zeros
      * @return TestOutcome indicating success or failure of the test
      */
     TestOutcome setValuesPointer(index_type n, index_type m, index_type nnz)
