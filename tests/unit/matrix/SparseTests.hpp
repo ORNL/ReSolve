@@ -8,6 +8,7 @@
 #include <resolve/vector/Vector.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
+#include <cassert>
 
 namespace ReSolve { namespace tests {
   class SparseTests : TestBase
@@ -49,10 +50,8 @@ namespace ReSolve { namespace tests {
       TestStatus status;
       status = true;
 
-      // Create a sparse matrix with 3 rows, 4 columns and 5 non-zeros
       ReSolve::matrix::Csr A(n, m, nnz, is_symmetric, is_expanded);
 
-      // Check if the matrix was created correctly
       if (A.getNumRows() != n || A.getNumColumns() != m || A.getNnz() != nnz) {
         std::cout << "Matrix dimensions do not match expected values.\n";
         status = false;
@@ -69,18 +68,27 @@ namespace ReSolve { namespace tests {
      * 
      * @return TestOutcome indicating success or failure of the test
      */
-    TestOutcome setDataPointers()
+    TestOutcome setDataPointers(index_type n, index_type m, index_type nnz)
     {
+      assert(nnz % m == 0 && "For this test, nnz must be divisible by m");
+      
       TestStatus status;
       status = true;
 
-      // Create a sparse matrix with 3 rows, 4 columns and 5 non-zeros
-      ReSolve::matrix::Csr A(3, 4, 5);
+      ReSolve::matrix::Csr A(n, m, nnz);
 
-      // Set data pointers
-      index_type* row_data = new index_type[4]{0, 2, 4, 5};
-      index_type* col_data = new index_type[5]{0, 1, 2, 3, 1};
-      real_type* val_data = new real_type[5]{1.0, 2.0, 3.0, 4.0, 5.0};
+      index_type* row_data = new index_type[n + 1];
+      for (index_type i = 0; i <= n; ++i) {
+        row_data[i] = i * (nnz / n); // Simple pattern for row pointers
+      }
+      index_type* col_data = new index_type[nnz];
+      for (index_type i = 0; i < nnz; ++i) {
+        col_data[i] = i % m; // Simple pattern for column indices
+      }
+      real_type* val_data = new real_type[nnz];
+      for (index_type i = 0; i < nnz; ++i) {
+        val_data[i] = static_cast<real_type>(i + 1);
+      }
 
       if (A.setDataPointers(row_data, col_data, val_data, memspace_) != 0) {
         std::cout << "Failed to set data pointers.\n";
@@ -89,6 +97,37 @@ namespace ReSolve { namespace tests {
                 A.getColData(memspace_) != col_data || 
                 A.getValues(memspace_) != val_data) {
         std::cout << "Data pointers do not point to expected values.\n";
+        status = false;
+      }
+
+      return status.report(__func__);
+    }
+
+    /**
+     * @brief Test setting values pointer for the sparse matrix
+     * 
+     * Sets the values pointer for the sparse matrix and checks if the pointer
+     * points to the expected values.
+     * 
+     * @return TestOutcome indicating success or failure of the test
+     */
+    TestOutcome setValuesPointer(index_type n, index_type m, index_type nnz)
+    {
+      TestStatus status;
+      status = true;
+
+      ReSolve::matrix::Csr A(n, m, nnz);
+
+      real_type* val_data = new real_type[nnz];
+      for (index_type i = 0; i < nnz; ++i) {
+        val_data[i] = static_cast<real_type>(i + 1);
+      }
+
+      if (A.setValuesPointer(val_data, memspace_) != 0) {
+        std::cout << "Failed to set values pointer.\n";
+        status = false;
+      } else if (A.getValues(memspace_) != val_data) {
+        std::cout << "Values pointer does not point to expected values.\n";
         status = false;
       }
 

@@ -25,13 +25,14 @@ void runTests(const std::string& backend, ReSolve::tests::TestingResults& result
 
   ReSolve::tests::SparseTests test(handler);
 
-  result += test.constructor(50, 50, 10);
-  result += test.constructor(50, 50, 10, true);
-  result += test.constructor(50, 50, 10, false, false);
+  result += test.constructor(50, 50, 100);
+  result += test.constructor(50, 50, 100, true);
+  result += test.constructor(50, 50, 100, false, false);
 
-  result += test.setDataPointers();
+  result += test.setDataPointers(50, 50, 100);
+  result += test.setValuesPointer(50, 50, 100);
 
-  result += test.allocateAndDestroyData(50, 50, 10);
+  result += test.allocateAndDestroyData(50, 50, 100);
 }
 
 int main(int, char**)
