@@ -32,6 +32,10 @@ void runTests(const std::string& backend, ReSolve::tests::TestingResults& result
   result += test.setDataPointers(50, 50, 100);
   result += test.setValuesPointer(50, 50, 100);
 
+  result += test.copyValues(50, 50, 100);
+  result += test.copyValuesAndSetValues(50, 50, 100);
+  result += test.copyValuesAndSetDataPointers(50, 50, 100);
+
   result += test.allocateAndDestroyData(50, 50, 100);
 }
 

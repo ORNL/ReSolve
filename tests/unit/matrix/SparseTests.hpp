@@ -66,6 +66,9 @@ namespace ReSolve { namespace tests {
      * Sets the row, column, and value data pointers for the sparse matrix and
      * checks if the pointers are set correctly.
      * 
+     * @param n - number of rows
+     * @param m - number of columns
+     * @param nnz - number of non-zeros
      * @return TestOutcome indicating success or failure of the test
      */
     TestOutcome setDataPointers(index_type n, index_type m, index_type nnz)
@@ -109,6 +112,9 @@ namespace ReSolve { namespace tests {
      * Sets the values pointer for the sparse matrix and checks if the pointer
      * points to the expected values.
      * 
+     * @param n - number of rows
+     * @param m - number of columns
+     * @param nnz - number of non-zeros
      * @return TestOutcome indicating success or failure of the test
      */
     TestOutcome setValuesPointer(index_type n, index_type m, index_type nnz)
@@ -130,6 +136,161 @@ namespace ReSolve { namespace tests {
         std::cout << "Values pointer does not point to expected values.\n";
         status = false;
       }
+
+      // Clean up allocated memory
+      delete[] val_data;
+
+      return status.report(__func__);
+    }
+
+    /**
+     * @brief Test copying values into the sparse matrix
+     * 
+     * Copies values into the sparse matrix, modifies the original values,
+     * and verifies the correct unmodified values are stored in the matrix, 
+     * and that the values pointer does not point to the original array.
+     * 
+     * @param n - number of rows
+     * @param m - number of columns
+     * @param nnz - number of non-zeros
+     * @return TestOutcome indicating success or failure of the test
+     */
+    TestOutcome copyValues(index_type n, index_type m, index_type nnz)
+    {
+      TestStatus status;
+      status = true;
+
+      ReSolve::matrix::Csr A(n, m, nnz);
+
+      real_type* val_data = new real_type[nnz];
+      for (index_type i = 0; i < nnz; ++i) {
+        val_data[i] = static_cast<real_type>(i + 1);
+      }
+
+      if (A.copyValues(val_data, memory::HOST, memspace_) != 0) {
+        std::cout << "Failed to copy values.\n";
+        status = false;
+      } else {
+        // Modify original values to ensure copy worked
+        for (index_type i = 0; i < nnz; ++i) {
+          val_data[i] *= 2; // Change the values
+        }
+
+        if (A.getValues(memspace_) == nullptr) {
+          std::cout << "Values pointer is null after copy.\n";
+          status = false;
+        } else if (A.getValues(memspace_) == val_data) {
+          std::cout << "Values pointer should not point to original array after copy.\n";
+          status = false;
+        } else {
+          // Check if the copied values are correct
+          for (index_type i = 0; i < nnz; ++i) {
+            if (A.getValues(memspace_)[i] != static_cast<real_type>(i + 1)) {
+              std::cout << "Copied values do not match expected values.\n";
+              status = false;
+              break;
+            }
+          }
+        }
+      }
+
+      // Clean up allocated memory
+      delete[] val_data;
+
+      if (A.destroyMatrixData(memspace_) != 0) {
+        std::cout << "Failed to destroy matrix data.\n";
+        status = false;
+      }
+
+      return status.report(__func__);
+    }
+
+    /**
+     * @brief Verify that matrix will not reset data pointers when it currently owns data.
+     * 
+     * Copies values into the sparse matrix and then attempts to set the values
+     * pointer, which should fail since the matrix owns the data.
+     * 
+     * @param n - number of rows
+     * @param m - number of columns
+     * @param nnz - number of non-zeros
+     * @return TestOutcome indicating success or failure of the test
+     */
+    TestOutcome copyValuesAndSetDataPointers(index_type n, index_type m, index_type nnz)
+    {
+      TestStatus status;
+      status = true;
+
+      ReSolve::matrix::Csr A(n, m, nnz);
+
+      real_type* val_data = new real_type[nnz];
+      for (index_type i = 0; i < nnz; ++i) {
+        val_data[i] = static_cast<real_type>(i + 1);
+      }
+
+      if (A.copyValues(val_data, memory::HOST, memspace_) != 0) {
+        std::cout << "Failed to copy values.\n";
+        status = false;
+      } 
+
+      index_type* row_data = new index_type[n + 1];
+      for (index_type i = 0; i <= n; ++i) {
+        row_data[i] = i * (nnz / n); // Simple pattern for row pointers
+      }
+      index_type* col_data = new index_type[nnz];
+      for (index_type i = 0; i < nnz; ++i) {
+        col_data[i] = i % m; // Simple pattern for column indices
+      }
+
+      if (A.setDataPointers(row_data, col_data, val_data, memspace_) == 0 ||
+          A.getRowData(memspace_) == row_data || 
+          A.getColData(memspace_) == col_data || 
+          A.getValues(memspace_) == val_data) {
+        std::cout << "Should not have set data pointers after copying values.\n";
+        status = false;
+      }
+
+      // Clean up allocated memory
+      delete[] val_data;
+      delete[] row_data;
+      delete[] col_data;
+
+      return status.report(__func__);
+    } 
+
+    /**
+     * @brief Verify that matrix will not reset values pointer when it currently owns data.
+     *
+     * Copies a data array using `copyValues`, then attempts to set the values pointer, 
+     * and verifies that this results in an error.
+     *
+     * @return TestOutcome indicating success or failure of the test
+     */
+    TestOutcome copyValuesAndSetValues(index_type n, index_type m, index_type nnz)
+    {
+      TestStatus status;
+      status = true;
+
+      ReSolve::matrix::Csr A(n, m, nnz);
+
+      real_type* val_data = new real_type[nnz];
+      for (index_type i = 0; i < nnz; ++i) {
+        val_data[i] = static_cast<real_type>(i + 1);
+      }
+
+      if (A.copyValues(val_data, memory::HOST, memspace_) != 0) {
+        std::cout << "Failed to copy values.\n";
+        status = false;
+      } 
+
+      if (A.setValuesPointer(val_data, memspace_) == 0 || 
+          A.getValues(memspace_) == val_data) {
+        std::cout << "Should not have set values pointer when matrix owns data.\n";
+        status = false;
+      }
+
+      // Clean up allocated memory
+      delete[] val_data;
 
       return status.report(__func__);
     }
@@ -163,8 +324,16 @@ namespace ReSolve { namespace tests {
         status = false;
       }
 
-      A.destroyMatrixData(memspace_);
-
+      if (A.destroyMatrixData(memspace_) != 0) {
+        std::cout << "Failed to destroy matrix data.\n";
+        status = false;
+      } else if (A.getRowData(memspace_) != nullptr || 
+                 A.getColData(memspace_) != nullptr || 
+                 A.getValues(memspace_) != nullptr) {
+        std::cout << "Matrix data pointers are not null after destruction.\n";
+        status = false;
+      }
+      
       return status.report(__func__);
     }
 
