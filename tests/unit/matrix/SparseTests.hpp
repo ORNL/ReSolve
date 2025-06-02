@@ -37,7 +37,8 @@ namespace ReSolve { namespace tests {
      * @param[in] m - number of columns
      * @param[in] nnz - number of non-zeros
      * @param[in] is_symmetric - true if the matrix is symmetric, false otherwise
-     * @param[in] is_expanded - true if the matrix is expanded, false otherwise
+     * @param[in] is_expanded - true if the matrix is expanded (all non-zeros 
+     are stored explicitly, not assumed based on symmetry), false otherwise
      * 
      * @return TestOutcome indicating success or failure of the test
      */
