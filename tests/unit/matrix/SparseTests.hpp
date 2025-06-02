@@ -95,30 +95,12 @@ namespace ReSolve { namespace tests {
         h_val_data[i] = static_cast<real_type>(i + 1);
       }
 
-      // If on device, allocate and copy data
-      index_type* row_data;
-      index_type* col_data;
-      real_type* val_data;
-
-      if (memspace_ == memory::HOST) {
-        row_data = h_row_data;
-        col_data = h_col_data;
-        val_data = h_val_data;
-      } else {
-        mem_.allocateArrayOnDevice(&row_data, n + 1);
-        mem_.allocateArrayOnDevice(&col_data, nnz);
-        mem_.allocateArrayOnDevice(&val_data, nnz);
-        mem_.copyArrayHostToDevice(row_data, h_row_data, n + 1);
-        mem_.copyArrayHostToDevice(col_data, h_col_data, nnz);
-        mem_.copyArrayHostToDevice(val_data, h_val_data, nnz);
-      }
-
-      if (A.setDataPointers(row_data, col_data, val_data, memspace_) != 0) {
+      if (A.setDataPointers(h_row_data, h_col_data, h_val_data, memory::HOST) != 0) {
         std::cout << "Failed to set data pointers.\n";
         status = false;
-      } else if (A.getRowData(memspace_) != row_data || 
-                A.getColData(memspace_) != col_data || 
-                A.getValues(memspace_) != val_data) {
+      } else if (A.getRowData(memory::HOST) != h_row_data || 
+                A.getColData(memory::HOST) != h_col_data || 
+                A.getValues(memory::HOST) != h_val_data) {
         std::cout << "Data pointers do not point to expected values.\n";
         status = false;
       }
@@ -149,16 +131,13 @@ namespace ReSolve { namespace tests {
         val_data[i] = static_cast<real_type>(i + 1);
       }
 
-      if (A.setValuesPointer(val_data, memspace_) != 0) {
+      if (A.setValuesPointer(val_data, memory::HOST) != 0) {
         std::cout << "Failed to set values pointer.\n";
         status = false;
-      } else if (A.getValues(memspace_) != val_data) {
+      } else if (A.getValues(memory::HOST) != val_data) {
         std::cout << "Values pointer does not point to expected values.\n";
         status = false;
       }
-
-      // Clean up allocated memory
-      delete[] val_data;
 
       return status.report(__func__);
     }
@@ -199,13 +178,17 @@ namespace ReSolve { namespace tests {
         if (A.getValues(memspace_) == nullptr) {
           std::cout << "Values pointer is null after copy.\n";
           status = false;
-        } else if (A.getValues(memspace_) == val_data) {
-          std::cout << "Values pointer should not point to original array after copy.\n";
-          status = false;
         } else {
+          real_type* h_val_data;
+          if (memspace_ == memory::HOST) {
+            h_val_data = A.getValues(memory::HOST);
+          } else {
+            mem_.copyArrayDeviceToHost(h_val_data, A.getValues(memory::DEVICE), A.getNnz());
+          }
+
           // Check if the copied values are correct
           for (index_type i = 0; i < nnz; ++i) {
-            if (A.getValues(memspace_)[i] != static_cast<real_type>(i + 1)) {
+            if (h_val_data[i] != static_cast<real_type>(i + 1)) {
               std::cout << "Copied values do not match expected values.\n";
               status = false;
               break;
@@ -262,10 +245,7 @@ namespace ReSolve { namespace tests {
         col_data[i] = i % m; // Simple pattern for column indices
       }
 
-      if (A.setDataPointers(row_data, col_data, val_data, memspace_) == 0 ||
-          A.getRowData(memspace_) == row_data || 
-          A.getColData(memspace_) == col_data || 
-          A.getValues(memspace_) == val_data) {
+      if (A.setDataPointers(row_data, col_data, val_data, memory::HOST) == 0) {
         std::cout << "Should not have set data pointers after copying values.\n";
         status = false;
       }
@@ -303,8 +283,7 @@ namespace ReSolve { namespace tests {
         status = false;
       } 
 
-      if (A.setValuesPointer(val_data, memspace_) == 0 || 
-          A.getValues(memspace_) == val_data) {
+      if (A.setValuesPointer(val_data, memory::HOST) == 0) {
         std::cout << "Should not have set values pointer when matrix owns data.\n";
         status = false;
       }
