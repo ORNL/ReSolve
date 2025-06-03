@@ -159,14 +159,14 @@ namespace ReSolve { namespace tests {
       TestStatus status;
       status = true;
 
-      ReSolve::matrix::Csr A(n, m, nnz);
+      ReSolve::matrix::Csr* A = new ReSolve::matrix::Csr(n, m, nnz);
 
       real_type* val_data = new real_type[nnz];
       for (index_type i = 0; i < nnz; ++i) {
         val_data[i] = static_cast<real_type>(i + 1);
       }
 
-      if (A.copyValues(val_data, memory::HOST, memspace_) != 0) {
+      if (A->copyValues(val_data, memory::HOST, memspace_) != 0) {
         std::cout << "Failed to copy values.\n";
         status = false;
       } else {
@@ -175,15 +175,15 @@ namespace ReSolve { namespace tests {
           val_data[i] *= 2; // Change the values
         }
 
-        if (A.getValues(memspace_) == nullptr) {
+        if (A->getValues(memspace_) == nullptr) {
           std::cout << "Values pointer is null after copy.\n";
           status = false;
         } else {
           real_type* h_val_data;
           if (memspace_ == memory::HOST) {
-            h_val_data = A.getValues(memory::HOST);
+            h_val_data = A->getValues(memory::HOST);
           } else {
-            mem_.copyArrayDeviceToHost(h_val_data, A.getValues(memory::DEVICE), A.getNnz());
+            mem_.copyArrayDeviceToHost(h_val_data, A->getValues(memory::DEVICE), nnz);
           }
 
           // Check if the copied values are correct
@@ -200,7 +200,7 @@ namespace ReSolve { namespace tests {
       // Clean up allocated memory
       delete[] val_data;
 
-      if (A.destroyMatrixData(memspace_) != 0) {
+      if (A->destroyMatrixData(memspace_) != 0) {
         std::cout << "Failed to destroy matrix data.\n";
         status = false;
       }
@@ -224,14 +224,14 @@ namespace ReSolve { namespace tests {
       TestStatus status;
       status = true;
 
-      ReSolve::matrix::Csr A(n, m, nnz);
+      ReSolve::matrix::Csr* A = new ReSolve::matrix::Csr(n, m, nnz);
 
       real_type* val_data = new real_type[nnz];
       for (index_type i = 0; i < nnz; ++i) {
         val_data[i] = static_cast<real_type>(i + 1);
       }
 
-      if (A.copyValues(val_data, memory::HOST, memspace_) != 0) {
+      if (A->copyValues(val_data, memory::HOST, memspace_) != 0) {
         std::cout << "Failed to copy values.\n";
         status = false;
       } 
@@ -245,7 +245,7 @@ namespace ReSolve { namespace tests {
         col_data[i] = i % m; // Simple pattern for column indices
       }
 
-      if (A.setDataPointers(row_data, col_data, val_data, memory::HOST) == 0) {
+      if (A->setDataPointers(row_data, col_data, val_data, memspace_) == 0) {
         std::cout << "Should not have set data pointers after copying values.\n";
         status = false;
       }
@@ -271,19 +271,19 @@ namespace ReSolve { namespace tests {
       TestStatus status;
       status = true;
 
-      ReSolve::matrix::Csr A(n, m, nnz);
+      ReSolve::matrix::Csr* A = new ReSolve::matrix::Csr(n, m, nnz);
 
       real_type* val_data = new real_type[nnz];
       for (index_type i = 0; i < nnz; ++i) {
         val_data[i] = static_cast<real_type>(i + 1);
       }
 
-      if (A.copyValues(val_data, memory::HOST, memspace_) != 0) {
+      if (A->copyValues(val_data, memory::HOST, memspace_) != 0) {
         std::cout << "Failed to copy values.\n";
         status = false;
       } 
 
-      if (A.setValuesPointer(val_data, memory::HOST) == 0) {
+      if (A->setValuesPointer(val_data, memspace_) == 0) {
         std::cout << "Should not have set values pointer when matrix owns data.\n";
         status = false;
       }
@@ -311,24 +311,24 @@ namespace ReSolve { namespace tests {
       TestStatus status;
       status = true;
 
-      ReSolve::matrix::Csr A(n, m, nnz);
+      ReSolve::matrix::Csr* A = new ReSolve::matrix::Csr(n, m, nnz);
 
-      if (A.allocateMatrixData(memspace_) != 0) {
+      if (A->allocateMatrixData(memspace_) != 0) {
         std::cout << "Failed to allocate matrix data.\n";
         status = false;
-      } else if (A.getRowData(memspace_) == nullptr || 
-                 A.getColData(memspace_) == nullptr || 
-                 A.getValues(memspace_) == nullptr) {
+      } else if (A->getRowData(memspace_) == nullptr || 
+                 A->getColData(memspace_) == nullptr || 
+                 A->getValues(memspace_) == nullptr) {
         std::cout << "Matrix data pointers are null after allocation.\n";
         status = false;
       }
 
-      if (A.destroyMatrixData(memspace_) != 0) {
+      if (A->destroyMatrixData(memspace_) != 0) {
         std::cout << "Failed to destroy matrix data.\n";
         status = false;
-      } else if (A.getRowData(memspace_) != nullptr || 
-                 A.getColData(memspace_) != nullptr || 
-                 A.getValues(memspace_) != nullptr) {
+      } else if (A->getRowData(memspace_) != nullptr || 
+                 A->getColData(memspace_) != nullptr || 
+                 A->getValues(memspace_) != nullptr) {
         std::cout << "Matrix data pointers are not null after destruction.\n";
         status = false;
       }
