@@ -75,7 +75,7 @@ namespace ReSolve { namespace tests {
      */
     TestOutcome setDataPointers(index_type n, index_type m, index_type nnz)
     {
-      assert(nnz % m == 0 && "For this test, nnz must be divisible by m");
+      assert(nnz % n == 0 && "For this test, nnz must be divisible by m");
       
       TestStatus status;
       status = true;
@@ -221,6 +221,8 @@ namespace ReSolve { namespace tests {
      */
     TestOutcome copyValuesAndSetDataPointers(index_type n, index_type m, index_type nnz)
     {
+      assert(nnz % n == 0 && "For this test, nnz must be divisible by m");
+
       TestStatus status;
       status = true;
 
