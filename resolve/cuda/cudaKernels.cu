@@ -306,10 +306,10 @@ namespace ReSolve {
   {
 
     // Define block size and number of blocks
-    const int blockSize = 1;
-    int numBlocks = (n + blockSize - 1) / blockSize;
+    const int block_size = 1;
+    int num_blocks = (n + block_size - 1) / block_size;
     // Launch the kernel
-    kernels::leftDiagScale<<<numBlocks, blockSize>>>(n, a_row_ptr, a_val, d_val);
+    kernels::leftDiagScale<<<num_blocks, block_size>>>(n, a_row_ptr, a_val, d_val);
   }
 
   /**
@@ -330,10 +330,10 @@ namespace ReSolve {
                       const real_type* d_val)
   {
     // Define block size and number of blocks
-    const int blockSize = 256;
-    int numBlocks = (n + blockSize - 1) / blockSize;
+    const int block_size = 256;
+    int num_blocks = (n + block_size - 1) / block_size;
     // Launch the kernel
-    kernels::rightDiagScale<<<numBlocks, blockSize>>>(n, a_row_ptr, a_col_ind, a_val, d_val);
+    kernels::rightDiagScale<<<num_blocks, block_size>>>(n, a_row_ptr, a_col_ind, a_val, d_val);
   }
 
 
