@@ -1,100 +1,10 @@
-Building Re::Solve
+Git and Documentation Tools
 ====================
 
-CMake Build System
--------------------
+Writing Sphynx Documentation
+----------------------------
 
-Our ``cmake`` folder contains some basic CMake modules that help manage resolve:
-
-* ``cmake/FindKLU.cmake``: Our custom find module for KLU that we maintain
-* ``cmake/ReSolveConfig.cmake.in``: Our custom config file that is used to generate the ``ReSolveConfig.cmake`` file that is installed with Re::Solve
-* ``cmake/ReSolveFindCudaLibraries.cmake``: Our custom find module for CUDA libraries that we maintain to link in subset of cuda needed
-* ``cmake/ReSolveFindHipLibraries.cmake``: Our custom find module for HIP/ROCm libraries that we maintain to link in subset of hip needed
-
-Apart from that check out our main ``CMakeLists.txt`` file for our remaining build configuration.
-
-We also export under the ``ReSolve::`` namespace in our installed CMake configuration for use with ``find_package`` as documented in our main ``README.md``.
-
-Spack Package
----------------
-
-Our current Spack package has been introduced
-`upstream <https://github.com/spack/spack/pull/40871>`_, and contains support
-for building Re::Solve with CUDA and HIP/ROCm support.
-
-We also have a custom ``spack`` folder/installation that contains our spack
-submodule located in ``buildsystem/spack/spack``. This is used to build
-Re::Solve on CI platforms, as well as support development of the spack package
-as neccessary.
-
-See the Quick How-To section below for more information on how to update the
-spack package and typical workflows for building Re::Solve with spack on CI
-platforms for testing.
-
-
-GitHub Actions
-----------------
-
-This is a quick summary of the workflows performed in each GitHub Action. For more information see the ``.github/workflows`` folder where each file is located.
-
-``documentation.yml``
-~~~~~~~~~~~~~~~~~~~~~~
-
-``ornl_ascent_mirror.yml``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Pushes to ORNL GitLab and triggers CI/CD pipelines there that are posted back to GitHub through commit messages.
-
-``ornl_crusher_mirror.yml``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Pushes to ORNL Crusher GitLab...
-
-``pnnl_mirror.yml``
-~~~~~~~~~~~~~~~~~~~~
-
-Pushes to PNNL GitLab...
-
-GitLab Pipelines
------------------
-
-This is a quick summary of the workflows performed in each GitLab Pipeline. For more information see the ``yml`` file for each associated pipeline.
-
-``ornl/crusher.gitlab-ci.yml``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Defines CI/CD for Crusher at ORNL.
-
-``.gitlab-ci.yml``
-~~~~~~~~~~~~~~~~~~~~
-
-Located in the root git directory, this defines the CI/CD pipelines for Ascent at ORNL.
-
-``pnnl/.gitlab-ci.yml``
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-Since single GitLab repo triggers many pipelines as downstream dependents, we need a core config file to kick all of these builds off.
-
-``pnnl/base.gitlab-ci.yml``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Describes core config shared across each job. This could be in ``pnnl/.gitlab-ci.yml`` but we keep it separate for clarity.
-
-``pnnl/deception.gitlab-ci.yml``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Deception specific CI.
-
-``pnnl/incline.gitlab-ci.yml``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Incline specific CI.
-
-
-Writing Documentation
----------------------
-
-Re::Solve uses Sphynx for the documentation. To write and preview the
+Re::Solve uses Sphynx for online documentation. To write and preview the
 documentation on your local machine use e.g. ``pip`` tool to install following
 Python packages:
 
@@ -177,6 +87,64 @@ Configures devcontainer through devcontainer features and sets up extensions.
 ~~~~~~~~~~~~~~~~~~
 
 Small shell script that renders documentation and hosts it for quick development.
+
+GitHub Actions
+----------------------------
+
+This is a quick summary of the workflows performed in each GitHub Action. For more information see the ``.github/workflows`` folder where each file is located.
+
+``documentation.yml``
+~~~~~~~~~~~~~~~~~~~~~~
+
+``ornl_ascent_mirror.yml``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Pushes to ORNL GitLab and triggers CI/CD pipelines there that are posted back to GitHub through commit messages.
+
+``ornl_crusher_mirror.yml``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Pushes to ORNL Crusher GitLab...
+
+``pnnl_mirror.yml``
+~~~~~~~~~~~~~~~~~~~~
+
+Pushes to PNNL GitLab...
+
+GitLab Pipelines
+-----------------
+
+This is a quick summary of the workflows performed in each GitLab Pipeline. For more information see the ``yml`` file for each associated pipeline.
+
+``ornl/crusher.gitlab-ci.yml``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Defines CI/CD for Crusher at ORNL.
+
+``.gitlab-ci.yml``
+~~~~~~~~~~~~~~~~~~~~
+
+Located in the root git directory, this defines the CI/CD pipelines for Ascent at ORNL.
+
+``pnnl/.gitlab-ci.yml``
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Since single GitLab repo triggers many pipelines as downstream dependents, we need a core config file to kick all of these builds off.
+
+``pnnl/base.gitlab-ci.yml``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Describes core config shared across each job. This could be in ``pnnl/.gitlab-ci.yml`` but we keep it separate for clarity.
+
+``pnnl/deception.gitlab-ci.yml``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Deception specific CI.
+
+``pnnl/incline.gitlab-ci.yml``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Incline specific CI.
 
 Quick How-To guides
 -------------------
