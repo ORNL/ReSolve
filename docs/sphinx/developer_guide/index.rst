@@ -32,7 +32,7 @@ This will generate HTML documentation and place it in ``build``
 subdirectory in your current directory.
 
 
-Using Dev Container for Writing Documentation
+Using Dev Containers for Writing Documentation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In case you cannot install Sphynx and other dependencies on your machine,

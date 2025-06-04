@@ -2788,3 +2788,4 @@ DOT_CLEANUP            = YES
 # command).
 
 MSCFILE_DIRS           =
+OUTPUT_DIRECTORY=../_readthedocs/html/doxygen
