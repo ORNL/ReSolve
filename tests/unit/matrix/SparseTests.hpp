@@ -190,7 +190,8 @@ namespace ReSolve { namespace tests {
           if (memspace_ == memory::HOST) {
             h_val_data = A->getValues(memory::HOST);
           } else {
-            mem_.copyArrayDeviceToHost(h_val_data, A->getValues(memory::DEVICE), nnz);
+            real_type* d_val_data = A->getValues(memory::DEVICE);
+            mem_.copyArrayDeviceToHost(h_val_data, d_val_data, nnz);
           }
 
           // Check if the copied values are correct
