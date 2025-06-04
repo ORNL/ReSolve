@@ -84,7 +84,7 @@ cmake -B build --preset cluster
 
 ## Support
 For technical questions or to report a bug please submit a [GitHub issue](https://github.com/ORNL/ReSolve/issues).
-For non-technical issues please contact Kasia &#346;wirydowicz <kasia.swirydowicz@pnnl.gov> or Slaven Peles <peless@ornl.gov>.
+For non-technical issues please contact Kasia &#346;wirydowicz <kasia.swirydowicz@amd.com> or Slaven Peles <peless@ornl.gov>.
 
 ## Authors and acknowledgment
 Primary authors of this project are Kasia &#346;wirydowicz and Slaven Peles.
