@@ -729,7 +729,7 @@ private:
 
     // Verify values - each element should be scaled by (i+1.0)
     for (index_type i = 0; i < n; ++i) {
-      real_type expected = original_data[i] * static_cast<real_type>(i + 1);
+      real_type expected = original_data[i] * static_cast<real_type>(i + 1.0);
       if (!isEqual(data[i], expected)) {
         std::cout << "Mismatch at index " << i << ": value = " << data[i]
                   << ", expected = " << expected << "\n";
