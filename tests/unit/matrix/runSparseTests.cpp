@@ -23,6 +23,8 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
 
   ReSolve::tests::SparseTests test(memspace);
 
+  ReSolve::io::Logger::setVerbosity(ReSolve::io::Logger::NONE);
+
   result += test.constructor(50, 50, 2);
   result += test.constructor(50, 50, 2, true);
   result += test.constructor(50, 50, 2, false, false);
