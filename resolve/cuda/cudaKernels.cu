@@ -360,7 +360,7 @@ namespace ReSolve {
   }
 
   /**
-   * @brief Scales a vector by a diagonal matrix
+   * @brief Wrapper that scales a vector by a diagonal matrix
    *
    * @param[in]  n      - size of the vector
    * @param[in, out] vec - vector to be scaled. Changes in place.
@@ -369,14 +369,14 @@ namespace ReSolve {
    * @todo Decide how to allow user to configure grid and block sizes.
    */
   void vectorDiagScale(index_type n,
-                      const real_type* d_val,
+                      const real_type* diag,
                       real_type* vec)
   {
     // Define block size and number of blocks
     const int block_size = 256;
     int num_blocks = (n + block_size - 1) / block_size;
     // Launch the kernel
-    kernels::vectorDiagScale<<<num_blocks, block_size>>>(n, d_val, vec);
+    kernels::vectorDiagScale<<<num_blocks, block_size>>>(n, diag, vec);
   }
 
   /**

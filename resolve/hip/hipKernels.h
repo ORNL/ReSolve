@@ -33,6 +33,10 @@ namespace ReSolve {
                       real_type* a_val,
                       const real_type* diag);
 
+  void vectorDiagScale(index_type n,
+                       const real_type* diag,
+                       real_type* vec);
+
   //needed for matrix inf nrm
   void matrix_row_sums(index_type n,
                        index_type nnz,
