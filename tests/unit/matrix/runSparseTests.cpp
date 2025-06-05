@@ -26,17 +26,24 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
   ReSolve::io::Logger::setVerbosity(ReSolve::io::Logger::NONE);
 
   result += test.constructor(50, 50, 2);
+  result += test.constructor(50, 100, 2);
   result += test.constructor(50, 50, 2, true);
   result += test.constructor(50, 50, 2, false, false);
 
   result += test.setDataPointers(50, 50, 2);
+  result += test.setDataPointers(50, 100, 2);
   result += test.setValuesPointer(50, 50, 2);
+  result += test.setValuesPointer(50, 100, 2);
 
   result += test.copyValues(50, 50, 2);
+  result += test.copyValues(50, 100, 2);
   result += test.copyValuesAndSetValues(50, 50, 2);
+  result += test.copyValuesAndSetValues(50, 100, 2);
   result += test.copyValuesAndSetDataPointers(50, 50, 2);
+  result += test.copyValuesAndSetDataPointers(50, 100, 2);
 
   result += test.allocateAndDestroyData(50, 50, 2);
+  result += test.allocateAndDestroyData(50, 100, 2);
 }
 
 int main(int, char**)
