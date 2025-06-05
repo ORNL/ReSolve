@@ -93,7 +93,7 @@ where capitalization is important and it is preserved similarly.
 Capitalize variables refering to a matrix `A`
 such as `A`, `At`, `A_csc`, and `A_csr`.
 This is due to the equation $Ax=b$ and the Householder convention where
-uppercase letters represent matrices and lowercase letter represent vectors
+uppercase letters represent matrices and lowercase letter represent vectors.
 
 Pointers and references
 ~~~~~~~~~~~~~~~~~~~~~~~
