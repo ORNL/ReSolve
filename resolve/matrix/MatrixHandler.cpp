@@ -320,6 +320,35 @@ namespace ReSolve {
   }
 
   /**
+   * @brief Scale a vector by a diagonal matrix
+   *
+   * @param[in] diag - vector representing the diagonal matrix
+   * @param[in,out] vec - vector to be scaled
+   * @param[in] memspace - Device where the operation is computed
+   *
+   * @pre The diagonal vector must be of the same size as the vector.
+   * @invariant diag
+   *
+   * @return 0 if successful, 1 otherwise
+   */
+  int MatrixHandler::vectorDiagonalScale(vector_type* diag, vector_type* vec, memory::MemorySpace memspace)
+  {
+    assert(diag->getSize() == vec->getSize() && "Diagonal vector must be of the same size as the vector.");
+    assert(diag->getData(memspace) != nullptr && "Diagonal vector data is null!\n");
+    assert(vec->getData(memspace) != nullptr && "Vector data is null!\n");
+    using namespace ReSolve::memory;
+    switch (memspace) {
+      case HOST:
+        return cpuImpl_->vectorDiagonalScale(diag, vec);
+        break;
+      case DEVICE:
+        return devImpl_->vectorDiagonalScale(diag, vec);
+        break;
+    }
+    return 1;
+  }
+
+  /**
    * @brief Add a constant to the nonzero values of a csr matrix.
    * @param[in,out] A - Sparse matrix
    * @param[in] alpha - scalar parameter

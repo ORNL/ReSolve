@@ -182,6 +182,22 @@ public:
     return status.report(testname.c_str());
   }
 
+  TestOutcome vectorDiagScale(index_type n)
+  {
+    TestStatus status;
+    std::string testname(__func__);
+    vector::Vector* diag = createIncrementingVector(n);
+    vector::Vector* vec = createIncrementingVector(n);
+    handler_.vectorDiagonalScale(diag, vec, memspace_);
+    if (memspace_ == memory::DEVICE) {
+      vec->syncData(memory::HOST);
+    }
+    status *= verifyVectorScaledDiagMatrix(vec);
+    delete vec;
+    delete diag;
+    return status.report(testname.c_str());
+  }
+
 private:
   ReSolve::MatrixHandler& handler_;
   memory::MemorySpace memspace_{memory::HOST};
@@ -678,6 +694,49 @@ private:
 
     // Clean up the original matrix
     delete original_A;
+    return true;
+  }
+
+  /**
+   * @brief Verify scaling vector vec by a diagonal matrix
+   *
+   * The diagonal matrix has entries corresponding to the vector created by createIncrementingVector,
+   * a vector with values 1.0, 2.0, ..., n
+   *
+   * @pre scaled_vec is a valid, allocated vector
+   * @invariant scaled_vec
+   *
+   * @param[in] scaled_vec vector::Vector* pointer to the vector to be verified
+   *
+   * @return bool true if the vector is valid, false otherwise
+   */
+  bool verifyVectorScaledDiagMatrix(vector::Vector* scaled_vec)
+  {
+    // Check if the vector is valid
+    if (scaled_vec == nullptr) {
+      return false;
+    }
+
+    // Get vector size
+    const index_type n = scaled_vec->getSize();
+
+    // Create the original unscaled vector to compare against
+    vector::Vector* original_vec = createIncrementingVector(n);
+    real_type* original_data = original_vec->getData(memory::HOST);
+
+    // Get data from the vector
+    real_type* data = scaled_vec->getData(memory::HOST);
+
+    // Verify values - each element should be scaled by (i+1.0)
+    for (index_type i = 0; i < n; ++i) {
+      real_type expected = original_data[i] * static_cast<real_type>(i + 1);
+      if (!isEqual(data[i], expected)) {
+        std::cout << "Mismatch at index " << i << ": value = " << data[i]
+                  << ", expected = " << expected << "\n";
+        return false;
+      }
+    }
+
     return true;
   }
 
