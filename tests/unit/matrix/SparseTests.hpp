@@ -8,20 +8,19 @@
 #include <tests/unit/TestBase.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/matrix/Csr.hpp>
-#include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/MemoryUtils.hpp>
 
 namespace ReSolve { namespace tests {
   class SparseTests : TestBase
   {
   public:
-    SparseTests(ReSolve::MatrixHandler& handler) : handler_(handler)
+    SparseTests()
     {
-      if (handler_.getIsCudaEnabled() || handler_.getIsHipEnabled()) {
+      #ifdef RESOLVE_USE_GPU  
         memspace_ = memory::DEVICE;
-      } else {
+      #else  
         memspace_ = memory::HOST;
-      }
+      #endif 
     }
 
     ~SparseTests()
@@ -354,7 +353,6 @@ namespace ReSolve { namespace tests {
     }
 
     private:
-      ReSolve::MatrixHandler& handler_;
       memory::MemorySpace memspace_;
       MemoryHandler mem_;
   }; // class SparseTests

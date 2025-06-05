@@ -3,7 +3,6 @@
 #include <fstream>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/io.hpp>
-#include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 #include "SparseTests.hpp"
 
@@ -21,9 +20,8 @@ void runTests(const std::string& backend, ReSolve::tests::TestingResults& result
 
   WorkspaceType workspace;
   workspace.initializeHandles();
-  ReSolve::MatrixHandler handler(&workspace);
 
-  ReSolve::tests::SparseTests test(handler);
+  ReSolve::tests::SparseTests test;
 
   result += test.constructor(50, 50, 2);
   result += test.constructor(50, 50, 2, true);
