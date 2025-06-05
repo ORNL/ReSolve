@@ -14,13 +14,9 @@ namespace ReSolve { namespace tests {
   class SparseTests : TestBase
   {
   public:
-    SparseTests()
+    SparseTests(memory::MemorySpace memspace = memory::HOST) : memspace_(memspace)
     {
-      #ifdef RESOLVE_USE_GPU  
-        memspace_ = memory::DEVICE;
-      #else  
-        memspace_ = memory::HOST;
-      #endif 
+      
     }
 
     ~SparseTests()

@@ -14,14 +14,14 @@
  * @param[out] result - test results
  */
 template<typename WorkspaceType>
-void runTests(const std::string& backend, ReSolve::tests::TestingResults& result)
+void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace, ReSolve::tests::TestingResults& result)
 {
-  std::cout << "Running tests on " << backend << " device:\n";
+  std::cout << "Running tests on " << backend << ":\n";
 
   WorkspaceType workspace;
   workspace.initializeHandles();
 
-  ReSolve::tests::SparseTests test;
+  ReSolve::tests::SparseTests test(memspace);
 
   result += test.constructor(50, 50, 2);
   result += test.constructor(50, 50, 2, true);
@@ -40,14 +40,14 @@ void runTests(const std::string& backend, ReSolve::tests::TestingResults& result
 int main(int, char**)
 {
   ReSolve::tests::TestingResults result;
-  runTests<ReSolve::LinAlgWorkspaceCpu>("CPU", result);
+  runTests<ReSolve::LinAlgWorkspaceCpu>("CPU", ReSolve::memory::HOST, result);
 
 #ifdef RESOLVE_USE_CUDA
-  runTests<ReSolve::LinAlgWorkspaceCUDA>("CUDA", result);
+  runTests<ReSolve::LinAlgWorkspaceCUDA>("CUDA", ReSolve::memory::DEVICE, result);
 #endif
 
 #ifdef RESOLVE_USE_HIP
-  runTests<ReSolve::LinAlgWorkspaceHIP>("HIP", result);
+  runTests<ReSolve::LinAlgWorkspaceHIP>("HIP", ReSolve::memory::DEVICE, result);
 #endif
 
   return result.summary();
