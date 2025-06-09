@@ -338,7 +338,7 @@ namespace ReSolve {
    *
    * @return 0 if successful, 1 otherwise
    */
-  int MatrixHandlerCuda::leftDiagonalScale(vector_type* diag, matrix::Csr* A)
+  int MatrixHandlerCuda::leftScale(vector_type* diag, matrix::Csr* A)
   {
     real_type* diag_data = diag->getData(memory::DEVICE);
     index_type* a_row_ptr = A->getRowData(memory::DEVICE);
@@ -363,7 +363,7 @@ namespace ReSolve {
    *
    * @return 0 if successful, 1 otherwise
    */
-  int MatrixHandlerCuda::rightDiagonalScale(matrix::Csr* A, vector_type* diag)
+  int MatrixHandlerCuda::rightScale(matrix::Csr* A, vector_type* diag)
   {
     real_type* diag_data = diag->getData(memory::DEVICE);
     index_type* a_row_ptr = A->getRowData(memory::DEVICE);
@@ -386,7 +386,7 @@ namespace ReSolve {
    *
    * @return 0 if successful, 1 otherwise
    */
-  int MatrixHandlerCuda::vectorDiagonalScale(vector_type* diag, vector_type* vec)
+  int MatrixHandlerCuda::vectorScale(vector_type* diag, vector_type* vec)
   {
     real_type* diag_data = diag->getData(memory::DEVICE);
     real_type* vec_data = vec->getData(memory::DEVICE);

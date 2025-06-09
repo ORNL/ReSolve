@@ -320,7 +320,7 @@ namespace ReSolve {
    *
    * @return 0 if successful, 1 otherwise
    */
-  int MatrixHandlerHip::leftDiagonalScale(vector_type* diag, matrix::Csr* A)
+  int MatrixHandlerHip::leftScale(vector_type* diag, matrix::Csr* A)
   {
     real_type* diag_data = diag->getData(memory::DEVICE);
     index_type* a_row_ptr = A->getRowData(memory::DEVICE);
@@ -345,7 +345,7 @@ namespace ReSolve {
    *
    * @return 0 if successful, 1 otherwise
    */
-  int MatrixHandlerHip::rightDiagonalScale(matrix::Csr* A, vector_type* diag)
+  int MatrixHandlerHip::rightScale(matrix::Csr* A, vector_type* diag)
   {
     real_type* diag_data = diag->getData(memory::DEVICE);
     index_type* a_row_ptr = A->getRowData(memory::DEVICE);
@@ -370,7 +370,7 @@ namespace ReSolve {
    *
    * @return 0 if successful, 1 otherwise
    */
-  int MatrixHandlerHip::vectorDiagonalScale(vector_type* diag, vector_type* vec)
+  int MatrixHandlerHip::vectorScale(vector_type* diag, vector_type* vec)
   {
     real_type* diag_data = diag->getData(memory::DEVICE);
     real_type* vec_data = vec->getData(memory::DEVICE);
