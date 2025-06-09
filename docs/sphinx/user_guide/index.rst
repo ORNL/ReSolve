@@ -35,7 +35,7 @@ In the directory where you built the library run
 
    $ make install
 
-To change the install location please use the CMAkePresets.json file as mentioned in `test and deploy <#test-and-deploy>`__
+To change the install location please use the CMakePresets.json file as mentioned in `test and deploy <#test-and-deploy>`__
 
 To run it, download `test linear systems <https://github.com/NREL/opf_matrices/tree/master/acopf/activsg10k>`__
 and then edit script |runResolve|_
