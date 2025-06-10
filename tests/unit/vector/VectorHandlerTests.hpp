@@ -239,9 +239,8 @@ namespace ReSolve {
           for (index_type i = 1; i <= N; ++i) {
             diag_data[i] = (real_type)i;
           }
-          diag.copyDataFrom(diag_data, memory::HOST, memspace_);
-          diag.syncData(memory::DEVICE);
-
+          diag.copyDataFrom(diag_data, memory::HOST, memspace_)
+          
           handler_.vectorScale(&diag, &vec, memspace_);
 
           vec.syncData(memory::HOST);
