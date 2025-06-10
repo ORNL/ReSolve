@@ -268,7 +268,7 @@ namespace ReSolve {
    *
    * @return 0 if successful, 1 otherwise
    */
-  int vectorScale(vector::Vector* diag, vector::Vector* vec)
+  int VectorHandlerHip::vectorScale(vector::Vector* diag, vector::Vector* vec)
   {
     real_type* diag_data = diag->getData(memory::DEVICE);
     real_type* vec_data = vec->getData(memory::DEVICE);
