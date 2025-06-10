@@ -255,4 +255,27 @@ namespace ReSolve {
     }
   }
 
+  /**
+   * @brief Scale a vector by a diagonal matrix in HIP
+   *
+   * @param[in]  diag - vector representing the diagonal matrix
+   * @param[in, out]  vec - vector to be scaled
+   *
+   * @pre The diagonal vector must be of the same size as the vector.
+   * @pre vec is unscaled
+   * @post vec is scaled
+   * @invariant diag
+   *
+   * @return 0 if successful, 1 otherwise
+   */
+  int vectorScale(vector::Vector* diag, vector::Vector* vec)
+  {
+    real_type* diag_data = diag->getData(memory::DEVICE);
+    real_type* vec_data = vec->getData(memory::DEVICE);
+    index_type n = vec->getSize();
+    vectorDiagScale(n, diag_data, vec_data);
+    vec->setDataUpdated(memory::DEVICE);
+    return 0;
+  }
+
 } // namespace ReSolve
