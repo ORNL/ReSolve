@@ -236,19 +236,21 @@ namespace ReSolve {
           vec.setToConst(3.0, memspace_);
 
           real_type* diag_data = new real_type[N];
-          for (index_type i = 1; i <= N; ++i) {
-            diag_data[i] = (real_type)i;
+          for (index_type i = 0; i < N; ++i) {
+            diag_data[i] = (real_type)(i+1);
           }
-          diag.copyDataFrom(diag_data, memory::HOST, memspace_)
+          diag.copyDataFrom(diag_data, memory::HOST, memspace_);
           
           handler_.vectorScale(&diag, &vec, memspace_);
 
-          vec.syncData(memory::HOST);
+          if (memspace_ == memory::DEVICE) {
+            vec.syncData(memory::HOST);
+          }
 
-          for (index_type i = 1; i <= N; ++i) {
-            if (!isEqual(vec.getData(memory::HOST)[i], (real_type)i * 3.0)) {
+          for (index_type i = 0; i < N; ++i) {
+            if (!isEqual(vec.getData(memory::HOST)[i], (real_type)(i+1) * 3.0)) {
               std::cout << "Solution vector element vec[" << i << "] = " << vec.getData(memory::HOST)[i]
-                << ", expected: " << (real_type)i * 3.0 << "\n";
+                << ", expected: " << (real_type)(i+1) * 3.0 << "\n";
               status *= false;
               break; 
             }
