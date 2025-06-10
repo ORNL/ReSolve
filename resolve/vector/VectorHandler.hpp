@@ -55,6 +55,8 @@ namespace ReSolve { //namespace vector {
                 vector::Vector* x,
                 memory::MemorySpace memspace);
 
+      int vectorScale(vector::Vector* diag, vector::Vector* vec, memory::MemorySpace memspace);
+
       /** infNorm:
        * Returns infinity norm of a vector (i.e., entry with max abs value)
        */ 
