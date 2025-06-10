@@ -228,15 +228,32 @@ namespace ReSolve {
           vector::Vector diag(N);
           vector::Vector vec(N);
 
+          // diag[i] = i, vec[i] = 3.0
+          // expected result vec[i] = i * 3.0
           diag.allocate(memspace_);
           vec.allocate(memspace_);
 
-          diag.setToConst(2.0, memspace_);
           vec.setToConst(3.0, memspace_);
+
+          real_type* diag_data = new real_type[N];
+          for (index_type i = 1; i <= N; ++i) {
+            diag_data[i] = (real_type)i;
+          }
+          diag.copyDataFrom(diag_data, memory::HOST, memspace_);
+          diag.syncData(memory::DEVICE);
 
           handler_.vectorScale(&diag, &vec, memspace_);
 
-          status *= verifyAnswer(vec, 6.0);
+          vec.syncData(memory::HOST);
+
+          for (index_type i = 1; i <= N; ++i) {
+            if (!isEqual(vec.getData(memory::HOST)[i], (real_type)i * 3.0)) {
+              std::cout << "Solution vector element vec[" << i << "] = " << vec.getData(memory::HOST)[i]
+                << ", expected: " << (real_type)i * 3.0 << "\n";
+              status *= false;
+              break; 
+            }
+          }
 
           return status.report(__func__);
         }
