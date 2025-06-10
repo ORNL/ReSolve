@@ -275,7 +275,7 @@ namespace ReSolve {
     real_type* diag_data = diag->getData(memory::DEVICE);
     real_type* vec_data = vec->getData(memory::DEVICE);
     index_type n = vec->getSize();
-    vectorScale(n, diag_data, vec_data);
+    vectorScaleWrapper(n, diag_data, vec_data);
     vec->setDataUpdated(memory::DEVICE);
     return 0;
   }

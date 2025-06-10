@@ -22,18 +22,18 @@ namespace ReSolve {
 
   void mass_axpy(index_type n, index_type i, const real_type* x, real_type* y, const real_type* alpha);
 
-  void leftScale(index_type n,
+  void leftScaleWrapper(index_type n,
                      const index_type* a_row_ptr,
                      real_type* a_val,
                      const real_type* diag);
 
-  void rightScale(index_type n,
+  void rightScaleWrapper(index_type n,
                       const index_type* a_row_ptr,
                       const index_type* a_col_idx,
                       real_type* a_val,
                       const real_type* diag);
 
-  void vectorScale(index_type n, 
+  void vectorScaleWrapper(index_type n,
                        const real_type* diag,
                        real_type* vec);
 
