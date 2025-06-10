@@ -23,6 +23,7 @@ int main(int, char**)
     result += test.gemv(5000, 10);
     result += test.massAxpy(100, 10);
     result += test.massDot(100, 10);
+    result += test.vectorScale(100);
 
     std::cout << "\n";
   }

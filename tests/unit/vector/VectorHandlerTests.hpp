@@ -221,6 +221,26 @@ namespace ReSolve {
           return status.report(__func__);
         }
 
+        TestOutcome vectorScale(index_type N)
+        {
+          TestStatus status;
+
+          vector::Vector diag(N);
+          vector::Vector vec(N);
+
+          diag.allocate(memspace_);
+          vec.allocate(memspace_);
+
+          diag.setToConst(2.0, memspace_);
+          vec.setToConst(3.0, memspace_);
+
+          handler_.vectorScale(&diag, &vec, memspace_);
+
+          status *= verifyAnswer(vec, 6.0);
+
+          return status.report(__func__);
+        }
+
       private:
         ReSolve::VectorHandler& handler_;
         ReSolve::memory::MemorySpace memspace_{memory::HOST};
