@@ -51,7 +51,6 @@ void runTests(const std::string& backend, ReSolve::tests::TestingResults& result
   result += test.rightScale(1024, 1024);
   result += test.rightScale(1024, 2048);
   result += test.rightScale(2048, 1024);
-  result += test.vectorScale(1024);
   std::cout << "\n";
 }
 

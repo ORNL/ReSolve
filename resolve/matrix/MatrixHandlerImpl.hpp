@@ -40,8 +40,6 @@ namespace ReSolve {
 
       virtual int rightScale(matrix::Csr* A, vector_type* diag) = 0;
 
-      virtual int vectorScale(vector_type* diag, vector_type* vec) = 0;
-
       virtual int addConst(matrix::Sparse* A, real_type alpha) = 0;
 
       virtual int matvec(matrix::Sparse* A,

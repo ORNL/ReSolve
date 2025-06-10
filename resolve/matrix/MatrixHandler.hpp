@@ -60,8 +60,6 @@ namespace ReSolve {
 
       int rightScale(matrix::Csr* A, vector_type* diag, memory::MemorySpace memspace);
 
-      int vectorScale(vector_type* diag, vector_type* vec, memory::MemorySpace memspace);
-
       void addConst(matrix::Sparse* A, real_type alpha, memory::MemorySpace memspace);
 
       /// Should compute vec_result := alpha*A*vec_x + beta*vec_result, but at least on cpu alpha and beta are flipped

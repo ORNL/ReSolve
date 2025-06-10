@@ -184,22 +184,6 @@ public:
     return status.report(testname.c_str());
   }
 
-  TestOutcome vectorScale(index_type n)
-  {
-    TestStatus status;
-    std::string testname(__func__);
-    vector::Vector diag = createIncrementingVector(n);
-    vector::Vector vec = createIncrementingVector(n);
-
-    handler_.vectorScale(&diag, &vec, memspace_);
-    if (memspace_ == memory::DEVICE) {
-      vec.syncData(memory::HOST);
-    }
-    status *= verifyVectorScaledDiagMatrix(&vec);
-
-    return status.report(testname.c_str());
-  }
-
 private:
   ReSolve::MatrixHandler& handler_;
   memory::MemorySpace memspace_{memory::HOST};
