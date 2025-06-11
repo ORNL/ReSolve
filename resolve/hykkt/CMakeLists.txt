@@ -10,6 +10,7 @@
 set(HyKKT_SRC
     Permutation.cpp
     cpuPermutationKernels.cpp
+    CudaPermutationKernels.cu
 )
 
 # C++ code that depends on CUDA SDK libraries
@@ -24,6 +25,7 @@ set(HyKKT_ROCM_SRC
 set(HyKKT_HEADER_INSTALL
     Permutation.hpp
     cpuPermutationKernels.hpp
+    CudaPermutationKernels.hpp
 )
 
 # Build shared library ReSolve::matrix

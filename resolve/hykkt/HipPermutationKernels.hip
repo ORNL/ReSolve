@@ -1,0 +1,53 @@
+/**
+ * @file HipPermutationKernels.cu
+ * @author Adham Ibrahim (ibrahimas@ornl.gov)
+ * 
+ */
+
+#include "HipPermutationKernels.hpp"
+#include <hip/hip_runtime.h>
+
+namespace ReSolve
+{
+  namespace hykkt
+  {
+    /**
+     * @brief Kernel to map indices for HIP.
+     * This kernel is used to permute the values in old_val based on the perm array.
+     *
+     * @param[in] n       - matrix size (number of elements to permute)
+     * @param[in] perm    - desired permutation array (indices for new_val)
+     * @param[in] old_val - the array containing the original values
+     * @param[out] new_val - the array to store the permuted values
+     */
+    __global__ void mapIdxKernel(int n, const int* perm, const double* old_val, double* new_val)
+    {
+      int i = blockIdx.x * blockDim.x + threadIdx.x;
+      if (i < n)
+      {
+        new_val[i] = old_val[perm[i]];
+      }
+    }
+
+    /**
+     * @brief Maps the values in old_val to new_val based on perm for HIP.
+     * This is the concrete implementation of the pure virtual method.
+     *
+     * @param[in] n       - matrix size (number of elements to permute)
+     * @param[in] perm    - desired permutation array (indices for new_val)
+     * @param[in] old_val - the array containing the original values
+     * @param[out] new_val - the array to store the permuted values
+     *
+     * @pre n is a positive integer, perm is an array of 0 to n-1
+     * (in some order), old_val is initialized.
+     * @post new_val contains the permuted old_val, where new_val[i] = old_val[perm[i]].
+     */
+    void HipPermutationKernels::mapIdx(int n, const int* perm, const double* old_val, double* new_val)
+    {
+      // Launch the CUDA kernel
+      int blockSize = 256;
+      int numBlocks = (n + blockSize - 1) / blockSize;
+      mapIdxKernel<<<numBlocks, blockSize>>>(n, perm, old_val, new_val);
+    }
+  } // namespace hykkt
+} // namespace ReSolve
