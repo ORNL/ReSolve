@@ -310,7 +310,7 @@ namespace ReSolve {
      *
      * @todo Decide how to allow user to configure grid and block sizes.
      */
-    __global__ void leftScaleKernel(index_type n,
+    __global__ void leftScale(index_type n,
                                   const index_type* a_row_ptr,
                                   real_type* a_val,
                                   const real_type* d_val)
@@ -345,7 +345,7 @@ namespace ReSolve {
      *
      * @todo Decide how to allow user to configure grid and block sizes.
      */
-    __global__ void rightScaleKernel(index_type n,
+    __global__ void rightScale(index_type n,
                                    const index_type* a_row_ptr,
                                    const index_type* a_col_ind,
                                    real_type* a_val,
@@ -376,7 +376,7 @@ namespace ReSolve {
      *
      * @todo Decide how to allow user to configure grid and block sizes.
      */
-    __global__ void scaleKernel(index_type n,
+    __global__ void scale(index_type n,
                                     const real_type* diag,
                                     real_type* vec)
     {
@@ -562,7 +562,7 @@ namespace ReSolve {
     const int block_size = 1;
     int num_blocks = (n + block_size - 1) / block_size;
     // Launch the kernel
-    kernels::leftScaleKernel<<<num_blocks, block_size>>>(n, a_row_ptr, a_val, d_val);
+    kernels::leftScale<<<num_blocks, block_size>>>(n, a_row_ptr, a_val, d_val);
   }
 
   /**
@@ -586,7 +586,7 @@ namespace ReSolve {
     const int block_size = 256;
     int num_blocks = (n + block_size - 1) / block_size;
     // Launch the kernel
-    kernels::rightScaleKernel<<<num_blocks, block_size>>>(n, a_row_ptr, a_col_ind, a_val, d_val);
+    kernels::rightScale<<<num_blocks, block_size>>>(n, a_row_ptr, a_col_ind, a_val, d_val);
   }
 
   /**
@@ -606,7 +606,7 @@ namespace ReSolve {
     const int block_size = 256;
     int num_blocks = (n + block_size - 1) / block_size;
     // Launch the kernel
-    kernels::scaleKernel<<<num_blocks, block_size>>>(n, diag, vec);
+    kernels::scale<<<num_blocks, block_size>>>(n, diag, vec);
   }
 
 } // namespace ReSolve
