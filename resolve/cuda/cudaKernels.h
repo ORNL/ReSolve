@@ -33,7 +33,7 @@ namespace ReSolve {
                       real_type* a_val,
                       const real_type* diag);
 
-  void vectorScaleWrapper(index_type n,
+  void scaleWrapper(index_type n,
                        const real_type* diag,
                        real_type* vec);
 

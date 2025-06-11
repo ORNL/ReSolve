@@ -376,7 +376,7 @@ namespace ReSolve {
      *
      * @todo Decide how to allow user to configure grid and block sizes.
      */
-    __global__ void vectorScaleKernel(index_type n,
+    __global__ void scaleKernel(index_type n,
                                     const real_type* diag,
                                     real_type* vec)
     {
@@ -598,7 +598,7 @@ namespace ReSolve {
    *
    * @todo Decide how to allow user to configure grid and block sizes.
    */
-  void vectorScaleWrapper(index_type n,
+  void scaleWrapper(index_type n,
                       const real_type* diag,
                       real_type* vec)
   {
@@ -606,7 +606,7 @@ namespace ReSolve {
     const int block_size = 256;
     int num_blocks = (n + block_size - 1) / block_size;
     // Launch the kernel
-    kernels::vectorScaleKernel<<<num_blocks, block_size>>>(n, diag, vec);
+    kernels::scaleKernel<<<num_blocks, block_size>>>(n, diag, vec);
   }
 
 } // namespace ReSolve

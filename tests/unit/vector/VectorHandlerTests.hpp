@@ -221,7 +221,7 @@ namespace ReSolve {
           return status.report(__func__);
         }
 
-        TestOutcome vectorScale(index_type N)
+        TestOutcome scale(index_type N)
         {
           TestStatus status;
 
@@ -241,7 +241,7 @@ namespace ReSolve {
           }
           diag.copyDataFrom(diag_data, memory::HOST, memspace_);
           
-          handler_.vectorScale(&diag, &vec, memspace_);
+          handler_.scale(&diag, &vec, memspace_);
 
           if (memspace_ == memory::DEVICE) {
             vec.syncData(memory::HOST);

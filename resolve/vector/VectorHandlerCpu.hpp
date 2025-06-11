@@ -53,7 +53,7 @@ namespace ReSolve { //namespace vector {
                         vector::Vector* y,
                         vector::Vector* x);
 
-      virtual int vectorScale(vector::Vector* diag, vector::Vector* vec);
+      virtual int scale(vector::Vector* diag, vector::Vector* vec);
 
     private:
       LinAlgWorkspaceCpu* workspace_;

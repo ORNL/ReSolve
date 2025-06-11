@@ -23,7 +23,7 @@ int main(int, char**)
     result += test.gemv(5000, 10);
     result += test.massAxpy(100, 10);
     result += test.massDot(100, 10);
-    result += test.vectorScale(100);
+    result += test.scale(100);
 
     std::cout << "\n";
   }
@@ -46,7 +46,7 @@ int main(int, char**)
     result += test.massDot(100, 10);
     result += test.massDot(1000, 30);
     result += test.infNorm(1000);
-    result += test.vectorScale(1000);
+    result += test.scale(1000);
 
     std::cout << "\n";
   }
@@ -70,7 +70,7 @@ int main(int, char**)
     result += test.massDot(100, 10);
     result += test.massDot(1000, 30);
     result += test.infNorm(1000);
-    result += test.vectorScale(1000);
+    result += test.scale(1000);
 
     std::cout << "\n";
   }
