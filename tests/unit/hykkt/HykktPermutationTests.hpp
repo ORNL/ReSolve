@@ -15,7 +15,9 @@
 #include <tests/unit/TestBase.hpp>
 #include <resolve/hykkt/Permutation.hpp>
 #include <resolve/hykkt/cpuPermutationKernels.hpp>
+#include <resolve/hykkt/CudaPermutationKernels.hpp>
 #include <resolve/workspace/LinAlgWorkspaceCpu.hpp>
+#include <resolve/workspace/LinAlgWorkspaceCUDA.hpp>
 
 namespace ReSolve
 {
@@ -52,9 +54,11 @@ namespace ReSolve
         bool flagr = false;
         bool flagc = false;
 
-        LinAlgWorkspaceCpu* workspaceCpu = new LinAlgWorkspaceCpu();
-        ReSolve::hykkt::Permutation pc(workspaceCpu, n, nnz, nnz);
-        pc.addHInfo(a_i, a_j);
+        
+        LinAlgWorkspaceCUDA* workspaceCuda = new LinAlgWorkspaceCUDA();
+	ReSolve::hykkt::Permutation pc = ReSolve::hykkt::Permutation(workspaceCuda, n, nnz, nnz);
+        
+	pc.addHInfo(a_i, a_j);
         pc.addJInfo(a_i, a_j, n, m);
         pc.addJtInfo(a_i, a_j);
         pc.addPerm(perm);

@@ -11,7 +11,9 @@
 
 #include <resolve/hykkt/Permutation.hpp>
 #include <resolve/hykkt/cpuPermutationKernels.hpp>
+#include <resolve/hykkt/CudaPermutationKernels.hpp>
 #include <resolve/workspace/LinAlgWorkspaceCpu.hpp>
+#include <resolve/workspace/LinAlgWorkspaceCUDA.hpp>
 
 namespace ReSolve
 {
@@ -21,13 +23,23 @@ namespace ReSolve
     Permutation::Permutation(LinAlgWorkspaceCpu* workspaceCpu, int n_hes, int nnz_hes, int nnz_jac)
     : n_hes_(n_hes),
       nnz_hes_(nnz_hes),
-      nnz_jac_(nnz_jac),
-      workspace_(workspaceCpu)
+      nnz_jac_(nnz_jac)
     {
       allocateWorkspace();
 
       // Initialize kernel handler
       kernelHandler_ = new CpuPermutationKernels();
+    }
+
+    Permutation::Permutation(LinAlgWorkspaceCUDA* workspaceCuda, int n_hes, int nnz_hes, int nnz_jac)
+    : n_hes_(n_hes),
+      nnz_hes_(nnz_hes),
+      nnz_jac_(nnz_jac)
+    {
+      allocateWorkspace();
+
+      // Initialize kernel handler
+      kernelHandler_ = new CudaPermutationKernels();
     }
 
     /// Permutation destructor

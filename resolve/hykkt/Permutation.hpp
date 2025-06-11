@@ -7,6 +7,7 @@
  */
 
 #include <resolve/workspace/LinAlgWorkspaceCpu.hpp>
+#include <resolve/workspace/LinAlgWorkspaceCUDA.hpp>
 #include <resolve/hykkt/PermutationKernelsImpl.hpp>
 
 namespace ReSolve
@@ -31,9 +32,10 @@ namespace ReSolve
     {
       public:
       
-        // constructor
+        // constructors for each workspace type
         Permutation(LinAlgWorkspaceCpu* workspace, int n_hes, int nnz_hes, int nnz_jac);
-        
+        Permutation(LinAlgWorkspaceCUDA* workspace, int n_hes, int nnz_hes, int nnz_jac);
+
         // destructor
         ~Permutation();
 
@@ -60,7 +62,6 @@ namespace ReSolve
         // member variables
         //
 
-        LinAlgWorkspaceCpu* workspace_; ///< workspace for the permutation
         PermutationKernelsImpl* kernelHandler_; ///< handler for the permutation kernels
 
         bool perm_is_default_ = true; ///< boolean if perm set custom
