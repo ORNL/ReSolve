@@ -5,18 +5,12 @@
  * 
  */
 
-#pragma once
-
-#include "PermutationKernelsImpl.hpp"
 #include "cpuPermutationKernels.hpp"
 
 namespace ReSolve
 {
   namespace hykkt
   {
-    CpuPermutationKernels::CpuPermutationKernels()
-    {}
-
     /**
      * @brief Maps the values in old_val to new_val based on perm for CPU.
      * This is the concrete implementation of the pure virtual method.

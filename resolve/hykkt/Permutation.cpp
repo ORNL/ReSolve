@@ -11,24 +11,30 @@
 
 #include <resolve/hykkt/Permutation.hpp>
 #include <resolve/hykkt/cpuPermutationKernels.hpp>
+#include <resolve/workspace/LinAlgWorkspaceCpu.hpp>
 
 namespace ReSolve
 {
   namespace hykkt
   {
     /// Creates a class for the permutation of $H_\gamma$ in (6)
-    Permutation::Permutation(int n_hes, int nnz_hes, int nnz_jac) 
+    Permutation::Permutation(LinAlgWorkspaceCpu* workspaceCpu, int n_hes, int nnz_hes, int nnz_jac)
     : n_hes_(n_hes),
       nnz_hes_(nnz_hes),
-      nnz_jac_(nnz_jac)
+      nnz_jac_(nnz_jac),
+      workspace_(workspaceCpu)
     {
       allocateWorkspace();
+
+      // Initialize kernel handler
+      kernelHandler_ = new CpuPermutationKernels();
     }
 
     /// Permutation destructor
     Permutation::~Permutation()
     {
       deleteWorkspace();
+      delete kernelHandler_;
     }
 
     /**
@@ -134,7 +140,7 @@ namespace ReSolve
      */
     void Permutation::invertPerm()
     {
-      reversePerm(n_hes_, perm_, rev_perm_);
+      kernelHandler_->reversePerm(n_hes_, perm_, rev_perm_);
     }
 
     /**
@@ -154,7 +160,7 @@ namespace ReSolve
      */
     void Permutation::vecMapRC(int* perm_i, int* perm_j)
     {
-      makeVecMapRC(n_hes_, hes_i_, hes_j_, perm_, rev_perm_, perm_i, perm_j, perm_map_hes_);
+      kernelHandler_->makeVecMapRC(n_hes_, hes_i_, hes_j_, perm_, rev_perm_, perm_i, perm_j, perm_map_hes_);
     }
 
     /**
@@ -172,7 +178,7 @@ namespace ReSolve
      */
     void Permutation::vecMapC(int* perm_j)
     {
-      makeVecMapC(n_jac_, jac_i_, jac_j_, rev_perm_, perm_j, perm_map_jac_);
+      kernelHandler_->makeVecMapC(n_jac_, jac_i_, jac_j_, rev_perm_, perm_j, perm_map_jac_);
     }
 
     /**
@@ -191,7 +197,7 @@ namespace ReSolve
      */
     void Permutation::vecMapR(int* perm_i, int* perm_j)
     {
-      makeVecMapR(m_jac_, jac_tr_i_, jac_tr_j_, perm_, perm_i, perm_j, perm_map_jac_tr_);
+      kernelHandler_->makeVecMapR(m_jac_, jac_tr_i_, jac_tr_j_, perm_, perm_i, perm_j, perm_map_jac_tr_);
     }
     
     /**
@@ -217,19 +223,19 @@ namespace ReSolve
       switch(permutation)
       {
         case PERM_V: 
-          cpuMapIdx(n_hes_, perm_, old_val, new_val);
+          kernelHandler_->mapIdx(n_hes_, perm_, old_val, new_val);
           break;
         case REV_PERM_V: 
-          cpuMapIdx(n_hes_, rev_perm_, old_val, new_val);
+          kernelHandler_->mapIdx(n_hes_, rev_perm_, old_val, new_val);
           break;
         case PERM_HES_V: 
-          cpuMapIdx(nnz_hes_, perm_map_hes_, old_val, new_val);
+          kernelHandler_->mapIdx(nnz_hes_, perm_map_hes_, old_val, new_val);
           break;
         case PERM_JAC_V: 
-          cpuMapIdx(nnz_jac_, perm_map_jac_, old_val, new_val);
+          kernelHandler_->mapIdx(nnz_jac_, perm_map_jac_, old_val, new_val);
           break;
         case PERM_JAC_TR_V: 
-          cpuMapIdx(nnz_jac_, perm_map_jac_tr_, old_val, new_val);
+          kernelHandler_->mapIdx(nnz_jac_, perm_map_jac_tr_, old_val, new_val);
           break;
         default:
           printf("Valid arguments are PERM_V, REV_PERM_V, PERM_H_V, PERM_J_V, PERM_JT_V\n");

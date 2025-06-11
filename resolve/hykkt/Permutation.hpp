@@ -5,6 +5,10 @@
  * @brief Declaration of hykkt::Permutation class
  * 
  */
+
+#include <resolve/workspace/LinAlgWorkspaceCpu.hpp>
+#include <resolve/hykkt/PermutationKernelsImpl.hpp>
+
 namespace ReSolve
 {
   namespace hykkt 
@@ -28,7 +32,7 @@ namespace ReSolve
       public:
       
         // constructor
-        Permutation(int n_hes, int nnz_hes, int nnz_jac);
+        Permutation(LinAlgWorkspaceCpu* workspace, int n_hes, int nnz_hes, int nnz_jac);
         
         // destructor
         ~Permutation();
@@ -55,6 +59,9 @@ namespace ReSolve
         //
         // member variables
         //
+
+        LinAlgWorkspaceCpu* workspace_; ///< workspace for the permutation
+        PermutationKernelsImpl* kernelHandler_; ///< handler for the permutation kernels
 
         bool perm_is_default_ = true; ///< boolean if perm set custom
         
