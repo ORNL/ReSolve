@@ -1,6 +1,7 @@
 /**
  * @file HykktPermutationTests.hpp
  * @author Shaked Regev (regevs@ornl.gov)
+ * @author Adham Ibrahim (ibrahimas@ornl.gov)
  * @brief Implementation of tests for class hykkt::Permutation
  * 
  */
@@ -30,7 +31,7 @@ namespace ReSolve
     class HykktPermutationTests : public TestBase
     {
     public:
-      HykktPermutationTests() {}
+      HykktPermutationTests(std::string workspaceType): workspaceType_(workspaceType) {}
       virtual ~HykktPermutationTests() {}
 
       TestOutcome permutation()
@@ -54,11 +55,9 @@ namespace ReSolve
         bool flagr = false;
         bool flagc = false;
 
-        
-        LinAlgWorkspaceCUDA* workspaceCuda = new LinAlgWorkspaceCUDA();
-	ReSolve::hykkt::Permutation pc = ReSolve::hykkt::Permutation(workspaceCuda, n, nnz, nnz);
-        
-	pc.addHInfo(a_i, a_j);
+        ReSolve::hykkt::Permutation pc = createPermutationObject(n, nnz, nnz);
+
+        pc.addHInfo(a_i, a_j);
         pc.addJInfo(a_i, a_j, n, m);
         pc.addJtInfo(a_i, a_j);
         pc.addPerm(perm);
@@ -130,7 +129,30 @@ namespace ReSolve
         // Final Test Outcome
         return (!flagrc && !flagr && !flagc) ? PASS : FAIL;
       }
-    }; // class HykktPermutationTests
 
+      private:
+        std::string workspaceType_;
+
+        /**
+         * @brief Create a Permutation object based on the workspace type passed into
+         * the constructor.
+         * 
+         * @param n_hes Number of rows in H
+         * @param nnz_hes Number of non-zeros in H
+         * @param nnz_jac Number of non-zeros in J
+         * @return ReSolve::hykkt::Permutation 
+         */
+        ReSolve::hykkt::Permutation createPermutationObject(int n_hes, int nnz_hes, int nnz_jac)
+        {
+          if (workspaceType_ == "CPU")
+          {
+            return ReSolve::hykkt::Permutation(new LinAlgWorkspaceCpu(), n_hes, nnz_hes, nnz_jac);
+          }
+          else if (workspaceType_ == "CUDA")
+          {
+            return ReSolve::hykkt::Permutation(new LinAlgWorkspaceCUDA(), n_hes, nnz_hes, nnz_jac);
+          }
+        }
+    }; // class HykktPermutationTests
   } // namespace tests
 } // namespace ReSolve
