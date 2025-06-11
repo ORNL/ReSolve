@@ -1,6 +1,7 @@
 /**
  * @file Permutation.cpp
  * @author Shaked Regev (regevs@ornl.gov)
+ * @author Adham Ibrahim (ibrahimas@ornl.gov)
  * @brief Implementation of the Permutation class.
  * 
  * 
@@ -11,9 +12,17 @@
 
 #include <resolve/hykkt/Permutation.hpp>
 #include <resolve/hykkt/cpuPermutationKernels.hpp>
-#include <resolve/hykkt/CudaPermutationKernels.hpp>
 #include <resolve/workspace/LinAlgWorkspaceCpu.hpp>
-#include <resolve/workspace/LinAlgWorkspaceCUDA.hpp>
+
+#ifdef RESOLVE_USE_CUDA
+  #include <resolve/hykkt/CudaPermutationKernels.hpp>
+  #include <resolve/workspace/LinAlgWorkspaceCUDA.hpp>
+#endif
+
+#ifdef RESOLVE_USE_HIP
+  #include <resolve/hykkt/HipPermutationKernels.hpp>
+  #include <resolve/workspace/LinAlgWorkspaceHIP.hpp>
+#endif
 
 namespace ReSolve
 {
@@ -31,6 +40,7 @@ namespace ReSolve
       kernelHandler_ = new CpuPermutationKernels();
     }
 
+#ifdef RESOLVE_USE_CUDA
     Permutation::Permutation(LinAlgWorkspaceCUDA* workspaceCuda, int n_hes, int nnz_hes, int nnz_jac)
     : n_hes_(n_hes),
       nnz_hes_(nnz_hes),
@@ -41,6 +51,20 @@ namespace ReSolve
       // Initialize kernel handler
       kernelHandler_ = new CudaPermutationKernels();
     }
+#endif
+
+#ifdef RESOLVE_USE_HIP
+    Permutation::Permutation(LinAlgWorkspaceHIP* workspaceHip, int n_hes, int nnz_hes, int nnz_jac)
+    : n_hes_(n_hes),
+      nnz_hes_(nnz_hes),
+      nnz_jac_(nnz_jac)
+    {
+      allocateWorkspace();
+
+      // Initialize kernel handler
+      kernelHandler_ = new HipPermutationKernels();
+    }
+#endif
 
     /// Permutation destructor
     Permutation::~Permutation()

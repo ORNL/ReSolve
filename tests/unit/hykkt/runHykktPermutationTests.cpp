@@ -36,6 +36,10 @@ int main(int, char**)
 #ifdef RESOLVE_USE_CUDA
   runTests("CUDA", result);
 #endif
+
+#ifdef RESOLVE_USE_HIP
+  runTests("HIP", result);
+#endif
   
   return result.summary();
 }

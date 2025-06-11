@@ -16,9 +16,17 @@
 #include <tests/unit/TestBase.hpp>
 #include <resolve/hykkt/Permutation.hpp>
 #include <resolve/hykkt/cpuPermutationKernels.hpp>
-#include <resolve/hykkt/CudaPermutationKernels.hpp>
 #include <resolve/workspace/LinAlgWorkspaceCpu.hpp>
-#include <resolve/workspace/LinAlgWorkspaceCUDA.hpp>
+
+#ifdef RESOLVE_USE_CUDA
+  #include <resolve/hykkt/CudaPermutationKernels.hpp>
+  #include <resolve/workspace/LinAlgWorkspaceCUDA.hpp>
+#endif
+
+#ifdef RESOLVE_USE_HIP
+  #include <resolve/hykkt/HipPermutationKernels.hpp>
+  #include <resolve/workspace/LinAlgWorkspaceHIP.hpp>
+#endif
 
 namespace ReSolve
 {
@@ -148,10 +156,18 @@ namespace ReSolve
           {
             return ReSolve::hykkt::Permutation(new LinAlgWorkspaceCpu(), n_hes, nnz_hes, nnz_jac);
           }
+#ifdef RESOLVE_USE_CUDA
           else if (workspaceType_ == "CUDA")
           {
             return ReSolve::hykkt::Permutation(new LinAlgWorkspaceCUDA(), n_hes, nnz_hes, nnz_jac);
           }
+#endif
+#ifdef RESOLVE_USE_HIP
+          else if (workspaceType_ == "HIP")
+          {
+            return ReSolve::hykkt::Permutation(new LinAlgWorkspaceHIP(), n_hes, nnz_hes, nnz_jac);
+          }
+#endif
         }
     }; // class HykktPermutationTests
   } // namespace tests
