@@ -6,15 +6,7 @@
  * 
  */
 #include <resolve/hykkt/PermutationKernelsImpl.hpp>
-
-#include <resolve/workspace/LinAlgWorkspaceCpu.hpp>
-
-#ifdef RESOLVE_USE_CUDA
-#include <resolve/workspace/LinAlgWorkspaceCUDA.hpp>
-#endif
-#ifdef RESOLVE_USE_HIP
-#include <resolve/workspace/LinAlgWorkspaceHIP.hpp>
-#endif
+#include <resolve/hykkt/PermutationHandler.hpp>
 
 namespace ReSolve
 {
@@ -39,13 +31,7 @@ namespace ReSolve
       public:
       
         // constructors for each workspace type
-        Permutation(LinAlgWorkspaceCpu* workspace, int n_hes, int nnz_hes, int nnz_jac);
-#ifdef RESOLVE_USE_CUDA
-        Permutation(LinAlgWorkspaceCUDA* workspace, int n_hes, int nnz_hes, int nnz_jac);
-#endif
-#ifdef RESOLVE_USE_HIP  
-        Permutation(LinAlgWorkspaceHIP* workspace, int n_hes, int nnz_hes, int nnz_jac);
-#endif
+        Permutation(PermutationHandler* permutationHandler, int n_hes, int nnz_hes, int nnz_jac);
 
         // destructor
         ~Permutation();
@@ -55,13 +41,13 @@ namespace ReSolve
         void addJtInfo(int* jac_tr_i, int* jac_tr_j);
         void addPerm(int* custom_perm);
         void symAmd();
-        void invertPerm();
-        void vecMapRC(int* perm_i, int* perm_j);
-        void vecMapC(int* perm_j);
-        void vecMapR(int* perm_i, int* perm_j);
+        void invertPerm(memory::MemorySpace memspace);
+        void vecMapRC(int* perm_i, int* perm_j, memory::MemorySpace memspace);
+        void vecMapC(int* perm_j, memory::MemorySpace memspace);
+        void vecMapR(int* perm_i, int* perm_j, memory::MemorySpace memspace);
         void map_index(PermutationType permutation, 
                       double* old_val, 
-                      double* new_val);
+                      double* new_val, memory::MemorySpace memspace);
         void display_perm() const;
 
       private:
@@ -73,7 +59,7 @@ namespace ReSolve
         // member variables
         //
 
-        PermutationKernelsImpl* kernelHandler_; ///< handler for the permutation kernels
+        PermutationHandler* permutationHandler_;
 
         bool perm_is_default_ = true; ///< boolean if perm set custom
         

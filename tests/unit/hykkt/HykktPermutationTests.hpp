@@ -15,18 +15,7 @@
 
 #include <tests/unit/TestBase.hpp>
 #include <resolve/hykkt/Permutation.hpp>
-#include <resolve/hykkt/cpuPermutationKernels.hpp>
-#include <resolve/workspace/LinAlgWorkspaceCpu.hpp>
-
-#ifdef RESOLVE_USE_CUDA
-  #include <resolve/hykkt/CudaPermutationKernels.hpp>
-  #include <resolve/workspace/LinAlgWorkspaceCUDA.hpp>
-#endif
-
-#ifdef RESOLVE_USE_HIP
-  #include <resolve/hykkt/HipPermutationKernels.hpp>
-  #include <resolve/workspace/LinAlgWorkspaceHIP.hpp>
-#endif
+#include <resolve/hykkt/PermutationHandler.hpp>
 
 namespace ReSolve
 {
@@ -39,7 +28,7 @@ namespace ReSolve
     class HykktPermutationTests : public TestBase
     {
     public:
-      HykktPermutationTests(std::string workspaceType): workspaceType_(workspaceType) {}
+      HykktPermutationTests(ReSolve::hykkt::PermutationHandler* permutationHandler): permutationHandler_(permutationHandler) {}
       virtual ~HykktPermutationTests() {}
 
       TestOutcome permutation()
@@ -63,7 +52,7 @@ namespace ReSolve
         bool flagr = false;
         bool flagc = false;
 
-        ReSolve::hykkt::Permutation pc = createPermutationObject(n, nnz, nnz);
+        ReSolve::hykkt::Permutation pc = ReSolve::hykkt::Permutation(permutationHandler_, n, nnz, nnz);
 
         pc.addHInfo(a_i, a_j);
         pc.addJInfo(a_i, a_j, n, m);
@@ -139,36 +128,7 @@ namespace ReSolve
       }
 
       private:
-        std::string workspaceType_;
-
-        /**
-         * @brief Create a Permutation object based on the workspace type passed into
-         * the constructor.
-         * 
-         * @param n_hes Number of rows in H
-         * @param nnz_hes Number of non-zeros in H
-         * @param nnz_jac Number of non-zeros in J
-         * @return ReSolve::hykkt::Permutation 
-         */
-        ReSolve::hykkt::Permutation createPermutationObject(int n_hes, int nnz_hes, int nnz_jac)
-        {
-          if (workspaceType_ == "CPU")
-          {
-            return ReSolve::hykkt::Permutation(new LinAlgWorkspaceCpu(), n_hes, nnz_hes, nnz_jac);
-          }
-#ifdef RESOLVE_USE_CUDA
-          else if (workspaceType_ == "CUDA")
-          {
-            return ReSolve::hykkt::Permutation(new LinAlgWorkspaceCUDA(), n_hes, nnz_hes, nnz_jac);
-          }
-#endif
-#ifdef RESOLVE_USE_HIP
-          else if (workspaceType_ == "HIP")
-          {
-            return ReSolve::hykkt::Permutation(new LinAlgWorkspaceHIP(), n_hes, nnz_hes, nnz_jac);
-          }
-#endif
-        }
+        ReSolve::hykkt::PermutationHandler* permutationHandler_;
     }; // class HykktPermutationTests
   } // namespace tests
 } // namespace ReSolve
