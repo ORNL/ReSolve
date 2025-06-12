@@ -57,7 +57,7 @@ namespace ReSolve
       }
 
       /**
-       * @brief Scales a vector by a diagonal matrix
+       * @brief Scales a vector by a diagonal matrix represented by a vector
        *
        * @param[in]  n      - size of the vector
        * @param[in, out] vec - vector to be scaled. Changes in place.
