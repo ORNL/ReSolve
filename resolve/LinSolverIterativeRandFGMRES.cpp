@@ -70,12 +70,10 @@ namespace ReSolve
   {
     if (is_solver_set_) {
       freeSolverData();
-      is_solver_set_ = false;
     }
 
     if (is_sketching_set_) {
       freeSketchingData();
-      is_sketching_set_ = false;
     }
   }
 
@@ -92,13 +90,11 @@ namespace ReSolve
       if (is_solver_set_) {
         out::warning() << "Matrix size changed. Reallocating solver ...\n";
         freeSolverData();
-        is_solver_set_ = false;
       }
 
       if (is_sketching_set_) {
         out::warning() << "Matrix size changed. Reallocating solver ...\n";
         freeSketchingData();
-        is_sketching_set_ = false;
       }
     }
 
@@ -107,12 +103,10 @@ namespace ReSolve
 
     if (!is_solver_set_) {
       allocateSolverData();
-      is_solver_set_ = true;
     }
 
     if (!is_sketching_set_) {
       allocateSketchingData();
-      is_sketching_set_ = true;
     }
 
     GS_->setup(k_rand_, restart_);
@@ -122,11 +116,11 @@ namespace ReSolve
 
   /**
    * @brief Solve linear system A * x = rhs
-   * 
+   *
    * @param rhs - right hand side vector
    * @param x   - solution vector
    * @return int - zero if successful, error code otherwise
-   * 
+   *
    * @invariant rhs vector is unchanged.
    * @post x is overwritten with the solution to the linear system.
    */
@@ -417,7 +411,6 @@ namespace ReSolve
       }
       out::misc() << "Deleting sketching method " << sketching_method_ << "\n";
       freeSketchingData();
-      is_sketching_set_ = false;
     }
 
     // If solver is set, go ahead and create sketching, otherwise just set sketching method.
@@ -425,7 +418,6 @@ namespace ReSolve
     if (is_solver_set_) {
       out::misc() << "Allocating sketching method " << sketching_method_ << "\n";
       allocateSketchingData();
-      is_sketching_set_ = true;
     }
 
     // If Gram-Schmidt is already set, we need to reallocate it since the
@@ -657,6 +649,7 @@ namespace ReSolve
     h_s_  = new real_type[restart_];      // same
     h_rs_ = new real_type[restart_ + 1];  // for residual norm history
 
+    is_solver_set_ = true;
     return 0;
   }
 
@@ -678,6 +671,7 @@ namespace ReSolve
     vec_Z_   = nullptr;
     vec_aux_ = nullptr;
 
+    is_solver_set_ = false;
     return 0;
   }
 
@@ -722,6 +716,7 @@ namespace ReSolve
     }
 
     sketching_handler_->setup(n_, k_rand_);
+    is_sketching_set_ = true;
     return 0;
   }
 
@@ -733,6 +728,7 @@ namespace ReSolve
     vec_S_ = nullptr;
     sketching_handler_ = nullptr;
 
+    is_sketching_set_ = false;
     return 0;
   }
 

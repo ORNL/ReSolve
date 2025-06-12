@@ -11,7 +11,7 @@
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 #include <resolve/MemoryUtils.hpp>
 
-namespace ReSolve { 
+namespace ReSolve {
   namespace tests {
     /**
      * @class Tests for vector operations.
@@ -48,7 +48,7 @@ namespace ReSolve {
           vector::Vector x(N, k);
 
           if (x.getCapacity() != N) {
-            std::cout << "The capacity of the vector is " << x.getCapacity() 
+            std::cout << "The capacity of the vector is " << x.getCapacity()
                     << ", expected: " << N << "\n";
             status *= false;
           }
@@ -92,7 +92,7 @@ namespace ReSolve {
 
           vector::Vector x(N);
           x.allocate(memspace_);
-          
+
           x.resize(new_N);
 
           if (x.getSize() != new_N) {
@@ -103,7 +103,7 @@ namespace ReSolve {
 
           return status.report(__func__);
         }
-      
+
         /**
          * @brief Test setting data in a vector from array.
          *
@@ -114,7 +114,7 @@ namespace ReSolve {
         {
           TestStatus status;
           status = true;
-          
+
           vector::Vector x(N);
 
           real_type* data = new real_type[N];
@@ -131,8 +131,8 @@ namespace ReSolve {
           } else {
             for (int i = 0; i < N; ++i) {
               if (!isEqual(x_data[i], data[i])) {
-                std::cout << "The data in the vector is incorrect at index " << i 
-                          << ", expected: " << data[i] 
+                std::cout << "The data in the vector is incorrect at index " << i
+                          << ", expected: " << data[i]
                           << ", got: " << x_data[i] << "\n";
                 status *= false;
                 break;
@@ -140,12 +140,13 @@ namespace ReSolve {
             }
           }
 
+          delete[] data;
           return status.report(__func__);
         }
 
         /**
          * @brief Test copying data between vector-array and vector-vector.
-         * 
+         *
          * This creates an array, copies it to a vector in the current memory space, then
          * copies it to another vector in the same memory space, and finally back to a third on the
          * HOST. Then, it verifies the content of the final vector. This test only passes if all
@@ -164,7 +165,7 @@ namespace ReSolve {
           for (int i = 0; i < N; ++i) {
             data[i] = 0.1 * (real_type) i;
           }
-          
+
           // array -> memspace
           x.copyDataFrom(data, memory::HOST, memspace_);
 
@@ -184,7 +185,7 @@ namespace ReSolve {
           } else {
             for (int i = 0; i < N; ++i) {
               if (!isEqual(z_data[i], data[i])) {
-                std::cout << "The data in the copied vector is incorrect at index " << i 
+                std::cout << "The data in the copied vector is incorrect at index " << i
                           << ", expected: " << data[i]
                           << ", got: " << z_data[i] << "\n";
                 status *= false;
@@ -193,6 +194,7 @@ namespace ReSolve {
             }
           }
 
+          delete[] data;
           return status.report(__func__);
         }
 
@@ -231,13 +233,14 @@ namespace ReSolve {
             dest = dest_h;
           } else {
             // If we are on HOST, we can use dest directly
+            delete[] dest_h;
             dest_h = dest;
           }
 
           // Verify the copied data
           for (int i = 0; i < N; ++i) {
             if (!isEqual(dest_h[i], data[i])) {
-              std::cout << "The data in the destination array is incorrect at index " << i 
+              std::cout << "The data in the destination array is incorrect at index " << i
                         << ", expected: " << data[i]
                         << ", got: " << dest_h[i] << "\n";
               status *= false;
@@ -245,6 +248,7 @@ namespace ReSolve {
             }
           }
 
+          delete[] data;
           delete[] dest;
           return status.report(__func__);
         }
@@ -278,8 +282,8 @@ namespace ReSolve {
           } else {
             for (int i = 0; i < N; ++i) {
               if (!isEqual(x_data[i], constValue)) {
-                std::cout << "The data in the vector is incorrect at index " << i 
-                          << ", expected: " << constValue 
+                std::cout << "The data in the vector is incorrect at index " << i
+                          << ", expected: " << constValue
                           << ", got: " << x_data[i] << "\n";
                 status *= false;
                 break;
@@ -308,7 +312,7 @@ namespace ReSolve {
 
           vector::Vector x(N);
           x.allocate(memspaceFrom);
-          
+
           real_type* data = new real_type[N];
           for (int i = 0; i < N; ++i) {
             data[i] = 0.1 * (real_type) i;
@@ -330,7 +334,7 @@ namespace ReSolve {
           } else {
             for (int i = 0; i < N; ++i) {
               if (!isEqual(x_synced_data[i], data[i])) {
-                std::cout << "The data in the vector after sync is incorrect at index " << i 
+                std::cout << "The data in the vector after sync is incorrect at index " << i
                           << ", expected: " << data[i]
                           << ", got: " << x_synced_data[i] << "\n";
                 status *= false;
@@ -340,7 +344,7 @@ namespace ReSolve {
 
           return status.report(__func__);
         }
-        
+
       private:
         ReSolve::VectorHandler& handler_;
         ReSolve::memory::MemorySpace memspace_;
@@ -348,4 +352,3 @@ namespace ReSolve {
     };//class
   } // namespace tests
 } //namespace ReSolve
-
