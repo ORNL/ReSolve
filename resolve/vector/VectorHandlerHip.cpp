@@ -89,7 +89,7 @@ namespace ReSolve {
       workspace_->setNormBufferState(true);
     }
     real_type norm;
-    vector_inf_norm(x->getSize(),
+    hip::vector_inf_norm(x->getSize(),
                     x->getData(memory::DEVICE),
                     workspace_->getNormBuffer(),
                     &norm);
@@ -193,7 +193,7 @@ namespace ReSolve {
   {
     using namespace constants;
     if (k < 200) {
-      mass_axpy(size, k, x->getData(memory::DEVICE), y->getData(memory::DEVICE),alpha->getData(memory::DEVICE));
+      hip::mass_axpy(size, k, x->getData(memory::DEVICE), y->getData(memory::DEVICE),alpha->getData(memory::DEVICE));
 
     } else {
       rocblas_handle handle_rocblas =  workspace_->getRocblasHandle();
@@ -234,7 +234,7 @@ namespace ReSolve {
     using namespace constants;
 
     if (k < 200) {
-      mass_inner_product_two_vectors(size, k, x->getData(memory::DEVICE) , x->getData(1, memory::DEVICE), V->getData(memory::DEVICE), res->getData(memory::DEVICE));
+      hip::mass_inner_product_two_vectors(size, k, x->getData(memory::DEVICE) , x->getData(1, memory::DEVICE), V->getData(memory::DEVICE), res->getData(memory::DEVICE));
     } else {
       rocblas_handle handle_rocblas =  workspace_->getRocblasHandle();
       rocblas_dgemm(handle_rocblas,
@@ -273,7 +273,7 @@ namespace ReSolve {
     real_type* diag_data = diag->getData(memory::DEVICE);
     real_type* vec_data = vec->getData(memory::DEVICE);
     index_type n = vec->getSize();
-    scaleWrapper(n, diag_data, vec_data);
+    hip::scaleWrapper(n, diag_data, vec_data);
     vec->setDataUpdated(memory::DEVICE);
     return 0;
   }

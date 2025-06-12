@@ -15,53 +15,53 @@
 #include <resolve/hip/hipVectorKernels.h>
 
 namespace ReSolve {
+  namespace hip {
+    namespace kernels {
 
-  namespace kernels {
-
-    __global__ void set_array_to_const(index_type n, real_type val, real_type* arr)
-    {
-      index_type i = blockIdx.x * blockDim.x + threadIdx.x;
-      while (i < n)
+      __global__ void set_array_to_const(index_type n, real_type val, real_type* arr)
       {
-        arr[i] = val;
-        i += blockDim.x * gridDim.x;
+        index_type i = blockIdx.x * blockDim.x + threadIdx.x;
+        while (i < n)
+        {
+          arr[i] = val;
+          i += blockDim.x * gridDim.x;
+        }
       }
+
+      /**
+      * @brief HIP kernel that adds a constant to each element of an array.
+      *
+      * @param[in]       n   - length of the array
+      * @param[in]       val - the value to add to each element
+      * @param[in, out]  arr - a pointer to the array
+      *
+      * @pre  `arr` is allocated to size `n`
+      * @post `val` is added to each element of `arr`
+      */
+      __global__ void addConst(index_type n, real_type val, real_type* arr)
+      {
+        index_type i = blockIdx.x * blockDim.x + threadIdx.x;
+        if(i < n)
+        {
+          arr[i] += val;
+        }
+      }
+    } // namespace kernels
+
+    void hip_set_array_const(index_type n, real_type c, real_type* v)
+    {
+      index_type num_blocks;
+      index_type block_size = 512;
+      num_blocks = (n + block_size - 1) / block_size;
+      hipLaunchKernelGGL(kernels::set_array_to_const, dim3(num_blocks), dim3(block_size), 0, 0, n, c, v);
     }
 
-    /**
-     * @brief HIP kernel that adds a constant to each element of an array.
-     *
-     * @param[in]       n   - length of the array
-     * @param[in]       val - the value to add to each element
-     * @param[in, out]  arr - a pointer to the array
-     *
-     * @pre  `arr` is allocated to size `n`
-     * @post `val` is added to each element of `arr`
-     */
-    __global__ void addConst(index_type n, real_type val, real_type* arr)
+    void hipAddConst(index_type n, real_type val, real_type* arr)
     {
-      index_type i = blockIdx.x * blockDim.x + threadIdx.x;
-      if(i < n)
-      {
-        arr[i] += val;
-      }
+      index_type num_blocks;
+      index_type block_size = 512;
+      num_blocks = (n + block_size - 1) / block_size;
+      hipLaunchKernelGGL(kernels::addConst, dim3(num_blocks), dim3(block_size), 0, 0, n, val, arr);
     }
-  } // namespace kernels
-
-  void hip_set_array_const(index_type n, real_type c, real_type* v)
-  {
-    index_type num_blocks;
-    index_type block_size = 512;
-    num_blocks = (n + block_size - 1) / block_size;
-    hipLaunchKernelGGL(kernels::set_array_to_const, dim3(num_blocks), dim3(block_size), 0, 0, n, c, v);
-  }
-
-  void hipAddConst(index_type n, real_type val, real_type* arr)
-  {
-    index_type num_blocks;
-    index_type block_size = 512;
-    num_blocks = (n + block_size - 1) / block_size;
-    hipLaunchKernelGGL(kernels::addConst, dim3(num_blocks), dim3(block_size), 0, 0, n, val, arr);
-  }
-
+  } // namespace hip
 } // namespace ReSolve

@@ -169,14 +169,14 @@ namespace ReSolve {
     }
 
     mem_.deviceSynchronize();
-    matrix_row_sums(A->getNumRows(),
+    hip::matrix_row_sums(A->getNumRows(),
                     A->getNnz(),
                     A->getRowData(memory::DEVICE),
                     A->getValues(memory::DEVICE),
                     d_r);
     mem_.deviceSynchronize();
 
-    vector_inf_norm(A->getNumRows(),
+    hip::vector_inf_norm(A->getNumRows(),
                     d_r,
                     workspace_->getNormBuffer(),
                     norm);
@@ -303,7 +303,7 @@ namespace ReSolve {
   {
     real_type* values = A->getValues(memory::DEVICE);
     index_type nnz = A->getNnz();
-    hipAddConst(nnz, alpha, values);
+    hip::hipAddConst(nnz, alpha, values);
     return 0;
   }
 
@@ -327,7 +327,7 @@ namespace ReSolve {
     real_type*  a_vals = A->getValues( memory::DEVICE);
     index_type n = A->getNumRows();
     // check values in A and diag
-    leftScaleWrapper(n, a_row_ptr, a_vals, diag_data);
+    hip::leftScaleWrapper(n, a_row_ptr, a_vals, diag_data);
     A->setUpdated(memory::DEVICE);
     return 0;
   }
@@ -352,7 +352,7 @@ namespace ReSolve {
     index_type* a_col_idx = A->getColData(memory::DEVICE);
     real_type*  a_vals = A->getValues( memory::DEVICE);
     index_type n = A->getNumRows();
-    rightScaleWrapper(n, a_row_ptr, a_col_idx, a_vals, diag_data);
+    hip::rightScaleWrapper(n, a_row_ptr, a_col_idx, a_vals, diag_data);
     A->setUpdated(memory::DEVICE);
     return 0;
   }
