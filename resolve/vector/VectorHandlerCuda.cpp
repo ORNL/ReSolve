@@ -198,7 +198,7 @@ namespace ReSolve {
   {
     using namespace constants;
     if (k < 200) {
-      mass_axpy(size, k, x->getData(memory::DEVICE), y->getData(memory::DEVICE),alpha->getData(memory::DEVICE));
+      cuda::mass_axpy(size, k, x->getData(memory::DEVICE), y->getData(memory::DEVICE),alpha->getData(memory::DEVICE));
     } else {
       cublasHandle_t handle_cublas =  workspace_->getCublasHandle();
       cublasDgemm(handle_cublas,
@@ -237,7 +237,7 @@ namespace ReSolve {
     using namespace constants;
 
     if (k < 200) {
-      mass_inner_product_two_vectors(size, k, x->getData(memory::DEVICE) , x->getData(1, memory::DEVICE), V->getData(memory::DEVICE), res->getData(memory::DEVICE));
+      cuda::mass_inner_product_two_vectors(size, k, x->getData(memory::DEVICE) , x->getData(1, memory::DEVICE), V->getData(memory::DEVICE), res->getData(memory::DEVICE));
     } else {
       cublasHandle_t handle_cublas =  workspace_->getCublasHandle();
       cublasDgemm(handle_cublas,
@@ -275,7 +275,7 @@ namespace ReSolve {
     real_type* diag_data = diag->getData(memory::DEVICE);
     real_type* vec_data = vec->getData(memory::DEVICE);
     index_type n = vec->getSize();
-    scaleWrapper(n, diag_data, vec_data);
+    cuda::scaleWrapper(n, diag_data, vec_data);
     vec->setDataUpdated(memory::DEVICE);
     return 0;
   }

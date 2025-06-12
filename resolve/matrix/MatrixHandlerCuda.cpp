@@ -8,6 +8,7 @@
 #include <resolve/workspace/LinAlgWorkspaceCUDA.hpp>
 #include "MatrixHandlerCuda.hpp"
 #include <resolve/cuda/cudaKernels.h>
+#include <resolve/cuda/cudaVectorKernels.h>
 #include <resolve/cusolver_defs.hpp> // needed for inf nrm
 
 namespace ReSolve {
@@ -179,7 +180,7 @@ namespace ReSolve {
       workspace_->setDr(d_r);
     }
 
-    matrix_row_sums(A->getNumRows(),
+    cuda::matrix_row_sums(A->getNumRows(),
                     A->getNnz(),
                     A->getRowData(memory::DEVICE),
                     A->getValues(memory::DEVICE),
@@ -345,7 +346,7 @@ namespace ReSolve {
     real_type*  a_vals = A->getValues( memory::DEVICE);
     index_type n = A->getNumRows();
     // check values in A and diag
-    leftScaleWrapper(n, a_row_ptr, a_vals, diag_data);
+    cuda::leftScaleWrapper(n, a_row_ptr, a_vals, diag_data);
     A->setUpdated(memory::DEVICE);
     return 0;
   }
@@ -370,7 +371,7 @@ namespace ReSolve {
     index_type* a_col_idx = A->getColData(memory::DEVICE);
     real_type*  a_vals = A->getValues( memory::DEVICE);
     index_type n = A->getNumRows();
-    rightScaleWrapper(n, a_row_ptr, a_col_idx, a_vals, diag_data);
+    cuda::rightScaleWrapper(n, a_row_ptr, a_col_idx, a_vals, diag_data);
     A->setUpdated(memory::DEVICE);
     return 0;
   }
@@ -387,7 +388,7 @@ namespace ReSolve {
   {
     real_type* values = A->getValues(memory::DEVICE);
     index_type nnz = A->getNnz();
-    cudaAddConst(nnz, alpha, values);
+    cuda::cudaAddConst(nnz, alpha, values);
     return 0;
   }
 } // namespace ReSolve
