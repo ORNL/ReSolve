@@ -2,9 +2,9 @@
  * @file gpuRefactor.cpp
  * @author Slaven Peles (peless@ornl.gov)
  * @author Kasia Swirydowicz (kasia.swirydowicz@amd.com)
- * 
+ *
  * @brief Example of solving linear systems using refactorization on a GPU.
- * 
+ *
  * A series of linear systems is read from files specified at command line
  * input and solved with refactorization approach on GPU. Initially, system(s)
  * are solved with KLU solver on CPU, using full factorization, and the
@@ -13,7 +13,7 @@
  * builds, rocsolverRf is used. It is assumed that all systems in the series
  * have the same sparsity pattern, so the analysis is done only once for the
  * entire series.
- * 
+ *
  */
 #include <string>
 #include <iostream>
@@ -93,7 +93,6 @@ int gpuRefactor(int argc, char *argv[])
   using vector_type = ReSolve::vector::Vector;
 
   CliOptions options(argc, argv);
-  CliOptions::Option* opt = nullptr;
 
   bool is_help = options.hasKey("-h");
   if (is_help) {
@@ -104,7 +103,7 @@ int gpuRefactor(int argc, char *argv[])
   bool is_iterative_refinement = options.hasKey("-i");
 
   index_type num_systems = 0;
-  opt = options.getParamFromKey("-n");
+  auto opt = options.getParamFromKey("-n");
   if (opt) {
     num_systems = atoi((opt->second).c_str());
   } else {

@@ -3,7 +3,7 @@
  * @author Kasia Swirydowicz (kasia.swirydowicz@amd.com)
  * @author Slaven Peles (peless@ornl.gov)
  * @brief Functionality test for rocsolver_rf.
- * 
+ *
  */
 #include <string>
 #include <iostream>
@@ -48,9 +48,8 @@ int main(int argc, char *argv[])
 
 #ifdef RESOLVE_USE_CUDA
   ReSolve::CliOptions options(argc, argv);
-  ReSolve::CliOptions::Option* opt = nullptr;
 
-  opt = options.getParamFromKey("-s");
+  auto opt = options.getParamFromKey("-s");
   std::string rf_solver = opt ? (*opt).second : "rf";
   if (rf_solver != "glu" && rf_solver != "rf") {
     std::cout << "Unrecognized refactorization solver " << rf_solver << " ...\n";
@@ -90,10 +89,9 @@ int runTest(int argc, char *argv[], std::string& solver_name)
 
   // Collect all command line options
   ReSolve::CliOptions options(argc, argv);
-  ReSolve::CliOptions::Option* opt = nullptr;
 
   // Get directory with input files
-  opt = options.getParamFromKey("-d");
+  auto opt = options.getParamFromKey("-d");
   std::string data_path = opt ? (*opt).second : ".";
 
   // Change Rf solver mode (only for rocsolverRf)
@@ -185,7 +183,7 @@ int runTest(int argc, char *argv[], std::string& solver_name)
   index_type* P = KLU.getPOrdering();
   index_type* Q = KLU.getQOrdering();
 
-  status = Rf.setup(A, L, U, P, Q, &vec_rhs); 
+  status = Rf.setup(A, L, U, P, Q, &vec_rhs);
   error_sum += status;
 
   // Refactorize (on device where available)
@@ -200,7 +198,7 @@ int runTest(int argc, char *argv[], std::string& solver_name)
   if (is_ir) {
     test_name += " + IR";
 
-    status =  FGMRES.setup(A); 
+    status =  FGMRES.setup(A);
     error_sum += status;
 
     status = FGMRES.setupPreconditioner("LU", &Rf);
@@ -246,7 +244,7 @@ int runTest(int argc, char *argv[], std::string& solver_name)
   // Refactorize second matrix
   status = Rf.refactorize();
   error_sum += status;
-  
+
   // Solve system (now one can go directly to IR when enabled)
   if (is_ir) {
     FGMRES.resetMatrix(A);
@@ -278,4 +276,3 @@ int runTest(int argc, char *argv[], std::string& solver_name)
 
   return error_sum;
 }
-
