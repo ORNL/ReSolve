@@ -111,7 +111,7 @@ namespace ReSolve
       template <typename I, typename T>
       static int setArrayToConstOnDevice(T* v, T c, I n)
       {
-        hip::hip_set_array_const(n, c, v);
+        hip::setArrayConst(n, c, v);
         return checkHipErrors(0);
       }
 

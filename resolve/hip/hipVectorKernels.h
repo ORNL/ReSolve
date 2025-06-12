@@ -15,7 +15,7 @@ namespace ReSolve
 {
   namespace hip
   {
-    void hip_set_array_const(index_type n, real_type val, real_type* arr);
-    void hipAddConst(index_type n, real_type val, real_type* arr);
+    void setArrayConst(index_type n, real_type val, real_type* arr);
+    void addConst(index_type n, real_type val, real_type* arr);
   }
 }

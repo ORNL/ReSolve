@@ -48,7 +48,7 @@ namespace ReSolve {
       }
     } // namespace kernels
 
-    void hip_set_array_const(index_type n, real_type c, real_type* v)
+    void setArrayConst(index_type n, real_type c, real_type* v)
     {
       index_type num_blocks;
       index_type block_size = 512;
@@ -56,7 +56,7 @@ namespace ReSolve {
       hipLaunchKernelGGL(kernels::set_array_to_const, dim3(num_blocks), dim3(block_size), 0, 0, n, c, v);
     }
 
-    void hipAddConst(index_type n, real_type val, real_type* arr)
+    void addConst(index_type n, real_type val, real_type* arr)
     {
       index_type num_blocks;
       index_type block_size = 512;
