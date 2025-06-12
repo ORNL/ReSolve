@@ -122,7 +122,7 @@ namespace ReSolve
     }
 
     setup_complete_ = true;
-    return true;
+    return 0;
   }
 
   int GramSchmidt::orthogonalize(index_type n, vector::Vector* V, real_type* H, index_type i)
