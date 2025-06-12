@@ -111,7 +111,7 @@ namespace ReSolve
       template <typename I, typename T>
       static int setArrayToConstOnDevice(T* v, T c, I n)
       {
-        cuda::cuda_set_array_const(n, c, v);
+        cuda::setArrayConst(n, c, v);
         return checkCudaErrors(0);
       }
 

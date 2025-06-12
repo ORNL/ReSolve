@@ -323,7 +323,7 @@ namespace ReSolve {
      *
      * @todo Decide how to allow user to configure grid and block sizes.
      */
-    void leftScaleWrapper(index_type n,
+    void leftScale(index_type n,
                       const index_type* a_row_ptr,
                       real_type* a_val,
                       const real_type* d_val)
@@ -347,7 +347,7 @@ namespace ReSolve {
      *
      * @todo Decide how to allow user to configure grid and block sizes.
      */
-    void rightScaleWrapper(index_type n,
+    void rightScale(index_type n,
                         const index_type* a_row_ptr,
                         const index_type* a_col_ind,
                         real_type* a_val,
@@ -369,7 +369,7 @@ namespace ReSolve {
      *
      * @todo Decide how to allow user to configure grid and block sizes.
      */
-    void scaleWrapper(index_type n,
+    void scale(index_type n,
                         const real_type* diag,
                         real_type* vec)
     {

@@ -346,7 +346,7 @@ namespace ReSolve {
     real_type*  a_vals = A->getValues( memory::DEVICE);
     index_type n = A->getNumRows();
     // check values in A and diag
-    cuda::leftScaleWrapper(n, a_row_ptr, a_vals, diag_data);
+    cuda::leftScale(n, a_row_ptr, a_vals, diag_data);
     A->setUpdated(memory::DEVICE);
     return 0;
   }
@@ -371,7 +371,7 @@ namespace ReSolve {
     index_type* a_col_idx = A->getColData(memory::DEVICE);
     real_type*  a_vals = A->getValues( memory::DEVICE);
     index_type n = A->getNumRows();
-    cuda::rightScaleWrapper(n, a_row_ptr, a_col_idx, a_vals, diag_data);
+    cuda::rightScale(n, a_row_ptr, a_col_idx, a_vals, diag_data);
     A->setUpdated(memory::DEVICE);
     return 0;
   }
@@ -388,7 +388,7 @@ namespace ReSolve {
   {
     real_type* values = A->getValues(memory::DEVICE);
     index_type nnz = A->getNnz();
-    cuda::cudaAddConst(nnz, alpha, values);
+    cuda::addConst(nnz, alpha, values);
     return 0;
   }
 } // namespace ReSolve

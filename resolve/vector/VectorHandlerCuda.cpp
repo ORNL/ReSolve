@@ -275,7 +275,7 @@ namespace ReSolve {
     real_type* diag_data = diag->getData(memory::DEVICE);
     real_type* vec_data = vec->getData(memory::DEVICE);
     index_type n = vec->getSize();
-    cuda::scaleWrapper(n, diag_data, vec_data);
+    cuda::scale(n, diag_data, vec_data);
     vec->setDataUpdated(memory::DEVICE);
     return 0;
   }

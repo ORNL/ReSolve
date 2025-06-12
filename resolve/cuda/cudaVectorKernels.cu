@@ -58,7 +58,7 @@ namespace ReSolve
 
     } // namespace kernels
 
-    void cuda_set_array_const(index_type n, real_type val, real_type* arr)
+    void setArrayConst(index_type n, real_type val, real_type* arr)
     {
       index_type num_blocks;
       index_type block_size = 512;
@@ -66,7 +66,7 @@ namespace ReSolve
       kernels::set_const<<<num_blocks, block_size>>>(n, val, arr);
     }
 
-    void cudaAddConst(index_type n, real_type val, real_type* arr)
+    void addConst(index_type n, real_type val, real_type* arr)
     {
       index_type num_blocks;
       index_type block_size = 512;
