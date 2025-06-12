@@ -4,12 +4,12 @@
  * @author Kasia Swirydowicz (kasia.swirydowicz@amd.com)
 
  * @brief Example solving linear systems using KLU factorization
- * 
+ *
  * A series of linear systems is read from files specified at command line
  * input and solved with KLU solver, using full factorization for each
  * system. It is assumed that all systems in the series have the same sparsity
  * pattern, so the analysis is done only once for the entire series.
- * 
+ *
  */
 #include <iostream>
 #include <iomanip>
@@ -53,7 +53,6 @@ int main(int argc, char *argv[])
   using namespace ReSolve::examples;
   using namespace ReSolve;
   CliOptions options(argc, argv);
-  CliOptions::Option* opt = nullptr;
 
   bool is_help = options.hasKey("-h");
   if (is_help) {
@@ -64,7 +63,7 @@ int main(int argc, char *argv[])
   bool is_iterative_refinement = options.hasKey("-i");
 
   index_type num_systems = 0;
-  opt = options.getParamFromKey("-n");
+  auto opt = options.getParamFromKey("-n");
   if (opt) {
     num_systems = std::stoi((opt->second).c_str());
   } else {

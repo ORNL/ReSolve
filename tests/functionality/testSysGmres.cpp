@@ -2,10 +2,10 @@
  * @file testSysRandGMRES.cpp
  * @author Kasia Swirydowicz (kasia.swirydowicz@pnnl.gov)
  * @author Slaven Peles (peless@ornl.gov)
- * @brief Functionality tests for SystemSolver and GMRES classes 
+ * @brief Functionality tests for SystemSolver and GMRES classes
  * @date 2023-12-18
- * 
- * 
+ *
+ *
  */
 #include <string>
 #include <iostream>
@@ -87,9 +87,8 @@ int test(int argc, char *argv[])
 
   // Collect all CLI
   ReSolve::CliOptions options(argc, argv);
-  ReSolve::CliOptions::Option* opt = nullptr;
 
-  opt = options.getParamFromKey("-N");
+  auto opt = options.getParamFromKey("-N");
   const index_type N = opt ? atoi((*opt).second.c_str()) : 10000;
 
   opt = options.getParamFromKey("-i");
@@ -210,10 +209,10 @@ void processInputs(std::string& method, std::string& gs, std::string& sketch)
     std::cout << "Setting iterative solver method to the default (FGMRES).\n\n";
     method = "fgmres";
   }
-  if (gs != "cgs1" && 
-      gs != "cgs2" && 
-      gs != "mgs" && 
-      gs != "mgs_two_sync" 
+  if (gs != "cgs1" &&
+      gs != "cgs2" &&
+      gs != "mgs" &&
+      gs != "mgs_two_sync"
       && gs != "mgs_pm") {
     std::cout << "Unknown orthogonalization " << gs << "\n";
     std::cout << "Setting orthogonalization to the default (CGS2).\n\n";
@@ -221,7 +220,7 @@ void processInputs(std::string& method, std::string& gs, std::string& sketch)
   }
 }
 
-std::string headerInfo(const std::string& method, 
+std::string headerInfo(const std::string& method,
                        const std::string& gs,
                        const std::string& sketch,
                        std::string flexible)
@@ -251,11 +250,11 @@ std::string headerInfo(const std::string& method,
   } else if (gs == "cgs1")  {
     header += (withgs + "classical Gram-Schmidt\n");
   } else if (gs == "mgs") {
-    header += (withgs + "modified Gram-Schmidt\n");    
+    header += (withgs + "modified Gram-Schmidt\n");
   } else if (gs == "mgs_two_sync") {
-    header += (withgs + "modified Gram-Schmidt 2-sync\n");    
+    header += (withgs + "modified Gram-Schmidt 2-sync\n");
   } else if (gs == "mgs_pm") {
-    header += (withgs + "post-modern modified Gram-Schmidt\n");    
+    header += (withgs + "post-modern modified Gram-Schmidt\n");
   } else {
     // do nothing
   }
@@ -283,7 +282,7 @@ ReSolve::vector::Vector* generateRhs(const index_type N, ReSolve::memory::Memory
     vec_rhs->syncData(memspace);
   }
   return vec_rhs;
-} 
+}
 
 ReSolve::matrix::Csr* generateMatrix(const index_type N, ReSolve::memory::MemorySpace memspace)
 {
@@ -310,7 +309,7 @@ ReSolve::matrix::Csr* generateMatrix(const index_type N, ReSolve::memory::Memory
 
   index_type* rowptr = A->getRowData(ReSolve::memory::HOST);
   index_type* colidx = A->getColData(ReSolve::memory::HOST);
-  real_type* val     = A->getValues(ReSolve::memory::HOST); 
+  real_type* val     = A->getValues(ReSolve::memory::HOST);
 
   // Populate CSR matrix using same row pattern as for NNZ calculation
   rowptr[0] = 0;
@@ -334,7 +333,7 @@ ReSolve::matrix::Csr* generateMatrix(const index_type N, ReSolve::memory::Memory
         where =  (j - rowptr[i]) * N/nnz_per_row + (N%(N/nnz_per_row));
         // evenly distribute nonzeros ^^^^             ^^^^^^^^ perturb offset
         what = row_sample[static_cast<size_t>(j - rowptr[i])];
-      } 
+      }
       colidx[j] = where;
       val[j] = what;
     }

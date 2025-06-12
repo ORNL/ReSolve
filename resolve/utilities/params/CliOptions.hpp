@@ -2,13 +2,14 @@
 
 #include <map>
 #include <string>
+#include <memory>
 
 namespace ReSolve
 {
 
   /**
    * @brief Parser for command line input
-   * 
+   *
    * @note Based on StackOverflow answer by Luca Davanzo
    */
   class CliOptions
@@ -19,7 +20,7 @@ namespace ReSolve
       virtual ~CliOptions();
       std::string getAppName() const;
       bool hasKey(const std::string&) const;
-      Option* getParamFromKey(const std::string&) const;
+      std::unique_ptr<Option> getParamFromKey(const std::string&) const;
       void printOptionsList() const;
     private:
       using OptionsList = std::map<std::string, std::string>;

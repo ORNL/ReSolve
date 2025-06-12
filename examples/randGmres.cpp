@@ -33,7 +33,7 @@ static void printUsage()
   std::cout << "\t -h\tPrints this message.\n\n";
 }
 
-/// Prototype of the example main function 
+/// Prototype of the example main function
 template <class workspace_type, class precon_type>
 static int runGmresExample(int argc, char *argv[]);
 
@@ -72,7 +72,6 @@ int runGmresExample(int argc, char *argv[])
 
   // Collect all CLI
   ReSolve::CliOptions options(argc, argv);
-  ReSolve::CliOptions::Option* opt = nullptr;
 
   bool is_help = options.hasKey("-h");
   if (is_help) {
@@ -81,7 +80,7 @@ int runGmresExample(int argc, char *argv[])
   }
 
   std::string matrix_pathname;
-  opt = options.getParamFromKey("-m");
+  auto opt = options.getParamFromKey("-m");
   if (opt) {
     matrix_pathname = opt->second;
   } else {
@@ -171,7 +170,7 @@ int runGmresExample(int argc, char *argv[])
 
   FGMRES.resetMatrix(A);
   FGMRES.setupPreconditioner("LU", &Precond);
-  FGMRES.setFlexible(1); 
+  FGMRES.setFlexible(1);
 
   FGMRES.solve(vec_rhs, vec_x);
 
