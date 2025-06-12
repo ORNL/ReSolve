@@ -111,8 +111,8 @@ namespace ReSolve
     real_type rnorm = 0.0;
     real_type bnorm = 0.0;
     real_type tolrel;
-    vector_type* vec_v = new vector_type(n_);
-    vector_type* vec_z = new vector_type(n_);
+    vector_type vec_v(n_);
+    vector_type vec_z(n_);
     //V[0] = b-A*x_0
     //debug
     vec_Z_->setToZero(memspace_);
@@ -174,20 +174,20 @@ namespace ReSolve
         it++;
 
         // Z_i = (LU)^{-1}*V_i
-        vec_v->setData( vec_V_->getVectorData(i, memspace_), memspace_);
+        vec_v.setData( vec_V_->getVectorData(i, memspace_), memspace_);
         if (flexible_) {
-          vec_z->setData( vec_Z_->getVectorData(i, memspace_), memspace_);
+          vec_z.setData( vec_Z_->getVectorData(i, memspace_), memspace_);
         } else {
-          vec_z->setData( vec_Z_->getVectorData(0, memspace_), memspace_);
+          vec_z.setData( vec_Z_->getVectorData(0, memspace_), memspace_);
         }
-        this->precV(vec_v, vec_z);
+        this->precV(&vec_v, &vec_z);
         mem_.deviceSynchronize();
 
         // V_{i+1}=A*Z_i
 
-        vec_v->setData( vec_V_->getVectorData(i + 1, memspace_), memspace_);
+        vec_v.setData( vec_V_->getVectorData(i + 1, memspace_), memspace_);
 
-        matrix_handler_->matvec(A_, vec_z, vec_v, &ONE, &ZERO, memspace_);
+        matrix_handler_->matvec(A_, &vec_z, &vec_v, &ONE, &ZERO, memspace_);
 
         // orthogonalize V[i+1], form a column of h_H_
 
@@ -246,22 +246,22 @@ namespace ReSolve
       // get solution
       if (flexible_) {
         for (j = 0; j <= i; j++) {
-          vec_z->setData( vec_Z_->getVectorData(j, memspace_), memspace_);
-          vector_handler_->axpy(&h_rs_[j], vec_z, x, memspace_);
+          vec_z.setData( vec_Z_->getVectorData(j, memspace_), memspace_);
+          vector_handler_->axpy(&h_rs_[j], &vec_z, x, memspace_);
         }
       } else {
         vec_Z_->setToZero(memspace_);
-        vec_z->setData( vec_Z_->getVectorData(0, memspace_), memspace_);
+        vec_z.setData( vec_Z_->getVectorData(0, memspace_), memspace_);
         for (j = 0; j <= i; j++) {
-          vec_v->setData( vec_V_->getVectorData(j, memspace_), memspace_);
-          vector_handler_->axpy(&h_rs_[j], vec_v, vec_z, memspace_);
+          vec_v.setData( vec_V_->getVectorData(j, memspace_), memspace_);
+          vector_handler_->axpy(&h_rs_[j], &vec_v, &vec_z, memspace_);
         }
         // now multiply d_Z by precon
 
-        vec_v->setData( vec_V_->getData(memspace_), memspace_);
-        this->precV(vec_z, vec_v);
+        vec_v.setData( vec_V_->getData(memspace_), memspace_);
+        this->precV(&vec_z, &vec_v);
         // and add to x
-        vector_handler_->axpy(&ONE, vec_v, x, memspace_);
+        vector_handler_->axpy(&ONE, &vec_v, x, memspace_);
       }
 
       /* test solution */
