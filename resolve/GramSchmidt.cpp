@@ -381,7 +381,7 @@ namespace ReSolve
   int GramSchmidt::freeGramSchmidtData()
   {
     if(variant_ == MGS_TWO_SYNC || variant_ == MGS_PM) {
-      delete h_L_;
+      delete[] h_L_;
       h_L_ = nullptr;
 
       delete vec_rv_;
@@ -391,7 +391,7 @@ namespace ReSolve
     }
 
     if (variant_ == CGS2) {
-      delete h_aux_;
+      delete[] h_aux_;
       h_aux_ = nullptr;
       delete vec_Hcolumn_;
       vec_Hcolumn_ = nullptr;
@@ -403,7 +403,7 @@ namespace ReSolve
     }
 
     if (variant_ == MGS_PM) {
-      delete h_aux_;
+      delete[] h_aux_;
       h_aux_ = nullptr;
     }
 
