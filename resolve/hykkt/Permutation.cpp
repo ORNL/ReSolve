@@ -11,66 +11,26 @@
 #include "amd.h"
 
 #include <resolve/hykkt/Permutation.hpp>
-#include <resolve/hykkt/cpuPermutationKernels.hpp>
-#include <resolve/workspace/LinAlgWorkspaceCpu.hpp>
-
-#ifdef RESOLVE_USE_CUDA
-  #include <resolve/hykkt/CudaPermutationKernels.hpp>
-  #include <resolve/workspace/LinAlgWorkspaceCUDA.hpp>
-#endif
-
-#ifdef RESOLVE_USE_HIP
-  #include <resolve/hykkt/HipPermutationKernels.hpp>
-  #include <resolve/workspace/LinAlgWorkspaceHIP.hpp>
-#endif
 
 namespace ReSolve
 {
   namespace hykkt
   {
     /// Creates a class for the permutation of $H_\gamma$ in (6)
-    Permutation::Permutation(LinAlgWorkspaceCpu* workspaceCpu, int n_hes, int nnz_hes, int nnz_jac)
+    Permutation::Permutation(PermutationHandler* permutationHandler, int n_hes, int nnz_hes, int nnz_jac)
     : n_hes_(n_hes),
       nnz_hes_(nnz_hes),
-      nnz_jac_(nnz_jac)
+      nnz_jac_(nnz_jac),
+      permutationHandler_(permutationHandler)
     {
       allocateWorkspace();
-
-      // Initialize kernel handler
-      kernelHandler_ = new CpuPermutationKernels();
     }
-
-#ifdef RESOLVE_USE_CUDA
-    Permutation::Permutation(LinAlgWorkspaceCUDA* workspaceCuda, int n_hes, int nnz_hes, int nnz_jac)
-    : n_hes_(n_hes),
-      nnz_hes_(nnz_hes),
-      nnz_jac_(nnz_jac)
-    {
-      allocateWorkspace();
-
-      // Initialize kernel handler
-      kernelHandler_ = new CudaPermutationKernels();
-    }
-#endif
-
-#ifdef RESOLVE_USE_HIP
-    Permutation::Permutation(LinAlgWorkspaceHIP* workspaceHip, int n_hes, int nnz_hes, int nnz_jac)
-    : n_hes_(n_hes),
-      nnz_hes_(nnz_hes),
-      nnz_jac_(nnz_jac)
-    {
-      allocateWorkspace();
-
-      // Initialize kernel handler
-      kernelHandler_ = new HipPermutationKernels();
-    }
-#endif
 
     /// Permutation destructor
     Permutation::~Permutation()
     {
       deleteWorkspace();
-      delete kernelHandler_;
+      delete permutationHandler_;
     }
 
     /**
@@ -174,9 +134,9 @@ namespace ReSolve
      * @post rev_perm is now the reverse permuation of perm and copied onto
      *       the device d_perm
      */
-    void Permutation::invertPerm()
+    void Permutation::invertPerm(memory::MemorySpace memspace)
     {
-      kernelHandler_->reversePerm(n_hes_, perm_, rev_perm_);
+      permutationHandler_->reversePerm(n_hes_, perm_, rev_perm_, memspace);
     }
 
     /**
@@ -194,9 +154,9 @@ namespace ReSolve
      * @post perm_map_h is now permuted rows/columns of H and copied onto
      *       the device d_perm_map_h
      */
-    void Permutation::vecMapRC(int* perm_i, int* perm_j)
+    void Permutation::vecMapRC(int* perm_i, int* perm_j, memory::MemorySpace memspace)
     {
-      kernelHandler_->makeVecMapRC(n_hes_, hes_i_, hes_j_, perm_, rev_perm_, perm_i, perm_j, perm_map_hes_);
+      permutationHandler_->makeVecMapRC(n_hes_, hes_i_, hes_j_, perm_, rev_perm_, perm_i, perm_j, perm_map_hes_, memspace);
     }
 
     /**
@@ -212,9 +172,9 @@ namespace ReSolve
      * @post perm_map_jac is now the column permutation and is copied onto
      *       the device d_perm_map_jac
      */
-    void Permutation::vecMapC(int* perm_j)
+    void Permutation::vecMapC(int* perm_j, memory::MemorySpace memspace)
     {
-      kernelHandler_->makeVecMapC(n_jac_, jac_i_, jac_j_, rev_perm_, perm_j, perm_map_jac_);
+      permutationHandler_->makeVecMapC(n_jac_, jac_i_, jac_j_, rev_perm_, perm_j, perm_map_jac_, memspace);
     }
 
     /**
@@ -231,9 +191,9 @@ namespace ReSolve
      * @post perm_map_jac_tr is now the permuations of the rows of J transpose
      *       and is copied onto the device d_perm_map_jac_tr
      */
-    void Permutation::vecMapR(int* perm_i, int* perm_j)
+    void Permutation::vecMapR(int* perm_i, int* perm_j, memory::MemorySpace memspace)
     {
-      kernelHandler_->makeVecMapR(m_jac_, jac_tr_i_, jac_tr_j_, perm_, perm_i, perm_j, perm_map_jac_tr_);
+      permutationHandler_->makeVecMapR(m_jac_, jac_tr_i_, jac_tr_j_, perm_, perm_i, perm_j, perm_map_jac_tr_, memspace);
     }
     
     /**
@@ -254,24 +214,25 @@ namespace ReSolve
      */
     void Permutation::map_index(PermutationType permutation,
         double* old_val,
-        double* new_val)
+        double* new_val,
+        memory::MemorySpace memspace)
     {
       switch(permutation)
       {
         case PERM_V: 
-          kernelHandler_->mapIdx(n_hes_, perm_, old_val, new_val);
+          permutationHandler_->mapIdx(n_hes_, perm_, old_val, new_val, memspace);
           break;
         case REV_PERM_V: 
-          kernelHandler_->mapIdx(n_hes_, rev_perm_, old_val, new_val);
+          permutationHandler_->mapIdx(n_hes_, rev_perm_, old_val, new_val, memspace);
           break;
         case PERM_HES_V: 
-          kernelHandler_->mapIdx(nnz_hes_, perm_map_hes_, old_val, new_val);
+          permutationHandler_->mapIdx(nnz_hes_, perm_map_hes_, old_val, new_val, memspace);
           break;
         case PERM_JAC_V: 
-          kernelHandler_->mapIdx(nnz_jac_, perm_map_jac_, old_val, new_val);
+          permutationHandler_->mapIdx(nnz_jac_, perm_map_jac_, old_val, new_val, memspace);
           break;
         case PERM_JAC_TR_V: 
-          kernelHandler_->mapIdx(nnz_jac_, perm_map_jac_tr_, old_val, new_val);
+          permutationHandler_->mapIdx(nnz_jac_, perm_map_jac_tr_, old_val, new_val, memspace);
           break;
         default:
           printf("Valid arguments are PERM_V, REV_PERM_V, PERM_H_V, PERM_J_V, PERM_JT_V\n");
