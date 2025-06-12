@@ -7,6 +7,7 @@
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/workspace/LinAlgWorkspaceHIP.hpp>
 #include <resolve/hip/hipKernels.h>
+#include <resolve/hip/hipVectorKernels.h>
 #include "MatrixHandlerHip.hpp"
 
 namespace ReSolve {
