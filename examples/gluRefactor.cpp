@@ -83,7 +83,6 @@ int gluRefactor(int argc, char *argv[])
   using vector_type = ReSolve::vector::Vector;
 
   CliOptions options(argc, argv);
-  CliOptions::Option* opt = nullptr;
 
   bool is_help = options.hasKey("-h");
   if (is_help) {
@@ -92,7 +91,7 @@ int gluRefactor(int argc, char *argv[])
   }
 
   index_type num_systems = 0;
-  opt = options.getParamFromKey("-n");
+  auto opt = options.getParamFromKey("-n");
   if (opt) {
     num_systems = atoi((opt->second).c_str());
   } else {
