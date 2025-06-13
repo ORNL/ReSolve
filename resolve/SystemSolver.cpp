@@ -150,9 +150,16 @@ namespace ReSolve
       delete refactorizationSolver_;
     }
 
+    if (solveMethod_ == "randgmres" || solveMethod_ == "fgmres") {
+      delete iterativeSolver_;
+    }
+
+    if (gs_ != nullptr) {
+      delete gs_;
+    }
+
     if (irMethod_ != "none") {
       delete iterativeSolver_;
-      delete gs_;
     }
 
     if (precondition_method_ != "none") {

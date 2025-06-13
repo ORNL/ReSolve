@@ -3,7 +3,7 @@
  * @author Kasia Swirydowicz (kasia.swirydowicz@amd.com)
  * @author Slaven Peles (peless@ornl.gov)
  * @brief Functionality test for rocsolver_rf.
- * 
+ *
  */
 #include <string>
 #include <iostream>
@@ -54,10 +54,9 @@ int runTest(int argc, char *argv[], std::string& solver_name)
 
   // Collect all command line options
   ReSolve::CliOptions options(argc, argv);
-  ReSolve::CliOptions::Option* opt = nullptr;
 
   // Get directory with input files
-  opt = options.getParamFromKey("-d");
+  auto opt = options.getParamFromKey("-d");
   std::string data_path = opt ? (*opt).second : ".";
 
   // Whether to use iterative refinement
@@ -123,7 +122,7 @@ int runTest(int argc, char *argv[], std::string& solver_name)
   status = KLU.factorize();
   error_sum += status;
 
-  std::cout << "KLU factorize status: " << status <<std::endl;      
+  std::cout << "KLU factorize status: " << status <<std::endl;
 
   status = KLU.solve(&vec_rhs, &vec_x);
   error_sum += status;
@@ -131,7 +130,7 @@ int runTest(int argc, char *argv[], std::string& solver_name)
   if (is_ir) {
     test_name += " + IR";
 
-    status =  FGMRES.setup(A); 
+    status =  FGMRES.setup(A);
     error_sum += status;
 
     status = FGMRES.setupPreconditioner("LU", &KLU);
@@ -175,8 +174,8 @@ int runTest(int argc, char *argv[], std::string& solver_name)
 
   status = KLU.refactorize();
   error_sum += status;
-  std::cout << "KLU refactorization status: " << status << std::endl;      
-  
+  std::cout << "KLU refactorization status: " << status << std::endl;
+
   if (is_ir) {
     FGMRES.resetMatrix(A);
     status = FGMRES.setupPreconditioner("LU", &KLU);
@@ -206,4 +205,3 @@ int runTest(int argc, char *argv[], std::string& solver_name)
 
   return error_sum;
 }
-

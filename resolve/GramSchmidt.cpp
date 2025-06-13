@@ -60,12 +60,10 @@ namespace ReSolve
 
     // First delete current data structures
     freeGramSchmidtData();
-    setup_complete_ = false;
 
     // Next, change variant and set up Gram-Scmidt again
     variant_ = variant;
     setup(n, num_vecs_);
-    setup_complete_ = true;
 
     return 0;
   }
@@ -90,7 +88,6 @@ namespace ReSolve
     if (setup_complete_) {
       if ((vec_v_->getSize() != n) || (num_vecs_ != restart)) {
         freeGramSchmidtData();
-        setup_complete_ = false;
       }
     }
 
@@ -108,31 +105,24 @@ namespace ReSolve
       vec_Hcolumn_ = new vector_type(num_vecs_ + 1);
       vec_Hcolumn_->allocate(memspace_);
       vec_Hcolumn_->setToZero(memspace_);
-
-      setup_complete_ = true;
     }
     if(variant_ == CGS2) {
       h_aux_ = new real_type[num_vecs_ + 1]();
       vec_Hcolumn_ = new vector_type(num_vecs_ + 1);
       vec_Hcolumn_->allocate(memspace_);
       vec_Hcolumn_->setToZero(memspace_);
-
-      setup_complete_ = true;
     }
     if(variant_ == CGS1) {
       vec_Hcolumn_ = new vector_type(num_vecs_ + 1);
       vec_Hcolumn_->allocate(memspace_);
       vec_Hcolumn_->setToZero(memspace_);
-
-      setup_complete_ = true;
     }
     if(variant_ == MGS_PM) {
       h_aux_ = new real_type[num_vecs_ + 1]();
-
-      setup_complete_ = true;
     }
 
-    return setup_complete_ ? 0 : 1;
+    setup_complete_ = true;
+    return 0;
   }
 
   int GramSchmidt::orthogonalize(index_type n, vector::Vector* V, real_type* H, index_type i)
@@ -381,7 +371,7 @@ namespace ReSolve
   int GramSchmidt::freeGramSchmidtData()
   {
     if(variant_ == MGS_TWO_SYNC || variant_ == MGS_PM) {
-      delete h_L_;
+      delete[] h_L_;
       h_L_ = nullptr;
 
       delete vec_rv_;
@@ -391,7 +381,7 @@ namespace ReSolve
     }
 
     if (variant_ == CGS2) {
-      delete h_aux_;
+      delete[] h_aux_;
       h_aux_ = nullptr;
       delete vec_Hcolumn_;
       vec_Hcolumn_ = nullptr;
@@ -403,7 +393,7 @@ namespace ReSolve
     }
 
     if (variant_ == MGS_PM) {
-      delete h_aux_;
+      delete[] h_aux_;
       h_aux_ = nullptr;
     }
 
@@ -412,6 +402,7 @@ namespace ReSolve
     delete vec_v_;
     vec_v_ = nullptr;
 
+    setup_complete_ = false;
     return 0;
   }
 

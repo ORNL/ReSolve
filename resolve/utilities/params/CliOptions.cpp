@@ -2,7 +2,6 @@
 
 #include "CliOptions.hpp"
 
-
 namespace ReSolve
 {
 
@@ -28,12 +27,12 @@ namespace ReSolve
     return options_.find(key) != options_.end();
   }
 
-  CliOptions::Option* CliOptions::getParamFromKey(const std::string& key) const
+  std::unique_ptr<CliOptions::Option> CliOptions::getParamFromKey(const std::string& key) const
   {
     const OptionsList::const_iterator i = options_.find(key);
-    CliOptions::Option* opt = 0;
+    auto opt = std::unique_ptr<CliOptions::Option>(nullptr);
     if (i != options_.end()) {
-      opt = new CliOptions::Option((*i).first, (*i).second);
+      opt = std::unique_ptr<CliOptions::Option>(new CliOptions::Option((*i).first, (*i).second));
     }
     return opt;
   }
@@ -46,8 +45,8 @@ namespace ReSolve
         std::cout << "No parameters\n";
     }
     for (; m != options_.end(); m++, ++i) {
-      std::cout << "Parameter [" << i << "] [" 
-                << (*m).first  << " " 
+      std::cout << "Parameter [" << i << "] ["
+                << (*m).first  << " "
                 << (*m).second << "]\n";
     }
   }
@@ -58,13 +57,13 @@ namespace ReSolve
 
   /**
    * @brief Parse command line input and store it in a map
-   * 
+   *
    * @pre Pointer to command line options is copied to `argv_`
    * @post Command line options are parsed and stored in map `options_`
    */
   void CliOptions::parse()
   {
-    Option* option = new std::pair<std::string, std::string>();
+    std::unique_ptr<Option> option(new std::pair<std::string, std::string>());
     // Loop over argv entries skipping the first one (executable name)
     for (const char* const* i = this->begin() + 1; i != this->end(); i++)
     {
@@ -79,7 +78,7 @@ namespace ReSolve
           options_.insert(Option(option->first, option->second));
         }
         continue;
-      } 
+      }
       else if (option->first != "" && p[0] == '-')
       {
         // Option ID has been set in prior cycle, string p is also option ID.

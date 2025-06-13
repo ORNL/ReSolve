@@ -10,7 +10,7 @@
 #include <tests/unit/TestBase.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 
-namespace ReSolve { 
+namespace ReSolve {
   namespace tests {
     /**
      * @class Tests for vector handler
@@ -18,8 +18,8 @@ namespace ReSolve {
      */
     class VectorHandlerTests : TestBase
     {
-      public:       
-        VectorHandlerTests(ReSolve::VectorHandler& handler) : handler_(handler) 
+      public:
+        VectorHandlerTests(ReSolve::VectorHandler& handler) : handler_(handler)
         {
           if (handler_.getIsCudaEnabled() || handler_.getIsHipEnabled()) {
             memspace_ = memory::DEVICE;
@@ -60,8 +60,9 @@ namespace ReSolve {
             std::cout << "The result " << result << " is incorrect. "
                       << "Expected answer is " << answer << "\n";
             status *= false;
-          } 
+          }
 
+          delete[] data;
           return status.report(__func__);
         }
 
@@ -80,12 +81,12 @@ namespace ReSolve {
 
           real_type alpha = 0.5;
 
-          //the result is a vector with y[i] = 2.5 forall i;          
+          //the result is a vector with y[i] = 2.5 forall i;
           handler_.axpy(&alpha, &x, &y, memspace_);
           status *= verifyAnswer(y, 2.5);
 
           return status.report(__func__);
-        }    
+        }
 
         TestOutcome dot(index_type N)
         {
@@ -109,10 +110,10 @@ namespace ReSolve {
             std::cout << "The result " << result << " is incorrect. "
                       << "Expected answer is " << answer << "\n";
             status *= false;
-          } 
+          }
 
           return status.report(__func__);
-        }    
+        }
 
         TestOutcome scal(index_type N)
         {
@@ -132,7 +133,7 @@ namespace ReSolve {
           status *= verifyAnswer(x, answer);
 
           return status.report(__func__);
-        }    
+        }
 
         TestOutcome massAxpy(index_type N, index_type K)
         {
@@ -141,7 +142,7 @@ namespace ReSolve {
           vector::Vector x(N, K);
           vector::Vector y(N);
           vector::Vector alpha(K);;
-          
+
           x.allocate(memspace_);
           y.allocate(memspace_);
           alpha.allocate(memspace_);
@@ -166,7 +167,7 @@ namespace ReSolve {
           status *= verifyAnswer(y, 2.0 - res);
 
           return status.report(__func__);
-        }    
+        }
 
         TestOutcome massDot(index_type N, index_type K)
         {
@@ -186,7 +187,7 @@ namespace ReSolve {
           status *= verifyAnswer(res, (-1.0) * (real_type) N);
 
           return status.report(__func__);
-        }    
+        }
 
         TestOutcome gemv(index_type N,  index_type K)
         {
@@ -218,7 +219,7 @@ namespace ReSolve {
           status *= verifyAnswer(xT, static_cast<real_type>(N) + 0.5);
 
           return status.report(__func__);
-        }    
+        }
 
       private:
         ReSolve::VectorHandler& handler_;
@@ -240,7 +241,7 @@ namespace ReSolve {
               status = false;
               std::cout << "Solution vector element x[" << i << "] = " << x.getData(memory::HOST)[i]
                 << ", expected: " << answer << "\n";
-              break; 
+              break;
             }
           }
           return status;
@@ -248,4 +249,3 @@ namespace ReSolve {
     };//class
   } // namespace tests
 } //namespace ReSolve
-

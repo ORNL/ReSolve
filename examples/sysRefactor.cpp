@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
   }
 
   // Select hardware backend, default to CPU if no -b option is passed
-  ReSolve::CliOptions::Option* opt = options.getParamFromKey("-b");
+  auto opt = options.getParamFromKey("-b");
   if (!opt)
   {
     std::cout << "No backend option provided. Defaulting to CPU.\n";
@@ -107,7 +107,6 @@ int sysRefactor(int argc, char *argv[])
   using vector_type = ReSolve::vector::Vector;
 
   CliOptions options(argc, argv);
-  CliOptions::Option* opt = nullptr;
 
   bool is_help = options.hasKey("-h");
   if (is_help) {
@@ -118,7 +117,7 @@ int sysRefactor(int argc, char *argv[])
   bool is_iterative_refinement = options.hasKey("-i");
 
   index_type num_systems = 0;
-  opt = options.getParamFromKey("-n");
+  auto opt = options.getParamFromKey("-n");
   if (opt) {
     num_systems = atoi((opt->second).c_str());
   } else {

@@ -155,14 +155,13 @@ public:
     TestStatus status;
     std::string testname(__func__);
     matrix::Csr* A = createRectangularCsrMatrix(n, m);
-    vector::Vector* diag = createIncrementingVector(n);
-    handler_.leftDiagonalScale(diag, A, memspace_);
+    vector::Vector diag = createIncrementingVector(n);
+    handler_.leftDiagonalScale(&diag, A, memspace_);
     if (memspace_ == memory::DEVICE) {
       A->syncData(memory::HOST);
     }
     status *= verifyLeftScaledCsrMatrix(A);
     delete A;
-    delete diag;
     return status.report(testname.c_str());
   }
 
@@ -171,14 +170,13 @@ public:
     TestStatus status;
     std::string testname(__func__);
     matrix::Csr* A = createRectangularCsrMatrix(n, m);
-    vector::Vector* diag = createIncrementingVector(m);
-    handler_.rightDiagonalScale(A, diag, memspace_);
+    vector::Vector diag = createIncrementingVector(m);
+    handler_.rightDiagonalScale(A, &diag, memspace_);
     if (memspace_ == memory::DEVICE) {
       A->syncData(memory::HOST);
     }
     status *= verifyRightScaledCsrMatrix(A);
     delete A;
-    delete diag;
     return status.report(testname.c_str());
   }
 
@@ -186,15 +184,13 @@ public:
   {
     TestStatus status;
     std::string testname(__func__);
-    vector::Vector* diag = createIncrementingVector(n);
-    vector::Vector* vec = createIncrementingVector(n);
-    handler_.vectorDiagonalScale(diag, vec, memspace_);
+    vector::Vector diag = createIncrementingVector(n);
+    vector::Vector vec = createIncrementingVector(n);
+    handler_.vectorDiagonalScale(&diag, &vec, memspace_);
     if (memspace_ == memory::DEVICE) {
-      vec->syncData(memory::HOST);
+      vec.syncData(memory::HOST);
     }
-    status *= verifyVectorScaledDiagMatrix(vec);
-    delete vec;
-    delete diag;
+    status *= verifyVectorScaledDiagMatrix(&vec);
     return status.report(testname.c_str());
   }
 
@@ -537,17 +533,17 @@ private:
    *
    * @param[in] n number of elements
    */
-  vector::Vector* createIncrementingVector(const index_type n)
+  vector::Vector createIncrementingVector(const index_type n)
   {
-    vector::Vector* vec = new vector::Vector(n);
-    vec->allocate(memory::HOST);
-    real_type* data = vec->getData(memory::HOST);
+    vector::Vector vec(n);
+    vec.allocate(memory::HOST);
+    real_type* data = vec.getData(memory::HOST);
     for (index_type i = 0; i < n; ++i) {
       data[i] = static_cast<real_type>(i + 1.0);
     }
-    vec->setDataUpdated(memory::HOST);
+    vec.setDataUpdated(memory::HOST);
     if (memspace_ == memory::DEVICE) {
-      vec->syncData(memspace_);
+      vec.syncData(memspace_);
     }
     return vec;
   }
@@ -721,8 +717,8 @@ private:
     const index_type n = scaled_vec->getSize();
 
     // Create the original unscaled vector to compare against
-    vector::Vector* original_vec = createIncrementingVector(n);
-    real_type* original_data = original_vec->getData(memory::HOST);
+    vector::Vector original_vec = createIncrementingVector(n);
+    real_type* original_data = original_vec.getData(memory::HOST);
 
     // Get data from the vector
     real_type* data = scaled_vec->getData(memory::HOST);
