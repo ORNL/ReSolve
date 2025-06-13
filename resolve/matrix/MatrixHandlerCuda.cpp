@@ -181,10 +181,10 @@ namespace ReSolve {
     }
 
     cuda::matrix_row_sums(A->getNumRows(),
-                    A->getNnz(),
-                    A->getRowData(memory::DEVICE),
-                    A->getValues(memory::DEVICE),
-                    d_r);
+                          A->getNnz(),
+                          A->getRowData(memory::DEVICE),
+                          A->getValues(memory::DEVICE),
+                          d_r);
 
     int status = cusolverSpDnrminf(workspace_->getCusolverSpHandle(),
                                    A->getNumRows(),

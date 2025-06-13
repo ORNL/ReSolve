@@ -88,15 +88,15 @@ namespace ReSolve {
       rocsparse_create_mat_info(&infoA);
 
       status = rocsparse_dcsrmv_analysis(handle_rocsparse,
-                                          rocsparse_operation_none,
-                                          A->getNumRows(),
-                                          A->getNumColumns(),
-                                          A->getNnz(),
-                                          descrA,
-                                          A->getValues( memory::DEVICE),
-                                          A->getRowData(memory::DEVICE),
-                                          A->getColData(memory::DEVICE),
-                                          infoA);
+                                         rocsparse_operation_none,
+                                         A->getNumRows(),
+                                         A->getNumColumns(),
+                                         A->getNnz(),
+                                         descrA,
+                                         A->getValues( memory::DEVICE),
+                                         A->getRowData(memory::DEVICE),
+                                         A->getColData(memory::DEVICE),
+                                         infoA);
       error_sum += status;
       mem_.deviceSynchronize();
 
@@ -171,16 +171,16 @@ namespace ReSolve {
 
     mem_.deviceSynchronize();
     hip::matrix_row_sums(A->getNumRows(),
-                    A->getNnz(),
-                    A->getRowData(memory::DEVICE),
-                    A->getValues(memory::DEVICE),
-                    d_r);
+                         A->getNnz(),
+                         A->getRowData(memory::DEVICE),
+                         A->getValues(memory::DEVICE),
+                         d_r);
     mem_.deviceSynchronize();
 
     hip::vector_inf_norm(A->getNumRows(),
-                    d_r,
-                    workspace_->getNormBuffer(),
-                    norm);
+                         d_r,
+                         workspace_->getNormBuffer(),
+                         norm);
     return 0;
   }
 
@@ -262,13 +262,13 @@ namespace ReSolve {
       // allocate transpose buffer
       size_t bufferSize;
       status = rocsparse_csr2csc_buffer_size(workspace_->getRocsparseHandle(),
-                                           m,
-                                           n,
-                                           nnz,
-                                           A->getRowData(memory::DEVICE),
-                                           A->getColData(memory::DEVICE),
-                                           rocsparse_action_numeric,
-                                           &bufferSize);
+                                             m,
+                                             n,
+                                             nnz,
+                                             A->getRowData(memory::DEVICE),
+                                             A->getColData(memory::DEVICE),
+                                             rocsparse_action_numeric,
+                                             &bufferSize);
       error_sum += status;
       workspace_->setTransposeBufferWorkspace(bufferSize);
     }

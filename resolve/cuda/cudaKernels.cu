@@ -30,11 +30,11 @@ namespace ReSolve {
        */
       template <size_t Tv5 = 1024>
       __global__ void MassIPTwoVec(const real_type* __restrict__ u1,
-                                  const real_type* __restrict__ u2,
-                                  const real_type* __restrict__ v,
-                                  real_type* result,
-                                  const index_type k,
-                                  const index_type N)
+                                   const real_type* __restrict__ u2,
+                                   const real_type* __restrict__ v,
+                                   real_type* result,
+                                   const index_type k,
+                                   const index_type N)
       {
         index_type t = threadIdx.x;
         index_type bsize = blockDim.x;
@@ -164,10 +164,10 @@ namespace ReSolve {
        * @param[out] result - array size [n x 1] containing sums of values in each row.
        */
       __global__ void matrixInfNormPart1(const index_type n,
-                                        const index_type nnz,
-                                        const index_type* a_ia,
-                                        const real_type* a_val,
-                                        real_type* result)
+                                         const index_type nnz,
+                                         const index_type* a_ia,
+                                         const real_type* a_val,
+                                         real_type* result)
       {
         index_type idx = blockIdx.x * blockDim.x + threadIdx.x;
         while (idx < n) {
@@ -190,9 +190,9 @@ namespace ReSolve {
        * @todo Decide how to allow user to configure grid and block sizes.
        */
       __global__ void leftScale(index_type n,
-                        const index_type* a_row_ptr,
-                        real_type* a_val,
-                        const real_type* d_val)
+                                const index_type* a_row_ptr,
+                                real_type* a_val,
+                                const real_type* d_val)
       {
         // Get row index from thread and block indices
         index_type row = blockIdx.x * blockDim.x + threadIdx.x;
@@ -225,10 +225,10 @@ namespace ReSolve {
        * @todo Decide how to allow user to configure grid and block sizes.
        */
       __global__ void rightScale(index_type n,
-                        const index_type* a_row_ptr,
-                        const index_type* a_col_ind,
-                        real_type* a_val,
-                        const real_type* d_val)
+                                 const index_type* a_row_ptr,
+                                 const index_type* a_col_ind,
+                                 real_type* a_val,
+                                 const real_type* d_val)
       {
         // Get row index from thread and block indices
         index_type row = blockIdx.x * blockDim.x + threadIdx.x;

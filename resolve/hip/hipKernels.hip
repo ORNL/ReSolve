@@ -132,10 +132,10 @@ namespace ReSolve {
       */
       template <size_t Tmaxk = 1024>
       __global__ void massAxpy3_kernel(index_type N,
-                                      index_type k,
-                                      const real_type* x_data,
-                                      real_type* y_data,
-                                      const real_type* alpha)
+                                       index_type k,
+                                       const real_type* x_data,
+                                       real_type* y_data,
+                                       const real_type* alpha)
       {
         index_type i = blockIdx.x * blockDim.x + threadIdx.x;
         index_type t = threadIdx.x;
@@ -165,10 +165,10 @@ namespace ReSolve {
       * @param[out] result -
       */
       __global__ void matrixInfNormPart1(const index_type n,
-                                        const index_type nnz,
-                                        const index_type* a_ia,
-                                        const real_type* a_val,
-                                        real_type* result)
+                                         const index_type nnz,
+                                         const index_type* a_ia,
+                                         const real_type* a_val,
+                                         real_type* result)
       {
         index_type idx = blockIdx.x*blockDim.x + threadIdx.x;
         while (idx < n) {
@@ -312,9 +312,9 @@ namespace ReSolve {
       * @todo Decide how to allow user to configure grid and block sizes.
       */
       __global__ void leftScale(index_type n,
-                                    const index_type* a_row_ptr,
-                                    real_type* a_val,
-                                    const real_type* d_val)
+                                const index_type* a_row_ptr,
+                                real_type* a_val,
+                                const real_type* d_val)
       {
         // Get row index from thread and block indices
         index_type row = blockIdx.x * blockDim.x + threadIdx.x;
@@ -347,10 +347,10 @@ namespace ReSolve {
       * @todo Decide how to allow user to configure grid and block sizes.
       */
       __global__ void rightScale(index_type n,
-                                    const index_type* a_row_ptr,
-                                    const index_type* a_col_ind,
-                                    real_type* a_val,
-                                    const real_type* d_val)
+                                 const index_type* a_row_ptr,
+                                 const index_type* a_col_ind,
+                                 real_type* a_val,
+                                 const real_type* d_val)
       {
         // Get row index from thread and block indices
         index_type row = blockIdx.x * blockDim.x + threadIdx.x;
@@ -396,16 +396,16 @@ namespace ReSolve {
                                         real_type* result)
     {
       hipLaunchKernelGGL(kernels::MassIPTwoVec_kernel,
-                        dim3(i),
-                        dim3(1024),
-                        0,
-                        0,
-                        vec1,
-                        vec2,
-                        mvec,
-                        result,
-                        i,
-                        n);
+                         dim3(i),
+                         dim3(1024),
+                         0,
+                         0,
+                         vec1,
+                         vec2,
+                         mvec,
+                         result,
+                         i,
+                         n);
     }
 
     /**
@@ -420,15 +420,15 @@ namespace ReSolve {
     void mass_axpy(index_type n, index_type i, real_type* x, real_type* y, real_type* alpha)
     {
       hipLaunchKernelGGL(kernels::massAxpy3_kernel,
-                        dim3((n + 384 - 1) / 384),
-                        dim3(384),
-                        0,
-                        0,
-                        n,
-                        i,
-                        x,
-                        y,
-                        alpha);
+                         dim3((n + 384 - 1) / 384),
+                         dim3(384),
+                         0,
+                         0,
+                         n,
+                         i,
+                         x,
+                         y,
+                         alpha);
     }
 
     /**
@@ -486,14 +486,14 @@ namespace ReSolve {
                         real_type* vec_out)
     {
       hipLaunchKernelGGL(kernels::permuteVectorP_kernel,
-                        dim3(1000),
-                        dim3(1024),
-                        0,
-                        0,
-                        n,
-                        perm_vector,
-                        vec_in,
-                        vec_out);
+                         dim3(1000),
+                         dim3(1024),
+                         0,
+                         0,
+                         n,
+                         perm_vector,
+                         vec_in,
+                         vec_out);
     }
 
     /**
@@ -510,14 +510,14 @@ namespace ReSolve {
                         real_type* vec_out)
     {
       hipLaunchKernelGGL(kernels::permuteVectorQ_kernel,
-                        dim3(1000),
-                        dim3(1024),
-                        0,
-                        0,
-                        n,
-                        perm_vector,
-                        vec_in,
-                        vec_out);
+                         dim3(1000),
+                         dim3(1024),
+                         0,
+                         0,
+                         n,
+                         perm_vector,
+                         vec_in,
+                         vec_out);
     }
 
     /**
@@ -554,10 +554,10 @@ namespace ReSolve {
     * @todo Decide how to allow user to configure grid and block sizes.
     */
     void rightScale(index_type n,
-                        const index_type* a_row_ptr,
-                        const index_type* a_col_ind,
-                        real_type* a_val,
-                        const real_type* d_val)
+                    const index_type* a_row_ptr,
+                    const index_type* a_col_ind,
+                    real_type* a_val,
+                    const real_type* d_val)
     {
       // Define block size and number of blocks
       const int block_size = 256;

@@ -23,22 +23,22 @@ namespace ReSolve {
     void mass_axpy(index_type n, index_type i, real_type* x, real_type* y, real_type* alpha);
 
     void leftScale(index_type n,
-                      const index_type* a_row_ptr,
-                      real_type* a_val,
-                      const real_type* diag);
+                   const index_type* a_row_ptr,
+                   real_type* a_val,
+                   const real_type* diag);
 
     void rightScale(index_type n,
-                        const index_type* a_row_ptr,
-                        const index_type* a_col_idx,
-                        real_type* a_val,
-                        const real_type* diag);
+                    const index_type* a_row_ptr,
+                    const index_type* a_col_idx,
+                    real_type* a_val,
+                    const real_type* diag);
 
     //needed for matrix inf nrm
     void matrix_row_sums(index_type n,
-                        index_type nnz,
-                        index_type* a_ia,
-                        real_type* a_val,
-                        real_type* result);
+                         index_type nnz,
+                         index_type* a_ia,
+                         real_type* a_val,
+                         real_type* result);
 
     // needed for triangular solve
 
@@ -54,8 +54,8 @@ namespace ReSolve {
 
 
     void vector_inf_norm(index_type n,
-                        real_type* input,
-                        real_type * buffer,
-                        real_type* result);
+                         real_type* input,
+                         real_type * buffer,
+                         real_type* result);
   } // namespace hip
 } // namespace ReSolve
