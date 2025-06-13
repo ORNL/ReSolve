@@ -30,7 +30,6 @@ namespace ReSolve
     Permutation::~Permutation()
     {
       deleteWorkspace();
-      delete permutationHandler_;
     }
 
     /**

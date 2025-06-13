@@ -39,49 +39,67 @@ namespace ReSolve
       }
       virtual ~HykktPermutationTests() {}
 
-      TestOutcome permutation()
+      TestOutcome permutationTest()
       {
-        int n = 4;
-        int m = 4;
-        int nnz = 9;
-        int a_i[5]    = {0, 2, 5, 7, 9};
-        int a_j[9]    = {0, 2, 0, 1, 2, 1, 2, 1, 3};
-        int a_prc_i[5] = {0, 2, 4, 6, 9};
-        int a_prc_j[9] = {0, 3, 0, 1, 2, 3, 0, 1, 3};
-        int a_pr_i[5]  = {0, 2, 4, 6, 9};
-        int a_pr_j[9]  = {1, 2, 0, 2, 1, 3, 0, 1, 2};
-        int a_pc_i[5]  = {0, 2, 5, 7, 9};
-        int a_pc_j[9]  = {0, 1, 0, 1, 3, 0, 3, 2, 3};
-        int b_i[5] = {0}; // Initialize row pointer
-        int b_j[9] = {0}; // Initialize column indices
-        int perm[4] = {2, 0, 3, 1};
+        // n_hes = m_jac = 3, n_jac = 2
+        int n = 3;
+        int m = 2;
+        int nnz_hes = 6;
+        int nnz_jac = 4;
+
+        int perm[4] = {2, 0, 1};
+
+        int hes_i[4] =  {0, 2, 4, 6};
+        int hes_j[6] = {0, 2, 1, 2, 0, 1};
+
+        int hes_prc_i[4] = {0, 2, 4, 6};
+        int hes_prc_j[6] = {1, 2, 0, 1, 0, 2};
+
+        int jac_i[3] = {0, 2, 4};
+        int jac_j[4] = {0, 2, 1, 2};
+        
+        int jac_pc_i[3] = {0, 2, 4};
+        int jac_pc_j[4] = {0, 1, 0, 2};
+
+        int jac_tr_i[4] = {0, 1, 2, 4};
+        int jac_tr_j[4] = {0, 1, 0, 1};
+
+        int jac_tr_pr_i[4] = {0, 2, 3, 4};
+        int jac_tr_pr_j[4] = {0, 1, 0, 1};
+
+        int result_prc_i[4] = {};
+        int result_prc_j[6] = {};
+        int result_pr_i[4] = {};
+        int result_pr_j[4] = {};
+        int result_pc_j[4] = {};
 
         bool flagrc = false;
-        bool flagr = false;
         bool flagc = false;
+        bool flagr = false;
 
-        ReSolve::hykkt::Permutation pc = ReSolve::hykkt::Permutation(permutationHandler_, n, nnz, nnz);
+        ReSolve::hykkt::Permutation pc = ReSolve::hykkt::Permutation(permutationHandler_, n, nnz_hes, nnz_jac);
 
-        pc.addHInfo(a_i, a_j);
-        pc.addJInfo(a_i, a_j, n, m);
-        pc.addJtInfo(a_i, a_j);
+        pc.addHInfo(hes_i, hes_j);
+        pc.addJInfo(jac_i, jac_j, m, n);
+        pc.addJtInfo(jac_tr_i, jac_tr_j);
+
         pc.addPerm(perm);
         pc.invertPerm(memspace_);
 
         // Test RC permutation
-        pc.vecMapRC(b_i, b_j, memspace_);
-        printf("Comparing RC permutation\n");
+        pc.vecMapRC(result_prc_i, result_prc_j, memspace_);
+        printf("Comparing RC permutation of H\n");
         for (int i = 0; i < n + 1; i++) // Loop over row pointers (n+1)
         {
-          if (a_prc_i[i] != b_i[i])
+          if (hes_prc_i[i] != result_prc_i[i])
           {
             printf("Mismatch in row pointer %d\n", i);
             flagrc = true;
           }
         }
-        for (int j = 0; j < nnz; j++) // Compare column indices
+        for (int j = 0; j < nnz_hes; j++) // Compare column indices
         {
-          if (a_prc_j[j] != b_j[j])
+          if (hes_prc_j[j] != result_prc_j[j])
           {
             printf("Mismatch in column index %d\n", j);
             flagrc = true;
@@ -90,40 +108,32 @@ namespace ReSolve
         printf(flagrc ? "RC permutation failed\n" : "RC permutation passed\n");
 
         // Test R permutation
-        pc.vecMapR(b_i, b_j, memspace_);
-        printf("Comparing R permutation\n");
+        pc.vecMapR(result_pr_i, result_pr_j, memspace_);
+        printf("Comparing R permutation of J_tr\n");
         for (int i = 0; i < n + 1; i++)
         {
-          if (a_pr_i[i] != b_i[i])
+          if (jac_tr_pr_i[i] != result_pr_i[i])
           {
-            printf("Mismatch in row pointer %d\n", i);
+            printf("Mismatch in row pointer %d: %d != %d\n", i, jac_tr_pr_i[i], result_pr_i[i]);
             flagr = true;
           }
         }
-        for (int j = 0; j < nnz; j++)
+        for (int j = 0; j < nnz_jac; j++)
         {
-          if (a_pr_j[j] != b_j[j])
+          if (jac_tr_pr_j[j] != result_pr_j[j])
           {
-            printf("Mismatch in column index %d\n", j);
+            printf("Mismatch in column index %d: %d != %d\n", j, jac_tr_pr_j[j], result_pr_j[j]);
             flagr = true;
           }
         }
         printf(flagr ? "R permutation failed\n" : "R permutation passed\n");
 
         // Test C permutation
-        pc.vecMapC(b_j, memspace_);
-        printf("Comparing C permutation\n");
-        for (int i = 0; i < n + 1; i++)
+        pc.vecMapC(result_pc_j, memspace_);
+        printf("Comparing C permutation of J\n");
+        for (int j = 0; j < nnz_jac; j++)
         {
-          if (a_pc_i[i] != a_i[i]) // Row pointers should match
-          {
-            printf("Mismatch in row pointer %d\n", i);
-            flagc = true;
-          }
-        }
-        for (int j = 0; j < nnz; j++)
-        {
-          if (a_pc_j[j] != b_j[j])
+          if (jac_pc_j[j] != result_pc_j[j])
           {
             printf("Mismatch in column index %d\n", j);
             flagc = true;
