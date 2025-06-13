@@ -23,12 +23,16 @@ namespace ReSolve {
     {
       cpuImpl_ = new CpuPermutationKernels();
       devImpl_ = nullptr;
+      isCudaEnabled_ = false;
+      isHipEnabled_ = false;
     }
   #ifdef RESOLVE_USE_CUDA
     PermutationHandler::PermutationHandler(LinAlgWorkspaceCUDA* workspaceCuda)
     {
       cpuImpl_ = new CpuPermutationKernels();
       devImpl_ = new CudaPermutationKernels();
+      isCudaEnabled_ = true;
+      isHipEnabled_ = false;
     }
   #endif
   #ifdef RESOLVE_USE_HIP
@@ -36,6 +40,8 @@ namespace ReSolve {
     {
       cpuImpl_ = new CpuPermutationKernels();
       devImpl_ = new HipPermutationKernels();
+      isHipEnabled_ = true;
+      isCudaEnabled_ = false;
     }
   #endif
     PermutationHandler::~PermutationHandler()

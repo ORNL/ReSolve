@@ -12,6 +12,7 @@ set(HyKKT_SRC
     PermutationHandler.cpp
     cpuPermutationKernels.cpp
     CudaPermutationKernels.cu
+    HipPermutationKernels.hip
 )
 
 # C++ code that depends on CUDA SDK libraries

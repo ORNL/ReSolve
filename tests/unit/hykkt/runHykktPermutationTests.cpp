@@ -35,7 +35,7 @@ void runTests(const std::string& backend, ReSolve::tests::TestingResults& result
 int main(int, char**)
 {
   ReSolve::tests::TestingResults result;
-  runTests<ReSolve::LinAlgWorkspaceCPU>("CPU", result);
+  runTests<ReSolve::LinAlgWorkspaceCpu>("CPU", result);
 
 #ifdef RESOLVE_USE_CUDA
   runTests<ReSolve::LinAlgWorkspaceCUDA>("CUDA", result);

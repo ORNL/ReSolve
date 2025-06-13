@@ -28,7 +28,15 @@ namespace ReSolve
     class HykktPermutationTests : public TestBase
     {
     public:
-      HykktPermutationTests(ReSolve::hykkt::PermutationHandler* permutationHandler): permutationHandler_(permutationHandler) {}
+      HykktPermutationTests(ReSolve::hykkt::PermutationHandler* permutationHandler): permutationHandler_(permutationHandler)
+      {
+        // Determine memory space based on the handler capabilities
+          if (permutationHandler_->getIsCudaEnabled() || permutationHandler_->getIsHipEnabled()) {
+            memspace_ = memory::DEVICE;
+          } else {
+            memspace_ = memory::HOST;
+          }
+      }
       virtual ~HykktPermutationTests() {}
 
       TestOutcome permutation()
@@ -58,10 +66,10 @@ namespace ReSolve
         pc.addJInfo(a_i, a_j, n, m);
         pc.addJtInfo(a_i, a_j);
         pc.addPerm(perm);
-        pc.invertPerm();
+        pc.invertPerm(memspace_);
 
         // Test RC permutation
-        pc.vecMapRC(b_i, b_j);
+        pc.vecMapRC(b_i, b_j, memspace_);
         printf("Comparing RC permutation\n");
         for (int i = 0; i < n + 1; i++) // Loop over row pointers (n+1)
         {
@@ -82,7 +90,7 @@ namespace ReSolve
         printf(flagrc ? "RC permutation failed\n" : "RC permutation passed\n");
 
         // Test R permutation
-        pc.vecMapR(b_i, b_j);
+        pc.vecMapR(b_i, b_j, memspace_);
         printf("Comparing R permutation\n");
         for (int i = 0; i < n + 1; i++)
         {
@@ -103,7 +111,7 @@ namespace ReSolve
         printf(flagr ? "R permutation failed\n" : "R permutation passed\n");
 
         // Test C permutation
-        pc.vecMapC(b_j);
+        pc.vecMapC(b_j, memspace_);
         printf("Comparing C permutation\n");
         for (int i = 0; i < n + 1; i++)
         {
@@ -129,6 +137,7 @@ namespace ReSolve
 
       private:
         ReSolve::hykkt::PermutationHandler* permutationHandler_;
+        ReSolve::memory::MemorySpace memspace_;
     }; // class HykktPermutationTests
   } // namespace tests
 } // namespace ReSolve

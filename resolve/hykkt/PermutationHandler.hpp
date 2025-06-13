@@ -70,9 +70,21 @@ namespace ReSolve {
                           int* perm_cols, 
                           int* perm_map,
                           memory::MemorySpace memspace);
+
+        bool getIsCudaEnabled()
+        {
+          return isCudaEnabled_;
+        }
+        bool getIsHipEnabled()
+        {
+          return isHipEnabled_;
+}
       private:
         PermutationKernelsImpl* cpuImpl_;
         PermutationKernelsImpl* devImpl_;
+
+        bool isCudaEnabled_; ///< true if CUDA implementation is instantiated
+        bool isHipEnabled_;  ///< true if HIP implementation is instantiated
     };
   } // namespace hykkt
 } // namespace ReSolve
