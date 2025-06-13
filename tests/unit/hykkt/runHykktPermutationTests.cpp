@@ -27,7 +27,7 @@ void runTests(const std::string& backend, ReSolve::tests::TestingResults& result
 
   ReSolve::tests::HykktPermutationTests test(permutationHandler);
 
-  result += test.permutation();
+  result += test.permutationTest();
   
   std::cout << "\n";
 }
