@@ -89,7 +89,7 @@ namespace ReSolve {
       workspace_->setNormBufferState(true);
     }
     real_type norm;
-    vector_inf_norm(x->getSize(),
+    hip::vector_inf_norm(x->getSize(),
                     x->getData(memory::DEVICE),
                     workspace_->getNormBuffer(),
                     &norm);
@@ -193,7 +193,7 @@ namespace ReSolve {
   {
     using namespace constants;
     if (k < 200) {
-      mass_axpy(size, k, x->getData(memory::DEVICE), y->getData(memory::DEVICE),alpha->getData(memory::DEVICE));
+      hip::mass_axpy(size, k, x->getData(memory::DEVICE), y->getData(memory::DEVICE),alpha->getData(memory::DEVICE));
 
     } else {
       rocblas_handle handle_rocblas =  workspace_->getRocblasHandle();
@@ -234,7 +234,7 @@ namespace ReSolve {
     using namespace constants;
 
     if (k < 200) {
-      mass_inner_product_two_vectors(size, k, x->getData(memory::DEVICE) , x->getData(1, memory::DEVICE), V->getData(memory::DEVICE), res->getData(memory::DEVICE));
+      hip::mass_inner_product_two_vectors(size, k, x->getData(memory::DEVICE) , x->getData(1, memory::DEVICE), V->getData(memory::DEVICE), res->getData(memory::DEVICE));
     } else {
       rocblas_handle handle_rocblas =  workspace_->getRocblasHandle();
       rocblas_dgemm(handle_rocblas,
@@ -253,6 +253,29 @@ namespace ReSolve {
                     k);  //ldc
 
     }
+  }
+
+  /**
+   * @brief Scale a vector by a diagonal matrix in HIP
+   *
+   * @param[in]  diag - vector representing the diagonal matrix
+   * @param[in, out]  vec - vector to be scaled
+   *
+   * @pre The diagonal vector must be of the same size as the vector.
+   * @pre vec is unscaled
+   * @post vec is scaled
+   * @invariant diag
+   *
+   * @return 0 if successful, 1 otherwise
+   */
+  int VectorHandlerHip::scale(vector::Vector* diag, vector::Vector* vec)
+  {
+    real_type* diag_data = diag->getData(memory::DEVICE);
+    real_type* vec_data = vec->getData(memory::DEVICE);
+    index_type n = vec->getSize();
+    hip::scale(n, diag_data, vec_data);
+    vec->setDataUpdated(memory::DEVICE);
+    return 0;
   }
 
 } // namespace ReSolve

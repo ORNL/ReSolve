@@ -56,11 +56,9 @@ namespace ReSolve {
 
       int transpose(matrix::Csr* A, matrix::Csr* At, memory::MemorySpace memspace);
 
-      int leftDiagonalScale(vector_type* diag, matrix::Csr* A, memory::MemorySpace memspace);
+      int leftScale(vector_type* diag, matrix::Csr* A, memory::MemorySpace memspace);
 
-      int rightDiagonalScale(matrix::Csr* A, vector_type* diag, memory::MemorySpace memspace);
-
-      int vectorDiagonalScale(vector_type* diag, vector_type* vec, memory::MemorySpace memspace);
+      int rightScale(matrix::Csr* A, vector_type* diag, memory::MemorySpace memspace);
 
       void addConst(matrix::Sparse* A, real_type alpha, memory::MemorySpace memspace);
 

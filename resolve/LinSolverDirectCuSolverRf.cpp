@@ -86,9 +86,6 @@ namespace ReSolve
     matrix::Csr* L_csr = nullptr;
     matrix::Csr* U_csr = nullptr;
 
-    matrix::Sparse::SparseFormat matrix_format = L->getSparseFormat();
-    // std::cout << "Matrix format is " << matrix_format << "\n";
-
     switch (L->getSparseFormat()) {
       case matrix::Sparse::COMPRESSED_SPARSE_COLUMN:
         // std::cout << "converting L and U factors from CSC to CSR format ...\n";

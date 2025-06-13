@@ -150,47 +150,37 @@ public:
       return status.report(testname.c_str());
   }
 
-  TestOutcome leftDiagScale(index_type n, index_type m)
+  TestOutcome leftScale(index_type n, index_type m)
   {
     TestStatus status;
     std::string testname(__func__);
     matrix::Csr* A = createRectangularCsrMatrix(n, m);
     vector::Vector diag = createIncrementingVector(n);
-    handler_.leftDiagonalScale(&diag, A, memspace_);
+
+    handler_.leftScale(&diag, A, memspace_);
     if (memspace_ == memory::DEVICE) {
       A->syncData(memory::HOST);
     }
     status *= verifyLeftScaledCsrMatrix(A);
+
     delete A;
     return status.report(testname.c_str());
   }
 
-  TestOutcome rightDiagScale(index_type n, index_type m)
+  TestOutcome rightScale(index_type n, index_type m)
   {
     TestStatus status;
     std::string testname(__func__);
     matrix::Csr* A = createRectangularCsrMatrix(n, m);
     vector::Vector diag = createIncrementingVector(m);
-    handler_.rightDiagonalScale(A, &diag, memspace_);
+
+    handler_.rightScale(A, &diag, memspace_);
     if (memspace_ == memory::DEVICE) {
       A->syncData(memory::HOST);
     }
     status *= verifyRightScaledCsrMatrix(A);
+    
     delete A;
-    return status.report(testname.c_str());
-  }
-
-  TestOutcome vectorDiagScale(index_type n)
-  {
-    TestStatus status;
-    std::string testname(__func__);
-    vector::Vector diag = createIncrementingVector(n);
-    vector::Vector vec = createIncrementingVector(n);
-    handler_.vectorDiagonalScale(&diag, &vec, memspace_);
-    if (memspace_ == memory::DEVICE) {
-      vec.syncData(memory::HOST);
-    }
-    status *= verifyVectorScaledDiagMatrix(&vec);
     return status.report(testname.c_str());
   }
 

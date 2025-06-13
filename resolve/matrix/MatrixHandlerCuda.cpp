@@ -8,6 +8,7 @@
 #include <resolve/workspace/LinAlgWorkspaceCUDA.hpp>
 #include "MatrixHandlerCuda.hpp"
 #include <resolve/cuda/cudaKernels.h>
+#include <resolve/cuda/cudaVectorKernels.h>
 #include <resolve/cusolver_defs.hpp> // needed for inf nrm
 
 namespace ReSolve {
@@ -179,11 +180,11 @@ namespace ReSolve {
       workspace_->setDr(d_r);
     }
 
-    matrix_row_sums(A->getNumRows(),
-                    A->getNnz(),
-                    A->getRowData(memory::DEVICE),
-                    A->getValues(memory::DEVICE),
-                    d_r);
+    cuda::matrix_row_sums(A->getNumRows(),
+                          A->getNnz(),
+                          A->getRowData(memory::DEVICE),
+                          A->getValues(memory::DEVICE),
+                          d_r);
 
     int status = cusolverSpDnrminf(workspace_->getCusolverSpHandle(),
                                    A->getNumRows(),
@@ -338,14 +339,14 @@ namespace ReSolve {
    *
    * @return 0 if successful, 1 otherwise
    */
-  int MatrixHandlerCuda::leftDiagonalScale(vector_type* diag, matrix::Csr* A)
+  int MatrixHandlerCuda::leftScale(vector_type* diag, matrix::Csr* A)
   {
     real_type* diag_data = diag->getData(memory::DEVICE);
     index_type* a_row_ptr = A->getRowData(memory::DEVICE);
     real_type*  a_vals = A->getValues( memory::DEVICE);
     index_type n = A->getNumRows();
     // check values in A and diag
-    leftDiagScale(n, a_row_ptr, a_vals, diag_data);
+    cuda::leftScale(n, a_row_ptr, a_vals, diag_data);
     A->setUpdated(memory::DEVICE);
     return 0;
   }
@@ -363,39 +364,17 @@ namespace ReSolve {
    *
    * @return 0 if successful, 1 otherwise
    */
-  int MatrixHandlerCuda::rightDiagonalScale(matrix::Csr* A, vector_type* diag)
+  int MatrixHandlerCuda::rightScale(matrix::Csr* A, vector_type* diag)
   {
     real_type* diag_data = diag->getData(memory::DEVICE);
     index_type* a_row_ptr = A->getRowData(memory::DEVICE);
     index_type* a_col_idx = A->getColData(memory::DEVICE);
     real_type*  a_vals = A->getValues( memory::DEVICE);
     index_type n = A->getNumRows();
-    rightDiagScale(n, a_row_ptr, a_col_idx, a_vals, diag_data);
+    cuda::rightScale(n, a_row_ptr, a_col_idx, a_vals, diag_data);
     A->setUpdated(memory::DEVICE);
     return 0;
   }
-
-  /**
-   * @brief Scale a vector by a diagonal matrix
-   *
-   * @param[in] diag - vector representing the diagonal matrix
-   * @param[in, out] vec - vector to be scaled
-   *
-   * @pre The diagonal vector must be of the same size as the vector.
-   * @invariant diag
-   *
-   * @return 0 if successful, 1 otherwise
-   */
-  int MatrixHandlerCuda::vectorDiagonalScale(vector_type* diag, vector_type* vec)
-  {
-    real_type* diag_data = diag->getData(memory::DEVICE);
-    real_type* vec_data = vec->getData(memory::DEVICE);
-    index_type n = vec->getSize();
-    vectorDiagScale(n, diag_data, vec_data);
-    vec->setDataUpdated(memory::DEVICE);
-    return 0;
-  }
-
 
   /**
    * @brief Add a constant to all nonzero values in the matrix
@@ -409,7 +388,7 @@ namespace ReSolve {
   {
     real_type* values = A->getValues(memory::DEVICE);
     index_type nnz = A->getNnz();
-    cudaAddConst(nnz, alpha, values);
+    cuda::addConst(nnz, alpha, values);
     return 0;
   }
 } // namespace ReSolve

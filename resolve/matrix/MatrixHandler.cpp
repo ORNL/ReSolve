@@ -8,6 +8,7 @@
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 #include "MatrixHandler.hpp"
 #include "MatrixHandlerCpu.hpp"
+#include "MatrixHandlerImpl.hpp"
 
 #ifdef RESOLVE_USE_CUDA
 #include "MatrixHandlerCuda.hpp"
@@ -266,7 +267,7 @@ namespace ReSolve {
    *
    * @return 0 if successful, 1 otherwise
    */
-  int MatrixHandler::leftDiagonalScale(vector_type* diag, matrix::Csr* A, memory::MemorySpace memspace)
+  int MatrixHandler::leftScale(vector_type* diag, matrix::Csr* A, memory::MemorySpace memspace)
   {
     assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW &&
            "Matrix has to be in CSR format for left diagonal scaling.\n");
@@ -277,10 +278,10 @@ namespace ReSolve {
     using namespace ReSolve::memory;
     switch (memspace) {
       case HOST:
-        return cpuImpl_->leftDiagonalScale(diag, A);
+        return cpuImpl_->leftScale(diag, A);
         break;
       case DEVICE:
-        return devImpl_->leftDiagonalScale(diag, A);
+        return devImpl_->leftScale(diag, A);
         break;
     }
     return 1;
@@ -300,7 +301,7 @@ namespace ReSolve {
    *
    * @return 0 if successful, 1 otherwise
    */
-  int MatrixHandler::rightDiagonalScale(matrix::Csr* A, vector_type* diag, memory::MemorySpace memspace)
+  int MatrixHandler::rightScale(matrix::Csr* A, vector_type* diag, memory::MemorySpace memspace)
   {
     assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW &&
            "Matrix has to be in CSR format for right diagonal scaling.\n");
@@ -310,39 +311,10 @@ namespace ReSolve {
     using namespace ReSolve::memory;
     switch (memspace) {
       case HOST:
-        return cpuImpl_->rightDiagonalScale(A, diag);
+        return cpuImpl_->rightScale(A, diag);
         break;
       case DEVICE:
-        return devImpl_->rightDiagonalScale(A, diag);
-        break;
-    }
-    return 1;
-  }
-
-  /**
-   * @brief Scale a vector by a diagonal matrix
-   *
-   * @param[in] diag - vector representing the diagonal matrix
-   * @param[in,out] vec - vector to be scaled
-   * @param[in] memspace - Device where the operation is computed
-   *
-   * @pre The diagonal vector must be of the same size as the vector.
-   * @invariant diag
-   *
-   * @return 0 if successful, 1 otherwise
-   */
-  int MatrixHandler::vectorDiagonalScale(vector_type* diag, vector_type* vec, memory::MemorySpace memspace)
-  {
-    assert(diag->getSize() == vec->getSize() && "Diagonal vector must be of the same size as the vector.");
-    assert(diag->getData(memspace) != nullptr && "Diagonal vector data is null!\n");
-    assert(vec->getData(memspace) != nullptr && "Vector data is null!\n");
-    using namespace ReSolve::memory;
-    switch (memspace) {
-      case HOST:
-        return cpuImpl_->vectorDiagonalScale(diag, vec);
-        break;
-      case DEVICE:
-        return devImpl_->vectorDiagonalScale(diag, vec);
+        return devImpl_->rightScale(A, diag);
         break;
     }
     return 1;

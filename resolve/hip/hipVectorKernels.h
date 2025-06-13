@@ -13,6 +13,10 @@
 
 namespace ReSolve
 {
-  void hip_set_array_const(index_type n, real_type c, real_type* v);
-  void hipAddConst(index_type n, real_type val, real_type* arr);
+  namespace hip
+  {
+    void setArrayConst(index_type n, real_type val, real_type* arr);
+    void addConst(index_type n, real_type val, real_type* arr);
+    void scale(index_type n, const real_type* diag, real_type* vec);
+  }
 }

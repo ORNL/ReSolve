@@ -7,6 +7,7 @@
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/workspace/LinAlgWorkspaceHIP.hpp>
 #include <resolve/hip/hipKernels.h>
+#include <resolve/hip/hipVectorKernels.h>
 #include "MatrixHandlerHip.hpp"
 
 namespace ReSolve {
@@ -87,15 +88,15 @@ namespace ReSolve {
       rocsparse_create_mat_info(&infoA);
 
       status = rocsparse_dcsrmv_analysis(handle_rocsparse,
-                                          rocsparse_operation_none,
-                                          A->getNumRows(),
-                                          A->getNumColumns(),
-                                          A->getNnz(),
-                                          descrA,
-                                          A->getValues( memory::DEVICE),
-                                          A->getRowData(memory::DEVICE),
-                                          A->getColData(memory::DEVICE),
-                                          infoA);
+                                         rocsparse_operation_none,
+                                         A->getNumRows(),
+                                         A->getNumColumns(),
+                                         A->getNnz(),
+                                         descrA,
+                                         A->getValues( memory::DEVICE),
+                                         A->getRowData(memory::DEVICE),
+                                         A->getColData(memory::DEVICE),
+                                         infoA);
       error_sum += status;
       mem_.deviceSynchronize();
 
@@ -169,17 +170,17 @@ namespace ReSolve {
     }
 
     mem_.deviceSynchronize();
-    matrix_row_sums(A->getNumRows(),
-                    A->getNnz(),
-                    A->getRowData(memory::DEVICE),
-                    A->getValues(memory::DEVICE),
-                    d_r);
+    hip::matrix_row_sums(A->getNumRows(),
+                         A->getNnz(),
+                         A->getRowData(memory::DEVICE),
+                         A->getValues(memory::DEVICE),
+                         d_r);
     mem_.deviceSynchronize();
 
-    vector_inf_norm(A->getNumRows(),
-                    d_r,
-                    workspace_->getNormBuffer(),
-                    norm);
+    hip::vector_inf_norm(A->getNumRows(),
+                         d_r,
+                         workspace_->getNormBuffer(),
+                         norm);
     return 0;
   }
 
@@ -261,13 +262,13 @@ namespace ReSolve {
       // allocate transpose buffer
       size_t bufferSize;
       status = rocsparse_csr2csc_buffer_size(workspace_->getRocsparseHandle(),
-                                           m,
-                                           n,
-                                           nnz,
-                                           A->getRowData(memory::DEVICE),
-                                           A->getColData(memory::DEVICE),
-                                           rocsparse_action_numeric,
-                                           &bufferSize);
+                                             m,
+                                             n,
+                                             nnz,
+                                             A->getRowData(memory::DEVICE),
+                                             A->getColData(memory::DEVICE),
+                                             rocsparse_action_numeric,
+                                             &bufferSize);
       error_sum += status;
       workspace_->setTransposeBufferWorkspace(bufferSize);
     }
@@ -303,7 +304,7 @@ namespace ReSolve {
   {
     real_type* values = A->getValues(memory::DEVICE);
     index_type nnz = A->getNnz();
-    hipAddConst(nnz, alpha, values);
+    hip::addConst(nnz, alpha, values);
     return 0;
   }
 
@@ -320,14 +321,14 @@ namespace ReSolve {
    *
    * @return 0 if successful, 1 otherwise
    */
-  int MatrixHandlerHip::leftDiagonalScale(vector_type* diag, matrix::Csr* A)
+  int MatrixHandlerHip::leftScale(vector_type* diag, matrix::Csr* A)
   {
     real_type* diag_data = diag->getData(memory::DEVICE);
     index_type* a_row_ptr = A->getRowData(memory::DEVICE);
     real_type*  a_vals = A->getValues( memory::DEVICE);
     index_type n = A->getNumRows();
     // check values in A and diag
-    leftDiagScale(n, a_row_ptr, a_vals, diag_data);
+    hip::leftScale(n, a_row_ptr, a_vals, diag_data);
     A->setUpdated(memory::DEVICE);
     return 0;
   }
@@ -345,38 +346,15 @@ namespace ReSolve {
    *
    * @return 0 if successful, 1 otherwise
    */
-  int MatrixHandlerHip::rightDiagonalScale(matrix::Csr* A, vector_type* diag)
+  int MatrixHandlerHip::rightScale(matrix::Csr* A, vector_type* diag)
   {
     real_type* diag_data = diag->getData(memory::DEVICE);
     index_type* a_row_ptr = A->getRowData(memory::DEVICE);
     index_type* a_col_idx = A->getColData(memory::DEVICE);
     real_type*  a_vals = A->getValues( memory::DEVICE);
     index_type n = A->getNumRows();
-    rightDiagScale(n, a_row_ptr, a_col_idx, a_vals, diag_data);
+    hip::rightScale(n, a_row_ptr, a_col_idx, a_vals, diag_data);
     A->setUpdated(memory::DEVICE);
-    return 0;
-  }
-
-  /**
-   * @brief Scale a vector by a diagonal matrix in HIP
-   *
-   * @param[in]  diag - vector representing the diagonal matrix
-   * @param[in, out]  vec - vector to be scaled
-   *
-   * @pre The diagonal vector must be of the same size as the vector.
-   * @pre vec is unscaled
-   * @post vec is scaled
-   * @invariant diag
-   *
-   * @return 0 if successful, 1 otherwise
-   */
-  int MatrixHandlerHip::vectorDiagonalScale(vector_type* diag, vector_type* vec)
-  {
-    real_type* diag_data = diag->getData(memory::DEVICE);
-    real_type* vec_data = vec->getData(memory::DEVICE);
-    index_type n = vec->getSize();
-    vectorDiagScale(n, diag_data, vec_data);
-    vec->setDataUpdated(memory::DEVICE);
     return 0;
   }
 

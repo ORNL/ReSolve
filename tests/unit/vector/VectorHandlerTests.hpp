@@ -221,6 +221,44 @@ namespace ReSolve {
           return status.report(__func__);
         }
 
+        TestOutcome scale(index_type N)
+        {
+          TestStatus status;
+
+          vector::Vector diag(N);
+          vector::Vector vec(N);
+
+          // diag[i] = i, vec[i] = 3.0
+          // expected result vec[i] = i * 3.0
+          diag.allocate(memspace_);
+          vec.allocate(memspace_);
+
+          vec.setToConst(3.0, memspace_);
+
+          real_type* diag_data = new real_type[N];
+          for (index_type i = 0; i < N; ++i) {
+            diag_data[i] = (real_type)(i+1);
+          }
+          diag.copyDataFrom(diag_data, memory::HOST, memspace_);
+          
+          handler_.scale(&diag, &vec, memspace_);
+
+          if (memspace_ == memory::DEVICE) {
+            vec.syncData(memory::HOST);
+          }
+
+          for (index_type i = 0; i < N; ++i) {
+            if (!isEqual(vec.getData(memory::HOST)[i], (real_type)(i+1) * 3.0)) {
+              std::cout << "Solution vector element vec[" << i << "] = " << vec.getData(memory::HOST)[i]
+                << ", expected: " << (real_type)(i+1) * 3.0 << "\n";
+              status *= false;
+              break; 
+            }
+          }
+
+          return status.report(__func__);
+        }
+
       private:
         ReSolve::VectorHandler& handler_;
         ReSolve::memory::MemorySpace memspace_{memory::HOST};

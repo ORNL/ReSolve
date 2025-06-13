@@ -304,7 +304,7 @@ namespace ReSolve
    *
    * @return 0 if successful, 1 otherwise
    */
-  int MatrixHandlerCpu::leftDiagonalScale(vector_type* diag, matrix::Csr* A)
+  int MatrixHandlerCpu::leftScale(vector_type* diag, matrix::Csr* A)
   {
     real_type* diag_data = diag->getData(memory::HOST);
     index_type* rowPtrA = A->getRowData(memory::HOST);
@@ -331,7 +331,7 @@ namespace ReSolve
    *
    * @return 0 if successful, 1 otherwise
    */
-  int MatrixHandlerCpu::rightDiagonalScale(matrix::Csr* A, vector_type* diag)
+  int MatrixHandlerCpu::rightScale(matrix::Csr* A, vector_type* diag)
   {
     real_type* diag_data = diag->getData(memory::HOST);
     index_type* rowPtrA = A->getRowData(memory::HOST);
@@ -343,30 +343,6 @@ namespace ReSolve
         valuesA[j] *= diag_data[colIdxA[j]];
       }
     }
-    return 0;
-  }
-
-  /**
-   * @brief Scale a vector by a diagonal matrix
-   *
-   * @param[in] diag - vector representing the diagonal matrix
-   * @param[in, out] vec - vector to be scaled
-   *
-   * @pre The diagonal vector must be of the same size as the vector.
-   * @invariant diag
-   *
-   * @return 0 if successful, 1 otherwise
-   */
-  int MatrixHandlerCpu::vectorDiagonalScale(vector_type* diag, vector_type* vec)
-  {
-    real_type* diag_data = diag->getData(memory::HOST);
-    real_type* vec_data = vec->getData(memory::HOST);
-    index_type n = vec->getSize();
-
-    for (index_type i = 0; i < n; ++i) {
-      vec_data[i] *= diag_data[i];
-    }
-    vec->setDataUpdated(memory::HOST);
     return 0;
   }
 

@@ -306,7 +306,7 @@ namespace ReSolve
       mem_.deviceSynchronize();
     } else {
       // not implemented yet
-      permuteVectorP(A_->getNumRows(), d_P_, rhs->getData(ReSolve::memory::DEVICE), d_aux1_);
+      hip::permuteVectorP(A_->getNumRows(), d_P_, rhs->getData(ReSolve::memory::DEVICE), d_aux1_);
       mem_.deviceSynchronize();
       rocsparse_dcsrsv_solve(workspace_->getRocsparseHandle(),
                              rocsparse_operation_none,
@@ -340,7 +340,7 @@ namespace ReSolve
                              U_buffer_);
       error_sum += status_rocsparse_;
 
-      permuteVectorQ(A_->getNumRows(), d_Q_,d_aux1_,rhs->getData(ReSolve::memory::DEVICE));
+      hip::permuteVectorQ(A_->getNumRows(), d_Q_,d_aux1_,rhs->getData(ReSolve::memory::DEVICE));
       mem_.deviceSynchronize();
     }
     RESOLVE_RANGE_POP(__FUNCTION__);
@@ -380,7 +380,7 @@ namespace ReSolve
     } else {
       // not implemented yet
 
-      permuteVectorP(A_->getNumRows(), d_P_, rhs->getData(ReSolve::memory::DEVICE), d_aux1_);
+      hip::permuteVectorP(A_->getNumRows(), d_P_, rhs->getData(ReSolve::memory::DEVICE), d_aux1_);
       mem_.deviceSynchronize();
 
       rocsparse_dcsrsv_solve(workspace_->getRocsparseHandle(),
@@ -415,7 +415,7 @@ namespace ReSolve
                              U_buffer_);
       error_sum += status_rocsparse_;
 
-      permuteVectorQ(A_->getNumRows(), d_Q_,d_aux1_,x->getData(ReSolve::memory::DEVICE));
+      hip::permuteVectorQ(A_->getNumRows(), d_Q_,d_aux1_,x->getData(ReSolve::memory::DEVICE));
       mem_.deviceSynchronize();
     }
     RESOLVE_RANGE_POP(__FUNCTION__);

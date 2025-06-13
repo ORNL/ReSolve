@@ -40,6 +40,9 @@ namespace ReSolve
       //Size = n
       virtual void massDot2Vec(index_type size, vector::Vector* V, index_type k, vector::Vector* x, vector::Vector* res) = 0;
 
+      // Scale a vector by a diagonal matrix
+      virtual int scale(vector::Vector* diag, vector::Vector* vec) = 0;
+
       /** gemv:
        * if `transpose = N` (no), `x = beta*x +  alpha*V*y`,
        * where `x` is `[n x 1]`, `V` is `[n x k]` and `y` is `[k x 1]`.

@@ -198,7 +198,7 @@ namespace ReSolve {
   {
     using namespace constants;
     if (k < 200) {
-      mass_axpy(size, k, x->getData(memory::DEVICE), y->getData(memory::DEVICE),alpha->getData(memory::DEVICE));
+      cuda::mass_axpy(size, k, x->getData(memory::DEVICE), y->getData(memory::DEVICE),alpha->getData(memory::DEVICE));
     } else {
       cublasHandle_t handle_cublas =  workspace_->getCublasHandle();
       cublasDgemm(handle_cublas,
@@ -237,7 +237,7 @@ namespace ReSolve {
     using namespace constants;
 
     if (k < 200) {
-      mass_inner_product_two_vectors(size, k, x->getData(memory::DEVICE) , x->getData(1, memory::DEVICE), V->getData(memory::DEVICE), res->getData(memory::DEVICE));
+      cuda::mass_inner_product_two_vectors(size, k, x->getData(memory::DEVICE) , x->getData(1, memory::DEVICE), V->getData(memory::DEVICE), res->getData(memory::DEVICE));
     } else {
       cublasHandle_t handle_cublas =  workspace_->getCublasHandle();
       cublasDgemm(handle_cublas,
@@ -255,6 +255,29 @@ namespace ReSolve {
                   res->getData(memory::DEVICE),     //c
                   k);  //ldc
     }
+  }
+
+  /**
+   * @brief Scale a vector by a diagonal matrix in HIP
+   *
+   * @param[in]  diag - vector representing the diagonal matrix
+   * @param[in, out]  vec - vector to be scaled
+   *
+   * @pre The diagonal vector must be of the same size as the vector.
+   * @pre vec is unscaled
+   * @post vec is scaled
+   * @invariant diag
+   *
+   * @return 0 if successful, 1 otherwise
+   */
+  int VectorHandlerCuda::scale(vector::Vector* diag, vector::Vector* vec)
+  {
+    real_type* diag_data = diag->getData(memory::DEVICE);
+    real_type* vec_data = vec->getData(memory::DEVICE);
+    index_type n = vec->getSize();
+    cuda::scale(n, diag_data, vec_data);
+    vec->setDataUpdated(memory::DEVICE);
+    return 0;
   }
 
 } // namespace ReSolve
