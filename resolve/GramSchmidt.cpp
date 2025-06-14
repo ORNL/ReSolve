@@ -93,6 +93,7 @@ namespace ReSolve
 
     vec_w_ = new vector_type(n);
     vec_v_ = new vector_type(n);
+    vec_x_ = new vector_type(n, 2); // n x 2 multivector view
 
     num_vecs_ = restart;
     if((variant_ == MGS_TWO_SYNC) || (variant_ == MGS_PM)) {
@@ -206,12 +207,11 @@ namespace ReSolve
 
       case MGS_TWO_SYNC:
         // V[1:i]^T[V[i] w]
-        vec_v_->setData(V->getVectorData(i, memspace_), memspace_);
+        vec_x_->setData(V->getVectorData(i, memspace_), memspace_);
         vec_w_->setData(V->getVectorData(i + 1, memspace_), memspace_);
         vec_rv_->resize(i + 1);
 
-        // vector_handler_->massDot2Vec(n, V, i + 1, vec_v_, vec_rv_, memspace_);
-        vector_handler_->massDot2Vec(n, V, i + 1, vec_v_, vec_rv_, memspace_);
+        vector_handler_->massDot2Vec(n, V, i + 1, vec_x_, vec_rv_, memspace_);
         vec_rv_->setDataUpdated(memspace_);
         if (memspace_ == memory::DEVICE) {
           vec_rv_->syncData(memory::HOST);
@@ -257,11 +257,11 @@ namespace ReSolve
         return 0;
 
       case MGS_PM:
-        vec_v_->setData(V->getVectorData(i, memspace_), memspace_);
+        vec_x_->setData(V->getVectorData(i, memspace_), memspace_);
         vec_w_->setData(V->getVectorData(i + 1, memspace_), memspace_);
         vec_rv_->resize(i + 1);
 
-        vector_handler_->massDot2Vec(n, V, i + 1, vec_v_, vec_rv_, memspace_);
+        vector_handler_->massDot2Vec(n, V, i + 1, vec_x_, vec_rv_, memspace_);
         vec_rv_->setDataUpdated(memspace_);
         if (memspace_ == memory::DEVICE) {
           vec_rv_->syncData(memory::HOST);
@@ -364,9 +364,9 @@ namespace ReSolve
     return 0;
   } // int orthogonalize()
 
-//
-// Private methods
-//
+  //
+  // Private methods
+  //
 
   int GramSchmidt::freeGramSchmidtData()
   {

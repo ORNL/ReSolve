@@ -48,6 +48,7 @@ namespace ReSolve
 
       vector_type* vec_v_{nullptr}; // aux variable
       vector_type* vec_w_{nullptr}; // aux variable
+      vector_type* vec_x_{nullptr}; // aux variable
     
       MemoryHandler mem_; ///< Device memory manager object
       memory::MemorySpace memspace_;
