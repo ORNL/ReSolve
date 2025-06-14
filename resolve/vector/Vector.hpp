@@ -39,7 +39,8 @@ namespace ReSolve { namespace vector {
       index_type getSize() const;
       index_type getNumVectors() const;
 
-      void setDataUpdated(memory::MemorySpace memspace);
+      int setDataUpdated(memory::MemorySpace memspace);
+      int setDataUpdated(index_type j, memory::MemorySpace memspace);
       int setData(real_type* data, memory::MemorySpace memspace);
       void allocate(memory::MemorySpace memspace);   
       void setToZero(memory::MemorySpace memspace);
@@ -47,6 +48,7 @@ namespace ReSolve { namespace vector {
       void setToConst(real_type C, memory::MemorySpace memspace);
       void setToConst(index_type i, real_type C, memory::MemorySpace memspace); // set i-th vector to C  - needed for unit tests, Gram Schmidt tests
       int syncData(memory::MemorySpace memspaceOut); 
+      int syncData(index_type j, memory::MemorySpace memspaceOut); 
       int resize(index_type new_n_current);
       real_type* getVectorData(index_type i, memory::MemorySpace memspace); // get ith vector data out of multivector   
       int copyDataTo(real_type* dest, index_type i, memory::MemorySpace memspace);  

@@ -140,30 +140,61 @@ namespace ReSolve { namespace vector {
    * @brief Set the flag to indicate that the data (HOST or DEVICE) has been
    * updated.
    *
-   * Important because of data mirroring approach.
+   * Use this function if you update vector elements by accessing the raw data
+   * pointer.
+   *
    *
    * @param[in] memspace - Memory space (HOST or DEVICE)
    * 
    * @warning This is an expert level method. Use only if you know what
    * you are doing.
    */
-  void Vector::setDataUpdated(memory::MemorySpace memspace)
+  int Vector::setDataUpdated(memory::MemorySpace memspace)
   {
+    assert(cpu_updated_ && gpu_updated_ && "Update flags not allocated");
+
     using namespace ReSolve::memory;
     switch (memspace) {
       case HOST:
         setHostUpdated(true);
         setDeviceUpdated(false);
-        // cpu_updated_[0] = true;
-        // gpu_updated_[0] = false;
         break;
       case DEVICE:
         setHostUpdated(false);
         setDeviceUpdated(true);
-        // gpu_updated_[0] = true;
-        // cpu_updated_[0] = false;
         break;
     }
+    return 0;
+  }
+
+  /**
+   * @brief Set the flag to indicate that the data (HOST or DEVICE) for
+   * vector `j` in the multivector has been updated.
+   *
+   * Use this function if you update vector elements by accessing the raw data
+   * pointer.
+   *
+   * @param[in] memspace - Memory space (HOST or DEVICE)
+   * 
+   * @warning This is an expert level method. Use only if you know what
+   * you are doing.
+   */
+  int Vector::setDataUpdated(index_type j, memory::MemorySpace memspace)
+  {
+    assert(cpu_updated_ && gpu_updated_ && "Update flags not allocated");
+    
+    using namespace ReSolve::memory;
+    switch (memspace) {
+      case HOST:
+        cpu_updated_[j] = true;
+        gpu_updated_[j] = false;
+        break;
+      case DEVICE:
+        gpu_updated_[j] = true;
+        cpu_updated_[j] = false;
+        break;
+    }
+    return 0;
   }
 
   /**
@@ -281,33 +312,41 @@ namespace ReSolve { namespace vector {
   /**
    * @brief get a pointer to HOST or DEVICE data of a particular vector in a multivector.
    *
-   * @param[in] i         - Index of a vector in multivector
+   * @param[in] j         - Index of a vector in multivector
    * @param[in] memspace  - Memory space of the pointer (HOST or DEVICE)
    *
    * @return pointer to the _i_th vector data (HOST or DEVICE) within a multivector.
    *
-   * @pre   _i_ < _k_ i.e,, _i_ is smaller than the total number of vectors in multivector.
+   * @pre `j` < `k_` i.e, `j` is smaller than the total number of vectors in multivector.
    *
    * @note This function gives you access to the pointer, not to a copy.
    * If you change the values using the pointer, the vector values will change too.
    */
-  real_type* Vector::getData(index_type i, memory::MemorySpace memspace)
+  real_type* Vector::getData(index_type j, memory::MemorySpace memspace)
   {
     using memory::HOST;
     using memory::DEVICE;
 
+    if (k_ < j) {
+      out::error() << "Trying to get data for vector " << j << " in multivector"
+                   << " but there are only " << k_ << " vectors!\n";
+      return nullptr;
+    }
+
     switch (memspace)
     {
     case HOST:
-      if ((cpu_updated_[0] == false) && (gpu_updated_[0] == true )) {
+      if ((cpu_updated_[j] == false) && (gpu_updated_[j] == true )) {
+        // syncData(j, memspace); // Temporally replaced 
         syncData(memspace);  
       } 
-      return &h_data_[i * n_size_];
+      return &h_data_[j * n_size_];
     case DEVICE:
-      if ((gpu_updated_[0] == false) && (cpu_updated_[0] == true )) {
+      if ((gpu_updated_[j] == false) && (cpu_updated_[j] == true )) {
+        // syncData(j, memspace); // Temporally replaced
         syncData(memspace);
       }
-      return &d_data_[i * n_size_];
+      return &d_data_[j * n_size_];
     default:
       return nullptr;
     }
@@ -333,11 +372,32 @@ namespace ReSolve { namespace vector {
   {
     using namespace ReSolve::memory;
 
+    bool all_cpu_updated = cpu_updated_[0];
+    bool all_gpu_updated = gpu_updated_[0];
+
+    // Verify that all vectors in multivector have the same update status.
+    for (index_type i = 1; i < k_; ++i) {
+      if (gpu_updated_[i] != all_gpu_updated) {
+        out::error() << "Trying to sync all multivector data on the device,"
+                     << " but individual vectors were updated differently.\n"
+                     << "Use syncData function for individual vectors instead!\n";
+        assert(false);
+        return 1;
+      }
+      if (cpu_updated_[i] != all_cpu_updated) {
+        out::error() << "Trying to sync all multivector data on the host,"
+                     << " but individual vectors were updated differently.\n"
+                     << "Use syncData function for individual vectors instead!\n";
+        assert(false);
+        return 1;
+      }
+    }
+
     switch(memspaceOut)  {
       case DEVICE: // cpu->gpu
         if (gpu_updated_[0]) {
           out::error() << "Trying to sync device, but device already up to date!\n";
-          assert(!gpu_updated_[0]);
+          // assert(!gpu_updated_[0]); // Temporally disabled
           return 1;
         }
         if (!cpu_updated_[0]) {
@@ -350,12 +410,11 @@ namespace ReSolve { namespace vector {
         } 
         mem_.copyArrayHostToDevice(d_data_, h_data_, n_size_ * k_);
         setDeviceUpdated(true);
-        // gpu_updated_[0] = true;
         break;
       case HOST: //cuda->cpu
         if (cpu_updated_[0]) {
           out::error() << "Trying to sync host, but host already up to date!\n";
-          assert(!cpu_updated_[0]);
+          // assert(!cpu_updated_[0]); // Temporally disabled
           return 1;
         }
         if (!gpu_updated_[0]) {
@@ -368,7 +427,68 @@ namespace ReSolve { namespace vector {
         }
         mem_.copyArrayDeviceToHost(h_data_, d_data_, n_size_ * k_);
         setHostUpdated(true);
-        // cpu_updated_[0] = true;
+        break;
+      default:
+        return 1;
+    }
+    return 0;
+  }
+
+  /** 
+   * @brief Sync out of date memory space with the updated one.
+   * 
+   * syncData is the only function that can set data on both HOST and DEVICE
+   * to the same values.
+   * 
+   * @param[in] memspaceOut  - Memory space to sync
+   *
+   * @return 0 if successful, 1 otherwise.
+   * 
+   * @warning This function can be called only when all vectors in a
+   * multivector have the same update status. Otherwise, you need to sync
+   * vectors in a multivector individually.
+   *
+   */
+  int Vector::syncData(index_type j, memory::MemorySpace memspaceOut)
+  {
+    using namespace ReSolve::memory;
+
+    switch(memspaceOut)  {
+      case DEVICE: // cpu->gpu
+        if (gpu_updated_[j]) {
+          out::error() << "Trying to sync device, but device already up to date!\n";
+          assert(!gpu_updated_[j]);
+          return 1;
+        }
+        if (!cpu_updated_[j]) {
+          out::error() << "Trying to sync device with host, but host is out of date!\n";
+          return 1;
+        }
+        if (d_data_ == nullptr) {
+          //allocate first
+          mem_.allocateArrayOnDevice(&d_data_, n_capacity_ * k_);
+          owns_gpu_data_ = true;
+        } 
+        mem_.copyArrayHostToDevice(&d_data_[j * n_size_], &h_data_[j * n_size_], n_size_);
+        gpu_updated_[j] = true;
+        break;
+      case HOST: //cuda->cpu
+        if (cpu_updated_[j]) {
+          out::error() << "Trying to sync host, but host already up to date!\n";
+          assert(!cpu_updated_[j]);
+          return 1;
+        }
+        if (!gpu_updated_[j]) {
+          out::error() << "Trying to sync host with device, but device is out of date!\n";
+          return 1;
+        }
+        if (h_data_ == nullptr) {
+          //allocate first
+          h_data_ = new real_type[n_capacity_ * k_];
+          owns_cpu_data_ = true;
+        }
+        mem_.copyArrayDeviceToHost(&h_data_[j * n_size_], &d_data_[j * n_size_], n_size_);
+        cpu_updated_[j] = true;
         break;
       default:
         return 1;
@@ -448,6 +568,8 @@ namespace ReSolve { namespace vector {
           owns_cpu_data_ = true;
         }
         mem_.setZeroArrayOnHost(&h_data_[j * n_size_], n_size_);
+        cpu_updated_[j] = true;
+        gpu_updated_[j] = false;
         break;
       case DEVICE:
         if (d_data_ == nullptr) {
@@ -456,6 +578,8 @@ namespace ReSolve { namespace vector {
         }
         // TODO: We should not need to access raw data in this class
         mem_.setZeroArrayOnDevice(&d_data_[j * n_size_], n_size_);
+        cpu_updated_[j] = false;
+        gpu_updated_[j] = true;
         break;
     }
   }
@@ -513,6 +637,8 @@ namespace ReSolve { namespace vector {
           owns_cpu_data_ = true;
         }
         mem_.setArrayToConstOnHost(&h_data_[n_size_ * j], C, n_size_);
+        cpu_updated_[j] = true;
+        gpu_updated_[j] = false;
         break;
       case DEVICE:
         if (d_data_ == nullptr) {
@@ -520,6 +646,8 @@ namespace ReSolve { namespace vector {
           owns_gpu_data_ = true;
         }
         mem_.setArrayToConstOnDevice(&d_data_[n_size_ * j], C, n_size_);
+        cpu_updated_[j] = false;
+        gpu_updated_[j] = true;
         break;
     }
   }
@@ -539,11 +667,11 @@ namespace ReSolve { namespace vector {
    */
   real_type* Vector::getVectorData(index_type i, memory::MemorySpace memspace)
   {
-    if (this->k_ < i) {
-      return nullptr;
-    } else {
+    // if (this->k_ < i) {
+    //   return nullptr;
+    // } else {
       return this->getData(i, memspace);
-    }
+    // }
   }
 
   /** 
