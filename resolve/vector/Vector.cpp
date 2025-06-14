@@ -115,8 +115,6 @@ namespace ReSolve { namespace vector {
         h_data_ = data;
         setHostUpdated(true);
         setDeviceUpdated(false);
-        // cpu_updated_[0] = true;
-        // gpu_updated_[0] = false;
         owns_cpu_data_ = false;
         break;
       case DEVICE:
@@ -128,8 +126,6 @@ namespace ReSolve { namespace vector {
         d_data_ = data;
         setHostUpdated(false);
         setDeviceUpdated(true);
-        // gpu_updated_[0] = true;
-        // cpu_updated_[0] = false;
         owns_gpu_data_ = false;
         break;
     }
@@ -243,33 +239,25 @@ namespace ReSolve { namespace vector {
     }
 
     switch(control)  {
-      case 0: //cpu->cpu
+      case 0: // cpu->cpu
         mem_.copyArrayHostToHost(h_data_, data, n_size_ * k_);
         setHostUpdated(true);
         setDeviceUpdated(false);
-        // cpu_updated_[0] = true;
-        // gpu_updated_[0] = false;
         break;
-      case 2: //gpu->cpu
+      case 2: // gpu->cpu
         mem_.copyArrayDeviceToHost(h_data_, data, n_size_ * k_);
         setHostUpdated(true);
         setDeviceUpdated(false);
-        // cpu_updated_[0] = true;
-        // gpu_updated_[0] = false;
         break;
-      case 1: //cpu->gpu
+      case 1: // cpu->gpu
         mem_.copyArrayHostToDevice(d_data_, data, n_size_ * k_);
         setHostUpdated(false);
         setDeviceUpdated(true);
-        // gpu_updated_[0] = true;
-        // cpu_updated_[0] = false;
         break;
-      case 3: //gpu->gpu
+      case 3: // gpu->gpu
         mem_.copyArrayDeviceToDevice(d_data_, data, n_size_ * k_);
         setHostUpdated(false);
         setDeviceUpdated(true);
-        // gpu_updated_[0] = true;
-        // cpu_updated_[0] = false;
         break;
       default:
         return -1;
@@ -282,7 +270,8 @@ namespace ReSolve { namespace vector {
    *
    * @param[in] memspace  - Memory space of the pointer (HOST or DEVICE)
    *
-   * @return pointer to the vector data (HOST or DEVICE). In case of multivectors, vectors are stored column-wise.
+   * @return pointer to the vector data (HOST or DEVICE). In case of multivectors,
+   * vectors are stored column-wise.
    *
    * @note This function gives you access to the pointer, not to a copy.
    * If you change the values using the pointer, the vector values will change too.
@@ -327,7 +316,7 @@ namespace ReSolve { namespace vector {
     using memory::HOST;
     using memory::DEVICE;
 
-    if (k_ < j) {
+    if (k_ <= j) {
       out::error() << "Trying to get data for vector " << j << " in multivector"
                    << " but there are only " << k_ << " vectors!\n";
       return nullptr;
@@ -600,7 +589,7 @@ namespace ReSolve { namespace vector {
           h_data_ = new real_type[n_capacity_ * k_]; 
           owns_cpu_data_ = true;
         }
-        mem_.setArrayToConstOnHost(h_data_, C, n_capacity_ * k_);
+        mem_.setArrayToConstOnHost(h_data_, C, n_size_ * k_);
         setHostUpdated(true);
         setDeviceUpdated(false);
         break;
@@ -609,7 +598,7 @@ namespace ReSolve { namespace vector {
           mem_.allocateArrayOnDevice(&d_data_, n_capacity_ * k_);
           owns_gpu_data_ = true;
         }
-        mem_.setArrayToConstOnDevice(d_data_, C, n_capacity_ * k_);
+        mem_.setArrayToConstOnDevice(d_data_, C, n_size_ * k_);
         setHostUpdated(false);
         setDeviceUpdated(true);
         break;
@@ -751,15 +740,11 @@ namespace ReSolve { namespace vector {
 
   void Vector::setHostUpdated(bool is_updated)
   {
-    // for (index_type i = 0; i< k_; ++i) cpu_updated_[i] = is_updated;
-    // std::fill_n(cpu_updated_, k_, is_updated);
     std::fill(cpu_updated_, cpu_updated_ + k_, is_updated);
   }
 
   void Vector::setDeviceUpdated(bool is_updated)
   {
-    // for (index_type i = 0; i< k_; ++i) gpu_updated_[i] = is_updated;
-    // std::fill_n(cpu_updated_, k_, is_updated);
     std::fill(gpu_updated_, gpu_updated_ + k_, is_updated);
   }
 
