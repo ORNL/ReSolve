@@ -15,7 +15,9 @@ namespace ReSolve { namespace vector {
   Vector::Vector(index_type n):
     n_capacity_(n),
     k_(1),
-    n_size_(n)
+    n_size_(n),
+    gpu_updated_(new bool[1]),
+    cpu_updated_(new bool[1])
   {
   }
 
@@ -28,7 +30,9 @@ namespace ReSolve { namespace vector {
   Vector::Vector(index_type n, index_type k)
     : n_capacity_(n),
       k_(k),
-      n_size_(n)
+      n_size_(n),
+      gpu_updated_(new bool[k]),
+      cpu_updated_(new bool[k])
   {
   }
 
@@ -38,8 +42,10 @@ namespace ReSolve { namespace vector {
    */
   Vector::~Vector()
   {
-    if (owns_cpu_data_ && h_data_) delete [] h_data_;
+    if (owns_cpu_data_ && h_data_) mem_.deleteOnHost(h_data_);
     if (owns_gpu_data_ && d_data_) mem_.deleteOnDevice(d_data_);
+    delete [] gpu_updated_;
+    delete [] cpu_updated_;
   }
 
 
@@ -99,8 +105,8 @@ namespace ReSolve { namespace vector {
           return 1;
         }
         h_data_ = data;
-        cpu_updated_ = true;
-        gpu_updated_ = false;
+        cpu_updated_[0] = true;
+        gpu_updated_[0] = false;
         owns_cpu_data_ = false;
         break;
       case DEVICE:
@@ -110,8 +116,8 @@ namespace ReSolve { namespace vector {
           return 1;
         }
         d_data_ = data;
-        gpu_updated_ = true;
-        cpu_updated_ = false;
+        gpu_updated_[0] = true;
+        cpu_updated_[0] = false;
         owns_gpu_data_ = false;
         break;
     }
@@ -130,12 +136,12 @@ namespace ReSolve { namespace vector {
     using namespace ReSolve::memory;
     switch (memspace) {
       case HOST:
-        cpu_updated_ = true;
-        gpu_updated_ = false;
+        cpu_updated_[0] = true;
+        gpu_updated_[0] = false;
         break;
       case DEVICE:
-        gpu_updated_ = true;
-        cpu_updated_ = false;
+        gpu_updated_[0] = true;
+        cpu_updated_[0] = false;
         break;
     }
   }
@@ -188,23 +194,23 @@ namespace ReSolve { namespace vector {
     switch(control)  {
       case 0: //cpu->cpu
         mem_.copyArrayHostToHost(h_data_, data, n_size_ * k_);
-        cpu_updated_ = true;
-        gpu_updated_ = false;
+        cpu_updated_[0] = true;
+        gpu_updated_[0] = false;
         break;
       case 2: //gpu->cpu
         mem_.copyArrayDeviceToHost(h_data_, data, n_size_ * k_);
-        cpu_updated_ = true;
-        gpu_updated_ = false;
+        cpu_updated_[0] = true;
+        gpu_updated_[0] = false;
         break;
       case 1: //cpu->gpu
         mem_.copyArrayHostToDevice(d_data_, data, n_size_ * k_);
-        gpu_updated_ = true;
-        cpu_updated_ = false;
+        gpu_updated_[0] = true;
+        cpu_updated_[0] = false;
         break;
       case 3: //gpu->gpu
         mem_.copyArrayDeviceToDevice(d_data_, data, n_size_ * k_);
-        gpu_updated_ = true;
-        cpu_updated_ = false;
+        gpu_updated_[0] = true;
+        cpu_updated_[0] = false;
         break;
       default:
         return -1;
@@ -248,12 +254,12 @@ namespace ReSolve { namespace vector {
     switch (memspace)
     {
     case HOST:
-      if ((cpu_updated_ == false) && (gpu_updated_ == true )) {
+      if ((cpu_updated_[0] == false) && (gpu_updated_[0] == true )) {
         syncData(memspace);  
       } 
       return &h_data_[i * n_size_];
     case DEVICE:
-      if ((gpu_updated_ == false) && (cpu_updated_ == true )) {
+      if ((gpu_updated_[0] == false) && (cpu_updated_[0] == true )) {
         syncData(memspace);
       }
       return &d_data_[i * n_size_];
@@ -277,12 +283,12 @@ namespace ReSolve { namespace vector {
 
     switch(memspaceOut)  {
       case DEVICE: // cpu->gpu
-        if (gpu_updated_) {
+        if (gpu_updated_[0]) {
           out::error() << "Trying to sync device, but device already up to date!\n";
-          assert(!gpu_updated_);
+          assert(!gpu_updated_[0]);
           return 1;
         }
-        if (!cpu_updated_) {
+        if (!cpu_updated_[0]) {
           out::error() << "Trying to sync device with host, but host is out of date!\n";
         }
         if (d_data_ == nullptr) {
@@ -291,15 +297,15 @@ namespace ReSolve { namespace vector {
           owns_gpu_data_ = true;
         } 
         mem_.copyArrayHostToDevice(d_data_, h_data_, n_size_ * k_);
-        gpu_updated_ = true;
+        gpu_updated_[0] = true;
         break;
       case HOST: //cuda->cpu
-        if (cpu_updated_) {
+        if (cpu_updated_[0]) {
           out::error() << "Trying to sync host, but host already up to date!\n";
-          assert(!cpu_updated_);
+          assert(!cpu_updated_[0]);
           return 1;
         }
-        if (!gpu_updated_) {
+        if (!gpu_updated_[0]) {
           out::error() << "Trying to sync host with device, but device is out of date!\n";
         }
         if (h_data_ == nullptr) {
@@ -308,7 +314,7 @@ namespace ReSolve { namespace vector {
           owns_cpu_data_ = true;
         }
         mem_.copyArrayDeviceToHost(h_data_, d_data_, n_size_ * k_);
-        cpu_updated_ = true;
+        cpu_updated_[0] = true;
         break;
       default:
         return 1;

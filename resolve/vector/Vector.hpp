@@ -53,13 +53,13 @@ namespace ReSolve { namespace vector {
       int copyDataTo(real_type* dest, memory::MemorySpace memspace);  //copy FULL multivector 
     
     private:
-      index_type n_capacity_{0}; ///< vector capacity
-      index_type k_{0}; ///< k_ = 1 for vectors and k_>1 for multivectors (multivectors are accessed column-wise). 
-      index_type n_size_; ///< actual size of the vector
+      index_type n_capacity_{0};   ///< vector capacity
+      index_type k_{0};            ///< number of vectors in multivector
+      index_type n_size_{0};       ///< actual size of the vector
       real_type* d_data_{nullptr}; ///< DEVICE data array
       real_type* h_data_{nullptr}; ///< HOST data array
-      bool gpu_updated_{false}; ///< DEVICE data flag (updated or not)
-      bool cpu_updated_{false}; ///< HOST data flag (updated or not)
+      bool* gpu_updated_{nullptr}; ///< DEVICE data flags (updated or not)
+      bool* cpu_updated_{nullptr}; ///< HOST data flags (updated or not)
 
       bool owns_gpu_data_{true}; ///< data owneship flag for DEVICE data
       bool owns_cpu_data_{true}; ///< data ownership flag for HOST data
