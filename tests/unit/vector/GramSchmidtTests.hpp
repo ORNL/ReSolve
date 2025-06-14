@@ -87,7 +87,7 @@ namespace ReSolve
           GS.setup(N, restart);
           
           // Fill 2nd and 3rd vector with values
-          real_type* aux_data = V.getVectorData(1, memory::HOST);
+          real_type* aux_data = V.getData(1, memory::HOST);
           for (int i = 0; i < N; ++i) {
             if (i % 2 == 0) {         
               aux_data[i] = constants::ONE;
@@ -95,7 +95,7 @@ namespace ReSolve
               aux_data[i] = var1;
             }
           }
-          aux_data = V.getVectorData(2, memory::HOST);
+          aux_data = V.getData(2, memory::HOST);
           for (int i = 0; i < N; ++i) {
             if (i % 3 > 0) {         
               aux_data[i] = constants::ZERO;
@@ -140,8 +140,8 @@ namespace ReSolve
 
           for (index_type i = 0; i < K; ++i) {
             for (index_type j = 0; j < K; ++j) {
-              a.copyDataFrom(x.getVectorData(i, memspace_), memspace_, memory::HOST);
-              b.copyDataFrom(x.getVectorData(j, memspace_), memspace_, memory::HOST);
+              a.copyDataFrom(x.getData(i, memspace_), memspace_, memory::HOST);
+              b.copyDataFrom(x.getData(j, memspace_), memspace_, memory::HOST);
               ip = handler_.dot(&a, &b, memory::HOST);
               if ( (i != j) && !isEqual(ip, 0.0)) {
                 status = false;

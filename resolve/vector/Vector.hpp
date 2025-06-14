@@ -50,7 +50,6 @@ namespace ReSolve { namespace vector {
       int syncData(memory::MemorySpace memspaceOut); 
       int syncData(index_type j, memory::MemorySpace memspaceOut); 
       int resize(index_type new_n_current);
-      real_type* getVectorData(index_type i, memory::MemorySpace memspace); // get ith vector data out of multivector   
       int copyDataTo(real_type* dest, index_type i, memory::MemorySpace memspace);  
       int copyDataTo(real_type* dest, memory::MemorySpace memspace);  //copy FULL multivector 
     

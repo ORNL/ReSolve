@@ -174,18 +174,18 @@ namespace ReSolve
         it++;
 
         // Z_i = (LU)^{-1}*V_i
-        vec_v.setData( vec_V_->getVectorData(i, memspace_), memspace_);
+        vec_v.setData( vec_V_->getData(i, memspace_), memspace_);
         if (flexible_) {
-          vec_z.setData( vec_Z_->getVectorData(i, memspace_), memspace_);
+          vec_z.setData( vec_Z_->getData(i, memspace_), memspace_);
         } else {
-          vec_z.setData( vec_Z_->getVectorData(0, memspace_), memspace_);
+          vec_z.setData( vec_Z_->getData(0, memspace_), memspace_);
         }
         this->precV(&vec_v, &vec_z);
         mem_.deviceSynchronize();
 
         // V_{i+1}=A*Z_i
 
-        vec_v.setData( vec_V_->getVectorData(i + 1, memspace_), memspace_);
+        vec_v.setData( vec_V_->getData(i + 1, memspace_), memspace_);
 
         matrix_handler_->matvec(A_, &vec_z, &vec_v, &ONE, &ZERO, memspace_);
 
@@ -246,14 +246,14 @@ namespace ReSolve
       // get solution
       if (flexible_) {
         for (j = 0; j <= i; j++) {
-          vec_z.setData( vec_Z_->getVectorData(j, memspace_), memspace_);
+          vec_z.setData( vec_Z_->getData(j, memspace_), memspace_);
           vector_handler_->axpy(&h_rs_[j], &vec_z, x, memspace_);
         }
       } else {
         vec_Z_->setToZero(memspace_);
-        vec_z.setData( vec_Z_->getVectorData(0, memspace_), memspace_);
+        vec_z.setData( vec_Z_->getData(0, memspace_), memspace_);
         for (j = 0; j <= i; j++) {
-          vec_v.setData( vec_V_->getVectorData(j, memspace_), memspace_);
+          vec_v.setData( vec_V_->getData(j, memspace_), memspace_);
           vector_handler_->axpy(&h_rs_[j], &vec_v, &vec_z, memspace_);
         }
         // now multiply d_Z by precon

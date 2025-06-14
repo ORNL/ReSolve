@@ -651,28 +651,6 @@ namespace ReSolve { namespace vector {
   }
 
   /** 
-   * @brief Get a pointer to HOST or DEVICE data of a specified vector in a multivector.
-   * 
-   * @param[in] i          - Index of a vector in a multivector
-   * @param[in] memspace   - Memory space of the pointer (HOST or DEVICE)
-   *
-   * @return A pointer to the `i`th vector data (HOST or DEVICE).
-   *
-   * @pre `i` < `k_`, i.e. `i` is smaller than the total number of vectors in multivector.
-   * 
-   * @note This function gives you access to the pointer, not to a copy.
-   * If you change the values using the pointer, the vector values will change too.
-   */
-  real_type* Vector::getVectorData(index_type i, memory::MemorySpace memspace)
-  {
-    // if (this->k_ < i) {
-    //   return nullptr;
-    // } else {
-      return this->getData(i, memspace);
-    // }
-  }
-
-  /** 
    * @brief Resize vector to `new_n_size`.
    * 
    * Use for vectors and multivectors that change size throughout computation.

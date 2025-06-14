@@ -153,8 +153,8 @@ namespace ReSolve
     rhs->copyDataTo(vec_V_->getData(memspace_), 0, memspace_);
     matrix_handler_->matvec(A_, x, vec_V_, &MINUS_ONE, &ONE, memspace_);
 
-    vec_v.setData(vec_V_->getVectorData(0, memspace_), memspace_);
-    vec_s.setData(vec_S_->getVectorData(0, memspace_), memspace_);
+    vec_v.setData(vec_V_->getData(0, memspace_), memspace_);
+    vec_s.setData(vec_S_->getData(0, memspace_), memspace_);
 
     sketching_handler_->Theta(&vec_v, &vec_s);
 
@@ -220,24 +220,24 @@ namespace ReSolve
         it++;
 
         // Z_i = (LU)^{-1}*V_i
-        vec_v.setData(vec_V_->getVectorData(i, memspace_), memspace_);
+        vec_v.setData(vec_V_->getData(i, memspace_), memspace_);
         if (flexible_) {
-          vec_z.setData(vec_Z_->getVectorData(i, memspace_), memspace_);
+          vec_z.setData(vec_Z_->getData(i, memspace_), memspace_);
         } else {
-          vec_z.setData(vec_Z_->getVectorData(0, memspace_), memspace_);
+          vec_z.setData(vec_Z_->getData(0, memspace_), memspace_);
         }
         this->precV(&vec_v, &vec_z);
 
         mem_.deviceSynchronize();
 
         // V_{i+1}=A*Z_i
-        vec_v.setData(vec_V_->getVectorData(i + 1, memspace_), memspace_);
+        vec_v.setData(vec_V_->getData(i + 1, memspace_), memspace_);
 
         matrix_handler_->matvec(A_, &vec_z, &vec_v, &ONE, &ZERO, memspace_);
 
         // orthogonalize V[i+1], form a column of h_H_
         // this is where it differs from normal solver GS
-        vec_s.setData(vec_S_->getVectorData(i + 1, memspace_), memspace_);
+        vec_s.setData(vec_S_->getData(i + 1, memspace_), memspace_);
         sketching_handler_->Theta(&vec_v, &vec_s);
         if (sketching_method_ == fwht) {
           vector_handler_->scal(&one_over_k_, &vec_s, memspace_);
@@ -255,7 +255,7 @@ namespace ReSolve
         t = 1.0 / h_H_[i * (restart_ + 1) + i + 1];
         vector_handler_->scal(&t, &vec_v, memspace_);
         mem_.deviceSynchronize();
-        vec_s.setData(vec_S_->getVectorData(i + 1, memspace_), memspace_);
+        vec_s.setData(vec_S_->getData(i + 1, memspace_), memspace_);
 
         if (i != 0) {
           for (int k = 1; k <= i; k++) {
@@ -312,14 +312,14 @@ namespace ReSolve
       // get solution
       if (flexible_) {
         for (j = 0; j <= i; j++) {
-          vec_z.setData(vec_Z_->getVectorData(j, memspace_), memspace_);
+          vec_z.setData(vec_Z_->getData(j, memspace_), memspace_);
           vector_handler_->axpy(&h_rs_[j], &vec_z, x, memspace_);
         }
       } else {
         vec_Z_->setToZero(0, memspace_);
-        vec_z.setData( vec_Z_->getVectorData(0, memspace_), memspace_);
+        vec_z.setData( vec_Z_->getData(0, memspace_), memspace_);
         for(j = 0; j <= i; j++) {
-          vec_v.setData(vec_V_->getVectorData(j, memspace_), memspace_);
+          vec_v.setData(vec_V_->getData(j, memspace_), memspace_);
           vector_handler_->axpy(&h_rs_[j], &vec_v, &vec_z, memspace_);
         }
         // now multiply d_Z by precon
@@ -344,8 +344,8 @@ namespace ReSolve
         if (sketching_method_ == cs) {
           vec_S_->setToZero(memspace_);
         }
-        vec_v.setData(vec_V_->getVectorData(0, memspace_), memspace_);
-        vec_s.setData(vec_S_->getVectorData(0, memspace_), memspace_);
+        vec_v.setData(vec_V_->getData(0, memspace_), memspace_);
+        vec_s.setData(vec_S_->getData(0, memspace_), memspace_);
         sketching_handler_->Theta(&vec_v, &vec_s);
         if (sketching_method_ == fwht) {
           vector_handler_->scal(&one_over_k_, &vec_s, memspace_);
