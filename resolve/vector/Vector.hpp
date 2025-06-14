@@ -53,6 +53,9 @@ namespace ReSolve { namespace vector {
       int copyDataTo(real_type* dest, memory::MemorySpace memspace);  //copy FULL multivector 
     
     private:
+      void setHostUpdated(bool is_updated);
+      void setDeviceUpdated(bool is_updated);
+
       index_type n_capacity_{0};   ///< vector capacity
       index_type k_{0};            ///< number of vectors in multivector
       index_type n_size_{0};       ///< actual size of the vector
