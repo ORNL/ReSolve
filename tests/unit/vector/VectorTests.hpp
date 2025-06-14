@@ -19,14 +19,9 @@ namespace ReSolve {
     class VectorTests : TestBase
     {
       public:
-        VectorTests(ReSolve::VectorHandler& handler) : handler_(handler)
+        VectorTests(memory::MemorySpace memspace = memory::HOST)
+          : memspace_(memspace)
         {
-          // Determine memory space based on the handler capabilities
-          if (handler_.getIsCudaEnabled() || handler_.getIsHipEnabled()) {
-            memspace_ = memory::DEVICE;
-          } else {
-            memspace_ = memory::HOST;
-          }
         }
 
         virtual ~VectorTests()
@@ -346,7 +341,6 @@ namespace ReSolve {
         }
 
       private:
-        ReSolve::VectorHandler& handler_;
         ReSolve::memory::MemorySpace memspace_;
         MemoryHandler mem_;
     };//class
