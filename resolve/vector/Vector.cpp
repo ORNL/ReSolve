@@ -337,14 +337,12 @@ namespace ReSolve { namespace vector {
     {
     case HOST:
       if ((cpu_updated_[j] == false) && (gpu_updated_[j] == true )) {
-        // syncData(j, memspace); // Temporally replaced 
-        syncData(memspace);  
+        syncData(j, memspace);  
       } 
       return &h_data_[j * n_size_];
     case DEVICE:
       if ((gpu_updated_[j] == false) && (cpu_updated_[j] == true )) {
-        // syncData(j, memspace); // Temporally replaced
-        syncData(memspace);
+        syncData(j, memspace);
       }
       return &d_data_[j * n_size_];
     default:
@@ -394,10 +392,10 @@ namespace ReSolve { namespace vector {
     }
 
     switch(memspaceOut)  {
-      case DEVICE: // cpu->gpu
+      case DEVICE: // cpu -> gpu
         if (gpu_updated_[0]) {
           out::error() << "Trying to sync device, but device already up to date!\n";
-          // assert(!gpu_updated_[0]); // Temporally disabled
+          assert(!gpu_updated_[0]);
           return 1;
         }
         if (!cpu_updated_[0]) {
@@ -411,10 +409,10 @@ namespace ReSolve { namespace vector {
         mem_.copyArrayHostToDevice(d_data_, h_data_, n_size_ * k_);
         setDeviceUpdated(true);
         break;
-      case HOST: //cuda->cpu
+      case HOST: // gpu -> cpu
         if (cpu_updated_[0]) {
           out::error() << "Trying to sync host, but host already up to date!\n";
-          // assert(!cpu_updated_[0]); // Temporally disabled
+          assert(!cpu_updated_[0]);
           return 1;
         }
         if (!gpu_updated_[0]) {
