@@ -232,12 +232,21 @@ namespace ReSolve {
    * @pre   _size_ > 0, _k_ > 0, size = x->getSize(), _res_ needs to be allocated
    *
    */
-  void VectorHandlerCuda::massDot2Vec(index_type size, vector::Vector* V, index_type k, vector::Vector* x, vector::Vector* res)
+  void VectorHandlerCuda::massDot2Vec(index_type size,
+                                      vector::Vector* V,
+                                      index_type k,
+                                      vector::Vector* x,
+                                      vector::Vector* res)
   {
     using namespace constants;
 
     if (k < 200) {
-      cuda::mass_inner_product_two_vectors(size, k, x->getData(memory::DEVICE) , x->getData(1, memory::DEVICE), V->getData(memory::DEVICE), res->getData(memory::DEVICE));
+      cuda::mass_inner_product_two_vectors(size, 
+                                           k,
+                                           x->getData(0, memory::DEVICE),
+                                           x->getData(1, memory::DEVICE),
+                                           V->getData(memory::DEVICE),
+                                           res->getData(memory::DEVICE));
     } else {
       cublasHandle_t handle_cublas =  workspace_->getCublasHandle();
       cublasDgemm(handle_cublas,
