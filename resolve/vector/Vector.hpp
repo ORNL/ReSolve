@@ -22,6 +22,7 @@ namespace ReSolve { namespace vector {
    *    flags for HOST and DEVICE) or not, depending on how it is used.
    *
    * @author Kasia Swirydowicz <kasia.swirydowicz@pnnl.gov>
+   * @author Slaven Peles <peless@ornl.gov>
    */
   class Vector 
   {
@@ -33,7 +34,7 @@ namespace ReSolve { namespace vector {
       int copyDataFrom(const real_type* data, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut);
       int copyDataFrom(Vector* v, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut);
       real_type* getData(memory::MemorySpace memspace);
-      real_type* getData(index_type i, memory::MemorySpace memspace); // get pointer to i-th vector in multivector
+      real_type* getData(index_type i, memory::MemorySpace memspace);
 
       index_type getCapacity() const;
       index_type getSize() const;
@@ -42,16 +43,16 @@ namespace ReSolve { namespace vector {
       int setDataUpdated(memory::MemorySpace memspace);
       int setDataUpdated(index_type j, memory::MemorySpace memspace);
       int setData(real_type* data, memory::MemorySpace memspace);
-      void allocate(memory::MemorySpace memspace);   
-      void setToZero(memory::MemorySpace memspace);
-      void setToZero(index_type i, memory::MemorySpace memspace); // set i-th ivector to 0
-      void setToConst(real_type C, memory::MemorySpace memspace);
-      void setToConst(index_type i, real_type C, memory::MemorySpace memspace); // set i-th vector to C  - needed for unit tests, Gram Schmidt tests
+      int allocate(memory::MemorySpace memspace);   
+      int setToZero(memory::MemorySpace memspace);
+      int setToZero(index_type i, memory::MemorySpace memspace);
+      int setToConst(real_type C, memory::MemorySpace memspace);
+      int setToConst(index_type i, real_type C, memory::MemorySpace memspace);
       int syncData(memory::MemorySpace memspaceOut); 
       int syncData(index_type j, memory::MemorySpace memspaceOut); 
       int resize(index_type new_n_current);
       int copyDataTo(real_type* dest, index_type i, memory::MemorySpace memspace);  
-      int copyDataTo(real_type* dest, memory::MemorySpace memspace);  //copy FULL multivector 
+      int copyDataTo(real_type* dest, memory::MemorySpace memspace);
     
     private:
       void setHostUpdated(bool is_updated);

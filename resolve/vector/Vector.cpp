@@ -489,7 +489,7 @@ namespace ReSolve { namespace vector {
    * @param[in] memspace   - Memory space of the data to be allocated
    *
    */
-  void Vector::allocate(memory::MemorySpace memspace)
+  int Vector::allocate(memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
     switch (memspace) {
@@ -504,6 +504,7 @@ namespace ReSolve { namespace vector {
         owns_gpu_data_ = true;
         break;
     }
+    return 0;
   }
 
   /**
@@ -512,7 +513,7 @@ namespace ReSolve { namespace vector {
    * @param[in] memspace   - Memory space of the data to be set to 0 (HOST or DEVICE)
    *
    */
-  void Vector::setToZero(memory::MemorySpace memspace)
+  int Vector::setToZero(memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
     switch (memspace) {
@@ -535,6 +536,7 @@ namespace ReSolve { namespace vector {
         setDeviceUpdated(true);
         break;
     }
+    return 0;
   }
 
   /**
@@ -545,7 +547,7 @@ namespace ReSolve { namespace vector {
    *
    * @pre   _i_ < _k_ i.e,, _i_ is smaller than the total number of vectors in multivector.
    */
-  void Vector::setToZero(index_type j, memory::MemorySpace memspace)
+  int Vector::setToZero(index_type j, memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
     switch (memspace) {
@@ -569,6 +571,7 @@ namespace ReSolve { namespace vector {
         gpu_updated_[j] = true;
         break;
     }
+    return 0;
   }
 
   /**
@@ -580,7 +583,7 @@ namespace ReSolve { namespace vector {
    * @param[in] memspace   - Memory space of the data to be set to 0 (HOST or DEVICE)
    *
    */
-  void Vector::setToConst(real_type C, memory::MemorySpace memspace)
+  int Vector::setToConst(real_type C, memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
     switch (memspace) {
@@ -603,6 +606,7 @@ namespace ReSolve { namespace vector {
         setDeviceUpdated(true);
         break;
     }
+    return 0;
   }
 
   /**
@@ -614,7 +618,7 @@ namespace ReSolve { namespace vector {
    *
    * @pre   _j_ < _k_ i.e,, _j_ is smaller than the total number of vectors in multivector.
    */
-  void Vector::setToConst(index_type j, real_type C, memory::MemorySpace memspace)
+  int Vector::setToConst(index_type j, real_type C, memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
     switch (memspace) {
@@ -637,6 +641,7 @@ namespace ReSolve { namespace vector {
         gpu_updated_[j] = true;
         break;
     }
+    return 0;
   }
 
   /** 
