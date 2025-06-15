@@ -92,7 +92,7 @@ namespace ReSolve {
 
           if (x.getSize() != new_N) {
             std::cout << "The size of the vector after resizing is " << x.getSize()
-                    << ", expected: " << new_N << "\n";
+                      << ", expected: " << new_N << "\n";
             status *= false;
           }
 
@@ -205,8 +205,7 @@ namespace ReSolve {
          */
         TestOutcome copyDataTo(index_type N)
         {
-          TestStatus status;
-          status = true;
+          TestStatus status = true;
 
           vector::Vector x(N);
           real_type* data = new real_type[N];
@@ -224,7 +223,7 @@ namespace ReSolve {
           // Copy to host to verify
           real_type* dest_h = new real_type[N];
           if (memspace_ == memory::DEVICE) {
-            mem_.copyArrayDeviceToHost(dest_h, dest, N);
+            mh_.copyArrayDeviceToHost(dest_h, dest, N);
             dest = dest_h;
           } else {
             // If we are on HOST, we can use dest directly
@@ -252,41 +251,37 @@ namespace ReSolve {
          * @brief Test setting all elements of a vector to a constant value.
          *
          * @param[in] N Number of elements in the vector.
-         * @param[in] constValue The constant value to set all elements to.
          * @return TestOutcome indicating success or failure of the test.
          */
-        TestOutcome setToConst(index_type N, real_type constValue) {
-          TestStatus status;
-          status = true;
+        TestOutcome setToConst(index_type N)
+        {
+          using constants::ZERO;
+          using constants::ONE;
 
-          vector::Vector x(N);
-          x.allocate(memspace_);
+          TestStatus success = true;
 
-          // Set all elements to a constant value
-          if (isEqual(constValue, (real_type) 0.0)) {
-            x.setToZero(memspace_);
-          } else {
-            x.setToConst(constValue, memspace_);
-          }
+          index_type vector_size = N;
+          index_type number_vectors = 3;
 
-          real_type* x_data = x.getData(memspace_);
+          vector::Vector x(vector_size, number_vectors);
 
-          if (x_data == nullptr) {
-            std::cout << "The data pointer is null after setting to constant.\n";
-            status *= false;
-          } else {
-            for (int i = 0; i < N; ++i) {
-              if (!isEqual(x_data[i], constValue)) {
-                std::cout << "The data in the vector is incorrect at index " << i
-                          << ", expected: " << constValue
-                          << ", got: " << x_data[i] << "\n";
-                status *= false;
-                break;
-              }
-            }
-          }
+          x.setToZero(memspace_);
+          success *= verifyAnswer(x, ZERO);
 
-          return status.report(__func__);
+          x.setToConst(1, ONE, memspace_); // set vector 1 to ones
+          success *= verifyAnswer(vector_size, x.getData(0, memspace_), ZERO);
+          success *= verifyAnswer(vector_size, x.getData(1, memspace_), ONE);
+          success *= verifyAnswer(vector_size, x.getData(2, memspace_), ZERO);
+
+          x.setToConst(ONE, memspace_);
+          success *= verifyAnswer(x, ONE);
+
+          x.setToZero(1, memspace_); // set vector 1 to zeros
+          success *= verifyAnswer(vector_size, x.getData(0, memspace_), ONE);
+          success *= verifyAnswer(vector_size, x.getData(1, memspace_), ZERO);
+          success *= verifyAnswer(vector_size, x.getData(2, memspace_), ONE);
+
+          return success.report(__func__);
         }
 
         /**
@@ -296,53 +291,99 @@ namespace ReSolve {
          * to the other memory space and verify that the data is synced correctly.
          *
          * @param[in] N Number of elements in the vector.
-         * @param[in] memspaceFrom Memory space from which to sync data (HOST or DEVICE).
-         * @return TestOutcome indicating success or failure of the test.
+         * @return TestOutcome returns a report on the test.
          */
-        TestOutcome syncData(index_type N, memory::MemorySpace memspaceFrom) {
-          memory::MemorySpace memspaceTo = (memspaceFrom == memory::HOST) ? memory::DEVICE : memory::HOST;
+        TestOutcome syncData(index_type N = 4)
+        {
+          using constants::ZERO;
+          using constants::ONE;
 
-          TestStatus status;
-          status = true;
+          TestStatus success;
+          success = true;
 
-          vector::Vector x(N);
-          x.allocate(memspaceFrom);
-
-          real_type* data = new real_type[N];
-          for (int i = 0; i < N; ++i) {
-            data[i] = 0.1 * (real_type) i;
-          }
-          x.copyDataFrom(data, memory::HOST, memspaceFrom);
-
-          // Sync data between host and device
-          x.syncData(memspaceTo);
-
-          // Bring back to host to verify
-          vector::Vector x_host(N);
-          x_host.copyDataFrom(&x, memspaceTo, memory::HOST);
-
-          real_type* x_synced_data = x_host.getData(memory::HOST);
-
-          if (x_synced_data == nullptr) {
-            std::cout << "The data pointer is null after syncing.\n";
-            status *= false;
-          } else {
-            for (int i = 0; i < N; ++i) {
-              if (!isEqual(x_synced_data[i], data[i])) {
-                std::cout << "The data in the vector after sync is incorrect at index " << i
-                          << ", expected: " << data[i]
-                          << ", got: " << x_synced_data[i] << "\n";
-                status *= false;
-              }
-            }
+          if (memspace_ == memory::HOST) {
+            return success.report(__func__);
           }
 
-          return status.report(__func__);
+          index_type vector_size = N;
+          index_type number_vectors = 3;
+
+          vector::Vector x(vector_size, number_vectors);
+
+          // Set all vectors in x on device to ones
+          x.setToConst(ONE, memspace_);
+          // Sync host (all ones on the host, as well)
+          x.syncData(memory::HOST);
+          // Set vector 1 to all zeros on host
+          x.setToZero(1, memory::HOST);
+          // Sync vector 1 on device
+          x.syncData(1, memspace_);
+
+          // Check what we have on device now is correct
+          success *= verifyAnswer(vector_size, x.getData(0, memspace_), ONE);
+          success *= verifyAnswer(vector_size, x.getData(1, memspace_), ZERO);
+          success *= verifyAnswer(vector_size, x.getData(2, memspace_), ONE);
+
+          return success.report(__func__);
         }
 
       private:
-        ReSolve::memory::MemorySpace memspace_;
-        MemoryHandler mem_;
+        ReSolve::memory::MemorySpace memspace_{memory::HOST};
+        MemoryHandler mh_;
+
+        /// Check if vector elements are set to the same number
+        bool verifyAnswer(vector::Vector& x, real_type answer)
+        {
+          bool success = true;
+
+          if (memspace_ == memory::DEVICE) {
+            x.syncData(memory::HOST);
+          }
+
+          for (index_type i = 0; i < x.getSize(); ++i) {
+            // std::cout << x->getData("cpu")[i] << "\n";
+            if (!isEqual(x.getData(memory::HOST)[i], answer)) {
+              std::cout << std::setprecision(16);
+              success = false;
+              std::cout << "Solution vector element x[" << i << "] = " << x.getData(memory::HOST)[i]
+                << ", expected: " << answer << "\n";
+              break; 
+            }
+          }
+          return success;
+        }
+
+        /// Check if an array elements are set to the same number
+        bool verifyAnswer(index_type size, const real_type* data, real_type answer)
+        {
+          bool success = true;
+          real_type* x = nullptr;
+
+          // If the data is on device copy it to the host
+          if (memspace_ == memory::DEVICE) {
+            mh_.allocateArrayOnHost(&x, size);
+            mh_.copyArrayDeviceToHost(x, data, size);
+            // Set `data` to point to the host copy
+            data = x;
+          }
+
+          for (size_t i = 0; i < static_cast<size_t>(size); ++i) {
+            if (!isEqual(data[i], answer)) {
+              std::cout << std::setprecision(16);
+              success = false;
+              std::cout << "Solution vector element x[" << i << "] = " << data[i]
+                << ", expected: " << answer << "\n";
+              break; 
+            }
+          }
+
+          if (memspace_ == memory::DEVICE) {
+            mh_.deleteOnHost(x);
+            data = nullptr;
+          }
+
+          return success;
+        }
     };//class
   } // namespace tests
 } //namespace ReSolve

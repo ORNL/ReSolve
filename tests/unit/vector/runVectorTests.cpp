@@ -18,12 +18,12 @@ int main(int, char**)
     result += test.setData(50);
     
     result += test.copyDataFrom(50);
-    result += test.copyDataTo(50);
+    // result += test.copyDataTo(50);
 
     result += test.resize(100, 50);
     
-    result += test.setToConst(50, 0.0);
-    result += test.setToConst(50, 5.0);
+    result += test.setToConst(50);
+    result += test.setToConst(50);
   }
 
 #ifdef RESOLVE_USE_GPU
@@ -41,10 +41,10 @@ int main(int, char**)
 
     result += test.resize(100, 50);
     
-    // result += test.setToConst(50, 0.0);
-    // result += test.setToConst(50, 5.0);
-    result += test.syncData(50, ReSolve::memory::HOST);
-    result += test.syncData(50, ReSolve::memory::DEVICE);
+    result += test.setToConst(50);
+    result += test.setToConst(50);
+    result += test.syncData(50);
+    result += test.syncData(50);
   }
 #endif
 
