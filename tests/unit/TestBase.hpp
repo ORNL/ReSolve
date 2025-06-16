@@ -24,13 +24,21 @@ class TestStatus
 public:
   TestStatus()
   : outcome_(TestOutcome::PASS)
-  {}
+  {
+  }
+
   TestStatus(const char* funcname) 
   : outcome_(TestOutcome::PASS),
     funcname_(funcname)
-  {}
-  ~TestStatus()
-  {}
+  {
+  }
+
+  TestStatus(bool success)
+    : outcome_(success ? TestOutcome::PASS : TestOutcome::FAIL)
+  {
+  }
+
+  ~TestStatus() = default;
 
   TestStatus& operator=(const bool isPass)
   {
@@ -218,18 +226,9 @@ static const real_type eps = 10*std::numeric_limits<real_type>::epsilon();
 class TestBase
 {
 public:
-  TestBase()
-    : mem_space_("DEFAULT")
-  {
-  }
-  inline void set_mem_space(const std::string& mem_space)
-  {
-    mem_space_ = mem_space;
-  }
-  inline std::string get_mem_space() const
-  {
-    return mem_space_;
-  }
+  TestBase() = default;
+  virtual ~TestBase() = default;
+
 protected:
   /// Returns true if two real numbers are equal within tolerance
   // [[nodiscard]] static <- uncomment when we switch to C++17
@@ -238,8 +237,6 @@ protected:
     return (std::abs(a - b)/(1.0 + std::abs(b)) < eps);
   }
   
-protected:
-  std::string mem_space_;
 };
 
 }} // namespace ReSolve::tests

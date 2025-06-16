@@ -234,7 +234,7 @@ namespace ReSolve {
     using namespace constants;
 
     if (k < 200) {
-      hip::mass_inner_product_two_vectors(size, k, x->getData(memory::DEVICE) , x->getData(1, memory::DEVICE), V->getData(memory::DEVICE), res->getData(memory::DEVICE));
+      hip::mass_inner_product_two_vectors(size, k, x->getData(0, memory::DEVICE) , x->getData(1, memory::DEVICE), V->getData(memory::DEVICE), res->getData(memory::DEVICE));
     } else {
       rocblas_handle handle_rocblas =  workspace_->getRocblasHandle();
       rocblas_dgemm(handle_rocblas,

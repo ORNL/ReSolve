@@ -93,6 +93,7 @@ namespace ReSolve
 
     vec_w_ = new vector_type(n);
     vec_v_ = new vector_type(n);
+    vec_x_ = new vector_type(n, 2); // n x 2 multivector view
 
     num_vecs_ = restart;
     if((variant_ == MGS_TWO_SYNC) || (variant_ == MGS_PM)) {
@@ -135,10 +136,10 @@ namespace ReSolve
 
     switch (variant_) {
       case MGS:
-        vec_w_->setData(V->getVectorData(i + 1, memspace_), memspace_);
+        vec_w_->setData(V->getData(i + 1, memspace_), memspace_);
         for(int j = 0; j <= i; ++j) {
           t = 0.0;
-          vec_v_->setData( V->getVectorData(j, memspace_), memspace_);
+          vec_v_->setData( V->getData(j, memspace_), memspace_);
           t = vector_handler_->dot(vec_v_, vec_w_, memspace_);
           H[ idxmap(i, j, num_vecs_ + 1) ] = t;
           t *= -1.0;
@@ -159,7 +160,7 @@ namespace ReSolve
         return 0;
 
       case CGS2:
-        vec_v_->setData(V->getVectorData(i + 1, memspace_), memspace_);
+        vec_v_->setData(V->getData(i + 1, memspace_), memspace_);
         vector_handler_->gemv('T', n, i + 1, &ONE, &ZERO, V,  vec_v_, vec_Hcolumn_, memspace_);
         // V(:,i+1) = V(:, i+1) -  V(:,1:i)*Hcol
         vector_handler_->gemv('N', n, i + 1, &ONE, &MINUS_ONE, V, vec_Hcolumn_, vec_v_, memspace_ );
@@ -206,19 +207,18 @@ namespace ReSolve
 
       case MGS_TWO_SYNC:
         // V[1:i]^T[V[i] w]
-        vec_v_->setData(V->getVectorData(i, memspace_), memspace_);
-        vec_w_->setData(V->getVectorData(i + 1, memspace_), memspace_);
+        vec_x_->setData(V->getData(i, memspace_), memspace_);
+        vec_w_->setData(V->getData(i + 1, memspace_), memspace_);
         vec_rv_->resize(i + 1);
 
-        // vector_handler_->massDot2Vec(n, V, i + 1, vec_v_, vec_rv_, memspace_);
-        vector_handler_->massDot2Vec(n, V, i + 1, vec_v_, vec_rv_, memspace_);
+        vector_handler_->massDot2Vec(n, V, i + 1, vec_x_, vec_rv_, memspace_);
         vec_rv_->setDataUpdated(memspace_);
         if (memspace_ == memory::DEVICE) {
           vec_rv_->syncData(memory::HOST);
         }
 
         vec_rv_->copyDataTo(&h_L_[idxmap(i, 0, num_vecs_ + 1)], 0, memory::HOST);
-        h_rv = vec_rv_->getVectorData(1, memory::HOST);
+        h_rv = vec_rv_->getData(1, memory::HOST);
 
         for(int j=0; j<=i; ++j) {
           H[ idxmap(i, j, num_vecs_ + 1) ] = 0.0;
@@ -246,8 +246,8 @@ namespace ReSolve
           vector_handler_->scal(&t, vec_w_, memspace_);
           for (int ii=0; ii<=i; ++ii)
           {
-            vec_v_->setData(V->getVectorData(ii, memspace_), memspace_);
-            vec_w_->setData(V->getVectorData(i + 1, memspace_), memspace_);
+            vec_v_->setData(V->getData(ii, memspace_), memspace_);
+            vec_w_->setData(V->getData(i + 1, memspace_), memspace_);
           }
         } else {
           assert(0 && "Iterative refinement failed, Krylov vector with ZERO norm\n");
@@ -257,18 +257,18 @@ namespace ReSolve
         return 0;
 
       case MGS_PM:
-        vec_v_->setData(V->getVectorData(i, memspace_), memspace_);
-        vec_w_->setData(V->getVectorData(i + 1, memspace_), memspace_);
+        vec_x_->setData(V->getData(i, memspace_), memspace_);
+        vec_w_->setData(V->getData(i + 1, memspace_), memspace_);
         vec_rv_->resize(i + 1);
 
-        vector_handler_->massDot2Vec(n, V, i + 1, vec_v_, vec_rv_, memspace_);
+        vector_handler_->massDot2Vec(n, V, i + 1, vec_x_, vec_rv_, memspace_);
         vec_rv_->setDataUpdated(memspace_);
         if (memspace_ == memory::DEVICE) {
           vec_rv_->syncData(memory::HOST);
         }
 
         vec_rv_->copyDataTo(&h_L_[idxmap(i, 0, num_vecs_ + 1)], 0, memory::HOST);
-        h_rv = vec_rv_->getVectorData(1, memory::HOST);
+        h_rv = vec_rv_->getData(1, memory::HOST);
 
         for(int j = 0; j <= i; ++j) {
           H[ idxmap(i, j, num_vecs_ + 1) ] = 0.0;
@@ -330,7 +330,7 @@ namespace ReSolve
         return 0;
 
       case CGS1:
-        vec_v_->setData(V->getVectorData(i + 1, memspace_), memspace_);
+        vec_v_->setData(V->getData(i + 1, memspace_), memspace_);
         //Hcol = V(:,1:i)^T*V(:,i+1);
         vector_handler_->gemv('T', n, i + 1, &ONE, &ZERO, V,  vec_v_, vec_Hcolumn_, memspace_);
         // V(:,i+1) = V(:, i+1) -  V(:,1:i)*Hcol
@@ -364,9 +364,9 @@ namespace ReSolve
     return 0;
   } // int orthogonalize()
 
-//
-// Private methods
-//
+  //
+  // Private methods
+  //
 
   int GramSchmidt::freeGramSchmidtData()
   {
