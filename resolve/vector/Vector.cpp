@@ -139,7 +139,6 @@ namespace ReSolve { namespace vector {
    * Use this function if you update vector elements by accessing the raw data
    * pointer.
    *
-   *
    * @param[in] memspace - Memory space (HOST or DEVICE)
    * 
    * @warning This is an expert level method. Use only if you know what
