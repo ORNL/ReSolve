@@ -24,7 +24,7 @@ namespace ReSolve
   {
     class Sparse;
     class Csr;
-  }
+  } // namespace matrix
 
   // Forward declaration of CPU workspace
   class LinAlgWorkspaceCpu;

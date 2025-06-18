@@ -10,8 +10,8 @@
 #include <string>
 #include <vector>
 
-#include <tests/unit/TestBase.hpp>
 #include <resolve/utilities/logger/Logger.hpp>
+#include <tests/unit/TestBase.hpp>
 
 namespace ReSolve
 {

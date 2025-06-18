@@ -7,9 +7,9 @@
 #pragma once
 
 #include "Common.hpp"
-#include <resolve/MemoryUtils.hpp>
 #include <resolve/LinSolverDirect.hpp>
 #include <resolve/LinSolverIterative.hpp>
+#include <resolve/MemoryUtils.hpp>
 
 namespace ReSolve
 {
