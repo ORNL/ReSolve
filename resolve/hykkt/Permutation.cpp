@@ -16,7 +16,16 @@ namespace ReSolve
 {
   namespace hykkt
   {
-    /// Creates a class for the permutation of $H_\gamma$ in (6)
+    /**
+     * @brief Permutation constructor
+     *
+     * @param[in] permutationHandler - Pointer to the PermutationHandler
+     * @param[in] n_hes - Number of rows/columns in matrix H
+     * @param[in] nnz_hes - Number of nonzeros in matrix H
+     * @param[in] nnz_jac - Number of nonzeros in matrix J
+     *
+     * @post Member variables initialized, workspace allocated
+     */
     Permutation::Permutation(PermutationHandler* permutationHandler, int n_hes, int nnz_hes, int nnz_jac)
     : n_hes_(n_hes),
       nnz_hes_(nnz_hes),
