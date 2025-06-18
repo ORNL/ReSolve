@@ -9,11 +9,12 @@
 
 #include <iostream>
 
-#include <resolve/MemoryUtils.tpp>
-
 #include <resolve/Common.hpp>
 #include <resolve/MemoryUtils.hpp>
 #include <resolve/cpu/CpuMemory.hpp>
+
+#define RESOLVE_FOOL_CLANG_FORMAT
+#include <resolve/MemoryUtils.tpp>
 
 namespace ReSolve
 {

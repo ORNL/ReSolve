@@ -1,6 +1,7 @@
 #pragma once
 
 #include <resolve/Common.hpp>
+#include <resolve/MemoryUtils.hpp>
 #include <resolve/vector/VectorHandlerImpl.hpp>
 
 namespace ReSolve
