@@ -12,11 +12,11 @@ jobs:
         ref: ${{ github.event.pull_request.head.ref }}
     - uses: actions/setup-python@v5.4.0
     - uses: pre-commit/action@v3.0.1
-    #- uses: EndBug/add-and-commit@v9.1.4
-    #  # Only need to try and commit if the action failed
-    #  if: failure()
-    #  with:
-    #    fetch: false
-    #    committer_name: GitHub Actions
-    #    committer_email: actions@github.com
-    #    message: Apply pre-commmit fixes 
+    - uses: EndBug/add-and-commit@v9.1.4
+      # Only need to try and commit if the action failed
+      if: failure()
+      with:
+        fetch: false
+        committer_name: GitHub Actions
+        committer_email: actions@github.com
+        message: Apply pre-commmit fixes 
