@@ -1,9 +1,9 @@
 #pragma once
 
+#include <cassert>
 #include <cmath>
 #include <iostream>
 #include <limits>
-#include <cassert>
 
 #include <resolve/LinSolverIterative.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
