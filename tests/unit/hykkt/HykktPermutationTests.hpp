@@ -3,19 +3,19 @@
  * @author Shaked Regev (regevs@ornl.gov)
  * @author Adham Ibrahim (ibrahimas@ornl.gov)
  * @brief Implementation of tests for class hykkt::Permutation
- * 
+ *
  */
 #pragma once
 
+#include <algorithm>
+#include <iterator>
+#include <sstream>
 #include <string>
 #include <vector>
-#include <sstream>
-#include <iterator>
-#include <algorithm>
 
+#include <resolve/hykkt/permutation/Permutation.hpp>
+#include <resolve/hykkt/permutation/PermutationHandler.hpp>
 #include <tests/unit/TestBase.hpp>
-#include <resolve/hykkt/Permutation.hpp>
-#include <resolve/hykkt/PermutationHandler.hpp>
 
 namespace ReSolve
 {
@@ -23,33 +23,40 @@ namespace ReSolve
   {
     /**
      * @brief Tests for class hykkt::Permutation
-     * 
+     *
      */
     class HykktPermutationTests : public TestBase
     {
     public:
-      HykktPermutationTests(ReSolve::hykkt::PermutationHandler* permutationHandler): permutationHandler_(permutationHandler)
+      HykktPermutationTests(ReSolve::hykkt::PermutationHandler* permutationHandler)
+        : permutationHandler_(permutationHandler)
       {
         // Determine memory space based on the handler capabilities
-          if (permutationHandler_->getIsCudaEnabled() || permutationHandler_->getIsHipEnabled()) {
-            memspace_ = memory::DEVICE;
-          } else {
-            memspace_ = memory::HOST;
-          }
+        if (permutationHandler_->getIsCudaEnabled() || permutationHandler_->getIsHipEnabled())
+        {
+          memspace_ = memory::DEVICE;
+        }
+        else
+        {
+          memspace_ = memory::HOST;
+        }
       }
-      virtual ~HykktPermutationTests() {}
+
+      virtual ~HykktPermutationTests()
+      {
+      }
 
       TestOutcome permutationTest()
       {
         // n_hes = m_jac = 3, n_jac = 2
-        int n = 3;
-        int m = 2;
+        int n       = 3;
+        int m       = 2;
         int nnz_hes = 6;
         int nnz_jac = 4;
 
         int perm[4] = {2, 0, 1};
 
-        int hes_i[4] =  {0, 2, 4, 6};
+        int hes_i[4] = {0, 2, 4, 6};
         int hes_j[6] = {0, 2, 1, 2, 0, 1};
 
         int hes_prc_i[4] = {0, 2, 4, 6};
@@ -57,7 +64,7 @@ namespace ReSolve
 
         int jac_i[3] = {0, 2, 4};
         int jac_j[4] = {0, 2, 1, 2};
-        
+
         int jac_pc_i[3] = {0, 2, 4};
         int jac_pc_j[4] = {0, 1, 0, 2};
 
@@ -69,13 +76,13 @@ namespace ReSolve
 
         int result_prc_i[4] = {};
         int result_prc_j[6] = {};
-        int result_pr_i[4] = {};
-        int result_pr_j[4] = {};
-        int result_pc_j[4] = {};
+        int result_pr_i[4]  = {};
+        int result_pr_j[4]  = {};
+        int result_pc_j[4]  = {};
 
         bool flagrc = false;
-        bool flagc = false;
-        bool flagr = false;
+        bool flagc  = false;
+        bool flagr  = false;
 
         ReSolve::hykkt::Permutation pc = ReSolve::hykkt::Permutation(permutationHandler_, n, nnz_hes, nnz_jac);
 
@@ -145,9 +152,9 @@ namespace ReSolve
         return (!flagrc && !flagr && !flagc) ? PASS : FAIL;
       }
 
-      private:
-        ReSolve::hykkt::PermutationHandler* permutationHandler_;
-        ReSolve::memory::MemorySpace memspace_;
+    private:
+      ReSolve::hykkt::PermutationHandler* permutationHandler_;
+      ReSolve::memory::MemorySpace        memspace_;
     }; // class HykktPermutationTests
   } // namespace tests
 } // namespace ReSolve

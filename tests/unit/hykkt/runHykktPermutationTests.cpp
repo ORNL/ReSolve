@@ -3,32 +3,32 @@
  * @author Shaked Regev (regevs@ornl.gov)
  * @author Adham Ibrahim (ibrahimas@ornl.gov)
  * @brief Tests for class hykkt::Permutation
- * 
+ *
  */
-#include <string>
-#include <iostream>
 #include <fstream>
+#include <iostream>
+#include <string>
 
 #include "tests/unit/hykkt/HykktPermutationTests.hpp"
 
-/** 
+/**
  * @brief Run tests with a given backend
- * 
+ *
  * @param backend - string name of the hardware backend
  * @param result - test results
  */
-template<typename WorkspaceType>
+template <typename WorkspaceType>
 void runTests(const std::string& backend, ReSolve::tests::TestingResults& result)
 {
   std::cout << "Running tests on " << backend << " device:\n";
 
-  WorkspaceType* workspace;
+  WorkspaceType*                      workspace;
   ReSolve::hykkt::PermutationHandler* permutationHandler = new ReSolve::hykkt::PermutationHandler(workspace);
 
   ReSolve::tests::HykktPermutationTests test(permutationHandler);
 
   result += test.permutationTest();
-  
+
   std::cout << "\n";
 }
 
@@ -44,6 +44,6 @@ int main(int, char**)
 #ifdef RESOLVE_USE_HIP
   runTests<ReSolve::LinAlgWorkspaceHIP>("HIP", result);
 #endif
-  
+
   return result.summary();
 }
