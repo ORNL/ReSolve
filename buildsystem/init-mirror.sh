@@ -15,4 +15,3 @@ res=$?
 chmod -R ugo+wrx $SPACK_MIRROR &
 
 exit $res
-

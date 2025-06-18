@@ -65,4 +65,3 @@ spack:
       modules: [gcc/10.2]
       operating_system: rhel8
       target: ppc64le
-

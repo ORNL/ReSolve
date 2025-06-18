@@ -389,5 +389,5 @@ namespace ReSolve
         return status;
       }
     }; // class MatrixFactorizationTests
-  }    // namespace tests
+  } // namespace tests
 } // namespace ReSolve

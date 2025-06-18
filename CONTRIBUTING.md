@@ -185,5 +185,3 @@ class Matrix   // No, class is outside ReSolve namespace
 {
   // matrix code
 };
-
-

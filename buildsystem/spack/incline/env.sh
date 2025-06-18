@@ -24,4 +24,3 @@ export SPACK_PYTHON=$(which python3)
 export tempdir=$SPACK_CACHE
 export TMP=$SPACK_CACHE
 export TMPDIR=$SPACK_CACHE
-

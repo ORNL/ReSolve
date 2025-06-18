@@ -419,5 +419,5 @@ namespace ReSolve
         return success;
       }
     }; // class
-  }    // namespace tests
+  } // namespace tests
 } // namespace ReSolve

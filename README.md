@@ -114,4 +114,3 @@ contributions to ReSolve must be made under the smae licensing terms.
 **Please Note** If you are using ReSolve with any third party libraries linked
 in (e.g., KLU), be sure to review the respective license of the package as that
 license may have more restrictive terms than the ReSolve license.
-
