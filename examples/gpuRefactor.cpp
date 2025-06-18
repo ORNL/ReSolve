@@ -20,6 +20,7 @@
 #include <sstream>
 #include <string>
 
+#include <resolve/GramSchmidt.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
 #include <resolve/LinSolverIterativeFGMRES.hpp>
 #include <resolve/Profiling.hpp>

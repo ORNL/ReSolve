@@ -1,5 +1,7 @@
 #pragma once
-#include <string>
+
+#include <resolve/Common.hpp>
+#include <resolve/vector/VectorHandlerImpl.hpp>
 
 namespace ReSolve
 {
@@ -8,7 +10,6 @@ namespace ReSolve
     class Vector;
   }
   class LinAlgWorkspaceCUDA;
-  class VectorHandlerImpl;
 } // namespace ReSolve
 
 namespace ReSolve

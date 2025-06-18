@@ -11,6 +11,7 @@
 #include <vector>
 
 #include <tests/unit/TestBase.hpp>
+#include <resolve/utilities/logger/Logger.hpp>
 
 namespace ReSolve
 {

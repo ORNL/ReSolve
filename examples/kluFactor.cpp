@@ -16,6 +16,7 @@
 #include <sstream>
 
 #include "ExampleHelper.hpp"
+#include <resolve/GramSchmidt.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
 #include <resolve/LinSolverIterativeFGMRES.hpp>
 #include <resolve/matrix/Coo.hpp>

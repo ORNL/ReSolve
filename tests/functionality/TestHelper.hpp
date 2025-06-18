@@ -5,6 +5,10 @@
 #include <limits>
 
 #include <resolve/LinSolverIterative.hpp>
+#include <resolve/matrix/Sparse.hpp>
+#include <resolve/matrix/MatrixHandler.hpp>
+#include <resolve/vector/Vector.hpp>
+#include <resolve/vector/VectorHandler.hpp>
 
 /**
  * @brief Checks the error code and prints pass/fail message.

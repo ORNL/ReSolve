@@ -11,8 +11,12 @@
 #include <iomanip>
 #include <iostream>
 
+#include <resolve/GramSchmidt.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
+#include <resolve/matrix/Sparse.hpp>
+#include <resolve/random/SketchingHandler.hpp>
 #include <resolve/utilities/logger/Logger.hpp>
+#include <resolve/vector/Vector.hpp>
 
 namespace ReSolve
 {

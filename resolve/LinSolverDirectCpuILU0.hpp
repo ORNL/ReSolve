@@ -23,6 +23,7 @@ namespace ReSolve
   namespace matrix
   {
     class Sparse;
+    class Csr;
   }
 
   // Forward declaration of CPU workspace

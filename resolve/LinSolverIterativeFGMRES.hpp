@@ -7,14 +7,26 @@
 #pragma once
 
 #include "Common.hpp"
-#include "GramSchmidt.hpp"
+#include <resolve/MemoryUtils.hpp>
 #include <resolve/LinSolverDirect.hpp>
 #include <resolve/LinSolverIterative.hpp>
-#include <resolve/matrix/Sparse.hpp>
-#include <resolve/vector/Vector.hpp>
 
 namespace ReSolve
 {
+  // Forward declarations
+  class SketchingHandler;
+  class GramSchmidt;
+
+  namespace matrix
+  {
+    class Sparse;
+  }
+
+  namespace vector
+  {
+    class Vector;
+  }
+
   /**
    * @brief (F)GMRES solver
    *

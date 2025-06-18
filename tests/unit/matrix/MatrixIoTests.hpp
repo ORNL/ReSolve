@@ -6,6 +6,8 @@
 #include <vector>
 
 #include <resolve/matrix/Coo.hpp>
+#include <resolve/matrix/Csr.hpp>
+#include <resolve/matrix/io.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <tests/unit/TestBase.hpp>
 

@@ -14,6 +14,7 @@
 namespace ReSolve
 {
   class GramSchmidt;
+  class LinSolverDirect;
 
   class LinSolverIterative : public LinSolver
   {

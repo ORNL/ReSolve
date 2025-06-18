@@ -1,4 +1,8 @@
+#pragma once
+
 #include <fstream>
+
+#include <resolve/Common.hpp>
 
 namespace ReSolve
 {
