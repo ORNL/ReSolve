@@ -1,8 +1,8 @@
 #include "RefactorizationSolver.hpp"
 
-namespace ReSolve 
+namespace ReSolve
 {
   RefactorizationSolver::RefactorizationSolver()
   {
   }
-}
+} // namespace ReSolve

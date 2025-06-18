@@ -1,14 +1,17 @@
+#include "VectorHandlerCuda.hpp"
+
 #include <iostream>
 
-#include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/cuda/cudaKernels.h>
-#include <resolve/vector/Vector.hpp>
-#include <resolve/workspace/LinAlgWorkspace.hpp>
-#include <resolve/vector/VectorHandlerImpl.hpp>
-#include "VectorHandlerCuda.hpp"
-#include <resolve/cusolver_defs.hpp> // needed for inf nrm
 
-namespace ReSolve {
+#include <resolve/cusolver_defs.hpp> // needed for inf nrm
+#include <resolve/utilities/logger/Logger.hpp>
+#include <resolve/vector/Vector.hpp>
+#include <resolve/vector/VectorHandlerImpl.hpp>
+#include <resolve/workspace/LinAlgWorkspace.hpp>
+
+namespace ReSolve
+{
   using out = io::Logger;
 
   /**
@@ -23,7 +26,7 @@ namespace ReSolve {
    *
    * @param new_workspace - workspace to be set
    */
-  VectorHandlerCuda:: VectorHandlerCuda(LinAlgWorkspaceCUDA* new_workspace)
+  VectorHandlerCuda::VectorHandlerCuda(LinAlgWorkspaceCUDA* new_workspace)
   {
     workspace_ = new_workspace;
   }
@@ -33,7 +36,7 @@ namespace ReSolve {
    */
   VectorHandlerCuda::~VectorHandlerCuda()
   {
-    //delete the workspace TODO
+    // delete the workspace TODO
   }
 
   /**
@@ -47,10 +50,11 @@ namespace ReSolve {
 
   real_type VectorHandlerCuda::dot(vector::Vector* x, vector::Vector* y)
   {
-    cublasHandle_t handle_cublas =  workspace_->getCublasHandle();
-    double nrm = 0.0;
-    cublasStatus_t st = cublasDdot(handle_cublas,  x->getSize(), x->getData(memory::DEVICE), 1, y->getData(memory::DEVICE), 1, &nrm);
-    if (st != 0) {
+    cublasHandle_t handle_cublas = workspace_->getCublasHandle();
+    double         nrm           = 0.0;
+    cublasStatus_t st            = cublasDdot(handle_cublas, x->getSize(), x->getData(memory::DEVICE), 1, y->getData(memory::DEVICE), 1, &nrm);
+    if (st != 0)
+    {
       out::error() << "Dot product failed with error code " << st << "\n";
     }
     return nrm;
@@ -65,9 +69,10 @@ namespace ReSolve {
    */
   void VectorHandlerCuda::scal(const real_type* alpha, vector::Vector* x)
   {
-    cublasHandle_t handle_cublas =  workspace_->getCublasHandle();
-    cublasStatus_t st = cublasDscal(handle_cublas, x->getSize(), alpha, x->getData(memory::DEVICE), 1);
-    if (st != 0) {
+    cublasHandle_t handle_cublas = workspace_->getCublasHandle();
+    cublasStatus_t st            = cublasDscal(handle_cublas, x->getSize(), alpha, x->getData(memory::DEVICE), 1);
+    if (st != 0)
+    {
       out::error() << "scal crashed with code " << st << "\n";
     }
   }
@@ -83,7 +88,8 @@ namespace ReSolve {
   real_type VectorHandlerCuda::infNorm(vector::Vector* x)
   {
 
-    if (workspace_->getNormBufferState() == false) { // not allocated
+    if (workspace_->getNormBufferState() == false)
+    { // not allocated
       real_type* buffer;
       mem_.allocateArrayOnDevice(&buffer, 1024);
       workspace_->setNormBuffer(buffer);
@@ -91,12 +97,13 @@ namespace ReSolve {
     }
     real_type norm;
     // TODO: Shouldn't the return type be cusolverStatus_t ?
-    int status = cusolverSpDnrminf(workspace_->getCusolverSpHandle(),
+    int       status = cusolverSpDnrminf(workspace_->getCusolverSpHandle(),
                                    x->getSize(),
                                    x->getData(memory::DEVICE),
                                    &norm,
-                                   workspace_->getNormBuffer()  /* at least 8192 bytes */);
-    if (status) {
+                                   workspace_->getNormBuffer() /* at least 8192 bytes */);
+    if (status)
+    {
       out::error() << "cusolverSpDnrminf failed with error code " << status << "\n";
     }
     return norm;
@@ -110,9 +117,9 @@ namespace ReSolve {
    * @param[in,out] y The second vector (result is return in y)
    *
    */
-  void VectorHandlerCuda::axpy(const  real_type* alpha, vector::Vector* x, vector::Vector* y)
+  void VectorHandlerCuda::axpy(const real_type* alpha, vector::Vector* x, vector::Vector* y)
   {
-    cublasHandle_t handle_cublas =  workspace_->getCublasHandle();
+    cublasHandle_t handle_cublas = workspace_->getCublasHandle();
     cublasDaxpy(handle_cublas,
                 x->getSize(),
                 alpha,
@@ -138,48 +145,50 @@ namespace ReSolve {
    * @pre   V is stored colum-wise, _n_ > 0, _k_ > 0
    *
    */
-  void VectorHandlerCuda::gemv(char transpose,
-                               index_type n,
-                               index_type k,
+  void VectorHandlerCuda::gemv(char             transpose,
+                               index_type       n,
+                               index_type       k,
                                const real_type* alpha,
                                const real_type* beta,
-                               vector::Vector* V,
-                               vector::Vector* y,
-                               vector::Vector* x)
+                               vector::Vector*  V,
+                               vector::Vector*  y,
+                               vector::Vector*  x)
   {
-    cublasHandle_t handle_cublas =  workspace_->getCublasHandle();
-    switch (transpose) {
-      case 'T':
-        cublasDgemv(handle_cublas,
-                    CUBLAS_OP_T,
-                    n,
-                    k,
-                    alpha,
-                    V->getData(memory::DEVICE),
-                    n,
-                    y->getData(memory::DEVICE),
-                    1,
-                    beta,
-                    x->getData(memory::DEVICE),
-                    1);
-        return;
-      default:
-        cublasDgemv(handle_cublas,
-                    CUBLAS_OP_N,
-                    n,
-                    k,
-                    alpha,
-                    V->getData(memory::DEVICE),
-                    n,
-                    y->getData(memory::DEVICE),
-                    1,
-                    beta,
-                    x->getData(memory::DEVICE),
-                    1);
-        if (transpose != 'N') {
-          out::warning() << "Unrecognized transpose option " << transpose
-                         << " in gemv. Using non-transposed multivector.\n";
-        }
+    cublasHandle_t handle_cublas = workspace_->getCublasHandle();
+    switch (transpose)
+    {
+    case 'T':
+      cublasDgemv(handle_cublas,
+                  CUBLAS_OP_T,
+                  n,
+                  k,
+                  alpha,
+                  V->getData(memory::DEVICE),
+                  n,
+                  y->getData(memory::DEVICE),
+                  1,
+                  beta,
+                  x->getData(memory::DEVICE),
+                  1);
+      return;
+    default:
+      cublasDgemv(handle_cublas,
+                  CUBLAS_OP_N,
+                  n,
+                  k,
+                  alpha,
+                  V->getData(memory::DEVICE),
+                  n,
+                  y->getData(memory::DEVICE),
+                  1,
+                  beta,
+                  x->getData(memory::DEVICE),
+                  1);
+      if (transpose != 'N')
+      {
+        out::warning() << "Unrecognized transpose option " << transpose
+                       << " in gemv. Using non-transposed multivector.\n";
+      }
     }
   }
 
@@ -197,24 +206,27 @@ namespace ReSolve {
   void VectorHandlerCuda::massAxpy(index_type size, vector::Vector* alpha, index_type k, vector::Vector* x, vector::Vector* y)
   {
     using namespace constants;
-    if (k < 200) {
-      cuda::mass_axpy(size, k, x->getData(memory::DEVICE), y->getData(memory::DEVICE),alpha->getData(memory::DEVICE));
-    } else {
-      cublasHandle_t handle_cublas =  workspace_->getCublasHandle();
+    if (k < 200)
+    {
+      cuda::mass_axpy(size, k, x->getData(memory::DEVICE), y->getData(memory::DEVICE), alpha->getData(memory::DEVICE));
+    }
+    else
+    {
+      cublasHandle_t handle_cublas = workspace_->getCublasHandle();
       cublasDgemm(handle_cublas,
                   CUBLAS_OP_N,
                   CUBLAS_OP_N,
-                  size,       // m
-                  1,          // n
-                  k,      // k
-                  &MINUS_ONE, // alpha
-                  x->getData(memory::DEVICE), // A
-                  size,       // lda
+                  size,                           // m
+                  1,                              // n
+                  k,                              // k
+                  &MINUS_ONE,                     // alpha
+                  x->getData(memory::DEVICE),     // A
+                  size,                           // lda
                   alpha->getData(memory::DEVICE), // B
-                  k,      // ldb
+                  k,                              // ldb
                   &ONE,
-                  y->getData(memory::DEVICE),          // c
-                  size);      // ldc
+                  y->getData(memory::DEVICE), // c
+                  size);                      // ldc
     }
   }
 
@@ -232,37 +244,40 @@ namespace ReSolve {
    * @pre   _size_ > 0, _k_ > 0, size = x->getSize(), _res_ needs to be allocated
    *
    */
-  void VectorHandlerCuda::massDot2Vec(index_type size,
+  void VectorHandlerCuda::massDot2Vec(index_type      size,
                                       vector::Vector* V,
-                                      index_type k,
+                                      index_type      k,
                                       vector::Vector* x,
                                       vector::Vector* res)
   {
     using namespace constants;
 
-    if (k < 200) {
-      cuda::mass_inner_product_two_vectors(size, 
+    if (k < 200)
+    {
+      cuda::mass_inner_product_two_vectors(size,
                                            k,
                                            x->getData(0, memory::DEVICE),
                                            x->getData(1, memory::DEVICE),
                                            V->getData(memory::DEVICE),
                                            res->getData(memory::DEVICE));
-    } else {
-      cublasHandle_t handle_cublas =  workspace_->getCublasHandle();
+    }
+    else
+    {
+      cublasHandle_t handle_cublas = workspace_->getCublasHandle();
       cublasDgemm(handle_cublas,
                   CUBLAS_OP_T,
                   CUBLAS_OP_N,
-                  k,   //m
-                  2,       //n
-                  size,    //k
-                  &ONE,   //alpha
-                  V->getData(memory::DEVICE),       //A
-                  size,    //lda
-                  x->getData(memory::DEVICE),       //B
-                  size,    //ldb
+                  k,                          // m
+                  2,                          // n
+                  size,                       // k
+                  &ONE,                       // alpha
+                  V->getData(memory::DEVICE), // A
+                  size,                       // lda
+                  x->getData(memory::DEVICE), // B
+                  size,                       // ldb
                   &ZERO,
-                  res->getData(memory::DEVICE),     //c
-                  k);  //ldc
+                  res->getData(memory::DEVICE), // c
+                  k);                           // ldc
     }
   }
 
@@ -282,8 +297,8 @@ namespace ReSolve {
   int VectorHandlerCuda::scale(vector::Vector* diag, vector::Vector* vec)
   {
     real_type* diag_data = diag->getData(memory::DEVICE);
-    real_type* vec_data = vec->getData(memory::DEVICE);
-    index_type n = vec->getSize();
+    real_type* vec_data  = vec->getData(memory::DEVICE);
+    index_type n         = vec->getSize();
     cuda::scale(n, diag_data, vec_data);
     vec->setDataUpdated(memory::DEVICE);
     return 0;

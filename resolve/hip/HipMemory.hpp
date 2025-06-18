@@ -1,9 +1,10 @@
 #pragma once
 
 #include <iostream>
-#include <hip/hip_runtime.h>
 
+#include <hip/hip_runtime.h>
 #include <resolve/hip/hipVectorKernels.h>
+
 #include "hip_check_errors.hpp"
 
 namespace ReSolve
@@ -12,10 +13,10 @@ namespace ReSolve
   {
     /**
      * @brief Class containing wrappers for CUDA API functions.
-     * 
+     *
      * All wrappers are implemented as static functions returning integer
      * error code from CUDA API functions.
-     * 
+     *
      * @author Slaven Peles <peless@ornl.gov>
      */
     struct Hip
@@ -24,13 +25,13 @@ namespace ReSolve
       {
         hipDeviceSynchronize();
       }
-      
+
       static int getLastDeviceError()
       {
         return static_cast<int>(hipGetLastError());
       }
-      
-      /** 
+
+      /**
        * @brief deletes variable from device
        *
        * @param v - a variable on the device
@@ -47,7 +48,7 @@ namespace ReSolve
        *
        * @param v - pointer to the array to be allocated on the device
        * @param n - number of array elements (int, size_t)
-       * 
+       *
        * @tparam T - Array element type
        * @tparam I - Array index type
        *
@@ -61,13 +62,13 @@ namespace ReSolve
 
       /**
        * @brief allocates buffer v onto device.
-       * 
+       *
        * The difference from the array is that buffer size is required in bytes,
        * not number of elements.
        *
        * @param v - pointer to the buffer to be allocated on the device
        * @param n - size of the buffer in bytes
-       * 
+       *
        * @tparam T - Buffer element data type type (typically void)
        * @tparam I - Buffer size type (typically size_t)
        *
@@ -84,7 +85,7 @@ namespace ReSolve
        *
        * @param v - pointer to the array to be allocated on the device
        * @param n - number of the array elements to be set to zero
-       * 
+       *
        * @tparam T - Array element type
        * @tparam I - Array index type
        *
@@ -102,7 +103,7 @@ namespace ReSolve
        * @param v - pointer to the array to be allocated on the device
        * @param c - value to set all array elements
        * @param n - number of the array elements to be set to zero
-       * 
+       *
        * @tparam T - Array element type
        * @tparam I - Array index type
        *
@@ -115,7 +116,7 @@ namespace ReSolve
         return checkHipErrors(0);
       }
 
-      /** 
+      /**
        * @brief Copies array `src` from device to the array `dst` on the host.
        *
        * @param[in]    n - size of src array
@@ -165,8 +166,7 @@ namespace ReSolve
       {
         return checkHipErrors(hipMemcpy(dst, src, sizeof(T) * n, hipMemcpyHostToDevice));
       }
-
     };
-  }
+  } // namespace memory
 
-} //namespace ReSolve
+} // namespace ReSolve

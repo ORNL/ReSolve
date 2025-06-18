@@ -1,12 +1,12 @@
-#include <string>
-#include <iostream>
 #include <fstream>
+#include <iostream>
+#include <string>
 
 #include "MemoryUtilsTests.hpp"
 
 int main(int, char**)
 {
-  ReSolve::tests::TestingResults result; 
+  ReSolve::tests::TestingResults result;
 
 #ifdef RESOLVE_USE_HIP
   {

@@ -1,14 +1,16 @@
+#include "MatrixHandler.hpp"
+
 #include <algorithm>
 #include <cassert>
-#include <resolve/utilities/logger/Logger.hpp>
-#include <resolve/vector/Vector.hpp>
+
+#include "MatrixHandlerCpu.hpp"
+#include "MatrixHandlerImpl.hpp"
 #include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/Csc.hpp>
 #include <resolve/matrix/Csr.hpp>
+#include <resolve/utilities/logger/Logger.hpp>
+#include <resolve/vector/Vector.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
-#include "MatrixHandler.hpp"
-#include "MatrixHandlerCpu.hpp"
-#include "MatrixHandlerImpl.hpp"
 
 #ifdef RESOLVE_USE_CUDA
 #include "MatrixHandlerCuda.hpp"
@@ -17,7 +19,8 @@
 #include "MatrixHandlerHip.hpp"
 #endif
 
-namespace ReSolve {
+namespace ReSolve
+{
   // Create a shortcut name for Logger static class
   using out = io::Logger;
 
@@ -43,7 +46,8 @@ namespace ReSolve {
   MatrixHandler::~MatrixHandler()
   {
     delete cpuImpl_;
-    if (isCudaEnabled_ || isHipEnabled_) {
+    if (isCudaEnabled_ || isHipEnabled_)
+    {
       delete devImpl_;
     }
   }
@@ -56,7 +60,7 @@ namespace ReSolve {
    */
   MatrixHandler::MatrixHandler(LinAlgWorkspaceCpu* new_workspace)
   {
-    cpuImpl_  = new MatrixHandlerCpu(new_workspace);
+    cpuImpl_       = new MatrixHandlerCpu(new_workspace);
     isCpuEnabled_  = true;
     isCudaEnabled_ = false;
   }
@@ -72,8 +76,8 @@ namespace ReSolve {
    */
   MatrixHandler::MatrixHandler(LinAlgWorkspaceCUDA* new_workspace)
   {
-    cpuImpl_ = new MatrixHandlerCpu();
-    devImpl_ = new MatrixHandlerCuda(new_workspace);
+    cpuImpl_       = new MatrixHandlerCpu();
+    devImpl_       = new MatrixHandlerCuda(new_workspace);
     isCpuEnabled_  = true;
     isCudaEnabled_ = true;
   }
@@ -90,8 +94,8 @@ namespace ReSolve {
    */
   MatrixHandler::MatrixHandler(LinAlgWorkspaceHIP* new_workspace)
   {
-    cpuImpl_ = new MatrixHandlerCpu();
-    devImpl_ = new MatrixHandlerHip(new_workspace);
+    cpuImpl_      = new MatrixHandlerCpu();
+    devImpl_      = new MatrixHandlerHip(new_workspace);
     isCpuEnabled_ = true;
     isHipEnabled_ = true;
   }
@@ -111,13 +115,14 @@ namespace ReSolve {
   void MatrixHandler::setValuesChanged(bool isValuesChanged, memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
-    switch (memspace) {
-      case HOST:
-        cpuImpl_->setValuesChanged(isValuesChanged);
-        break;
-      case DEVICE:
-        devImpl_->setValuesChanged(isValuesChanged);
-        break;
+    switch (memspace)
+    {
+    case HOST:
+      cpuImpl_->setValuesChanged(isValuesChanged);
+      break;
+    case DEVICE:
+      devImpl_->setValuesChanged(isValuesChanged);
+      break;
     }
   }
 
@@ -134,21 +139,22 @@ namespace ReSolve {
    *
    * @return 0 if successful, 1 otherwise
    */
-  int MatrixHandler::matvec(matrix::Sparse* A,
-                            vector_type* vec_x,
-                            vector_type* vec_result,
-                            const real_type* alpha,
-                            const real_type* beta,
+  int MatrixHandler::matvec(matrix::Sparse*     A,
+                            vector_type*        vec_x,
+                            vector_type*        vec_result,
+                            const real_type*    alpha,
+                            const real_type*    beta,
                             memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
-    switch (memspace) {
-      case HOST:
-        return cpuImpl_->matvec(A, vec_x, vec_result, alpha, beta);
-        break;
-      case DEVICE:
-        return devImpl_->matvec(A, vec_x, vec_result, alpha, beta);
-        break;
+    switch (memspace)
+    {
+    case HOST:
+      return cpuImpl_->matvec(A, vec_x, vec_result, alpha, beta);
+      break;
+    case DEVICE:
+      return devImpl_->matvec(A, vec_x, vec_result, alpha, beta);
+      break;
     }
     return 1;
   }
@@ -162,16 +168,17 @@ namespace ReSolve {
    *
    * @return 0 if successful, 1 otherwise
    */
-  int MatrixHandler::matrixInfNorm(matrix::Sparse *A, real_type* norm, memory::MemorySpace memspace)
+  int MatrixHandler::matrixInfNorm(matrix::Sparse* A, real_type* norm, memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
-    switch (memspace) {
-      case HOST:
-        return cpuImpl_->matrixInfNorm(A, norm);
-        break;
-      case DEVICE:
-        return devImpl_->matrixInfNorm(A, norm);
-        break;
+    switch (memspace)
+    {
+    case HOST:
+      return cpuImpl_->matrixInfNorm(A, norm);
+      break;
+    case DEVICE:
+      return devImpl_->matrixInfNorm(A, norm);
+      break;
     }
     return 1;
   }
@@ -195,13 +202,14 @@ namespace ReSolve {
   int MatrixHandler::csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr, memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
-    switch (memspace) {
-      case HOST:
-        return cpuImpl_->csc2csr(A_csc, A_csr);
-        break;
-      case DEVICE:
-        return devImpl_->csc2csr(A_csc, A_csr);
-        break;
+    switch (memspace)
+    {
+    case HOST:
+      return cpuImpl_->csc2csr(A_csc, A_csr);
+      break;
+    case DEVICE:
+      return devImpl_->csc2csr(A_csc, A_csr);
+      break;
     }
     return 1;
   }
@@ -222,33 +230,36 @@ namespace ReSolve {
     assert(A->getNumRows() == At->getNumColumns() && "Number of rows in A must be equal to number of columns in At");
     assert(A->getNumColumns() == At->getNumRows() && "Number of columns in A must be equal to number of rows in At");
     assert(A->getNnz() == At->getNnz() && "Number of nonzeros in A must be equal to number of nonzeros in At");
-    assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW &&
-          "Matrix has to be in CSR format for transpose.\n");
-    assert(At->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW &&
-          "Matrix has to be in CSR format for transpose.\n");
-    switch (memspace) {
-      case HOST:
-        if(A->getValues(memory::HOST) == nullptr) {
-          out::error() << "In MatrixHandler::transpose, A->getValues(memory::HOST) is null!\n";
-          return 1;
-        }
-        if(At->getValues(memory::HOST) == nullptr) {
-          out::error() << "In MatrixHandler::transpose, At->getValues(memory::HOST) is null!\n";
-          return 1;
-        }
-        return cpuImpl_->transpose(A, At);
-        break;
-      case DEVICE:
-        if(A->getValues(memory::DEVICE) == nullptr) {
-          out::error() << "In MatrixHandlerCuda::transpose, A->getValues(memory::DEVICE) is null!\n";
-          return 1;
-        }
-        if(At->getValues(memory::DEVICE) == nullptr) {
-          out::error() << "In MatrixHandlerCuda::transpose, At->getValues(memory::DEVICE) is null!\n";
-          return 1;
-        }
-        return devImpl_->transpose(A, At);
-        break;
+    assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW && "Matrix has to be in CSR format for transpose.\n");
+    assert(At->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW && "Matrix has to be in CSR format for transpose.\n");
+    switch (memspace)
+    {
+    case HOST:
+      if (A->getValues(memory::HOST) == nullptr)
+      {
+        out::error() << "In MatrixHandler::transpose, A->getValues(memory::HOST) is null!\n";
+        return 1;
+      }
+      if (At->getValues(memory::HOST) == nullptr)
+      {
+        out::error() << "In MatrixHandler::transpose, At->getValues(memory::HOST) is null!\n";
+        return 1;
+      }
+      return cpuImpl_->transpose(A, At);
+      break;
+    case DEVICE:
+      if (A->getValues(memory::DEVICE) == nullptr)
+      {
+        out::error() << "In MatrixHandlerCuda::transpose, A->getValues(memory::DEVICE) is null!\n";
+        return 1;
+      }
+      if (At->getValues(memory::DEVICE) == nullptr)
+      {
+        out::error() << "In MatrixHandlerCuda::transpose, At->getValues(memory::DEVICE) is null!\n";
+        return 1;
+      }
+      return devImpl_->transpose(A, At);
+      break;
     }
     return 1;
   }
@@ -269,20 +280,19 @@ namespace ReSolve {
    */
   int MatrixHandler::leftScale(vector_type* diag, matrix::Csr* A, memory::MemorySpace memspace)
   {
-    assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW &&
-           "Matrix has to be in CSR format for left diagonal scaling.\n");
-    assert(diag->getSize() == A->getNumRows() && 
-           "Diagonal vector must be of the same size as the number of rows in the matrix.");
+    assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW && "Matrix has to be in CSR format for left diagonal scaling.\n");
+    assert(diag->getSize() == A->getNumRows() && "Diagonal vector must be of the same size as the number of rows in the matrix.");
     assert(A->getValues(memspace) != nullptr && "Matrix values are null!\n");
     assert(diag->getData(memspace) != nullptr && "Diagonal vector data is null!\n");
     using namespace ReSolve::memory;
-    switch (memspace) {
-      case HOST:
-        return cpuImpl_->leftScale(diag, A);
-        break;
-      case DEVICE:
-        return devImpl_->leftScale(diag, A);
-        break;
+    switch (memspace)
+    {
+    case HOST:
+      return cpuImpl_->leftScale(diag, A);
+      break;
+    case DEVICE:
+      return devImpl_->leftScale(diag, A);
+      break;
     }
     return 1;
   }
@@ -303,19 +313,19 @@ namespace ReSolve {
    */
   int MatrixHandler::rightScale(matrix::Csr* A, vector_type* diag, memory::MemorySpace memspace)
   {
-    assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW &&
-           "Matrix has to be in CSR format for right diagonal scaling.\n");
+    assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW && "Matrix has to be in CSR format for right diagonal scaling.\n");
     assert(diag->getSize() == A->getNumColumns() && "Diagonal vector must be of the same size as the number of columns in the matrix.");
     assert(A->getValues(memspace) != nullptr && "Matrix values are null!\n");
     assert(diag->getData(memspace) != nullptr && "Diagonal vector data is null!\n");
     using namespace ReSolve::memory;
-    switch (memspace) {
-      case HOST:
-        return cpuImpl_->rightScale(A, diag);
-        break;
-      case DEVICE:
-        return devImpl_->rightScale(A, diag);
-        break;
+    switch (memspace)
+    {
+    case HOST:
+      return cpuImpl_->rightScale(A, diag);
+      break;
+    case DEVICE:
+      return devImpl_->rightScale(A, diag);
+      break;
     }
     return 1;
   }
@@ -330,13 +340,14 @@ namespace ReSolve {
   void MatrixHandler::addConst(matrix::Sparse* A, real_type alpha, memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
-    switch (memspace) {
-      case HOST:
-        cpuImpl_->addConst(A, alpha);
-        break;
-      case DEVICE:
-        devImpl_->addConst(A, alpha);
-        break;
+    switch (memspace)
+    {
+    case HOST:
+      cpuImpl_->addConst(A, alpha);
+      break;
+    case DEVICE:
+      devImpl_->addConst(A, alpha);
+      break;
     }
   }
 

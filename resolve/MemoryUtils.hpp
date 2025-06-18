@@ -1,108 +1,127 @@
 #pragma once
 
-#include <resolve/resolve_defs.hpp>
 #include <cstring> // <- declares `memcpy`
+
+#include <resolve/resolve_defs.hpp>
 
 namespace ReSolve
 {
   namespace memory
   {
-    enum MemorySpace{HOST = 0, DEVICE};
-    enum MemoryDirection{HOST_TO_HOST = 0, HOST_TO_DEVICE, DEVICE_TO_HOST, DEVICE_TO_DEVICE};
-    enum DeviceType{NONE = 0, CUDADEVICE, HIPDEVICE};
-  }
-}
+    enum MemorySpace
+    {
+      HOST = 0,
+      DEVICE
+    };
+
+    enum MemoryDirection
+    {
+      HOST_TO_HOST = 0,
+      HOST_TO_DEVICE,
+      DEVICE_TO_HOST,
+      DEVICE_TO_DEVICE
+    };
+
+    enum DeviceType
+    {
+      NONE = 0,
+      CUDADEVICE,
+      HIPDEVICE
+    };
+  } // namespace memory
+} // namespace ReSolve
 
 namespace ReSolve
 {
   /**
    * @class MemoryUtils
-   * 
+   *
    * @brief Provides basic memory allocation, free and copy functions.
-   * 
+   *
    * This class provedes abstractions for memory management functiosn for
    * different GPU programming models.
-   * 
+   *
    * @tparam Policy - Memory management policy (vendor specific)
-   * 
+   *
    * @author Slaven Peles <peless@ornl.gov>
    */
   template <class Policy>
   class MemoryUtils
   {
-    public:
-      MemoryUtils()  = default;
-      ~MemoryUtils() = default;
+  public:
+    MemoryUtils()  = default;
+    ~MemoryUtils() = default;
 
-      void deviceSynchronize();
-      int getLastDeviceError();
-      int deleteOnDevice(void* v);
-      
-      template <typename I, typename T>
-      int allocateArrayOnDevice(T** v, I n);
-      
-      template <typename I, typename T>
-      int allocateBufferOnDevice(T** v, I n);
-      
-      template <typename I, typename T>
-      int setZeroArrayOnDevice(T* v, I n);
-      
-      template <typename I, typename T>
-      int setArrayToConstOnDevice(T* v, T c, I n);
-      
-      template <typename I, typename T>
-      int copyArrayDeviceToHost(T* dst, const T* src, I n);
-      
-      template <typename I, typename T>
-      int copyArrayDeviceToDevice(T* dst, const T* src, I n);
-      
-      template <typename I, typename T>
-      int copyArrayHostToDevice(T* dst, const T* src, I n);
+    void deviceSynchronize();
+    int  getLastDeviceError();
+    int  deleteOnDevice(void* v);
 
-      /// 
-      /// Methods implemented here are always needed
-      ///
+    template <typename I, typename T>
+    int allocateArrayOnDevice(T** v, I n);
 
-      template <typename I, typename T>
-      int allocateArrayOnHost(T** v, I n)
+    template <typename I, typename T>
+    int allocateBufferOnDevice(T** v, I n);
+
+    template <typename I, typename T>
+    int setZeroArrayOnDevice(T* v, I n);
+
+    template <typename I, typename T>
+    int setArrayToConstOnDevice(T* v, T c, I n);
+
+    template <typename I, typename T>
+    int copyArrayDeviceToHost(T* dst, const T* src, I n);
+
+    template <typename I, typename T>
+    int copyArrayDeviceToDevice(T* dst, const T* src, I n);
+
+    template <typename I, typename T>
+    int copyArrayHostToDevice(T* dst, const T* src, I n);
+
+    ///
+    /// Methods implemented here are always needed
+    ///
+
+    template <typename I, typename T>
+    int allocateArrayOnHost(T** v, I n)
+    {
+      std::size_t arraysize = static_cast<std::size_t>(n) * sizeof(T);
+      *v                    = new T[arraysize];
+      return *v == nullptr ? 1 : 0;
+    }
+
+    template <typename T>
+    int deleteOnHost(T* v)
+    {
+      delete[] v;
+      v = nullptr;
+      return 0;
+    }
+
+    template <typename I, typename T>
+    int copyArrayHostToHost(T* dst, const T* src, I n)
+    {
+      std::size_t arraysize = static_cast<std::size_t>(n) * sizeof(T);
+      memcpy(dst, src, arraysize);
+      return 0;
+    }
+
+    template <typename I, typename T>
+    int setZeroArrayOnHost(T* v, I n)
+    {
+      std::size_t arraysize = static_cast<std::size_t>(n) * sizeof(T);
+      memset(v, 0, arraysize);
+      return 0;
+    }
+
+    template <typename I, typename T>
+    int setArrayToConstOnHost(T* v, T c, I n)
+    {
+      for (I i = 0; i < n; ++i)
       {
-        std::size_t arraysize = static_cast<std::size_t>(n) * sizeof(T);
-        *v = new T[arraysize];
-        return *v == nullptr ? 1 : 0;
+        v[i] = c;
       }
-
-      template <typename T>
-      int deleteOnHost(T* v)
-      {
-        delete [] v;
-        v = nullptr;
-        return 0;
-      }
-
-      template <typename I, typename T>
-      int copyArrayHostToHost(T* dst, const T* src, I n)
-      {
-        std::size_t arraysize = static_cast<std::size_t>(n) * sizeof(T);
-        memcpy(dst, src, arraysize);
-        return 0;
-      }
-
-      template <typename I, typename T>
-      int setZeroArrayOnHost(T* v, I n)
-      {
-        std::size_t arraysize = static_cast<std::size_t>(n) * sizeof(T);
-        memset(v, 0, arraysize);
-        return 0;
-      }
-
-      template <typename I, typename T>
-      int setArrayToConstOnHost(T* v, T c, I n)
-      {
-        for (I i = 0; i < n; ++i) {
-          v[i] = c;
-        }
-        return 0;
-      }
+      return 0;
+    }
   };
 
 } // namespace ReSolve
@@ -127,4 +146,3 @@ using MemoryHandler = ReSolve::MemoryUtils<ReSolve::memory::Hip>;
 using MemoryHandler = ReSolve::MemoryUtils<ReSolve::memory::Cpu>;
 
 #endif
-

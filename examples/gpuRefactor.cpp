@@ -15,28 +15,28 @@
  * entire series.
  *
  */
-#include <string>
-#include <iostream>
 #include <iomanip>
+#include <iostream>
 #include <sstream>
+#include <string>
 
-#include <resolve/matrix/Csr.hpp>
-#include <resolve/matrix/Csc.hpp>
-#include <resolve/vector/Vector.hpp>
-#include <resolve/matrix/io.hpp>
-#include <resolve/matrix/MatrixHandler.hpp>
-#include <resolve/vector/VectorHandler.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
 #include <resolve/LinSolverIterativeFGMRES.hpp>
-#include <resolve/workspace/LinAlgWorkspace.hpp>
 #include <resolve/Profiling.hpp>
+#include <resolve/matrix/Csc.hpp>
+#include <resolve/matrix/Csr.hpp>
+#include <resolve/matrix/MatrixHandler.hpp>
+#include <resolve/matrix/io.hpp>
 #include <resolve/utilities/params/CliOptions.hpp>
+#include <resolve/vector/Vector.hpp>
+#include <resolve/vector/VectorHandler.hpp>
+#include <resolve/workspace/LinAlgWorkspace.hpp>
 
 #ifdef RESOLVE_USE_CUDA
-  #include <resolve/LinSolverDirectCuSolverRf.hpp>
+#include <resolve/LinSolverDirectCuSolverRf.hpp>
 #endif
 #ifdef RESOLVE_USE_HIP
-  #include <resolve/LinSolverDirectRocSolverRf.hpp>
+#include <resolve/LinSolverDirectRocSolverRf.hpp>
 #endif
 
 #include "ExampleHelper.hpp"
@@ -58,20 +58,20 @@ void printHelpInfo()
 
 /// Prototype of the example function
 template <class workspace_type, class refactor_type>
-static int gpuRefactor(int argc, char *argv[]);
+static int gpuRefactor(int argc, char* argv[]);
 
 /// Main function selects example to be run.
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
-  #ifdef RESOLVE_USE_CUDA
-    gpuRefactor<ReSolve::LinAlgWorkspaceCUDA,
-               ReSolve::LinSolverDirectCuSolverRf>(argc, argv);
-  #endif
+#ifdef RESOLVE_USE_CUDA
+  gpuRefactor<ReSolve::LinAlgWorkspaceCUDA,
+              ReSolve::LinSolverDirectCuSolverRf>(argc, argv);
+#endif
 
-  #ifdef RESOLVE_USE_HIP
-    gpuRefactor<ReSolve::LinAlgWorkspaceHIP,
-                ReSolve::LinSolverDirectRocSolverRf>(argc, argv);
-  #endif
+#ifdef RESOLVE_USE_HIP
+  gpuRefactor<ReSolve::LinAlgWorkspaceHIP,
+              ReSolve::LinSolverDirectRocSolverRf>(argc, argv);
+#endif
 
   return 0;
 }
@@ -85,17 +85,18 @@ int main(int argc, char *argv[])
  * @return 0 if the example ran successfully, -1 otherwise
  */
 template <class workspace_type, class refactor_type>
-int gpuRefactor(int argc, char *argv[])
+int gpuRefactor(int argc, char* argv[])
 {
   using namespace ReSolve::examples;
   using namespace ReSolve;
-  using index_type = ReSolve::index_type;
+  using index_type  = ReSolve::index_type;
   using vector_type = ReSolve::vector::Vector;
 
   CliOptions options(argc, argv);
 
   bool is_help = options.hasKey("-h");
-  if (is_help) {
+  if (is_help)
+  {
     printHelpInfo();
     return 0;
   }
@@ -103,10 +104,13 @@ int gpuRefactor(int argc, char *argv[])
   bool is_iterative_refinement = options.hasKey("-i");
 
   index_type num_systems = 0;
-  auto opt = options.getParamFromKey("-n");
-  if (opt) {
+  auto       opt         = options.getParamFromKey("-n");
+  if (opt)
+  {
     num_systems = atoi((opt->second).c_str());
-  } else {
+  }
+  else
+  {
     std::cout << "Incorrect input!\n\n";
     printHelpInfo();
     return 1;
@@ -114,9 +118,12 @@ int gpuRefactor(int argc, char *argv[])
 
   std::string matrix_pathname("");
   opt = options.getParamFromKey("-m");
-  if (opt) {
+  if (opt)
+  {
     matrix_pathname = opt->second;
-  } else {
+  }
+  else
+  {
     std::cout << "Incorrect input!\n\n";
     printHelpInfo();
     return 1;
@@ -124,9 +131,12 @@ int gpuRefactor(int argc, char *argv[])
 
   std::string rhs_pathname("");
   opt = options.getParamFromKey("-r");
-  if (opt) {
+  if (opt)
+  {
     rhs_pathname = opt->second;
-  } else {
+  }
+  else
+  {
     std::cout << "Incorrect input!\n\n";
     printHelpInfo();
     return 1;
@@ -134,16 +144,19 @@ int gpuRefactor(int argc, char *argv[])
 
   std::string file_extension("");
   opt = options.getParamFromKey("-e");
-  if (opt) {
+  if (opt)
+  {
     file_extension = opt->second;
-  } else {
+  }
+  else
+  {
     file_extension = "mtx";
   }
 
-  std::cout << "Family mtx file name: "       << matrix_pathname
+  std::cout << "Family mtx file name: " << matrix_pathname
             << ", total number of matrices: " << num_systems << "\n"
-            << "Family rhs file name: "       << rhs_pathname
-            << ", total number of RHSes: "    << num_systems << "\n";
+            << "Family rhs file name: " << rhs_pathname
+            << ", total number of RHSes: " << num_systems << "\n";
 
   // Create workspace
   workspace_type workspace;
@@ -159,50 +172,54 @@ int gpuRefactor(int argc, char *argv[])
 
   // Direct solvers instantiation
   LinSolverDirectKLU KLU;
-  refactor_type Rf(&workspace);
+  refactor_type      Rf(&workspace);
 
   // Iterative solver instantiation
-  GramSchmidt GS(&vector_handler, GramSchmidt::CGS2);
+  GramSchmidt              GS(&vector_handler, GramSchmidt::CGS2);
   LinSolverIterativeFGMRES FGMRES(&matrix_handler, &vector_handler, &GS);
 
   // Pointers to matrix and vectors defining the linear system
-  matrix::Csr* A = nullptr;
+  matrix::Csr* A       = nullptr;
   vector_type* vec_rhs = nullptr;
   vector_type* vec_x   = nullptr;
 
   RESOLVE_RANGE_PUSH(__FUNCTION__);
-  for (int i = 0; i < num_systems; ++i) {
+  for (int i = 0; i < num_systems; ++i)
+  {
     std::cout << "System " << i << ":\n";
 
     RESOLVE_RANGE_PUSH("File input");
     std::ostringstream matname;
     std::ostringstream rhsname;
     matname << matrix_pathname << std::setfill('0') << std::setw(2) << i << "." << file_extension;
-    rhsname << rhs_pathname    << std::setfill('0') << std::setw(2) << i << "." << file_extension;
+    rhsname << rhs_pathname << std::setfill('0') << std::setw(2) << i << "." << file_extension;
     std::string matrix_pathname_full = matname.str();
     std::string rhs_pathname_full    = rhsname.str();
 
     // Read matrix and right-hand-side vector
     std::ifstream mat_file(matrix_pathname_full);
-    if(!mat_file.is_open())
+    if (!mat_file.is_open())
     {
       std::cout << "Failed to open file " << matrix_pathname_full << "\n";
       return -1;
     }
     std::ifstream rhs_file(rhs_pathname_full);
-    if(!rhs_file.is_open())
+    if (!rhs_file.is_open())
     {
       std::cout << "Failed to open file " << rhs_pathname_full << "\n";
       return -1;
     }
     bool is_expand_symmetric = true;
-    if (i == 0) {
-      A = io::createCsrFromFile(mat_file, is_expand_symmetric);
+    if (i == 0)
+    {
+      A       = io::createCsrFromFile(mat_file, is_expand_symmetric);
       vec_rhs = io::createVectorFromFile(rhs_file);
-      vec_x = new vector_type(A->getNumRows());
+      vec_x   = new vector_type(A->getNumRows());
       vec_x->allocate(memory::HOST);
       vec_x->allocate(memory::DEVICE);
-    } else {
+    }
+    else
+    {
       io::updateMatrixFromFile(mat_file, A);
       io::updateVectorFromFile(rhs_file, vec_rhs);
     }
@@ -220,7 +237,8 @@ int gpuRefactor(int argc, char *argv[])
 
     int status = 0;
 
-    if (i == 0) {
+    if (i == 0)
+    {
       RESOLVE_RANGE_PUSH("KLU");
       // Setup factorization solver
       KLU.setup(A);
@@ -231,7 +249,8 @@ int gpuRefactor(int argc, char *argv[])
       std::cout << "KLU analysis status: " << status << std::endl;
     }
 
-    if (i < 2) {
+    if (i < 2)
+    {
       // Numeric factorization
       status = KLU.factorize();
       std::cout << "KLU factorization status: " << status << std::endl;
@@ -244,11 +263,13 @@ int gpuRefactor(int argc, char *argv[])
       helper.resetSystem(A, vec_rhs, vec_x);
       helper.printShortSummary();
 
-      if (i == 1) {
+      if (i == 1)
+      {
         // Extract factors and configure refactorization solver
         matrix::Csc* L = (matrix::Csc*) KLU.getLFactor();
         matrix::Csc* U = (matrix::Csc*) KLU.getUFactor();
-        if (L == nullptr || U == nullptr) {
+        if (L == nullptr || U == nullptr)
+        {
           std::cout << "Factor extraction from KLU failed!\n";
         }
         index_type* P = KLU.getPOrdering();
@@ -257,12 +278,15 @@ int gpuRefactor(int argc, char *argv[])
         Rf.setup(A, L, U, P, Q, vec_rhs);
 
         // Setup iterative refinement solver
-        if (is_iterative_refinement) {
+        if (is_iterative_refinement)
+        {
           FGMRES.setup(A);
         }
       }
       RESOLVE_RANGE_POP("KLU");
-    } else {
+    }
+    else
+    {
       std::cout << "Using refactorization\n";
 
       RESOLVE_RANGE_PUSH("Refactorization");
@@ -278,13 +302,15 @@ int gpuRefactor(int argc, char *argv[])
       helper.printSummary();
 
       RESOLVE_RANGE_PUSH("Iterative refinement");
-      if (is_iterative_refinement) {
+      if (is_iterative_refinement)
+      {
         // Setup iterative refinement
         FGMRES.resetMatrix(A);
         FGMRES.setupPreconditioner("LU", &Rf);
 
         // If refactorization produced finite solution do iterative refinement
-        if (std::isfinite(helper.getNormRelativeResidual())) {
+        if (std::isfinite(helper.getNormRelativeResidual()))
+        {
           FGMRES.solve(vec_rhs, vec_x);
 
           // Print summary

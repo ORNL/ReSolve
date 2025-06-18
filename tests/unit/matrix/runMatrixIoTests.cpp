@@ -1,10 +1,11 @@
-#include <string>
-#include <iostream>
 #include <fstream>
+#include <iostream>
+#include <string>
+
+#include "MatrixIoTests.hpp"
 #include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/io.hpp>
-#include "MatrixIoTests.hpp"
 
 int main(int, char**)
 {

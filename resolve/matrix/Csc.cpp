@@ -1,9 +1,10 @@
-#include <cstring>  // <-- includes memcpy
-#include <iomanip>
+#include "Csc.hpp"
+
 #include <cassert>
+#include <cstring> // <-- includes memcpy
+#include <iomanip>
 
 #include <resolve/utilities/logger/Logger.hpp>
-#include "Csc.hpp"
 
 namespace ReSolve
 {
@@ -14,7 +15,8 @@ namespace ReSolve
     sparse_format_ = COMPRESSED_SPARSE_COLUMN;
   }
 
-  matrix::Csc::Csc(index_type n, index_type m, index_type nnz) : Sparse(n, m, nnz)
+  matrix::Csc::Csc(index_type n, index_type m, index_type nnz)
+    : Sparse(n, m, nnz)
   {
     sparse_format_ = COMPRESSED_SPARSE_COLUMN;
   }
@@ -22,8 +24,9 @@ namespace ReSolve
   matrix::Csc::Csc(index_type n,
                    index_type m,
                    index_type nnz,
-                   bool symmetric,
-                   bool expanded) : Sparse(n, m, nnz, symmetric, expanded)
+                   bool       symmetric,
+                   bool       expanded)
+    : Sparse(n, m, nnz, symmetric, expanded)
   {
     sparse_format_ = COMPRESSED_SPARSE_COLUMN;
   }
@@ -36,13 +39,14 @@ namespace ReSolve
   {
     using namespace ReSolve::memory;
 
-    switch (memspace) {
-      case HOST:
-        return this->h_row_data_;
-      case DEVICE:
-        return this->d_row_data_;
-      default:
-        return nullptr;
+    switch (memspace)
+    {
+    case HOST:
+      return this->h_row_data_;
+    case DEVICE:
+      return this->d_row_data_;
+    default:
+      return nullptr;
     }
   }
 
@@ -50,13 +54,14 @@ namespace ReSolve
   {
     using namespace ReSolve::memory;
 
-    switch (memspace) {
-      case HOST:
-        return this->h_col_data_;
-      case DEVICE:
-        return this->d_col_data_;
-      default:
-        return nullptr;
+    switch (memspace)
+    {
+    case HOST:
+      return this->h_col_data_;
+    case DEVICE:
+      return this->d_col_data_;
+    default:
+      return nullptr;
     }
   }
 
@@ -64,100 +69,117 @@ namespace ReSolve
   {
     using namespace ReSolve::memory;
 
-    switch (memspace) {
-      case HOST:
-        return this->h_val_data_;
-      case DEVICE:
-        return this->d_val_data_;
-      default:
-        return nullptr;
+    switch (memspace)
+    {
+    case HOST:
+      return this->h_val_data_;
+    case DEVICE:
+      return this->d_val_data_;
+    default:
+      return nullptr;
     }
   }
 
-  int matrix::Csc::copyDataFrom(const index_type* row_data,
-                                const index_type* col_data,
-                                const real_type* val_data,
+  int matrix::Csc::copyDataFrom(const index_type*   row_data,
+                                const index_type*   col_data,
+                                const real_type*    val_data,
                                 memory::MemorySpace memspaceIn,
                                 memory::MemorySpace memspaceOut)
   {
     index_type nnz_current = nnz_;
 
-    //four cases (for now)
+    // four cases (for now)
     int control = -1;
     setNotUpdated();
-    if ((memspaceIn == memory::HOST)   && (memspaceOut == memory::HOST)  ) { control = 0;}
-    if ((memspaceIn == memory::HOST)   && (memspaceOut == memory::DEVICE)) { control = 1;}
-    if ((memspaceIn == memory::DEVICE) && (memspaceOut == memory::HOST)  ) { control = 2;}
-    if ((memspaceIn == memory::DEVICE) && (memspaceOut == memory::DEVICE)) { control = 3;}
+    if ((memspaceIn == memory::HOST) && (memspaceOut == memory::HOST))
+    {
+      control = 0;
+    }
+    if ((memspaceIn == memory::HOST) && (memspaceOut == memory::DEVICE))
+    {
+      control = 1;
+    }
+    if ((memspaceIn == memory::DEVICE) && (memspaceOut == memory::HOST))
+    {
+      control = 2;
+    }
+    if ((memspaceIn == memory::DEVICE) && (memspaceOut == memory::DEVICE))
+    {
+      control = 3;
+    }
 
-    if (memspaceOut == memory::HOST) {
-      //check if cpu data allocated
-      assert(((h_row_data_ == nullptr) == (h_col_data_ == nullptr)) &&
-             "In Csc::copyDataFrom one of host row or column data is null!\n");
+    if (memspaceOut == memory::HOST)
+    {
+      // check if cpu data allocated
+      assert(((h_row_data_ == nullptr) == (h_col_data_ == nullptr)) && "In Csc::copyDataFrom one of host row or column data is null!\n");
 
-      if ((h_col_data_ == nullptr) && (h_row_data_ == nullptr)) {
-        this->h_col_data_ = new index_type[m_ + 1];
-        this->h_row_data_ = new index_type[nnz_current];
+      if ((h_col_data_ == nullptr) && (h_row_data_ == nullptr))
+      {
+        this->h_col_data_          = new index_type[m_ + 1];
+        this->h_row_data_          = new index_type[nnz_current];
         owns_cpu_sparsity_pattern_ = true;
       }
-      if (h_val_data_ == nullptr) {
+      if (h_val_data_ == nullptr)
+      {
         this->h_val_data_ = new real_type[nnz_current];
-        owns_cpu_values_ = true;
+        owns_cpu_values_  = true;
       }
     }
 
-    if (memspaceOut == memory::DEVICE) {
-      //check if cuda data allocated
-      assert(((d_row_data_ == nullptr) == (d_col_data_ == nullptr)) &&
-             "In Csc::copyDataFrom one of device row or column data is null!\n");
+    if (memspaceOut == memory::DEVICE)
+    {
+      // check if cuda data allocated
+      assert(((d_row_data_ == nullptr) == (d_col_data_ == nullptr)) && "In Csc::copyDataFrom one of device row or column data is null!\n");
 
-      if ((d_col_data_ == nullptr) && (d_row_data_ == nullptr)) {
+      if ((d_col_data_ == nullptr) && (d_row_data_ == nullptr))
+      {
         mem_.allocateArrayOnDevice(&d_col_data_, m_ + 1);
         mem_.allocateArrayOnDevice(&d_row_data_, nnz_current);
         owns_gpu_sparsity_pattern_ = true;
       }
-      if (d_val_data_ == nullptr) {
+      if (d_val_data_ == nullptr)
+      {
         mem_.allocateArrayOnDevice(&d_val_data_, nnz_current);
         owns_gpu_values_ = true;
       }
     }
 
-    switch(control) {
-      case 0: //cpu->cpu
-        mem_.copyArrayHostToHost(h_col_data_, col_data,      m_ + 1);
-        mem_.copyArrayHostToHost(h_row_data_, row_data, nnz_current);
-        mem_.copyArrayHostToHost(h_val_data_, val_data, nnz_current);
-        h_data_updated_ = true;
-        break;
-      case 2://gpu->cpu
-        mem_.copyArrayDeviceToHost(h_col_data_, col_data,      m_ + 1);
-        mem_.copyArrayDeviceToHost(h_row_data_, row_data, nnz_current);
-        mem_.copyArrayDeviceToHost(h_val_data_, val_data, nnz_current);
-        h_data_updated_ = true;
-        break;
-      case 1://cpu->gpu
-        mem_.copyArrayHostToDevice(d_col_data_, col_data,      m_ + 1);
-        mem_.copyArrayHostToDevice(d_row_data_, row_data, nnz_current);
-        mem_.copyArrayHostToDevice(d_val_data_, val_data, nnz_current);
-        d_data_updated_ = true;
-        break;
-      case 3://gpu->gpu
-        mem_.copyArrayDeviceToDevice(d_col_data_, col_data,      m_ + 1);
-        mem_.copyArrayDeviceToDevice(d_row_data_, row_data, nnz_current);
-        mem_.copyArrayDeviceToDevice(d_val_data_, val_data, nnz_current);
-        d_data_updated_ = true;
-        break;
-      default:
-        return -1;
+    switch (control)
+    {
+    case 0: // cpu->cpu
+      mem_.copyArrayHostToHost(h_col_data_, col_data, m_ + 1);
+      mem_.copyArrayHostToHost(h_row_data_, row_data, nnz_current);
+      mem_.copyArrayHostToHost(h_val_data_, val_data, nnz_current);
+      h_data_updated_ = true;
+      break;
+    case 2: // gpu->cpu
+      mem_.copyArrayDeviceToHost(h_col_data_, col_data, m_ + 1);
+      mem_.copyArrayDeviceToHost(h_row_data_, row_data, nnz_current);
+      mem_.copyArrayDeviceToHost(h_val_data_, val_data, nnz_current);
+      h_data_updated_ = true;
+      break;
+    case 1: // cpu->gpu
+      mem_.copyArrayHostToDevice(d_col_data_, col_data, m_ + 1);
+      mem_.copyArrayHostToDevice(d_row_data_, row_data, nnz_current);
+      mem_.copyArrayHostToDevice(d_val_data_, val_data, nnz_current);
+      d_data_updated_ = true;
+      break;
+    case 3: // gpu->gpu
+      mem_.copyArrayDeviceToDevice(d_col_data_, col_data, m_ + 1);
+      mem_.copyArrayDeviceToDevice(d_row_data_, row_data, nnz_current);
+      mem_.copyArrayDeviceToDevice(d_val_data_, val_data, nnz_current);
+      d_data_updated_ = true;
+      break;
+    default:
+      return -1;
     }
     return 0;
-
   }
 
-  int matrix::Csc::copyDataFrom(const index_type* row_data,
-                                const index_type* col_data,
-                                const real_type* val_data,
-                                index_type new_nnz,
+  int matrix::Csc::copyDataFrom(const index_type*   row_data,
+                                const index_type*   col_data,
+                                const real_type*    val_data,
+                                index_type          new_nnz,
                                 memory::MemorySpace memspaceIn,
                                 memory::MemorySpace memspaceOut)
   {
@@ -169,9 +191,10 @@ namespace ReSolve
   int matrix::Csc::allocateMatrixData(memory::MemorySpace memspace)
   {
     index_type nnz_current = nnz_;
-    destroyMatrixData(memspace);//just in case
+    destroyMatrixData(memspace); // just in case
 
-    if (memspace == memory::HOST) {
+    if (memspace == memory::HOST)
+    {
       this->h_col_data_ = new index_type[m_ + 1];
       std::fill(h_col_data_, h_col_data_ + m_ + 1, 0);
       this->h_row_data_ = new index_type[nnz_current];
@@ -179,16 +202,17 @@ namespace ReSolve
       this->h_val_data_ = new real_type[nnz_current];
       std::fill(h_val_data_, h_val_data_ + nnz_current, 0.0);
       owns_cpu_sparsity_pattern_ = true;
-      owns_cpu_values_ = true;
+      owns_cpu_values_           = true;
       return 0;
     }
 
-    if (memspace == memory::DEVICE) {
-      mem_.allocateArrayOnDevice(&d_col_data_,      m_ + 1);
+    if (memspace == memory::DEVICE)
+    {
+      mem_.allocateArrayOnDevice(&d_col_data_, m_ + 1);
       mem_.allocateArrayOnDevice(&d_row_data_, nnz_current);
       mem_.allocateArrayOnDevice(&d_val_data_, nnz_current);
       owns_gpu_sparsity_pattern_ = true;
-      owns_gpu_values_ = true;
+      owns_gpu_values_           = true;
       return 0;
     }
     return -1;
@@ -209,65 +233,72 @@ namespace ReSolve
   {
     using namespace ReSolve::memory;
 
-    switch(memspace) {
-      case HOST:
-        assert(((h_row_data_ == nullptr) == (h_col_data_ == nullptr)) &&
-               "In Csc::syncData one of host row or column data is null!\n");
+    switch (memspace)
+    {
+    case HOST:
+      assert(((h_row_data_ == nullptr) == (h_col_data_ == nullptr)) && "In Csc::syncData one of host row or column data is null!\n");
 
-        if (h_data_updated_) {
-          out::error() << "Csc::syncData is trying to sync host, but host already up to date!\n";
-          assert(!h_data_updated_);
-          return 1;
-        }
-        if (!d_data_updated_) {
-          out::error() << "Csc::syncData is trying to sync host with device, but device is out of date!\n"
-                       << "See Csc::syncData documentation\n.";
-          assert(d_data_updated_);
-        }
-        if ((h_col_data_ == nullptr) && (h_row_data_ == nullptr)) {
-          h_col_data_ = new index_type[m_ + 1];
-          h_row_data_ = new index_type[nnz_];
-          owns_cpu_sparsity_pattern_ = true;
-        }
-        if (h_val_data_ == nullptr) {
-          h_val_data_ = new real_type[nnz_];
-          owns_cpu_values_ = true;
-        }
-        mem_.copyArrayDeviceToHost(h_col_data_, d_col_data_, m_ + 1);
-        mem_.copyArrayDeviceToHost(h_row_data_, d_row_data_,   nnz_);
-        mem_.copyArrayDeviceToHost(h_val_data_, d_val_data_,   nnz_);
-        h_data_updated_ = true;
-        return 0;
-      case DEVICE:
-        assert(((d_row_data_ == nullptr) == (d_col_data_ == nullptr)) &&
-               "In Csc::syncData one of device row or column data is null!\n");
-
-        if (d_data_updated_) {
-          out::error() << "Csc::syncData is trying to sync device, but device already up to date!\n";
-          assert(!d_data_updated_);
-          return 1;
-        }
-        if (!h_data_updated_) {
-          out::error() << "Csc::syncData is trying to sync device with host, but host is out of date!\n"
-                       << "See Csc::syncData documentation\n.";
-          assert(h_data_updated_);
-        }
-        if ((d_col_data_ == nullptr) && (d_row_data_ == nullptr)) {
-          mem_.allocateArrayOnDevice(&d_col_data_, m_ + 1);
-          mem_.allocateArrayOnDevice(&d_row_data_,   nnz_);
-          owns_gpu_sparsity_pattern_ = true;
-        }
-        if (d_val_data_ == nullptr) {
-          mem_.allocateArrayOnDevice(&d_val_data_, nnz_);
-          owns_gpu_values_ = true;
-        }
-        mem_.copyArrayHostToDevice(d_col_data_, h_col_data_, m_ + 1);
-        mem_.copyArrayHostToDevice(d_row_data_, h_row_data_,   nnz_);
-        mem_.copyArrayHostToDevice(d_val_data_, h_val_data_,   nnz_);
-        d_data_updated_ = true;
-        return 0;
-      default:
+      if (h_data_updated_)
+      {
+        out::error() << "Csc::syncData is trying to sync host, but host already up to date!\n";
+        assert(!h_data_updated_);
         return 1;
+      }
+      if (!d_data_updated_)
+      {
+        out::error() << "Csc::syncData is trying to sync host with device, but device is out of date!\n"
+                     << "See Csc::syncData documentation\n.";
+        assert(d_data_updated_);
+      }
+      if ((h_col_data_ == nullptr) && (h_row_data_ == nullptr))
+      {
+        h_col_data_                = new index_type[m_ + 1];
+        h_row_data_                = new index_type[nnz_];
+        owns_cpu_sparsity_pattern_ = true;
+      }
+      if (h_val_data_ == nullptr)
+      {
+        h_val_data_      = new real_type[nnz_];
+        owns_cpu_values_ = true;
+      }
+      mem_.copyArrayDeviceToHost(h_col_data_, d_col_data_, m_ + 1);
+      mem_.copyArrayDeviceToHost(h_row_data_, d_row_data_, nnz_);
+      mem_.copyArrayDeviceToHost(h_val_data_, d_val_data_, nnz_);
+      h_data_updated_ = true;
+      return 0;
+    case DEVICE:
+      assert(((d_row_data_ == nullptr) == (d_col_data_ == nullptr)) && "In Csc::syncData one of device row or column data is null!\n");
+
+      if (d_data_updated_)
+      {
+        out::error() << "Csc::syncData is trying to sync device, but device already up to date!\n";
+        assert(!d_data_updated_);
+        return 1;
+      }
+      if (!h_data_updated_)
+      {
+        out::error() << "Csc::syncData is trying to sync device with host, but host is out of date!\n"
+                     << "See Csc::syncData documentation\n.";
+        assert(h_data_updated_);
+      }
+      if ((d_col_data_ == nullptr) && (d_row_data_ == nullptr))
+      {
+        mem_.allocateArrayOnDevice(&d_col_data_, m_ + 1);
+        mem_.allocateArrayOnDevice(&d_row_data_, nnz_);
+        owns_gpu_sparsity_pattern_ = true;
+      }
+      if (d_val_data_ == nullptr)
+      {
+        mem_.allocateArrayOnDevice(&d_val_data_, nnz_);
+        owns_gpu_values_ = true;
+      }
+      mem_.copyArrayHostToDevice(d_col_data_, h_col_data_, m_ + 1);
+      mem_.copyArrayHostToDevice(d_row_data_, h_row_data_, nnz_);
+      mem_.copyArrayHostToDevice(d_val_data_, h_val_data_, nnz_);
+      d_data_updated_ = true;
+      return 0;
+    default:
+      return 1;
     } // switch
   }
 
@@ -279,10 +310,12 @@ namespace ReSolve
   void matrix::Csc::print(std::ostream& out, index_type indexing_base)
   {
     out << std::scientific << std::setprecision(std::numeric_limits<real_type>::digits10);
-    for(index_type i = 0; i < m_; ++i) {
-      for (index_type j = h_col_data_[i]; j < h_col_data_[i+1]; ++j) {
+    for (index_type i = 0; i < m_; ++i)
+    {
+      for (index_type j = h_col_data_[i]; j < h_col_data_[i + 1]; ++j)
+      {
         out << h_row_data_[j] + indexing_base << " "
-            << i              + indexing_base << " "
+            << i + indexing_base << " "
             << h_val_data_[j] << "\n";
       }
     }

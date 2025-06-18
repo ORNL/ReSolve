@@ -1,29 +1,33 @@
+#include "MatrixHandlerCpu.hpp"
+
 #include <algorithm>
 #include <cassert>
 
-#include <resolve/utilities/logger/Logger.hpp>
-#include <resolve/vector/Vector.hpp>
 #include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/Csc.hpp>
 #include <resolve/matrix/Csr.hpp>
-#include "MatrixHandlerCpu.hpp"
+#include <resolve/utilities/logger/Logger.hpp>
+#include <resolve/vector/Vector.hpp>
 
 namespace ReSolve
 {
   // Create a shortcut name for Logger static class
   using out = io::Logger;
+
   /**
    * @brief Empty constructor for MatrixHandlerCpu class.
    */
   MatrixHandlerCpu::MatrixHandlerCpu()
   {
   }
+
   /**
    * @brief Empty destructor for MatrixHandlerCpu class.
    */
   MatrixHandlerCpu::~MatrixHandlerCpu()
   {
   }
+
   /**
    * @brief Constructor for MatrixHandlerCpu class.
    * @param[in] new_workspace - pointer to LinAlgWorkspaceCpu object
@@ -32,6 +36,7 @@ namespace ReSolve
   {
     workspace_ = new_workspace;
   }
+
   /**
    * @brief Marks when values have changed in MatrixHandlerCpu class.
    * @param[in] values_changed - boolean value indicating if values have changed
@@ -40,7 +45,6 @@ namespace ReSolve
   {
     values_changed_ = values_changed;
   }
-
 
   /**
    * @brief result := alpha * A * x + beta * result
@@ -59,41 +63,42 @@ namespace ReSolve
    * statement to select implementation for recognized input matrix
    * format.
    */
-  int MatrixHandlerCpu::matvec(matrix::Sparse* A,
-                               vector_type* vec_x,
-                               vector_type* vec_result,
+  int MatrixHandlerCpu::matvec(matrix::Sparse*  A,
+                               vector_type*     vec_x,
+                               vector_type*     vec_result,
                                const real_type* alpha,
                                const real_type* beta)
   {
     using namespace constants;
 
-    assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW &&
-           "Matrix has to be in CSR format for matrix-vector product.\n");
+    assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW && "Matrix has to be in CSR format for matrix-vector product.\n");
 
     index_type* ia = A->getRowData(memory::HOST);
     index_type* ja = A->getColData(memory::HOST);
-    real_type*   a = A->getValues( memory::HOST);
+    real_type*  a  = A->getValues(memory::HOST);
 
     real_type* x_data      = vec_x->getData(memory::HOST);
     real_type* result_data = vec_result->getData(memory::HOST);
-    real_type sum;
-    real_type y;
-    real_type t;
-    real_type c;
+    real_type  sum;
+    real_type  y;
+    real_type  t;
+    real_type  c;
 
     // Kahan algorithm for stability
-    for (int i = 0; i < A->getNumRows(); ++i) {
+    for (int i = 0; i < A->getNumRows(); ++i)
+    {
       sum = 0.0;
-      c = 0.0;
-      for (int j = ia[i]; j < ia[i+1]; ++j) {
-        y =  ( a[j] * x_data[ja[j]]) - c;
-        t = sum + y;
-        c = (t - sum) - y;
+      c   = 0.0;
+      for (int j = ia[i]; j < ia[i + 1]; ++j)
+      {
+        y   = (a[j] * x_data[ja[j]]) - c;
+        t   = sum + y;
+        c   = (t - sum) - y;
         sum = t;
         //  sum += (a[j] * x_data[ja[j]]);
       }
-      sum *= (*alpha);
-      result_data[i] = result_data[i]*(*beta) + sum;
+      sum            *= (*alpha);
+      result_data[i]  = result_data[i] * (*beta) + sum;
     }
     vec_result->setDataUpdated(memory::HOST);
     return 0;
@@ -116,18 +121,20 @@ namespace ReSolve
   int MatrixHandlerCpu::matrixInfNorm(matrix::Sparse* A, real_type* norm)
   {
     using memory::HOST;
-    assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW &&
-           "Matrix has to be in CSR format for matrix-vector product.\n");
+    assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW && "Matrix has to be in CSR format for matrix-vector product.\n");
 
     real_type sum = 0.0;
     real_type nrm = 0.0;
 
-    for (index_type i = 0; i < A->getNumRows(); ++i) {
+    for (index_type i = 0; i < A->getNumRows(); ++i)
+    {
       sum = 0.0;
-      for (index_type j  = A->getRowData(HOST)[i]; j < A->getRowData(HOST)[i+1]; ++j) {
+      for (index_type j = A->getRowData(HOST)[i]; j < A->getRowData(HOST)[i + 1]; ++j)
+      {
         sum += std::abs(A->getValues(HOST)[j]);
       }
-      if (i == 0 || sum > nrm) {
+      if (i == 0 || sum > nrm)
+      {
         nrm = sum;
       }
     }
@@ -157,32 +164,36 @@ namespace ReSolve
 
     index_type* rowIdxCsc = A_csc->getRowData(memory::HOST);
     index_type* colPtrCsc = A_csc->getColData(memory::HOST);
-    real_type*  valuesCsc = A_csc->getValues( memory::HOST);
+    real_type*  valuesCsc = A_csc->getValues(memory::HOST);
 
     index_type* rowPtrCsr = A_csr->getRowData(memory::HOST);
     index_type* colIdxCsr = A_csr->getColData(memory::HOST);
-    real_type*  valuesCsr = A_csr->getValues( memory::HOST);
+    real_type*  valuesCsr = A_csr->getValues(memory::HOST);
 
     // Set all CSR row pointers to zero
-    for (index_type i = 0; i <= n; ++i) {
+    for (index_type i = 0; i <= n; ++i)
+    {
       rowPtrCsr[i] = 0;
     }
 
     // Set all CSR values and column indices to zero
-    for (index_type i = 0; i < nnz; ++i) {
+    for (index_type i = 0; i < nnz; ++i)
+    {
       colIdxCsr[i] = 0;
       valuesCsr[i] = 0.0;
     }
 
     // Compute number of entries per row
-    for (index_type i = 0; i < nnz; ++i) {
+    for (index_type i = 0; i < nnz; ++i)
+    {
       rowPtrCsr[rowIdxCsc[i]]++;
     }
 
     // Compute cumualtive sum of nnz per row
-    for (index_type row = 0, rowsum = 0; row < n; ++row) {
+    for (index_type row = 0, rowsum = 0; row < n; ++row)
+    {
       // Store value in row pointer to temp
-      index_type temp  = rowPtrCsr[row];
+      index_type temp = rowPtrCsr[row];
 
       // Copy cumulative sum to the row pointer
       rowPtrCsr[row] = rowsum;
@@ -192,10 +203,12 @@ namespace ReSolve
     }
     rowPtrCsr[n] = nnz;
 
-    for (index_type col = 0; col < m; ++col) {
+    for (index_type col = 0; col < m; ++col)
+    {
       // Compute positions of column indices and values in CSR matrix and store them there
       // Overwrites CSR row pointers in the process
-      for (index_type jj = colPtrCsc[col]; jj < colPtrCsc[col+1]; jj++) {
+      for (index_type jj = colPtrCsc[col]; jj < colPtrCsc[col + 1]; jj++)
+      {
         index_type row  = rowIdxCsc[jj];
         index_type dest = rowPtrCsr[row];
 
@@ -207,10 +220,11 @@ namespace ReSolve
     }
 
     // Restore CSR row pointer values
-    for (index_type row = 0, last = 0; row <= n; row++) {
-        index_type temp  = rowPtrCsr[row];
-        rowPtrCsr[row] = last;
-        last    = temp;
+    for (index_type row = 0, last = 0; row <= n; row++)
+    {
+      index_type temp = rowPtrCsr[row];
+      rowPtrCsr[row]  = last;
+      last            = temp;
     }
 
     // Values on the host are updated now -- mark them as such!
@@ -231,33 +245,37 @@ namespace ReSolve
   {
     assert(A->getValues(memory::HOST) != nullptr && "Matrix A is not allocated on host.\n");
     assert(At->getValues(memory::HOST) != nullptr && "Matrix At is not allocated on host.\n");
-    index_type n = A->getNumRows();
-    index_type m = A->getNumColumns();
-    index_type nnz = A->getNnz();
-    index_type* rowPtrA = A->getRowData(memory::HOST);
-    index_type* colIdxA = A->getColData(memory::HOST);
-    real_type*  valuesA = A->getValues( memory::HOST);
+    index_type  n        = A->getNumRows();
+    index_type  m        = A->getNumColumns();
+    index_type  nnz      = A->getNnz();
+    index_type* rowPtrA  = A->getRowData(memory::HOST);
+    index_type* colIdxA  = A->getColData(memory::HOST);
+    real_type*  valuesA  = A->getValues(memory::HOST);
     index_type* rowPtrAt = At->getRowData(memory::HOST);
     index_type* colIdxAt = At->getColData(memory::HOST);
-    real_type*  valuesAt = At->getValues( memory::HOST);
+    real_type*  valuesAt = At->getValues(memory::HOST);
     // Set all CSR row pointers to zero
-    for (index_type i = 0; i <= m; ++i) {
+    for (index_type i = 0; i <= m; ++i)
+    {
       rowPtrAt[i] = 0;
     }
     // Set all CSR values and column indices to zero
-    for (index_type i = 0; i < nnz; ++i) {
+    for (index_type i = 0; i < nnz; ++i)
+    {
       colIdxAt[i] = 0;
       valuesAt[i] = 0.0;
     }
 
     // Compute number of entries per row
-    for (index_type i = 0; i < nnz; ++i) {
+    for (index_type i = 0; i < nnz; ++i)
+    {
       rowPtrAt[colIdxA[i]]++;
     }
     // Compute cumualtive sum of nnz per row
-    for (index_type row = 0, rowsum = 0; row < m; ++row) {
+    for (index_type row = 0, rowsum = 0; row < m; ++row)
+    {
       // Store value in row pointer to temp
-      index_type temp  = rowPtrAt[row];
+      index_type temp = rowPtrAt[row];
 
       // Copy cumulative sum to the row pointer
       rowPtrAt[row] = rowsum;
@@ -266,10 +284,12 @@ namespace ReSolve
       rowsum += temp;
     }
     rowPtrAt[m] = nnz;
-    for (index_type col = 0; col < n; ++col) {
+    for (index_type col = 0; col < n; ++col)
+    {
       // Compute positions of column indices and values in CSR matrix and store them there
       // Overwrites CSR row pointers in the process
-      for (index_type jj = rowPtrA[col]; jj < rowPtrA[col+1]; jj++) {
+      for (index_type jj = rowPtrA[col]; jj < rowPtrA[col + 1]; jj++)
+      {
         index_type row  = colIdxA[jj];
         index_type dest = rowPtrAt[row];
 
@@ -280,10 +300,11 @@ namespace ReSolve
       }
     }
     // Restore CSR row pointer values
-    for (index_type row = 0, last = 0; row <= m; row++) {
-        index_type temp  = rowPtrAt[row];
-        rowPtrAt[row] = last;
-        last    = temp;
+    for (index_type row = 0, last = 0; row <= m; row++)
+    {
+      index_type temp = rowPtrAt[row];
+      rowPtrAt[row]   = last;
+      last            = temp;
     }
     // Values on the host are updated now -- mark them as such!
     At->setUpdated(memory::HOST);
@@ -306,12 +327,14 @@ namespace ReSolve
    */
   int MatrixHandlerCpu::leftScale(vector_type* diag, matrix::Csr* A)
   {
-    real_type* diag_data = diag->getData(memory::HOST);
-    index_type* rowPtrA = A->getRowData(memory::HOST);
-    real_type*  valuesA = A->getValues( memory::HOST);
+    real_type*  diag_data = diag->getData(memory::HOST);
+    index_type* rowPtrA   = A->getRowData(memory::HOST);
+    real_type*  valuesA   = A->getValues(memory::HOST);
 
-    for (index_type i = 0; i < A->getNumRows(); ++i) {
-      for (index_type j = rowPtrA[i]; j < rowPtrA[i+1]; ++j) {
+    for (index_type i = 0; i < A->getNumRows(); ++i)
+    {
+      for (index_type j = rowPtrA[i]; j < rowPtrA[i + 1]; ++j)
+      {
         valuesA[j] *= diag_data[i];
       }
     }
@@ -333,13 +356,15 @@ namespace ReSolve
    */
   int MatrixHandlerCpu::rightScale(matrix::Csr* A, vector_type* diag)
   {
-    real_type* diag_data = diag->getData(memory::HOST);
-    index_type* rowPtrA = A->getRowData(memory::HOST);
-    index_type* colIdxA = A->getColData(memory::HOST);
-    real_type*  valuesA = A->getValues( memory::HOST);
+    real_type*  diag_data = diag->getData(memory::HOST);
+    index_type* rowPtrA   = A->getRowData(memory::HOST);
+    index_type* colIdxA   = A->getColData(memory::HOST);
+    real_type*  valuesA   = A->getValues(memory::HOST);
 
-    for (index_type i = 0; i < A->getNumRows(); ++i) {
-      for (index_type j = rowPtrA[i]; j < rowPtrA[i+1]; ++j) {
+    for (index_type i = 0; i < A->getNumRows(); ++i)
+    {
+      for (index_type j = rowPtrA[i]; j < rowPtrA[i + 1]; ++j)
+      {
         valuesA[j] *= diag_data[colIdxA[j]];
       }
     }
@@ -357,8 +382,9 @@ namespace ReSolve
   int MatrixHandlerCpu::addConst(matrix::Sparse* A, real_type alpha)
   {
     real_type* values = A->getValues(memory::HOST);
-    index_type nnz = A->getNnz();
-    for (index_type i = 0; i < nnz; ++i) {
+    index_type nnz    = A->getNnz();
+    for (index_type i = 0; i < nnz; ++i)
+    {
       values[i] += alpha;
     }
     return 0;

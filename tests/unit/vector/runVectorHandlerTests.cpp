@@ -1,11 +1,12 @@
-#include <string>
-#include <iostream>
 #include <fstream>
+#include <iostream>
+#include <string>
+
 #include "VectorHandlerTests.hpp"
 
 int main(int, char**)
 {
-  ReSolve::tests::TestingResults result; 
+  ReSolve::tests::TestingResults result;
 
   {
     std::cout << "Running tests on CPU:\n";

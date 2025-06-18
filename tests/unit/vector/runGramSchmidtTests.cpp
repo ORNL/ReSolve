@@ -1,6 +1,7 @@
-#include <string>
-#include <iostream>
 #include <fstream>
+#include <iostream>
+#include <string>
+
 #include "GramSchmidtTests.hpp"
 
 template <class workspace_type>
@@ -8,7 +9,7 @@ static ReSolve::tests::TestingResults runTests();
 
 int main(int, char**)
 {
-  ReSolve::tests::TestingResults result; 
+  ReSolve::tests::TestingResults result;
 
   std::cout << "\nRunning tests on a CPU device:\n";
   result += runTests<ReSolve::LinAlgWorkspaceCpu>();
@@ -29,8 +30,7 @@ int main(int, char**)
 template <class workspace_type>
 ReSolve::tests::TestingResults runTests()
 {
-  ReSolve::tests::TestingResults result; 
-
+  ReSolve::tests::TestingResults result;
 
   workspace_type workspace;
   workspace.initializeHandles();

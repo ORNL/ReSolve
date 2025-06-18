@@ -7,9 +7,9 @@
 #include <iostream>
 #include <ostream>
 
-#include <resolve/utilities/logger/Logger.hpp>
-#include <resolve/Common.hpp>
 #include "LoggerTests.hpp"
+#include <resolve/Common.hpp>
+#include <resolve/utilities/logger/Logger.hpp>
 
 int main()
 {

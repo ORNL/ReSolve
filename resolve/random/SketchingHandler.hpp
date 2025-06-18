@@ -2,7 +2,7 @@
  * @file SketchingHandler.hpp
  * @author Slaven Peles (peless@ornl.gov)
  * @brief Declaration of SketchingHandler class
- * 
+ *
  */
 #pragma once
 #include <resolve/LinSolverIterativeRandFGMRES.hpp>
@@ -11,6 +11,7 @@ namespace ReSolve
 {
   // Forward declarations
   class RandomSketchingImpl;
+
   namespace vector
   {
     class VectorHandler;
@@ -18,28 +19,29 @@ namespace ReSolve
 
   /**
    * @brief Class that invokes sketching method using PIMPL idiom.
-   * 
+   *
    */
   class SketchingHandler
   {
-    private:
-      using SketchingMethod = LinSolverIterativeRandFGMRES::SketchingMethod;
-      using vector_type = vector::Vector;
-    public:
-      SketchingHandler(SketchingMethod method, memory::DeviceType devtype);
-      ~SketchingHandler();
+  private:
+    using SketchingMethod = LinSolverIterativeRandFGMRES::SketchingMethod;
+    using vector_type     = vector::Vector;
 
-      /// Actual sketching process
-      int Theta(vector_type* input, vector_type* output);
+  public:
+    SketchingHandler(SketchingMethod method, memory::DeviceType devtype);
+    ~SketchingHandler();
 
-      /// Setup the parameters, sampling matrices, permuations, etc.
-      int setup(index_type n, index_type k);
+    /// Actual sketching process
+    int Theta(vector_type* input, vector_type* output);
 
-      /// Needed for iterative methods with restarting
-      int reset();
+    /// Setup the parameters, sampling matrices, permuations, etc.
+    int setup(index_type n, index_type k);
 
-    private:
-      RandomSketchingImpl* sketching_{nullptr}; ///< Pointer to implementation
+    /// Needed for iterative methods with restarting
+    int reset();
+
+  private:
+    RandomSketchingImpl* sketching_{nullptr}; ///< Pointer to implementation
   };
 
 } // namespace ReSolve

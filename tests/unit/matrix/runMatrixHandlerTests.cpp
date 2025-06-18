@@ -1,10 +1,10 @@
-#include <string>
-#include <iostream>
 #include <fstream>
+#include <iostream>
+#include <string>
+
+#include "MatrixHandlerTests.hpp"
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/io.hpp>
-#include "MatrixHandlerTests.hpp"
-
 
 /**
  * @brief run tests with a given backend
@@ -16,7 +16,7 @@
  * @param[in] backend - name of the hardware backend
  * @param[out] result - test results
  */
-template<typename WorkspaceType>
+template <typename WorkspaceType>
 void runTests(const std::string& backend, ReSolve::tests::TestingResults& result)
 {
   std::cout << "Running tests on " << backend << " device:\n";
@@ -69,4 +69,3 @@ int main(int, char**)
 
   return result.summary();
 }
-

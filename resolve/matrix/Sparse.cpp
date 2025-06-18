@@ -1,39 +1,41 @@
-#include <cstring>  // <-- includes memcpy
-
-#include <resolve/utilities/logger/Logger.hpp>
 #include "Sparse.hpp"
 
-namespace ReSolve {
+#include <cstring> // <-- includes memcpy
+
+#include <resolve/utilities/logger/Logger.hpp>
+
+namespace ReSolve
+{
 
   using out = io::Logger;
 
-  /** 
-   * @brief empty constructor that does absolutely nothing        
+  /**
+   * @brief empty constructor that does absolutely nothing
    */
   matrix::Sparse::Sparse()
   {
   }
 
-  /** 
+  /**
    * @brief basic constructor. It DOES NOT allocate any memory!
    *
    * @param[in] n   - number of rows
    * @param[in] m   - number of columns
-   * @param[in] nnz - number of non-zeros        
+   * @param[in] nnz - number of non-zeros
    */
-  matrix::Sparse::Sparse(index_type n, 
-                         index_type m, 
-                         index_type nnz):
-    n_{n},
-    m_{m},
-    nnz_{nnz}
+  matrix::Sparse::Sparse(index_type n,
+                         index_type m,
+                         index_type nnz)
+    : n_{n},
+      m_{m},
+      nnz_{nnz}
   {
     this->is_symmetric_ = false;
-    this->is_expanded_ = true; //default is a normal non-symmetric fully expanded matrix
+    this->is_expanded_  = true; // default is a normal non-symmetric fully expanded matrix
 
     setNotUpdated();
 
-    //set everything to nullptr
+    // set everything to nullptr
     h_row_data_ = nullptr;
     h_col_data_ = nullptr;
     h_val_data_ = nullptr;
@@ -41,37 +43,37 @@ namespace ReSolve {
     d_row_data_ = nullptr;
     d_col_data_ = nullptr;
     d_val_data_ = nullptr;
-    
+
     owns_cpu_sparsity_pattern_ = false;
-    owns_cpu_values_ = false;
-    
+    owns_cpu_values_           = false;
+
     owns_gpu_sparsity_pattern_ = false;
-    owns_gpu_values_ = false;
+    owns_gpu_values_           = false;
   }
 
-  /** 
+  /**
    * @brief another basic constructor. It DOES NOT allocate any memory!
    *
    * @param[in] n         - number of rows
    * @param[in] m         - number of columns
-   * @param[in] nnz       - number of non-zeros        
-   * @param[in] symmetric - true if symmetric, false if non-symmetric       
-   * @param[in] expanded  - true if expanded, false if not       
+   * @param[in] nnz       - number of non-zeros
+   * @param[in] symmetric - true if symmetric, false if non-symmetric
+   * @param[in] expanded  - true if expanded, false if not
    */
-  matrix::Sparse::Sparse(index_type n, 
-                         index_type m, 
+  matrix::Sparse::Sparse(index_type n,
+                         index_type m,
                          index_type nnz,
-                         bool symmetric,
-                         bool expanded):
-    n_{n},
-    m_{m},
-    nnz_{nnz},
-    is_symmetric_{symmetric},
-    is_expanded_{expanded}
+                         bool       symmetric,
+                         bool       expanded)
+    : n_{n},
+      m_{m},
+      nnz_{nnz},
+      is_symmetric_{symmetric},
+      is_expanded_{expanded}
   {
     setNotUpdated();
 
-    //set everything to nullptr
+    // set everything to nullptr
     h_row_data_ = nullptr;
     h_col_data_ = nullptr;
     h_val_data_ = nullptr;
@@ -81,12 +83,12 @@ namespace ReSolve {
     d_val_data_ = nullptr;
 
     owns_cpu_sparsity_pattern_ = false;
-    owns_cpu_values_ = false;
-    
+    owns_cpu_values_           = false;
+
     owns_gpu_sparsity_pattern_ = false;
-    owns_gpu_values_ = false;
+    owns_gpu_values_           = false;
   }
-  
+
   /**
    * @brief destructor
    * */
@@ -96,15 +98,15 @@ namespace ReSolve {
     this->destroyMatrixData(memory::DEVICE);
   }
 
-  /** 
+  /**
    * @brief set the matrix update flags to false (for both HOST and DEVICE).
    */
   void matrix::Sparse::setNotUpdated()
   {
     h_data_updated_ = false;
-    d_data_updated_ = false; 
+    d_data_updated_ = false;
   }
-  
+
   /**
    * @brief get number of matrix rows
    *
@@ -163,8 +165,8 @@ namespace ReSolve {
   /**
    * @brief Set matrix symmetry property
    *
-   * @param[in] symmetric - true to set matrix to symmetric and false to set to non-symmetric 
-   */  
+   * @param[in] symmetric - true to set matrix to symmetric and false to set to non-symmetric
+   */
   void matrix::Sparse::setSymmetric(bool symmetric)
   {
     this->is_symmetric_ = symmetric;
@@ -174,7 +176,7 @@ namespace ReSolve {
    * @brief Set matrix "expanded" property
    *
    * @param[in] expanded - true to set matrix to expanded and false to set to not expanded
-   */  
+   */
   void matrix::Sparse::setExpanded(bool expanded)
   {
     this->is_expanded_ = expanded;
@@ -184,7 +186,7 @@ namespace ReSolve {
    * @brief Set number of non-zeros.
    *
    * @param[in] nnz_new - new number of non-zeros
-   */  
+   */
   void matrix::Sparse::setNnz(index_type nnz_new)
   {
     this->nnz_ = nnz_new;
@@ -196,38 +198,39 @@ namespace ReSolve {
    * @param[in] memspace - memory space (HOST or DEVICE) to set to "updated"
    *
    * @return 0 if successful, -1 if not.
-   * 
+   *
    * The method sets the boolean flag indicating that the `memspace` is updated.
    * It automatically sets the other data mirror to non-updated. You would
    * use this function if you update matrix data by accessing its raw pointers.
    * In such case, the matrix has no way of knowing which data is most recent, so
    * you have to tell it.
-   * 
+   *
    * @warning This is an expert-level function. Use only if you know what you are
    * doing.
-   * 
+   *
    * @note If you want to set both DEVICE and HOST memory to the same value
    * use syncData function.
-   */  
+   */
   int matrix::Sparse::setUpdated(memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
-    switch (memspace) {
-      case HOST:
-        h_data_updated_ = true;
-        d_data_updated_ = false;
-        break;
-      case DEVICE:
-        d_data_updated_ = true;
-        h_data_updated_ = false;
-        break;
+    switch (memspace)
+    {
+    case HOST:
+      h_data_updated_ = true;
+      d_data_updated_ = false;
+      break;
+    case DEVICE:
+      d_data_updated_ = true;
+      h_data_updated_ = false;
+      break;
     }
     return 0;
   }
 
   /**
    * @brief Set the pointers for matrix row, column, value data.
-   * 
+   *
    * Useful if interfacing with other codes - this function only assigns
    * pointers, but it does not allocate nor copy anything. The data ownership
    * flags would be set to false (default).
@@ -238,102 +241,112 @@ namespace ReSolve {
    * @param[in] memspace - memory space (HOST or DEVICE) of incoming data
    *
    * @return 0 if successful, 1 if not.
-   */  
-  int matrix::Sparse::setDataPointers(index_type* row_data,
-                                      index_type* col_data,
-                                      real_type*  val_data,
+   */
+  int matrix::Sparse::setDataPointers(index_type*         row_data,
+                                      index_type*         col_data,
+                                      real_type*          val_data,
                                       memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
 
     setNotUpdated();
 
-    switch (memspace) {
-      case HOST:
-        if (owns_cpu_sparsity_pattern_ && (h_row_data_ || h_col_data_)) {
-          out::error() << "Trying to set matrix host data, but the data already set!\n";
-          out::error() << "Ignoring setDataPointers function call ...\n";
-          return 1;
-        }
-        if (owns_cpu_values_ && h_val_data_) {
-          out::error() << "Trying to set matrix host values, but the values already set!\n";
-          out::error() << "Ignoring setValuesPointer function call ...\n";
-          return 1;
-        }
-        h_row_data_ = row_data;
-        h_col_data_ = col_data;
-        h_val_data_ = val_data;	
-        h_data_updated_ = true;
-        owns_cpu_sparsity_pattern_ = false;
-        owns_cpu_values_ = false;
-        break;
-      case DEVICE:
-        if (owns_gpu_sparsity_pattern_ && (d_row_data_ || d_col_data_)) {
-          out::error() << "Trying to set matrix host data, but the data already set!\n";
-          out::error() << "Ignoring setDataPointers function call ...\n";
-          return 1;
-        }
-        if (owns_gpu_values_ && d_val_data_) {
-          out::error() << "Trying to set matrix device values, but the values already set!\n";
-          out::error() << "Ignoring setValuesPointer function call ...\n";
-          return 1;
-        }
-        d_row_data_ = row_data;
-        d_col_data_ = col_data;
-        d_val_data_ = val_data;	
-        d_data_updated_ = true;
-        owns_gpu_sparsity_pattern_ = false;
-        owns_gpu_values_ = false;
-        break;
+    switch (memspace)
+    {
+    case HOST:
+      if (owns_cpu_sparsity_pattern_ && (h_row_data_ || h_col_data_))
+      {
+        out::error() << "Trying to set matrix host data, but the data already set!\n";
+        out::error() << "Ignoring setDataPointers function call ...\n";
+        return 1;
+      }
+      if (owns_cpu_values_ && h_val_data_)
+      {
+        out::error() << "Trying to set matrix host values, but the values already set!\n";
+        out::error() << "Ignoring setValuesPointer function call ...\n";
+        return 1;
+      }
+      h_row_data_                = row_data;
+      h_col_data_                = col_data;
+      h_val_data_                = val_data;
+      h_data_updated_            = true;
+      owns_cpu_sparsity_pattern_ = false;
+      owns_cpu_values_           = false;
+      break;
+    case DEVICE:
+      if (owns_gpu_sparsity_pattern_ && (d_row_data_ || d_col_data_))
+      {
+        out::error() << "Trying to set matrix host data, but the data already set!\n";
+        out::error() << "Ignoring setDataPointers function call ...\n";
+        return 1;
+      }
+      if (owns_gpu_values_ && d_val_data_)
+      {
+        out::error() << "Trying to set matrix device values, but the values already set!\n";
+        out::error() << "Ignoring setValuesPointer function call ...\n";
+        return 1;
+      }
+      d_row_data_                = row_data;
+      d_col_data_                = col_data;
+      d_val_data_                = val_data;
+      d_data_updated_            = true;
+      owns_gpu_sparsity_pattern_ = false;
+      owns_gpu_values_           = false;
+      break;
     }
     return 0;
   }
-  
+
   /**
-   * @brief destroy matrix data (HOST or DEVICE) if the matrix owns it 
+   * @brief destroy matrix data (HOST or DEVICE) if the matrix owns it
    * (will attempt to destroy all three arrays).
    *
    * @param[in] memspace - memory space (HOST or DEVICE) of incoming data
    *
    * @return 0 if successful, -1 if not.
    *
-   */ 
+   */
   int matrix::Sparse::destroyMatrixData(memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
-    switch (memspace) {
-      case HOST:
-        if (owns_cpu_sparsity_pattern_) {
-          delete [] h_row_data_;
-          delete [] h_col_data_;
-          h_row_data_ = nullptr;
-          h_col_data_ = nullptr;
-        }
-        if (owns_cpu_values_) {
-          delete [] h_val_data_;
-          h_val_data_ = nullptr;
-        }
-        return 0;
-      case DEVICE:
-        if (owns_gpu_sparsity_pattern_) {
-          mem_.deleteOnDevice(d_row_data_);
-          mem_.deleteOnDevice(d_col_data_);
-          d_row_data_ = nullptr;
-          d_col_data_ = nullptr;
-        }
-        if (owns_gpu_values_) {
-          mem_.deleteOnDevice(d_val_data_);
-          d_val_data_ = nullptr;
-        }
-        return 0;
-      default:
-        return -1;
+    switch (memspace)
+    {
+    case HOST:
+      if (owns_cpu_sparsity_pattern_)
+      {
+        delete[] h_row_data_;
+        delete[] h_col_data_;
+        h_row_data_ = nullptr;
+        h_col_data_ = nullptr;
+      }
+      if (owns_cpu_values_)
+      {
+        delete[] h_val_data_;
+        h_val_data_ = nullptr;
+      }
+      return 0;
+    case DEVICE:
+      if (owns_gpu_sparsity_pattern_)
+      {
+        mem_.deleteOnDevice(d_row_data_);
+        mem_.deleteOnDevice(d_col_data_);
+        d_row_data_ = nullptr;
+        d_col_data_ = nullptr;
+      }
+      if (owns_gpu_values_)
+      {
+        mem_.deleteOnDevice(d_val_data_);
+        d_val_data_ = nullptr;
+      }
+      return 0;
+    default:
+      return -1;
     }
   }
 
   /**
    * @brief updata matrix values using the _new_values_ provided either as HOST or as DEVICE array.
-   * 
+   *
    * This function will copy the data (not just assign a pointer) and allocate if needed.
    * It also sets ownership and update flags.
    *
@@ -342,56 +355,73 @@ namespace ReSolve {
    * @param[in] memspaceOut - memory space (HOST or DEVICE) of matrix values to be updated.
    *
    * @return 0 if successful, -1 if not.
-   */  
-  int matrix::Sparse::copyValues(const real_type* new_vals,
+   */
+  int matrix::Sparse::copyValues(const real_type*    new_vals,
                                  memory::MemorySpace memspaceIn,
                                  memory::MemorySpace memspaceOut)
   {
- 
+
     index_type nnz_current = nnz_;
-    //four cases (for now)
+    // four cases (for now)
     setNotUpdated();
-    int control=-1;
-    if ((memspaceIn == memory::HOST)   && (memspaceOut == memory::HOST))  { control = 0;}
-    if ((memspaceIn == memory::HOST)   && (memspaceOut == memory::DEVICE)){ control = 1;}
-    if ((memspaceIn == memory::DEVICE) && (memspaceOut == memory::HOST))  { control = 2;}
-    if ((memspaceIn == memory::DEVICE) && (memspaceOut == memory::DEVICE)){ control = 3;}
-   
-    if (memspaceOut == memory::HOST) {
-      //check if cpu data allocated
-      if (h_val_data_ == nullptr) {
+    int control = -1;
+    if ((memspaceIn == memory::HOST) && (memspaceOut == memory::HOST))
+    {
+      control = 0;
+    }
+    if ((memspaceIn == memory::HOST) && (memspaceOut == memory::DEVICE))
+    {
+      control = 1;
+    }
+    if ((memspaceIn == memory::DEVICE) && (memspaceOut == memory::HOST))
+    {
+      control = 2;
+    }
+    if ((memspaceIn == memory::DEVICE) && (memspaceOut == memory::DEVICE))
+    {
+      control = 3;
+    }
+
+    if (memspaceOut == memory::HOST)
+    {
+      // check if cpu data allocated
+      if (h_val_data_ == nullptr)
+      {
         this->h_val_data_ = new real_type[nnz_current];
-        owns_cpu_values_ = true;
+        owns_cpu_values_  = true;
       }
     }
 
-    if (memspaceOut == memory::DEVICE) {
-      //check if cuda data allocated
-      if (d_val_data_ == nullptr) {
-        mem_.allocateArrayOnDevice(&d_val_data_, nnz_current); 
+    if (memspaceOut == memory::DEVICE)
+    {
+      // check if cuda data allocated
+      if (d_val_data_ == nullptr)
+      {
+        mem_.allocateArrayOnDevice(&d_val_data_, nnz_current);
         owns_gpu_values_ = true;
       }
     }
 
-    switch(control)  {
-      case 0: //cpu->cpu
-        mem_.copyArrayHostToHost(h_val_data_, new_vals, nnz_current);
-        h_data_updated_ = true;
-        break;
-      case 2://cuda->cpu
-        mem_.copyArrayDeviceToHost(h_val_data_, new_vals, nnz_current);
-        h_data_updated_ = true;
-        break;
-      case 1://cpu->cuda
-        mem_.copyArrayHostToDevice(d_val_data_, new_vals, nnz_current);
-        d_data_updated_ = true;
-        break;
-      case 3://cuda->cuda
-        mem_.copyArrayDeviceToDevice(d_val_data_, new_vals, nnz_current);
-        d_data_updated_ = true;
-        break;
-      default:
-        return -1;
+    switch (control)
+    {
+    case 0: // cpu->cpu
+      mem_.copyArrayHostToHost(h_val_data_, new_vals, nnz_current);
+      h_data_updated_ = true;
+      break;
+    case 2: // cuda->cpu
+      mem_.copyArrayDeviceToHost(h_val_data_, new_vals, nnz_current);
+      h_data_updated_ = true;
+      break;
+    case 1: // cpu->cuda
+      mem_.copyArrayHostToDevice(d_val_data_, new_vals, nnz_current);
+      d_data_updated_ = true;
+      break;
+    case 3: // cuda->cuda
+      mem_.copyArrayDeviceToDevice(d_val_data_, new_vals, nnz_current);
+      d_data_updated_ = true;
+      break;
+    default:
+      return -1;
     }
     return 0;
   }
@@ -399,7 +429,7 @@ namespace ReSolve {
   /**
    * @brief updata matrix values using the _new_values_ provided either as
    * HOST or as DEVICE array.
-   * 
+   *
    * This function only assigns a pointer, but does not copy. It sets update
    * flags.
    *
@@ -407,39 +437,41 @@ namespace ReSolve {
    * @param[in] memspace - memory space (HOST or DEVICE) of _new_vals_
    *
    * @return 0 if successful, -1 if not.
-   */  
-  int matrix::Sparse::setValuesPointer(real_type* new_vals,
+   */
+  int matrix::Sparse::setValuesPointer(real_type*          new_vals,
                                        memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
     setNotUpdated();
 
-    switch (memspace) {
-      case HOST:
-        if (owns_cpu_values_ && h_val_data_) {
-          out::error() << "Trying to set matrix host values, but the values already set!\n";
-          out::error() << "Ignoring setValuesPointer function call ...\n";
-          return 1;
-        }
-        h_val_data_ = new_vals;	
-        h_data_updated_ = true;
-        owns_cpu_values_  = false;
-        break;
-      case DEVICE:
-        if (owns_gpu_values_ && d_val_data_) {
-          out::error() << "Trying to set matrix device values, but the values already set!\n";
-          out::error() << "Ignoring setValuesPointer function call ...\n";
-          return 1;
-        }
-        d_val_data_ = new_vals;	
-        d_data_updated_ = true;
-        owns_gpu_values_  = false;
-        break;
-      default:
-        return -1;
+    switch (memspace)
+    {
+    case HOST:
+      if (owns_cpu_values_ && h_val_data_)
+      {
+        out::error() << "Trying to set matrix host values, but the values already set!\n";
+        out::error() << "Ignoring setValuesPointer function call ...\n";
+        return 1;
+      }
+      h_val_data_      = new_vals;
+      h_data_updated_  = true;
+      owns_cpu_values_ = false;
+      break;
+    case DEVICE:
+      if (owns_gpu_values_ && d_val_data_)
+      {
+        out::error() << "Trying to set matrix device values, but the values already set!\n";
+        out::error() << "Ignoring setValuesPointer function call ...\n";
+        return 1;
+      }
+      d_val_data_      = new_vals;
+      d_data_updated_  = true;
+      owns_gpu_values_ = false;
+      break;
+    default:
+      return -1;
     }
     return 0;
   }
 
 } // namespace ReSolve
-

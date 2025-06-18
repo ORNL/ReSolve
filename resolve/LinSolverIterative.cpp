@@ -3,30 +3,29 @@
  * @author Kasia Swirydowicz (kasia.swirydowicz@pnnl.gov)
  * @author Slaven Peles (peless@ornl.gov)
  * @brief Implementation of iterative solver base class.
- * 
+ *
  */
-#include <resolve/matrix/Sparse.hpp>
-#include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/LinSolverDirect.hpp>
 #include <resolve/LinSolverIterative.hpp>
+#include <resolve/matrix/Sparse.hpp>
+#include <resolve/utilities/logger/Logger.hpp>
 
-
-namespace ReSolve 
+namespace ReSolve
 {
   using out = io::Logger;
-
 
   LinSolverIterative::LinSolverIterative()
   {
   }
-  
+
   LinSolverIterative::~LinSolverIterative()
   {
   }
 
   int LinSolverIterative::setup(matrix::Sparse* A)
   {
-    if (A == nullptr) {
+    if (A == nullptr)
+    {
       return 1;
     }
     this->A_ = A;
@@ -48,7 +47,6 @@ namespace ReSolve
     return total_iters_;
   }
 
-
   real_type LinSolverIterative::getTol() const
   {
     return tol_;
@@ -65,16 +63,13 @@ namespace ReSolve
     return 1;
   }
 
-  void  LinSolverIterative::setTol(real_type new_tol)
+  void LinSolverIterative::setTol(real_type new_tol)
   {
     this->tol_ = new_tol;
   }
 
-  void  LinSolverIterative::setMaxit(index_type new_maxit)
+  void LinSolverIterative::setMaxit(index_type new_maxit)
   {
     this->maxit_ = new_maxit;
   }
-}
-
-
-
+} // namespace ReSolve

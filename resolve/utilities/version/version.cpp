@@ -1,7 +1,8 @@
-#include <unordered_map>
-#include <string>
-
 #include "version.hpp"
+
+#include <string>
+#include <unordered_map>
+
 #include <resolve/resolve_defs.hpp>
 
 namespace ReSolve
@@ -16,10 +17,10 @@ namespace ReSolve
   }
 
   // Function that grabs ReSolves Version as a string
-  int VersionGetVersionStr(std::string &str)
+  int VersionGetVersionStr(std::string& str)
   {
     str = RESOLVE_VERSION;
     return 0;
   }
 
-}
+} // namespace ReSolve

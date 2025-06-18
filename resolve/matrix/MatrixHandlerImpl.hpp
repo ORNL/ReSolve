@@ -6,17 +6,18 @@ namespace ReSolve
   {
     class Vector;
   }
+
   namespace matrix
   {
     class Sparse;
     class Coo;
     class Csc;
     class Csr;
-  }
-}
+  } // namespace matrix
+} // namespace ReSolve
 
-
-namespace ReSolve {
+namespace ReSolve
+{
   /**
    * @class MatrixHandlerImpl
    *
@@ -26,31 +27,33 @@ namespace ReSolve {
   {
     using vector_type = vector::Vector;
 
-    public:
-      MatrixHandlerImpl()
-      {}
-      virtual ~MatrixHandlerImpl()
-      {}
+  public:
+    MatrixHandlerImpl()
+    {
+    }
 
-      virtual int csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr) = 0;
+    virtual ~MatrixHandlerImpl()
+    {
+    }
 
-      virtual int transpose(matrix::Csr* A, matrix::Csr* At) = 0;
+    virtual int csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr) = 0;
 
-      virtual int leftScale(vector_type* diag, matrix::Csr* A) = 0;
+    virtual int transpose(matrix::Csr* A, matrix::Csr* At) = 0;
 
-      virtual int rightScale(matrix::Csr* A, vector_type* diag) = 0;
+    virtual int leftScale(vector_type* diag, matrix::Csr* A) = 0;
 
-      virtual int addConst(matrix::Sparse* A, real_type alpha) = 0;
+    virtual int rightScale(matrix::Csr* A, vector_type* diag) = 0;
 
-      virtual int matvec(matrix::Sparse* A,
-                         vector_type* vec_x,
-                         vector_type* vec_result,
-                         const real_type* alpha,
-                         const real_type* beta) = 0;
-      virtual int matrixInfNorm(matrix::Sparse* A, real_type* norm) = 0;
+    virtual int addConst(matrix::Sparse* A, real_type alpha) = 0;
 
-      virtual void setValuesChanged(bool isValuesChanged) = 0;
+    virtual int matvec(matrix::Sparse*  A,
+                       vector_type*     vec_x,
+                       vector_type*     vec_result,
+                       const real_type* alpha,
+                       const real_type* beta)                     = 0;
+    virtual int matrixInfNorm(matrix::Sparse* A, real_type* norm) = 0;
+
+    virtual void setValuesChanged(bool isValuesChanged) = 0;
   };
 
 } // namespace ReSolve
-
