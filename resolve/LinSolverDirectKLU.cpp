@@ -556,6 +556,7 @@ namespace ReSolve
   //
   // Private methods
   //
+  
   /**
    * @brief Initialize the parameter list for KLU solver.
    *

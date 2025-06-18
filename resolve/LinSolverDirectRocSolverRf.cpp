@@ -163,7 +163,7 @@ namespace ReSolve
 
       error_sum += status_rocblas_;
 
-      status_rocsparse_  = rocsparse_dcsrsv_buffer_size(workspace_->getRocsparseHandle(),
+      status_rocsparse_ = rocsparse_dcsrsv_buffer_size(workspace_->getRocsparseHandle(),
                                                        rocsparse_operation_none,
                                                        n,
                                                        L_csr_->getNnz(),
@@ -173,10 +173,11 @@ namespace ReSolve
                                                        L_csr_->getColData(ReSolve::memory::DEVICE),
                                                        info_L_,
                                                        &L_buffer_size);
-      error_sum         += status_rocsparse_;
 
+      error_sum += status_rocsparse_;
       mem_.allocateBufferOnDevice(&L_buffer_, L_buffer_size);
-      status_rocsparse_  = rocsparse_dcsrsv_buffer_size(workspace_->getRocsparseHandle(),
+
+      status_rocsparse_ = rocsparse_dcsrsv_buffer_size(workspace_->getRocsparseHandle(),
                                                        rocsparse_operation_none,
                                                        n,
                                                        U_csr_->getNnz(),
@@ -186,10 +187,11 @@ namespace ReSolve
                                                        U_csr_->getColData(ReSolve::memory::DEVICE),
                                                        info_U_,
                                                        &U_buffer_size);
-      error_sum         += status_rocsparse_;
+
+      error_sum += status_rocsparse_;
       mem_.allocateBufferOnDevice(&U_buffer_, U_buffer_size);
 
-      status_rocsparse_  = rocsparse_dcsrsv_analysis(workspace_->getRocsparseHandle(),
+      status_rocsparse_ = rocsparse_dcsrsv_analysis(workspace_->getRocsparseHandle(),
                                                     rocsparse_operation_none,
                                                     n,
                                                     L_csr_->getNnz(),
@@ -201,12 +203,14 @@ namespace ReSolve
                                                     rocsparse_analysis_policy_force,
                                                     rocsparse_solve_policy_auto,
                                                     L_buffer_);
-      error_sum         += status_rocsparse_;
+
+      error_sum += status_rocsparse_;
       if (status_rocsparse_ != 0)
       {
         std::cout << "status after analysis 1: " << status_rocsparse_ << "\n";
       }
-      status_rocsparse_  = rocsparse_dcsrsv_analysis(workspace_->getRocsparseHandle(),
+
+      status_rocsparse_ = rocsparse_dcsrsv_analysis(workspace_->getRocsparseHandle(),
                                                     rocsparse_operation_none,
                                                     n,
                                                     U_csr_->getNnz(),
@@ -218,11 +222,13 @@ namespace ReSolve
                                                     rocsparse_analysis_policy_force,
                                                     rocsparse_solve_policy_auto,
                                                     U_buffer_);
-      error_sum         += status_rocsparse_;
+
+      error_sum += status_rocsparse_;
       if (status_rocsparse_ != 0)
       {
         out::error() << "status after analysis 2: " << status_rocsparse_ << "\n";
       }
+
       // allocate aux data
       if (d_aux1_ == nullptr)
       {
@@ -376,7 +382,7 @@ namespace ReSolve
     if (solve_mode_ == 0)
     {
       mem_.deviceSynchronize();
-      status_rocblas_  = rocsolver_dcsrrf_solve(workspace_->getRocblasHandle(),
+      status_rocblas_ = rocsolver_dcsrrf_solve(workspace_->getRocblasHandle(),
                                                A_->getNumRows(),
                                                1,
                                                M_->getNnz(),
@@ -388,7 +394,8 @@ namespace ReSolve
                                                x->getData(ReSolve::memory::DEVICE),
                                                A_->getNumRows(),
                                                infoM_);
-      error_sum       += status_rocblas_;
+
+      error_sum += status_rocblas_;
       mem_.deviceSynchronize();
     }
     else

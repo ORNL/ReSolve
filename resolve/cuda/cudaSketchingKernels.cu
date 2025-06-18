@@ -190,15 +190,17 @@ namespace ReSolve
           real_type D3 = s_data[i3];
 
           real_type T;
-          T          = D0;
-          D0         = D0 + D2;
-          D2         = T - D2;
-          T          = D1;
-          D1         = D1 + D3;
-          D3         = T - D3;
+          T  = D0;
+          D0 = D0 + D2;
+          D2 = T - D2;
+          T  = D1;
+          D1 = D1 + D3;
+          D3 = T - D3;
+
           T          = D0;
           s_data[i0] = D0 + D1;
           s_data[i1] = T - D1;
+
           T          = D2;
           s_data[i2] = D2 + D3;
           s_data[i3] = T - D3;

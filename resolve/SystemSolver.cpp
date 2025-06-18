@@ -443,11 +443,12 @@ namespace ReSolve
   int SystemSolver::refactorizationSetup()
   {
     int status = 0;
+
     // Get factors and permutation vectors
-    L_         = factorizationSolver_->getLFactor();
-    U_         = factorizationSolver_->getUFactor();
-    P_         = factorizationSolver_->getPOrdering();
-    Q_         = factorizationSolver_->getQOrdering();
+    L_ = factorizationSolver_->getLFactor();
+    U_ = factorizationSolver_->getUFactor();
+    P_ = factorizationSolver_->getPOrdering();
+    Q_ = factorizationSolver_->getQOrdering();
 
     if (L_ == nullptr)
     {

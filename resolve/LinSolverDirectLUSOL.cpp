@@ -395,7 +395,8 @@ namespace ReSolve
 
     index_type current_nnz     = luparm_[23];
     index_type n_singularities = luparm_[10];
-    U_                         = static_cast<matrix::Sparse*>(new matrix::Csr(n_, m_, current_nnz - n_singularities, false, true));
+
+    U_ = static_cast<matrix::Sparse*>(new matrix::Csr(n_, m_, current_nnz - n_singularities, false, true));
     U_->allocateMatrixData(memory::HOST);
 
     index_type* rows    = U_->getRowData(memory::HOST);
