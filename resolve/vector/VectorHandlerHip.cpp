@@ -1,13 +1,16 @@
-#include <iostream>
-
-#include <resolve/utilities/logger/Logger.hpp>
-#include <resolve/hip/hipKernels.h>
-#include <resolve/vector/Vector.hpp>
-#include <resolve/workspace/LinAlgWorkspace.hpp>
-#include <resolve/vector/VectorHandlerImpl.hpp>
 #include "VectorHandlerHip.hpp"
 
-namespace ReSolve {
+#include <iostream>
+
+#include <resolve/hip/hipKernels.h>
+
+#include <resolve/utilities/logger/Logger.hpp>
+#include <resolve/vector/Vector.hpp>
+#include <resolve/vector/VectorHandlerImpl.hpp>
+#include <resolve/workspace/LinAlgWorkspace.hpp>
+
+namespace ReSolve
+{
   using out = io::Logger;
 
   /**
@@ -22,7 +25,7 @@ namespace ReSolve {
    *
    * @param new_workspace - workspace to be set
    */
-  VectorHandlerHip:: VectorHandlerHip(LinAlgWorkspaceHIP* new_workspace)
+  VectorHandlerHip::VectorHandlerHip(LinAlgWorkspaceHIP* new_workspace)
   {
     workspace_ = new_workspace;
   }
@@ -32,7 +35,7 @@ namespace ReSolve {
    */
   VectorHandlerHip::~VectorHandlerHip()
   {
-    //delete the workspace TODO
+    // delete the workspace TODO
   }
 
   /**
@@ -47,10 +50,13 @@ namespace ReSolve {
   real_type VectorHandlerHip::dot(vector::Vector* x, vector::Vector* y)
   {
     rocblas_handle handle_rocblas = workspace_->getRocblasHandle();
-    double nrm = 0.0;
-    rocblas_status st= rocblas_ddot (handle_rocblas,  x->getSize(), x->getData(memory::DEVICE), 1, y->getData(memory::DEVICE), 1, &nrm);
+    double         nrm            = 0.0;
+    rocblas_status st             = rocblas_ddot(handle_rocblas, x->getSize(), x->getData(memory::DEVICE), 1, y->getData(memory::DEVICE), 1, &nrm);
 
-    if (st!=0) {printf("dot product crashed with code %d \n", st);}
+    if (st != 0)
+    {
+      printf("dot product crashed with code %d \n", st);
+    }
     return nrm;
   }
 
@@ -63,10 +69,11 @@ namespace ReSolve {
    */
   void VectorHandlerHip::scal(const real_type* alpha, vector::Vector* x)
   {
-    rocblas_handle handle_rocblas =  workspace_->getRocblasHandle();
-    rocblas_status st = rocblas_dscal(handle_rocblas, x->getSize(), alpha, x->getData(memory::DEVICE), 1);
+    rocblas_handle handle_rocblas = workspace_->getRocblasHandle();
+    rocblas_status st             = rocblas_dscal(handle_rocblas, x->getSize(), alpha, x->getData(memory::DEVICE), 1);
 
-    if (st!=0) {
+    if (st != 0)
+    {
       ReSolve::io::Logger::error() << "scal crashed with code " << st << "\n";
     }
   }
@@ -82,7 +89,8 @@ namespace ReSolve {
   real_type VectorHandlerHip::infNorm(vector::Vector* x)
   {
 
-    if (workspace_->getNormBufferState() == false) { // not allocated
+    if (workspace_->getNormBufferState() == false)
+    { // not allocated
       real_type* buffer;
       mem_.allocateArrayOnDevice(&buffer, 1024);
       workspace_->setNormBuffer(buffer);
@@ -90,9 +98,9 @@ namespace ReSolve {
     }
     real_type norm;
     hip::vector_inf_norm(x->getSize(),
-                    x->getData(memory::DEVICE),
-                    workspace_->getNormBuffer(),
-                    &norm);
+                         x->getData(memory::DEVICE),
+                         workspace_->getNormBuffer(),
+                         &norm);
     return norm;
   }
 
@@ -104,9 +112,9 @@ namespace ReSolve {
    * @param[in,out] y The second vector (result is return in y)
    *
    */
-  void VectorHandlerHip::axpy(const  real_type* alpha, vector::Vector* x, vector::Vector* y)
+  void VectorHandlerHip::axpy(const real_type* alpha, vector::Vector* x, vector::Vector* y)
   {
-    rocblas_handle handle_rocblas =  workspace_->getRocblasHandle();
+    rocblas_handle handle_rocblas = workspace_->getRocblasHandle();
     rocblas_daxpy(handle_rocblas,
                   x->getSize(),
                   alpha,
@@ -114,7 +122,6 @@ namespace ReSolve {
                   1,
                   y->getData(memory::DEVICE),
                   1);
-
   }
 
   /**
@@ -133,48 +140,50 @@ namespace ReSolve {
    * @pre   V is stored colum-wise, _n_ > 0, _k_ > 0
    *
    */
-  void VectorHandlerHip::gemv(char transpose,
-                              index_type n,
-                              index_type k,
+  void VectorHandlerHip::gemv(char             transpose,
+                              index_type       n,
+                              index_type       k,
                               const real_type* alpha,
                               const real_type* beta,
-                              vector::Vector* V,
-                              vector::Vector* y,
-                              vector::Vector* x)
+                              vector::Vector*  V,
+                              vector::Vector*  y,
+                              vector::Vector*  x)
   {
-    rocblas_handle handle_rocblas =  workspace_->getRocblasHandle();
-    switch (transpose) {
-      case 'T':
-        rocblas_dgemv(handle_rocblas,
-                      rocblas_operation_transpose,
-                      n,
-                      k,
-                      alpha,
-                      V->getData(memory::DEVICE),
-                      n,
-                      y->getData(memory::DEVICE),
-                      1,
-                      beta,
-                      x->getData(memory::DEVICE),
-                      1);
-        return;
-      default:
-        rocblas_dgemv(handle_rocblas,
-                      rocblas_operation_none,
-                      n,
-                      k,
-                      alpha,
-                      V->getData(memory::DEVICE),
-                      n,
-                      y->getData(memory::DEVICE),
-                      1,
-                      beta,
-                      x->getData(memory::DEVICE),
-                      1);
-        if (transpose != 'N') {
-          out::warning() << "Unrecognized transpose option " << transpose
-                         << " in gemv. Using non-transposed multivector.\n";
-        }
+    rocblas_handle handle_rocblas = workspace_->getRocblasHandle();
+    switch (transpose)
+    {
+    case 'T':
+      rocblas_dgemv(handle_rocblas,
+                    rocblas_operation_transpose,
+                    n,
+                    k,
+                    alpha,
+                    V->getData(memory::DEVICE),
+                    n,
+                    y->getData(memory::DEVICE),
+                    1,
+                    beta,
+                    x->getData(memory::DEVICE),
+                    1);
+      return;
+    default:
+      rocblas_dgemv(handle_rocblas,
+                    rocblas_operation_none,
+                    n,
+                    k,
+                    alpha,
+                    V->getData(memory::DEVICE),
+                    n,
+                    y->getData(memory::DEVICE),
+                    1,
+                    beta,
+                    x->getData(memory::DEVICE),
+                    1);
+      if (transpose != 'N')
+      {
+        out::warning() << "Unrecognized transpose option " << transpose
+                       << " in gemv. Using non-transposed multivector.\n";
+      }
     }
   }
 
@@ -192,26 +201,27 @@ namespace ReSolve {
   void VectorHandlerHip::massAxpy(index_type size, vector::Vector* alpha, index_type k, vector::Vector* x, vector::Vector* y)
   {
     using namespace constants;
-    if (k < 200) {
-      hip::mass_axpy(size, k, x->getData(memory::DEVICE), y->getData(memory::DEVICE),alpha->getData(memory::DEVICE));
-
-    } else {
-      rocblas_handle handle_rocblas =  workspace_->getRocblasHandle();
+    if (k < 200)
+    {
+      hip::mass_axpy(size, k, x->getData(memory::DEVICE), y->getData(memory::DEVICE), alpha->getData(memory::DEVICE));
+    }
+    else
+    {
+      rocblas_handle handle_rocblas = workspace_->getRocblasHandle();
       rocblas_dgemm(handle_rocblas,
                     rocblas_operation_none,
                     rocblas_operation_none,
-                    size,       // m
-                    1,          // n
-                    k,      // k
-                    &MINUS_ONE, // alpha
-                    x->getData(memory::DEVICE), // A
-                    size,       // lda
+                    size,                           // m
+                    1,                              // n
+                    k,                              // k
+                    &MINUS_ONE,                     // alpha
+                    x->getData(memory::DEVICE),     // A
+                    size,                           // lda
                     alpha->getData(memory::DEVICE), // B
-                    k,      // ldb
+                    k,                              // ldb
                     &ONE,
-                    y->getData(memory::DEVICE),          // c
-                    size);      // ldc
-
+                    y->getData(memory::DEVICE), // c
+                    size);                      // ldc
     }
   }
 
@@ -233,25 +243,27 @@ namespace ReSolve {
   {
     using namespace constants;
 
-    if (k < 200) {
-      hip::mass_inner_product_two_vectors(size, k, x->getData(0, memory::DEVICE) , x->getData(1, memory::DEVICE), V->getData(memory::DEVICE), res->getData(memory::DEVICE));
-    } else {
-      rocblas_handle handle_rocblas =  workspace_->getRocblasHandle();
+    if (k < 200)
+    {
+      hip::mass_inner_product_two_vectors(size, k, x->getData(0, memory::DEVICE), x->getData(1, memory::DEVICE), V->getData(memory::DEVICE), res->getData(memory::DEVICE));
+    }
+    else
+    {
+      rocblas_handle handle_rocblas = workspace_->getRocblasHandle();
       rocblas_dgemm(handle_rocblas,
                     rocblas_operation_transpose,
                     rocblas_operation_none,
-                    k,   //m
-                    2,       //n
-                    size,    //k
-                    &ONE,   //alpha
-                    V->getData(memory::DEVICE),       //A
-                    size,    //lda
-                    x->getData(memory::DEVICE),       //B
-                    size,    //ldb
+                    k,                          // m
+                    2,                          // n
+                    size,                       // k
+                    &ONE,                       // alpha
+                    V->getData(memory::DEVICE), // A
+                    size,                       // lda
+                    x->getData(memory::DEVICE), // B
+                    size,                       // ldb
                     &ZERO,
-                    res->getData(memory::DEVICE),     //c
-                    k);  //ldc
-
+                    res->getData(memory::DEVICE), // c
+                    k);                           // ldc
     }
   }
 
@@ -271,8 +283,8 @@ namespace ReSolve {
   int VectorHandlerHip::scale(vector::Vector* diag, vector::Vector* vec)
   {
     real_type* diag_data = diag->getData(memory::DEVICE);
-    real_type* vec_data = vec->getData(memory::DEVICE);
-    index_type n = vec->getSize();
+    real_type* vec_data  = vec->getData(memory::DEVICE);
+    index_type n         = vec->getSize();
     hip::scale(n, diag_data, vec_data);
     vec->setDataUpdated(memory::DEVICE);
     return 0;

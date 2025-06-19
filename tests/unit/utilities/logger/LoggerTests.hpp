@@ -5,190 +5,201 @@
  */
 
 #pragma once
+#include <iterator>
+#include <sstream>
 #include <string>
 #include <vector>
-#include <sstream>
-#include <iterator>
+
+#include <resolve/utilities/logger/Logger.hpp>
 #include <tests/unit/TestBase.hpp>
 
-namespace ReSolve { namespace tests {
-  /**
-   * @brief Class implementing unit tests for Logger class.
-   * 
-   * The LoggerTests class is implemented entirely in this header file.
-   * Adding new unit test requires simply adding another method to this
-   * class.
-   */
-  class LoggerTests : TestBase
+namespace ReSolve
+{
+  namespace tests
   {
-  public:
-    LoggerTests(){}
-    virtual ~LoggerTests(){}
-
     /**
-     * @brief Test data stream for error log messages.
-     * 
-     * This method tests streaming messages to `Logger::error()` data
-     * stream. The method streams messages to all available output streams,
-     * however only mesages streamed to the error stream should be logged.
+     * @brief Class implementing unit tests for Logger class.
+     *
+     * The LoggerTests class is implemented entirely in this header file.
+     * Adding new unit test requires simply adding another method to this
+     * class.
      */
-    TestOutcome errorOutput()
+    class LoggerTests : TestBase
     {
-      using out = ReSolve::io::Logger;
-      std::string s1("Test error output ...");
-      std::string s2("Another error output test ...\n");
-      std::string answer = error_text() + s1 + "\n" + error_text() + s2;
+    public:
+      LoggerTests()
+      {
+      }
 
-      TestStatus status;
+      virtual ~LoggerTests()
+      {
+      }
 
-      std::ostringstream file;
+      /**
+       * @brief Test data stream for error log messages.
+       *
+       * This method tests streaming messages to `Logger::error()` data
+       * stream. The method streams messages to all available output streams,
+       * however only mesages streamed to the error stream should be logged.
+       */
+      TestOutcome errorOutput()
+      {
+        using out = ReSolve::io::Logger;
+        std::string s1("Test error output ...");
+        std::string s2("Another error output test ...\n");
+        std::string answer = error_text() + s1 + "\n" + error_text() + s2;
 
-      out::setOutput(file);
-      out::setVerbosity(out::ERRORS);
-      out::error() << s1 << std::endl;
-      out::error() << s2;
+        TestStatus status;
 
-      out::warning() << s1;
-      out::warning() << s2;
-      out::summary() << s1;
-      out::misc()    << s1;
+        std::ostringstream file;
 
-      // std::cout << file.str();
-      // std::cout << answer;
+        out::setOutput(file);
+        out::setVerbosity(out::ERRORS);
+        out::error() << s1 << std::endl;
+        out::error() << s2;
 
-      status = (answer == file.str());
+        out::warning() << s1;
+        out::warning() << s2;
+        out::summary() << s1;
+        out::misc() << s1;
 
-      return status.report(__func__);
-    }
+        // std::cout << file.str();
+        // std::cout << answer;
 
-    /**
-     * @brief Test data stream for warning log messages.
-     * 
-     * This method tests streaming messages to `Logger::error()` data
-     * stream. The method streams messages to all available output streams,
-     * however only mesages streamed to the error and warning streams should
-     * be logged.
-     */
-    TestOutcome warningOutput()
-    {
-      using out = ReSolve::io::Logger;
-      std::string s1("Test error output ...\n");
-      std::string s2("Test warning output ...\n");
-      std::string answer = error_text() + s1 + warning_text() + s2;
+        status = (answer == file.str());
 
-      TestStatus status;
+        return status.report(__func__);
+      }
 
-      std::ostringstream file;
+      /**
+       * @brief Test data stream for warning log messages.
+       *
+       * This method tests streaming messages to `Logger::error()` data
+       * stream. The method streams messages to all available output streams,
+       * however only mesages streamed to the error and warning streams should
+       * be logged.
+       */
+      TestOutcome warningOutput()
+      {
+        using out = ReSolve::io::Logger;
+        std::string s1("Test error output ...\n");
+        std::string s2("Test warning output ...\n");
+        std::string answer = error_text() + s1 + warning_text() + s2;
 
-      out::setOutput(file);
-      out::setVerbosity(out::WARNINGS);
+        TestStatus status;
 
-      out::error()   << s1;
-      out::warning() << s2;
-      out::summary() << s1;
-      out::misc()    << s1;
+        std::ostringstream file;
 
-      // std::cout << file.str();
+        out::setOutput(file);
+        out::setVerbosity(out::WARNINGS);
 
-      status = (answer == file.str());
+        out::error() << s1;
+        out::warning() << s2;
+        out::summary() << s1;
+        out::misc() << s1;
 
-      return status.report(__func__);
-    }
+        // std::cout << file.str();
 
-    /**
-     * @brief Test data stream for result summary log messages.
-     * 
-     * This method tests streaming messages to `Logger::error()` data
-     * stream. The method streams messages to all available output streams,
-     * however only mesages streamed to the error, warning, and result summary
-     * streams should be logged.
-     */
-    TestOutcome summaryOutput()
-    {
-      using out = ReSolve::io::Logger;
-      std::string s1("Test error output ...\n");
-      std::string s2("Test warning output ...\n");
-      std::string s3("Test summary output ...\n");
-      std::string answer = error_text() + s1 + warning_text() + s2 + summary_ + s3;
+        status = (answer == file.str());
 
-      TestStatus status;
+        return status.report(__func__);
+      }
 
-      std::ostringstream file;
+      /**
+       * @brief Test data stream for result summary log messages.
+       *
+       * This method tests streaming messages to `Logger::error()` data
+       * stream. The method streams messages to all available output streams,
+       * however only mesages streamed to the error, warning, and result summary
+       * streams should be logged.
+       */
+      TestOutcome summaryOutput()
+      {
+        using out = ReSolve::io::Logger;
+        std::string s1("Test error output ...\n");
+        std::string s2("Test warning output ...\n");
+        std::string s3("Test summary output ...\n");
+        std::string answer = error_text() + s1 + warning_text() + s2 + summary_ + s3;
 
-      out::setOutput(file);
-      out::setVerbosity(out::SUMMARY);
+        TestStatus status;
 
-      out::error()   << s1;
-      out::warning() << s2;
-      out::summary() << s3;
-      out::misc()    << s1;
+        std::ostringstream file;
 
-      // std::cout << file.str();
+        out::setOutput(file);
+        out::setVerbosity(out::SUMMARY);
 
-      status = (answer == file.str());
+        out::error() << s1;
+        out::warning() << s2;
+        out::summary() << s3;
+        out::misc() << s1;
 
-      return status.report(__func__);
-    }
+        // std::cout << file.str();
 
-    /**
-     * @brief Test data stream for all other log messages.
-     * 
-     * This method tests streaming messages to `Logger::error()` data
-     * stream. The method streams messages to all available output streams
-     * and all messages should be logged.
-     */
-    TestOutcome miscOutput()
-    {
-      using out = ReSolve::io::Logger;
-      std::string s1("Test error output ...\n");
-      std::string s2("Test warning output ...\n");
-      std::string s3("Test summary output ...\n");
-      std::string s4("Test any other output ...\n");
-      std::string answer = error_text() + s1 + warning_text() + s2 + summary_ + s3 + message_ + s4;
+        status = (answer == file.str());
 
-      TestStatus status;
+        return status.report(__func__);
+      }
 
-      std::ostringstream file;
+      /**
+       * @brief Test data stream for all other log messages.
+       *
+       * This method tests streaming messages to `Logger::error()` data
+       * stream. The method streams messages to all available output streams
+       * and all messages should be logged.
+       */
+      TestOutcome miscOutput()
+      {
+        using out = ReSolve::io::Logger;
+        std::string s1("Test error output ...\n");
+        std::string s2("Test warning output ...\n");
+        std::string s3("Test summary output ...\n");
+        std::string s4("Test any other output ...\n");
+        std::string answer = error_text() + s1 + warning_text() + s2 + summary_ + s3 + message_ + s4;
 
-      out::setOutput(file);
-      out::setVerbosity(out::EVERYTHING);
+        TestStatus status;
 
-      out::error()   << s1;
-      out::warning() << s2;
-      out::summary() << s3;
-      out::misc()    << s4;
+        std::ostringstream file;
 
-      // std::cout << file.str();
+        out::setOutput(file);
+        out::setVerbosity(out::EVERYTHING);
 
-      status = (answer == file.str());
+        out::error() << s1;
+        out::warning() << s2;
+        out::summary() << s3;
+        out::misc() << s4;
 
-      return status.report(__func__);
-    }
+        // std::cout << file.str();
 
-  private:
-    /// Private method to return the string preceding error output
-    std::string error_text()
-    {
-      using namespace colors;
-      std::ostringstream stream;
-      stream << "[" << RED << "ERROR" << CLEAR << "] ";
-      return stream.str();
-    }
+        status = (answer == file.str());
 
-    /// Private method to return the string preceding warning output
-    std::string warning_text()
-    {
-      using namespace colors;
-      std::ostringstream stream;
-      stream << "[" << YELLOW << "WARNING" << CLEAR << "] ";
-      return stream.str();
-    }
+        return status.report(__func__);
+      }
 
-    /// String preceding output of a result summary
-    const std::string summary_ = "[SUMMARY] ";
+    private:
+      /// Private method to return the string preceding error output
+      std::string error_text()
+      {
+        using namespace colors;
+        std::ostringstream stream;
+        stream << "[" << RED << "ERROR" << CLEAR << "] ";
+        return stream.str();
+      }
 
-    /// String preceding miscellaneous output
-    const std::string message_ = "[MESSAGE] ";
-  }; // class LoggerTests
+      /// Private method to return the string preceding warning output
+      std::string warning_text()
+      {
+        using namespace colors;
+        std::ostringstream stream;
+        stream << "[" << YELLOW << "WARNING" << CLEAR << "] ";
+        return stream.str();
+      }
 
-}} // namespace ReSolve::tests
+      /// String preceding output of a result summary
+      const std::string summary_ = "[SUMMARY] ";
+
+      /// String preceding miscellaneous output
+      const std::string message_ = "[MESSAGE] ";
+    }; // class LoggerTests
+
+  } // namespace tests
+} // namespace ReSolve

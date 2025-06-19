@@ -1,5 +1,6 @@
 #pragma once
 #include <cassert>
+
 #include <resolve/utilities/logger/Logger.hpp>
 
 namespace ReSolve
@@ -8,7 +9,7 @@ namespace ReSolve
   {
     /**
      * @brief Class containing dummy functions when there is no GPU support.
-     * 
+     *
      * @author Slaven Peles <peless@ornl.gov>
      */
     struct Cpu
@@ -20,10 +21,10 @@ namespace ReSolve
       {
         // Nothing to synchronize
       }
-      
+
       /**
        * @brief Dummy function to stand in when GPU support is not enabled.
-       * 
+       *
        * @return Allways return success!
        */
       static int getLastDeviceError()
@@ -31,10 +32,10 @@ namespace ReSolve
         // not on device, nothing to get
         return 0;
       }
-      
-      /** 
+
+      /**
        * @brief Dummy function to notify us something is wrong.
-       * 
+       *
        * This will be called only if GPU device support is not built, so
        * trying to access a device should indicate a bug in the code.
        *
@@ -46,9 +47,9 @@ namespace ReSolve
         return -1;
       }
 
-      /** 
+      /**
        * @brief Dummy function to notify us something is wrong.
-       * 
+       *
        * This will be called only if GPU device support is not built, so
        * trying to access a device should indicate a bug in the code.
        *
@@ -61,9 +62,9 @@ namespace ReSolve
         return -1;
       }
 
-      /** 
+      /**
        * @brief Dummy function to notify us something is wrong.
-       * 
+       *
        * This will be called only if GPU device support is not built, so
        * trying to access a device should indicate a bug in the code.
        *
@@ -76,9 +77,9 @@ namespace ReSolve
         return -1;
       }
 
-      /** 
+      /**
        * @brief Dummy function to notify us something is wrong.
-       * 
+       *
        * This will be called only if GPU device support is not built, so
        * trying to access a device should indicate a bug in the code.
        *
@@ -91,9 +92,9 @@ namespace ReSolve
         return -1;
       }
 
-      /** 
+      /**
        * @brief Dummy function to notify us something is wrong.
-       * 
+       *
        * This will be called only if GPU device support is not built, so
        * trying to access a device should indicate a bug in the code.
        *
@@ -106,9 +107,9 @@ namespace ReSolve
         return -1;
       }
 
-      /** 
+      /**
        * @brief Dummy function to notify us something is wrong.
-       * 
+       *
        * This will be called only if GPU device support is not built, so
        * trying to access a device should indicate a bug in the code.
        *
@@ -121,9 +122,9 @@ namespace ReSolve
         return -1;
       }
 
-      /** 
+      /**
        * @brief Dummy function to notify us something is wrong.
-       * 
+       *
        * This will be called only if GPU device support is not built, so
        * trying to access a device should indicate a bug in the code.
        *
@@ -146,4 +147,4 @@ namespace ReSolve
     }; // struct Cuda
   } // namespace memory
 
-} //namespace ReSolve
+} // namespace ReSolve

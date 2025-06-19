@@ -1,6 +1,6 @@
 #[[
 
-@brief ReSolve library root
+@brief Re::Solve library root
 
 @author Slaven Peles <peless@ornl.gov>
 

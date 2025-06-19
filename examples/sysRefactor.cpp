@@ -1,24 +1,22 @@
-#include <string>
-#include <iostream>
-#include <iomanip>
 #include <cmath>
+#include <iomanip>
+#include <iostream>
 #include <sstream>
 #include <string>
 
-#include <resolve/Profiling.hpp>
-#include <resolve/matrix/Coo.hpp>
-#include <resolve/matrix/Csr.hpp>
-#include <resolve/matrix/Csc.hpp>
-#include <resolve/vector/Vector.hpp>
-#include <resolve/matrix/io.hpp>
-#include <resolve/matrix/MatrixHandler.hpp>
-#include <resolve/vector/VectorHandler.hpp>
-#include <resolve/LinSolverDirectKLU.hpp>
-#include <resolve/workspace/LinAlgWorkspace.hpp>
-#include <resolve/SystemSolver.hpp>
-#include <resolve/utilities/params/CliOptions.hpp>
-
 #include "ExampleHelper.hpp"
+#include <resolve/LinSolverDirectKLU.hpp>
+#include <resolve/Profiling.hpp>
+#include <resolve/SystemSolver.hpp>
+#include <resolve/matrix/Coo.hpp>
+#include <resolve/matrix/Csc.hpp>
+#include <resolve/matrix/Csr.hpp>
+#include <resolve/matrix/MatrixHandler.hpp>
+#include <resolve/matrix/io.hpp>
+#include <resolve/utilities/params/CliOptions.hpp>
+#include <resolve/vector/Vector.hpp>
+#include <resolve/vector/VectorHandler.hpp>
+#include <resolve/workspace/LinAlgWorkspace.hpp>
 
 /// Prints help message describing system usage.
 void printHelpInfo()
@@ -41,16 +39,17 @@ using namespace ReSolve::constants;
 
 /// Prototype of the example function
 template <class workspace_type>
-static int sysRefactor(int argc, char *argv[]);
+static int sysRefactor(int argc, char* argv[]);
 
 /// Main function selects example to be run.
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ReSolve::CliOptions options(argc, argv);
 
   // If help flag is passed, print help message and return
   bool is_help = options.hasKey("-h");
-  if (is_help) {
+  if (is_help)
+  {
     printHelpInfo();
     return 0;
   }
@@ -98,18 +97,19 @@ int main(int argc, char *argv[])
  * @return 0 if the example ran successfully, -1 otherwise
  */
 template <class workspace_type>
-int sysRefactor(int argc, char *argv[])
+int sysRefactor(int argc, char* argv[])
 {
   // Use the same data types as those you specified in ReSolve build.
   using namespace ReSolve::examples;
   using namespace ReSolve;
-  using index_type = ReSolve::index_type;
+  using index_type  = ReSolve::index_type;
   using vector_type = ReSolve::vector::Vector;
 
   CliOptions options(argc, argv);
 
   bool is_help = options.hasKey("-h");
-  if (is_help) {
+  if (is_help)
+  {
     printHelpInfo();
     return 0;
   }
@@ -117,44 +117,56 @@ int sysRefactor(int argc, char *argv[])
   bool is_iterative_refinement = options.hasKey("-i");
 
   index_type num_systems = 0;
-  auto opt = options.getParamFromKey("-n");
-  if (opt) {
+  auto       opt         = options.getParamFromKey("-n");
+  if (opt)
+  {
     num_systems = atoi((opt->second).c_str());
-  } else {
+  }
+  else
+  {
     std::cout << "Incorrect input!\n";
     printHelpInfo();
   }
 
   std::string matrix_pathname("");
   opt = options.getParamFromKey("-m");
-  if (opt) {
+  if (opt)
+  {
     matrix_pathname = opt->second;
-  } else {
+  }
+  else
+  {
     std::cout << "Incorrect input!\n";
     printHelpInfo();
   }
 
   std::string rhs_pathname("");
   opt = options.getParamFromKey("-r");
-  if (opt) {
+  if (opt)
+  {
     rhs_pathname = opt->second;
-  } else {
+  }
+  else
+  {
     std::cout << "Incorrect input!\n";
     printHelpInfo();
   }
 
   std::string file_extension("");
   opt = options.getParamFromKey("-e");
-  if (opt) {
+  if (opt)
+  {
     file_extension = opt->second;
-  } else {
+  }
+  else
+  {
     file_extension = "mtx";
   }
 
-  std::cout << "Family matrix file name: "    << matrix_pathname
+  std::cout << "Family matrix file name: " << matrix_pathname
             << ", total number of matrices: " << num_systems << "\n"
-            << "Family rhs file name: "       << rhs_pathname
-            << ", total number of RHSes: "    << num_systems << "\n";
+            << "Family rhs file name: " << rhs_pathname
+            << ", total number of RHSes: " << num_systems << "\n";
 
   int status = 0;
 
@@ -163,7 +175,7 @@ int sysRefactor(int argc, char *argv[])
 
   // Create a helper object (computing errors, printing summaries, etc.)
   ExampleHelper<workspace_type> helper(workspace);
-  std::string hw_backend = helper.getHardwareBackend();
+  std::string                   hw_backend = helper.getHardwareBackend();
   std::cout << "sysRefactor with " << hw_backend << " backend\n";
 
   MatrixHandler matrix_handler(&workspace);
@@ -176,11 +188,16 @@ int sysRefactor(int argc, char *argv[])
 
   // Create system solver
   std::string refactor("none");
-  if (hw_backend == "CUDA") {
+  if (hw_backend == "CUDA")
+  {
     refactor = "cusolverrf";
-  } else if (hw_backend == "HIP") {
+  }
+  else if (hw_backend == "HIP")
+  {
     refactor = "rocsolverrf";
-  } else {
+  }
+  else
+  {
     refactor = "klu";
   }
 
@@ -192,14 +209,17 @@ int sysRefactor(int argc, char *argv[])
                                "none");  // iterative refinement
 
   // Disable iterative refinement temporarily for CPU backend
-  if (hw_backend == "CPU") {
+  if (hw_backend == "CPU")
+  {
     is_iterative_refinement = false;
   }
 
-  if (is_iterative_refinement) {
+  if (is_iterative_refinement)
+  {
     solver.setRefinementMethod("fgmres", "cgs2");
     solver.getIterativeSolver().setCliParam("restart", "100");
-    if (hw_backend == "CUDA") {
+    if (hw_backend == "CUDA")
+    {
       solver.getIterativeSolver().setTol(1e-17);
     }
   }
@@ -212,19 +232,19 @@ int sysRefactor(int argc, char *argv[])
     std::ostringstream matname;
     std::ostringstream rhsname;
     matname << matrix_pathname << std::setfill('0') << std::setw(2) << i << "." << file_extension;
-    rhsname << rhs_pathname    << std::setfill('0') << std::setw(2) << i << "." << file_extension;
+    rhsname << rhs_pathname << std::setfill('0') << std::setw(2) << i << "." << file_extension;
     std::string matrix_pathname_full = matname.str();
     std::string rhs_pathname_full    = rhsname.str();
 
     // Read matrix and right-hand-side vector
     std::ifstream mat_file(matrix_pathname_full);
-    if(!mat_file.is_open())
+    if (!mat_file.is_open())
     {
       std::cout << "Failed to open file " << matrix_pathname_full << "\n";
       return 1;
     }
     std::ifstream rhs_file(rhs_pathname_full);
-    if(!rhs_file.is_open())
+    if (!rhs_file.is_open())
     {
       std::cout << "Failed to open file " << rhs_pathname_full << "\n";
       return 1;
@@ -232,15 +252,19 @@ int sysRefactor(int argc, char *argv[])
 
     // Refactorization is LU-based, so need to expand symmetric matrices
     bool is_expand_symmetric = true;
-    if (i == 0) {
-      A = ReSolve::io::createCsrFromFile(mat_file, is_expand_symmetric);
+    if (i == 0)
+    {
+      A       = ReSolve::io::createCsrFromFile(mat_file, is_expand_symmetric);
       vec_rhs = ReSolve::io::createVectorFromFile(rhs_file);
-      vec_x = new vector_type(A->getNumRows());
+      vec_x   = new vector_type(A->getNumRows());
       vec_x->allocate(memory::HOST);
-      if (hw_backend == "CUDA" || hw_backend == "HIP") {
+      if (hw_backend == "CUDA" || hw_backend == "HIP")
+      {
         vec_x->allocate(memory::DEVICE);
       }
-    } else {
+    }
+    else
+    {
       ReSolve::io::updateMatrixFromFile(mat_file, A);
       ReSolve::io::updateVectorFromFile(rhs_file, vec_rhs);
     }
@@ -249,7 +273,8 @@ int sysRefactor(int argc, char *argv[])
     rhs_file.close();
 
     // Ensure matrix data is synced to the device before any GPU operations
-    if (hw_backend == "CUDA" || hw_backend == "HIP") {
+    if (hw_backend == "CUDA" || hw_backend == "HIP")
+    {
       A->syncData(memory::DEVICE);
       vec_rhs->syncData(memory::DEVICE);
     }
@@ -258,10 +283,12 @@ int sysRefactor(int argc, char *argv[])
     printSystemInfo(matrix_pathname_full, A);
 
     // Now call direct solver
-    if (i == 0) {
+    if (i == 0)
+    {
       // Set matrix in solver after the initial matrix is loaded
       status = solver.setMatrix(A);
-      if (status != 0) {
+      if (status != 0)
+      {
         std::cout << "Failed to set matrix in solver. Status: " << status << std::endl;
         return 1;
       }
@@ -273,7 +300,9 @@ int sysRefactor(int argc, char *argv[])
       // Numeric factorization on the host
       status = solver.factorize();
       std::cout << "Numeric factorization on the host status: " << status << std::endl;
-    } else if (i == 1) {
+    }
+    else if (i == 1)
+    {
       // Numeric factorization on the host
       status = solver.factorize();
       std::cout << "Numeric factorization on the host status: " << status << std::endl;
@@ -281,8 +310,9 @@ int sysRefactor(int argc, char *argv[])
       // Set up refactorization solver
       status = solver.refactorizationSetup();
       std::cout << "Refactorization setup status: " << status << std::endl;
-
-    } else {
+    }
+    else
+    {
       // Refactorize on the device
       status = solver.refactorize();
       std::cout << "Refactorization on the device status: " << status << std::endl;
@@ -294,7 +324,8 @@ int sysRefactor(int argc, char *argv[])
     // Print summary of results
     helper.resetSystem(A, vec_rhs, vec_x);
     helper.printShortSummary();
-    if ((i > 1) && is_iterative_refinement) {
+    if ((i > 1) && is_iterative_refinement)
+    {
       helper.printIrSummary(&(solver.getIterativeSolver()));
     }
   }

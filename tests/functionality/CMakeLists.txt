@@ -1,6 +1,6 @@
 #[[
 
-@brief Build ReSolve functionality tests
+@brief Build Re::Solve functionality tests
 
 @author Slaven Peles <peless@ornl.gov>
 

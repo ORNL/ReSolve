@@ -34,4 +34,3 @@ target_include_directories(resolve_hip INTERFACE
   $<BUILD_INTERFACE:${hip_includes}>)
 
 install(TARGETS resolve_hip EXPORT ReSolveTargets)
-

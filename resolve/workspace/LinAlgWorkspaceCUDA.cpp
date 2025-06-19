@@ -4,31 +4,36 @@ namespace ReSolve
 {
   LinAlgWorkspaceCUDA::LinAlgWorkspaceCUDA()
   {
-    handle_cusolversp_ = nullptr;
-    handle_cusparse_   = nullptr;
-    handle_cublas_     = nullptr;
-    buffer_spmv_       = nullptr;
-    buffer_1norm_      = nullptr;
-    transpose_workspace_ = nullptr;
+    handle_cusolversp_         = nullptr;
+    handle_cusparse_           = nullptr;
+    handle_cublas_             = nullptr;
+    buffer_spmv_               = nullptr;
+    buffer_1norm_              = nullptr;
+    transpose_workspace_       = nullptr;
     transpose_workspace_ready_ = false;
-    d_r_               = nullptr;
-    d_r_size_          = 0;
-    matvec_setup_done_ = false;
-    norm_buffer_ready_ = false;
+    d_r_                       = nullptr;
+    d_r_size_                  = 0;
+    matvec_setup_done_         = false;
+    norm_buffer_ready_         = false;
   }
 
   LinAlgWorkspaceCUDA::~LinAlgWorkspaceCUDA()
   {
-    if (buffer_spmv_ != nullptr)  mem_.deleteOnDevice(buffer_spmv_);
-    if (d_r_size_ != 0)  mem_.deleteOnDevice(d_r_);
-    if (norm_buffer_ready_) mem_.deleteOnDevice(buffer_1norm_);
+    if (buffer_spmv_ != nullptr)
+      mem_.deleteOnDevice(buffer_spmv_);
+    if (d_r_size_ != 0)
+      mem_.deleteOnDevice(d_r_);
+    if (norm_buffer_ready_)
+      mem_.deleteOnDevice(buffer_1norm_);
     cusparseDestroy(handle_cusparse_);
     cusolverSpDestroy(handle_cusolversp_);
     cublasDestroy(handle_cublas_);
-    if (matvec_setup_done_) {
+    if (matvec_setup_done_)
+    {
       cusparseDestroySpMat(mat_A_);
     }
-    if (transpose_workspace_ready_) {
+    if (transpose_workspace_ready_)
+    {
       mem_.deleteOnDevice(transpose_workspace_);
     }
   }
@@ -50,11 +55,12 @@ namespace ReSolve
 
   void LinAlgWorkspaceCUDA::setTransposeBufferWorkspace(size_t bufferSize)
   {
-      if (transpose_workspace_ready_) {
-        mem_.deleteOnDevice(transpose_workspace_);
-      }
-      mem_.allocateBufferOnDevice(&transpose_workspace_, bufferSize);
-      transpose_workspace_ready_ = true;
+    if (transpose_workspace_ready_)
+    {
+      mem_.deleteOnDevice(transpose_workspace_);
+    }
+    mem_.allocateBufferOnDevice(&transpose_workspace_, bufferSize);
+    transpose_workspace_ready_ = true;
     return;
   }
 
@@ -63,19 +69,19 @@ namespace ReSolve
     return transpose_workspace_ready_;
   }
 
-  bool  LinAlgWorkspaceCUDA::getNormBufferState()
+  bool LinAlgWorkspaceCUDA::getNormBufferState()
   {
     return norm_buffer_ready_;
   }
 
   void LinAlgWorkspaceCUDA::setSpmvBuffer(void* buffer)
   {
-    buffer_spmv_ =  buffer;
+    buffer_spmv_ = buffer;
   }
 
   void LinAlgWorkspaceCUDA::setNormBuffer(void* buffer)
   {
-    buffer_1norm_ =  buffer;
+    buffer_1norm_ = buffer;
   }
 
   void LinAlgWorkspaceCUDA::setNormBufferState(bool r)
@@ -143,15 +149,16 @@ namespace ReSolve
     return vec_y_;
   }
 
-  index_type  LinAlgWorkspaceCUDA::getDrSize()
+  index_type LinAlgWorkspaceCUDA::getDrSize()
   {
     return d_r_size_;
   }
 
-  real_type*  LinAlgWorkspaceCUDA::getDr()
+  real_type* LinAlgWorkspaceCUDA::getDr()
   {
     return d_r_;
   }
+
   bool LinAlgWorkspaceCUDA::matvecSetup()
   {
     return matvec_setup_done_;

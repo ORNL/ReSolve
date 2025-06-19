@@ -32,4 +32,3 @@ target_link_libraries(resolve_backend_cuda PUBLIC resolve_cuda)
 
 # install include headers
 install(FILES ${ReSolve_CUDA_HEADER_INSTALL} DESTINATION include/resolve/cuda)
-

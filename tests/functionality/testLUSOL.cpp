@@ -25,8 +25,8 @@
 
 using namespace ReSolve::constants;
 using namespace ReSolve::colors;
-using index_type = ReSolve::index_type;
-using real_type = ReSolve::real_type;
+using index_type  = ReSolve::index_type;
+using real_type   = ReSolve::real_type;
 using vector_type = ReSolve::vector::Vector;
 
 // Prototype for Coo to CSR matrix conversion function
@@ -40,9 +40,9 @@ int main(int argc, char* argv[])
   // argv[1] contains the path to the data directory, if it is not ./
   const std::string data_path = (argc == 2) ? argv[1] : "./";
 
-  ReSolve::LinAlgWorkspaceCpu workspace;
-  ReSolve::MatrixHandler matrix_handler(&workspace);
-  ReSolve::VectorHandler vector_handler(&workspace);
+  ReSolve::LinAlgWorkspaceCpu   workspace;
+  ReSolve::MatrixHandler        matrix_handler(&workspace);
+  ReSolve::VectorHandler        vector_handler(&workspace);
   ReSolve::LinSolverDirectLUSOL lusol;
 
   std::string matrix_one_path = data_path + "data/matrix_ACTIVSg200_AC_10.mtx";
@@ -52,17 +52,19 @@ int main(int argc, char* argv[])
   std::string rhs_two_path = data_path + "data/rhs_ACTIVSg200_AC_11.mtx.ones";
 
   std::ifstream matrix_file(matrix_one_path);
-  if (!matrix_file.is_open()) {
+  if (!matrix_file.is_open())
+  {
     std::cout << "Failed to open " << matrix_one_path << "\n";
     return 1;
   }
 
-  bool is_expand_symmetric = true;
+  bool                                  is_expand_symmetric = true;
   std::unique_ptr<ReSolve::matrix::Coo> A(ReSolve::io::createCooFromFile(matrix_file, is_expand_symmetric));
   matrix_file.close();
 
   std::ifstream rhs_file(rhs_one_path);
-  if (!rhs_file.is_open()) {
+  if (!rhs_file.is_open())
+  {
     std::cout << "Failed to open " << rhs_one_path << "\n";
     return 1;
   }
@@ -70,7 +72,7 @@ int main(int argc, char* argv[])
   real_type* rhs = ReSolve::io::createArrayFromFile(rhs_file);
   rhs_file.close();
 
-  real_type* x = new real_type[A->getNumRows()];
+  real_type*  x = new real_type[A->getNumRows()];
   vector_type vec_rhs(A->getNumRows());
   vector_type vec_x(A->getNumRows());
   vector_type vec_r(A->getNumRows());
@@ -83,14 +85,16 @@ int main(int argc, char* argv[])
   error_sum += lusol.analyze();
 
   status = lusol.factorize();
-  if (status != 0) {
+  if (status != 0)
+  {
     // LUSOL will segfault if solving is attempted after factorization failed
     error_sum += status;
     return error_sum;
   }
 
   status = lusol.solve(&vec_rhs, &vec_x);
-  if (status != 0) {
+  if (status != 0)
+  {
     error_sum += status;
     return error_sum;
   }
@@ -123,8 +127,8 @@ int main(int argc, char* argv[])
 
   // Compute vector norms
   real_type normRmatrix = sqrt(vector_handler.dot(&vec_r, &vec_r, ReSolve::memory::HOST));
-  real_type normXtrue = sqrt(vector_handler.dot(&vec_x, &vec_x, ReSolve::memory::HOST));
-  real_type normB = sqrt(vector_handler.dot(&vec_rhs, &vec_rhs, ReSolve::memory::HOST));
+  real_type normXtrue   = sqrt(vector_handler.dot(&vec_x, &vec_x, ReSolve::memory::HOST));
+  real_type normB       = sqrt(vector_handler.dot(&vec_rhs, &vec_rhs, ReSolve::memory::HOST));
 
   // Compute vec_diff := vec_diff - vec_x
   vector_handler.axpy(&MINUS_ONE, &vec_x, &vec_diff, ReSolve::memory::HOST);
@@ -133,13 +137,13 @@ int main(int argc, char* argv[])
 
   // Compute residual r := A*x - r using exact solution x
   vec_r.copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
-  error_sum += matrix_handler.matvec(&A_csr,
+  error_sum                      += matrix_handler.matvec(&A_csr,
                                      &vec_test,
                                      &vec_r,
                                      &ONE,
                                      &MINUS_ONE,
                                      ReSolve::memory::HOST);
-  real_type exactSol_normRmatrix = sqrt(vector_handler.dot(&vec_r, &vec_r, ReSolve::memory::HOST));
+  real_type exactSol_normRmatrix  = sqrt(vector_handler.dot(&vec_r, &vec_r, ReSolve::memory::HOST));
 
   std::cout << "Results: \n";
   std::cout << std::scientific << std::setprecision(16);
@@ -149,18 +153,18 @@ int main(int argc, char* argv[])
   std::cout << "\t ||x-x_true||_2/||x_true||_2 : " << normDiffMatrix / normXtrue << " (scaled solution error)\n";
   std::cout << "\t ||b-A*x_exact||_2           : " << exactSol_normRmatrix << " (control; residual norm with exact solution)\n\n";
 
-  delete[] rhs;     // rhs    = nullptr;
-  delete[] x;       // x      = nullptr;
-  delete[] x_data;  // x_data = nullptr;
+  delete[] rhs;    // rhs    = nullptr;
+  delete[] x;      // x      = nullptr;
+  delete[] x_data; // x_data = nullptr;
   real_type scaled_residual_norm_one = normRmatrix / normB;
-
 
   //
   // Repeat the test for a different matrix
   //
 
   matrix_file = std::ifstream(matrix_two_path);
-  if (!matrix_file.is_open()) {
+  if (!matrix_file.is_open())
+  {
     std::cout << "Failed to open " << matrix_two_path << "\n";
     return 1;
   }
@@ -169,7 +173,8 @@ int main(int argc, char* argv[])
   matrix_file.close();
 
   rhs_file = std::ifstream(rhs_two_path);
-  if (!rhs_file.is_open()) {
+  if (!rhs_file.is_open())
+  {
     std::cout << "Failed to open " << rhs_two_path << "\n";
     return 1;
   }
@@ -187,14 +192,16 @@ int main(int argc, char* argv[])
   error_sum += lusol.analyze();
 
   status = lusol.factorize();
-  if (status != 0) {
+  if (status != 0)
+  {
     // LUSOL will segfault if solving is attempted after factorization failed
     error_sum += status;
     return error_sum;
   }
 
   status = lusol.solve(&vec_rhs, &vec_x);
-  if (status != 0) {
+  if (status != 0)
+  {
     error_sum += status;
     return error_sum;
   }
@@ -223,8 +230,8 @@ int main(int argc, char* argv[])
 
   // Compute vector norms
   normRmatrix = sqrt(vector_handler.dot(&vec_r, &vec_r, ReSolve::memory::HOST));
-  normXtrue = sqrt(vector_handler.dot(&vec_x, &vec_x, ReSolve::memory::HOST));
-  normB = sqrt(vector_handler.dot(&vec_rhs, &vec_rhs, ReSolve::memory::HOST));
+  normXtrue   = sqrt(vector_handler.dot(&vec_x, &vec_x, ReSolve::memory::HOST));
+  normB       = sqrt(vector_handler.dot(&vec_rhs, &vec_rhs, ReSolve::memory::HOST));
 
   // Compute vec_diff := vec_diff - vec_x
   vector_handler.axpy(&MINUS_ONE, &vec_x, &vec_diff, ReSolve::memory::HOST);
@@ -234,14 +241,14 @@ int main(int argc, char* argv[])
   // compute the residual using exact solution
   vec_r.copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   // Compute residual r := A*x - r using exact solution x
-  error_sum += matrix_handler.matvec(&A_csr,
+  error_sum            += matrix_handler.matvec(&A_csr,
                                      &vec_test,
                                      &vec_r,
                                      &ONE,
                                      &MINUS_ONE,
                                      ReSolve::memory::HOST);
   // Compute residual error norm
-  exactSol_normRmatrix = sqrt(vector_handler.dot(&vec_r, &vec_r, ReSolve::memory::HOST));
+  exactSol_normRmatrix  = sqrt(vector_handler.dot(&vec_r, &vec_r, ReSolve::memory::HOST));
 
   std::cout << "Results: \n";
   std::cout << std::scientific << std::setprecision(16);
@@ -256,18 +263,23 @@ int main(int argc, char* argv[])
   delete[] x_data;
   real_type scaled_residual_norm_two = normRmatrix / normB;
 
-  if (!std::isfinite(scaled_residual_norm_one) || !std::isfinite(scaled_residual_norm_two)) {
+  if (!std::isfinite(scaled_residual_norm_one) || !std::isfinite(scaled_residual_norm_two))
+  {
     std::cout << "Result is not a finite number!\n";
     error_sum++;
   }
   real_type tol = 100 * ReSolve::constants::MACHINE_EPSILON;
-  if ((scaled_residual_norm_one > tol) || (scaled_residual_norm_two > tol)) {
+  if ((scaled_residual_norm_one > tol) || (scaled_residual_norm_two > tol))
+  {
     std::cout << "Result inaccurate!\n";
     error_sum++;
   }
-  if (error_sum == 0) {
+  if (error_sum == 0)
+  {
     std::cout << "Test LUSOL " << GREEN << "PASSED" << CLEAR << "\n\n";
-  } else {
+  }
+  else
+  {
     std::cout << "Test LUSOL " << RED << "FAILED" << CLEAR << ", error sum: " << error_sum << "\n\n";
   }
 
@@ -286,18 +298,15 @@ int main(int argc, char* argv[])
  */
 int coo2csr(ReSolve::matrix::Coo* A_coo, ReSolve::matrix::Csr* A_csr, ReSolve::memory::MemorySpace memspace)
 {
-  index_type n = A_coo->getNumRows();
-  index_type m = A_coo->getNumColumns();
-  index_type nnz = A_coo->getNnz();
-  bool is_symmetric = A_coo->symmetric();
-  bool is_expanded  = A_coo->expanded();
+  index_type n            = A_coo->getNumRows();
+  index_type m            = A_coo->getNumColumns();
+  index_type nnz          = A_coo->getNnz();
+  bool       is_symmetric = A_coo->symmetric();
+  bool       is_expanded  = A_coo->expanded();
 
   // First make sure the input is correct or the test fails.
-  if (n            != A_csr->getNumRows()    ||
-      m            != A_csr->getNumColumns() ||
-      nnz          != A_csr->getNnz()        ||
-      is_symmetric != A_csr->symmetric()     ||
-      is_expanded  != A_csr->expanded()) {
+  if (n != A_csr->getNumRows() || m != A_csr->getNumColumns() || nnz != A_csr->getNnz() || is_symmetric != A_csr->symmetric() || is_expanded != A_csr->expanded())
+  {
     std::cout << "COO and CSR matrices don't match!\n";
     return 1;
   }
@@ -305,11 +314,13 @@ int coo2csr(ReSolve::matrix::Coo* A_coo, ReSolve::matrix::Csr* A_csr, ReSolve::m
   /* const */ index_type* rows_coo = A_coo->getRowData(ReSolve::memory::HOST);
   /* const */ index_type* cols_coo = A_coo->getColData(ReSolve::memory::HOST);
   /* const */ real_type*  vals_coo = A_coo->getValues(ReSolve::memory::HOST);
-  index_type* row_csr = new index_type[n + 1];
-  row_csr[0] = 0;
-  index_type i_csr = 0;
-  for (index_type i = 1; i < nnz; ++i) {
-    if (rows_coo[i] != rows_coo[i - 1]) {
+  index_type*             row_csr  = new index_type[n + 1];
+  row_csr[0]                       = 0;
+  index_type i_csr                 = 0;
+  for (index_type i = 1; i < nnz; ++i)
+  {
+    if (rows_coo[i] != rows_coo[i - 1])
+    {
       i_csr++;
       row_csr[i_csr] = i;
     }
@@ -317,8 +328,7 @@ int coo2csr(ReSolve::matrix::Coo* A_coo, ReSolve::matrix::Csr* A_csr, ReSolve::m
   row_csr[n] = nnz;
   A_csr->copyDataFrom(row_csr, cols_coo, vals_coo, ReSolve::memory::HOST, memspace);
 
-  delete [] row_csr;
+  delete[] row_csr;
 
   return 0;
 }
-

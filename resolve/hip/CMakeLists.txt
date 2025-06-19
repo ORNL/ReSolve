@@ -32,4 +32,3 @@ target_link_libraries(resolve_backend_hip PUBLIC resolve_hip)
 
 # install include headers
 install(FILES ${ReSolve_HIP_HEADER_INSTALL} DESTINATION include/resolve/hip)
-

@@ -1,0 +1,72 @@
+---
+Language:        Cpp
+BasedOnStyle:  Microsoft
+
+# Indentation
+IndentWidth: 2                    # 2 spaces per indent
+AccessModifierOffset: -2
+IndentAccessModifiers: false      # Align access modifiers to braces
+NamespaceIndentation: All       # Indent namspace contents
+ConstructorInitializerIndentWidth: 2
+
+# Comments which match this regex will be unformatted (and therefore can be longer or have more whitespace than other comments)
+CommentPragmas: '^\*\*'
+
+
+# Alignment
+AlignConsecutiveAssignments:
+  Enabled:          true
+  AcrossEmptyLines: false
+  AcrossComments:   true
+  AlignCompound:    true
+  PadOperators:     true
+AlignConsecutiveBitFields:
+  Enabled:          true
+  AcrossEmptyLines: false
+  AcrossComments:   true
+AlignConsecutiveDeclarations:
+  Enabled:          true
+  AcrossEmptyLines: false
+  AcrossComments:   true
+  # For future versions of clang-format
+  # AlignFunctionDeclarations: false
+  # AlignFunctionPointers: false
+AlignConsecutiveMacros:
+  Enabled:          true
+  AcrossEmptyLines: false
+  AcrossComments:   true
+
+# Newlines
+ColumnLimit:     0
+BreakBeforeBraces: Allman         # Braces on their own lines
+SeparateDefinitionBlocks: Always  # Separate definitions (functions etc.) with an empty line
+AlwaysBreakTemplateDeclarations: true # Put template on their own lines
+AllowShortBlocksOnASingleLine: Never
+# On a newer version of clang-format, replace with BinPackArguments: OnePerLine
+BinPackArguments: false           # Don't allow multiple function arguments on the same line unless they all fit
+BinPackParameters: false          # Same but for parameters
+PackConstructorInitializers: NextLine
+AllowShortFunctionsOnASingleLine: None
+BreakBeforeBinaryOperators: NonAssignment # Put binary operators after a line break, rather than before
+AllowShortIfStatementsOnASingleLine: Never
+
+# Spaces
+SpaceBeforeParens: ControlStatementsExceptControlMacros
+SpaceAfterCStyleCast: true
+PointerAlignment: Left
+
+# Includes
+IncludeBlocks: Regroup            # Regroup includes based on config
+IncludeCategories:
+  - Regex:           '(^"|\.hpp)'  # 'local' includes
+    Priority:        3
+    SortPriority:    0
+    CaseSensitive:   false
+  - Regex:           '\/'         # Library includes
+    Priority:        2
+    SortPriority:    0
+    CaseSensitive:   false
+  - Regex:           '.*'         # Everything else
+    Priority:        1
+    SortPriority:    0
+    CaseSensitive:   false

@@ -1,6 +1,6 @@
-#include <iostream>
-
 #include "CliOptions.hpp"
+
+#include <iostream>
 
 namespace ReSolve
 {
@@ -29,9 +29,10 @@ namespace ReSolve
 
   std::unique_ptr<CliOptions::Option> CliOptions::getParamFromKey(const std::string& key) const
   {
-    const OptionsList::const_iterator i = options_.find(key);
-    auto opt = std::unique_ptr<CliOptions::Option>(nullptr);
-    if (i != options_.end()) {
+    const OptionsList::const_iterator i   = options_.find(key);
+    auto                              opt = std::unique_ptr<CliOptions::Option>(nullptr);
+    if (i != options_.end())
+    {
       opt = std::unique_ptr<CliOptions::Option>(new CliOptions::Option((*i).first, (*i).second));
     }
     return opt;
@@ -40,13 +41,15 @@ namespace ReSolve
   void CliOptions::printOptionsList() const
   {
     OptionsList::const_iterator m = options_.begin();
-    int i = 0;
-    if (options_.empty()) {
-        std::cout << "No parameters\n";
+    int                         i = 0;
+    if (options_.empty())
+    {
+      std::cout << "No parameters\n";
     }
-    for (; m != options_.end(); m++, ++i) {
+    for (; m != options_.end(); m++, ++i)
+    {
       std::cout << "Parameter [" << i << "] ["
-                << (*m).first  << " "
+                << (*m).first << " "
                 << (*m).second << "]\n";
     }
   }
@@ -87,7 +90,7 @@ namespace ReSolve
         // Set option without parameter value
         options_.insert(Option(option->first, option->second));
         // Set parameter ID for the next option and continue
-        option->first = p;
+        option->first  = p;
         option->second = "";
         if (i == this->last())
         {
@@ -103,27 +106,26 @@ namespace ReSolve
         // Set option with parameter value
         options_.insert(Option(option->first, option->second));
         // Reset 'option' pair to receive the next entry and continue
-        option->first = "";
+        option->first  = "";
         option->second = "";
         continue;
       }
     }
   }
 
-  const char* const *CliOptions::begin() const
+  const char* const* CliOptions::begin() const
   {
-      return argv_;
+    return argv_;
   }
 
-  const char* const *CliOptions::end() const
+  const char* const* CliOptions::end() const
   {
-      return argv_ + argc_;
+    return argv_ + argc_;
   }
 
-  const char* const *CliOptions::last() const
+  const char* const* CliOptions::last() const
   {
-      return argv_ + argc_ - 1;
+    return argv_ + argc_ - 1;
   }
-
 
 } // namespace ReSolve

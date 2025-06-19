@@ -12,8 +12,10 @@
 
 #include <resolve/Common.hpp>
 
-namespace ReSolve {
-  namespace hip {
+namespace ReSolve
+{
+  namespace hip
+  {
     void mass_inner_product_two_vectors(index_type n,
                                         index_type i,
                                         real_type* vec1,
@@ -22,40 +24,39 @@ namespace ReSolve {
                                         real_type* result);
     void mass_axpy(index_type n, index_type i, real_type* x, real_type* y, real_type* alpha);
 
-    void leftScale(index_type n,
+    void leftScale(index_type        n,
                    const index_type* a_row_ptr,
-                   real_type* a_val,
-                   const real_type* diag);
+                   real_type*        a_val,
+                   const real_type*  diag);
 
-    void rightScale(index_type n,
+    void rightScale(index_type        n,
                     const index_type* a_row_ptr,
                     const index_type* a_col_idx,
-                    real_type* a_val,
-                    const real_type* diag);
+                    real_type*        a_val,
+                    const real_type*  diag);
 
-    //needed for matrix inf nrm
-    void matrix_row_sums(index_type n,
-                         index_type nnz,
+    // needed for matrix inf nrm
+    void matrix_row_sums(index_type  n,
+                         index_type  nnz,
                          index_type* a_ia,
-                         real_type* a_val,
-                         real_type* result);
+                         real_type*  a_val,
+                         real_type*  result);
 
     // needed for triangular solve
 
-    void permuteVectorP(index_type n,
+    void permuteVectorP(index_type  n,
                         index_type* perm_vector,
-                        real_type* vec_in,
-                        real_type* vec_out);
+                        real_type*  vec_in,
+                        real_type*  vec_out);
 
-    void permuteVectorQ(index_type n,
+    void permuteVectorQ(index_type  n,
                         index_type* perm_vector,
-                        real_type* vec_in,
-                        real_type* vec_out);
-
+                        real_type*  vec_in,
+                        real_type*  vec_out);
 
     void vector_inf_norm(index_type n,
                          real_type* input,
-                         real_type * buffer,
+                         real_type* buffer,
                          real_type* result);
   } // namespace hip
 } // namespace ReSolve

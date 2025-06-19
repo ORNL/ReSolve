@@ -5,28 +5,27 @@
  * @brief Functionality test for rocsolver_rf.
  *
  */
-#include <string>
-#include <iostream>
 #include <iomanip>
+#include <iostream>
+#include <string>
 
-#include <resolve/vector/Vector.hpp>
-#include <resolve/matrix/io.hpp>
+#include "TestHelper.hpp"
+#include <resolve/GramSchmidt.hpp>
+#include <resolve/LinSolverDirectKLU.hpp>
+#include <resolve/LinSolverIterativeFGMRES.hpp>
 #include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
-#include <resolve/vector/VectorHandler.hpp>
-#include <resolve/LinSolverDirectKLU.hpp>
-#include <resolve/GramSchmidt.hpp>
-#include <resolve/LinSolverIterativeFGMRES.hpp>
-#include <resolve/workspace/LinAlgWorkspace.hpp>
+#include <resolve/matrix/io.hpp>
 #include <resolve/utilities/params/CliOptions.hpp>
-
-#include "TestHelper.hpp"
+#include <resolve/vector/Vector.hpp>
+#include <resolve/vector/VectorHandler.hpp>
+#include <resolve/workspace/LinAlgWorkspace.hpp>
 
 template <class workspace_type, class refactorization_type>
-static int runTest(int argc, char *argv[], std::string& solver_name);
+static int runTest(int argc, char* argv[], std::string& solver_name);
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   using namespace ReSolve;
   int error_sum = 0;
@@ -39,28 +38,28 @@ int main(int argc, char *argv[])
 }
 
 template <class workspace_type, class refactorization_type>
-int runTest(int argc, char *argv[], std::string& solver_name)
+int runTest(int argc, char* argv[], std::string& solver_name)
 {
   std::string test_name("Test KLU with ");
   test_name += solver_name;
 
   // Use ReSolve data types.
-  using real_type  = ReSolve::real_type;
+  using real_type   = ReSolve::real_type;
   using vector_type = ReSolve::vector::Vector;
 
   // Error sum needs to be zero at the end for test to pass.
   int error_sum = 0;
-  int status = 0;
+  int status    = 0;
 
   // Collect all command line options
   ReSolve::CliOptions options(argc, argv);
 
   // Get directory with input files
-  auto opt = options.getParamFromKey("-d");
+  auto        opt       = options.getParamFromKey("-d");
   std::string data_path = opt ? (*opt).second : ".";
 
   // Whether to use iterative refinement
-  opt = options.getParamFromKey("-i");
+  opt        = options.getParamFromKey("-i");
   bool is_ir = opt ? true : false;
 
   // Create workspace
@@ -74,9 +73,9 @@ int runTest(int argc, char *argv[], std::string& solver_name)
   ReSolve::LinSolverDirectKLU KLU;
 
   // Create iterative solver
-  ReSolve::MatrixHandler matrix_handler(&workspace);
-  ReSolve::VectorHandler vector_handler(&workspace);
-  ReSolve::GramSchmidt GS(&vector_handler, ReSolve::GramSchmidt::CGS2);
+  ReSolve::MatrixHandler            matrix_handler(&workspace);
+  ReSolve::VectorHandler            vector_handler(&workspace);
+  ReSolve::GramSchmidt              GS(&vector_handler, ReSolve::GramSchmidt::CGS2);
   ReSolve::LinSolverIterativeFGMRES FGMRES(&matrix_handler, &vector_handler, &GS);
 
   // Input data
@@ -88,7 +87,7 @@ int runTest(int argc, char *argv[], std::string& solver_name)
 
   // Read first matrix
   std::ifstream mat1(matrix_file_name_1);
-  if(!mat1.is_open())
+  if (!mat1.is_open())
   {
     std::cout << "Failed to open file " << matrix_file_name_1 << "\n";
     return -1;
@@ -98,45 +97,46 @@ int runTest(int argc, char *argv[], std::string& solver_name)
 
   // Read first rhs vector
   std::ifstream rhs1_file(rhs_file_name_1);
-  if(!rhs1_file.is_open())
+  if (!rhs1_file.is_open())
   {
     std::cout << "Failed to open file " << rhs_file_name_1 << "\n";
     return -1;
   }
-  real_type* rhs = ReSolve::io::createArrayFromFile(rhs1_file);
+  real_type*  rhs = ReSolve::io::createArrayFromFile(rhs1_file);
   vector_type vec_rhs(A->getNumRows());
   vec_rhs.copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   rhs1_file.close();
 
   // Allocate the solution vector
   vector_type vec_x(A->getNumRows());
-  vec_x.allocate(ReSolve::memory::HOST); //for KLU
+  vec_x.allocate(ReSolve::memory::HOST); // for KLU
 
   // Solve the first system using KLU
-  status = KLU.setup(A);
+  status     = KLU.setup(A);
   error_sum += status;
 
-  status = KLU.analyze();
+  status     = KLU.analyze();
   error_sum += status;
 
-  status = KLU.factorize();
+  status     = KLU.factorize();
   error_sum += status;
 
-  std::cout << "KLU factorize status: " << status <<std::endl;
+  std::cout << "KLU factorize status: " << status << std::endl;
 
-  status = KLU.solve(&vec_rhs, &vec_x);
+  status     = KLU.solve(&vec_rhs, &vec_x);
   error_sum += status;
 
-  if (is_ir) {
+  if (is_ir)
+  {
     test_name += " + IR";
 
-    status =  FGMRES.setup(A);
+    status     = FGMRES.setup(A);
     error_sum += status;
 
-    status = FGMRES.setupPreconditioner("LU", &KLU);
+    status     = FGMRES.setupPreconditioner("LU", &KLU);
     error_sum += status;
 
-    status = FGMRES.solve(&vec_rhs, &vec_x);
+    status     = FGMRES.solve(&vec_rhs, &vec_x);
     error_sum += status;
   }
 
@@ -146,14 +146,15 @@ int runTest(int argc, char *argv[], std::string& solver_name)
   // Print result summary and check solution
   std::cout << "\nResults (first matrix): \n\n";
   helper.printSummary();
-  if (is_ir) {
+  if (is_ir)
+  {
     helper.printIrSummary(&FGMRES);
   }
   error_sum += helper.checkResult(1e-16);
 
   // Load the second matrix
   std::ifstream mat2(matrix_file_name_2);
-  if(!mat2.is_open())
+  if (!mat2.is_open())
   {
     std::cout << "Failed to open file " << matrix_file_name_2 << "\n";
     return -1;
@@ -163,7 +164,7 @@ int runTest(int argc, char *argv[], std::string& solver_name)
 
   // Load the second rhs vector
   std::ifstream rhs2_file(rhs_file_name_2);
-  if(!rhs2_file.is_open())
+  if (!rhs2_file.is_open())
   {
     std::cout << "Failed to open file " << rhs_file_name_2 << "\n";
     return -1;
@@ -172,19 +173,22 @@ int runTest(int argc, char *argv[], std::string& solver_name)
   rhs2_file.close();
   vec_rhs.copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
 
-  status = KLU.refactorize();
+  status     = KLU.refactorize();
   error_sum += status;
   std::cout << "KLU refactorization status: " << status << std::endl;
 
-  if (is_ir) {
+  if (is_ir)
+  {
     FGMRES.resetMatrix(A);
-    status = FGMRES.setupPreconditioner("LU", &KLU);
+    status     = FGMRES.setupPreconditioner("LU", &KLU);
     error_sum += status;
 
-    status = FGMRES.solve(&vec_rhs, &vec_x);
+    status     = FGMRES.solve(&vec_rhs, &vec_x);
     error_sum += status;
-  } else {
-    status = KLU.solve(&vec_rhs, &vec_x);
+  }
+  else
+  {
+    status     = KLU.solve(&vec_rhs, &vec_x);
     error_sum += status;
   }
 
@@ -192,7 +196,8 @@ int runTest(int argc, char *argv[], std::string& solver_name)
 
   std::cout << "\nResults (second matrix): \n\n";
   helper.printSummary();
-  if (is_ir) {
+  if (is_ir)
+  {
     helper.printIrSummary(&FGMRES);
   }
   error_sum += helper.checkResult(1e-16);
@@ -201,7 +206,7 @@ int runTest(int argc, char *argv[], std::string& solver_name)
 
   // delete data on the heap
   delete A;
-  delete [] rhs;
+  delete[] rhs;
 
   return error_sum;
 }

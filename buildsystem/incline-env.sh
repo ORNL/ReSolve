@@ -12,4 +12,3 @@ unset GPU_DEVICE_ORDINAL
 
 # Load spack generated modules
 source ./buildsystem/spack/incline/modules/dependencies.sh
-

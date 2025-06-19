@@ -1,12 +1,13 @@
-#include <cstddef>
 #include "LinAlgWorkspaceCpu.hpp"
+
+#include <cstddef>
 
 namespace ReSolve
 {
   LinAlgWorkspaceCpu::LinAlgWorkspaceCpu()
   {
   }
-  
+
   LinAlgWorkspaceCpu::~LinAlgWorkspaceCpu()
   {
   }
@@ -14,4 +15,4 @@ namespace ReSolve
   void LinAlgWorkspaceCpu::initializeHandles()
   {
   }
-}
+} // namespace ReSolve

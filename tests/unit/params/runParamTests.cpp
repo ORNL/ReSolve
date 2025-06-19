@@ -7,8 +7,8 @@
 #include <iostream>
 #include <ostream>
 
-#include <resolve/Common.hpp>
 #include "ParamTests.hpp"
+#include <resolve/Common.hpp>
 
 int main()
 {
