@@ -1,0 +1,178 @@
+# This is a Spack Environment file.
+#
+# It describes a set of packages to be installed, along with
+# configuration settings.
+spack:
+  specs:
+  - resolve@develop%rocmcc@6.3.1~cuda+rocm amdgpu_target=gfx90a
+  view: false
+  concretizer:
+    unify: when_possible
+    reuse: false
+  config:
+    concretizer: clingo
+    install_tree:
+      root: $SPACK_INSTALL
+    source_cache: $SPACK_CACHE/source
+    misc_cache: $SPACK_CACHE/misc
+    build_stage: $SPACK_CACHE/build
+    url_fetch_method: curl
+  modules:
+    default:
+      roots:
+        tcl: $SPACK_INSTALL/modules  
+  packages:
+    all:
+      compiler:
+      - rocmcc@6.3.1
+      providers:
+        blas: [openblas]
+        mpi: [cray-mpich]
+      target: [zen3]
+    cmake:
+      externals:
+      - spec: cmake@3.27.9
+        modules:
+        - cmake/3.27.9
+        buildable: false
+    metis:
+      externals:
+      - spec: metis@5.1.0
+        modules:
+        - metis/5.1.0
+        buildable: false
+    openblas:
+      externals:
+      - spec: openblas@0.3.26
+        modules:
+        - openblas/0.3.26
+        buildable: false
+    rccl:
+      buildable: false
+      externals:
+      - spec: rccl@6.3.1
+        prefix: /opt/rocm-6.3.1/
+    rocblas:
+      buildable: false
+      externals:
+      - spec: rocblas@6.3.1
+        prefix: /opt/rocm-6.3.1/
+    rocfft:
+      buildable: false
+      externals:
+      - spec: rocfft@6.3.1
+        prefix: /opt/rocm-6.3.1/
+    rocm-clang-ocl:
+      buildable: false
+      externals:
+      - spec: rocm-clang-ocl@6.3.1
+        prefix: /opt/rocm-6.3.1/
+    rocm-cmake:
+      buildable: false
+      externals:
+      - spec: rocm-cmake@6.3.1
+        prefix: /opt/rocm-6.3.1/
+    rocm-dbgapi:
+      buildable: false
+      externals:
+      - spec: rocm-dbgapi@6.3.1
+        prefix: /opt/rocm-6.3.1/
+    rocm-debug-agent:
+      buildable: false
+      externals:
+      - spec: rocm-debug-agent@6.3.1
+        prefix: /opt/rocm-6.3.1/
+    rocm-device-libs:
+      buildable: false
+      externals:
+      - spec: rocm-device-libs@6.3.1
+        prefix: /opt/rocm-6.3.1/
+    rocm-gdb:
+      buildable: false
+      externals:
+      - spec: rocm-gdb@6.3.1
+        prefix: /opt/rocm-6.3.1/
+    rocm-opencl:
+      buildable: false
+      externals:
+      - spec: rocm-opencl@6.3.1
+        prefix: /opt/rocm-6.3.1/opencl
+    rocm-smi-lib:
+      buildable: false
+      externals:
+      - spec: rocm-smi-lib@6.3.1
+        prefix: /opt/rocm-6.3.1/
+    hip:
+      buildable: false
+      externals:
+      - spec: hip@6.3.1
+        prefix: /opt/rocm-6.3.1
+    llvm-amdgpu:
+      buildable: false
+      externals:
+      - spec: llvm-amdgpu@6.3.1
+        prefix: /opt/rocm-6.3.1/llvm
+    hsakmt-roct:
+      buildable: false
+      externals:
+      - spec: hsakmt-roct@6.3.1
+        prefix: /opt/rocm-6.3.1/
+    hsa-rocr-dev:
+      buildable: false
+      externals:
+      - spec: hsa-rocr-dev@6.3.1
+        prefix: /opt/rocm-6.3.1/
+    rocsolver:
+      buildable: false
+      externals:
+      - spec: rocsolver@6.3.1
+        prefix: /opt/rocm-6.3.1
+    rocsparse:
+      buildable: false
+      externals:
+      - spec: rocsparse@6.3.1
+        prefix: /opt/rocm-6.3.1
+    autoconf:
+      externals:
+      - spec: autoconf@2.72
+        modules:
+        - autoconf/2.72
+      buildable: false
+    curl:
+      buildable: false
+      externals:
+      - spec: curl@8.1.0
+        prefix: /usr
+    python:
+      externals:
+      - spec: python@3.11.5
+        modules:
+        - cray-python/3.11.5
+      buildable: false
+  compilers:
+    - compiler:
+        spec: rocmcc@6.3.1
+       paths:
+         cc: /opt/rocm-6.3.1/llvm/bin/amdclang
+         cxx: /opt/rocm-6.3.1/llvm/bin/amdclang++
+         f77: /opt/rocm-6.3.1/llvm/bin/amdflang
+         fc: /opt/rocm-6.3.1/llvm/bin/amdflang
+       flags: {}
+       operating_system: sles15
+       target: x86_64
+        modules: []
+       environment: {}
+       extra_rpaths: []
+    - compiler:
+        spec: gcc@12.3.0
+        paths:
+          cc: /opt/cray/pe/gcc-native/12/bin/gcc
+          cxx: /opt/cray/pe/gcc-native/12/bin/g++
+          f77: /opt/cray/pe/gcc-native/12/bin/gfortran
+          fc: /opt/cray/pe/gcc-native/12/bin/gfortran
+        flags: {}
+        operating_system: sles15
+        target: x86_64
+        modules: []
+        environment: {}
+        extra_rpaths: []

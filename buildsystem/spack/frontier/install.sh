@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH -A csc359_crusher
+#SBATCH -A eng151
 #SBATCH -N 1
 #SBATCH -p batch
 #SBATCH -J resolve_spack
@@ -17,7 +17,7 @@ export HTTPS_PROXY="http://proxy.ccs.ornl.gov:3128"
 export proxy="proxy.ccs.ornl.gov:3128"
 export no_proxy='localhost,127.0.0.0/8,*.ccs.ornl.gov,*.olcf.ornl.gov,*.ncrc.gov'
 
-export MY_CLUSTER=crusher
+export MY_CLUSTER=frontier
 . buildsystem/load-spack.sh &&
 spack mirror add local file://$SPACK_MIRROR &&
 # This is necessary?

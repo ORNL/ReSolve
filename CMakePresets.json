@@ -88,15 +88,15 @@
             }
         },
         {
-            "name": "crusher",
+            "name": "frontier",
 	        "inherits": "rocm",
-            "displayName": "Crusher Build",
-            "description": "Custom changes specific for Crusher",
+            "displayName": "Frontier Build",
+            "description": "Custom changes specific for Frontier",
 	        "cacheVariables": {
                 "CMAKE_HIP_ARCHITECTURES": "gfx90a",
                 "CMAKE_BUILD_TYPE": "Debug",
-	            "CMAKE_C_COMPILER": "/opt/rocm-5.6.0/llvm/bin/clang",
-                "CMAKE_CXX_COMPILER": "/opt/rocm-5.6.0/llvm/bin/clang++"
+	        "CMAKE_C_COMPILER": "/opt/rocm-6.3.1/llvm/bin/clang",
+                "CMAKE_CXX_COMPILER": "/opt/rocm-6.3.1/llvm/bin/clang++"
 	        }  
 	    }
     ]
