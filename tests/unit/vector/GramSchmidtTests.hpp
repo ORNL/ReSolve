@@ -178,5 +178,5 @@ namespace ReSolve
         return status;
       }
     }; // class
-  }    // namespace tests
+  } // namespace tests
 } // namespace ReSolve
