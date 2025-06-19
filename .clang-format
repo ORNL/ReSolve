@@ -27,7 +27,7 @@ AlignConsecutiveBitFields:
 AlignConsecutiveDeclarations:
   Enabled:          true
   AcrossEmptyLines: false
-  AcrossComments:   true
+  AcrossComments:   false
   # For future versions of clang-format
   # AlignFunctionDeclarations: false
   # AlignFunctionPointers: false

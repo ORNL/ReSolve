@@ -71,7 +71,7 @@ namespace ReSolve
 
     assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW && "Matrix has to be in CSR format for matrix-vector product.\n");
 
-    int              error_sum = 0;
+    int error_sum = 0;
     // result = alpha *A*x + beta * result
     rocsparse_status status;
 

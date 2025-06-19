@@ -97,7 +97,7 @@ namespace ReSolve
     }
     real_type norm;
     // TODO: Shouldn't the return type be cusolverStatus_t ?
-    int       status = cusolverSpDnrminf(workspace_->getCusolverSpHandle(),
+    int status = cusolverSpDnrminf(workspace_->getCusolverSpHandle(),
                                    x->getSize(),
                                    x->getData(memory::DEVICE),
                                    &norm,

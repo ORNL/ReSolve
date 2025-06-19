@@ -24,9 +24,9 @@ namespace ReSolve
     std::string refact_solver_name_;
     std::string use_ir_;
     // IR parameters
-    real_type   ir_tol_;
-    index_type  ir_maxit_;
-    index_type  ir_gs_;
+    real_type  ir_tol_;
+    index_type ir_maxit_;
+    index_type ir_gs_;
 
     LinSolverDirect*    first_solver_;
     LinSolverDirect*    refact_solver_;
