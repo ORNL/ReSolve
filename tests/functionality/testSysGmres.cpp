@@ -361,7 +361,7 @@ ReSolve::matrix::Csr* generateMatrix(const index_type N, ReSolve::memory::Memory
       {
         where = (j - rowptr[i]) * N / nnz_per_row + (N % (N / nnz_per_row));
         // evenly distribute nonzeros ^^^^             ^^^^^^^^ perturb offset
-        what  = row_sample[static_cast<size_t>(j - rowptr[i])];
+        what = row_sample[static_cast<size_t>(j - rowptr[i])];
       }
       colidx[j] = where;
       val[j]    = what;

@@ -258,7 +258,7 @@ ReSolve::matrix::Csr* generateMatrix(const index_type             n,
       {
         where = (j - rowptr[i]) * n / nnz_per_row + (n % (n / nnz_per_row));
         // evenly distribute nonzeros ^^^^             ^^^^^^^^ perturb offset
-        what  = row_sample[static_cast<size_t>(j - rowptr[i])];
+        what = row_sample[static_cast<size_t>(j - rowptr[i])];
       }
       colidx[j] = where;
       val[j]    = what;

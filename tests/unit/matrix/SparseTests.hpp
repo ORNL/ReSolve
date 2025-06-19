@@ -400,5 +400,5 @@ namespace ReSolve
       memory::MemorySpace memspace_;
       MemoryHandler       mem_;
     }; // class SparseTests
-  } // namespace tests
+  }    // namespace tests
 } // namespace ReSolve
