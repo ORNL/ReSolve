@@ -37,33 +37,7 @@
             "installDir": "${sourceDir}/install",
             "generator": "Unix Makefiles"
         },
-	    {
-            "name": "ascent",
-            "inherits": "cuda",
-            "displayName": "Ascent Build",
-            "description": "Custom changes specific for Ascent",
-            "cacheVariables": {
-                "CMAKE_C_COMPILER": "$env{OLCF_GCC_ROOT}/bin/gcc",
-                "CMAKE_CXX_COMPILER": "$env{OLCF_GCC_ROOT}/bin/g++",
-		        "CMAKE_CUDA_ARCHITECTURES": "70"
-	        }
-        },
-	    {
-            "name": "ascent-clang",
-            "inherits": "cuda",
-            "displayName": "Ascent Build with Clang",
-            "description": "Custom changes specific for Ascent with Clang",
-            "cacheVariables": {
-                "CMAKE_C_COMPILER": "$env{OLCF_LLVM_ROOT}/bin/clang",
-                "CMAKE_CXX_COMPILER": "$env{OLCF_LLVM_ROOT}/bin/clang++",
-                "CMAKE_CUDA_COMPILER": "nvcc",
-                "CMAKE_CUDA_HOST_COMPILER": "$env{OLCF_LLVM_ROOT}/bin/clang++",
-                "CMAKE_CUDA_FLAGS": "-allow-unsupported-compiler",
-                "RESOLVE_USE_ASAN": "OFF",
-		        "CMAKE_CUDA_ARCHITECTURES": "70"
-	    }
-        },
-        {
+	{
             "name": "deception",
             "inherits": "cuda",
             "displayName": "Deception Build",

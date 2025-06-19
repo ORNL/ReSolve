@@ -76,7 +76,7 @@ from your build directory.
 
 You can find default Cmake Configurations in the CMakePresets.json file, which allows for easy switching between different CMake Configs. To create your own CMake Configuration we encourage you to utlize a CmakeUserPresets.json file. To learn more about cmake-presets please checkout the cmake [docs](https://cmake.org/cmake/help/latest/manual/cmake-presets.7.html) 
 
-For example if you wanted to build and install ReSolve on a High Performance Computing Cluster such as PNNL's Deception or ORNL's Ascent we encourage you to utilize our cluster preset. Using this preset will set CMAKE_INSTALL_PREFIX to an install folder. To use this preset simply call the preset flag in the cmake build step. 
+For example if you wanted to build and install ReSolve on a High Performance Computing Cluster such as PNNL's Deception or ORNL's Frontier we encourage you to utilize our cluster preset. Using this preset will set CMAKE_INSTALL_PREFIX to an install folder. To use this preset simply call the preset flag in the cmake build step. 
 
 ```shell
 cmake -B build --preset cluster
