@@ -130,9 +130,9 @@ namespace ReSolve
     mem_.copyArrayHostToDevice(d_P_, P, n);
     mem_.copyArrayHostToDevice(d_Q_, Q, n);
 
-    status_cusolverrf_  = cusolverRfSetResetValuesFastMode(handle_cusolverrf_, CUSOLVERRF_RESET_VALUES_FAST_MODE_ON);
-    error_sum          += status_cusolverrf_;
-    status_cusolverrf_  = cusolverRfSetupDevice(n,
+    status_cusolverrf_ = cusolverRfSetResetValuesFastMode(handle_cusolverrf_, CUSOLVERRF_RESET_VALUES_FAST_MODE_ON);
+    error_sum += status_cusolverrf_;
+    status_cusolverrf_ = cusolverRfSetupDevice(n,
                                                A_->getNnz(),
                                                A_->getRowData(memory::DEVICE),
                                                A_->getColData(memory::DEVICE),
@@ -148,11 +148,11 @@ namespace ReSolve
                                                d_P_,
                                                d_Q_,
                                                handle_cusolverrf_);
-    error_sum          += status_cusolverrf_;
+    error_sum += status_cusolverrf_;
 
     mem_.deviceSynchronize();
-    status_cusolverrf_  = cusolverRfAnalyze(handle_cusolverrf_);
-    error_sum          += status_cusolverrf_;
+    status_cusolverrf_ = cusolverRfAnalyze(handle_cusolverrf_);
+    error_sum += status_cusolverrf_;
 
     const cusolverRfFactorization_t fact_alg =
         CUSOLVERRF_FACTORIZATION_ALG0; // 0 - default, 1 or 2
@@ -233,7 +233,7 @@ namespace ReSolve
     // Check solver handle
     assert(handle_cusolverrf_ != nullptr && "cuSolverRf handle is null!");
 
-    status_cusolverrf_  = cusolverRfResetValues(A_->getNumRows(),
+    status_cusolverrf_ = cusolverRfResetValues(A_->getNumRows(),
                                                A_->getNnz(),
                                                A_->getRowData(memory::DEVICE),
                                                A_->getColData(memory::DEVICE),
@@ -241,11 +241,11 @@ namespace ReSolve
                                                d_P_,
                                                d_Q_,
                                                handle_cusolverrf_);
-    error_sum          += status_cusolverrf_;
+    error_sum += status_cusolverrf_;
 
     mem_.deviceSynchronize();
-    status_cusolverrf_  = cusolverRfRefactor(handle_cusolverrf_);
-    error_sum          += status_cusolverrf_;
+    status_cusolverrf_ = cusolverRfRefactor(handle_cusolverrf_);
+    error_sum += status_cusolverrf_;
 
     return error_sum;
   }

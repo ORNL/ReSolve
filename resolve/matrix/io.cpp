@@ -148,10 +148,10 @@ namespace ReSolve
                                            matrix::Sparse*                  A,
                                            std::list<MatrixElementTriplet>& tmp);
     // static void print_list(std::list<MatrixElementTriplet>& l);
-    static int  loadToList(std::istream& file, bool is_expand_symmetric, std::list<MatrixElementTriplet>& tmp);
-    static int  removeDuplicates(std::list<MatrixElementTriplet>& tmp);
-    static int  copyListToCoo(const std::list<MatrixElementTriplet>& tmp, matrix::Coo* A);
-    static int  copyListToCsr(const std::list<MatrixElementTriplet>& tmp, matrix::Csr* A);
+    static int loadToList(std::istream& file, bool is_expand_symmetric, std::list<MatrixElementTriplet>& tmp);
+    static int removeDuplicates(std::list<MatrixElementTriplet>& tmp);
+    static int copyListToCoo(const std::list<MatrixElementTriplet>& tmp, matrix::Coo* A);
+    static int copyListToCsr(const std::list<MatrixElementTriplet>& tmp, matrix::Csr* A);
 
     /**
      * @brief Create a COO matrix and populate it with data from Matrix Market
@@ -617,7 +617,7 @@ namespace ReSolve
       std::stringstream ss;
       std::string       line;
       // Default is a general matrix
-      bool              symmetric = false;
+      bool symmetric = false;
 
       // Default is not to expand symmetric matrix
       bool is_expand_symmetric = false;

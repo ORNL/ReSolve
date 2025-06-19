@@ -86,8 +86,8 @@ namespace ReSolve
    */
   int RandomSketchingFWHTCpu::setup(index_type n, index_type k)
   {
-    k_rand_          = k;
-    n_               = n;
+    k_rand_ = k;
+    n_      = n;
     // pad to the nearest power of 2
     real_type N_real = std::pow(2.0, std::ceil(std::log(n_) / std::log(2.0)));
     if (N_real > static_cast<real_type>(std::numeric_limits<index_type>::max()))

@@ -36,8 +36,8 @@ extern "C"
   cusolverSpDestroyGluInfo(csrgluInfo_t info);
 
   cusolverStatus_t CUSOLVERAPI
-  cusolverSpDgluSetup(cusolverSpHandle_t       handle,
-                      int                      m,
+  cusolverSpDgluSetup(cusolverSpHandle_t handle,
+                      int                m,
                       /* A can be base-0 or base-1 */
                       int                      nnzA,
                       const cusparseMatDescr_t descrA,
@@ -63,8 +63,8 @@ extern "C"
                          void*              workspace);
 
   cusolverStatus_t CUSOLVERAPI
-  cusolverSpDgluReset(cusolverSpHandle_t       handle,
-                      int                      m,
+  cusolverSpDgluReset(cusolverSpHandle_t handle,
+                      int                m,
                       /* A is original matrix */
                       int                      nnzA,
                       const cusparseMatDescr_t descr_A,
@@ -79,8 +79,8 @@ extern "C"
                        void*              workspace);
 
   cusolverStatus_t CUSOLVERAPI
-  cusolverSpDgluSolve(cusolverSpHandle_t       handle,
-                      int                      m,
+  cusolverSpDgluSolve(cusolverSpHandle_t handle,
+                      int                m,
                       /* A is original matrix */
                       int                      nnzA,
                       const cusparseMatDescr_t descr_A,

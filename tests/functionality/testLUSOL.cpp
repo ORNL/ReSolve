@@ -137,13 +137,13 @@ int main(int argc, char* argv[])
 
   // Compute residual r := A*x - r using exact solution x
   vec_r.copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
-  error_sum                      += matrix_handler.matvec(&A_csr,
+  error_sum += matrix_handler.matvec(&A_csr,
                                      &vec_test,
                                      &vec_r,
                                      &ONE,
                                      &MINUS_ONE,
                                      ReSolve::memory::HOST);
-  real_type exactSol_normRmatrix  = sqrt(vector_handler.dot(&vec_r, &vec_r, ReSolve::memory::HOST));
+  real_type exactSol_normRmatrix = sqrt(vector_handler.dot(&vec_r, &vec_r, ReSolve::memory::HOST));
 
   std::cout << "Results: \n";
   std::cout << std::scientific << std::setprecision(16);
@@ -241,14 +241,14 @@ int main(int argc, char* argv[])
   // compute the residual using exact solution
   vec_r.copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   // Compute residual r := A*x - r using exact solution x
-  error_sum            += matrix_handler.matvec(&A_csr,
+  error_sum += matrix_handler.matvec(&A_csr,
                                      &vec_test,
                                      &vec_r,
                                      &ONE,
                                      &MINUS_ONE,
                                      ReSolve::memory::HOST);
   // Compute residual error norm
-  exactSol_normRmatrix  = sqrt(vector_handler.dot(&vec_r, &vec_r, ReSolve::memory::HOST));
+  exactSol_normRmatrix = sqrt(vector_handler.dot(&vec_r, &vec_r, ReSolve::memory::HOST));
 
   std::cout << "Results: \n";
   std::cout << std::scientific << std::setprecision(16);

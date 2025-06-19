@@ -162,10 +162,10 @@ namespace ReSolve
 
       TestingResults& operator+=(const TestingResults& rhs)
       {
-        this->success            += rhs.success;
-        this->failure            += rhs.failure;
-        this->skip               += rhs.skip;
-        this->expected_failure   += rhs.expected_failure;
+        this->success += rhs.success;
+        this->failure += rhs.failure;
+        this->skip += rhs.skip;
+        this->expected_failure += rhs.expected_failure;
         this->unexpected_success += rhs.unexpected_success;
 
         return *this;

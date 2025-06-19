@@ -40,10 +40,10 @@ namespace ReSolve
 
     LinAlgWorkspaceCUDA* workspaceCUDA = workspace_;
     // get the handle
-    handle_cusolversp_                 = workspaceCUDA->getCusolverSpHandle();
-    A_                                 = (matrix::Csr*) A;
-    index_type n                       = A_->getNumRows();
-    index_type nnz                     = A_->getNnz();
+    handle_cusolversp_ = workspaceCUDA->getCusolverSpHandle();
+    A_                 = (matrix::Csr*) A;
+    index_type n       = A_->getNumRows();
+    index_type nnz     = A_->getNnz();
     // create combined factor
     combineFactors(L, U);
 
@@ -58,7 +58,7 @@ namespace ReSolve
     cusparseSetMatIndexBase(descr_A_, CUSPARSE_INDEX_BASE_ZERO);
 
     // set up the GLU
-    status_cusolver_  = cusolverSpDgluSetup(handle_cusolversp_,
+    status_cusolver_ = cusolverSpDgluSetup(handle_cusolversp_,
                                            n,
                                            nnz,
                                            descr_A_,
@@ -71,20 +71,20 @@ namespace ReSolve
                                            M_->getRowData(memory::HOST),
                                            M_->getColData(memory::HOST),
                                            info_M_);
-    error_sum        += status_cusolver_;
+    error_sum += status_cusolver_;
     // NOW the buffer
     size_t buffer_size;
-    status_cusolver_  = cusolverSpDgluBufferSize(handle_cusolversp_, info_M_, &buffer_size);
-    error_sum        += status_cusolver_;
+    status_cusolver_ = cusolverSpDgluBufferSize(handle_cusolversp_, info_M_, &buffer_size);
+    error_sum += status_cusolver_;
 
     mem_.allocateBufferOnDevice(&glu_buffer_, buffer_size);
 
-    status_cusolver_  = cusolverSpDgluAnalysis(handle_cusolversp_, info_M_, glu_buffer_);
-    error_sum        += status_cusolver_;
+    status_cusolver_ = cusolverSpDgluAnalysis(handle_cusolversp_, info_M_, glu_buffer_);
+    error_sum += status_cusolver_;
 
     // reset and refactor so factors are ON THE GPU
 
-    status_cusolver_  = cusolverSpDgluReset(handle_cusolversp_,
+    status_cusolver_ = cusolverSpDgluReset(handle_cusolversp_,
                                            n,
                                            /** A is original matrix */
                                            nnz,
@@ -93,10 +93,10 @@ namespace ReSolve
                                            A_->getRowData(memory::DEVICE),
                                            A_->getColData(memory::DEVICE),
                                            info_M_);
-    error_sum        += status_cusolver_;
+    error_sum += status_cusolver_;
 
-    status_cusolver_  = cusolverSpDgluFactor(handle_cusolversp_, info_M_, glu_buffer_);
-    error_sum        += status_cusolver_;
+    status_cusolver_ = cusolverSpDgluFactor(handle_cusolversp_, info_M_, glu_buffer_);
+    error_sum += status_cusolver_;
 
     RESOLVE_RANGE_POP(__FUNCTION__);
     return error_sum;
@@ -169,8 +169,8 @@ namespace ReSolve
   int LinSolverDirectCuSolverGLU::refactorize()
   {
     RESOLVE_RANGE_PUSH(__FUNCTION__);
-    int error_sum     = 0;
-    status_cusolver_  = cusolverSpDgluReset(handle_cusolversp_,
+    int error_sum    = 0;
+    status_cusolver_ = cusolverSpDgluReset(handle_cusolversp_,
                                            A_->getNumRows(),
                                            /** A is original matrix */
                                            A_->getNnz(),
@@ -179,10 +179,10 @@ namespace ReSolve
                                            A_->getRowData(memory::DEVICE),
                                            A_->getColData(memory::DEVICE),
                                            info_M_);
-    error_sum        += status_cusolver_;
+    error_sum += status_cusolver_;
 
-    status_cusolver_  = cusolverSpDgluFactor(handle_cusolversp_, info_M_, glu_buffer_);
-    error_sum        += status_cusolver_;
+    status_cusolver_ = cusolverSpDgluFactor(handle_cusolversp_, info_M_, glu_buffer_);
+    error_sum += status_cusolver_;
 
     RESOLVE_RANGE_POP(__FUNCTION__);
     return error_sum;

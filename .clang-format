@@ -17,8 +17,8 @@ CommentPragmas: '^\*\*'
 AlignConsecutiveAssignments:
   Enabled:          true
   AcrossEmptyLines: false
-  AcrossComments:   true
-  AlignCompound:    true
+  AcrossComments:   false
+  AlignCompound:    false
   PadOperators:     true
 AlignConsecutiveBitFields:
   Enabled:          true
@@ -27,7 +27,7 @@ AlignConsecutiveBitFields:
 AlignConsecutiveDeclarations:
   Enabled:          true
   AcrossEmptyLines: false
-  AcrossComments:   true
+  AcrossComments:   false
   # For future versions of clang-format
   # AlignFunctionDeclarations: false
   # AlignFunctionPointers: false

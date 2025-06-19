@@ -1,6 +1,6 @@
 #[[
 
-@brief Build ReSolve backend when there is no GPU support
+@brief Build Re::Solve backend when there is no GPU support
 
 @author Slaven Peles <peless@ornl.gov>
 

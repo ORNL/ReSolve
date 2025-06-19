@@ -112,31 +112,31 @@ int runTest(int argc, char* argv[], std::string& solver_name)
   vec_x.allocate(ReSolve::memory::HOST); // for KLU
 
   // Solve the first system using KLU
-  status     = KLU.setup(A);
+  status = KLU.setup(A);
   error_sum += status;
 
-  status     = KLU.analyze();
+  status = KLU.analyze();
   error_sum += status;
 
-  status     = KLU.factorize();
+  status = KLU.factorize();
   error_sum += status;
 
   std::cout << "KLU factorize status: " << status << std::endl;
 
-  status     = KLU.solve(&vec_rhs, &vec_x);
+  status = KLU.solve(&vec_rhs, &vec_x);
   error_sum += status;
 
   if (is_ir)
   {
     test_name += " + IR";
 
-    status     = FGMRES.setup(A);
+    status = FGMRES.setup(A);
     error_sum += status;
 
-    status     = FGMRES.setupPreconditioner("LU", &KLU);
+    status = FGMRES.setupPreconditioner("LU", &KLU);
     error_sum += status;
 
-    status     = FGMRES.solve(&vec_rhs, &vec_x);
+    status = FGMRES.solve(&vec_rhs, &vec_x);
     error_sum += status;
   }
 
@@ -173,22 +173,22 @@ int runTest(int argc, char* argv[], std::string& solver_name)
   rhs2_file.close();
   vec_rhs.copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
 
-  status     = KLU.refactorize();
+  status = KLU.refactorize();
   error_sum += status;
   std::cout << "KLU refactorization status: " << status << std::endl;
 
   if (is_ir)
   {
     FGMRES.resetMatrix(A);
-    status     = FGMRES.setupPreconditioner("LU", &KLU);
+    status = FGMRES.setupPreconditioner("LU", &KLU);
     error_sum += status;
 
-    status     = FGMRES.solve(&vec_rhs, &vec_x);
+    status = FGMRES.solve(&vec_rhs, &vec_x);
     error_sum += status;
   }
   else
   {
-    status     = KLU.solve(&vec_rhs, &vec_x);
+    status = KLU.solve(&vec_rhs, &vec_x);
     error_sum += status;
   }
 

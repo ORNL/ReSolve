@@ -155,13 +155,13 @@ namespace ReSolve
       {
         t = 0.0;
         vec_v_->setData(V->getData(j, memspace_), memspace_);
-        t                               = vector_handler_->dot(vec_v_, vec_w_, memspace_);
-        H[idxmap(i, j, num_vecs_ + 1)]  = t;
-        t                              *= -1.0;
+        t                              = vector_handler_->dot(vec_v_, vec_w_, memspace_);
+        H[idxmap(i, j, num_vecs_ + 1)] = t;
+        t *= -1.0;
         vector_handler_->axpy(&t, vec_v_, vec_w_, memspace_);
       }
-      t                                  = 0.0;
-      t                                  = vector_handler_->dot(vec_w_, vec_w_, memspace_);
+      t = 0.0;
+      t = vector_handler_->dot(vec_w_, vec_w_, memspace_);
       // set the last entry in Hessenberg matrix
       t                                  = std::sqrt(t);
       H[idxmap(i, i + 1, num_vecs_ + 1)] = t;
@@ -210,7 +210,7 @@ namespace ReSolve
         H[idxmap(i, j, num_vecs_ + 1)] += h_aux_[j];
       }
 
-      t                                  = vector_handler_->dot(vec_v_, vec_v_, memspace_);
+      t = vector_handler_->dot(vec_v_, vec_v_, memspace_);
       // set the last entry in Hessenberg matrix
       t                                  = std::sqrt(t);
       H[idxmap(i, i + 1, num_vecs_ + 1)] = t;
@@ -263,7 +263,7 @@ namespace ReSolve
       vector_handler_->massAxpy(n, vec_Hcolumn_, i + 1, V, vec_w_, memspace_);
 
       // normalize (second synch)
-      t                                  = vector_handler_->dot(vec_w_, vec_w_, memspace_);
+      t = vector_handler_->dot(vec_w_, vec_w_, memspace_);
       // set the last entry in Hessenberg matrix
       t                                  = std::sqrt(t);
       H[idxmap(i, i + 1, num_vecs_ + 1)] = t;
@@ -325,7 +325,7 @@ namespace ReSolve
         h_rv[j] = 0.0;
         for (int k = j + 1; k <= i; ++k)
         {
-          h        = h_L_[idxmap(k, j, num_vecs_ + 1)];
+          h = h_L_[idxmap(k, j, num_vecs_ + 1)];
           h_rv[j] += H[idxmap(i, k, num_vecs_ + 1)] * h;
         }
       }
@@ -353,7 +353,7 @@ namespace ReSolve
 
       vector_handler_->massAxpy(n, vec_Hcolumn_, i + 1, V, vec_w_, memspace_);
       // normalize (second synch)
-      t                                  = vector_handler_->dot(vec_w_, vec_w_, memspace_);
+      t = vector_handler_->dot(vec_w_, vec_w_, memspace_);
       // set the last entry in Hessenberg matrix
       t                                  = std::sqrt(t);
       H[idxmap(i, i + 1, num_vecs_ + 1)] = t;
@@ -384,7 +384,7 @@ namespace ReSolve
       vec_Hcolumn_->copyDataTo(&H[idxmap(i, 0, num_vecs_ + 1)], 0, memory::HOST);
       mem_.deviceSynchronize();
 
-      t                                  = vector_handler_->dot(vec_v_, vec_v_, memspace_);
+      t = vector_handler_->dot(vec_v_, vec_v_, memspace_);
       // set the last entry in Hessenberg matrix
       t                                  = std::sqrt(t);
       H[idxmap(i, i + 1, num_vecs_ + 1)] = t;

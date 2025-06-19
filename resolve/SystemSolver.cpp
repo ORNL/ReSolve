@@ -195,13 +195,13 @@ namespace ReSolve
     // If we use iterative solver, we can set it up here
     if (solveMethod_ == "randgmres")
     {
-      auto* rgmres  = dynamic_cast<LinSolverIterativeRandFGMRES*>(iterativeSolver_);
-      status       += rgmres->setup(A_);
+      auto* rgmres = dynamic_cast<LinSolverIterativeRandFGMRES*>(iterativeSolver_);
+      status += rgmres->setup(A_);
     }
     else if (solveMethod_ == "fgmres")
     {
-      auto* fgmres  = dynamic_cast<LinSolverIterativeFGMRES*>(iterativeSolver_);
-      status       += fgmres->setup(A_);
+      auto* fgmres = dynamic_cast<LinSolverIterativeFGMRES*>(iterativeSolver_);
+      status += fgmres->setup(A_);
     }
     else
     {
@@ -459,8 +459,8 @@ namespace ReSolve
 #ifdef RESOLVE_USE_CUDA
     if (refactorizationMethod_ == "glu")
     {
-      is_solve_on_device_  = true;
-      status              += refactorizationSolver_->setup(A_, L_, U_, P_, Q_);
+      is_solve_on_device_ = true;
+      status += refactorizationSolver_->setup(A_, L_, U_, P_, Q_);
     }
     if (refactorizationMethod_ == "cusolverrf")
     {

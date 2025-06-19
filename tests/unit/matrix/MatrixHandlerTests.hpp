@@ -504,7 +504,7 @@ namespace ReSolve
                 return false;
               }
               main_val += 2.0;
-              off_val  += 2.0;
+              off_val += 2.0;
             }
             else
             {
@@ -542,8 +542,8 @@ namespace ReSolve
         index_type nnz = 0;
         for (index_type i = 0; i < n; ++i)
         {
-          size_t reminder  = static_cast<size_t>(i % 5);
-          nnz             += static_cast<index_type>(data[reminder].size());
+          size_t reminder = static_cast<size_t>(i % 5);
+          nnz += static_cast<index_type>(data[reminder].size());
         }
 
         matrix::Csr* A = new matrix::Csr(n, n, nnz);

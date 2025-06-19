@@ -58,7 +58,7 @@ namespace ReSolve
           can1 = u1[nn];
           can2 = u2[nn];
 
-          cbn        = v[N * j + nn];
+          cbn = v[N * j + nn];
           s_tmp1[t] += can1 * cbn;
           s_tmp2[t] += can2 * cbn;
 
@@ -191,8 +191,8 @@ namespace ReSolve
           {
             sum = sum + fabs(a_val[i]);
           }
-          result[idx]  = sum;
-          idx         += (blockDim.x * gridDim.x);
+          result[idx] = sum;
+          idx += (blockDim.x * gridDim.x);
         }
       }
 

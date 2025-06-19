@@ -72,7 +72,7 @@ namespace ReSolve
 
     assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW && "Matrix has to be in CSR format for matrix-vector product.\n");
 
-    int                  error_sum = 0;
+    int error_sum = 0;
     // result = alpha *A*x + beta * result
     cusparseStatus_t     status;
     cusparseDnVecDescr_t vecx = workspace_->getVecX();
@@ -87,7 +87,7 @@ namespace ReSolve
     cusparseHandle_t handle_cusparse = workspace_->getCusparseHandle();
     if (values_changed_)
     {
-      status           = cusparseCreateCsr(&matA,
+      status = cusparseCreateCsr(&matA,
                                  A->getNumRows(),
                                  A->getNumColumns(),
                                  A->getNnz(),
@@ -98,15 +98,15 @@ namespace ReSolve
                                  CUSPARSE_INDEX_32I,
                                  CUSPARSE_INDEX_BASE_ZERO,
                                  CUDA_R_64F);
-      error_sum       += status;
-      values_changed_  = false;
+      error_sum += status;
+      values_changed_ = false;
     }
     if (!workspace_->matvecSetup())
     {
       // setup first, allocate, etc.
       size_t bufferSize = 0;
 
-      status     = cusparseSpMV_bufferSize(handle_cusparse,
+      status = cusparseSpMV_bufferSize(handle_cusparse,
                                        CUSPARSE_OPERATION_NON_TRANSPOSE,
                                        &MINUS_ONE,
                                        matA,
@@ -125,7 +125,7 @@ namespace ReSolve
       workspace_->matvecSetupDone();
     }
 
-    status     = cusparseSpMV(handle_cusparse,
+    status = cusparseSpMV(handle_cusparse,
                           CUSPARSE_OPERATION_NON_TRANSPOSE,
                           alpha,
                           matA,
@@ -226,7 +226,7 @@ namespace ReSolve
 
     size_t           bufferSize;
     void*            d_work;
-    cusparseStatus_t status  = cusparseCsr2cscEx2_bufferSize(workspace_->getCusparseHandle(),
+    cusparseStatus_t status = cusparseCsr2cscEx2_bufferSize(workspace_->getCusparseHandle(),
                                                             m,
                                                             n,
                                                             nnz,
@@ -241,9 +241,9 @@ namespace ReSolve
                                                             CUSPARSE_INDEX_BASE_ZERO,
                                                             CUSPARSE_CSR2CSC_ALG1,
                                                             &bufferSize);
-    error_sum               += status;
+    error_sum += status;
     mem_.allocateBufferOnDevice(&d_work, bufferSize);
-    status     = cusparseCsr2cscEx2(workspace_->getCusparseHandle(),
+    status = cusparseCsr2cscEx2(workspace_->getCusparseHandle(),
                                 m,
                                 n,
                                 nnz,
@@ -295,7 +295,7 @@ namespace ReSolve
     {
       // allocate transpose buffer
       size_t bufferSize;
-      status     = cusparseCsr2cscEx2_bufferSize(workspace_->getCusparseHandle(),
+      status = cusparseCsr2cscEx2_bufferSize(workspace_->getCusparseHandle(),
                                              m,
                                              n,
                                              nnz,
@@ -313,7 +313,7 @@ namespace ReSolve
       error_sum += status;
       workspace_->setTransposeBufferWorkspace(bufferSize);
     }
-    status     = cusparseCsr2cscEx2(workspace_->getCusparseHandle(),
+    status = cusparseCsr2cscEx2(workspace_->getCusparseHandle(),
                                 m,
                                 n,
                                 nnz,

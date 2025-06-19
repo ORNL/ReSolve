@@ -97,9 +97,9 @@ namespace ReSolve
                                                     &buffer_size_A);
 
     mem_.allocateBufferOnDevice(&buffer_, (size_t) buffer_size_A);
-    error_sum        += status_cusparse_;
+    error_sum += status_cusparse_;
     // Now analysis
-    status_cusparse_  = cusparseDcsrilu02_analysis(workspace_->getCusparseHandle(),
+    status_cusparse_ = cusparseDcsrilu02_analysis(workspace_->getCusparseHandle(),
                                                   n,
                                                   nnz,
                                                   descr_A_,
@@ -157,7 +157,7 @@ namespace ReSolve
                               &diagtypeU,
                               sizeof(diagtypeU));
 
-    status_cusparse_  = cusparseSpSV_bufferSize(workspace_->getCusparseHandle(),
+    status_cusparse_ = cusparseSpSV_bufferSize(workspace_->getCusparseHandle(),
                                                CUSPARSE_OPERATION_NON_TRANSPOSE,
                                                &(constants::ONE),
                                                mat_L_,
@@ -167,10 +167,10 @@ namespace ReSolve
                                                CUSPARSE_SPSV_ALG_DEFAULT,
                                                descr_spsv_L_,
                                                &buffer_size_L);
-    error_sum        += status_cusparse_;
+    error_sum += status_cusparse_;
 
     mem_.allocateBufferOnDevice(&buffer_L_, buffer_size_L);
-    status_cusparse_  = cusparseSpSV_bufferSize(workspace_->getCusparseHandle(),
+    status_cusparse_ = cusparseSpSV_bufferSize(workspace_->getCusparseHandle(),
                                                CUSPARSE_OPERATION_NON_TRANSPOSE,
                                                &(constants::ONE),
                                                mat_U_,
@@ -180,11 +180,11 @@ namespace ReSolve
                                                CUSPARSE_SPSV_ALG_DEFAULT,
                                                descr_spsv_U_,
                                                &buffer_size_U);
-    error_sum        += status_cusparse_;
+    error_sum += status_cusparse_;
 
     mem_.allocateBufferOnDevice(&buffer_U_, buffer_size_U);
 
-    status_cusparse_  = cusparseSpSV_analysis(workspace_->getCusparseHandle(),
+    status_cusparse_ = cusparseSpSV_analysis(workspace_->getCusparseHandle(),
                                              CUSPARSE_OPERATION_NON_TRANSPOSE,
                                              &(constants::ONE),
                                              mat_L_,
@@ -194,7 +194,7 @@ namespace ReSolve
                                              CUSPARSE_SPSV_ALG_DEFAULT,
                                              descr_spsv_L_,
                                              buffer_L_);
-    error_sum        += status_cusparse_;
+    error_sum += status_cusparse_;
 
     status_cusparse_ = cusparseSpSV_analysis(workspace_->getCusparseHandle(),
                                              CUSPARSE_OPERATION_NON_TRANSPOSE,
@@ -221,7 +221,7 @@ namespace ReSolve
     index_type nnz = A_->getNnz();
     mem_.copyArrayDeviceToDevice(d_ILU_vals_, A_->getValues(ReSolve::memory::DEVICE), nnz);
 
-    status_cusparse_  = cusparseDcsrilu02(workspace_->getCusparseHandle(),
+    status_cusparse_ = cusparseDcsrilu02(workspace_->getCusparseHandle(),
                                          n,
                                          nnz,
                                          descr_A_,
@@ -232,7 +232,7 @@ namespace ReSolve
                                          CUSPARSE_SOLVE_POLICY_USE_LEVEL,
                                          buffer_);
     // rerun tri solve analysis - to be updated
-    error_sum        += status_cusparse_;
+    error_sum += status_cusparse_;
 
     return error_sum;
   }
@@ -245,7 +245,7 @@ namespace ReSolve
     cusparseCreateDnVec(&vec_X_, A_->getNumRows(), rhs->getData(ReSolve::memory::DEVICE), CUDA_R_64F);
     cusparseCreateDnVec(&vec_Y_, A_->getNumRows(), d_aux1_, CUDA_R_64F);
 
-    status_cusparse_  = cusparseSpSV_solve(workspace_->getCusparseHandle(),
+    status_cusparse_ = cusparseSpSV_solve(workspace_->getCusparseHandle(),
                                           CUSPARSE_OPERATION_NON_TRANSPOSE,
                                           &(constants::ONE),
                                           mat_L_,
@@ -254,9 +254,9 @@ namespace ReSolve
                                           CUDA_R_64F,
                                           CUSPARSE_SPSV_ALG_DEFAULT,
                                           descr_spsv_L_);
-    error_sum        += status_cusparse_;
+    error_sum += status_cusparse_;
 
-    status_cusparse_  = cusparseSpSV_solve(workspace_->getCusparseHandle(),
+    status_cusparse_ = cusparseSpSV_solve(workspace_->getCusparseHandle(),
                                           CUSPARSE_OPERATION_NON_TRANSPOSE,
                                           &(constants::ONE),
                                           mat_U_,
@@ -265,7 +265,7 @@ namespace ReSolve
                                           CUDA_R_64F,
                                           CUSPARSE_SPSV_ALG_DEFAULT,
                                           descr_spsv_U_);
-    error_sum        += status_cusparse_;
+    error_sum += status_cusparse_;
 
     rhs->setDataUpdated(ReSolve::memory::DEVICE);
 
@@ -282,7 +282,7 @@ namespace ReSolve
     cusparseCreateDnVec(&vec_X_, A_->getNumRows(), rhs->getData(ReSolve::memory::DEVICE), CUDA_R_64F);
     cusparseCreateDnVec(&vec_Y_, A_->getNumRows(), d_aux1_, CUDA_R_64F);
 
-    status_cusparse_  = cusparseSpSV_solve(workspace_->getCusparseHandle(),
+    status_cusparse_ = cusparseSpSV_solve(workspace_->getCusparseHandle(),
                                           CUSPARSE_OPERATION_NON_TRANSPOSE,
                                           &(constants::ONE),
                                           mat_L_,
@@ -291,10 +291,10 @@ namespace ReSolve
                                           CUDA_R_64F,
                                           CUSPARSE_SPSV_ALG_DEFAULT,
                                           descr_spsv_L_);
-    error_sum        += status_cusparse_;
+    error_sum += status_cusparse_;
 
     cusparseCreateDnVec(&vec_X_, A_->getNumRows(), x->getData(ReSolve::memory::DEVICE), CUDA_R_64F);
-    status_cusparse_  = cusparseSpSV_solve(workspace_->getCusparseHandle(),
+    status_cusparse_ = cusparseSpSV_solve(workspace_->getCusparseHandle(),
                                           CUSPARSE_OPERATION_NON_TRANSPOSE,
                                           &(constants::ONE),
                                           mat_U_,
@@ -303,7 +303,7 @@ namespace ReSolve
                                           CUDA_R_64F,
                                           CUSPARSE_SPSV_ALG_DEFAULT,
                                           descr_spsv_U_);
-    error_sum        += status_cusparse_;
+    error_sum += status_cusparse_;
 
     x->setDataUpdated(ReSolve::memory::DEVICE);
 

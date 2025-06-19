@@ -48,10 +48,10 @@ namespace ReSolve
                                     index_type*,
                                     vector_type*)
   {
-    int error_sum  = 0;
-    A_             = dynamic_cast<matrix::Csr*>(A);
-    error_sum     += analyze();
-    error_sum     += factorize();
+    int error_sum = 0;
+    A_            = dynamic_cast<matrix::Csr*>(A);
+    error_sum += analyze();
+    error_sum += factorize();
 
     return error_sum;
   }
