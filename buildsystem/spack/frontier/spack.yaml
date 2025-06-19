@@ -158,17 +158,17 @@ spack:
   compilers:
     - compiler:
         spec: rocmcc@6.3.1
-       paths:
-         cc: /opt/rocm-6.3.1/llvm/bin/amdclang
-         cxx: /opt/rocm-6.3.1/llvm/bin/amdclang++
-         f77: /opt/rocm-6.3.1/llvm/bin/amdflang
-         fc: /opt/rocm-6.3.1/llvm/bin/amdflang
-       flags: {}
-       operating_system: sles15
-       target: x86_64
+        paths:
+          cc: /opt/rocm-6.3.1/llvm/bin/amdclang
+          cxx: /opt/rocm-6.3.1/llvm/bin/amdclang++
+          f77: /opt/rocm-6.3.1/llvm/bin/amdflang
+          fc: /opt/rocm-6.3.1/llvm/bin/amdflang
+        flags: {}
+        operating_system: sles15
+        target: x86_64
         modules: []
-       environment: {}
-       extra_rpaths: []
+        environment: {}
+        extra_rpaths: []
     - compiler:
         spec: gcc@12.3.0
         paths:
