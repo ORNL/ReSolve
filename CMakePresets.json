@@ -72,6 +72,6 @@
 	        "CMAKE_C_COMPILER": "/opt/rocm-6.3.1/llvm/bin/clang",
                 "CMAKE_CXX_COMPILER": "/opt/rocm-6.3.1/llvm/bin/clang++"
 	        }  
-	    }
+	}
     ]
 }

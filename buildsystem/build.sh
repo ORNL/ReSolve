@@ -150,12 +150,6 @@ case $MY_CLUSTER in
   dl*|deception|*fat*)
     export MY_CLUSTER=deception
     ;;
-  ascent-clang*)
-    export MY_CLUSTER=ascent-clang
-    ;;
-  ascent*)
-    export MY_CLUSTER=ascent
-    ;;
   frontier*)
     export MY_CLUSTER=frontier
     ;;
@@ -176,7 +170,7 @@ if [[ -f "$varfile" ]]; then
   source $varfile || { echo "Could not source $varfile"; exit 1; }
 else
   echo "No cluster variable file configured for ${MY_CLUSTER}. Try one of:\n"
-  echo "deception, incline, ascent." && exit 1
+  echo "deception, incline, frontier." && exit 1
 fi
 
 echo "Paths:"

@@ -31,9 +31,9 @@ spack:
       target: [zen3]
     cmake:
       externals:
-      - spec: cmake@3.27.9
+      - spec: cmake@3.30.5
         modules:
-        - cmake/3.27.9
+        - cmake/3.30.5
         buildable: false
     metis:
       externals:
@@ -43,9 +43,9 @@ spack:
         buildable: false
     openblas:
       externals:
-      - spec: openblas@0.3.26
+      - spec: openblas@0.3.28
         modules:
-        - openblas/0.3.26
+        - openblas/0.3.28
         buildable: false
     rccl:
       buildable: false
@@ -141,13 +141,19 @@ spack:
     curl:
       buildable: false
       externals:
-      - spec: curl@8.1.0
+      - spec: curl@8.6.0
         prefix: /usr
+    gmake:
+      externals:
+      - spec: gmake@4.4.1
+        modules:
+        - gmake/4.4.1
+      buildable: false
     python:
       externals:
-      - spec: python@3.11.5
+      - spec: python@3.11.7
         modules:
-        - cray-python/3.11.5
+        - cray-python/3.11.7
       buildable: false
   compilers:
     - compiler:
