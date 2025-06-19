@@ -145,6 +145,6 @@ namespace ReSolve
       }
 
     }; // struct Cuda
-  } // namespace memory
+  }    // namespace memory
 
 } // namespace ReSolve

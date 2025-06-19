@@ -72,8 +72,8 @@ namespace ReSolve
       io::Logger::warning() << "Buffer size estimate for ILU0 failed with code: " << status_rocsparse_ << " \n";
     }
 
-    error_sum         += status_rocsparse_;
-    status_rocsparse_  = rocsparse_dcsrsv_buffer_size(workspace_->getRocsparseHandle(),
+    error_sum += status_rocsparse_;
+    status_rocsparse_ = rocsparse_dcsrsv_buffer_size(workspace_->getRocsparseHandle(),
                                                      rocsparse_operation_none,
                                                      n,
                                                      nnz,
@@ -219,8 +219,8 @@ namespace ReSolve
   // solution is returned in RHS
   int LinSolverDirectRocSparseILU0::solve(vector_type* rhs)
   {
-    int error_sum      = 0;
-    status_rocsparse_  = rocsparse_dcsrsv_solve(workspace_->getRocsparseHandle(),
+    int error_sum     = 0;
+    status_rocsparse_ = rocsparse_dcsrsv_solve(workspace_->getRocsparseHandle(),
                                                rocsparse_operation_none,
                                                A_->getNumRows(),
                                                A_->getNnz(),
@@ -234,9 +234,9 @@ namespace ReSolve
                                                d_aux1_, // result
                                                rocsparse_solve_policy_auto,
                                                buffer_);
-    error_sum         += status_rocsparse_;
+    error_sum += status_rocsparse_;
 
-    status_rocsparse_  = rocsparse_dcsrsv_solve(workspace_->getRocsparseHandle(),
+    status_rocsparse_ = rocsparse_dcsrsv_solve(workspace_->getRocsparseHandle(),
                                                rocsparse_operation_none,
                                                A_->getNumRows(),
                                                A_->getNnz(),
@@ -250,7 +250,7 @@ namespace ReSolve
                                                rhs->getData(ReSolve::memory::DEVICE), // result
                                                rocsparse_solve_policy_auto,
                                                buffer_);
-    error_sum         += status_rocsparse_;
+    error_sum += status_rocsparse_;
     rhs->setDataUpdated(ReSolve::memory::DEVICE);
 
     return error_sum;
@@ -260,7 +260,7 @@ namespace ReSolve
   {
     int error_sum = 0;
 
-    status_rocsparse_  = rocsparse_dcsrsv_solve(workspace_->getRocsparseHandle(),
+    status_rocsparse_ = rocsparse_dcsrsv_solve(workspace_->getRocsparseHandle(),
                                                rocsparse_operation_none,
                                                A_->getNumRows(),
                                                A_->getNnz(),
@@ -274,9 +274,9 @@ namespace ReSolve
                                                d_aux1_, // result
                                                rocsparse_solve_policy_auto,
                                                buffer_);
-    error_sum         += status_rocsparse_;
+    error_sum += status_rocsparse_;
 
-    status_rocsparse_  = rocsparse_dcsrsv_solve(workspace_->getRocsparseHandle(),
+    status_rocsparse_ = rocsparse_dcsrsv_solve(workspace_->getRocsparseHandle(),
                                                rocsparse_operation_none,
                                                A_->getNumRows(),
                                                A_->getNnz(),
@@ -290,7 +290,7 @@ namespace ReSolve
                                                x->getData(ReSolve::memory::DEVICE), // result
                                                rocsparse_solve_policy_auto,
                                                buffer_);
-    error_sum         += status_rocsparse_;
+    error_sum += status_rocsparse_;
 
     x->setDataUpdated(ReSolve::memory::DEVICE);
 

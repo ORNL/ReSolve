@@ -173,7 +173,6 @@ namespace ReSolve
                                                        L_csr_->getColData(ReSolve::memory::DEVICE),
                                                        info_L_,
                                                        &L_buffer_size);
-
       error_sum += status_rocsparse_;
       mem_.allocateBufferOnDevice(&L_buffer_, L_buffer_size);
 
@@ -187,7 +186,6 @@ namespace ReSolve
                                                        U_csr_->getColData(ReSolve::memory::DEVICE),
                                                        info_U_,
                                                        &U_buffer_size);
-
       error_sum += status_rocsparse_;
       mem_.allocateBufferOnDevice(&U_buffer_, U_buffer_size);
 
@@ -222,7 +220,6 @@ namespace ReSolve
                                                     rocsparse_analysis_policy_force,
                                                     rocsparse_solve_policy_auto,
                                                     U_buffer_);
-
       error_sum += status_rocsparse_;
       if (status_rocsparse_ != 0)
       {
@@ -266,7 +263,6 @@ namespace ReSolve
                                                 d_P_,
                                                 d_Q_,
                                                 infoM_);
-
     mem_.deviceSynchronize();
     error_sum += status_rocblas_;
 
@@ -285,7 +281,6 @@ namespace ReSolve
                                                  U_csr_->getRowData(ReSolve::memory::DEVICE),
                                                  U_csr_->getColData(ReSolve::memory::DEVICE),
                                                  U_csr_->getValues(ReSolve::memory::DEVICE));
-
       mem_.deviceSynchronize();
       error_sum += status_rocblas_;
     }
@@ -394,7 +389,6 @@ namespace ReSolve
                                                x->getData(ReSolve::memory::DEVICE),
                                                A_->getNumRows(),
                                                infoM_);
-
       error_sum += status_rocblas_;
       mem_.deviceSynchronize();
     }

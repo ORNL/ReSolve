@@ -97,8 +97,8 @@ namespace ReSolve
         sum = t;
         //  sum += (a[j] * x_data[ja[j]]);
       }
-      sum            *= (*alpha);
-      result_data[i]  = result_data[i] * (*beta) + sum;
+      sum *= (*alpha);
+      result_data[i] = result_data[i] * (*beta) + sum;
     }
     vec_result->setDataUpdated(memory::HOST);
     return 0;

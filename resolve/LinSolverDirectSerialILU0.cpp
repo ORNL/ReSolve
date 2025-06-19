@@ -216,8 +216,8 @@ namespace ReSolve
       h_aux1_[i] = rhs->getData(ReSolve::memory::HOST)[i];
       for (index_type j = L_->getRowData(ReSolve::memory::HOST)[i]; j < L_->getRowData(ReSolve::memory::HOST)[i + 1] - 1; ++j)
       {
-        index_type col  = L_->getColData(ReSolve::memory::HOST)[j];
-        h_aux1_[i]     -= L_->getValues(ReSolve::memory::HOST)[j] * h_aux1_[col];
+        index_type col = L_->getColData(ReSolve::memory::HOST)[j];
+        h_aux1_[i] -= L_->getValues(ReSolve::memory::HOST)[j] * h_aux1_[col];
       }
       h_aux1_[i] /= L_->getValues(ReSolve::memory::HOST)[L_->getRowData(ReSolve::memory::HOST)[i + 1] - 1];
     }
@@ -229,7 +229,7 @@ namespace ReSolve
       rhs->getData(ReSolve::memory::HOST)[i] = h_aux1_[i];
       for (index_type j = U_->getRowData(ReSolve::memory::HOST)[i] + 1; j < U_->getRowData(ReSolve::memory::HOST)[i + 1]; ++j)
       {
-        index_type col                          = U_->getColData(ReSolve::memory::HOST)[j];
+        index_type col = U_->getColData(ReSolve::memory::HOST)[j];
         rhs->getData(ReSolve::memory::HOST)[i] -= U_->getValues(ReSolve::memory::HOST)[j] * rhs->getData(ReSolve::memory::HOST)[col];
       }
       rhs->getData(ReSolve::memory::HOST)[i] /= U_->getValues(ReSolve::memory::HOST)[U_->getRowData(ReSolve::memory::HOST)[i]]; // divide by the diagonal entry
@@ -249,8 +249,8 @@ namespace ReSolve
       h_aux1_[i] = rhs->getData(ReSolve::memory::HOST)[i];
       for (index_type j = L_->getRowData(ReSolve::memory::HOST)[i]; j < L_->getRowData(ReSolve::memory::HOST)[i + 1] - 1; ++j)
       {
-        index_type col  = L_->getColData(ReSolve::memory::HOST)[j];
-        h_aux1_[i]     -= L_->getValues(ReSolve::memory::HOST)[j] * h_aux1_[col];
+        index_type col = L_->getColData(ReSolve::memory::HOST)[j];
+        h_aux1_[i] -= L_->getValues(ReSolve::memory::HOST)[j] * h_aux1_[col];
       }
       h_aux1_[i] /= L_->getValues(ReSolve::memory::HOST)[L_->getRowData(ReSolve::memory::HOST)[i + 1] - 1];
     }
@@ -263,7 +263,7 @@ namespace ReSolve
       x->getData(ReSolve::memory::HOST)[i] = h_aux1_[i];
       for (index_type j = U_->getRowData(ReSolve::memory::HOST)[i] + 1; j < U_->getRowData(ReSolve::memory::HOST)[i + 1]; ++j)
       {
-        index_type col                        = U_->getColData(ReSolve::memory::HOST)[j];
+        index_type col = U_->getColData(ReSolve::memory::HOST)[j];
         x->getData(ReSolve::memory::HOST)[i] -= U_->getValues(ReSolve::memory::HOST)[j] * x->getData(ReSolve::memory::HOST)[col];
       }
       x->getData(ReSolve::memory::HOST)[i] /= U_->getValues(ReSolve::memory::HOST)[U_->getRowData(ReSolve::memory::HOST)[i]]; // divide by the diagonal entry

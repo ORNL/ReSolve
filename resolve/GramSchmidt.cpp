@@ -155,9 +155,9 @@ namespace ReSolve
       {
         t = 0.0;
         vec_v_->setData(V->getData(j, memspace_), memspace_);
-        t                               = vector_handler_->dot(vec_v_, vec_w_, memspace_);
-        H[idxmap(i, j, num_vecs_ + 1)]  = t;
-        t                              *= -1.0;
+        t                              = vector_handler_->dot(vec_v_, vec_w_, memspace_);
+        H[idxmap(i, j, num_vecs_ + 1)] = t;
+        t *= -1.0;
         vector_handler_->axpy(&t, vec_v_, vec_w_, memspace_);
       }
       t                                  = 0.0;
@@ -325,7 +325,7 @@ namespace ReSolve
         h_rv[j] = 0.0;
         for (int k = j + 1; k <= i; ++k)
         {
-          h        = h_L_[idxmap(k, j, num_vecs_ + 1)];
+          h = h_L_[idxmap(k, j, num_vecs_ + 1)];
           h_rv[j] += H[idxmap(i, k, num_vecs_ + 1)] * h;
         }
       }

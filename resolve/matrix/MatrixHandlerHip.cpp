@@ -89,7 +89,7 @@ namespace ReSolve
 
       rocsparse_create_mat_info(&infoA);
 
-      status     = rocsparse_dcsrmv_analysis(handle_rocsparse,
+      status = rocsparse_dcsrmv_analysis(handle_rocsparse,
                                          rocsparse_operation_none,
                                          A->getNumRows(),
                                          A->getNumColumns(),
@@ -221,7 +221,7 @@ namespace ReSolve
     error_sum += status;
     mem_.allocateBufferOnDevice(&d_work, bufferSize);
 
-    status     = rocsparse_dcsr2csc(workspace_->getRocsparseHandle(),
+    status = rocsparse_dcsr2csc(workspace_->getRocsparseHandle(),
                                 m,
                                 n,
                                 nnz,
@@ -267,7 +267,7 @@ namespace ReSolve
     {
       // allocate transpose buffer
       size_t bufferSize;
-      status     = rocsparse_csr2csc_buffer_size(workspace_->getRocsparseHandle(),
+      status = rocsparse_csr2csc_buffer_size(workspace_->getRocsparseHandle(),
                                              m,
                                              n,
                                              nnz,
@@ -278,7 +278,7 @@ namespace ReSolve
       error_sum += status;
       workspace_->setTransposeBufferWorkspace(bufferSize);
     }
-    status     = rocsparse_dcsr2csc(workspace_->getRocsparseHandle(),
+    status = rocsparse_dcsr2csc(workspace_->getRocsparseHandle(),
                                 m,
                                 n,
                                 nnz,

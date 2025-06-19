@@ -320,9 +320,9 @@ namespace ReSolve
     // handle rectangular l factors correctly
     for (index_type column = 0; column < diagonal_bound; column++)
     {
-      columns[column + 1]             += column + 1;
-      rows[columns[column + 1] - 1]    = column;
-      values[columns[column + 1] - 1]  = 1.0;
+      columns[column + 1] += column + 1;
+      rows[columns[column + 1] - 1]   = column;
+      values[columns[column + 1] - 1] = 1.0;
     }
 
     // fill the destination arrays. iterates over the stored columns, depermuting the
