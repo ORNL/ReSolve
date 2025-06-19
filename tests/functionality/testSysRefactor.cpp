@@ -162,17 +162,17 @@ static int runTest(int argc, char* argv[], std::string backend)
   vec_x.allocate(memspace);
 
   // Add system matrix to the solver
-  status     = solver.setMatrix(A);
+  status = solver.setMatrix(A);
   error_sum += status;
 
   // Solve the first system using KLU
-  status     = solver.analyze();
+  status = solver.analyze();
   error_sum += status;
 
-  status     = solver.factorize();
+  status = solver.factorize();
   error_sum += status;
 
-  status     = solver.solve(&vec_rhs, &vec_x);
+  status = solver.solve(&vec_rhs, &vec_x);
   error_sum += status;
 
   // Compute error norms for the system
@@ -184,15 +184,15 @@ static int runTest(int argc, char* argv[], std::string backend)
   error_sum += helper.checkResult(1e-12);
 
   // Verify norm of scaled residuals calculation in SystemSolver class
-  real_type nsr_system  = solver.getNormOfScaledResiduals(&vec_rhs, &vec_x);
-  error_sum            += helper.checkNormOfScaledResiduals(nsr_system);
+  real_type nsr_system = solver.getNormOfScaledResiduals(&vec_rhs, &vec_x);
+  error_sum += helper.checkNormOfScaledResiduals(nsr_system);
 
   // Verify relative residual norm computation in SystemSolver
-  real_type rel_residual_norm  = solver.getResidualNorm(&vec_rhs, &vec_x);
-  error_sum                   += helper.checkRelativeResidualNorm(rel_residual_norm);
+  real_type rel_residual_norm = solver.getResidualNorm(&vec_rhs, &vec_x);
+  error_sum += helper.checkRelativeResidualNorm(rel_residual_norm);
 
   // Now prepare the Rf solver
-  status     = solver.refactorizationSetup();
+  status = solver.refactorizationSetup();
   error_sum += status;
 
   // Load the second matrix
@@ -222,11 +222,11 @@ static int runTest(int argc, char* argv[], std::string backend)
   vec_rhs.copyDataFrom(rhs, ReSolve::memory::HOST, memspace);
 
   // Refactorize matrix
-  status     = solver.refactorize();
+  status = solver.refactorize();
   error_sum += status;
 
   // Solve system
-  status     = solver.solve(&vec_rhs, &vec_x);
+  status = solver.solve(&vec_rhs, &vec_x);
   error_sum += status;
 
   // Compute error norms for the system
@@ -239,12 +239,12 @@ static int runTest(int argc, char* argv[], std::string backend)
   error_sum += helper.checkResult(1e-15); // Why does test not pass with 1e-16?
 
   // Verify norm of scaled residuals calculation in SystemSolver class
-  nsr_system  = solver.getNormOfScaledResiduals(&vec_rhs, &vec_x);
-  error_sum  += helper.checkNormOfScaledResiduals(nsr_system);
+  nsr_system = solver.getNormOfScaledResiduals(&vec_rhs, &vec_x);
+  error_sum += helper.checkNormOfScaledResiduals(nsr_system);
 
   // Verify relative residual norm computation in SystemSolver
-  rel_residual_norm  = solver.getResidualNorm(&vec_rhs, &vec_x);
-  error_sum         += helper.checkRelativeResidualNorm(rel_residual_norm);
+  rel_residual_norm = solver.getResidualNorm(&vec_rhs, &vec_x);
+  error_sum += helper.checkRelativeResidualNorm(rel_residual_norm);
 
   // Add one output specific to GMRES
   index_type restart = solver.getIterativeSolver().getCliParamInt("restart");

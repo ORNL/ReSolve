@@ -154,7 +154,7 @@ int test(int argc, char* argv[])
   matrix_handler.setValuesChanged(true, memspace);
 
   // Set system matrix and initialize iterative solver
-  status     = solver.setMatrix(A);
+  status = solver.setMatrix(A);
   error_sum += status;
 
   // Solver options can be changed even after solver workspace is allocated.
@@ -166,11 +166,11 @@ int test(int argc, char* argv[])
   solver.getIterativeSolver().setCliParam("restart", "200");
 
   // Set preconditioner (default in this case ILU0)
-  status     = solver.preconditionerSetup();
+  status = solver.preconditionerSetup();
   error_sum += status;
 
   // Solve system
-  status     = solver.solve(vec_rhs, &vec_x);
+  status = solver.solve(vec_rhs, &vec_x);
   error_sum += status;
 
   // Check results and print summary
@@ -325,8 +325,8 @@ ReSolve::matrix::Csr* generateMatrix(const index_type N, ReSolve::memory::Memory
   index_type NNZ = 0;
   for (index_type i = 0; i < N; ++i)
   {
-    size_t reminder  = static_cast<size_t>(i % 5);
-    NNZ             += static_cast<index_type>(data[reminder].size());
+    size_t reminder = static_cast<size_t>(i % 5);
+    NNZ += static_cast<index_type>(data[reminder].size());
   }
 
   // Allocate NxN CSR matrix with NNZ nonzeros

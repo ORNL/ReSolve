@@ -66,8 +66,8 @@ namespace ReSolve
         index_type idx = blockIdx.x * blockDim.x + threadIdx.x;
         while (idx < k)
         {
-          output[idx]  = input[perm[idx]];
-          idx         += blockDim.x * gridDim.x;
+          output[idx] = input[perm[idx]];
+          idx += blockDim.x * gridDim.x;
         }
       }
 

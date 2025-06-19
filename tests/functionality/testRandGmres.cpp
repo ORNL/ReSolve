@@ -119,7 +119,7 @@ int runTest(int argc, char* argv[])
   real_type test_pass_tol = 10.0 * tol; // test results tolerance
 
   // Configure preconditioner
-  status     = ILU.setup(A);
+  status = ILU.setup(A);
   error_sum += status;
 
   // Set solver parameters
@@ -132,12 +132,12 @@ int runTest(int argc, char* argv[])
   FGMRES.setRestart(200);
   FGMRES.setSketchingMethod(LinSolverIterativeRandFGMRES::cs);
 
-  status     = FGMRES.setupPreconditioner("LU", &ILU);
+  status = FGMRES.setupPreconditioner("LU", &ILU);
   error_sum += status;
 
   FGMRES.setFlexible(true);
 
-  status     = FGMRES.solve(vec_rhs, &vec_x);
+  status = FGMRES.solve(vec_rhs, &vec_x);
   error_sum += status;
 
   // Compute error norms for the system
@@ -160,7 +160,7 @@ int runTest(int argc, char* argv[])
   FGMRES.resetMatrix(A);
 
   vec_x.setToZero(memspace);
-  status     = FGMRES.solve(vec_rhs, &vec_x);
+  status = FGMRES.solve(vec_rhs, &vec_x);
   error_sum += status;
 
   // Print result summary and check solution
@@ -222,8 +222,8 @@ ReSolve::matrix::Csr* generateMatrix(const index_type             n,
   index_type nnz = 0;
   for (index_type i = 0; i < n; ++i)
   {
-    size_t reminder  = static_cast<size_t>(i % 5);
-    nnz             += static_cast<index_type>(data[reminder].size());
+    size_t reminder = static_cast<size_t>(i % 5);
+    nnz += static_cast<index_type>(data[reminder].size());
   }
 
   // Allocate NxN CSR matrix with nnz nonzeros

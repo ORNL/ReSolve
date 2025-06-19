@@ -177,13 +177,13 @@ int runTest(int argc, char* argv[], std::string& solver_name)
   vec_x.allocate(ReSolve::memory::DEVICE);
 
   // Solve the first system using KLU
-  status     = KLU.setup(A);
+  status = KLU.setup(A);
   error_sum += status;
 
-  status     = KLU.analyze();
+  status = KLU.analyze();
   error_sum += status;
 
-  status     = KLU.factorize();
+  status = KLU.factorize();
   error_sum += status;
 
   // Extract factors and setup factorization
@@ -192,15 +192,15 @@ int runTest(int argc, char* argv[], std::string& solver_name)
   index_type*  P = KLU.getPOrdering();
   index_type*  Q = KLU.getQOrdering();
 
-  status     = Rf.setup(A, L, U, P, Q, &vec_rhs);
+  status = Rf.setup(A, L, U, P, Q, &vec_rhs);
   error_sum += status;
 
   // Refactorize (on device where available)
-  status     = Rf.refactorize();
+  status = Rf.refactorize();
   error_sum += status;
 
   // Solve system (on device where available)
-  status     = Rf.solve(&vec_rhs, &vec_x);
+  status = Rf.solve(&vec_rhs, &vec_x);
   error_sum += status;
 
   // Refine solutions
@@ -208,13 +208,13 @@ int runTest(int argc, char* argv[], std::string& solver_name)
   {
     test_name += " + IR";
 
-    status     = FGMRES.setup(A);
+    status = FGMRES.setup(A);
     error_sum += status;
 
-    status     = FGMRES.setupPreconditioner("LU", &Rf);
+    status = FGMRES.setupPreconditioner("LU", &Rf);
     error_sum += status;
 
-    status     = FGMRES.solve(&vec_rhs, &vec_x);
+    status = FGMRES.solve(&vec_rhs, &vec_x);
     error_sum += status;
   }
 
@@ -253,22 +253,22 @@ int runTest(int argc, char* argv[], std::string& solver_name)
   vec_rhs.copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
 
   // Refactorize second matrix
-  status     = Rf.refactorize();
+  status = Rf.refactorize();
   error_sum += status;
 
   // Solve system (now one can go directly to IR when enabled)
   if (is_ir)
   {
     FGMRES.resetMatrix(A);
-    status     = FGMRES.setupPreconditioner("LU", &Rf);
+    status = FGMRES.setupPreconditioner("LU", &Rf);
     error_sum += status;
 
-    status     = FGMRES.solve(&vec_rhs, &vec_x);
+    status = FGMRES.solve(&vec_rhs, &vec_x);
     error_sum += status;
   }
   else
   {
-    status     = Rf.solve(&vec_rhs, &vec_x);
+    status = Rf.solve(&vec_rhs, &vec_x);
     error_sum += status;
   }
 
