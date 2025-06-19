@@ -17,7 +17,7 @@ CommentPragmas: '^\*\*'
 AlignConsecutiveAssignments:
   Enabled:          true
   AcrossEmptyLines: false
-  AcrossComments:   true
+  AcrossComments:   false
   AlignCompound:    false
   PadOperators:     true
 AlignConsecutiveBitFields:

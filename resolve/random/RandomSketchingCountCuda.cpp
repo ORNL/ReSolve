@@ -83,7 +83,7 @@ namespace ReSolve
 
     h_labels_ = new int[n_];
     // allocate sgn - a vector of flip signs
-    h_flip_   = new int[n_];
+    h_flip_ = new int[n_];
 
     // populate labeling scheme (can be done on the gpu really)
     // to be fixed, this can be done on the GPU

@@ -40,10 +40,10 @@ namespace ReSolve
 
     LinAlgWorkspaceCUDA* workspaceCUDA = workspace_;
     // get the handle
-    handle_cusolversp_                 = workspaceCUDA->getCusolverSpHandle();
-    A_                                 = (matrix::Csr*) A;
-    index_type n                       = A_->getNumRows();
-    index_type nnz                     = A_->getNnz();
+    handle_cusolversp_ = workspaceCUDA->getCusolverSpHandle();
+    A_                 = (matrix::Csr*) A;
+    index_type n       = A_->getNumRows();
+    index_type nnz     = A_->getNnz();
     // create combined factor
     combineFactors(L, U);
 

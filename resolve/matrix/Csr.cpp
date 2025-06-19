@@ -102,9 +102,9 @@ namespace ReSolve
       owns_gpu_sparsity_pattern_ = false;
       owns_gpu_values_           = false;
       // Hijack data from the source
-      *rows                      = nullptr;
-      *cols                      = nullptr;
-      *vals                      = nullptr;
+      *rows = nullptr;
+      *cols = nullptr;
+      *vals = nullptr;
       break;
     case 2: // gpu->cpu
       // Set device data and copy it to host
@@ -156,9 +156,9 @@ namespace ReSolve
       owns_cpu_sparsity_pattern_ = false;
       owns_cpu_values_           = false;
       // Hijack data from the source
-      *rows                      = nullptr;
-      *cols                      = nullptr;
-      *vals                      = nullptr;
+      *rows = nullptr;
+      *cols = nullptr;
+      *vals = nullptr;
       break;
     default:
       out::error() << "Csr constructor failed! "
