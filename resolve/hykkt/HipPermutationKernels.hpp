@@ -1,7 +1,7 @@
 /**
  * @file HipPermutationKernels.hpp
  * @author Adham Ibrahim (ibrahimas@ornl.gov)
- * 
+ *
  */
 
 #pragma once
@@ -19,9 +19,12 @@ namespace ReSolve
     {
     public:
       HipPermutationKernels()
-      {}
+      {
+      }
+
       virtual ~HipPermutationKernels()
-      {}
+      {
+      }
 
       void mapIdx(int n, const int* perm, const double* old_val, double* new_val);
     }; // class HipPermutationKernels

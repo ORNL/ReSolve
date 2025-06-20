@@ -1,11 +1,12 @@
 /**
  * @file CudaPermutationKernels.cu
  * @author Adham Ibrahim (ibrahimas@ornl.gov)
- * 
+ *
  */
 
-#include "CudaPermutationKernels.hpp"
 #include <cuda_runtime.h>
+
+#include "CudaPermutationKernels.hpp"
 
 namespace ReSolve
 {
