@@ -2,7 +2,7 @@
  * @file cpuPermutationKernels.cpp
  * @author Shaked Regev (regevs@ornl.gov)
  * @author Adham Ibrahim (ibrahimas@ornl.gov)
- * 
+ *
  */
 
 #include "cpuPermutationKernels.hpp"

@@ -18,4 +18,3 @@ install(TARGETS ${installable_tests}
         RUNTIME DESTINATION bin/resolve/tests/unit)
 
 add_test(NAME hykkt_perm_test   COMMAND $<TARGET_FILE:runHykktPermutationTests.exe>)
-

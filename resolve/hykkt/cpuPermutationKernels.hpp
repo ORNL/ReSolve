@@ -2,7 +2,7 @@
  * @file cpuPermutationKernels.hpp
  * @author Shaked Regev (regevs@ornl.gov)
  * @author Adham Ibrahim (ibrahimas@ornl.gov)
- * 
+ *
  */
 
 #pragma once
@@ -20,9 +20,12 @@ namespace ReSolve
     {
     public:
       CpuPermutationKernels()
-      {}
+      {
+      }
+
       virtual ~CpuPermutationKernels()
-      {}
+      {
+      }
 
       void mapIdx(int n, const int* perm, const double* old_val, double* new_val);
     }; // class CpuPermutationKernels
