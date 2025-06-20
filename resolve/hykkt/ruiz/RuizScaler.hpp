@@ -66,11 +66,6 @@ namespace ReSolve {
          */
         void scale(memory::MemorySpace memspace);
 
-        /**
-         *  @brief Reset the scaling vector to its initial state.
-         */
-        void reset(memory::MemorySpace memspace);
-
       private:
         RuizScalingHandler* handler_;
 

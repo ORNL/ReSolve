@@ -63,9 +63,5 @@ namespace ReSolve {
                       aggregate_scaling_vector_,
                       memspace);
     }
-
-    void RuizScaler::reset(memory::MemorySpace memspace) {
-      handler_->reset(aggregate_scaling_vector_, memspace);
-    }
   }
 }

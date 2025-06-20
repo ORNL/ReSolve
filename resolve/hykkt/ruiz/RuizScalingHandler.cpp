@@ -1,11 +1,6 @@
 #include <resolve/MemoryUtils.hpp>
 #include "RuizScalingHandler.hpp"  
 
-namespace ReSolve {
-  using index_type = ReSolve::index_type;
-  using real_type = ReSolve::real_type;
-}
-
 namespace  ReSolve {
   namespace hykkt {
     RuizScalingHandler::RuizScalingHandler(index_type num_iterations, index_type n, index_type totalN)
@@ -24,9 +19,6 @@ namespace  ReSolve {
 
     RuizScalingHandler::~RuizScalingHandler()
     {
-      // Cleanup resources if necessary
-      // This destructor can be used to free any allocated memory or resources
-      // related to the scaling handler.
       delete cpuImpl;
       delete devImpl;
     }
@@ -39,37 +31,29 @@ namespace  ReSolve {
                                     real_type* scaling_vector,
                                     memory::MemorySpace memspace)
     {
+      RuizScalingKernelImpl* impl = nullptr;
       if (memspace == memory::HOST) {
-        if (cpuImpl) {
-          cpuImpl->scale(hes_i, hes_j, hes_v,
-                         jac_i, jac_j, jac_v,
-                         jac_tr_i, jac_tr_j, jac_tr_v,
-                         rhs1, rhs2,
-                         aggregate_scaling_vector,
-                         scaling_vector);
-        }
-      } else if (memspace == memory::DEVICE) {
-        if (devImpl) {
-          devImpl->scale(hes_i, hes_j, hes_v,
-                         jac_i, jac_j, jac_v,
-                         jac_tr_i, jac_tr_j, jac_tr_v,
-                         rhs1, rhs2,
-                         aggregate_scaling_vector,
-                         scaling_vector);
-        }
+        impl = cpuImpl;
+        MemoryHandler::setArrayToConstOnHost(aggregate_scaling_vector, ONE, totalN_);
+      } else {
+        impl = devImpl;
+        MemoryHandler::setArrayToConstOnDevice(aggregate_scaling_vector, ONE, totalN_);
       }
-    }
 
-    void RuizScalingHandler::reset(real_type* aggregate_scaling_vector, memory::MemorySpace memspace)
-    {
-      if (memspace == memory::HOST) {
-        if (cpuImpl) {
-          cpuImpl->reset(aggregate_scaling_vector);
-        }
-      } else if (memspace == memory::DEVICE) {
-        if (devImpl) {
-          devImpl->reset(aggregate_scaling_vector);
-        }
+      for (index_type i = 0; i < num_iterations_; ++i) {
+        impl->adaptRowMax(n_, hes_i, hes_j, hes_v,
+                          n_, jac_i, jac_j, jac_v,
+                          jac_tr_i, jac_tr_j, jac_tr_v,
+                          rhs1, rhs2,
+                          aggregate_scaling_vector,
+                          scaling_vector);
+
+        impl->adaptDiagScale(n_, hes_i, hes_j, hes_v,
+                           n_, jac_i, jac_j, jac_v,
+                           jac_tr_i, jac_tr_j, jac_tr_v,
+                           rhs1, rhs2,
+                           aggregate_scaling_vector,
+                           scaling_vector);
       }
     }
   }

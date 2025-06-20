@@ -1,10 +1,5 @@
 #include <resolve/MemoryUtils.hpp>
 
-namespace ReSolve {
-  using index_type = ReSolve::index_type;
-  using real_type = ReSolve::real_type;
-}
-
 namespace  ReSolve {
   namespace hykkt {
     class RuizScalingHandler {
@@ -19,8 +14,6 @@ namespace  ReSolve {
                    real_type* aggregate_scaling_vector,
                    real_type* scaling_vector,
                    memory::MemorySpace memspace);
-                   
-        void reset(real_type* aggregate_scaling_vector, memory::MemorySpace memspace);
       private:
         index_type num_iterations_;
         index_type n_;
