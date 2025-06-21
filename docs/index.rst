@@ -87,5 +87,3 @@ Copyright © 2023, UT-Battelle, LLC, and Battelle Memorial Institute.
    sphinx/developer_guide/git_guidelines
    sphinx/developer_guide/index
    sphinx/developer_guide/profiling
-
-
