@@ -30,7 +30,7 @@ Authors and acknowledgment
 
 Primary authors of this project are:
 
-* Kasia Świrydowicz kasia.swirydowicz@pnnl.gov (PNNL)
+* Kasia Świrydowicz Kasia.Swirydowicz@amd.com (AMD)
 * Slaven Peles peless@ornl.gov (ORNL)
 
 ReSolve project would not be possible without significant contributions
@@ -83,7 +83,9 @@ Copyright © 2023, UT-Battelle, LLC, and Battelle Memorial Institute.
    :caption: Developer Resources
 
    doxygen/index
+   sphinx/developer_guide/coding_guidelines
+   sphinx/developer_guide/git_guidelines
    sphinx/developer_guide/index
    sphinx/developer_guide/profiling
-   sphinx/developer_guide/git_guidelines
-   sphinx/developer_guide/coding_guidelines
+
+
