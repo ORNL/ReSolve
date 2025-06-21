@@ -3,14 +3,14 @@
  * @author Slaven Peles (peless@ornl.gov)
  * @brief
  *
- * @mainpage ReSolve Source Code Documentation
+ * @mainpage Re::Solve Source Code Documentation
  *
- * ReSolve is a library of GPU-resident linear solvers. It contains iterative
+ * Re::Solve is a library of GPU-resident linear solvers. It contains iterative
  * and direct linear solvers designed to run on NVIDIA and AMD GPUs, as well as
  * on CPU devices. This is the main page of source code documentation intended
- * for developers who want to contribute to ReSolve code. General documentation
- * is available at <a href=https://resolve.readthedocs.io>readthedocs</a>. The
- * ReSolve project is hosted on <a href=https://github.com/ORNL/ReSolve>GitHub</a>.
+ * for developers who want to contribute to Re::Solve code. General documentation
+ * is available at <a href=https://Re::Solve.readthedocs.io>readthedocs</a>. The
+ * Re::Solve project is hosted on <a href=https://github.com/ORNL/Re::Solve>GitHub</a>.
  *
  *
  * @section name_sec Name
@@ -20,7 +20,7 @@
  * the case of dynamic simulations or optimization. An efficient linear solver
  * design will _re-solve_ systems with the same sparsity pattern while reusing
  * symbolic operations and memory allocations from the prior systems, therefore
- * the name ReSolve.
+ * the name Re::Solve.
  *
  * @section history_sec History
  *
