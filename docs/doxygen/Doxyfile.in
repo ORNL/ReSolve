@@ -65,7 +65,7 @@ PROJECT_BRIEF          = "A library of GPU-resident linear solvers."
 # pixels and the maximum width should not exceed 200 pixels. Doxygen will copy
 # the logo to the output directory.
 
-PROJECT_LOGO           = ./images/ReSolve-Icon-Red.png
+PROJECT_LOGO           = ./images/ReSolve-Icon-Red.svg
 
 # With the PROJECT_ICON tag one can specify an icon that is included in the tabs
 # when the HTML document is shown. Doxygen will copy the logo to the output
@@ -1358,8 +1358,8 @@ HTML_STYLESHEET        =
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
 # HTML_EXTRA_STYLESHEET  = doxygen-awesome-css/doxygen-awesome.css
-HTML_EXTRA_STYLESHEET  = doxygen/doxygen-awesome.css
-# HTML_EXTRA_STYLESHEET  = doxygen/doxygen-awesome-sidebar-only-darkmode-toggle.css
+# HTML_EXTRA_STYLESHEET  = doxygen/doxygen-awesome.css
+HTML_EXTRA_STYLESHEET  = doxygen/doxygen-awesome-sidebar-only.css
 
 
 # The HTML_EXTRA_FILES tag can be used to specify one or more extra images or
