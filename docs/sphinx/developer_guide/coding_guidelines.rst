@@ -93,7 +93,7 @@ where capitalization is important and it is preserved similarly.
 Capitalize variables refering to a matrix `A`
 such as `A`, `At`, `A_csc`, and `A_csr`.
 This is due to the equation $Ax=b$ and the Householder convention where
-uppercase letters represent matrices and lowercase letter represent vectors
+uppercase letters represent matrices and lowercase letter represent vectors.
 
 Pointers and references
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -176,7 +176,22 @@ parenthesis as shown here:
      // some code
    } 
 
-Do not use one-line ``if``\ s and ``for``\ s. Always use braces.
+Do not use one-line ``for``\ s. Always use braces.
+One-line ``if``\ s are acceptable (though not mandatory) if the command directly follows from the conditional.
+I.e. the command can only be executed if the conditional is true.
+An ``if`` statement where the conditional and the command are not fundamentally connected should use braces.
+The following are correct uses:
+
+.. code:: cpp
+
+   if (owns_cpu_data_ && h_data_) delete [] h_data_; // Ok. A method should only delete something if it is allocated and the class owns it.
+   if (x != 0) z = y / x; // Ok. Division by 0 is always invalid, regardless of code structure.
+   if (y % 2 == 1) { //Must be written this way, because x can be incremented regardless of y's parity. The logic is internal to our code.
+      x++;
+   }
+
+
+
 
 Use of spaces and newlines
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
