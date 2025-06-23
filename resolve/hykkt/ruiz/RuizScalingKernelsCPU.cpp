@@ -13,7 +13,41 @@ namespace ReSolve {
                                             real_type* aggregate_scaling_vector,
                                             real_type* scaling_vector)
     {
-      // Implement the row max adaptation logic here
+      double max_l = 0;
+      double max_u = 0;
+      int    j;
+      double entry;
+      for (index_type i = 0; i < n_hes; i++) {
+        for(j = hes_i[i]; j < hes_i[i + 1]; j++) {
+          entry = fabs(hes_v[j]);
+          if(entry > max_l) {
+            max_l = entry;
+          }
+        }
+        for(j = jac_tr_i[i]; j < jac_tr_i[i + 1]; j++) {
+          entry = fabs(jac_tr_v[j]);
+          if(entry > max_u) {
+            max_u = entry;
+          }
+        }
+        if(max_l > max_u) {
+          scaling_vector[i] = 1.0 / sqrt(max_l);
+        }
+        else {
+          scaling_vector[i] = 1.0 / sqrt(max_u);
+        }
+      
+      for (index_type i = n_hes; i < n_total; i++) {
+        for(j = jac_i[i - n]; j < jac_i[i - n + 1]; j++)
+        {
+          entry = fabs(jac_v[j]);
+          if(entry > max_l)
+          {
+            max_l = entry;
+          }
+        }
+        scaling_vector[i] = 1.0 / sqrt(max_l);
+      }
     }
 
     void RuizScalingKernelsCPU::adaptDiagScale(index_type n_hes, index_type n_total, 
@@ -24,7 +58,24 @@ namespace ReSolve {
                                                real_type* aggregate_scaling_vector,
                                                real_type* scaling_vector)
     {
-      // Implement the diagonal scaling adaptation logic here
+      for (index_type i = 0; i < n_hes; i++) {
+        for(index_type j = hes_i[i]; j < hes_i[i + 1]; j++) {
+          hes_v[j] *= scaling_vector[i] * scaling_vector[hes_j[j]];
+        }
+        for(index_type j = jac_tr_i[i]; j < jac_tr_i[i + 1]; j++) {
+          jac_tr_v[j] *= scaling_vector[i] * scaling_vector[n_hes + jac_tr_j[j]];
+        }
+        rhs1[i] *= scaling_vector[i];
+        aggregate_scaling_vector *= scaling_vector[i];
+        
+      }
+      for (index_type i = n_hes; i < n_total; i++) {
+        for(index_type j = jac_i[i - n_hes]; j < jac_i[i - n_hes + 1]; j++) {
+          jac_v[j] *= scaling_vector[i] * scaling_vector[n_hes + jac_j[j]];
+        }
+        rhs2[i - n_hes] *= scaling_vector[i];
+        aggregate_scaling_vector *= scaling_vector[i];
+      }
     }
   }
 }
