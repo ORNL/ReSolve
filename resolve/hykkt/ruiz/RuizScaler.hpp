@@ -16,32 +16,32 @@ namespace ReSolve {
       public:
         RuizScaler(index_type num_iterations,
                     index_type n,
-                    index_type totalN);
+                    index_type total_n);
         ~RuizScaler();
 
         /**
          *  @brief Add Hessian information to the Ruiz scaling handler.
-         *  @param hes_v[in] - Pointer to the Hessian nonzero values.
          *  @param hes_i[in] - Row data of the Hessian matrix.
          *  @param hes_j[in] - Column data of the Hessian matrix.
+         *  @param hes_v[in] - Pointer to the Hessian nonzero values.
          */
-        void addHInfo(real_type* hes_v, index_type hes_i, index_type hes_j);
+        void addHInfo(index_type* hes_i, index_type* hes_j, real_type* hes_v);
 
         /**
          *  @brief Add Jacobian information to the Ruiz scaling handler.
-         *  @param jac_v[in] - Pointer to the Jacobian nonzero values.
          *  @param jac_i[in] - Row data of the Jacobian matrix.
          *  @param jac_j[in] - Column data of the Jacobian matrix.
+         *  @param jac_v[in] - Pointer to the Jacobian nonzero values.
          */
-        void addJInfo(real_type* jac_v, index_type jac_i, index_type jac_j);
+        void addJInfo(index_type* jac_i, index_type* jac_j, real_type* jac_v);
 
         /**
          *  @brief Add Jacobian transpose information to the Ruiz scaling handler.
-         *  @param jac_v[in] - Pointer to the Jacobian transpose nonzero values.
          *  @param jac_i[in] - Row data of the Jacobian transpose matrix.
          *  @param jac_j[in] - Column data of the Jacobian transpose matrix.
+         *  @param jac_v[in] - Pointer to the Jacobian transpose nonzero values.
          */
-        void addJtInfo(real_type* jac_v, index_type jac_i, index_type jac_j);
+        void addJtInfo(index_type* jac_i, index_type* jac_j, real_type* jac_v);
 
         /**
          *  @brief Add right-hand side vector to the Ruiz scaling handler.
@@ -71,7 +71,7 @@ namespace ReSolve {
 
         index_type num_iterations_;
         index_type n_;
-        index_type totalN_;
+        index_type total_n_;
 
         real_type* hes_v_;
         index_type* hes_i_;
