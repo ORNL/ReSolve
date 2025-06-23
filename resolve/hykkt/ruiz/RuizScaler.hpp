@@ -1,14 +1,10 @@
 #include <resolve/MemoryUtils.hpp>
 #include <resolve/Common.hpp>
-#include "RuizScalingHandler.hpp"
+#include "RuizScalingKernelImpl.hpp"
 
 namespace ReSolve {
   using index_type = ReSolve::index_type;
   using real_type = ReSolve::real_type;
-
-  namespace hykkt {
-    class RuizScalingHandler;
-  }
 }
 
 namespace ReSolve {
@@ -69,8 +65,6 @@ namespace ReSolve {
         void scale();
 
       private:
-        RuizScalingHandler* handler_;
-
         index_type num_iterations_;
         index_type n_;
         index_type total_n_;
@@ -89,6 +83,8 @@ namespace ReSolve {
 
         real_type* scaling_vector_;
         real_type* aggregate_scaling_vector_;
+
+        RuizScalingKernelImpl* kernelImpl_;
 
         memory::MemorySpace memspace_;
         MemoryHandler mem_;

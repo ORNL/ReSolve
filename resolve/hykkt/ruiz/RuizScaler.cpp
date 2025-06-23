@@ -1,4 +1,10 @@
 #include "RuizScaler.hpp"
+#include "RuizScalingKernelsCPU.hpp"
+#ifdef RESOLVE_USE_CUDA
+#include "RuizScalingKernelsCUDA.hpp"
+#elseif RESOLVE_USE_HIP
+#include "RuizScalingKernelsHIP.hpp"
+#endif
 
 namespace ReSolve {
   using index_type = ReSolve::index_type;
@@ -20,13 +26,19 @@ namespace ReSolve {
                            memory::MemorySpace memspace)
         : num_iterations_(num_iterations), n_(n), total_n_(total_n), memspace_(memspace)
     {
-      handler_ = new RuizScalingHandler(num_iterations, n, total_n, memspace);
+#ifdef RESOLVE_USE_CUDA
+      kernelImpl_ = new RuizScalingKernelsCUDA();
+#elseif RESOLVE_USE_HIP
+      kernelImpl_ = new RuizScalingKernelsHIP();
+#else
+      kernelImpl_ = new RuizScalingKernelsCPU();
+#endif
+
       allocateWorkspace();
     }
 
     RuizScaler::~RuizScaler()
     {
-      delete handler_;
       deallocateWorkspace();
     }
 
@@ -63,12 +75,23 @@ namespace ReSolve {
     void RuizScaler::scale() {
       resetScaling();
 
-      handler_->scale(hes_i_, hes_j_, hes_v_,
-                      jac_i_, jac_j_, jac_v_,
-                      jac_tr_i_, jac_tr_j_, jac_tr_v_,
-                      rhs1_, rhs2_,
-                      scaling_vector_,
-                      aggregate_scaling_vector_);
+      for (index_type i = 0; i < num_iterations_; ++i) {
+        kernelImpl_->adaptRowMax(n_, total_n_,
+                                  hes_i_, hes_j_, hes_v_,
+                                  jac_i_, jac_j_, jac_v_,
+                                  jac_tr_i_, jac_tr_j_, jac_tr_v_,
+                                  rhs1_, rhs2_,
+                                  aggregate_scaling_vector_,
+                                  scaling_vector_);
+
+        kernelImpl_->adaptDiagScale(n_, total_n_,
+                                    hes_i_, hes_j_, hes_v_,
+                                    jac_i_, jac_j_, jac_v_,
+                                    jac_tr_i_, jac_tr_j_, jac_tr_v_,
+                                    rhs1_, rhs2_,
+                                    aggregate_scaling_vector_,
+                                    scaling_vector_);
+      }
     }
 
     void RuizScaler::resetScaling()
