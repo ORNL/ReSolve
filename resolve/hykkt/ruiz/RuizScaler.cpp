@@ -1,9 +1,10 @@
 #include "RuizScaler.hpp"
-#include "RuizScalingHandler.hpp"
 
 namespace ReSolve {
   using index_type = ReSolve::index_type;
   using real_type = ReSolve::real_type;
+
+  using namespace ReSolve::constants;
 
   namespace hykkt {
     class RuizScaler;
@@ -15,13 +16,18 @@ namespace ReSolve {
   namespace hykkt {
     RuizScaler::RuizScaler(index_type num_iterations,
                            index_type n,
-                           index_type total_n)
-        : num_iterations_(num_iterations), n_(n), total_n_(total_n) {
-      handler_ = new RuizScalingHandler(num_iterations, n, total_n);
+                           index_type total_n,
+                           memory::MemorySpace memspace)
+        : num_iterations_(num_iterations), n_(n), total_n_(total_n), memspace_(memspace)
+    {
+      handler_ = new RuizScalingHandler(num_iterations, n, total_n, memspace);
+      allocateWorkspace();
     }
 
-    RuizScaler::~RuizScaler() {
+    RuizScaler::~RuizScaler()
+    {
       delete handler_;
+      deallocateWorkspace();
     }
 
     void RuizScaler::addHInfo(index_type* hes_i, index_type* hes_j, real_type* hes_v) {
@@ -54,14 +60,46 @@ namespace ReSolve {
       return aggregate_scaling_vector_;
     }
 
-    void RuizScaler::scale(memory::MemorySpace memspace) {
+    void RuizScaler::scale() {
+      resetScaling();
+
       handler_->scale(hes_i_, hes_j_, hes_v_,
                       jac_i_, jac_j_, jac_v_,
                       jac_tr_i_, jac_tr_j_, jac_tr_v_,
                       rhs1_, rhs2_,
                       scaling_vector_,
-                      aggregate_scaling_vector_,
-                      memspace);
+                      aggregate_scaling_vector_);
+    }
+
+    void RuizScaler::resetScaling()
+    {
+      if (memspace_ == memory::HOST) {
+        mem_.setArrayToConstOnHost(aggregate_scaling_vector_, ONE, total_n_);
+      } else {
+        mem_.setArrayToConstOnDevice(aggregate_scaling_vector_, ONE, total_n_);
+      }
+    }
+
+    void RuizScaler::allocateWorkspace()
+    {
+      if (memspace_ == memory::HOST) {
+        scaling_vector_ = new real_type[n_];
+        aggregate_scaling_vector_ = new real_type[total_n_];
+      } else {
+        mem_.allocateArrayOnDevice(&scaling_vector_, total_n_);
+        mem_.allocateArrayOnDevice(&aggregate_scaling_vector_, total_n_);
+      }
+      resetScaling();
+    }
+
+    void RuizScaler::deallocateWorkspace() {
+      if (memspace_ == memory::HOST) {
+        delete[] scaling_vector_;
+        delete[] aggregate_scaling_vector_;
+      } else {
+        mem_.deleteOnDevice(scaling_vector_);
+        mem_.deleteOnDevice(aggregate_scaling_vector_);
+      }
     }
   }
 }

@@ -1,5 +1,6 @@
 #include <resolve/MemoryUtils.hpp>
-#include <RuizScalingHandler.hpp>
+#include <resolve/Common.hpp>
+#include "RuizScalingHandler.hpp"
 
 namespace ReSolve {
   using index_type = ReSolve::index_type;
@@ -16,7 +17,8 @@ namespace ReSolve {
       public:
         RuizScaler(index_type num_iterations,
                     index_type n,
-                    index_type total_n);
+                    index_type total_n,
+                    memory::MemorySpace memspace);
         ~RuizScaler();
 
         /**
@@ -64,7 +66,7 @@ namespace ReSolve {
         /**
          *  @brief Compute the Ruiz scaling.
          */
-        void scale(memory::MemorySpace memspace);
+        void scale();
 
       private:
         RuizScalingHandler* handler_;
@@ -87,6 +89,15 @@ namespace ReSolve {
 
         real_type* scaling_vector_;
         real_type* aggregate_scaling_vector_;
+
+        memory::MemorySpace memspace_;
+        MemoryHandler mem_;
+
+        void resetScaling();
+
+        void allocateWorkspace();
+
+        void deallocateWorkspace();
     };
   }
 }

@@ -4,24 +4,22 @@
 
 namespace  ReSolve {
   namespace hykkt {
-    RuizScalingHandler::RuizScalingHandler(index_type num_iterations, index_type n, index_type total_n)
-        : num_iterations_(num_iterations), n_(n), total_n_(total_n) 
+    RuizScalingHandler::RuizScalingHandler(index_type num_iterations, index_type n, index_type total_n,
+                                           memory::MemorySpace memspace)
+        : num_iterations_(num_iterations), n_(n), total_n_(total_n), memspace_(memspace)
     {
-      cpuImpl = new RuizScalingKernelsCPU(num_iterations, n, total_n);
-
-      #ifdef RE_SOLVE_USE_CUDA
-      devImpl = new RuizScalingKernelsCUDA(num_iterations, n, total_n);
+      #ifdef RESOLVE_USE_CUDA
+      handlerImpl_ = new RuizScalingKernelsCUDA(num_iterations, n, total_n);
       #elseif RESOLVE_USE_HIP
-      devImpl = new RuizScalingKernelsHIP(num_iterations, n, total_n);
-      #else
-      devImpl = nullptr;
+      handlerImpl_ = new RuizScalingKernelsHIP(num_iterations, n, total_n);
+      #else RESOLVE_USE_HIP
+      handlerImpl_ = new RuizScalingKernelsCPU(num_iterations, n, total_n);
       #endif
     }
 
     RuizScalingHandler::~RuizScalingHandler()
     {
-      delete cpuImpl;
-      delete devImpl;
+      delete handlerImpl_;
     }
 
     void RuizScalingHandler::scale(index_type* hes_i, index_type* hes_j, real_type* hes_v,
@@ -29,22 +27,12 @@ namespace  ReSolve {
                                     index_type* jac_tr_i, index_type* jac_tr_j, real_type* jac_tr_v,
                                     real_type* rhs1, real_type* rhs2,
                                     real_type* aggregate_scaling_vector,
-                                    real_type* scaling_vector,
-                                    memory::MemorySpace memspace)
+                                    real_type* scaling_vector)
     {
       using namespace ReSolve::constants;
 
-      RuizScalingKernelImpl* impl = nullptr;
-      if (memspace == memory::HOST) {
-        impl = cpuImpl;
-        mem_.setArrayToConstOnHost(aggregate_scaling_vector, ONE, total_n_);
-      } else {
-        impl = devImpl;
-        mem_.setArrayToConstOnDevice(aggregate_scaling_vector, ONE, total_n_);
-      }
-
       for (index_type i = 0; i < num_iterations_; ++i) {
-        impl->adaptRowMax(n_, total_n_,
+        handlerImpl_->adaptRowMax(n_, total_n_,
                           hes_i, hes_j, hes_v,
                           jac_i, jac_j, jac_v,
                           jac_tr_i, jac_tr_j, jac_tr_v,
@@ -52,7 +40,7 @@ namespace  ReSolve {
                           aggregate_scaling_vector,
                           scaling_vector);
 
-        impl->adaptDiagScale(n_, total_n_,
+        handlerImpl_->adaptDiagScale(n_, total_n_,
                               hes_i, hes_j, hes_v,
                               jac_i, jac_j, jac_v,
                               jac_tr_i, jac_tr_j, jac_tr_v,
