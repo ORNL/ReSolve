@@ -17,15 +17,11 @@
  * @param backend - string name of the hardware backend
  * @param result - test results
  */
-template <typename WorkspaceType>
-void runTests(const std::string& backend, ReSolve::tests::TestingResults& result)
+void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace, ReSolve::tests::TestingResults& result)
 {
   std::cout << "Running tests on " << backend << " device:\n";
 
-  WorkspaceType*                      workspace;
-  ReSolve::hykkt::PermutationHandler* permutationHandler = new ReSolve::hykkt::PermutationHandler(workspace);
-
-  ReSolve::tests::HykktPermutationTests test(permutationHandler);
+  ReSolve::tests::HykktPermutationTests test(memspace);
 
   result += test.permutationTest();
 
@@ -35,14 +31,14 @@ void runTests(const std::string& backend, ReSolve::tests::TestingResults& result
 int main(int, char**)
 {
   ReSolve::tests::TestingResults result;
-  runTests<ReSolve::LinAlgWorkspaceCpu>("CPU", result);
+  runTests("CPU", ReSolve::memory::HOST, result);
 
 #ifdef RESOLVE_USE_CUDA
-  runTests<ReSolve::LinAlgWorkspaceCUDA>("CUDA", result);
+  runTests("CUDA", ReSolve::memory::DEVICE, result);
 #endif
 
 #ifdef RESOLVE_USE_HIP
-  runTests<ReSolve::LinAlgWorkspaceHIP>("HIP", result);
+  runTests("HIP", ReSolve::memory::DEVICE, result);
 #endif
 
   return result.summary();

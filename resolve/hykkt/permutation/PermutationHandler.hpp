@@ -25,13 +25,7 @@ namespace ReSolve
     class PermutationHandler
     {
     public:
-      PermutationHandler(LinAlgWorkspaceCpu* workspaceCpu);
-#ifdef RESOLVE_USE_CUDA
-      PermutationHandler(LinAlgWorkspaceCUDA* workspaceCuda);
-#endif
-#ifdef RESOLVE_USE_HIP
-      PermutationHandler(LinAlgWorkspaceHIP* workspaceHip);
-#endif
+      PermutationHandler();
       ~PermutationHandler();
 
       void        mapIdx(int                 n,

@@ -8,45 +8,36 @@
 #include "PermutationHandler.hpp"
 
 #include "cpuPermutationKernels.hpp"
-#include <resolve/workspace/LinAlgWorkspaceCpu.hpp>
 #ifdef RESOLVE_USE_CUDA
 #include "CudaPermutationKernels.hpp"
-#include <resolve/workspace/LinAlgWorkspaceCUDA.hpp>
 #endif
 #ifdef RESOLVE_USE_HIP
 #include "HipPermutationKernels.hpp"
-#include <resolve/workspace/LinAlgWorkspaceHIP.hpp>
 #endif
 
 namespace ReSolve
 {
   namespace hykkt
   {
-    PermutationHandler::PermutationHandler(LinAlgWorkspaceCpu* workspaceCpu)
+    PermutationHandler::PermutationHandler()
     {
-      cpuImpl_       = new CpuPermutationKernels();
-      devImpl_       = nullptr;
-      isCudaEnabled_ = false;
-      isHipEnabled_  = false;
-    }
+      cpuImpl_ = new CpuPermutationKernels();
 #ifdef RESOLVE_USE_CUDA
-    PermutationHandler::PermutationHandler(LinAlgWorkspaceCUDA* workspaceCuda)
-    {
-      cpuImpl_       = new CpuPermutationKernels();
       devImpl_       = new CudaPermutationKernels();
       isCudaEnabled_ = true;
       isHipEnabled_  = false;
-    }
 #endif
 #ifdef RESOLVE_USE_HIP
-    PermutationHandler::PermutationHandler(LinAlgWorkspaceHIP* workspaceHip)
-    {
-      cpuImpl_       = new CpuPermutationKernels();
       devImpl_       = new HipPermutationKernels();
       isHipEnabled_  = true;
       isCudaEnabled_ = false;
-    }
 #endif
+      if (!isCudaEnabled_ && !isHipEnabled_)
+      {
+        devImpl_ = nullptr;
+      }
+    }
+
     PermutationHandler::~PermutationHandler()
     {
       delete cpuImpl_;
