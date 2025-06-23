@@ -37,7 +37,8 @@ namespace ReSolve
     {
     public:
       // constructors for each workspace type
-      Permutation(PermutationHandler* permutationHandler, int n_hes, int nnz_hes, int nnz_jac);
+      Permutation(int n_hes, int nnz_hes, int nnz_jac,
+                  memory::MemorySpace memspace);
 
       // destructor
       ~Permutation();
@@ -47,14 +48,13 @@ namespace ReSolve
       void addJtInfo(int* jac_tr_i, int* jac_tr_j);
       void addPerm(int* custom_perm);
       void symAmd();
-      void invertPerm(memory::MemorySpace memspace);
-      void vecMapRC(int* perm_i, int* perm_j, memory::MemorySpace memspace);
-      void vecMapC(int* perm_j, memory::MemorySpace memspace);
-      void vecMapR(int* perm_i, int* perm_j, memory::MemorySpace memspace);
+      void invertPerm();
+      void vecMapRC(int* perm_i, int* perm_j);
+      void vecMapC(int* perm_j);
+      void vecMapR(int* perm_i, int* perm_j);
       void map_index(PermutationType     permutation,
                      double*             old_val,
-                     double*             new_val,
-                     memory::MemorySpace memspace);
+                     double*             new_val);
       void display_perm() const;
 
     private:
@@ -66,6 +66,7 @@ namespace ReSolve
       //
 
       PermutationHandler* permutationHandler_;
+      memory::MemorySpace memspace_; ///< memory space for the permutation
 
       bool perm_is_default_ = true; ///< boolean if perm set custom
 

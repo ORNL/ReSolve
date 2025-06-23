@@ -28,18 +28,9 @@ namespace ReSolve
     class HykktPermutationTests : public TestBase
     {
     public:
-      HykktPermutationTests(ReSolve::hykkt::PermutationHandler* permutationHandler)
-        : permutationHandler_(permutationHandler)
+      HykktPermutationTests(memory::MemorySpace memspace = memory::HOST)
       {
-        // Determine memory space based on the handler capabilities
-        if (permutationHandler_->getIsCudaEnabled() || permutationHandler_->getIsHipEnabled())
-        {
-          memspace_ = memory::DEVICE;
-        }
-        else
-        {
-          memspace_ = memory::HOST;
-        }
+        memspace_ = memspace;
       }
 
       virtual ~HykktPermutationTests()
@@ -84,17 +75,17 @@ namespace ReSolve
         bool flagc  = false;
         bool flagr  = false;
 
-        ReSolve::hykkt::Permutation pc = ReSolve::hykkt::Permutation(permutationHandler_, n, nnz_hes, nnz_jac);
+        ReSolve::hykkt::Permutation pc = ReSolve::hykkt::Permutation(n, nnz_hes, nnz_jac, memspace_);
 
         pc.addHInfo(hes_i, hes_j);
         pc.addJInfo(jac_i, jac_j, m, n);
         pc.addJtInfo(jac_tr_i, jac_tr_j);
 
         pc.addPerm(perm);
-        pc.invertPerm(memspace_);
+        pc.invertPerm();
 
         // Test RC permutation
-        pc.vecMapRC(result_prc_i, result_prc_j, memspace_);
+        pc.vecMapRC(result_prc_i, result_prc_j);
         printf("Comparing RC permutation of H\n");
         for (int i = 0; i < n + 1; i++) // Loop over row pointers (n+1)
         {
@@ -115,7 +106,7 @@ namespace ReSolve
         printf(flagrc ? "RC permutation failed\n" : "RC permutation passed\n");
 
         // Test R permutation
-        pc.vecMapR(result_pr_i, result_pr_j, memspace_);
+        pc.vecMapR(result_pr_i, result_pr_j);
         printf("Comparing R permutation of J_tr\n");
         for (int i = 0; i < n + 1; i++)
         {
@@ -136,7 +127,7 @@ namespace ReSolve
         printf(flagr ? "R permutation failed\n" : "R permutation passed\n");
 
         // Test C permutation
-        pc.vecMapC(result_pc_j, memspace_);
+        pc.vecMapC(result_pc_j);
         printf("Comparing C permutation of J\n");
         for (int j = 0; j < nnz_jac; j++)
         {
@@ -153,7 +144,6 @@ namespace ReSolve
       }
 
     private:
-      ReSolve::hykkt::PermutationHandler* permutationHandler_;
       ReSolve::memory::MemorySpace        memspace_;
     }; // class HykktPermutationTests
   } // namespace tests
