@@ -1,3 +1,4 @@
+#pragma once
 #include <resolve/MemoryUtils.hpp>
 #include <resolve/Common.hpp>
 #include "RuizScalingKernelImpl.hpp"
@@ -5,9 +6,7 @@
 namespace ReSolve {
   using index_type = ReSolve::index_type;
   using real_type = ReSolve::real_type;
-}
 
-namespace ReSolve {
   namespace hykkt {
     class RuizScaler {
       public:

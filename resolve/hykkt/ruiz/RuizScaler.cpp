@@ -2,7 +2,8 @@
 #include "RuizScalingKernelsCPU.hpp"
 #ifdef RESOLVE_USE_CUDA
 #include "RuizScalingKernelsCUDA.hpp"
-#elseif RESOLVE_USE_HIP
+#endif
+#ifdef RESOLVE_USE_HIP
 #include "RuizScalingKernelsHIP.hpp"
 #endif
 
@@ -26,13 +27,16 @@ namespace ReSolve {
                            memory::MemorySpace memspace)
         : num_iterations_(num_iterations), n_(n), total_n_(total_n), memspace_(memspace)
     {
+      if (memspace_ == memory::HOST) {
+        kernelImpl_ = new RuizScalingKernelsCPU();
+      } else {
 #ifdef RESOLVE_USE_CUDA
       kernelImpl_ = new RuizScalingKernelsCUDA();
-#elseif RESOLVE_USE_HIP
-      kernelImpl_ = new RuizScalingKernelsHIP();
 #else
-      kernelImpl_ = new RuizScalingKernelsCPU();
+      kernelImpl_ = new RuizScalingKernelsHIP();
 #endif
+      }
+
 
       allocateWorkspace();
     }

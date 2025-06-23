@@ -1,3 +1,5 @@
+#pragma once
+
 namespace ReSolve {
   namespace hykkt {
 
