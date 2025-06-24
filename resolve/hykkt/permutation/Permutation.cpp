@@ -7,8 +7,8 @@
  *
  */
 #include <cstdio>
-
 #include "amd.h"
+
 #include <resolve/hykkt/permutation/Permutation.hpp>
 
 namespace ReSolve
@@ -51,10 +51,10 @@ namespace ReSolve
      *
      * @post hes_i_ set to hes_i, hes_j_ set to hes_j
      */
-    void Permutation::addHInfo(int* hes_i, int* hes_j)
+    void Permutation::addHInfo(matrix::Csr* hes)
     {
-      hes_i_ = hes_i;
-      hes_j_ = hes_j;
+      hes_i_ = hes->getRowData(memspace_);
+      hes_j_ = hes->getColData(memspace_);
     }
 
     /**
@@ -68,10 +68,10 @@ namespace ReSolve
      * @post jac_i_ set to jac_i, jac_j_ set to jac_j, n_jac_ set to n_jac,
      * m_jac_ set to m_jac
      */
-    void Permutation::addJInfo(int* jac_i, int* jac_j)
+    void Permutation::addJInfo(matrix::Csr* jac)
     {
-      jac_i_ = jac_i;
-      jac_j_ = jac_j;
+      jac_i_ = jac->getRowData(memspace_);
+      jac_j_ = jac->getColData(memspace_);
     }
 
     /**
@@ -83,10 +83,10 @@ namespace ReSolve
      * @pre
      * @post jac_tr_i_ set to jac_tr_i, jac_tr_j_ set to jac_tr_j
      */
-    void Permutation::addJtInfo(int* jac_tr_i, int* jac_tr_j)
+    void Permutation::addJtInfo(matrix::Csr* jac_tr)
     {
-      jac_tr_i_ = jac_tr_i;
-      jac_tr_j_ = jac_tr_j;
+      jac_tr_i_ = jac_tr->getRowData(memspace_);
+      jac_tr_j_ = jac_tr->getColData(memspace_);
     }
 
     /**
