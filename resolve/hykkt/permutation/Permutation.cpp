@@ -257,14 +257,20 @@ namespace ReSolve
      */
     void Permutation::deleteWorkspace()
     {
-      if (perm_is_default_)
+      if (memspace_ == memory::HOST)
       {
-        delete[] perm_;
+        delete[] rev_perm_;
+        delete[] perm_map_hes_;
+        delete[] perm_map_jac_;
+        delete[] perm_map_jac_tr_;
       }
-      delete[] rev_perm_;
-      delete[] perm_map_hes_;
-      delete[] perm_map_jac_;
-      delete[] perm_map_jac_tr_;
+      else
+      {
+        mem_.deleteOnDevice(rev_perm_);
+        mem_.deleteOnDevice(perm_map_hes_);
+        mem_.deleteOnDevice(perm_map_jac_);
+        mem_.deleteOnDevice(perm_map_jac_tr_);
+      }
     }
 
     /**
@@ -280,11 +286,17 @@ namespace ReSolve
      */
     void Permutation::allocateWorkspace()
     {
-      perm_            = new int[n_hes_];
-      rev_perm_        = new int[n_hes_];
-      perm_map_hes_    = new int[nnz_hes_];
-      perm_map_jac_    = new int[nnz_jac_];
-      perm_map_jac_tr_ = new int[nnz_jac_];
+      if (memspace_ == memory::HOST) {
+        rev_perm_        = new int[n_hes_];
+        perm_map_hes_    = new int[nnz_hes_];
+        perm_map_jac_    = new int[nnz_jac_];
+        perm_map_jac_tr_ = new int[nnz_jac_];
+      } else {
+        mem_.allocateArrayOnDevice(&rev_perm_, n_hes_);
+        mem_.allocateArrayOnDevice(&perm_map_hes_, nnz_hes_);
+        mem_.allocateArrayOnDevice(&perm_map_jac_, nnz_jac_);
+        mem_.allocateArrayOnDevice(&perm_map_jac_tr_, nnz_jac_);
+      }
     }
   } // namespace hykkt
 } //  namespace ReSolve

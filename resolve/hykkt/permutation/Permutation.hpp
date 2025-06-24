@@ -72,6 +72,7 @@ namespace ReSolve
       //
 
       PermutationHandler* permutationHandler_;
+      MemoryHandler mem_; ///< memory handler for the permutation
       memory::MemorySpace memspace_; ///< memory space for the permutation
 
       bool perm_is_default_ = true; ///< boolean if perm set custom

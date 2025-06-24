@@ -45,7 +45,14 @@ namespace ReSolve
         int nnz_hes = 6;
         int nnz_jac = 4;
 
-        int perm[3] = {2, 0, 1};
+        int h_perm[3] = {2, 0, 1};
+        int *perm;
+        if (memspace_ == memory::HOST) {
+          perm = h_perm; // already on host
+        } else {
+          mem_.allocateArrayOnDevice(&perm, n);
+          mem_.copyArrayHostToDevice(perm, h_perm, n);
+        }
 
         matrix::Csr* hes =  new matrix::Csr(n, n, nnz_hes);
         matrix::Csr* jac =   new matrix::Csr(m, n, nnz_jac);
@@ -68,10 +75,6 @@ namespace ReSolve
         int result_pr_j[4]  = {};
         int result_pc_j[4]  = {};
 
-        bool flagrc = false;
-        bool flagc  = false;
-        bool flagr  = false;
-
         ReSolve::hykkt::Permutation pc = ReSolve::hykkt::Permutation(n, m, nnz_hes, nnz_jac, memspace_);
 
         pc.addHInfo(hes);
@@ -84,141 +87,101 @@ namespace ReSolve
         // Test RC permutation
         pc.vecMapRC(result_prc_i, result_prc_j);
         printf("Comparing RC permutation of H\n");
-        for (int i = 0; i < n + 1; i++) // Loop over row pointers (n+1)
-        {
-          if (hes_prc_i[i] != result_prc_i[i])
-          {
-            printf("Mismatch in row pointer %d\n", i);
-            flagrc = true;
-          }
-        }
-        for (int j = 0; j < nnz_hes; j++) // Compare column indices
-        {
-          if (hes_prc_j[j] != result_prc_j[j])
-          {
-            printf("Mismatch in column index %d\n", j);
-            flagrc = true;
-          }
-        }
-        printf(flagrc ? "RC permutation failed\n" : "RC permutation passed\n");
+        bool flagrc = verifyResults(hes_prc_i, result_prc_i, n + 1);
+        flagrc &= verifyResults(hes_prc_j, result_prc_j, nnz_hes);
+        printf(!flagrc ? "RC permutation failed\n" : "RC permutation passed\n");
 
         // Test R permutation
         pc.vecMapR(result_pr_i, result_pr_j);
         printf("Comparing R permutation of J_tr\n");
-        for (int i = 0; i < n + 1; i++)
-        {
-          if (jac_tr_pr_i[i] != result_pr_i[i])
-          {
-            printf("Mismatch in row pointer %d: %d != %d\n", i, jac_tr_pr_i[i], result_pr_i[i]);
-            flagr = true;
-          }
-        }
-        for (int j = 0; j < nnz_jac; j++)
-        {
-          if (jac_tr_pr_j[j] != result_pr_j[j])
-          {
-            printf("Mismatch in column index %d: %d != %d\n", j, jac_tr_pr_j[j], result_pr_j[j]);
-            flagr = true;
-          }
-        }
-        printf(flagr ? "R permutation failed\n" : "R permutation passed\n");
+        bool flagr = verifyResults(jac_tr_pr_i, result_pr_i, m + 1);
+        flagr &= verifyResults(jac_tr_pr_j, result_pr_j, nnz_jac);
+        printf(!flagr ? "R permutation failed\n" : "R permutation passed\n");
 
         // Test C permutation
         pc.vecMapC(result_pc_j);
         printf("Comparing C permutation of J\n");
-        for (int j = 0; j < nnz_jac; j++)
-        {
-          if (jac_pc_j[j] != result_pc_j[j])
-          {
-            printf("Mismatch in column index %d\n", j);
-            flagc = true;
-          }
-        }
-        printf(flagc ? "C permutation failed\n" : "C permutation passed\n");
-
+        bool flagc = verifyResults(jac_pc_j, result_pc_j, nnz_jac);
+        printf(!flagc ? "C permutation failed\n" : "C permutation passed\n");
+        
         double hes_prc_v[6] = {4, 5, 1, 0, 3, 2};
         double jac_pc_v[4] = {1, 0, 3, 2};
         double jac_tr_pr_v[4] = {2, 3, 0, 1};
 
-        double result_prc_v[6] = {};
-        double result_pr_v[4] = {};
-        double result_pc_v[4] = {};
-
-        bool flagrc_v = false;
-        bool flagr_v  = false;
-        bool flagc_v  = false;
-
+        // Test mapIndex on H
+        double *result_prc_v = allocateArray(nnz_hes);
         pc.mapIndex(ReSolve::hykkt::PERM_HES_V, hes->getValues(memspace_), result_prc_v);
+        double *h_result_prc_v = bringToHost(result_prc_v, nnz_hes);
         printf("Comparing mapped H nonzero values\n");
-        for (int j = 0; j < nnz_hes; j++)
-        {
-          if (hes_prc_v[j] != result_prc_v[j])
-          {
-            printf("Mismatch in column index %d\n", j);
-            flagrc_v = true;
-          }
-        }
-        printf(flagrc_v ? "Map Index failed on H\n" : "Map Index passed on H\n");
+        bool flagrc_v = verifyResults(hes_prc_v, h_result_prc_v, nnz_hes);
+        printf(!flagrc_v ? "Map Index failed on H\n" : "Map Index passed on H\n");
 
-        
+        // Test mapIndex on J
+        double *result_pc_v = allocateArray(nnz_jac);
         pc.mapIndex(ReSolve::hykkt::PERM_JAC_V, jac->getValues(memspace_), result_pc_v);
+        double *h_result_pc_v = bringToHost(result_pc_v, nnz_jac);
         printf("Comparing mapped J nonzero values\n");
-        for (int j = 0; j < nnz_jac; j++)
-        {
-          if (jac_pc_v[j] != result_pc_v[j])
-          {
-            printf("Mismatch in column index %d\n", j);
-            flagc_v = true;
-          }
-        }
-        printf(flagc_v ? "Map Index failed on J\n" : "Map Index passed on J\n");
+        bool flagc_v = verifyResults(jac_pc_v, h_result_pc_v, nnz_jac);
+        printf(!flagc_v ? "Map Index failed on J\n" : "Map Index passed on J\n");
 
-        pc.mapIndex(ReSolve::hykkt::PERM_JAC_V, jac_tr->getValues(memspace_), result_pc_v);
-        printf("Comparing mapped J nonzero values\n");
-        for (int j = 0; j < nnz_jac; j++)
-        {
-          if (jac_pc_v[j] != result_pc_v[j])
-          {
-            printf("Mismatch in column index %d\n", j);
-            flagr_v = true;
-          }
-        }
-        printf(flagr_v ? "Map Index failed on J_TR\n" : "Map Index passed on J_TR\n");
+        // Test mapIndex on J transpose
+        double *result_pr_v = allocateArray(nnz_jac);
+        pc.mapIndex(ReSolve::hykkt::PERM_JAC_TR_V, jac_tr->getValues(memspace_), result_pr_v);
+        double *h_result_pr_v = bringToHost(result_pr_v, nnz_jac);
+        printf("Comparing mapped J_TR nonzero values\n");
+        bool flagr_v = verifyResults(jac_tr_pr_v, result_pr_v, nnz_jac);
+        printf(!flagr_v ? "Map Index failed on J_TR\n" : "Map Index passed on J_TR\n");
 
-        double indices[3] = {0, 1, 2};
-        double result[3] = {};
-        bool flag_perm = false;
-        bool flag_rev_perm = false;
+        double h_indices[3] = {0, 1, 2};
+        double *indices = allocateArray(n);
+        if (memspace_ == memory::HOST) {
+          indices = h_indices; // already on host
+        } else {
+          indices = allocateArray(n);
+          mem_.copyArrayHostToDevice(indices, h_indices, n);
+        }
         
+        double *result = allocateArray(n);
+
         pc.mapIndex(ReSolve::hykkt::PERM_V, indices, result);
+
+        double *h_result = bringToHost(result, n);
+
         printf("Comparing mapped permutation\n");
+        bool flag_perm = true;
         for (int i = 0; i < n; i++)
         {
-          if (result[i] != perm[i])
+          if (h_result[i] != (double) h_perm[i])
           {
-            printf("Mismatch in index %d: %f != %f\n", i, result[i], (double) perm[i]);
-            flag_perm = true;
+            printf("Mismatch in index %d: %f != %f\n", i, h_result[i], (double) h_perm[i]);
+            flag_perm = false;
           }
         }
+        printf(!flag_perm ? "Map Index failed on perm\n" : "Map Index passed on perm\n");  
 
-        printf(flag_perm ? "Map Index failed on perm\n" : "Map Index passed on perm\n");  
-
+        bool flag_rev_perm = true;
         pc.mapIndex(ReSolve::hykkt::REV_PERM_V, result, indices);
+        if (memspace_ == memory::HOST) {
+          h_result = indices;
+        } else {
+          mem_.copyArrayDeviceToHost(h_result, indices, n);
+        }
+        
         printf("Comparing mapped reverse permutation\n");
         for (int i = 0; i < n; i++)
         {
-          if (indices[i] != i)
+          if (h_result[i] != i)
           {
-            printf("Mismatch in index %d: %f != %f\n", i, indices[i], (double) i);
-            flag_rev_perm = true;
+            printf("Mismatch in index %d: %f != %f\n", i, h_result[i], (double) i);
+            flag_rev_perm = false;
           }
         }
 
-        printf(flag_rev_perm ? "Map Index failed on reverse perm\n" : "Map Index passed on reverse perm\n");
+        printf(!flag_rev_perm ? "Map Index failed on reverse perm\n" : "Map Index passed on reverse perm\n");
 
         // Final Test Outcome
-        return (!flagrc && !flagr && !flagc && !flagrc_v && 
-          !flagr_v && !flagc_v && !flag_perm && !flag_rev_perm) ? PASS : FAIL;
+        return (flagrc && flagr && flagc && flagrc_v && 
+                flagr_v && flagc_v && flag_perm && flag_rev_perm) ? PASS : FAIL;
       }
 
     private:
@@ -249,6 +212,52 @@ namespace ReSolve
         hes->copyDataFrom(hes_i, hes_j, hes_v, memory::HOST, memspace_);
         jac->copyDataFrom(jac_i, jac_j, jac_v, memory::HOST, memspace_);
         jac_tr->copyDataFrom(jac_tr_i, jac_tr_j, jac_tr_v, memory::HOST, memspace_);
+      }
+
+      bool verifyResults(const int* expected, const int* actual, int size)
+      {
+        for (int i = 0; i < size; ++i)
+        {
+          if (expected[i] != actual[i])
+          {
+            printf("Mismatch at index %d: expected %d, got %d\n", i, expected[i], actual[i]);
+            return false;
+          }
+        }
+        return true;
+      }
+
+      bool verifyResults(const double* expected, const double* actual, int size)
+      {
+        for (int i = 0; i < size; ++i)
+        {
+          if (expected[i] != actual[i])
+          {
+            printf("Mismatch at index %d: expected %f, got %f\n", i, expected[i], actual[i]);
+            return false;
+          }
+        }
+        return true;
+      }
+
+      double* allocateArray(int n) {
+        if (memspace_ == memory::HOST) {
+          return new double[n];
+        } else {
+          double* arr;
+          mem_.allocateArrayOnDevice(&arr, n);
+          return arr;
+        }
+      }
+
+      double* bringToHost(double* arr, int n) {
+        if (memspace_ == memory::HOST) {
+          return arr; // already on host
+        } else {
+          double* h_arr = new double[n];
+          mem_.copyArrayDeviceToHost(h_arr, arr, n);
+          return h_arr;
+        }
       }
     }; // class HykktPermutationTests
   } // namespace tests
