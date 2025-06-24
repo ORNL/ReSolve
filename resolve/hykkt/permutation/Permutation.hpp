@@ -7,15 +7,14 @@
  */
 
 #include <resolve/Common.hpp>
-#include <resolve/matrix/Csr.hpp>
-
 #include <resolve/hykkt/permutation/PermutationHandler.hpp>
 #include <resolve/hykkt/permutation/PermutationKernelsImpl.hpp>
+#include <resolve/matrix/Csr.hpp>
 
 namespace ReSolve
 {
   using index_type = ReSolve::index_type;
-  using real_type = ReSolve::real_type;
+  using real_type  = ReSolve::real_type;
 
   namespace hykkt
   {
@@ -43,38 +42,29 @@ namespace ReSolve
     class Permutation
     {
     public:
-      // constructors for each workspace type
-      Permutation(index_type n_hes, index_type n_jac, index_type nnz_hes, index_type nnz_jac, 
-                  memory::MemorySpace memspace);
-
-      // destructor
+      Permutation(index_type n_hes, index_type n_jac, index_type nnz_hes, index_type nnz_jac, memory::MemorySpace memspace);
       ~Permutation();
 
       void addHInfo(matrix::Csr* hes);
       void addJInfo(matrix::Csr* jac);
       void addJtInfo(matrix::Csr* jac_tr);
-      void addPerm(index_type* custom_perm);
+      void addCustomPerm(index_type* custom_perm);
       void symAmd();
       void invertPerm();
       void vecMapRC(index_type* perm_i, index_type* perm_j);
       void vecMapC(index_type* perm_j);
       void vecMapR(index_type* perm_i, index_type* perm_j);
       void mapIndex(PermutationType permutation,
-                     real_type*         old_val,
-                     real_type*         new_val);
+                    real_type*      old_val,
+                    real_type*      new_val);
 
     private:
       void deleteWorkspace();
       void allocateWorkspace();
 
-      //
-      // member variables
-      //
-
-      PermutationHandler* permutationHandler_;
+      PermutationHandler  permutationHandler_;
+      MemoryHandler       mem_;      ///< memory handler for the permutation
       memory::MemorySpace memspace_; ///< memory space for the permutation
-
-      bool perm_is_default_ = true; ///< boolean if perm set custom
 
       index_type n_hes_;   ///< dimension of H
       index_type nnz_hes_; ///< nonzeros of H
@@ -83,6 +73,7 @@ namespace ReSolve
       index_type m_jac_;
       index_type nnz_jac_; ///< nonzeros of J
 
+      bool        perm_is_default_;
       index_type* perm_;            ///< permutation of 2x2 system
       index_type* rev_perm_;        ///< reverse of permutation
       index_type* perm_map_hes_;    ///< mapping of permuted H

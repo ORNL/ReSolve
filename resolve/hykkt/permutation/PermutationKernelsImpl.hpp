@@ -12,7 +12,7 @@
 namespace ReSolve
 {
   using index_type = ReSolve::index_type;
-  using real_type = ReSolve::real_type;
+  using real_type  = ReSolve::real_type;
 
   namespace hykkt
   {
@@ -86,8 +86,8 @@ namespace ReSolve
       inline void swap(index_type* arr1, index_type* arr2, index_type i, index_type j)
       {
         index_type temp = arr1[i];
-        arr1[i]  = arr1[j];
-        arr1[j]  = temp;
+        arr1[i]         = arr1[j];
+        arr1[j]         = temp;
 
         temp    = arr2[i];
         arr2[i] = arr2[j];
@@ -206,17 +206,17 @@ namespace ReSolve
                        index_type*       perm_map)
       {
         index_type row_s;
-        index_type rowlen;
+        index_type row_len;
         for (index_type i = 0; i < n; i++)
         {
           row_s  = rows[i];
-          rowlen = rows[i + 1] - row_s;
-          for (index_type j = 0; j < rowlen; j++)
+          row_len = rows[i + 1] - row_s;
+          for (index_type j = 0; j < row_len; j++)
           {
             perm_map[row_s + j]  = row_s + j;
             perm_cols[row_s + j] = rev_perm[cols[row_s + j]];
           }
-          insertionSort(rowlen, &perm_cols[row_s], &perm_map[row_s]);
+          insertionSort(row_len, &perm_cols[row_s], &perm_map[row_s]);
         }
       }
 
@@ -250,7 +250,7 @@ namespace ReSolve
        * @param[out] perm_cols - column indices of permuted matrix
        * @param[out] perm_map - corresponding indices to facilitate permuting the values
        *
-       * @pre perm has index_typeegers 0 to n-1 (permuted),
+       * @pre perm has integers 0 to n-1 (permuted),
        * rows and cols present valid csr storage array
        *
        * @post perm_rows and perm_cols are now the permuted rows and column arrays,
@@ -264,23 +264,23 @@ namespace ReSolve
                        index_type*       perm_cols,
                        index_type*       perm_map)
       {
-        perm_rows[0] = 0;
-        index_type count    = 0;
+        perm_rows[0]     = 0;
+        index_type count = 0;
         index_type idx;
         index_type row_s;
-        index_type rowlen;
+        index_type row_len;
         for (index_type i = 0; i < n; i++)
         {
           idx              = perm[i];
           row_s            = rows[idx];
-          rowlen           = rows[idx + 1] - row_s;
-          perm_rows[i + 1] = perm_rows[i] + rowlen;
-          for (index_type j = 0; j < rowlen; j++)
+          row_len           = rows[idx + 1] - row_s;
+          perm_rows[i + 1] = perm_rows[i] + row_len;
+          for (index_type j = 0; j < row_len; j++)
           {
             perm_map[count + j]  = row_s + j;
             perm_cols[count + j] = cols[row_s + j];
           }
-          count += rowlen;
+          count += row_len;
         }
       }
 
@@ -297,7 +297,7 @@ namespace ReSolve
        * @param[out] perm_cols - column indices of permuted matrix
        * @param[out] perm_map - corresponding indices to facilitate permuting the values
        *
-       * @pre perm and rev_perm have corresponding index_typeegers 0 to n-1 (permuted),
+       * @pre perm and rev_perm have corresponding integers 0 to n-1 (permuted),
        * rows and cols present valid csr storage array
        *
        * @post perm_rows and perm_cols are now the permuted rows and column
@@ -313,25 +313,25 @@ namespace ReSolve
                         index_type*       perm_cols,
                         index_type*       perm_map)
       {
-        perm_rows[0] = 0;
-        index_type count    = 0;
+        perm_rows[0]     = 0;
+        index_type count = 0;
         index_type idx;
         index_type row_s;
-        index_type rowlen;
+        index_type row_len;
 
         for (index_type i = 0; i < n; i++)
         {
           idx              = perm[i];
           row_s            = rows[idx];
-          rowlen           = rows[idx + 1] - row_s;
-          perm_rows[i + 1] = perm_rows[i] + rowlen;
-          for (index_type j = 0; j < rowlen; j++)
+          row_len           = rows[idx + 1] - row_s;
+          perm_rows[i + 1] = perm_rows[i] + row_len;
+          for (index_type j = 0; j < row_len; j++)
           {
             perm_map[count + j]  = row_s + j;
             perm_cols[count + j] = rev_perm[cols[row_s + j]];
           }
-          insertionSort(rowlen, &perm_cols[count], &perm_map[count]);
-          count += rowlen;
+          insertionSort(row_len, &perm_cols[count], &perm_map[count]);
+          count += row_len;
         }
       }
     }; // class

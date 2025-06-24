@@ -13,7 +13,7 @@ namespace ReSolve
   namespace hykkt
   {
     /**
-     * @brief Declaration of PermutationKernelsImpl for HIP.
+     * @brief HyKKT permutation kernels for HIP.
      */
     class HipPermutationKernels : public PermutationKernelsImpl
     {

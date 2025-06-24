@@ -14,7 +14,7 @@ namespace ReSolve
   namespace hykkt
   {
     /**
-     * @brief Declaration of PermutationKernelsImpl for CPU.
+     * @brief HyKKT permutation kernels for CPU.
      */
     class CpuPermutationKernels : public PermutationKernelsImpl
     {

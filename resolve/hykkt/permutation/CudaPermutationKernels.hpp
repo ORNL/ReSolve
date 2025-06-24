@@ -13,7 +13,7 @@ namespace ReSolve
   namespace hykkt
   {
     /**
-     * @brief Declaration of PermutationKernelsImpl for CUDA.
+     * @brief HyKKT permutation kernels for CUDA.
      */
     class CudaPermutationKernels : public PermutationKernelsImpl
     {

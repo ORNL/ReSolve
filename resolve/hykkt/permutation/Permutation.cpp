@@ -7,8 +7,8 @@
  *
  */
 #include <cstdio>
-#include "amd.h"
 
+#include "amd.h"
 #include <resolve/hykkt/permutation/Permutation.hpp>
 
 namespace ReSolve
@@ -34,7 +34,7 @@ namespace ReSolve
         memspace_(memspace)
     {
       allocateWorkspace();
-      permutationHandler_ = new PermutationHandler();
+      perm_is_default_ = true;
     }
 
     /// Permutation destructor
@@ -49,6 +49,9 @@ namespace ReSolve
      * @param[in] hes_i - Row offsets for H
      * @param[in] hes_j - Column indices for H
      *
+     * @pre Matrix data stored in the same memory space as was passed
+     *      into the constructor
+     *
      * @post hes_i_ set to hes_i, hes_j_ set to hes_j
      */
     void Permutation::addHInfo(matrix::Csr* hes)
@@ -62,8 +65,9 @@ namespace ReSolve
      *
      * @param[in] jac_i - Row offsets for J
      * @param[in] jac_j - Column indices for j
-     * @param[in] n_jac - number of rows of J
-     * @param[in] m_jac - number of columns of J
+     *
+     * @pre Matrix data stored in the same memory space as was passed
+     *      into the constructor
      *
      * @post jac_i_ set to jac_i, jac_j_ set to jac_j, n_jac_ set to n_jac,
      * m_jac_ set to m_jac
@@ -80,6 +84,9 @@ namespace ReSolve
      * @param[in] jac_tr_i - Row offsets for Jt
      * @param[in] jac_tr_j - Column indices for Jt
      *
+     * @pre Matrix data stored in the same memory space as was passed
+     *      into the constructor
+     *
      * @pre
      * @post jac_tr_i_ set to jac_tr_i, jac_tr_j_ set to jac_tr_j
      */
@@ -92,16 +99,25 @@ namespace ReSolve
     /**
      * @brief sets custom permutation of matrix
      *
-     * @param[in] custom_perm - custom permutation vector
-     *
-     * @pre Member variable n_hes_ initialized to dimension of matrix
+     * @param[in] perm - permutation vector stored in the same memory space as the matrix data
      *
      * @post perm points to custom_perm out of scope so perm_is_default
      *       set to false so that custom_perm not deleted twice in destructors,
      *       permutation vector copied onto device d_perm
      */
-    void Permutation::addPerm(int* custom_perm)
+    void Permutation::addCustomPerm(int* custom_perm)
     {
+      if (perm_is_default_)
+      {
+        if (memspace_ == memory::HOST)
+        {
+          delete[] perm_;
+        }
+        else
+        {
+          mem_.deleteOnDevice(perm_);
+        }
+      }
       perm_is_default_ = false;
       perm_            = custom_perm;
     }
@@ -114,7 +130,7 @@ namespace ReSolve
      *      initialized to the dimensions of matrix H, the number
      *      of nonzeros it has, its row offsets, and column arrays
      *
-     * @post perm is the perumation vector that implements symAmd
+     * @post perm is the permutation vector that implements symAmd
      *       on the 2x2 system
      */
     void Permutation::symAmd()
@@ -144,7 +160,7 @@ namespace ReSolve
      */
     void Permutation::invertPerm()
     {
-      permutationHandler_->reversePerm(n_hes_, perm_, rev_perm_, memspace_);
+      permutationHandler_.reversePerm(n_hes_, perm_, rev_perm_, memspace_);
     }
 
     /**
@@ -164,7 +180,7 @@ namespace ReSolve
      */
     void Permutation::vecMapRC(int* perm_i, int* perm_j)
     {
-      permutationHandler_->makeVecMapRC(n_hes_, hes_i_, hes_j_, perm_, rev_perm_, perm_i, perm_j, perm_map_hes_, memspace_);
+      permutationHandler_.makeVecMapRC(n_hes_, hes_i_, hes_j_, perm_, rev_perm_, perm_i, perm_j, perm_map_hes_, memspace_);
     }
 
     /**
@@ -182,7 +198,7 @@ namespace ReSolve
      */
     void Permutation::vecMapC(int* perm_j)
     {
-      permutationHandler_->makeVecMapC(n_jac_, jac_i_, jac_j_, rev_perm_, perm_j, perm_map_jac_, memspace_);
+      permutationHandler_.makeVecMapC(n_jac_, jac_i_, jac_j_, rev_perm_, perm_j, perm_map_jac_, memspace_);
     }
 
     /**
@@ -201,7 +217,7 @@ namespace ReSolve
      */
     void Permutation::vecMapR(int* perm_i, int* perm_j)
     {
-      permutationHandler_->makeVecMapR(m_jac_, jac_tr_i_, jac_tr_j_, perm_, perm_i, perm_j, perm_map_jac_tr_, memspace_);
+      permutationHandler_.makeVecMapR(m_jac_, jac_tr_i_, jac_tr_j_, perm_, perm_i, perm_j, perm_map_jac_tr_, memspace_);
     }
 
     /**
@@ -221,25 +237,25 @@ namespace ReSolve
      * @post new_val contains the permuted old_val
      */
     void Permutation::mapIndex(PermutationType permutation,
-                                double*         old_val,
-                                double*         new_val)
+                               double*         old_val,
+                               double*         new_val)
     {
       switch (permutation)
       {
       case PERM_V:
-        permutationHandler_->mapIdx(n_hes_, perm_, old_val, new_val, memspace_);
+        permutationHandler_.mapIdx(n_hes_, perm_, old_val, new_val, memspace_);
         break;
       case REV_PERM_V:
-        permutationHandler_->mapIdx(n_hes_, rev_perm_, old_val, new_val, memspace_);
+        permutationHandler_.mapIdx(n_hes_, rev_perm_, old_val, new_val, memspace_);
         break;
       case PERM_HES_V:
-        permutationHandler_->mapIdx(nnz_hes_, perm_map_hes_, old_val, new_val, memspace_);
+        permutationHandler_.mapIdx(nnz_hes_, perm_map_hes_, old_val, new_val, memspace_);
         break;
       case PERM_JAC_V:
-        permutationHandler_->mapIdx(nnz_jac_, perm_map_jac_, old_val, new_val, memspace_);
+        permutationHandler_.mapIdx(nnz_jac_, perm_map_jac_, old_val, new_val, memspace_);
         break;
       case PERM_JAC_TR_V:
-        permutationHandler_->mapIdx(nnz_jac_, perm_map_jac_tr_, old_val, new_val, memspace_);
+        permutationHandler_.mapIdx(nnz_jac_, perm_map_jac_tr_, old_val, new_val, memspace_);
         break;
       default:
         printf("Valid arguments are PERM_V, REV_PERM_V, PERM_H_V, PERM_J_V, PERM_JT_V\n");
@@ -257,14 +273,28 @@ namespace ReSolve
      */
     void Permutation::deleteWorkspace()
     {
-      if (perm_is_default_)
+      if (memspace_ == memory::HOST)
       {
-        delete[] perm_;
+        if (perm_is_default_)
+        {
+          delete[] perm_;
+        }
+        delete[] rev_perm_;
+        delete[] perm_map_hes_;
+        delete[] perm_map_jac_;
+        delete[] perm_map_jac_tr_;
       }
-      delete[] rev_perm_;
-      delete[] perm_map_hes_;
-      delete[] perm_map_jac_;
-      delete[] perm_map_jac_tr_;
+      else
+      {
+        if (perm_is_default_)
+        {
+          mem_.deleteOnDevice(perm_);
+        }
+        mem_.deleteOnDevice(rev_perm_);
+        mem_.deleteOnDevice(perm_map_hes_);
+        mem_.deleteOnDevice(perm_map_jac_);
+        mem_.deleteOnDevice(perm_map_jac_tr_);
+      }
     }
 
     /**
@@ -280,11 +310,22 @@ namespace ReSolve
      */
     void Permutation::allocateWorkspace()
     {
-      perm_            = new int[n_hes_];
-      rev_perm_        = new int[n_hes_];
-      perm_map_hes_    = new int[nnz_hes_];
-      perm_map_jac_    = new int[nnz_jac_];
-      perm_map_jac_tr_ = new int[nnz_jac_];
+      if (memspace_ == memory::HOST)
+      {
+        perm_            = new int[n_hes_];
+        rev_perm_        = new int[n_hes_];
+        perm_map_hes_    = new int[nnz_hes_];
+        perm_map_jac_    = new int[nnz_jac_];
+        perm_map_jac_tr_ = new int[nnz_jac_];
+      }
+      else
+      {
+        mem_.allocateArrayOnDevice(&perm_, n_hes_);
+        mem_.allocateArrayOnDevice(&rev_perm_, n_hes_);
+        mem_.allocateArrayOnDevice(&perm_map_hes_, nnz_hes_);
+        mem_.allocateArrayOnDevice(&perm_map_jac_, nnz_jac_);
+        mem_.allocateArrayOnDevice(&perm_map_jac_tr_, nnz_jac_);
+      }
     }
   } // namespace hykkt
 } //  namespace ReSolve

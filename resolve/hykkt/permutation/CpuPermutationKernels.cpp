@@ -5,7 +5,7 @@
  *
  */
 
-#include "cpuPermutationKernels.hpp"
+#include "CpuPermutationKernels.hpp"
 
 namespace ReSolve
 {
