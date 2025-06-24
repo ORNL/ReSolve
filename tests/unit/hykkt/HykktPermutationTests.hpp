@@ -139,8 +139,93 @@ namespace ReSolve
         }
         printf(flagc ? "C permutation failed\n" : "C permutation passed\n");
 
+        double hes_v[6] = {0, 1, 2, 3, 4, 5};
+        double hes_prc_v[6] = {4, 5, 1, 0, 3, 2};
+
+        double jac_v[4] = {0, 1, 2, 3};
+        double jac_pc_v[4] = {1, 0, 3, 2};
+
+        double jac_tr_v[4] = {0, 1, 2, 3};
+        double jac_tr_pr_v[4] = {2, 3, 0, 1};
+
+        double result_prc_v[6] = {};
+        double result_pr_v[4]  = {};
+        double result_pc_v[4]  = {};
+
+        bool flagrc_v = false;
+        bool flagr_v  = false;
+        bool flagc_v  = false;
+
+        pc.mapIndex(ReSolve::hykkt::PERM_HES_V, hes_v, result_prc_v);
+        printf("Comparing mapped H nonzero values\n");
+        for (int j = 0; j < nnz_hes; j++)
+        {
+          if (hes_prc_v[j] != result_prc_v[j])
+          {
+            printf("Mismatch in column index %d\n", j);
+            flagrc_v = true;
+          }
+        }
+        printf(flagrc_v ? "Map Index failed on H\n" : "Map Index passed on H\n");
+
+        pc.mapIndex(ReSolve::hykkt::PERM_JAC_V, jac_v, result_pc_v);
+        printf("Comparing mapped J nonzero values\n");
+        for (int j = 0; j < nnz_jac; j++)
+        {
+          if (jac_pc_v[j] != result_pc_v[j])
+          {
+            printf("Mismatch in column index %d\n", j);
+            flagc_v = true;
+          }
+        }
+        printf(flagc_v ? "Map Index failed on J\n" : "Map Index passed on J\n");
+
+        pc.mapIndex(ReSolve::hykkt::PERM_JAC_V, jac_v, result_pc_v);
+        printf("Comparing mapped J nonzero values\n");
+        for (int j = 0; j < nnz_jac; j++)
+        {
+          if (jac_pc_v[j] != result_pc_v[j])
+          {
+            printf("Mismatch in column index %d\n", j);
+            flagr_v = true;
+          }
+        }
+        printf(flagr_v ? "Map Index failed on J_TR\n" : "Map Index passed on J_TR\n");
+
+        double indices[3] = {0, 1, 2};
+        double result[3] = {};
+        bool flag_perm = false;
+        bool flag_rev_perm = false;
+        
+        pc.mapIndex(ReSolve::hykkt::PERM_V, indices, result);
+        printf("Comparing mapped permutation\n");
+        for (int i = 0; i < n; i++)
+        {
+          if (result[i] != perm[i])
+          {
+            printf("Mismatch in index %d: %f != %f\n", i, result[i], (double) perm[i]);
+            flag_perm = true;
+          }
+        }
+
+        printf(flag_perm ? "Map Index failed on perm\n" : "Map Index passed on perm\n");  
+
+        pc.mapIndex(ReSolve::hykkt::REV_PERM_V, result, indices);
+        printf("Comparing mapped reverse permutation\n");
+        for (int i = 0; i < n; i++)
+        {
+          if (indices[i] != i)
+          {
+            printf("Mismatch in index %d: %f != %f\n", i, indices[i], (double) i);
+            flag_rev_perm = true;
+          }
+        }
+
+        printf(flag_rev_perm ? "Map Index failed on reverse perm\n" : "Map Index passed on reverse perm\n");
+
         // Final Test Outcome
-        return (!flagrc && !flagr && !flagc) ? PASS : FAIL;
+        return (!flagrc && !flagr && !flagc && !flagrc_v && 
+          !flagr_v && !flagc_v && !flag_perm && !flag_rev_perm) ? PASS : FAIL;
       }
 
     private:
