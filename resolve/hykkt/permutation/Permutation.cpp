@@ -25,8 +25,10 @@ namespace ReSolve
      *
      * @post Member variables initialized, workspace allocated
      */
-    Permutation::Permutation(int n_hes, int nnz_hes, int nnz_jac, memory::MemorySpace memspace)
+    Permutation::Permutation(int n_hes, int n_jac, int nnz_hes, int nnz_jac, memory::MemorySpace memspace)
       : n_hes_(n_hes),
+        n_jac_(n_jac),
+        m_jac_(n_hes),
         nnz_hes_(nnz_hes),
         nnz_jac_(nnz_jac),
         memspace_(memspace)
@@ -66,12 +68,10 @@ namespace ReSolve
      * @post jac_i_ set to jac_i, jac_j_ set to jac_j, n_jac_ set to n_jac,
      * m_jac_ set to m_jac
      */
-    void Permutation::addJInfo(int* jac_i, int* jac_j, int n_jac, int m_jac)
+    void Permutation::addJInfo(int* jac_i, int* jac_j)
     {
       jac_i_ = jac_i;
       jac_j_ = jac_j;
-      n_jac_ = n_jac;
-      m_jac_ = m_jac;
     }
 
     /**

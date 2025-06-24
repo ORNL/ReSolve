@@ -37,13 +37,13 @@ namespace ReSolve
     {
     public:
       // constructors for each workspace type
-      Permutation(int n_hes, int nnz_hes, int nnz_jac, memory::MemorySpace memspace);
+      Permutation(int n_hes, int n_jac, int nnz_hes, int nnz_jac, memory::MemorySpace memspace);
 
       // destructor
       ~Permutation();
 
       void addHInfo(int* hes_i, int* hes_j);
-      void addJInfo(int* jac_i, int* jac_j, int n_jac, int m_jac);
+      void addJInfo(int* jac_i, int* jac_j);
       void addJtInfo(int* jac_tr_i, int* jac_tr_j);
       void addPerm(int* custom_perm);
       void symAmd();
@@ -54,7 +54,7 @@ namespace ReSolve
       void mapIndex(PermutationType permutation,
                      double*         old_val,
                      double*         new_val);
-                     
+
     private:
       void deleteWorkspace();
       void allocateWorkspace();

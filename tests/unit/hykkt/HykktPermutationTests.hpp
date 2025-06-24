@@ -75,10 +75,10 @@ namespace ReSolve
         bool flagc  = false;
         bool flagr  = false;
 
-        ReSolve::hykkt::Permutation pc = ReSolve::hykkt::Permutation(n, nnz_hes, nnz_jac, memspace_);
+        ReSolve::hykkt::Permutation pc = ReSolve::hykkt::Permutation(n, m, nnz_hes, nnz_jac, memspace_);
 
         pc.addHInfo(hes_i, hes_j);
-        pc.addJInfo(jac_i, jac_j, m, n);
+        pc.addJInfo(jac_i, jac_j);
         pc.addJtInfo(jac_tr_i, jac_tr_j);
 
         pc.addPerm(perm);
