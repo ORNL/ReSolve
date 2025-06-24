@@ -26,7 +26,7 @@ namespace ReSolve
       {
       }
 
-      void mapIdx(int n, const int* perm, const double* old_val, double* new_val);
+      void mapIdx(index_type n, const index_type* perm, const real_type* old_val, real_type* new_val);
     }; // class HipPermutationKernels
   } // namespace hykkt
 } // namespace ReSolve
