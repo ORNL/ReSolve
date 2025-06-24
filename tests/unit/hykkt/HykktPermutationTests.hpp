@@ -13,8 +13,8 @@
 #include <string>
 #include <vector>
 
-#include <resolve/hykkt/Permutation.hpp>
-#include <resolve/hykkt/PermutationHandler.hpp>
+#include <resolve/hykkt/permutation/Permutation.hpp>
+#include <resolve/hykkt/permutation/PermutationHandler.hpp>
 #include <tests/unit/TestBase.hpp>
 
 namespace ReSolve

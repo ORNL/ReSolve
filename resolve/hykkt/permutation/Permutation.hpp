@@ -5,8 +5,8 @@
  * @brief Declaration of hykkt::Permutation class
  *
  */
-#include <resolve/hykkt/PermutationHandler.hpp>
-#include <resolve/hykkt/PermutationKernelsImpl.hpp>
+#include <resolve/hykkt/permutation/PermutationHandler.hpp>
+#include <resolve/hykkt/permutation/PermutationKernelsImpl.hpp>
 
 namespace ReSolve
 {
