@@ -9,7 +9,7 @@
 #include <cstdio>
 
 #include "amd.h"
-#include <resolve/hykkt/Permutation.hpp>
+#include <resolve/hykkt/permutation/Permutation.hpp>
 
 namespace ReSolve
 {
