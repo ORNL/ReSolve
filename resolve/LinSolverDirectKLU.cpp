@@ -218,8 +218,19 @@ namespace ReSolve
     // copy the vector
     x->copyDataFrom(rhs->getData(memory::HOST), memory::HOST, memory::HOST);
     x->setDataUpdated(memory::HOST);
-
-    int kluStatus = klu_solve(Symbolic_, Numeric_, A_->getNumRows(), 1, x->getData(memory::HOST), &Common_);
+    int kluStatus = 1;
+    // check sparsity format of A
+    if (A_->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_COLUMN)
+    {
+      kluStatus = klu_solve(Symbolic_, Numeric_, A_->getNumRows(), 1, x->getData(memory::HOST), &Common_);
+    } else if (A_->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW)
+    {
+      kluStatus = klu_tsolve(Symbolic_, Numeric_, A_->getNumRows(), 1, x->getData(memory::HOST), &Common_);
+    } else
+    {
+      out::error() << "Unsupported sparse format for matrix A in LinSolverDirectKLU! Only CSC and CSR are supported.\n";
+      return 1;
+    }
 
     if (!kluStatus)
     {
