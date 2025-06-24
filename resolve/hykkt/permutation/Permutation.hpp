@@ -51,11 +51,10 @@ namespace ReSolve
       void vecMapRC(int* perm_i, int* perm_j);
       void vecMapC(int* perm_j);
       void vecMapR(int* perm_i, int* perm_j);
-      void map_index(PermutationType permutation,
+      void mapIndex(PermutationType permutation,
                      double*         old_val,
                      double*         new_val);
-      void display_perm() const;
-
+                     
     private:
       void deleteWorkspace();
       void allocateWorkspace();

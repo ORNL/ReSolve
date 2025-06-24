@@ -220,7 +220,7 @@ namespace ReSolve
      *
      * @post new_val contains the permuted old_val
      */
-    void Permutation::map_index(PermutationType permutation,
+    void Permutation::mapIndex(PermutationType permutation,
                                 double*         old_val,
                                 double*         new_val)
     {
