@@ -24,9 +24,9 @@ namespace ReSolve
      * (in some order), old_val is initialized.
      * @post new_val contains the permuted old_val, where new_val[i] = old_val[perm[i]].
      */
-    void CpuPermutationKernels::mapIdx(int n, const int* perm, const double* old_val, double* new_val)
+    void CpuPermutationKernels::mapIdx(index_type n, const index_type* perm, const real_type* old_val, real_type* new_val)
     {
-      for (int i = 0; i < n; ++i)
+      for (index_type i = 0; i < n; ++i)
       {
         new_val[i] = old_val[perm[i]];
       }

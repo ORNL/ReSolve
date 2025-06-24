@@ -7,8 +7,13 @@
 
 #pragma once
 
+#include <resolve/Common.hpp>
+
 namespace ReSolve
 {
+  using index_type = ReSolve::index_type;
+  using real_type = ReSolve::real_type;
+
   namespace hykkt
   {
     /**
@@ -27,7 +32,7 @@ namespace ReSolve
       {
       }
 
-      virtual void mapIdx(int n, const int* perm, const double* old_val, double* new_val) = 0;
+      virtual void mapIdx(index_type n, const index_type* perm, const double* old_val, double* new_val) = 0;
 
       /**
        * @brief Selection sorts arr1 and arr2 w/indices
@@ -44,14 +49,14 @@ namespace ReSolve
        *
        * @post arr1 and arr2 are sorted based on increasing values in arr1
        */
-      void selectionSort(int len, int* arr1, int* arr2)
+      void selectionSort(index_type len, index_type* arr1, index_type* arr2)
       {
-        int min_ind;
-        int temp;
-        for (int i = 0; i < len - 1; i++)
+        index_type min_ind;
+        index_type temp;
+        for (index_type i = 0; i < len - 1; i++)
         {
           min_ind = i;
-          for (int j = i + 1; j < len; j++)
+          for (index_type j = i + 1; j < len; j++)
           {
             if (arr1[j] < arr1[min_ind])
             {
@@ -78,9 +83,9 @@ namespace ReSolve
        * @param[in] i - index of first value to be swapped
        * @param[in] j - index of second value to be swapped
        */
-      inline void swap(int* arr1, int* arr2, int i, int j)
+      inline void swap(index_type* arr1, index_type* arr2, index_type i, index_type j)
       {
-        int temp = arr1[i];
+        index_type temp = arr1[i];
         arr1[i]  = arr1[j];
         arr1[j]  = temp;
 
@@ -96,13 +101,13 @@ namespace ReSolve
        * @param[in,out] arr2 - array to be sorted based on other array
        * @param[in] low - lower index bound of array slice
        * @param[in] high - higher index bound of array slice
-       * @return int - index of the pivot
+       * @return index_type - index of the pivot
        */
-      inline int partition(int* arr1, int* arr2, int low, int high)
+      inline index_type partition(index_type* arr1, index_type* arr2, index_type low, index_type high)
       {
-        int pivot = arr1[high];
-        int i     = (low - 1);
-        for (int j = low; j <= high - 1; j++)
+        index_type pivot = arr1[high];
+        index_type i     = (low - 1);
+        for (index_type j = low; j <= high - 1; j++)
         {
           if (arr1[j] < pivot)
           {
@@ -129,11 +134,11 @@ namespace ReSolve
        * @param[in] low - lower index bound of array slice
        * @param[in] high - higher index bound of array slice
        */
-      void quickSort(int* arr1, int* arr2, int low, int high)
+      void quickSort(index_type* arr1, index_type* arr2, index_type low, index_type high)
       {
         if (low < high)
         {
-          int pi = partition(arr1, arr2, low, high);
+          index_type pi = partition(arr1, arr2, low, high);
           quickSort(arr1, arr2, low, pi - 1);
           quickSort(arr1, arr2, pi + 1, high);
         }
@@ -156,9 +161,9 @@ namespace ReSolve
        *
        * @post arr1 and arr2 are sorted based on increasing values in arr1
        */
-      void insertionSort(int n, int* arr1, int* arr2)
+      void insertionSort(index_type n, index_type* arr1, index_type* arr2)
       {
-        int i, key1, key2, j;
+        index_type i, key1, key2, j;
         for (i = 1; i < n; i++)
         {
           key1 = arr1[i];
@@ -193,20 +198,20 @@ namespace ReSolve
        * @post perm_cols is now the permuted column array and perm_map stores
        * the corresponding indices to facilitate permuting the values
        */
-      void makeVecMapC(int        n,
-                       const int* rows,
-                       const int* cols,
-                       const int* rev_perm,
-                       int*       perm_cols,
-                       int*       perm_map)
+      void makeVecMapC(index_type        n,
+                       const index_type* rows,
+                       const index_type* cols,
+                       const index_type* rev_perm,
+                       index_type*       perm_cols,
+                       index_type*       perm_map)
       {
-        int row_s;
-        int rowlen;
-        for (int i = 0; i < n; i++)
+        index_type row_s;
+        index_type rowlen;
+        for (index_type i = 0; i < n; i++)
         {
           row_s  = rows[i];
           rowlen = rows[i + 1] - row_s;
-          for (int j = 0; j < rowlen; j++)
+          for (index_type j = 0; j < rowlen; j++)
           {
             perm_map[row_s + j]  = row_s + j;
             perm_cols[row_s + j] = rev_perm[cols[row_s + j]];
@@ -222,13 +227,13 @@ namespace ReSolve
        * @param[in] perm - permutation array
        * @param[out] rev_perm - reversed permutation array
        *
-       * @pre perm has integers 0 to n-1 (permuted),
+       * @pre perm has index_typeegers 0 to n-1 (permuted),
        *
        * @post rev_perm now contains the reverse permutation
        */
-      void reversePerm(int n, const int* perm, int* rev_perm)
+      void reversePerm(index_type n, const index_type* perm, index_type* rev_perm)
       {
-        for (int i = 0; i < n; i++)
+        for (index_type i = 0; i < n; i++)
         {
           rev_perm[perm[i]] = i;
         }
@@ -245,32 +250,32 @@ namespace ReSolve
        * @param[out] perm_cols - column indices of permuted matrix
        * @param[out] perm_map - corresponding indices to facilitate permuting the values
        *
-       * @pre perm has integers 0 to n-1 (permuted),
+       * @pre perm has index_typeegers 0 to n-1 (permuted),
        * rows and cols present valid csr storage array
        *
        * @post perm_rows and perm_cols are now the permuted rows and column arrays,
        * perm_map stores the corresponding indices to facilitate permuting the values
        */
-      void makeVecMapR(int        n,
-                       const int* rows,
-                       const int* cols,
-                       const int* perm,
-                       int*       perm_rows,
-                       int*       perm_cols,
-                       int*       perm_map)
+      void makeVecMapR(index_type        n,
+                       const index_type* rows,
+                       const index_type* cols,
+                       const index_type* perm,
+                       index_type*       perm_rows,
+                       index_type*       perm_cols,
+                       index_type*       perm_map)
       {
         perm_rows[0] = 0;
-        int count    = 0;
-        int idx;
-        int row_s;
-        int rowlen;
-        for (int i = 0; i < n; i++)
+        index_type count    = 0;
+        index_type idx;
+        index_type row_s;
+        index_type rowlen;
+        for (index_type i = 0; i < n; i++)
         {
           idx              = perm[i];
           row_s            = rows[idx];
           rowlen           = rows[idx + 1] - row_s;
           perm_rows[i + 1] = perm_rows[i] + rowlen;
-          for (int j = 0; j < rowlen; j++)
+          for (index_type j = 0; j < rowlen; j++)
           {
             perm_map[count + j]  = row_s + j;
             perm_cols[count + j] = cols[row_s + j];
@@ -292,35 +297,35 @@ namespace ReSolve
        * @param[out] perm_cols - column indices of permuted matrix
        * @param[out] perm_map - corresponding indices to facilitate permuting the values
        *
-       * @pre perm and rev_perm have corresponding integers 0 to n-1 (permuted),
+       * @pre perm and rev_perm have corresponding index_typeegers 0 to n-1 (permuted),
        * rows and cols present valid csr storage array
        *
        * @post perm_rows and perm_cols are now the permuted rows and column
        * arrays, perm_map stores the corresponding indices to facilitate
        * permuting the values
        */
-      void makeVecMapRC(int        n,
-                        const int* rows,
-                        const int* cols,
-                        const int* perm,
-                        const int* rev_perm,
-                        int*       perm_rows,
-                        int*       perm_cols,
-                        int*       perm_map)
+      void makeVecMapRC(index_type        n,
+                        const index_type* rows,
+                        const index_type* cols,
+                        const index_type* perm,
+                        const index_type* rev_perm,
+                        index_type*       perm_rows,
+                        index_type*       perm_cols,
+                        index_type*       perm_map)
       {
         perm_rows[0] = 0;
-        int count    = 0;
-        int idx;
-        int row_s;
-        int rowlen;
+        index_type count    = 0;
+        index_type idx;
+        index_type row_s;
+        index_type rowlen;
 
-        for (int i = 0; i < n; i++)
+        for (index_type i = 0; i < n; i++)
         {
           idx              = perm[i];
           row_s            = rows[idx];
           rowlen           = rows[idx + 1] - row_s;
           perm_rows[i + 1] = perm_rows[i] + rowlen;
-          for (int j = 0; j < rowlen; j++)
+          for (index_type j = 0; j < rowlen; j++)
           {
             perm_map[count + j]  = row_s + j;
             perm_cols[count + j] = rev_perm[cols[row_s + j]];

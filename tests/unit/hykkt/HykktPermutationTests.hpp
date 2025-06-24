@@ -45,22 +45,19 @@ namespace ReSolve
         int nnz_hes = 6;
         int nnz_jac = 4;
 
-        int perm[4] = {2, 0, 1};
+        int perm[3] = {2, 0, 1};
 
-        int hes_i[4] = {0, 2, 4, 6};
-        int hes_j[6] = {0, 2, 1, 2, 0, 1};
+        matrix::Csr* hes =  new matrix::Csr(n, n, nnz_hes);
+        matrix::Csr* jac =   new matrix::Csr(m, n, nnz_jac);
+        matrix::Csr* jac_tr =  new matrix::Csr(n, m, nnz_jac);
+        getTestData(hes, jac, jac_tr);
 
+        // correct results
         int hes_prc_i[4] = {0, 2, 4, 6};
         int hes_prc_j[6] = {1, 2, 0, 1, 0, 2};
 
-        int jac_i[3] = {0, 2, 4};
-        int jac_j[4] = {0, 2, 1, 2};
-
         int jac_pc_i[3] = {0, 2, 4};
         int jac_pc_j[4] = {0, 1, 0, 2};
-
-        int jac_tr_i[4] = {0, 1, 2, 4};
-        int jac_tr_j[4] = {0, 1, 0, 1};
 
         int jac_tr_pr_i[4] = {0, 2, 3, 4};
         int jac_tr_pr_j[4] = {0, 1, 0, 1};
@@ -75,11 +72,11 @@ namespace ReSolve
         bool flagc  = false;
         bool flagr  = false;
 
-        ReSolve::hykkt::Permutation pc = ReSolve::hykkt::Permutation(n, nnz_hes, nnz_jac, memspace_);
+        ReSolve::hykkt::Permutation pc = ReSolve::hykkt::Permutation(n, m, nnz_hes, nnz_jac, memspace_);
 
-        pc.addHInfo(hes_i, hes_j);
-        pc.addJInfo(jac_i, jac_j, m, n);
-        pc.addJtInfo(jac_tr_i, jac_tr_j);
+        pc.addHInfo(hes);
+        pc.addJInfo(jac);
+        pc.addJtInfo(jac_tr);
 
         pc.addPerm(perm);
         pc.invertPerm();
@@ -139,24 +136,19 @@ namespace ReSolve
         }
         printf(flagc ? "C permutation failed\n" : "C permutation passed\n");
 
-        double hes_v[6] = {0, 1, 2, 3, 4, 5};
         double hes_prc_v[6] = {4, 5, 1, 0, 3, 2};
-
-        double jac_v[4] = {0, 1, 2, 3};
         double jac_pc_v[4] = {1, 0, 3, 2};
-
-        double jac_tr_v[4] = {0, 1, 2, 3};
         double jac_tr_pr_v[4] = {2, 3, 0, 1};
 
         double result_prc_v[6] = {};
-        double result_pr_v[4]  = {};
-        double result_pc_v[4]  = {};
+        double result_pr_v[4] = {};
+        double result_pc_v[4] = {};
 
         bool flagrc_v = false;
         bool flagr_v  = false;
         bool flagc_v  = false;
 
-        pc.mapIndex(ReSolve::hykkt::PERM_HES_V, hes_v, result_prc_v);
+        pc.mapIndex(ReSolve::hykkt::PERM_HES_V, hes->getValues(memspace_), result_prc_v);
         printf("Comparing mapped H nonzero values\n");
         for (int j = 0; j < nnz_hes; j++)
         {
@@ -168,7 +160,8 @@ namespace ReSolve
         }
         printf(flagrc_v ? "Map Index failed on H\n" : "Map Index passed on H\n");
 
-        pc.mapIndex(ReSolve::hykkt::PERM_JAC_V, jac_v, result_pc_v);
+        
+        pc.mapIndex(ReSolve::hykkt::PERM_JAC_V, jac->getValues(memspace_), result_pc_v);
         printf("Comparing mapped J nonzero values\n");
         for (int j = 0; j < nnz_jac; j++)
         {
@@ -180,7 +173,7 @@ namespace ReSolve
         }
         printf(flagc_v ? "Map Index failed on J\n" : "Map Index passed on J\n");
 
-        pc.mapIndex(ReSolve::hykkt::PERM_JAC_V, jac_v, result_pc_v);
+        pc.mapIndex(ReSolve::hykkt::PERM_JAC_V, jac_tr->getValues(memspace_), result_pc_v);
         printf("Comparing mapped J nonzero values\n");
         for (int j = 0; j < nnz_jac; j++)
         {
@@ -229,7 +222,34 @@ namespace ReSolve
       }
 
     private:
+      MemoryHandler mem_;
       ReSolve::memory::MemorySpace memspace_;
+
+      void getTestData(matrix::Csr* hes,
+                        matrix::Csr* jac,
+                        matrix::Csr* jac_tr)
+      {
+        int n       = 3;
+        int m       = 2;
+        int nnz_hes = 6;
+        int nnz_jac = 4;
+
+        int hes_i[4] = {0, 2, 4, 6};
+        int hes_j[6] = {0, 2, 1, 2, 0, 1};
+        double hes_v[6] = {0, 1, 2, 3, 4, 5};
+
+        int jac_i[3] = {0, 2, 4};
+        int jac_j[4] = {0, 2, 1, 2};
+        double jac_v[4] = {0, 1, 2, 3};
+
+        int jac_tr_i[4] = {0, 1, 2, 4};
+        int jac_tr_j[4] = {0, 1, 0, 1};
+        double jac_tr_v[4] = {0, 1, 2, 3};
+
+        hes->copyDataFrom(hes_i, hes_j, hes_v, memory::HOST, memspace_);
+        jac->copyDataFrom(jac_i, jac_j, jac_v, memory::HOST, memspace_);
+        jac_tr->copyDataFrom(jac_tr_i, jac_tr_j, jac_tr_v, memory::HOST, memspace_);
+      }
     }; // class HykktPermutationTests
   } // namespace tests
 } // namespace ReSolve

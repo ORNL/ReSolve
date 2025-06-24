@@ -5,11 +5,18 @@
  * @brief Declaration of hykkt::Permutation class
  *
  */
+
+#include <resolve/Common.hpp>
+#include <resolve/matrix/Csr.hpp>
+
 #include <resolve/hykkt/permutation/PermutationHandler.hpp>
 #include <resolve/hykkt/permutation/PermutationKernelsImpl.hpp>
 
 namespace ReSolve
 {
+  using index_type = ReSolve::index_type;
+  using real_type = ReSolve::real_type;
+
   namespace hykkt
   {
     enum PermutationType
@@ -37,24 +44,25 @@ namespace ReSolve
     {
     public:
       // constructors for each workspace type
-      Permutation(int n_hes, int nnz_hes, int nnz_jac, memory::MemorySpace memspace);
+      Permutation(index_type n_hes, index_type n_jac, index_type nnz_hes, index_type nnz_jac, 
+                  memory::MemorySpace memspace);
 
       // destructor
       ~Permutation();
 
-      void addHInfo(int* hes_i, int* hes_j);
-      void addJInfo(int* jac_i, int* jac_j, int n_jac, int m_jac);
-      void addJtInfo(int* jac_tr_i, int* jac_tr_j);
-      void addPerm(int* custom_perm);
+      void addHInfo(matrix::Csr* hes);
+      void addJInfo(matrix::Csr* jac);
+      void addJtInfo(matrix::Csr* jac_tr);
+      void addPerm(index_type* custom_perm);
       void symAmd();
       void invertPerm();
-      void vecMapRC(int* perm_i, int* perm_j);
-      void vecMapC(int* perm_j);
-      void vecMapR(int* perm_i, int* perm_j);
+      void vecMapRC(index_type* perm_i, index_type* perm_j);
+      void vecMapC(index_type* perm_j);
+      void vecMapR(index_type* perm_i, index_type* perm_j);
       void mapIndex(PermutationType permutation,
-                     double*         old_val,
-                     double*         new_val);
-                     
+                     real_type*         old_val,
+                     real_type*         new_val);
+
     private:
       void deleteWorkspace();
       void allocateWorkspace();
@@ -68,31 +76,31 @@ namespace ReSolve
 
       bool perm_is_default_ = true; ///< boolean if perm set custom
 
-      int n_hes_;   ///< dimension of H
-      int nnz_hes_; ///< nonzeros of H
+      index_type n_hes_;   ///< dimension of H
+      index_type nnz_hes_; ///< nonzeros of H
 
-      int n_jac_; ///< dimensions of J
-      int m_jac_;
-      int nnz_jac_; ///< nonzeros of J
+      index_type n_jac_; ///< dimensions of J
+      index_type m_jac_;
+      index_type nnz_jac_; ///< nonzeros of J
 
-      int* perm_;            ///< permutation of 2x2 system
-      int* rev_perm_;        ///< reverse of permutation
-      int* perm_map_hes_;    ///< mapping of permuted H
-      int* perm_map_jac_;    ///< mapping of permuted J
-      int* perm_map_jac_tr_; ///< mapping of permuted Jt
+      index_type* perm_;            ///< permutation of 2x2 system
+      index_type* rev_perm_;        ///< reverse of permutation
+      index_type* perm_map_hes_;    ///< mapping of permuted H
+      index_type* perm_map_jac_;    ///< mapping of permuted J
+      index_type* perm_map_jac_tr_; ///< mapping of permuted Jt
 
-      int* hes_i_; ///< row offsets of csr storage of H
-      int* hes_j_; ///< column pointers of csr storage of H
+      index_type* hes_i_; ///< row offsets of csr storage of H
+      index_type* hes_j_; ///< column pointers of csr storage of H
 
-      int* jac_i_; ///< row offsets of csr storage of J
-      int* jac_j_; ///< column pointers of csr storage of J
+      index_type* jac_i_; ///< row offsets of csr storage of J
+      index_type* jac_j_; ///< column pointers of csr storage of J
 
-      int* jac_tr_i_; ///< row offsets of csr storage of J transpose
-      int* jac_tr_j_; ///< column pointers of csr storage of J transpose
+      index_type* jac_tr_i_; ///< row offsets of csr storage of J transpose
+      index_type* jac_tr_j_; ///< column pointers of csr storage of J transpose
 
       ///< right hand side of 2x2 system
-      double* rhs1_; ///< first block in vector
-      double* rhs2_; ///< second block in vector
+      real_type* rhs1_; ///< first block in vector
+      real_type* rhs2_; ///< second block in vector
     };
   } // namespace hykkt
 } // namespace ReSolve
