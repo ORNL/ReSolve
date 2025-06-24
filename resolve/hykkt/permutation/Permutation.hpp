@@ -37,8 +37,7 @@ namespace ReSolve
     {
     public:
       // constructors for each workspace type
-      Permutation(int n_hes, int nnz_hes, int nnz_jac,
-                  memory::MemorySpace memspace);
+      Permutation(int n_hes, int nnz_hes, int nnz_jac, memory::MemorySpace memspace);
 
       // destructor
       ~Permutation();
@@ -52,9 +51,9 @@ namespace ReSolve
       void vecMapRC(int* perm_i, int* perm_j);
       void vecMapC(int* perm_j);
       void vecMapR(int* perm_i, int* perm_j);
-      void map_index(PermutationType     permutation,
-                     double*             old_val,
-                     double*             new_val);
+      void map_index(PermutationType permutation,
+                     double*         old_val,
+                     double*         new_val);
       void display_perm() const;
 
     private:

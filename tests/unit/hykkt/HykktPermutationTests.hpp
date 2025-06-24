@@ -144,7 +144,7 @@ namespace ReSolve
       }
 
     private:
-      ReSolve::memory::MemorySpace        memspace_;
+      ReSolve::memory::MemorySpace memspace_;
     }; // class HykktPermutationTests
   } // namespace tests
 } // namespace ReSolve

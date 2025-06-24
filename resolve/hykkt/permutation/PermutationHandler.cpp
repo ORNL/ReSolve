@@ -21,7 +21,7 @@ namespace ReSolve
   {
     PermutationHandler::PermutationHandler()
     {
-      cpuImpl_       = new CpuPermutationKernels();
+      cpuImpl_ = new CpuPermutationKernels();
 #ifdef RESOLVE_USE_CUDA
       devImpl_       = new CudaPermutationKernels();
       isCudaEnabled_ = true;
@@ -37,6 +37,7 @@ namespace ReSolve
         devImpl_ = nullptr;
       }
     }
+
     PermutationHandler::~PermutationHandler()
     {
       delete cpuImpl_;

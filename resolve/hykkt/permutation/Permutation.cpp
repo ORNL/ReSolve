@@ -25,8 +25,7 @@ namespace ReSolve
      *
      * @post Member variables initialized, workspace allocated
      */
-    Permutation::Permutation(int n_hes, int nnz_hes, int nnz_jac, 
-                             memory::MemorySpace memspace)
+    Permutation::Permutation(int n_hes, int nnz_hes, int nnz_jac, memory::MemorySpace memspace)
       : n_hes_(n_hes),
         nnz_hes_(nnz_hes),
         nnz_jac_(nnz_jac),
@@ -221,9 +220,9 @@ namespace ReSolve
      *
      * @post new_val contains the permuted old_val
      */
-    void Permutation::map_index(PermutationType     permutation,
-                                double*             old_val,
-                                double*             new_val)
+    void Permutation::map_index(PermutationType permutation,
+                                double*         old_val,
+                                double*         new_val)
     {
       switch (permutation)
       {
