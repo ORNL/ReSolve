@@ -53,35 +53,35 @@ namespace ReSolve
       deallocateWorkspace();
     }
 
-    void RuizScaler::addHInfo(index_type* hes_i, index_type* hes_j, real_type* hes_v)
+    void RuizScaler::addHInfo(matrix::Csr* hes)
     {
-      hes_i_ = hes_i;
-      hes_j_ = hes_j;
-      hes_v_ = hes_v;
+      hes_i_ = hes->getRowData(memspace_);
+      hes_j_ = hes->getColData(memspace_);
+      hes_v_ = hes->getValues(memspace_);
     }
 
-    void RuizScaler::addJInfo(index_type* jac_i, index_type* jac_j, real_type* jac_v)
+    void RuizScaler::addJInfo(matrix::Csr* jac)
     {
-      jac_i_ = jac_i;
-      jac_j_ = jac_j;
-      jac_v_ = jac_v;
+      jac_i_ = jac->getRowData(memspace_);
+      jac_j_ = jac->getColData(memspace_);
+      jac_v_ = jac->getValues(memspace_);
     }
 
-    void RuizScaler::addJtInfo(index_type* jac_tr_i, index_type* jac_tr_j, real_type* jac_tr_v)
+    void RuizScaler::addJtInfo(matrix::Csr* jac_tr)
     {
-      jac_tr_i_ = jac_tr_i;
-      jac_tr_j_ = jac_tr_j;
-      jac_tr_v_ = jac_tr_v;
+      jac_tr_i_ = jac_tr->getRowData(memspace_);
+      jac_tr_j_ = jac_tr->getColData(memspace_);
+      jac_tr_v_ = jac_tr->getValues(memspace_);
     }
 
-    void RuizScaler::addRhs1(real_type* rhs1)
+    void RuizScaler::addRhsTop(vector::Vector* rhs_top)
     {
-      rhs1_ = rhs1;
+      rhs_top_ = rhs_top->getData(memspace_);
     }
 
-    void RuizScaler::addRhs2(real_type* rhs2)
+    void RuizScaler::addRhsBottom(vector::Vector* rhs_bottom)
     {
-      rhs2_ = rhs2;
+      rhs_bottom_ = rhs_bottom->getData(memspace_);
     }
 
     real_type* RuizScaler::getAggregateScalingVector() const
@@ -97,7 +97,7 @@ namespace ReSolve
       {
         kernelImpl_->adaptRowMax(n_, total_n_, hes_i_, hes_j_, hes_v_, jac_i_, jac_j_, jac_v_, jac_tr_i_, jac_tr_j_, jac_tr_v_, scaling_vector_);
 
-        kernelImpl_->adaptDiagScale(n_, total_n_, hes_i_, hes_j_, hes_v_, jac_i_, jac_j_, jac_v_, jac_tr_i_, jac_tr_j_, jac_tr_v_, rhs1_, rhs2_, aggregate_scaling_vector_, scaling_vector_);
+        kernelImpl_->adaptDiagScale(n_, total_n_, hes_i_, hes_j_, hes_v_, jac_i_, jac_j_, jac_v_, jac_tr_i_, jac_tr_j_, jac_tr_v_, rhs_top_, rhs_bottom_, aggregate_scaling_vector_, scaling_vector_);
       }
     }
 
