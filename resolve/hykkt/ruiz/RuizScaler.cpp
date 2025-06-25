@@ -117,7 +117,7 @@ namespace ReSolve
     {
       if (memspace_ == memory::HOST)
       {
-        scaling_vector_           = new real_type[n_];
+        scaling_vector_           = new real_type[total_n_];
         aggregate_scaling_vector_ = new real_type[total_n_];
       }
       else
