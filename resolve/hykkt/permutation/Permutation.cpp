@@ -34,7 +34,6 @@ namespace ReSolve
         memspace_(memspace)
     {
       allocateWorkspace();
-      permutationHandler_ = new PermutationHandler();
     }
 
     /// Permutation destructor
@@ -148,7 +147,7 @@ namespace ReSolve
      */
     void Permutation::invertPerm()
     {
-      permutationHandler_->reversePerm(n_hes_, perm_, rev_perm_, memspace_);
+      permutationHandler_.reversePerm(n_hes_, perm_, rev_perm_, memspace_);
     }
 
     /**
@@ -168,7 +167,7 @@ namespace ReSolve
      */
     void Permutation::vecMapRC(int* perm_i, int* perm_j)
     {
-      permutationHandler_->makeVecMapRC(n_hes_, hes_i_, hes_j_, perm_, rev_perm_, perm_i, perm_j, perm_map_hes_, memspace_);
+      permutationHandler_.makeVecMapRC(n_hes_, hes_i_, hes_j_, perm_, rev_perm_, perm_i, perm_j, perm_map_hes_, memspace_);
     }
 
     /**
@@ -186,7 +185,7 @@ namespace ReSolve
      */
     void Permutation::vecMapC(int* perm_j)
     {
-      permutationHandler_->makeVecMapC(n_jac_, jac_i_, jac_j_, rev_perm_, perm_j, perm_map_jac_, memspace_);
+      permutationHandler_.makeVecMapC(n_jac_, jac_i_, jac_j_, rev_perm_, perm_j, perm_map_jac_, memspace_);
     }
 
     /**
@@ -205,7 +204,7 @@ namespace ReSolve
      */
     void Permutation::vecMapR(int* perm_i, int* perm_j)
     {
-      permutationHandler_->makeVecMapR(m_jac_, jac_tr_i_, jac_tr_j_, perm_, perm_i, perm_j, perm_map_jac_tr_, memspace_);
+      permutationHandler_.makeVecMapR(m_jac_, jac_tr_i_, jac_tr_j_, perm_, perm_i, perm_j, perm_map_jac_tr_, memspace_);
     }
 
     /**
@@ -231,19 +230,19 @@ namespace ReSolve
       switch (permutation)
       {
       case PERM_V:
-        permutationHandler_->mapIdx(n_hes_, perm_, old_val, new_val, memspace_);
+        permutationHandler_.mapIdx(n_hes_, perm_, old_val, new_val, memspace_);
         break;
       case REV_PERM_V:
-        permutationHandler_->mapIdx(n_hes_, rev_perm_, old_val, new_val, memspace_);
+        permutationHandler_.mapIdx(n_hes_, rev_perm_, old_val, new_val, memspace_);
         break;
       case PERM_HES_V:
-        permutationHandler_->mapIdx(nnz_hes_, perm_map_hes_, old_val, new_val, memspace_);
+        permutationHandler_.mapIdx(nnz_hes_, perm_map_hes_, old_val, new_val, memspace_);
         break;
       case PERM_JAC_V:
-        permutationHandler_->mapIdx(nnz_jac_, perm_map_jac_, old_val, new_val, memspace_);
+        permutationHandler_.mapIdx(nnz_jac_, perm_map_jac_, old_val, new_val, memspace_);
         break;
       case PERM_JAC_TR_V:
-        permutationHandler_->mapIdx(nnz_jac_, perm_map_jac_tr_, old_val, new_val, memspace_);
+        permutationHandler_.mapIdx(nnz_jac_, perm_map_jac_tr_, old_val, new_val, memspace_);
         break;
       default:
         printf("Valid arguments are PERM_V, REV_PERM_V, PERM_H_V, PERM_J_V, PERM_JT_V\n");
