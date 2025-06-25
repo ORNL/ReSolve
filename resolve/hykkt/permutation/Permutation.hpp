@@ -62,7 +62,7 @@ namespace ReSolve
       void deleteWorkspace();
       void allocateWorkspace();
 
-      PermutationHandler permutationHandler_;
+      PermutationHandler  permutationHandler_;
       MemoryHandler       mem_;      ///< memory handler for the permutation
       memory::MemorySpace memspace_; ///< memory space for the permutation
 
