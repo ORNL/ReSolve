@@ -11,12 +11,14 @@ set(RUIZ_SRC
   RuizScaler.cpp
   RuizScalingKernelsCPU.cpp
   RuizScalingKernelsHIP.hip
+  RuizScalingKernelsCUDA.cu
 )
 set(RUIZ_HEADER_INSTALL
   RuizScaler.hpp
   RuizScalingKernels.hpp
   RuizScalingKernelsCPU.hpp
   RuizScalingKernelsHIP.hpp
+  RuizScalingKernelsCUDA.hpp
 )
 
 # Build shared library ReSolve::hykkt
