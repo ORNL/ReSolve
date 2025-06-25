@@ -7,8 +7,8 @@
  *
  */
 #include <cstdio>
-#include "amd.h"
 
+#include "amd.h"
 #include <resolve/hykkt/permutation/Permutation.hpp>
 
 namespace ReSolve
@@ -221,8 +221,8 @@ namespace ReSolve
      * @post new_val contains the permuted old_val
      */
     void Permutation::mapIndex(PermutationType permutation,
-                                double*         old_val,
-                                double*         new_val)
+                               double*         old_val,
+                               double*         new_val)
     {
       switch (permutation)
       {
@@ -286,12 +286,15 @@ namespace ReSolve
      */
     void Permutation::allocateWorkspace()
     {
-      if (memspace_ == memory::HOST) {
+      if (memspace_ == memory::HOST)
+      {
         rev_perm_        = new int[n_hes_];
         perm_map_hes_    = new int[nnz_hes_];
         perm_map_jac_    = new int[nnz_jac_];
         perm_map_jac_tr_ = new int[nnz_jac_];
-      } else {
+      }
+      else
+      {
         mem_.allocateArrayOnDevice(&rev_perm_, n_hes_);
         mem_.allocateArrayOnDevice(&perm_map_hes_, nnz_hes_);
         mem_.allocateArrayOnDevice(&perm_map_jac_, nnz_jac_);

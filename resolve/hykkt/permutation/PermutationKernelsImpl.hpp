@@ -12,7 +12,7 @@
 namespace ReSolve
 {
   using index_type = ReSolve::index_type;
-  using real_type = ReSolve::real_type;
+  using real_type  = ReSolve::real_type;
 
   namespace hykkt
   {
@@ -86,8 +86,8 @@ namespace ReSolve
       inline void swap(index_type* arr1, index_type* arr2, index_type i, index_type j)
       {
         index_type temp = arr1[i];
-        arr1[i]  = arr1[j];
-        arr1[j]  = temp;
+        arr1[i]         = arr1[j];
+        arr1[j]         = temp;
 
         temp    = arr2[i];
         arr2[i] = arr2[j];
@@ -264,8 +264,8 @@ namespace ReSolve
                        index_type*       perm_cols,
                        index_type*       perm_map)
       {
-        perm_rows[0] = 0;
-        index_type count    = 0;
+        perm_rows[0]     = 0;
+        index_type count = 0;
         index_type idx;
         index_type row_s;
         index_type rowlen;
@@ -313,8 +313,8 @@ namespace ReSolve
                         index_type*       perm_cols,
                         index_type*       perm_map)
       {
-        perm_rows[0] = 0;
-        index_type count    = 0;
+        perm_rows[0]     = 0;
+        index_type count = 0;
         index_type idx;
         index_type row_s;
         index_type rowlen;

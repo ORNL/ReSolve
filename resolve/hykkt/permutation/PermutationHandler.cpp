@@ -107,12 +107,12 @@ namespace ReSolve
       }
     }
 
-    void PermutationHandler::makeVecMapC(index_type                 n,
-                                         const index_type*          rows,
-                                         const index_type*          cols,
-                                         const index_type*          rev_perm,
-                                         index_type*                perm_cols,
-                                         index_type*                perm_map,
+    void PermutationHandler::makeVecMapC(index_type          n,
+                                         const index_type*   rows,
+                                         const index_type*   cols,
+                                         const index_type*   rev_perm,
+                                         index_type*         perm_cols,
+                                         index_type*         perm_map,
                                          memory::MemorySpace memspace)
     {
       if (memspace == memory::HOST)
@@ -125,13 +125,13 @@ namespace ReSolve
       }
     }
 
-    void PermutationHandler::makeVecMapR(index_type                 n,
-                                         const index_type*          rows,
-                                         const index_type*          cols,
-                                         const index_type*          perm,
-                                         index_type*                perm_rows,
-                                         index_type*                perm_cols,
-                                         index_type*                perm_map,
+    void PermutationHandler::makeVecMapR(index_type          n,
+                                         const index_type*   rows,
+                                         const index_type*   cols,
+                                         const index_type*   perm,
+                                         index_type*         perm_rows,
+                                         index_type*         perm_cols,
+                                         index_type*         perm_map,
                                          memory::MemorySpace memspace)
     {
       if (memspace == memory::HOST)
@@ -144,14 +144,14 @@ namespace ReSolve
       }
     }
 
-    void PermutationHandler::makeVecMapRC(index_type                 n,
-                                          const index_type*          rows,
-                                          const index_type*          cols,
-                                          const index_type*          perm,
-                                          const index_type*          rev_perm,
-                                          index_type*                perm_rows,
-                                          index_type*                perm_cols,
-                                          index_type*                perm_map,
+    void PermutationHandler::makeVecMapRC(index_type          n,
+                                          const index_type*   rows,
+                                          const index_type*   cols,
+                                          const index_type*   perm,
+                                          const index_type*   rev_perm,
+                                          index_type*         perm_rows,
+                                          index_type*         perm_cols,
+                                          index_type*         perm_map,
                                           memory::MemorySpace memspace)
     {
       if (memspace == memory::HOST)

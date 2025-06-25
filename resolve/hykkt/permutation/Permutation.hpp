@@ -7,15 +7,14 @@
  */
 
 #include <resolve/Common.hpp>
-#include <resolve/matrix/Csr.hpp>
-
 #include <resolve/hykkt/permutation/PermutationHandler.hpp>
 #include <resolve/hykkt/permutation/PermutationKernelsImpl.hpp>
+#include <resolve/matrix/Csr.hpp>
 
 namespace ReSolve
 {
   using index_type = ReSolve::index_type;
-  using real_type = ReSolve::real_type;
+  using real_type  = ReSolve::real_type;
 
   namespace hykkt
   {
@@ -44,8 +43,7 @@ namespace ReSolve
     {
     public:
       // constructors for each workspace type
-      Permutation(index_type n_hes, index_type n_jac, index_type nnz_hes, index_type nnz_jac, 
-                  memory::MemorySpace memspace);
+      Permutation(index_type n_hes, index_type n_jac, index_type nnz_hes, index_type nnz_jac, memory::MemorySpace memspace);
 
       // destructor
       ~Permutation();
@@ -60,8 +58,8 @@ namespace ReSolve
       void vecMapC(index_type* perm_j);
       void vecMapR(index_type* perm_i, index_type* perm_j);
       void mapIndex(PermutationType permutation,
-                     real_type*         old_val,
-                     real_type*         new_val);
+                    real_type*      old_val,
+                    real_type*      new_val);
 
     private:
       void deleteWorkspace();
@@ -72,7 +70,7 @@ namespace ReSolve
       //
 
       PermutationHandler* permutationHandler_;
-      MemoryHandler mem_; ///< memory handler for the permutation
+      MemoryHandler       mem_;      ///< memory handler for the permutation
       memory::MemorySpace memspace_; ///< memory space for the permutation
 
       bool perm_is_default_ = true; ///< boolean if perm set custom

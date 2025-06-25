@@ -45,18 +45,21 @@ namespace ReSolve
         int nnz_hes = 6;
         int nnz_jac = 4;
 
-        int h_perm[3] = {2, 0, 1};
-        int *perm;
-        if (memspace_ == memory::HOST) {
+        int  h_perm[3] = {2, 0, 1};
+        int* perm;
+        if (memspace_ == memory::HOST)
+        {
           perm = h_perm; // already on host
-        } else {
+        }
+        else
+        {
           mem_.allocateArrayOnDevice(&perm, n);
           mem_.copyArrayHostToDevice(perm, h_perm, n);
         }
 
-        matrix::Csr* hes =  new matrix::Csr(n, n, nnz_hes);
-        matrix::Csr* jac =   new matrix::Csr(m, n, nnz_jac);
-        matrix::Csr* jac_tr =  new matrix::Csr(n, m, nnz_jac);
+        matrix::Csr* hes    = new matrix::Csr(n, n, nnz_hes);
+        matrix::Csr* jac    = new matrix::Csr(m, n, nnz_jac);
+        matrix::Csr* jac_tr = new matrix::Csr(n, m, nnz_jac);
         getTestData(hes, jac, jac_tr);
 
         // correct results
@@ -103,49 +106,52 @@ namespace ReSolve
         printf("Comparing C permutation of J\n");
         bool flagc = verifyResults(jac_pc_j, result_pc_j, nnz_jac);
         printf(!flagc ? "C permutation failed\n" : "C permutation passed\n");
-        
-        double hes_prc_v[6] = {4, 5, 1, 0, 3, 2};
-        double jac_pc_v[4] = {1, 0, 3, 2};
+
+        double hes_prc_v[6]   = {4, 5, 1, 0, 3, 2};
+        double jac_pc_v[4]    = {1, 0, 3, 2};
         double jac_tr_pr_v[4] = {2, 3, 0, 1};
 
         // Test mapIndex on H
-        double *result_prc_v = allocateArray(nnz_hes);
+        double* result_prc_v = allocateArray(nnz_hes);
         pc.mapIndex(ReSolve::hykkt::PERM_HES_V, hes->getValues(memspace_), result_prc_v);
-        double *h_result_prc_v = bringToHost(result_prc_v, nnz_hes);
+        double* h_result_prc_v = bringToHost(result_prc_v, nnz_hes);
         printf("Comparing mapped H nonzero values\n");
         bool flagrc_v = verifyResults(hes_prc_v, h_result_prc_v, nnz_hes);
         printf(!flagrc_v ? "Map Index failed on H\n" : "Map Index passed on H\n");
 
         // Test mapIndex on J
-        double *result_pc_v = allocateArray(nnz_jac);
+        double* result_pc_v = allocateArray(nnz_jac);
         pc.mapIndex(ReSolve::hykkt::PERM_JAC_V, jac->getValues(memspace_), result_pc_v);
-        double *h_result_pc_v = bringToHost(result_pc_v, nnz_jac);
+        double* h_result_pc_v = bringToHost(result_pc_v, nnz_jac);
         printf("Comparing mapped J nonzero values\n");
         bool flagc_v = verifyResults(jac_pc_v, h_result_pc_v, nnz_jac);
         printf(!flagc_v ? "Map Index failed on J\n" : "Map Index passed on J\n");
 
         // Test mapIndex on J transpose
-        double *result_pr_v = allocateArray(nnz_jac);
+        double* result_pr_v = allocateArray(nnz_jac);
         pc.mapIndex(ReSolve::hykkt::PERM_JAC_TR_V, jac_tr->getValues(memspace_), result_pr_v);
-        double *h_result_pr_v = bringToHost(result_pr_v, nnz_jac);
+        double* h_result_pr_v = bringToHost(result_pr_v, nnz_jac);
         printf("Comparing mapped J_TR nonzero values\n");
         bool flagr_v = verifyResults(jac_tr_pr_v, result_pr_v, nnz_jac);
         printf(!flagr_v ? "Map Index failed on J_TR\n" : "Map Index passed on J_TR\n");
 
-        double h_indices[3] = {0, 1, 2};
-        double *indices = allocateArray(n);
-        if (memspace_ == memory::HOST) {
+        double  h_indices[3] = {0, 1, 2};
+        double* indices      = allocateArray(n);
+        if (memspace_ == memory::HOST)
+        {
           indices = h_indices; // already on host
-        } else {
+        }
+        else
+        {
           indices = allocateArray(n);
           mem_.copyArrayHostToDevice(indices, h_indices, n);
         }
-        
-        double *result = allocateArray(n);
+
+        double* result = allocateArray(n);
 
         pc.mapIndex(ReSolve::hykkt::PERM_V, indices, result);
 
-        double *h_result = bringToHost(result, n);
+        double* h_result = bringToHost(result, n);
 
         printf("Comparing mapped permutation\n");
         bool flag_perm = true;
@@ -157,16 +163,19 @@ namespace ReSolve
             flag_perm = false;
           }
         }
-        printf(!flag_perm ? "Map Index failed on perm\n" : "Map Index passed on perm\n");  
+        printf(!flag_perm ? "Map Index failed on perm\n" : "Map Index passed on perm\n");
 
         bool flag_rev_perm = true;
         pc.mapIndex(ReSolve::hykkt::REV_PERM_V, result, indices);
-        if (memspace_ == memory::HOST) {
+        if (memspace_ == memory::HOST)
+        {
           h_result = indices;
-        } else {
+        }
+        else
+        {
           mem_.copyArrayDeviceToHost(h_result, indices, n);
         }
-        
+
         printf("Comparing mapped reverse permutation\n");
         for (int i = 0; i < n; i++)
         {
@@ -180,33 +189,32 @@ namespace ReSolve
         printf(!flag_rev_perm ? "Map Index failed on reverse perm\n" : "Map Index passed on reverse perm\n");
 
         // Final Test Outcome
-        return (flagrc && flagr && flagc && flagrc_v && 
-                flagr_v && flagc_v && flag_perm && flag_rev_perm) ? PASS : FAIL;
+        return (flagrc && flagr && flagc && flagrc_v && flagr_v && flagc_v && flag_perm && flag_rev_perm) ? PASS : FAIL;
       }
 
     private:
-      MemoryHandler mem_;
+      MemoryHandler                mem_;
       ReSolve::memory::MemorySpace memspace_;
 
       void getTestData(matrix::Csr* hes,
-                        matrix::Csr* jac,
-                        matrix::Csr* jac_tr)
+                       matrix::Csr* jac,
+                       matrix::Csr* jac_tr)
       {
         int n       = 3;
         int m       = 2;
         int nnz_hes = 6;
         int nnz_jac = 4;
 
-        int hes_i[4] = {0, 2, 4, 6};
-        int hes_j[6] = {0, 2, 1, 2, 0, 1};
+        int    hes_i[4] = {0, 2, 4, 6};
+        int    hes_j[6] = {0, 2, 1, 2, 0, 1};
         double hes_v[6] = {0, 1, 2, 3, 4, 5};
 
-        int jac_i[3] = {0, 2, 4};
-        int jac_j[4] = {0, 2, 1, 2};
+        int    jac_i[3] = {0, 2, 4};
+        int    jac_j[4] = {0, 2, 1, 2};
         double jac_v[4] = {0, 1, 2, 3};
 
-        int jac_tr_i[4] = {0, 1, 2, 4};
-        int jac_tr_j[4] = {0, 1, 0, 1};
+        int    jac_tr_i[4] = {0, 1, 2, 4};
+        int    jac_tr_j[4] = {0, 1, 0, 1};
         double jac_tr_v[4] = {0, 1, 2, 3};
 
         hes->copyDataFrom(hes_i, hes_j, hes_v, memory::HOST, memspace_);
@@ -240,20 +248,28 @@ namespace ReSolve
         return true;
       }
 
-      double* allocateArray(int n) {
-        if (memspace_ == memory::HOST) {
+      double* allocateArray(int n)
+      {
+        if (memspace_ == memory::HOST)
+        {
           return new double[n];
-        } else {
+        }
+        else
+        {
           double* arr;
           mem_.allocateArrayOnDevice(&arr, n);
           return arr;
         }
       }
 
-      double* bringToHost(double* arr, int n) {
-        if (memspace_ == memory::HOST) {
+      double* bringToHost(double* arr, int n)
+      {
+        if (memspace_ == memory::HOST)
+        {
           return arr; // already on host
-        } else {
+        }
+        else
+        {
           double* h_arr = new double[n];
           mem_.copyArrayDeviceToHost(h_arr, arr, n);
           return h_arr;
