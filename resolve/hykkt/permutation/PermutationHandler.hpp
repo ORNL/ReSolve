@@ -22,6 +22,13 @@ namespace ReSolve
   namespace hykkt
   {
 
+    /**
+     * @class PermutationHandler
+     *
+     * @brief This class is a wrapper for the kernels used for the hykkt::Permutation
+     *        operations. 
+     *
+     */
     class PermutationHandler
     {
     public:

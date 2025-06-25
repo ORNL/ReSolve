@@ -42,10 +42,7 @@ namespace ReSolve
     class Permutation
     {
     public:
-      // constructors for each workspace type
       Permutation(index_type n_hes, index_type n_jac, index_type nnz_hes, index_type nnz_jac, memory::MemorySpace memspace);
-
-      // destructor
       ~Permutation();
 
       void addHInfo(matrix::Csr* hes);
@@ -65,15 +62,9 @@ namespace ReSolve
       void deleteWorkspace();
       void allocateWorkspace();
 
-      //
-      // member variables
-      //
-
       PermutationHandler* permutationHandler_;
       MemoryHandler       mem_;      ///< memory handler for the permutation
       memory::MemorySpace memspace_; ///< memory space for the permutation
-
-      bool perm_is_default_ = true; ///< boolean if perm set custom
 
       index_type n_hes_;   ///< dimension of H
       index_type nnz_hes_; ///< nonzeros of H

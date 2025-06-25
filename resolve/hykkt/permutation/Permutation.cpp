@@ -49,6 +49,9 @@ namespace ReSolve
      * @param[in] hes_i - Row offsets for H
      * @param[in] hes_j - Column indices for H
      *
+     * @pre Matrix data stored in the same memory space as was passed 
+     *      into the constructor
+     * 
      * @post hes_i_ set to hes_i, hes_j_ set to hes_j
      */
     void Permutation::addHInfo(matrix::Csr* hes)
@@ -62,8 +65,9 @@ namespace ReSolve
      *
      * @param[in] jac_i - Row offsets for J
      * @param[in] jac_j - Column indices for j
-     * @param[in] n_jac - number of rows of J
-     * @param[in] m_jac - number of columns of J
+     *
+     * @pre Matrix data stored in the same memory space as was passed 
+     *      into the constructor
      *
      * @post jac_i_ set to jac_i, jac_j_ set to jac_j, n_jac_ set to n_jac,
      * m_jac_ set to m_jac
@@ -80,6 +84,9 @@ namespace ReSolve
      * @param[in] jac_tr_i - Row offsets for Jt
      * @param[in] jac_tr_j - Column indices for Jt
      *
+     * @pre Matrix data stored in the same memory space as was passed 
+     *      into the constructor
+     *
      * @pre
      * @post jac_tr_i_ set to jac_tr_i, jac_tr_j_ set to jac_tr_j
      */
@@ -92,18 +99,15 @@ namespace ReSolve
     /**
      * @brief sets custom permutation of matrix
      *
-     * @param[in] custom_perm - custom permutation vector
-     *
-     * @pre Member variable n_hes_ initialized to dimension of matrix
+     * @param[in] perm - permutation vector stored in the same memory space as the matrix data
      *
      * @post perm points to custom_perm out of scope so perm_is_default
      *       set to false so that custom_perm not deleted twice in destructors,
      *       permutation vector copied onto device d_perm
      */
-    void Permutation::addPerm(int* custom_perm)
+    void Permutation::addPerm(int* perm)
     {
-      perm_is_default_ = false;
-      perm_            = custom_perm;
+      perm_ = perm;
     }
 
     /**
@@ -114,7 +118,7 @@ namespace ReSolve
      *      initialized to the dimensions of matrix H, the number
      *      of nonzeros it has, its row offsets, and column arrays
      *
-     * @post perm is the perumation vector that implements symAmd
+     * @post perm is the permutation vector that implements symAmd
      *       on the 2x2 system
      */
     void Permutation::symAmd()
