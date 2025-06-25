@@ -31,7 +31,8 @@ option(RESOLVE_USE_PROFILING "Set profiling tracers in the code" OFF)
 option(RESOLVE_USE_GPU  "Use GPU device for computations" OFF)
 mark_as_advanced(FORCE RESOLVE_USE_GPU)
 
-option(RESOLVE_USE_ASAN "Use LLVM address sanitizer" OFF)
+option(RESOLVE_USE_ASAN "Enable the address sanitizer" OFF)
+option(RESOLVE_USE_UBSAN "Enable the undefined behavior sanitizer" OFF)
 option(RESOLVE_USE_DOXYGEN "Use Doxygen to generate Re::Solve documentation" OFF)
 set(RESOLVE_CTEST_OUTPUT_DIR ${PROJECT_BINARY_DIR} CACHE PATH "Directory where CTest outputs are saved")
 
@@ -113,9 +114,18 @@ else()
   message(STATUS "Not using HIP")
 endif(RESOLVE_USE_HIP)
 
-if (RESOLVE_USE_ASAN)
+if(RESOLVE_USE_ASAN)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
+  set(CMAKE_Fortran_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
+endif()
+
+if(RESOLVE_USE_UBSAN)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=undefined -fno-omit-frame-pointer")
+  set(CMAKE_Fortran_FLAGS "${CMAKE_C_FLAGS} -fsanitize=undefined -fno-omit-frame-pointer")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fno-omit-frame-pointer")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=undefined")
 endif()
 
 # The binary dir is already a global include directory
