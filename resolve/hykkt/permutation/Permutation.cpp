@@ -49,9 +49,9 @@ namespace ReSolve
      * @param[in] hes_i - Row offsets for H
      * @param[in] hes_j - Column indices for H
      *
-     * @pre Matrix data stored in the same memory space as was passed 
+     * @pre Matrix data stored in the same memory space as was passed
      *      into the constructor
-     * 
+     *
      * @post hes_i_ set to hes_i, hes_j_ set to hes_j
      */
     void Permutation::addHInfo(matrix::Csr* hes)
@@ -66,7 +66,7 @@ namespace ReSolve
      * @param[in] jac_i - Row offsets for J
      * @param[in] jac_j - Column indices for j
      *
-     * @pre Matrix data stored in the same memory space as was passed 
+     * @pre Matrix data stored in the same memory space as was passed
      *      into the constructor
      *
      * @post jac_i_ set to jac_i, jac_j_ set to jac_j, n_jac_ set to n_jac,
@@ -84,7 +84,7 @@ namespace ReSolve
      * @param[in] jac_tr_i - Row offsets for Jt
      * @param[in] jac_tr_j - Column indices for Jt
      *
-     * @pre Matrix data stored in the same memory space as was passed 
+     * @pre Matrix data stored in the same memory space as was passed
      *      into the constructor
      *
      * @pre
