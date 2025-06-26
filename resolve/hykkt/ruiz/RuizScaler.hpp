@@ -22,52 +22,24 @@ namespace ReSolve
                  memory::MemorySpace memspace);
       ~RuizScaler();
 
-      /**
-       *  @brief Add Hessian information to the Ruiz scaling handler.
-       *  @param hes[in] - Pointer to CSR matrix representing the Hessian.
-       */
+      
       void addHInfo(matrix::Csr* hes);
-
-      /**
-       *  @brief Add Jacobian information to the Ruiz scaling handler.
-       *  @param jac[in] - Pointer to CSR matrix representing the Jacobian.
-       */
       void addJInfo(matrix::Csr* jac);
-
-      /**
-       *  @brief Add Jacobian transpose information to the Ruiz scaling handler.
-       *  @param jac_tr[in] - Pointer to CSR matrix representing the transpose of the Jacobian.
-       */
       void addJtInfo(matrix::Csr* jac_tr);
-
-      /**
-       *  @brief Add right-hand side vector to the Ruiz scaling handler.
-       *  @param rhs1[in] - Pointer to the top right-hand side vector.
-       */
       void addRhsTop(vector::Vector* rhs_top);
-
-      /**
-       *  @brief Add right-hand side vector to the Ruiz scaling handler.
-       *  @param rhs2[in] - Pointer to the bottom right-hand side vector.
-       */
       void addRhsBottom(vector::Vector* rhs_bottom);
-
-      /**
-       *  @brief Get the scaling vector.
-       *  @return Pointer to the scaling vector.
-       */
       real_type* getAggregateScalingVector() const;
-
-      /**
-       *  @brief Compute the Ruiz scaling.
-       */
       void scale();
 
     private:
+      // Number of iterations
       index_type num_iterations_;
+      // Size of hessian (block [1,1])
       index_type n_;
+      // Total matrix size
       index_type total_n_;
 
+      // Matrix data
       real_type*  hes_v_;
       index_type* hes_i_;
       index_type* hes_j_;
@@ -80,8 +52,8 @@ namespace ReSolve
       real_type*  rhs_top_;
       real_type*  rhs_bottom_;
 
-      real_type* scaling_vector_;
-      real_type* aggregate_scaling_vector_;
+      real_type* scaling_vector_; // Scaling vector for the current iteration
+      real_type* aggregate_scaling_vector_; // Cumulative scaling vector
 
       RuizScalingKernelImpl* kernelImpl_;
 

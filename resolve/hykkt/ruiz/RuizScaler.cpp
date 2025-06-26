@@ -26,6 +26,12 @@ namespace ReSolve
 {
   namespace hykkt
   {
+    /** Constructor for RuizScaler.
+     *  @param num_iterations[in] - Number of iterations for scaling.
+     *  @param n[in] - Size of block [1,1]
+     *  @param total_n[in] - Total size of the matrix.
+     *  @param memspace[in] - Memory space of incoming data and for computation.
+     */
     RuizScaler::RuizScaler(index_type          num_iterations,
                            index_type          n,
                            index_type          total_n,
@@ -53,6 +59,10 @@ namespace ReSolve
       deallocateWorkspace();
     }
 
+    /**
+     *  @brief Add Hessian information to the Ruiz scaling handler.
+     *  @param hes[in] - Pointer to CSR matrix representing the Hessian.
+     */
     void RuizScaler::addHInfo(matrix::Csr* hes)
     {
       hes_i_ = hes->getRowData(memspace_);
@@ -60,6 +70,10 @@ namespace ReSolve
       hes_v_ = hes->getValues(memspace_);
     }
 
+    /**
+     *  @brief Add Jacobian information to the Ruiz scaling handler.
+     *  @param jac[in] - Pointer to CSR matrix representing the Jacobian.
+     */
     void RuizScaler::addJInfo(matrix::Csr* jac)
     {
       jac_i_ = jac->getRowData(memspace_);
@@ -67,6 +81,10 @@ namespace ReSolve
       jac_v_ = jac->getValues(memspace_);
     }
 
+    /**
+     *  @brief Add Jacobian transpose information to the Ruiz scaling handler.
+     *  @param jac_tr[in] - Pointer to CSR matrix representing the transpose of the Jacobian.
+     */
     void RuizScaler::addJtInfo(matrix::Csr* jac_tr)
     {
       jac_tr_i_ = jac_tr->getRowData(memspace_);
@@ -74,21 +92,36 @@ namespace ReSolve
       jac_tr_v_ = jac_tr->getValues(memspace_);
     }
 
+    /**
+     *  @brief Add right-hand side vector to the Ruiz scaling handler.
+     *  @param rhs_top[in] - Pointer to the top right-hand side vector.
+     */
     void RuizScaler::addRhsTop(vector::Vector* rhs_top)
     {
       rhs_top_ = rhs_top->getData(memspace_);
     }
 
+    /**
+     *  @brief Add right-hand side vector to the Ruiz scaling handler.
+     *  @param rhs_bottom[in] - Pointer to the bottom right-hand side vector.
+     */
     void RuizScaler::addRhsBottom(vector::Vector* rhs_bottom)
     {
       rhs_bottom_ = rhs_bottom->getData(memspace_);
     }
 
+    /**
+     *  @brief Get the scaling vector.
+     *  @return Pointer to the scaling vector.
+     */
     real_type* RuizScaler::getAggregateScalingVector() const
     {
       return aggregate_scaling_vector_;
     }
 
+    /**
+     *  @brief Compute the Ruiz scaling in-place.
+     */
     void RuizScaler::scale()
     {
       resetScaling();
@@ -101,6 +134,9 @@ namespace ReSolve
       }
     }
 
+    /**
+     *  @brief Reset the scaling vector to its initial state.
+     */
     void RuizScaler::resetScaling()
     {
       if (memspace_ == memory::HOST)
@@ -113,6 +149,9 @@ namespace ReSolve
       }
     }
 
+    /**
+     *  @brief Allocate memory for the scaling vectors and set initial values.
+     */
     void RuizScaler::allocateWorkspace()
     {
       if (memspace_ == memory::HOST)
@@ -128,6 +167,9 @@ namespace ReSolve
       resetScaling();
     }
 
+    /**
+     *  @brief Deallocate memory for the scaling vectors.
+     */
     void RuizScaler::deallocateWorkspace()
     {
       if (memspace_ == memory::HOST)

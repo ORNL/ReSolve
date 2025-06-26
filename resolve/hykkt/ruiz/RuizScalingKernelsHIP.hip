@@ -81,6 +81,22 @@ namespace ReSolve {
       }
     }
 
+    /**
+     * @brief HIP implementation of adaptRowMax. See RuizScalingKernelImpl.hpp.
+     *
+     * @param[in] n_hes - Number of rows in the Hessian matrix.
+     * @param[in] n_total - Total number of rows in the system.
+     * @param[in] hes_i - Row pointers for the Hessian matrix.
+     * @param[in] hes_j - Column indices for the Hessian matrix.
+     * @param[in] hes_v - Values for the Hessian matrix.
+     * @param[in] jac_i - Row pointers for the Jacobian matrix.
+     * @param[in] jac_j - Column indices for the Jacobian matrix.
+     * @param[in] jac_v - Values for the Jacobian matrix.
+     * @param[in] jac_tr_i - Row pointers for the transposed Jacobian matrix.
+     * @param[in] jac_tr_j - Column indices for the transposed Jacobian matrix.
+     * @param[in] jac_tr_v - Values for the transposed Jacobian matrix.
+     * @param[out] scaling_vector - Scaling vector to be updated.
+     */
     void RuizScalingKernelsHIP::adaptRowMax(index_type n_hes, index_type n_total, 
                                             index_type* hes_i, index_type* hes_j, real_type* hes_v,
                                             index_type* jac_i, index_type* jac_j, real_type* jac_v,
@@ -97,6 +113,25 @@ namespace ReSolve {
                                                         scaling_vector);
     }
 
+    /**
+     * @brief HIP implementation of adaptDiagScale. See RuizScalingKernelImpl.hpp.
+     *
+     * @param[in] n_hes - Number of rows in the Hessian matrix.
+     * @param[in] n_total - Total number of rows in the system.
+     * @param[in,out] hes_i - Row pointers for the Hessian matrix.
+     * @param[in,out] hes_j - Column indices for the Hessian matrix.
+     * @param[in,out] hes_v - Values for the Hessian matrix.
+     * @param[in,out] jac_i - Row pointers for the Jacobian matrix.
+     * @param[in,out] jac_j - Column indices for the Jacobian matrix.
+     * @param[in,out] jac_v - Values for the Jacobian matrix.
+     * @param[in,out] jac_tr_i - Row pointers for the transposed Jacobian matrix.
+     * @param[in,out] jac_tr_j - Column indices for the transposed Jacobian matrix.
+     * @param[in,out] jac_tr_v - Values for the transposed Jacobian matrix.
+     * @param[in,out] rhs1 - Right-hand side vector for the top block.
+     * @param[in,out] rhs2 - Right-hand side vector for the bottom block.
+     * @param[out] aggregate_scaling_vector - Cumulative scaling vector.
+     * @param[in] scaling_vector - Scaling vector for the current iteration.
+     */
     void RuizScalingKernelsHIP::adaptDiagScale(index_type n_hes, index_type n_total, 
                                                index_type* hes_i, index_type* hes_j, real_type* hes_v,
                                                index_type* jac_i, index_type* jac_j, real_type* jac_v,
