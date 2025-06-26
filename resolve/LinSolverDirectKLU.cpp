@@ -223,10 +223,12 @@ namespace ReSolve
     if (A_->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_COLUMN)
     {
       kluStatus = klu_solve(Symbolic_, Numeric_, A_->getNumRows(), 1, x->getData(memory::HOST), &Common_);
-    } else if (A_->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW)
+    }
+    else if (A_->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW)
     {
       kluStatus = klu_tsolve(Symbolic_, Numeric_, A_->getNumRows(), 1, x->getData(memory::HOST), &Common_);
-    } else
+    }
+    else
     {
       out::error() << "Unsupported sparse format for matrix A in LinSolverDirectKLU! Only CSC and CSR are supported.\n";
       return 1;
