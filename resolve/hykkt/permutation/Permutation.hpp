@@ -73,7 +73,7 @@ namespace ReSolve
       index_type m_jac_;
       index_type nnz_jac_; ///< nonzeros of J
 
-      bool perm_is_default_;
+      bool        perm_is_default_;
       index_type* perm_;            ///< permutation of 2x2 system
       index_type* rev_perm_;        ///< reverse of permutation
       index_type* perm_map_hes_;    ///< mapping of permuted H

@@ -119,7 +119,7 @@ namespace ReSolve
         }
       }
       perm_is_default_ = false;
-      perm_ = custom_perm;
+      perm_            = custom_perm;
     }
 
     /**
