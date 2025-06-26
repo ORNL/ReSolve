@@ -9,23 +9,21 @@ namespace ReSolve
   {
     void hykkt::RuizScalingKernelsCPU::adaptRowMax(index_type n_hes, index_type n_total, index_type* hes_i, index_type* hes_j, real_type* hes_v, index_type* jac_i, index_type* jac_j, real_type* jac_v, index_type* jac_tr_i, index_type* jac_tr_j, real_type* jac_tr_v, real_type* scaling_vector)
     {
-      double max_l = 0;
-      double max_u = 0;
-      int    j;
-      double entry;
       for (index_type i = 0; i < n_hes; i++)
       {
-        for (j = hes_i[i]; j < hes_i[i + 1]; j++)
+        real_type max_l = 0;
+        real_type max_u = 0;
+        for (index_type j = hes_i[i]; j < hes_i[i + 1]; j++)
         {
-          entry = fabs(hes_v[j]);
+          real_type entry = fabs(hes_v[j]);
           if (entry > max_l)
           {
             max_l = entry;
           }
         }
-        for (j = jac_tr_i[i]; j < jac_tr_i[i + 1]; j++)
+        for (index_type j = jac_tr_i[i]; j < jac_tr_i[i + 1]; j++)
         {
-          entry = fabs(jac_tr_v[j]);
+          real_type entry = fabs(jac_tr_v[j]);
           if (entry > max_u)
           {
             max_u = entry;
@@ -42,9 +40,10 @@ namespace ReSolve
       }
       for (index_type i = n_hes; i < n_total; i++)
       {
-        for (j = jac_i[i - n_hes]; j < jac_i[i - n_hes + 1]; j++)
+        double max_l = 0;
+        for (index_type j = jac_i[i - n_hes]; j < jac_i[i - n_hes + 1]; j++)
         {
-          entry = fabs(jac_v[j]);
+          real_type entry = fabs(jac_v[j]);
           if (entry > max_l)
           {
             max_l = entry;
@@ -73,7 +72,7 @@ namespace ReSolve
       {
         for (index_type j = jac_i[i - n_hes]; j < jac_i[i - n_hes + 1]; j++)
         {
-          jac_v[j] *= scaling_vector[i] * scaling_vector[n_hes + jac_j[j]];
+          jac_v[j] *= scaling_vector[i] * scaling_vector[jac_j[j]];
         }
         rhs2[i - n_hes] *= scaling_vector[i];
         aggregate_scaling_vector[i] *= scaling_vector[i];

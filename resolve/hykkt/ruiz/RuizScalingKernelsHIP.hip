@@ -73,7 +73,7 @@ namespace ReSolve {
         }
         if (i >= n_hes && i < n_total) {
           for(index_type j = jac_i[i - n_hes]; j < jac_i[i - n_hes + 1]; j++) {
-            jac_v[j] *= scaling_vector[i] * scaling_vector[n_hes + jac_j[j]];
+            jac_v[j] *= scaling_vector[i] * scaling_vector[jac_j[j]];
           }
           rhs2[i - n_hes] *= scaling_vector[i];
           aggregate_scaling_vector[i] *= scaling_vector[i];
