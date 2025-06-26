@@ -84,7 +84,7 @@ namespace ReSolve
         pc.addJInfo(&jac);
         pc.addJtInfo(&jac_tr);
 
-        pc.addPerm(perm);
+        pc.addCustomPerm(perm);
         pc.invertPerm();
 
         // Test RC permutation

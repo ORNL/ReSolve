@@ -34,6 +34,7 @@ namespace ReSolve
         memspace_(memspace)
     {
       allocateWorkspace();
+      perm_is_default_ = true;
     }
 
     /// Permutation destructor
@@ -104,9 +105,21 @@ namespace ReSolve
      *       set to false so that custom_perm not deleted twice in destructors,
      *       permutation vector copied onto device d_perm
      */
-    void Permutation::addPerm(int* perm)
+    void Permutation::addCustomPerm(int* custom_perm)
     {
-      perm_ = perm;
+      if (perm_is_default_)
+      {
+        if (memspace_ == memory::HOST)
+        {
+          delete[] perm_;
+        }
+        else
+        {
+          mem_.deleteOnDevice(perm_);
+        }
+      }
+      perm_is_default_ = false;
+      perm_ = custom_perm;
     }
 
     /**
@@ -262,6 +275,10 @@ namespace ReSolve
     {
       if (memspace_ == memory::HOST)
       {
+        if (perm_is_default_)
+        {
+          delete[] perm_;
+        }
         delete[] rev_perm_;
         delete[] perm_map_hes_;
         delete[] perm_map_jac_;
@@ -269,6 +286,10 @@ namespace ReSolve
       }
       else
       {
+        if (perm_is_default_)
+        {
+          mem_.deleteOnDevice(perm_);
+        }
         mem_.deleteOnDevice(rev_perm_);
         mem_.deleteOnDevice(perm_map_hes_);
         mem_.deleteOnDevice(perm_map_jac_);
@@ -291,6 +312,7 @@ namespace ReSolve
     {
       if (memspace_ == memory::HOST)
       {
+        perm_            = new int[n_hes_];
         rev_perm_        = new int[n_hes_];
         perm_map_hes_    = new int[nnz_hes_];
         perm_map_jac_    = new int[nnz_jac_];
@@ -298,6 +320,7 @@ namespace ReSolve
       }
       else
       {
+        mem_.allocateArrayOnDevice(&perm_, n_hes_);
         mem_.allocateArrayOnDevice(&rev_perm_, n_hes_);
         mem_.allocateArrayOnDevice(&perm_map_hes_, nnz_hes_);
         mem_.allocateArrayOnDevice(&perm_map_jac_, nnz_jac_);
