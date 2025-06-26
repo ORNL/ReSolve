@@ -1,6 +1,6 @@
 [submodule "buildsystem/spack/spack"]
 	path = buildsystem/spack/spack
-	url = https://github.com/cameronrutherford/spack.git
+	url = https://github.com/spack/spack.git
 [submodule "doxygen-awesome-css"]
 	path = docs/doxygen-awesome-css
 	url = https://github.com/jothepro/doxygen-awesome-css.git
