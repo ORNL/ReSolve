@@ -75,5 +75,5 @@ module load mpfr/4.2.1-rocmcc-6.3.1-h5arply
 module load openblas/0.3.28-rocmcc-6.3.1-yx5h226
 # suite-sparse@=7.7.0%rocmcc@=6.3.1~cuda~graphblas~openmp+pic build_system=generic arch=linux-sles15-zen3
 module load suite-sparse/7.7.0-rocmcc-6.3.1-k5bpn4t
-# resolve@=develop%rocmcc@=6.3.1~cuda~ipo+klu+lusol+rocm amdgpu_target=gfx90a build_system=cmake build_type=Release dev_path=/lustre/orion/scratch/nkouk/stf006/Codes/ReSolve generator=make arch=linux-sles15-zen3
-## module load resolve/develop-rocmcc-6.3.1-6pmzbco
+# resolve@=develop%rocmcc@=6.3.1+asan~cuda~ipo+klu+lusol+rocm+ubsan amdgpu_target=gfx90a build_system=cmake build_type=Release dev_path=/lustre/orion/scratch/nkouk/stf006/Codes/ReSolve generator=make arch=linux-sles15-zen3
+## module load resolve/develop-rocmcc-6.3.1-uzusuxq

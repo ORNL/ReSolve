@@ -4,7 +4,7 @@
 # configuration settings.
 spack:
   specs:
-  - resolve@develop%rocmcc@6.3.1~cuda+rocm amdgpu_target=gfx90a
+  - resolve@develop%rocmcc@6.3.1+asan~cuda+rocm+ubsan amdgpu_target=gfx90a
   view: false
   concretizer:
     unify: when_possible
