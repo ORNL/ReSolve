@@ -10,18 +10,16 @@
 set(HyKKT_SRC
     Permutation.cpp
     PermutationHandler.cpp
-    cpuPermutationKernels.cpp
+    CpuPermutationKernels.cpp
     CudaPermutationKernels.cu
     HipPermutationKernels.hip
 )
 
 # C++ code that depends on CUDA SDK libraries
-set(HyKKT_CUDASDK_SRC
-)
+set(HyKKT_CUDASDK_SRC)
 
 # and on HIP
-set(HyKKT_ROCM_SRC
-)
+set(HyKKT_ROCM_SRC)
 
 # Header files to be installed
 set(HyKKT_HEADER_INSTALL

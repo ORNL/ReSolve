@@ -7,7 +7,7 @@
  */
 #include "PermutationHandler.hpp"
 
-#include "cpuPermutationKernels.hpp"
+#include "CpuPermutationKernels.hpp"
 #ifdef RESOLVE_USE_CUDA
 #include "CudaPermutationKernels.hpp"
 #endif
