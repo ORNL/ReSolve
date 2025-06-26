@@ -114,20 +114,6 @@ else()
   message(STATUS "Not using HIP")
 endif(RESOLVE_USE_HIP)
 
-if(RESOLVE_USE_ASAN)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
-  set(CMAKE_Fortran_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
-endif()
-
-if(RESOLVE_USE_UBSAN)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=undefined -fno-omit-frame-pointer")
-  set(CMAKE_Fortran_FLAGS "${CMAKE_C_FLAGS} -fsanitize=undefined -fno-omit-frame-pointer")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fno-omit-frame-pointer")
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=undefined")
-endif()
-
 # The binary dir is already a global include directory
 configure_file(
   ${CMAKE_SOURCE_DIR}/resolve/resolve_defs.hpp.in
