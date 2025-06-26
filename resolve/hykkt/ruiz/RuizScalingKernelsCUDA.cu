@@ -38,11 +38,11 @@ namespace ReSolve
           }
           if (max_l > max_u)
           {
-            scaling_vector[i] = 1.0 / sqrt(max_l);
+            scaling_vector[i] = 1.0 / std::sqrt(max_l);
           }
           else
           {
-            scaling_vector[i] = 1.0 / sqrt(max_u);
+            scaling_vector[i] = 1.0 / std::sqrt(max_u);
           }
         }
         if (i >= n_hes && i < n_total)
@@ -55,7 +55,7 @@ namespace ReSolve
               max_l = entry;
             }
           }
-          scaling_vector[i] = 1.0 / sqrt(max_l);
+          scaling_vector[i] = 1.0 / std::sqrt(max_l);
         }
       }
 

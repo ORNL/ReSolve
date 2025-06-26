@@ -22,14 +22,13 @@ namespace ReSolve
                  memory::MemorySpace memspace);
       ~RuizScaler();
 
-      
-      void addHInfo(matrix::Csr* hes);
-      void addJInfo(matrix::Csr* jac);
-      void addJtInfo(matrix::Csr* jac_tr);
-      void addRhsTop(vector::Vector* rhs_top);
-      void addRhsBottom(vector::Vector* rhs_bottom);
+      void       addHInfo(matrix::Csr* hes);
+      void       addJInfo(matrix::Csr* jac);
+      void       addJtInfo(matrix::Csr* jac_tr);
+      void       addRhsTop(vector::Vector* rhs_top);
+      void       addRhsBottom(vector::Vector* rhs_bottom);
       real_type* getAggregateScalingVector() const;
-      void scale();
+      void       scale();
 
     private:
       // Number of iterations
@@ -52,7 +51,7 @@ namespace ReSolve
       real_type*  rhs_top_;
       real_type*  rhs_bottom_;
 
-      real_type* scaling_vector_; // Scaling vector for the current iteration
+      real_type* scaling_vector_;           // Scaling vector for the current iteration
       real_type* aggregate_scaling_vector_; // Cumulative scaling vector
 
       RuizScalingKernelImpl* kernelImpl_;

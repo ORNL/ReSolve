@@ -63,6 +63,16 @@ namespace ReSolve
         ruizScaler.addRhsBottom(rhs_bottom);
         ruizScaler.scale();
         real_type* aggregate_scaling_vector = ruizScaler.getAggregateScalingVector();
+        real_type* h_aggregate_scaling_vector;
+        if (memspace_ == memory::DEVICE)
+        {
+          h_aggregate_scaling_vector = new real_type[total_n];
+          mem_.copyArrayDeviceToHost(h_aggregate_scaling_vector, aggregate_scaling_vector, total_n);
+        }
+        else
+        {
+          h_aggregate_scaling_vector = aggregate_scaling_vector;
+        }
 
         // Get data back to HOST
         if (memspace_ == memory::DEVICE)
@@ -107,14 +117,14 @@ namespace ReSolve
         if (fabs(rhs_bottom->getData(memory::HOST)[n / 2 - 1] - 0.044194173824159) > tol)
         {
           test_passed = false;
-          std::cout << "Test failed: rhs[3*n/2 - 1] = " << rhs_bottom->getData(memory::HOST)[3 * n / 2 - 1]
+          std::cout << "Test failed: rhs[3*n/2 - 1] = " << rhs_bottom->getData(memory::HOST)[n / 2 - 1]
                     << ", expected " << 0.044194173824159 << "\n";
         }
 
-        if (fabs(aggregate_scaling_vector[32] - 0.171498585142) > tol)
+        if (fabs(h_aggregate_scaling_vector[32] - 0.171498585142) > tol)
         {
           test_passed = false;
-          std::cout << "Test failed: aggregate_scaling_vector[32] = " << aggregate_scaling_vector[32]
+          std::cout << "Test failed: aggregate_scaling_vector[32] = " << h_aggregate_scaling_vector[32]
                     << ", expected " << 0.171498585142 << "\n";
         }
 
@@ -123,17 +133,18 @@ namespace ReSolve
           std::cout << "Test passed successfully.\n";
         }
 
-        delete A;
-        delete H;
-        delete A_tr;
-        delete rhs_top;
-        delete rhs_bottom;
+        // delete A;
+        // delete H;
+        // delete A_tr;
+        // delete rhs_top;
+        // delete rhs_bottom;
 
         return test_passed ? PASS : FAIL;
       }
 
     private:
       memory::MemorySpace memspace_;
+      MemoryHandler       mem_;
       MatrixHandler&      matrixHandler_;
 
       /**

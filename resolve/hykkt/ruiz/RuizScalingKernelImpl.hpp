@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cmath>
+
 #include <resolve/Common.hpp>
 
 namespace ReSolve
@@ -13,8 +15,10 @@ namespace ReSolve
       using index_type = ReSolve::index_type;
       using real_type  = ReSolve::real_type;
 
-      /** 
-       * @brief Determines the correct scaling corresponding to one iteration 
+      virtual ~RuizScalingKernelImpl() = default;
+
+      /**
+       * @brief Determines the correct scaling corresponding to one iteration
        *        of Ruiz scaling on matrix with form [hes jac^T; jac 0]
        *
        * @param[in] n_hes - Number of rows in the Hessian matrix.

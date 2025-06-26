@@ -46,7 +46,8 @@ namespace ReSolve
       {
 #ifdef RESOLVE_USE_CUDA
         kernelImpl_ = new RuizScalingKernelsCUDA();
-#else
+#endif
+#ifdef RESOLVE_USE_HIP
         kernelImpl_ = new RuizScalingKernelsHIP();
 #endif
       }
@@ -57,6 +58,7 @@ namespace ReSolve
     RuizScaler::~RuizScaler()
     {
       deallocateWorkspace();
+      delete kernelImpl_;
     }
 
     /**
