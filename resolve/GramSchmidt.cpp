@@ -449,6 +449,8 @@ namespace ReSolve
     vec_w_ = nullptr;
     delete vec_v_;
     vec_v_ = nullptr;
+    delete vec_x_;
+    vec_x_ = nullptr;
 
     setup_complete_ = false;
     return 0;
