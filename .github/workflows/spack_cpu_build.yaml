@@ -130,38 +130,35 @@ jobs:
               spack: https://binaries.spack.io/develop
           EOF
 
-      - name: Create and activate Spack environment
-        run: spack env create . resolve-spack-env
-
       - name: Configure GHCR mirror
-        run: spack -e resolve-spack-env --oci-password "${{ secrets.GITHUB_TOKEN }}" local-buildcache
+        run: spack -e . mirror set --oci-username ${{ env.USERNAME }} --oci-password "${{ secrets.GITHUB_TOKEN }}" local-buildcache
 
       - name: Trust keys
-        run: spack -e resolve-spack-env buildcache keys --install --trust
+        run: spack -e . buildcache keys --install --trust
 
       - name: Find external packages
-        run: spack -e resolve-spack-env external find --all
+        run: spack -e . external find --all
 
       - name: Spack develop ReSolve
-        run: spack -e resolve-spack-env develop --path=$(pwd) resolve@develop
+        run: spack -e . develop --path=$(pwd) resolve@develop
 
       - name: Concretize
-        run: spack -e resolve-spack-env concretize
+        run: spack -e . concretize
 
       - name: Install dependencies
-        run: spack -e resolve-spack-env install --no-check-signature --only dependencies
+        run: spack -e . install --no-check-signature --only dependencies
 
       - name: Install package
-        run: spack -e resolve-spack-env install --keep-stage --no-check-signature --no-cache --fresh
+        run: spack -e . install --keep-stage --no-check-signature --no-cache --fresh
 
       - name: Test Build
-        run: cd $(spack -e resolve-spack-env location --build-dir resolve@develop) && spack -e resolve-spack-env build-env resolve ctest -VV"
+        run: cd $(spack -e . location --build-dir resolve@develop) && spack build-env resolve ctest -VV
 
       - name: Test Installation
-        run: cd $(spack -e resolve-spack-env location --build-dir resolve@develop) && spack -e resolve-spack-env build-env resolve make test_install
+        run: cd $(spack -e . location --build-dir resolve@develop) && spack build-env resolve make test_install
 
       # Push with force to override existing binaries...
       - name: Push to binaries to buildcache
         run: |
-          spack -e resolve-spack-env buildcache push --force --base-image ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.BASE_VERSION }} --unsigned --update-index local-buildcache
+          spack -e . buildcache push --force --base-image ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.BASE_VERSION }} --unsigned --update-index local-buildcache
         if: ${{ !cancelled() }}
