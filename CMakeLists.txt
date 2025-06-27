@@ -21,6 +21,12 @@ if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
   message(FATAL_ERROR "In-source build prohibited.")
 endif()
 
+if (MSVC)
+  set(CMAKE_CXX_FLAGS "/Wall")
+else()
+  set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wconversion -Wpedantic")
+endif()
+
 option(RESOLVE_TEST_WITH_BSUB "Use `jsrun` instead of `mpirun` commands when running tests" OFF)
 option(RESOLVE_USE_KLU  "Use KLU, AMD and COLAMD libraries from SuiteSparse" OFF)
 option(RESOLVE_USE_LUSOL "Build the LUSOL library" OFF)
