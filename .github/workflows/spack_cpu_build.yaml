@@ -152,10 +152,10 @@ jobs:
         run: spack -e . install --keep-stage --no-check-signature --no-cache --fresh
 
       - name: Test Build
-        run: cd $(spack -e . location --build-dir resolve@develop) && spack build-env resolve ctest -VV
+        run: cd $(spack -e . location --build-dir resolve@develop) && spack -e ${OLDPWD} build-env resolve ctest -VV
 
       - name: Test Installation
-        run: cd $(spack -e . location --build-dir resolve@develop) && spack build-env resolve make test_install
+        run: cd $(spack -e . location --build-dir resolve@develop) && spack -e ${OLDPWD} build-env resolve make test_install
 
       # Push with force to override existing binaries...
       - name: Push to binaries to buildcache
