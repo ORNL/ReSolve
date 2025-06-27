@@ -253,7 +253,7 @@ namespace ReSolve
         vec.setToConst(3.0, memspace_);
 
         auto diag_data = std::unique_ptr<real_type[]>(new real_type[N]);
-        for (index_type i = 0; i < N; ++i)
+        for (size_t i = 0; i < static_cast<size_t>(N); ++i)
         {
           diag_data[i] = (real_type) (i + 1);
         }

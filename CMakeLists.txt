@@ -21,6 +21,12 @@ if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
   message(FATAL_ERROR "In-source build prohibited.")
 endif()
 
+if (MSVC)
+  set(CMAKE_CXX_FLAGS "/Wall")
+else()
+  set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wconversion -Wpedantic")
+endif()
+
 option(RESOLVE_TEST_WITH_BSUB "Use `jsrun` instead of `mpirun` commands when running tests" OFF)
 option(RESOLVE_USE_KLU  "Use KLU, AMD and COLAMD libraries from SuiteSparse" OFF)
 option(RESOLVE_USE_LUSOL "Build the LUSOL library" OFF)
@@ -113,20 +119,6 @@ if(RESOLVE_USE_HIP)
 else()
   message(STATUS "Not using HIP")
 endif(RESOLVE_USE_HIP)
-
-if(RESOLVE_USE_ASAN)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
-  set(CMAKE_Fortran_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
-endif()
-
-if(RESOLVE_USE_UBSAN)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=undefined -fno-omit-frame-pointer")
-  set(CMAKE_Fortran_FLAGS "${CMAKE_C_FLAGS} -fsanitize=undefined -fno-omit-frame-pointer")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fno-omit-frame-pointer")
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=undefined")
-endif()
 
 # The binary dir is already a global include directory
 configure_file(

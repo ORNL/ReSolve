@@ -138,6 +138,24 @@ if(RESOLVE_USE_HIP)
   list(APPEND ReSolve_HEADER_INSTALL ${ReSolve_ROCM_HEADER_INSTALL})
 endif()
 
+# Address sanitizer target
+if(RESOLVE_USE_ASAN)
+  add_library(resolve_asan INTERFACE)
+  target_compile_options(resolve_asan INTERFACE "-fsanitize=address")
+  target_link_libraries(resolve_asan INTERFACE "-fsanitize=address -fno-omit-frame-pointer")
+  target_link_libraries(resolve_tpl INTERFACE resolve_asan)
+  list(APPEND ReSolve_Targets_List resolve_asan)
+endif()
+
+# Undefined behavior sanitizer target
+if(RESOLVE_USE_UBSAN)
+  add_library(resolve_ubsan INTERFACE)
+  target_compile_options(resolve_ubsan INTERFACE "-fsanitize=undefined")
+  target_link_libraries(resolve_ubsan INTERFACE "-fsanitize=undefined -fno-omit-frame-pointer")
+  target_link_libraries(resolve_tpl INTERFACE resolve_ubsan)
+  list(APPEND ReSolve_Targets_List resolve_ubsan)
+endif()
+
 # Set installable targets
 install(TARGETS ${ReSolve_Targets_List} EXPORT ReSolveTargets)
 
