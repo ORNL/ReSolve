@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# ReSolve documentation build configuration file, created by
+# Re::Solve documentation build configuration file, created by
 # sphinx-quickstart on Thu Nov 2 13:13:18 2023.
 #
 # This file is execfile()d with the current directory set to its
@@ -15,8 +15,10 @@
 import sys
 import os
 import shlex
+import shutil
 
-
+# Copy Doxyfile template
+# shutil.copyfile('./doxygen/Doxyfile', './doxygen/Doxyfile.in')
 
 # Modify Doxyfile for ReadTheDocs compatibility
 with open('./doxygen/Doxyfile.in', 'r') as f:
@@ -30,9 +32,9 @@ with open('./doxygen/Doxyfile.in', 'w') as f:
 with open('./doxygen/Doxyfile.in', 'a') as f:
     f.write("\nOUTPUT_DIRECTORY=../_readthedocs/html/doxygen")
 
-        # Call doxygen
-    # from subprocess import call
-    # call(['doxygen', "./doxygen/Doxyfile.in"])
+# Call doxygen
+# from subprocess import call
+# call(['doxygen', "./doxygen/Doxyfile.in"])
 
 
 # Get current directory
@@ -64,7 +66,7 @@ templates_path = [os.path.join(conf_directory, 'sphinx/_templates')]
 # The suffix(es) of source filenames.
 source_suffix = ['.rst', '.html', '.md']
 
-project = 'ReSolve'
+project = 'Re::Solve'
 copyright = '2023, UT-Battelle, LLC, and Battelle Memorial Institute'
 author = 'Kasia Świrydowicz, Slaven Peles'
 release = '1.0.0'
@@ -120,7 +122,7 @@ else:
 
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'ReSolve'
+htmlhelp_basename = 'Re::Solve'
 
 # primal, quest, sphinx:
 # override wide tables in RTD theme
@@ -156,7 +158,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  (master_doc, 'ReSolve.tex', u'ReSolve Documentation',
+  (master_doc, 'ReSolve.tex', u'Re::Solve Documentation',
    u'ORNL', 'manual'),
 ]
 
@@ -186,7 +188,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'resolve', u'ReSolve Documentation',
+    (master_doc, 'Re::Solve', u'Re::Solve Documentation',
      [u'ORNL'], 1)
 ]
 
@@ -200,8 +202,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  (master_doc, 'ReSolve', u'ReSolve Documentation',
-   'ReSolve Team', 'ReSolve', 'ReSolve is a library of GPU-resident linear solvers.',
+  (master_doc, 'Re::Solve', u'Re::Solve Documentation',
+   'Re::Solve Team', 'Re::Solve', 'Re::Solve is a library of GPU-resident linear solvers.',
    'Miscellaneous'),
 ]
 
