@@ -31,7 +31,7 @@ jobs:
         run: |
           pushd docs
           sphinx-build . ./sphinx/_build
-          doxygen ./doxygen/Doxyfile.in
+          doxygen ./doxygen/Doxyfile
           popd
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
