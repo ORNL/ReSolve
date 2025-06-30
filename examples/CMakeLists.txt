@@ -26,7 +26,7 @@ if(RESOLVE_USE_KLU)
 
   if(RESOLVE_USE_GPU)
     # Build an example with refactorization on GPU
-    add_executable(gpuRefactor.exe gpuRefactor.cpp)
+    add_executable(gpuRefactor.exe gpuRefactor.cpp Stopwatch.cpp)
     target_link_libraries(gpuRefactor.exe PRIVATE ReSolve)
   endif(RESOLVE_USE_GPU)
 

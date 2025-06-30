@@ -20,6 +20,9 @@
 #include <sstream>
 #include <string>
 
+// Stopwatch class made for this branch
+#include "Stopwatch.hpp"
+
 #include <resolve/GramSchmidt.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
 #include <resolve/LinSolverIterativeFGMRES.hpp>
@@ -94,6 +97,9 @@ int gpuRefactor(int argc, char* argv[])
   using vector_type = ReSolve::vector::Vector;
 
   CliOptions options(argc, argv);
+  Stopwatch setup_stopwatch;
+  Stopwatch io_stopwatch;
+  Stopwatch solving_stopwatch;
 
   bool is_help = options.hasKey("-h");
   if (is_help)
@@ -154,6 +160,8 @@ int gpuRefactor(int argc, char* argv[])
     file_extension = "mtx";
   }
 
+  setup_stopwatch.start();
+
   std::cout << "Family mtx file name: " << matrix_pathname
             << ", total number of matrices: " << num_systems << "\n"
             << "Family rhs file name: " << rhs_pathname
@@ -184,9 +192,13 @@ int gpuRefactor(int argc, char* argv[])
   vector_type* vec_rhs = nullptr;
   vector_type* vec_x   = nullptr;
 
+  setup_stopwatch.stop();
+
   RESOLVE_RANGE_PUSH(__FUNCTION__);
   for (int i = 0; i < num_systems; ++i)
   {
+    io_stopwatch.start();
+
     std::cout << "System " << i << ":\n";
 
     RESOLVE_RANGE_PUSH("File input");
@@ -235,6 +247,9 @@ int gpuRefactor(int argc, char* argv[])
 
     printSystemInfo(matrix_pathname_full, A);
     std::cout << "CSR matrix loaded. Expanded NNZ: " << A->getNnz() << std::endl;
+
+    io_stopwatch.pause();
+    solving_stopwatch.start();
 
     int status = 0;
 
@@ -320,13 +335,30 @@ int gpuRefactor(int argc, char* argv[])
       }
       RESOLVE_RANGE_POP("Iterative refinement");
     }
+    
+    solving_stopwatch.pause();
 
   } // for (int i = 0; i < num_systems; ++i)
   RESOLVE_RANGE_POP(__FUNCTION__);
 
+  io_stopwatch.stop();
+  solving_stopwatch.stop();
+
+  std::cout << "\n";
+  std::cout << "========================================================================================================================\n";
+  std::cout << "Timing Report\n";
+  std::cout << "========================================================================================================================\n";
+  printf("Setup time: %.6f seconds\n", setup_stopwatch.elapsed());
+  printf("I/O time: %.6f seconds\n", io_stopwatch.elapsed());
+  printf("Solving time: %.6f seconds\n", solving_stopwatch.elapsed());
+  printf("Total time: %.6f seconds\n",
+         setup_stopwatch.elapsed() + io_stopwatch.elapsed() + solving_stopwatch.elapsed());
+
   delete A;
   delete vec_x;
   delete vec_rhs;
+
+  
 
   return 0;
 }
