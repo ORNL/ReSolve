@@ -235,9 +235,13 @@ int gluRefactor(int argc, char* argv[])
       status = KLU.solve(vec_rhs, vec_x);
       std::cout << "KLU solve status: " << status << std::endl;
 
+      // // Extract factors and configure refactorization solver
+      // matrix::Csc* L = (matrix::Csc*) KLU.getLFactor();
+      // matrix::Csc* U = (matrix::Csc*) KLU.getUFactor();
+
       // Extract factors and configure refactorization solver
-      matrix::Csc* L = (matrix::Csc*) KLU.getLFactor();
-      matrix::Csc* U = (matrix::Csc*) KLU.getUFactor();
+      matrix::Csr* L = KLU.getLFactorCsr();
+      matrix::Csr* U = KLU.getUFactorCsr();
       if (L == nullptr || U == nullptr)
       {
         std::cout << "Factor extraction from KLU failed!\n";

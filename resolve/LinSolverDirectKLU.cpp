@@ -252,6 +252,126 @@ namespace ReSolve
   }
 
   /**
+   * @brief Get the L factor of the matrix A in compressed sparse row format.
+   * 
+   * This function extracts the lower triangular factor L from the
+   * KLU solver's numeric factorization. If the factors have not been
+   * extracted yet, it allocates memory for L and U factors,
+   * extracts them from the numeric factorization,
+   * and sets the updated flag for both factors.
+   * Otherwise, it returns the already extracted L factor.
+   * This is because the input matrix is CSR and interpreted as CSC.
+   * Then the CSC U extraced from klu is actually an L factor of the original matrix,
+   * if interprted as CSR. The reverse is true for the CSC L being a U factor of the original matrix.
+   * Note that in this factorization, the scaling is in the L factor, unlike convention.
+   * 
+   * @return L factor in compressed sparse row format
+   */
+  matrix::Sparse* LinSolverDirectKLU::getLFactorCsr()
+  {
+    if (!factors_extracted_)
+    {
+      //this is not a typo, we switch L and U here
+      // because KLU does not support CSR format directly
+      // this is a workaround to extract L and U factors
+      const int nnzU = Numeric_->lnz;
+      const int nnzL = Numeric_->unz;
+
+      L_ = new matrix::Csr(A_->getNumRows(), A_->getNumColumns(), nnzL);
+      U_ = new matrix::Csr(A_->getNumRows(), A_->getNumColumns(), nnzU);
+      L_->allocateMatrixData(memory::HOST);
+      U_->allocateMatrixData(memory::HOST);
+
+      // Extract L and U factors from the numeric factorization
+      // Note: KLU does not support CSR format directly, so we use CSC format
+      // and switch between L and U and their column and row data.
+      int ok = klu_extract(Numeric_,
+                           Symbolic_,
+                           U_->getRowData(memory::HOST),
+                           U_->getColData(memory::HOST),
+                           U_->getValues(memory::HOST),
+                           L_->getRowData(memory::HOST),
+                           L_->getColData(memory::HOST),
+                           L_->getValues(memory::HOST),
+                           nullptr,
+                           nullptr,
+                           nullptr,
+                           nullptr,
+                           nullptr,
+                           nullptr,
+                           nullptr,
+                           &Common_);
+
+      L_->setUpdated(memory::HOST);
+      U_->setUpdated(memory::HOST);
+      (void) ok; // TODO: Check status in ok before setting `factors_extracted_`
+      factors_extracted_ = true;
+    }
+    return L_;
+  }
+
+  /**
+   * @brief Get the U factor of the matrix A in compressed sparse row format.
+   *
+   * This function extracts the upper triangular factor U from the
+   * KLU solver's numeric factorization. If the factors have not been
+   * extracted yet, it allocates memory for L and U factors,
+   * extracts them from the numeric factorization,
+   * and sets the updated flag for both factors.
+   * Otherwise, it returns the already extracted U factor.
+   * This is because the input matrix is CSR and interpreted as CSC.
+   * Then the CSC U extraced from klu is actually an L factor of the original matrix,
+   * if interprted as CSR. The reverse is true for the CSC L being a U factor of the original matrix.
+   * Note that in this factorization, the scaling is in the L factor, unlike convention.
+   *
+   * @return U factor in compressed sparse row format
+   */
+  matrix::Sparse* LinSolverDirectKLU::getUFactorCsr()
+  {
+    if (!factors_extracted_)
+    {
+      //this is not a typo, we switch L and U here
+      // because KLU does not support CSR format directly
+      // this is a workaround to extract L and U factors
+      const int nnzU = Numeric_->lnz;
+      const int nnzL = Numeric_->unz;
+
+
+      L_ = new matrix::Csr(A_->getNumRows(), A_->getNumColumns(), nnzL);
+      U_ = new matrix::Csr(A_->getNumRows(), A_->getNumColumns(), nnzU);
+      L_->allocateMatrixData(memory::HOST);
+      U_->allocateMatrixData(memory::HOST);
+
+      // Extract L and U factors from the numeric factorization
+      // Note: KLU does not support CSR format directly, so we use CSC format
+      // and switch between L and U and their column and row data.
+      int ok = klu_extract(Numeric_,
+                           Symbolic_,
+                           U_->getRowData(memory::HOST),
+                           U_->getColData(memory::HOST),
+                           U_->getValues(memory::HOST),
+                           L_->getRowData(memory::HOST),
+                           L_->getColData(memory::HOST),
+                           L_->getValues(memory::HOST),
+                           nullptr,
+                           nullptr,
+                           nullptr,
+                           nullptr,
+                           nullptr,
+                           nullptr,
+                           nullptr,
+                           &Common_);
+
+      L_->setUpdated(memory::HOST);
+      U_->setUpdated(memory::HOST);
+      (void) ok; // TODO: Check status in ok before setting `factors_extracted_`
+      factors_extracted_ = true;
+    }
+    return U_;
+  }
+
+
+  /**
    * @brief Get the lower triangular factor L.
    *
    * @return L factor
