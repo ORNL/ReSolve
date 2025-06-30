@@ -248,7 +248,7 @@ int gpuRefactor(int argc, char* argv[])
     printSystemInfo(matrix_pathname_full, A);
     std::cout << "CSR matrix loaded. Expanded NNZ: " << A->getNnz() << std::endl;
 
-    io_stopwatch.pause();
+    double io_time = io_stopwatch.pause();
     solving_stopwatch.start();
 
     int status = 0;
@@ -336,7 +336,11 @@ int gpuRefactor(int argc, char* argv[])
       RESOLVE_RANGE_POP("Iterative refinement");
     }
     
-    solving_stopwatch.pause();
+    double solving_time = solving_stopwatch.pause();
+
+    printf("I/O time: %.6f seconds\n", io_time);
+    printf("Solving time: %.6f seconds\n", solving_time);
+    std::cout << "\n";
 
   } // for (int i = 0; i < num_systems; ++i)
   RESOLVE_RANGE_POP(__FUNCTION__);
@@ -348,9 +352,9 @@ int gpuRefactor(int argc, char* argv[])
   std::cout << "========================================================================================================================\n";
   std::cout << "Timing Report\n";
   std::cout << "========================================================================================================================\n";
-  printf("Setup time: %.6f seconds\n", setup_stopwatch.elapsed());
-  printf("I/O time: %.6f seconds\n", io_stopwatch.elapsed());
-  printf("Solving time: %.6f seconds\n", solving_stopwatch.elapsed());
+  printf("Solver setup time: %.6f seconds\n", setup_stopwatch.elapsed());
+  printf("Total I/O time: %.6f seconds\n", io_stopwatch.elapsed());
+  printf("Total solving time: %.6f seconds\n", solving_stopwatch.elapsed());
   printf("Total time: %.6f seconds\n",
          setup_stopwatch.elapsed() + io_stopwatch.elapsed() + solving_stopwatch.elapsed());
 

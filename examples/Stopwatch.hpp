@@ -11,8 +11,7 @@ public:
     Stopwatch();
 
     void start();
-    void pause();
-    void resume();
+    double pause();
     void stop();
     double elapsed() const;
 

@@ -3,9 +3,13 @@
 
 Stopwatch::Stopwatch() : running(false), paused(false), elapsed_time(0) {}
 
+/**
+ * @brief Start or resume the stopwatch.
+ */
 void Stopwatch::start() {
-    if (paused) {
-        Stopwatch::resume();
+    if (running && paused) {
+        start_time = std::chrono::steady_clock::now();
+        paused = false;
         return;
     }
 
@@ -15,21 +19,25 @@ void Stopwatch::start() {
     start_time = std::chrono::steady_clock::now();
 }
 
-void Stopwatch::pause() {
+/**
+ * @brief Pause the stopwatch.
+ * @return Elapsed time in seconds since the stopwatch was started or resumed.
+ */
+double Stopwatch::pause() {
     if (running && !paused) {
         pause_time = std::chrono::steady_clock::now();
-        elapsed_time += pause_time - start_time;
+        auto elapsed_diff = pause_time - start_time;
+        elapsed_time += elapsed_diff;
         paused = true;
+        return std::chrono::duration<double>(elapsed_diff).count();
     }
+    return 0;
 }
 
-void Stopwatch::resume() {
-    if (running && paused) {
-        start_time = std::chrono::steady_clock::now();
-        paused = false;
-    }
-}
-
+/**
+ * @brief Stop the stopwatch.
+ * If the stopwatch is running, it will record the elapsed time until now.
+ */
 void Stopwatch::stop() {
     if (running) {
         if (!paused) {
@@ -41,6 +49,12 @@ void Stopwatch::stop() {
     }
 }
 
+/**
+ * @brief Get the elapsed time in seconds.
+ * If the stopwatch is running, it will return the total elapsed time.
+ * If stopped or paused, it will return the total elapsed time until it was stopped.
+ * @return Elapsed time in seconds.
+ */
 double Stopwatch::elapsed() const {
     if (running) {
         if (paused) {
