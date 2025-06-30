@@ -16,6 +16,8 @@
 #include <iostream>
 #include <sstream>
 
+#include "Stopwatch.hpp"
+
 #include "ExampleHelper.hpp"
 #include <resolve/GramSchmidt.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
@@ -54,6 +56,9 @@ int main(int argc, char* argv[])
   using namespace ReSolve::examples;
   using namespace ReSolve;
   CliOptions options(argc, argv);
+  Stopwatch setup_stopwatch;
+  Stopwatch io_stopwatch;
+  Stopwatch solving_stopwatch;
 
   bool is_help = options.hasKey("-h");
   if (is_help)
@@ -114,6 +119,8 @@ int main(int argc, char* argv[])
     file_extension = "mtx";
   }
 
+  setup_stopwatch.start();
+
   std::string fileId;
   std::string rhsId;
   std::string matrix_file_name_full;
@@ -131,8 +138,13 @@ int main(int argc, char* argv[])
   LinSolverDirectKLU*      KLU = new LinSolverDirectKLU;
   GramSchmidt              GS(&vector_handler, GramSchmidt::CGS2);
   LinSolverIterativeFGMRES FGMRES(&matrix_handler, &vector_handler, &GS);
+
+  setup_stopwatch.stop();
+
   for (int i = 0; i < num_systems; ++i)
   {
+    io_stopwatch.start();
+
     std::cout << "System " << i << ":\n";
 
     std::ostringstream matname;
@@ -171,6 +183,10 @@ int main(int argc, char* argv[])
     rhs_file.close();
 
     std::cout << "COO to CSR completed. Expanded NNZ: " << A->getNnz() << std::endl;
+
+    double io_time = io_stopwatch.pause();
+    solving_stopwatch.start();
+
     // Now call direct solver
     int status;
     if (i == 0)
@@ -210,7 +226,22 @@ int main(int argc, char* argv[])
         helper.printIrSummary(&FGMRES);
       }
     }
+    
+    double solving_time = solving_stopwatch.pause();
+    printf("I/O time: %.6f seconds\n", io_time);
+    printf("Solving time: %.6f seconds\n", solving_time);
+    std::cout << "\n";
   }
+
+  std::cout << "\n";
+  std::cout << "========================================================================================================================\n";
+  std::cout << "Timing Report\n";
+  std::cout << "========================================================================================================================\n";
+  printf("Solver setup time: %.6f seconds\n", setup_stopwatch.elapsed());
+  printf("Total I/O time: %.6f seconds\n", io_stopwatch.elapsed());
+  printf("Total solving time: %.6f seconds\n", solving_stopwatch.elapsed());
+  printf("Total time: %.6f seconds\n",
+         setup_stopwatch.elapsed() + io_stopwatch.elapsed() + solving_stopwatch.elapsed());
 
   // now DELETE
   delete A;

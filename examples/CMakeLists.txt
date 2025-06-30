@@ -17,7 +17,7 @@ if(RESOLVE_USE_KLU)
   target_link_libraries(kluFactor.exe PRIVATE ReSolve)
 
   # Build example with KLU factorization and KLU refactorization
-  add_executable(kluRefactor.exe kluRefactor.cpp)
+  add_executable(kluRefactor.exe kluRefactor.cpp Stopwatch.cpp)
   target_link_libraries(kluRefactor.exe PRIVATE ReSolve)
 
   # Build an example with a configurable and portable system solver
