@@ -262,22 +262,28 @@ int gpuRefactor(int argc, char* argv[])
 
       // Analysis (symbolic factorization)
       status = KLU.analyze();
-      std::cout << "KLU analysis status: " << status << std::endl;
+      // solving_stopwatch.pause();
+      // std::cout << "KLU analysis status: " << status << std::endl;
+      // solving_stopwatch.start();
     }
 
     if (i < 2)
     {
       // Numeric factorization
       status = KLU.factorize();
-      std::cout << "KLU factorization status: " << status << std::endl;
+      // solving_stopwatch.pause();
+      // std::cout << "KLU factorization status: " << status << std::endl;
+      // solving_stopwatch.start();
 
       // Triangular solve
       status = KLU.solve(vec_rhs, vec_x);
-      std::cout << "KLU solve status: " << status << std::endl;
+      // solving_stopwatch.pause();
+      // std::cout << "KLU solve status: " << status << std::endl;
+      // solving_stopwatch.start();
 
       // Print summary of results
       helper.resetSystem(A, vec_rhs, vec_x);
-      helper.printShortSummary();
+      // helper.printShortSummary();
 
       if (i == 1)
       {
@@ -286,7 +292,9 @@ int gpuRefactor(int argc, char* argv[])
         matrix::Csc* U = (matrix::Csc*) KLU.getUFactor();
         if (L == nullptr || U == nullptr)
         {
-          std::cout << "Factor extraction from KLU failed!\n";
+          // solving_stopwatch.pause();
+          // std::cout << "Factor extraction from KLU failed!\n";
+          // solving_stopwatch.start();
         }
         index_type* P = KLU.getPOrdering();
         index_type* Q = KLU.getQOrdering();
@@ -303,7 +311,9 @@ int gpuRefactor(int argc, char* argv[])
     }
     else
     {
-      std::cout << "Using refactorization\n";
+      // solving_stopwatch.pause();
+      // std::cout << "Using refactorization\n";
+      // solving_stopwatch.start();
 
       RESOLVE_RANGE_PUSH("Refactorization");
       // Refactorize on the device
@@ -315,7 +325,9 @@ int gpuRefactor(int argc, char* argv[])
 
       // Print summary of the results
       helper.resetSystem(A, vec_rhs, vec_x);
-      helper.printSummary();
+      // solving_stopwatch.pause();
+      // helper.printSummary();
+      // solving_stopwatch.start();
 
       RESOLVE_RANGE_PUSH("Iterative refinement");
       if (is_iterative_refinement)
@@ -330,7 +342,9 @@ int gpuRefactor(int argc, char* argv[])
           FGMRES.solve(vec_rhs, vec_x);
 
           // Print summary
-          helper.printIrSummary(&FGMRES);
+          // solving_stopwatch.pause();
+          // helper.printIrSummary(&FGMRES);
+          // solving_stopwatch.start();
         }
       }
       RESOLVE_RANGE_POP("Iterative refinement");
@@ -338,8 +352,8 @@ int gpuRefactor(int argc, char* argv[])
     
     double solving_time = solving_stopwatch.pause();
 
-    printf("I/O time: %.6f seconds\n", io_time);
-    printf("Solving time: %.6f seconds\n", solving_time);
+    printf("I/O time: %.12f seconds\n", io_time);
+    printf("Solving time: %.12f seconds\n", solving_time);
     std::cout << "\n";
 
   } // for (int i = 0; i < num_systems; ++i)
@@ -352,10 +366,10 @@ int gpuRefactor(int argc, char* argv[])
   std::cout << "========================================================================================================================\n";
   std::cout << "Timing Report\n";
   std::cout << "========================================================================================================================\n";
-  printf("Solver setup time: %.6f seconds\n", setup_stopwatch.elapsed());
-  printf("Total I/O time: %.6f seconds\n", io_stopwatch.elapsed());
-  printf("Total solving time: %.6f seconds\n", solving_stopwatch.elapsed());
-  printf("Total time: %.6f seconds\n",
+  printf("Solver setup time: %.12f seconds\n", setup_stopwatch.elapsed());
+  printf("Total I/O time: %.12f seconds\n", io_stopwatch.elapsed());
+  printf("Total solving time: %.12f seconds\n", solving_stopwatch.elapsed());
+  printf("Total time: %.12f seconds\n",
          setup_stopwatch.elapsed() + io_stopwatch.elapsed() + solving_stopwatch.elapsed());
 
   delete A;

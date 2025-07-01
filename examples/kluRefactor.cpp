@@ -194,23 +194,23 @@ int main(int argc, char* argv[])
       vec_rhs->setDataUpdated(ReSolve::memory::HOST);
       KLU->setup(A);
       status = KLU->analyze();
-      std::cout << "KLU analysis status: " << status << std::endl;
+      // std::cout << "KLU analysis status: " << status << std::endl;
     }
     if (i < 2)
     {
       status = KLU->factorize();
-      std::cout << "KLU factorization status: " << status << std::endl;
+      // std::cout << "KLU factorization status: " << status << std::endl;
     }
     else
     {
       status = KLU->refactorize();
-      std::cout << "KLU re-factorization status: " << status << std::endl;
+      // std::cout << "KLU re-factorization status: " << status << std::endl;
     }
     status = KLU->solve(vec_rhs, vec_x);
-    std::cout << "KLU solve status: " << status << std::endl;
+    // std::cout << "KLU solve status: " << status << std::endl;
 
     helper.resetSystem(A, vec_rhs, vec_x);
-    helper.printShortSummary();
+    // helper.printShortSummary();
     if (is_iterative_refinement)
     {
       // Setup iterative refinement
@@ -223,7 +223,7 @@ int main(int argc, char* argv[])
         FGMRES.solve(vec_rhs, vec_x);
 
         // Print summary
-        helper.printIrSummary(&FGMRES);
+        // helper.printIrSummary(&FGMRES);
       }
     }
     
