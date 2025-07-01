@@ -228,13 +228,11 @@ namespace ReSolve
       {
         M_col[count++] = L_col[j];
       }
-      for (index_type j = U_row[i] + 1; j < U_row[i + 1]; ++j)
+      for (index_type j = U_row[i] + 1; j < U_row[i + 1]; ++j) // skip the diagonal element of U, which is at U_row[i] 
       {
-        // skip the diagonal element of U, which is at U_row[i] 
         M_col[count++] = U_col[j];
       }
-    }
-    
+    } 
   }
 
   void LinSolverDirectCuSolverGLU::combineFactors(matrix::Sparse* L, matrix::Sparse* U)
