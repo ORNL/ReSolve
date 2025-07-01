@@ -8,4 +8,5 @@
 
 add_subdirectory(logger)
 add_subdirectory(params)
+add_subdirectory(stopwatch)
 add_subdirectory(version)

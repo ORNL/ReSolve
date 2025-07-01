@@ -21,7 +21,7 @@
 #include <string>
 
 // Stopwatch class made for this branch
-#include "Stopwatch.hpp"
+#include <resolve/utilities/stopwatch/Stopwatch.hpp>
 
 #include <resolve/GramSchmidt.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
@@ -192,7 +192,7 @@ int gpuRefactor(int argc, char* argv[])
   vector_type* vec_rhs = nullptr;
   vector_type* vec_x   = nullptr;
 
-  setup_stopwatch.stop();
+  setup_stopwatch.pause();
 
   RESOLVE_RANGE_PUSH(__FUNCTION__);
   for (int i = 0; i < num_systems; ++i)
@@ -248,7 +248,7 @@ int gpuRefactor(int argc, char* argv[])
     printSystemInfo(matrix_pathname_full, A);
     std::cout << "CSR matrix loaded. Expanded NNZ: " << A->getNnz() << std::endl;
 
-    double io_time = io_stopwatch.pause();
+    double io_time = io_stopwatch.lap();
     solving_stopwatch.start();
 
     int status = 0;
@@ -350,7 +350,8 @@ int gpuRefactor(int argc, char* argv[])
       RESOLVE_RANGE_POP("Iterative refinement");
     }
     
-    double solving_time = solving_stopwatch.pause();
+    solving_stopwatch.pause();
+    double solving_time = solving_stopwatch.lap();
 
     printf("I/O time: %.12f seconds\n", io_time);
     printf("Solving time: %.12f seconds\n", solving_time);
@@ -359,18 +360,18 @@ int gpuRefactor(int argc, char* argv[])
   } // for (int i = 0; i < num_systems; ++i)
   RESOLVE_RANGE_POP(__FUNCTION__);
 
-  io_stopwatch.stop();
-  solving_stopwatch.stop();
+  io_stopwatch.pause();
+  solving_stopwatch.pause();
 
   std::cout << "\n";
   std::cout << "========================================================================================================================\n";
   std::cout << "Timing Report\n";
   std::cout << "========================================================================================================================\n";
-  printf("Solver setup time: %.12f seconds\n", setup_stopwatch.elapsed());
-  printf("Total I/O time: %.12f seconds\n", io_stopwatch.elapsed());
-  printf("Total solving time: %.12f seconds\n", solving_stopwatch.elapsed());
+  printf("Solver setup time: %.12f seconds\n", setup_stopwatch.totalElapsed());
+  printf("Total I/O time: %.12f seconds\n", io_stopwatch.totalElapsed());
+  printf("Total solving time: %.12f seconds\n", solving_stopwatch.totalElapsed());
   printf("Total time: %.12f seconds\n",
-         setup_stopwatch.elapsed() + io_stopwatch.elapsed() + solving_stopwatch.elapsed());
+         setup_stopwatch.totalElapsed() + io_stopwatch.totalElapsed() + solving_stopwatch.totalElapsed());
 
   delete A;
   delete vec_x;

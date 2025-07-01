@@ -98,6 +98,7 @@ set(ReSolve_Targets_List
     resolve_vector
     resolve_random
     resolve_logger
+    resolve_stopwatch
     resolve_tpl
     resolve_workspace
 )
