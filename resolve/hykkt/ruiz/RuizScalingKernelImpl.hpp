@@ -18,8 +18,10 @@ namespace ReSolve
       virtual ~RuizScalingKernelImpl() = default;
 
       /**
-       * @brief Determines the correct scaling corresponding to one iteration
-       *        of Ruiz scaling on matrix with form [hes jac^T; jac 0]
+       * @brief Compute one iteration of Ruiz scaling
+       *
+       * @post scaling_vector[i] = 1 / sqrt(max_val) where max_val is the maximum absolute
+       *       value of the entries in the i-th row of the block matrix [hes jac^T; jac 0]
        *
        * @param[in] n_hes - Number of rows in the Hessian matrix.
        * @param[in] n_total - Total number of rows in the system.
@@ -34,29 +36,31 @@ namespace ReSolve
        * @param[in] jac_tr_v - Values for the transposed Jacobian matrix.
        * @param[out] scaling_vector - Scaling vector to be updated.
        */
-      virtual void adaptRowMax(index_type n_hes, index_type n_total, index_type* hes_i, index_type* hes_j, real_type* hes_v, index_type* jac_i, index_type* hes_tr_j, real_type* jac_v, index_type* jac_tr_i, index_type* jac_tr_j, real_type* jac_tr_v, real_type* scaling_vector) = 0;
+      virtual void adaptRowMax(index_type n_hes, index_type n_total, const index_type* hes_i, const index_type* hes_j, const real_type* hes_v, const index_type* jac_i, const index_type* jac_j, const real_type* jac_v, const index_type* jac_tr_i, const index_type* jac_tr_j, const real_type* jac_tr_v, real_type* scaling_vector) = 0;
 
       /**
-       * @brief Diagonally scales the lhs from the left and right, and
-       *        diagonally scales rhs from the left
+       * @brief Apply the scaling stored in scaling_vector to the matrices and rhs
+       *
+       * @post The left hand side is scaled from the left and right and the right hand side
+       *       is scaled from the right by the scaling_vector.
        *
        * @param[in] n_hes - Number of rows in the Hessian matrix.
        * @param[in] n_total - Total number of rows in the system.
-       * @param[in,out] hes_i - Row pointers for the Hessian matrix.
-       * @param[in,out] hes_j - Column indices for the Hessian matrix.
+       * @param[in] hes_i - Row pointers for the Hessian matrix.
+       * @param[in] hes_j - Column indices for the Hessian matrix.
        * @param[in,out] hes_v - Values for the Hessian matrix.
-       * @param[in,out] jac_i - Row pointers for the Jacobian matrix.
-       * @param[in,out] jac_j - Column indices for the Jacobian matrix.
+       * @param[in] jac_i - Row pointers for the Jacobian matrix.
+       * @param[in] jac_j - Column indices for the Jacobian matrix.
        * @param[in,out] jac_v - Values for the Jacobian matrix.
-       * @param[in,out] jac_tr_i - Row pointers for the transposed Jacobian matrix.
-       * @param[in,out] jac_tr_j - Column indices for the transposed Jacobian matrix.
+       * @param[in] jac_tr_i - Row pointers for the transposed Jacobian matrix.
+       * @param[in] jac_tr_j - Column indices for the transposed Jacobian matrix.
        * @param[in,out] jac_tr_v - Values for the transposed Jacobian matrix.
        * @param[in,out] rhs1 - Right-hand side vector for the top block.
        * @param[in,out] rhs2 - Right-hand side vector for the bottom block.
        * @param[in,out] aggregate_scaling_vector - Cumulative scaling vector.
        * @param[in] scaling_vector - Scaling vector for the current iteration.
        */
-      virtual void adaptDiagScale(index_type n_hes, index_type n_total, index_type* hes_i, index_type* hes_j, real_type* hes_v, index_type* jac_i, index_type* hes_tr_j, real_type* jac_v, index_type* jac_tr_i, index_type* jac_tr_j, real_type* jac_tr_v, real_type* rhs1, real_type* rhs2, real_type* aggregate_scaling_vector, real_type* scaling_vector) = 0;
+      virtual void adaptDiagScale(index_type n_hes, index_type n_total, const index_type* hes_i, const index_type* hes_j, real_type* hes_v, const index_type* jac_i, const index_type* jac_j, real_type* jac_v, const index_type* jac_tr_i, const index_type* jac_tr_j, real_type* jac_tr_v, real_type* rhs1, real_type* rhs2, real_type* aggregate_scaling_vector, const real_type* scaling_vector) = 0;
     };
 
   } // namespace hykkt

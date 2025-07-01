@@ -11,7 +11,23 @@ namespace ReSolve
   {
     namespace kernels
     {
-      __global__ void adaptRowMax(index_type n_hes, index_type n_total, index_type* hes_i, index_type* hes_j, real_type* hes_v, index_type* jac_i, index_type* jac_j, real_type* jac_v, index_type* jac_tr_i, index_type* jac_tr_j, real_type* jac_tr_v, real_type* scaling_vector)
+      /**
+       * @brief CUDA kernel implementation of adaptRowMax.
+       *
+       * @param[in] n_hes - Number of rows in the Hessian matrix.
+       * @param[in] n_total - Total number of rows in the system.
+       * @param[in] hes_i - Row pointers for the Hessian matrix.
+       * @param[in] hes_j - Column indices for the Hessian matrix.
+       * @param[in] hes_v - Values for the Hessian matrix.
+       * @param[in] jac_i - Row pointers for the Jacobian matrix.
+       * @param[in] jac_j - Column indices for the Jacobian matrix.
+       * @param[in] jac_v - Values for the Jacobian matrix.
+       * @param[in] jac_tr_i - Row pointers for the transposed Jacobian matrix.
+       * @param[in] jac_tr_j - Column indices for the transposed Jacobian matrix.
+       * @param[in] jac_tr_v - Values for the transposed Jacobian matrix.
+       * @param[out] scaling_vector - Scaling vector output
+       */
+      __global__ void adaptRowMax(index_type n_hes, index_type n_total, const index_type* hes_i, const index_type* hes_j, const real_type* hes_v, const index_type* jac_i, const index_type* jac_j, const real_type* jac_v, const index_type* jac_tr_i, const index_type* jac_tr_j, const real_type* jac_tr_v, real_type* scaling_vector)
       {
         real_type  max_l = 0;
         real_type  max_u = 0;
@@ -59,7 +75,26 @@ namespace ReSolve
         }
       }
 
-      __global__ void adaptDiagScale(index_type n_hes, index_type n_total, index_type* hes_i, index_type* hes_j, real_type* hes_v, index_type* jac_i, index_type* jac_j, real_type* jac_v, index_type* jac_tr_i, index_type* jac_tr_j, real_type* jac_tr_v, real_type* rhs1, real_type* rhs2, real_type* aggregate_scaling_vector, real_type* scaling_vector)
+      /**
+       * @brief CUDA kernel implementation for adaptRowMax.
+       *
+       * @param[in] n_hes - Number of rows in the Hessian matrix.
+       * @param[in] n_total - Total number of rows in the system.
+       * @param[in] hes_i - Row pointers for the Hessian matrix.
+       * @param[in] hes_j - Column indices for the Hessian matrix.
+       * @param[in,out] hes_v - Values for the Hessian matrix.
+       * @param[in] jac_i - Row pointers for the Jacobian matrix.
+       * @param[in] jac_j - Column indices for the Jacobian matrix.
+       * @param[in,out] jac_v - Values for the Jacobian matrix.
+       * @param[in] jac_tr_i - Row pointers for the transposed Jacobian matrix.
+       * @param[in] jac_tr_j - Column indices for the transposed Jacobian matrix.
+       * @param[in,out] jac_tr_v - Values for the transposed Jacobian matrix.
+       * @param[in,out] rhs1 - Right-hand side vector for the top block.
+       * @param[in,out] rhs2 - Right-hand side vector for the bottom block.
+       * @param[in,out] aggregate_scaling_vector - Cumulative scaling vector to be updated.
+       * @param[in] scaling_vector - Scaling vector computed in the current iteration.
+       */
+      __global__ void adaptDiagScale(index_type n_hes, index_type n_total, const index_type* hes_i, const index_type* hes_j, real_type* hes_v, const index_type* jac_i, const index_type* jac_j, real_type* jac_v, const index_type* jac_tr_i, const index_type* jac_tr_j, real_type* jac_tr_v, real_type* rhs1, real_type* rhs2, real_type* aggregate_scaling_vector, const real_type* scaling_vector)
       {
         index_type i = blockIdx.x * blockDim.x + threadIdx.x;
         if (i < n_hes)
@@ -88,7 +123,9 @@ namespace ReSolve
     } // namespace kernels
 
     /**
-     * @brief CUDA implementation of adaptRowMax. See RuizScalingKernelImpl.hpp.
+     * @brief CUDA kernel wrapper of adaptRowMax. See RuizScalingKernelImpl.hpp.
+     *
+     * @post scaling_vector contains the scaling factors for the current iteration. See RuizScalingKernelImpl.hpp for details.
      *
      * @param[in] n_hes - Number of rows in the Hessian matrix.
      * @param[in] n_total - Total number of rows in the system.
@@ -101,9 +138,9 @@ namespace ReSolve
      * @param[in] jac_tr_i - Row pointers for the transposed Jacobian matrix.
      * @param[in] jac_tr_j - Column indices for the transposed Jacobian matrix.
      * @param[in] jac_tr_v - Values for the transposed Jacobian matrix.
-     * @param[out] scaling_vector - Scaling vector to be updated.
+     * @param[out] scaling_vector - Scaling vector output.
      */
-    void RuizScalingKernelsCUDA::adaptRowMax(index_type n_hes, index_type n_total, index_type* hes_i, index_type* hes_j, real_type* hes_v, index_type* jac_i, index_type* jac_j, real_type* jac_v, index_type* jac_tr_i, index_type* jac_tr_j, real_type* jac_tr_v, real_type* scaling_vector)
+    void RuizScalingKernelsCUDA::adaptRowMax(index_type n_hes, index_type n_total, const index_type* hes_i, const index_type* hes_j, const real_type* hes_v, const index_type* jac_i, const index_type* jac_j, const real_type* jac_v, const index_type* jac_tr_i, const index_type* jac_tr_j, const real_type* jac_tr_v, real_type* scaling_vector)
     {
       int num_blocks;
       int block_size = 256;
@@ -112,25 +149,28 @@ namespace ReSolve
     }
 
     /**
-     * @brief CUDA implementation of adaptDiagScale. See RuizScalingKernelImpl.hpp.
-     *
+     * @brief CUDA kernel implementation for adaptRowMax. See RuizScalingKernelImpl.hpp.
+     * 
+     * @pre adaptRowMax has been called to compute the scaling_vector.
+     * @post The system is scaled. See RuizScalingKernelImpl.hpp for details.
+     * 
      * @param[in] n_hes - Number of rows in the Hessian matrix.
      * @param[in] n_total - Total number of rows in the system.
-     * @param[in,out] hes_i - Row pointers for the Hessian matrix.
-     * @param[in,out] hes_j - Column indices for the Hessian matrix.
-     * @param[in,out] hes_v - Values for the Hessian matrix.
-     * @param[in,out] jac_i - Row pointers for the Jacobian matrix.
-     * @param[in,out] jac_j - Column indices for the Jacobian matrix.
-     * @param[in,out] jac_v - Values for the Jacobian matrix.
-     * @param[in,out] jac_tr_i - Row pointers for the transposed Jacobian matrix.
-     * @param[in,out] jac_tr_j - Column indices for the transposed Jacobian matrix.
-     * @param[in,out] jac_tr_v - Values for the transposed Jacobian matrix.
+     * @param[in] hes_i - Row pointers for the Hessian matrix.
+     * @param[in] hes_j - Column indices for the Hessian matrix.
+     * @param[in,out] hes_v - Values for the Hessian matrix to be scaled.
+     * @param[in] jac_i - Row pointers for the Jacobian matrix.
+     * @param[in] jac_j - Column indices for the Jacobian matrix.
+     * @param[in,out] jac_v - Values for the Jacobian matrix to be scaled.
+     * @param[in] jac_tr_i - Row pointers for the transposed Jacobian matrix.
+     * @param[in] jac_tr_j - Column indices for the transposed Jacobian matrix.
+     * @param[in,out] jac_tr_v - Values for the transposed Jacobian matrix to be scaled.
      * @param[in,out] rhs1 - Right-hand side vector for the top block.
      * @param[in,out] rhs2 - Right-hand side vector for the bottom block.
-     * @param[out] aggregate_scaling_vector - Cumulative scaling vector.
-     * @param[in] scaling_vector - Scaling vector for the current iteration.
+     * @param[in,out] aggregate_scaling_vector - Cumulative scaling vector to be updated.
+     * @param[in] scaling_vector - Scaling vector computed in the current iteration.
      */
-    void RuizScalingKernelsCUDA::adaptDiagScale(index_type n_hes, index_type n_total, index_type* hes_i, index_type* hes_j, real_type* hes_v, index_type* jac_i, index_type* jac_j, real_type* jac_v, index_type* jac_tr_i, index_type* jac_tr_j, real_type* jac_tr_v, real_type* rhs1, real_type* rhs2, real_type* aggregate_scaling_vector, real_type* scaling_vector)
+    void RuizScalingKernelsCUDA::adaptDiagScale(index_type n_hes, index_type n_total, const index_type* hes_i, const index_type* hes_j, real_type* hes_v, const index_type* jac_i, const index_type* jac_j, real_type* jac_v, const index_type* jac_tr_i, const index_type* jac_tr_j, real_type* jac_tr_v, real_type* rhs1, real_type* rhs2, real_type* aggregate_scaling_vector, const real_type* scaling_vector)
     {
       int block_size = 256;
       int num_blocks = (n_total + block_size - 1) / block_size;
