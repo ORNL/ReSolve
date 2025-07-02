@@ -17,14 +17,21 @@ namespace ReSolve {
     paused = false;
   }
 
+  /**
+   * @brief Start a new lap for the stopwatch without pausing.
+   */
+  void Stopwatch::startLap() {
+    lap_start_time = std::chrono::steady_clock::now();
+  }
+
   /** 
    * @brief Return time between last call to start() and this call.
    *
    * @return Elapsed time in seconds since the stopwatch was started or resumed.
    */
-  double Stopwatch::lap() const {
+  double Stopwatch::lapElapsed() const {
     auto current_time = std::chrono::steady_clock::now();
-    auto lap_duration = current_time - start_time;
+    auto lap_duration = current_time - lap_start_time;
     return std::chrono::duration<double>(lap_duration).count();
   }
 

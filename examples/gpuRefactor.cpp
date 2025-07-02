@@ -160,6 +160,8 @@ int gpuRefactor(int argc, char* argv[])
     file_extension = "mtx";
   }
 
+  bool print_timing_results = options.hasKey("-t");
+
   setup_stopwatch.start();
 
   std::cout << "Family mtx file name: " << matrix_pathname
@@ -198,6 +200,7 @@ int gpuRefactor(int argc, char* argv[])
   for (int i = 0; i < num_systems; ++i)
   {
     io_stopwatch.start();
+    io_stopwatch.startLap();
 
     std::cout << "System " << i << ":\n";
 
@@ -248,8 +251,11 @@ int gpuRefactor(int argc, char* argv[])
     printSystemInfo(matrix_pathname_full, A);
     std::cout << "CSR matrix loaded. Expanded NNZ: " << A->getNnz() << std::endl;
 
-    double io_time = io_stopwatch.lap();
+    io_stopwatch.pause();
+    double io_time = io_stopwatch.lapElapsed();
+    
     solving_stopwatch.start();
+    solving_stopwatch.startLap();
 
     int status = 0;
 
@@ -262,28 +268,31 @@ int gpuRefactor(int argc, char* argv[])
 
       // Analysis (symbolic factorization)
       status = KLU.analyze();
-      // solving_stopwatch.pause();
-      // std::cout << "KLU analysis status: " << status << std::endl;
-      // solving_stopwatch.start();
+      solving_stopwatch.pause();
+      std::cout << "KLU analysis status: " << status << std::endl;
+      solving_stopwatch.start();
     }
 
     if (i < 2)
     {
       // Numeric factorization
       status = KLU.factorize();
-      // solving_stopwatch.pause();
-      // std::cout << "KLU factorization status: " << status << std::endl;
-      // solving_stopwatch.start();
+      solving_stopwatch.pause();
+      std::cout << "KLU factorization status: " << status << std::endl;
+      solving_stopwatch.start();
 
       // Triangular solve
       status = KLU.solve(vec_rhs, vec_x);
-      // solving_stopwatch.pause();
-      // std::cout << "KLU solve status: " << status << std::endl;
-      // solving_stopwatch.start();
+      solving_stopwatch.pause();
+      std::cout << "KLU solve status: " << status << std::endl;
+      solving_stopwatch.start();
 
       // Print summary of results
       helper.resetSystem(A, vec_rhs, vec_x);
-      // helper.printShortSummary();
+
+      solving_stopwatch.pause();
+      helper.printShortSummary();
+      solving_stopwatch.start();
 
       if (i == 1)
       {
@@ -292,9 +301,9 @@ int gpuRefactor(int argc, char* argv[])
         matrix::Csc* U = (matrix::Csc*) KLU.getUFactor();
         if (L == nullptr || U == nullptr)
         {
-          // solving_stopwatch.pause();
-          // std::cout << "Factor extraction from KLU failed!\n";
-          // solving_stopwatch.start();
+          solving_stopwatch.pause();
+          std::cout << "Factor extraction from KLU failed!\n";
+          solving_stopwatch.start();
         }
         index_type* P = KLU.getPOrdering();
         index_type* Q = KLU.getQOrdering();
@@ -311,9 +320,9 @@ int gpuRefactor(int argc, char* argv[])
     }
     else
     {
-      // solving_stopwatch.pause();
-      // std::cout << "Using refactorization\n";
-      // solving_stopwatch.start();
+      solving_stopwatch.pause();
+      std::cout << "Using refactorization\n";
+      solving_stopwatch.start();
 
       RESOLVE_RANGE_PUSH("Refactorization");
       // Refactorize on the device
@@ -325,9 +334,9 @@ int gpuRefactor(int argc, char* argv[])
 
       // Print summary of the results
       helper.resetSystem(A, vec_rhs, vec_x);
-      // solving_stopwatch.pause();
-      // helper.printSummary();
-      // solving_stopwatch.start();
+      solving_stopwatch.pause();
+      helper.printSummary();
+      solving_stopwatch.start();
 
       RESOLVE_RANGE_PUSH("Iterative refinement");
       if (is_iterative_refinement)
@@ -342,42 +351,45 @@ int gpuRefactor(int argc, char* argv[])
           FGMRES.solve(vec_rhs, vec_x);
 
           // Print summary
-          // solving_stopwatch.pause();
-          // helper.printIrSummary(&FGMRES);
-          // solving_stopwatch.start();
+          solving_stopwatch.pause();
+          helper.printIrSummary(&FGMRES);
+          solving_stopwatch.start();
         }
       }
       RESOLVE_RANGE_POP("Iterative refinement");
     }
     
     solving_stopwatch.pause();
-    double solving_time = solving_stopwatch.lap();
+    double solving_time = solving_stopwatch.lapElapsed();
 
-    printf("I/O time: %.12f seconds\n", io_time);
-    printf("Solving time: %.12f seconds\n", solving_time);
-    std::cout << "\n";
-
+    if (print_timing_results)
+    {
+      printf("I/O time: %.12f seconds\n", io_time);
+      printf("Solving time: %.12f seconds\n", solving_time);
+      std::cout << "\n";
+    }
   } // for (int i = 0; i < num_systems; ++i)
   RESOLVE_RANGE_POP(__FUNCTION__);
 
   io_stopwatch.pause();
   solving_stopwatch.pause();
 
-  std::cout << "\n";
-  std::cout << "========================================================================================================================\n";
-  std::cout << "Timing Report\n";
-  std::cout << "========================================================================================================================\n";
-  printf("Solver setup time: %.12f seconds\n", setup_stopwatch.totalElapsed());
-  printf("Total I/O time: %.12f seconds\n", io_stopwatch.totalElapsed());
-  printf("Total solving time: %.12f seconds\n", solving_stopwatch.totalElapsed());
-  printf("Total time: %.12f seconds\n",
-         setup_stopwatch.totalElapsed() + io_stopwatch.totalElapsed() + solving_stopwatch.totalElapsed());
-
+  if (print_timing_results)
+  {
+    std::cout << "\n";
+    std::cout << "========================================================================================================================\n";
+    std::cout << "Timing Report\n";
+    std::cout << "========================================================================================================================\n";
+    printf("Solver setup time: %.12f seconds\n", setup_stopwatch.totalElapsed());
+    printf("Total I/O time: %.12f seconds\n", io_stopwatch.totalElapsed());
+    printf("Total solving time: %.12f seconds\n", solving_stopwatch.totalElapsed());
+    printf("Total time: %.12f seconds\n",
+          setup_stopwatch.totalElapsed() + io_stopwatch.totalElapsed() + solving_stopwatch.totalElapsed());
+  }
+  
   delete A;
   delete vec_x;
   delete vec_rhs;
-
-  
 
   return 0;
 }

@@ -13,12 +13,14 @@ namespace ReSolve
 
     void start();
     void pause();
-    double lap() const;
+    void startLap();
+    double lapElapsed() const;
     double totalElapsed() const;
 
   private:
     bool paused;
     std::chrono::steady_clock::time_point start_time;
+    std::chrono::steady_clock::time_point lap_start_time;
     std::chrono::duration<double> elapsed_time;
   };
 }

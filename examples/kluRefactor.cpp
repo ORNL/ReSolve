@@ -119,6 +119,8 @@ int main(int argc, char* argv[])
     file_extension = "mtx";
   }
 
+  bool print_timing_results = options.hasKey("-t");
+
   setup_stopwatch.start();
 
   std::string fileId;
@@ -144,6 +146,7 @@ int main(int argc, char* argv[])
   for (int i = 0; i < num_systems; ++i)
   {
     io_stopwatch.start();
+    io_stopwatch.startLap();
 
     std::cout << "System " << i << ":\n";
 
@@ -184,8 +187,11 @@ int main(int argc, char* argv[])
 
     std::cout << "COO to CSR completed. Expanded NNZ: " << A->getNnz() << std::endl;
 
-    double io_time = io_stopwatch.lap();
+    io_stopwatch.pause();
+    double io_time = io_stopwatch.lapElapsed();
+    
     solving_stopwatch.start();
+    solving_stopwatch.startLap();
 
     // Now call direct solver
     int status;
@@ -194,23 +200,39 @@ int main(int argc, char* argv[])
       vec_rhs->setDataUpdated(ReSolve::memory::HOST);
       KLU->setup(A);
       status = KLU->analyze();
-      // std::cout << "KLU analysis status: " << status << std::endl;
+
+      solving_stopwatch.pause();
+      std::cout << "KLU analysis status: " << status << std::endl;
+      solving_stopwatch.start();
     }
     if (i < 2)
     {
       status = KLU->factorize();
-      // std::cout << "KLU factorization status: " << status << std::endl;
+
+      solving_stopwatch.pause();
+      std::cout << "KLU factorization status: " << status << std::endl;
+      solving_stopwatch.start();
     }
     else
     {
       status = KLU->refactorize();
-      // std::cout << "KLU re-factorization status: " << status << std::endl;
+
+      solving_stopwatch.pause();
+      std::cout << "KLU re-factorization status: " << status << std::endl;
+      solving_stopwatch.start();
     }
     status = KLU->solve(vec_rhs, vec_x);
-    // std::cout << "KLU solve status: " << status << std::endl;
+
+    solving_stopwatch.pause();
+    std::cout << "KLU solve status: " << status << std::endl;
+    solving_stopwatch.start();
 
     helper.resetSystem(A, vec_rhs, vec_x);
-    // helper.printShortSummary();
+    
+    solving_stopwatch.pause();
+    helper.printShortSummary();
+    solving_stopwatch.start();
+
     if (is_iterative_refinement)
     {
       // Setup iterative refinement
@@ -223,28 +245,36 @@ int main(int argc, char* argv[])
         FGMRES.solve(vec_rhs, vec_x);
 
         // Print summary
-        // helper.printIrSummary(&FGMRES);
+        solving_stopwatch.pause();
+        helper.printIrSummary(&FGMRES);
+        solving_stopwatch.start();
       }
     }
     
     solving_stopwatch.pause();
-    double solving_time = solving_stopwatch.lap();
+    double solving_time = solving_stopwatch.lapElapsed();
 
-    printf("I/O time: %.12f seconds\n", io_time);
-    printf("Solving time: %.12f seconds\n", solving_time);
-    std::cout << "\n";
+    if (print_timing_results)
+    {
+      printf("I/O time: %.12f seconds\n", io_time);
+      printf("Solving time: %.12f seconds\n", solving_time);
+      std::cout << "\n";
+    }
   }
 
-  std::cout << "\n";
-  std::cout << "========================================================================================================================\n";
-  std::cout << "Timing Report\n";
-  std::cout << "========================================================================================================================\n";
-  printf("Solver setup time: %.12f seconds\n", setup_stopwatch.totalElapsed());
-  printf("Total I/O time: %.12f seconds\n", io_stopwatch.totalElapsed());
-  printf("Total solving time: %.12f seconds\n", solving_stopwatch.totalElapsed());
-  printf("Total time: %.12f seconds\n",
-         setup_stopwatch.totalElapsed() + io_stopwatch.totalElapsed() + solving_stopwatch.totalElapsed());
-
+  if (print_timing_results)
+  {
+    std::cout << "\n";
+    std::cout << "========================================================================================================================\n";
+    std::cout << "Timing Report\n";
+    std::cout << "========================================================================================================================\n";
+    printf("Solver setup time: %.12f seconds\n", setup_stopwatch.totalElapsed());
+    printf("Total I/O time: %.12f seconds\n", io_stopwatch.totalElapsed());
+    printf("Total solving time: %.12f seconds\n", solving_stopwatch.totalElapsed());
+    printf("Total time: %.12f seconds\n",
+          setup_stopwatch.totalElapsed() + io_stopwatch.totalElapsed() + solving_stopwatch.totalElapsed());
+  }
+  
   // now DELETE
   delete A;
   delete KLU;
