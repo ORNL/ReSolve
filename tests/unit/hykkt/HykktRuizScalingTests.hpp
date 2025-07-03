@@ -41,10 +41,10 @@ namespace ReSolve
       TestOutcome ruizTest()
       {
         index_type      n = 1024;
-        matrix::Csr*    A;
-        matrix::Csr*    H;
-        vector::Vector* rhs_top;
-        vector::Vector* rhs_bottom;
+        matrix::Csr*    A = new matrix::Csr(n, n, 2 * n - 1);
+        matrix::Csr*    H = new matrix::Csr(n, n, n);
+        vector::Vector* rhs_top = new vector::Vector(n);
+        vector::Vector* rhs_bottom = new vector::Vector(n);
         generateMatrixData(&A, &H, &rhs_top, &rhs_bottom, n);
 
         // Transpose A and store in A_tr
@@ -55,25 +55,11 @@ namespace ReSolve
         // Perform scaling
         index_type                 num_iterations = 2;
         index_type                 total_n        = 2 * n;
-        ReSolve::hykkt::RuizScaling RuizScaling(num_iterations, n, total_n, memspace_);
-        RuizScaling.addHInfo(H);
-        RuizScaling.addJInfo(A);
-        RuizScaling.addJtInfo(A_tr);
-        RuizScaling.addRhsTop(rhs_top);
-        RuizScaling.addRhsBottom(rhs_bottom);
-        RuizScaling.scale();
-        real_type* aggregate_scaling_vector = RuizScaling.getAggregateScalingVector();
-        real_type* h_aggregate_scaling_vector;
-        if (memspace_ == memory::DEVICE)
-        {
-          h_aggregate_scaling_vector = new real_type[total_n];
-          mem_.copyArrayDeviceToHost(h_aggregate_scaling_vector, aggregate_scaling_vector, total_n);
-        }
-        else
-        {
-          h_aggregate_scaling_vector = aggregate_scaling_vector;
-        }
-
+        ReSolve::hykkt::RuizScaling RuizScaling(n, total_n, memspace_);
+        RuizScaling.addMatrixData(H, A, A_tr);
+        RuizScaling.addRhsData(rhs_top, rhs_bottom);
+        RuizScaling.scale(num_iterations);
+        vector::Vector* aggregate_scaling_vector = RuizScaling.getAggregateScalingVector();
         // Get data back to HOST
         if (memspace_ == memory::DEVICE)
         {
@@ -82,6 +68,7 @@ namespace ReSolve
           A_tr->syncData(memory::HOST);
           rhs_top->syncData(memory::HOST);
           rhs_bottom->syncData(memory::HOST);
+          aggregate_scaling_vector->syncData(memory::HOST);
         }
 
         bool         test_passed = true;
@@ -121,10 +108,10 @@ namespace ReSolve
                     << ", expected " << 0.044194173824159 << "\n";
         }
 
-        if (fabs(h_aggregate_scaling_vector[32] - 0.171498585142) > tol)
+        if (fabs(aggregate_scaling_vector->getData(memory::HOST)[32] - 0.171498585142) > tol)
         {
           test_passed = false;
-          std::cout << "Test failed: aggregate_scaling_vector[32] = " << h_aggregate_scaling_vector[32]
+          std::cout << "Test failed: aggregate_scaling_vector[32] = " << aggregate_scaling_vector->getData(memory::HOST)[32]
                     << ", expected " << 0.171498585142 << "\n";
         }
 
@@ -133,11 +120,11 @@ namespace ReSolve
           std::cout << "Test passed successfully.\n";
         }
 
-        // delete A;
-        // delete H;
-        // delete A_tr;
-        // delete rhs_top;
-        // delete rhs_bottom;
+        delete A;
+        delete H;
+        delete A_tr;
+        delete rhs_top;
+        delete rhs_bottom;
 
         return test_passed ? PASS : FAIL;
       }
@@ -178,7 +165,6 @@ namespace ReSolve
         }
         A_row_data[n] = 2 * n - 1;
 
-        *A = new matrix::Csr(n, n, 2 * n - 1);
         (*A)->copyDataFrom(A_row_data, A_col_data, A_val_data, memory::HOST, memspace_);
 
         // Define H
@@ -193,7 +179,6 @@ namespace ReSolve
         }
         H_row_data[n] = n;
 
-        *H = new matrix::Csr(n, n, n);
         (*H)->copyDataFrom(H_row_data, H_col_data, H_val_data, memory::HOST, memspace_);
 
         // Define rhs vectors
@@ -203,10 +188,8 @@ namespace ReSolve
           rhs_data[i] = 1.0;
         }
 
-        *rhs_top = new vector::Vector(n);
         (*rhs_top)->copyDataFrom(rhs_data, memory::HOST, memspace_);
 
-        *rhs_bottom = new vector::Vector(n);
         (*rhs_bottom)->copyDataFrom(rhs_data, memory::HOST, memspace_);
 
         delete[] A_row_data;

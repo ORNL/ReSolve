@@ -32,11 +32,10 @@ namespace ReSolve
      *  @param total_n[in] - Total size of the matrix.
      *  @param memspace[in] - Memory space of incoming data and for computation.
      */
-    RuizScaling::RuizScaling(index_type          num_iterations,
-                           index_type          n,
-                           index_type          total_n,
-                           memory::MemorySpace memspace)
-      : num_iterations_(num_iterations), n_(n), total_n_(total_n), memspace_(memspace)
+    RuizScaling::RuizScaling(index_type          n,
+                             index_type          total_n,
+                             memory::MemorySpace memspace)
+      : n_(n), total_n_(total_n), memspace_(memspace)
     {
       if (memspace_ == memory::HOST)
       {
@@ -62,61 +61,34 @@ namespace ReSolve
     }
 
     /**
-     *  @brief Add Hessian information to the Ruiz scaling handler.
+     *  @brief Add matrix data to the Ruiz scaling handler.
      *  @param hes[in] - Pointer to CSR matrix representing the Hessian.
-     */
-    void RuizScaling::addHInfo(matrix::Csr* hes)
-    {
-      hes_i_ = hes->getRowData(memspace_);
-      hes_j_ = hes->getColData(memspace_);
-      hes_v_ = hes->getValues(memspace_);
-    }
-
-    /**
-     *  @brief Add Jacobian information to the Ruiz scaling handler.
      *  @param jac[in] - Pointer to CSR matrix representing the Jacobian.
+     *  @param jac_tr[in] - Pointer to CSR matrix representing the transposed Jacobian.
      */
-    void RuizScaling::addJInfo(matrix::Csr* jac)
+    void RuizScaling::addMatrixData(matrix::Csr* hes, matrix::Csr* jac, matrix::Csr* jac_tr)
     {
-      jac_i_ = jac->getRowData(memspace_);
-      jac_j_ = jac->getColData(memspace_);
-      jac_v_ = jac->getValues(memspace_);
-    }
-
-    /**
-     *  @brief Add Jacobian transpose information to the Ruiz scaling handler.
-     *  @param jac_tr[in] - Pointer to CSR matrix representing the transpose of the Jacobian.
-     */
-    void RuizScaling::addJtInfo(matrix::Csr* jac_tr)
-    {
-      jac_tr_i_ = jac_tr->getRowData(memspace_);
-      jac_tr_j_ = jac_tr->getColData(memspace_);
-      jac_tr_v_ = jac_tr->getValues(memspace_);
+      hes_ = hes;
+      jac_ = jac;
+      jac_tr_ = jac_tr;
     }
 
     /**
      *  @brief Add right-hand side vector to the Ruiz scaling handler.
      *  @param rhs_top[in] - Pointer to the top right-hand side vector.
-     */
-    void RuizScaling::addRhsTop(vector::Vector* rhs_top)
-    {
-      rhs_top_ = rhs_top->getData(memspace_);
-    }
-
-    /**
-     *  @brief Add right-hand side vector to the Ruiz scaling handler.
      *  @param rhs_bottom[in] - Pointer to the bottom right-hand side vector.
      */
-    void RuizScaling::addRhsBottom(vector::Vector* rhs_bottom)
+    void RuizScaling::addRhsData(vector::Vector* rhs_top, vector::Vector* rhs_bottom)
     {
-      rhs_bottom_ = rhs_bottom->getData(memspace_);
+      rhs_top_ = rhs_top;
+      rhs_bottom_ = rhs_bottom;
     }
 
     /**
      *  @brief Get the scaling vector.
      *  @return Pointer to the scaling vector.
      */
-    real_type* RuizScaling::getAggregateScalingVector() const
+    vector::Vector* RuizScaling::getAggregateScalingVector() const
     {
       return aggregate_scaling_vector_;
     }
@@ -124,16 +96,23 @@ namespace ReSolve
     /**
      *  @brief Compute the Ruiz scaling in-place.
      */
-    void RuizScaling::scale()
+    void RuizScaling::scale(index_type num_iterations)
     {
       resetScaling();
 
-      for (index_type i = 0; i < num_iterations_; ++i)
+      for (index_type i = 0; i < num_iterations; ++i)
       {
-        kernelImpl_->adaptRowMax(n_, total_n_, hes_i_, hes_j_, hes_v_, jac_i_, jac_j_, jac_v_, jac_tr_i_, jac_tr_j_, jac_tr_v_, scaling_vector_);
-
-        kernelImpl_->adaptDiagScale(n_, total_n_, hes_i_, hes_j_, hes_v_, jac_i_, jac_j_, jac_v_, jac_tr_i_, jac_tr_j_, jac_tr_v_, rhs_top_, rhs_bottom_, aggregate_scaling_vector_, scaling_vector_);
+        kernelImpl_->adaptRowMax(n_, total_n_, hes_, jac_, jac_tr_, scaling_vector_);
+        kernelImpl_->adaptDiagScale(n_, total_n_, hes_, jac_, jac_tr_, rhs_top_, rhs_bottom_, aggregate_scaling_vector_, scaling_vector_);
       }
+
+      // Make the client aware that the data has been updated
+      hes_->setUpdated(memspace_);
+      jac_->setUpdated(memspace_);
+      jac_tr_->setUpdated(memspace_);
+      rhs_top_->setDataUpdated(memspace_);
+      rhs_bottom_->setDataUpdated(memspace_);
+      aggregate_scaling_vector_->setDataUpdated(memspace_);
     }
 
     /**
@@ -141,14 +120,7 @@ namespace ReSolve
      */
     void RuizScaling::resetScaling()
     {
-      if (memspace_ == memory::HOST)
-      {
-        mem_.setArrayToConstOnHost(aggregate_scaling_vector_, ONE, total_n_);
-      }
-      else
-      {
-        mem_.setArrayToConstOnDevice(aggregate_scaling_vector_, ONE, total_n_);
-      }
+      aggregate_scaling_vector_->setToConst(ONE, memspace_);
     }
 
     /**
@@ -156,16 +128,12 @@ namespace ReSolve
      */
     void RuizScaling::allocateWorkspace()
     {
-      if (memspace_ == memory::HOST)
-      {
-        scaling_vector_           = new real_type[total_n_];
-        aggregate_scaling_vector_ = new real_type[total_n_];
-      }
-      else
-      {
-        mem_.allocateArrayOnDevice(&scaling_vector_, total_n_);
-        mem_.allocateArrayOnDevice(&aggregate_scaling_vector_, total_n_);
-      }
+      scaling_vector_ = new vector::Vector(total_n_);
+      scaling_vector_->allocate(memspace_);
+
+      aggregate_scaling_vector_ = new vector::Vector(total_n_);
+      aggregate_scaling_vector_->allocate(memspace_);
+
       resetScaling();
     }
 
@@ -174,16 +142,8 @@ namespace ReSolve
      */
     void RuizScaling::deallocateWorkspace()
     {
-      if (memspace_ == memory::HOST)
-      {
-        delete[] scaling_vector_;
-        delete[] aggregate_scaling_vector_;
-      }
-      else
-      {
-        mem_.deleteOnDevice(scaling_vector_);
-        mem_.deleteOnDevice(aggregate_scaling_vector_);
-      }
+      delete scaling_vector_;
+      delete aggregate_scaling_vector_;
     }
   } // namespace hykkt
 } // namespace ReSolve

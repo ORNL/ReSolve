@@ -16,43 +16,29 @@ namespace ReSolve
     class RuizScaling
     {
     public:
-      RuizScaling(index_type          num_iterations,
-                 index_type          n,
-                 index_type          total_n,
-                 memory::MemorySpace memspace);
+      RuizScaling(index_type          n,
+                  index_type          total_n,
+                  memory::MemorySpace memspace);
       ~RuizScaling();
 
-      void       addHInfo(matrix::Csr* hes);
-      void       addJInfo(matrix::Csr* jac);
-      void       addJtInfo(matrix::Csr* jac_tr);
-      void       addRhsTop(vector::Vector* rhs_top);
-      void       addRhsBottom(vector::Vector* rhs_bottom);
-      real_type* getAggregateScalingVector() const;
-      void       scale();
+      void       addMatrixData(matrix::Csr* hes, matrix::Csr* jac, matrix::Csr* jac_tr);
+      void       addRhsData(vector::Vector* rhs_top, vector::Vector* rhs_bottom);
+      vector::Vector* getAggregateScalingVector() const;
+      void       scale(index_type num_iterations);
 
     private:
-      // Number of iterations
-      index_type num_iterations_;
-      // Size of hessian (block [1,1])
-      index_type n_;
-      // Total matrix size
-      index_type total_n_;
+      index_type n_; // Size of hessian (block [1,1])
+      index_type total_n_; // Total matrix size
 
       // Matrix data
-      real_type*  hes_v_;
-      index_type* hes_i_;
-      index_type* hes_j_;
-      real_type*  jac_v_;
-      index_type* jac_i_;
-      index_type* jac_j_;
-      real_type*  jac_tr_v_;
-      index_type* jac_tr_i_;
-      index_type* jac_tr_j_;
-      real_type*  rhs_top_;
-      real_type*  rhs_bottom_;
+      matrix::Csr* hes_;          // Hessian matrix
+      matrix::Csr* jac_;          // Jacobian matrix
+      matrix::Csr* jac_tr_;       // Transposed Jacobian matrix
+      vector::Vector* rhs_top_;    // Top of the right-hand side vector
+      vector::Vector* rhs_bottom_; // Bottom of the right-hand side vector
 
-      real_type* scaling_vector_;           // Scaling vector for the current iteration
-      real_type* aggregate_scaling_vector_; // Cumulative scaling vector
+      vector::Vector* scaling_vector_;           // Scaling vector data for the current iteration
+      vector::Vector* aggregate_scaling_vector_; // Cumulative scaling vector
 
       RuizScalingKernelImpl* kernelImpl_;
 
@@ -60,9 +46,7 @@ namespace ReSolve
       MemoryHandler       mem_;
 
       void resetScaling();
-
       void allocateWorkspace();
-
       void deallocateWorkspace();
     };
   } // namespace hykkt
