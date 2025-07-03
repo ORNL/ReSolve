@@ -240,8 +240,8 @@ int gluRefactor(int argc, char* argv[])
       // matrix::Csc* U = (matrix::Csc*) KLU.getUFactor();
 
       // Extract factors and configure refactorization solver
-      matrix::Csr* L = KLU.getLFactorCsr();
-      matrix::Csr* U = KLU.getUFactorCsr();
+      matrix::Csr* L = (matrix::Csr*) KLU.getLFactorCsr();
+      matrix::Csr* U = (matrix::Csr*) KLU.getUFactorCsr();
       if (L == nullptr || U == nullptr)
       {
         std::cout << "Factor extraction from KLU failed!\n";

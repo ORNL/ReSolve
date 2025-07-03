@@ -3,6 +3,7 @@
 #include <cstring> // includes memcpy
 
 #include <resolve/matrix/Csc.hpp>
+#include <resolve/matrix/Csr.hpp>
 #include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/vector/Vector.hpp>
 
