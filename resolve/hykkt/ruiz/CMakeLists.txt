@@ -8,13 +8,13 @@
 
 # Add source files for the Ruiz module
 set(RUIZ_SRC
-  RuizScaler.cpp
+  RuizScaling.cpp
   RuizScalingKernelsCPU.cpp
   RuizScalingKernelsHIP.hip
   RuizScalingKernelsCUDA.cu
 )
 set(RUIZ_HEADER_INSTALL
-  RuizScaler.hpp
+  RuizScaling.hpp
   RuizScalingKernels.hpp
   RuizScalingKernelsCPU.hpp
   RuizScalingKernelsHIP.hpp

@@ -15,7 +15,7 @@ namespace ReSolve
        * @brief CUDA kernel implementation of adaptRowMax.
        *
        * @param[in] n_hes - Number of rows in the Hessian matrix.
-       * @param[in] n_total - Total number of rows in the system.
+       * @param[in] n_total - Total number of rows in the 2x2 block system.
        * @param[in] hes_i - Row pointers for the Hessian matrix.
        * @param[in] hes_j - Column indices for the Hessian matrix.
        * @param[in] hes_v - Values for the Hessian matrix.
@@ -79,7 +79,7 @@ namespace ReSolve
        * @brief CUDA kernel implementation for adaptRowMax.
        *
        * @param[in] n_hes - Number of rows in the Hessian matrix.
-       * @param[in] n_total - Total number of rows in the system.
+       * @param[in] n_total - Total number of rows in the 2x2 block system.
        * @param[in] hes_i - Row pointers for the Hessian matrix.
        * @param[in] hes_j - Column indices for the Hessian matrix.
        * @param[in,out] hes_v - Values for the Hessian matrix.
@@ -123,12 +123,12 @@ namespace ReSolve
     } // namespace kernels
 
     /**
-     * @brief CUDA kernel wrapper of adaptRowMax. See RuizScalingKernelImpl.hpp.
+     * @brief CUDA kernel wrapper of adaptRowMax. See RuizScalingKernelImpl.
      *
      * @post scaling_vector contains the scaling factors for the current iteration. See RuizScalingKernelImpl.hpp for details.
      *
      * @param[in] n_hes - Number of rows in the Hessian matrix.
-     * @param[in] n_total - Total number of rows in the system.
+     * @param[in] n_total - Total number of rows in the 2x2 block system.
      * @param[in] hes_i - Row pointers for the Hessian matrix.
      * @param[in] hes_j - Column indices for the Hessian matrix.
      * @param[in] hes_v - Values for the Hessian matrix.
@@ -149,13 +149,13 @@ namespace ReSolve
     }
 
     /**
-     * @brief CUDA kernel implementation for adaptRowMax. See RuizScalingKernelImpl.hpp.
+     * @brief CUDA kernel implementation for adaptRowMax. See RuizScalingKernelImpl.
      * 
      * @pre adaptRowMax has been called to compute the scaling_vector.
      * @post The system is scaled. See RuizScalingKernelImpl.hpp for details.
      * 
      * @param[in] n_hes - Number of rows in the Hessian matrix.
-     * @param[in] n_total - Total number of rows in the system.
+     * @param[in] n_total - Total number of rows in the 2x2 block system.
      * @param[in] hes_i - Row pointers for the Hessian matrix.
      * @param[in] hes_j - Column indices for the Hessian matrix.
      * @param[in,out] hes_v - Values for the Hessian matrix to be scaled.

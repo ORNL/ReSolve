@@ -24,7 +24,7 @@ namespace ReSolve
        *       value of the entries in the i-th row of the block matrix [hes jac^T; jac 0]
        *
        * @param[in] n_hes - Number of rows in the Hessian matrix.
-       * @param[in] n_total - Total number of rows in the system.
+       * @param[in] n_total - Total number of rows in the 2x2 block system.
        * @param[in] hes_i - Row pointers for the Hessian matrix.
        * @param[in] hes_j - Column indices for the Hessian matrix.
        * @param[in] hes_v - Values for the Hessian matrix.
@@ -45,7 +45,7 @@ namespace ReSolve
        *       is scaled from the right by the scaling_vector.
        *
        * @param[in] n_hes - Number of rows in the Hessian matrix.
-       * @param[in] n_total - Total number of rows in the system.
+       * @param[in] n_total - Total number of rows in the 2x2 block system.
        * @param[in] hes_i - Row pointers for the Hessian matrix.
        * @param[in] hes_j - Column indices for the Hessian matrix.
        * @param[in,out] hes_v - Values for the Hessian matrix.

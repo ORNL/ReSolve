@@ -1,7 +1,7 @@
 /**
  * @file runHykktRuizScalingTests.hpp
  * @author Adham Ibrahim (ibrahimas@ornl.gov)
- * @brief Tests for class hykkt::RuizScaler
+ * @brief Tests for class hykkt::RuizScaling
  *
  */
 #include <fstream>

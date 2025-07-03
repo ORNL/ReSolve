@@ -1,7 +1,7 @@
 /**
  * @file HykktRuizScalingTests.hpp
  * @author Adham Ibrahim (ibrahimas@ornl.gov)
- * @brief Implementation of tests for class hykkt::RuizScaler
+ * @brief Implementation of tests for class hykkt::RuizScaling
  *
  */
 #pragma once
@@ -14,7 +14,7 @@
 #include <vector>
 
 #include <resolve/MemoryUtils.hpp>
-#include <resolve/hykkt/ruiz/RuizScaler.hpp>
+#include <resolve/hykkt/ruiz/RuizScaling.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <tests/unit/TestBase.hpp>
 
@@ -23,7 +23,7 @@ namespace ReSolve
   namespace tests
   {
     /**
-     * @brief Tests for class hykkt::RuizScaler
+     * @brief Tests for class hykkt::RuizScaling
      *
      */
     class HykktRuizScalingTests : public TestBase
@@ -55,14 +55,14 @@ namespace ReSolve
         // Perform scaling
         index_type                 num_iterations = 2;
         index_type                 total_n        = 2 * n;
-        ReSolve::hykkt::RuizScaler ruizScaler(num_iterations, n, total_n, memspace_);
-        ruizScaler.addHInfo(H);
-        ruizScaler.addJInfo(A);
-        ruizScaler.addJtInfo(A_tr);
-        ruizScaler.addRhsTop(rhs_top);
-        ruizScaler.addRhsBottom(rhs_bottom);
-        ruizScaler.scale();
-        real_type* aggregate_scaling_vector = ruizScaler.getAggregateScalingVector();
+        ReSolve::hykkt::RuizScaling RuizScaling(num_iterations, n, total_n, memspace_);
+        RuizScaling.addHInfo(H);
+        RuizScaling.addJInfo(A);
+        RuizScaling.addJtInfo(A_tr);
+        RuizScaling.addRhsTop(rhs_top);
+        RuizScaling.addRhsBottom(rhs_bottom);
+        RuizScaling.scale();
+        real_type* aggregate_scaling_vector = RuizScaling.getAggregateScalingVector();
         real_type* h_aggregate_scaling_vector;
         if (memspace_ == memory::DEVICE)
         {

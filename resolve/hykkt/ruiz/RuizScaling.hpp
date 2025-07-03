@@ -13,14 +13,14 @@ namespace ReSolve
 
   namespace hykkt
   {
-    class RuizScaler
+    class RuizScaling
     {
     public:
-      RuizScaler(index_type          num_iterations,
+      RuizScaling(index_type          num_iterations,
                  index_type          n,
                  index_type          total_n,
                  memory::MemorySpace memspace);
-      ~RuizScaler();
+      ~RuizScaling();
 
       void       addHInfo(matrix::Csr* hes);
       void       addJInfo(matrix::Csr* jac);
