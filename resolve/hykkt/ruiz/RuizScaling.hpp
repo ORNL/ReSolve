@@ -21,19 +21,19 @@ namespace ReSolve
                   memory::MemorySpace memspace);
       ~RuizScaling();
 
-      void       addMatrixData(matrix::Csr* hes, matrix::Csr* jac, matrix::Csr* jac_tr);
-      void       addRhsData(vector::Vector* rhs_top, vector::Vector* rhs_bottom);
+      void            addMatrixData(matrix::Csr* hes, matrix::Csr* jac, matrix::Csr* jac_tr);
+      void            addRhsData(vector::Vector* rhs_top, vector::Vector* rhs_bottom);
       vector::Vector* getAggregateScalingVector() const;
-      void       scale(index_type num_iterations);
+      void            scale(index_type num_iterations);
 
     private:
-      index_type n_; // Size of hessian (block [1,1])
+      index_type n_;       // Size of hessian (block [1,1])
       index_type total_n_; // Total matrix size
 
       // Matrix data
-      matrix::Csr* hes_;          // Hessian matrix
-      matrix::Csr* jac_;          // Jacobian matrix
-      matrix::Csr* jac_tr_;       // Transposed Jacobian matrix
+      matrix::Csr*    hes_;        // Hessian matrix
+      matrix::Csr*    jac_;        // Jacobian matrix
+      matrix::Csr*    jac_tr_;     // Transposed Jacobian matrix
       vector::Vector* rhs_top_;    // Top of the right-hand side vector
       vector::Vector* rhs_bottom_; // Bottom of the right-hand side vector
 

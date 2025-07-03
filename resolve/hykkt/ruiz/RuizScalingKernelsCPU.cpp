@@ -10,21 +10,21 @@ namespace ReSolve
     namespace kernelsCPU
     {
       /**
-      * @brief CPU kernel implementation of adaptRowMax. See RuizScalingKernelImpl.
-      *
-      * @param[in] n_hes - Number of rows in the Hessian matrix.
-      * @param[in] n_total - Total number of rows in the 2x2 block system.
-      * @param[in] hes_i - Row pointers for the Hessian matrix.
-      * @param[in] hes_j - Column indices for the Hessian matrix.
-      * @param[in] hes_v - Values for the Hessian matrix.
-      * @param[in] jac_i - Row pointers for the Jacobian matrix.
-      * @param[in] jac_j - Column indices for the Jacobian matrix.
-      * @param[in] jac_v - Values for the Jacobian matrix.
-      * @param[in] jac_tr_i - Row pointers for the transposed Jacobian matrix.
-      * @param[in] jac_tr_j - Column indices for the transposed Jacobian matrix.
-      * @param[in] jac_tr_v - Values for the transposed Jacobian matrix.
-      * @param[out] scaling_vector - Scaling vector to be updated.
-      */
+       * @brief CPU kernel implementation of adaptRowMax. See RuizScalingKernelImpl.
+       *
+       * @param[in] n_hes - Number of rows in the Hessian matrix.
+       * @param[in] n_total - Total number of rows in the 2x2 block system.
+       * @param[in] hes_i - Row pointers for the Hessian matrix.
+       * @param[in] hes_j - Column indices for the Hessian matrix.
+       * @param[in] hes_v - Values for the Hessian matrix.
+       * @param[in] jac_i - Row pointers for the Jacobian matrix.
+       * @param[in] jac_j - Column indices for the Jacobian matrix.
+       * @param[in] jac_v - Values for the Jacobian matrix.
+       * @param[in] jac_tr_i - Row pointers for the transposed Jacobian matrix.
+       * @param[in] jac_tr_j - Column indices for the transposed Jacobian matrix.
+       * @param[in] jac_tr_v - Values for the transposed Jacobian matrix.
+       * @param[out] scaling_vector - Scaling vector to be updated.
+       */
       void adaptRowMax(index_type n_hes, index_type n_total, const index_type* hes_i, const index_type* hes_j, const real_type* hes_v, const index_type* jac_i, const index_type* jac_j, const real_type* jac_v, const index_type* jac_tr_i, const index_type* jac_tr_j, const real_type* jac_tr_v, real_type* scaling_vector)
       {
         for (index_type i = 0; i < n_hes; i++)
@@ -72,24 +72,24 @@ namespace ReSolve
       }
 
       /**
-      * @brief CPU kernel implementation of adaptDiagScale. See RuizScalingKernelImpl.
-      *
-      * @param[in] n_hes - Number of rows in the Hessian matrix.
-      * @param[in] n_total - Total number of rows in the 2x2 block system.
-      * @param[in,out] hes_i - Row pointers for the Hessian matrix.
-      * @param[in,out] hes_j - Column indices for the Hessian matrix.
-      * @param[in,out] hes_v - Values for the Hessian matrix.
-      * @param[in,out] jac_i - Row pointers for the Jacobian matrix.
-      * @param[in,out] jac_j - Column indices for the Jacobian matrix.
-      * @param[in,out] jac_v - Values for the Jacobian matrix.
-      * @param[in,out] jac_tr_i - Row pointers for the transposed Jacobian matrix.
-      * @param[in,out] jac_tr_j - Column indices for the transposed Jacobian matrix.
-      * @param[in,out] jac_tr_v - Values for the transposed Jacobian matrix.
-      * @param[in,out] rhs1 - Right-hand side vector for the top block.
-      * @param[in,out] rhs2 - Right-hand side vector for the bottom block.
-      * @param[out] aggregate_scaling_vector - Cumulative scaling vector.
-      * @param[in] scaling_vector - Scaling vector for the current iteration.
-      */
+       * @brief CPU kernel implementation of adaptDiagScale. See RuizScalingKernelImpl.
+       *
+       * @param[in] n_hes - Number of rows in the Hessian matrix.
+       * @param[in] n_total - Total number of rows in the 2x2 block system.
+       * @param[in,out] hes_i - Row pointers for the Hessian matrix.
+       * @param[in,out] hes_j - Column indices for the Hessian matrix.
+       * @param[in,out] hes_v - Values for the Hessian matrix.
+       * @param[in,out] jac_i - Row pointers for the Jacobian matrix.
+       * @param[in,out] jac_j - Column indices for the Jacobian matrix.
+       * @param[in,out] jac_v - Values for the Jacobian matrix.
+       * @param[in,out] jac_tr_i - Row pointers for the transposed Jacobian matrix.
+       * @param[in,out] jac_tr_j - Column indices for the transposed Jacobian matrix.
+       * @param[in,out] jac_tr_v - Values for the transposed Jacobian matrix.
+       * @param[in,out] rhs1 - Right-hand side vector for the top block.
+       * @param[in,out] rhs2 - Right-hand side vector for the bottom block.
+       * @param[out] aggregate_scaling_vector - Cumulative scaling vector.
+       * @param[in] scaling_vector - Scaling vector for the current iteration.
+       */
       void adaptDiagScale(index_type n_hes, index_type n_total, const index_type* hes_i, const index_type* hes_j, real_type* hes_v, const index_type* jac_i, const index_type* jac_j, real_type* jac_v, const index_type* jac_tr_i, const index_type* jac_tr_j, real_type* jac_tr_v, real_type* rhs1, real_type* rhs2, real_type* aggregate_scaling_vector, const real_type* scaling_vector)
       {
         for (index_type i = 0; i < n_hes; i++)
@@ -115,11 +115,11 @@ namespace ReSolve
           aggregate_scaling_vector[i] *= scaling_vector[i];
         }
       }
-    } // namespace kernels
+    } // namespace kernelsCPU
 
-    /** 
+    /**
      * @brief CUDA kernel wrapper of adaptRowMax. See RuizScalingKernelImpl.
-     * 
+     *
      * @param[in] n_hes - Number of rows in the Hessian matrix.
      * @param[in] n_total - Total number of rows in the 2x2 block system.
      * @param[in] hes - Pointer to the Hessian matrix in CSR format.
@@ -129,10 +129,7 @@ namespace ReSolve
      */
     void RuizScalingKernelsCPU::adaptRowMax(index_type n_hes, index_type n_total, matrix::Csr* hes, matrix::Csr* jac, matrix::Csr* jac_tr, vector::Vector* scaling_vector)
     {
-      kernelsCPU::adaptRowMax(n_hes, n_total, hes->getRowData(memory::HOST), hes->getColData(memory::HOST), hes->getValues(memory::HOST),
-                           jac->getRowData(memory::HOST), jac->getColData(memory::HOST), jac->getValues(memory::HOST),
-                           jac_tr->getRowData(memory::HOST), jac_tr->getColData(memory::HOST), jac_tr->getValues(memory::HOST),
-                           scaling_vector->getData(memory::HOST));
+      kernelsCPU::adaptRowMax(n_hes, n_total, hes->getRowData(memory::HOST), hes->getColData(memory::HOST), hes->getValues(memory::HOST), jac->getRowData(memory::HOST), jac->getColData(memory::HOST), jac->getValues(memory::HOST), jac_tr->getRowData(memory::HOST), jac_tr->getColData(memory::HOST), jac_tr->getValues(memory::HOST), scaling_vector->getData(memory::HOST));
     }
 
     /**
@@ -148,11 +145,7 @@ namespace ReSolve
      */
     void RuizScalingKernelsCPU::adaptDiagScale(index_type n_hes, index_type n_total, matrix::Csr* hes, matrix::Csr* jac, matrix::Csr* jac_tr, vector::Vector* rhs_top, vector::Vector* rhs_bottom, vector::Vector* aggregate_scaling_vector, vector::Vector* scaling_vector)
     {
-      kernelsCPU::adaptDiagScale(n_hes, n_total, hes->getRowData(memory::HOST), hes->getColData(memory::HOST), hes->getValues(memory::HOST),
-                               jac->getRowData(memory::HOST), jac->getColData(memory::HOST), jac->getValues(memory::HOST),
-                               jac_tr->getRowData(memory::HOST), jac_tr->getColData(memory::HOST), jac_tr->getValues(memory::HOST),
-                               rhs_top->getData(memory::HOST), rhs_bottom->getData(memory::HOST),
-                               aggregate_scaling_vector->getData(memory::HOST), scaling_vector->getData(memory::HOST));
+      kernelsCPU::adaptDiagScale(n_hes, n_total, hes->getRowData(memory::HOST), hes->getColData(memory::HOST), hes->getValues(memory::HOST), jac->getRowData(memory::HOST), jac->getColData(memory::HOST), jac->getValues(memory::HOST), jac_tr->getRowData(memory::HOST), jac_tr->getColData(memory::HOST), jac_tr->getValues(memory::HOST), rhs_top->getData(memory::HOST), rhs_bottom->getData(memory::HOST), aggregate_scaling_vector->getData(memory::HOST), scaling_vector->getData(memory::HOST));
     }
 
   } // namespace hykkt

@@ -120,7 +120,7 @@ namespace ReSolve
           aggregate_scaling_vector[i] *= scaling_vector[i];
         }
       }
-    } // namespace kernels
+    } // namespace kernelsCUDA
 
     /**
      * @brief CUDA kernel wrapper of adaptRowMax. See RuizScalingKernelImpl.
@@ -145,18 +145,15 @@ namespace ReSolve
       int num_blocks;
       int block_size = 256;
       num_blocks     = (n_total + block_size - 1) / block_size;
-      kernelsCUDA::adaptRowMax<<<num_blocks, block_size>>>(n_hes, n_total, hes->getRowData(memory::DEVICE), hes->getColData(memory::DEVICE), hes->getValues(memory::DEVICE),
-                                                            jac->getRowData(memory::DEVICE), jac->getColData(memory::DEVICE), jac->getValues(memory::DEVICE),
-                                                            jac_tr->getRowData(memory::DEVICE), jac_tr->getColData(memory::DEVICE), jac_tr->getValues(memory::DEVICE),
-                                                            scaling_vector->getData(memory::DEVICE));
+      kernelsCUDA::adaptRowMax<<<num_blocks, block_size>>>(n_hes, n_total, hes->getRowData(memory::DEVICE), hes->getColData(memory::DEVICE), hes->getValues(memory::DEVICE), jac->getRowData(memory::DEVICE), jac->getColData(memory::DEVICE), jac->getValues(memory::DEVICE), jac_tr->getRowData(memory::DEVICE), jac_tr->getColData(memory::DEVICE), jac_tr->getValues(memory::DEVICE), scaling_vector->getData(memory::DEVICE));
     }
 
     /**
      * @brief CUDA kernel implementation for adaptRowMax. See RuizScalingKernelImpl.
-     * 
+     *
      * @pre adaptRowMax has been called to compute the scaling_vector.
      * @post The system is scaled. See RuizScalingKernelImpl.hpp for details.
-     * 
+     *
      * @param[in] n_hes - Number of rows in the Hessian matrix.
      * @param[in] n_total - Total number of rows in the 2x2 block system.
      * @param[in] hes_i - Row pointers for the Hessian matrix.
@@ -177,11 +174,7 @@ namespace ReSolve
     {
       int block_size = 256;
       int num_blocks = (n_total + block_size - 1) / block_size;
-      kernelsCUDA::adaptDiagScale<<<num_blocks, block_size>>>(n_hes, n_total, hes->getRowData(memory::DEVICE), hes->getColData(memory::DEVICE), hes->getValues(memory::DEVICE),
-                                                              jac->getRowData(memory::DEVICE), jac->getColData(memory::DEVICE), jac->getValues(memory::DEVICE),
-                                                              jac_tr->getRowData(memory::DEVICE), jac_tr->getColData(memory::DEVICE), jac_tr->getValues(memory::DEVICE),
-                                                              rhs_top->getData(memory::DEVICE), rhs_bottom->getData(memory::DEVICE), 
-                                                              aggregate_scaling_vector->getData(memory::DEVICE), scaling_vector->getData(memory::DEVICE));
+      kernelsCUDA::adaptDiagScale<<<num_blocks, block_size>>>(n_hes, n_total, hes->getRowData(memory::DEVICE), hes->getColData(memory::DEVICE), hes->getValues(memory::DEVICE), jac->getRowData(memory::DEVICE), jac->getColData(memory::DEVICE), jac->getValues(memory::DEVICE), jac_tr->getRowData(memory::DEVICE), jac_tr->getColData(memory::DEVICE), jac_tr->getValues(memory::DEVICE), rhs_top->getData(memory::DEVICE), rhs_bottom->getData(memory::DEVICE), aggregate_scaling_vector->getData(memory::DEVICE), scaling_vector->getData(memory::DEVICE));
     }
   } // namespace hykkt
 } // namespace ReSolve

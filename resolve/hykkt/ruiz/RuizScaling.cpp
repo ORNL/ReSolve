@@ -68,8 +68,8 @@ namespace ReSolve
      */
     void RuizScaling::addMatrixData(matrix::Csr* hes, matrix::Csr* jac, matrix::Csr* jac_tr)
     {
-      hes_ = hes;
-      jac_ = jac;
+      hes_    = hes;
+      jac_    = jac;
       jac_tr_ = jac_tr;
     }
 
@@ -80,7 +80,7 @@ namespace ReSolve
      */
     void RuizScaling::addRhsData(vector::Vector* rhs_top, vector::Vector* rhs_bottom)
     {
-      rhs_top_ = rhs_top;
+      rhs_top_    = rhs_top;
       rhs_bottom_ = rhs_bottom;
     }
 

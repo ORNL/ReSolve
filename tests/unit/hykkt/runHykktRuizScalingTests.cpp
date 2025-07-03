@@ -36,7 +36,11 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
 
   ReSolve::tests::HykktRuizScalingTests test(memspace, handler);
 
-  result += test.ruizTest();
+  result += test.ruizTest(8);
+  result += test.ruizTest(9);
+  result += test.ruizTest(10);
+  result += test.ruizTest(1024);
+  result += test.ruizTest(4096);
 
   std::cout << "\n";
 }
