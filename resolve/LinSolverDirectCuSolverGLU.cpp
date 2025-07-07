@@ -57,7 +57,9 @@ namespace ReSolve
     index_type n       = A_->getNumRows();
     index_type nnz     = A_->getNnz();
     // create combined factor
+    std::cout << "Combining L and U factors into M...\n";
     combineFactorsCsr(L, U);
+    std::cout << "Combined factor M has " << M_->getNnz() << " non-zeros.\n";
 
     // set up descriptors
     cusparseCreateMatDescr(&descr_M_);
@@ -83,6 +85,7 @@ namespace ReSolve
                                            M_->getRowData(memory::HOST),
                                            M_->getColData(memory::HOST),
                                            info_M_);
+    std::cout << "GLU setup status: " << status_cusolver_ << std::endl;
     error_sum += status_cusolver_;
     // NOW the buffer
     size_t buffer_size;
@@ -105,6 +108,8 @@ namespace ReSolve
                                            A_->getRowData(memory::DEVICE),
                                            A_->getColData(memory::DEVICE),
                                            info_M_);
+                                           
+    std::cout << "GLU reset status: " << status_cusolver_ << std::endl;
     error_sum += status_cusolver_;
 
     status_cusolver_ = cusolverSpDgluFactor(handle_cusolversp_, info_M_, glu_buffer_);
