@@ -197,7 +197,7 @@ int gpuRefactor(int argc, char* argv[])
   setup_stopwatch.pause();
 
   RESOLVE_RANGE_PUSH(__FUNCTION__);
-  for (int i = 0; i < num_systems; ++i)
+  for (int i = 1; i < num_systems; ++i)
   {
     io_stopwatch.start();
     io_stopwatch.startLap();
@@ -226,7 +226,7 @@ int gpuRefactor(int argc, char* argv[])
       return -1;
     }
     bool is_expand_symmetric = true;
-    if (i == 0)
+    if (i == 1)
     {
       A       = io::createCsrFromFile(mat_file, is_expand_symmetric);
       vec_rhs = io::createVectorFromFile(rhs_file);
@@ -259,7 +259,7 @@ int gpuRefactor(int argc, char* argv[])
 
     int status = 0;
 
-    if (i == 0)
+    if (i == 1)
     {
       RESOLVE_RANGE_PUSH("KLU");
       // Setup factorization solver
@@ -273,7 +273,7 @@ int gpuRefactor(int argc, char* argv[])
       solving_stopwatch.start();
     }
 
-    if (i < 2)
+    if (i < 3)
     {
       // Numeric factorization
       status = KLU.factorize();
@@ -294,7 +294,7 @@ int gpuRefactor(int argc, char* argv[])
       helper.printShortSummary();
       solving_stopwatch.start();
 
-      if (i == 1)
+      if (i == 2)
       {
         // Extract factors and configure refactorization solver
         matrix::Csc* L = (matrix::Csc*) KLU.getLFactor();
