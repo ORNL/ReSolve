@@ -271,10 +271,7 @@ int gpuRefactor(int argc, char* argv[])
       solving_stopwatch.pause();
       std::cout << "KLU analysis status: " << status << std::endl;
       solving_stopwatch.start();
-    }
-
-    if (i < 3)
-    {
+      
       // Numeric factorization
       status = KLU.factorize();
       solving_stopwatch.pause();
@@ -294,27 +291,25 @@ int gpuRefactor(int argc, char* argv[])
       helper.printShortSummary();
       solving_stopwatch.start();
 
-      if (i == 2)
+     
+      // Extract factors and configure refactorization solver
+      matrix::Csc* L = (matrix::Csc*) KLU.getLFactor();
+      matrix::Csc* U = (matrix::Csc*) KLU.getUFactor();
+      if (L == nullptr || U == nullptr)
       {
-        // Extract factors and configure refactorization solver
-        matrix::Csc* L = (matrix::Csc*) KLU.getLFactor();
-        matrix::Csc* U = (matrix::Csc*) KLU.getUFactor();
-        if (L == nullptr || U == nullptr)
-        {
-          solving_stopwatch.pause();
-          std::cout << "Factor extraction from KLU failed!\n";
-          solving_stopwatch.start();
-        }
-        index_type* P = KLU.getPOrdering();
-        index_type* Q = KLU.getQOrdering();
+        solving_stopwatch.pause();
+        std::cout << "Factor extraction from KLU failed!\n";
+        solving_stopwatch.start();
+      }
+      index_type* P = KLU.getPOrdering();
+      index_type* Q = KLU.getQOrdering();
 
-        Rf.setup(A, L, U, P, Q, vec_rhs);
+      Rf.setup(A, L, U, P, Q, vec_rhs);
 
-        // Setup iterative refinement solver
-        if (is_iterative_refinement)
-        {
-          FGMRES.setup(A);
-        }
+      // Setup iterative refinement solver
+      if (is_iterative_refinement)
+      {
+        FGMRES.setup(A);
       }
       RESOLVE_RANGE_POP("KLU");
     }

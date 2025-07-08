@@ -204,9 +204,7 @@ int main(int argc, char* argv[])
       solving_stopwatch.pause();
       std::cout << "KLU analysis status: " << status << std::endl;
       solving_stopwatch.start();
-    }
-    if (i < 2)
-    {
+      
       status = KLU->factorize();
 
       solving_stopwatch.pause();
