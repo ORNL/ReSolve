@@ -1,4 +1,4 @@
-#include "RuizScalingKernelsCPU.hpp"
+#include "RuizScalingKernelsCpu.hpp"
 
 namespace ReSolve
 {
@@ -7,7 +7,7 @@ namespace ReSolve
 
   namespace hykkt
   {
-    namespace kernelsCPU
+    namespace kernelsCpu
     {
       /**
        * @brief CPU kernel implementation of adaptRowMax. See RuizScalingKernelImpl.
@@ -25,7 +25,15 @@ namespace ReSolve
        * @param[in] jac_tr_v - Values for the transposed Jacobian matrix.
        * @param[out] scaling_vector - Scaling vector to be updated.
        */
-      void adaptRowMax(index_type n_hes, index_type n_total, const index_type* hes_i, const index_type* hes_j, const real_type* hes_v, const index_type* jac_i, const index_type* jac_j, const real_type* jac_v, const index_type* jac_tr_i, const index_type* jac_tr_j, const real_type* jac_tr_v, real_type* scaling_vector)
+      void adaptRowMax(index_type        n_hes,
+                       index_type        n_total,
+                       const index_type* hes_i,
+                       const real_type*  hes_v,
+                       const index_type* jac_i,
+                       const real_type*  jac_v,
+                       const index_type* jac_tr_i,
+                       const real_type*  jac_tr_v,
+                       real_type*        scaling_vector)
       {
         for (index_type i = 0; i < n_hes; i++)
         {
@@ -90,7 +98,21 @@ namespace ReSolve
        * @param[out] aggregate_scaling_vector - Cumulative scaling vector.
        * @param[in] scaling_vector - Scaling vector for the current iteration.
        */
-      void adaptDiagScale(index_type n_hes, index_type n_total, const index_type* hes_i, const index_type* hes_j, real_type* hes_v, const index_type* jac_i, const index_type* jac_j, real_type* jac_v, const index_type* jac_tr_i, const index_type* jac_tr_j, real_type* jac_tr_v, real_type* rhs1, real_type* rhs2, real_type* aggregate_scaling_vector, const real_type* scaling_vector)
+      void adaptDiagScale(index_type        n_hes,
+                          index_type        n_total,
+                          const index_type* hes_i,
+                          const index_type* hes_j,
+                          real_type*        hes_v,
+                          const index_type* jac_i,
+                          const index_type* jac_j,
+                          real_type*        jac_v,
+                          const index_type* jac_tr_i,
+                          const index_type* jac_tr_j,
+                          real_type*        jac_tr_v,
+                          real_type*        rhs1,
+                          real_type*        rhs2,
+                          real_type*        aggregate_scaling_vector,
+                          const real_type*  scaling_vector)
       {
         for (index_type i = 0; i < n_hes; i++)
         {
@@ -115,7 +137,7 @@ namespace ReSolve
           aggregate_scaling_vector[i] *= scaling_vector[i];
         }
       }
-    } // namespace kernelsCPU
+    } // namespace kernelsCpu
 
     /**
      * @brief CUDA kernel wrapper of adaptRowMax. See RuizScalingKernelImpl.
@@ -127,9 +149,22 @@ namespace ReSolve
      * @param[in] jac_tr - Pointer to the transposed Jacobian matrix in CSR format.
      * @param[out] scaling_vector - Scaling vector to be updated in-place.
      */
-    void RuizScalingKernelsCPU::adaptRowMax(index_type n_hes, index_type n_total, matrix::Csr* hes, matrix::Csr* jac, matrix::Csr* jac_tr, vector::Vector* scaling_vector)
+    void RuizScalingKernelsCpu::adaptRowMax(index_type      n_hes,
+                                            index_type      n_total,
+                                            matrix::Csr*    hes,
+                                            matrix::Csr*    jac,
+                                            matrix::Csr*    jac_tr,
+                                            vector::Vector* scaling_vector)
     {
-      kernelsCPU::adaptRowMax(n_hes, n_total, hes->getRowData(memory::HOST), hes->getColData(memory::HOST), hes->getValues(memory::HOST), jac->getRowData(memory::HOST), jac->getColData(memory::HOST), jac->getValues(memory::HOST), jac_tr->getRowData(memory::HOST), jac_tr->getColData(memory::HOST), jac_tr->getValues(memory::HOST), scaling_vector->getData(memory::HOST));
+      kernelsCpu::adaptRowMax(n_hes,
+                              n_total,
+                              hes->getRowData(memory::HOST),
+                              hes->getValues(memory::HOST),
+                              jac->getRowData(memory::HOST),
+                              jac->getValues(memory::HOST),
+                              jac_tr->getRowData(memory::HOST),
+                              jac_tr->getValues(memory::HOST),
+                              scaling_vector->getData(memory::HOST));
     }
 
     /**
@@ -143,9 +178,31 @@ namespace ReSolve
      * @param[in,out] aggregate_scaling_vector - Cumulative scaling vector to be updated
      * @param[in] scaling_vector - Scaling vector for the current iteration.
      */
-    void RuizScalingKernelsCPU::adaptDiagScale(index_type n_hes, index_type n_total, matrix::Csr* hes, matrix::Csr* jac, matrix::Csr* jac_tr, vector::Vector* rhs_top, vector::Vector* rhs_bottom, vector::Vector* aggregate_scaling_vector, vector::Vector* scaling_vector)
+    void RuizScalingKernelsCpu::adaptDiagScale(index_type      n_hes,
+                                               index_type      n_total,
+                                               matrix::Csr*    hes,
+                                               matrix::Csr*    jac,
+                                               matrix::Csr*    jac_tr,
+                                               vector::Vector* rhs_top,
+                                               vector::Vector* rhs_bottom,
+                                               vector::Vector* aggregate_scaling_vector,
+                                               vector::Vector* scaling_vector)
     {
-      kernelsCPU::adaptDiagScale(n_hes, n_total, hes->getRowData(memory::HOST), hes->getColData(memory::HOST), hes->getValues(memory::HOST), jac->getRowData(memory::HOST), jac->getColData(memory::HOST), jac->getValues(memory::HOST), jac_tr->getRowData(memory::HOST), jac_tr->getColData(memory::HOST), jac_tr->getValues(memory::HOST), rhs_top->getData(memory::HOST), rhs_bottom->getData(memory::HOST), aggregate_scaling_vector->getData(memory::HOST), scaling_vector->getData(memory::HOST));
+      kernelsCpu::adaptDiagScale(n_hes,
+                                 n_total,
+                                 hes->getRowData(memory::HOST),
+                                 hes->getColData(memory::HOST),
+                                 hes->getValues(memory::HOST),
+                                 jac->getRowData(memory::HOST),
+                                 jac->getColData(memory::HOST),
+                                 jac->getValues(memory::HOST),
+                                 jac_tr->getRowData(memory::HOST),
+                                 jac_tr->getColData(memory::HOST),
+                                 jac_tr->getValues(memory::HOST),
+                                 rhs_top->getData(memory::HOST),
+                                 rhs_bottom->getData(memory::HOST),
+                                 aggregate_scaling_vector->getData(memory::HOST),
+                                 scaling_vector->getData(memory::HOST));
     }
 
   } // namespace hykkt

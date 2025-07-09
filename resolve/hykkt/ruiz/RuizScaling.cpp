@@ -1,11 +1,11 @@
 #include "RuizScaling.hpp"
 
-#include "RuizScalingKernelsCPU.hpp"
+#include "RuizScalingKernelsCpu.hpp"
 #ifdef RESOLVE_USE_CUDA
-#include "RuizScalingKernelsCUDA.hpp"
+#include "RuizScalingKernelsCuda.hpp"
 #endif
 #ifdef RESOLVE_USE_HIP
-#include "RuizScalingKernelsHIP.hpp"
+#include "RuizScalingKernelsHip.hpp"
 #endif
 
 namespace ReSolve
@@ -39,15 +39,15 @@ namespace ReSolve
     {
       if (memspace_ == memory::HOST)
       {
-        kernelImpl_ = new RuizScalingKernelsCPU();
+        kernelImpl_ = new RuizScalingKernelsCpu();
       }
       else
       {
 #ifdef RESOLVE_USE_CUDA
-        kernelImpl_ = new RuizScalingKernelsCUDA();
+        kernelImpl_ = new RuizScalingKernelsCuda();
 #endif
 #ifdef RESOLVE_USE_HIP
-        kernelImpl_ = new RuizScalingKernelsHIP();
+        kernelImpl_ = new RuizScalingKernelsHip();
 #endif
       }
 

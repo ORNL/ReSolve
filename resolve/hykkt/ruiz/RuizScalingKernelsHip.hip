@@ -1,6 +1,6 @@
 #include <hip/hip_runtime.h>
 
-#include "RuizScalingKernelsHIP.hpp"
+#include "RuizScalingKernelsHip.hpp"
 
 namespace ReSolve
 {
@@ -17,17 +17,22 @@ namespace ReSolve
        * @param[in] n_hes - Number of rows in the Hessian matrix.
        * @param[in] n_total - Total number of rows in the 2x2 block system.
        * @param[in] hes_i - Row pointers for the Hessian matrix.
-       * @param[in] hes_j - Column indices for the Hessian matrix.
        * @param[in] hes_v - Values for the Hessian matrix.
        * @param[in] jac_i - Row pointers for the Jacobian matrix.
-       * @param[in] jac_j - Column indices for the Jacobian matrix.
        * @param[in] jac_v - Values for the Jacobian matrix.
        * @param[in] jac_tr_i - Row pointers for the transposed Jacobian matrix.
-       * @param[in] jac_tr_j - Column indices for the transposed Jacobian matrix.
        * @param[in] jac_tr_v - Values for the transposed Jacobian matrix.
        * @param[out] scaling_vector - Scaling vector output
        */
-      __global__ void adaptRowMax(index_type n_hes, index_type n_total, const index_type* hes_i, const index_type* hes_j, const real_type* hes_v, const index_type* jac_i, const index_type* jac_j, const real_type* jac_v, const index_type* jac_tr_i, const index_type* jac_tr_j, const real_type* jac_tr_v, real_type* scaling_vector)
+      __global__ void adaptRowMax(index_type n_hes, 
+                                  index_type n_total, 
+                                  const index_type* hes_i, 
+                                  const real_type* hes_v, 
+                                  const index_type* jac_i, 
+                                  const real_type* jac_v, 
+                                  const index_type* jac_tr_i,
+                                  const real_type* jac_tr_v, 
+                                  real_type* scaling_vector)
       {
         real_type  max_l = 0;
         real_type  max_u = 0;
@@ -94,7 +99,21 @@ namespace ReSolve
        * @param[in,out] aggregate_scaling_vector - Cumulative scaling vector to be updated.
        * @param[in] scaling_vector - Scaling vector computed in the current iteration.
        */
-      __global__ void adaptDiagScale(index_type n_hes, index_type n_total, const index_type* hes_i, const index_type* hes_j, real_type* hes_v, const index_type* jac_i, const index_type* jac_j, real_type* jac_v, const index_type* jac_tr_i, const index_type* jac_tr_j, real_type* jac_tr_v, real_type* rhs1, real_type* rhs2, real_type* aggregate_scaling_vector, const real_type* scaling_vector)
+      __global__ void adaptDiagScale(index_type n_hes, 
+                                     index_type n_total, 
+                                     const index_type* hes_i, 
+                                     const index_type* hes_j, 
+                                     real_type* hes_v, 
+                                     const index_type* jac_i, 
+                                     const index_type* jac_j, 
+                                     real_type* jac_v, 
+                                     const index_type* jac_tr_i, 
+                                     const index_type* jac_tr_j, 
+                                     real_type* jac_tr_v, 
+                                     real_type* rhs1, 
+                                     real_type* rhs2, 
+                                     real_type* aggregate_scaling_vector, 
+                                     const real_type* scaling_vector)
       {
         index_type i = blockIdx.x * blockDim.x + threadIdx.x;
         if (i < n_hes)
@@ -140,15 +159,25 @@ namespace ReSolve
      * @param[in] jac_tr_v - Values for the transposed Jacobian matrix.
      * @param[out] scaling_vector - Scaling vector output.
      */
-    void RuizScalingKernelsHIP::adaptRowMax(index_type n_hes, index_type n_total, matrix::Csr* hes, matrix::Csr* jac, matrix::Csr* jac_tr, vector::Vector* scaling_vector)
+    void RuizScalingKernelsHip::adaptRowMax(index_type n_hes, 
+                                            index_type n_total, 
+                                            matrix::Csr* hes, 
+                                            matrix::Csr* jac, 
+                                            matrix::Csr* jac_tr, 
+                                            vector::Vector* scaling_vector)
     {
       int num_blocks;
       int block_size = 256;
       num_blocks     = (n_total + block_size - 1) / block_size;
-      kernelsHIP::adaptRowMax<<<num_blocks, block_size>>>(n_hes, n_total, hes->getRowData(memory::DEVICE), hes->getColData(memory::DEVICE), hes->getValues(memory::DEVICE),
-                           jac->getRowData(memory::DEVICE), jac->getColData(memory::DEVICE), jac->getValues(memory::DEVICE),
-                           jac_tr->getRowData(memory::DEVICE), jac_tr->getColData(memory::DEVICE), jac_tr->getValues(memory::DEVICE),
-                           scaling_vector->getData(memory::DEVICE));
+      kernelsHIP::adaptRowMax<<<num_blocks, block_size>>>(n_hes, 
+                                                          n_total, 
+                                                          hes->getRowData(memory::DEVICE), 
+                                                          hes->getValues(memory::DEVICE),
+                                                          jac->getRowData(memory::DEVICE), 
+                                                          jac->getValues(memory::DEVICE),
+                                                          jac_tr->getRowData(memory::DEVICE), 
+                                                          jac_tr->getValues(memory::DEVICE),
+                                                          scaling_vector->getData(memory::DEVICE));
     }
 
     /**
@@ -173,15 +202,33 @@ namespace ReSolve
      * @param[in,out] aggregate_scaling_vector - Cumulative scaling vector to be updated.
      * @param[in] scaling_vector - Scaling vector computed in the current iteration.
      */
-    void RuizScalingKernelsHIP::adaptDiagScale(index_type n_hes, index_type n_total, matrix::Csr* hes, matrix::Csr* jac, matrix::Csr* jac_tr, vector::Vector* rhs_top, vector::Vector* rhs_bottom, vector::Vector* aggregate_scaling_vector, vector::Vector* scaling_vector)
+    void RuizScalingKernelsHip::adaptDiagScale(index_type n_hes, 
+                                               index_type n_total, 
+                                               matrix::Csr* hes, 
+                                               matrix::Csr* jac, 
+                                               matrix::Csr* jac_tr, 
+                                               vector::Vector* rhs_top, 
+                                               vector::Vector* rhs_bottom, 
+                                               vector::Vector* aggregate_scaling_vector, 
+                                               vector::Vector* scaling_vector)
     {
       int block_size = 256;
       int num_blocks = (n_total + block_size - 1) / block_size;
-      kernelsHIP::adaptDiagScale<<<num_blocks, block_size>>>(n_hes, n_total, hes->getRowData(memory::DEVICE), hes->getColData(memory::DEVICE), hes->getValues(memory::DEVICE),
-                               jac->getRowData(memory::DEVICE), jac->getColData(memory::DEVICE), jac->getValues(memory::DEVICE),
-                               jac_tr->getRowData(memory::DEVICE), jac_tr->getColData(memory::DEVICE), jac_tr->getValues(memory::DEVICE),
-                               rhs_top->getData(memory::DEVICE), rhs_bottom->getData(memory::DEVICE),
-                               aggregate_scaling_vector->getData(memory::DEVICE), scaling_vector->getData(memory::DEVICE));
+      kernelsHIP::adaptDiagScale<<<num_blocks, block_size>>>(n_hes, 
+                                                             n_total, 
+                                                             hes->getRowData(memory::DEVICE), 
+                                                             hes->getColData(memory::DEVICE), 
+                                                             hes->getValues(memory::DEVICE),
+                                                             jac->getRowData(memory::DEVICE), 
+                                                             jac->getColData(memory::DEVICE), 
+                                                             jac->getValues(memory::DEVICE),
+                                                             jac_tr->getRowData(memory::DEVICE), 
+                                                             jac_tr->getColData(memory::DEVICE), 
+                                                             jac_tr->getValues(memory::DEVICE),
+                                                             rhs_top->getData(memory::DEVICE), 
+                                                             rhs_bottom->getData(memory::DEVICE),
+                                                             aggregate_scaling_vector->getData(memory::DEVICE), 
+                                                             scaling_vector->getData(memory::DEVICE));
     }
   } // namespace hykkt
 } // namespace ReSolve

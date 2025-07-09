@@ -9,16 +9,16 @@
 # Add source files for the Ruiz module
 set(RUIZ_SRC
   RuizScaling.cpp
-  RuizScalingKernelsCPU.cpp
-  RuizScalingKernelsHIP.hip
-  RuizScalingKernelsCUDA.cu
+  RuizScalingKernelsCpu.cpp
+  RuizScalingKernelsHip.hip
+  RuizScalingKernelsCuda.cu
 )
 set(RUIZ_HEADER_INSTALL
   RuizScaling.hpp
   RuizScalingKernels.hpp
-  RuizScalingKernelsCPU.hpp
-  RuizScalingKernelsHIP.hpp
-  RuizScalingKernelsCUDA.hpp
+  RuizScalingKernelsCpu.hpp
+  RuizScalingKernelsHip.hpp
+  RuizScalingKernelsCuda.hpp
 )
 
 # Build shared library ReSolve::hykkt

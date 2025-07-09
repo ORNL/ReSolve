@@ -33,7 +33,12 @@ namespace ReSolve
        * @param[in] jac_tr - Pointer to the transposed Jacobian matrix in CSR format.
        * @param[out] scaling_vector - Scaling vector to be updated in-place.
        */
-      virtual void adaptRowMax(index_type n_hes, index_type n_total, matrix::Csr* hes, matrix::Csr* jac, matrix::Csr* jac_tr, vector::Vector* scaling_vector) = 0;
+      virtual void adaptRowMax(index_type      n_hes,
+                               index_type      n_total,
+                               matrix::Csr*    hes,
+                               matrix::Csr*    jac,
+                               matrix::Csr*    jac_tr,
+                               vector::Vector* scaling_vector) = 0;
 
       /**
        * @brief Apply the scaling stored in scaling_vector to the matrices and rhs
@@ -51,7 +56,15 @@ namespace ReSolve
        * @param[in,out] aggregate_scaling_vector - Cumulative scaling vector to be updated in-place.
        * @param[in] scaling_vector - Scaling vector for the current iteration.
        */
-      virtual void adaptDiagScale(index_type n_hes, index_type n_total, matrix::Csr* hes, matrix::Csr* jac, matrix::Csr* jac_tr, vector::Vector* rhs_top, vector::Vector* rhs_bottom, vector::Vector* aggregate_scaling_vector, vector::Vector* scaling_vector) = 0;
+      virtual void adaptDiagScale(index_type      n_hes,
+                                  index_type      n_total,
+                                  matrix::Csr*    hes,
+                                  matrix::Csr*    jac,
+                                  matrix::Csr*    jac_tr,
+                                  vector::Vector* rhs_top,
+                                  vector::Vector* rhs_bottom,
+                                  vector::Vector* aggregate_scaling_vector,
+                                  vector::Vector* scaling_vector) = 0;
     };
 
   } // namespace hykkt
