@@ -244,7 +244,7 @@ int gluRefactor(int argc, char* argv[])
       }
       index_type* P = KLU.getPOrdering();
       index_type* Q = KLU.getQOrdering();
-      status = Rf.setupCsr(A, L, U, P, Q);
+      status        = Rf.setupCsr(A, L, U, P, Q);
       std::cout << "Refactorization setup status: " << status << std::endl;
 
       RESOLVE_RANGE_POP("KLU");

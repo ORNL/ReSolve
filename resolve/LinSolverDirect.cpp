@@ -74,11 +74,11 @@ namespace ReSolve
    * @return int - error code, 0 if successful
    */
   int LinSolverDirect::setupCsr(matrix::Sparse* A,
-                             matrix::Sparse* /* L */,
-                             matrix::Sparse* /* U */,
-                             index_type* /* P */,
-                             index_type* /* Q */,
-                             vector_type* /* rhs */)
+                                matrix::Sparse* /* L */,
+                                matrix::Sparse* /* U */,
+                                index_type* /* P */,
+                                index_type* /* Q */,
+                                vector_type* /* rhs */)
   {
     if (A == nullptr)
     {
@@ -86,7 +86,7 @@ namespace ReSolve
     }
     A_ = A;
     return 0;
-  } 
+  }
 
   /**
    * @brief Placeholder function for symbolic factorization.

@@ -1,8 +1,8 @@
 #include "LinSolverDirectCuSolverGLU.hpp"
 
+#include <algorithm>
 #include <cstring> // includes memcpy
 #include <vector>
-#include <algorithm>
 
 #include <resolve/Profiling.hpp>
 #include <resolve/matrix/Csr.hpp>
@@ -28,9 +28,10 @@ namespace ReSolve
     cusolverSpDestroyGluInfo(info_M_);
     delete M_;
   }
-  /** 
+
+  /**
    * @brief Sets up the GLU factorization for the CSR matrix A.
-   * 
+   *
    * This function initializes the GLU factorization for a given sparse matrix A.
    * It combines the L and U factors into a single matrix M, sets up the necessary
    * descriptors, and performs the GLU setup, analysis, and factorization.
@@ -40,7 +41,7 @@ namespace ReSolve
    * @param[in] P - Pointer to the permutation vector for rows (base-0).
    * @param[in] Q - Pointer to the permutation vector for columns (base-0).
    * @param[in] rhs - Pointer to the right-hand side vector (not used in this setup).
-  */
+   */
   int LinSolverDirectCuSolverGLU::setupCsr(matrix::Sparse* A,
                                            matrix::Sparse* L,
                                            matrix::Sparse* U,
@@ -106,7 +107,7 @@ namespace ReSolve
                                            A_->getRowData(memory::DEVICE),
                                            A_->getColData(memory::DEVICE),
                                            info_M_);
-                                           
+
     error_sum += status_cusolver_;
 
     status_cusolver_ = cusolverSpDgluFactor(handle_cusolversp_, info_M_, glu_buffer_);
@@ -192,37 +193,37 @@ namespace ReSolve
 
   /**
    * @brief Combines the CSR L and U factors into a single matrix CSR M.
-   * 
+   *
    * This function takes two sparse matrices L and U in CSR format,
    * combines them into a single matrix M in CSR format,
    * where M = L + U. The diagonal of L is taken and that of U is ommitted.
    * It is implicitly assumed that L has the scaling and U has unit diagonal.
-   * 
+   *
    * @param[in] L - Pointer to the L factor in CSR format.
    * @param[in] U - Pointer to the U factor in CSR format.
    */
   void LinSolverDirectCuSolverGLU::combineFactorsCsr(matrix::Sparse* L, matrix::Sparse* U)
   {
-    index_type  n    = L->getNumRows();
-    index_type* L_row   = L->getRowData(memory::HOST);
-    index_type* L_col   = L->getColData(memory::HOST);
-    index_type* U_row   = U->getRowData(memory::HOST);
-    index_type* U_col   = U->getColData(memory::HOST);
+    index_type  n     = L->getNumRows();
+    index_type* L_row = L->getRowData(memory::HOST);
+    index_type* L_col = L->getColData(memory::HOST);
+    index_type* U_row = U->getRowData(memory::HOST);
+    index_type* U_col = U->getColData(memory::HOST);
     index_type  M_nnz = (L->getNnz() + U->getNnz() - n);
-    M_               = new matrix::Csr(n, n, M_nnz);
+    M_                = new matrix::Csr(n, n, M_nnz);
     M_->allocateMatrixData(memory::HOST);
     index_type* M_row = M_->getRowData(memory::HOST);
     index_type* M_col = M_->getColData(memory::HOST);
-    // The total number of non-zeros in a row is the sum of non-zeros in L and U, 
+    // The total number of non-zeros in a row is the sum of non-zeros in L and U,
     // minus 1 for the diagonal element, which is not counted twice.
     // You can verify with this formula that M_row[i+1] - M_row[i] is the number of non-zeros in row i.
     // M_row[i+1] - M_row[i] = (L_row[i+1] - L_row[i]) + (U_row[i+1] - U_row[i]) - 1
     // The number of zeros in the i-th row of L + U -1.
-    for (index_type i=0; i<=n; i++)
+    for (index_type i = 0; i <= n; i++)
     {
       M_row[i] = L_row[i] + U_row[i] - i;
     }
-    //Now we need to fill the M_col array with the correct column indices.
+    // Now we need to fill the M_col array with the correct column indices.
     index_type count = 0;
     for (index_type i = 0; i < n; ++i)
     {
@@ -230,7 +231,7 @@ namespace ReSolve
       {
         M_col[count++] = L_col[j];
       }
-      for (index_type j = U_row[i] + 1; j < U_row[i + 1]; ++j) // skip the diagonal element of U, which is at U_row[i] 
+      for (index_type j = U_row[i] + 1; j < U_row[i + 1]; ++j) // skip the diagonal element of U, which is at U_row[i]
       {
         M_col[count++] = U_col[j];
       }
@@ -238,7 +239,7 @@ namespace ReSolve
     for (index_type i = 0; i < n; ++i) // this is crucial, turns out somehow the indices are not sorted
     {
       std::sort(M_col + M_row[i], M_col + M_row[i + 1]);
-    } 
+    }
   }
 
   void LinSolverDirectCuSolverGLU::combineFactors(matrix::Sparse* L, matrix::Sparse* U)

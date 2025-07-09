@@ -254,7 +254,7 @@ namespace ReSolve
 
   /**
    * @brief Get the L factor of the matrix A in compressed sparse row format.
-   * 
+   *
    * This function extracts the lower triangular factor L from the
    * KLU solver's numeric factorization. If the factors have not been
    * extracted yet, it allocates memory for L and U factors,
@@ -265,7 +265,7 @@ namespace ReSolve
    * Then the CSC U extraced from klu is actually an L factor of the original matrix,
    * if interprted as CSR. The reverse is true for the CSC L being a U factor of the original matrix.
    * Note that in this factorization, the scaling is in the L factor, unlike convention.
-   * 
+   *
    * @return L factor in compressed sparse row format
    */
   matrix::Sparse* LinSolverDirectKLU::getLFactorCsr()
@@ -282,21 +282,21 @@ namespace ReSolve
       U_->allocateMatrixData(memory::HOST);
 
       int ok = klu_extract(Numeric_,
-                          Symbolic_,
-                          U_->getRowData(memory::HOST),  // L CSC colptr -> U CSR rowptr
-                          U_->getColData(memory::HOST),  // L CSC rowidx -> U CSR colidx
-                          U_->getValues(memory::HOST),   // L CSC values -> U CSR values
-                          L_->getRowData(memory::HOST),  // U CSC colptr -> L CSR rowptr
-                          L_->getColData(memory::HOST),  // U CSC rowidx -> L CSR colidx
-                          L_->getValues(memory::HOST),   // U CSC values -> L CSR values
-                          nullptr,
-                          nullptr,
-                          nullptr,
-                          nullptr,
-                          nullptr,
-                          nullptr,
-                          nullptr,
-                          &Common_);
+                           Symbolic_,
+                           U_->getRowData(memory::HOST), // L CSC colptr -> U CSR rowptr
+                           U_->getColData(memory::HOST), // L CSC rowidx -> U CSR colidx
+                           U_->getValues(memory::HOST),  // L CSC values -> U CSR values
+                           L_->getRowData(memory::HOST), // U CSC colptr -> L CSR rowptr
+                           L_->getColData(memory::HOST), // U CSC rowidx -> L CSR colidx
+                           L_->getValues(memory::HOST),  // U CSC values -> L CSR values
+                           nullptr,
+                           nullptr,
+                           nullptr,
+                           nullptr,
+                           nullptr,
+                           nullptr,
+                           nullptr,
+                           &Common_);
 
       L_->setUpdated(memory::HOST);
       U_->setUpdated(memory::HOST);
@@ -323,7 +323,7 @@ namespace ReSolve
    * @return U factor in compressed sparse row format
    */
   matrix::Sparse* LinSolverDirectKLU::getUFactorCsr()
- {
+  {
     if (!factors_extracted_)
     {
       const int nnzL = Numeric_->lnz;
@@ -336,21 +336,21 @@ namespace ReSolve
       U_->allocateMatrixData(memory::HOST);
 
       int ok = klu_extract(Numeric_,
-                          Symbolic_,
-                          U_->getRowData(memory::HOST),  // L CSC colptr -> U CSR rowptr
-                          U_->getColData(memory::HOST),  // L CSC rowidx -> U CSR colidx
-                          U_->getValues(memory::HOST),   // L CSC values -> U CSR values
-                          L_->getRowData(memory::HOST),  // U CSC colptr -> L CSR rowptr
-                          L_->getColData(memory::HOST),  // U CSC rowidx -> L CSR colidx
-                          L_->getValues(memory::HOST),   // U CSC values -> L CSR values
-                          nullptr,
-                          nullptr,
-                          nullptr,
-                          nullptr,
-                          nullptr,
-                          nullptr,
-                          nullptr,
-                          &Common_);
+                           Symbolic_,
+                           U_->getRowData(memory::HOST), // L CSC colptr -> U CSR rowptr
+                           U_->getColData(memory::HOST), // L CSC rowidx -> U CSR colidx
+                           U_->getValues(memory::HOST),  // L CSC values -> U CSR values
+                           L_->getRowData(memory::HOST), // U CSC colptr -> L CSR rowptr
+                           L_->getColData(memory::HOST), // U CSC rowidx -> L CSR colidx
+                           L_->getValues(memory::HOST),  // U CSC values -> L CSR values
+                           nullptr,
+                           nullptr,
+                           nullptr,
+                           nullptr,
+                           nullptr,
+                           nullptr,
+                           nullptr,
+                           &Common_);
 
       L_->setUpdated(memory::HOST);
       U_->setUpdated(memory::HOST);
