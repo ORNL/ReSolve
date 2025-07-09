@@ -99,7 +99,6 @@ namespace ReSolve
 
     private:
       memory::MemorySpace memspace_;
-      MemoryHandler       mem_;
       MatrixHandler&      matrixHandler_;
 
       /**

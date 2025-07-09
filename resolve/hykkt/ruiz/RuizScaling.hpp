@@ -43,7 +43,6 @@ namespace ReSolve
       RuizScalingKernelImpl* kernelImpl_;
 
       memory::MemorySpace memspace_;
-      MemoryHandler       mem_;
 
       void resetScaling();
       void allocateWorkspace();
