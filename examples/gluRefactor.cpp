@@ -236,16 +236,16 @@ int gluRefactor(int argc, char* argv[])
       std::cout << "KLU solve status: " << status << std::endl;
 
       // Extract factors and configure refactorization solver
-      matrix::Csc* L = (matrix::Csc*) KLU.getLFactor();
-      matrix::Csc* U = (matrix::Csc*) KLU.getUFactor();
+      matrix::Csr* L = (matrix::Csr*) KLU.getLFactorCsr();
+      matrix::Csr* U = (matrix::Csr*) KLU.getUFactorCsr();
       if (L == nullptr || U == nullptr)
       {
         std::cout << "Factor extraction from KLU failed!\n";
       }
       index_type* P = KLU.getPOrdering();
       index_type* Q = KLU.getQOrdering();
-
-      status = Rf.setup(A, L, U, P, Q);
+      status        = Rf.setupCsr(A, L, U, P, Q);
+      std::cout << "Refactorization setup status: " << status << std::endl;
 
       RESOLVE_RANGE_POP("KLU");
     }

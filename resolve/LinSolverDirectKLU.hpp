@@ -39,6 +39,8 @@ namespace ReSolve
     int solve(vector_type* rhs, vector_type* x) override;
     int solve(vector_type* x) override;
 
+    matrix::Sparse* getLFactorCsr() override;
+    matrix::Sparse* getUFactorCsr() override;
     matrix::Sparse* getLFactor() override;
     matrix::Sparse* getUFactor() override;
     index_type*     getPOrdering() override;
