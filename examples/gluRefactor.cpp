@@ -164,7 +164,7 @@ int gluRefactor(int argc, char* argv[])
   vector_type* vec_x   = nullptr;
 
   RESOLVE_RANGE_PUSH(__FUNCTION__);
-  for (int i = 1; i <= num_systems; ++i)
+  for (int i = 0; i < num_systems; ++i)
   {
     std::cout << "System " << i << ":\n";
 
@@ -190,7 +190,7 @@ int gluRefactor(int argc, char* argv[])
       return -1;
     }
     bool is_expand_symmetric = true;
-    if (i == 1)
+    if (i == 0)
     {
       A       = io::createCsrFromFile(mat_file, is_expand_symmetric);
       vec_rhs = io::createVectorFromFile(rhs_file);
@@ -217,7 +217,7 @@ int gluRefactor(int argc, char* argv[])
 
     int status = 0;
 
-    if (i < 2)
+    if (i < 1)
     {
       RESOLVE_RANGE_PUSH("KLU");
       // Setup factorization solver
