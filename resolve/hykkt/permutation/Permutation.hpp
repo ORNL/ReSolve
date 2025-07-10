@@ -7,9 +7,17 @@
  */
 
 #include <resolve/Common.hpp>
-#include <resolve/hykkt/permutation/PermutationHandler.hpp>
-#include <resolve/hykkt/permutation/PermutationKernelsImpl.hpp>
 #include <resolve/matrix/Csr.hpp>
+#include <resolve/vector/Vector.hpp>
+
+#include "PermutationKernelsImpl.hpp"
+#include "CpuPermutationKernels.hpp"
+#ifdef RESOLVE_USE_CUDA
+#include "CudaPermutationKernels.hpp"
+#endif
+#ifdef RESOLVE_USE_HIP
+#include "HipPermutationKernels.hpp"
+#endif
 
 namespace ReSolve
 {
@@ -62,9 +70,11 @@ namespace ReSolve
       void deleteWorkspace();
       void allocateWorkspace();
 
-      PermutationHandler  permutationHandler_;
       MemoryHandler       mem_;      ///< memory handler for the permutation
       memory::MemorySpace memspace_; ///< memory space for the permutation
+
+      PermutationKernelsImpl* cpuImpl_; ///< pointer to the implementation of the permutation kernels
+      PermutationKernelsImpl* devImpl_;  ///< pointer to the device implementation of the permutation kernels
 
       index_type n_hes_;   ///< dimension of H
       index_type nnz_hes_; ///< nonzeros of H
@@ -79,6 +89,12 @@ namespace ReSolve
       index_type* perm_map_hes_;    ///< mapping of permuted H
       index_type* perm_map_jac_;    ///< mapping of permuted J
       index_type* perm_map_jac_tr_; ///< mapping of permuted Jt
+
+      index_type* d_perm_;
+      index_type* d_rev_perm_;
+      index_type* d_perm_map_hes_;
+      index_type* d_perm_map_jac_;
+      index_type* d_perm_map_jac_tr_;
 
       index_type* hes_i_; ///< row offsets of csr storage of H
       index_type* hes_j_; ///< column pointers of csr storage of H

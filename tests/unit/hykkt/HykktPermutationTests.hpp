@@ -14,7 +14,6 @@
 #include <vector>
 
 #include <resolve/hykkt/permutation/Permutation.hpp>
-#include <resolve/hykkt/permutation/PermutationHandler.hpp>
 #include <tests/unit/TestBase.hpp>
 
 namespace ReSolve
@@ -45,17 +44,7 @@ namespace ReSolve
         int nnz_hes = 6;
         int nnz_jac = 4;
 
-        int  h_perm[3] = {2, 0, 1};
-        int* perm;
-        if (memspace_ == memory::HOST)
-        {
-          perm = h_perm; // already on host
-        }
-        else
-        {
-          mem_.allocateArrayOnDevice(&perm, n);
-          mem_.copyArrayHostToDevice(perm, h_perm, n);
-        }
+        int  perm[3] = {2, 0, 1};
 
         matrix::Csr hes(n, n, nnz_hes);
         matrix::Csr jac(m, n, nnz_jac);
@@ -107,6 +96,13 @@ namespace ReSolve
         bool flagc = verifyResults(jac_pc_j, result_pc_j, nnz_jac);
         printf(!flagc ? "C permutation failed\n" : "C permutation passed\n");
 
+        if (memspace_ == memory::DEVICE)
+        {
+          hes.syncData(memory::DEVICE);
+          jac.syncData(memory::DEVICE);
+          jac_tr.syncData(memory::DEVICE);
+        }
+
         double hes_prc_v[6]   = {4, 5, 1, 0, 3, 2};
         double jac_pc_v[4]    = {1, 0, 3, 2};
         double jac_tr_pr_v[4] = {2, 3, 0, 1};
@@ -132,7 +128,7 @@ namespace ReSolve
         pc.mapIndex(ReSolve::hykkt::PERM_JAC_TR_V, jac_tr.getValues(memspace_), result_pr_v);
         double* h_result_pr_v = bringToHost(result_pr_v, nnz_jac);
         printf("Comparing mapped J_TR nonzero values\n");
-        bool flagr_v = verifyResults(jac_tr_pr_v, result_pr_v, nnz_jac);
+        bool flagr_v = verifyResults(jac_tr_pr_v, h_result_pr_v, nnz_jac);
         printf(!flagr_v ? "Map Index failed on J_TR\n" : "Map Index passed on J_TR\n");
 
         double  h_indices[3] = {0, 1, 2};
@@ -157,9 +153,9 @@ namespace ReSolve
         bool flag_perm = true;
         for (int i = 0; i < n; i++)
         {
-          if (h_result[i] != (double) h_perm[i])
+          if (h_result[i] != (double) perm[i])
           {
-            printf("Mismatch in index %d: %f != %f\n", i, h_result[i], (double) h_perm[i]);
+            printf("Mismatch in index %d: %f != %f\n", i, h_result[i], (double) perm[i]);
             flag_perm = false;
           }
         }
@@ -232,9 +228,9 @@ namespace ReSolve
         int    jac_tr_j[4] = {0, 1, 0, 1};
         double jac_tr_v[4] = {0, 1, 2, 3};
 
-        hes->copyDataFrom(hes_i, hes_j, hes_v, memory::HOST, memspace_);
-        jac->copyDataFrom(jac_i, jac_j, jac_v, memory::HOST, memspace_);
-        jac_tr->copyDataFrom(jac_tr_i, jac_tr_j, jac_tr_v, memory::HOST, memspace_);
+        hes->copyDataFrom(hes_i, hes_j, hes_v, memory::HOST, memory::HOST);
+        jac->copyDataFrom(jac_i, jac_j, jac_v, memory::HOST, memory::HOST);
+        jac_tr->copyDataFrom(jac_tr_i, jac_tr_j, jac_tr_v, memory::HOST, memory::HOST);
       }
 
       bool verifyResults(const int* expected, const int* actual, int size)
