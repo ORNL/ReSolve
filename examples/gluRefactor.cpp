@@ -164,7 +164,7 @@ int gluRefactor(int argc, char* argv[])
   vector_type* vec_x   = nullptr;
 
   RESOLVE_RANGE_PUSH(__FUNCTION__);
-  for (int i = 1; i < num_systems; ++i)
+  for (int i = 1; i <= num_systems; ++i)
   {
     std::cout << "System " << i << ":\n";
 
