@@ -13,7 +13,7 @@ namespace ReSolve
   using index_type = ReSolve::index_type;
   using real_type  = ReSolve::real_type;
 
-  using out = ReSolve::io::Logger::out;
+  using out = ReSolve::io::Logger;
 
   using namespace ReSolve::constants;
 
@@ -51,6 +51,10 @@ namespace ReSolve
 #ifdef RESOLVE_USE_HIP
         kernelImpl_ = new RuizScalingKernelsHip();
 #endif
+        if (!kernelImpl_)
+        {
+          out::error() << "RuizScaling: Memory space is DEVICE but no GPU support is enabled.";
+        }
       }
 
       allocateWorkspace();
@@ -58,7 +62,6 @@ namespace ReSolve
 
     RuizScaling::~RuizScaling()
     {
-      deallocateWorkspace();
       delete kernelImpl_;
     }
 
