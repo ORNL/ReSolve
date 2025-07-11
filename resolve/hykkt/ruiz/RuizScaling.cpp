@@ -13,6 +13,8 @@ namespace ReSolve
   using index_type = ReSolve::index_type;
   using real_type  = ReSolve::real_type;
 
+  using out = ReSolve::io::Logger::out;
+
   using namespace ReSolve::constants;
 
   namespace hykkt

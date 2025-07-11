@@ -15,7 +15,7 @@ set(RUIZ_SRC
 )
 set(RUIZ_HEADER_INSTALL
   RuizScaling.hpp
-  RuizScalingKernels.hpp
+  RuizScalingKernelImpl.hpp
   RuizScalingKernelsCpu.hpp
   RuizScalingKernelsHip.hpp
   RuizScalingKernelsCuda.hpp

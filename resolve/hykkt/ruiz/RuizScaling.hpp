@@ -2,6 +2,7 @@
 
 #include "RuizScalingKernelImpl.hpp"
 #include <resolve/Common.hpp>
+#include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/MemoryUtils.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/vector/Vector.hpp>
