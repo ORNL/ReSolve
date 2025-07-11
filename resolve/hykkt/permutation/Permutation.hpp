@@ -53,9 +53,7 @@ namespace ReSolve
       Permutation(index_type n_hes, index_type n_jac, index_type nnz_hes, index_type nnz_jac, memory::MemorySpace memspace);
       ~Permutation();
 
-      void addHInfo(matrix::Csr* hes);
-      void addJInfo(matrix::Csr* jac);
-      void addJtInfo(matrix::Csr* jac_tr);
+      void addMatrixInfo(matrix::Csr* hes, matrix::Csr* jac, matrix::Csr* jac_tr);
       void addCustomPerm(index_type* custom_perm);
       void symAmd();
       void invertPerm();

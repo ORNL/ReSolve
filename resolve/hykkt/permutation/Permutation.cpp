@@ -59,70 +59,44 @@ namespace ReSolve
     /// Permutation destructor
     Permutation::~Permutation()
     {
+      delete cpuImpl_;
+      if (devImpl_ != nullptr)
+      {
+        delete devImpl_;
+      }
       deleteWorkspace();
     }
 
     /**
      * @brief loads CSR structure for matrix H
      *
-     * @param[in] hes_i - Row offsets for H
-     * @param[in] hes_j - Column indices for H
+     * @param hes - pointer to matrix H
+     * @param jac - pointer to matrix J
+     * @param jac_tr - pointer to matrix J transpose
      *
-     * @pre Matrix data stored in the same memory space as was passed
-     *      into the constructor
-     *
-     * @post hes_i_ set to hes_i, hes_j_ set to hes_j
+     * @pre If this is the first time this function is called, then the data
+     *      is stored on HOST, otherwise, the data is stored in the same memory
+     *      space as passed to the constructor.
      */
-    void Permutation::addHInfo(matrix::Csr* hes)
+    void Permutation::addMatrixInfo(matrix::Csr* hes, matrix::Csr* jac, matrix::Csr* jac_tr)
     {
       hes_i_ = hes->getRowData(memory::HOST);
       hes_j_ = hes->getColData(memory::HOST);
-    }
-
-    /**
-     * @brief loads CSR structure for matrix J
-     *
-     * @param[in] jac_i - Row offsets for J
-     * @param[in] jac_j - Column indices for j
-     *
-     * @pre Matrix data stored in the same memory space as was passed
-     *      into the constructor
-     *
-     * @post jac_i_ set to jac_i, jac_j_ set to jac_j, n_jac_ set to n_jac,
-     * m_jac_ set to m_jac
-     */
-    void Permutation::addJInfo(matrix::Csr* jac)
-    {
       jac_i_ = jac->getRowData(memory::HOST);
       jac_j_ = jac->getColData(memory::HOST);
-    }
-
-    /**
-     * @brief loads CSR structure for matrix Jt
-     *
-     * @param[in] jac_tr_i - Row offsets for Jt
-     * @param[in] jac_tr_j - Column indices for Jt
-     *
-     * @pre Matrix data stored in the same memory space as was passed
-     *      into the constructor
-     *
-     * @pre
-     * @post jac_tr_i_ set to jac_tr_i, jac_tr_j_ set to jac_tr_j
-     */
-    void Permutation::addJtInfo(matrix::Csr* jac_tr)
-    {
       jac_tr_i_ = jac_tr->getRowData(memory::HOST);
       jac_tr_j_ = jac_tr->getColData(memory::HOST);
     }
 
     /**
-     * @brief sets custom permutation of matrix
+     * @brief Set a custom permutation
      *
-     * @param[in] perm - permutation vector stored on HOST
+     * This function allows the user to set a custom permutation vector, rather
+     * than use symmetric approximate minimum degree, the function symAmd(), to generate one.
+     * 
+     * @param[in] custom_perm - custom permutation vector stored on HOST
      *
-     * @post perm points to custom_perm out of scope so perm_is_default
-     *       set to false so that custom_perm not deleted twice in destructors,
-     *       permutation vector copied onto device d_perm
+     * @post perm_ points to the custom permutation vector, and is not owned by the Permutation class anymore.
      */
     void Permutation::addCustomPerm(int* custom_perm)
     {
@@ -143,11 +117,9 @@ namespace ReSolve
      * @brief Uses Symmetric Approximate Minimum Degree
      *        to reduce zero-fill in Cholesky Factorization
      *
-     * @pre Member variables n_hes_, nnz_hes_, hes_i_, hes_j_ have been
-     *      initialized to the dimensions of matrix H, the number
-     *      of nonzeros it has, its row offsets, and column arrays
+     * @pre addMatrixInfo() has been called
      *
-     * @post perm is the permutation vector that implements symAmd
+     * @post perm_ is the permutation vector that implements symAmd
      *       on the 2x2 system
      */
     void Permutation::symAmd()
@@ -174,8 +146,7 @@ namespace ReSolve
     /**
      * @brief Creates reverse permutation of perm and copies onto device
      *
-     * @pre Member variables n_hes_, perm intialized to dimension of matrix
-     *      and to a permutation vector
+     * @pre Either addCustomPerm() or symAmd() has been called
      *
      * @post rev_perm is now the reverse permuation of perm and copied onto
      *       the device d_perm
@@ -339,10 +310,7 @@ namespace ReSolve
 
       if (memspace_ == memory::DEVICE)
       {
-        if (perm_is_default_)
-        {
-          mem_.deleteOnDevice(d_perm_);
-        }
+        mem_.deleteOnDevice(d_perm_);
         mem_.deleteOnDevice(d_rev_perm_);
         mem_.deleteOnDevice(d_perm_map_hes_);
         mem_.deleteOnDevice(d_perm_map_jac_);

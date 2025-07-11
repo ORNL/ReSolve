@@ -69,9 +69,7 @@ namespace ReSolve
 
         ReSolve::hykkt::Permutation pc = ReSolve::hykkt::Permutation(n, m, nnz_hes, nnz_jac, memspace_);
 
-        pc.addHInfo(&hes);
-        pc.addJInfo(&jac);
-        pc.addJtInfo(&jac_tr);
+        pc.addMatrixInfo(&hes, &jac, &jac_tr);
 
         pc.addCustomPerm(perm);
         pc.invertPerm();
