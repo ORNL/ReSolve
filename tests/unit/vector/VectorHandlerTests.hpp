@@ -1,7 +1,9 @@
 #pragma once
+
 #include <algorithm>
 #include <iomanip>
 #include <iterator>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -250,12 +252,12 @@ namespace ReSolve
 
         vec.setToConst(3.0, memspace_);
 
-        real_type* diag_data = new real_type[N];
-        for (index_type i = 0; i < N; ++i)
+        auto diag_data = std::unique_ptr<real_type[]>(new real_type[N]);
+        for (size_t i = 0; i < static_cast<size_t>(N); ++i)
         {
           diag_data[i] = (real_type) (i + 1);
         }
-        diag.copyDataFrom(diag_data, memory::HOST, memspace_);
+        diag.copyDataFrom(diag_data.get(), memory::HOST, memspace_);
 
         handler_.scale(&diag, &vec, memspace_);
 

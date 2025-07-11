@@ -21,6 +21,12 @@ if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
   message(FATAL_ERROR "In-source build prohibited.")
 endif()
 
+if (MSVC)
+  set(CMAKE_CXX_FLAGS "/Wall")
+else()
+  set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wconversion -Wpedantic")
+endif()
+
 option(RESOLVE_TEST_WITH_BSUB "Use `jsrun` instead of `mpirun` commands when running tests" OFF)
 option(RESOLVE_USE_KLU  "Use KLU, AMD and COLAMD libraries from SuiteSparse" OFF)
 option(RESOLVE_USE_LUSOL "Build the LUSOL library" OFF)
@@ -31,7 +37,8 @@ option(RESOLVE_USE_PROFILING "Set profiling tracers in the code" OFF)
 option(RESOLVE_USE_GPU  "Use GPU device for computations" OFF)
 mark_as_advanced(FORCE RESOLVE_USE_GPU)
 
-option(RESOLVE_USE_ASAN "Use LLVM address sanitizer" OFF)
+option(RESOLVE_USE_ASAN "Enable the address sanitizer" OFF)
+option(RESOLVE_USE_UBSAN "Enable the undefined behavior sanitizer" OFF)
 option(RESOLVE_USE_DOXYGEN "Use Doxygen to generate Re::Solve documentation" OFF)
 set(RESOLVE_CTEST_OUTPUT_DIR ${PROJECT_BINARY_DIR} CACHE PATH "Directory where CTest outputs are saved")
 
@@ -112,11 +119,6 @@ if(RESOLVE_USE_HIP)
 else()
   message(STATUS "Not using HIP")
 endif(RESOLVE_USE_HIP)
-
-if (RESOLVE_USE_ASAN)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
-endif()
 
 # The binary dir is already a global include directory
 configure_file(
