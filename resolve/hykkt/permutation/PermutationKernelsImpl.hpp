@@ -209,7 +209,7 @@ namespace ReSolve
         index_type row_len;
         for (index_type i = 0; i < n; i++)
         {
-          row_s  = rows[i];
+          row_s   = rows[i];
           row_len = rows[i + 1] - row_s;
           for (index_type j = 0; j < row_len; j++)
           {
@@ -273,7 +273,7 @@ namespace ReSolve
         {
           idx              = perm[i];
           row_s            = rows[idx];
-          row_len           = rows[idx + 1] - row_s;
+          row_len          = rows[idx + 1] - row_s;
           perm_rows[i + 1] = perm_rows[i] + row_len;
           for (index_type j = 0; j < row_len; j++)
           {
@@ -323,7 +323,7 @@ namespace ReSolve
         {
           idx              = perm[i];
           row_s            = rows[idx];
-          row_len           = rows[idx + 1] - row_s;
+          row_len          = rows[idx + 1] - row_s;
           perm_rows[i + 1] = perm_rows[i] + row_len;
           for (index_type j = 0; j < row_len; j++)
           {

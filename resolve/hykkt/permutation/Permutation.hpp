@@ -6,12 +6,11 @@
  *
  */
 
+#include "CpuPermutationKernels.hpp"
+#include "PermutationKernelsImpl.hpp"
 #include <resolve/Common.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/vector/Vector.hpp>
-
-#include "PermutationKernelsImpl.hpp"
-#include "CpuPermutationKernels.hpp"
 #ifdef RESOLVE_USE_CUDA
 #include "CudaPermutationKernels.hpp"
 #endif
@@ -72,7 +71,7 @@ namespace ReSolve
       memory::MemorySpace memspace_; ///< memory space for the permutation
 
       PermutationKernelsImpl* cpuImpl_; ///< pointer to the implementation of the permutation kernels
-      PermutationKernelsImpl* devImpl_;  ///< pointer to the device implementation of the permutation kernels
+      PermutationKernelsImpl* devImpl_; ///< pointer to the device implementation of the permutation kernels
 
       index_type n_hes_;   ///< dimension of H
       index_type nnz_hes_; ///< nonzeros of H

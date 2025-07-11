@@ -38,15 +38,15 @@ namespace ReSolve
 
       bool isCudaEnabled = false;
       bool isHipEnabled  = false;
-      
-      cpuImpl_       = new CpuPermutationKernels();
+
+      cpuImpl_ = new CpuPermutationKernels();
 #ifdef RESOLVE_USE_CUDA
-      devImpl_       = new CudaPermutationKernels();
+      devImpl_      = new CudaPermutationKernels();
       isCudaEnabled = true;
       isHipEnabled  = false;
 #endif
 #ifdef RESOLVE_USE_HIP
-      devImpl_       =  new HipPermutationKernels();
+      devImpl_      = new HipPermutationKernels();
       isHipEnabled  = true;
       isCudaEnabled = false;
 #endif
@@ -80,10 +80,10 @@ namespace ReSolve
      */
     void Permutation::addMatrixInfo(matrix::Csr* hes, matrix::Csr* jac, matrix::Csr* jac_tr)
     {
-      hes_i_ = hes->getRowData(memory::HOST);
-      hes_j_ = hes->getColData(memory::HOST);
-      jac_i_ = jac->getRowData(memory::HOST);
-      jac_j_ = jac->getColData(memory::HOST);
+      hes_i_    = hes->getRowData(memory::HOST);
+      hes_j_    = hes->getColData(memory::HOST);
+      jac_i_    = jac->getRowData(memory::HOST);
+      jac_j_    = jac->getColData(memory::HOST);
       jac_tr_i_ = jac_tr->getRowData(memory::HOST);
       jac_tr_j_ = jac_tr->getColData(memory::HOST);
     }
@@ -93,7 +93,7 @@ namespace ReSolve
      *
      * This function allows the user to set a custom permutation vector, rather
      * than use symmetric approximate minimum degree, the function symAmd(), to generate one.
-     * 
+     *
      * @param[in] custom_perm - custom permutation vector stored on HOST
      *
      * @post perm_ points to the custom permutation vector, and is not owned by the Permutation class anymore.
@@ -250,28 +250,28 @@ namespace ReSolve
                                double*         old_val,
                                double*         new_val)
     {
-      index_type length;
+      index_type  length;
       index_type* apply_perm_;
       switch (permutation)
       {
       case PERM_V:
-        length = n_hes_;
+        length      = n_hes_;
         apply_perm_ = memspace_ == memory::HOST ? perm_ : d_perm_;
         break;
       case REV_PERM_V:
-        length = n_hes_;
+        length      = n_hes_;
         apply_perm_ = memspace_ == memory::HOST ? rev_perm_ : d_rev_perm_;
         break;
       case PERM_HES_V:
-        length = nnz_hes_;
+        length      = nnz_hes_;
         apply_perm_ = memspace_ == memory::HOST ? perm_map_hes_ : d_perm_map_hes_;
         break;
       case PERM_JAC_V:
-        length = nnz_jac_;
+        length      = nnz_jac_;
         apply_perm_ = memspace_ == memory::HOST ? perm_map_jac_ : d_perm_map_jac_;
         break;
       case PERM_JAC_TR_V:
-        length = nnz_jac_;
+        length      = nnz_jac_;
         apply_perm_ = memspace_ == memory::HOST ? perm_map_jac_tr_ : d_perm_map_jac_tr_;
         break;
       default:

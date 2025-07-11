@@ -44,7 +44,7 @@ namespace ReSolve
         int nnz_hes = 6;
         int nnz_jac = 4;
 
-        int  perm[3] = {2, 0, 1};
+        int perm[3] = {2, 0, 1};
 
         matrix::Csr hes(n, n, nnz_hes);
         matrix::Csr jac(m, n, nnz_jac);
