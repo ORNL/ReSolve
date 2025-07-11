@@ -55,7 +55,6 @@ namespace ReSolve
         int hes_prc_i[4] = {0, 2, 4, 6};
         int hes_prc_j[6] = {1, 2, 0, 1, 0, 2};
 
-        int jac_pc_i[3] = {0, 2, 4};
         int jac_pc_j[4] = {0, 1, 0, 2};
 
         int jac_tr_pr_i[4] = {0, 2, 3, 4};
@@ -209,11 +208,6 @@ namespace ReSolve
                        matrix::Csr* jac,
                        matrix::Csr* jac_tr)
       {
-        int n       = 3;
-        int m       = 2;
-        int nnz_hes = 6;
-        int nnz_jac = 4;
-
         int    hes_i[4] = {0, 2, 4, 6};
         int    hes_j[6] = {0, 2, 1, 2, 0, 1};
         double hes_v[6] = {0, 1, 2, 3, 4, 5};
