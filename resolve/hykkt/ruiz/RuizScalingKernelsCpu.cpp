@@ -140,7 +140,7 @@ namespace ReSolve
     } // namespace kernelsCpu
 
     /**
-     * @brief CUDA kernel wrapper of adaptRowMax. See RuizScalingKernelImpl.
+     * @brief CPU kernel wrapper of adaptRowMax. See RuizScalingKernelImpl.
      *
      * @param[in] n_hes - Number of rows in the Hessian matrix.
      * @param[in] n_total - Total number of rows in the 2x2 block system.
@@ -168,7 +168,7 @@ namespace ReSolve
     }
 
     /**
-     * @brief CUDA kernel wrapper of adaptDiagScale. See RuizScalingKernelImpl.
+     * @brief CPU kernel wrapper of adaptDiagScale. See RuizScalingKernelImpl.
      *
      * @param[in] n_hes - Number of rows in the Hessian matrix.
      * @param[in] n_total - Total number of rows in the 2x2 block system.
