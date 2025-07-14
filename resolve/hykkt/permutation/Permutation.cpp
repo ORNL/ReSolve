@@ -40,9 +40,9 @@ namespace ReSolve
 
       cpuImpl_ = new CpuPermutationKernels();
 #ifdef RESOLVE_USE_CUDA
-      devImpl_      = new CudaPermutationKernels();
+      devImpl_ = new CudaPermutationKernels();
 #elif defined(RESOLVE_USE_HIP)
-      devImpl_      = new HipPermutationKernels();
+      devImpl_ = new HipPermutationKernels();
 #else
       out::error() << "No GPU support enabled, and memory space set to DEVICE.\n";
       exit(1);

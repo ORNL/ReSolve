@@ -9,8 +9,8 @@
 #include "CpuPermutationKernels.hpp"
 #include "PermutationKernelsImpl.hpp"
 #include <resolve/Common.hpp>
-#include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/matrix/Csr.hpp>
+#include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/vector/Vector.hpp>
 #ifdef RESOLVE_USE_CUDA
 #include "CudaPermutationKernels.hpp"
@@ -68,12 +68,10 @@ namespace ReSolve
       void deleteWorkspace();
       void allocateWorkspace();
 
-      
-
       PermutationKernelsImpl* cpuImpl_; ///< pointer to the implementation of the permutation kernels
       PermutationKernelsImpl* devImpl_; ///< pointer to the device implementation of the permutation kernels
 
-      index_type n_hes_;   ///< dimension of H
+      index_type n_hes_; ///< dimension of H
 
       index_type n_jac_; ///< dimensions of J
       index_type m_jac_;
