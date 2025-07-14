@@ -27,7 +27,7 @@ namespace ReSolve
      *
      * @post Member variables initialized, workspace allocated
      */
-    Permutation::Permutation(int n_hes, int n_jac, int nnz_hes, int nnz_jac, memory::MemorySpace memspace)
+    Permutation::Permutation(index_type n_hes, index_type n_jac, index_type nnz_hes, index_type nnz_jac, memory::MemorySpace memspace)
       : n_hes_(n_hes),
         n_jac_(n_jac),
         m_jac_(n_hes),
@@ -44,8 +44,11 @@ namespace ReSolve
 #elif defined(RESOLVE_USE_HIP)
       devImpl_ = new HipPermutationKernels();
 #else
-      out::error() << "No GPU support enabled, and memory space set to DEVICE.\n";
-      exit(1);
+      if (memspace_ == memory::DEVICE)
+      {
+        out::error() << "No GPU support enabled, and memory space set to DEVICE.\n";
+        exit(1);
+      }
 #endif
     }
 
@@ -91,7 +94,7 @@ namespace ReSolve
      *
      * @post perm_ points to the custom permutation vector, and is not owned by the Permutation class anymore.
      */
-    void Permutation::addCustomPerm(int* custom_perm)
+    void Permutation::addCustomPerm(index_type* custom_perm)
     {
       if (perm_is_default_)
       {
@@ -168,7 +171,7 @@ namespace ReSolve
      * @post perm_map_h is now permuted rows/columns of H and copied onto
      *       the device d_perm_map_h
      */
-    void Permutation::vecMapRC(int* perm_i, int* perm_j)
+    void Permutation::vecMapRC(index_type* perm_i, index_type* perm_j)
     {
 
       cpuImpl_->makeVecMapRC(n_hes_, hes_i_, hes_j_, perm_, rev_perm_, perm_i, perm_j, perm_map_hes_);
@@ -191,7 +194,7 @@ namespace ReSolve
      * @post perm_map_jac is now the column permutation and is copied onto
      *       the device d_perm_map_jac
      */
-    void Permutation::vecMapC(int* perm_j)
+    void Permutation::vecMapC(index_type* perm_j)
     {
       cpuImpl_->makeVecMapC(n_jac_, jac_i_, jac_j_, rev_perm_, perm_j, perm_map_jac_);
       if (memspace_ == memory::DEVICE)
@@ -214,7 +217,7 @@ namespace ReSolve
      * @post perm_map_jac_tr is now the permuations of the rows of J transpose
      *       and is copied onto the device d_perm_map_jac_tr
      */
-    void Permutation::vecMapR(int* perm_i, int* perm_j)
+    void Permutation::vecMapR(index_type* perm_i, index_type* perm_j)
     {
       cpuImpl_->makeVecMapR(m_jac_, jac_tr_i_, jac_tr_j_, perm_, perm_i, perm_j, perm_map_jac_tr_);
       if (memspace_ == memory::DEVICE)
@@ -240,8 +243,8 @@ namespace ReSolve
      * @post new_val contains the permuted old_val
      */
     void Permutation::mapIndex(PermutationType permutation,
-                               double*         old_val,
-                               double*         new_val)
+                               real_type*         old_val,
+                               real_type*         new_val)
     {
       index_type  length;
       index_type* apply_perm_;
@@ -324,11 +327,11 @@ namespace ReSolve
      */
     void Permutation::allocateWorkspace()
     {
-      perm_            = new int[n_hes_];
-      rev_perm_        = new int[n_hes_];
-      perm_map_hes_    = new int[nnz_hes_];
-      perm_map_jac_    = new int[nnz_jac_];
-      perm_map_jac_tr_ = new int[nnz_jac_];
+      perm_            = new index_type[n_hes_];
+      rev_perm_        = new index_type[n_hes_];
+      perm_map_hes_    = new index_type[nnz_hes_];
+      perm_map_jac_    = new index_type[nnz_jac_];
+      perm_map_jac_tr_ = new index_type[nnz_jac_];
 
       if (memspace_ == memory::DEVICE)
       {
