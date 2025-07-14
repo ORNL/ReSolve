@@ -13,6 +13,8 @@
 
 namespace ReSolve
 {
+  using out = ReSolve::io::Logger;
+
   namespace hykkt
   {
     /**
@@ -36,24 +38,15 @@ namespace ReSolve
       allocateWorkspace();
       perm_is_default_ = true;
 
-      bool isCudaEnabled = false;
-      bool isHipEnabled  = false;
-
       cpuImpl_ = new CpuPermutationKernels();
 #ifdef RESOLVE_USE_CUDA
       devImpl_      = new CudaPermutationKernels();
-      isCudaEnabled = true;
-      isHipEnabled  = false;
-#endif
-#ifdef RESOLVE_USE_HIP
+#elif defined(RESOLVE_USE_HIP)
       devImpl_      = new HipPermutationKernels();
-      isHipEnabled  = true;
-      isCudaEnabled = false;
+#else
+      out::error() << "No GPU support enabled, and memory space set to DEVICE.\n";
+      exit(1);
 #endif
-      if (!isCudaEnabled && !isHipEnabled)
-      {
-        devImpl_ = nullptr;
-      }
     }
 
     /// Permutation destructor
@@ -133,7 +126,7 @@ namespace ReSolve
 
       if (result != AMD_OK)
       {
-        printf("AMD failed\n");
+        out::error() << "AMD failed\n";
         exit(1);
       }
 
@@ -275,7 +268,7 @@ namespace ReSolve
         apply_perm_ = memspace_ == memory::HOST ? perm_map_jac_tr_ : d_perm_map_jac_tr_;
         break;
       default:
-        printf("Valid arguments are PERM_V, REV_PERM_V, PERM_H_V, PERM_J_V, PERM_JT_V\n");
+        out::error() << "Valid arguments are PERM_V, REV_PERM_V, PERM_H_V, PERM_J_V, PERM_JT_V\n";
       }
 
       if (memspace_ == memory::HOST)

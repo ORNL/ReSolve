@@ -9,8 +9,7 @@
 # Build HyKKT tests
 
 add_executable(runHykktPermutationTests.exe runHykktPermutationTests.cpp)
-target_link_libraries(runHykktPermutationTests.exe PRIVATE resolve_hykkt)
-target_link_libraries(runHykktPermutationTests.exe PRIVATE resolve_matrix)
+target_link_libraries(runHykktPermutationTests.exe PRIVATE resolve_hykkt resolve_matrix)
 
 # Install tests
 set(installable_tests runHykktPermutationTests.exe)

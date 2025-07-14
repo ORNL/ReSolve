@@ -23,8 +23,9 @@ set(HyKKT_ROCM_SRC)
 # Header files to be installed
 set(HyKKT_HEADER_INSTALL
     Permutation.hpp
-    cpuPermutationKernels.hpp
+    CpuPermutationKernels.hpp
     CudaPermutationKernels.hpp
+    HipPermutationKernels.hpp
 )
 
 # Build shared library ReSolve::matrix

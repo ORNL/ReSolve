@@ -9,6 +9,7 @@
 #include "CpuPermutationKernels.hpp"
 #include "PermutationKernelsImpl.hpp"
 #include <resolve/Common.hpp>
+#include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/vector/Vector.hpp>
 #ifdef RESOLVE_USE_CUDA
@@ -67,17 +68,17 @@ namespace ReSolve
       void deleteWorkspace();
       void allocateWorkspace();
 
-      MemoryHandler       mem_;      ///< memory handler for the permutation
-      memory::MemorySpace memspace_; ///< memory space for the permutation
+      
 
       PermutationKernelsImpl* cpuImpl_; ///< pointer to the implementation of the permutation kernels
       PermutationKernelsImpl* devImpl_; ///< pointer to the device implementation of the permutation kernels
 
       index_type n_hes_;   ///< dimension of H
-      index_type nnz_hes_; ///< nonzeros of H
 
       index_type n_jac_; ///< dimensions of J
       index_type m_jac_;
+
+      index_type nnz_hes_; ///< nonzeros of H
       index_type nnz_jac_; ///< nonzeros of J
 
       bool        perm_is_default_;
@@ -102,9 +103,8 @@ namespace ReSolve
       index_type* jac_tr_i_; ///< row offsets of csr storage of J transpose
       index_type* jac_tr_j_; ///< column pointers of csr storage of J transpose
 
-      ///< right hand side of 2x2 system
-      real_type* rhs1_; ///< first block in vector
-      real_type* rhs2_; ///< second block in vector
+      MemoryHandler       mem_;      ///< memory handler for the permutation
+      memory::MemorySpace memspace_; ///< memory space for the permutation
     };
   } // namespace hykkt
 } // namespace ReSolve
