@@ -3,16 +3,14 @@
 
 namespace ReSolve {
   Stopwatch::Stopwatch() : paused(false)
-  {}
+  {
+    elapsed_time = std::chrono::duration<double>::zero();
+  }
 
   /**
    * @brief Start or resume the stopwatch.
    */
   void Stopwatch::start() {
-    if (!paused) {
-      paused = true;
-      elapsed_time = std::chrono::duration<double>::zero();
-    }
     start_time = std::chrono::steady_clock::now();
     paused = false;
   }
