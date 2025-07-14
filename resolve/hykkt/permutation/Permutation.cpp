@@ -243,8 +243,8 @@ namespace ReSolve
      * @post new_val contains the permuted old_val
      */
     void Permutation::mapIndex(PermutationType permutation,
-                               real_type*         old_val,
-                               real_type*         new_val)
+                               real_type*      old_val,
+                               real_type*      new_val)
     {
       index_type  length;
       index_type* apply_perm_;
