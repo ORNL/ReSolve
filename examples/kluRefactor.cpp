@@ -143,7 +143,7 @@ int main(int argc, char* argv[])
 
   setup_stopwatch.pause();
 
-  for (int i = 1; i < num_systems; ++i)
+  for (int i = 0; i < num_systems; ++i)
   {
     io_stopwatch.start();
     io_stopwatch.startLap();
@@ -169,7 +169,7 @@ int main(int argc, char* argv[])
       return 1;
     }
     bool is_expand_symmetric = true;
-    if (i == 1)
+    if (i == 0)
     {
       A = ReSolve::io::createCsrFromFile(mat_file, is_expand_symmetric);
 
@@ -195,7 +195,7 @@ int main(int argc, char* argv[])
 
     // Now call direct solver
     int status;
-    if (i == 1)
+    if (i == 0)
     {
       vec_rhs->setDataUpdated(ReSolve::memory::HOST);
       KLU->setup(A);

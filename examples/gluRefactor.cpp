@@ -217,7 +217,7 @@ int gluRefactor(int argc, char* argv[])
 
     int status = 0;
 
-    if (i < 1)
+    if (i == 0)
     {
       RESOLVE_RANGE_PUSH("KLU");
       // Setup factorization solver
