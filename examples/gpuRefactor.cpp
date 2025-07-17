@@ -162,6 +162,21 @@ int gpuRefactor(int argc, char* argv[])
 
   bool print_timing_results = options.hasKey("-t");
 
+  int start_index = 0;
+  if (options.hasKey("-s"))
+  {
+    opt = options.getParamFromKey("-s");
+    if (opt)
+    {
+      start_index = atoi((opt->second).c_str());
+      if (start_index < 0 || start_index >= num_systems)
+      {
+        std::cout << "Invalid start index: " << start_index << "\n";
+        return 1;
+      }
+    }
+  }
+
   setup_stopwatch.start();
 
   std::cout << "Family mtx file name: " << matrix_pathname
@@ -197,7 +212,7 @@ int gpuRefactor(int argc, char* argv[])
   setup_stopwatch.pause();
 
   RESOLVE_RANGE_PUSH(__FUNCTION__);
-  for (int i = 0; i < num_systems; ++i)
+  for (int i = start_index; i < num_systems; ++i)
   {
     io_stopwatch.start();
     io_stopwatch.startLap();
@@ -226,7 +241,7 @@ int gpuRefactor(int argc, char* argv[])
       return -1;
     }
     bool is_expand_symmetric = true;
-    if (i == 0)
+    if (i == start_index)
     {
       A       = io::createCsrFromFile(mat_file, is_expand_symmetric);
       vec_rhs = io::createVectorFromFile(rhs_file);
@@ -259,7 +274,7 @@ int gpuRefactor(int argc, char* argv[])
 
     int status = 0;
 
-    if (i == 0)
+    if (i == start_index)
     {
       RESOLVE_RANGE_PUSH("KLU");
       // Setup factorization solver

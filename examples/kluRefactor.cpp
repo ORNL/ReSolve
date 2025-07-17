@@ -121,6 +121,21 @@ int main(int argc, char* argv[])
 
   bool print_timing_results = options.hasKey("-t");
 
+  int start_index = 0;
+  if (options.hasKey("-s"))
+  {
+    opt = options.getParamFromKey("-s");
+    if (opt)
+    {
+      start_index = atoi((opt->second).c_str());
+      if (start_index < 0 || start_index >= num_systems)
+      {
+        std::cout << "Invalid start index: " << start_index << "\n";
+        return 1;
+      }
+    }
+  }
+
   setup_stopwatch.start();
 
   std::string fileId;
@@ -143,7 +158,7 @@ int main(int argc, char* argv[])
 
   setup_stopwatch.pause();
 
-  for (int i = 0; i < num_systems; ++i)
+  for (int i = start_index; i < num_systems; ++i)
   {
     io_stopwatch.start();
     io_stopwatch.startLap();
@@ -169,7 +184,7 @@ int main(int argc, char* argv[])
       return 1;
     }
     bool is_expand_symmetric = true;
-    if (i == 0)
+    if (i == start_index)
     {
       A = ReSolve::io::createCsrFromFile(mat_file, is_expand_symmetric);
 
@@ -195,7 +210,7 @@ int main(int argc, char* argv[])
 
     // Now call direct solver
     int status;
-    if (i == 0)
+    if (i == start_index)
     {
       vec_rhs->setDataUpdated(ReSolve::memory::HOST);
       KLU->setup(A);
