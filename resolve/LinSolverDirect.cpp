@@ -146,7 +146,7 @@ namespace ReSolve
   }
 
   /**
-   * @brief Placeholder function for full factor matrix.
+   * @brief Placeholder function for F factor matrix.
    */
   matrix::Sparse* LinSolverDirect::getFFactor()
   {
