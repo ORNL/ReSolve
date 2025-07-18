@@ -369,13 +369,17 @@ namespace ReSolve
   {
     if (!factors_extracted_)
     {
+      const int n = Symbolic_->n;
       const int nnzL = Numeric_->lnz;
       const int nnzU = Numeric_->unz;
+      const int nnzF = Numeric_->Offp [n];
 
       L_ = new matrix::Csc(A_->getNumRows(), A_->getNumColumns(), nnzL);
       U_ = new matrix::Csc(A_->getNumRows(), A_->getNumColumns(), nnzU);
+      F_ = new matrix::Csc(A_->getNumRows(), A_->getNumColumns(), nnzF);
       L_->allocateMatrixData(memory::HOST);
       U_->allocateMatrixData(memory::HOST);
+      F_->allocateMatrixData(memory::HOST);
 
       int ok = klu_extract(Numeric_,
                            Symbolic_,
@@ -385,9 +389,9 @@ namespace ReSolve
                            U_->getColData(memory::HOST),
                            U_->getRowData(memory::HOST),
                            U_->getValues(memory::HOST),
-                           nullptr,
-                           nullptr,
-                           nullptr,
+                           F_->getColData(memory::HOST),
+                           F_->getRowData(memory::HOST),
+                           F_->getValues(memory::HOST),
                            nullptr,
                            nullptr,
                            nullptr,
@@ -396,6 +400,7 @@ namespace ReSolve
 
       L_->setUpdated(memory::HOST);
       U_->setUpdated(memory::HOST);
+      F_->setUpdated(memory::HOST);
       (void) ok; // TODO: Check status in ok before setting `factors_extracted_`
       factors_extracted_ = true;
     }
@@ -411,13 +416,18 @@ namespace ReSolve
   {
     if (!factors_extracted_)
     {
+      const int n = Symbolic_->n;
       const int nnzL = Numeric_->lnz;
       const int nnzU = Numeric_->unz;
+      const int nnzF = Numeric_->Offp [n];
 
       L_ = new matrix::Csc(A_->getNumRows(), A_->getNumColumns(), nnzL);
       U_ = new matrix::Csc(A_->getNumRows(), A_->getNumColumns(), nnzU);
+      F_ = new matrix::Csc(A_->getNumRows(), A_->getNumColumns(), nnzF);
       L_->allocateMatrixData(memory::HOST);
       U_->allocateMatrixData(memory::HOST);
+      F_->allocateMatrixData(memory::HOST);
+
       int ok = klu_extract(Numeric_,
                            Symbolic_,
                            L_->getColData(memory::HOST),
@@ -426,9 +436,9 @@ namespace ReSolve
                            U_->getColData(memory::HOST),
                            U_->getRowData(memory::HOST),
                            U_->getValues(memory::HOST),
-                           nullptr,
-                           nullptr,
-                           nullptr,
+                           F_->getColData(memory::HOST),
+                           F_->getRowData(memory::HOST),
+                           F_->getValues(memory::HOST),
                            nullptr,
                            nullptr,
                            nullptr,
@@ -437,11 +447,56 @@ namespace ReSolve
 
       L_->setUpdated(memory::HOST);
       U_->setUpdated(memory::HOST);
-
+      F_->setUpdated(memory::HOST);
       (void) ok; // TODO: Check status in ok before setting `factors_extracted_`
       factors_extracted_ = true;
     }
     return U_;
+  }
+
+  /**
+   * @brief Get the factor F of the matrix A.
+   */
+  matrix::Sparse* LinSolverDirectKLU::getFFactor()
+  {
+    if (!factors_extracted_)
+    {
+      const int n = Symbolic_->n;
+      const int nnzL = Numeric_->lnz;
+      const int nnzU = Numeric_->unz;
+      const int nnzF = Numeric_->Offp [n];
+
+      L_ = new matrix::Csc(A_->getNumRows(), A_->getNumColumns(), nnzL);
+      U_ = new matrix::Csc(A_->getNumRows(), A_->getNumColumns(), nnzU);
+      F_ = new matrix::Csc(A_->getNumRows(), A_->getNumColumns(), nnzF);
+      L_->allocateMatrixData(memory::HOST);
+      U_->allocateMatrixData(memory::HOST);
+      F_->allocateMatrixData(memory::HOST);
+
+      int ok = klu_extract(Numeric_,
+                           Symbolic_,
+                           L_->getColData(memory::HOST),
+                           L_->getRowData(memory::HOST),
+                           L_->getValues(memory::HOST),
+                           U_->getColData(memory::HOST),
+                           U_->getRowData(memory::HOST),
+                           U_->getValues(memory::HOST),
+                           F_->getColData(memory::HOST),
+                           F_->getRowData(memory::HOST),
+                           F_->getValues(memory::HOST),
+                           nullptr,
+                           nullptr,
+                           nullptr,
+                           nullptr,
+                           &Common_);
+
+      L_->setUpdated(memory::HOST);
+      U_->setUpdated(memory::HOST);
+      F_->setUpdated(memory::HOST);
+      (void) ok; // TODO: Check status in ok before setting `factors_extracted_`
+      factors_extracted_ = true;
+    }
+    return F_;
   }
 
   /**

@@ -23,6 +23,7 @@ namespace ReSolve
   {
     L_ = nullptr;
     U_ = nullptr;
+    F_ = nullptr;
     P_ = nullptr;
     Q_ = nullptr;
   }
@@ -140,6 +141,14 @@ namespace ReSolve
    * @brief Placeholder function for upper triangular factor.
    */
   matrix::Sparse* LinSolverDirect::getUFactor()
+  {
+    return nullptr;
+  }
+
+  /**
+   * @brief Placeholder function for full factor matrix.
+   */
+  matrix::Sparse* LinSolverDirect::getFFactor()
   {
     return nullptr;
   }

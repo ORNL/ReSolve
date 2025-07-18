@@ -43,6 +43,7 @@ namespace ReSolve
     matrix::Sparse* getUFactorCsr() override;
     matrix::Sparse* getLFactor() override;
     matrix::Sparse* getUFactor() override;
+    matrix::Sparse* getFFactor() override;
     index_type*     getPOrdering() override;
     index_type*     getQOrdering() override;
 

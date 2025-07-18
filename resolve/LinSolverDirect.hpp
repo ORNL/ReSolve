@@ -42,12 +42,14 @@ namespace ReSolve
     virtual matrix::Sparse* getUFactorCsr();
     virtual matrix::Sparse* getLFactor();
     virtual matrix::Sparse* getUFactor();
+    virtual matrix::Sparse* getFFactor();
     virtual index_type*     getPOrdering();
     virtual index_type*     getQOrdering();
 
   protected:
     matrix::Sparse* L_{nullptr};
     matrix::Sparse* U_{nullptr};
+    matrix::Sparse* F_{nullptr};
     index_type*     P_{nullptr};
     index_type*     Q_{nullptr};
   };
