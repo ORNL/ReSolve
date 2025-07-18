@@ -239,6 +239,7 @@ namespace ReSolve
 
     // Values on the device are updated now -- mark them as such!
     A_csr->setUpdated(memory::DEVICE);
+    mem_.deviceSynchronize();
 
     return error_sum;
   }
@@ -294,6 +295,8 @@ namespace ReSolve
     error_sum += status;
     // Values on the device are updated now -- mark them as such!
     At->setUpdated(memory::DEVICE);
+    // synching device is necessary on HIP
+    mem_.deviceSynchronize();
 
     return error_sum;
   }
@@ -311,6 +314,7 @@ namespace ReSolve
     real_type* values = A->getValues(memory::DEVICE);
     index_type nnz    = A->getNnz();
     hip::addConst(nnz, alpha, values);
+    mem_.deviceSynchronize();
     return 0;
   }
 
@@ -336,6 +340,7 @@ namespace ReSolve
     // check values in A and diag
     hip::leftScale(n, a_row_ptr, a_vals, diag_data);
     A->setUpdated(memory::DEVICE);
+    mem_.deviceSynchronize();
     return 0;
   }
 
@@ -361,6 +366,7 @@ namespace ReSolve
     index_type  n         = A->getNumRows();
     hip::rightScale(n, a_row_ptr, a_col_idx, a_vals, diag_data);
     A->setUpdated(memory::DEVICE);
+    mem_.deviceSynchronize();
     return 0;
   }
 
