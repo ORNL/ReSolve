@@ -195,7 +195,7 @@ namespace ReSolve
                                    A->getNumRows(),
                                    d_r,
                                    norm,
-                                   workspace_->getNormBuffer() /* at least 8192 bytes */);
+                                   workspace_->getNormBuffer() /* this is at least 8192 bytes */);
     mem_.deviceSynchronize();
     if (status != 0)
     {
