@@ -295,7 +295,6 @@ namespace ReSolve
     error_sum += status;
     // Values on the device are updated now -- mark them as such!
     At->setUpdated(memory::DEVICE);
-    // synching device is necessary on HIP
     mem_.deviceSynchronize();
 
     return error_sum;
