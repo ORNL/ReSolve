@@ -369,10 +369,10 @@ namespace ReSolve
   {
     if (!factors_extracted_)
     {
-      const int n = Symbolic_->n;
+      const int n    = Symbolic_->n;
       const int nnzL = Numeric_->lnz;
       const int nnzU = Numeric_->unz;
-      const int nnzF = Numeric_->Offp [n];
+      const int nnzF = Numeric_->Offp[n];
 
       L_ = new matrix::Csc(A_->getNumRows(), A_->getNumColumns(), nnzL);
       U_ = new matrix::Csc(A_->getNumRows(), A_->getNumColumns(), nnzU);
@@ -416,10 +416,10 @@ namespace ReSolve
   {
     if (!factors_extracted_)
     {
-      const int n = Symbolic_->n;
+      const int n    = Symbolic_->n;
       const int nnzL = Numeric_->lnz;
       const int nnzU = Numeric_->unz;
-      const int nnzF = Numeric_->Offp [n];
+      const int nnzF = Numeric_->Offp[n];
 
       L_ = new matrix::Csc(A_->getNumRows(), A_->getNumColumns(), nnzL);
       U_ = new matrix::Csc(A_->getNumRows(), A_->getNumColumns(), nnzU);
@@ -461,10 +461,10 @@ namespace ReSolve
   {
     if (!factors_extracted_)
     {
-      const int n = Symbolic_->n;
+      const int n    = Symbolic_->n;
       const int nnzL = Numeric_->lnz;
       const int nnzU = Numeric_->unz;
-      const int nnzF = Numeric_->Offp [n];
+      const int nnzF = Numeric_->Offp[n];
 
       L_ = new matrix::Csc(A_->getNumRows(), A_->getNumColumns(), nnzL);
       U_ = new matrix::Csc(A_->getNumRows(), A_->getNumColumns(), nnzU);
