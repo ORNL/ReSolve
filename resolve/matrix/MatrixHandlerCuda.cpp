@@ -195,8 +195,8 @@ namespace ReSolve
                                    A->getNumRows(),
                                    d_r,
                                    norm,
-                                   workspace_->getNormBuffer() /* at least 8192 bytes */);
-
+                                   workspace_->getNormBuffer() /* at least 8192 bytes */);                                  
+    mem_.deviceSynchronize();
     if (status != 0)
     {
       io::Logger::warning() << "Vector inf nrm returned " << status << "\n";
@@ -268,7 +268,7 @@ namespace ReSolve
 
     // Values on the device are updated now -- mark them as such!
     A_csr->setUpdated(memory::DEVICE);
-
+    mem_.deviceSynchronize();
     return error_sum;
   }
 
@@ -331,7 +331,7 @@ namespace ReSolve
     error_sum += status;
     // Values on the device are updated now -- mark them as such!
     At->setUpdated(memory::DEVICE);
-
+    mem_.deviceSynchronize();
     return error_sum;
   }
 
@@ -357,6 +357,7 @@ namespace ReSolve
     // check values in A and diag
     cuda::leftScale(n, a_row_ptr, a_vals, diag_data);
     A->setUpdated(memory::DEVICE);
+    mem_.deviceSynchronize();
     return 0;
   }
 
@@ -382,6 +383,7 @@ namespace ReSolve
     index_type  n         = A->getNumRows();
     cuda::rightScale(n, a_row_ptr, a_col_idx, a_vals, diag_data);
     A->setUpdated(memory::DEVICE);
+    mem_.deviceSynchronize();
     return 0;
   }
 
@@ -398,6 +400,7 @@ namespace ReSolve
     real_type* values = A->getValues(memory::DEVICE);
     index_type nnz    = A->getNnz();
     cuda::addConst(nnz, alpha, values);
+    mem_.deviceSynchronize();
     return 0;
   }
 } // namespace ReSolve
