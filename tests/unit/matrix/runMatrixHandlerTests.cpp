@@ -40,7 +40,7 @@ void runTests(const std::string& backend, ReSolve::tests::TestingResults& result
   result += test.transpose(3, 3);
   result += test.transpose(5, 3);
   result += test.transpose(3, 5);
-  result += test.transpose(10,10);
+  result += test.transpose(10, 10);
   result += test.transpose(256, 256);
   result += test.transpose(1024, 1024);
   result += test.transpose(1024, 2048);
