@@ -140,7 +140,6 @@ if(RESOLVE_USE_HIP)
   list(APPEND ReSolve_HEADER_INSTALL ${ReSolve_ROCM_HEADER_INSTALL})
 endif()
 
-<<<<<<< HEAD
 # Address sanitizer target
 if(RESOLVE_USE_ASAN)
   add_library(resolve_asan INTERFACE)
@@ -158,15 +157,12 @@ if(RESOLVE_USE_UBSAN)
   target_link_libraries(resolve_tpl INTERFACE resolve_ubsan)
   list(APPEND ReSolve_Targets_List resolve_ubsan)
 endif()
-=======
+
 # Add HyKKT solver
 if(RESOLVE_USE_KLU)
   add_subdirectory(hykkt)
 endif()
 #list(APPEND ReSolve_Targets_List resolve_hykkt)
-
-
->>>>>>> 744822f (Added the permutation class from hykkt, along with tests.)
 
 # Set installable targets
 install(TARGETS ${ReSolve_Targets_List} EXPORT ReSolveTargets)
