@@ -47,13 +47,13 @@ namespace ReSolve
       {
 #ifdef RESOLVE_USE_CUDA
         kernelImpl_ = new RuizScalingKernelsCuda();
-#endif
-#ifdef RESOLVE_USE_HIP
+#elif defined(RESOLVE_USE_HIP)
         kernelImpl_ = new RuizScalingKernelsHip();
 #endif
         if (!kernelImpl_)
         {
           out::error() << "RuizScaling: Memory space is DEVICE but no GPU support is enabled.";
+          exit(1);
         }
       }
 
