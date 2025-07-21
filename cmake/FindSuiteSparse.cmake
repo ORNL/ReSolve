@@ -42,12 +42,8 @@ find_path(SUITESPARSE_INCLUDE_DIR
   PATHS
   ${SUITESPARSE_DIR} $ENV{SUITESPARSE_DIR} ${SUITESPARSE_ROOT_DIR} ${SUITESPARSE_LIBRARY_DIR}/..
   PATH_SUFFIXES
-<<<<<<< HEAD
   include
   include/suitesparse)
-=======
-  include include/suitesparse)
->>>>>>> dfca733 (Added the permutation class from hykkt, along with tests.)
 
 if(SUITESPARSE_LIBRARY)
   message(STATUS "Found Suitesparse include: ${SUITESPARSE_INCLUDE_DIR}")
