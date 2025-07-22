@@ -38,6 +38,34 @@ namespace ReSolve
     }
   }
 
+  void LinAlgWorkspaceCUDA::resetLinAlgWorkspace()
+  {
+    if (matvec_setup_done_)
+    {
+      cusparseDestroySpMat(mat_A_);
+      matvec_setup_done_ = false;
+    }
+    if (d_r_size_ != 0)
+    {
+      mem_.deleteOnDevice(d_r_);
+      d_r_ = nullptr;
+      d_r_size_ = 0;
+    }
+    if (norm_buffer_ready_ == true)
+    {
+      mem_.deleteOnDevice(buffer_1norm_);
+      buffer_1norm_ = nullptr;
+      norm_buffer_ready_ = false;
+    }
+    if (transpose_workspace_ready_)
+    {
+      mem_.deleteOnDevice(transpose_workspace_);
+      transpose_workspace_ = nullptr;
+      transpose_workspace_ready_ = false;
+    }
+    return;
+  }
+
   void* LinAlgWorkspaceCUDA::getSpmvBuffer()
   {
     return buffer_spmv_;
