@@ -15,4 +15,9 @@ namespace ReSolve
   void LinAlgWorkspaceCpu::initializeHandles()
   {
   }
+
+  void LinAlgWorkspaceCpu::resetLinAlgWorkspace()
+  {
+    // No resources to reset in CPU workspace
+  }
 } // namespace ReSolve
