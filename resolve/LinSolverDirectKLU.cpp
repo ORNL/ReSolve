@@ -59,10 +59,12 @@ namespace ReSolve
     {
       delete L_;
       delete U_;
+      delete F_;
       delete[] P_;
       delete[] Q_;
       L_ = nullptr;
       U_ = nullptr;
+      F_ = nullptr;
       P_ = nullptr;
       Q_ = nullptr;
     }
