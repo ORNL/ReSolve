@@ -40,7 +40,7 @@ namespace ReSolve
 
   /**
    * @brief Resets the linear algebra workspace.
-   * 
+   *
    * This function clears the state of the linear algebra workspace by
    * destroying the matrix descriptor, deallocating the residual vector,
    * deleting the norm buffer, and resetting the transpose workspace.
@@ -55,19 +55,19 @@ namespace ReSolve
     if (d_r_size_ != 0)
     {
       mem_.deleteOnDevice(d_r_);
-      d_r_ = nullptr;
+      d_r_      = nullptr;
       d_r_size_ = 0;
     }
     if (norm_buffer_ready_ == true)
     {
       mem_.deleteOnDevice(norm_buffer_);
-      norm_buffer_ = nullptr;
+      norm_buffer_       = nullptr;
       norm_buffer_ready_ = false;
     }
     if (transpose_workspace_ready_)
     {
       mem_.deleteOnDevice(transpose_workspace_);
-      transpose_workspace_ = nullptr;
+      transpose_workspace_       = nullptr;
       transpose_workspace_ready_ = false;
     }
     return;

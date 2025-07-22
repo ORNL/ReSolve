@@ -44,7 +44,7 @@ void runTests(const std::string& backend, ReSolve::tests::TestingResults& result
   result += test.csc2csr(1024, 1200);
   workspace.resetLinAlgWorkspace();
   result += test.csc2csr(1200, 1024);
-  workspace.resetLinAlgWorkspace();  
+  workspace.resetLinAlgWorkspace();
   result += test.transpose(3, 3);
   workspace.resetLinAlgWorkspace();
   result += test.transpose(5, 3);
