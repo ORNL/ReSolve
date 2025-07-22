@@ -38,6 +38,13 @@ namespace ReSolve
     }
   }
 
+  /**
+   * @brief Resets the linear algebra workspace.
+   * 
+   * This function clears the state of the linear algebra workspace by
+   * destroying the matrix descriptor, deallocating the residual vector,
+   * deleting the norm buffer, and resetting the transpose workspace.
+   */
   void LinAlgWorkspaceHIP::resetLinAlgWorkspace()
   {
     if (matvec_setup_done_)
