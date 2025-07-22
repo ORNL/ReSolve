@@ -14,6 +14,8 @@ namespace ReSolve
     LinAlgWorkspaceCUDA();
     ~LinAlgWorkspaceCUDA();
 
+    void resetLinAlgWorkspace();
+
     // accessors
     void* getSpmvBuffer();
     void* getNormBuffer();

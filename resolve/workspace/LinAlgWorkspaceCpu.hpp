@@ -8,6 +8,7 @@ namespace ReSolve
     LinAlgWorkspaceCpu();
     ~LinAlgWorkspaceCpu();
     void initializeHandles();
+    void resetLinAlgWorkspace();
   };
 
 } // namespace ReSolve

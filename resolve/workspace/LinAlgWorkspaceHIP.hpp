@@ -15,6 +15,8 @@ namespace ReSolve
     LinAlgWorkspaceHIP();
     ~LinAlgWorkspaceHIP();
 
+    void resetLinAlgWorkspace();
+
     rocblas_handle      getRocblasHandle();
     rocsparse_handle    getRocsparseHandle();
     rocsparse_mat_descr getSpmvMatrixDescriptor();
