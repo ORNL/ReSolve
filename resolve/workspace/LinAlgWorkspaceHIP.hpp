@@ -14,8 +14,8 @@ namespace ReSolve
   public:
     LinAlgWorkspaceHIP();
     ~LinAlgWorkspaceHIP();
-    
-    void resetLinAlgWorkspaceHIP();
+
+    void resetLinAlgWorkspace();
 
     rocblas_handle      getRocblasHandle();
     rocsparse_handle    getRocsparseHandle();
