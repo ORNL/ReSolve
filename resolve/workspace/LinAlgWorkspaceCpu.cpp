@@ -19,5 +19,6 @@ namespace ReSolve
   void LinAlgWorkspaceCpu::resetLinAlgWorkspace()
   {
     // No resources to reset in CPU workspace
+    return;
   }
 } // namespace ReSolve
