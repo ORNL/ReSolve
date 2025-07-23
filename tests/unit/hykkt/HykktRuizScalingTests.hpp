@@ -59,7 +59,7 @@ namespace ReSolve
         vector::Vector* rhs_bottom = new vector::Vector(n - 1);
         generateMatrixData(H, J, rhs_top, rhs_bottom, n);
 
-        // // Transpose J and store in J_tr
+        // Transpose J and store in J_tr
         matrix::Csr* J_tr = new matrix::Csr(n, n - 1, 2 * n - 2);
         J_tr->allocateMatrixData(memspace_);
         matrixHandler_.transpose(J, J_tr, memspace_);
