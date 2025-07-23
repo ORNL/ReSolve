@@ -1,20 +1,24 @@
 #include "CholeskySolver.hpp"
 
+#ifdef RESOLVE_USE_CUDA
+#include "CholeskySolverCuda.hpp"
+#endif
+
 namespace ReSolve {
   namespace hykkt {
     CholeskySolver::CholeskySolver(memory::MemorySpace memspace):
-      memspace_(memspace),
+      memspace_(memspace)
     {
       if (memspace_ == memory::HOST)
       {
-        impl_ = CholeskySolverCPU();
+        impl_ = new CholeskySolverCuda();
       }
       else
       {
 #ifdef RESOLVE_USE_CUDA
-        impl_ = CholeskySolverCuda();
+        impl_ = new CholeskySolverCuda();
 #elif defined(RESOLVE_USE_HIP)
-        impl_ = CholeskySolverHip();
+        // impl_ = new CholeskySolverHip();
 #else
         out::error() << "No GPU support enabled, and memory space set to DEVICE.\n";
         exit(1);
@@ -32,7 +36,7 @@ namespace ReSolve {
 
     void CholeskySolver::symbolicAnalysis()
     {
-      impl_.symbolicAnalysis(A_);
+      impl_->symbolicAnalysis(A_);
     }
 
     void CholeskySolver::setPivotTolerance(real_type tol)
@@ -42,12 +46,12 @@ namespace ReSolve {
 
     void CholeskySolver::numericalFactorization()
     {
-      impl_.numericalFactorization(A_, tol_);
+      impl_->numericalFactorization(A_, tol_);
     }
     
     void CholeskySolver::solve(vector::Vector* x, vector::Vector* b)
     {
-      impl_.solve(x, b);
+      impl_->solve(A_, x, b);
     }
   } // namespace hykkt
 } // namespace ReSolve
