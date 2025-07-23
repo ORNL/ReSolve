@@ -28,7 +28,7 @@ For all contributions to ReSolve please consult
 Authors and acknowledgment
 --------------------------
 
-Primary authors of this project are:
+The primary authors of this project are:
 
 * Kasia Świrydowicz Kasia.Swirydowicz@amd.com (AMD)
 * Slaven Peles peless@ornl.gov (ORNL)
@@ -38,7 +38,9 @@ ReSolve project would not be possible without significant contributions
 from (in alphabetic order):
 
 * Maksudul Alam (ORNL)
+* Kaleb Brunhoeber (ORNL)
 * Ryan Danehy (PNNL)
+* Adham Ibrahim (ORNL)
 * Nicholson Koukpaizan (ORNL)
 * Jaelyn Litzinger (PNNL)
 * Phil Roth (ORNL)
