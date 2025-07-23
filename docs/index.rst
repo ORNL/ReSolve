@@ -32,6 +32,7 @@ Primary authors of this project are:
 
 * Kasia Świrydowicz Kasia.Swirydowicz@amd.com (AMD)
 * Slaven Peles peless@ornl.gov (ORNL)
+* Shaked Regev regevs@ornl.gov (ORNL)
 
 ReSolve project would not be possible without significant contributions
 from (in alphabetic order):
@@ -40,7 +41,6 @@ from (in alphabetic order):
 * Ryan Danehy (PNNL)
 * Nicholson Koukpaizan (ORNL)
 * Jaelyn Litzinger (PNNL)
-* Shaked Regev (ORNL)
 * Phil Roth (ORNL)
 * Cameron Rutherford (PNNL)
 

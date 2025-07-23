@@ -122,16 +122,16 @@ For non-technical issues please contact
 [Re::Solve developers](mailto:resolve-devel@elist.ornl.gov).
 
 ## Authors and acknowledgment
-Primary authors of this project are Kasia &#346;wirydowicz and Slaven Peles.
+The primary authors of this project are Kasia &#346;wirydowicz, Slaven Peles, and Shaked Regev.
 
 Re::Solve project would not be possible without significant contributions from
 (in alphabetic order):
 - Maksudul Alam
 - Kaleb Brunhoeber
 - Ryan Danehy
+- Adham Ibrahim 
 - Nicholson Koukpaizan
 - Jaelyn Litzinger
-- Shaked Regev
 - Phil Roth
 - Cameron Rutherford
 
