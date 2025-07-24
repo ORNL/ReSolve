@@ -260,12 +260,12 @@ namespace ReSolve
     return 1;
   }
 
-  /** 
+  /**
    * @brief Extracts L and U factors from the KLU solver in CSR format, if they have not already been extracted.
-   * 
+   *
    * It extracts the factors as $A = U^T L^T$,
    * where U^T is the reinterpretation of the CSC U factor as CSR and L^T is the reinterpretation of the CSC L factor as CSR.
-  */
+   */
   void LinSolverDirectKLU::extractFactorsCsr()
   {
     if (!factors_extracted_)
