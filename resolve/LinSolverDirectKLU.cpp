@@ -1,6 +1,6 @@
 #include "LinSolverDirectKLU.hpp"
 
-#include <cassert> // includes assert
+#include <cassert>
 #include <cstring> // includes memcpy
 
 #include <resolve/matrix/Csc.hpp>
