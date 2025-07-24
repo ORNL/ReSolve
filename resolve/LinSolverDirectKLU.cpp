@@ -1,6 +1,7 @@
 #include "LinSolverDirectKLU.hpp"
 
-#include <cstring> // includes memcpy
+#include <cassert>
+#include <cstring>
 
 #include <resolve/matrix/Csc.hpp>
 #include <resolve/matrix/Csr.hpp>
@@ -166,6 +167,13 @@ namespace ReSolve
     {
       return 1;
     }
+    else
+    {
+      if (Numeric_->nzoff != 0)
+      {
+        assert(0 && "Numeric_->nzoff != 0, this is not supported by ReSolve!");
+      }
+    }
     return 0;
   }
 
@@ -253,119 +261,75 @@ namespace ReSolve
   }
 
   /**
-   * @brief Get the L factor of the matrix A in compressed sparse row format.
+   * @brief Extracts L and U factors from the KLU solver in CSR format, if they have not already been extracted.
    *
-   * This function extracts the lower triangular factor L from the
-   * KLU solver's numeric factorization. If the factors have not been
-   * extracted yet, it allocates memory for L and U factors,
-   * extracts them from the numeric factorization,
-   * and sets the updated flag for both factors.
-   * Otherwise, it returns the already extracted L factor.
-   * This is because the input matrix is CSR and interpreted as CSC.
-   * Then the CSC U extraced from klu is actually an L factor of the original matrix,
-   * if interprted as CSR. The reverse is true for the CSC L being a U factor of the original matrix.
-   * Note that in this factorization, the scaling is in the L factor, unlike convention.
+   * It extracts the factors as $A = U^T L^T$,
+   * where U^T is the reinterpretation of the CSC U factor as CSR and L^T is the reinterpretation of the CSC L factor as CSR.
+   */
+  void LinSolverDirectKLU::extractFactorsCsr()
+  {
+    if (!factors_extracted_)
+    {
+      const int nnzL = Numeric_->lnz;
+      const int nnzU = Numeric_->unz;
+
+      // Create CSR matrices - L gets U's data, U gets L's data
+      L_ = new matrix::Csr(A_->getNumRows(), A_->getNumColumns(), nnzU);
+      U_ = new matrix::Csr(A_->getNumRows(), A_->getNumColumns(), nnzL);
+      L_->allocateMatrixData(memory::HOST);
+      U_->allocateMatrixData(memory::HOST);
+
+      int ok = klu_extract(Numeric_,
+                           Symbolic_,
+                           U_->getRowData(memory::HOST), // L CSC colptr -> U CSR rowptr
+                           U_->getColData(memory::HOST), // L CSC rowidx -> U CSR colidx
+                           U_->getValues(memory::HOST),  // L CSC values -> U CSR values
+                           L_->getRowData(memory::HOST), // U CSC colptr -> L CSR rowptr
+                           L_->getColData(memory::HOST), // U CSC rowidx -> L CSR colidx
+                           L_->getValues(memory::HOST),  // U CSC values -> L CSR values
+                           nullptr,
+                           nullptr,
+                           nullptr,
+                           nullptr,
+                           nullptr,
+                           nullptr,
+                           nullptr,
+                           &Common_);
+
+      L_->setUpdated(memory::HOST);
+      U_->setUpdated(memory::HOST);
+      (void) ok; // TODO: Check status in ok before setting `factors_extracted_`
+      factors_extracted_ = true;
+    }
+    return;
+  }
+
+  /**
+   * @brief Gets an L factor of the matrix A in compressed sparse row format.
    *
    * @return L factor in compressed sparse row format
    */
   matrix::Sparse* LinSolverDirectKLU::getLFactorCsr()
   {
-    if (!factors_extracted_)
-    {
-      const int nnzL = Numeric_->lnz;
-      const int nnzU = Numeric_->unz;
-
-      // Create CSR matrices - L gets U's data, U gets L's data
-      L_ = new matrix::Csr(A_->getNumRows(), A_->getNumColumns(), nnzU);
-      U_ = new matrix::Csr(A_->getNumRows(), A_->getNumColumns(), nnzL);
-      L_->allocateMatrixData(memory::HOST);
-      U_->allocateMatrixData(memory::HOST);
-
-      int ok = klu_extract(Numeric_,
-                           Symbolic_,
-                           U_->getRowData(memory::HOST), // L CSC colptr -> U CSR rowptr
-                           U_->getColData(memory::HOST), // L CSC rowidx -> U CSR colidx
-                           U_->getValues(memory::HOST),  // L CSC values -> U CSR values
-                           L_->getRowData(memory::HOST), // U CSC colptr -> L CSR rowptr
-                           L_->getColData(memory::HOST), // U CSC rowidx -> L CSR colidx
-                           L_->getValues(memory::HOST),  // U CSC values -> L CSR values
-                           nullptr,
-                           nullptr,
-                           nullptr,
-                           nullptr,
-                           nullptr,
-                           nullptr,
-                           nullptr,
-                           &Common_);
-
-      L_->setUpdated(memory::HOST);
-      U_->setUpdated(memory::HOST);
-      (void) ok; // TODO: Check status in ok before setting `factors_extracted_`
-      factors_extracted_ = true;
-    }
+    extractFactorsCsr();
     return L_;
   }
 
   /**
-   * @brief Get the U factor of the matrix A in compressed sparse row format.
-   *
-   * This function extracts the upper triangular factor U from the
-   * KLU solver's numeric factorization. If the factors have not been
-   * extracted yet, it allocates memory for L and U factors,
-   * extracts them from the numeric factorization,
-   * and sets the updated flag for both factors.
-   * Otherwise, it returns the already extracted U factor.
-   * This is because the input matrix is CSR and interpreted as CSC.
-   * Then the CSC U extraced from klu is actually an L factor of the original matrix,
-   * if interprted as CSR. The reverse is true for the CSC L being a U factor of the original matrix.
-   * Note that in this factorization, the scaling is in the L factor, unlike convention.
+   * @brief Gets a U factor of the matrix A in compressed sparse row format.
    *
    * @return U factor in compressed sparse row format
    */
   matrix::Sparse* LinSolverDirectKLU::getUFactorCsr()
   {
-    if (!factors_extracted_)
-    {
-      const int nnzL = Numeric_->lnz;
-      const int nnzU = Numeric_->unz;
-
-      // Create CSR matrices - L gets U's data, U gets L's data
-      L_ = new matrix::Csr(A_->getNumRows(), A_->getNumColumns(), nnzU);
-      U_ = new matrix::Csr(A_->getNumRows(), A_->getNumColumns(), nnzL);
-      L_->allocateMatrixData(memory::HOST);
-      U_->allocateMatrixData(memory::HOST);
-
-      int ok = klu_extract(Numeric_,
-                           Symbolic_,
-                           U_->getRowData(memory::HOST), // L CSC colptr -> U CSR rowptr
-                           U_->getColData(memory::HOST), // L CSC rowidx -> U CSR colidx
-                           U_->getValues(memory::HOST),  // L CSC values -> U CSR values
-                           L_->getRowData(memory::HOST), // U CSC colptr -> L CSR rowptr
-                           L_->getColData(memory::HOST), // U CSC rowidx -> L CSR colidx
-                           L_->getValues(memory::HOST),  // U CSC values -> L CSR values
-                           nullptr,
-                           nullptr,
-                           nullptr,
-                           nullptr,
-                           nullptr,
-                           nullptr,
-                           nullptr,
-                           &Common_);
-
-      L_->setUpdated(memory::HOST);
-      U_->setUpdated(memory::HOST);
-      (void) ok; // TODO: Check status in ok before setting `factors_extracted_`
-      factors_extracted_ = true;
-    }
+    extractFactorsCsr();
     return U_;
   }
 
   /**
-   * @brief Get the lower triangular factor L.
-   *
-   * @return L factor
+   * @brief Extract L and U factors from the KLU solver in compressed sparse column format.
    */
-  matrix::Sparse* LinSolverDirectKLU::getLFactor()
+  void LinSolverDirectKLU::extractFactors()
   {
     if (!factors_extracted_)
     {
@@ -399,48 +363,27 @@ namespace ReSolve
       (void) ok; // TODO: Check status in ok before setting `factors_extracted_`
       factors_extracted_ = true;
     }
+  }
+
+  /**
+   * @brief Get the lower triangular factor L of the matrix A in compressed sparse column format.
+   *
+   * @return L factor in compressed sparse column format
+   */
+  matrix::Sparse* LinSolverDirectKLU::getLFactor()
+  {
+    extractFactors();
     return L_;
   }
 
   /**
-   * @brief Get the upper triangular factor U.
+   * @brief Get the upper triangular factor U of the matrix A in compressed sparse column format.
    *
    * @return U factor
    */
   matrix::Sparse* LinSolverDirectKLU::getUFactor()
   {
-    if (!factors_extracted_)
-    {
-      const int nnzL = Numeric_->lnz;
-      const int nnzU = Numeric_->unz;
-
-      L_ = new matrix::Csc(A_->getNumRows(), A_->getNumColumns(), nnzL);
-      U_ = new matrix::Csc(A_->getNumRows(), A_->getNumColumns(), nnzU);
-      L_->allocateMatrixData(memory::HOST);
-      U_->allocateMatrixData(memory::HOST);
-      int ok = klu_extract(Numeric_,
-                           Symbolic_,
-                           L_->getColData(memory::HOST),
-                           L_->getRowData(memory::HOST),
-                           L_->getValues(memory::HOST),
-                           U_->getColData(memory::HOST),
-                           U_->getRowData(memory::HOST),
-                           U_->getValues(memory::HOST),
-                           nullptr,
-                           nullptr,
-                           nullptr,
-                           nullptr,
-                           nullptr,
-                           nullptr,
-                           nullptr,
-                           &Common_);
-
-      L_->setUpdated(memory::HOST);
-      U_->setUpdated(memory::HOST);
-
-      (void) ok; // TODO: Check status in ok before setting `factors_extracted_`
-      factors_extracted_ = true;
-    }
+    extractFactors();
     return U_;
   }
 
