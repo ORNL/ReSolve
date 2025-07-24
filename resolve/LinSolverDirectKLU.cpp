@@ -260,6 +260,12 @@ namespace ReSolve
     return 1;
   }
 
+  /** 
+   * @brief Extracts L and U factors from the KLU solver in CSR format, if they have not already been extracted.
+   * 
+   * It extracts the factors as $A = U^T L^T$,
+   * where U^T is the reinterpretation of the CSC U factor as CSR and L^T is the reinterpretation of the CSC L factor as CSR.
+  */
   void LinSolverDirectKLU::extractFactorsCsr()
   {
     if (!factors_extracted_)
@@ -299,18 +305,7 @@ namespace ReSolve
   }
 
   /**
-   * @brief Get the L factor of the matrix A in compressed sparse row format.
-   *
-   * This function extracts the lower triangular factor L from the
-   * KLU solver's numeric factorization. If the factors have not been
-   * extracted yet, it allocates memory for L and U factors,
-   * extracts them from the numeric factorization,
-   * and sets the updated flag for both factors.
-   * Otherwise, it returns the already extracted L factor.
-   * This is because the input matrix is CSR and interpreted as CSC.
-   * Then the CSC U extraced from klu is actually an L factor of the original matrix,
-   * if interprted as CSR. The reverse is true for the CSC L being a U factor of the original matrix.
-   * Note that in this factorization, the scaling is in the L factor, unlike convention.
+   * @brief Gets an L factor of the matrix A in compressed sparse row format.
    *
    * @return L factor in compressed sparse row format
    */
@@ -321,18 +316,7 @@ namespace ReSolve
   }
 
   /**
-   * @brief Get the U factor of the matrix A in compressed sparse row format.
-   *
-   * This function extracts the upper triangular factor U from the
-   * KLU solver's numeric factorization. If the factors have not been
-   * extracted yet, it allocates memory for L and U factors,
-   * extracts them from the numeric factorization,
-   * and sets the updated flag for both factors.
-   * Otherwise, it returns the already extracted U factor.
-   * This is because the input matrix is CSR and interpreted as CSC.
-   * Then the CSC U extraced from klu is actually an L factor of the original matrix,
-   * if interprted as CSR. The reverse is true for the CSC L being a U factor of the original matrix.
-   * Note that in this factorization, the scaling is in the L factor, unlike convention.
+   * @brief Gets a U factor of the matrix A in compressed sparse row format.
    *
    * @return U factor in compressed sparse row format
    */
@@ -343,7 +327,7 @@ namespace ReSolve
   }
 
   /**
-   * @brief Extract the L and U factors from the KLU solver in CSC format.
+   * @brief Extract L and U factors from the KLU solver in compressed sparse column format.
    */
   void LinSolverDirectKLU::extractFactors()
   {
@@ -382,9 +366,9 @@ namespace ReSolve
   }
 
   /**
-   * @brief Get the lower triangular factor L.
+   * @brief Get the lower triangular factor L of the matrix A in compressed sparse column format.
    *
-   * @return L factor
+   * @return L factor in compressed sparse column format
    */
   matrix::Sparse* LinSolverDirectKLU::getLFactor()
   {
@@ -393,7 +377,7 @@ namespace ReSolve
   }
 
   /**
-   * @brief Get the upper triangular factor U.
+   * @brief Get the upper triangular factor U of the matrix A in compressed sparse column format.
    *
    * @return U factor
    */
