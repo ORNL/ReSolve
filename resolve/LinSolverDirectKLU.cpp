@@ -1,4 +1,5 @@
 #include "LinSolverDirectKLU.hpp"
+
 #include <cassert> // includes assert
 #include <cstring> // includes memcpy
 
