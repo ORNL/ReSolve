@@ -1,5 +1,5 @@
 #include "LinSolverDirectKLU.hpp"
-
+#include <cassert> // includes assert
 #include <cstring> // includes memcpy
 
 #include <resolve/matrix/Csc.hpp>
@@ -165,6 +165,13 @@ namespace ReSolve
     if (Numeric_ == nullptr)
     {
       return 1;
+    }
+    else
+    {
+      if (Numeric_->nzoff != 0)
+      {
+        assert(0 && "Numeric_->nzoff != 0, this is not supported by ReSolve!");
+      }
     }
     return 0;
   }
