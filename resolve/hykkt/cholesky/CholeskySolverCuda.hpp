@@ -12,11 +12,15 @@ namespace ReSolve {
       CholeskySolverCuda();
       ~CholeskySolverCuda();
 
-      void symbolicAnalysis(matrix::Csr* A);
-      void numericalFactorization(matrix::Csr* A, real_type tol);
-      void solve(matrix::Csr* A, vector::Vector* x, vector::Vector* b);
+      void addMatrixInfo(matrix::Csr* A);
+      void symbolicAnalysis();
+      void numericalFactorization(real_type tol);
+      void solve(vector::Vector* x, vector::Vector* b);
     private:
       MemoryHandler mem_;
+
+      matrix::Csr* A_; // pointer to the input matrix
+
         //handle to the cuSPARSE library context
       cusolverSpHandle_t cusolverHandle_;
       cusparseMatDescr_t descrA_; //descriptor for matrix A 

@@ -23,7 +23,7 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
 
   ReSolve::tests::HykktCholeskyTests test(memspace);
 
-  result += test.test();
+  result += test.minimalCorrectness();
 
   std::cout << "\n";
 }
@@ -31,7 +31,7 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
 int main(int, char**)
 {
   ReSolve::tests::TestingResults result;
-  // runTests("CPU", ReSolve::memory::HOST, result);
+  runTests("CPU", ReSolve::memory::HOST, result);
 
 #ifdef RESOLVE_USE_CUDA
   runTests("CUDA", ReSolve::memory::DEVICE, result);

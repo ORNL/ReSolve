@@ -1,5 +1,6 @@
 #include "CholeskySolver.hpp"
 
+#include "CholeskySolverCpu.hpp"
 #ifdef RESOLVE_USE_CUDA
 #include "CholeskySolverCuda.hpp"
 #endif
@@ -11,7 +12,7 @@ namespace ReSolve {
     {
       if (memspace_ == memory::HOST)
       {
-        impl_ = new CholeskySolverCuda();
+        impl_ = new CholeskySolverCpu();
       }
       else
       {
@@ -32,11 +33,12 @@ namespace ReSolve {
     void CholeskySolver::addMatrixInfo(matrix::Csr* A)
     {
       A_ = A;
+      impl_->addMatrixInfo(A);
     }
 
     void CholeskySolver::symbolicAnalysis()
     {
-      impl_->symbolicAnalysis(A_);
+      impl_->symbolicAnalysis();
     }
 
     void CholeskySolver::setPivotTolerance(real_type tol)
@@ -46,12 +48,12 @@ namespace ReSolve {
 
     void CholeskySolver::numericalFactorization()
     {
-      impl_->numericalFactorization(A_, tol_);
+      impl_->numericalFactorization(tol_);
     }
     
     void CholeskySolver::solve(vector::Vector* x, vector::Vector* b)
     {
-      impl_->solve(A_, x, b);
+      impl_->solve(x, b);
     }
   } // namespace hykkt
 } // namespace ReSolve

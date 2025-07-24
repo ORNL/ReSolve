@@ -30,8 +30,16 @@ namespace ReSolve
       {
       }
 
-      TestOutcome test()
+      /**
+       * @brief Test the solver on a dense 3x3 matrix with known solution.
+       *
+       * @return TestOutcome the outcome of the test
+       */
+      TestOutcome minimalCorrectness()
       {
+        TestStatus  status;
+        std::string testname(__func__);
+
         index_type n = 3;
         matrix::Csr* A = new matrix::Csr(n, n, 9);
         index_type A_row_data[4] = {0, 3, 6, 9};
@@ -68,6 +76,7 @@ namespace ReSolve
             std::cout << "Test failed at index " << i << ": expected " 
                   << expected_x[i] << ", got " 
                   << x->getData(memory::HOST)[i] << "\n";
+            status = FAIL;
           }
         }
 
@@ -75,7 +84,7 @@ namespace ReSolve
         delete x;
         delete b;
 
-        return PASS;
+        return status.report(testname.c_str());
       }
 
     private:

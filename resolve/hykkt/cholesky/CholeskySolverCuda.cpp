@@ -18,39 +18,43 @@ namespace ReSolve {
       mem_.deleteOnDevice(buffer_);
     }
 
-    void CholeskySolverCuda::symbolicAnalysis(matrix::Csr* A) {
+    void CholeskySolverCuda::addMatrixInfo(matrix::Csr* A) {
+      A_ = A;
+    }
+
+    void CholeskySolverCuda::symbolicAnalysis() {
       cusolverSpXcsrcholAnalysis(cusolverHandle_,
-                                  A->getNumRows(), 
-                                  A->getNnz(), 
-                                  descrA_, 
-                                  A->getRowData(memory::DEVICE), 
-                                  A->getColData(memory::DEVICE), 
+                                  A_->getNumRows(),
+                                  A_->getNnz(),
+                                  descrA_,
+                                  A_->getRowData(memory::DEVICE),
+                                  A_->getColData(memory::DEVICE),
                                   factorizationInfo_);
       // TODO: Do we have a ReSolve type for size_t?
       size_t internalDataBytes = 0;
       size_t workspaceBytes = 0;
       cusolverSpDcsrcholBufferInfo(cusolverHandle_,
-                                    A->getNumRows(),
-                                    A->getNnz(),
+                                    A_->getNumRows(),
+                                    A_->getNnz(),
                                     descrA_,
-                                    A->getValues(memory::DEVICE),
-                                    A->getRowData(memory::DEVICE),
-                                    A->getColData(memory::DEVICE),
+                                    A_->getValues(memory::DEVICE),
+                                    A_->getRowData(memory::DEVICE),
+                                    A_->getColData(memory::DEVICE),
                                     factorizationInfo_,
                                     &internalDataBytes,
                                     &workspaceBytes);
       mem_.allocateBufferOnDevice(&buffer_, workspaceBytes);
     }
 
-    void CholeskySolverCuda::numericalFactorization(matrix::Csr* A, real_type tol) {
+    void CholeskySolverCuda::numericalFactorization(real_type tol) {
       int singularity = 0;
       cusolverSpDcsrcholFactor(cusolverHandle_,
-                                A->getNumRows(),
-                                A->getNnz(),
+                                A_->getNumRows(),
+                                A_->getNnz(),
                                 descrA_,
-                                A->getValues(memory::DEVICE),
-                                A->getRowData(memory::DEVICE),
-                                A->getColData(memory::DEVICE),
+                                A_->getValues(memory::DEVICE),
+                                A_->getRowData(memory::DEVICE),
+                                A_->getColData(memory::DEVICE),
                                 factorizationInfo_,
                                 buffer_);
       cusolverSpDcsrcholZeroPivot(cusolverHandle_,
@@ -58,13 +62,13 @@ namespace ReSolve {
                                   tol,
                                   &singularity);
       if (singularity >= 0) {
-        // TODO: What to do if A is singular?
+        // TODO: What to do if A_ is singular?
       }
     }
 
-    void CholeskySolverCuda::solve(matrix::Csr* A, vector::Vector* x, vector::Vector* b) {
+    void CholeskySolverCuda::solve(vector::Vector* x, vector::Vector* b) {
       cusolverSpDcsrcholSolve(cusolverHandle_,
-                              A->getNumRows(),
+                              A_->getNumRows(),
                               b->getData(memory::DEVICE),
                               x->getData(memory::DEVICE),
                               factorizationInfo_,

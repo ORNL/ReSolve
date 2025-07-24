@@ -9,6 +9,7 @@
 # C++ code
 set(HyKKT_CHOL_SRC
     CholeskySolver.cpp
+    CholeskySolverCpu.cpp
 )
 
 # C++ code that depends on CUDA SDK libraries
@@ -23,12 +24,13 @@ set(HyKKT_ROCM_SRC)
 set(HyKKT_CHOL_HEADER_INSTALL
     CholeskySolver.hpp
     CholeskySolverImpl.hpp
+    CholeskySolverCpu.hpp
     CholeskySolverCuda.hpp
 )
 
 add_library(resolve_hykkt_chol SHARED ${HyKKT_CHOL_SRC})
 
-target_link_libraries(resolve_hykkt_chol PUBLIC ${suitesparse_amd})
+target_link_libraries(resolve_hykkt_chol PUBLIC ${suitesparse_cholmod})
 target_include_directories(resolve_hykkt_chol PUBLIC ${SUITESPARSE_INCLUDE_DIR})
 
 # Link to CUDA ReSolve backend if CUDA is support enabled
@@ -48,9 +50,9 @@ if (NOT RESOLVE_USE_GPU)
 endif()
 
 target_link_libraries(resolve_hykkt_chol PUBLIC resolve_workspace
-                                                resolve_hykkt
                                                 resolve_vector
-                                                resolve_tpl)
+                                                resolve_matrix
+                                                resolve_logger)
 
 target_include_directories(resolve_hykkt_chol INTERFACE
     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
