@@ -69,6 +69,7 @@ namespace ReSolve {
                               x->getData(memory::DEVICE),
                               factorizationInfo_,
                               buffer_);
+      x->setDataUpdated(memory::DEVICE);
     }
   }
 }
