@@ -13,6 +13,7 @@ set(SUITESPARSE_MODULES
   amd
   colamd
   klu
+  cholmod
   suitesparseconfig)
 
 find_library(SUITESPARSE_LIBRARY
