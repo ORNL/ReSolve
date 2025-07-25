@@ -49,6 +49,7 @@ namespace ReSolve
         out::error() << "No GPU support enabled, and memory space set to DEVICE.\n";
         exit(1);
       }
+      devImpl_ = nullptr;
 #endif
     }
 
