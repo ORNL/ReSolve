@@ -9,6 +9,7 @@
 # Build HyKKT tests
 
 add_executable(runHykktPermutationTests.exe runHykktPermutationTests.cpp)
+
 add_executable(runHykktRuizScalingTests.exe runHykktRuizScalingTests.cpp)
 target_link_libraries(runHykktPermutationTests.exe PRIVATE resolve_hykkt resolve_matrix)
 target_link_libraries(runHykktRuizScalingTests.exe PRIVATE resolve_hykkt resolve_hykkt_ruiz resolve_matrix)
