@@ -266,6 +266,30 @@ namespace ReSolve
           }
         }
 
+        // Check J_tr
+        // J_tr[i][j] = (j+1)^{0.25} / (i+1)^{0.5} for i = j or j = i-1
+        row = 0;
+        col = 0;
+        for (index_type i = 0; i < J->getNnz(); ++i)
+        {
+          real_type expected_value = std::pow(static_cast<real_type>(col + 1), 0.25) / std::pow(static_cast<real_type>(row + 1), 0.5);
+          if (std::abs(J->getValues(memory::HOST)[i] - expected_value) > tol)
+          {
+            std::cout << "Test failed for J^T[" << row << "," << col << "]: expected " << expected_value
+                      << ", got " << J->getValues(memory::HOST)[i] << "\n";
+            test_passed = false;
+          }
+
+          if (i % 2 == 0)
+          {
+            row++;
+          }
+          else
+          {
+            col++;
+          }
+        }
+
         // Check rhs_top
         // rhs[i] = 1 / sqrt(i + 1) for i = 0, 1, ..., n-1
         for (index_type i = 0; i < n; ++i)
