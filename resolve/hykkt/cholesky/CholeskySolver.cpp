@@ -3,6 +3,8 @@
 #include "CholeskySolverCpu.hpp"
 #ifdef RESOLVE_USE_CUDA
 #include "CholeskySolverCuda.hpp"
+#elif defined(RESOLVE_USE_HIP)
+#include "CholeskySolverHip.hpp"
 #endif
 
 namespace ReSolve {
@@ -19,7 +21,7 @@ namespace ReSolve {
 #ifdef RESOLVE_USE_CUDA
         impl_ = new CholeskySolverCuda();
 #elif defined(RESOLVE_USE_HIP)
-        // impl_ = new CholeskySolverHip();
+        impl_ = new CholeskySolverHip();
 #else
         out::error() << "No GPU support enabled, and memory space set to DEVICE.\n";
         exit(1);

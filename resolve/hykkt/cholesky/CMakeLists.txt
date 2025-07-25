@@ -18,7 +18,9 @@ set(HyKKT_CUDASDK_SRC
 )
 
 # and on HIP
-set(HyKKT_ROCM_SRC)
+set(HyKKT_ROCM_SRC
+    CholeskySolverHip.cpp
+)
 
 # Header files to be installed
 set(HyKKT_CHOL_HEADER_INSTALL
@@ -26,6 +28,7 @@ set(HyKKT_CHOL_HEADER_INSTALL
     CholeskySolverImpl.hpp
     CholeskySolverCpu.hpp
     CholeskySolverCuda.hpp
+    CholeskySolverHip.hpp
 )
 
 add_library(resolve_hykkt_chol SHARED ${HyKKT_CHOL_SRC})
