@@ -1,5 +1,4 @@
 #include "RuizScaling.hpp"
-
 #include "RuizScalingKernelsCpu.hpp"
 #ifdef RESOLVE_USE_CUDA
 #include "RuizScalingKernelsCuda.hpp"
@@ -37,7 +36,11 @@ namespace ReSolve
     RuizScaling::RuizScaling(index_type          n,
                              index_type          total_n,
                              memory::MemorySpace memspace)
-      : n_(n), total_n_(total_n), memspace_(memspace)
+      : n_(n),
+        total_n_(total_n),
+        memspace_(memspace),
+        scaling_vector_(total_n_),
+        aggregate_scaling_vector_(total_n_)
     {
       if (memspace_ == memory::HOST)
       {
@@ -49,15 +52,15 @@ namespace ReSolve
         kernelImpl_ = new RuizScalingKernelsCuda();
 #elif defined(RESOLVE_USE_HIP)
         kernelImpl_ = new RuizScalingKernelsHip();
+#else
+        out::error() << "RuizScaling: Memory space is DEVICE but no GPU support is enabled.";
+        exit(1);
 #endif
-        if (!kernelImpl_)
-        {
-          out::error() << "RuizScaling: Memory space is DEVICE but no GPU support is enabled.";
-          exit(1);
-        }
       }
 
-      allocateWorkspace();
+      scaling_vector_.allocate(memspace_);
+      aggregate_scaling_vector_.allocate(memspace_);
+      resetScaling();
     }
 
     RuizScaling::~RuizScaling()
@@ -93,9 +96,9 @@ namespace ReSolve
      *  @brief Get the scaling vector.
      *  @return Pointer to the scaling vector.
      */
-    vector::Vector* RuizScaling::getAggregateScalingVector() const
+    vector::Vector* RuizScaling::getAggregateScalingVector()
     {
-      return aggregate_scaling_vector_;
+      return &aggregate_scaling_vector_;
     }
 
     /**
@@ -107,8 +110,8 @@ namespace ReSolve
 
       for (index_type i = 0; i < num_iterations; ++i)
       {
-        kernelImpl_->adaptRowMax(n_, total_n_, hes_, jac_, jac_tr_, scaling_vector_);
-        kernelImpl_->adaptDiagScale(n_, total_n_, hes_, jac_, jac_tr_, rhs_top_, rhs_bottom_, aggregate_scaling_vector_, scaling_vector_);
+        kernelImpl_->adaptRowMax(n_, total_n_, hes_, jac_, jac_tr_, &scaling_vector_);
+        kernelImpl_->adaptDiagScale(n_, total_n_, hes_, jac_, jac_tr_, rhs_top_, rhs_bottom_, &aggregate_scaling_vector_, &scaling_vector_);
       }
 
       // Make the client aware that the data has been updated
@@ -117,7 +120,7 @@ namespace ReSolve
       jac_tr_->setUpdated(memspace_);
       rhs_top_->setDataUpdated(memspace_);
       rhs_bottom_->setDataUpdated(memspace_);
-      aggregate_scaling_vector_->setDataUpdated(memspace_);
+      aggregate_scaling_vector_.setDataUpdated(memspace_);
     }
 
     /**
@@ -125,30 +128,7 @@ namespace ReSolve
      */
     void RuizScaling::resetScaling()
     {
-      aggregate_scaling_vector_->setToConst(ONE, memspace_);
-    }
-
-    /**
-     *  @brief Allocate memory for the scaling vectors and set initial values.
-     */
-    void RuizScaling::allocateWorkspace()
-    {
-      scaling_vector_ = new vector::Vector(total_n_);
-      scaling_vector_->allocate(memspace_);
-
-      aggregate_scaling_vector_ = new vector::Vector(total_n_);
-      aggregate_scaling_vector_->allocate(memspace_);
-
-      resetScaling();
-    }
-
-    /**
-     *  @brief Deallocate memory for the scaling vectors.
-     */
-    void RuizScaling::deallocateWorkspace()
-    {
-      delete scaling_vector_;
-      delete aggregate_scaling_vector_;
+      aggregate_scaling_vector_.setToConst(ONE, memspace_);
     }
   } // namespace hykkt
 } // namespace ReSolve
