@@ -1,4 +1,5 @@
 #include "RuizScaling.hpp"
+
 #include "RuizScalingKernelsCpu.hpp"
 #ifdef RESOLVE_USE_CUDA
 #include "RuizScalingKernelsCuda.hpp"
