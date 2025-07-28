@@ -314,4 +314,4 @@ namespace ReSolve
       }
     }; // class HykktCholeskyTests
   } // namespace tests
-} // namespace ReSolve
+} // namespace ReSolv
