@@ -13,13 +13,10 @@ namespace ReSolve {
       void symbolicAnalysis();
       void numericalFactorization(real_type tol);
       void solve(vector::Vector* x, vector::Vector* b);
-    private:
-      MemoryHandler mem_;
-      
+    private:      
       cholmod_common Common_;
       cholmod_sparse* A_chol_; // cholmod sparse matrix representation
       cholmod_factor* factorization_;
-      cholmod_dense* x_chol_; // cholmod dense vector for solution
 
       // helper methods to convert between ReSolve and cholmod types
       cholmod_sparse* convertToCholmod(matrix::Csr* A);

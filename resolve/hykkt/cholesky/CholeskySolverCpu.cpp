@@ -12,10 +12,21 @@ namespace ReSolve {
     }
 
     CholeskySolverCpu::~CholeskySolverCpu() {
-      cholmod_free_sparse(&A_chol_, &Common_);
+      if (A_chol_)
+      {
+        cholmod_free_sparse(&A_chol_, &Common_);
+      }
+      if (factorization_)
+      {
+        cholmod_free_factor(&factorization_, &Common_);
+      }
     }
 
     void CholeskySolverCpu::addMatrixInfo(matrix::Csr* A) {
+      if (A_chol_)
+      {
+        cholmod_free_sparse(&A_chol_, &Common_);
+      }
       A_chol_ = convertToCholmod(A);
     }
 
@@ -37,16 +48,24 @@ namespace ReSolve {
     }
 
     void CholeskySolverCpu::solve(vector::Vector* x, vector::Vector* b) {
-      cholmod_dense* x_chol_ = cholmod_solve(CHOLMOD_A, factorization_, convertToCholmod(b), &Common_);
+      cholmod_dense* b_chol = convertToCholmod(b);
+      cholmod_dense* x_chol = cholmod_solve(CHOLMOD_A, factorization_, b_chol, &Common_);
       if (Common_.status < 0)
       {
         out::error() << "Cholesky solve failed.";
       }
-      x->copyDataFrom(static_cast<real_type*>(x_chol_->x), memory::HOST, memory::HOST);
+      x->copyDataFrom(static_cast<real_type*>(x_chol->x), memory::HOST, memory::HOST);
     }
 
     cholmod_sparse* CholeskySolverCpu::convertToCholmod(matrix::Csr* A) {
-      A_chol_ = cholmod_allocate_sparse(A->getNumRows(), A->getNumColumns(), A->getNnz(), 1, 1, 1, CHOLMOD_REAL, &Common_);
+      A_chol_ = cholmod_allocate_sparse((size_t) A->getNumRows(),
+                                        (size_t) A->getNumColumns(), 
+                                        (size_t) A->getNnz(), 
+                                        1, 
+                                        1, 
+                                        1, 
+                                        CHOLMOD_REAL, 
+                                        &Common_);
       A_chol_->p = A->getRowData(memory::HOST);
       A_chol_->i = A->getColData(memory::HOST);
       A_chol_->x = A->getValues(memory::HOST);
@@ -55,7 +74,11 @@ namespace ReSolve {
     }
 
     cholmod_dense* CholeskySolverCpu::convertToCholmod(vector::Vector* v) {
-      cholmod_dense* v_chol = cholmod_allocate_dense(v->getSize(), 1, v->getSize(), CHOLMOD_REAL, &Common_);
+      cholmod_dense* v_chol = cholmod_allocate_dense((size_t) v->getSize(), 
+                                                     1, 
+                                                     (size_t) v->getSize(), 
+                                                     CHOLMOD_REAL, 
+                                                     &Common_);
       v_chol->x = v->getData(memory::HOST);
       return v_chol;
     }
