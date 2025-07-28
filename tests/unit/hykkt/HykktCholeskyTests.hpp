@@ -7,8 +7,11 @@
 #include <string>
 #include <vector>
 
-#include <resolve/hykkt/cholesky/CholeskySolver.hpp>
 #include <tests/unit/TestBase.hpp>
+#include <resolve/matrix/Csr.hpp>
+#include <resolve/vector/Vector.hpp>
+#include <resolve/hykkt/cholesky/CholeskySolver.hpp>
+
 
 namespace ReSolve
 {

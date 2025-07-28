@@ -16,7 +16,7 @@ target_link_libraries(runHykktRuizScalingTests.exe PRIVATE resolve_hykkt resolve
 
 
 add_executable(runHykktCholeskyTests.exe runHykktCholeskyTests.cpp)
-target_link_libraries(runHykktCholeskyTests.exe PRIVATE resolve_hykkt_chol resolve_matrix resolve_vector resolve_tpl)
+target_link_libraries(runHykktCholeskyTests.exe PRIVATE resolve_hykkt_chol resolve_matrix resolve_vector)
 
 # Install tests
 set(installable_tests runHykktPermutationTests.exe
