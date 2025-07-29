@@ -7,10 +7,12 @@
 #include "CholeskySolverHip.hpp"
 #endif
 
-namespace ReSolve {
-  namespace hykkt {
-    CholeskySolver::CholeskySolver(memory::MemorySpace memspace):
-      memspace_(memspace)
+namespace ReSolve
+{
+  namespace hykkt
+  {
+    CholeskySolver::CholeskySolver(memory::MemorySpace memspace)
+      : memspace_(memspace)
     {
       if (memspace_ == memory::HOST)
       {
@@ -30,7 +32,8 @@ namespace ReSolve {
     }
 
     CholeskySolver::~CholeskySolver()
-    {}
+    {
+    }
 
     void CholeskySolver::addMatrixInfo(matrix::Csr* A)
     {
@@ -52,7 +55,7 @@ namespace ReSolve {
     {
       impl_->numericalFactorization(tol_);
     }
-    
+
     void CholeskySolver::solve(vector::Vector* x, vector::Vector* b)
     {
       impl_->solve(x, b);

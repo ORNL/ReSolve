@@ -1,13 +1,15 @@
 #pragma once
+#include "CholeskySolverImpl.hpp"
+#include <resolve/MemoryUtils.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/vector/Vector.hpp>
-#include <resolve/MemoryUtils.hpp>
 
-#include "CholeskySolverImpl.hpp"
-
-namespace ReSolve {
-  namespace hykkt {
-    class CholeskySolver {
+namespace ReSolve
+{
+  namespace hykkt
+  {
+    class CholeskySolver
+    {
     public:
       CholeskySolver(memory::MemorySpace memspace);
       ~CholeskySolver();
@@ -21,9 +23,9 @@ namespace ReSolve {
     private:
       memory::MemorySpace memspace_;
 
-      matrix::Csr* A_;
-      real_type tol_ = 1e-12;
+      matrix::Csr*        A_;
+      real_type           tol_ = 1e-12;
       CholeskySolverImpl* impl_;
     };
-  }
-}
+  } // namespace hykkt
+} // namespace ReSolve

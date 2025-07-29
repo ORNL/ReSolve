@@ -1,17 +1,21 @@
 #include "CholeskySolverCpu.hpp"
 
-namespace ReSolve {
+namespace ReSolve
+{
   using real_type = ReSolve::real_type;
-  using out = ReSolve::io::Logger;
+  using out       = ReSolve::io::Logger;
 
-  namespace hykkt {
-    CholeskySolverCpu::CholeskySolverCpu() {
+  namespace hykkt
+  {
+    CholeskySolverCpu::CholeskySolverCpu()
+    {
       Common_.nmethods = 1;
       // Use natural ordering
       Common_.method[0].ordering = CHOLMOD_NATURAL;
     }
 
-    CholeskySolverCpu::~CholeskySolverCpu() {
+    CholeskySolverCpu::~CholeskySolverCpu()
+    {
       if (A_chol_)
       {
         cholmod_free_sparse(&A_chol_, &Common_);
@@ -22,7 +26,8 @@ namespace ReSolve {
       }
     }
 
-    void CholeskySolverCpu::addMatrixInfo(matrix::Csr* A) {
+    void CholeskySolverCpu::addMatrixInfo(matrix::Csr* A)
+    {
       if (A_chol_)
       {
         cholmod_free_sparse(&A_chol_, &Common_);
@@ -30,7 +35,8 @@ namespace ReSolve {
       A_chol_ = convertToCholmod(A);
     }
 
-    void CholeskySolverCpu::symbolicAnalysis() {
+    void CholeskySolverCpu::symbolicAnalysis()
+    {
       factorization_ = cholmod_analyze(A_chol_, &Common_);
       if (Common_.status < 0)
       {
@@ -38,7 +44,8 @@ namespace ReSolve {
       }
     }
 
-    void CholeskySolverCpu::numericalFactorization(real_type tol) {
+    void CholeskySolverCpu::numericalFactorization(real_type tol)
+    {
       // TODO: What to do with tol for CPU?
       cholmod_factorize(A_chol_, factorization_, &Common_);
       if (Common_.status < 0)
@@ -47,7 +54,8 @@ namespace ReSolve {
       }
     }
 
-    void CholeskySolverCpu::solve(vector::Vector* x, vector::Vector* b) {
+    void CholeskySolverCpu::solve(vector::Vector* x, vector::Vector* b)
+    {
       cholmod_dense* b_chol = convertToCholmod(b);
       cholmod_dense* x_chol = cholmod_solve(CHOLMOD_A, factorization_, b_chol, &Common_);
       if (Common_.status < 0)
@@ -57,14 +65,15 @@ namespace ReSolve {
       x->copyDataFrom(static_cast<real_type*>(x_chol->x), memory::HOST, memory::HOST);
     }
 
-    cholmod_sparse* CholeskySolverCpu::convertToCholmod(matrix::Csr* A) {
-      A_chol_ = cholmod_allocate_sparse((size_t) A->getNumRows(),
-                                        (size_t) A->getNumColumns(), 
-                                        (size_t) A->getNnz(), 
-                                        1, 
-                                        1, 
-                                        1, 
-                                        CHOLMOD_REAL, 
+    cholmod_sparse* CholeskySolverCpu::convertToCholmod(matrix::Csr* A)
+    {
+      A_chol_    = cholmod_allocate_sparse((size_t) A->getNumRows(),
+                                        (size_t) A->getNumColumns(),
+                                        (size_t) A->getNnz(),
+                                        1,
+                                        1,
+                                        1,
+                                        CHOLMOD_REAL,
                                         &Common_);
       A_chol_->p = A->getRowData(memory::HOST);
       A_chol_->i = A->getColData(memory::HOST);
@@ -73,14 +82,15 @@ namespace ReSolve {
       return A_chol_;
     }
 
-    cholmod_dense* CholeskySolverCpu::convertToCholmod(vector::Vector* v) {
-      cholmod_dense* v_chol = cholmod_allocate_dense((size_t) v->getSize(), 
-                                                     1, 
-                                                     (size_t) v->getSize(), 
-                                                     CHOLMOD_REAL, 
+    cholmod_dense* CholeskySolverCpu::convertToCholmod(vector::Vector* v)
+    {
+      cholmod_dense* v_chol = cholmod_allocate_dense((size_t) v->getSize(),
+                                                     1,
+                                                     (size_t) v->getSize(),
+                                                     CHOLMOD_REAL,
                                                      &Common_);
-      v_chol->x = v->getData(memory::HOST);
+      v_chol->x             = v->getData(memory::HOST);
       return v_chol;
     }
-  }
-}
+  } // namespace hykkt
+} // namespace ReSolve

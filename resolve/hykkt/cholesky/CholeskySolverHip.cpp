@@ -1,31 +1,33 @@
 #include "CholeskySolverHip.hpp"
 
-namespace ReSolve {
+namespace ReSolve
+{
   using real_type = ReSolve::real_type;
 
-  namespace hykkt {
-    CholeskySolverHip::CholeskySolverHip() {
-      
+  namespace hykkt
+  {
+    CholeskySolverHip::CholeskySolverHip()
+    {
     }
 
-    CholeskySolverHip::~CholeskySolverHip() {
-      
+    CholeskySolverHip::~CholeskySolverHip()
+    {
     }
 
-    void CholeskySolverHip::addMatrixInfo(matrix::Csr* A) {
-      
+    void CholeskySolverHip::addMatrixInfo(matrix::Csr* A)
+    {
     }
 
-    void CholeskySolverHip::symbolicAnalysis() {
-      
+    void CholeskySolverHip::symbolicAnalysis()
+    {
     }
 
-    void CholeskySolverHip::numericalFactorization(real_type tol) {
-      
+    void CholeskySolverHip::numericalFactorization(real_type tol)
+    {
     }
 
-    void CholeskySolverHip::solve(vector::Vector* x, vector::Vector* b) {
-      
+    void CholeskySolverHip::solve(vector::Vector* x, vector::Vector* b)
+    {
     }
-  }
-}
+  } // namespace hykkt
+} // namespace ReSolve
