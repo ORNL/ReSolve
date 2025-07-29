@@ -40,7 +40,7 @@ namespace ReSolve
       factorization_ = cholmod_analyze(A_chol_, &Common_);
       if (Common_.status < 0)
       {
-        out::error() << "Cholesky symbolic analysis failed.";
+        out::error() << "Cholesky symbolic analysis failed with status: " << Common_.status << "\n";
       }
     }
 
@@ -50,7 +50,7 @@ namespace ReSolve
       cholmod_factorize(A_chol_, factorization_, &Common_);
       if (Common_.status < 0)
       {
-        out::error() << "Cholesky factorization failed.";
+        out::error() << "Cholesky factorization failed with status: " << Common_.status << "\n";
       }
     }
 
@@ -60,7 +60,7 @@ namespace ReSolve
       cholmod_dense* x_chol = cholmod_solve(CHOLMOD_A, factorization_, b_chol, &Common_);
       if (Common_.status < 0)
       {
-        out::error() << "Cholesky solve failed.";
+        out::error() << "Cholesky solve failed with status: " << Common_.status << "\n";
       }
       x->copyDataFrom(static_cast<real_type*>(x_chol->x), memory::HOST, memory::HOST);
     }

@@ -3,6 +3,7 @@
 namespace ReSolve
 {
   using real_type = ReSolve::real_type;
+  using out = ReSolve::io::Logger;
 
   namespace hykkt
   {
@@ -30,25 +31,28 @@ namespace ReSolve
     void CholeskySolverCuda::symbolicAnalysis()
     {
       cusolverSpXcsrcholAnalysis(cusolverHandle_,
-                                 A_->getNumRows(),
-                                 A_->getNnz(),
-                                 descrA_,
-                                 A_->getRowData(memory::DEVICE),
-                                 A_->getColData(memory::DEVICE),
-                                 factorizationInfo_);
-      // TODO: Do we have a ReSolve type for size_t?
+                                  A_->getNumRows(),
+                                  A_->getNnz(),
+                                  descrA_,
+                                  A_->getRowData(memory::DEVICE),
+                                  A_->getColData(memory::DEVICE),
+                                  factorizationInfo_);
+      // TODO: Do we have a ReSolve type for size_t? Handle type conversions with library functions.
       size_t internalDataBytes = 0;
       size_t workspaceBytes    = 0;
       cusolverSpDcsrcholBufferInfo(cusolverHandle_,
-                                   A_->getNumRows(),
-                                   A_->getNnz(),
-                                   descrA_,
-                                   A_->getValues(memory::DEVICE),
-                                   A_->getRowData(memory::DEVICE),
-                                   A_->getColData(memory::DEVICE),
-                                   factorizationInfo_,
-                                   &internalDataBytes,
-                                   &workspaceBytes);
+                                    A_->getNumRows(),
+                                    A_->getNnz(),
+                                    descrA_,
+                                    A_->getValues(memory::DEVICE),
+                                    A_->getRowData(memory::DEVICE),
+                                    A_->getColData(memory::DEVICE),
+                                    factorizationInfo_,
+                                    &internalDataBytes,
+                                    &workspaceBytes);
+      if (buffer_ != nullptr) {
+        mem_.deleteOnDevice(buffer_);
+      }
       mem_.allocateBufferOnDevice(&buffer_, workspaceBytes);
     }
 
@@ -68,9 +72,8 @@ namespace ReSolve
                                   factorizationInfo_,
                                   tol,
                                   &singularity);
-      if (singularity >= 0)
-      {
-        // TODO: What to do if A_ is singular?
+      if (singularity >= 0) {
+        out::error() << "Cholesky factorization failed with singularity at index: " << singularity << "\n";
       }
     }
 
