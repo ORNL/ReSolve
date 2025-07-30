@@ -29,6 +29,7 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
   ReSolve::tests::HykktCholeskyTests test(memspace, handler);
 
   result += test.minimalCorrectness();
+  result += test.randomizedDifferentSparsityPatterns(1000, 10);
 
   for (int size : {3, 10, 100, 1000})
   {
