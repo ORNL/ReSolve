@@ -12,6 +12,10 @@ namespace ReSolve
       Common_.nmethods = 1;
       // Use natural ordering
       Common_.method[0].ordering = CHOLMOD_NATURAL;
+
+      A_chol_ = nullptr;
+      factorization_ = nullptr;
+      cholmod_start(&Common_);
     }
 
     CholeskySolverCpu::~CholeskySolverCpu()
@@ -24,6 +28,7 @@ namespace ReSolve
       {
         cholmod_free_factor(&factorization_, &Common_);
       }
+      cholmod_finish(&Common_);
     }
 
     void CholeskySolverCpu::addMatrixInfo(matrix::Csr* A)

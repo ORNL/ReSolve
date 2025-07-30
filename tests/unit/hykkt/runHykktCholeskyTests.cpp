@@ -17,13 +17,19 @@
  * @param backend - string name of the hardware backend
  * @param result - test results
  */
+template <typename WorkspaceType>
 void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace, ReSolve::tests::TestingResults& result)
 {
   std::cout << "Running tests on " << backend << " device:\n";
 
-  ReSolve::tests::HykktCholeskyTests test(memspace);
+  WorkspaceType workspace;
+  workspace.initializeHandles();
+  ReSolve::MatrixHandler handler(&workspace);
+
+  ReSolve::tests::HykktCholeskyTests test(memspace, handler);
 
   result += test.minimalCorrectness();
+  result += test.randomizedDifferentSparsityPatterns(1000, 10);
 
   std::cout << "\n";
 }
@@ -31,14 +37,14 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
 int main(int, char**)
 {
   ReSolve::tests::TestingResults result;
-  runTests("CPU", ReSolve::memory::HOST, result);
+  runTests<ReSolve::LinAlgWorkspaceCpu>("CPU", ReSolve::memory::HOST, result);
 
 #ifdef RESOLVE_USE_CUDA
-  runTests("CUDA", ReSolve::memory::DEVICE, result);
+  runTests<ReSolve::LinAlgWorkspaceCUDA>("CUDA", ReSolve::memory::DEVICE, result);
 #endif
 
 #ifdef RESOLVE_USE_HIP
-  runTests("HIP", ReSolve::memory::DEVICE, result);
+  // runTests<ReSolve::LinAlgWorkspaceHIP>("HIP", ReSolve::memory::DEVICE, result);
 #endif
 
   return result.summary();

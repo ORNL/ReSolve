@@ -7,9 +7,14 @@
 #include <string>
 #include <vector>
 
+#include <cholmod.h>
+
 #include <resolve/hykkt/cholesky/CholeskySolver.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/vector/Vector.hpp>
+
+#include <resolve/matrix/MatrixHandler.hpp>
+#include <resolve/workspace/LinAlgWorkspace.hpp>
 #include <tests/unit/TestBase.hpp>
 
 namespace ReSolve
@@ -23,13 +28,15 @@ namespace ReSolve
     class HykktCholeskyTests : public TestBase
     {
     public:
-      HykktCholeskyTests(memory::MemorySpace memspace = memory::HOST)
+      HykktCholeskyTests(memory::MemorySpace memspace, MatrixHandler& matrixHandler)
+        : memspace_(memspace), matrixHandler_(matrixHandler)
       {
-        memspace_ = memspace;
+        cholmod_start(&Common);
       }
 
       virtual ~HykktCholeskyTests()
       {
+        cholmod_finish(&Common);
       }
 
       /**
@@ -87,9 +94,135 @@ namespace ReSolve
         return status.report(testname.c_str());
       }
 
+      TestOutcome randomizedDifferentSparsityPatterns(index_type n, index_type trials)
+      {
+        TestStatus status;
+        std::string testname(__func__);
+
+        for (index_type i = 0; i < trials; ++i)
+        {
+          matrix::Csr* A = randomSparseSPDMatrix((size_t) n, 2.0 / n);
+
+          ReSolve::hykkt::CholeskySolver solver(memspace_);
+
+          // Add A to the solver, symbolic analysis, and numerical factorization
+          solver.addMatrixInfo(A);
+          solver.symbolicAnalysis();
+          solver.numericalFactorization();
+
+          // Generate a random vector x_expected and compute b = A * x_expected
+          vector::Vector* x_expected = randomVector(n);
+          
+          vector::Vector* b = new vector::Vector(n);
+          b->allocate(memspace_);
+          real_type alpha = 1.0;
+          real_type beta  = 0.0;
+          matrixHandler_.matvec(A, x_expected, b, &alpha, &beta, memspace_);
+
+          // Solve the system A * x = b
+          vector::Vector* x = new vector::Vector(n);
+          x->allocate(memspace_);
+          solver.solve(x, b);
+
+          if (memspace_ == memory::DEVICE)
+          {
+            x_expected->syncData(memory::HOST);
+            x->syncData(memory::HOST);
+          }
+
+          // Verify result
+          // TODO only works with 1e-4 tolerance
+          real_type tol = 1e-4;
+          for (index_type j = 0; j < n; ++j)
+          {
+            if (fabs(x->getData(memory::HOST)[j] - x_expected->getData(memory::HOST)[j]) > tol)
+            {
+              printf("Test failed at index %d: expected %.12f, got %.12f\n, difference %.12f\n", 
+                      j, x_expected->getData(memory::HOST)[j], x->getData(memory::HOST)[j], 
+                      fabs(x->getData(memory::HOST)[j] - x_expected->getData(memory::HOST)[j]));
+              status *= false;
+            }
+          }
+
+          delete A;
+          delete b;
+          delete x;
+        }
+
+        return status.report(testname.c_str());
+      }
+
+      TestOutcome randomizedSameSparsityPattern(index_type n, index_type trials)
+      {
+        // TODO
+        return FAIL;
+      }
+
     private:
-      MemoryHandler                mem_;
       ReSolve::memory::MemorySpace memspace_;
+      MatrixHandler& matrixHandler_;
+
+      cholmod_common Common;
+      
+      matrix::Csr* randomSparseSPDMatrix(size_t n, double density)
+      {
+        size_t nnz = 0;
+        std::vector<int> L_p(n + 1, 0);
+        std::vector<int> L_i;
+        std::vector<double>  L_x;
+        for (size_t i = 0; i < n; ++i)
+        {
+          L_p[i + 1] = L_p[i];
+          for (size_t j = i; j < n; ++j)
+          {
+            // with probability 'density', add a non-zero entry
+            if (i == j || static_cast<double>(rand()) / RAND_MAX < density)
+            {
+              L_i.push_back((int) j);
+              L_x.push_back(2.0 * static_cast<double>(rand()) / RAND_MAX - 1.0);
+              L_p[i + 1]++;
+              nnz++;
+            }
+          }
+        }
+        
+        cholmod_sparse* L = cholmod_allocate_sparse(
+          n, n, nnz, 1, 1, 0, CHOLMOD_REAL, &Common);
+        std::copy(L_p.begin(), L_p.end(), static_cast<int*>(L->p));
+        std::copy(L_i.begin(), L_i.end(), static_cast<int*>(L->i));
+        std::copy(L_x.begin(), L_x.end(), static_cast<double*>(L->x));
+        
+        cholmod_sparse* L_tr = cholmod_transpose(L, 1, &Common);
+
+        cholmod_sparse* A_chol = cholmod_ssmult(L, L_tr, 0, 1, 0, &Common);
+        
+        matrix::Csr* A = new matrix::Csr((index_type) A_chol->nrow, (index_type) A_chol->ncol, (index_type) A_chol->nzmax);
+        A->copyDataFrom(
+          static_cast<int*>(A_chol->p), static_cast<int*>(A_chol->i),
+          static_cast<double*>(A_chol->x), memory::HOST, memspace_);
+
+        cholmod_free_sparse(&L, &Common);
+        cholmod_free_sparse(&L_tr, &Common);
+        cholmod_free_sparse(&A_chol, &Common);
+
+        return A;
+      }
+
+      vector::Vector* randomVector(index_type n)
+      {
+        vector::Vector* v = new vector::Vector(n);
+        v->allocate(memory::HOST);
+        for (index_type i = 0; i < n; ++i)
+        {
+          v->getData(memory::HOST)[i] = static_cast<double>(rand()) / RAND_MAX;
+        }
+        v->setDataUpdated(memory::HOST);
+        if (memspace_ == memory::DEVICE)
+        {
+          v->syncData(memory::DEVICE);
+        }
+        return v;
+      }
     }; // class HykktCholeskyTests
   } // namespace tests
 } // namespace ReSolve

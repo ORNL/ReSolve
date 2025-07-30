@@ -59,6 +59,7 @@ namespace ReSolve
     void CholeskySolver::solve(vector::Vector* x, vector::Vector* b)
     {
       impl_->solve(x, b);
+      x->setDataUpdated(memspace_);
     }
   } // namespace hykkt
 } // namespace ReSolve
