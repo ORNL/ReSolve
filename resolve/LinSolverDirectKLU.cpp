@@ -398,7 +398,7 @@ namespace ReSolve
     {
       P_           = new index_type[A_->getNumRows()];
       size_t nrows = static_cast<size_t>(A_->getNumRows());
-      std::memcpy(P_, Numeric_->Pnum, nrows * sizeof(index_type));
+      std::memcpy(P_, Symbolic_->P, nrows * sizeof(index_type));
       return P_;
     }
     else
