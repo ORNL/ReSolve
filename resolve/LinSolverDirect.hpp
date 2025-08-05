@@ -10,12 +10,12 @@
 #include <string>
 
 #include <resolve/LinSolver.hpp>
-
 namespace ReSolve
 {
   class LinSolverDirect : public LinSolver
   {
   public:
+    using vector_type = vector::Vector;
     LinSolverDirect();
     virtual ~LinSolverDirect();
     virtual int setup(matrix::Sparse* A   = nullptr,
@@ -40,6 +40,7 @@ namespace ReSolve
 
     virtual matrix::Sparse* getLFactorCsr();
     virtual matrix::Sparse* getUFactorCsr();
+    virtual vector_type*    getRFactorCsr();
     virtual matrix::Sparse* getLFactor();
     virtual matrix::Sparse* getUFactor();
     virtual index_type*     getPOrdering();

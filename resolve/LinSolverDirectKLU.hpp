@@ -42,11 +42,10 @@ namespace ReSolve
     void            extractFactorsCsr();
     matrix::Sparse* getLFactorCsr() override;
     matrix::Sparse* getUFactorCsr() override;
-    vector::Vector* getRScalingVectorCsr();
+    vector::Vector* getRFactorCsr() override;
     void            extractFactors();
     matrix::Sparse* getLFactor() override;
     matrix::Sparse* getUFactor() override;
-    vector::Vector* getRScalingVector();
     index_type*     getPOrdering() override;
     index_type*     getQOrdering() override;
 

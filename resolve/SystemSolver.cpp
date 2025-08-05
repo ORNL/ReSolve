@@ -41,7 +41,7 @@ namespace ReSolve
 {
   // Create a shortcut name for Logger static class
   using out = io::Logger;
-
+  using vector_type = vector::Vector;
   SystemSolver::SystemSolver(LinAlgWorkspaceCpu* workspaceCpu,
                              std::string         factor,
                              std::string         refactor,
@@ -419,8 +419,15 @@ namespace ReSolve
       is_solve_on_device_ = true;
       return refactorizationSolver_->refactorize();
     }
-
     return 1;
+  }
+
+  /**
+   * @brief get the R scaling factor
+   */
+  vector_type* SystemSolver::getRFactorCsr()
+  {
+    return factorizationSolver_->getRFactorCsr();
   }
 
   /**
@@ -445,6 +452,7 @@ namespace ReSolve
     // Get factors and permutation vectors
     L_ = factorizationSolver_->getLFactorCsr();
     U_ = factorizationSolver_->getUFactorCsr();
+    R_ = factorizationSolver_->getRFactorCsr();
     Q_ = factorizationSolver_->getPOrdering(); // P and Q are switched for CSR, eventually the function should be changed, but this limits PR scope
     P_ = factorizationSolver_->getQOrdering();
 
@@ -452,6 +460,15 @@ namespace ReSolve
     {
       out::error() << "Factorization failed, cannot extract factors ...\n";
       status += 1;
+    }
+    // scale A
+    if (R_ != nullptr)
+    {
+      matrixHandler_->rightScale((matrix::Csr*)A_, R_, memory::DEVICE);
+    }
+    else
+    {
+      out::warning() << "R factor is null, cannot scale the matrix ...\n";
     }
 
 #ifdef RESOLVE_USE_CUDA

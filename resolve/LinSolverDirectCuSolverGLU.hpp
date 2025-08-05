@@ -31,6 +31,7 @@ namespace ReSolve
     ~LinSolverDirectCuSolverGLU();
 
     int refactorize() override;
+    int refactorizeCsr();
     int solve(vector_type* rhs, vector_type* x) override;
     int solve(vector_type* x) override;
 

@@ -58,6 +58,7 @@ namespace ReSolve
     int refactorize();
     int refactorizationSetup();
     int refactorizationSetupCsr();
+    vector_type* getRFactorCsr();
     int preconditionerSetup();
     int solve(vector_type* rhs, vector_type* x);  // for direct and iterative
     int refine(vector_type* rhs, vector_type* x); // for iterative refinement

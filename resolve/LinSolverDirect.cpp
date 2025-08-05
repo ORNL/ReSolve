@@ -13,6 +13,7 @@ namespace ReSolve
 
 {
   using out = io::Logger;
+  using vector_type = vector::Vector;
 
   /**
    * @brief Constructor for LinSolverDirect class.
@@ -125,6 +126,15 @@ namespace ReSolve
    */
   matrix::Sparse* LinSolverDirect::getUFactorCsr()
   {
+    return nullptr;
+  }
+
+  /**
+   * @brief Placeholder function for scaling R_ vector
+   */
+  vector_type* LinSolverDirect::getRFactorCsr()
+  {
+    std::cout << "getRFactorCsr called, but not implemented in LinSolverDirect.\n";
     return nullptr;
   }
 

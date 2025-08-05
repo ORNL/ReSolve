@@ -303,6 +303,7 @@ namespace ReSolve
 
       L_->setUpdated(memory::HOST);
       U_->setUpdated(memory::HOST);
+      R_->setDataUpdated(memory::HOST);
       (void) ok; // TODO: Check status in ok before setting `factors_extracted_`
       factors_extracted_ = true;
     }
@@ -336,7 +337,7 @@ namespace ReSolve
    *
    * @return R scaling vector
    */
-  vector_type* LinSolverDirectKLU::getRScalingVectorCsr()
+  vector_type* LinSolverDirectKLU::getRFactorCsr()
   {
     extractFactorsCsr();
     return R_;
@@ -378,6 +379,7 @@ namespace ReSolve
 
       L_->setUpdated(memory::HOST);
       U_->setUpdated(memory::HOST);
+      R_->setDataUpdated(memory::HOST);
       (void) ok; // TODO: Check status in ok before setting `factors_extracted_`
       factors_extracted_ = true;
     }
@@ -405,16 +407,16 @@ namespace ReSolve
     return U_;
   }
 
-  /**
-   * @brief Extract R scaling vector from the KLU solver.
-   *
-   * @return R scaling vector
-   */
-  vector_type* LinSolverDirectKLU::getRScalingVector()
-  {
-    extractFactors();
-    return R_;
-  }
+  // /**
+  //  * @brief Extract R scaling vector from the KLU solver.
+  //  *
+  //  * @return R scaling vector
+  //  */
+  // vector_type* LinSolverDirectKLU::getRFactorCsr()
+  // {
+  //   extractFactors();
+  //   return R_;
+  // }
 
   /**
    * @brief Get the permutation vector P.

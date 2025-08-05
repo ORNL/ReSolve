@@ -306,6 +306,28 @@ namespace ReSolve
     }
   }
 
+  int LinSolverDirectCuSolverGLU::refactorizeCsr()
+  {
+    RESOLVE_RANGE_PUSH(__FUNCTION__);
+    int error_sum    = 0;
+    status_cusolver_ = cusolverSpDgluReset(handle_cusolversp_,
+                                           A_->getNumRows(),
+                                           /** A is original matrix */
+                                           A_->getNnz(),
+                                           descr_A_,
+                                           A_->getValues(memory::DEVICE),
+                                           A_->getRowData(memory::DEVICE),
+                                           A_->getColData(memory::DEVICE),
+                                           info_M_);
+    error_sum += status_cusolver_;
+
+    status_cusolver_ = cusolverSpDgluFactor(handle_cusolversp_, info_M_, glu_buffer_);
+    error_sum += status_cusolver_;
+
+    RESOLVE_RANGE_POP(__FUNCTION__);
+    return error_sum;
+  }
+
   int LinSolverDirectCuSolverGLU::refactorize()
   {
     RESOLVE_RANGE_PUSH(__FUNCTION__);
