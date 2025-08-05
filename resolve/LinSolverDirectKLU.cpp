@@ -11,7 +11,7 @@
 namespace ReSolve
 {
   using vector_type = ReSolve::vector::Vector;
-  using out = io::Logger;
+  using out         = io::Logger;
 
   /**
    * @brief Constructor for LinSolverDirectKLU
@@ -333,7 +333,7 @@ namespace ReSolve
 
   /**
    * @brief Extract R scaling vector from the KLU solver.
-   * 
+   *
    * @return R scaling vector
    */
   vector_type* LinSolverDirectKLU::getRScalingVectorCsr()
@@ -407,7 +407,7 @@ namespace ReSolve
 
   /**
    * @brief Extract R scaling vector from the KLU solver.
-   * 
+   *
    * @return R scaling vector
    */
   vector_type* LinSolverDirectKLU::getRScalingVector()

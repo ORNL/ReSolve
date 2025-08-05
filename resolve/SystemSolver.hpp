@@ -108,8 +108,8 @@ namespace ReSolve
     matrix_type* L_{nullptr};
     matrix_type* U_{nullptr};
     vector_type* R_{nullptr}; ///< Scaling vector for GLU factorization
-    index_type* P_{nullptr};
-    index_type* Q_{nullptr};
+    index_type*  P_{nullptr};
+    index_type*  Q_{nullptr};
 
     vector_type* resVector_{nullptr};
 
