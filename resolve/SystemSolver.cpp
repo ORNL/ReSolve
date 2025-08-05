@@ -424,7 +424,7 @@ namespace ReSolve
   }
 
   /**
-   * @brief get the R scaling factor
+   * @brief get the R scaling factor with the overridden function
    */
   vector_type* SystemSolver::getRFactorCsr()
   {
