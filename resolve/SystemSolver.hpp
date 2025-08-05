@@ -51,17 +51,17 @@ namespace ReSolve
 
     ~SystemSolver();
 
-    int initialize();
-    int setMatrix(matrix::Sparse* A);
-    int analyze();   //    symbolic part
-    int factorize(); //  numeric part
-    int refactorize();
-    int refactorizationSetup();
-    int refactorizationSetupCsr();
+    int          initialize();
+    int          setMatrix(matrix::Sparse* A);
+    int          analyze();   //    symbolic part
+    int          factorize(); //  numeric part
+    int          refactorize();
+    int          refactorizationSetup();
+    int          refactorizationSetupCsr();
     vector_type* getRFactorCsr();
-    int preconditionerSetup();
-    int solve(vector_type* rhs, vector_type* x);  // for direct and iterative
-    int refine(vector_type* rhs, vector_type* x); // for iterative refinement
+    int          preconditionerSetup();
+    int          solve(vector_type* rhs, vector_type* x);  // for direct and iterative
+    int          refine(vector_type* rhs, vector_type* x); // for iterative refinement
 
     // we update the matrix once it changed
     int updateMatrix(std::string format, int* ia, int* ja, double* a);

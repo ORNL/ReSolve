@@ -12,7 +12,7 @@
 namespace ReSolve
 
 {
-  using out = io::Logger;
+  using out         = io::Logger;
   using vector_type = vector::Vector;
 
   /**

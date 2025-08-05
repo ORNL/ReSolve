@@ -40,8 +40,9 @@
 namespace ReSolve
 {
   // Create a shortcut name for Logger static class
-  using out = io::Logger;
+  using out         = io::Logger;
   using vector_type = vector::Vector;
+
   SystemSolver::SystemSolver(LinAlgWorkspaceCpu* workspaceCpu,
                              std::string         factor,
                              std::string         refactor,
@@ -464,7 +465,7 @@ namespace ReSolve
     // scale A
     if (R_ != nullptr)
     {
-      matrixHandler_->rightScale((matrix::Csr*)A_, R_, memory::DEVICE);
+      matrixHandler_->rightScale((matrix::Csr*) A_, R_, memory::DEVICE);
     }
     else
     {

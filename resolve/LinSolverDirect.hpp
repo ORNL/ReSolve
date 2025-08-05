@@ -10,6 +10,7 @@
 #include <string>
 
 #include <resolve/LinSolver.hpp>
+
 namespace ReSolve
 {
   class LinSolverDirect : public LinSolver

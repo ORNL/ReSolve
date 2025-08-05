@@ -225,16 +225,16 @@ int main(int argc, char* argv[])
   // Update system values
   vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
 
-  //scale A
+  // scale A
   vector_type* r_scale = new vector_type(A->getNumRows());
-  r_scale = solver.getRFactorCsr();
+  r_scale              = solver.getRFactorCsr();
   if (r_scale == nullptr)
   {
     std::cout << "Failed to get R factor from the solver.\n";
     return -1;
   }
 
-  matrix_handler.rightScale(A, r_scale, ReSolve::memory::DEVICE); 
+  matrix_handler.rightScale(A, r_scale, ReSolve::memory::DEVICE);
   A->syncData(ReSolve::memory::HOST);
 
   // Refactorize and solve
