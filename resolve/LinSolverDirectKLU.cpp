@@ -10,6 +10,7 @@
 
 namespace ReSolve
 {
+  using vector_type = ReSolve::vector::Vector;
   using out = io::Logger;
 
   /**
@@ -335,7 +336,7 @@ namespace ReSolve
    * 
    * @return R scaling vector
    */
-  vector::Vector* LinSolverDirectKLU::getRScalingVectorCsr()
+  vector_type* LinSolverDirectKLU::getRScalingVectorCsr()
   {
     extractFactorsCsr();
     return R_;
@@ -409,7 +410,7 @@ namespace ReSolve
    * 
    * @return R scaling vector
    */
-  vector::Vector* LinSolverDirectKLU::getRScalingVector()
+  vector_type* LinSolverDirectKLU::getRScalingVector()
   {
     extractFactors();
     return R_;

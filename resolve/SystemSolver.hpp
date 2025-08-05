@@ -57,6 +57,7 @@ namespace ReSolve
     int factorize(); //  numeric part
     int refactorize();
     int refactorizationSetup();
+    int refactorizationSetupCsr();
     int preconditionerSetup();
     int solve(vector_type* rhs, vector_type* x);  // for direct and iterative
     int refine(vector_type* rhs, vector_type* x); // for iterative refinement
@@ -106,7 +107,7 @@ namespace ReSolve
 
     matrix_type* L_{nullptr};
     matrix_type* U_{nullptr};
-
+    vector_type* R_{nullptr}; ///< Scaling vector for GLU factorization
     index_type* P_{nullptr};
     index_type* Q_{nullptr};
 

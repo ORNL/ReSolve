@@ -424,6 +424,73 @@ namespace ReSolve
   }
 
   /**
+   * @brief Sets up refactorization when the input matrix is CSR.
+   *
+   * Extracts factors and permutation vectors from the factorization solver
+   * and configures selected refactorization solver. Also configures iterative
+   * refinement, if it is enabled by the user.
+   *
+   * Also sets flag `is_solve_on_device_` to true signaling to a triangular
+   * solver to run on GPU.
+   *
+   * The L and U factors are extracted in CSR format by switching them.
+   * P and Q are also switched, to match the CSR format.
+   *
+   * @return int 0 if successful, 1 if it fails
+   */
+  int SystemSolver::refactorizationSetupCsr()
+  {
+    int status = 0;
+
+    // Get factors and permutation vectors
+    L_ = factorizationSolver_->getLFactorCsr();
+    U_ = factorizationSolver_->getUFactorCsr();
+    Q_ = factorizationSolver_->getPOrdering(); // P and Q are switched for CSR, eventually the function should be changed, but this limits PR scope
+    P_ = factorizationSolver_->getQOrdering();
+
+    if (L_ == nullptr)
+    {
+      out::error() << "Factorization failed, cannot extract factors ...\n";
+      status += 1;
+    }
+
+#ifdef RESOLVE_USE_CUDA
+    if (refactorizationMethod_ == "glu")
+    {
+      is_solve_on_device_ = true;
+      status += refactorizationSolver_->setupCsr(A_, L_, U_, P_, Q_);
+    }
+    if (refactorizationMethod_ == "cusolverrf")
+    {
+      status += refactorizationSolver_->setup(A_, L_, U_, P_, Q_);
+
+      LinSolverDirectCuSolverRf* Rf = dynamic_cast<LinSolverDirectCuSolverRf*>(refactorizationSolver_);
+      Rf->setNumericalProperties(1e-14, 1e-1);
+
+      is_solve_on_device_ = false;
+    }
+#endif
+
+#ifdef RESOLVE_USE_HIP
+    if (refactorizationMethod_ == "rocsolverrf")
+    {
+      is_solve_on_device_ = false;
+      auto* Rf            = dynamic_cast<LinSolverDirectRocSolverRf*>(refactorizationSolver_);
+      Rf->setSolveMode(1);
+      status += refactorizationSolver_->setup(A_, L_, U_, P_, Q_, resVector_);
+    }
+#endif
+
+    if (irMethod_ == "fgmres")
+    {
+      status += iterativeSolver_->setup(A_);
+      status += iterativeSolver_->setupPreconditioner("LU", refactorizationSolver_);
+    }
+
+    return status;
+  }
+
+  /**
    * @brief Sets up refactorization.
    *
    * Extracts factors and permutation vectors from the factorization solver

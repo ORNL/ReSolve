@@ -35,6 +35,10 @@ if(RESOLVE_USE_KLU)
     # System solver test with GLU (to be subsumed in testSysRefactor.cpp)
     add_executable(sys_glu_test.exe testSysGLU.cpp)
     target_link_libraries(sys_glu_test.exe PRIVATE ReSolve)
+
+    # System solver test with GLU and scaling
+    add_executable(sys_glu_scale_test.exe testSysGLUScale.cpp)
+    target_link_libraries(sys_glu_scale_test.exe PRIVATE ReSolve)
   endif(RESOLVE_USE_CUDA)
 endif(RESOLVE_USE_KLU)
 

@@ -109,6 +109,6 @@ namespace ReSolve
     klu_common    Common_; // settings
     klu_symbolic* Symbolic_{nullptr};
     klu_numeric*  Numeric_{nullptr};
-    vector::Vector* R_{nullptr}; // scaling vector
+    vector_type* R_{nullptr}; // scaling vector
   };
 } // namespace ReSolve
