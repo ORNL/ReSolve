@@ -17,19 +17,16 @@ import os
 import shlex
 import shutil
 
-# Copy Doxyfile template
-shutil.copyfile('./doxygen/Doxyfile.in', './doxygen/Doxyfile')
-
 # Modify Doxyfile for ReadTheDocs compatibility
-with open('./doxygen/Doxyfile', 'r') as f:
+with open('./doxygen/Doxyfile.in', 'r') as f:
     fdata = f.read()
 fdata = fdata.replace('@PROJECT_SOURCE_DIR@', '.')
-with open('./doxygen/Doxyfile', 'w') as f:
+with open('./doxygen/Doxyfile.in', 'w') as f:
     f.write(fdata)
 # The output directory needs to point to a directory within ../_readthedocs/ 
 # by default readthedocs checks for html files within ../_readthedocs/ folder
 # ../readthedocs folder does not exist locally only on the readthedocs server.
-with open('./doxygen/Doxyfile', 'a') as f:
+with open('./doxygen/Doxyfile.in', 'a') as f:
     f.write("\nOUTPUT_DIRECTORY=../_readthedocs/html/doxygen")
 
 # Call doxygen
