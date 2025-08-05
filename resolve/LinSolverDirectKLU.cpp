@@ -24,6 +24,7 @@ namespace ReSolve
 
     L_ = nullptr;
     U_ = nullptr;
+    R_ = nullptr;
 
     // Populate KLU data structure holding solver parameters
     klu_defaults(&Common_);
@@ -60,6 +61,7 @@ namespace ReSolve
     {
       delete L_;
       delete U_;
+      delete R_;
       delete[] P_;
       delete[] Q_;
       L_ = nullptr;
@@ -276,8 +278,10 @@ namespace ReSolve
       // Create CSR matrices - L gets U's data, U gets L's data
       L_ = new matrix::Csr(A_->getNumRows(), A_->getNumColumns(), nnzU);
       U_ = new matrix::Csr(A_->getNumRows(), A_->getNumColumns(), nnzL);
+      R_ = new vector::Vector(A_->getNumRows());
       L_->allocateMatrixData(memory::HOST);
       U_->allocateMatrixData(memory::HOST);
+      R_->allocate(memory::HOST);
 
       int ok = klu_extract(Numeric_,
                            Symbolic_,
@@ -292,7 +296,7 @@ namespace ReSolve
                            nullptr,
                            nullptr,
                            nullptr,
-                           nullptr,
+                           R_->getData(memory::HOST), // R vector for scaling
                            nullptr,
                            &Common_);
 
@@ -327,6 +331,17 @@ namespace ReSolve
   }
 
   /**
+   * @brief Extract R scaling vector from the KLU solver.
+   * 
+   * @return R scaling vector
+   */
+  vector::Vector* LinSolverDirectKLU::getRScalingVectorCsr()
+  {
+    extractFactorsCsr();
+    return R_;
+  }
+
+  /**
    * @brief Extract L and U factors from the KLU solver in compressed sparse column format.
    */
   void LinSolverDirectKLU::extractFactors()
@@ -338,8 +353,10 @@ namespace ReSolve
 
       L_ = new matrix::Csc(A_->getNumRows(), A_->getNumColumns(), nnzL);
       U_ = new matrix::Csc(A_->getNumRows(), A_->getNumColumns(), nnzU);
+      R_ = new vector::Vector(A_->getNumRows());
       L_->allocateMatrixData(memory::HOST);
       U_->allocateMatrixData(memory::HOST);
+      R_->allocate(memory::HOST);
 
       int ok = klu_extract(Numeric_,
                            Symbolic_,
@@ -354,7 +371,7 @@ namespace ReSolve
                            nullptr,
                            nullptr,
                            nullptr,
-                           nullptr,
+                           R_->getData(memory::HOST),
                            nullptr,
                            &Common_);
 
@@ -388,6 +405,17 @@ namespace ReSolve
   }
 
   /**
+   * @brief Extract R scaling vector from the KLU solver.
+   * 
+   * @return R scaling vector
+   */
+  vector::Vector* LinSolverDirectKLU::getRScalingVector()
+  {
+    extractFactors();
+    return R_;
+  }
+
+  /**
    * @brief Get the permutation vector P.
    *
    * @return P permutation vector
@@ -398,7 +426,7 @@ namespace ReSolve
     {
       P_           = new index_type[A_->getNumRows()];
       size_t nrows = static_cast<size_t>(A_->getNumRows());
-      std::memcpy(P_, Symbolic_->P, nrows * sizeof(index_type));
+      std::memcpy(P_, Numeric_->Pnum, nrows * sizeof(index_type));
       return P_;
     }
     else

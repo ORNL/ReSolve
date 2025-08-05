@@ -42,9 +42,11 @@ namespace ReSolve
     void            extractFactorsCsr();
     matrix::Sparse* getLFactorCsr() override;
     matrix::Sparse* getUFactorCsr() override;
+    vector::Vector*  getRScalingVectorCsr();
     void            extractFactors();
     matrix::Sparse* getLFactor() override;
     matrix::Sparse* getUFactor() override;
+    vector::Vector*  getRScalingVector();
     index_type*     getPOrdering() override;
     index_type*     getQOrdering() override;
 
@@ -107,5 +109,6 @@ namespace ReSolve
     klu_common    Common_; // settings
     klu_symbolic* Symbolic_{nullptr};
     klu_numeric*  Numeric_{nullptr};
+    vector::Vector* R_{nullptr}; // scaling vector
   };
 } // namespace ReSolve

@@ -48,6 +48,7 @@ namespace ReSolve
   protected:
     matrix::Sparse* L_{nullptr};
     matrix::Sparse* U_{nullptr};
+    vector::Vector* R_{nullptr};
     index_type*     P_{nullptr};
     index_type*     Q_{nullptr};
   };
