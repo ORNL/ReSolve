@@ -10,7 +10,7 @@
  * on CPU devices. This is the main page of source code documentation intended
  * for developers who want to contribute to Re::Solve code. General documentation
  * is available at <a href=https://Re::Solve.readthedocs.io>readthedocs</a>. The
- * Re::Solve project is hosted on <a href=https://github.com/ORNL/Re::Solve>GitHub</a>.
+ * Re::Solve project is hosted on <a href=https://github.com/ORNL/ReSolve>GitHub</a>.
  *
  *
  * @section name_sec Name

@@ -87,7 +87,7 @@ look something like this:
   EXE=resolve_executable.exe
   OUT=hpctoolkit_resolve_profile
 
-  # Profile ReSolve code on a single GPU  
+  # Profile Re::Solve code on a single GPU  
   echo "`date` Starting run"
   srun -N 1 -n 1 -c 1 -G 1 \
     hpcrun -t -e CPUTIME -e gpu=amd -o ${OUT}.m ${EXE}
