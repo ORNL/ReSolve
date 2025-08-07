@@ -35,6 +35,10 @@ if(RESOLVE_USE_KLU)
     # System solver test with GLU (to be subsumed in testSysRefactor.cpp)
     add_executable(sys_glu_test.exe testSysGLU.cpp)
     target_link_libraries(sys_glu_test.exe PRIVATE ReSolve)
+
+    add_executable(sys_glu_asym_test.exe testSysGLUAsym.cpp)
+    target_link_libraries(sys_glu_asym_test.exe PRIVATE ReSolve)
+
   endif(RESOLVE_USE_CUDA)
 endif(RESOLVE_USE_KLU)
 
@@ -58,6 +62,7 @@ if(RESOLVE_USE_KLU)
 
   if(RESOLVE_USE_CUDA)
     list(APPEND installable_tests sys_glu_test.exe)
+    list(APPEND installable_tests sys_glu_asym_test.exe)
   endif(RESOLVE_USE_CUDA)
 endif()
 
@@ -122,6 +127,7 @@ if(RESOLVE_USE_KLU)
     add_test(NAME klu_glu_cuda_test   COMMAND $<TARGET_FILE:klu_rf_test.exe> "-d" "${test_data_dir}" "-s" "glu")
     add_test(NAME sys_refactor_cuda_test COMMAND $<TARGET_FILE:sys_refactor_test.exe> "${test_data_dir}")
     add_test(NAME sys_glu_test COMMAND $<TARGET_FILE:sys_glu_test.exe> "${test_data_dir}")
+    add_test(NAME sys_glu_asym_test COMMAND $<TARGET_FILE:sys_glu_asym_test.exe> "${test_data_dir}")
   endif(RESOLVE_USE_CUDA)
 
   # ROCm specific tests
