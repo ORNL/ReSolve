@@ -445,8 +445,8 @@ namespace ReSolve
     int status = 0;
 
     // Get factors and permutation vectors
-    L_ = factorizationSolver_->getLFactor();
-    U_ = factorizationSolver_->getUFactor();
+    L_ = factorizationSolver_->getLFactorCsr();
+    U_ = factorizationSolver_->getUFactorCsr();
     P_ = factorizationSolver_->getPOrdering();
     Q_ = factorizationSolver_->getQOrdering();
 
