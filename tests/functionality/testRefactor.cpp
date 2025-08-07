@@ -189,8 +189,8 @@ int runTest(int argc, char* argv[], std::string& solver_name)
   // Extract factors and setup factorization
   matrix_type* L = KLU.getLFactor();
   matrix_type* U = KLU.getUFactor();
-  index_type*  P = KLU.getPOrdering();
-  index_type*  Q = KLU.getQOrdering();
+  index_type*  Q = KLU.getPOrdering();
+  index_type*  P = KLU.getQOrdering();
 
   status = Rf.setup(A, L, U, P, Q, &vec_rhs);
   error_sum += status;
