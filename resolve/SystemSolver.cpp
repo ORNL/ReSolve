@@ -460,7 +460,7 @@ namespace ReSolve
     if (refactorizationMethod_ == "glu")
     {
       is_solve_on_device_ = true;
-      status += refactorizationSolver_->setup(A_, L_, U_, P_, Q_);
+      status += refactorizationSolver_->setupCsr(A_, L_, U_, P_, Q_);
     }
     if (refactorizationMethod_ == "cusolverrf")
     {
