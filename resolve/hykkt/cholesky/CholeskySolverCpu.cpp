@@ -13,7 +13,7 @@ namespace ReSolve
       // Use natural ordering
       Common_.method[0].ordering = CHOLMOD_NATURAL;
 
-      A_chol_ = nullptr;
+      A_chol_        = nullptr;
       factorization_ = nullptr;
       cholmod_start(&Common_);
     }

@@ -2,18 +2,16 @@
 #pragma once
 
 #include <algorithm>
+#include <cholmod.h>
 #include <iterator>
 #include <sstream>
 #include <string>
 #include <vector>
 
-#include <cholmod.h>
-
 #include <resolve/hykkt/cholesky/CholeskySolver.hpp>
 #include <resolve/matrix/Csr.hpp>
-#include <resolve/vector/Vector.hpp>
-
 #include <resolve/matrix/MatrixHandler.hpp>
+#include <resolve/vector/Vector.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 #include <tests/unit/TestBase.hpp>
 
@@ -96,7 +94,7 @@ namespace ReSolve
 
       TestOutcome randomizedDifferentSparsityPatterns(index_type n, index_type trials)
       {
-        TestStatus status;
+        TestStatus  status;
         std::string testname(__func__);
 
         for (index_type i = 0; i < trials; ++i)
@@ -112,7 +110,7 @@ namespace ReSolve
 
           // Generate a random vector x_expected and compute b = A * x_expected
           vector::Vector* x_expected = randomVector(n);
-          
+
           vector::Vector* b = new vector::Vector(n);
           b->allocate(memspace_);
           real_type alpha = 1.0;
@@ -137,9 +135,11 @@ namespace ReSolve
           {
             if (fabs(x->getData(memory::HOST)[j] - x_expected->getData(memory::HOST)[j]) > tol)
             {
-              printf("Test failed at index %d: expected %.12f, got %.12f\n, difference %.12f\n", 
-                      j, x_expected->getData(memory::HOST)[j], x->getData(memory::HOST)[j], 
-                      fabs(x->getData(memory::HOST)[j] - x_expected->getData(memory::HOST)[j]));
+              printf("Test failed at index %d: expected %.12f, got %.12f\n, difference %.12f\n",
+                     j,
+                     x_expected->getData(memory::HOST)[j],
+                     x->getData(memory::HOST)[j],
+                     fabs(x->getData(memory::HOST)[j] - x_expected->getData(memory::HOST)[j]));
               status *= false;
             }
           }
@@ -160,16 +160,16 @@ namespace ReSolve
 
     private:
       ReSolve::memory::MemorySpace memspace_;
-      MatrixHandler& matrixHandler_;
+      MatrixHandler&               matrixHandler_;
 
       cholmod_common Common;
-      
+
       matrix::Csr* randomSparseSPDMatrix(size_t n, double density)
       {
-        size_t nnz = 0;
-        std::vector<int> L_p(n + 1, 0);
-        std::vector<int> L_i;
-        std::vector<double>  L_x;
+        size_t              nnz = 0;
+        std::vector<int>    L_p(n + 1, 0);
+        std::vector<int>    L_i;
+        std::vector<double> L_x;
         for (size_t i = 0; i < n; ++i)
         {
           L_p[i + 1] = L_p[i];
@@ -185,21 +185,20 @@ namespace ReSolve
             }
           }
         }
-        
+
         cholmod_sparse* L = cholmod_allocate_sparse(
-          n, n, nnz, 1, 1, 0, CHOLMOD_REAL, &Common);
+            n, n, nnz, 1, 1, 0, CHOLMOD_REAL, &Common);
         std::copy(L_p.begin(), L_p.end(), static_cast<int*>(L->p));
         std::copy(L_i.begin(), L_i.end(), static_cast<int*>(L->i));
         std::copy(L_x.begin(), L_x.end(), static_cast<double*>(L->x));
-        
+
         cholmod_sparse* L_tr = cholmod_transpose(L, 1, &Common);
 
         cholmod_sparse* A_chol = cholmod_ssmult(L, L_tr, 0, 1, 0, &Common);
-        
+
         matrix::Csr* A = new matrix::Csr((index_type) A_chol->nrow, (index_type) A_chol->ncol, (index_type) A_chol->nzmax);
         A->copyDataFrom(
-          static_cast<int*>(A_chol->p), static_cast<int*>(A_chol->i),
-          static_cast<double*>(A_chol->x), memory::HOST, memspace_);
+            static_cast<int*>(A_chol->p), static_cast<int*>(A_chol->i), static_cast<double*>(A_chol->x), memory::HOST, memspace_);
 
         cholmod_free_sparse(&L, &Common);
         cholmod_free_sparse(&L_tr, &Common);
