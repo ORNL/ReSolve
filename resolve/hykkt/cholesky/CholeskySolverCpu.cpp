@@ -73,7 +73,7 @@ namespace ReSolve
 
     cholmod_sparse* CholeskySolverCpu::convertToCholmod(matrix::Csr* A)
     {
-      A_chol_    = cholmod_allocate_sparse((size_t) A->getNumRows(),
+      A_chol_ = cholmod_allocate_sparse((size_t) A->getNumRows(),
                                         (size_t) A->getNumColumns(),
                                         (size_t) A->getNnz(),
                                         1,

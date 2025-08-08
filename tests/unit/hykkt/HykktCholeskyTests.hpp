@@ -98,8 +98,8 @@ namespace ReSolve
         std::string testname(__func__);
         testname += " n = " + std::to_string(n);
 
-        cholmod_sparse* L = randomSparseLowerTriangular((size_t) n);
-        cholmod_sparse* L_tr = cholmod_transpose(L, 1, &Common);
+        cholmod_sparse* L      = randomSparseLowerTriangular((size_t) n);
+        cholmod_sparse* L_tr   = cholmod_transpose(L, 1, &Common);
         cholmod_sparse* A_chol = cholmod_ssmult(L, L_tr, 0, 1, 0, &Common);
 
         matrix::Csr* A = new matrix::Csr((index_type) A_chol->nrow, (index_type) A_chol->ncol, (index_type) A_chol->nzmax);
@@ -157,18 +157,18 @@ namespace ReSolve
         delete x_expected;
         delete b;
         delete x;
-        
+
         return status.report(testname.c_str());
       }
 
       TestOutcome randomizedReuseSparsityPattern(index_type n, index_type trials)
-      {        
+      {
         TestStatus  status;
         std::string testname(__func__);
         testname += " n = " + std::to_string(n) + ", trials = " + std::to_string(trials);
 
-        cholmod_sparse* L = randomSparseLowerTriangular((size_t) n);
-        cholmod_sparse* L_tr = cholmod_transpose(L, 1, &Common);
+        cholmod_sparse* L      = randomSparseLowerTriangular((size_t) n);
+        cholmod_sparse* L_tr   = cholmod_transpose(L, 1, &Common);
         cholmod_sparse* A_chol = cholmod_ssmult(L, L_tr, 0, 1, 0, &Common);
 
         matrix::Csr* A = new matrix::Csr((index_type) A_chol->nrow, (index_type) A_chol->ncol, (index_type) A_chol->nzmax);
@@ -230,7 +230,7 @@ namespace ReSolve
           }
           cholmod_free_sparse(&L_tr, &Common);
           cholmod_free_sparse(&A_chol, &Common);
-          L_tr = cholmod_transpose(L, 1, &Common);
+          L_tr   = cholmod_transpose(L, 1, &Common);
           A_chol = cholmod_ssmult(L, L_tr, 0, 1, 0, &Common);
           A->copyValues(static_cast<double*>(A_chol->x), memory::HOST, memspace_);
           A->setUpdated(memspace_);
@@ -256,7 +256,7 @@ namespace ReSolve
       cholmod_sparse* randomSparseLowerTriangular(size_t n)
       {
         double              density = 2.0 / n;
-        size_t              nnz = 0;
+        size_t              nnz     = 0;
         std::vector<int>    L_p(n + 1, 0);
         std::vector<int>    L_i;
         std::vector<double> L_x;
@@ -281,7 +281,7 @@ namespace ReSolve
         std::copy(L_p.begin(), L_p.end(), static_cast<int*>(L->p));
         std::copy(L_i.begin(), L_i.end(), static_cast<int*>(L->i));
         std::copy(L_x.begin(), L_x.end(), static_cast<double*>(L->x));
-        
+
         return L;
       }
 
