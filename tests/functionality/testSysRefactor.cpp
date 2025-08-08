@@ -227,7 +227,7 @@ static int runTest(int argc, char* argv[], std::string backend)
   error_sum += status;
 
   // Solve system
-  status = solver.solve(&vec_rhs, &vec_x);// bug is coming from this line
+  status = solver.solve(&vec_rhs, &vec_x); // bug is coming from this line
   std::cout << "System solve status: " << status << std::endl;
   error_sum += status;
 

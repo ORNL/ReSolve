@@ -460,10 +460,10 @@ namespace ReSolve
     //   P_ = factorizationSolver_->getQOrdering();
     // }
 
-      L_ = factorizationSolver_->getLFactorCsr();
-      U_ = factorizationSolver_->getUFactorCsr();
-      P_ = factorizationSolver_->getPOrdering();
-      Q_ = factorizationSolver_->getQOrdering();
+    L_ = factorizationSolver_->getLFactorCsr();
+    U_ = factorizationSolver_->getUFactorCsr();
+    P_ = factorizationSolver_->getPOrdering();
+    Q_ = factorizationSolver_->getQOrdering();
 
     if (L_ == nullptr)
     {

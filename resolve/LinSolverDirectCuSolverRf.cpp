@@ -61,14 +61,14 @@ namespace ReSolve
    */
 
   int LinSolverDirectCuSolverRf::setupCsr(matrix::Sparse* A,
-                                       matrix::Sparse* L,
-                                       matrix::Sparse* U,
-                                       index_type*     P,
-                                       index_type*     Q,
-                                       vector_type* /* rhs */)
+                                          matrix::Sparse* L,
+                                          matrix::Sparse* U,
+                                          index_type*     P,
+                                          index_type*     Q,
+                                          vector_type* /* rhs */)
   {
     assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW && "Matrix A has to be in CSR format for cusolverRf input.\n");
-    assert(L->getSparseFormat() == U->getSparseFormat()&& "Matrices L and U have to be in the same format for cusolverRf input.\n");
+    assert(L->getSparseFormat() == U->getSparseFormat() && "Matrices L and U have to be in the same format for cusolverRf input.\n");
     assert(L->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW && "Matrices L and U have to be in CSR format for cusolverRf input.\n");
     L->syncData(memory::DEVICE);
     U->syncData(memory::DEVICE);
@@ -131,8 +131,8 @@ namespace ReSolve
     const cusolverRfFactorization_t fact_alg =
         CUSOLVERRF_FACTORIZATION_ALG0; // 0 - default, 1 or 2
     const cusolverRfTriangularSolve_t solve_alg =
-        CUSOLVERRF_TRIANGULAR_SOLVE_ALG1; //  1- default, 2 or 3 
-    
+        CUSOLVERRF_TRIANGULAR_SOLVE_ALG1; //  1- default, 2 or 3
+
     this->setAlgorithms(fact_alg, solve_alg);
 
     setup_completed_ = true;

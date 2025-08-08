@@ -40,11 +40,11 @@ namespace ReSolve
               vector_type*    rhs = nullptr) override;
 
     int setupCsr(matrix::Sparse* A,
-                matrix::Sparse* L,
-                matrix::Sparse* U,
-                index_type*     P,
-                index_type*     Q,
-                vector_type*    rhs = nullptr);
+                 matrix::Sparse* L,
+                 matrix::Sparse* U,
+                 index_type*     P,
+                 index_type*     Q,
+                 vector_type*    rhs = nullptr);
 
     int refactorize() override;
     int solve(vector_type* rhs, vector_type* x) override;

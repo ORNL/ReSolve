@@ -187,7 +187,7 @@ int runTest(int argc, char* argv[], std::string& solver_name)
   error_sum += status;
 
   // Extract factors and setup factorization
-  //switch these to get it to work for cuSolver, this is a workaround for now
+  // switch these to get it to work for cuSolver, this is a workaround for now
   // matrix_type* L = KLU.getLFactor();
   // matrix_type* U = KLU.getUFactor();
   // index_type*  Q = KLU.getPOrdering();

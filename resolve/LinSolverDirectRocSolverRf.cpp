@@ -57,11 +57,11 @@ namespace ReSolve
    * @param[out] error_sum - int - sum of errors from setup
    */
   int LinSolverDirectRocSolverRf::setupCsr(matrix::Sparse* A,
-                                        matrix::Sparse* L,
-                                        matrix::Sparse* U,
-                                        index_type*     P,
-                                        index_type*     Q,
-                                        vector_type*    rhs)
+                                           matrix::Sparse* L,
+                                           matrix::Sparse* U,
+                                           index_type*     P,
+                                           index_type*     Q,
+                                           vector_type*    rhs)
   {
     RESOLVE_RANGE_PUSH(__FUNCTION__);
 
