@@ -98,7 +98,13 @@ namespace ReSolve
         std::string testname(__func__);
         testname += " n = " + std::to_string(n);
 
-        matrix::Csr* A = randomSparseSPDMatrix((size_t) n, 2.0 / n);
+        cholmod_sparse* L = randomSparseLowerTriangular((size_t) n);
+        cholmod_sparse* L_tr = cholmod_transpose(L, 1, &Common);
+        cholmod_sparse* A_chol = cholmod_ssmult(L, L_tr, 0, 1, 0, &Common);
+
+        matrix::Csr* A = new matrix::Csr((index_type) A_chol->nrow, (index_type) A_chol->ncol, (index_type) A_chol->nzmax);
+        A->copyDataFrom(
+            static_cast<int*>(A_chol->p), static_cast<int*>(A_chol->i), static_cast<double*>(A_chol->x), memory::HOST, memspace_);
 
         ReSolve::hykkt::CholeskySolver solver(memspace_);
 
@@ -143,18 +149,102 @@ namespace ReSolve
           }
         }
 
+        cholmod_free_sparse(&L, &Common);
+        cholmod_free_sparse(&L_tr, &Common);
+        cholmod_free_sparse(&A_chol, &Common);
+
         delete A;
+        delete x_expected;
         delete b;
         delete x;
-        delete x_expected;
-
+        
         return status.report(testname.c_str());
       }
 
-      TestOutcome randomizedSameSparsityPattern(index_type n, index_type trials)
-      {
-        // TODO
-        return FAIL;
+      TestOutcome randomizedReuseSparsityPattern(index_type n, index_type trials)
+      {        
+        TestStatus  status;
+        std::string testname(__func__);
+        testname += " n = " + std::to_string(n) + ", trials = " + std::to_string(trials);
+
+        cholmod_sparse* L = randomSparseLowerTriangular((size_t) n);
+        cholmod_sparse* L_tr = cholmod_transpose(L, 1, &Common);
+        cholmod_sparse* A_chol = cholmod_ssmult(L, L_tr, 0, 1, 0, &Common);
+
+        matrix::Csr* A = new matrix::Csr((index_type) A_chol->nrow, (index_type) A_chol->ncol, (index_type) A_chol->nzmax);
+        A->copyDataFrom(
+            static_cast<int*>(A_chol->p), static_cast<int*>(A_chol->i), static_cast<double*>(A_chol->x), memory::HOST, memspace_);
+
+        ReSolve::hykkt::CholeskySolver solver(memspace_);
+        for (index_type i = 0; i < trials; ++i)
+        {
+          // Only do symbolic analysis the first iteration
+          solver.addMatrixInfo(A);
+          if (i == 0)
+          {
+            solver.symbolicAnalysis();
+          }
+          solver.numericalFactorization();
+
+          // Generate a random vector x_expected and compute b = A * x_expected
+          vector::Vector* x_expected = randomVector(n);
+
+          vector::Vector* b = new vector::Vector(n);
+          b->allocate(memspace_);
+          b->setToZero(memspace_);
+          real_type alpha = 1.0;
+          real_type beta  = 0.0;
+          matrixHandler_.matvec(A, x_expected, b, &alpha, &beta, memspace_);
+
+          // Solve the system A * x = b
+          vector::Vector* x = new vector::Vector(n);
+          x->allocate(memspace_);
+          solver.solve(x, b);
+
+          if (memspace_ == memory::DEVICE)
+          {
+            // x_expected->syncData(memory::HOST);
+            x->syncData(memory::HOST);
+          }
+
+          // Verify result
+          // TODO only works with 1e-4 tolerance
+          real_type tol = 1e-4;
+          for (index_type j = 0; j < n; ++j)
+          {
+            if (fabs(x->getData(memory::HOST)[j] - x_expected->getData(memory::HOST)[j]) > tol)
+            {
+              printf("Test failed at index %d: expected %.12f, got %.12f\n, difference %.12f\n",
+                     j,
+                     x_expected->getData(memory::HOST)[j],
+                     x->getData(memory::HOST)[j],
+                     fabs(x->getData(memory::HOST)[j] - x_expected->getData(memory::HOST)[j]));
+              status *= false;
+            }
+          }
+
+          // reset values
+          for (size_t j = 0; j < L->nzmax; j++)
+          {
+            static_cast<double*>(L->x)[j] = 2.0 * static_cast<double>(rand()) / RAND_MAX - 1.0;
+          }
+          cholmod_free_sparse(&L_tr, &Common);
+          cholmod_free_sparse(&A_chol, &Common);
+          L_tr = cholmod_transpose(L, 1, &Common);
+          A_chol = cholmod_ssmult(L, L_tr, 0, 1, 0, &Common);
+          A->copyValues(static_cast<double*>(A_chol->x), memory::HOST, memspace_);
+          A->setUpdated(memspace_);
+          matrixHandler_.setValuesChanged(true, memspace_);
+
+          delete b;
+          delete x;
+          delete x_expected;
+        }
+
+        delete A;
+        cholmod_free_sparse(&L, &Common);
+
+        return status.report(testname.c_str());
       }
 
     private:
@@ -163,8 +253,9 @@ namespace ReSolve
 
       cholmod_common Common;
 
-      matrix::Csr* randomSparseSPDMatrix(size_t n, double density)
+      cholmod_sparse* randomSparseLowerTriangular(size_t n)
       {
+        double              density = 2.0 / n;
         size_t              nnz = 0;
         std::vector<int>    L_p(n + 1, 0);
         std::vector<int>    L_i;
@@ -190,21 +281,27 @@ namespace ReSolve
         std::copy(L_p.begin(), L_p.end(), static_cast<int*>(L->p));
         std::copy(L_i.begin(), L_i.end(), static_cast<int*>(L->i));
         std::copy(L_x.begin(), L_x.end(), static_cast<double*>(L->x));
-
-        cholmod_sparse* L_tr = cholmod_transpose(L, 1, &Common);
-
-        cholmod_sparse* A_chol = cholmod_ssmult(L, L_tr, 0, 1, 0, &Common);
-
-        matrix::Csr* A = new matrix::Csr((index_type) A_chol->nrow, (index_type) A_chol->ncol, (index_type) A_chol->nzmax);
-        A->copyDataFrom(
-            static_cast<int*>(A_chol->p), static_cast<int*>(A_chol->i), static_cast<double*>(A_chol->x), memory::HOST, memspace_);
-
-        cholmod_free_sparse(&L, &Common);
-        cholmod_free_sparse(&L_tr, &Common);
-        cholmod_free_sparse(&A_chol, &Common);
-
-        return A;
+        
+        return L;
       }
+
+      // matrix::Csr* randomSparseSPDMatrix(size_t n, double density)
+      // {
+      //   cholmod_sparse* L = randomSparseLowerTriangular(n);
+      //   cholmod_sparse* L_tr = cholmod_transpose(L, 1, &Common);
+
+      //   cholmod_sparse* A_chol = cholmod_ssmult(L, L_tr, 0, 1, 0, &Common);
+
+      //   matrix::Csr* A = new matrix::Csr((index_type) A_chol->nrow, (index_type) A_chol->ncol, (index_type) A_chol->nzmax);
+      //   A->copyDataFrom(
+      //       static_cast<int*>(A_chol->p), static_cast<int*>(A_chol->i), static_cast<double*>(A_chol->x), memory::HOST, memspace_);
+
+      //   cholmod_free_sparse(&L, &Common);
+      //   cholmod_free_sparse(&L_tr, &Common);
+      //   cholmod_free_sparse(&A_chol, &Common);
+
+      //   return A;
+      // }
 
       vector::Vector* randomVector(index_type n)
       {

@@ -33,9 +33,11 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
   for (int size : {3, 10, 100, 1000})
   {
     result += test.randomized(size);
-    workspace.resetLinAlgWorkspace();
     handler.setValuesChanged(true, memspace);
+    workspace.resetLinAlgWorkspace();
   }
+
+  result += test.randomizedReuseSparsityPattern(3, 10);
 
   std::cout << "\n";
 }

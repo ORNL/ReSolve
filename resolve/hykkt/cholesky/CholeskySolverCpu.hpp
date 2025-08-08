@@ -18,6 +18,8 @@ namespace ReSolve
       void solve(vector::Vector* x, vector::Vector* b);
 
     private:
+      MemoryHandler   mem_;
+
       cholmod_common  Common_;
       cholmod_sparse* A_chol_; // cholmod sparse matrix representation
       cholmod_factor* factorization_;

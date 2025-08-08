@@ -51,7 +51,8 @@ namespace ReSolve
 
     void CholeskySolverCpu::numericalFactorization(real_type tol)
     {
-      // TODO: What to do with tol for CPU?
+      (void) tol; // Mark tol as unused
+
       cholmod_factorize(A_chol_, factorization_, &Common_);
       if (Common_.status < 0)
       {
@@ -80,9 +81,12 @@ namespace ReSolve
                                         1,
                                         CHOLMOD_REAL,
                                         &Common_);
-      A_chol_->p = A->getRowData(memory::HOST);
-      A_chol_->i = A->getColData(memory::HOST);
-      A_chol_->x = A->getValues(memory::HOST);
+      mem_.copyArrayHostToHost(
+          static_cast<int*>(A_chol_->p), A->getRowData(memory::HOST), A->getNumRows() + 1);
+      mem_.copyArrayHostToHost(
+          static_cast<int*>(A_chol_->i), A->getColData(memory::HOST), A->getNnz());
+      mem_.copyArrayHostToHost(
+          static_cast<double*>(A_chol_->x), A->getValues(memory::HOST), A->getNnz());
 
       return A_chol_;
     }
@@ -94,7 +98,8 @@ namespace ReSolve
                                                      (size_t) v->getSize(),
                                                      CHOLMOD_REAL,
                                                      &Common_);
-      v_chol->x             = v->getData(memory::HOST);
+      mem_.copyArrayHostToHost(
+          static_cast<double*>(v_chol->x), v->getData(memory::HOST), v->getSize());
       return v_chol;
     }
   } // namespace hykkt
