@@ -445,20 +445,25 @@ namespace ReSolve
     int status = 0;
 
     // Get factors and permutation vectors
-    if (refactorizationMethod_ == "glu")
-    {
+    // if (refactorizationMethod_ == "glu")
+    // {
+    //   L_ = factorizationSolver_->getLFactorCsr();
+    //   U_ = factorizationSolver_->getUFactorCsr();
+    //   P_ = factorizationSolver_->getPOrdering();
+    //   Q_ = factorizationSolver_->getQOrdering();
+    // }
+    // else
+    // {
+    //   L_ = factorizationSolver_->getLFactor();
+    //   U_ = factorizationSolver_->getUFactor();
+    //   Q_ = factorizationSolver_->getPOrdering();
+    //   P_ = factorizationSolver_->getQOrdering();
+    // }
+
       L_ = factorizationSolver_->getLFactorCsr();
       U_ = factorizationSolver_->getUFactorCsr();
       P_ = factorizationSolver_->getPOrdering();
       Q_ = factorizationSolver_->getQOrdering();
-    }
-    else
-    {
-      L_ = factorizationSolver_->getLFactor();
-      U_ = factorizationSolver_->getUFactor();
-      Q_ = factorizationSolver_->getPOrdering();
-      P_ = factorizationSolver_->getQOrdering();
-    }
 
     if (L_ == nullptr)
     {
@@ -474,7 +479,7 @@ namespace ReSolve
     }
     if (refactorizationMethod_ == "cusolverrf")
     {
-      status += refactorizationSolver_->setup(A_, L_, U_, P_, Q_);
+      status += refactorizationSolver_->setupCsr(A_, L_, U_, P_, Q_);
 
       LinSolverDirectCuSolverRf* Rf = dynamic_cast<LinSolverDirectCuSolverRf*>(refactorizationSolver_);
       Rf->setNumericalProperties(1e-14, 1e-1);
