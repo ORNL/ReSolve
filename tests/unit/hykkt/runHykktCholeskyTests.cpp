@@ -30,7 +30,8 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
 
   result += test.minimalCorrectness();
 
-  for (int size : {3, 10, 100, 1000}) {
+  for (int size : {3, 10, 100, 1000})
+  {
     result += test.randomized(size);
     workspace.resetLinAlgWorkspace();
     handler.setValuesChanged(true, memspace);

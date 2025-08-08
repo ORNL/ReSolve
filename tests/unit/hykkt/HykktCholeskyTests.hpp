@@ -135,10 +135,10 @@ namespace ReSolve
           if (fabs(x->getData(memory::HOST)[j] - x_expected->getData(memory::HOST)[j]) > tol)
           {
             printf("Test failed at index %d: expected %.12f, got %.12f\n, difference %.12f\n",
-                    j,
-                    x_expected->getData(memory::HOST)[j],
-                    x->getData(memory::HOST)[j],
-                    fabs(x->getData(memory::HOST)[j] - x_expected->getData(memory::HOST)[j]));
+                   j,
+                   x_expected->getData(memory::HOST)[j],
+                   x->getData(memory::HOST)[j],
+                   fabs(x->getData(memory::HOST)[j] - x_expected->getData(memory::HOST)[j]));
             status *= false;
           }
         }
