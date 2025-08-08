@@ -92,62 +92,61 @@ namespace ReSolve
         return status.report(testname.c_str());
       }
 
-      TestOutcome randomizedDifferentSparsityPatterns(index_type n, index_type trials)
+      TestOutcome randomized(index_type n)
       {
         TestStatus  status;
         std::string testname(__func__);
+        testname += " n = " + std::to_string(n);
 
-        for (index_type i = 0; i < trials; ++i)
+        matrix::Csr* A = randomSparseSPDMatrix((size_t) n, 2.0 / n);
+
+        ReSolve::hykkt::CholeskySolver solver(memspace_);
+
+        // Add A to the solver, symbolic analysis, and numerical factorization
+        solver.addMatrixInfo(A);
+        solver.symbolicAnalysis();
+        solver.numericalFactorization();
+
+        // Generate a random vector x_expected and compute b = A * x_expected
+        vector::Vector* x_expected = randomVector(n);
+
+        vector::Vector* b = new vector::Vector(n);
+        b->allocate(memspace_);
+        real_type alpha = 1.0;
+        real_type beta  = 0.0;
+        matrixHandler_.matvec(A, x_expected, b, &alpha, &beta, memspace_);
+
+        // Solve the system A * x = b
+        vector::Vector* x = new vector::Vector(n);
+        x->allocate(memspace_);
+        solver.solve(x, b);
+
+        if (memspace_ == memory::DEVICE)
         {
-          matrix::Csr* A = randomSparseSPDMatrix((size_t) n, 2.0 / n);
-
-          ReSolve::hykkt::CholeskySolver solver(memspace_);
-
-          // Add A to the solver, symbolic analysis, and numerical factorization
-          solver.addMatrixInfo(A);
-          solver.symbolicAnalysis();
-          solver.numericalFactorization();
-
-          // Generate a random vector x_expected and compute b = A * x_expected
-          vector::Vector* x_expected = randomVector(n);
-
-          vector::Vector* b = new vector::Vector(n);
-          b->allocate(memspace_);
-          real_type alpha = 1.0;
-          real_type beta  = 0.0;
-          matrixHandler_.matvec(A, x_expected, b, &alpha, &beta, memspace_);
-
-          // Solve the system A * x = b
-          vector::Vector* x = new vector::Vector(n);
-          x->allocate(memspace_);
-          solver.solve(x, b);
-
-          if (memspace_ == memory::DEVICE)
-          {
-            x_expected->syncData(memory::HOST);
-            x->syncData(memory::HOST);
-          }
-
-          // Verify result
-          // TODO only works with 1e-4 tolerance
-          real_type tol = 1e-4;
-          for (index_type j = 0; j < n; ++j)
-          {
-            if (fabs(x->getData(memory::HOST)[j] - x_expected->getData(memory::HOST)[j]) > tol)
-            {
-              printf("Test failed at index %d: expected %.12f, got %.12f\n, difference %.12f\n",
-                     j,
-                     x_expected->getData(memory::HOST)[j],
-                     x->getData(memory::HOST)[j],
-                     fabs(x->getData(memory::HOST)[j] - x_expected->getData(memory::HOST)[j]));
-              status *= false;
-            }
-          }
-
-          delete A;
-          delete b;
-          delete x;
+          // x_expected->syncData(memory::HOST);
+          x->syncData(memory::HOST);
         }
+
+        // Verify result
+        // TODO only works with 1e-4 tolerance
+        real_type tol = 1e-4;
+        for (index_type j = 0; j < n; ++j)
+        {
+          if (fabs(x->getData(memory::HOST)[j] - x_expected->getData(memory::HOST)[j]) > tol)
+          {
+            printf("Test failed at index %d: expected %.12f, got %.12f\n, difference %.12f\n",
+                    j,
+                    x_expected->getData(memory::HOST)[j],
+                    x->getData(memory::HOST)[j],
+                    fabs(x->getData(memory::HOST)[j] - x_expected->getData(memory::HOST)[j]));
+            status *= false;
+          }
+        }
+
+        delete A;
+        delete b;
+        delete x;
+        delete x_expected;
 
         return status.report(testname.c_str());
       }
