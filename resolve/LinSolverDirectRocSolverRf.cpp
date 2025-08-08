@@ -45,6 +45,202 @@ namespace ReSolve
   }
 
   /**
+   * @brief Setup function for LinSolverDirectRocSolverRf where factors are already in csr
+   *
+   * @param[in] A - matrix::Sparse* - matrix to solve
+   * @param[in] L - matrix::Sparse* - lower triangular factor
+   * @param[in] U - matrix::Sparse* - upper triangular factor
+   * @param[in] P - index_type* - permutation vector P
+   * @param[in] Q - index_type* - permutation vector Q
+   * @param[in] rhs - vector_type* - right hand side
+   *
+   * @param[out] error_sum - int - sum of errors from setup
+   */
+  int LinSolverDirectRocSolverRf::setupCsr(matrix::Sparse* A,
+                                        matrix::Sparse* L,
+                                        matrix::Sparse* U,
+                                        index_type*     P,
+                                        index_type*     Q,
+                                        vector_type*    rhs)
+  {
+    RESOLVE_RANGE_PUSH(__FUNCTION__);
+
+    int error_sum = 0;
+
+    assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW && "Matrix has to be in CSR format for rocsolverRf.\n");
+    A_           = A;
+    index_type n = A_->getNumRows();
+
+    // set matrix info
+    rocsolver_create_rfinfo(&infoM_, workspace_->getRocblasHandle());
+
+    // Combine factors L and U into matrix M_
+    combineFactorsCsr(L, U);
+
+    M_->setUpdated(ReSolve::memory::HOST);
+    M_->syncData(ReSolve::memory::DEVICE);
+
+    // remember - P and Q are generally CPU variables
+    if (d_P_ == nullptr)
+    {
+      mem_.allocateArrayOnDevice(&d_P_, n);
+    }
+
+    if (d_Q_ == nullptr)
+    {
+      mem_.allocateArrayOnDevice(&d_Q_, n);
+    }
+    mem_.copyArrayHostToDevice(d_P_, P, n);
+    mem_.copyArrayHostToDevice(d_Q_, Q, n);
+
+    mem_.deviceSynchronize();
+    status_rocblas_ = rocsolver_dcsrrf_analysis(workspace_->getRocblasHandle(),
+                                                n,
+                                                1,
+                                                A_->getNnz(),
+                                                A_->getRowData(ReSolve::memory::DEVICE), // kRowPtr_,
+                                                A_->getColData(ReSolve::memory::DEVICE), // jCol_,
+                                                A_->getValues(ReSolve::memory::DEVICE),  // vals_,
+                                                M_->getNnz(),
+                                                M_->getRowData(ReSolve::memory::DEVICE),
+                                                M_->getColData(ReSolve::memory::DEVICE),
+                                                M_->getValues(ReSolve::memory::DEVICE), // vals_,
+                                                d_P_,
+                                                d_Q_,
+                                                rhs->getData(ReSolve::memory::DEVICE),
+                                                n,
+                                                infoM_);
+
+    mem_.deviceSynchronize();
+    error_sum += status_rocblas_;
+    // tri solve setup
+    if (solve_mode_ == 1)
+    { // fast mode
+
+      if (L_csr_ != nullptr)
+      {
+        delete L_csr_;
+      }
+
+      L_csr_ = new ReSolve::matrix::Csr(L->getNumRows(), L->getNumColumns(), L->getNnz());
+      L_csr_->allocateMatrixData(ReSolve::memory::DEVICE);
+
+      if (U_csr_ != nullptr)
+      {
+        delete U_csr_;
+      }
+
+      U_csr_ = new ReSolve::matrix::Csr(U->getNumRows(), U->getNumColumns(), U->getNnz());
+      U_csr_->allocateMatrixData(ReSolve::memory::DEVICE);
+
+      rocsparse_create_mat_descr(&(descr_L_));
+      rocsparse_set_mat_fill_mode(descr_L_, rocsparse_fill_mode_lower);
+      rocsparse_set_mat_index_base(descr_L_, rocsparse_index_base_zero);
+
+      rocsparse_create_mat_descr(&(descr_U_));
+      rocsparse_set_mat_index_base(descr_U_, rocsparse_index_base_zero);
+      rocsparse_set_mat_fill_mode(descr_U_, rocsparse_fill_mode_upper);
+
+      rocsparse_create_mat_info(&info_L_);
+      rocsparse_create_mat_info(&info_U_);
+
+      // local variables
+      size_t L_buffer_size;
+      size_t U_buffer_size;
+
+      status_rocblas_ = rocsolver_dcsrrf_splitlu(workspace_->getRocblasHandle(),
+                                                 n,
+                                                 M_->getNnz(),
+                                                 M_->getRowData(ReSolve::memory::DEVICE),
+                                                 M_->getColData(ReSolve::memory::DEVICE),
+                                                 M_->getValues(ReSolve::memory::DEVICE), // vals_,
+                                                 L_csr_->getRowData(ReSolve::memory::DEVICE),
+                                                 L_csr_->getColData(ReSolve::memory::DEVICE),
+                                                 L_csr_->getValues(ReSolve::memory::DEVICE), // vals_,
+                                                 U_csr_->getRowData(ReSolve::memory::DEVICE),
+                                                 U_csr_->getColData(ReSolve::memory::DEVICE),
+                                                 U_csr_->getValues(ReSolve::memory::DEVICE));
+
+      error_sum += status_rocblas_;
+
+      status_rocsparse_ = rocsparse_dcsrsv_buffer_size(workspace_->getRocsparseHandle(),
+                                                       rocsparse_operation_none,
+                                                       n,
+                                                       L_csr_->getNnz(),
+                                                       descr_L_,
+                                                       L_csr_->getValues(ReSolve::memory::DEVICE),
+                                                       L_csr_->getRowData(ReSolve::memory::DEVICE),
+                                                       L_csr_->getColData(ReSolve::memory::DEVICE),
+                                                       info_L_,
+                                                       &L_buffer_size);
+      error_sum += status_rocsparse_;
+      mem_.allocateBufferOnDevice(&L_buffer_, L_buffer_size);
+
+      status_rocsparse_ = rocsparse_dcsrsv_buffer_size(workspace_->getRocsparseHandle(),
+                                                       rocsparse_operation_none,
+                                                       n,
+                                                       U_csr_->getNnz(),
+                                                       descr_U_,
+                                                       U_csr_->getValues(ReSolve::memory::DEVICE),
+                                                       U_csr_->getRowData(ReSolve::memory::DEVICE),
+                                                       U_csr_->getColData(ReSolve::memory::DEVICE),
+                                                       info_U_,
+                                                       &U_buffer_size);
+      error_sum += status_rocsparse_;
+      mem_.allocateBufferOnDevice(&U_buffer_, U_buffer_size);
+
+      status_rocsparse_ = rocsparse_dcsrsv_analysis(workspace_->getRocsparseHandle(),
+                                                    rocsparse_operation_none,
+                                                    n,
+                                                    L_csr_->getNnz(),
+                                                    descr_L_,
+                                                    L_csr_->getValues(ReSolve::memory::DEVICE),
+                                                    L_csr_->getRowData(ReSolve::memory::DEVICE),
+                                                    L_csr_->getColData(ReSolve::memory::DEVICE),
+                                                    info_L_,
+                                                    rocsparse_analysis_policy_force,
+                                                    rocsparse_solve_policy_auto,
+                                                    L_buffer_);
+
+      error_sum += status_rocsparse_;
+      if (status_rocsparse_ != 0)
+      {
+        std::cout << "status after analysis 1: " << status_rocsparse_ << "\n";
+      }
+
+      status_rocsparse_ = rocsparse_dcsrsv_analysis(workspace_->getRocsparseHandle(),
+                                                    rocsparse_operation_none,
+                                                    n,
+                                                    U_csr_->getNnz(),
+                                                    descr_U_,
+                                                    U_csr_->getValues(ReSolve::memory::DEVICE), // vals_,
+                                                    U_csr_->getRowData(ReSolve::memory::DEVICE),
+                                                    U_csr_->getColData(ReSolve::memory::DEVICE),
+                                                    info_U_,
+                                                    rocsparse_analysis_policy_force,
+                                                    rocsparse_solve_policy_auto,
+                                                    U_buffer_);
+      error_sum += status_rocsparse_;
+      if (status_rocsparse_ != 0)
+      {
+        out::error() << "status after analysis 2: " << status_rocsparse_ << "\n";
+      }
+
+      // allocate aux data
+      if (d_aux1_ == nullptr)
+      {
+        mem_.allocateArrayOnDevice(&d_aux1_, n);
+      }
+      if (d_aux2_ == nullptr)
+      {
+        mem_.allocateArrayOnDevice(&d_aux2_, n);
+      }
+    }
+    RESOLVE_RANGE_POP(__FUNCTION__);
+    return error_sum;
+  }
+
+  /**
    * @brief Setup function for LinSolverDirectRocSolverRf
    *
    * @param[in] A - matrix::Sparse* - matrix to solve
@@ -600,6 +796,57 @@ namespace ReSolve
   //
   // Private methods
   //
+
+  /**
+   * @brief Combine L and U factors already in CSR into a single matrix M
+   *
+   * M = [L U], where L and U are lower and upper triangular factors
+   * The implicit identity diagonal of L is not included in M
+   *
+   * @param[in] L - matrix::Sparse* - lower triangular factor
+   * @param[in] U - matrix::Sparse* - upper triangular factor
+   *
+   * @post M_ is allocated and filled with L and U factors
+   */
+  void LinSolverDirectRocSolverRf::combineFactorsCsr(matrix::Sparse* L, matrix::Sparse* U)
+  {
+    index_type  n     = L->getNumRows();
+    index_type* L_row = L->getRowData(memory::HOST);
+    index_type* L_col = L->getColData(memory::HOST);
+    index_type* U_row = U->getRowData(memory::HOST);
+    index_type* U_col = U->getColData(memory::HOST);
+    index_type  M_nnz = (L->getNnz() + U->getNnz() - n);
+    M_                = new matrix::Csr(n, n, M_nnz);
+    M_->allocateMatrixData(memory::HOST);
+    index_type* M_row = M_->getRowData(memory::HOST);
+    index_type* M_col = M_->getColData(memory::HOST);
+    // The total number of non-zeros in a row is the sum of non-zeros in L and U,
+    // minus 1 for the diagonal element, which is not counted twice.
+    // You can verify with this formula that M_row[i+1] - M_row[i] is the number of non-zeros in row i.
+    // M_row[i+1] - M_row[i] = (L_row[i+1] - L_row[i]) + (U_row[i+1] - U_row[i]) - 1
+    // The number of zeros in the i-th row of L + U -1.
+    for (index_type i = 0; i <= n; i++)
+    {
+      M_row[i] = L_row[i] + U_row[i] - i;
+    }
+    // Now we need to fill the M_col array with the correct column indices.
+    index_type count = 0;
+    for (index_type i = 0; i < n; ++i)
+    {
+      for (index_type j = L_row[i]; j < L_row[i + 1]; ++j)
+      {
+        M_col[count++] = L_col[j];
+      }
+      for (index_type j = U_row[i] + 1; j < U_row[i + 1]; ++j) // skip the diagonal element of U, which is at U_row[i]
+      {
+        M_col[count++] = U_col[j];
+      }
+    }
+    for (index_type i = 0; i < n; ++i) // this is crucial, turns out somehow the indices are not sorted
+    {
+      std::sort(M_col + M_row[i], M_col + M_row[i + 1]);
+    }
+  }
 
   /**
    * @brief Combine L and U factors into a single matrix M
