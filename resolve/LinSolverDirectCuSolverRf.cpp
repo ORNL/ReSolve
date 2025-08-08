@@ -59,7 +59,6 @@ namespace ReSolve
    *
    * @pre The matrix A is in CSR format.
    */
-
   int LinSolverDirectCuSolverRf::setupCsr(matrix::Sparse* A,
                                           matrix::Sparse* L,
                                           matrix::Sparse* U,
