@@ -72,7 +72,6 @@ namespace ReSolve
     assert(L->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW && "Matrices L and U have to be in CSR format for cusolverRf input.\n");
     L->syncData(memory::DEVICE);
     U->syncData(memory::DEVICE);
-
     int error_sum = 0;
     this->A_      = A;
     index_type n  = A_->getNumRows();
@@ -196,8 +195,10 @@ namespace ReSolve
       break;
     case matrix::Sparse::COMPRESSED_SPARSE_ROW:
       std::cout << "L and U factors are in CSR format ...\n";
-      L_csr = dynamic_cast<matrix::Csr*>(L);
-      U_csr = dynamic_cast<matrix::Csr*>(U);
+      L_csr = static_cast<matrix::Csr*>(L);
+      U_csr = static_cast<matrix::Csr*>(U);
+      L_csr->setUpdated(memory::HOST);
+      U_csr->setUpdated(memory::HOST);
       break;
     default:
       out::error() << "Matrix type for L and U factors not recognized!\n";
@@ -385,6 +386,15 @@ namespace ReSolve
   {
     x->copyDataFrom(rhs->getData(memory::DEVICE), memory::DEVICE, memory::DEVICE);
     x->setDataUpdated(memory::DEVICE);
+    // // copy rhs and x to host
+    // (rhs->syncData)(memory::HOST);
+    // (x->syncData)(memory::HOST);
+    // // print rhs and x
+    // for(int i = 0; i < 10; ++i)
+    // {
+    //   std::cout << "rhs[" << i << "] = " << (rhs->getData)(memory::HOST)[i] << ", x[" << i << "] = " << (x->getData)(memory::HOST)[i] << std::endl;
+    // }
+    // values are correct when entering cusolverRfSolve, but it gives NaNs in x
     status_cusolverrf_ = cusolverRfSolve(handle_cusolverrf_,
                                          d_P_,
                                          d_Q_,
@@ -393,6 +403,12 @@ namespace ReSolve
                                          A_->getNumRows(),
                                          x->getData(memory::DEVICE),
                                          A_->getNumRows());
+    x->setDataUpdated(memory::DEVICE);
+    // (x->syncData)(memory::HOST);
+    // for(int i = 0; i < 10; ++i)
+    // {
+    //   std::cout << "rhs[" << i << "] = " << (rhs->getData)(memory::HOST)[i] << ", x[" << i << "] = " << (x->getData)(memory::HOST)[i] << std::endl;
+    // }
     return status_cusolverrf_;
   }
 

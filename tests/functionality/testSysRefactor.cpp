@@ -223,10 +223,12 @@ static int runTest(int argc, char* argv[], std::string backend)
 
   // Refactorize matrix
   status = solver.refactorize();
+  std::cout << "\nRefactorizing and solving second system ...\n";
   error_sum += status;
 
   // Solve system
-  status = solver.solve(&vec_rhs, &vec_x);
+  status = solver.solve(&vec_rhs, &vec_x);// bug is coming from this line
+  std::cout << "System solve status: " << status << std::endl;
   error_sum += status;
 
   // Compute error norms for the system
