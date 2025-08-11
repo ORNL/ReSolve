@@ -59,18 +59,17 @@ namespace ReSolve
    *
    * @pre The matrix A is in CSR format.
    */
+
   int LinSolverDirectCuSolverRf::setupCsr(matrix::Sparse* A,
-                                          matrix::Sparse* L,
-                                          matrix::Sparse* U,
-                                          index_type*     P,
-                                          index_type*     Q,
-                                          vector_type* /* rhs */)
+                                       matrix::Sparse* L,
+                                       matrix::Sparse* U,
+                                       index_type*     P,
+                                       index_type*     Q,
+                                       vector_type* /* rhs */)
   {
     assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW && "Matrix A has to be in CSR format for cusolverRf input.\n");
-    assert(L->getSparseFormat() == U->getSparseFormat() && "Matrices L and U have to be in the same format for cusolverRf input.\n");
+    assert(L->getSparseFormat() == U->getSparseFormat()&& "Matrices L and U have to be in the same format for cusolverRf input.\n");
     assert(L->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW && "Matrices L and U have to be in CSR format for cusolverRf input.\n");
-    L->syncData(memory::DEVICE);
-    U->syncData(memory::DEVICE);
     int error_sum = 0;
     this->A_      = A;
     index_type n  = A_->getNumRows();
@@ -106,6 +105,13 @@ namespace ReSolve
 
     status_cusolverrf_ = cusolverRfSetResetValuesFastMode(handle_cusolverrf_, CUSOLVERRF_RESET_VALUES_FAST_MODE_ON);
     error_sum += status_cusolverrf_;
+    // These lines are a nice thought, but don't change anything.
+    // A->setUpdated(memory::HOST);
+    // A->syncData(memory::DEVICE);
+    // L->setUpdated(memory::HOST);
+    // U->setUpdated(memory::HOST);
+    // L->syncData(memory::DEVICE);
+    // U->syncData(memory::DEVICE);
     status_cusolverrf_ = cusolverRfSetupDevice(n,
                                                A_->getNnz(),
                                                A_->getRowData(memory::DEVICE),
@@ -122,7 +128,6 @@ namespace ReSolve
                                                d_P_,
                                                d_Q_,
                                                handle_cusolverrf_);
-    std::cout << "cusolverRfSetupDevice status: " << status_cusolverrf_ << std::endl;
     error_sum += status_cusolverrf_;
     mem_.deviceSynchronize();
     status_cusolverrf_ = cusolverRfAnalyze(handle_cusolverrf_);
@@ -130,8 +135,8 @@ namespace ReSolve
     const cusolverRfFactorization_t fact_alg =
         CUSOLVERRF_FACTORIZATION_ALG0; // 0 - default, 1 or 2
     const cusolverRfTriangularSolve_t solve_alg =
-        CUSOLVERRF_TRIANGULAR_SOLVE_ALG1; //  1- default, 2 or 3
-
+        CUSOLVERRF_TRIANGULAR_SOLVE_ALG1; //  1- default, 2 or 3 
+    
     this->setAlgorithms(fact_alg, solve_alg);
 
     setup_completed_ = true;
@@ -279,9 +284,6 @@ namespace ReSolve
     default:
       break;
     }
-    // delete L_csr;
-    // delete U_csr;
-
     return error_sum;
   }
 
