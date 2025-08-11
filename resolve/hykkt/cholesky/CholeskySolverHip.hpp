@@ -1,4 +1,5 @@
 #include <cholmod.h>
+
 #include <rocsolver/rocsolver.h>
 
 #include "CholeskySolverImpl.hpp"
@@ -25,12 +26,12 @@ namespace ReSolve
       cholmod_sparse* A_chol_; // cholmod sparse matrix representation
       cholmod_factor* factorization_;
 
-      rocblas_handle handle_;
+      rocblas_handle   handle_;
       rocsolver_rfinfo rfinfo_;
 
       matrix::Csr* A_;
-      matrix::Csr* L_; 
-      index_type* Q_;
+      matrix::Csr* L_;
+      index_type*  Q_;
 
       cholmod_sparse* convertToCholmod(matrix::Csr* A);
     };

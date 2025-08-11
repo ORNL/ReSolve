@@ -18,12 +18,12 @@ namespace ReSolve
       Common_.nmethods = 1;
       // Use natural ordering
       Common_.method[0].ordering = CHOLMOD_NATURAL;
-      Common_.final_ll = true;
+      Common_.final_ll           = true;
 
       A_chol_        = nullptr;
       factorization_ = nullptr;
-      L_ = nullptr;
-      Q_ = nullptr;
+      L_             = nullptr;
+      Q_             = nullptr;
     }
 
     CholeskySolverHip::~CholeskySolverHip()
@@ -52,7 +52,7 @@ namespace ReSolve
         cholmod_free_sparse(&A_chol_, &Common_);
       }
       A_chol_ = convertToCholmod(A);
-      A_ = A;
+      A_      = A;
     }
 
     void CholeskySolverHip::symbolicAnalysis()
@@ -79,9 +79,9 @@ namespace ReSolve
         }
 
         // Extract initial factorization to L_
-        cholmod_sparse* L_chol = cholmod_factor_to_sparse(factorization_, &Common_);
+        cholmod_sparse* L_chol    = cholmod_factor_to_sparse(factorization_, &Common_);
         cholmod_sparse* L_chol_tr = cholmod_transpose(L_chol, 1, &Common_);
-        L_ = new matrix::Csr((index_type) L_chol->nrow, (index_type) L_chol->ncol, (index_type) L_chol->nzmax);
+        L_                        = new matrix::Csr((index_type) L_chol->nrow, (index_type) L_chol->ncol, (index_type) L_chol->nzmax);
         L_->allocateMatrixData(memory::DEVICE);
         L_->copyDataFrom(static_cast<index_type*>(L_chol_tr->p),
                          static_cast<index_type*>(L_chol_tr->i),
@@ -97,47 +97,46 @@ namespace ReSolve
 
         // Store analysis in rfinfo_
         rocblas_status status = rocsolver_dcsrrf_analysis(handle_,
-                                  A_->getNumRows(),
-                                  0,
-                                  A_->getNnz(),
-                                  A_->getRowData(memory::DEVICE),
-                                  A_->getColData(memory::DEVICE),
-                                  A_->getValues(memory::DEVICE),
-                                  L_->getNnz(),
-                                  L_->getRowData(memory::DEVICE),
-                                  L_->getColData(memory::DEVICE),
-                                  L_->getValues(memory::DEVICE),
-                                  nullptr,
-                                  Q_,
-                                  nullptr,
-                                  A_->getNumRows(),
-                                  rfinfo_);
+                                                          A_->getNumRows(),
+                                                          0,
+                                                          A_->getNnz(),
+                                                          A_->getRowData(memory::DEVICE),
+                                                          A_->getColData(memory::DEVICE),
+                                                          A_->getValues(memory::DEVICE),
+                                                          L_->getNnz(),
+                                                          L_->getRowData(memory::DEVICE),
+                                                          L_->getColData(memory::DEVICE),
+                                                          L_->getValues(memory::DEVICE),
+                                                          nullptr,
+                                                          Q_,
+                                                          nullptr,
+                                                          A_->getNumRows(),
+                                                          rfinfo_);
         if (status != rocblas_status_success)
         {
           out::error() << "Analysis step failed with status: " << status << "\n";
         }
       }
-      else //re-factorize
+      else // re-factorize
       {
         rocblas_status status = rocsolver_dcsrrf_refactchol(handle_,
-                                    A_->getNumRows(),
-                                    A_->getNnz(),
-                                    A_->getRowData(memory::DEVICE),
-                                    A_->getColData(memory::DEVICE),
-                                    A_->getValues(memory::DEVICE),
-                                    L_->getNnz(),
-                                    L_->getRowData(memory::DEVICE),
-                                    L_->getColData(memory::DEVICE),
-                                    L_->getValues(memory::DEVICE),
-                                    Q_,
-                                    rfinfo_);
+                                                            A_->getNumRows(),
+                                                            A_->getNnz(),
+                                                            A_->getRowData(memory::DEVICE),
+                                                            A_->getColData(memory::DEVICE),
+                                                            A_->getValues(memory::DEVICE),
+                                                            L_->getNnz(),
+                                                            L_->getRowData(memory::DEVICE),
+                                                            L_->getColData(memory::DEVICE),
+                                                            L_->getValues(memory::DEVICE),
+                                                            Q_,
+                                                            rfinfo_);
         if (status != rocblas_status_success)
         {
           out::error() << "Refactorization step failed with status: " << status << "\n";
         }
         L_->setUpdated(memory::DEVICE);
       }
-      
     }
 
     void CholeskySolverHip::solve(vector::Vector* x, vector::Vector* b)
@@ -154,17 +153,17 @@ namespace ReSolve
       // std::cout << x->getSize() << "\n";
       // std::cout << rfinfo_ << "\n";
       rocblas_status status = rocsolver_dcsrrf_solve(handle_,
-                             L_->getNumRows(),
-                             1,
-                             L_->getNnz(),
-                             L_->getRowData(memory::DEVICE),
-                             L_->getColData(memory::DEVICE),
-                             L_->getValues(memory::DEVICE),
-                             nullptr,
-                             Q_,
-                             x->getData(memory::DEVICE),
-                             x->getSize(),
-                             rfinfo_);
+                                                     L_->getNumRows(),
+                                                     1,
+                                                     L_->getNnz(),
+                                                     L_->getRowData(memory::DEVICE),
+                                                     L_->getColData(memory::DEVICE),
+                                                     L_->getValues(memory::DEVICE),
+                                                     nullptr,
+                                                     Q_,
+                                                     x->getData(memory::DEVICE),
+                                                     x->getSize(),
+                                                     rfinfo_);
       if (status != rocblas_status_success)
       {
         out::error() << "Direct solve step failed with status: " << status << "\n";
