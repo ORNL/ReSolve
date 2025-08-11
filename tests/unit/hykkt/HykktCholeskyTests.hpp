@@ -52,7 +52,11 @@ namespace ReSolve
         index_type   A_row_data[4] = {0, 3, 6, 9};
         index_type   A_col_data[9] = {0, 1, 2, 0, 1, 2, 0, 1, 2};
         real_type    A_values[9]   = {4.0, 12.0, -16.0, 12.0, 37.0, -43.0, -16.0, -43.0, 98.0};
-        A->copyDataFrom(A_row_data, A_col_data, A_values, memory::HOST, memspace_);
+        A->copyDataFrom(A_row_data, A_col_data, A_values, memory::HOST, memory::HOST);
+        if (memspace_ == memory::DEVICE)
+        {
+          A->syncData(memory::DEVICE);
+        }
 
         ReSolve::hykkt::CholeskySolver solver(memspace_);
         solver.addMatrixInfo(A);
@@ -81,7 +85,7 @@ namespace ReSolve
             std::cout << "Test failed at index " << i << ": expected "
                       << expected_x[i] << ", got "
                       << x->getData(memory::HOST)[i] << "\n";
-            status = FAIL;
+            status *= false;
           }
         }
 
