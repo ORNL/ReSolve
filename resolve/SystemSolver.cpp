@@ -479,7 +479,7 @@ namespace ReSolve
     }
     if (refactorizationMethod_ == "cusolverrf")
     {
-      status += refactorizationSolver_->setup(A_, L_, U_, P_, Q_);
+      status += refactorizationSolver_->setupCsr(A_, L_, U_, P_, Q_);
 
       LinSolverDirectCuSolverRf* Rf = dynamic_cast<LinSolverDirectCuSolverRf*>(refactorizationSolver_);
       Rf->setNumericalProperties(1e-14, 1e-1);

@@ -110,8 +110,8 @@ namespace ReSolve
     // A->syncData(memory::DEVICE);
     // L->setUpdated(memory::HOST);
     // U->setUpdated(memory::HOST);
-    // L->syncData(memory::DEVICE);
-    // U->syncData(memory::DEVICE);
+    L->syncData(memory::DEVICE);
+    U->syncData(memory::DEVICE);
     status_cusolverrf_ = cusolverRfSetupDevice(n,
                                                A_->getNnz(),
                                                A_->getRowData(memory::DEVICE),
