@@ -1,7 +1,9 @@
 #include "LinSolverDirectCuSolverRf.hpp"
 
 #include <cassert>
-
+#include <algorithm>
+#include <cstring> // includes memcpy
+#include <vector>
 #include <resolve/matrix/Csc.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/vector/Vector.hpp>
@@ -105,11 +107,16 @@ namespace ReSolve
 
     status_cusolverrf_ = cusolverRfSetResetValuesFastMode(handle_cusolverrf_, CUSOLVERRF_RESET_VALUES_FAST_MODE_ON);
     error_sum += status_cusolverrf_;
-    // These lines are a nice thought, but don't change anything.
-    // A->setUpdated(memory::HOST);
-    // A->syncData(memory::DEVICE);
-    // L->setUpdated(memory::HOST);
-    // U->setUpdated(memory::HOST);
+    //sort L and U columns
+    for (index_type i = 0; i < n; ++i)
+    {
+      std::sort(L->getColData(memory::HOST) + L->getRowData(memory::HOST)[i],
+              L->getColData(memory::HOST) + L->getRowData(memory::HOST)[i + 1]);
+      std::sort(U->getColData(memory::HOST) + U->getRowData(memory::HOST)[i],
+              U->getColData(memory::HOST) + U->getRowData(memory::HOST)[i + 1]);
+    }
+    L->setUpdated(memory::HOST);
+    U->setUpdated(memory::HOST);
     L->syncData(memory::DEVICE);
     U->syncData(memory::DEVICE);
     status_cusolverrf_ = cusolverRfSetupDevice(n,
