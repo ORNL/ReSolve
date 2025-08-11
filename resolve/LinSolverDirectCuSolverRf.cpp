@@ -1,9 +1,10 @@
 #include "LinSolverDirectCuSolverRf.hpp"
 
-#include <cassert>
 #include <algorithm>
+#include <cassert>
 #include <cstring> // includes memcpy
 #include <vector>
+
 #include <resolve/matrix/Csc.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/vector/Vector.hpp>
@@ -63,14 +64,14 @@ namespace ReSolve
    */
 
   int LinSolverDirectCuSolverRf::setupCsr(matrix::Sparse* A,
-                                       matrix::Sparse* L,
-                                       matrix::Sparse* U,
-                                       index_type*     P,
-                                       index_type*     Q,
-                                       vector_type* /* rhs */)
+                                          matrix::Sparse* L,
+                                          matrix::Sparse* U,
+                                          index_type*     P,
+                                          index_type*     Q,
+                                          vector_type* /* rhs */)
   {
     assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW && "Matrix A has to be in CSR format for cusolverRf input.\n");
-    assert(L->getSparseFormat() == U->getSparseFormat()&& "Matrices L and U have to be in the same format for cusolverRf input.\n");
+    assert(L->getSparseFormat() == U->getSparseFormat() && "Matrices L and U have to be in the same format for cusolverRf input.\n");
     assert(L->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW && "Matrices L and U have to be in CSR format for cusolverRf input.\n");
     int error_sum = 0;
     this->A_      = A;
@@ -107,13 +108,13 @@ namespace ReSolve
 
     status_cusolverrf_ = cusolverRfSetResetValuesFastMode(handle_cusolverrf_, CUSOLVERRF_RESET_VALUES_FAST_MODE_ON);
     error_sum += status_cusolverrf_;
-    //sort L and U columns
+    // sort L and U columns
     for (index_type i = 0; i < n; ++i)
     {
       std::sort(L->getColData(memory::HOST) + L->getRowData(memory::HOST)[i],
-              L->getColData(memory::HOST) + L->getRowData(memory::HOST)[i + 1]);
+                L->getColData(memory::HOST) + L->getRowData(memory::HOST)[i + 1]);
       std::sort(U->getColData(memory::HOST) + U->getRowData(memory::HOST)[i],
-              U->getColData(memory::HOST) + U->getRowData(memory::HOST)[i + 1]);
+                U->getColData(memory::HOST) + U->getRowData(memory::HOST)[i + 1]);
     }
     L->setUpdated(memory::HOST);
     U->setUpdated(memory::HOST);
@@ -142,8 +143,8 @@ namespace ReSolve
     const cusolverRfFactorization_t fact_alg =
         CUSOLVERRF_FACTORIZATION_ALG0; // 0 - default, 1 or 2
     const cusolverRfTriangularSolve_t solve_alg =
-        CUSOLVERRF_TRIANGULAR_SOLVE_ALG1; //  1- default, 2 or 3 
-    
+        CUSOLVERRF_TRIANGULAR_SOLVE_ALG1; //  1- default, 2 or 3
+
     this->setAlgorithms(fact_alg, solve_alg);
 
     setup_completed_ = true;
