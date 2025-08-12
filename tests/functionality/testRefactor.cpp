@@ -186,14 +186,7 @@ int runTest(int argc, char* argv[], std::string& solver_name)
   status = KLU.factorize();
   error_sum += status;
 
-  // Extract factors and setup factorization
-  // switch these to get it to work for cuSolver, this is a workaround for now
-  // matrix_type* L = KLU.getLFactor();
-  // matrix_type* U = KLU.getUFactor();
-  // index_type*  Q = KLU.getPOrdering();
-  // index_type*  P = KLU.getQOrdering();
-
-  // status = Rf.setup(A, L, U, P, Q, &vec_rhs);
+  // Extract factors and setup factorization for refactorization
   matrix_type* L = KLU.getLFactorCsr();
   matrix_type* U = KLU.getUFactorCsr();
   index_type*  P = KLU.getPOrdering();

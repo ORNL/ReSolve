@@ -444,22 +444,6 @@ namespace ReSolve
   {
     int status = 0;
 
-    // Get factors and permutation vectors
-    // if (refactorizationMethod_ == "glu")
-    // {
-    //   L_ = factorizationSolver_->getLFactorCsr();
-    //   U_ = factorizationSolver_->getUFactorCsr();
-    //   P_ = factorizationSolver_->getPOrdering();
-    //   Q_ = factorizationSolver_->getQOrdering();
-    // }
-    // else
-    // {
-    //   L_ = factorizationSolver_->getLFactor();
-    //   U_ = factorizationSolver_->getUFactor();
-    //   Q_ = factorizationSolver_->getPOrdering();
-    //   P_ = factorizationSolver_->getQOrdering();
-    // }
-
     L_ = factorizationSolver_->getLFactorCsr();
     U_ = factorizationSolver_->getUFactorCsr();
     P_ = factorizationSolver_->getPOrdering();
@@ -542,7 +526,6 @@ namespace ReSolve
       if (is_solve_on_device_)
       {
         status += refactorizationSolver_->solve(rhs, x);
-        std::cout << "Refactorization solver solve status: " << status << std::endl;
       }
       else
       {

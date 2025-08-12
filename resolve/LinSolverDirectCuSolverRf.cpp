@@ -402,11 +402,6 @@ namespace ReSolve
                                          x->getData(memory::DEVICE),
                                          A_->getNumRows());
     x->setDataUpdated(memory::DEVICE);
-    // (x->syncData)(memory::HOST);
-    // for(int i = 0; i < 10; ++i)
-    // {
-    //   std::cout << "rhs[" << i << "] = " << (rhs->getData)(memory::HOST)[i] << ", x[" << i << "] = " << (x->getData)(memory::HOST)[i] << std::endl;
-    // }
     return status_cusolverrf_;
   }
 
