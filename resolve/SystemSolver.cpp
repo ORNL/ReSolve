@@ -543,12 +543,6 @@ namespace ReSolve
       {
         status += refactorizationSolver_->solve(rhs, x);
         std::cout << "Refactorization solver solve status: " << status << std::endl;
-        // copy rhs and x to host
-        // print rhs and x
-        // for(int i = 0; i < 10; ++i)
-        // {
-        //   std::cout << "rhs[" << i << "] = " << (rhs->getData)(memory::HOST)[i] << ", x[" << i << "] = " << (x->getData)(memory::HOST)[i] << std::endl;
-        // }
       }
       else
       {

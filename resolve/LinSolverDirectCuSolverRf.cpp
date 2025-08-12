@@ -197,7 +197,6 @@ namespace ReSolve
     switch (L->getSparseFormat())
     {
     case matrix::Sparse::COMPRESSED_SPARSE_COLUMN:
-      std::cout << "converting L and U factors from CSC to CSR format ...\n";
       L_csc = static_cast<matrix::Csc*>(L);
       U_csc = static_cast<matrix::Csc*>(U);
       L_csr = new matrix::Csr(L_csc->getNumRows(), L_csc->getNumColumns(), L_csc->getNnz());
@@ -206,7 +205,6 @@ namespace ReSolve
       csc2csr(U_csc, U_csr);
       break;
     case matrix::Sparse::COMPRESSED_SPARSE_ROW:
-      std::cout << "L and U factors are in CSR format ...\n";
       L_csr = static_cast<matrix::Csr*>(L);
       U_csr = static_cast<matrix::Csr*>(U);
       L_csr->setUpdated(memory::HOST);
@@ -395,15 +393,6 @@ namespace ReSolve
   {
     x->copyDataFrom(rhs->getData(memory::DEVICE), memory::DEVICE, memory::DEVICE);
     x->setDataUpdated(memory::DEVICE);
-    // // copy rhs and x to host
-    // (rhs->syncData)(memory::HOST);
-    // (x->syncData)(memory::HOST);
-    // // print rhs and x
-    // for(int i = 0; i < 10; ++i)
-    // {
-    //   std::cout << "rhs[" << i << "] = " << (rhs->getData)(memory::HOST)[i] << ", x[" << i << "] = " << (x->getData)(memory::HOST)[i] << std::endl;
-    // }
-    // values are correct when entering cusolverRfSolve, but it gives NaNs in x
     status_cusolverrf_ = cusolverRfSolve(handle_cusolverrf_,
                                          d_P_,
                                          d_Q_,
