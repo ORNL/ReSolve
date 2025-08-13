@@ -115,7 +115,7 @@ namespace ReSolve
     error_sum += status_rocblas_;
     // tri solve setup
     if (solve_mode_ == 1)
-    { // OBSOLETE -- to be removed. Formerly known as "fast mode"
+    { // OBSOLETE -- to be removed. Formerly known as "fast mode" TODO
 
       if (L_csr_ != nullptr)
       {
