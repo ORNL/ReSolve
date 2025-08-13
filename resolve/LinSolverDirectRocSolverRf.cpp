@@ -821,7 +821,7 @@ namespace ReSolve
     index_type* M_row = M_->getRowData(memory::HOST);
     index_type* M_col = M_->getColData(memory::HOST);
     // The total number of non-zeros in a row is the sum of non-zeros in L and U,
-    // minus 1 for the diagonal element, which is not counted twice.
+    // minus 1 to not count the diagonal element twice.
     // You can verify with this formula that M_row[i+1] - M_row[i] is the number of non-zeros in row i.
     // M_row[i+1] - M_row[i] = (L_row[i+1] - L_row[i]) + (U_row[i+1] - U_row[i]) - 1
     // The number of zeros in the i-th row of L + U -1.
