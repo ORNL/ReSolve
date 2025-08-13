@@ -77,9 +77,9 @@ namespace ReSolve
     this->A_      = A;
     index_type n  = A_->getNumRows();
 
-    // remember - P and Q are generally CPU variables
-    //  factorization data is stored in the handle.
-    //  If function is called again, destroy the old handle to get rid of old data.
+    // Remember - P and Q are generally CPU variables!
+    // Factorization data is stored in the handle.
+    // If function is called again, destroy the old handle to get rid of old data.
     if (setup_completed_)
     {
       cusolverRfDestroy(handle_cusolverrf_);
