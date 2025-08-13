@@ -40,6 +40,13 @@ namespace ReSolve
               index_type*     Q,
               vector_type*    rhs) override;
 
+    int setupCsr(matrix::Sparse* A,
+                 matrix::Sparse* L,
+                 matrix::Sparse* U,
+                 index_type*     P,
+                 index_type*     Q,
+                 vector_type*    rhs) override;
+
     int refactorize() override;
     int solve(vector_type* rhs, vector_type* x) override;
     int solve(vector_type* rhs) override; // the solution overwrites rhs
@@ -64,7 +71,8 @@ namespace ReSolve
 
   private:
     // to be exported to matrix handler in a later time
-    void combineFactors(matrix::Sparse* L, matrix::Sparse* U); // create L+U from separate L, U factors
+    void combineFactors(matrix::Sparse* L, matrix::Sparse* U);    // create L+U from separate L, U factors
+    void combineFactorsCsr(matrix::Sparse* L, matrix::Sparse* U); // create L+U from separate L, U factors
     void initParamList();
 
     rocblas_status   status_rocblas_;

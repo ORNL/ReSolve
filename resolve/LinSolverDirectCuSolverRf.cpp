@@ -1,6 +1,9 @@
 #include "LinSolverDirectCuSolverRf.hpp"
 
+#include <algorithm>
 #include <cassert>
+#include <cstring> // includes memcpy
+#include <vector>
 
 #include <resolve/matrix/Csc.hpp>
 #include <resolve/matrix/Csr.hpp>
@@ -42,6 +45,110 @@ namespace ReSolve
     mem_.deleteOnDevice(d_P_);
     mem_.deleteOnDevice(d_Q_);
     mem_.deleteOnDevice(d_T_);
+  }
+
+  /**
+   * @brief Setup the cuSolverRf factorization with factors already in CSR
+   *
+   * Sets up the cuSolverRf factorization for the given matrix A and its
+   * L and U factors. The permutation vectors P and Q are also set up.
+   *
+   * @param[in] A - pointer to the matrix A
+   * @param[in] L - pointer to the lower triangular factor L in CSR
+   * @param[in] U - pointer to the upper triangular factor U in CSR
+   * @param[in] P - pointer to the permutation vector P
+   * @param[in] Q - pointer to the permutation vector Q
+   * @param[in] rhs - pointer to the right-hand side vector (optional)
+   *
+   * @pre The matrix A is in CSR format.
+   */
+
+  int LinSolverDirectCuSolverRf::setupCsr(matrix::Sparse* A,
+                                          matrix::Sparse* L,
+                                          matrix::Sparse* U,
+                                          index_type*     P,
+                                          index_type*     Q,
+                                          vector_type* /* rhs */)
+  {
+    assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW && "Matrix A has to be in CSR format for cusolverRf input.\n");
+    assert(L->getSparseFormat() == U->getSparseFormat() && "Matrices L and U have to be in the same format for cusolverRf input.\n");
+    assert(L->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW && "Matrices L and U have to be in CSR format for cusolverRf input.\n");
+    int error_sum = 0;
+    this->A_      = A;
+    index_type n  = A_->getNumRows();
+
+    // Remember - P and Q are generally CPU variables!
+    // Factorization data is stored in the handle.
+    // If function is called again, destroy the old handle to get rid of old data.
+    if (setup_completed_)
+    {
+      cusolverRfDestroy(handle_cusolverrf_);
+      cusolverRfCreate(&handle_cusolverrf_);
+    }
+
+    if (d_P_ == nullptr)
+    {
+      mem_.allocateArrayOnDevice(&d_P_, n);
+    }
+
+    if (d_Q_ == nullptr)
+    {
+      mem_.allocateArrayOnDevice(&d_Q_, n);
+    }
+
+    if (d_T_ != nullptr)
+    {
+      mem_.deleteOnDevice(d_T_);
+    }
+
+    mem_.allocateArrayOnDevice(&d_T_, n);
+
+    mem_.copyArrayHostToDevice(d_P_, P, n);
+    mem_.copyArrayHostToDevice(d_Q_, Q, n);
+
+    status_cusolverrf_ = cusolverRfSetResetValuesFastMode(handle_cusolverrf_, CUSOLVERRF_RESET_VALUES_FAST_MODE_ON);
+    error_sum += status_cusolverrf_;
+    // sort L and U columns
+    for (index_type i = 0; i < n; ++i)
+    {
+      std::sort(L->getColData(memory::HOST) + L->getRowData(memory::HOST)[i],
+                L->getColData(memory::HOST) + L->getRowData(memory::HOST)[i + 1]);
+      std::sort(U->getColData(memory::HOST) + U->getRowData(memory::HOST)[i],
+                U->getColData(memory::HOST) + U->getRowData(memory::HOST)[i + 1]);
+    }
+    L->setUpdated(memory::HOST);
+    U->setUpdated(memory::HOST);
+    L->syncData(memory::DEVICE);
+    U->syncData(memory::DEVICE);
+    status_cusolverrf_ = cusolverRfSetupDevice(n,
+                                               A_->getNnz(),
+                                               A_->getRowData(memory::DEVICE),
+                                               A_->getColData(memory::DEVICE),
+                                               A_->getValues(memory::DEVICE),
+                                               L->getNnz(),
+                                               L->getRowData(memory::DEVICE),
+                                               L->getColData(memory::DEVICE),
+                                               L->getValues(memory::DEVICE),
+                                               U->getNnz(),
+                                               U->getRowData(memory::DEVICE),
+                                               U->getColData(memory::DEVICE),
+                                               U->getValues(memory::DEVICE),
+                                               d_P_,
+                                               d_Q_,
+                                               handle_cusolverrf_);
+    error_sum += status_cusolverrf_;
+    mem_.deviceSynchronize();
+    status_cusolverrf_ = cusolverRfAnalyze(handle_cusolverrf_);
+    error_sum += status_cusolverrf_;
+    const cusolverRfFactorization_t fact_alg =
+        CUSOLVERRF_FACTORIZATION_ALG0; // 0 - default, 1 or 2
+    const cusolverRfTriangularSolve_t solve_alg =
+        CUSOLVERRF_TRIANGULAR_SOLVE_ALG1; //  1- default, 2 or 3
+
+    this->setAlgorithms(fact_alg, solve_alg);
+
+    setup_completed_ = true;
+    return error_sum;
   }
 
   /**
@@ -90,25 +197,26 @@ namespace ReSolve
     switch (L->getSparseFormat())
     {
     case matrix::Sparse::COMPRESSED_SPARSE_COLUMN:
-      // std::cout << "converting L and U factors from CSC to CSR format ...\n";
       L_csc = static_cast<matrix::Csc*>(L);
       U_csc = static_cast<matrix::Csc*>(U);
       L_csr = new matrix::Csr(L_csc->getNumRows(), L_csc->getNumColumns(), L_csc->getNnz());
       U_csr = new matrix::Csr(U_csc->getNumRows(), U_csc->getNumColumns(), U_csc->getNnz());
       csc2csr(L_csc, L_csr);
       csc2csr(U_csc, U_csr);
-      L_csr->syncData(memory::DEVICE);
-      U_csr->syncData(memory::DEVICE);
       break;
     case matrix::Sparse::COMPRESSED_SPARSE_ROW:
-      L_csr = dynamic_cast<matrix::Csr*>(L);
-      U_csr = dynamic_cast<matrix::Csr*>(U);
+      L_csr = static_cast<matrix::Csr*>(L);
+      U_csr = static_cast<matrix::Csr*>(U);
+      L_csr->setUpdated(memory::HOST);
+      U_csr->setUpdated(memory::HOST);
       break;
     default:
       out::error() << "Matrix type for L and U factors not recognized!\n";
       out::error() << "Refactorization not completed.\n";
       return 1;
     }
+    L_csr->syncData(memory::DEVICE);
+    U_csr->syncData(memory::DEVICE);
 
     if (d_P_ == nullptr)
     {
@@ -182,9 +290,6 @@ namespace ReSolve
     default:
       break;
     }
-    // delete L_csr;
-    // delete U_csr;
-
     return error_sum;
   }
 
@@ -296,6 +401,7 @@ namespace ReSolve
                                          A_->getNumRows(),
                                          x->getData(memory::DEVICE),
                                          A_->getNumRows());
+    x->setDataUpdated(memory::DEVICE);
     return status_cusolverrf_;
   }
 

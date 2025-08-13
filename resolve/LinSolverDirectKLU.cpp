@@ -390,6 +390,9 @@ namespace ReSolve
   /**
    * @brief Get the permutation vector P.
    *
+   * Due to KLU's internal CSC storage, the P vector is obtained from Symbolic_->Q,
+   * to keep things consistent with our CSR storage convention.
+   *
    * @return P permutation vector
    */
   index_type* LinSolverDirectKLU::getPOrdering()
@@ -398,7 +401,8 @@ namespace ReSolve
     {
       P_           = new index_type[A_->getNumRows()];
       size_t nrows = static_cast<size_t>(A_->getNumRows());
-      std::memcpy(P_, Numeric_->Pnum, nrows * sizeof(index_type));
+      std::memcpy(P_, Symbolic_->Q, nrows * sizeof(index_type)); // KLU's CSC Symbolic_->Q is the CSR P vector.
+      // Only a symbolic factorization is needed to get Q, because there is only row pivoting for the numeric factorization.
       return P_;
     }
     else
@@ -410,6 +414,9 @@ namespace ReSolve
   /**
    * @brief Get the permutation vector Q.
    *
+   * Due to KLU's internal CSC storage, the Q vector is obtained from Numeric_->Pnum,
+   * to keep things consistent with our CSR storage convention.
+   *
    * @return Q permutation vector
    */
   index_type* LinSolverDirectKLU::getQOrdering()
@@ -418,7 +425,8 @@ namespace ReSolve
     {
       Q_           = new index_type[A_->getNumRows()];
       size_t nrows = static_cast<size_t>(A_->getNumRows());
-      std::memcpy(Q_, Symbolic_->Q, nrows * sizeof(index_type));
+      std::memcpy(Q_, Numeric_->Pnum, nrows * sizeof(index_type)); // KLU's CSC Numeric_->Pnum is the CSR Q vector.
+      // A numeric factorization is needed to get Pnum, because there is row pivoting for the numeric factorization.
       return Q_;
     }
     else

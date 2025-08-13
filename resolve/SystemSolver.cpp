@@ -444,9 +444,8 @@ namespace ReSolve
   {
     int status = 0;
 
-    // Get factors and permutation vectors
-    L_ = factorizationSolver_->getLFactor();
-    U_ = factorizationSolver_->getUFactor();
+    L_ = factorizationSolver_->getLFactorCsr();
+    U_ = factorizationSolver_->getUFactorCsr();
     P_ = factorizationSolver_->getPOrdering();
     Q_ = factorizationSolver_->getQOrdering();
 
@@ -460,11 +459,11 @@ namespace ReSolve
     if (refactorizationMethod_ == "glu")
     {
       is_solve_on_device_ = true;
-      status += refactorizationSolver_->setup(A_, L_, U_, P_, Q_);
+      status += refactorizationSolver_->setupCsr(A_, L_, U_, P_, Q_);
     }
     if (refactorizationMethod_ == "cusolverrf")
     {
-      status += refactorizationSolver_->setup(A_, L_, U_, P_, Q_);
+      status += refactorizationSolver_->setupCsr(A_, L_, U_, P_, Q_);
 
       LinSolverDirectCuSolverRf* Rf = dynamic_cast<LinSolverDirectCuSolverRf*>(refactorizationSolver_);
       Rf->setNumericalProperties(1e-14, 1e-1);
@@ -479,7 +478,7 @@ namespace ReSolve
       is_solve_on_device_ = false;
       auto* Rf            = dynamic_cast<LinSolverDirectRocSolverRf*>(refactorizationSolver_);
       Rf->setSolveMode(1);
-      status += refactorizationSolver_->setup(A_, L_, U_, P_, Q_, resVector_);
+      status += refactorizationSolver_->setupCsr(A_, L_, U_, P_, Q_, resVector_);
     }
 #endif
 
