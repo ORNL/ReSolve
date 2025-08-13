@@ -1,13 +1,17 @@
 #pragma once
 #include "SpGEMMImpl.hpp"
 
+#include <resolve/Common.hpp>
 #include <resolve/MemoryUtils.hpp>
 #include <resolve/matrix/Csr.hpp>
 
 namespace ReSolve {
+  using real_type = ReSolve::real_type;
+
   namespace hykkt {
     class SpGEMM {
       public:
+        // computes E = alpha * A * B + beta * D
         SpGEMM(memory::MemorySpace memspace, real_type alpha, real_type beta);
         ~SpGEMM();
 
@@ -19,11 +23,6 @@ namespace ReSolve {
 
       private:
         memory::MemorySpace memspace_;
-
-        matrix::Csr* A;
-        matrix::Csr* B;
-        matrix::Csr* D;
-        matrix::Csr* E;
 
         SpGEMMImpl* impl_;
     };
