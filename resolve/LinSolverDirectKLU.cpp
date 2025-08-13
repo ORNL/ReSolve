@@ -389,7 +389,7 @@ namespace ReSolve
 
   /**
    * @brief Get the permutation vector P.
-   * 
+   *
    * Due to KLU's internal CSC storage, the P vector is obtained from Symbolic_->Q,
    * to keep things consistent with our CSR storage convention.
    *
@@ -413,8 +413,8 @@ namespace ReSolve
 
   /**
    * @brief Get the permutation vector Q.
-   * 
-   * Due to KLU's internal CSC storage, the Q vector is obtained from Numeric_->Pnum, 
+   *
+   * Due to KLU's internal CSC storage, the Q vector is obtained from Numeric_->Pnum,
    * to keep things consistent with our CSR storage convention.
    *
    * @return Q permutation vector
