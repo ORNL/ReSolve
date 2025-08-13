@@ -60,8 +60,8 @@ namespace ReSolve {
 
     void SpGEMMCpu::compute()
     {
-      cholmod_sparse* C_chol = cholmod_ssmult(A_, B_, 0, 1, 0, &Common_);
-      cholmod_sparse* E_chol =cholmod_add(C_chol, D_, &alpha_, &beta_, 1, 0, &Common_);
+      cholmod_sparse* C_chol = cholmod_ssmult(B_, A_, 0, 1, 0, &Common_);
+      cholmod_sparse* E_chol = cholmod_add(C_chol, D_, &alpha_, &beta_, 1, 0, &Common_);
       
       E_->copyDataFrom(static_cast<index_type*>(E_chol->p), 
       static_cast<index_type*>(E_chol->i), 
@@ -77,7 +77,7 @@ namespace ReSolve {
                                         (size_t) A->getNnz(),
                                         1,
                                         1,
-                                        1,
+                                        0,
                                         CHOLMOD_REAL,
                                         &Common_);
     }
