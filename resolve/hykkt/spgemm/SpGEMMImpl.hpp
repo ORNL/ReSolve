@@ -2,6 +2,7 @@
 
 #include <resolve/Common.hpp>
 #include <resolve/MemoryUtils.hpp>
+#include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/matrix/Csr.hpp>
 
 namespace ReSolve {

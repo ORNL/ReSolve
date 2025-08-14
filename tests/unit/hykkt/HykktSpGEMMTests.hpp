@@ -76,7 +76,7 @@ namespace ReSolve
         D->copyDataFrom(D_row_ptr, D_col_ind, D_values, memory::HOST, memspace_);
 
         matrix::Csr* E = new matrix::Csr(3, 3, 8);
-        E->allocateMatrixData(memspace_);
+        // E->allocateMatrixData(memspace_);
 
         spgemm.addProductMatrices(A, B);
         spgemm.addSumMatrix(D);

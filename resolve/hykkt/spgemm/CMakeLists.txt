@@ -10,11 +10,13 @@
 set(SPGEMM_SRC
   SpGEMM.cpp
   SpGEMMCpu.cpp
+  SpGEMMHip.cpp
 )
 set(SPGEMM_HEADER_INSTALL
   SpGEMM.hpp
   SpGEMMImpl.hpp
   SpGEMMCpu.hpp
+  SpGEMMHip.hpp
 )
 
 # Build shared library ReSolve::hykkt

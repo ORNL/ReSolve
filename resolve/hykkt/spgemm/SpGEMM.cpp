@@ -4,7 +4,7 @@
 #ifdef RESOLVE_USE_CUDA
 #include "SpGEMMCuda.hpp"
 #elif defined(RESOLVE_USE_HIP)
-// #include "SpGEMMHip.hpp"
+#include "SpGEMMHip.hpp"
 #endif
 
 namespace ReSolve {
@@ -22,7 +22,7 @@ namespace ReSolve {
 #ifdef RESOLVE_USE_CUDA
         // impl_ = new SpGEMMCuda(alpha, beta);
 #elif defined(RESOLVE_USE_HIP)
-        // impl_ = new SpGEMMHip(alpha, beta);
+        impl_ = new SpGEMMHip(alpha, beta);
 #else
         out::error() << "No GPU support enabled, and memory space set to DEVICE.\n";
         exit(1);
