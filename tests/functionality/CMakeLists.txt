@@ -36,9 +36,6 @@ if(RESOLVE_USE_KLU)
     add_executable(sys_glu_test.exe testSysGLU.cpp)
     target_link_libraries(sys_glu_test.exe PRIVATE ReSolve)
 
-    # add_executable(sys_glu_asym_test.exe testSysGLUAsym.cpp)
-    # target_link_libraries(sys_glu_asym_test.exe PRIVATE ReSolve)
-
   endif(RESOLVE_USE_CUDA)
 endif(RESOLVE_USE_KLU)
 
@@ -62,7 +59,6 @@ if(RESOLVE_USE_KLU)
 
   if(RESOLVE_USE_CUDA)
     list(APPEND installable_tests sys_glu_test.exe)
-    # list(APPEND installable_tests sys_glu_asym_test.exe)
   endif(RESOLVE_USE_CUDA)
 endif()
 
