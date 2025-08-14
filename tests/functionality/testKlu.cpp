@@ -102,8 +102,6 @@ int runTest(int argc, char* argv[], std::string& solver_name)
   ReSolve::GramSchmidt              GS(&vector_handler, ReSolve::GramSchmidt::CGS2);
   ReSolve::LinSolverIterativeFGMRES FGMRES(&matrix_handler, &vector_handler, &GS);
 
-
-
   // Read first matrix
   std::ifstream mat1(matrix_file_name_1);
   if (!mat1.is_open())
