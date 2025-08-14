@@ -1,7 +1,9 @@
 #include "LinSolverDirectKLU.hpp"
 
+#include <algorithm>
 #include <cassert>
 #include <cstring>
+#include <vector>
 
 #include <resolve/matrix/Csc.hpp>
 #include <resolve/matrix/Csr.hpp>
@@ -295,6 +297,15 @@ namespace ReSolve
                            nullptr,
                            nullptr,
                            &Common_);
+      // Sort the column indices in L and U to ensure they are in ordered CSR format
+      // WARNING: Values are not sorted. We currently don't use values from KLU across solvers. If we ever decide to, we will need to change this.
+      for (index_type i = 0; i < A_->getNumRows(); ++i)
+      {
+        std::sort(L_->getColData(memory::HOST) + L_->getRowData(memory::HOST)[i], // Sort L's column indices from the start of Row i to the start of Row i+1 (non inclusive).
+                  L_->getColData(memory::HOST) + L_->getRowData(memory::HOST)[i + 1]);
+        std::sort(U_->getColData(memory::HOST) + U_->getRowData(memory::HOST)[i],
+                  U_->getColData(memory::HOST) + U_->getRowData(memory::HOST)[i + 1]);
+      }
 
       L_->setUpdated(memory::HOST);
       U_->setUpdated(memory::HOST);
