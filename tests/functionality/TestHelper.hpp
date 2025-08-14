@@ -232,9 +232,6 @@ public:
       std::cout << "\t Residual norm on CPU    ||b-A*x|| (CPU)         : " << getNormResidualCpu() << "\n";
     }
     std::cout << "\t Relative residual norm  ||b-A*x||/||b||         : " << getNormResidualScaled() << "\n";
-    std::cout << "\t Error norm              ||x-x_true||            : " << getNormDiff() << "\n";
-    std::cout << "\t Relative error norm     ||x-x_true||/||x_true|| : " << getNormDiffScaled() << "\n";
-    std::cout << "\t Exact solution residual ||b-A*x_true||          : " << getNormResidualTrue() << "\n";
   }
 
   /// Summary of error norms for an iterative refinement test.

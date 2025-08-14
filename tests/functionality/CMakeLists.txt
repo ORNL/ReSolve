@@ -36,8 +36,8 @@ if(RESOLVE_USE_KLU)
     add_executable(sys_glu_test.exe testSysGLU.cpp)
     target_link_libraries(sys_glu_test.exe PRIVATE ReSolve)
 
-    add_executable(sys_glu_asym_test.exe testSysGLUAsym.cpp)
-    target_link_libraries(sys_glu_asym_test.exe PRIVATE ReSolve)
+    # add_executable(sys_glu_asym_test.exe testSysGLUAsym.cpp)
+    # target_link_libraries(sys_glu_asym_test.exe PRIVATE ReSolve)
 
   endif(RESOLVE_USE_CUDA)
 endif(RESOLVE_USE_KLU)
@@ -62,7 +62,7 @@ if(RESOLVE_USE_KLU)
 
   if(RESOLVE_USE_CUDA)
     list(APPEND installable_tests sys_glu_test.exe)
-    list(APPEND installable_tests sys_glu_asym_test.exe)
+    # list(APPEND installable_tests sys_glu_asym_test.exe)
   endif(RESOLVE_USE_CUDA)
 endif()
 
@@ -76,7 +76,12 @@ install(TARGETS ${installable_tests}
 # Install directory with data files
 install(DIRECTORY data DESTINATION bin/resolve/tests/functionality)
 
-set(test_data_dir ${CMAKE_SOURCE_DIR}/tests/functionality/)
+set(test_data_dir ${CMAKE_SOURCE_DIR}/tests/functionality)
+set(sym_matrix_path /data/matrix_ACTIVSg2000_AC_)
+set(sym_rhs_path /data/rhs_ACTIVSg2000_AC_ones)
+set(asym_matrix_path /data/ScaleMicrogrid_Jacobian_N1000_)
+set(asym_rhs_path /data/ScaleMicrogrid_Reisudal_N1000_ones_number)
+
 
 add_test(NAME version COMMAND $<TARGET_FILE:version.exe>)
 
@@ -117,17 +122,20 @@ add_test(NAME rand_gmres_test    COMMAND $<TARGET_FILE:rand_gmres_test.exe>)
 
 if(RESOLVE_USE_KLU)
   # Using KLU as refactorization solver
-  add_test(NAME klu_klu_test    COMMAND $<TARGET_FILE:klu_klu_test.exe> "-d" "${test_data_dir}")
-  add_test(NAME klu_klu_ir_test COMMAND $<TARGET_FILE:klu_klu_test.exe> "-d" "${test_data_dir}" "-i")
+  add_test(NAME klu_klu_test    COMMAND $<TARGET_FILE:klu_klu_test.exe> "-d" "${test_data_dir}" "-m" "${sym_matrix_path}" "-r" "${sym_rhs_path}") # expected fail, tolerance too strict
+  add_test(NAME klu_klu_ir_test COMMAND $<TARGET_FILE:klu_klu_test.exe> "-d" "${test_data_dir}" "-m" "${sym_matrix_path}" "-r" "${sym_rhs_path}" "-i")
+  add_test(NAME klu_klu_asym_test COMMAND $<TARGET_FILE:klu_klu_test.exe> "-d" "${test_data_dir}" "-m" "${asym_matrix_path}" "-r" "${asym_rhs_path}")
+  add_test(NAME klu_klu_asym_ir_test COMMAND $<TARGET_FILE:klu_klu_test.exe> "-d" "${test_data_dir}" "-m" "${asym_matrix_path}" "-r" "${asym_rhs_path}" "-i") # expected fail, IR should not be used when tolerance is reached
 
   # CUDA-SDK specific tests
   if(RESOLVE_USE_CUDA)
     add_test(NAME klu_rf_cuda_test    COMMAND $<TARGET_FILE:klu_rf_test.exe> "-d" "${test_data_dir}")
     add_test(NAME klu_rf_ir_cuda_test COMMAND $<TARGET_FILE:klu_rf_test.exe> "-d" "${test_data_dir}" "-i")
     add_test(NAME klu_glu_cuda_test   COMMAND $<TARGET_FILE:klu_rf_test.exe> "-d" "${test_data_dir}" "-s" "glu")
-    add_test(NAME sys_refactor_cuda_test COMMAND $<TARGET_FILE:sys_refactor_test.exe> "${test_data_dir}")
-    add_test(NAME sys_glu_test COMMAND $<TARGET_FILE:sys_glu_test.exe> "${test_data_dir}")
-    add_test(NAME sys_glu_asym_test COMMAND $<TARGET_FILE:sys_glu_asym_test.exe> "${test_data_dir}")
+    add_test(NAME sys_refactor_cuda_test COMMAND $<TARGET_FILE:sys_refactor_test.exe> "${test_data_dir}" "-d" "${test_data_dir}" "-m" "${sym_matrix_path}" "-r" "${sym_rhs_path}")
+    add_test(NAME sys_refactor_cuda_asym_test COMMAND $<TARGET_FILE:sys_refactor_test.exe> "${test_data_dir}" "-d" "${test_data_dir}" "-m" "${asym_matrix_path}" "-r" "${asym_rhs_path}") # expected fail, IR should not be used when tolerance is reached
+    add_test(NAME sys_glu_test COMMAND $<TARGET_FILE:sys_glu_test.exe> "${test_data_dir}" "-d" "${test_data_dir}" "-m" "${sym_matrix_path}" "-r" "${sym_rhs_path}")
+    add_test(NAME sys_glu_asym_test COMMAND $<TARGET_FILE:sys_glu_test.exe> "${test_data_dir}" "-d" "${test_data_dir}" "-m" "${asym_matrix_path}" "-r" "${asym_rhs_path}") 
   endif(RESOLVE_USE_CUDA)
 
   # ROCm specific tests
@@ -136,6 +144,7 @@ if(RESOLVE_USE_KLU)
     add_test(NAME rocsolver_rf_m1_test    COMMAND $<TARGET_FILE:klu_rf_test.exe> "-d" "${test_data_dir}" "-m" "rocsparse_trisolve")
     add_test(NAME rocsolver_rf_ir_test    COMMAND $<TARGET_FILE:klu_rf_test.exe> "-d" "${test_data_dir}" "-i")
     add_test(NAME rocsolver_rf_ir_m1_test COMMAND $<TARGET_FILE:klu_rf_test.exe> "-d" "${test_data_dir}" "-i" "-m" "rocsparse_trisolve")
-    add_test(NAME sys_refactor_hip_test  COMMAND $<TARGET_FILE:sys_refactor_test.exe>  "${test_data_dir}")
+    add_test(NAME sys_refactor_cuda_test COMMAND $<TARGET_FILE:sys_refactor_test.exe> "${test_data_dir}" "-d" "${test_data_dir}" "-m" "${sym_matrix_path}" "-r" "${sym_rhs_path}")
+    add_test(NAME sys_refactor_cuda_asym_test COMMAND $<TARGET_FILE:sys_refactor_test.exe> "${test_data_dir}" "-d" "${test_data_dir}" "-m" "${asym_matrix_path}" "-r" "${asym_rhs_path}") # expected fail, IR should not be used when tolerance is reached
   endif(RESOLVE_USE_HIP)
 endif(RESOLVE_USE_KLU)

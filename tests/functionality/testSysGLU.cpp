@@ -18,6 +18,7 @@
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/matrix/io.hpp>
+#include <resolve/utilities/params/CliOptions.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
@@ -42,6 +43,37 @@ int main(int argc, char* argv[])
   int error_sum = 0; ///< error sum zero means test passes, otherwise fails
   int status    = 0;
 
+  // Collect all command line options
+  ReSolve::CliOptions options(argc, argv);
+
+  // Get directory with input files
+  auto        opt       = options.getParamFromKey("-d");
+  std::string data_path = opt ? (*opt).second : ".";
+
+  // Get matrix file name
+  opt = options.getParamFromKey("-m");
+  if (!opt)
+  {
+    std::cout << "Matrix file name not provided. Use -m <matrix_file_name>.\n";
+    return -1;
+  }
+  std::string matrix_temp = (*opt).second;
+
+  // Get rhs file name
+  opt = options.getParamFromKey("-r");
+  if (!opt)
+  {
+    std::cout << "RHS file name not provided. Use -r <rhs_file_name>.\n";
+    return -1;
+  }
+  std::string rhs_temp = (*opt).second;
+
+  // Construct matrix and rhs file names from inputs
+  std::string matrix_file_name_1 = data_path + matrix_temp + "01.mtx";
+  std::string matrix_file_name_2 = data_path + matrix_temp + "02.mtx";
+  std::string rhs_file_name_1    = data_path + rhs_temp + "01.mtx";
+  std::string rhs_file_name_2    = data_path + rhs_temp + "02.mtx";
+
   workspace_type workspace;
   workspace.initializeHandles();
   ReSolve::MatrixHandler matrix_handler(&workspace);
@@ -49,20 +81,11 @@ int main(int argc, char* argv[])
 
   ReSolve::SystemSolver solver(&workspace, "klu", "glu", "glu", "none", "none");
 
-  // Input to this code is location of `data` directory where matrix files are stored
-  const std::string data_path = (argc == 2) ? argv[1] : "./";
-
-  std::string matrixFileName1 = data_path + "data/matrix_ACTIVSg200_AC_10.mtx";
-  std::string matrixFileName2 = data_path + "data/matrix_ACTIVSg200_AC_11.mtx";
-
-  std::string rhsFileName1 = data_path + "data/rhs_ACTIVSg200_AC_10.mtx.ones";
-  std::string rhsFileName2 = data_path + "data/rhs_ACTIVSg200_AC_11.mtx.ones";
-
   // Read first matrix
-  std::ifstream mat1(matrixFileName1);
+  std::ifstream mat1(matrix_file_name_1);
   if (!mat1.is_open())
   {
-    std::cout << "Failed to open file " << matrixFileName1 << "\n";
+    std::cout << "Failed to open file " << matrix_file_name_1 << "\n";
     return -1;
   }
   ReSolve::matrix::Csr* A = ReSolve::io::createCsrFromFile(mat1);
@@ -70,10 +93,10 @@ int main(int argc, char* argv[])
   mat1.close();
 
   // Read first rhs vector
-  std::ifstream rhs1_file(rhsFileName1);
+  std::ifstream rhs1_file(rhs_file_name_1);
   if (!rhs1_file.is_open())
   {
-    std::cout << "Failed to open file " << rhsFileName1 << "\n";
+    std::cout << "Failed to open file " << rhs_file_name_1 << "\n";
     return -1;
   }
   real_type*   rhs     = ReSolve::io::createArrayFromFile(rhs1_file);
@@ -202,10 +225,10 @@ int main(int argc, char* argv[])
   std::cout << "\t ||b-A*x_true||_2  (control) : " << exactSol_normRmatrix1 << " (residual norm with exact solution)\n\n";
 
   // Load the second matrix
-  std::ifstream mat2(matrixFileName2);
+  std::ifstream mat2(matrix_file_name_2);
   if (!mat2.is_open())
   {
-    std::cout << "Failed to open file " << matrixFileName2 << "\n";
+    std::cout << "Failed to open file " << matrix_file_name_2 << "\n";
     return -1;
   }
   ReSolve::io::updateMatrixFromFile(mat2, A);
@@ -213,10 +236,10 @@ int main(int argc, char* argv[])
   mat2.close();
 
   // Load the second rhs vector
-  std::ifstream rhs2_file(rhsFileName2);
+  std::ifstream rhs2_file(rhs_file_name_2);
   if (!rhs2_file.is_open())
   {
-    std::cout << "Failed to open file " << rhsFileName2 << "\n";
+    std::cout << "Failed to open file " << rhs_file_name_2 << "\n";
     return -1;
   }
   ReSolve::io::updateArrayFromFile(rhs2_file, &rhs);

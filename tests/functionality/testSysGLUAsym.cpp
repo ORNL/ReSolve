@@ -55,8 +55,8 @@ int main(int argc, char* argv[])
   std::string matrixFileName1 = data_path + "data/ScaleMicrogrid_Jacobian_N1000_01.mtx";
   std::string matrixFileName2 = data_path + "data/ScaleMicrogrid_Jacobian_N1000_02.mtx";
 
-  std::string rhsFileName1 = data_path + "data/ScaleMicrogrid_Reisudal_N1000_ones_number1.mtx";
-  std::string rhsFileName2 = data_path + "data/ScaleMicrogrid_Reisudal_N1000_ones_number1.mtx";
+  std::string rhsFileName1 = data_path + "data/ScaleMicrogrid_Reisudal_N1000_ones_number01.mtx";
+  std::string rhsFileName2 = data_path + "data/ScaleMicrogrid_Reisudal_N1000_ones_number02.mtx";
 
   // Read first matrix
   std::ifstream mat1(matrixFileName1);
