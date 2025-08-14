@@ -842,10 +842,6 @@ namespace ReSolve
         M_col[count++] = U_col[j];
       }
     }
-    for (index_type i = 0; i < n; ++i) // this is crucial, turns out somehow the indices are not sorted
-    {
-      std::sort(M_col + M_row[i], M_col + M_row[i + 1]);
-    }
   }
 
   /**
