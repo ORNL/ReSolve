@@ -80,7 +80,7 @@ set(test_data_dir ${CMAKE_SOURCE_DIR}/tests/functionality)
 set(sym_matrix_path /data/matrix_ACTIVSg2000_AC_)
 set(sym_rhs_path /data/rhs_ACTIVSg2000_AC_ones)
 set(asym_matrix_path /data/ScaleMicrogrid_Jacobian_N1000_)
-set(asym_rhs_path /data/ScaleMicrogrid_Reisudal_N1000_ones_number)
+set(asym_rhs_path /data/ScaleMicrogrid_Residual_N1000_ones_number)
 
 
 add_test(NAME version COMMAND $<TARGET_FILE:version.exe>)
