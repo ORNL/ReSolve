@@ -53,9 +53,9 @@ namespace ReSolve {
       copyValuesToCholmodType(D, D_);
     }
 
-    void SpGEMMCpu::addResultMatrix(matrix::Csr* E)
+    void SpGEMMCpu::addResultMatrix(matrix::Csr** E_ptr)
     {
-      E_ = E;
+      E_ptr_ = E_ptr;
     }
 
     void SpGEMMCpu::compute()
@@ -63,11 +63,15 @@ namespace ReSolve {
       cholmod_sparse* C_chol = cholmod_ssmult(B_, A_, 0, 1, 0, &Common_);
       cholmod_sparse* E_chol = cholmod_add(C_chol, D_, &alpha_, &beta_, 1, 0, &Common_);
       
-      E_->copyDataFrom(static_cast<index_type*>(E_chol->p), 
-      static_cast<index_type*>(E_chol->i), 
-      static_cast<real_type*>(E_chol->x), 
-      memory::HOST, 
-      memory::HOST);
+      if (!(*E_ptr_))
+      {
+        *E_ptr_ = new matrix::Csr((index_type) E_chol->nrow, (index_type) E_chol->ncol, (index_type) E_chol->nzmax);
+      }
+      (*E_ptr_)->copyDataFrom(static_cast<index_type*>(E_chol->p), 
+          static_cast<index_type*>(E_chol->i), 
+          static_cast<real_type*>(E_chol->x), 
+          memory::HOST, 
+          memory::HOST);
     }
 
     cholmod_sparse* SpGEMMCpu::allocateCholmodType(matrix::Csr* A)

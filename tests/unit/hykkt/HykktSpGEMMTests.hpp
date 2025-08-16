@@ -66,21 +66,15 @@ namespace ReSolve
         matrix::Csr* B = new matrix::Csr(3, 3, 5);
         matrix::Csr* D = new matrix::Csr(3, 3, 6);
 
-        A->allocateMatrixData(memspace_);
         A->copyDataFrom(A_row_ptr, A_col_ind, A_values, memory::HOST, memspace_);
-
-        B->allocateMatrixData(memspace_);
         B->copyDataFrom(B_row_ptr, B_col_ind, B_values, memory::HOST, memspace_);
-
-        D->allocateMatrixData(memspace_);
         D->copyDataFrom(D_row_ptr, D_col_ind, D_values, memory::HOST, memspace_);
 
-        matrix::Csr* E = new matrix::Csr(3, 3, 8);
-        // E->allocateMatrixData(memspace_);
-
+        matrix::Csr* E = nullptr;
+        
         spgemm.addProductMatrices(A, B);
         spgemm.addSumMatrix(D);
-        spgemm.addResultMatrix(E);
+        spgemm.addResultMatrix(&E);
         spgemm.compute();
 
         if (memspace_ == memory::DEVICE)

@@ -15,7 +15,7 @@ namespace ReSolve {
 
         void addProductMatrices(matrix::Csr* A, matrix::Csr* B);
         void addSumMatrix(matrix::Csr* D);
-        void addResultMatrix(matrix::Csr* E);
+        void addResultMatrix(matrix::Csr** E_ptr);
 
         void compute();
 
@@ -31,7 +31,7 @@ namespace ReSolve {
         cholmod_sparse* B_;
         cholmod_sparse* D_;
 
-        matrix::Csr* E_;
+        matrix::Csr** E_ptr_;
 
         cholmod_sparse* allocateCholmodType(matrix::Csr* X);
         void copyValuesToCholmodType(matrix::Csr* X, cholmod_sparse* X_chol);

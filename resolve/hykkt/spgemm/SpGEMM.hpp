@@ -17,7 +17,7 @@ namespace ReSolve {
 
         void addProductMatrices(matrix::Csr* A, matrix::Csr* B);
         void addSumMatrix(matrix::Csr* D);
-        void addResultMatrix(matrix::Csr* E);
+        void addResultMatrix(matrix::Csr** E_ptr);
 
         void compute();
 

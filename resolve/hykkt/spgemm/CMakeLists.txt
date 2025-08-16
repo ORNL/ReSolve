@@ -10,14 +10,20 @@
 set(SPGEMM_SRC
   SpGEMM.cpp
   SpGEMMCpu.cpp
-  SpGEMMHip.cpp
+  SpGEMMCuda.cpp
+  # SpGEMMHip.cpp
 )
 set(SPGEMM_HEADER_INSTALL
   SpGEMM.hpp
   SpGEMMImpl.hpp
   SpGEMMCpu.hpp
-  SpGEMMHip.hpp
+  SpGEMMCuda.hpp
+  # SpGEMMHip.hpp
 )
+
+# set(SPGEMM_ROCM_SRC
+#   SpGEMMHip.cpp
+# )
 
 # Build shared library ReSolve::hykkt
 add_library(resolve_hykkt_spgemm SHARED ${SPGEMM_SRC})
@@ -27,15 +33,15 @@ target_link_libraries(resolve_hykkt_spgemm PUBLIC ${suitesparse_cholmod})
 target_include_directories(resolve_hykkt_spgemm PUBLIC ${SUITESPARSE_INCLUDE_DIR})
 
 # Link to CUDA ReSolve backend if CUDA is support enabled
-if (RESOLVE_USE_CUDA)
-  target_sources(resolve_hykkt_spgemm PRIVATE ${Matrix_CUDASDK_SRC})
-  target_link_libraries(resolve_hykkt_spgemm PUBLIC resolve_backend_cuda)
-endif()
+# if (RESOLVE_USE_CUDA)
+#   target_sources(resolve_hykkt_spgemm PRIVATE ${Matrix_CUDASDK_SRC})
+#   target_link_libraries(resolve_hykkt_spgemm PUBLIC resolve_backend_cuda)
+# endif()
 
-if (RESOLVE_USE_HIP)
-  target_sources(resolve_hykkt_spgemm PRIVATE ${Matrix_ROCM_SRC})
-  target_link_libraries(resolve_hykkt_spgemm PUBLIC resolve_backend_hip)
-endif()
+# if (RESOLVE_USE_HIP)
+#   target_sources(resolve_hykkt_spgemm PRIVATE ${SPGEMM_ROCM_SRC})
+#   target_link_libraries(resolve_hykkt_spgemm PUBLIC resolve_backend_hip)
+# endif()
 
 # Link to dummy device backend if GPU support is not enabled
 if (NOT RESOLVE_USE_GPU)

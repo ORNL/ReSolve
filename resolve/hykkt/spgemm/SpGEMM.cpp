@@ -4,7 +4,7 @@
 #ifdef RESOLVE_USE_CUDA
 #include "SpGEMMCuda.hpp"
 #elif defined(RESOLVE_USE_HIP)
-#include "SpGEMMHip.hpp"
+// #include "SpGEMMHip.hpp"
 #endif
 
 namespace ReSolve {
@@ -20,7 +20,7 @@ namespace ReSolve {
       else
       {
 #ifdef RESOLVE_USE_CUDA
-        // impl_ = new SpGEMMCuda(alpha, beta);
+        impl_ = new SpGEMMCuda(alpha, beta);
 #elif defined(RESOLVE_USE_HIP)
         impl_ = new SpGEMMHip(alpha, beta);
 #else
@@ -42,8 +42,8 @@ namespace ReSolve {
       impl_->addSumMatrix(D);
     }
 
-    void SpGEMM::addResultMatrix(matrix::Csr* E) {
-      impl_->addResultMatrix(E);
+    void SpGEMM::addResultMatrix(matrix::Csr** E_ptr) {
+      impl_->addResultMatrix(E_ptr);
     }
 
     void SpGEMM::compute() {
