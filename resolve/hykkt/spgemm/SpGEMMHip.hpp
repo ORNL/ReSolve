@@ -15,7 +15,7 @@ namespace ReSolve {
 
         void addProductMatrices(matrix::Csr* A, matrix::Csr* B);
         void addSumMatrix(matrix::Csr* D);
-        void addResultMatrix(matrix::Csr* E);
+        void addResultMatrix(matrix::Csr** E_ptr);
 
         void compute();
 
@@ -40,7 +40,7 @@ namespace ReSolve {
 
         rocsparse_spmat_descr E_descr_ = nullptr;
         
-        matrix::Csr* E_ = nullptr;
+        matrix::Csr** E_ptr_ = nullptr;
 
         size_t buffer_size_ = 0;
         void* buffer_ = nullptr;

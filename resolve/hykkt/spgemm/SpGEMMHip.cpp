@@ -35,9 +35,10 @@ namespace ReSolve {
       D_descr_ = convertToRocsparseType(D);
     }
 
-    void SpGEMMHip::addResultMatrix(matrix::Csr* E)
+    void SpGEMMHip::addResultMatrix(matrix::Csr** E_ptr)
     {
-      if (!E_) // first computation
+      // TODO: will this ever be called more than once?
+      if (!E_ptr_)
       {
         mem_.allocateArrayOnDevice(&E_row_ptr_, (index_type) E_num_rows_+1);
         rocsparse_create_csr_descr(&E_descr_,
@@ -52,7 +53,7 @@ namespace ReSolve {
                 rocsparse_index_base_zero,
                 rocsparse_datatype_f64_r);
       }
-      E_ = E;
+      E_ptr_ = E_ptr;
     }
 
     void SpGEMMHip::compute()
@@ -108,8 +109,8 @@ namespace ReSolve {
 
         rocsparse_csr_set_pointers(E_descr_, E_row_ptr_, E_col_ind_, E_val_);
 
-        // TODO: I think this is wrong: when are we allocating E?
-        E_->setDataPointers(E_row_ptr_, E_col_ind_, E_val_, memory::DEVICE);
+        *E_ptr_ = new matrix::Csr((index_type) E_num_rows_, (index_type) E_num_cols_, (index_type) E_nnz_);
+        (*E_ptr_)->setDataPointers(E_row_ptr_, E_col_ind_, E_val_, memory::DEVICE);
       }
       
       // SpGEMM computation

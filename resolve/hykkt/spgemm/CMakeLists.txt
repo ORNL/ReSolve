@@ -10,15 +10,15 @@
 set(SPGEMM_SRC
   SpGEMM.cpp
   SpGEMMCpu.cpp
-  SpGEMMCuda.cpp
-  # SpGEMMHip.cpp
+  # SpGEMMCuda.cpp
+  SpGEMMHip.cpp
 )
 set(SPGEMM_HEADER_INSTALL
   SpGEMM.hpp
   SpGEMMImpl.hpp
   SpGEMMCpu.hpp
-  SpGEMMCuda.hpp
-  # SpGEMMHip.hpp
+  # SpGEMMCuda.hpp
+  SpGEMMHip.hpp
 )
 
 # set(SPGEMM_ROCM_SRC

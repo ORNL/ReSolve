@@ -2,9 +2,9 @@
 
 #include "SpGEMMCpu.hpp"
 #ifdef RESOLVE_USE_CUDA
-#include "SpGEMMCuda.hpp"
+// #include "SpGEMMCuda.hpp"
 #elif defined(RESOLVE_USE_HIP)
-// #include "SpGEMMHip.hpp"
+#include "SpGEMMHip.hpp"
 #endif
 
 namespace ReSolve {
