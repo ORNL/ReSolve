@@ -104,4 +104,4 @@ install(FILES ${PROJECT_SOURCE_DIR}/tests/functionality/TestHelper.hpp DESTINATI
 # Shell script argumets:
 #    1. Path to where resolve is installed.
 #    2. Path to data directory
-add_custom_target(test_install COMMAND ${CONSUMER_PATH}/test.sh  ${CMAKE_INSTALL_PREFIX} ${test_data_dir} -m ${sym_matrix_path} -r ${sym_rhs_path} 
+add_custom_target(test_install COMMAND ${CONSUMER_PATH}/test.sh  ${CMAKE_INSTALL_PREFIX} ${test_data_dir} -m ${sym_matrix_path} -r ${sym_rhs_path}) 
