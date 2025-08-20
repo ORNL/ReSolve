@@ -10,7 +10,9 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
-
+#include <limits>
+#include <algorithm> // Required for std::max
+#include "LinSolverIterativeFGMRES.hpp"
 #include <resolve/GramSchmidt.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/matrix/Sparse.hpp>
@@ -102,221 +104,249 @@ namespace ReSolve
     return 0;
   }
 
-  int LinSolverIterativeFGMRES::solve(vector_type* rhs, vector_type* x)
+
+
+int LinSolverIterativeFGMRES::solve(vector_type* rhs, vector_type* x)
+{
+  using namespace constants;
+
+  // Initialize the effective stability to 0 for each new solve
+  effectiveStability_ = 0.0;
+
+  // io::Logger::setVerbosity(io::Logger::EVERYTHING);
+
+  int outer_flag = 1;
+  int notconv    = 1;
+  int i          = 0;
+  int it         = 0;
+  int j          = 0;
+  int k          = 0;
+  int k1         = 0;
+
+  real_type   t      = 0.0;
+  real_type   rnorm  = 0.0;
+  real_type   bnorm  = 0.0;
+  real_type   tolrel;
+
+  // Create temporary vectors used inside the solve loop
+  vector_type vec_v(n_);
+  vector_type vec_z(n_);
+  // Vector to hold a copy of v_i for the stability calculation
+  vector_type vec_v_copy(n_);
+  vec_v_copy.allocate(memspace_);
+
+  // V[0] = b-A*x_0
+  // debug
+  vec_Z_->setToZero(memspace_);
+  vec_V_->setToZero(memspace_);
+
+  rhs->copyDataTo(vec_V_->getData(memspace_), 0, memspace_);
+  matrix_handler_->matvec(A_, x, vec_V_, &MINUS_ONE, &ONE, memspace_);
+  rnorm = 0.0;
+  bnorm = vector_handler_->dot(rhs, rhs, memspace_);
+  rnorm = vector_handler_->dot(vec_V_, vec_V_, memspace_);
+  // rnorm = ||V_1||
+  rnorm = std::sqrt(rnorm);
+  bnorm = std::sqrt(bnorm);
+  io::Logger::misc() << "it 0: norm of residual "
+                     << std::scientific << std::setprecision(16)
+                     << rnorm << " Norm of rhs: " << bnorm << "\n";
+  initial_residual_norm_ = rnorm;
+  while (outer_flag)
   {
-    using namespace constants;
-
-    // io::Logger::setVerbosity(io::Logger::EVERYTHING);
-
-    int outer_flag = 1;
-    int notconv    = 1;
-    int i          = 0;
-    int it         = 0;
-    int j          = 0;
-    int k          = 0;
-    int k1         = 0;
-
-    real_type   t     = 0.0;
-    real_type   rnorm = 0.0;
-    real_type   bnorm = 0.0;
-    real_type   tolrel;
-    vector_type vec_v(n_);
-    vector_type vec_z(n_);
-    // V[0] = b-A*x_0
-    // debug
-    vec_Z_->setToZero(memspace_);
-    vec_V_->setToZero(memspace_);
-
-    rhs->copyDataTo(vec_V_->getData(memspace_), 0, memspace_);
-    matrix_handler_->matvec(A_, x, vec_V_, &MINUS_ONE, &ONE, memspace_);
-    rnorm = 0.0;
-    bnorm = vector_handler_->dot(rhs, rhs, memspace_);
-    rnorm = vector_handler_->dot(vec_V_, vec_V_, memspace_);
-    // rnorm = ||V_1||
-    rnorm = std::sqrt(rnorm);
-    bnorm = std::sqrt(bnorm);
-    io::Logger::misc() << "it 0: norm of residual "
-                       << std::scientific << std::setprecision(16)
-                       << rnorm << " Norm of rhs: " << bnorm << "\n";
-    initial_residual_norm_ = rnorm;
-    while (outer_flag)
+    // check if maybe residual is already small enough?
+    if (it == 0)
     {
-      // check if maybe residual is already small enough?
-      if (it == 0)
+      tolrel = tol_ * rnorm;
+      if (std::abs(tolrel) < MACHINE_EPSILON)
       {
-        tolrel = tol_ * rnorm;
-        if (std::abs(tolrel) < MACHINE_EPSILON)
-        {
-          tolrel = MACHINE_EPSILON;
-        }
+        tolrel = MACHINE_EPSILON;
       }
+    }
 
-      bool exit_cond = false;
-      switch (conv_cond_)
-      {
-      case 0:
-        exit_cond = ((std::abs(rnorm - ZERO) <= MACHINE_EPSILON));
-        break;
-      case 1:
-        exit_cond = ((std::abs(rnorm - ZERO) <= MACHINE_EPSILON) || (rnorm < tol_));
-        break;
-      case 2:
-        exit_cond = ((std::abs(rnorm - ZERO) <= MACHINE_EPSILON) || (rnorm < (tol_ * bnorm)));
-        break;
-      }
+    bool exit_cond = false;
+    switch (conv_cond_)
+    {
+    case 0:
+      exit_cond = ((std::abs(rnorm - ZERO) <= MACHINE_EPSILON));
+      break;
+    case 1:
+      exit_cond = ((std::abs(rnorm - ZERO) <= MACHINE_EPSILON) || (rnorm < tol_));
+      break;
+    case 2:
+      exit_cond = ((std::abs(rnorm - ZERO) <= MACHINE_EPSILON) || (rnorm < (tol_ * bnorm)));
+      break;
+    }
 
-      if (exit_cond)
-      {
-        outer_flag             = 0;
-        final_residual_norm_   = rnorm;
-        initial_residual_norm_ = rnorm;
-        total_iters_           = 0;
-        break;
-      }
+    if (exit_cond)
+    {
+      outer_flag         = 0;
+      final_residual_norm_   = rnorm;
+      initial_residual_norm_ = rnorm;
+      total_iters_           = 0;
+      break;
+    }
 
-      // normalize first vector
-      t = 1.0 / rnorm;
-      vector_handler_->scal(&t, vec_V_, memspace_);
-      // initialize norm history
-      h_rs_[0] = rnorm;
-      i        = -1;
-      notconv  = 1;
+    // normalize first vector
+    t = 1.0 / rnorm;
+    vector_handler_->scal(&t, vec_V_, memspace_);
+    // initialize norm history
+    h_rs_[0] = rnorm;
+    i        = -1;
+    notconv  = 1;
 
-      while ((notconv) && (it < maxit_))
-      {
-        i++;
-        it++;
+    while ((notconv) && (it < maxit_))
+    {
+      i++;
+      it++;
 
-        // Z_i = (LU)^{-1}*V_i
-        vec_v.setData(vec_V_->getData(i, memspace_), memspace_);
-        if (flexible_)
-        {
-          vec_z.setData(vec_Z_->getData(i, memspace_), memspace_);
-        }
-        else
-        {
-          vec_z.setData(vec_Z_->getData(0, memspace_), memspace_);
-        }
-        this->precV(&vec_v, &vec_z);
-        mem_.deviceSynchronize();
-
-        // V_{i+1}=A*Z_i
-
-        vec_v.setData(vec_V_->getData(i + 1, memspace_), memspace_);
-
-        matrix_handler_->matvec(A_, &vec_z, &vec_v, &ONE, &ZERO, memspace_);
-
-        // orthogonalize V[i+1], form a column of h_H_
-
-        GS_->orthogonalize(n_, vec_V_, h_H_, i);
-        if (i != 0)
-        {
-          for (index_type k = 1; k <= i; k++)
-          {
-            k1                            = k - 1;
-            t                             = h_H_[i * (restart_ + 1) + k1];
-            h_H_[i * (restart_ + 1) + k1] = h_c_[k1] * t + h_s_[k1] * h_H_[i * (restart_ + 1) + k];
-            h_H_[i * (restart_ + 1) + k]  = -h_s_[k1] * t + h_c_[k1] * h_H_[i * (restart_ + 1) + k];
-          }
-        } // if i!=0
-        real_type Hii  = h_H_[i * (restart_ + 1) + i];
-        real_type Hii1 = h_H_[(i) * (restart_ + 1) + i + 1];
-        real_type gam  = std::sqrt(Hii * Hii + Hii1 * Hii1);
-
-        if (std::abs(gam - ZERO) <= MACHINE_EPSILON)
-        {
-          gam = MACHINE_EPSILON;
-        }
-
-        /* next Given's rotation */
-        h_c_[i]      = Hii / gam;
-        h_s_[i]      = Hii1 / gam;
-        h_rs_[i + 1] = -h_s_[i] * h_rs_[i];
-        h_rs_[i]     = h_c_[i] * h_rs_[i];
-
-        h_H_[(i) * (restart_ + 1) + (i)]     = h_c_[i] * Hii + h_s_[i] * Hii1;
-        h_H_[(i) * (restart_ + 1) + (i + 1)] = h_c_[i] * Hii1 - h_s_[i] * Hii;
-
-        // residual norm estimate
-        rnorm = std::abs(h_rs_[i + 1]);
-        io::Logger::misc() << "it: " << it << " --> norm of the residual "
-                           << std::scientific << std::setprecision(16)
-                           << rnorm << "\n";
-        // check convergence
-        if (i + 1 >= restart_ || rnorm <= tolrel || it >= maxit_)
-        {
-          notconv = 0;
-        }
-      } // inner while
-
-      io::Logger::misc() << "End of cycle, ESTIMATED norm of residual "
-                         << std::scientific << std::setprecision(16)
-                         << rnorm << "\n";
-      // solve tri system
-      h_rs_[i] = h_rs_[i] / h_H_[i * (restart_ + 1) + i];
-      for (int ii = 2; ii <= i + 1; ii++)
-      {
-        k  = i - ii + 1;
-        k1 = k + 1;
-        t  = h_rs_[k];
-        for (j = k1; j <= i; j++)
-        {
-          t -= h_H_[j * (restart_ + 1) + k] * h_rs_[j];
-        }
-        h_rs_[k] = t / h_H_[k * (restart_ + 1) + k];
-      }
-
-      // get solution
+      // Z_i = (LU)^{-1}*V_i
+      vec_v.setData(vec_V_->getData(i, memspace_), memspace_);
       if (flexible_)
       {
-        for (j = 0; j <= i; j++)
-        {
-          vec_z.setData(vec_Z_->getData(j, memspace_), memspace_);
-          vector_handler_->axpy(&h_rs_[j], &vec_z, x, memspace_);
-        }
+        vec_z.setData(vec_Z_->getData(i, memspace_), memspace_);
       }
       else
       {
-        vec_Z_->setToZero(memspace_);
         vec_z.setData(vec_Z_->getData(0, memspace_), memspace_);
-        for (j = 0; j <= i; j++)
+      }
+      this->precV(&vec_v, &vec_z);
+      mem_.deviceSynchronize();
+
+      // --- Stability Calculation ---
+      // We need to compute ||v_i - A*(LU)^{-1}v_i||_2
+      // 1. Copy the current Arnoldi vector v_i
+      vector_handler_->copy(&vec_v, &vec_v_copy, memspace_);
+
+      // 2. Compute V_{i+1}=A*Z_i. The result is stored in vec_v
+      vec_v.setData(vec_V_->getData(i + 1, memspace_), memspace_);
+      matrix_handler_->matvec(A_, &vec_z, &vec_v, &ONE, &ZERO, memspace_);
+
+      // 3. Compute the difference: vec_v_copy = v_i - A*(LU)^{-1}v_i
+      vector_handler_->axpy(&MINUS_ONE, &vec_v, &vec_v_copy, memspace_);
+
+      // 4. Calculate the 2-norm of the difference
+      real_type currentStabilityNorm = std::sqrt(vector_handler_->dot(&vec_v_copy, &vec_v_copy, memspace_));
+
+      // 5. Update the maximum effective stability
+      if (currentStabilityNorm > effectiveStability_) {
+          effectiveStability_ = currentStabilityNorm;
+      }
+      // --- End of Stability Calculation ---
+
+      // orthogonalize V[i+1], form a column of h_H_
+      GS_->orthogonalize(n_, vec_V_, h_H_, i);
+      if (i != 0)
+      {
+        for (index_type k = 1; k <= i; k++)
         {
-          vec_v.setData(vec_V_->getData(j, memspace_), memspace_);
-          vector_handler_->axpy(&h_rs_[j], &vec_v, &vec_z, memspace_);
+          k1            = k - 1;
+          t             = h_H_[i * (restart_ + 1) + k1];
+          h_H_[i * (restart_ + 1) + k1] = h_c_[k1] * t + h_s_[k1] * h_H_[i * (restart_ + 1) + k];
+          h_H_[i * (restart_ + 1) + k]  = -h_s_[k1] * t + h_c_[k1] * h_H_[i * (restart_ + 1) + k];
         }
-        // now multiply d_Z by precon
+      } // if i!=0
+      real_type Hii  = h_H_[i * (restart_ + 1) + i];
+      real_type Hii1 = h_H_[(i) * (restart_ + 1) + i + 1];
+      real_type gam  = std::sqrt(Hii * Hii + Hii1 * Hii1);
 
-        vec_v.setData(vec_V_->getData(memspace_), memspace_);
-        this->precV(&vec_z, &vec_v);
-        // and add to x
-        vector_handler_->axpy(&ONE, &vec_v, x, memspace_);
-      }
-
-      /* test solution */
-
-      if (rnorm <= tolrel || it >= maxit_)
+      if (std::abs(gam - ZERO) <= MACHINE_EPSILON)
       {
-        // rnorm_aux = rnorm;
-        outer_flag = 0;
+        gam = MACHINE_EPSILON;
       }
 
-      rhs->copyDataTo(vec_V_->getData(memspace_), 0, memspace_);
-      matrix_handler_->matvec(A_, x, vec_V_, &MINUS_ONE, &ONE, memspace_);
-      rnorm = vector_handler_->dot(vec_V_, vec_V_, memspace_);
-      // rnorm = ||V_1||
-      rnorm = std::sqrt(rnorm);
+      /* next Given's rotation */
+      h_c_[i]      = Hii / gam;
+      h_s_[i]      = Hii1 / gam;
+      h_rs_[i + 1] = -h_s_[i] * h_rs_[i];
+      h_rs_[i]     = h_c_[i] * h_rs_[i];
 
-      if (!outer_flag)
+      h_H_[(i) * (restart_ + 1) + (i)]      = h_c_[i] * Hii + h_s_[i] * Hii1;
+      h_H_[(i) * (restart_ + 1) + (i + 1)] = h_c_[i] * Hii1 - h_s_[i] * Hii;
+
+      // residual norm estimate
+      rnorm = std::abs(h_rs_[i + 1]);
+      io::Logger::misc() << "it: " << it << " --> norm of the residual "
+                         << std::scientific << std::setprecision(16)
+                         << rnorm << "\n";
+      // check convergence
+      if (i + 1 >= restart_ || rnorm <= tolrel || it >= maxit_)
       {
-        final_residual_norm_ = rnorm;
-        total_iters_         = it;
-        io::Logger::misc() << "End of cycle, COMPUTED norm of residual "
-                           << std::scientific << std::setprecision(16)
-                           << rnorm << "\n";
+        notconv = 0;
       }
-    } // outer while
-    return 0;
-  }
+    } // inner while
+
+    io::Logger::misc() << "End of cycle, ESTIMATED norm of residual "
+                       << std::scientific << std::setprecision(16)
+                       << rnorm << "\n";
+    // solve tri system
+    h_rs_[i] = h_rs_[i] / h_H_[i * (restart_ + 1) + i];
+    for (int ii = 2; ii <= i + 1; ii++)
+    {
+      k  = i - ii + 1;
+      k1 = k + 1;
+      t  = h_rs_[k];
+      for (j = k1; j <= i; j++)
+      {
+        t -= h_H_[j * (restart_ + 1) + k] * h_rs_[j];
+      }
+      h_rs_[k] = t / h_H_[k * (restart_ + 1) + k];
+    }
+
+    // get solution
+    if (flexible_)
+    {
+      for (j = 0; j <= i; j++)
+      {
+        vec_z.setData(vec_Z_->getData(j, memspace_), memspace_);
+        vector_handler_->axpy(&h_rs_[j], &vec_z, x, memspace_);
+      }
+    }
+    else
+    {
+      vec_Z_->setToZero(memspace_);
+      vec_z.setData(vec_Z_->getData(0, memspace_), memspace_);
+      for (j = 0; j <= i; j++)
+      {
+        vec_v.setData(vec_V_->getData(j, memspace_), memspace_);
+        vector_handler_->axpy(&h_rs_[j], &vec_v, &vec_z, memspace_);
+      }
+      // now multiply d_Z by precon
+      vec_v.setData(vec_V_->getData(memspace_), memspace_);
+      this->precV(&vec_z, &vec_v);
+      // and add to x
+      vector_handler_->axpy(&ONE, &vec_v, x, memspace_);
+    }
+
+    /* test solution */
+    if (rnorm <= tolrel || it >= maxit_)
+    {
+      // rnorm_aux = rnorm;
+      outer_flag = 0;
+    }
+
+    rhs->copyDataTo(vec_V_->getData(memspace_), 0, memspace_);
+    matrix_handler_->matvec(A_, x, vec_V_, &MINUS_ONE, &ONE, memspace_);
+    rnorm = vector_handler_->dot(vec_V_, vec_V_, memspace_);
+    // rnorm = ||V_1||
+    rnorm = std::sqrt(rnorm);
+
+    if (!outer_flag)
+    {
+      final_residual_norm_ = rnorm;
+      total_iters_         = it;
+      io::Logger::misc() << "End of cycle, COMPUTED norm of residual "
+                         << std::scientific << std::setprecision(16)
+                         << rnorm << "\n";
+    }
+  } // outer while
+
+  // Free temporary vectors
+  vec_v_copy.free(memspace_);
+  return 0;
+}
+
+
 
   int LinSolverIterativeFGMRES::setupPreconditioner(std::string type, LinSolverDirect* LU_solver)
   {
