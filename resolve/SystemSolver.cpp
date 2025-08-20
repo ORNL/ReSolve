@@ -532,13 +532,13 @@ namespace ReSolve
       }
     }
 
-    // if (irMethod_ == "fgmres")
-    // {
-    //   if (is_solve_on_device_)
-    //   {
-    //     status += refine(rhs, x);
-    //   }
-    // }
+    if (irMethod_ == "fgmres")
+    {
+      if (is_solve_on_device_)
+      {
+        status += refine(rhs, x);
+      }
+    }
     return status;
   }
 
