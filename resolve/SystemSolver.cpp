@@ -562,8 +562,7 @@ namespace ReSolve
   {
     int status = 0;
 
-    // status += iterativeSolver_->resetMatrix(A_);
-    std::cout << "Refining solution with iterative refinement ...\n";
+    status += iterativeSolver_->resetMatrix(A_);
     status += iterativeSolver_->solve(rhs, x);
 
     return status;
