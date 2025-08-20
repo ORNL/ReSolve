@@ -42,14 +42,14 @@ namespace ReSolve
   public:
     LinSolverIterativeFGMRES(MatrixHandler* matrix_handler,
                              VectorHandler* vector_handler,
-                             GramSchmidt*   gs);
+                             GramSchmidt* gs);
     LinSolverIterativeFGMRES(index_type     restart,
                              real_type      tol,
                              index_type     maxit,
                              index_type     conv_cond,
                              MatrixHandler* matrix_handler,
                              VectorHandler* vector_handler,
-                             GramSchmidt*   gs);
+                             GramSchmidt* gs);
     ~LinSolverIterativeFGMRES();
 
     int solve(vector_type* rhs, vector_type* x) override;
@@ -58,19 +58,20 @@ namespace ReSolve
     int setupPreconditioner(std::string name, LinSolverDirect* LU_solver) override;
     int setOrthogonalization(GramSchmidt* gs) override;
 
-    int        setRestart(index_type restart);
-    int        setFlexible(bool is_flexible);
-    int        setConvergenceCondition(index_type conv_cond);
-    index_type getRestart() const;
-    index_type getConvCond() const;
-    bool       getFlexible() const;
+    int          setRestart(index_type restart);
+    int          setFlexible(bool is_flexible);
+    int          setConvergenceCondition(index_type conv_cond);
+    index_type   getRestart() const;
+    index_type   getConvCond() const;
+    bool         getFlexible() const;
+    real_type    getEffectiveStability() const; // Getter for the new member variable
 
-    int         setCliParam(const std::string id, const std::string value) override;
-    std::string getCliParamString(const std::string id) const override;
-    index_type  getCliParamInt(const std::string id) const override;
-    real_type   getCliParamReal(const std::string id) const override;
-    bool        getCliParamBool(const std::string id) const override;
-    int         printCliParam(const std::string id) const override;
+    int          setCliParam(const std::string id, const std::string value) override;
+    std::string  getCliParamString(const std::string id) const override;
+    index_type   getCliParamInt(const std::string id) const override;
+    real_type    getCliParamReal(const std::string id) const override;
+    bool         getCliParamBool(const std::string id) const override;
+    int          printCliParam(const std::string id) const override;
 
   private:
     enum ParamaterIDs
@@ -82,9 +83,10 @@ namespace ReSolve
       FLEXIBLE
     };
 
-    index_type restart_{10};    ///< GMRES restart
-    index_type conv_cond_{0};   ///< GMRES convergence condition
-    bool       flexible_{true}; ///< If using flexible GMRES (FGMRES) algorithm
+    index_type restart_{10};      ///< GMRES restart
+    index_type conv_cond_{0};     ///< GMRES convergence condition
+    bool       flexible_{true};   ///< If using flexible GMRES (FGMRES) algorithm
+    real_type  effectiveStability_{0.0}; ///< Max norm of the preconditioner residual
 
   private:
     int  allocateSolverData();
@@ -103,10 +105,10 @@ namespace ReSolve
     real_type* h_s_{nullptr};
     real_type* h_rs_{nullptr};
 
-    GramSchmidt*     GS_{nullptr};
+    GramSchmidt* GS_{nullptr};
     LinSolverDirect* LU_solver_{nullptr};
-    index_type       n_{0};
-    bool             is_solver_set_{false};
+    index_type     n_{0};
+    bool           is_solver_set_{false};
 
     MemoryHandler mem_; ///< Device memory manager object
   };

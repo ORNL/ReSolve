@@ -1,10 +1,12 @@
 #[[
-
 @brief Build Re::Solve examples
 
 @author Slaven Peles <peless@ornl.gov>
-
 ]]
+
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Build portable randomized GMRES example
 add_executable(rand_gmres.exe randGmres.cpp)
@@ -32,6 +34,10 @@ if(RESOLVE_USE_KLU)
 
   # Create KLU+CUDA examples
   if(RESOLVE_USE_CUDA)
+
+    # Build example with KLU factorization and GLU refactorization
+    add_executable(hybrid_solver.exe hybrid_solver.cpp)
+    target_link_libraries(hybrid_solver.exe PRIVATE ReSolve)
 
     # Build example with KLU factorization and GLU refactorization
     add_executable(gluRefactor.exe gluRefactor.cpp)
