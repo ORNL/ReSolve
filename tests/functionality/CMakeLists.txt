@@ -141,6 +141,6 @@ if(RESOLVE_USE_KLU)
     add_test(NAME rocsolver_rf_ir_test    COMMAND $<TARGET_FILE:klu_rf_test.exe> "-d" "${test_data_dir}" "-i")
     add_test(NAME rocsolver_rf_ir_m1_test COMMAND $<TARGET_FILE:klu_rf_test.exe> "-d" "${test_data_dir}" "-i" "-m" "rocsparse_trisolve")
     add_test(NAME sys_refactor_cuda_test COMMAND $<TARGET_FILE:sys_refactor_test.exe> "${test_data_dir}" "-d" "${test_data_dir}" "-m" "${sym_matrix_path}" "-r" "${sym_rhs_path}")
-    add_test(NAME sys_refactor_cuda_asym_test COMMAND $<TARGET_FILE:sys_refactor_test.exe> "${test_data_dir}" "-d" "${test_data_dir}" "-m" "${asym_matrix_path}" "-r" "${asym_rhs_path}") # expected fail, IR should not be used when tolerance is reached
+    add_test(NAME sys_refactor_cuda_asym_test COMMAND $<TARGET_FILE:sys_refactor_test.exe> "${test_data_dir}" "-d" "${test_data_dir}" "-m" "${asym_matrix_path}" "-r" "${asym_rhs_path}")
   endif(RESOLVE_USE_HIP)
 endif(RESOLVE_USE_KLU)
