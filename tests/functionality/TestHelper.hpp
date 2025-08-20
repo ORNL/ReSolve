@@ -266,7 +266,6 @@ public:
   {
     int                error_sum = 0;
     ReSolve::real_type norm      = norm_res_ / norm_rhs_;
-
     if (!std::isfinite(norm))
     {
       std::cout << "Result is not a finite number!\n";

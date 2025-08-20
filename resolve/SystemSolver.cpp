@@ -13,7 +13,6 @@
 #ifdef RESOLVE_USE_KLU
 #include <resolve/LinSolverDirectKLU.hpp>
 #endif
-
 #include <resolve/LinSolverIterativeRandFGMRES.hpp>
 
 #ifdef RESOLVE_USE_CUDA
@@ -533,13 +532,13 @@ namespace ReSolve
       }
     }
 
-    if (irMethod_ == "fgmres")
-    {
-      if (is_solve_on_device_)
-      {
-        status += refine(rhs, x);
-      }
-    }
+    // if (irMethod_ == "fgmres")
+    // {
+    //   if (is_solve_on_device_)
+    //   {
+    //     status += refine(rhs, x);
+    //   }
+    // }
     return status;
   }
 
@@ -563,7 +562,8 @@ namespace ReSolve
   {
     int status = 0;
 
-    status += iterativeSolver_->resetMatrix(A_);
+    // status += iterativeSolver_->resetMatrix(A_);
+    std::cout << "Refining solution with iterative refinement ...\n";
     status += iterativeSolver_->solve(rhs, x);
 
     return status;

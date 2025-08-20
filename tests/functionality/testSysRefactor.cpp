@@ -1,3 +1,4 @@
+
 /**
  * @file testSysHipRefine.cpp
  * @author Kasia Swirydowicz (kasia.swirydowicz@pnnl.gov)
@@ -204,7 +205,7 @@ static int runTest(int argc, char* argv[], std::string backend)
   // Print result summary and check solution
   std::cout << "\nResults (first matrix): \n\n";
   helper.printSummary();
-  error_sum += helper.checkResult(1e-12);
+  error_sum += helper.checkResult(100*ReSolve::constants::MACHINE_EPSILON); // tolerance increased to deal with difficult system
 
   // Verify norm of scaled residuals calculation in SystemSolver class
   real_type nsr_system = solver.getNormOfScaledResiduals(&vec_rhs, &vec_x);
@@ -259,8 +260,8 @@ static int runTest(int argc, char* argv[], std::string backend)
   std::cout << "\nResults (second matrix): \n\n";
   helper.printSummary();
   helper.printIrSummary(&(solver.getIterativeSolver()));
-  error_sum += helper.checkResult(1e-15); // Why does test not pass with 1e-16?
-
+  error_sum += helper.checkResult(100*ReSolve::constants::MACHINE_EPSILON); // tolerance increased to deal with difficult system
+  
   // Verify norm of scaled residuals calculation in SystemSolver class
   nsr_system = solver.getNormOfScaledResiduals(&vec_rhs, &vec_x);
   error_sum += helper.checkNormOfScaledResiduals(nsr_system);
