@@ -118,10 +118,10 @@ add_test(NAME rand_gmres_test    COMMAND $<TARGET_FILE:rand_gmres_test.exe>)
 
 if(RESOLVE_USE_KLU)
   # Using KLU as refactorization solver
-  add_test(NAME klu_klu_test    COMMAND $<TARGET_FILE:klu_klu_test.exe> "-d" "${test_data_dir}" "-m" "${sym_matrix_path}" "-r" "${sym_rhs_path}") # expected fail, tolerance too strict
+  add_test(NAME klu_klu_test    COMMAND $<TARGET_FILE:klu_klu_test.exe> "-d" "${test_data_dir}" "-m" "${sym_matrix_path}" "-r" "${sym_rhs_path}") 
   add_test(NAME klu_klu_ir_test COMMAND $<TARGET_FILE:klu_klu_test.exe> "-d" "${test_data_dir}" "-m" "${sym_matrix_path}" "-r" "${sym_rhs_path}" "-i")
   add_test(NAME klu_klu_asym_test COMMAND $<TARGET_FILE:klu_klu_test.exe> "-d" "${test_data_dir}" "-m" "${asym_matrix_path}" "-r" "${asym_rhs_path}")
-  add_test(NAME klu_klu_asym_ir_test COMMAND $<TARGET_FILE:klu_klu_test.exe> "-d" "${test_data_dir}" "-m" "${asym_matrix_path}" "-r" "${asym_rhs_path}" "-i") # expected fail, IR should not be used when tolerance is reached
+  add_test(NAME klu_klu_asym_ir_test COMMAND $<TARGET_FILE:klu_klu_test.exe> "-d" "${test_data_dir}" "-m" "${asym_matrix_path}" "-r" "${asym_rhs_path}" "-i") 
 
   # CUDA-SDK specific tests
   if(RESOLVE_USE_CUDA)
