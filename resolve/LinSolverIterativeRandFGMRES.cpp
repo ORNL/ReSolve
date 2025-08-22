@@ -180,12 +180,7 @@ namespace ReSolve
     io::Logger::misc() << "it 0: norm of residual "
                        << std::scientific << std::setprecision(16)
                        << rnorm << " Norm of rhs: " << bnorm << "\n";
-    if (rnorm / bnorm < MACHINE_EPSILON)
-    {
-      out::warning() << "Initial residual norm is smaller than machine epsilon. "
-                     << "Returning initial guess as solution.\n";
-      return 0;
-    }
+
     initial_residual_norm_ = rnorm;
     while (outer_flag)
     {

@@ -138,13 +138,6 @@ namespace ReSolve
     io::Logger::misc() << "it 0: norm of residual "
                        << std::scientific << std::setprecision(16)
                        << rnorm << " Norm of rhs: " << bnorm << "\n";
-    if (rnorm / bnorm < MACHINE_EPSILON)
-    {
-      std::cout << "Iterative solve skipped. Initial residual is accurate to machine precision.\n"
-                << std::scientific << std::setprecision(16) << rnorm
-                << " / " << bnorm << "\n";
-      return 0;
-    }
     initial_residual_norm_ = rnorm;
     while (outer_flag)
     {
