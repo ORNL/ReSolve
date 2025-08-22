@@ -7,11 +7,14 @@
 #include "SpGEMMHip.hpp"
 #endif
 
-namespace ReSolve {
+namespace ReSolve
+{
   using real_type = ReSolve::real_type;
 
-  namespace hykkt {
-    SpGEMM::SpGEMM(memory::MemorySpace memspace, real_type alpha, real_type beta): memspace_(memspace)
+  namespace hykkt
+  {
+    SpGEMM::SpGEMM(memory::MemorySpace memspace, real_type alpha, real_type beta)
+      : memspace_(memspace)
     {
       if (memspace_ == memory::HOST)
       {
@@ -30,24 +33,29 @@ namespace ReSolve {
       }
     }
 
-    SpGEMM::~SpGEMM() {
+    SpGEMM::~SpGEMM()
+    {
       delete impl_;
     }
 
-    void SpGEMM::addProductMatrices(matrix::Csr* A, matrix::Csr* B) {
+    void SpGEMM::addProductMatrices(matrix::Csr* A, matrix::Csr* B)
+    {
       impl_->addProductMatrices(A, B);
     }
 
-    void SpGEMM::addSumMatrix(matrix::Csr* D) {
+    void SpGEMM::addSumMatrix(matrix::Csr* D)
+    {
       impl_->addSumMatrix(D);
     }
 
-    void SpGEMM::addResultMatrix(matrix::Csr** E_ptr) {
+    void SpGEMM::addResultMatrix(matrix::Csr** E_ptr)
+    {
       impl_->addResultMatrix(E_ptr);
     }
 
-    void SpGEMM::compute() {
+    void SpGEMM::compute()
+    {
       impl_->compute();
     }
-  }
-}
+  } // namespace hykkt
+} // namespace ReSolve
