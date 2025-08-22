@@ -57,6 +57,17 @@ namespace ReSolve
     return maxit_;
   }
 
+  int LinSolverIterative::setConvergenceCondition(index_type conv_cond)
+  {
+    if (conv_cond < 0 || conv_cond > 2)
+    {
+      out::error() << "Convergence condition must be 0, 1, or 2.\n";
+      return 1;
+    }
+    this->conv_cond_ = conv_cond;
+    return 0;
+  }
+
   int LinSolverIterative::setOrthogonalization(GramSchmidt* /* gs */)
   {
     out::error() << "Solver does not implement setting orthogonalization.\n";

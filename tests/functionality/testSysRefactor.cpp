@@ -139,6 +139,8 @@ static int runTest(int argc, char* argv[], std::string backend)
   // settings than HIP-based one)
   solver.setRefinementMethod("fgmres", "cgs2");
   solver.getIterativeSolver().setCliParam("restart", "100");
+  solver.getIterativeSolver().setTol(ReSolve::constants::MACHINE_EPSILON);
+  solver.getIterativeSolver().setConvergenceCondition(2); // relative residual norm
   if (backend == "hip")
   {
     solver.getIterativeSolver().setMaxit(200);
@@ -146,7 +148,6 @@ static int runTest(int argc, char* argv[], std::string backend)
   if (backend == "cuda")
   {
     solver.getIterativeSolver().setMaxit(400);
-    solver.getIterativeSolver().setTol(1e-17);
   }
 
   // Read first matrix
