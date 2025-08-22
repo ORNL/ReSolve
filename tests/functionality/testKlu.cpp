@@ -193,23 +193,21 @@ int runTest(int argc, char* argv[], std::string& solver_name)
   status = KLU.refactorize();
   error_sum += status;
   std::cout << "KLU refactorization status: " << status << std::endl;
-
+  status = KLU.solve(&vec_rhs, &vec_x);
+  error_sum += status;
   if (is_ir)
   {
-    std::cout << "Second matrix: Performing iterative refinement...\n";
+    std::cout << "Running IR with FGMRES on the second matrix.\n";
     FGMRES.resetMatrix(A);
     status = FGMRES.setupPreconditioner("LU", &KLU);
     error_sum += status;
+    std::cout << "FGMRES setup status: " << status << std::endl;
 
     status = FGMRES.solve(&vec_rhs, &vec_x);
+    std::cout << "FGMRES solve status: " << status << std::endl;
     error_sum += status;
   }
-  else
-  {
-    status = KLU.solve(&vec_rhs, &vec_x);
-    error_sum += status;
-  }
-
+  std::cout << "KLU solve status: " << status << std::endl;
   helper.resetSystem(A, &vec_rhs, &vec_x);
 
   std::cout << "\nResults (second matrix): \n\n";
