@@ -158,7 +158,7 @@ int main(int argc, char* argv[])
   real_type nsr_norm   = inf_norm_r / (inf_norm_A * inf_norm_x);
   real_type nsr_system = solver.getNormOfScaledResiduals(vec_rhs, vec_x);
   real_type error      = std::abs(nsr_system - nsr_norm) / nsr_norm;
-  
+
   if (error > 10.0 * std::numeric_limits<real_type>::epsilon())
   {
     std::cout << "Norm of scaled residuals computation failed:\n";
