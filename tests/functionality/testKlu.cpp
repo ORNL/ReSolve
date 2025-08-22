@@ -143,7 +143,7 @@ int runTest(int argc, char* argv[], std::string& solver_name)
   status = KLU.solve(&vec_rhs, &vec_x);
   error_sum += status;
 
-  if (is_ir) 
+  if (is_ir)
   {
     test_name += " + IR";
 
@@ -167,7 +167,7 @@ int runTest(int argc, char* argv[], std::string& solver_name)
   {
     helper.printIrSummary(&FGMRES);
   }
-  error_sum += helper.checkResult(ReSolve::constants::MACHINE_EPSILON); 
+  error_sum += helper.checkResult(ReSolve::constants::MACHINE_EPSILON);
 
   // Load the second matrix
   std::ifstream mat2(matrix_file_name_2);
@@ -194,7 +194,7 @@ int runTest(int argc, char* argv[], std::string& solver_name)
   error_sum += status;
   std::cout << "KLU refactorization status: " << status << std::endl;
 
-  if (is_ir) 
+  if (is_ir)
   {
     std::cout << "Second matrix: Performing iterative refinement...\n";
     FGMRES.resetMatrix(A);
@@ -218,7 +218,7 @@ int runTest(int argc, char* argv[], std::string& solver_name)
   {
     helper.printIrSummary(&FGMRES);
   }
-  error_sum += helper.checkResult(ReSolve::constants::MACHINE_EPSILON); 
+  error_sum += helper.checkResult(ReSolve::constants::MACHINE_EPSILON);
 
   isTestPass(error_sum, test_name);
 
