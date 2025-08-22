@@ -182,9 +182,8 @@ namespace ReSolve
                        << rnorm << " Norm of rhs: " << bnorm << "\n";
     if (rnorm / bnorm < MACHINE_EPSILON)
     {
-      std::cout << "Iterative solve skipped. Initial residual is accurate to machine precision.\n"
-                << std::scientific << std::setprecision(16) << rnorm
-                << " / " << bnorm << "\n";
+      out::warning() << "Initial residual norm is smaller than machine epsilon. "
+                     << "Returning initial guess as solution.\n";
       return 0;
     }
     initial_residual_norm_ = rnorm;
