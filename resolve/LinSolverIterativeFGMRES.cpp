@@ -141,6 +141,7 @@ namespace ReSolve
     initial_residual_norm_ = rnorm;
     while (outer_flag)
     {
+      std::cout <<"Convergence condition: " << conv_cond_ << std::endl;
       // if (rnorm / bnorm <= ReSolve::constants::MACHINE_EPSILON) // addressed comment to check if residual is small enough
       // {
       //   io::Logger::misc() << "Early exit, relative norm of residual "
