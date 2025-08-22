@@ -117,6 +117,23 @@ namespace ReSolve
           }
         }
 
+        delete[] A_row_ptr;
+        delete[] A_col_ind;
+        delete[] A_values;
+
+        delete[] B_row_ptr;
+        delete[] B_col_ind;
+        delete[] B_values;
+
+        delete[] D_row_ptr;
+        delete[] D_col_ind;
+        delete[] D_values;
+
+        delete A;
+        delete B;
+        delete D;
+        delete E;
+
         return status.report(testname.c_str());
       }
 

@@ -44,7 +44,6 @@ namespace ReSolve {
 
     void SpGEMMCuda::addSumMatrix(matrix::Csr* D)
     {
-      // D_descr_ = convertToCusparseType(D);
       D_ = D;
     }
 
@@ -183,7 +182,6 @@ namespace ReSolve {
       if (!(*E_ptr_))
       {
         // Begin set up for addition
-
         mem_.allocateArrayOnDevice(&E_row_ptr_, (index_type) n_ + 1);
         cusparseSetPointerMode(handle_, CUSPARSE_POINTER_MODE_HOST);
 

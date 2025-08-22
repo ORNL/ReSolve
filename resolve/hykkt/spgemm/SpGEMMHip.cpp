@@ -23,7 +23,16 @@ namespace ReSolve {
 
     void SpGEMMHip::addProductMatrices(matrix::Csr* A, matrix::Csr* B)
     {
+      if (A_descr_)
+      {
+        rocsparse_destroy_spmat_descr(A_descr_);
+      }
       A_descr_ = convertToRocsparseType(A);
+
+      if (B_descr_)
+      {
+        rocsparse_destroy_spmat_descr(B_descr_);
+      }
       B_descr_ = convertToRocsparseType(B);
 
       E_num_rows_ = A->getNumRows();
@@ -32,12 +41,15 @@ namespace ReSolve {
 
     void SpGEMMHip::addSumMatrix(matrix::Csr* D)
     {
+      if (D_descr_)
+      {
+        rocsparse_destroy_spmat_descr(D_descr_);
+      }
       D_descr_ = convertToRocsparseType(D);
     }
 
     void SpGEMMHip::addResultMatrix(matrix::Csr** E_ptr)
     {
-      // TODO: will this ever be called more than once?
       if (!E_ptr_)
       {
         mem_.allocateArrayOnDevice(&E_row_ptr_, (index_type) E_num_rows_+1);
