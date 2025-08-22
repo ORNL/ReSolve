@@ -197,14 +197,11 @@ int runTest(int argc, char* argv[], std::string& solver_name)
   error_sum += status;
   if (is_ir)
   {
-    std::cout << "Running IR with FGMRES on the second matrix.\n";
     FGMRES.resetMatrix(A);
     status = FGMRES.setupPreconditioner("LU", &KLU);
     error_sum += status;
-    std::cout << "FGMRES setup status: " << status << std::endl;
 
     status = FGMRES.solve(&vec_rhs, &vec_x);
-    std::cout << "FGMRES solve status: " << status << std::endl;
     error_sum += status;
   }
   std::cout << "KLU solve status: " << status << std::endl;
