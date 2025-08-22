@@ -158,7 +158,7 @@ int main(int argc, char* argv[])
   real_type nsr_norm   = inf_norm_r / (inf_norm_A * inf_norm_x);
   real_type nsr_system = solver.getNormOfScaledResiduals(vec_rhs, vec_x);
   real_type error      = std::abs(nsr_system - nsr_norm) / nsr_norm;
-
+  
   if (error > 10.0 * std::numeric_limits<real_type>::epsilon())
   {
     std::cout << "Norm of scaled residuals computation failed:\n";
@@ -170,7 +170,6 @@ int main(int argc, char* argv[])
               << "\tNorm of scaled residuals (system): " << nsr_system << "\n\n";
     error_sum++;
   }
-
   // Create reference vectors for testing purposes
   vector_type* vec_test = new vector_type(A->getNumRows());
   vector_type* vec_diff = new vector_type(A->getNumRows());
@@ -325,7 +324,7 @@ int main(int argc, char* argv[])
     std::cout << "Result is not a finite number!\n";
     error_sum++;
   }
-  if ((normRmatrix1 / normB1 > 1e-16) || (normRmatrix2 / normB2 > 1e-16))
+  if ((normRmatrix1 / normB1 > ReSolve::constants::MACHINE_EPSILON) || (normRmatrix2 / normB2 > ReSolve::constants::MACHINE_EPSILON))
   {
     std::cout << "Result inaccurate!\n";
     error_sum++;
