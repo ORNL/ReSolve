@@ -72,6 +72,7 @@ install(TARGETS ${installable_tests}
 # Install directory with data files
 install(DIRECTORY data DESTINATION bin/resolve/tests/functionality)
 
+# Set the matrices for the tests.
 set(test_data_dir ${CMAKE_SOURCE_DIR}/tests/functionality)
 set(sym_matrix_path /data/A_spd)
 set(sym_rhs_path /data/b_spd)
