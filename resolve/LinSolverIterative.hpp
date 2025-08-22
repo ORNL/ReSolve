@@ -36,8 +36,6 @@ namespace ReSolve
     real_type  getTol() const;
     index_type getMaxit() const;
 
-    int setConvergenceCondition(index_type conv_cond);
-
     void setTol(real_type new_tol);
     void setMaxit(index_type new_maxit);
 
@@ -45,7 +43,6 @@ namespace ReSolve
     real_type  initial_residual_norm_;
     real_type  final_residual_norm_;
     index_type total_iters_;
-    index_type conv_cond_{0}; ///< Convergence condition (0: absolute, 1: relative to tol, 2: relative to rhs norm)
 
     // Parameters common for all iterative solvers
     real_type  tol_{1e-14}; ///< Solver tolerance

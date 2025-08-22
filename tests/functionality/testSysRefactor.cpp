@@ -133,14 +133,13 @@ static int runTest(int argc, char* argv[], std::string backend)
                                refactor, // refactorization
                                refactor, // triangular solve
                                "none",   // preconditioner (always 'none' here)
-                               "none");  // iterative refinement
+                               "none");   // iterative refinement
 
   // Configure solver (CUDA-based solver needs slightly different
   // settings than HIP-based one)
   solver.setRefinementMethod("fgmres", "cgs2");
   solver.getIterativeSolver().setCliParam("restart", "100");
   solver.getIterativeSolver().setTol(ReSolve::constants::MACHINE_EPSILON);
-  solver.getIterativeSolver().setConvergenceCondition(2); // relative residual norm
   if (backend == "hip")
   {
     solver.getIterativeSolver().setMaxit(200);
