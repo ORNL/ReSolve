@@ -31,7 +31,7 @@ namespace ReSolve
     tol_       = 1e-14; // default
     maxit_     = 100;   // default
     restart_   = 10;
-    conv_cond_ = 0; // default
+    conv_cond_ = 2; // default
     flexible_  = true;
 
     matrix_handler_   = matrix_handler;
