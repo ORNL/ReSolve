@@ -168,7 +168,7 @@ int runTest(int argc, char* argv[], std::string& solver_name)
   {
     helper.printIrSummary(&FGMRES);
   }
-  error_sum += helper.checkResult(10 * ReSolve::constants::MACHINE_EPSILON); // tolerance increased to deal with system
+  error_sum += helper.checkResult(ReSolve::constants::MACHINE_EPSILON); // tolerance increased to deal with system
 
   // Load the second matrix
   std::ifstream mat2(matrix_file_name_2);
@@ -219,7 +219,7 @@ int runTest(int argc, char* argv[], std::string& solver_name)
   {
     helper.printIrSummary(&FGMRES);
   }
-  error_sum += helper.checkResult(100 * ReSolve::constants::MACHINE_EPSILON); // tolerance increased to deal with system
+  error_sum += helper.checkResult(ReSolve::constants::MACHINE_EPSILON); // tolerance increased to deal with system
 
   isTestPass(error_sum, test_name);
 

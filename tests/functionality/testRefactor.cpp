@@ -228,7 +228,7 @@ int runTest(int argc, char* argv[], std::string& solver_name)
   {
     helper.printIrSummary(&FGMRES);
   }
-  error_sum += helper.checkResult(1e-16);
+  error_sum += helper.checkResult(ReSolve::constants::MACHINE_EPSILON);
 
   // Load the second matrix
   std::ifstream mat2(matrix_file_name_2);
@@ -281,7 +281,7 @@ int runTest(int argc, char* argv[], std::string& solver_name)
   {
     helper.printIrSummary(&FGMRES);
   }
-  error_sum += helper.checkResult(1e-16);
+  error_sum += helper.checkResult(ReSolve::constants::MACHINE_EPSILON);
 
   isTestPass(error_sum, test_name);
 
