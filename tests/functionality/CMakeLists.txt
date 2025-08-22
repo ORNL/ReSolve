@@ -73,8 +73,8 @@ install(TARGETS ${installable_tests}
 install(DIRECTORY data DESTINATION bin/resolve/tests/functionality)
 
 set(test_data_dir ${CMAKE_SOURCE_DIR}/tests/functionality)
-set(sym_matrix_path /data/A_symmetric)
-set(sym_rhs_path /data/b_symmetric)
+set(sym_matrix_path /data/A_spd)
+set(sym_rhs_path /data/b_spd)
 set(asym_matrix_path /data/A_asymmetric)
 set(asym_rhs_path /data/b_asymmetric)
 
