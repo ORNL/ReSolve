@@ -133,7 +133,7 @@ static int runTest(int argc, char* argv[], std::string backend)
                                refactor, // refactorization
                                refactor, // triangular solve
                                "none",   // preconditioner (always 'none' here)
-                               "none");   // iterative refinement
+                               "none");  // iterative refinement
 
   // Configure solver (CUDA-based solver needs slightly different
   // settings than HIP-based one)
