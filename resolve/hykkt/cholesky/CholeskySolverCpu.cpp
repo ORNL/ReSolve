@@ -1,4 +1,4 @@
-/** 
+/**
  * @file CholeskySolverCpu.cpp
  * @author Adham Ibrahim (ibrahimas@ornl.gov)
  * @brief CPU implementation of Cholesky Solver
@@ -48,7 +48,7 @@ namespace ReSolve
 
     /**
      * @brief Performs symbolic analysis
-     * 
+     *
      * Uses the `cholmod_analyze` routine.
      */
     void CholeskySolverCpu::symbolicAnalysis()
@@ -65,7 +65,7 @@ namespace ReSolve
      * @brief Performs numerical factorization
      *
      * Uses the `cholmod_factorize` routine.
-     * 
+     *
      * @param[in] tol - This is ignored in the CPU implementation
      */
     void CholeskySolverCpu::numericalFactorization(real_type tol)
@@ -83,7 +83,7 @@ namespace ReSolve
      * @brief Solves the system Ax = b and stores the result in x.
      *
      * Uses the `cholmod_solve` routine.
-     * 
+     *
      * @param[out] x - The solution vector.
      * @param[in]  b - The right-hand side vector.
      */

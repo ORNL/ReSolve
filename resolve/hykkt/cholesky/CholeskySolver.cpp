@@ -1,4 +1,4 @@
-/** 
+/**
  * @file CholeskySolver.cpp
  * @author Adham Ibrahim (ibrahimas@ornl.gov)
  * @brief Cholesky decomposition solver implementation
@@ -44,7 +44,7 @@ namespace ReSolve
       }
     }
 
-    /** 
+    /**
      * @brief Cholesky Solver destructor
      */
     CholeskySolver::~CholeskySolver()
@@ -76,7 +76,7 @@ namespace ReSolve
      *
      * This is only used in the CUDA implementation. For other backends,
      * it is ignored.
-     * 
+     *
      * @param[in] tol - pivot tolerance value
      */
     void CholeskySolver::setPivotTolerance(real_type tol)

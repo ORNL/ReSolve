@@ -1,4 +1,4 @@
-/** 
+/**
  * @file CholeskySolverCuda.cpp
  * @author Adham Ibrahim (ibrahimas@ornl.gov)
  * @brief CUDA implementation of Cholesky Solver
@@ -36,7 +36,7 @@ namespace ReSolve
 
     /**
      * @brief Perform symbolic analysis for the Cholesky factorization
-     * 
+     *
      * Uses the `cusolverSpXcsrcholAnalysis` routine.
      */
     void CholeskySolverCuda::symbolicAnalysis()
@@ -70,9 +70,9 @@ namespace ReSolve
 
     /**
      * @brief Perform numerical factorization for the Cholesky factorization
-     * 
+     *
      * Uses the `cusolverSpDcsrcholFactor` routine.
-     * 
+     *
      * @param[in] tol - Tolerance for zero pivot detection.
      */
     void CholeskySolverCuda::numericalFactorization(real_type tol)
@@ -99,9 +99,9 @@ namespace ReSolve
 
     /**
      * @brief Solve the linear system Ax = b
-     * 
+     *
      * Uses the `cusolverSpDcsrcholSolve` routine.
-     * 
+     *
      * @param[out] x - Solution vector.
      * @param[in]  b - Right-hand side vector.
      */

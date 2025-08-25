@@ -74,10 +74,10 @@ namespace ReSolve
     /**
      * @brief Perform numerical factorization for the Cholesky factorization
      *
-     * For the first factorization, the cholmod routines in SuiteSparse is used. 
+     * For the first factorization, the cholmod routines in SuiteSparse is used.
      * Then, the `rocsolver_dcsrrf_analysis` routine is called to store the result in `rfinfo`.
      * Afterwards, a refactorization is done using `rocsolver_dcsrrf_refactchol`.
-     * 
+     *
      * @param[in] tol - Ignored in the HIP implementation.
      */
     void CholeskySolverHip::numericalFactorization(real_type tol)
@@ -156,9 +156,9 @@ namespace ReSolve
 
     /**
      * @brief Solve the linear system Ax = b
-     * 
+     *
      * Uses the `rocsolver_dcsrrf_solve` routine.
-     * 
+     *
      * @param[out] x - Solution vector.
      * @param[in]  b - Right-hand side vector.
      */

@@ -1,4 +1,4 @@
-/** 
+/**
  * @file CholeskySolverCuda.hpp
  * @author Adham Ibrahim (ibrahimas@ornl.gov)
  * @brief Header for CUDA implementation of Cholesky Solver

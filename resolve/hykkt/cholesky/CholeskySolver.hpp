@@ -1,4 +1,4 @@
-/** 
+/**
  * @file CholeskySolver.hpp
  * @author Adham Ibrahim (ibrahimas@ornl.gov)
  * @brief Cholesky decomposition solver header

@@ -18,7 +18,7 @@ namespace ReSolve
     class CholeskySolverImpl
     {
     public:
-      CholeskySolverImpl()  = default;
+      CholeskySolverImpl()          = default;
       virtual ~CholeskySolverImpl() = default;
 
       virtual void addMatrixInfo(matrix::Csr* A)               = 0;

@@ -1,4 +1,4 @@
-/** 
+/**
  * @file CholeskySolverCpu.hpp
  * @author Adham Ibrahim (ibrahimas@ornl.gov)
  * @brief Header for CPU implementation of Cholesky Solver
