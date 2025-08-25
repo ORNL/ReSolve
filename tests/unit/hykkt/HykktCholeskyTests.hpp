@@ -259,7 +259,7 @@ namespace ReSolve
 
       cholmod_sparse* randomSparseLowerTriangular(size_t n)
       {
-        double              density = 2.0 / n;
+        double              density = 2.0 / (double) n;
         size_t              nnz     = 0;
         std::vector<int>    L_p(n + 1, 0);
         std::vector<int>    L_i;

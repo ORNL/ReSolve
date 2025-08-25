@@ -1,3 +1,9 @@
+/** 
+ * @file CholeskySolver.hpp
+ * @author Adham Ibrahim (ibrahimas@ornl.gov)
+ * @brief Cholesky decomposition solver header
+ */
+
 #pragma once
 #include "CholeskySolverImpl.hpp"
 #include <resolve/MemoryUtils.hpp>

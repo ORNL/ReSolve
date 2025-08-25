@@ -1,3 +1,9 @@
+/**
+ * @file CholeskySolverHip.hpp
+ * @author Adham Ibrahim (ibrahimas@ornl.gov)
+ * @brief Header for HIP implementation of Cholesky Solver
+ */
+
 #include <cholmod.h>
 
 #include <rocsolver/rocsolver.h>

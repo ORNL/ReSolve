@@ -1,3 +1,9 @@
+/**
+ * @file CholeskySolverHip.cpp
+ * @author Adham Ibrahim (ibrahimas@ornl.gov)
+ * @brief HIP implementation of Cholesky Solver
+ */
+
 #include "CholeskySolverHip.hpp"
 
 namespace ReSolve
@@ -65,6 +71,15 @@ namespace ReSolve
       }
     }
 
+    /**
+     * @brief Perform numerical factorization for the Cholesky factorization
+     *
+     * For the first factorization, the cholmod routines in SuiteSparse is used. 
+     * Then, the `rocsolver_dcsrrf_analysis` routine is called to store the result in `rfinfo`.
+     * Afterwards, a refactorization is done using `rocsolver_dcsrrf_refactchol`.
+     * 
+     * @param[in] tol - Ignored in the HIP implementation.
+     */
     void CholeskySolverHip::numericalFactorization(real_type tol)
     {
       (void) tol; // Mark tol as unused
@@ -139,19 +154,19 @@ namespace ReSolve
       }
     }
 
+    /**
+     * @brief Solve the linear system Ax = b
+     * 
+     * Uses the `rocsolver_dcsrrf_solve` routine.
+     * 
+     * @param[out] x - Solution vector.
+     * @param[in]  b - Right-hand side vector.
+     */
     void CholeskySolverHip::solve(vector::Vector* x, vector::Vector* b)
     {
       x->copyDataFrom(b, memory::DEVICE, memory::DEVICE);
-      // uncomment to check that none of these are null
-      // std::cout << L_->getNumRows() << "\n";
-      // std::cout << L_->getNnz() << "\n";
-      // std::cout << L_->getRowData(memory::DEVICE) << "\n";
-      // std::cout << L_->getColData(memory::DEVICE) << "\n";
-      // std::cout << L_->getValues(memory::DEVICE) << "\n";
-      // std::cout << x->getData(memory::DEVICE) << "\n";
-      // std::cout << Q_ << "\n";
-      // std::cout << x->getSize() << "\n";
-      // std::cout << rfinfo_ << "\n";
+      // TODO: currently, this returns status rocblas_status_invalid_pointer
+      // but we have verified that none of the inputs are null and need to be non-null
       rocblas_status status = rocsolver_dcsrrf_solve(handle_,
                                                      L_->getNumRows(),
                                                      1,
@@ -171,6 +186,12 @@ namespace ReSolve
       x->setDataUpdated(memory::DEVICE);
     }
 
+    /**
+     * @brief Convert a CSR matrix to CHOLMOD format.
+     *
+     * @param[in] A - Input CSR matrix.
+     * @return Equivalent CHOLMOD sparse matrix.
+     */
     cholmod_sparse* CholeskySolverHip::convertToCholmod(matrix::Csr* A)
     {
       A_chol_ = cholmod_allocate_sparse((size_t) A->getNumRows(),

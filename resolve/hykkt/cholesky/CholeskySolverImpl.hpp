@@ -1,3 +1,9 @@
+/**
+ * @file CholeskySolverImpl.hpp
+ * @author Adham Ibrahim (ibrahimas@ornl.gov)
+ * @brief Abstract interface for Cholesky Solver implementations
+ */
+
 #pragma once
 #include <resolve/Common.hpp>
 #include <resolve/MemoryUtils.hpp>
@@ -13,7 +19,7 @@ namespace ReSolve
     {
     public:
       CholeskySolverImpl()  = default;
-      ~CholeskySolverImpl() = default;
+      virtual ~CholeskySolverImpl() = default;
 
       virtual void addMatrixInfo(matrix::Csr* A)               = 0;
       virtual void symbolicAnalysis()                          = 0;

@@ -1,3 +1,9 @@
+/** 
+ * @file CholeskySolverCuda.hpp
+ * @author Adham Ibrahim (ibrahimas@ornl.gov)
+ * @brief Header for CUDA implementation of Cholesky Solver
+ */
+
 #include <cublas_v2.h>
 #include <cusolverSp.h>
 #include <cusolverSp_LOWLEVEL_PREVIEW.h>

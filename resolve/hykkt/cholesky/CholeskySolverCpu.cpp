@@ -1,3 +1,9 @@
+/** 
+ * @file CholeskySolverCpu.cpp
+ * @author Adham Ibrahim (ibrahimas@ornl.gov)
+ * @brief CPU implementation of Cholesky Solver
+ */
+
 #include "CholeskySolverCpu.hpp"
 
 namespace ReSolve
@@ -40,6 +46,11 @@ namespace ReSolve
       A_chol_ = convertToCholmod(A);
     }
 
+    /**
+     * @brief Performs symbolic analysis
+     * 
+     * Uses the `cholmod_analyze` routine.
+     */
     void CholeskySolverCpu::symbolicAnalysis()
     {
       factorization_ = cholmod_analyze(A_chol_, &Common_);
@@ -49,6 +60,14 @@ namespace ReSolve
       }
     }
 
+    /**
+     * @brief Performs symbolic analysis
+     * @brief Performs numerical factorization
+     *
+     * Uses the `cholmod_factorize` routine.
+     * 
+     * @param[in] tol - This is ignored in the CPU implementation
+     */
     void CholeskySolverCpu::numericalFactorization(real_type tol)
     {
       (void) tol; // Mark tol as unused
@@ -60,6 +79,14 @@ namespace ReSolve
       }
     }
 
+    /**
+     * @brief Solves the system Ax = b and stores the result in x.
+     *
+     * Uses the `cholmod_solve` routine.
+     * 
+     * @param[out] x - The solution vector.
+     * @param[in]  b - The right-hand side vector.
+     */
     void CholeskySolverCpu::solve(vector::Vector* x, vector::Vector* b)
     {
       cholmod_dense* b_chol = convertToCholmod(b);
@@ -71,6 +98,12 @@ namespace ReSolve
       x->copyDataFrom(static_cast<real_type*>(x_chol->x), memory::HOST, memory::HOST);
     }
 
+    /**
+     * @brief Converts a ReSolve type CSR matrix to CHOLMOD format.
+     *
+     * @param[in] A - pointer to the CSR matrix
+     * @return Pointer to the equivalent CHOLMOD sparse matrix
+     */
     cholmod_sparse* CholeskySolverCpu::convertToCholmod(matrix::Csr* A)
     {
       A_chol_ = cholmod_allocate_sparse((size_t) A->getNumRows(),
@@ -91,6 +124,12 @@ namespace ReSolve
       return A_chol_;
     }
 
+    /**
+     * @brief Converts a ReSolve type vector to CHOLMOD format.
+     *
+     * @param[in] v - pointer to the vector
+     * @return Pointer to the equivalent CHOLMOD dense matrix
+     */
     cholmod_dense* CholeskySolverCpu::convertToCholmod(vector::Vector* v)
     {
       cholmod_dense* v_chol = cholmod_allocate_dense((size_t) v->getSize(),
