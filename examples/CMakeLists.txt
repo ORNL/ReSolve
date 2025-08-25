@@ -91,8 +91,8 @@ else(RESOLVE_USE_KLU)
 endif(RESOLVE_USE_KLU)
 
 set(test_data_dir ${CMAKE_SOURCE_DIR}/tests/functionality)
-set(sym_matrix_path /data/A_spd)
-set(sym_rhs_path /data/b_spd)
+set(sym_matrix_path /data/matrix_ACTIVSg200_AC_renumbered_add9_)
+set(sym_rhs_path /data/rhs_ACTIVSg200_AC_renumbered_add9_ones_)
 set(asym_matrix_path /data/A_asymmetric)
 set(asym_rhs_path /data/b_asymmetric)
 

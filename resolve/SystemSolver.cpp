@@ -562,7 +562,6 @@ namespace ReSolve
   {
     int status = 0;
 
-    status += iterativeSolver_->resetMatrix(A_);
     status += iterativeSolver_->solve(rhs, x);
 
     return status;

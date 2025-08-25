@@ -141,11 +141,11 @@ int runTest(int argc, char* argv[], std::string& solver_name)
   ReSolve::LinSolverIterativeFGMRES FGMRES(&matrix_handler, &vector_handler, &GS);
 
   // Input data
-  std::string matrix_file_name_1 = data_path + "/data/matrix_ACTIVSg200_AC_renumbered_add10_01.mtx";
-  std::string matrix_file_name_2 = data_path + "/data/matrix_ACTIVSg200_AC_renumbered_add10_02.mtx";
+  std::string matrix_file_name_1 = data_path + "/data/matrix_ACTIVSg200_AC_renumbered_add9_01.mtx";
+  std::string matrix_file_name_2 = data_path + "/data/matrix_ACTIVSg200_AC_renumbered_add9_02.mtx";
 
-  std::string rhs_file_name_1 = data_path + "/data/rhs_ACTIVSg200_AC_renumbered_add10_ones_01.mtx";
-  std::string rhs_file_name_2 = data_path + "/data/rhs_ACTIVSg200_AC_renumbered_add10_ones_02.mtx";
+  std::string rhs_file_name_1 = data_path + "/data/rhs_ACTIVSg200_AC_renumbered_add9_ones_01.mtx";
+  std::string rhs_file_name_2 = data_path + "/data/rhs_ACTIVSg200_AC_renumbered_add9_ones_02.mtx";
 
   // Read first matrix
   std::ifstream mat1(matrix_file_name_1);
@@ -228,7 +228,7 @@ int runTest(int argc, char* argv[], std::string& solver_name)
   {
     helper.printIrSummary(&FGMRES);
   }
-  error_sum += helper.checkResult(10*ReSolve::constants::MACHINE_EPSILON);
+  error_sum += helper.checkResult(ReSolve::constants::MACHINE_EPSILON);
 
   // Load the second matrix
   std::ifstream mat2(matrix_file_name_2);
@@ -281,7 +281,7 @@ int runTest(int argc, char* argv[], std::string& solver_name)
   {
     helper.printIrSummary(&FGMRES);
   }
-  error_sum += helper.checkResult(10*ReSolve::constants::MACHINE_EPSILON);
+  error_sum += helper.checkResult(ReSolve::constants::MACHINE_EPSILON);
 
   isTestPass(error_sum, test_name);
 

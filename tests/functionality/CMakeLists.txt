@@ -74,8 +74,8 @@ install(DIRECTORY data DESTINATION bin/resolve/tests/functionality)
 
 # Set the matrices for the tests.
 set(test_data_dir ${CMAKE_SOURCE_DIR}/tests/functionality)
-set(sym_matrix_path /data/matrix_ACTIVSg200_AC_renumbered_add10_)
-set(sym_rhs_path /data/rhs_ACTIVSg200_AC_renumbered_add10_ones_)
+set(sym_matrix_path /data/matrix_ACTIVSg200_AC_renumbered_add9_)
+set(sym_rhs_path /data/rhs_ACTIVSg200_AC_renumbered_add9_ones_)
 set(asym_matrix_path /data/A_asymmetric)
 set(asym_rhs_path /data/b_asymmetric)
 
