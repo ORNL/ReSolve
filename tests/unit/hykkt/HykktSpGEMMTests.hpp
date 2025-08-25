@@ -134,6 +134,169 @@ namespace ReSolve
         return status.report(testname.c_str());
       }
 
+      /**
+       * @brief Generate an n by n example with known solution
+       *
+       * Generates lower bidiagonal A, upper bidiagonal B, and D with 
+       * ones on upper diagonal.
+       * 
+       * @param[in] n - The size of the test
+       */
+      TestOutcome symbolic(index_type n)
+      {
+        TestStatus  status;
+        std::string testname(__func__);
+        testname += ", n = " + std::to_string(n);
+
+        hykkt::SpGEMM spgemm(memspace_, 1.0, 1.0);
+
+        index_type nnz = 2 * n - 1;
+
+        index_type* A_row_ptr = new index_type[n + 1];
+        index_type* A_col_ind = new index_type[nnz];
+        real_type*  A_values  = new real_type[nnz];
+
+        index_type* B_row_ptr = new index_type[n + 1];
+        index_type* B_col_ind = new index_type[nnz];
+        real_type*  B_values  = new real_type[nnz];
+
+        index_type* D_row_ptr = new index_type[n + 1];
+        index_type* D_col_ind = new index_type[n-1];
+        real_type*  D_values  = new real_type[n-1];
+
+        A_row_ptr[0] = 0;
+        A_row_ptr[1] = 1;
+        A_col_ind[0] = 0;
+        A_values[0] = 1.0;
+
+        // A = [1      ]
+        //     [2 1    ]
+        //     [  3 1  ]
+        //     [  ...  ]
+        for (index_type i = 1; i < n; i++)
+        {
+          A_col_ind[2 * i - 1] = i - 1;
+          A_values[2 * i - 1]  = i + 1;
+
+          A_col_ind[2 * i] = i;
+          A_values[2 * i] = 1.0;
+
+          A_row_ptr[i+1] = 2 + A_row_ptr[i];
+        }
+
+        // B = [1 2    ]
+        //     [  1 3  ]
+        //     [    1  ]
+        //     [  ...  ]
+        B_row_ptr[0] = 0;
+        for (index_type i = 0; i < n; i++)
+        {
+          B_col_ind[2 * i] = i;
+          B_values[2 * i]  = 1.0;
+
+          if (i < n-1)
+          {
+            B_col_ind[2 * i + 1] = i + 1;
+            B_values[2 * i + 1] = i + 2;
+            B_row_ptr[i+1] = 2 + B_row_ptr[i];
+          }
+          else
+          {
+            B_row_ptr[i+1] = 1 + B_row_ptr[i];
+          }
+        }
+
+        // D = [0 1    ]
+        //     [  0 1  ]
+        //     [    0 1]
+        //     [  ...  ]
+        D_row_ptr[0] = 0;
+        for (index_type i = 0; i < n-1; i++)
+        {
+          D_col_ind[i] = i+1;
+          D_values[i] = 1.0;
+          D_row_ptr[i+1] = 1 + D_row_ptr[i];
+        }
+        D_row_ptr[n] = D_row_ptr[n-1];
+
+        matrix::Csr* A = new matrix::Csr(n, n, nnz);
+        matrix::Csr* B = new matrix::Csr(n, n, nnz);
+        matrix::Csr* D = new matrix::Csr(n, n, n-1);
+
+        A->copyDataFrom(A_row_ptr, A_col_ind, A_values, memory::HOST, memspace_);
+        B->copyDataFrom(B_row_ptr, B_col_ind, B_values, memory::HOST, memspace_);
+        D->copyDataFrom(D_row_ptr, D_col_ind, D_values, memory::HOST, memspace_);
+
+        matrix::Csr* E = nullptr;
+
+        spgemm.addProductMatrices(A, B);
+        spgemm.addSumMatrix(D);
+        spgemm.addResultMatrix(&E);
+        spgemm.compute();
+
+        if (memspace_ == memory::DEVICE)
+        {
+          E->syncData(memory::HOST);
+        }
+
+        double tol = 1e-6;
+        if (fabs(E->getValues(memory::HOST)[0] - 1.0) > tol)
+        {
+          std::cerr << "Test failed: E[0][0] = " << E->getValues(memory::HOST)[0] << ", expected: 1.0\n";
+          status *= false;
+        }
+
+        if (fabs(E->getValues(memory::HOST)[1] - 3.0) > tol)
+        {
+          std::cerr << "Test failed: E[0][1] = " << E->getValues(memory::HOST)[1] << ", expected: 2.0\n";
+          status *= false;
+        }
+
+        for (index_type i = 1; i < n; i++) {
+          if (fabs(E->getValues(memory::HOST)[3 * i - 1] - (i+1)) > tol)
+          {
+            std::cerr << "Test failed: E[" << i << "][" << i-1 << "] = " << E->getValues(memory::HOST)[3 * i - 1] << ", expected: " << (i+1) << "\n";
+            status *= false;
+          }
+
+          if (fabs(E->getValues(memory::HOST)[3 * i] - (1 + (i+1) * (i+1))) > tol)
+          {
+            std::cerr << "Test failed: E[" << i << "][" << i << "] = " << E->getValues(memory::HOST)[3 * i] << ", expected: " << (1 + (i+1) * (i+1)) << "\n";
+            status *= false;
+          }
+
+          if (i == n-1)
+          {
+            break;
+          }
+
+          if (fabs(E->getValues(memory::HOST)[3 * i + 1] - (i+3)) > tol)
+          {
+            std::cerr << "Test failed: E[" << i << "][" << i + 1 << "] = " << E->getValues(memory::HOST)[3 * i + 1] << ", expected: " << (i+3) << "\n";
+            status *= false;
+          }
+        }
+
+        delete[] A_row_ptr;
+        delete[] A_col_ind;
+        delete[] A_values;
+
+        delete[] B_row_ptr;
+        delete[] B_col_ind;
+        delete[] B_values;
+
+        delete[] D_row_ptr;
+        delete[] D_col_ind;
+        delete[] D_values;
+
+        delete A;
+        delete B;
+        delete D;
+        delete E;
+
+        return status.report(testname.c_str());
+      }
+
     private:
       ReSolve::memory::MemorySpace memspace_;
 

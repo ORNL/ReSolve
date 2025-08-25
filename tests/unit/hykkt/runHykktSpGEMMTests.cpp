@@ -36,6 +36,8 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
   ReSolve::tests::HykktSpGEMMTests test(memspace);
 
   result += test.minimalCorrectness();
+  result += test.symbolic(10);
+  result += test.symbolic(1000);
 
   std::cout << "\n";
 }
