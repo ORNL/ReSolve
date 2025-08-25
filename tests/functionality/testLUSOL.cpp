@@ -45,11 +45,11 @@ int main(int argc, char* argv[])
   ReSolve::VectorHandler        vector_handler(&workspace);
   ReSolve::LinSolverDirectLUSOL lusol;
 
-  std::string matrix_one_path = data_path + "/data/matrix_ACTIVSg200_AC_10.mtx";
-  std::string matrix_two_path = data_path + "/data/matrix_ACTIVSg200_AC_11.mtx";
+  std::string matrix_one_path = data_path + "/data/matrix_ACTIVSg200_AC_renumbered_add10_01.mtx";
+  std::string matrix_two_path = data_path + "/data/matrix_ACTIVSg200_AC_renumbered_add10_02.mtx";
 
-  std::string rhs_one_path = data_path + "/data/rhs_ACTIVSg200_AC_10.mtx.ones";
-  std::string rhs_two_path = data_path + "/data/rhs_ACTIVSg200_AC_11.mtx.ones";
+  std::string rhs_one_path = data_path + "/data/rhs_ACTIVSg200_AC_renumbered_add10_ones_01.mtx";
+  std::string rhs_two_path = data_path + "/data/rhs_ACTIVSg200_AC_renumbered_add10_ones_02.mtx";
 
   std::ifstream matrix_file(matrix_one_path);
   if (!matrix_file.is_open())

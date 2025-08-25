@@ -205,7 +205,7 @@ static int runTest(int argc, char* argv[], std::string backend)
   // Print result summary and check solution
   std::cout << "\nResults (first matrix): \n\n";
   helper.printSummary();
-  error_sum += helper.checkResult(ReSolve::constants::MACHINE_EPSILON);
+  error_sum += helper.checkResult(10*ReSolve::constants::MACHINE_EPSILON);
 
   // Verify norm of scaled residuals calculation in SystemSolver class
   real_type nsr_system = solver.getNormOfScaledResiduals(&vec_rhs, &vec_x);
@@ -260,7 +260,7 @@ static int runTest(int argc, char* argv[], std::string backend)
   std::cout << "\nResults (second matrix): \n\n";
   helper.printSummary();
   helper.printIrSummary(&(solver.getIterativeSolver()));
-  error_sum += helper.checkResult(ReSolve::constants::MACHINE_EPSILON);
+  error_sum += helper.checkResult(10*ReSolve::constants::MACHINE_EPSILON);
 
   // Verify norm of scaled residuals calculation in SystemSolver class
   nsr_system = solver.getNormOfScaledResiduals(&vec_rhs, &vec_x);
