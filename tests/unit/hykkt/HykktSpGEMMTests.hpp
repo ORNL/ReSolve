@@ -358,7 +358,7 @@ namespace ReSolve
           {
             std::cout << "Row pointer mismatch at index " << j << ": got "
                       << E->getRowData(memory::HOST)[j] << ", expected " << E_row_ptr_expected[j] << "\n";
-            is_correct *= false;
+            is_correct = false;
           }
         }
 
@@ -368,7 +368,7 @@ namespace ReSolve
           {
             std::cout << "Column index mismatch at index " << j << ": got "
                       << E->getColData(memory::HOST)[j] << ", expected " << E_col_ind_expected[j] << "\n";
-            is_correct *= false;
+            is_correct = false;
           }
         }
 
@@ -378,7 +378,7 @@ namespace ReSolve
           {
             std::cout << "Value mismatch at index " << j << ": got "
                       << E->getValues(memory::HOST)[j] << ", expected " << E_values_expected[j] << "\n";
-            is_correct *= false;
+            is_correct = false;
           }
         }
 
