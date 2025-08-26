@@ -126,9 +126,29 @@ namespace ReSolve
 
         *E_ptr_ = new matrix::Csr((index_type) E_num_rows_, (index_type) E_num_cols_, (index_type) E_nnz_);
         (*E_ptr_)->setDataPointers(E_row_ptr_, E_col_ind_, E_val_, memory::DEVICE);
+      
+        // Fill the column indices of the result, the values will be computed next
+        status = rocsparse_spgemm(handle_,
+                                  rocsparse_operation_none,
+                                  rocsparse_operation_none,
+                                  &alpha_,
+                                  A_descr_,
+                                  B_descr_,
+                                  &beta_,
+                                  D_descr_,
+                                  E_descr_,
+                                  rocsparse_datatype_f64_r,
+                                  rocsparse_spgemm_alg_default,
+                                  rocsparse_spgemm_stage_symbolic,
+                                  &buffer_size_,
+                                  buffer_);
+        if (status != rocsparse_status_success)
+        {
+          out::error() << "Failed to perform symbolic stage. Status: " << status << "\n";
+        }
       }
 
-      // SpGEMM computation
+      // SpGEMM numeric computation
       status = rocsparse_spgemm(handle_,
                                 rocsparse_operation_none,
                                 rocsparse_operation_none,
@@ -140,12 +160,12 @@ namespace ReSolve
                                 E_descr_,
                                 rocsparse_datatype_f64_r,
                                 rocsparse_spgemm_alg_default,
-                                rocsparse_spgemm_stage_compute,
+                                rocsparse_spgemm_stage_numeric,
                                 &buffer_size_,
                                 buffer_);
       if (status != rocsparse_status_success)
       {
-        out::error() << "Failed to compute SpGEMM. Status: " << status << "\n";
+        out::error() << "Failed to perform numeric stage. Status: " << status << "\n";
       }
     }
 
