@@ -239,7 +239,6 @@ namespace ReSolve
         return status.report(testname.c_str());
       }
 
-      
       TestOutcome reuse()
       {
         TestStatus  status;
@@ -263,13 +262,13 @@ namespace ReSolve
         if (memspace_ == memory::DEVICE)
         {
           E->syncData(memory::HOST);
-          
+
           A->syncData(memory::HOST);
           D->syncData(memory::HOST);
         }
 
         status *= verifyResult(E, 2.0);
-        
+
         for (index_type j = 0; j < A->getNnz(); j++)
         {
           A->getValues(memory::HOST)[j] *= 2.0;
@@ -303,7 +302,7 @@ namespace ReSolve
 
     private:
       memory::MemorySpace memspace_;
-      
+
       void generateExampleData(matrix::Csr** A, matrix::Csr** B, matrix::Csr** D)
       {
         index_type* A_row_ptr = new index_type[4]{0, 1, 3, 5};
@@ -325,7 +324,7 @@ namespace ReSolve
         (*A)->copyDataFrom(A_row_ptr, A_col_ind, A_values, memory::HOST, memspace_);
         (*B)->copyDataFrom(B_row_ptr, B_col_ind, B_values, memory::HOST, memspace_);
         (*D)->copyDataFrom(D_row_ptr, D_col_ind, D_values, memory::HOST, memspace_);
-      
+
         delete[] A_row_ptr;
         delete[] A_col_ind;
         delete[] A_values;

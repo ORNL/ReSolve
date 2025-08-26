@@ -126,7 +126,7 @@ namespace ReSolve
 
         *E_ptr_ = new matrix::Csr((index_type) E_num_rows_, (index_type) E_num_cols_, (index_type) E_nnz_);
         (*E_ptr_)->setDataPointers(E_row_ptr_, E_col_ind_, E_val_, memory::DEVICE);
-      
+
         // Fill the column indices of the result, the values will be computed next
         status = rocsparse_spgemm(handle_,
                                   rocsparse_operation_none,
