@@ -38,7 +38,7 @@ namespace ReSolve
 #elif defined(RESOLVE_USE_HIP)
         impl_ = new CholeskySolverHip();
 #else
-        out::error() << "No GPU support enabled, and memory space set to DEVICE.\n";
+        out::error() << "Memory space set to DEVICE, though no GPU support enabled. Must enable RESOLVE_USE_CUDA or RESOLVE_USE_HIP.\n";
         exit(1);
 #endif
       }
