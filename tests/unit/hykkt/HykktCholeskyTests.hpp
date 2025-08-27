@@ -102,18 +102,18 @@ namespace ReSolve
         std::string testname(__func__);
         testname += " n = " + std::to_string(n);
 
-        cholmod_sparse* L      = randomSparseLowerTriangular((size_t) n);
-        cholmod_sparse* L_tr   = cholmod_transpose(L, 1, &Common);
+        cholmod_sparse* L            = randomSparseLowerTriangular((size_t) n);
+        cholmod_sparse* L_tr         = cholmod_transpose(L, 1, &Common);
         cholmod_sparse* L_times_L_tr = cholmod_ssmult(L, L_tr, 0, 1, 0, &Common);
 
-        matrix::Csr* A = new matrix::Csr((index_type) L_times_L_tr->nrow, 
-        (index_type) L_times_L_tr->ncol, 
-        (index_type) L_times_L_tr->nzmax);
+        matrix::Csr* A = new matrix::Csr((index_type) L_times_L_tr->nrow,
+                                         (index_type) L_times_L_tr->ncol,
+                                         (index_type) L_times_L_tr->nzmax);
         A->copyDataFrom(
-            static_cast<int*>(L_times_L_tr->p), 
-            static_cast<int*>(L_times_L_tr->i), 
-            static_cast<double*>(L_times_L_tr->x), 
-            memory::HOST, 
+            static_cast<int*>(L_times_L_tr->p),
+            static_cast<int*>(L_times_L_tr->i),
+            static_cast<double*>(L_times_L_tr->x),
+            memory::HOST,
             memspace_);
 
         ReSolve::hykkt::CholeskySolver solver(memspace_);
