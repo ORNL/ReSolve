@@ -211,7 +211,6 @@ namespace ReSolve
 
           if (memspace_ == memory::DEVICE)
           {
-            // x_expected->syncData(memory::HOST);
             x->syncData(memory::HOST);
           }
 
@@ -297,24 +296,6 @@ namespace ReSolve
 
         return L;
       }
-
-      // matrix::Csr* randomSparseSPDMatrix(size_t n, double density)
-      // {
-      //   cholmod_sparse* L = randomSparseLowerTriangular(n);
-      //   cholmod_sparse* L_tr = cholmod_transpose(L, 1, &Common);
-
-      //   cholmod_sparse* A_chol = cholmod_ssmult(L, L_tr, 0, 1, 0, &Common);
-
-      //   matrix::Csr* A = new matrix::Csr((index_type) A_chol->nrow, (index_type) A_chol->ncol, (index_type) A_chol->nzmax);
-      //   A->copyDataFrom(
-      //       static_cast<int*>(A_chol->p), static_cast<int*>(A_chol->i), static_cast<double*>(A_chol->x), memory::HOST, memspace_);
-
-      //   cholmod_free_sparse(&L, &Common);
-      //   cholmod_free_sparse(&L_tr, &Common);
-      //   cholmod_free_sparse(&A_chol, &Common);
-
-      //   return A;
-      // }
 
       vector::Vector* randomVector(index_type n)
       {

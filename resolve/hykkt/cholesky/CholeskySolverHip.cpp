@@ -103,8 +103,6 @@ namespace ReSolve
                          static_cast<real_type*>(L_chol_tr->x),
                          memory::HOST,
                          memory::DEVICE);
-        // L_->syncData(memory::HOST);
-        // L_->print(std::cout);
         // Store fill-in reducing permutation.
         // Within HyKKT, this will be the identity permutation because the Permutation class will permute the matrix.
         mem_.allocateArrayOnDevice(&Q_, A_->getNumRows());
