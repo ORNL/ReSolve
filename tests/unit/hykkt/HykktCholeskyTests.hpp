@@ -77,7 +77,7 @@ namespace ReSolve
 
         real_type expected_x[3] = {1.0, -0.5, 0.25};
 
-        real_type tol = 1e-8;
+        real_type tol = 1e-12;
         for (index_type i = 0; i < n; ++i)
         {
           if (fabs(x->getData(memory::HOST)[i] - expected_x[i]) > tol)
@@ -104,11 +104,17 @@ namespace ReSolve
 
         cholmod_sparse* L      = randomSparseLowerTriangular((size_t) n);
         cholmod_sparse* L_tr   = cholmod_transpose(L, 1, &Common);
-        cholmod_sparse* A_chol = cholmod_ssmult(L, L_tr, 0, 1, 0, &Common);
+        cholmod_sparse* L_times_L_tr = cholmod_ssmult(L, L_tr, 0, 1, 0, &Common);
 
-        matrix::Csr* A = new matrix::Csr((index_type) A_chol->nrow, (index_type) A_chol->ncol, (index_type) A_chol->nzmax);
+        matrix::Csr* A = new matrix::Csr((index_type) L_times_L_tr->nrow, 
+        (index_type) L_times_L_tr->ncol, 
+        (index_type) L_times_L_tr->nzmax);
         A->copyDataFrom(
-            static_cast<int*>(A_chol->p), static_cast<int*>(A_chol->i), static_cast<double*>(A_chol->x), memory::HOST, memspace_);
+            static_cast<int*>(L_times_L_tr->p), 
+            static_cast<int*>(L_times_L_tr->i), 
+            static_cast<double*>(L_times_L_tr->x), 
+            memory::HOST, 
+            memspace_);
 
         ReSolve::hykkt::CholeskySolver solver(memspace_);
 
@@ -133,13 +139,11 @@ namespace ReSolve
 
         if (memspace_ == memory::DEVICE)
         {
-          // x_expected->syncData(memory::HOST);
           x->syncData(memory::HOST);
         }
 
         // Verify result
-        // TODO only works with 1e-4 tolerance
-        real_type tol = 1e-4;
+        real_type tol = 1e-12;
         for (index_type j = 0; j < n; ++j)
         {
           if (fabs(x->getData(memory::HOST)[j] - x_expected->getData(memory::HOST)[j]) > tol)
@@ -155,7 +159,7 @@ namespace ReSolve
 
         cholmod_free_sparse(&L, &Common);
         cholmod_free_sparse(&L_tr, &Common);
-        cholmod_free_sparse(&A_chol, &Common);
+        cholmod_free_sparse(&L_times_L_tr, &Common);
 
         delete A;
         delete x_expected;
@@ -212,8 +216,7 @@ namespace ReSolve
           }
 
           // Verify result
-          // TODO only works with 1e-4 tolerance
-          real_type tol = 1e-4;
+          real_type tol = 1e-12;
           for (index_type j = 0; j < n; ++j)
           {
             if (fabs(x->getData(memory::HOST)[j] - x_expected->getData(memory::HOST)[j]) > tol)
@@ -273,7 +276,13 @@ namespace ReSolve
             if (i == j || static_cast<double>(rand()) / RAND_MAX < density)
             {
               L_i.push_back((int) j);
-              L_x.push_back(2.0 * static_cast<double>(rand()) / RAND_MAX - 1.0);
+              // force diagonal entry to be non-zero
+              double value = 2.0;
+              if (i != j)
+              {
+                value = 2.0 * static_cast<double>(rand()) / RAND_MAX - 1.0;
+              }
+              L_x.push_back(value);
               L_p[i + 1]++;
               nnz++;
             }
