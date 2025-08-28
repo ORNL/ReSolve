@@ -13,7 +13,6 @@
 #ifdef RESOLVE_USE_KLU
 #include <resolve/LinSolverDirectKLU.hpp>
 #endif
-
 #include <resolve/LinSolverIterativeRandFGMRES.hpp>
 
 #ifdef RESOLVE_USE_CUDA
@@ -563,7 +562,6 @@ namespace ReSolve
   {
     int status = 0;
 
-    status += iterativeSolver_->resetMatrix(A_);
     status += iterativeSolver_->solve(rhs, x);
 
     return status;

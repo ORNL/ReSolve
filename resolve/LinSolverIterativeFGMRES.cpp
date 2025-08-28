@@ -141,7 +141,6 @@ namespace ReSolve
     initial_residual_norm_ = rnorm;
     while (outer_flag)
     {
-      // check if maybe residual is already small enough?
       if (it == 0)
       {
         tolrel = tol_ * rnorm;

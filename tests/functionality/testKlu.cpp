@@ -58,6 +58,30 @@ int runTest(int argc, char* argv[], std::string& solver_name)
   auto        opt       = options.getParamFromKey("-d");
   std::string data_path = opt ? (*opt).second : ".";
 
+  // Get matrix file name
+  opt = options.getParamFromKey("-m");
+  if (!opt)
+  {
+    std::cout << "Matrix file name not provided. Use -m <matrix_file_name>.\n";
+    return -1;
+  }
+  std::string matrix_temp = (*opt).second;
+
+  // Get rhs file name
+  opt = options.getParamFromKey("-r");
+  if (!opt)
+  {
+    std::cout << "RHS file name not provided. Use -r <rhs_file_name>.\n";
+    return -1;
+  }
+  std::string rhs_temp = (*opt).second;
+
+  // Construct matrix and rhs file names from inputs
+  std::string matrix_file_name_1 = data_path + matrix_temp + "01.mtx";
+  std::string matrix_file_name_2 = data_path + matrix_temp + "02.mtx";
+  std::string rhs_file_name_1    = data_path + rhs_temp + "01.mtx";
+  std::string rhs_file_name_2    = data_path + rhs_temp + "02.mtx";
+
   // Whether to use iterative refinement
   opt        = options.getParamFromKey("-i");
   bool is_ir = opt ? true : false;
@@ -77,13 +101,6 @@ int runTest(int argc, char* argv[], std::string& solver_name)
   ReSolve::VectorHandler            vector_handler(&workspace);
   ReSolve::GramSchmidt              GS(&vector_handler, ReSolve::GramSchmidt::CGS2);
   ReSolve::LinSolverIterativeFGMRES FGMRES(&matrix_handler, &vector_handler, &GS);
-
-  // Input data
-  std::string matrix_file_name_1 = data_path + "/data/matrix_ACTIVSg200_AC_10.mtx";
-  std::string matrix_file_name_2 = data_path + "/data/matrix_ACTIVSg200_AC_11.mtx";
-
-  std::string rhs_file_name_1 = data_path + "/data/rhs_ACTIVSg200_AC_10.mtx.ones";
-  std::string rhs_file_name_2 = data_path + "/data/rhs_ACTIVSg200_AC_11.mtx.ones";
 
   // Read first matrix
   std::ifstream mat1(matrix_file_name_1);
@@ -135,7 +152,6 @@ int runTest(int argc, char* argv[], std::string& solver_name)
 
     status = FGMRES.setupPreconditioner("LU", &KLU);
     error_sum += status;
-
     status = FGMRES.solve(&vec_rhs, &vec_x);
     error_sum += status;
   }
@@ -176,22 +192,17 @@ int runTest(int argc, char* argv[], std::string& solver_name)
   status = KLU.refactorize();
   error_sum += status;
   std::cout << "KLU refactorization status: " << status << std::endl;
-
+  status = KLU.solve(&vec_rhs, &vec_x);
+  error_sum += status;
   if (is_ir)
   {
     FGMRES.resetMatrix(A);
     status = FGMRES.setupPreconditioner("LU", &KLU);
     error_sum += status;
-
     status = FGMRES.solve(&vec_rhs, &vec_x);
     error_sum += status;
   }
-  else
-  {
-    status = KLU.solve(&vec_rhs, &vec_x);
-    error_sum += status;
-  }
-
+  std::cout << "KLU solve status: " << status << std::endl;
   helper.resetSystem(A, &vec_rhs, &vec_x);
 
   std::cout << "\nResults (second matrix): \n\n";

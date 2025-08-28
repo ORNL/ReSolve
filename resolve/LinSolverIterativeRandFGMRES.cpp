@@ -31,7 +31,7 @@ namespace ReSolve
     tol_       = 1e-14; // default
     maxit_     = 100;   // default
     restart_   = 10;
-    conv_cond_ = 0; // default
+    conv_cond_ = 2; // default
     flexible_  = true;
 
     matrix_handler_   = matrix_handler;
@@ -180,10 +180,10 @@ namespace ReSolve
     io::Logger::misc() << "it 0: norm of residual "
                        << std::scientific << std::setprecision(16)
                        << rnorm << " Norm of rhs: " << bnorm << "\n";
+
     initial_residual_norm_ = rnorm;
     while (outer_flag)
     {
-      // check if maybe residual is already small enough?
       if (it == 0)
       {
         tolrel = tol_ * rnorm;
