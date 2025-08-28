@@ -141,7 +141,6 @@ namespace ReSolve
     initial_residual_norm_ = rnorm;
     while (outer_flag)
     {
-      std::cout << "Convergence condition: " << conv_cond_ << std::endl;
       if (it == 0)
       {
         tolrel = tol_ * rnorm;
