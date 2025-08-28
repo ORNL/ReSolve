@@ -184,17 +184,6 @@ namespace ReSolve
     initial_residual_norm_ = rnorm;
     while (outer_flag)
     {
-      // if (rnorm / bnorm <= ReSolve::constants::MACHINE_EPSILON) // addressed comment to check if residual is small enough
-      // {
-      //   io::Logger::misc() << "Early exit, relative norm of residual "
-      //                      << std::scientific << std::setprecision(16)
-      //                      << rnorm / bnorm << "\n";
-      //   outer_flag             = 0;
-      //   final_residual_norm_   = rnorm;
-      //   initial_residual_norm_ = rnorm;
-      //   total_iters_           = it;
-      //   break;
-      // }
       if (it == 0)
       {
         tolrel = tol_ * rnorm;

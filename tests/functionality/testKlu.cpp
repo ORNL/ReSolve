@@ -152,7 +152,6 @@ int runTest(int argc, char* argv[], std::string& solver_name)
 
     status = FGMRES.setupPreconditioner("LU", &KLU);
     error_sum += status;
-    FGMRES.setConvergenceCondition(2); // set convergence condition to 2 to look at relative residual
     status = FGMRES.solve(&vec_rhs, &vec_x);
     error_sum += status;
   }
@@ -200,7 +199,6 @@ int runTest(int argc, char* argv[], std::string& solver_name)
     FGMRES.resetMatrix(A);
     status = FGMRES.setupPreconditioner("LU", &KLU);
     error_sum += status;
-    FGMRES.setConvergenceCondition(2); // set convergence condition to 2 to look at relative residual
     status = FGMRES.solve(&vec_rhs, &vec_x);
     error_sum += status;
   }
