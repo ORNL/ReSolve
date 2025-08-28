@@ -30,19 +30,22 @@ namespace ReSolve
 
       n_ = A->getNumRows();
 
-      mem_.allocateArrayOnDevice(&C_row_ptr_, (index_type) n_ + 1);
+      if (!C_descr_)
+      {
+        mem_.allocateArrayOnDevice(&C_row_ptr_, (index_type) n_ + 1);
 
-      cusparseCreateCsr(&C_descr_,
-                        n_,
-                        B->getNumColumns(),
-                        0, // nnz will be determined later
-                        C_row_ptr_,
-                        nullptr,
-                        nullptr,
-                        CUSPARSE_INDEX_32I,
-                        CUSPARSE_INDEX_32I,
-                        CUSPARSE_INDEX_BASE_ZERO,
-                        CUDA_R_64F);
+        cusparseCreateCsr(&C_descr_,
+                          n_,
+                          B->getNumColumns(),
+                          0, // nnz will be determined later
+                          C_row_ptr_,
+                          nullptr,
+                          nullptr,
+                          CUSPARSE_INDEX_32I,
+                          CUSPARSE_INDEX_32I,
+                          CUSPARSE_INDEX_BASE_ZERO,
+                          CUDA_R_64F);
+      }
     }
 
     void SpGEMMCuda::addSumMatrix(matrix::Csr* D)
@@ -255,6 +258,8 @@ namespace ReSolve
                         E_row_ptr_,
                         E_col_ind_,
                         buffer_add_);
+
+      (*E_ptr_)->setUpdated(memory::DEVICE);
     }
 
     cusparseSpMatDescr_t SpGEMMCuda::convertToCusparseType(matrix::Csr* A)
