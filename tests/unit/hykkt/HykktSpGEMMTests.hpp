@@ -290,6 +290,11 @@ namespace ReSolve
         spgemm.addSumMatrix(D);
         spgemm.compute();
 
+        if (memspace_ == memory::DEVICE)
+        {
+          E->syncData(memory::HOST);
+        }
+
         status *= verifyResult(E, 4.0);
 
         delete A;

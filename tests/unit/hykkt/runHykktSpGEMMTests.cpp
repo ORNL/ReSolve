@@ -37,7 +37,7 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
 
   result += test.minimalCorrectness();
   result += test.symbolic(10);
-  // result += test.symbolic(1000);
+  result += test.symbolic(1000);
   result += test.reuse();
 
   std::cout << "\n";

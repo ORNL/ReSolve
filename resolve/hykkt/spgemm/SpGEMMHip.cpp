@@ -167,6 +167,8 @@ namespace ReSolve
       {
         out::error() << "Failed to perform numeric stage. Status: " << status << "\n";
       }
+
+      (*E_ptr_)->setUpdated(memory::DEVICE);
     }
 
     rocsparse_spmat_descr SpGEMMHip::convertToRocsparseType(matrix::Csr* A)
