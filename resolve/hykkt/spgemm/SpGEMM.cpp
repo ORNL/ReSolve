@@ -15,7 +15,7 @@
 namespace ReSolve
 {
   using real_type = ReSolve::real_type;
-  using out = ReSolve::io::Logger;
+  using out       = ReSolve::io::Logger;
 
   namespace hykkt
   {
