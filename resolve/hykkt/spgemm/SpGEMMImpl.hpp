@@ -1,3 +1,9 @@
+/**
+ * @file SpGEMMImpl.hpp
+ * @author Adham Ibrahim (ibrahimas@ornl.gov)
+ * @brief Interface for SpGEMM implementations
+ */
+
 #pragma once
 
 #include <resolve/Common.hpp>

@@ -1,3 +1,9 @@
+/**
+ * @file SpGEMMHip.cpp
+ * @author Adham Ibrahim (ibrahimas@ornl.gov)
+ * @brief Implementation of SpGEMM using rocSPARSE for GPU
+ */
+
 #include "SpGEMMHip.hpp"
 
 namespace ReSolve
@@ -71,6 +77,11 @@ namespace ReSolve
       E_ptr_ = E_ptr;
     }
 
+    /**
+     * @brief Computes the result of the SpGEMM operation
+     * This uses `rocsparse_spgemm` with the symbolic and numeric stages 
+     * separated to allow for efficient reuse.
+     */
     void SpGEMMHip::compute()
     {
       rocsparse_status status;
@@ -171,6 +182,11 @@ namespace ReSolve
       (*E_ptr_)->setUpdated(memory::DEVICE);
     }
 
+    /**
+     * @brief Converts a CSR matrix to a rocSPARSE sparse matrix descriptor
+     * @param A[in] - Pointer to CSR matrix
+     * @return rocSPARSE sparse matrix descriptor
+     */
     rocsparse_spmat_descr SpGEMMHip::convertToRocsparseType(matrix::Csr* A)
     {
       rocsparse_spmat_descr descr;

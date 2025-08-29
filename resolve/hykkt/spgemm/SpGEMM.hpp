@@ -1,3 +1,8 @@
+/**
+ * @file SpGEMM.hpp
+ * @author Adham Ibrahim (ibrahimas@ornl.gov)
+ */
+
 #pragma once
 #include "SpGEMMImpl.hpp"
 #include <resolve/Common.hpp>

@@ -1,3 +1,9 @@
+/**
+ * @file SpGEMMHip.hpp
+ * @author Adham Ibrahim (ibrahimas@ornl.gov)
+ * @brief Header file for SpGEMM using rocSPARSE for GPU
+ */
+
 #pragma once
 
 #include <rocsparse/rocsparse.h>

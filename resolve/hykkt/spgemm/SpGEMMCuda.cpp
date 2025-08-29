@@ -1,3 +1,9 @@
+/**
+ * @file SpGEMMCuda.cpp
+ * @author Adham Ibrahim (ibrahimas@ornl.gov)
+ * @brief Implementation of SpGEMM using cuSPARSE for GPU
+ */
+
 #include "SpGEMMCuda.hpp"
 
 namespace ReSolve
@@ -58,6 +64,13 @@ namespace ReSolve
       E_ptr_ = E_ptr;
     }
 
+    /**
+     * @brief Computes the result of the SpGEMM operation
+     * This uses both `cusparseSpGEMMreuse` and `cusparseXcsrgeam` to perform
+     * the product and sum in separate stages. This is required because 
+     * cusparseSpGEMM does not handle the case where D has a different sparsity
+     * pattern than the product A * B
+     */
     void SpGEMMCuda::compute()
     {
       double beta_product = 0.0;
@@ -262,6 +275,11 @@ namespace ReSolve
       (*E_ptr_)->setUpdated(memory::DEVICE);
     }
 
+    /**
+     * @brief Converts a CSR matrix to a cuSPARSE sparse matrix descriptor
+     * @param A[in] - Pointer to CSR matrix
+     * @return cuSPARSE sparse matrix descriptor
+     */
     cusparseSpMatDescr_t SpGEMMCuda::convertToCusparseType(matrix::Csr* A)
     {
       cusparseSpMatDescr_t descr;

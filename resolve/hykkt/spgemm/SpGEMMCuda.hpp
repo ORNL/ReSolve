@@ -1,3 +1,9 @@
+/**
+ * @file SpGEMMCuda.hpp
+ * @author Adham Ibrahim (ibrahimas@ornl.gov)
+ * @brief Header file for SpGEMM using cuSPARSE for GPU
+ */
+
 #pragma once
 
 #include <cusparse.h>

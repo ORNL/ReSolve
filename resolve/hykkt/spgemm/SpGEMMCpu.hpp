@@ -37,7 +37,7 @@ namespace ReSolve
       matrix::Csr** E_ptr_;
 
       cholmod_sparse* allocateCholmodType(matrix::Csr* X);
-      void            copyValuesToCholmodType(matrix::Csr* X, cholmod_sparse* X_chol);
+      void            copyDataToCholmodType(matrix::Csr* X, cholmod_sparse* X_chol);
     };
   } // namespace hykkt
 } // namespace ReSolve
