@@ -67,7 +67,7 @@ namespace ReSolve
     /**
      * @brief Computes the result of the SpGEMM operation
      * This uses both `cusparseSpGEMMreuse` and `cusparseXcsrgeam` to perform
-     * the product and sum in separate stages. This is required because 
+     * the product and sum in separate stages. This is required because
      * cusparseSpGEMM does not handle the case where D has a different sparsity
      * pattern than the product A * B
      */

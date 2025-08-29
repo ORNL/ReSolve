@@ -77,7 +77,7 @@ namespace ReSolve
 
     /**
      * @brief Computes the result of the SpGEMM operation
-     * 
+     *
      * Does not store partial results for reuse, as is this is not supported
      * by the CHOLMOD package.
      */

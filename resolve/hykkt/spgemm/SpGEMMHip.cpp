@@ -79,7 +79,7 @@ namespace ReSolve
 
     /**
      * @brief Computes the result of the SpGEMM operation
-     * This uses `rocsparse_spgemm` with the symbolic and numeric stages 
+     * This uses `rocsparse_spgemm` with the symbolic and numeric stages
      * separated to allow for efficient reuse.
      */
     void SpGEMMHip::compute()
