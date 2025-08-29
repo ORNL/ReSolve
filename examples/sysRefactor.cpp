@@ -81,7 +81,7 @@ int main(int argc, char* argv[])
   else
   {
     std::cout << "Re::Solve is not built with support for " << opt->second;
-    std::cout << "backend.\n";
+    std::cout << " backend.\n";
     return 1;
   }
 
