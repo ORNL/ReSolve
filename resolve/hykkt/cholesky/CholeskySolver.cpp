@@ -64,7 +64,7 @@ namespace ReSolve
 
     /**
      * @brief Performs symbolic analysis. Determines the sparsity pattern of
-     *        the factor L. Values will be computed by numerical analysis. 
+     *        the factor L. Values will be computed by numerical analysis.
      *        This need only be called once as long as the sparsity pattern does not change.
      */
     void CholeskySolver::symbolicAnalysis()
