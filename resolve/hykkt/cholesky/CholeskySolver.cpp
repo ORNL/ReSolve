@@ -63,8 +63,9 @@ namespace ReSolve
     }
 
     /**
-     * @brief Performs symbolic analysis. This need only be called once
-     *        as long as the sparsity pattern does not change.
+     * @brief Performs symbolic analysis. Determines the sparsity pattern of
+     *        the factor L. Values will be computed by numerical analysis. 
+     *        This need only be called once as long as the sparsity pattern does not change.
      */
     void CholeskySolver::symbolicAnalysis()
     {
@@ -85,7 +86,8 @@ namespace ReSolve
     }
 
     /**
-     * @brief Performs numerical factorization.
+     * @brief Performs numerical factorization. Fills in the values of the factor L such
+     *        that LL^T = A.
      */
     void CholeskySolver::numericalFactorization()
     {
