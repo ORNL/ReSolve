@@ -55,9 +55,9 @@ namespace ReSolve
 
         matrix::Csr* E = nullptr;
 
-        spgemm.addProductMatrices(A, B);
-        spgemm.addSumMatrix(D);
-        spgemm.addResultMatrix(&E);
+        spgemm.loadProductMatrices(A, B);
+        spgemm.loadSumMatrix(D);
+        spgemm.loadResultMatrix(&E);
         spgemm.compute();
 
         if (memspace_ == memory::DEVICE)
@@ -170,9 +170,9 @@ namespace ReSolve
 
         matrix::Csr* E = nullptr;
 
-        spgemm.addProductMatrices(A, B);
-        spgemm.addSumMatrix(D);
-        spgemm.addResultMatrix(&E);
+        spgemm.loadProductMatrices(A, B);
+        spgemm.loadSumMatrix(D);
+        spgemm.loadResultMatrix(&E);
         spgemm.compute();
 
         if (memspace_ == memory::DEVICE)
@@ -254,9 +254,9 @@ namespace ReSolve
 
         matrix::Csr* E = nullptr;
 
-        spgemm.addProductMatrices(A, B);
-        spgemm.addSumMatrix(D);
-        spgemm.addResultMatrix(&E);
+        spgemm.loadProductMatrices(A, B);
+        spgemm.loadSumMatrix(D);
+        spgemm.loadResultMatrix(&E);
         spgemm.compute();
 
         if (memspace_ == memory::DEVICE)
@@ -286,8 +286,8 @@ namespace ReSolve
           D->syncData(memory::DEVICE);
         }
 
-        spgemm.addProductMatrices(A, B);
-        spgemm.addSumMatrix(D);
+        spgemm.loadProductMatrices(A, B);
+        spgemm.loadSumMatrix(D);
         spgemm.compute();
 
         if (memspace_ == memory::DEVICE)

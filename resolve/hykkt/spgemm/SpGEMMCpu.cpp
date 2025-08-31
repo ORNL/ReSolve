@@ -47,7 +47,7 @@ namespace ReSolve
       cholmod_finish(&Common_);
     }
 
-    void SpGEMMCpu::addProductMatrices(matrix::Csr* A, matrix::Csr* B)
+    void SpGEMMCpu::loadProductMatrices(matrix::Csr* A, matrix::Csr* B)
     {
       if (!A_)
       {
@@ -61,7 +61,7 @@ namespace ReSolve
       copyDataToCholmodType(B, B_);
     }
 
-    void SpGEMMCpu::addSumMatrix(matrix::Csr* D)
+    void SpGEMMCpu::loadSumMatrix(matrix::Csr* D)
     {
       if (!D_)
       {
@@ -70,7 +70,7 @@ namespace ReSolve
       copyDataToCholmodType(D, D_);
     }
 
-    void SpGEMMCpu::addResultMatrix(matrix::Csr** E_ptr)
+    void SpGEMMCpu::loadResultMatrix(matrix::Csr** E_ptr)
     {
       E_ptr_ = E_ptr;
     }

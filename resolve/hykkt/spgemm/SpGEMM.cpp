@@ -58,27 +58,27 @@ namespace ReSolve
      * @param A[in] - Pointer to CSR matrix
      * @param B[in] - Pointer to CSR matrix
      */
-    void SpGEMM::addProductMatrices(matrix::Csr* A, matrix::Csr* B)
+    void SpGEMM::loadProductMatrices(matrix::Csr* A, matrix::Csr* B)
     {
-      impl_->addProductMatrices(A, B);
+      impl_->loadProductMatrices(A, B);
     }
 
     /**
      * Loads the sum matrix for the operation
      * @param D[in] - Pointer to CSR matrix
      */
-    void SpGEMM::addSumMatrix(matrix::Csr* D)
+    void SpGEMM::loadSumMatrix(matrix::Csr* D)
     {
-      impl_->addSumMatrix(D);
+      impl_->loadSumMatrix(D);
     }
 
     /**
      * Loads the result matrix
      * @param E[in] - Pointer to pointer to CSR matrix
      */
-    void SpGEMM::addResultMatrix(matrix::Csr** E_ptr)
+    void SpGEMM::loadResultMatrix(matrix::Csr** E_ptr)
     {
-      impl_->addResultMatrix(E_ptr);
+      impl_->loadResultMatrix(E_ptr);
     }
 
     /**

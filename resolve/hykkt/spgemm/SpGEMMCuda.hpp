@@ -22,9 +22,9 @@ namespace ReSolve
       SpGEMMCuda(real_type alpha, real_type beta);
       ~SpGEMMCuda();
 
-      void addProductMatrices(matrix::Csr* A, matrix::Csr* B);
-      void addSumMatrix(matrix::Csr* D);
-      void addResultMatrix(matrix::Csr** E_ptr);
+      void loadProductMatrices(matrix::Csr* A, matrix::Csr* B);
+      void loadSumMatrix(matrix::Csr* D);
+      void loadResultMatrix(matrix::Csr** E_ptr);
 
       void compute();
 

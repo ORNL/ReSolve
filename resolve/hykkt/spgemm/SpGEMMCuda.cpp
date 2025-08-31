@@ -29,7 +29,7 @@ namespace ReSolve
       cusparseDestroy(handle_);
     }
 
-    void SpGEMMCuda::addProductMatrices(matrix::Csr* A, matrix::Csr* B)
+    void SpGEMMCuda::loadProductMatrices(matrix::Csr* A, matrix::Csr* B)
     {
       A_descr_ = convertToCusparseType(A);
       B_descr_ = convertToCusparseType(B);
@@ -54,12 +54,12 @@ namespace ReSolve
       }
     }
 
-    void SpGEMMCuda::addSumMatrix(matrix::Csr* D)
+    void SpGEMMCuda::loadSumMatrix(matrix::Csr* D)
     {
       D_ = D;
     }
 
-    void SpGEMMCuda::addResultMatrix(matrix::Csr** E_ptr)
+    void SpGEMMCuda::loadResultMatrix(matrix::Csr** E_ptr)
     {
       E_ptr_ = E_ptr;
     }

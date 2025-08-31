@@ -30,7 +30,7 @@ namespace ReSolve
       mem_.deleteOnDevice(buffer_);
     }
 
-    void SpGEMMHip::addProductMatrices(matrix::Csr* A, matrix::Csr* B)
+    void SpGEMMHip::loadProductMatrices(matrix::Csr* A, matrix::Csr* B)
     {
       if (A_descr_)
       {
@@ -48,7 +48,7 @@ namespace ReSolve
       E_num_cols_ = B->getNumColumns();
     }
 
-    void SpGEMMHip::addSumMatrix(matrix::Csr* D)
+    void SpGEMMHip::loadSumMatrix(matrix::Csr* D)
     {
       if (D_descr_)
       {
@@ -57,7 +57,7 @@ namespace ReSolve
       D_descr_ = convertToRocsparseType(D);
     }
 
-    void SpGEMMHip::addResultMatrix(matrix::Csr** E_ptr)
+    void SpGEMMHip::loadResultMatrix(matrix::Csr** E_ptr)
     {
       if (!E_ptr_)
       {
