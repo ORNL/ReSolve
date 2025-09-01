@@ -159,7 +159,7 @@ namespace ReSolve
           D_row_ptr[i + 1] = 1 + D_row_ptr[i];
         }
         D_row_ptr[n - 1] = D_row_ptr[n - 2];
-        D_row_ptr[n] = D_row_ptr[n - 1];
+        D_row_ptr[n]     = D_row_ptr[n - 1];
 
         matrix::Csr* A = new matrix::Csr(n, n, nnz);
         matrix::Csr* B = new matrix::Csr(n, n, nnz);
@@ -222,14 +222,16 @@ namespace ReSolve
             std::cerr << "Test failed: E[" << i << "][" << i + 1 << "] = " << E->getValues(memory::HOST)[j] << ", expected: " << (i + 2) << "\n";
             status *= false;
           }
-          if (i < n - 1) j++;
+          if (i < n - 1)
+            j++;
 
           if (i < n - 2 && fabs(E->getValues(memory::HOST)[j] - (1.0)) > tol)
           {
             std::cerr << "Test failed: E[" << i << "][" << i + 2 << "] = " << E->getValues(memory::HOST)[j] << ", expected: " << (1.0) << "\n";
             status *= false;
           }
-          if (i < n - 2) j++;
+          if (i < n - 2)
+            j++;
         }
 
         delete[] A_row_ptr;
