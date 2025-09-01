@@ -102,8 +102,8 @@ namespace ReSolve
         real_type*  B_values  = new real_type[nnz];
 
         index_type* D_row_ptr = new index_type[n + 1];
-        index_type* D_col_ind = new index_type[n - 1];
-        real_type*  D_values  = new real_type[n - 1];
+        index_type* D_col_ind = new index_type[n - 2];
+        real_type*  D_values  = new real_type[n - 2];
 
         A_row_ptr[0] = 0;
         A_row_ptr[1] = 1;
@@ -147,22 +147,23 @@ namespace ReSolve
           }
         }
 
-        // D = [0 1    ]
-        //     [  0 1  ]
-        //     [    0 1]
-        //     [  ...  ]
+        // D = [0 0 1    ]
+        //     [  0 0 1  ]
+        //     [    0 0 1]
+        //     [   ...   ]
         D_row_ptr[0] = 0;
-        for (index_type i = 0; i < n - 1; i++)
+        for (index_type i = 0; i < n - 2; i++)
         {
-          D_col_ind[i]     = i + 1;
+          D_col_ind[i]     = i + 2;
           D_values[i]      = 1.0;
           D_row_ptr[i + 1] = 1 + D_row_ptr[i];
         }
+        D_row_ptr[n - 1] = D_row_ptr[n - 2];
         D_row_ptr[n] = D_row_ptr[n - 1];
 
         matrix::Csr* A = new matrix::Csr(n, n, nnz);
         matrix::Csr* B = new matrix::Csr(n, n, nnz);
-        matrix::Csr* D = new matrix::Csr(n, n, n - 1);
+        matrix::Csr* D = new matrix::Csr(n, n, n - 2);
 
         A->copyDataFrom(A_row_ptr, A_col_ind, A_values, memory::HOST, memspace_);
         B->copyDataFrom(B_row_ptr, B_col_ind, B_values, memory::HOST, memspace_);
@@ -187,36 +188,48 @@ namespace ReSolve
           status *= false;
         }
 
-        if (fabs(E->getValues(memory::HOST)[1] - 3.0) > tol)
+        if (fabs(E->getValues(memory::HOST)[1] - 2.0) > tol)
         {
           std::cerr << "Test failed: E[0][1] = " << E->getValues(memory::HOST)[1] << ", expected: 2.0\n";
           status *= false;
         }
 
+        if (fabs(E->getValues(memory::HOST)[2] - 1.0) > tol)
+        {
+          std::cerr << "Test failed: E[0][2] = " << E->getValues(memory::HOST)[2] << ", expected: 1.0\n";
+          status *= false;
+        }
+
+        index_type j = 3;
         for (index_type i = 1; i < n; i++)
         {
-          if (fabs(E->getValues(memory::HOST)[3 * i - 1] - (i + 1)) > tol)
+          if (fabs(E->getValues(memory::HOST)[j] - (i + 1)) > tol)
           {
-            std::cerr << "Test failed: E[" << i << "][" << i - 1 << "] = " << E->getValues(memory::HOST)[3 * i - 1] << ", expected: " << (i + 1) << "\n";
+            std::cerr << "Test failed: E[" << i << "][" << i - 1 << "] = " << E->getValues(memory::HOST)[j] << ", expected: " << (i + 1) << "\n";
             status *= false;
           }
+          j++;
 
-          if (fabs(E->getValues(memory::HOST)[3 * i] - (1 + (i + 1) * (i + 1))) > tol)
+          if (fabs(E->getValues(memory::HOST)[j] - (1 + (i + 1) * (i + 1))) > tol)
           {
-            std::cerr << "Test failed: E[" << i << "][" << i << "] = " << E->getValues(memory::HOST)[3 * i] << ", expected: " << (1 + (i + 1) * (i + 1)) << "\n";
+            std::cerr << "Test failed: E[" << i << "][" << i << "] = " << E->getValues(memory::HOST)[j] << ", expected: " << (1 + (i + 1) * (i + 1)) << "\n";
             status *= false;
           }
+          j++;
 
-          if (i == n - 1)
+          if (i < n - 1 && fabs(E->getValues(memory::HOST)[j] - (i + 2)) > tol)
           {
-            break;
-          }
-
-          if (fabs(E->getValues(memory::HOST)[3 * i + 1] - (i + 3)) > tol)
-          {
-            std::cerr << "Test failed: E[" << i << "][" << i + 1 << "] = " << E->getValues(memory::HOST)[3 * i + 1] << ", expected: " << (i + 3) << "\n";
+            std::cerr << "Test failed: E[" << i << "][" << i + 1 << "] = " << E->getValues(memory::HOST)[j] << ", expected: " << (i + 2) << "\n";
             status *= false;
           }
+          if (i < n - 1) j++;
+
+          if (i < n - 2 && fabs(E->getValues(memory::HOST)[j] - (1.0)) > tol)
+          {
+            std::cerr << "Test failed: E[" << i << "][" << i + 2 << "] = " << E->getValues(memory::HOST)[j] << ", expected: " << (1.0) << "\n";
+            status *= false;
+          }
+          if (i < n - 2) j++;
         }
 
         delete[] A_row_ptr;
