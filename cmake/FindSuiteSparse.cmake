@@ -9,7 +9,12 @@ Author(s):
 - Cameron Rutherford <cameron.rutherford@pnnl.gov>
 
 ]]
-set(SUITESPARSE_MODULES amd colamd klu suitesparseconfig)
+set(SUITESPARSE_MODULES
+  amd
+  colamd
+  klu
+  cholmod
+  suitesparseconfig)
 
 find_library(SUITESPARSE_LIBRARY
   NAMES

@@ -149,7 +149,6 @@ endif()
 if(RESOLVE_USE_KLU)
   add_subdirectory(hykkt)
 endif()
-#list(APPEND ReSolve_Targets_List resolve_hykkt)
 
 # Set installable targets
 install(TARGETS ${ReSolve_Targets_List} EXPORT ReSolveTargets)
