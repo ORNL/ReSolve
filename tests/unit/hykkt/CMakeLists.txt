@@ -21,19 +21,13 @@ target_link_libraries(runHykktCholeskyTests.exe PRIVATE resolve_hykkt_chol resol
 # Install tests
 set(installable_tests runHykktPermutationTests.exe
                       runHykktRuizScalingTests.exe
-<<<<<<< HEAD
                       runHykktCholeskyTests.exe)
-=======
                       runHykktSpGEMMTests.exe)
->>>>>>> a9ce04a (cpu implementation: no test yet)
 
 install(TARGETS ${installable_tests}
         RUNTIME DESTINATION bin/resolve/tests/unit)
 
 add_test(NAME hykkt_perm_test   COMMAND $<TARGET_FILE:runHykktPermutationTests.exe>)
 add_test(NAME hykkt_ruiz_test   COMMAND $<TARGET_FILE:runHykktRuizScalingTests.exe>)
-<<<<<<< HEAD
 add_test(NAME hykkt_chol_test   COMMAND $<TARGET_FILE:runHykktCholeskyTests.exe>)
-=======
 add_test(NAME hykkt_spgemm_test COMMAND $<TARGET_FILE:runHykktSpGEMMTests.exe>)
->>>>>>> a9ce04a (cpu implementation: no test yet)
