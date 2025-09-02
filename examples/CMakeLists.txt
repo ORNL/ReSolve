@@ -30,11 +30,6 @@ if(RESOLVE_USE_KLU)
     target_link_libraries(gpuRefactor.exe PRIVATE ReSolve)
   endif(RESOLVE_USE_GPU)
 
-  if(RESOLVE_USE_HIP) #HIP specific example
-    add_executable(gpuRefactorSame.exe gpuRefactorSame.cpp)
-    target_link_libraries(gpuRefactorSame.exe PRIVATE ReSolve)
-  endif(RESOLVE_USE_HIP)
-
   # Create KLU+CUDA examples
   if(RESOLVE_USE_CUDA)
 

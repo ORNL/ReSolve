@@ -14,7 +14,7 @@
 #include <resolve/vector/Vector.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 
-#include "ExampleHelper.hpp"
+#include "examples/ExampleHelper.hpp"
 
 int main()
 {
@@ -179,12 +179,6 @@ int main()
         L->print(std::cout, 0);
         std::cout << "U factor:\n";
         U->print(std::cout, 0);
-        if (F != nullptr) {
-            std::cout << "F factor:\n";
-            F->print(std::cout, 0);
-        } else {
-            std::cout << "F factor is not available.\n";
-        }
 
         ReSolve::index_type* P = KLU.getPOrdering();
         ReSolve::index_type* Q = KLU.getQOrdering();
@@ -194,8 +188,7 @@ int main()
             std::cout << rhs_before[i] << (i < n - 1 ? ", " : "");
         }
         std::cout << "]" << std::endl;
-        //Rf.setupCsr(A, L, U, P, Q, vec_rhs);
-        Rf.setup(A, L, U, P, Q, vec_rhs);
+        Rf.setupCsr(A, L, U, P, Q, vec_rhs);
         std::cout << "RocSolverRf setup completed\n";
 
         // Test refactorization with the same matrix (in practice, you'd change matrix values)
