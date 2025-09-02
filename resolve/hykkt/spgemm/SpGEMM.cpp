@@ -83,6 +83,7 @@ namespace ReSolve
 
     /**
      * Computes the result of the SpGEMM operation
+     * E = alpha * A * B + beta * D
      */
     void SpGEMM::compute()
     {
