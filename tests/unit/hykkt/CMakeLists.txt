@@ -21,7 +21,7 @@ target_link_libraries(runHykktCholeskyTests.exe PRIVATE resolve_hykkt_chol resol
 # Install tests
 set(installable_tests runHykktPermutationTests.exe
                       runHykktRuizScalingTests.exe
-                      runHykktCholeskyTests.exe)
+                      runHykktCholeskyTests.exe
                       runHykktSpGEMMTests.exe)
 
 install(TARGETS ${installable_tests}
