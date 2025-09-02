@@ -164,10 +164,6 @@ int main()
 
     helper.resetSystem(A, vec_rhs, vec_x);
     helper.printShortSummary();
-    // Extract factors and configure refactorization solver
-    // ReSolve::matrix::Csc* L = (ReSolve::matrix::Csc*) KLU.getLFactor();
-    // ReSolve::matrix::Csc* U = (ReSolve::matrix::Csc*) KLU.getUFactor();
-    // ReSolve::matrix::Csc* F = (ReSolve::matrix::Csc*) KLU.getFFactor();
     ReSolve::matrix::Csr* L = (ReSolve::matrix::Csr*) KLU.getLFactorCsr();
     ReSolve::matrix::Csr* U = (ReSolve::matrix::Csr*) KLU.getUFactorCsr();
     if (L == nullptr || U == nullptr) {
