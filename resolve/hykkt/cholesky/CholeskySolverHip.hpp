@@ -33,6 +33,8 @@ namespace ReSolve
       matrix::Csr* L_;
       index_type*  Q_;
 
+      real_type*   rhs_tmp_;// used during analysis
+ 
       cholmod_sparse* convertToCholmod(matrix::Csr* A);
     };
   } // namespace hykkt

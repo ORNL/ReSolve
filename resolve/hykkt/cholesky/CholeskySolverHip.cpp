@@ -40,7 +40,8 @@ namespace ReSolve
       }
       cholmod_finish(&Common_);
       free(L_);
-      free(Q_);
+      //
+      mem_.deleteOnDevice(Q_);
     }
 
     void CholeskySolverHip::addMatrixInfo(matrix::Csr* A)
@@ -95,10 +96,14 @@ namespace ReSolve
         mem_.allocateArrayOnDevice(&Q_, A_->getNumRows());
         mem_.copyArrayHostToDevice(Q_, static_cast<index_type*>(factorization_->Perm), A_->getNumRows());
 
+        //tmp rhs for analysis
+        mem_.allocateArrayOnDevice(&rhs_tmp_, A_->getNumColumns());
+        mem_.setArrayToConstOnHost(rhs_tmp_, 1.0, A_->getNumColumns());
+        
         // Store analysis in rfinfo_
         rocblas_status status = rocsolver_dcsrrf_analysis(handle_,
                                                           A_->getNumRows(),
-                                                          0,
+                                                          1,
                                                           A_->getNnz(),
                                                           A_->getRowData(memory::DEVICE),
                                                           A_->getColData(memory::DEVICE),
@@ -109,13 +114,15 @@ namespace ReSolve
                                                           L_->getValues(memory::DEVICE),
                                                           nullptr,
                                                           Q_,
-                                                          nullptr,
+                                                          rhs_tmp_,
                                                           A_->getNumRows(),
                                                           rfinfo_);
-        if (status != rocblas_status_success)
-        {
-          out::error() << "Analysis step failed with status: " << status << "\n";
-        }
+	mem_.deleteOnDevice(rhs_tmp_); 
+	rhs_tmp_ = nullptr; 
+	if (status != rocblas_status_success)
+	{
+	  out::error() << "Analysis step failed with status: " << status << "\n";
+	}
       }
       else // re-factorize
       {
