@@ -1,3 +1,8 @@
+/*
+This is a simple example demonstrating the use of ReSolve's direct solvers KLU with RocSolverRf on the same system.
+Previously, this example was flagged as failing in issue #332.
+*/
+
 #include <algorithm>
 #include <iomanip>
 #include <iostream>
