@@ -4,7 +4,7 @@
 # configuration settings.
 spack:
   specs:
-  - resolve@develop%rocmcc@6.3.1~asan~cuda+rocm~ubsan amdgpu_target=gfx90a
+  - resolve@develop%rocmcc@6.4.1~asan~cuda+rocm~ubsan amdgpu_target=gfx90a
   view: false
   concretizer:
     unify: when_possible
@@ -24,7 +24,7 @@ spack:
   packages:
     all:
       compiler:
-      - rocmcc@6.3.1
+      - rocmcc@6.4.1
       providers:
         blas: [openblas]
         mpi: [cray-mpich]
@@ -50,88 +50,88 @@ spack:
     rccl:
       buildable: false
       externals:
-      - spec: rccl@6.3.1
-        prefix: /opt/rocm-6.3.1/
+      - spec: rccl@6.4.1
+        prefix: /opt/rocm-6.4.1/
     rocblas:
       buildable: false
       externals:
-      - spec: rocblas@6.3.1
-        prefix: /opt/rocm-6.3.1/
+      - spec: rocblas@6.4.1
+        prefix: /opt/rocm-6.4.1/
     rocfft:
       buildable: false
       externals:
-      - spec: rocfft@6.3.1
-        prefix: /opt/rocm-6.3.1/
+      - spec: rocfft@6.4.1
+        prefix: /opt/rocm-6.4.1/
     rocm-clang-ocl:
       buildable: false
       externals:
-      - spec: rocm-clang-ocl@6.3.1
-        prefix: /opt/rocm-6.3.1/
+      - spec: rocm-clang-ocl@6.4.1
+        prefix: /opt/rocm-6.4.1/
     rocm-cmake:
       buildable: false
       externals:
-      - spec: rocm-cmake@6.3.1
-        prefix: /opt/rocm-6.3.1/
+      - spec: rocm-cmake@6.4.1
+        prefix: /opt/rocm-6.4.1/
     rocm-dbgapi:
       buildable: false
       externals:
-      - spec: rocm-dbgapi@6.3.1
-        prefix: /opt/rocm-6.3.1/
+      - spec: rocm-dbgapi@6.4.1
+        prefix: /opt/rocm-6.4.1/
     rocm-debug-agent:
       buildable: false
       externals:
-      - spec: rocm-debug-agent@6.3.1
-        prefix: /opt/rocm-6.3.1/
+      - spec: rocm-debug-agent@6.4.1
+        prefix: /opt/rocm-6.4.1/
     rocm-device-libs:
       buildable: false
       externals:
-      - spec: rocm-device-libs@6.3.1
-        prefix: /opt/rocm-6.3.1/
+      - spec: rocm-device-libs@6.4.1
+        prefix: /opt/rocm-6.4.1/
     rocm-gdb:
       buildable: false
       externals:
-      - spec: rocm-gdb@6.3.1
-        prefix: /opt/rocm-6.3.1/
+      - spec: rocm-gdb@6.4.1
+        prefix: /opt/rocm-6.4.1/
     rocm-opencl:
       buildable: false
       externals:
-      - spec: rocm-opencl@6.3.1
-        prefix: /opt/rocm-6.3.1/opencl
+      - spec: rocm-opencl@6.4.1
+        prefix: /opt/rocm-6.4.1/opencl
     rocm-smi-lib:
       buildable: false
       externals:
-      - spec: rocm-smi-lib@6.3.1
-        prefix: /opt/rocm-6.3.1/
+      - spec: rocm-smi-lib@6.4.1
+        prefix: /opt/rocm-6.4.1/
     hip:
       buildable: false
       externals:
-      - spec: hip@6.3.1
-        prefix: /opt/rocm-6.3.1
+      - spec: hip@6.4.1
+        prefix: /opt/rocm-6.4.1
     llvm-amdgpu:
       buildable: false
       externals:
-      - spec: llvm-amdgpu@6.3.1
-        prefix: /opt/rocm-6.3.1/llvm
+      - spec: llvm-amdgpu@6.4.1
+        prefix: /opt/rocm-6.4.1/llvm
     hsakmt-roct:
       buildable: false
       externals:
-      - spec: hsakmt-roct@6.3.1
-        prefix: /opt/rocm-6.3.1/
+      - spec: hsakmt-roct@6.4.1
+        prefix: /opt/rocm-6.4.1/
     hsa-rocr-dev:
       buildable: false
       externals:
-      - spec: hsa-rocr-dev@6.3.1
-        prefix: /opt/rocm-6.3.1/
+      - spec: hsa-rocr-dev@6.4.1
+        prefix: /opt/rocm-6.4.1/
     rocsolver:
       buildable: false
       externals:
-      - spec: rocsolver@6.3.1
-        prefix: /opt/rocm-6.3.1
+      - spec: rocsolver@6.4.1
+        prefix: /opt/rocm-6.4.1
     rocsparse:
       buildable: false
       externals:
-      - spec: rocsparse@6.3.1
-        prefix: /opt/rocm-6.3.1
+      - spec: rocsparse@6.4.1
+        prefix: /opt/rocm-6.4.1
     autoconf:
       externals:
       - spec: autoconf@2.72
@@ -157,12 +157,12 @@ spack:
       buildable: false
   compilers:
     - compiler:
-        spec: rocmcc@6.3.1
+        spec: rocmcc@6.4.1
         paths:
-          cc: /opt/rocm-6.3.1/llvm/bin/amdclang
-          cxx: /opt/rocm-6.3.1/llvm/bin/amdclang++
-          f77: /opt/rocm-6.3.1/llvm/bin/amdflang
-          fc: /opt/rocm-6.3.1/llvm/bin/amdflang
+          cc: /opt/rocm-6.4.1/llvm/bin/amdclang
+          cxx: /opt/rocm-6.4.1/llvm/bin/amdclang++
+          f77: /opt/rocm-6.4.1/llvm/bin/amdflang
+          fc: /opt/rocm-6.4.1/llvm/bin/amdflang
         flags: {}
         operating_system: sles15
         target: x86_64
