@@ -33,13 +33,6 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
   for (int size : {3, 10, 100, 1000})
   {
     result += test.randomized(size);
-    workspace.resetLinAlgWorkspace();
-    handler.setValuesChanged(true, memspace);
-  }
-
-  for (int size : {3, 10, 100, 1000})
-  {
-    result += test.randomized(size);
     handler.setValuesChanged(true, memspace);
     workspace.resetLinAlgWorkspace();
   }
