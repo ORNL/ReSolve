@@ -116,6 +116,11 @@ namespace ReSolve
             memory::HOST,
             memspace_);
 
+        if (memspace_ == memory::DEVICE)
+        {
+          A->syncData(memory::HOST);
+        }
+
         ReSolve::hykkt::CholeskySolver solver(memspace_);
 
         // Add A to the solver, symbolic analysis, and numerical factorization
@@ -182,6 +187,11 @@ namespace ReSolve
         matrix::Csr* A = new matrix::Csr((index_type) A_chol->nrow, (index_type) A_chol->ncol, (index_type) A_chol->nzmax);
         A->copyDataFrom(
             static_cast<int*>(A_chol->p), static_cast<int*>(A_chol->i), static_cast<double*>(A_chol->x), memory::HOST, memspace_);
+
+        if (memspace_ == memory::DEVICE)
+        {
+          A->syncData(memory::HOST);
+        }
 
         ReSolve::hykkt::CholeskySolver solver(memspace_);
         for (index_type i = 0; i < trials; ++i)

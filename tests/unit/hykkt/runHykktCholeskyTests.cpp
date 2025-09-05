@@ -29,6 +29,8 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
   ReSolve::tests::HykktCholeskyTests test(memspace, handler);
 
   result += test.minimalCorrectness();
+  handler.setValuesChanged(true, memspace);
+  workspace.resetLinAlgWorkspace(); // reset is necessary due to different sparsity.
 
   for (int size : {3, 10, 100, 1000})
   {
@@ -52,7 +54,7 @@ int main(int, char**)
 #endif
 
 #ifdef RESOLVE_USE_HIP
-  // runTests<ReSolve::LinAlgWorkspaceHIP>("HIP", ReSolve::memory::DEVICE, result);
+  runTests<ReSolve::LinAlgWorkspaceHIP>("HIP", ReSolve::memory::DEVICE, result);
 #endif
 
   return result.summary();
