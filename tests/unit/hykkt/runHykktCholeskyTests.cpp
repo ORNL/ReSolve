@@ -54,7 +54,7 @@ int main(int, char**)
 #endif
 
 #ifdef RESOLVE_USE_HIP
-  // runTests<ReSolve::LinAlgWorkspaceHIP>("HIP", ReSolve::memory::DEVICE, result);
+  runTests<ReSolve::LinAlgWorkspaceHIP>("HIP", ReSolve::memory::DEVICE, result);
 #endif
 
   return result.summary();
