@@ -103,6 +103,9 @@ int main(int argc, char* argv[])
 
     vector_type* vec_rhs = nullptr; // Device vector for RHS
     vector_type* vec_x   = nullptr;   // Device vector for solution
+    vector_type* vec_residual = nullptr; // Device vector for residual
+    vector_type* vec_error = nullptr;  // Device vector for error
+
     // Removed vec_r, as ExampleHelper will handle the residual vector internally
 
     ReSolve::GramSchmidt* GS = nullptr; // Gram-Schmidt orthogonalization (for FGMRES)
@@ -195,11 +198,18 @@ int main(int argc, char* argv[])
 
             vec_rhs = new vector_type(A->getNumRows());
             vec_x   = new vector_type(A->getNumRows());
+	    vec_residual = new vector_type(A->getNumRows());
+	    vec_error = new vector_type(A->getNumRows());
 
             vec_x->allocate(ReSolve::memory::HOST);
             vec_x->allocate(ReSolve::memory::DEVICE);
             vec_x->setToZero(ReSolve::memory::HOST);
             vec_x->setToZero(ReSolve::memory::DEVICE);
+
+	    vec_error->allocate(ReSolve::memory::HOST);
+	    vec_error->allocate(ReSolve::memory::DEVICE);
+	    vec_error->setToZero(ReSolve::memory::HOST);
+	    vec_error->setToZero(ReSolve::memory::DEVICE);
         }
         else // Subsequent systems: update existing structures
         {
@@ -225,7 +235,7 @@ int main(int argc, char* argv[])
         std::cout << "CSR matrix loaded. Expanded NNZ: " << A->getNnz() << std::endl;
 
         // --- Solver Logic ---
-        if (i < 2) // For the first two systems (i=0, i=1), perform full KLU factorization
+        if (i < 1) // For the first system (i=1), perform full KLU factorization
         {
             std::cout << "DEBUG: System " << i << ": Performing initial KLU factorization and solve." << std::endl;
             KLU->setup(A);
@@ -259,19 +269,39 @@ int main(int argc, char* argv[])
                 Rf->setup(A, L_csc_klu, U_csc_klu, P_klu, Q_klu);
                 Rf->refactorize(); // Initial refactorize for Rf
             }
-            FGMRES->setRestart(1000);
+
+	    FGMRES->setRestart(1000);
             FGMRES->setMaxit(2000);
             FGMRES->setup(A);
             FGMRES->setupPreconditioner("LU", Rf); // Set Rf as preconditioner for FGMRES
 
+	    // Compute the residual: r = b - Ax
+            vec_residual->copyDataFrom(vec_rhs, ReSolve::memory::DEVICE, ReSolve::memory::DEVICE);
+            matrix_handler->matvec(A, vec_x, vec_residual, &ReSolve::constants::MINUS_ONE, &ReSolve::constants::ONE, ReSolve::memory::DEVICE);
+
+	    std::cout << "DEBUG: Solving error equation with FGMRES." << std::endl;
+
             // Perform FGMRES solve after initial KLU solve
-            FGMRES->solve(vec_rhs, vec_x);
+            FGMRES->solve(vec_residual, vec_error);
+	    std::cout << "FGMRES error estimation: " << sqrt(vector_handler->dot(vec_error, vec_error, ReSolve::memory::DEVICE)) << std::endl;
+
             // Print FGMRES summary using the helper function
             helper->printIrSummary(FGMRES);
             std::cout << "FGMRES Effective Stability: " << FGMRES->getEffectiveStability() << std::endl;
 
+	    // Update the solution: x = x + e
+	    std::cout << "DEBUG: Updating solution vector." << std::endl;
+	    vector_handler->axpy(&ReSolve::constants::ONE, vec_error, vec_x, ReSolve::memory::DEVICE);
+
+	    // Final residual calculation
+	    helper->resetSystem(A, vec_rhs, vec_x);
+	    std::cout << "DEBUG: Relative residual after error update: " << helper->getNormRelativeResidual() << std::endl;
+
+	    // Setting vec_error back to zero for future calculations
+	    vec_error->setToZero(ReSolve::memory::HOST);
+	    vec_error->setToZero(ReSolve::memory::DEVICE);
         }
-        else // if (i >= 1) -- Use CuSolverRf for refactorization, then FGMRES, with KLU redo logic
+        else // if (i > 1) -- Use CuSolverRf for refactorization, then FGMRES, with KLU redo logic
         {
             std::cout << "DEBUG: System " << i << ": Using CuSolverRf refactorization and FGMRES." << std::endl;
             matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
@@ -322,12 +352,32 @@ int main(int argc, char* argv[])
             helper->resetSystem(A, vec_rhs, vec_x);
             helper->printShortSummary();
 
-            // Now, regardless of whether KLU was redone or not, run FGMRES for refinement
+            // Compute the residual: r = b - Ax
+            vec_residual->copyDataFrom(vec_rhs, ReSolve::memory::DEVICE, ReSolve::memory::DEVICE);
+            matrix_handler->matvec(A, vec_x, vec_residual, &ReSolve::constants::MINUS_ONE, &ReSolve::constants::ONE, ReSolve::memory::DEVICE);
+
+            std::cout << "DEBUG: Solving error equation with FGMRES." << std::endl;
+
             FGMRES->resetMatrix(A); // Reset FGMRES with current matrix A
-            FGMRES->solve(vec_rhs, vec_x); // Refine solution with FGMRES
+            FGMRES->solve(vec_residual, vec_error); // Refine solution with FGMRES
+            std::cout << "FGMRES norm of error: " << sqrt(vector_handler->dot(vec_error, vec_error, ReSolve::memory::DEVICE)) << std::endl;
+
             // Print FGMRES summary using the helper function
             helper->printIrSummary(FGMRES);
             std::cout << "FGMRES Effective Stability: " << FGMRES->getEffectiveStability() << std::endl;
+
+	    // Update the solution: x = x + e
+            std::cout << "DEBUG: Updating solution vector." << std::endl;
+            vector_handler->axpy(&ReSolve::constants::ONE, vec_error, vec_x, ReSolve::memory::DEVICE);
+
+	    // Final residual calculation
+            helper->resetSystem(A, vec_rhs, vec_x);
+            std::cout << "DEBUG: Relative residual after error update: " << helper->getNormRelativeResidual() << std::endl;
+
+	    // Setting vec_error to zero to get Relative residual norm
+	    vec_error->setToZero(ReSolve::memory::HOST);
+            vec_error->setToZero(ReSolve::memory::DEVICE);
+
         }
     } // End of for loop
 

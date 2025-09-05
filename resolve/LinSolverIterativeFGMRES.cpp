@@ -19,6 +19,7 @@
 #include <resolve/random/SketchingHandler.hpp>
 #include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/vector/Vector.hpp>
+#include <resolve/ExampleHelper.hpp>
 
 namespace ReSolve
 {
@@ -44,7 +45,7 @@ namespace ReSolve
                                                      GramSchmidt*   gs)
   {
     // Base class settings here (to be removed when solver parameter settings are implemented)
-    tol_       = tol;
+    tol_       = 1e-14;
     maxit_     = maxit;
     restart_   = restart;
     conv_cond_ = conv_cond;
@@ -216,7 +217,7 @@ int LinSolverIterativeFGMRES::solve(vector_type* rhs, vector_type* x)
       // --- Stability Calculation ---
       // We need to compute ||v_i - A*(LU)^{-1}v_i||_2
       // 1. Copy the current Arnoldi vector v_i
-      vector_handler_->copy(&vec_v, &vec_v_copy, memspace_);
+      vec_v_copy.copyDataFrom(vec_V_, memspace_, memspace_);
 
       // 2. Compute V_{i+1}=A*Z_i. The result is stored in vec_v
       vec_v.setData(vec_V_->getData(i + 1, memspace_), memspace_);
@@ -342,7 +343,7 @@ int LinSolverIterativeFGMRES::solve(vector_type* rhs, vector_type* x)
   } // outer while
 
   // Free temporary vectors
-  vec_v_copy.free(memspace_);
+  // vec_v_copy.free(memspace_);
   return 0;
 }
 
@@ -367,6 +368,15 @@ int LinSolverIterativeFGMRES::solve(vector_type* rhs, vector_type* x)
     A_ = new_matrix;
     matrix_handler_->setValuesChanged(true, memspace_);
     return 0;
+  }
+
+  /**
+  * @brief Returns the computed effective stability of the preconditioner.
+  * @return real_type - The effective stability value.
+  */
+  real_type LinSolverIterativeFGMRES::getEffectiveStability() const
+  {
+      return effectiveStability_;
   }
 
   /**

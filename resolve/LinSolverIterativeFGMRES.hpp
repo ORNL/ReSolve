@@ -86,7 +86,7 @@ namespace ReSolve
     index_type restart_{10};      ///< GMRES restart
     index_type conv_cond_{0};     ///< GMRES convergence condition
     bool       flexible_{true};   ///< If using flexible GMRES (FGMRES) algorithm
-    real_type  effectiveStability_{0.0}; ///< Max norm of the preconditioner residual
+    real_type effectiveStability_; ///< Max norm of the preconditioner residual
 
   private:
     int  allocateSolverData();

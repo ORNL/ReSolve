@@ -127,6 +127,22 @@ namespace ReSolve
       }
 
       /**
+        * @brief Copies data from a source vector to a destination vector.
+        *
+        * This function is a convenience wrapper around the VectorHandler's
+        * copyData method, simplifying the call within the ExampleHelper class.
+        * It performs a deep copy of the vector data.
+        *
+        * @param[in]  src - The source vector to copy from.
+        * @param[out] dest - The destination vector to copy to.
+        */
+       void copyData(ReSolve::vector::Vector* src, ReSolve::vector::Vector* dest)
+       {
+	 // The Vector class has a copyDataTo method, so we use that directly.
+         dest->copyDataFrom(src, memspace_, memspace_);
+       }
+
+      /**
        * @brief Set the new linear system together with its computed solution
        * and compute solution error and residual norms.
        *
