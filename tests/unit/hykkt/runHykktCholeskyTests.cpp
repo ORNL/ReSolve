@@ -29,6 +29,8 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
   ReSolve::tests::HykktCholeskyTests test(memspace, handler);
 
   result += test.minimalCorrectness();
+  handler.setValuesChanged(true, memspace);
+  workspace.resetLinAlgWorkspace();
 
   for (int size : {3, 10, 100, 1000})
   {
