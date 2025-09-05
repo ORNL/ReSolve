@@ -30,7 +30,7 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
 
   result += test.minimalCorrectness();
   handler.setValuesChanged(true, memspace);
-  workspace.resetLinAlgWorkspace();
+  workspace.resetLinAlgWorkspace(); //reset is necessary due to different sparsity.
 
   for (int size : {3, 10, 100, 1000})
   {
