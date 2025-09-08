@@ -5,7 +5,6 @@
 #include <resolve/LinSolverDirectCuSolverRf.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
 #include <resolve/matrix/Coo.hpp>
-#include <resolve/matrix/Csc.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/matrix/io.hpp>
@@ -55,8 +54,8 @@ int main(int argc, char* argv[])
   real_type b_nrm   = 0.0;
 
   // We need them. They hold a POINTER. Don't delete them here. KLU deletes them.
-  ReSolve::matrix::Csc* L_csc;
-  ReSolve::matrix::Csc* U_csc;
+  ReSolve::matrix::Csr* L;
+  ReSolve::matrix::Csr* U;
   index_type*           P;
   index_type*           Q;
 
@@ -143,21 +142,15 @@ int main(int argc, char* argv[])
       std::cout << "KLU solve status: " << status << std::endl;
       if (i == 1)
       {
-        L_csc                   = (ReSolve::matrix::Csc*) KLU->getLFactor();
-        U_csc                   = (ReSolve::matrix::Csc*) KLU->getUFactor();
-        ReSolve::matrix::Csr* L = new ReSolve::matrix::Csr(L_csc->getNumRows(), L_csc->getNumColumns(), L_csc->getNnz());
-        ReSolve::matrix::Csr* U = new ReSolve::matrix::Csr(U_csc->getNumRows(), U_csc->getNumColumns(), U_csc->getNnz());
-        L_csc->syncData(ReSolve::memory::DEVICE);
-        U_csc->syncData(ReSolve::memory::DEVICE);
-        matrix_handler->csc2csr(L_csc, L, ReSolve::memory::DEVICE);
-        matrix_handler->csc2csr(U_csc, U, ReSolve::memory::DEVICE);
+        L = (ReSolve::matrix::Csr*) KLU->getLFactorCsr();
+        U = (ReSolve::matrix::Csr*) KLU->getUFactorCsr();
         if (L == nullptr)
         {
           std::cout << "ERROR\n";
         }
         P = KLU->getPOrdering();
         Q = KLU->getQOrdering();
-        Rf->setup(A, L, U, P, Q);
+        Rf->setupCsr(A, L, U, P, Q);
         Rf->refactorize();
         delete L;
         delete U;
@@ -211,18 +204,13 @@ int main(int argc, char* argv[])
                 << std::scientific << std::setprecision(16)
                 << res_nrm / b_nrm << "\n";
 
-      L_csc = (ReSolve::matrix::Csc*) KLU->getLFactor();
-      U_csc = (ReSolve::matrix::Csc*) KLU->getUFactor();
-
-      ReSolve::matrix::Csr* L = new ReSolve::matrix::Csr(L_csc->getNumRows(), L_csc->getNumColumns(), L_csc->getNnz());
-      ReSolve::matrix::Csr* U = new ReSolve::matrix::Csr(U_csc->getNumRows(), U_csc->getNumColumns(), U_csc->getNnz());
-      matrix_handler->csc2csr(L_csc, L, ReSolve::memory::DEVICE);
-      matrix_handler->csc2csr(U_csc, U, ReSolve::memory::DEVICE);
+      L = (ReSolve::matrix::Csr*) KLU->getLFactorCsr();
+      U = (ReSolve::matrix::Csr*) KLU->getUFactorCsr();
 
       P = KLU->getPOrdering();
       Q = KLU->getQOrdering();
 
-      Rf->setup(A, L, U, P, Q);
+      Rf->setupCsr(A, L, U, P, Q);
       Rf->refactorize();
 
       delete L;
