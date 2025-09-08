@@ -2,12 +2,9 @@
 #include <iostream>
 #include <string>
 
-#include <resolve/GramSchmidt.hpp>
 #include <resolve/LinSolverDirectCuSolverRf.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
-#include <resolve/LinSolverIterativeFGMRES.hpp>
 #include <resolve/matrix/Coo.hpp>
-#include <resolve/matrix/Csc.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/matrix/io.hpp>
@@ -50,18 +47,33 @@ int main(int argc, char* argv[])
   vector_type* vec_x   = nullptr;
   vector_type* vec_r   = nullptr;
 
-  ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::CGS2);
+  ReSolve::LinSolverDirectKLU*        KLU = new ReSolve::LinSolverDirectKLU;
+  ReSolve::LinSolverDirectCuSolverRf* Rf  = new ReSolve::LinSolverDirectCuSolverRf();
 
-  ReSolve::LinSolverDirectKLU*        KLU    = new ReSolve::LinSolverDirectKLU;
-  ReSolve::LinSolverDirectCuSolverRf* Rf     = new ReSolve::LinSolverDirectCuSolverRf;
-  ReSolve::LinSolverIterativeFGMRES*  FGMRES = new ReSolve::LinSolverIterativeFGMRES(matrix_handler, vector_handler, GS);
+  real_type res_nrm = 0.0;
+  real_type b_nrm   = 0.0;
 
+  // We need them. They hold a POINTER. Don't delete them here. KLU deletes them.
+  ReSolve::matrix::Csr* L = nullptr;
+  ReSolve::matrix::Csr* U = nullptr;
+  index_type*           P = nullptr;
+  index_type*           Q = nullptr;
+
+  int status          = 0;
+  int status_refactor = 0;
+  
   for (int i = 0; i < numSystems; ++i)
   {
-    index_type j = 4 + i * 2;
-    fileId       = argv[j];
-    rhsId        = argv[j + 1];
-
+    if(i<10)
+    {
+      fileId = "0" + std::to_string(i);
+      rhsId  = "0" + std::to_string(i);
+    }
+    else
+    {
+      fileId = std::to_string(i);
+      rhsId  = std::to_string(i);
+    }
     matrixFileNameFull = "";
     rhsFileNameFull    = "";
 
@@ -91,14 +103,13 @@ int main(int argc, char* argv[])
     bool is_expand_symmetric = true;
     if (i == 0)
     {
-      A       = ReSolve::io::createCsrFromFile(mat_file, is_expand_symmetric);
+      A = ReSolve::io::createCsrFromFile(mat_file, is_expand_symmetric);
+
       rhs     = ReSolve::io::createArrayFromFile(rhs_file);
       x       = new real_type[A->getNumRows()];
       vec_rhs = new vector_type(A->getNumRows());
       vec_x   = new vector_type(A->getNumRows());
-      vec_x->allocate(ReSolve::memory::HOST); // for KLU
-      vec_x->allocate(ReSolve::memory::DEVICE);
-      vec_r = new vector_type(A->getNumRows());
+      vec_r   = new vector_type(A->getNumRows());
     }
     else
     {
@@ -119,123 +130,166 @@ int main(int argc, char* argv[])
     if (i < 2)
     {
       vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
-      vec_rhs->setDataUpdated(ReSolve::memory::HOST);
     }
     else
     {
-      A->syncData(ReSolve::memory::DEVICE);
       vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
     }
     std::cout << "CSR matrix loaded. Expanded NNZ: " << A->getNnz() << std::endl;
 
     // Now call direct solver
-    int       status = 0;
-    real_type norm_b;
     if (i < 2)
     {
       KLU->setup(A);
-      matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
       status = KLU->analyze();
       std::cout << "KLU analysis status: " << status << std::endl;
       status = KLU->factorize();
       std::cout << "KLU factorization status: " << status << std::endl;
       status = KLU->solve(vec_rhs, vec_x);
       std::cout << "KLU solve status: " << status << std::endl;
-      vec_r->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-      norm_b = vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE);
-      norm_b = sqrt(norm_b);
-      matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
-      matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUS_ONE, ReSolve::memory::DEVICE);
-      std::cout << "\t 2-Norm of the residual : "
-                << std::scientific << std::setprecision(16)
-                << sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE)) / norm_b << "\n";
       if (i == 1)
       {
-        ReSolve::matrix::Csc* L_csc = (ReSolve::matrix::Csc*) KLU->getLFactor();
-        ReSolve::matrix::Csc* U_csc = (ReSolve::matrix::Csc*) KLU->getUFactor();
-        ReSolve::matrix::Csr* L     = new ReSolve::matrix::Csr(L_csc->getNumRows(), L_csc->getNumColumns(), L_csc->getNnz());
-        ReSolve::matrix::Csr* U     = new ReSolve::matrix::Csr(U_csc->getNumRows(), U_csc->getNumColumns(), U_csc->getNnz());
-        L_csc->syncData(ReSolve::memory::DEVICE);
-        U_csc->syncData(ReSolve::memory::DEVICE);
-
-        matrix_handler->csc2csr(L_csc, L, ReSolve::memory::DEVICE);
-        matrix_handler->csc2csr(U_csc, U, ReSolve::memory::DEVICE);
+        L = (ReSolve::matrix::Csr*) KLU->getLFactorCsr();
+        U = (ReSolve::matrix::Csr*) KLU->getUFactorCsr();
         if (L == nullptr)
         {
-          std::cout << "ERROR\n";
+          std::cout << "ERROR: L factor is null\n";
+          continue; // Skip this iteration
         }
-        index_type* P = KLU->getPOrdering();
-        index_type* Q = KLU->getQOrdering();
-        Rf->setup(A, L, U, P, Q);
-        std::cout << "about to set FGMRES" << std::endl;
-        FGMRES->setRestart(1000);
-        FGMRES->setMaxit(2000);
-        FGMRES->setup(A);
+        if (U == nullptr)
+        {
+          std::cout << "ERROR: U factor is null\n";
+          continue; // Skip this iteration
+        }
+        P = KLU->getPOrdering();
+        Q = KLU->getQOrdering();
+        Rf->setupCsr(A, L, U, P, Q);
+        status_refactor = Rf->refactorize();
+        std::cout << "Initial Rf refactorization status: " << status_refactor << std::endl;
+        
+        // Don't delete L and U here - they are managed by KLU
+        L = nullptr;
+        U = nullptr;
       }
     }
     else
     {
-      // status =  KLU->refactorize();
-      std::cout << "Using CUSOLVER RF" << std::endl;
-      if ((i % 2 == 0))
+      std::cout << "Using cusolver rf" << std::endl;
+      status_refactor = Rf->refactorize();
+      std::cout << "cusolver rf refactorization status: " << status_refactor << std::endl;
+      status = Rf->solve(vec_rhs, vec_x);
+      std::cout << "cusolver rf solve status: " << status << std::endl;
+    }
+    
+    // Make sure vec_r is properly initialized before using it
+    vec_r->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+
+    matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
+
+    matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUS_ONE, ReSolve::memory::DEVICE);
+    res_nrm = sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE));
+    b_nrm   = sqrt(vector_handler->dot(vec_rhs, vec_rhs, ReSolve::memory::DEVICE));
+    std::cout << "\t2-Norm of the residual: "
+              << std::scientific << std::setprecision(16)
+              << res_nrm / b_nrm << "\n";
+              
+    if (((res_nrm / b_nrm > 1e-7) && (!std::isnan(res_nrm))) || (status_refactor != 0))
+    {
+      if ((res_nrm / b_nrm > 1e-7))
       {
-        status = Rf->refactorize();
-        std::cout << "CUSOLVER RF, using REAL refactorization, refactorization status: "
-                  << status << std::endl;
-        vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-        status = Rf->solve(vec_rhs, vec_x);
-        FGMRES->setupPreconditioner("LU", Rf);
+        std::cout << "\n \t !!! ALERT !!! Residual norm is too large; redoing KLU symbolic and numeric factorization. !!! ALERT !!! \n \n";
       }
-      // if (i%2!=0)  vec_x->setToZero(ReSolve::memory::DEVICE);
-      real_type norm_x = vector_handler->dot(vec_x, vec_x, ReSolve::memory::DEVICE);
-      std::cout << "Norm of x (before solve): "
-                << std::scientific << std::setprecision(16)
-                << sqrt(norm_x) << "\n";
-      std::cout << "CUSOLVER RF solve status: " << status << std::endl;
+      else
+      {
+        std::cout << "\n \t !!! ALERT !!! cuSolverRf crashed; redoing KLU symbolic and numeric factorization. !!! ALERT !!! \n \n";
+      }
+      KLU->setup(A);
+      status = KLU->analyze();
+      std::cout << "KLU analysis status: " << status << std::endl;
+      status = KLU->factorize();
+      std::cout << "KLU factorization status: " << status << std::endl;
+      status = KLU->solve(vec_rhs, vec_x);
+      std::cout << "KLU solve status: " << status << std::endl;
 
       vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
       vec_r->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-      norm_b = vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE);
-      norm_b = sqrt(norm_b);
 
       matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
-      FGMRES->resetMatrix(A);
 
       matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUS_ONE, ReSolve::memory::DEVICE);
+      res_nrm = sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE));
 
-      std::cout << "\t 2-Norm of the residual (before IR): "
+      std::cout << "\t New residual norm: "
                 << std::scientific << std::setprecision(16)
-                << sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE)) / norm_b << "\n";
-      std::cout << "\t 2-Norm of the RIGHT HAND SIDE: "
-                << std::scientific << std::setprecision(16)
-                << norm_b << "\n";
+                << res_nrm / b_nrm << "\n";
 
-      vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-      FGMRES->solve(vec_rhs, vec_x);
+      L = (ReSolve::matrix::Csr*) KLU->getLFactorCsr();
+      U = (ReSolve::matrix::Csr*) KLU->getUFactorCsr();
 
-      std::cout << "FGMRES: init nrm: "
-                << std::scientific << std::setprecision(16)
-                << FGMRES->getInitResidualNorm() / norm_b
-                << " final nrm: "
-                << FGMRES->getFinalResidualNorm() / norm_b
-                << " iter: " << FGMRES->getNumIter() << "\n";
-      norm_x = vector_handler->dot(vec_x, vec_x, ReSolve::memory::DEVICE);
-      std::cout << "Norm of x (after IR): "
-                << std::scientific << std::setprecision(16)
-                << sqrt(norm_x) << "\n";
+      if (L != nullptr && U != nullptr) {
+        P = KLU->getPOrdering();
+        Q = KLU->getQOrdering();
+
+        Rf->setupCsr(A, L, U, P, Q);
+        status_refactor = Rf->refactorize();
+        std::cout << "Rf refactorization after KLU redo status: " << status_refactor << std::endl;
+      }
+      
+      // Don't delete L and U - they are managed by KLU
+      L = nullptr;
+      U = nullptr;
     }
+  } // for (int i = 0; i < numSystems; ++i)
+
+  if (vec_r != nullptr) {
+    delete vec_r;
+    vec_r = nullptr;
   }
-
-  delete A;
-  delete KLU;
-  delete Rf;
-  delete[] x;
-  delete[] rhs;
-  delete vec_r;
-  delete vec_x;
-  delete workspace_CUDA;
-  delete matrix_handler;
-  delete vector_handler;
-
+  if (vec_x != nullptr) {
+    delete vec_x;
+    vec_x = nullptr;
+  }
+  if (vec_rhs != nullptr) {
+    delete vec_rhs;
+    vec_rhs = nullptr;
+  }
+  
+  if (x != nullptr) {
+    delete[] x;
+    x = nullptr;
+  }
+  if (rhs != nullptr) {
+    delete[] rhs;
+    rhs = nullptr;
+  }
+  
+  if (Rf != nullptr) {
+    delete Rf;
+    Rf = nullptr;
+  }
+  if (KLU != nullptr) {
+    delete KLU;
+    KLU = nullptr;
+  }
+  
+  if (A != nullptr) {
+    delete A;
+    A = nullptr;
+  }
+  
+  if (matrix_handler != nullptr) {
+    delete matrix_handler;
+    matrix_handler = nullptr;
+  }
+  if (vector_handler != nullptr) {
+    delete vector_handler;
+    vector_handler = nullptr;
+  }
+  
+  if (workspace_CUDA != nullptr) {
+    delete workspace_CUDA;
+    workspace_CUDA = nullptr;
+  }
+  
   return 0;
 }
