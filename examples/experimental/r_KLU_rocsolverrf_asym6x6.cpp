@@ -48,7 +48,7 @@ int main()
   std::cout << "Matrix size: " << n << "x" << n << "\n";
   std::cout << "Number of non-zeros: " << nnz << "\n";
 
-  // Convert CSC to CSR
+  // Convert CSC to CSR.
   std::vector<int>    csr_row_ptr(static_cast<size_t>(n + 1), 0);
   std::vector<int>    csr_col_ind(static_cast<size_t>(nnz));
   std::vector<double> csr_values(static_cast<size_t>(nnz));
