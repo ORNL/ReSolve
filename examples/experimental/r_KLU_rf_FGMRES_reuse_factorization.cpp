@@ -58,7 +58,7 @@ int main(int argc, char* argv[])
 
   for (int i = 0; i < numSystems; ++i)
   {
-    if(i<10)
+    if (i < 10)
     {
       fileId = "0" + std::to_string(i);
       rhsId  = "0" + std::to_string(i);
