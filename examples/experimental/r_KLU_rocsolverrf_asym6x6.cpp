@@ -53,7 +53,7 @@ int main()
   std::vector<int>    csr_col_ind(static_cast<size_t>(nnz));
   std::vector<double> csr_values(static_cast<size_t>(nnz));
 
-  // Count entries per row
+  // Count entries per row.
   for (size_t i = 0; i < static_cast<size_t>(nnz); ++i)
   {
     csr_row_ptr[static_cast<size_t>(csc_row_ind[i] + 1)]++;
