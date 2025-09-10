@@ -41,39 +41,39 @@ int main()
       -0.835721417925707,
       -10.0};
   using namespace ReSolve::examples;
-  // Convert CSC to CSR manually for this example
-  int n   = 6;                 // 6x6 matrix
-  int nnz = csc_values.size(); // 10 non-zeros
+  // Convert CSC to CSR manually for this example.
+  int n   = 6;                                   // 6x6 matrix
+  int nnz = static_cast<int>(csc_values.size()); // 10 non-zeros
 
   std::cout << "Matrix size: " << n << "x" << n << "\n";
   std::cout << "Number of non-zeros: " << nnz << "\n";
 
-  // Convert CSC to CSR
-  std::vector<int>    csr_row_ptr(n + 1, 0);
-  std::vector<int>    csr_col_ind(nnz);
-  std::vector<double> csr_values(nnz);
+  // Convert CSC to CSR.
+  std::vector<int>    csr_row_ptr(static_cast<size_t>(n + 1), 0);
+  std::vector<int>    csr_col_ind(static_cast<size_t>(nnz));
+  std::vector<double> csr_values(static_cast<size_t>(nnz));
 
-  // Count entries per row
-  for (int i = 0; i < nnz; ++i)
+  // Count entries per row.
+  for (size_t i = 0; i < static_cast<size_t>(nnz); ++i)
   {
-    csr_row_ptr[csc_row_ind[i] + 1]++;
+    csr_row_ptr[static_cast<size_t>(csc_row_ind[i] + 1)]++;
   }
 
-  // Convert counts to pointers
-  for (int i = 1; i <= n; ++i)
+  // Convert counts to pointers.
+  for (size_t i = 1; i <= static_cast<size_t>(n); ++i)
   {
     csr_row_ptr[i] += csr_row_ptr[i - 1];
   }
 
-  // Fill CSR arrays
+  // Fill CSR arrays.
   std::vector<int> temp_row_ptr = csr_row_ptr;
-  for (int col = 0; col < n; ++col)
+  for (size_t col = 0; col < static_cast<size_t>(n); ++col)
   {
-    for (int idx = csc_col_ptr[col]; idx < csc_col_ptr[col + 1]; ++idx)
+    for (size_t idx = static_cast<size_t>(csc_col_ptr[col]); idx < static_cast<size_t>(csc_col_ptr[col + 1]); ++idx)
     {
-      int row          = csc_row_ind[idx];
-      int pos          = temp_row_ptr[row]++;
-      csr_col_ind[pos] = col;
+      size_t row       = static_cast<size_t>(csc_row_ind[idx]);
+      size_t pos       = static_cast<size_t>(temp_row_ptr[row]++);
+      csr_col_ind[pos] = static_cast<int>(col);
       csr_values[pos]  = csc_values[idx];
     }
   }
