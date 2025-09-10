@@ -42,7 +42,7 @@ int main()
       -10.0};
   using namespace ReSolve::examples;
   // Convert CSC to CSR manually for this example
-  int n   = 6;                 // 6x6 matrix
+  int n   = 6;                                   // 6x6 matrix
   int nnz = static_cast<int>(csc_values.size()); // 10 non-zeros
 
   std::cout << "Matrix size: " << n << "x" << n << "\n";
