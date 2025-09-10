@@ -65,7 +65,7 @@ int main()
     csr_row_ptr[i] += csr_row_ptr[i - 1];
   }
 
-  // Fill CSR arrays
+  // Fill CSR arrays.
   std::vector<int> temp_row_ptr = csr_row_ptr;
   for (size_t col = 0; col < static_cast<size_t>(n); ++col)
   {
