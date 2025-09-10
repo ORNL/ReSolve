@@ -59,7 +59,7 @@ int main()
     csr_row_ptr[static_cast<size_t>(csc_row_ind[i] + 1)]++;
   }
 
-  // Convert counts to pointers
+  // Convert counts to pointers.
   for (size_t i = 1; i <= static_cast<size_t>(n); ++i)
   {
     csr_row_ptr[i] += csr_row_ptr[i - 1];
