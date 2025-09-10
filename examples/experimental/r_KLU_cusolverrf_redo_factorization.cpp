@@ -167,7 +167,7 @@ int main(int argc, char* argv[])
         status_refactor = Rf->refactorize();
         std::cout << "Initial Rf refactorization status: " << status_refactor << std::endl;
 
-        // Don't delete L and U here - they are managed by KLU
+        // Don't delete L and U here - they are managed by KLU.
         L = nullptr;
         U = nullptr;
       }
