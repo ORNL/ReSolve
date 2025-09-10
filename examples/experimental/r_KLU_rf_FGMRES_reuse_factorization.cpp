@@ -1,3 +1,4 @@
+
 #include <iomanip>
 #include <iostream>
 #include <string>
@@ -7,7 +8,6 @@
 #include <resolve/LinSolverDirectKLU.hpp>
 #include <resolve/LinSolverIterativeFGMRES.hpp>
 #include <resolve/matrix/Coo.hpp>
-#include <resolve/matrix/Csc.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/matrix/io.hpp>
@@ -58,9 +58,16 @@ int main(int argc, char* argv[])
 
   for (int i = 0; i < numSystems; ++i)
   {
-    index_type j = 4 + i * 2;
-    fileId       = argv[j];
-    rhsId        = argv[j + 1];
+    if (i < 10)
+    {
+      fileId = "0" + std::to_string(i);
+      rhsId  = "0" + std::to_string(i);
+    }
+    else
+    {
+      fileId = std::to_string(i);
+      rhsId  = std::to_string(i);
+    }
 
     matrixFileNameFull = "";
     rhsFileNameFull    = "";
@@ -123,6 +130,7 @@ int main(int argc, char* argv[])
     }
     else
     {
+      A->setUpdated(ReSolve::memory::HOST);
       A->syncData(ReSolve::memory::DEVICE);
       vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
     }
@@ -151,22 +159,15 @@ int main(int argc, char* argv[])
                 << sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE)) / norm_b << "\n";
       if (i == 1)
       {
-        ReSolve::matrix::Csc* L_csc = (ReSolve::matrix::Csc*) KLU->getLFactor();
-        ReSolve::matrix::Csc* U_csc = (ReSolve::matrix::Csc*) KLU->getUFactor();
-        ReSolve::matrix::Csr* L     = new ReSolve::matrix::Csr(L_csc->getNumRows(), L_csc->getNumColumns(), L_csc->getNnz());
-        ReSolve::matrix::Csr* U     = new ReSolve::matrix::Csr(U_csc->getNumRows(), U_csc->getNumColumns(), U_csc->getNnz());
-        L_csc->syncData(ReSolve::memory::DEVICE);
-        U_csc->syncData(ReSolve::memory::DEVICE);
-
-        matrix_handler->csc2csr(L_csc, L, ReSolve::memory::DEVICE);
-        matrix_handler->csc2csr(U_csc, U, ReSolve::memory::DEVICE);
+        ReSolve::matrix::Csr* L = (ReSolve::matrix::Csr*) KLU->getLFactorCsr();
+        ReSolve::matrix::Csr* U = (ReSolve::matrix::Csr*) KLU->getUFactorCsr();
         if (L == nullptr)
         {
           std::cout << "ERROR\n";
         }
         index_type* P = KLU->getPOrdering();
         index_type* Q = KLU->getQOrdering();
-        Rf->setup(A, L, U, P, Q);
+        Rf->setupCsr(A, L, U, P, Q);
         std::cout << "about to set FGMRES" << std::endl;
         FGMRES->setRestart(1000);
         FGMRES->setMaxit(2000);

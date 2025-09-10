@@ -5,7 +5,6 @@
 #include <resolve/LinSolverDirectCuSolverRf.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
 #include <resolve/matrix/Coo.hpp>
-#include <resolve/matrix/Csc.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/matrix/io.hpp>
@@ -55,19 +54,26 @@ int main(int argc, char* argv[])
   real_type b_nrm   = 0.0;
 
   // We need them. They hold a POINTER. Don't delete them here. KLU deletes them.
-  ReSolve::matrix::Csc* L_csc;
-  ReSolve::matrix::Csc* U_csc;
-  index_type*           P;
-  index_type*           Q;
+  ReSolve::matrix::Csr* L = nullptr;
+  ReSolve::matrix::Csr* U = nullptr;
+  index_type*           P = nullptr;
+  index_type*           Q = nullptr;
 
   int status          = 0;
   int status_refactor = 0;
+
   for (int i = 0; i < numSystems; ++i)
   {
-    index_type j = 4 + i * 2;
-    fileId       = argv[j];
-    rhsId        = argv[j + 1];
-
+    if (i < 10)
+    {
+      fileId = "0" + std::to_string(i);
+      rhsId  = "0" + std::to_string(i);
+    }
+    else
+    {
+      fileId = std::to_string(i);
+      rhsId  = std::to_string(i);
+    }
     matrixFileNameFull = "";
     rhsFileNameFull    = "";
 
@@ -143,34 +149,39 @@ int main(int argc, char* argv[])
       std::cout << "KLU solve status: " << status << std::endl;
       if (i == 1)
       {
-        L_csc                   = (ReSolve::matrix::Csc*) KLU->getLFactor();
-        U_csc                   = (ReSolve::matrix::Csc*) KLU->getUFactor();
-        ReSolve::matrix::Csr* L = new ReSolve::matrix::Csr(L_csc->getNumRows(), L_csc->getNumColumns(), L_csc->getNnz());
-        ReSolve::matrix::Csr* U = new ReSolve::matrix::Csr(U_csc->getNumRows(), U_csc->getNumColumns(), U_csc->getNnz());
-        L_csc->syncData(ReSolve::memory::DEVICE);
-        U_csc->syncData(ReSolve::memory::DEVICE);
-        matrix_handler->csc2csr(L_csc, L, ReSolve::memory::DEVICE);
-        matrix_handler->csc2csr(U_csc, U, ReSolve::memory::DEVICE);
+        L = (ReSolve::matrix::Csr*) KLU->getLFactorCsr();
+        U = (ReSolve::matrix::Csr*) KLU->getUFactorCsr();
         if (L == nullptr)
         {
-          std::cout << "ERROR\n";
+          std::cout << "ERROR: L factor is null\n";
+          continue; // Skip this iteration
+        }
+        if (U == nullptr)
+        {
+          std::cout << "ERROR: U factor is null\n";
+          continue; // Skip this iteration
         }
         P = KLU->getPOrdering();
         Q = KLU->getQOrdering();
-        Rf->setup(A, L, U, P, Q);
-        Rf->refactorize();
-        delete L;
-        delete U;
+        Rf->setupCsr(A, L, U, P, Q);
+        status_refactor = Rf->refactorize();
+        std::cout << "Initial Rf refactorization status: " << status_refactor << std::endl;
+
+        // Don't delete L and U here - they are managed by KLU.
+        L = nullptr;
+        U = nullptr;
       }
     }
     else
     {
       std::cout << "Using cusolver rf" << std::endl;
       status_refactor = Rf->refactorize();
-      std::cout << "cusolver rf refactorization status: " << status << std::endl;
+      std::cout << "cusolver rf refactorization status: " << status_refactor << std::endl;
       status = Rf->solve(vec_rhs, vec_x);
       std::cout << "cusolver rf solve status: " << status << std::endl;
     }
+
+    // Make sure vec_r is properly initialized before using it.
     vec_r->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
 
     matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
@@ -181,6 +192,7 @@ int main(int argc, char* argv[])
     std::cout << "\t2-Norm of the residual: "
               << std::scientific << std::setprecision(16)
               << res_nrm / b_nrm << "\n";
+
     if (((res_nrm / b_nrm > 1e-7) && (!std::isnan(res_nrm))) || (status_refactor != 0))
     {
       if ((res_nrm / b_nrm > 1e-7))
@@ -211,35 +223,85 @@ int main(int argc, char* argv[])
                 << std::scientific << std::setprecision(16)
                 << res_nrm / b_nrm << "\n";
 
-      L_csc = (ReSolve::matrix::Csc*) KLU->getLFactor();
-      U_csc = (ReSolve::matrix::Csc*) KLU->getUFactor();
+      L = (ReSolve::matrix::Csr*) KLU->getLFactorCsr();
+      U = (ReSolve::matrix::Csr*) KLU->getUFactorCsr();
 
-      ReSolve::matrix::Csr* L = new ReSolve::matrix::Csr(L_csc->getNumRows(), L_csc->getNumColumns(), L_csc->getNnz());
-      ReSolve::matrix::Csr* U = new ReSolve::matrix::Csr(U_csc->getNumRows(), U_csc->getNumColumns(), U_csc->getNnz());
-      matrix_handler->csc2csr(L_csc, L, ReSolve::memory::DEVICE);
-      matrix_handler->csc2csr(U_csc, U, ReSolve::memory::DEVICE);
+      if (L != nullptr && U != nullptr)
+      {
+        P = KLU->getPOrdering();
+        Q = KLU->getQOrdering();
 
-      P = KLU->getPOrdering();
-      Q = KLU->getQOrdering();
+        Rf->setupCsr(A, L, U, P, Q);
+        status_refactor = Rf->refactorize();
+        std::cout << "Rf refactorization after KLU redo status: " << status_refactor << std::endl;
+      }
 
-      Rf->setup(A, L, U, P, Q);
-      Rf->refactorize();
-
-      delete L;
-      delete U;
+      // Don't delete L and U - they are managed by KLU.
+      L = nullptr;
+      U = nullptr;
     }
   } // for (int i = 0; i < numSystems; ++i)
 
-  // now DELETE
-  delete A;
-  delete KLU;
-  delete Rf;
-  delete[] x;
-  delete[] rhs;
-  delete vec_r;
-  delete vec_x;
-  delete workspace_CUDA;
-  delete matrix_handler;
-  delete vector_handler;
+  if (vec_r != nullptr)
+  {
+    delete vec_r;
+    vec_r = nullptr;
+  }
+  if (vec_x != nullptr)
+  {
+    delete vec_x;
+    vec_x = nullptr;
+  }
+  if (vec_rhs != nullptr)
+  {
+    delete vec_rhs;
+    vec_rhs = nullptr;
+  }
+
+  if (x != nullptr)
+  {
+    delete[] x;
+    x = nullptr;
+  }
+  if (rhs != nullptr)
+  {
+    delete[] rhs;
+    rhs = nullptr;
+  }
+
+  if (Rf != nullptr)
+  {
+    delete Rf;
+    Rf = nullptr;
+  }
+  if (KLU != nullptr)
+  {
+    delete KLU;
+    KLU = nullptr;
+  }
+
+  if (A != nullptr)
+  {
+    delete A;
+    A = nullptr;
+  }
+
+  if (matrix_handler != nullptr)
+  {
+    delete matrix_handler;
+    matrix_handler = nullptr;
+  }
+  if (vector_handler != nullptr)
+  {
+    delete vector_handler;
+    vector_handler = nullptr;
+  }
+
+  if (workspace_CUDA != nullptr)
+  {
+    delete workspace_CUDA;
+    workspace_CUDA = nullptr;
+  }
+
   return 0;
 }

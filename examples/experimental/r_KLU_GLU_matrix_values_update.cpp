@@ -55,9 +55,16 @@ int main(int argc, char* argv[])
 
   for (int i = 0; i < numSystems; ++i)
   {
-    index_type j = 4 + i * 2;
-    fileId       = argv[j];
-    rhsId        = argv[j + 1];
+    if (i < 10)
+    {
+      fileId = "0" + std::to_string(i);
+      rhsId  = "0" + std::to_string(i);
+    }
+    else
+    {
+      fileId = std::to_string(i);
+      rhsId  = std::to_string(i);
+    }
 
     matrixFileNameFull = "";
     rhsFileNameFull    = "";
@@ -143,15 +150,15 @@ int main(int argc, char* argv[])
       std::cout << "KLU analysis status: " << status << std::endl;
       status = KLU->factorize();
       std::cout << "KLU factorization status: " << status << std::endl;
-      matrix_type* L = KLU->getLFactor();
-      matrix_type* U = KLU->getUFactor();
+      matrix_type* L = KLU->getLFactorCsr();
+      matrix_type* U = KLU->getUFactorCsr();
       if (L == nullptr)
       {
         printf("ERROR");
       }
       index_type* P = KLU->getPOrdering();
       index_type* Q = KLU->getQOrdering();
-      GLU->setup(A, L, U, P, Q);
+      GLU->setupCsr(A, L, U, P, Q);
       status = GLU->solve(vec_rhs, vec_x);
       std::cout << "GLU solve status: " << status << std::endl;
       //      status = KLU->solve(vec_rhs, vec_x);
