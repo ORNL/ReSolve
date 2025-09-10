@@ -20,11 +20,11 @@ namespace ReSolve
     virtual ~LinSolverDirect();
 
     virtual int setup(matrix::Sparse* A,
-                         matrix::Sparse* L   = nullptr,
-                         matrix::Sparse* U   = nullptr,
-                         index_type*     P   = nullptr,
-                         index_type*     Q   = nullptr,
-                         vector_type*    rhs = nullptr);
+                      matrix::Sparse* L   = nullptr,
+                      matrix::Sparse* U   = nullptr,
+                      index_type*     P   = nullptr,
+                      index_type*     Q   = nullptr,
+                      vector_type*    rhs = nullptr);
 
     virtual int analyze(); // the same as symbolic factorization
     virtual int factorize();

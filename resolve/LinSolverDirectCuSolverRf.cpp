@@ -62,11 +62,11 @@ namespace ReSolve
    */
 
   int LinSolverDirectCuSolverRf::setup(matrix::Sparse* A,
-                                          matrix::Sparse* L,
-                                          matrix::Sparse* U,
-                                          index_type*     P,
-                                          index_type*     Q,
-                                          vector_type* /* rhs */)
+                                       matrix::Sparse* L,
+                                       matrix::Sparse* U,
+                                       index_type*     P,
+                                       index_type*     Q,
+                                       vector_type* /* rhs */)
   {
     assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW && "Matrix A has to be in CSR format for cusolverRf input.\n");
     assert(L->getSparseFormat() == U->getSparseFormat() && "Matrices L and U have to be in the same format for cusolverRf input.\n");

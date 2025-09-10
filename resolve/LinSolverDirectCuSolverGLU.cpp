@@ -41,11 +41,11 @@ namespace ReSolve
    * @param[in] rhs - Pointer to the right-hand side vector (not used in this setup).
    */
   int LinSolverDirectCuSolverGLU::setup(matrix::Sparse* A,
-                                           matrix::Sparse* L,
-                                           matrix::Sparse* U,
-                                           index_type*     P,
-                                           index_type*     Q,
-                                           vector_type* /** rhs */)
+                                        matrix::Sparse* L,
+                                        matrix::Sparse* U,
+                                        index_type*     P,
+                                        index_type*     Q,
+                                        vector_type* /** rhs */)
   {
     RESOLVE_RANGE_PUSH(__FUNCTION__);
     int error_sum = 0;

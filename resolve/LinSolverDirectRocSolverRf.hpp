@@ -34,11 +34,11 @@ namespace ReSolve
     ~LinSolverDirectRocSolverRf();
 
     int setup(matrix::Sparse* A,
-                 matrix::Sparse* L,
-                 matrix::Sparse* U,
-                 index_type*     P,
-                 index_type*     Q,
-                 vector_type*    rhs) override;
+              matrix::Sparse* L,
+              matrix::Sparse* U,
+              index_type*     P,
+              index_type*     Q,
+              vector_type*    rhs) override;
 
     int refactorize() override;
     int solve(vector_type* rhs, vector_type* x) override;
