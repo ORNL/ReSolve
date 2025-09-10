@@ -186,7 +186,7 @@ int runTest(int argc, char* argv[], std::string& solver_name)
   status = KLU.factorize();
   error_sum += status;
 
-  // Extract factors and setup factorization for refactorization
+  // Extract factors and setup factorization for refactorization.
   matrix_type* L = KLU.getLFactor();
   matrix_type* U = KLU.getUFactor();
   index_type*  P = KLU.getPOrdering();
