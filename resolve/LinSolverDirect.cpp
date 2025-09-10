@@ -35,33 +35,6 @@ namespace ReSolve
   }
 
   /**
-   * @brief Setup function for LinSolverDirect class.
-   *
-   * @param[in] A - matrix to be solved
-   * @param[in] L - optional lower triangular factor
-   * @param[in] U - optional upper triangular factor
-   * @param[in] P - optional row permutation vector
-   * @param[in] Q - optional column permutation vector
-   * @param[in] rhs - optional right-hand side vector
-   *
-   * @return int - error code, 0 if successful
-   */
-  int LinSolverDirect::setup(matrix::Sparse* A,
-                             matrix::Sparse* /* L */,
-                             matrix::Sparse* /* U */,
-                             index_type* /* P */,
-                             index_type* /* Q */,
-                             vector_type* /* rhs */)
-  {
-    if (A == nullptr)
-    {
-      return 1;
-    }
-    A_ = A;
-    return 0;
-  }
-
-  /**
    * @brief Setup function for LinSolverDirect class with CSR data
    *
    * @param[in] A - matrix to be solved
@@ -73,7 +46,7 @@ namespace ReSolve
    *
    * @return int - error code, 0 if successful
    */
-  int LinSolverDirect::setupCsr(matrix::Sparse* A,
+  int LinSolverDirect::setup(matrix::Sparse* A,
                                 matrix::Sparse* /* L */,
                                 matrix::Sparse* /* U */,
                                 index_type* /* P */,
@@ -115,29 +88,13 @@ namespace ReSolve
   /**
    * @brief Placeholder function for lower triangular factor in Csr.
    */
-  matrix::Sparse* LinSolverDirect::getLFactorCsr()
-  {
-    return nullptr;
-  }
-
-  /**
-   * @brief Placeholder function for upper triangular factor in Csr.
-   */
-  matrix::Sparse* LinSolverDirect::getUFactorCsr()
-  {
-    return nullptr;
-  }
-
-  /**
-   * @brief Placeholder function for lower triangular factor.
-   */
   matrix::Sparse* LinSolverDirect::getLFactor()
   {
     return nullptr;
   }
 
   /**
-   * @brief Placeholder function for upper triangular factor.
+   * @brief Placeholder function for upper triangular factor in Csr.
    */
   matrix::Sparse* LinSolverDirect::getUFactor()
   {

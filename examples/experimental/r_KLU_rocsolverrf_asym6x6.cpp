@@ -172,8 +172,8 @@ int main()
 
   helper.resetSystem(A, vec_rhs, vec_x);
   helper.printShortSummary();
-  ReSolve::matrix::Csr* L = (ReSolve::matrix::Csr*) KLU.getLFactorCsr();
-  ReSolve::matrix::Csr* U = (ReSolve::matrix::Csr*) KLU.getUFactorCsr();
+  ReSolve::matrix::Csr* L = (ReSolve::matrix::Csr*) KLU.getLFactor();
+  ReSolve::matrix::Csr* U = (ReSolve::matrix::Csr*) KLU.getUFactor();
   if (L == nullptr || U == nullptr)
   {
     std::cout << "Factor extraction from KLU failed!\n";
@@ -196,7 +196,7 @@ int main()
       std::cout << rhs_before[i] << (i < n - 1 ? ", " : "");
     }
     std::cout << "]" << std::endl;
-    Rf.setupCsr(A, L, U, P, Q, vec_rhs);
+    Rf.setup(A, L, U, P, Q, vec_rhs);
     std::cout << "RocSolverRf setup completed\n";
 
     // Test refactorization with the same matrix (in practice, you'd change matrix values)

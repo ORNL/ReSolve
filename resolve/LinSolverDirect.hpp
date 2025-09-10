@@ -18,14 +18,8 @@ namespace ReSolve
   public:
     LinSolverDirect();
     virtual ~LinSolverDirect();
-    virtual int setup(matrix::Sparse* A   = nullptr,
-                      matrix::Sparse* L   = nullptr,
-                      matrix::Sparse* U   = nullptr,
-                      index_type*     P   = nullptr,
-                      index_type*     Q   = nullptr,
-                      vector_type*    rhs = nullptr);
 
-    virtual int setupCsr(matrix::Sparse* A,
+    virtual int setup(matrix::Sparse* A,
                          matrix::Sparse* L   = nullptr,
                          matrix::Sparse* U   = nullptr,
                          index_type*     P   = nullptr,
@@ -38,8 +32,6 @@ namespace ReSolve
     virtual int solve(vector_type* rhs, vector_type* x) = 0;
     virtual int solve(vector_type* x)                   = 0;
 
-    virtual matrix::Sparse* getLFactorCsr();
-    virtual matrix::Sparse* getUFactorCsr();
     virtual matrix::Sparse* getLFactor();
     virtual matrix::Sparse* getUFactor();
     virtual index_type*     getPOrdering();

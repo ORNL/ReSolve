@@ -139,12 +139,12 @@ int main(int argc, char* argv[])
       std::cout << "KLU solve status: " << status << std::endl;
       if (i == 1)
       {
-        ReSolve::matrix::Csr* L = (ReSolve::matrix::Csr*) KLU->getLFactorCsr();
-        ReSolve::matrix::Csr* U = (ReSolve::matrix::Csr*) KLU->getUFactorCsr();
+        ReSolve::matrix::Csr* L = (ReSolve::matrix::Csr*) KLU->getLFactor();
+        ReSolve::matrix::Csr* U = (ReSolve::matrix::Csr*) KLU->getUFactor();
         index_type*           P = KLU->getPOrdering();
         index_type*           Q = KLU->getQOrdering();
         vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-        Rf->setupCsr(A, L, U, P, Q, vec_rhs);
+        Rf->setup(A, L, U, P, Q, vec_rhs);
         Rf->refactorize();
       }
     }
@@ -193,13 +193,13 @@ int main(int argc, char* argv[])
                   << std::scientific << std::setprecision(16)
                   << res_nrm / b_nrm << "\n";
 
-        ReSolve::matrix::Csr* L = (ReSolve::matrix::Csr*) KLU->getLFactorCsr();
-        ReSolve::matrix::Csr* U = (ReSolve::matrix::Csr*) KLU->getUFactorCsr();
+        ReSolve::matrix::Csr* L = (ReSolve::matrix::Csr*) KLU->getLFactor();
+        ReSolve::matrix::Csr* U = (ReSolve::matrix::Csr*) KLU->getUFactor();
 
         index_type* P = KLU->getPOrdering();
         index_type* Q = KLU->getQOrdering();
 
-        Rf->setupCsr(A, L, U, P, Q, vec_rhs);
+        Rf->setup(A, L, U, P, Q, vec_rhs);
       }
     }
 

@@ -159,15 +159,15 @@ int main(int argc, char* argv[])
                 << sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE)) / norm_b << "\n";
       if (i == 1)
       {
-        ReSolve::matrix::Csr* L = (ReSolve::matrix::Csr*) KLU->getLFactorCsr();
-        ReSolve::matrix::Csr* U = (ReSolve::matrix::Csr*) KLU->getUFactorCsr();
+        ReSolve::matrix::Csr* L = (ReSolve::matrix::Csr*) KLU->getLFactor();
+        ReSolve::matrix::Csr* U = (ReSolve::matrix::Csr*) KLU->getUFactor();
         if (L == nullptr)
         {
           std::cout << "ERROR\n";
         }
         index_type* P = KLU->getPOrdering();
         index_type* Q = KLU->getQOrdering();
-        Rf->setupCsr(A, L, U, P, Q);
+        Rf->setup(A, L, U, P, Q);
         std::cout << "about to set FGMRES" << std::endl;
         FGMRES->setRestart(1000);
         FGMRES->setMaxit(2000);

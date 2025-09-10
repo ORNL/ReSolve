@@ -187,12 +187,12 @@ int runTest(int argc, char* argv[], std::string& solver_name)
   error_sum += status;
 
   // Extract factors and setup factorization for refactorization
-  matrix_type* L = KLU.getLFactorCsr();
-  matrix_type* U = KLU.getUFactorCsr();
+  matrix_type* L = KLU.getLFactor();
+  matrix_type* U = KLU.getUFactor();
   index_type*  P = KLU.getPOrdering();
   index_type*  Q = KLU.getQOrdering();
 
-  status = Rf.setupCsr(A, L, U, P, Q, &vec_rhs);
+  status = Rf.setup(A, L, U, P, Q, &vec_rhs);
   error_sum += status;
 
   // Refactorize (on device where available)
