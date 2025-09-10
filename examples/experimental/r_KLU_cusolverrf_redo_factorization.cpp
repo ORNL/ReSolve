@@ -181,7 +181,7 @@ int main(int argc, char* argv[])
       std::cout << "cusolver rf solve status: " << status << std::endl;
     }
 
-    // Make sure vec_r is properly initialized before using it
+    // Make sure vec_r is properly initialized before using it.
     vec_r->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
 
     matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
