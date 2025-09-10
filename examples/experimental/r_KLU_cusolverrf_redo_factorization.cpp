@@ -236,7 +236,7 @@ int main(int argc, char* argv[])
         std::cout << "Rf refactorization after KLU redo status: " << status_refactor << std::endl;
       }
 
-      // Don't delete L and U - they are managed by KLU
+      // Don't delete L and U - they are managed by KLU.
       L = nullptr;
       U = nullptr;
     }
