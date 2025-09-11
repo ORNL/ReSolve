@@ -149,8 +149,8 @@ int main(int argc, char* argv[])
       std::cout << "KLU solve status: " << status << std::endl;
       if (i == 1)
       {
-        L = (ReSolve::matrix::Csr*) KLU->getLFactorCsr();
-        U = (ReSolve::matrix::Csr*) KLU->getUFactorCsr();
+        L = (ReSolve::matrix::Csr*) KLU->getLFactor();
+        U = (ReSolve::matrix::Csr*) KLU->getUFactor();
         if (L == nullptr)
         {
           std::cout << "ERROR: L factor is null\n";
@@ -163,7 +163,7 @@ int main(int argc, char* argv[])
         }
         P = KLU->getPOrdering();
         Q = KLU->getQOrdering();
-        Rf->setupCsr(A, L, U, P, Q);
+        Rf->setup(A, L, U, P, Q);
         status_refactor = Rf->refactorize();
         std::cout << "Initial Rf refactorization status: " << status_refactor << std::endl;
 
@@ -223,15 +223,15 @@ int main(int argc, char* argv[])
                 << std::scientific << std::setprecision(16)
                 << res_nrm / b_nrm << "\n";
 
-      L = (ReSolve::matrix::Csr*) KLU->getLFactorCsr();
-      U = (ReSolve::matrix::Csr*) KLU->getUFactorCsr();
+      L = (ReSolve::matrix::Csr*) KLU->getLFactor();
+      U = (ReSolve::matrix::Csr*) KLU->getUFactor();
 
       if (L != nullptr && U != nullptr)
       {
         P = KLU->getPOrdering();
         Q = KLU->getQOrdering();
 
-        Rf->setupCsr(A, L, U, P, Q);
+        Rf->setup(A, L, U, P, Q);
         status_refactor = Rf->refactorize();
         std::cout << "Rf refactorization after KLU redo status: " << status_refactor << std::endl;
       }

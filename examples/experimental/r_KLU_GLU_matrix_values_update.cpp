@@ -150,15 +150,15 @@ int main(int argc, char* argv[])
       std::cout << "KLU analysis status: " << status << std::endl;
       status = KLU->factorize();
       std::cout << "KLU factorization status: " << status << std::endl;
-      matrix_type* L = KLU->getLFactorCsr();
-      matrix_type* U = KLU->getUFactorCsr();
+      matrix_type* L = KLU->getLFactor();
+      matrix_type* U = KLU->getUFactor();
       if (L == nullptr)
       {
         printf("ERROR");
       }
       index_type* P = KLU->getPOrdering();
       index_type* Q = KLU->getQOrdering();
-      GLU->setupCsr(A, L, U, P, Q);
+      GLU->setup(A, L, U, P, Q);
       status = GLU->solve(vec_rhs, vec_x);
       std::cout << "GLU solve status: " << status << std::endl;
       //      status = KLU->solve(vec_rhs, vec_x);

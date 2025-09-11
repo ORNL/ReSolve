@@ -34,18 +34,11 @@ namespace ReSolve
     int solve(vector_type* rhs, vector_type* x) override;
     int solve(vector_type* x) override;
 
-    int setupCsr(matrix::Sparse* A,
-                 matrix::Sparse* L   = nullptr,
-                 matrix::Sparse* U   = nullptr,
-                 index_type*     P   = nullptr,
-                 index_type*     Q   = nullptr,
-                 vector_type*    rhs = nullptr) override;
-
     int setup(matrix::Sparse* A,
-              matrix::Sparse* L,
-              matrix::Sparse* U,
-              index_type*     P,
-              index_type*     Q,
+              matrix::Sparse* L   = nullptr,
+              matrix::Sparse* U   = nullptr,
+              index_type*     P   = nullptr,
+              index_type*     Q   = nullptr,
               vector_type*    rhs = nullptr) override;
 
     int         setCliParam(const std::string id, const std::string value) override;
@@ -56,9 +49,8 @@ namespace ReSolve
     int         printCliParam(const std::string id) const override;
 
   private:
-    void            combineFactors(matrix::Sparse* L, matrix::Sparse* U);    ///< creates L+U from separate L, U factors
-    void            combineFactorsCsr(matrix::Sparse* L, matrix::Sparse* U); ///< creates L+U from separate L, U factors in CSR format
-    matrix::Sparse* M_;                                                      ///< the matrix that contains added factors
+    void            combineFactors(matrix::Sparse* L, matrix::Sparse* U); ///< creates L+U from separate L, U factors in CSR format
+    matrix::Sparse* M_;                                                   ///< the matrix that contains added factors
     // note: we need cuSolver handle, we can copy it from the workspace to avoid double allocation
     cusparseMatDescr_t   descr_M_;   // this is NOT sparse matrix descriptor
     cusparseMatDescr_t   descr_A_;   // this is NOT sparse matrix descriptor
