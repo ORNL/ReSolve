@@ -21,7 +21,7 @@ namespace ReSolve
   {
     workspace_  = workspace;
     infoM_      = nullptr;
-    solve_mode_ = 1; // solve mode - 1: use rocsparse trisolve
+    solve_mode_ = 0; // solve mode - 1: use rocsparse trisolve
     initParamList();
   }
 
@@ -114,128 +114,128 @@ namespace ReSolve
     mem_.deviceSynchronize();
     error_sum += status_rocblas_;
     // tri solve setup
-    if (solve_mode_ == 1)
-    { // OBSOLETE -- to be removed. Formerly known as "fast mode" TODO
+    // if (solve_mode_ == 1)
+    // { // OBSOLETE -- to be removed. Formerly known as "fast mode" TODO
 
-      if (L_csr_ != nullptr)
-      {
-        delete L_csr_;
-      }
+    //   if (L_csr_ != nullptr)
+    //   {
+    //     delete L_csr_;
+    //   }
 
-      L_csr_ = new ReSolve::matrix::Csr(L->getNumRows(), L->getNumColumns(), L->getNnz());
-      L_csr_->allocateMatrixData(ReSolve::memory::DEVICE);
+    //   L_csr_ = new ReSolve::matrix::Csr(L->getNumRows(), L->getNumColumns(), L->getNnz());
+    //   L_csr_->allocateMatrixData(ReSolve::memory::DEVICE);
 
-      if (U_csr_ != nullptr)
-      {
-        delete U_csr_;
-      }
+    //   if (U_csr_ != nullptr)
+    //   {
+    //     delete U_csr_;
+    //   }
 
-      U_csr_ = new ReSolve::matrix::Csr(U->getNumRows(), U->getNumColumns(), U->getNnz());
-      U_csr_->allocateMatrixData(ReSolve::memory::DEVICE);
+    //   U_csr_ = new ReSolve::matrix::Csr(U->getNumRows(), U->getNumColumns(), U->getNnz());
+    //   U_csr_->allocateMatrixData(ReSolve::memory::DEVICE);
 
-      rocsparse_create_mat_descr(&(descr_L_));
-      rocsparse_set_mat_fill_mode(descr_L_, rocsparse_fill_mode_lower);
-      rocsparse_set_mat_index_base(descr_L_, rocsparse_index_base_zero);
+    //   rocsparse_create_mat_descr(&(descr_L_));
+    //   rocsparse_set_mat_fill_mode(descr_L_, rocsparse_fill_mode_lower);
+    //   rocsparse_set_mat_index_base(descr_L_, rocsparse_index_base_zero);
 
-      rocsparse_create_mat_descr(&(descr_U_));
-      rocsparse_set_mat_index_base(descr_U_, rocsparse_index_base_zero);
-      rocsparse_set_mat_fill_mode(descr_U_, rocsparse_fill_mode_upper);
+    //   rocsparse_create_mat_descr(&(descr_U_));
+    //   rocsparse_set_mat_index_base(descr_U_, rocsparse_index_base_zero);
+    //   rocsparse_set_mat_fill_mode(descr_U_, rocsparse_fill_mode_upper);
 
-      rocsparse_create_mat_info(&info_L_);
-      rocsparse_create_mat_info(&info_U_);
+    //   rocsparse_create_mat_info(&info_L_);
+    //   rocsparse_create_mat_info(&info_U_);
 
-      // local variables
-      size_t L_buffer_size;
-      size_t U_buffer_size;
+    //   // local variables
+    //   size_t L_buffer_size;
+    //   size_t U_buffer_size;
 
-      status_rocblas_ = rocsolver_dcsrrf_splitlu(workspace_->getRocblasHandle(),
-                                                 n,
-                                                 M_->getNnz(),
-                                                 M_->getRowData(ReSolve::memory::DEVICE),
-                                                 M_->getColData(ReSolve::memory::DEVICE),
-                                                 M_->getValues(ReSolve::memory::DEVICE), // vals_,
-                                                 L_csr_->getRowData(ReSolve::memory::DEVICE),
-                                                 L_csr_->getColData(ReSolve::memory::DEVICE),
-                                                 L_csr_->getValues(ReSolve::memory::DEVICE), // vals_,
-                                                 U_csr_->getRowData(ReSolve::memory::DEVICE),
-                                                 U_csr_->getColData(ReSolve::memory::DEVICE),
-                                                 U_csr_->getValues(ReSolve::memory::DEVICE));
+    //   status_rocblas_ = rocsolver_dcsrrf_splitlu(workspace_->getRocblasHandle(),
+    //                                              n,
+    //                                              M_->getNnz(),
+    //                                              M_->getRowData(ReSolve::memory::DEVICE),
+    //                                              M_->getColData(ReSolve::memory::DEVICE),
+    //                                              M_->getValues(ReSolve::memory::DEVICE), // vals_,
+    //                                              L_csr_->getRowData(ReSolve::memory::DEVICE),
+    //                                              L_csr_->getColData(ReSolve::memory::DEVICE),
+    //                                              L_csr_->getValues(ReSolve::memory::DEVICE), // vals_,
+    //                                              U_csr_->getRowData(ReSolve::memory::DEVICE),
+    //                                              U_csr_->getColData(ReSolve::memory::DEVICE),
+    //                                              U_csr_->getValues(ReSolve::memory::DEVICE));
 
-      error_sum += status_rocblas_;
+    //   error_sum += status_rocblas_;
 
-      status_rocsparse_ = rocsparse_dcsrsv_buffer_size(workspace_->getRocsparseHandle(),
-                                                       rocsparse_operation_none,
-                                                       n,
-                                                       L_csr_->getNnz(),
-                                                       descr_L_,
-                                                       L_csr_->getValues(ReSolve::memory::DEVICE),
-                                                       L_csr_->getRowData(ReSolve::memory::DEVICE),
-                                                       L_csr_->getColData(ReSolve::memory::DEVICE),
-                                                       info_L_,
-                                                       &L_buffer_size);
-      error_sum += status_rocsparse_;
-      mem_.allocateBufferOnDevice(&L_buffer_, L_buffer_size);
+    //   status_rocsparse_ = rocsparse_dcsrsv_buffer_size(workspace_->getRocsparseHandle(),
+    //                                                    rocsparse_operation_none,
+    //                                                    n,
+    //                                                    L_csr_->getNnz(),
+    //                                                    descr_L_,
+    //                                                    L_csr_->getValues(ReSolve::memory::DEVICE),
+    //                                                    L_csr_->getRowData(ReSolve::memory::DEVICE),
+    //                                                    L_csr_->getColData(ReSolve::memory::DEVICE),
+    //                                                    info_L_,
+    //                                                    &L_buffer_size);
+    //   error_sum += status_rocsparse_;
+    //   mem_.allocateBufferOnDevice(&L_buffer_, L_buffer_size);
 
-      status_rocsparse_ = rocsparse_dcsrsv_buffer_size(workspace_->getRocsparseHandle(),
-                                                       rocsparse_operation_none,
-                                                       n,
-                                                       U_csr_->getNnz(),
-                                                       descr_U_,
-                                                       U_csr_->getValues(ReSolve::memory::DEVICE),
-                                                       U_csr_->getRowData(ReSolve::memory::DEVICE),
-                                                       U_csr_->getColData(ReSolve::memory::DEVICE),
-                                                       info_U_,
-                                                       &U_buffer_size);
-      error_sum += status_rocsparse_;
-      mem_.allocateBufferOnDevice(&U_buffer_, U_buffer_size);
+    //   status_rocsparse_ = rocsparse_dcsrsv_buffer_size(workspace_->getRocsparseHandle(),
+    //                                                    rocsparse_operation_none,
+    //                                                    n,
+    //                                                    U_csr_->getNnz(),
+    //                                                    descr_U_,
+    //                                                    U_csr_->getValues(ReSolve::memory::DEVICE),
+    //                                                    U_csr_->getRowData(ReSolve::memory::DEVICE),
+    //                                                    U_csr_->getColData(ReSolve::memory::DEVICE),
+    //                                                    info_U_,
+    //                                                    &U_buffer_size);
+    //   error_sum += status_rocsparse_;
+    //   mem_.allocateBufferOnDevice(&U_buffer_, U_buffer_size);
 
-      status_rocsparse_ = rocsparse_dcsrsv_analysis(workspace_->getRocsparseHandle(),
-                                                    rocsparse_operation_none,
-                                                    n,
-                                                    L_csr_->getNnz(),
-                                                    descr_L_,
-                                                    L_csr_->getValues(ReSolve::memory::DEVICE),
-                                                    L_csr_->getRowData(ReSolve::memory::DEVICE),
-                                                    L_csr_->getColData(ReSolve::memory::DEVICE),
-                                                    info_L_,
-                                                    rocsparse_analysis_policy_force,
-                                                    rocsparse_solve_policy_auto,
-                                                    L_buffer_);
+    //   status_rocsparse_ = rocsparse_dcsrsv_analysis(workspace_->getRocsparseHandle(),
+    //                                                 rocsparse_operation_none,
+    //                                                 n,
+    //                                                 L_csr_->getNnz(),
+    //                                                 descr_L_,
+    //                                                 L_csr_->getValues(ReSolve::memory::DEVICE),
+    //                                                 L_csr_->getRowData(ReSolve::memory::DEVICE),
+    //                                                 L_csr_->getColData(ReSolve::memory::DEVICE),
+    //                                                 info_L_,
+    //                                                 rocsparse_analysis_policy_force,
+    //                                                 rocsparse_solve_policy_auto,
+    //                                                 L_buffer_);
 
-      error_sum += status_rocsparse_;
-      if (status_rocsparse_ != 0)
-      {
-        std::cout << "status after analysis 1: " << status_rocsparse_ << "\n";
-      }
+    //   error_sum += status_rocsparse_;
+    //   if (status_rocsparse_ != 0)
+    //   {
+    //     std::cout << "status after analysis 1: " << status_rocsparse_ << "\n";
+    //   }
 
-      status_rocsparse_ = rocsparse_dcsrsv_analysis(workspace_->getRocsparseHandle(),
-                                                    rocsparse_operation_none,
-                                                    n,
-                                                    U_csr_->getNnz(),
-                                                    descr_U_,
-                                                    U_csr_->getValues(ReSolve::memory::DEVICE), // vals_,
-                                                    U_csr_->getRowData(ReSolve::memory::DEVICE),
-                                                    U_csr_->getColData(ReSolve::memory::DEVICE),
-                                                    info_U_,
-                                                    rocsparse_analysis_policy_force,
-                                                    rocsparse_solve_policy_auto,
-                                                    U_buffer_);
-      error_sum += status_rocsparse_;
-      if (status_rocsparse_ != 0)
-      {
-        out::error() << "status after analysis 2: " << status_rocsparse_ << "\n";
-      }
+    //   status_rocsparse_ = rocsparse_dcsrsv_analysis(workspace_->getRocsparseHandle(),
+    //                                                 rocsparse_operation_none,
+    //                                                 n,
+    //                                                 U_csr_->getNnz(),
+    //                                                 descr_U_,
+    //                                                 U_csr_->getValues(ReSolve::memory::DEVICE), // vals_,
+    //                                                 U_csr_->getRowData(ReSolve::memory::DEVICE),
+    //                                                 U_csr_->getColData(ReSolve::memory::DEVICE),
+    //                                                 info_U_,
+    //                                                 rocsparse_analysis_policy_force,
+    //                                                 rocsparse_solve_policy_auto,
+    //                                                 U_buffer_);
+    //   error_sum += status_rocsparse_;
+    //   if (status_rocsparse_ != 0)
+    //   {
+    //     out::error() << "status after analysis 2: " << status_rocsparse_ << "\n";
+    //   }
 
-      // allocate aux data
-      if (d_aux1_ == nullptr)
-      {
-        mem_.allocateArrayOnDevice(&d_aux1_, n);
-      }
-      if (d_aux2_ == nullptr)
-      {
-        mem_.allocateArrayOnDevice(&d_aux2_, n);
-      }
-    }
+    //   // allocate aux data
+    //   if (d_aux1_ == nullptr)
+    //   {
+    //     mem_.allocateArrayOnDevice(&d_aux1_, n);
+    //   }
+    //   if (d_aux2_ == nullptr)
+    //   {
+    //     mem_.allocateArrayOnDevice(&d_aux2_, n);
+    //   }
+    // }
     RESOLVE_RANGE_POP(__FUNCTION__);
     return error_sum;
   }
@@ -266,24 +266,24 @@ namespace ReSolve
     mem_.deviceSynchronize();
     error_sum += status_rocblas_;
 
-    if (solve_mode_ == 1)
-    {
-      // split M, fill L and U with correct values
-      status_rocblas_ = rocsolver_dcsrrf_splitlu(workspace_->getRocblasHandle(),
-                                                 A_->getNumRows(),
-                                                 M_->getNnz(),
-                                                 M_->getRowData(ReSolve::memory::DEVICE),
-                                                 M_->getColData(ReSolve::memory::DEVICE),
-                                                 M_->getValues(ReSolve::memory::DEVICE), // vals_,
-                                                 L_csr_->getRowData(ReSolve::memory::DEVICE),
-                                                 L_csr_->getColData(ReSolve::memory::DEVICE),
-                                                 L_csr_->getValues(ReSolve::memory::DEVICE), // vals_,
-                                                 U_csr_->getRowData(ReSolve::memory::DEVICE),
-                                                 U_csr_->getColData(ReSolve::memory::DEVICE),
-                                                 U_csr_->getValues(ReSolve::memory::DEVICE));
-      mem_.deviceSynchronize();
-      error_sum += status_rocblas_;
-    }
+    // if (solve_mode_ == 1)
+    // {
+    //   // split M, fill L and U with correct values
+    //   status_rocblas_ = rocsolver_dcsrrf_splitlu(workspace_->getRocblasHandle(),
+    //                                              A_->getNumRows(),
+    //                                              M_->getNnz(),
+    //                                              M_->getRowData(ReSolve::memory::DEVICE),
+    //                                              M_->getColData(ReSolve::memory::DEVICE),
+    //                                              M_->getValues(ReSolve::memory::DEVICE), // vals_,
+    //                                              L_csr_->getRowData(ReSolve::memory::DEVICE),
+    //                                              L_csr_->getColData(ReSolve::memory::DEVICE),
+    //                                              L_csr_->getValues(ReSolve::memory::DEVICE), // vals_,
+    //                                              U_csr_->getRowData(ReSolve::memory::DEVICE),
+    //                                              U_csr_->getColData(ReSolve::memory::DEVICE),
+    //                                              U_csr_->getValues(ReSolve::memory::DEVICE));
+    //   mem_.deviceSynchronize();
+    //   error_sum += status_rocblas_;
+    // }
     RESOLVE_RANGE_POP(__FUNCTION__);
     return error_sum;
   }
@@ -448,6 +448,7 @@ namespace ReSolve
   int LinSolverDirectRocSolverRf::setSolveMode(int mode)
   {
     solve_mode_ = mode;
+    solve_mode_ = 0; // temporary, until trisolve is fully implemented
     return 0;
   }
 
@@ -515,6 +516,7 @@ namespace ReSolve
         break;
       case 1:
         value = "rocsparse_trisolve";
+        value = "default"; // temporary, until trisolve is fully implemented
         break;
       }
     default:
