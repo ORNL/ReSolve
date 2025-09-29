@@ -19,7 +19,7 @@ namespace ReSolve
   {
     workspace_  = workspace;
     infoM_      = nullptr;
-    initParamList();
+    initParamList(); //Currently this does nothing, but it's in place for when we have Cli params.
   }
 
   /**
