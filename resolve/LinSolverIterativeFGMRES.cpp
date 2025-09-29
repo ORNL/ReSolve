@@ -101,7 +101,6 @@ namespace ReSolve
     }
 
     GS_->setup(n_, restart_);
-
     return 0;
   }
 
@@ -127,43 +126,66 @@ int LinSolverIterativeFGMRES::solve(vector_type* rhs, vector_type* x)
   real_type   t      = 0.0;
   real_type   rnorm  = 0.0;
   real_type   bnorm  = 0.0;
+  real_type   rhsnorm = 0.0;
   real_type   tolrel;
+  real_type   relnorm = 0.0;
+
+  // Compute the residual
+  vec_R_->setToZero(memspace_);
+  vec_R_->copyDataFrom(rhs, memspace_, memspace_);
+  matrix_handler_->matvec(A_, x, vec_R_, &MINUS_ONE, &ONE, memspace_);
 
   // Create temporary vectors used inside the solve loop
   vector_type vec_v(n_);
   vector_type vec_z(n_);
+
   // Vector to hold a copy of v_i for the stability calculation
   vector_type vec_v_copy(n_);
   vec_v_copy.allocate(memspace_);
 
-  // V[0] = b-A*x_0
-  // debug
+  // Arnoldi Basis
   vec_Z_->setToZero(memspace_);
   vec_V_->setToZero(memspace_);
 
-  rhs->copyDataTo(vec_V_->getData(memspace_), 0, memspace_);
-  matrix_handler_->matvec(A_, x, vec_V_, &MINUS_ONE, &ONE, memspace_);
+  // Initializing Residual and Update
+  vec_Y_->setToZero(memspace_);
+
+  // Computing the first Arnodi basis vector
+  vec_R_->copyDataTo(vec_V_->getData(memspace_), 0, memspace_);
   rnorm = 0.0;
-  bnorm = vector_handler_->dot(rhs, rhs, memspace_);
+  bnorm = vector_handler_->dot(vec_R_, vec_R_, memspace_);
   rnorm = vector_handler_->dot(vec_V_, vec_V_, memspace_);
-  // rnorm = ||V_1||
   rnorm = std::sqrt(rnorm);
+
+  // Checking if rnorm > norm of RHS
+  rhsnorm = vector_handler_->dot(rhs, rhs, memspace_);
+  rhsnorm = std::sqrt(rhsnorm);
+  if (rnorm > rhsnorm)
+      {
+	out::warning() << "Initial guess is invalid." << std::endl;
+        return 1;
+      }
+
+  // rnorm = ||V_1||
   bnorm = std::sqrt(bnorm);
   io::Logger::misc() << "it 0: norm of residual "
                      << std::scientific << std::setprecision(16)
                      << rnorm << " Norm of rhs: " << bnorm << "\n";
   initial_residual_norm_ = rnorm;
+
+  // Outer While
   while (outer_flag)
   {
-    // check if maybe residual is already small enough?
+
     if (it == 0)
-    {
-      tolrel = tol_ * rnorm;
-      if (std::abs(tolrel) < MACHINE_EPSILON)
       {
-        tolrel = MACHINE_EPSILON;
-      }
+        tolrel = tol_ * rnorm;
+        if (std::abs(tolrel) < MACHINE_EPSILON)
+        {
+          tolrel = MACHINE_EPSILON;
+        }
     }
+
 
     bool exit_cond = false;
     switch (conv_cond_)
@@ -300,7 +322,7 @@ int LinSolverIterativeFGMRES::solve(vector_type* rhs, vector_type* x)
       for (j = 0; j <= i; j++)
       {
         vec_z.setData(vec_Z_->getData(j, memspace_), memspace_);
-        vector_handler_->axpy(&h_rs_[j], &vec_z, x, memspace_);
+        vector_handler_->axpy(&h_rs_[j], &vec_z, vec_Y_, memspace_);
       }
     }
     else
@@ -316,7 +338,7 @@ int LinSolverIterativeFGMRES::solve(vector_type* rhs, vector_type* x)
       vec_v.setData(vec_V_->getData(memspace_), memspace_);
       this->precV(&vec_z, &vec_v);
       // and add to x
-      vector_handler_->axpy(&ONE, &vec_v, x, memspace_);
+      vector_handler_->axpy(&ONE, &vec_v, vec_Y_, memspace_);
     }
 
     /* test solution */
@@ -326,8 +348,8 @@ int LinSolverIterativeFGMRES::solve(vector_type* rhs, vector_type* x)
       outer_flag = 0;
     }
 
-    rhs->copyDataTo(vec_V_->getData(memspace_), 0, memspace_);
-    matrix_handler_->matvec(A_, x, vec_V_, &MINUS_ONE, &ONE, memspace_);
+    vec_R_->copyDataTo(vec_V_->getData(memspace_), 0, memspace_);
+    matrix_handler_->matvec(A_, vec_Y_, vec_V_, &MINUS_ONE, &ONE, memspace_);
     rnorm = vector_handler_->dot(vec_V_, vec_V_, memspace_);
     // rnorm = ||V_1||
     rnorm = std::sqrt(rnorm);
@@ -336,14 +358,36 @@ int LinSolverIterativeFGMRES::solve(vector_type* rhs, vector_type* x)
     {
       final_residual_norm_ = rnorm;
       total_iters_         = it;
-      io::Logger::misc() << "End of cycle, COMPUTED norm of residual "
+      io::Logger::misc() << "End of cycle, solved for update with residual "
                          << std::scientific << std::setprecision(16)
                          << rnorm << "\n";
     }
   } // outer while
 
-  // Free temporary vectors
-  // vec_v_copy.free(memspace_);
+  // Compute the norm of residual with the update
+  vector_handler_->axpy(&ONE, x, vec_Y_, memspace_);
+  vec_R_->copyDataFrom(rhs, memspace_, memspace_);
+  matrix_handler_->matvec(A_, vec_Y_, vec_R_, &MINUS_ONE, &ONE, memspace_);
+  rnorm = vector_handler_->dot(vec_R_, vec_R_, memspace_);
+  // rnorm = ||V_1||
+  rnorm = std::sqrt(rnorm);
+  relnorm = rnorm / rhsnorm;
+
+  // Compare this with bnorm and update x accordingly
+  if (rnorm <= initial_residual_norm_)
+      {
+	std::cout << "Update to intial guess is successful, final residual (solution plus update) "
+	  << std::scientific << std::setprecision(16)
+          << relnorm << "\n";
+
+	  x->copyDataFrom(vec_Y_, memspace_, memspace_);
+      }
+  else {
+	std::cout << "Update to intial guess is not successful, final residual greater than initial residual "
+          << std::scientific << std::setprecision(16)
+          << relnorm << "\n";
+       }
+
   return 0;
 }
 
@@ -598,7 +642,10 @@ int LinSolverIterativeFGMRES::solve(vector_type* rhs, vector_type* x)
 
   int LinSolverIterativeFGMRES::allocateSolverData()
   {
+    vec_R_ = new vector_type(n_);
+    vec_Y_ = new vector_type(n_);
     vec_V_ = new vector_type(n_, restart_ + 1);
+
     vec_V_->allocate(memspace_);
     if (flexible_)
     {
@@ -626,6 +673,8 @@ int LinSolverIterativeFGMRES::solve(vector_type* rhs, vector_type* x)
     delete[] h_rs_;
     delete vec_V_;
     delete vec_Z_;
+    delete vec_R_;
+    delete vec_Y_;
 
     h_H_   = nullptr;
     h_c_   = nullptr;
@@ -633,7 +682,8 @@ int LinSolverIterativeFGMRES::solve(vector_type* rhs, vector_type* x)
     h_rs_  = nullptr;
     vec_V_ = nullptr;
     vec_Z_ = nullptr;
-
+    vec_R_ = nullptr;
+    vec_Y_ = nullptr;
     return 0;
   }
 

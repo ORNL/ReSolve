@@ -1,7 +1,8 @@
 #include "LinSolverDirectCuSolverRf.hpp"
 
+#include <cuda_runtime.h>
 #include <cassert>
-
+#include <iostream>
 #include <resolve/matrix/Csc.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/vector/Vector.hpp>
@@ -132,6 +133,7 @@ namespace ReSolve
 
     status_cusolverrf_ = cusolverRfSetResetValuesFastMode(handle_cusolverrf_, CUSOLVERRF_RESET_VALUES_FAST_MODE_ON);
     error_sum += status_cusolverrf_;
+
     status_cusolverrf_ = cusolverRfSetupDevice(n,
                                                A_->getNnz(),
                                                A_->getRowData(memory::DEVICE),
@@ -149,6 +151,12 @@ namespace ReSolve
                                                d_Q_,
                                                handle_cusolverrf_);
     error_sum += status_cusolverrf_;
+
+    // Ensuring that the cuSolverRf does not mistake our matrix for symmetric
+    cusolverStatus_t set_type_status = setCuSolverRfMatrixType(handle_cusolverrf_, CUSOLVER_MAT_TYPE_GENERAL, CUSOLVER_BASE_INDEX_ZERO);
+    error_sum += set_type_status;
+    std::cout << "DEBUG: CuSolverRf Matrix Type Set Status: "
+          << set_type_status << std::endl;
 
     mem_.deviceSynchronize();
     status_cusolverrf_ = cusolverRfAnalyze(handle_cusolverrf_);
@@ -243,9 +251,20 @@ namespace ReSolve
                                                handle_cusolverrf_);
     error_sum += status_cusolverrf_;
 
+    std::cout << "The error after cusolverRfResestValues: " << error_sum << std::endl;
+
     mem_.deviceSynchronize();
+
+    // Checking for any cuda errors from prior operations
+    cudaError_t cuda_status = cudaGetLastError();
+    if (cuda_status != cudaSuccess)
+    {
+       std::cout << "Previous CUDA error before cusolverRfRefactor: " << cudaGetErrorString(cuda_status) << std::endl;
+    }
     status_cusolverrf_ = cusolverRfRefactor(handle_cusolverrf_);
     error_sum += status_cusolverrf_;
+
+    std::cout << "The error due to cusolverRfRefactor: " << status_cusolverrf_ << std::endl;
 
     return error_sum;
   }

@@ -38,6 +38,8 @@ if(RESOLVE_USE_KLU)
     # Build example with KLU factorization and GLU refactorization
     add_executable(hybrid_solver.exe hybrid_solver.cpp)
     target_link_libraries(hybrid_solver.exe PRIVATE ReSolve)
+    add_executable(hybrid_solver_test.exe hybrid_solver_test.cpp)
+    target_link_libraries(hybrid_solver_test.exe PRIVATE ReSolve)
 
     # Build example with KLU factorization and GLU refactorization
     add_executable(gluRefactor.exe gluRefactor.cpp)

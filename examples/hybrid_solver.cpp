@@ -103,7 +103,8 @@ int main(int argc, char* argv[])
 
     vector_type* vec_rhs = nullptr; // Device vector for RHS
     vector_type* vec_x   = nullptr;   // Device vector for solution
-    vector_type* vec_r   = nullptr;   // Device vector for residual
+
+    // Removed vec_r, as ExampleHelper will handle the residual vector internally
 
     ReSolve::GramSchmidt* GS = nullptr; // Gram-Schmidt orthogonalization (for FGMRES)
 
@@ -191,12 +192,12 @@ int main(int argc, char* argv[])
 
             vec_rhs = new vector_type(A->getNumRows());
             vec_x   = new vector_type(A->getNumRows());
-            vec_r   = new vector_type(A->getNumRows());
 
             vec_x->allocate(ReSolve::memory::HOST);
             vec_x->allocate(ReSolve::memory::DEVICE);
             vec_x->setToZero(ReSolve::memory::HOST);
             vec_x->setToZero(ReSolve::memory::DEVICE);
+
         }
         else // Subsequent systems: update existing structures
         {
@@ -266,14 +267,15 @@ int main(int argc, char* argv[])
             FGMRES->setup(A);
             FGMRES->setupPreconditioner("LU", Rf); // Set Rf as preconditioner for FGMRES
 
+	    std::cout << "DEBUG: Solving error equation with FGMRES. Update solution based on reliability." << std::endl;
+
             // Perform FGMRES solve after initial KLU solve
             FGMRES->solve(vec_rhs, vec_x);
-            std::cout << "FGMRES (after initial KLU): init nrm: "
-                      << std::scientific << std::setprecision(16)
-                      << FGMRES->getInitResidualNorm() / b_nrm
-                      << " final nrm: "
-                      << FGMRES->getFinalResidualNorm() / b_nrm
-                      << " iter: " << FGMRES->getNumIter() << "\n";
+
+            // Print FGMRES summary using the helper function
+            helper->printIrSummary(FGMRES);
+            std::cout << "FGMRES Effective Stability: " << FGMRES->getEffectiveStability() << std::endl;
+
         }
         else // if (i >= 1) -- Use CuSolverRf for refactorization, then FGMRES, with KLU redo logic
         {
@@ -338,19 +340,6 @@ int main(int argc, char* argv[])
             matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUS_ONE, ReSolve::memory::DEVICE);
             res_nrm = sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE));
 
-            std::cout << "\t 2-Norm of the residual (after CuSolverRf): "
-                      << std::scientific << std::setprecision(16)
-                      << res_nrm / b_nrm << "\n";
-
-            // Now, regardless of whether KLU was redone or not, run FGMRES for refinement
-            FGMRES->resetMatrix(A); // Reset FGMRES with current matrix A
-            FGMRES->solve(vec_rhs, vec_x); // Refine solution with FGMRES
-            std::cout << "FGMRES (after CuSolverRf/KLU redo): init nrm: "
-                      << std::scientific << std::setprecision(16)
-                      << FGMRES->getInitResidualNorm() / b_nrm
-                      << " final nrm: "
-                      << FGMRES->getFinalResidualNorm() / b_nrm
-                      << " iter: " << FGMRES->getNumIter() << "\n";
         }
 
         // Removed solution saving logic:

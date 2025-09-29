@@ -99,6 +99,8 @@ namespace ReSolve
 
     vector_type* vec_V_{nullptr};
     vector_type* vec_Z_{nullptr};
+    vector_type* vec_Y_{nullptr};
+    vector_type* vec_R_{nullptr};
 
     real_type* h_H_{nullptr};
     real_type* h_c_{nullptr};
