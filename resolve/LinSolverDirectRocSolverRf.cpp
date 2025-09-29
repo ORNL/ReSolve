@@ -208,7 +208,7 @@ namespace ReSolve
   /**
    * @brief Set the CLI parameters for LinSolverDirectRocSolverRf
    *
-   * Placeholder function till command line parameters are supported.
+   * Placeholder function till command line input parameters are supported.
    *
    * @param[in] id - string - parameter ID
    * @param[in] value - string - parameter value
