@@ -193,10 +193,10 @@ namespace ReSolve
     rhsnorm = vector_handler_->dot(rhs, rhs, memspace_);
     rhsnorm = std::sqrt(rhsnorm);
     if (rnorm > rhsnorm)
-        {
-          out::warning() << "Initial guess is invalid." << std::endl;
-          return 1;
-        }
+    {
+      out::warning() << "Initial guess is invalid." << std::endl;
+      return 1;
+    }
 
     io::Logger::misc() << "it 0: norm of residual "
                        << std::scientific << std::setprecision(16)
@@ -432,23 +432,24 @@ namespace ReSolve
     matrix_handler_->matvec(A_, vec_Y_, vec_R_, &MINUS_ONE, &ONE, memspace_);
     rnorm = vector_handler_->dot(vec_R_, vec_R_, memspace_);
     // rnorm = ||V_1||
-    rnorm = std::sqrt(rnorm);
+    rnorm   = std::sqrt(rnorm);
     relnorm = rnorm / rhsnorm;
 
     // Compare this with bnorm and update x accordingly
     if (rnorm <= initial_residual_norm_)
-        {
-           std::cout << "Update to intial guess is successful, final residual (solution plus update) "
-             << std::scientific << std::setprecision(16)
-             << relnorm << "\n";
+    {
+      std::cout << "Update to intial guess is successful, final residual (solution plus update) "
+                << std::scientific << std::setprecision(16)
+                << relnorm << "\n";
 
-            x->copyDataFrom(vec_Y_, memspace_, memspace_);
-        }
-    else {
-           std::cout << "Update to intial guess is not successful, final residual greater than initial residual "
-             << std::scientific << std::setprecision(16)
-             << relnorm << "\n";
-         }
+      x->copyDataFrom(vec_Y_, memspace_, memspace_);
+    }
+    else
+    {
+      std::cout << "Update to intial guess is not successful, final residual greater than initial residual "
+                << std::scientific << std::setprecision(16)
+                << relnorm << "\n";
+    }
 
     return 0;
   }
