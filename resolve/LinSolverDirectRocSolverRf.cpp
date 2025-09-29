@@ -17,9 +17,9 @@ namespace ReSolve
    */
   LinSolverDirectRocSolverRf::LinSolverDirectRocSolverRf(LinAlgWorkspaceHIP* workspace)
   {
-    workspace_  = workspace;
-    infoM_      = nullptr;
-    initParamList(); //Currently this does nothing, but it's in place for when we have Cli params.
+    workspace_ = workspace;
+    infoM_     = nullptr;
+    initParamList(); // Currently this does nothing, but it's in place for when we have Cli params.
   }
 
   /**
@@ -156,17 +156,17 @@ namespace ReSolve
     int error_sum = 0;
     mem_.deviceSynchronize();
     status_rocblas_ = rocsolver_dcsrrf_solve(workspace_->getRocblasHandle(),
-                                              A_->getNumRows(),
-                                              1,
-                                              M_->getNnz(),
-                                              M_->getRowData(ReSolve::memory::DEVICE),
-                                              M_->getColData(ReSolve::memory::DEVICE),
-                                              M_->getValues(ReSolve::memory::DEVICE),
-                                              d_P_,
-                                              d_Q_,
-                                              rhs->getData(ReSolve::memory::DEVICE),
-                                              A_->getNumRows(),
-                                              infoM_);
+                                             A_->getNumRows(),
+                                             1,
+                                             M_->getNnz(),
+                                             M_->getRowData(ReSolve::memory::DEVICE),
+                                             M_->getColData(ReSolve::memory::DEVICE),
+                                             M_->getValues(ReSolve::memory::DEVICE),
+                                             d_P_,
+                                             d_Q_,
+                                             rhs->getData(ReSolve::memory::DEVICE),
+                                             A_->getNumRows(),
+                                             infoM_);
     mem_.deviceSynchronize();
     RESOLVE_RANGE_POP(__FUNCTION__);
     return error_sum;
@@ -188,17 +188,17 @@ namespace ReSolve
     int error_sum = 0;
     mem_.deviceSynchronize();
     status_rocblas_ = rocsolver_dcsrrf_solve(workspace_->getRocblasHandle(),
-                                              A_->getNumRows(),
-                                              1,
-                                              M_->getNnz(),
-                                              M_->getRowData(ReSolve::memory::DEVICE),
-                                              M_->getColData(ReSolve::memory::DEVICE),
-                                              M_->getValues(ReSolve::memory::DEVICE),
-                                              d_P_,
-                                              d_Q_,
-                                              x->getData(ReSolve::memory::DEVICE),
-                                              A_->getNumRows(),
-                                              infoM_);
+                                             A_->getNumRows(),
+                                             1,
+                                             M_->getNnz(),
+                                             M_->getRowData(ReSolve::memory::DEVICE),
+                                             M_->getColData(ReSolve::memory::DEVICE),
+                                             M_->getValues(ReSolve::memory::DEVICE),
+                                             d_P_,
+                                             d_Q_,
+                                             x->getData(ReSolve::memory::DEVICE),
+                                             A_->getNumRows(),
+                                             infoM_);
     error_sum += status_rocblas_;
     mem_.deviceSynchronize();
     RESOLVE_RANGE_POP(__FUNCTION__);
@@ -223,7 +223,7 @@ namespace ReSolve
 
   /**
    * @brief Placeholder function till command line parameters are supported.
-   * 
+   *
    * The following switch (getParamId(Id)) cases always run the default and
    * are currently redundant code (like an if (true)).
    * In the future, they will be expanded to include more options.

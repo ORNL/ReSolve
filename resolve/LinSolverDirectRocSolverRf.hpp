@@ -60,9 +60,9 @@ namespace ReSolve
     void combineFactors(matrix::Sparse* L, matrix::Sparse* U); // create L+U from separate L, U factors
     void initParamList();
 
-    rocblas_status   status_rocblas_;
-    index_type*      d_P_{nullptr};
-    index_type*      d_Q_{nullptr};
+    rocblas_status status_rocblas_;
+    index_type*    d_P_{nullptr};
+    index_type*    d_Q_{nullptr};
 
     MemoryHandler       mem_; ///< Device memory manager object
     LinAlgWorkspaceHIP* workspace_;
