@@ -339,7 +339,7 @@ namespace ReSolve
         }
 
         // 5. Calculate the Euclidean norm (L2 norm).
-        // The formula is: $||x||_2 = \sqrt{\sum_{i=1}^{n} |x_i|^2}$
+        // The formula is: $||x||_2 = \sqrt{\sum_{i=1}^{n} |x_i|^2}$.
         double norm = 0.0;
         for (ReSolve::index_type i = 0; i < size; ++i)
         {
