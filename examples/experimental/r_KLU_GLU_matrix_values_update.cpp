@@ -55,9 +55,16 @@ int main(int argc, char* argv[])
 
   for (int i = 0; i < numSystems; ++i)
   {
-    index_type j = 4 + i * 2;
-    fileId       = argv[j];
-    rhsId        = argv[j + 1];
+    if (i < 10)
+    {
+      fileId = "0" + std::to_string(i);
+      rhsId  = "0" + std::to_string(i);
+    }
+    else
+    {
+      fileId = std::to_string(i);
+      rhsId  = std::to_string(i);
+    }
 
     matrixFileNameFull = "";
     rhsFileNameFull    = "";

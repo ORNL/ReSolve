@@ -88,15 +88,21 @@ install(PROGRAMS test.sh DESTINATION ${CONSUMER_PATH})
 # Select consumer app
 if(RESOLVE_USE_KLU)
   if(RESOLVE_USE_CUDA)
-    set(RESOLVE_CONSUMER_APP "testRefactor.cpp")
+    set(RESOLVE_CONSUMER_APP "testSysRefactor.cpp")
   elseif(RESOLVE_USE_HIP)
-    set(RESOLVE_CONSUMER_APP "testRefactor.cpp")
+    set(RESOLVE_CONSUMER_APP "testSysRefactor.cpp")
   else()
     set(RESOLVE_CONSUMER_APP "testKlu.cpp")
   endif()
 else(RESOLVE_USE_KLU)
   set(RESOLVE_CONSUMER_APP "testSysGmres.cpp")
 endif(RESOLVE_USE_KLU)
+
+set(test_data_dir ${CMAKE_SOURCE_DIR}/tests/functionality)
+set(sym_matrix_path /data/matrix_ACTIVSg200_AC_renumbered_add9_)
+set(sym_rhs_path /data/rhs_ACTIVSg200_AC_renumbered_add9_ones_)
+set(asym_matrix_path /data/A_asymmetric)
+set(asym_rhs_path /data/b_asymmetric)
 
 # Install directory with example on how to consume ReSolve
 install(DIRECTORY resolve_consumer DESTINATION share/examples)
@@ -106,4 +112,4 @@ install(FILES ${PROJECT_SOURCE_DIR}/tests/functionality/TestHelper.hpp DESTINATI
 # Shell script argumets:
 #    1. Path to where resolve is installed.
 #    2. Path to data directory
-add_custom_target(test_install COMMAND ${CONSUMER_PATH}/test.sh  ${CMAKE_INSTALL_PREFIX} ${PROJECT_SOURCE_DIR}/tests/functionality/)
+add_custom_target(test_install COMMAND ${CONSUMER_PATH}/test.sh  ${CMAKE_INSTALL_PREFIX} ${test_data_dir} ${sym_matrix_path} ${sym_rhs_path}) 

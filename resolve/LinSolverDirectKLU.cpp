@@ -1,7 +1,9 @@
 #include "LinSolverDirectKLU.hpp"
 
+#include <algorithm>
 #include <cassert>
 #include <cstring>
+#include <vector>
 
 #include <resolve/matrix/Csc.hpp>
 #include <resolve/matrix/Csr.hpp>
@@ -266,7 +268,7 @@ namespace ReSolve
    * It extracts the factors as $A = U^T L^T$,
    * where U^T is the reinterpretation of the CSC U factor as CSR and L^T is the reinterpretation of the CSC L factor as CSR.
    */
-  void LinSolverDirectKLU::extractFactorsCsr()
+  void LinSolverDirectKLU::extractFactors()
   {
     if (!factors_extracted_)
     {
@@ -295,6 +297,15 @@ namespace ReSolve
                            nullptr,
                            nullptr,
                            &Common_);
+      // Sort the column indices in L and U to ensure they are in ordered CSR format
+      // WARNING: Values are not sorted. We currently don't use values from KLU across solvers. If we ever decide to, we will need to change this.
+      for (index_type i = 0; i < A_->getNumRows(); ++i)
+      {
+        std::sort(L_->getColData(memory::HOST) + L_->getRowData(memory::HOST)[i], // Sort L's column indices from the start of Row i to the start of Row i+1 (non inclusive).
+                  L_->getColData(memory::HOST) + L_->getRowData(memory::HOST)[i + 1]);
+        std::sort(U_->getColData(memory::HOST) + U_->getRowData(memory::HOST)[i],
+                  U_->getColData(memory::HOST) + U_->getRowData(memory::HOST)[i + 1]);
+      }
 
       L_->setUpdated(memory::HOST);
       U_->setUpdated(memory::HOST);
@@ -309,67 +320,6 @@ namespace ReSolve
    *
    * @return L factor in compressed sparse row format
    */
-  matrix::Sparse* LinSolverDirectKLU::getLFactorCsr()
-  {
-    extractFactorsCsr();
-    return L_;
-  }
-
-  /**
-   * @brief Gets a U factor of the matrix A in compressed sparse row format.
-   *
-   * @return U factor in compressed sparse row format
-   */
-  matrix::Sparse* LinSolverDirectKLU::getUFactorCsr()
-  {
-    extractFactorsCsr();
-    return U_;
-  }
-
-  /**
-   * @brief Extract L and U factors from the KLU solver in compressed sparse column format.
-   */
-  void LinSolverDirectKLU::extractFactors()
-  {
-    if (!factors_extracted_)
-    {
-      const int nnzL = Numeric_->lnz;
-      const int nnzU = Numeric_->unz;
-
-      L_ = new matrix::Csc(A_->getNumRows(), A_->getNumColumns(), nnzL);
-      U_ = new matrix::Csc(A_->getNumRows(), A_->getNumColumns(), nnzU);
-      L_->allocateMatrixData(memory::HOST);
-      U_->allocateMatrixData(memory::HOST);
-
-      int ok = klu_extract(Numeric_,
-                           Symbolic_,
-                           L_->getColData(memory::HOST),
-                           L_->getRowData(memory::HOST),
-                           L_->getValues(memory::HOST),
-                           U_->getColData(memory::HOST),
-                           U_->getRowData(memory::HOST),
-                           U_->getValues(memory::HOST),
-                           nullptr,
-                           nullptr,
-                           nullptr,
-                           nullptr,
-                           nullptr,
-                           nullptr,
-                           nullptr,
-                           &Common_);
-
-      L_->setUpdated(memory::HOST);
-      U_->setUpdated(memory::HOST);
-      (void) ok; // TODO: Check status in ok before setting `factors_extracted_`
-      factors_extracted_ = true;
-    }
-  }
-
-  /**
-   * @brief Get the lower triangular factor L of the matrix A in compressed sparse column format.
-   *
-   * @return L factor in compressed sparse column format
-   */
   matrix::Sparse* LinSolverDirectKLU::getLFactor()
   {
     extractFactors();
@@ -377,9 +327,9 @@ namespace ReSolve
   }
 
   /**
-   * @brief Get the upper triangular factor U of the matrix A in compressed sparse column format.
+   * @brief Gets a U factor of the matrix A in compressed sparse row format.
    *
-   * @return U factor
+   * @return U factor in compressed sparse row format
    */
   matrix::Sparse* LinSolverDirectKLU::getUFactor()
   {
@@ -390,6 +340,9 @@ namespace ReSolve
   /**
    * @brief Get the permutation vector P.
    *
+   * Due to KLU's internal CSC storage, the P vector is obtained from Symbolic_->Q,
+   * to keep things consistent with our CSR storage convention.
+   *
    * @return P permutation vector
    */
   index_type* LinSolverDirectKLU::getPOrdering()
@@ -398,7 +351,8 @@ namespace ReSolve
     {
       P_           = new index_type[A_->getNumRows()];
       size_t nrows = static_cast<size_t>(A_->getNumRows());
-      std::memcpy(P_, Numeric_->Pnum, nrows * sizeof(index_type));
+      std::memcpy(P_, Symbolic_->Q, nrows * sizeof(index_type)); // KLU's CSC Symbolic_->Q is the CSR P vector.
+      // Only a symbolic factorization is needed to get Q, because there is only row pivoting for the numeric factorization.
       return P_;
     }
     else
@@ -410,6 +364,9 @@ namespace ReSolve
   /**
    * @brief Get the permutation vector Q.
    *
+   * Due to KLU's internal CSC storage, the Q vector is obtained from Numeric_->Pnum,
+   * to keep things consistent with our CSR storage convention.
+   *
    * @return Q permutation vector
    */
   index_type* LinSolverDirectKLU::getQOrdering()
@@ -418,7 +375,8 @@ namespace ReSolve
     {
       Q_           = new index_type[A_->getNumRows()];
       size_t nrows = static_cast<size_t>(A_->getNumRows());
-      std::memcpy(Q_, Symbolic_->Q, nrows * sizeof(index_type));
+      std::memcpy(Q_, Numeric_->Pnum, nrows * sizeof(index_type)); // KLU's CSC Numeric_->Pnum is the CSR Q vector.
+      // A numeric factorization is needed to get Pnum, because there is row pivoting for the numeric factorization.
       return Q_;
     }
     else

@@ -141,11 +141,11 @@ int runTest(int argc, char* argv[], std::string& solver_name)
   ReSolve::LinSolverIterativeFGMRES FGMRES(&matrix_handler, &vector_handler, &GS);
 
   // Input data
-  std::string matrix_file_name_1 = data_path + "/data/matrix_ACTIVSg200_AC_10.mtx";
-  std::string matrix_file_name_2 = data_path + "/data/matrix_ACTIVSg200_AC_11.mtx";
+  std::string matrix_file_name_1 = data_path + "/data/matrix_ACTIVSg200_AC_renumbered_add9_01.mtx";
+  std::string matrix_file_name_2 = data_path + "/data/matrix_ACTIVSg200_AC_renumbered_add9_02.mtx";
 
-  std::string rhs_file_name_1 = data_path + "/data/rhs_ACTIVSg200_AC_10.mtx.ones";
-  std::string rhs_file_name_2 = data_path + "/data/rhs_ACTIVSg200_AC_11.mtx.ones";
+  std::string rhs_file_name_1 = data_path + "/data/rhs_ACTIVSg200_AC_renumbered_add9_ones_01.mtx";
+  std::string rhs_file_name_2 = data_path + "/data/rhs_ACTIVSg200_AC_renumbered_add9_ones_02.mtx";
 
   // Read first matrix
   std::ifstream mat1(matrix_file_name_1);
@@ -186,7 +186,7 @@ int runTest(int argc, char* argv[], std::string& solver_name)
   status = KLU.factorize();
   error_sum += status;
 
-  // Extract factors and setup factorization
+  // Extract factors and setup factorization for refactorization.
   matrix_type* L = KLU.getLFactor();
   matrix_type* U = KLU.getUFactor();
   index_type*  P = KLU.getPOrdering();
@@ -228,7 +228,7 @@ int runTest(int argc, char* argv[], std::string& solver_name)
   {
     helper.printIrSummary(&FGMRES);
   }
-  error_sum += helper.checkResult(1e-16);
+  error_sum += helper.checkResult(ReSolve::constants::MACHINE_EPSILON);
 
   // Load the second matrix
   std::ifstream mat2(matrix_file_name_2);
@@ -281,7 +281,7 @@ int runTest(int argc, char* argv[], std::string& solver_name)
   {
     helper.printIrSummary(&FGMRES);
   }
-  error_sum += helper.checkResult(1e-16);
+  error_sum += helper.checkResult(ReSolve::constants::MACHINE_EPSILON);
 
   isTestPass(error_sum, test_name);
 

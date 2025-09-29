@@ -5,7 +5,6 @@
 #include <resolve/LinSolverDirectKLU.hpp>
 #include <resolve/LinSolverDirectRocSolverRf.hpp>
 #include <resolve/matrix/Coo.hpp>
-#include <resolve/matrix/Csc.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/matrix/io.hpp>
@@ -56,12 +55,16 @@ int main(int argc, char* argv[])
 
   for (int i = 0; i < numSystems; ++i)
   {
-    index_type j = 4 + i * 2;
-    fileId       = argv[j];
-    rhsId        = argv[j + 1];
-
-    matrixFileNameFull = "";
-    rhsFileNameFull    = "";
+    if (i < 10)
+    {
+      fileId = "0" + std::to_string(i);
+      rhsId  = "0" + std::to_string(i);
+    }
+    else
+    {
+      fileId = std::to_string(i);
+      rhsId  = std::to_string(i);
+    }
 
     // Read matrix first
     matrixFileNameFull = matrixFileName + fileId + ".mtx";
@@ -136,8 +139,8 @@ int main(int argc, char* argv[])
       std::cout << "KLU solve status: " << status << std::endl;
       if (i == 1)
       {
-        ReSolve::matrix::Csc* L = (ReSolve::matrix::Csc*) KLU->getLFactor();
-        ReSolve::matrix::Csc* U = (ReSolve::matrix::Csc*) KLU->getUFactor();
+        ReSolve::matrix::Csr* L = (ReSolve::matrix::Csr*) KLU->getLFactor();
+        ReSolve::matrix::Csr* U = (ReSolve::matrix::Csr*) KLU->getUFactor();
         index_type*           P = KLU->getPOrdering();
         index_type*           Q = KLU->getQOrdering();
         vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
@@ -190,8 +193,8 @@ int main(int argc, char* argv[])
                   << std::scientific << std::setprecision(16)
                   << res_nrm / b_nrm << "\n";
 
-        ReSolve::matrix::Csc* L = (ReSolve::matrix::Csc*) KLU->getLFactor();
-        ReSolve::matrix::Csc* U = (ReSolve::matrix::Csc*) KLU->getUFactor();
+        ReSolve::matrix::Csr* L = (ReSolve::matrix::Csr*) KLU->getLFactor();
+        ReSolve::matrix::Csr* U = (ReSolve::matrix::Csr*) KLU->getUFactor();
 
         index_type* P = KLU->getPOrdering();
         index_type* Q = KLU->getQOrdering();

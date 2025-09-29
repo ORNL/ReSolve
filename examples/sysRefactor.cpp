@@ -8,8 +8,6 @@
 #include <resolve/LinSolverDirectKLU.hpp>
 #include <resolve/Profiling.hpp>
 #include <resolve/SystemSolver.hpp>
-#include <resolve/matrix/Coo.hpp>
-#include <resolve/matrix/Csc.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/matrix/io.hpp>
@@ -81,7 +79,7 @@ int main(int argc, char* argv[])
   else
   {
     std::cout << "Re::Solve is not built with support for " << opt->second;
-    std::cout << "backend.\n";
+    std::cout << " backend.\n";
     return 1;
   }
 

@@ -32,6 +32,9 @@ if(RESOLVE_USE_KLU)
     add_executable(klu_rocsolverrf_check_redo.exe r_KLU_rocsolverrf_redo_factorization.cpp)
     target_link_libraries(klu_rocsolverrf_check_redo.exe PRIVATE ReSolve)
 
+    add_executable(r_KLU_rocsolverrf_asym6x6.exe r_KLU_rocsolverrf_asym6x6.cpp) # Example with refactorization on GPU with the same system (from kalmarek).
+    target_link_libraries(r_KLU_rocsolverrf_asym6x6.exe PRIVATE ReSolve)
+
   endif(RESOLVE_USE_HIP)
 
 endif(RESOLVE_USE_KLU)

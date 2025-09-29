@@ -1,8 +1,8 @@
 #include "LinSolverDirectCuSolverRf.hpp"
 
-#include <cuda_runtime.h>
 #include <cassert>
-#include <iostream>
+#include <cstring> // includes memcpy
+
 #include <resolve/matrix/Csc.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/vector/Vector.hpp>
@@ -46,20 +46,21 @@ namespace ReSolve
   }
 
   /**
-   * @brief Setup the cuSolverRf factorization
+   * @brief Setup the cuSolverRf factorization with factors already in CSR
    *
    * Sets up the cuSolverRf factorization for the given matrix A and its
    * L and U factors. The permutation vectors P and Q are also set up.
    *
    * @param[in] A - pointer to the matrix A
-   * @param[in] L - pointer to the lower triangular factor L
-   * @param[in] U - pointer to the upper triangular factor U
+   * @param[in] L - pointer to the lower triangular factor L in CSR
+   * @param[in] U - pointer to the upper triangular factor U in CSR
    * @param[in] P - pointer to the permutation vector P
    * @param[in] Q - pointer to the permutation vector Q
    * @param[in] rhs - pointer to the right-hand side vector (optional)
    *
    * @pre The matrix A is in CSR format.
    */
+
   int LinSolverDirectCuSolverRf::setup(matrix::Sparse* A,
                                        matrix::Sparse* L,
                                        matrix::Sparse* U,
@@ -69,46 +70,18 @@ namespace ReSolve
   {
     assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW && "Matrix A has to be in CSR format for cusolverRf input.\n");
     assert(L->getSparseFormat() == U->getSparseFormat() && "Matrices L and U have to be in the same format for cusolverRf input.\n");
-
+    assert(L->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW && "Matrices L and U have to be in CSR format for cusolverRf input.\n");
     int error_sum = 0;
     this->A_      = A;
     index_type n  = A_->getNumRows();
 
-    // remember - P and Q are generally CPU variables
-    //  factorization data is stored in the handle.
-    //  If function is called again, destroy the old handle to get rid of old data.
+    // Remember - P and Q are generally CPU variables!
+    // Factorization data is stored in the handle.
+    // If function is called again, destroy the old handle to get rid of old data.
     if (setup_completed_)
     {
       cusolverRfDestroy(handle_cusolverrf_);
       cusolverRfCreate(&handle_cusolverrf_);
-    }
-
-    matrix::Csc* L_csc = nullptr;
-    matrix::Csc* U_csc = nullptr;
-    matrix::Csr* L_csr = nullptr;
-    matrix::Csr* U_csr = nullptr;
-
-    switch (L->getSparseFormat())
-    {
-    case matrix::Sparse::COMPRESSED_SPARSE_COLUMN:
-      // std::cout << "converting L and U factors from CSC to CSR format ...\n";
-      L_csc = static_cast<matrix::Csc*>(L);
-      U_csc = static_cast<matrix::Csc*>(U);
-      L_csr = new matrix::Csr(L_csc->getNumRows(), L_csc->getNumColumns(), L_csc->getNnz());
-      U_csr = new matrix::Csr(U_csc->getNumRows(), U_csc->getNumColumns(), U_csc->getNnz());
-      csc2csr(L_csc, L_csr);
-      csc2csr(U_csc, U_csr);
-      L_csr->syncData(memory::DEVICE);
-      U_csr->syncData(memory::DEVICE);
-      break;
-    case matrix::Sparse::COMPRESSED_SPARSE_ROW:
-      L_csr = dynamic_cast<matrix::Csr*>(L);
-      U_csr = dynamic_cast<matrix::Csr*>(U);
-      break;
-    default:
-      out::error() << "Matrix type for L and U factors not recognized!\n";
-      out::error() << "Refactorization not completed.\n";
-      return 1;
     }
 
     if (d_P_ == nullptr)
@@ -133,66 +106,36 @@ namespace ReSolve
 
     status_cusolverrf_ = cusolverRfSetResetValuesFastMode(handle_cusolverrf_, CUSOLVERRF_RESET_VALUES_FAST_MODE_ON);
     error_sum += status_cusolverrf_;
-
+    L->syncData(memory::DEVICE);
+    U->syncData(memory::DEVICE);
     status_cusolverrf_ = cusolverRfSetupDevice(n,
                                                A_->getNnz(),
                                                A_->getRowData(memory::DEVICE),
                                                A_->getColData(memory::DEVICE),
                                                A_->getValues(memory::DEVICE),
-                                               L_csr->getNnz(),
-                                               L_csr->getRowData(memory::DEVICE),
-                                               L_csr->getColData(memory::DEVICE),
-                                               L_csr->getValues(memory::DEVICE),
-                                               U_csr->getNnz(),
-                                               U_csr->getRowData(memory::DEVICE),
-                                               U_csr->getColData(memory::DEVICE),
-                                               U_csr->getValues(memory::DEVICE),
+                                               L->getNnz(),
+                                               L->getRowData(memory::DEVICE),
+                                               L->getColData(memory::DEVICE),
+                                               L->getValues(memory::DEVICE),
+                                               U->getNnz(),
+                                               U->getRowData(memory::DEVICE),
+                                               U->getColData(memory::DEVICE),
+                                               U->getValues(memory::DEVICE),
                                                d_P_,
                                                d_Q_,
                                                handle_cusolverrf_);
     error_sum += status_cusolverrf_;
-
-    // Ensuring that the cuSolverRf does not mistake our matrix for symmetric
-    cusolverStatus_t set_type_status = setCuSolverRfMatrixType(handle_cusolverrf_, CUSOLVER_MAT_TYPE_GENERAL, CUSOLVER_BASE_INDEX_ZERO);
-    error_sum += set_type_status;
-    std::cout << "DEBUG: CuSolverRf Matrix Type Set Status: "
-          << set_type_status << std::endl;
-
     mem_.deviceSynchronize();
     status_cusolverrf_ = cusolverRfAnalyze(handle_cusolverrf_);
     error_sum += status_cusolverrf_;
-
     const cusolverRfFactorization_t fact_alg =
         CUSOLVERRF_FACTORIZATION_ALG0; // 0 - default, 1 or 2
     const cusolverRfTriangularSolve_t solve_alg =
-        CUSOLVERRF_TRIANGULAR_SOLVE_ALG1; //  1- default, 2 or 3 // 1 causes error
+        CUSOLVERRF_TRIANGULAR_SOLVE_ALG1; //  1- default, 2 or 3
+
     this->setAlgorithms(fact_alg, solve_alg);
 
     setup_completed_ = true;
-
-    // Remove temporary objects upon setup completion
-    switch (L->getSparseFormat())
-    {
-    case matrix::Sparse::COMPRESSED_SPARSE_COLUMN:
-      delete L_csr;
-      delete U_csr;
-      L_csr = nullptr;
-      U_csr = nullptr;
-      L_csc = nullptr;
-      U_csc = nullptr;
-      break;
-    case matrix::Sparse::COMPRESSED_SPARSE_ROW:
-      L_csr = nullptr;
-      U_csr = nullptr;
-      L_csc = nullptr;
-      U_csc = nullptr;
-      break;
-    default:
-      break;
-    }
-    // delete L_csr;
-    // delete U_csr;
-
     return error_sum;
   }
 
@@ -251,20 +194,9 @@ namespace ReSolve
                                                handle_cusolverrf_);
     error_sum += status_cusolverrf_;
 
-    std::cout << "The error after cusolverRfResestValues: " << error_sum << std::endl;
-
     mem_.deviceSynchronize();
-
-    // Checking for any cuda errors from prior operations
-    cudaError_t cuda_status = cudaGetLastError();
-    if (cuda_status != cudaSuccess)
-    {
-       std::cout << "Previous CUDA error before cusolverRfRefactor: " << cudaGetErrorString(cuda_status) << std::endl;
-    }
     status_cusolverrf_ = cusolverRfRefactor(handle_cusolverrf_);
     error_sum += status_cusolverrf_;
-
-    std::cout << "The error due to cusolverRfRefactor: " << status_cusolverrf_ << std::endl;
 
     return error_sum;
   }
@@ -315,6 +247,7 @@ namespace ReSolve
                                          A_->getNumRows(),
                                          x->getData(memory::DEVICE),
                                          A_->getNumRows());
+    x->setDataUpdated(memory::DEVICE);
     return status_cusolverrf_;
   }
 

@@ -24,7 +24,6 @@
 #include <resolve/LinSolverDirectKLU.hpp>
 #include <resolve/LinSolverIterativeFGMRES.hpp>
 #include <resolve/Profiling.hpp>
-#include <resolve/matrix/Csc.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/matrix/io.hpp>
@@ -267,8 +266,8 @@ int gpuRefactor(int argc, char* argv[])
       if (i == 1)
       {
         // Extract factors and configure refactorization solver
-        matrix::Csc* L = (matrix::Csc*) KLU.getLFactor();
-        matrix::Csc* U = (matrix::Csc*) KLU.getUFactor();
+        matrix::Csr* L = (matrix::Csr*) KLU.getLFactor();
+        matrix::Csr* U = (matrix::Csr*) KLU.getUFactor();
         if (L == nullptr || U == nullptr)
         {
           std::cout << "Factor extraction from KLU failed!\n";

@@ -20,7 +20,6 @@
 
 #include <resolve/LinSolverDirectKLU.hpp>
 #include <resolve/Profiling.hpp>
-#include <resolve/matrix/Csc.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/matrix/io.hpp>
@@ -236,15 +235,15 @@ int gluRefactor(int argc, char* argv[])
       std::cout << "KLU solve status: " << status << std::endl;
 
       // Extract factors and configure refactorization solver
-      matrix::Csr* L = (matrix::Csr*) KLU.getLFactorCsr();
-      matrix::Csr* U = (matrix::Csr*) KLU.getUFactorCsr();
+      matrix::Csr* L = (matrix::Csr*) KLU.getLFactor();
+      matrix::Csr* U = (matrix::Csr*) KLU.getUFactor();
       if (L == nullptr || U == nullptr)
       {
         std::cout << "Factor extraction from KLU failed!\n";
       }
       index_type* P = KLU.getPOrdering();
       index_type* Q = KLU.getQOrdering();
-      status        = Rf.setupCsr(A, L, U, P, Q);
+      status        = Rf.setup(A, L, U, P, Q);
       std::cout << "Refactorization setup status: " << status << std::endl;
 
       RESOLVE_RANGE_POP("KLU");

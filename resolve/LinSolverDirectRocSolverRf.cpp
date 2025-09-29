@@ -45,7 +45,7 @@ namespace ReSolve
   }
 
   /**
-   * @brief Setup function for LinSolverDirectRocSolverRf
+   * @brief Setup function for LinSolverDirectRocSolverRf where factors are already in csr
    *
    * @param[in] A - matrix::Sparse* - matrix to solve
    * @param[in] L - matrix::Sparse* - lower triangular factor
@@ -115,7 +115,7 @@ namespace ReSolve
     error_sum += status_rocblas_;
     // tri solve setup
     if (solve_mode_ == 1)
-    { // fast mode
+    { // OBSOLETE -- to be removed. Formerly known as "fast mode" TODO
 
       if (L_csr_ != nullptr)
       {
@@ -602,7 +602,7 @@ namespace ReSolve
   //
 
   /**
-   * @brief Combine L and U factors into a single matrix M
+   * @brief Combine L and U factors already in CSR into a single matrix M
    *
    * M = [L U], where L and U are lower and upper triangular factors
    * The implicit identity diagonal of L is not included in M
@@ -614,73 +614,39 @@ namespace ReSolve
    */
   void LinSolverDirectRocSolverRf::combineFactors(matrix::Sparse* L, matrix::Sparse* U)
   {
-    // L and U need to be in CSC format
-    index_type  n  = L->getNumRows();
-    index_type* Lp = L->getColData(ReSolve::memory::HOST);
-    index_type* Li = L->getRowData(ReSolve::memory::HOST);
-    index_type* Up = U->getColData(ReSolve::memory::HOST);
-    index_type* Ui = U->getRowData(ReSolve::memory::HOST);
-    if (M_ != nullptr)
+    index_type  n     = L->getNumRows();
+    index_type* L_row = L->getRowData(memory::HOST);
+    index_type* L_col = L->getColData(memory::HOST);
+    index_type* U_row = U->getRowData(memory::HOST);
+    index_type* U_col = U->getColData(memory::HOST);
+    index_type  M_nnz = (L->getNnz() + U->getNnz() - n);
+    M_                = new matrix::Csr(n, n, M_nnz);
+    M_->allocateMatrixData(memory::HOST);
+    index_type* M_row = M_->getRowData(memory::HOST);
+    index_type* M_col = M_->getColData(memory::HOST);
+    // The total number of non-zeros in a row is the sum of non-zeros in L and U,
+    // minus 1 to not count the diagonal element twice.
+    // You can verify with this formula that M_row[i+1] - M_row[i] is the number of non-zeros in row i.
+    // M_row[i+1] - M_row[i] = (L_row[i+1] - L_row[i]) + (U_row[i+1] - U_row[i]) - 1
+    // The number of zeros in the i-th row of L + U -1.
+    for (index_type i = 0; i <= n; i++)
     {
-      delete M_;
+      M_row[i] = L_row[i] + U_row[i] - i;
     }
-
-    index_type nnzM = (L->getNnz() + U->getNnz() - n);
-    M_              = new matrix::Csr(n, n, nnzM);
-    M_->allocateMatrixData(ReSolve::memory::DEVICE);
-    M_->allocateMatrixData(ReSolve::memory::HOST);
-    index_type* mia = M_->getRowData(ReSolve::memory::HOST);
-    index_type* mja = M_->getColData(ReSolve::memory::HOST);
-    index_type  row;
+    // Now we need to fill the M_col array with the correct column indices.
+    index_type count = 0;
     for (index_type i = 0; i < n; ++i)
     {
-      // go through EACH COLUMN OF L first
-      for (index_type j = Lp[i]; j < Lp[i + 1]; ++j)
+      for (index_type j = L_row[i]; j < L_row[i + 1]; ++j)
       {
-        row = Li[j];
-        // BUT dont count diagonal twice, important
-        if (row != i)
-        {
-          mia[row + 1]++;
-        }
+        M_col[count++] = L_col[j];
       }
-      // then each column of U
-      for (index_type j = Up[i]; j < Up[i + 1]; ++j)
+      for (index_type j = U_row[i] + 1; j < U_row[i + 1]; ++j) // skip the diagonal element of U, which is at U_row[i]
       {
-        row = Ui[j];
-        mia[row + 1]++;
+        M_col[count++] = U_col[j];
       }
     }
-    // then organize mia_;
-    mia[0] = 0;
-    for (index_type i = 1; i < n + 1; i++)
-    {
-      mia[i] += mia[i - 1];
-    }
-
-    std::vector<int> Mshifts(static_cast<size_t>(n), 0);
-    for (index_type i = 0; i < n; ++i)
-    {
-      // go through EACH COLUMN OF L first
-      for (int j = Lp[i]; j < Lp[i + 1]; ++j)
-      {
-        row = Li[j];
-        if (row != i)
-        {
-          // place (row, i) where it belongs!
-          mja[mia[row] + Mshifts[static_cast<size_t>(row)]] = i;
-          Mshifts[static_cast<size_t>(row)]++;
-        }
-      }
-      // each column of U next
-      for (index_type j = Up[i]; j < Up[i + 1]; ++j)
-      {
-        row                                               = Ui[j];
-        mja[mia[row] + Mshifts[static_cast<size_t>(row)]] = i;
-        Mshifts[static_cast<size_t>(row)]++;
-      }
-    }
-  } // LinSolverDirectRocSolverRf::combineFactors
+  }
 
   /**
    * @brief initialize the parameter list for LinSolverDirectRocSolverRf
