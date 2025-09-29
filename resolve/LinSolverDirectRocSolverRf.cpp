@@ -222,7 +222,7 @@ namespace ReSolve
   }
 
   /**
-   * @brief Placeholder function till command line parameters are supported.
+   * @brief Placeholder function till command line input parameters are supported.
    *
    * The following switch (getParamId(Id)) cases always run the default and
    * are currently redundant code (like an if (true)).
