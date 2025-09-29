@@ -236,27 +236,6 @@ int LinSolverIterativeFGMRES::solve(vector_type* rhs, vector_type* x)
       this->precV(&vec_v, &vec_z);
       mem_.deviceSynchronize();
 
-      // --- Stability Calculation ---
-      // We need to compute ||v_i - A*(LU)^{-1}v_i||_2
-      // 1. Copy the current Arnoldi vector v_i
-      vec_v_copy.copyDataFrom(vec_V_, memspace_, memspace_);
-
-      // 2. Compute V_{i+1}=A*Z_i. The result is stored in vec_v
-      vec_v.setData(vec_V_->getData(i + 1, memspace_), memspace_);
-      matrix_handler_->matvec(A_, &vec_z, &vec_v, &ONE, &ZERO, memspace_);
-
-      // 3. Compute the difference: vec_v_copy = v_i - A*(LU)^{-1}v_i
-      vector_handler_->axpy(&MINUS_ONE, &vec_v, &vec_v_copy, memspace_);
-
-      // 4. Calculate the 2-norm of the difference
-      real_type currentStabilityNorm = std::sqrt(vector_handler_->dot(&vec_v_copy, &vec_v_copy, memspace_));
-
-      // 5. Update the maximum effective stability
-      if (currentStabilityNorm > effectiveStability_) {
-          effectiveStability_ = currentStabilityNorm;
-      }
-      // --- End of Stability Calculation ---
-
       // orthogonalize V[i+1], form a column of h_H_
       GS_->orthogonalize(n_, vec_V_, h_H_, i);
       if (i != 0)
