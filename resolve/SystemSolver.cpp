@@ -475,8 +475,6 @@ namespace ReSolve
     if (refactorizationMethod_ == "rocsolverrf")
     {
       is_solve_on_device_ = false;
-      auto* Rf            = dynamic_cast<LinSolverDirectRocSolverRf*>(refactorizationSolver_);
-      Rf->setSolveMode(1);
       status += refactorizationSolver_->setup(A_, L_, U_, P_, Q_, resVector_);
     }
 #endif
