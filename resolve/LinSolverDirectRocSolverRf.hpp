@@ -78,16 +78,6 @@ namespace ReSolve
     rocsolver_rfinfo infoM_;
     matrix::Sparse*  M_{nullptr}; // the matrix that contains added factors
 
-    // not used by default - for fast solve
-    rocsparse_mat_descr descr_L_{nullptr};
-    rocsparse_mat_descr descr_U_{nullptr};
-
-    rocsparse_mat_info info_L_{nullptr};
-    rocsparse_mat_info info_U_{nullptr};
-
-    void* L_buffer_{nullptr};
-    void* U_buffer_{nullptr};
-
     ReSolve::matrix::Csr* L_csr_{nullptr};
     ReSolve::matrix::Csr* U_csr_{nullptr};
 
