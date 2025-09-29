@@ -367,7 +367,7 @@ namespace ReSolve
   /**
    * @brief initialize the parameter list for LinSolverDirectRocSolverRf
    *
-   * currently no parameters are supported
+   * Currently, no parameters are supported.
    */
   void LinSolverDirectRocSolverRf::initParamList()
   {
