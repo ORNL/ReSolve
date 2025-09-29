@@ -98,23 +98,6 @@ int runTest(int argc, char* argv[], std::string& solver_name)
   auto        opt       = options.getParamFromKey("-d");
   std::string data_path = opt ? (*opt).second : ".";
 
-  // Change Rf solver mode (only for rocsolverRf)
-  std::string mode("default");
-  opt = options.getParamFromKey("-m");
-  if (opt)
-  {
-    if (opt->second != "default" && opt->second != "rocsparse_trisolve")
-    {
-      std::cout << "Invalid rocSOLVER mode option.\n"
-                << "Available modes are 'default' and 'rocsparse_trisolve'.\n"
-                << "Setting mode to default ...\n";
-    }
-    else
-    {
-      mode = opt->second;
-    }
-  }
-
   // Whether to use iterative refinement
   opt        = options.getParamFromKey("-i");
   bool is_ir = opt ? true : false;
