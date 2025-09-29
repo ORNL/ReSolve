@@ -1,8 +1,8 @@
 #include "LinSolverDirectCuSolverRf.hpp"
 
+#include <cuda_runtime.h>
 #include <cassert>
 #include <cstring> // includes memcpy
-
 #include <resolve/matrix/Csc.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/vector/Vector.hpp>
@@ -106,8 +106,10 @@ namespace ReSolve
 
     status_cusolverrf_ = cusolverRfSetResetValuesFastMode(handle_cusolverrf_, CUSOLVERRF_RESET_VALUES_FAST_MODE_ON);
     error_sum += status_cusolverrf_;
+
     L->syncData(memory::DEVICE);
     U->syncData(memory::DEVICE);
+
     status_cusolverrf_ = cusolverRfSetupDevice(n,
                                                A_->getNnz(),
                                                A_->getRowData(memory::DEVICE),
@@ -194,9 +196,20 @@ namespace ReSolve
                                                handle_cusolverrf_);
     error_sum += status_cusolverrf_;
 
+    std::cout << "The error after cusolverRfResestValues: " << error_sum << std::endl;
+
     mem_.deviceSynchronize();
+
+    // Checking for any cuda errors from prior operations
+    cudaError_t cuda_status = cudaGetLastError();
+    if (cuda_status != cudaSuccess)
+    {
+       std::cout << "Previous CUDA error before cusolverRfRefactor: " << cudaGetErrorString(cuda_status) << std::endl;
+    }
     status_cusolverrf_ = cusolverRfRefactor(handle_cusolverrf_);
     error_sum += status_cusolverrf_;
+
+    std::cout << "The error due to cusolverRfRefactor: " << status_cusolverrf_ << std::endl;
 
     return error_sum;
   }
