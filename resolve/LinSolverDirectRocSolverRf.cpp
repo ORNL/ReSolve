@@ -208,20 +208,22 @@ namespace ReSolve
   /**
    * @brief Set the CLI parameters for LinSolverDirectRocSolverRf
    *
-   * Currently only supports setting the solve mode
-   * (rocsparse trisolve or default).
+   * Placeholder function till command line parameters are supported.
    *
    * @param[in] id - string - parameter ID
    * @param[in] value - string - parameter value
    */
   int LinSolverDirectRocSolverRf::setCliParam(const std::string id, const std::string value)
   {
+    // Suppress unused variable warnings.
+    (void) id;
+    (void) value;
     return 0;
   }
 
   /**
-   * @brief Placeholder function for now.
-   *
+   * @brief Placeholder function till command line parameters are supported.
+   * 
    * The following switch (getParamId(Id)) cases always run the default and
    * are currently redundant code (like an if (true)).
    * In the future, they will be expanded to include more options.
@@ -231,6 +233,8 @@ namespace ReSolve
    */
   std::string LinSolverDirectRocSolverRf::getCliParamString(const std::string id) const
   {
+    // Suppress unused variable warnings.
+    (void) id;
     std::string value("");
     return value;
   }
@@ -363,7 +367,7 @@ namespace ReSolve
   /**
    * @brief initialize the parameter list for LinSolverDirectRocSolverRf
    *
-   * currently only no parameters are supported
+   * currently no parameters are supported
    */
   void LinSolverDirectRocSolverRf::initParamList()
   {

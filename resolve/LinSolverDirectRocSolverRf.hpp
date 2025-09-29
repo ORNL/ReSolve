@@ -3,7 +3,6 @@
 #include <hip/hip_runtime.h>
 #include <rocblas/rocblas.h>
 #include <rocsolver/rocsolver.h>
-#include <rocsparse/rocsparse.h>
 
 #include "Common.hpp"
 #include <resolve/LinSolverDirect.hpp>
@@ -62,7 +61,6 @@ namespace ReSolve
     void initParamList();
 
     rocblas_status   status_rocblas_;
-    rocsparse_status status_rocsparse_;
     index_type*      d_P_{nullptr};
     index_type*      d_Q_{nullptr};
 
