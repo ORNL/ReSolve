@@ -44,9 +44,6 @@ namespace ReSolve
     int solve(vector_type* rhs, vector_type* x) override;
     int solve(vector_type* rhs) override; // the solution overwrites rhs
 
-    int setSolveMode(int mode); // should probably be enum
-    int getSolveMode() const;   // should be enum too
-
     int         setCliParam(const std::string id, const std::string value) override;
     std::string getCliParamString(const std::string id) const override;
     index_type  getCliParamInt(const std::string id) const override;
@@ -57,10 +54,7 @@ namespace ReSolve
   private:
     enum ParamaterIDs
     {
-      SOLVE_MODE = 0
     };
-
-    int solve_mode_{0}; // 0 - default; 1 - use rocparse trisolver
 
   private:
     // to be exported to matrix handler in a later time

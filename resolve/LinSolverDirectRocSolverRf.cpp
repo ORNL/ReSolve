@@ -14,14 +14,11 @@ namespace ReSolve
    * @brief Constructor for LinSolverDirectRocSolverRf
    *
    * @param[in] workspace - pointer to LinAlgWorkspaceHIP
-   *
-   * @post solve_mode_ is set to 1 or -1
    */
   LinSolverDirectRocSolverRf::LinSolverDirectRocSolverRf(LinAlgWorkspaceHIP* workspace)
   {
     workspace_  = workspace;
     infoM_      = nullptr;
-    solve_mode_ = 0; // solve mode - 1: use rocsparse trisolve
     initParamList();
   }
 
@@ -209,30 +206,6 @@ namespace ReSolve
   }
 
   /**
-   * @brief Set the solve mode for LinSolverDirectRocSolverRf
-   *
-   * @param[in] mode - int - solve mode
-   *
-   * @return int - 0 if successful
-   */
-  int LinSolverDirectRocSolverRf::setSolveMode(int mode)
-  {
-    solve_mode_ = mode;
-    solve_mode_ = 0; // temporary, until trisolve is fully implemented
-    return 0;
-  }
-
-  /**
-   * @brief Get the solve mode for LinSolverDirectRocSolverRf
-   *
-   * @return int - solve mode
-   */
-  int LinSolverDirectRocSolverRf::getSolveMode() const
-  {
-    return solve_mode_;
-  }
-
-  /**
    * @brief Set the CLI parameters for LinSolverDirectRocSolverRf
    *
    * Currently only supports setting the solve mode
@@ -243,23 +216,6 @@ namespace ReSolve
    */
   int LinSolverDirectRocSolverRf::setCliParam(const std::string id, const std::string value)
   {
-    switch (getParamId(id))
-    {
-    case SOLVE_MODE:
-      if (value == "rocsparse_trisolve")
-      {
-        // use rocsparse triangular solver
-        setSolveMode(1);
-      }
-      else
-      {
-        // use default
-        setSolveMode(0);
-      }
-      break;
-    default:
-      std::cout << "Setting parameter failed!\n";
-    }
     return 0;
   }
 
@@ -276,22 +232,6 @@ namespace ReSolve
   std::string LinSolverDirectRocSolverRf::getCliParamString(const std::string id) const
   {
     std::string value("");
-    switch (getParamId(id))
-    {
-    case SOLVE_MODE:
-      switch (getSolveMode())
-      {
-      case 0:
-        value = "default";
-        break;
-      case 1:
-        value = "rocsparse_trisolve";
-        value = "default"; // temporary, until trisolve is fully implemented
-        break;
-      }
-    default:
-      out::error() << "Trying to get unknown string parameter " << id << "\n";
-    }
     return value;
   }
 
@@ -423,10 +363,9 @@ namespace ReSolve
   /**
    * @brief initialize the parameter list for LinSolverDirectRocSolverRf
    *
-   * currently only "solve_mode" is supported
+   * currently only no parameters are supported
    */
   void LinSolverDirectRocSolverRf::initParamList()
   {
-    params_list_["solve_mode"] = SOLVE_MODE;
   }
 } // namespace ReSolve

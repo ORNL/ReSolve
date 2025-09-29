@@ -129,10 +129,6 @@ int runTest(int argc, char* argv[], std::string& solver_name)
   // Create direct solvers
   ReSolve::LinSolverDirectKLU KLU;
   refactorization_type        Rf(&workspace);
-  if (solver_name == "rocsolverRf")
-  {
-    Rf.setCliParam("solve_mode", mode);
-  }
 
   // Create iterative solver
   ReSolve::MatrixHandler            matrix_handler(&workspace);
