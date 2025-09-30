@@ -2,15 +2,16 @@
 
 #include <cassert>
 #include <cmath>
-#include <iostream>
-#include <vector>
-#include <random>
 #include <ctime>
-#include <numeric>
 #include <cuda_runtime.h>
+#include <iostream>
+#include <numeric>
+#include <random>
+#include <vector>
+
 #include <resolve/LinSolverIterative.hpp>
-#include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/matrix/Csr.hpp>
+#include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/matrix/Sparse.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/vector/VectorHandler.hpp>
@@ -102,11 +103,11 @@ namespace ReSolve
           delete x_true_;
           x_true_ = nullptr;
         }
-       if (h_values)
-       {
-	 delete h_values;
-	 h_values = nullptr;
-       }
+        if (h_values)
+        {
+          delete h_values;
+          h_values = nullptr;
+        }
       }
 
       std::string getHardwareBackend() const
@@ -311,50 +312,58 @@ namespace ReSolve
         return error_sum;
       }
 
-      void generate_normalized_random_vector(ReSolve::vector::Vector* target_vector, ReSolve::index_type size, double min_val, double max_val) {
+      void generate_normalized_random_vector(ReSolve::vector::Vector* target_vector, ReSolve::index_type size, double min_val, double max_val)
+      {
         // Check for invalid size
-        if (size <= 0) {
-            std::cerr << "Error: Vector size must be positive." << std::endl;
-        return;
+        if (size <= 0)
+        {
+          std::cerr << "Error: Vector size must be positive." << std::endl;
+          return;
         }
 
         // 1. Create a random number generator engine and distribution.
-        std::mt19937 engine(static_cast<unsigned int>(std::time(nullptr)));
+        std::mt19937                           engine(static_cast<unsigned int>(std::time(nullptr)));
         std::uniform_real_distribution<double> dist(min_val, max_val);
 
         // 2. Resize the vector to the required size.
         target_vector->resize(size);
 
-	// 3. Get pointer to the underlying host data
-	double* h_data = target_vector->getData(ReSolve::memory::HOST);
+        // 3. Get pointer to the underlying host data
+        double* h_data = target_vector->getData(ReSolve::memory::HOST);
 
         // 4. Populate the vector with random numbers.
-        for (int i = 0; i < size; ++i) {
-            // Use the 'at' method to safely access and modify the vector elements.
-            h_data[i] = dist(engine);
+        for (int i = 0; i < size; ++i)
+        {
+          // Use the 'at' method to safely access and modify the vector elements.
+          h_data[i] = dist(engine);
         }
 
         // 5. Calculate the Euclidean norm (L2 norm).
         // The formula is: $||x||_2 = \sqrt{\sum_{i=1}^{n} |x_i|^2}$
         double norm = 0.0;
-        for (ReSolve::index_type i = 0; i < size; ++i) {
-            norm += h_data[i] * h_data[i];
+        for (ReSolve::index_type i = 0; i < size; ++i)
+        {
+          norm += h_data[i] * h_data[i];
         }
         norm = std::sqrt(norm);
 
         // 6. Normalize the vector.
         // Each element is divided by the norm.
         // Avoid division by zero in case the norm is 0.
-        if (norm > 1e-9) { // Using a small epsilon to check for non-zero
-            for (ReSolve::index_type i = 0; i < size; ++i) {
-                 h_data[i] /= norm;
-            }
-        } else {
-             std::cerr << "Warning: Cannot normalize vector with a zero norm." << std::endl;
+        if (norm > 1e-9)
+        { // Using a small epsilon to check for non-zero
+          for (ReSolve::index_type i = 0; i < size; ++i)
+          {
+            h_data[i] /= norm;
+          }
+        }
+        else
+        {
+          std::cerr << "Warning: Cannot normalize vector with a zero norm." << std::endl;
         }
 
-	// 7. Inform the vector that it's host data has been updated
-	target_vector->setDataUpdated(ReSolve::memory::HOST);
+        // 7. Inform the vector that it's host data has been updated
+        target_vector->setDataUpdated(ReSolve::memory::HOST);
       }
 
       // Validation Check on A_ CSR format
@@ -362,89 +371,96 @@ namespace ReSolve
       // Checks if row pointers are matching nnz and if they are non-decreasing
       // Checks if col indices are out of bounds
       // values: The entries of A_
-      void validateAndPrintMatrix() {
-	    using real_type   = ReSolve::real_type;
-	    std::cout << "Starting CSR matrix validation..." << std::endl;
+      void validateAndPrintMatrix()
+      {
+        using real_type = ReSolve::real_type;
+        std::cout << "Starting CSR matrix validation..." << std::endl;
 
-   	    // Sanity checks on the matrix object itself
-    	    if (A_ == nullptr) {
-        	std::cerr << "Error: Matrix pointer is null!" << std::endl;
-                return;
+        // Sanity checks on the matrix object itself
+        if (A_ == nullptr)
+        {
+          std::cerr << "Error: Matrix pointer is null!" << std::endl;
+          return;
+        }
+
+        // Sanity check that the matrix is appropriate CSR formatting
+        assert(A_->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW && "Matrix A has to be in CSR format.\n");
+
+        int num_rows = A_->getNumRows();
+        int num_nnz  = A_->getNnz();
+
+        if (num_rows <= 0 || num_nnz <= 0)
+        {
+          std::cerr << "Error: Matrix dimensions are invalid (rows: " << num_rows << ", nnz: " << num_nnz << ")" << std::endl;
+          return;
+        }
+
+        // Allocate temporary host memory
+        std::vector<int> h_row_pointers_int(num_rows + 1);
+        std::vector<int> h_col_indices_int(num_nnz);
+        h_values = new ReSolve::vector::Vector(num_nnz);
+
+        // Copy data from device to host
+        std::cout << "Running direct cudaMemcpy for integer arrays..." << std::endl;
+        // cuda row pointers: Device to Host
+        cudaError_t err_row = cudaMemcpy(h_row_pointers_int.data(), A_->getRowData(ReSolve::memory::DEVICE), (num_rows + 1) * sizeof(int), cudaMemcpyDeviceToHost);
+        if (err_row != cudaSuccess)
+        {
+          std::cerr << "[ERROR] cudaMemcpy for row pointers have failed: " << cudaGetErrorString(err_row) << std::endl;
+        }
+        // cuda col indices: Device to Host
+        cudaError_t err_col = cudaMemcpy(h_col_indices_int.data(), A_->getColData(ReSolve::memory::DEVICE), (num_nnz) * sizeof(int), cudaMemcpyDeviceToHost);
+        if (err_col != cudaSuccess)
+        {
+          std::cerr << "[ERROR] cudaMemcpy for col indices have failed: " << cudaGetErrorString(err_row) << std::endl;
+        }
+        // values of the matrix are treated as ReSolve::vector entries
+        h_values->copyDataFrom((const real_type*) A_->getValues(ReSolve::memory::DEVICE), ReSolve::memory::DEVICE, ReSolve::memory::HOST);
+
+        // Extracting the data associated with the pointers
+        double* values_data = h_values->getData(ReSolve::memory::HOST);
+
+        // Perform the validation
+        // Check for NaNs or Infinity in values
+        for (int i = 0; i < num_nnz; ++i)
+        {
+          // We must check if the pointer is null for safety, though it shouldn't be if copy was successful.
+          if (!values_data || std::isnan(values_data[i]) || std::isinf(values_data[i]))
+          {
+            std::cerr << "Validation Error: Found NaN/Inf at values[" << i << "]. GPU operations will likely fail." << std::endl;
+            return;
+          }
+        }
+
+        // Check if the last element of row_pointers matches nnz
+        if (h_row_pointers_int[num_rows] != num_nnz)
+        {
+          std::cerr << "Validation Error: row_pointers[" << num_rows << "] (" << h_row_pointers_int[num_rows] << ") does not match total nnz (" << num_nnz << ")" << std::endl;
+          return;
+        }
+
+        // Check if row_pointers is non-decreasing
+        for (int i = 0; i < num_rows; ++i)
+        {
+          if (h_row_pointers_int[i] > h_row_pointers_int[i + 1])
+          {
+            std::cerr << "Validation Error: row_pointers is not non-decreasing at index " << i << std::endl;
+            std::cerr << "row_pointers[" << i << "] = " << h_row_pointers_int[i] << ", row_pointers[" << i + 1 << "] = " << h_row_pointers_int[i + 1] << std::endl;
+            return;
+          }
+          // Check for out-of-bounds column indices
+          for (int j = h_row_pointers_int[i]; j < h_row_pointers_int[i + 1]; ++j)
+          {
+            if (h_col_indices_int[j] < 0 || h_col_indices_int[j] >= num_rows)
+            {
+              std::cerr << "Validation Error: Invalid column index " << h_col_indices_int[j] << " found at col_indices[" << j << "]" << std::endl;
+              return;
             }
+          }
+        }
 
-	    // Sanity check that the matrix is appropriate CSR formatting
-	    assert(A_->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW && "Matrix A has to be in CSR format.\n");
-
-    	    int num_rows = A_->getNumRows();
-    	    int num_nnz = A_->getNnz();
-
-   	     if (num_rows <= 0 || num_nnz <= 0) {
-        	std::cerr << "Error: Matrix dimensions are invalid (rows: " << num_rows << ", nnz: " << num_nnz << ")" << std::endl;
-        	return;
-    	     }
-
-    	     // Allocate temporary host memory
-	     std::vector<int> h_row_pointers_int(num_rows + 1);
-	     std::vector<int> h_col_indices_int(num_nnz);
-    	     h_values = new ReSolve::vector::Vector(num_nnz);
-
-    	    // Copy data from device to host
-	    std::cout << "Running direct cudaMemcpy for integer arrays..." << std::endl;
-    	    // cuda row pointers: Device to Host
-	    cudaError_t err_row = cudaMemcpy(h_row_pointers_int.data(), A_->getRowData(ReSolve::memory::DEVICE), (num_rows + 1) * sizeof(int), cudaMemcpyDeviceToHost);
-	    if (err_row != cudaSuccess){
-		std::cerr << "[ERROR] cudaMemcpy for row pointers have failed: " << cudaGetErrorString(err_row) << std::endl;
-	    }
-	    // cuda col indices: Device to Host
-	    cudaError_t err_col = cudaMemcpy(h_col_indices_int.data(), A_->getColData(ReSolve::memory::DEVICE), (num_nnz) * sizeof(int), cudaMemcpyDeviceToHost);
-	    if (err_col != cudaSuccess){
-                std::cerr << "[ERROR] cudaMemcpy for col indices have failed: " << cudaGetErrorString(err_row) << std::endl;
-            }
-	    // values of the matrix are treated as ReSolve::vector entries
-            h_values->copyDataFrom((const real_type*)A_->getValues(ReSolve::memory::DEVICE), ReSolve::memory::DEVICE, ReSolve::memory::HOST);
-
-	    //Extracting the data associated with the pointers
-	    double* values_data = h_values->getData(ReSolve::memory::HOST);
-
-	    // Perform the validation
-	    // Check for NaNs or Infinity in values
-    	    for (int i = 0; i < num_nnz; ++i) {
-        	// We must check if the pointer is null for safety, though it shouldn't be if copy was successful.
-        	if (!values_data || std::isnan(values_data[i]) || std::isinf(values_data[i])) {
-            		std::cerr << "Validation Error: Found NaN/Inf at values[" << i << "]. GPU operations will likely fail." << std::endl;
-            		return;
-        	}
-    	    }
-
-	    // Check if the last element of row_pointers matches nnz
-    	    if (h_row_pointers_int[num_rows] != num_nnz) {
-        	std::cerr << "Validation Error: row_pointers[" << num_rows << "] (" << h_row_pointers_int[num_rows] << ") does not match total nnz (" << num_nnz << ")" << std::endl;
-        	return;
-    	    }
-
-	    // Check if row_pointers is non-decreasing
-    	    for (int i = 0; i < num_rows; ++i) {
-        	if (h_row_pointers_int[i] > h_row_pointers_int[i + 1]) {
-            		std::cerr << "Validation Error: row_pointers is not non-decreasing at index " << i << std::endl;
-            		std::cerr << "row_pointers[" << i << "] = " << h_row_pointers_int[i] << ", row_pointers[" << i+1 << "] = " << h_row_pointers_int[i+1] << std::endl;
-            		return;
-        	}
-		// Check for out-of-bounds column indices
-        	for (int j = h_row_pointers_int[i]; j < h_row_pointers_int[i+1]; ++j) {
-            		if (h_col_indices_int[j] < 0 || h_col_indices_int[j] >= num_rows) {
-                		std::cerr << "Validation Error: Invalid column index " << h_col_indices_int[j] << " found at col_indices[" << j << "]" << std::endl;
-                		return;
-            		}
-        	}
-
-	    }
-
-	   std::cout << "Validation Successful: CSR structure appears correct." << std::endl;
-
-       }
-
-
-
+        std::cout << "Validation Successful: CSR structure appears correct." << std::endl;
+      }
 
       /**
        * @brief Verify the computation of the residual norm.
@@ -529,8 +545,8 @@ namespace ReSolve
       ReSolve::MatrixHandler mh_; ///< matrix handler instance
       ReSolve::VectorHandler vh_; ///< vector handler instance
 
-      ReSolve::vector::Vector* res_{nullptr};    ///< pointer to residual vector
-      ReSolve::vector::Vector* x_true_{nullptr}; ///< pointer to solution error vector
+      ReSolve::vector::Vector* res_{nullptr};     ///< pointer to residual vector
+      ReSolve::vector::Vector* x_true_{nullptr};  ///< pointer to solution error vector
       ReSolve::vector::Vector* h_values{nullptr}; //< pointer to matrix values on host
 
       ReSolve::real_type norm_rhs_{0.0}; ///< right-hand side vector norm

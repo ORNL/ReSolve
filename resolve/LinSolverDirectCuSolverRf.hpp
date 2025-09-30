@@ -39,10 +39,10 @@ namespace ReSolve
               index_type*     Q,
               vector_type*    rhs = nullptr);
 
-    int refactorize() override;
-    int solve(vector_type* rhs, vector_type* x) override;
-    int solve(vector_type* rhs) override; // rhs overwritten by solution
-    int setCuSolverRfMatrixType(int matrix_type, int index_base);
+    int  refactorize() override;
+    int  solve(vector_type* rhs, vector_type* x) override;
+    int  solve(vector_type* rhs) override; // rhs overwritten by solution
+    int  setCuSolverRfMatrixType(int matrix_type, int index_base);
     void setAlgorithms(cusolverRfFactorization_t   fact_alg,
                        cusolverRfTriangularSolve_t solve_alg);
     int  setNumericalProperties(real_type nzero, real_type nboost);
