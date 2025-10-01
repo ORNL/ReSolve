@@ -208,7 +208,7 @@ ReSolve::vector::Vector* generateRhs(const index_type             n,
 }
 
 /**
- * @brief Generates a sparse matrix in CSR format with cyclic row patterns
+ * @brief Generates a sparse matrix in CSR format with cyclic row patterns.
  *
  * Creates an n×n sparse matrix with nonzero values following a cyclic pattern
  * across 5 predefined row templates. Each row is guaranteed to have a diagonal
