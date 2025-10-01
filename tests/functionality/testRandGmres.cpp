@@ -248,7 +248,7 @@ ReSolve::matrix::Csr* generateMatrix(const index_type             n,
     bool c        = false;
     for (index_type j = rowptr[i]; j < rowptr[i + 1]; ++j)
     {
-      if (((!c) && (((j - rowptr[i]) * n / nnz_per_row + (n % (n / nnz_per_row))) >= i)) || ((!c) && (j == (rowptr[i + 1] - 1))))
+      if ((!c) && (((j - rowptr[i]) * n / nnz_per_row + (n % (n / nnz_per_row))) >= i || j == (rowptr[i + 1] - 1)))
       {
         c     = true;
         where = i;
