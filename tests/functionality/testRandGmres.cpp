@@ -222,8 +222,8 @@ ReSolve::matrix::Csr* generateMatrix(const index_type             n,
   index_type nnz = 0;
   for (index_type i = 0; i < n; ++i)
   {
-    size_t reminder = static_cast<size_t>(i % 5);
-    nnz += static_cast<index_type>(data[reminder].size());
+    size_t remainder = static_cast<size_t>(i % 5);
+    nnz += static_cast<index_type>(data[remainder].size());
   }
 
   // Allocate NxN CSR matrix with nnz nonzeros
@@ -240,8 +240,8 @@ ReSolve::matrix::Csr* generateMatrix(const index_type             n,
   real_type  what;
   for (index_type i = 0; i < n; ++i)
   {
-    size_t                        reminder    = static_cast<size_t>(i % 5);
-    const std::vector<real_type>& row_sample  = data[reminder];
+    size_t                        remainder    = static_cast<size_t>(i % 5);
+    const std::vector<real_type>& row_sample  = data[remainder];
     index_type                    nnz_per_row = static_cast<index_type>(row_sample.size());
 
     rowptr[i + 1] = rowptr[i] + nnz_per_row;
