@@ -209,12 +209,12 @@ ReSolve::vector::Vector* generateRhs(const index_type             n,
 
 /**
  * @brief Generates a sparse matrix in CSR format with cyclic row patterns
- * 
+ *
  * Creates an n×n sparse matrix with nonzero values following a cyclic pattern
  * across 5 predefined row templates. Each row is guaranteed to have a diagonal
  * entry with value 4.0. Off-diagonal values are distributed approximately evenly
  * across columns.
- * 
+ *
  * @param n Dimension of the square matrix (n×n)
  * @param memory_space Target memory location (HOST, DEVICE, etc.)
  * @return Pointer to newly allocated CSR matrix
@@ -224,14 +224,14 @@ ReSolve::matrix::Csr* generateMatrix(const index_type n, ReSolve::memory::Memory
   // Define 5 row patterns that cycle through the matrix
   // Each pattern's values sum to 30 for consistent row sums
   const std::vector<std::vector<real_type>> row_patterns = {
-    {1., 5., 7., 8., 3., 2., 4.},                 // 7 nonzeros, sum = 30
-    {1., 3., 2., 2., 1., 6., 7., 3., 2., 3.},     // 10 nonzeros, sum = 30
-    {11., 15., 4.},                               // 3 nonzeros, sum = 30
-    {1., 1., 5., 1., 9., 2., 1., 2., 3., 2., 3.}, // 11 nonzeros, sum = 30
-    {6., 5., 7., 3., 2., 5., 2.}                  // 7 nonzeros, sum = 30
+      {1., 5., 7., 8., 3., 2., 4.},                 // 7 nonzeros, sum = 30
+      {1., 3., 2., 2., 1., 6., 7., 3., 2., 3.},     // 10 nonzeros, sum = 30
+      {11., 15., 4.},                               // 3 nonzeros, sum = 30
+      {1., 1., 5., 1., 9., 2., 1., 2., 3., 2., 3.}, // 11 nonzeros, sum = 30
+      {6., 5., 7., 3., 2., 5., 2.}                  // 7 nonzeros, sum = 30
   };
-  
-  size_t full_cycles = static_cast<size_t>(n) / 5;
+
+  size_t full_cycles    = static_cast<size_t>(n) / 5;
   size_t remaining_rows = static_cast<size_t>(n) % 5;
 
   // Calculate total number of nonzeros by cycling through patterns
@@ -240,66 +240,66 @@ ReSolve::matrix::Csr* generateMatrix(const index_type n, ReSolve::memory::Memory
   {
     total_nonzeros += static_cast<size_t>(row_patterns[i].size());
   }
-  
+
   // Allocate CSR matrix structure
   ReSolve::matrix::Csr* matrix = new ReSolve::matrix::Csr(n, n, static_cast<index_type>(total_nonzeros));
   matrix->allocateMatrixData(ReSolve::memory::HOST);
-  
+
   // Get pointers to CSR data structures
-  index_type* row_offsets = matrix->getRowData(ReSolve::memory::HOST);
+  index_type* row_offsets    = matrix->getRowData(ReSolve::memory::HOST);
   index_type* column_indices = matrix->getColData(ReSolve::memory::HOST);
-  real_type* values = matrix->getValues(ReSolve::memory::HOST);
-  
+  real_type*  values         = matrix->getValues(ReSolve::memory::HOST);
+
   // Populate CSR matrix row by row
   row_offsets[0] = 0;
   bool diagonal_placed;
-  
+
   for (index_type row = 0; row < n; ++row)
   {
-    size_t pattern_index = static_cast<size_t>(row % 5);
+    size_t                        pattern_index   = static_cast<size_t>(row % 5);
     const std::vector<real_type>& current_pattern = row_patterns[pattern_index];
-    index_type nonzeros_in_row = static_cast<index_type>(current_pattern.size());
-    
+    index_type                    nonzeros_in_row = static_cast<index_type>(current_pattern.size());
+
     row_offsets[row + 1] = row_offsets[row] + nonzeros_in_row;
-    diagonal_placed = false;
-    
+    diagonal_placed      = false;
+
     // Place nonzeros for this row
     for (index_type nz_index = row_offsets[row]; nz_index < row_offsets[row + 1]; ++nz_index)
     {
       index_type position_in_row = nz_index - row_offsets[row];
       index_type column;
-      real_type value;
-      
+      real_type  value;
+
       // Determine if this position should contain the diagonal element
-      index_type estimated_column = position_in_row * n / nonzeros_in_row 
-                                   + (n % (n / nonzeros_in_row));
-      bool is_last_nonzero = (nz_index == row_offsets[row + 1] - 1);
+      index_type estimated_column = position_in_row * n / nonzeros_in_row
+                                    + (n % (n / nonzeros_in_row));
+      bool is_last_nonzero      = (nz_index == row_offsets[row + 1] - 1);
       bool column_past_diagonal = (estimated_column >= row);
-      
+
       if (!diagonal_placed && (column_past_diagonal || is_last_nonzero))
       {
         diagonal_placed = true;
-        column = row;
-        value = 4.0;
+        column          = row;
+        value           = 4.0;
       }
       else
       {
         // Place off-diagonal element, distributing columns evenly
         column = estimated_column;
-        value = current_pattern[static_cast<size_t>(position_in_row)];
+        value  = current_pattern[static_cast<size_t>(position_in_row)];
       }
-      
+
       column_indices[nz_index] = column;
-      values[nz_index] = value;
+      values[nz_index]         = value;
     }
   }
-  
+
   // Mark data as updated and sync to target memory space if needed
   matrix->setUpdated(ReSolve::memory::HOST);
   if (memory_space != ReSolve::memory::HOST)
   {
     matrix->syncData(memory_space);
   }
-  
+
   return matrix;
 }
