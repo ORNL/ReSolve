@@ -30,7 +30,7 @@
 - [ ] There are unit tests for the new code.
 - [ ] The new code is documented.
 - [ ] The feature branch is rebased with respect to the target branch.
- 
+- [ ] I have updated CHANGELOG.md to reflect the changes in this PR. If this is a minor PR that is part of a larger fix already included in the file, state so.
  
  ## Further comments
  
