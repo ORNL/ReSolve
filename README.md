@@ -113,7 +113,6 @@ target_link_libraries(my_app PRIVATE ReSolve::ReSolve)
 For all contributions to Re::Solve please follow the
 [developer guidelines](CONTRIBUTING.md)
 
-
 ## Support
 For technical questions or to report a bug please submit a
 [GitHub issue](https://github.com/ORNL/ReSolve/issues) or post a question on
