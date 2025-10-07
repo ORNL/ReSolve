@@ -631,11 +631,11 @@ namespace ReSolve
      *
      * In case of multivectors, entire multivector is set to the constant.
      *
-     * @param[in] C          - Constant (real number)
+     * @param[in] constant          - Constant (real number)
      * @param[in] memspace   - Memory space of the data to be set to constant (HOST or DEVICE)
      *
      */
-    int Vector::setToConst(real_type C, memory::MemorySpace memspace)
+    int Vector::setToConst(real_type constant, memory::MemorySpace memspace)
     {
       using namespace ReSolve::memory;
       switch (memspace)
@@ -646,7 +646,7 @@ namespace ReSolve
           h_data_        = new real_type[n_capacity_ * k_];
           owns_cpu_data_ = true;
         }
-        mem_.setArrayToConstOnHost(h_data_, C, n_size_ * k_);
+        mem_.setArrayToConstOnHost(h_data_, constant, n_size_ * k_);
         setHostUpdated(true);
         setDeviceUpdated(false);
         break;
@@ -656,7 +656,7 @@ namespace ReSolve
           mem_.allocateArrayOnDevice(&d_data_, n_capacity_ * k_);
           owns_gpu_data_ = true;
         }
-        mem_.setArrayToConstOnDevice(d_data_, C, n_size_ * k_);
+        mem_.setArrayToConstOnDevice(d_data_, constant, n_size_ * k_);
         setHostUpdated(false);
         setDeviceUpdated(true);
         break;
