@@ -82,10 +82,18 @@ namespace ReSolve
     {
       mem_.allocateArrayOnDevice(&d_P_, n);
     }
+    else
+    {
+      out::error() << "d_P_ should be nullptr on call to LinSolverDirectRocSolverRf::setup" << std::endl;
+    }
 
     if (d_Q_ == nullptr)
     {
       mem_.allocateArrayOnDevice(&d_Q_, n);
+    }
+    else
+    {
+      out::error() << "d_Q_ should be nullptr on call to LinSolverDirectRocSolverRf::setup" << std::endl;
     }
     mem_.copyArrayHostToDevice(d_P_, P, n);
     mem_.copyArrayHostToDevice(d_Q_, Q, n);

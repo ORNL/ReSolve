@@ -127,7 +127,7 @@ namespace ReSolve
     if (Symbolic_ == nullptr)
     {
       out::error() << "Symbolic_ factorization failed with Common_.status = "
-                   << Common_.status << "\n";
+                   << Common_.status << std::endl;
       return 1;
     }
     return 0;
@@ -167,6 +167,8 @@ namespace ReSolve
 
     if (Numeric_ == nullptr)
     {
+      out::error() << "Numeric_ factorization failed with Common_.status = "
+                   << Common_.status << std::endl;
       return 1;
     }
     else
