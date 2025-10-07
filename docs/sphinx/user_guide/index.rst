@@ -195,6 +195,7 @@ Function Requirements
 ---------------------
 
 Functions must be used as in the examples and tests. 
+
 - Workspaces are required for GPU solvers. The generic workspace_type is required for backend agnostic code.
 - Handles are created with the `initializeHandles()` function and destroyed with the default destructor.
 - Allocate memory first, preferably with the `ReSolve::MatrixHandler`` or `ReSolve::VectorHandler`` classes.
