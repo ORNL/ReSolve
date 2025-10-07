@@ -82,7 +82,7 @@ namespace ReSolve
     }
     else
     {
-      out::error() << "d_P_ should be nullptr on call to LinSolverDirectCuSolverRf::setup" std::endl;
+      out::error() << "d_P_ should be nullptr on call to LinSolverDirectCuSolverRf::setup" << std::endl;
     }
 
     if (d_Q_ == nullptr)
@@ -91,7 +91,7 @@ namespace ReSolve
     }
     else
     {
-      out::error() << "d_Q_ should be nullptr on call to LinSolverDirectCuSolverRf::setup" std::endl;
+      out::error() << "d_Q_ should be nullptr on call to LinSolverDirectCuSolverRf::setup" << std::endl;
     }
 
     if (d_T_ == nullptr)
@@ -100,7 +100,7 @@ namespace ReSolve
     }
     else
     {
-      out::error() << "d_T_ should be nullptr on call to LinSolverDirectCuSolverRf::setup" std::endl;
+      out::error() << "d_T_ should be nullptr on call to LinSolverDirectCuSolverRf::setup" << std::endl;
     }
 
     mem_.copyArrayHostToDevice(d_P_, P, n);
