@@ -1,4 +1,4 @@
-# Contributing
+# Developer Guidelines
 
 ## Code Style
 
