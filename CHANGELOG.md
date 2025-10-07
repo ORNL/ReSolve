@@ -8,7 +8,7 @@
 This requires switching $L$ with $U$ and $P$ with $Q$ and reinterpretting them as CSR instead of CSC. 
 It is seamless from the user perspective and fixed many bugs.
 
-2. Significant improvements to documentation and instructions inside and outside the code.
+2. Significant improvements to documentation and instructions inside and outside the code. Added general API description.
 
 3. Added more rigorous checks for PRs for clang formatting and to compile without warnings and memory leaks.
 
