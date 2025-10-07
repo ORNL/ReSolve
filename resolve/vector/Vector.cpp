@@ -632,7 +632,7 @@ namespace ReSolve
      * In case of multivectors, entire multivector is set to the constant.
      *
      * @param[in] C          - Constant (real number)
-     * @param[in] memspace   - Memory space of the data to be set to 0 (HOST or DEVICE)
+     * @param[in] memspace   - Memory space of the data to be set to constant (HOST or DEVICE)
      *
      */
     int Vector::setToConst(real_type C, memory::MemorySpace memspace)
