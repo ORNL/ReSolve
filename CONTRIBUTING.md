@@ -1,4 +1,4 @@
-# Code Style Guidelines
+# Contributing
 
 ## Code Style
 

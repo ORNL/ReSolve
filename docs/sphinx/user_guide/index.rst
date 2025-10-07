@@ -208,4 +208,9 @@ Functions in ReSolve that take pointers as arguments will have the following req
 * Pointers that are not marked as const must point to memory that is writable.
 * Pointers that are marked as const must point to memory that is readable.
 
-
+Memory Synchronization
+-------------------------------
+* For CPU solvers, memory is always in sync.
+* For GPU solvers, the user must synchronize memory manually. 
+* Manually call `setUpdated()` if you modify the contents of a `ReSolve::MatrixHandler` or `ReSolve::VectorHandler` object without using the object's member functions.
+* Manually call `syncData(memspace)` when you modify the other memory space and want them to match. Both memory spaces must be allocated.
