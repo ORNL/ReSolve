@@ -1,13 +1,14 @@
 #pragma once
 
 #include <cstring> // <- declares `memcpy`
-#include <resolve/utilities/logger/Logger.hpp>
 
 #include <resolve/resolve_defs.hpp>
+#include <resolve/utilities/logger/Logger.hpp>
 
 namespace ReSolve
 {
   using out = ReSolve::io::Logger;
+
   namespace memory
   {
     enum MemorySpace
@@ -88,18 +89,18 @@ namespace ReSolve
     {
       std::size_t arraysize = static_cast<std::size_t>(n) * sizeof(T);
       *v                    = new T[arraysize];
-      if (*v== nullptr)
+      if (*v == nullptr)
       {
         out::error() << "Memory allocation on host failed for size " << arraysize << " bytes." << std::endl;
         return 1;
       }
-      return 0; 
+      return 0;
     }
 
     template <typename T>
     int deleteOnHost(T* v)
     {
-      if (v== nullptr)
+      if (v == nullptr)
       {
         out::error() << "Trying to delete nullptr on host!" << std::endl;
         return 1;

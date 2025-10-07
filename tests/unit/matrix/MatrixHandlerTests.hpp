@@ -8,15 +8,15 @@
 #include <resolve/matrix/Csc.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
+#include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
-#include <resolve/utilities/logger/Logger.hpp>
 #include <tests/unit/TestBase.hpp>
-
 
 namespace ReSolve
 {
   using out = io::Logger;
+
   namespace tests
   {
 
