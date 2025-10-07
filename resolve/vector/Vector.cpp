@@ -681,8 +681,8 @@ namespace ReSolve
       case HOST:
         if (h_data_ == nullptr)
         {
-          h_data_        = new real_type[n_capacity_ * k_];
-          owns_cpu_data_ = true;
+          out::error() << "Trying to set vector host values, but the values are not allocated!" << std::endl;
+          return 1;
         }
         mem_.setArrayToConstOnHost(&h_data_[n_size_ * j], C, n_size_);
         cpu_updated_[j] = true;
@@ -691,8 +691,8 @@ namespace ReSolve
       case DEVICE:
         if (d_data_ == nullptr)
         {
-          mem_.allocateArrayOnDevice(&d_data_, n_capacity_ * k_);
-          owns_gpu_data_ = true;
+          out::error() << "Trying to set vector device values, but the values are not allocated!" << std::endl;
+          return 1;
         }
         mem_.setArrayToConstOnDevice(&d_data_[n_size_ * j], C, n_size_);
         cpu_updated_[j] = false;

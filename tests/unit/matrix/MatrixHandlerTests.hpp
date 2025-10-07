@@ -10,10 +10,13 @@
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
+#include <resolve/utilities/logger/Logger.hpp>
 #include <tests/unit/TestBase.hpp>
+
 
 namespace ReSolve
 {
+  using out = io::Logger;
   namespace tests
   {
 
@@ -616,6 +619,7 @@ namespace ReSolve
         // Check if the matrix is valid
         if (A == nullptr)
         {
+          out::error() << "Matrix pointer is NULL in " << __func__ << std::endl;
           return false;
         }
 
@@ -697,6 +701,7 @@ namespace ReSolve
         // Check if the matrix is valid
         if (A == nullptr)
         {
+          out::error() << "Matrix pointer is NULL in " << __func__ << std::endl;
           return false;
         }
 
@@ -780,6 +785,7 @@ namespace ReSolve
         // Check if the vector is valid
         if (scaled_vec == nullptr)
         {
+          out::error() << "Vector pointer is NULL in " << __func__ << std::endl;
           return false;
         }
 

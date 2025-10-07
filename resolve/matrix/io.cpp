@@ -386,7 +386,11 @@ namespace ReSolve
         Logger::error() << "Empty input to updateArrayFromFile function ..." << std::endl;
         return;
       }
-
+      if (p_rhs == nullptr)
+      {
+        Logger::error() << "Null pointer to array in updateArrayFromFile function ..." << std::endl;
+        return;
+      }
       real_type*        rhs = *p_rhs;
       std::stringstream ss;
       std::string       line;
@@ -399,11 +403,6 @@ namespace ReSolve
       }
       ss << line;
       ss >> n >> m;
-
-      if (rhs == nullptr)
-      {
-        rhs = new real_type[n];
-      }
       real_type  a;
       index_type i = 0;
       while (file >> a)

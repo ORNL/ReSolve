@@ -372,10 +372,6 @@ namespace ReSolve
                                                       vectorHandler_,
                                                       gs_);
     }
-    else
-    {
-      // do nothing
-    }
 
     return 0;
   }
@@ -393,32 +389,43 @@ namespace ReSolve
       factorizationSolver_->setup(A_);
       return factorizationSolver_->analyze();
     }
+    out::error() << "Analyze method not set to a valid method!" << std::endl;
     return 1;
   }
 
   int SystemSolver::factorize()
   {
+    if (A_ == nullptr)
+    {
+      out::error() << "System matrix not set!\n";
+      return 1;
+    }
     if (factorizationMethod_ == "klu")
     {
       is_solve_on_device_ = false;
       return factorizationSolver_->factorize();
     }
+    out::error() << "Factorization method not set to a valid method!" << std::endl;
     return 1;
   }
 
   int SystemSolver::refactorize()
   {
+    if (A_ == nullptr)
+    {
+      out::error() << "System matrix not set!\n";
+      return 1;
+    }
     if (refactorizationMethod_ == "klu")
     {
       return factorizationSolver_->refactorize();
     }
-
     if (refactorizationMethod_ == "glu" || refactorizationMethod_ == "cusolverrf" || refactorizationMethod_ == "rocsolverrf")
     {
       is_solve_on_device_ = true;
       return refactorizationSolver_->refactorize();
     }
-
+    out::error() << "Refactorization method not set to a valid method!" << std::endl;
     return 1;
   }
 
