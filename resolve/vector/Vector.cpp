@@ -631,7 +631,7 @@ namespace ReSolve
      *
      * In case of multivectors, entire multivector is set to the constant.
      *
-     * @param[in] constant          - Constant (real number)
+     * @param[in] constant   - Constant (real number)
      * @param[in] memspace   - Memory space of the data to be set to constant (HOST or DEVICE)
      *
      */
@@ -668,12 +668,12 @@ namespace ReSolve
      * @brief set the data of a single vector in a multivector to a given constant.
      *
      * @param[in] j          - Index of a vector in a multivector
-     * @param[in] C          - Constant (real number)
+     * @param[in] constant   - Constant (real number)
      * @param[in] memspace   - Memory space of the data to be set to 0 (HOST or DEVICE)
      *
      * @pre   _j_ < _k_ i.e,, _j_ is smaller than the total number of vectors in multivector.
      */
-    int Vector::setToConst(index_type j, real_type C, memory::MemorySpace memspace)
+    int Vector::setToConst(index_type j, real_type constant, memory::MemorySpace memspace)
     {
       using namespace ReSolve::memory;
       switch (memspace)
@@ -684,7 +684,7 @@ namespace ReSolve
           out::error() << "Trying to set vector host values, but the values are not allocated!" << std::endl;
           return 1;
         }
-        mem_.setArrayToConstOnHost(&h_data_[n_size_ * j], C, n_size_);
+        mem_.setArrayToConstOnHost(&h_data_[n_size_ * j], constant, n_size_);
         cpu_updated_[j] = true;
         gpu_updated_[j] = false;
         break;
@@ -694,7 +694,7 @@ namespace ReSolve
           out::error() << "Trying to set vector device values, but the values are not allocated!" << std::endl;
           return 1;
         }
-        mem_.setArrayToConstOnDevice(&d_data_[n_size_ * j], C, n_size_);
+        mem_.setArrayToConstOnDevice(&d_data_[n_size_ * j], constant, n_size_);
         cpu_updated_[j] = false;
         gpu_updated_[j] = true;
         break;
