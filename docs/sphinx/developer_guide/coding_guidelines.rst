@@ -153,15 +153,17 @@ For short functions (i.e., empty constructor), do not inline braces.
    {
    }
 
-Have opening brace at the same line as the ``for``, ``if``, or ``while``
-statement. Leave a space between the statement and the brace. When using
-``else``, follow the example below.
+Have opening brace at the next line after the ``for``, ``if``, or ``while``
+statement (Allman style). See, e.g, the example below:
 
 .. code:: cpp
 
-   if (cond == true) {
+   if (cond == true)
+   {
      // some code
-   } else {
+   }
+   else
+   {
      // some other code
    }
 
@@ -170,7 +172,8 @@ parenthesis as shown here:
 
 .. code:: cpp
 
-   for (int i = 0; i < n; ++i) {
+   for (int i = 0; i < n; ++i)
+   {
      // some code
    } 
 
@@ -182,9 +185,9 @@ The following are correct uses:
 
 .. code:: cpp
 
-   if (owns_cpu_data_ && h_data_) delete [] h_data_; // Ok. A method should only delete something if it is allocated and the class owns it.
-   if (x != 0) z = y / x; // Ok. Division by 0 is always invalid, regardless of code structure.
-   if (y % 2 == 1) { //Must be written this way, because x can be incremented regardless of y's parity. The logic is internal to our code.
+   if (owns_cpu_data_ && h_data_) delete [] h_data_; // Ok. The intent is obvious.
+   if (x != 0) z = y / x;  // Ok. Operation is always invalid, regardless of code structure.
+   if (y % 2 == 1) {       // Must be written this way, the logic is internal to the code.
       x++;
    }
 
@@ -199,7 +202,7 @@ There should be spaces between arithmetic operators.
 .. code:: cpp
 
    x = c * (a + b);  //Yes
-   x = c*(a+b).      // No, the clarity is better if there are spaces between binary operators and operands.
+   x = c*(a+b).      // No, the clarity is better with spaces around binary operators.
 
 When defining member functions, use one empty line between the
 functions.
