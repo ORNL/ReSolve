@@ -18,8 +18,8 @@ and direct solvers designed to run on NVIDIA and AMD GPUs, as well as on CPU
 devices.
 
 The User Guide and developer's documentation is available
-[online](https://resolve.readthedocs.io/en/frontmatter-dev/) (**update link before merging**), including Doxygen-generated
-[source code documentation](https://resolve.readthedocs.io/en/frontmatter-dev/doxygen/html/index.html) (**update link before merging**).
+[online](https://resolve.readthedocs.io/en/latest/), including Doxygen-generated
+[source code documentation](https://resolve.readthedocs.io/en/latest/doxygen/html/index.html).
 
 
 ## Getting started
@@ -28,7 +28,7 @@ Dependencies:
 - CMake >= 3.22
 - KLU, AMD and COLAMD libraries from SuiteSparse >= 5.0 (optional)
 - CUDA >= 11.4 (optional)
-- HIP/ROCm >= 5.6 (optional)
+- HIP/ROCm >= 6.0 (optional)
 
 To build it:
 ```shell
@@ -147,7 +147,7 @@ Copyright &copy; 2023, UT-Battelle, LLC, and Battelle Memorial Institute.
 
 Re::Solve is a free software distributed under a BSD-style license. See the
 [LICENSE](LICENSE) and [NOTICE](NOTICE) files for details. All new
-contributions to Re::Solve must be made under the smae licensing terms.
+contributions to Re::Solve must be made under the same licensing terms.
 
 **Please Note** If you are using Re::Solve with any third party libraries linked
 in (e.g., KLU), be sure to review the respective license of the package as that
