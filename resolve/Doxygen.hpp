@@ -3,14 +3,14 @@
  * @author Slaven Peles (peless@ornl.gov)
  * @brief
  *
- * @mainpage ReSolve Source Code Documentation
+ * @mainpage Re::Solve Source Code Documentation
  *
- * ReSolve is a library of GPU-resident linear solvers. It contains iterative
+ * Re::Solve is a library of GPU-resident linear solvers. It contains iterative
  * and direct linear solvers designed to run on NVIDIA and AMD GPUs, as well as
  * on CPU devices. This is the main page of source code documentation intended
- * for developers who want to contribute to ReSolve code. General documentation
- * is available at <a href=https://resolve.readthedocs.io>readthedocs</a>. The
- * ReSolve project is hosted on <a href=https://github.com/ORNL/ReSolve>GitHub</a>.
+ * for developers who want to contribute to Re::Solve code. General documentation
+ * is available at <a href=https://Re::Solve.readthedocs.io>readthedocs</a>. The
+ * Re::Solve project is hosted on <a href=https://github.com/ORNL/ReSolve>GitHub</a>.
  *
  *
  * @section name_sec Name
@@ -20,7 +20,7 @@
  * the case of dynamic simulations or optimization. An efficient linear solver
  * design will _re-solve_ systems with the same sparsity pattern while reusing
  * symbolic operations and memory allocations from the prior systems, therefore
- * the name ReSolve.
+ * the name Re::Solve.
  *
  * @section history_sec History
  *
@@ -51,16 +51,61 @@
  *
  * @section design_sec Code Design and Organization
  *
+ * Re::Solve is designed to be portable so it can run on different hardware;
+ * extensible so that new solvers can be added easily, reusing existing
+ * ifrastructure; and configurable so that different solving strategies can
+ * be instantiated with existing solvers classes. Re::Solve operates on its
+ * matrix and vector objects, which can be instantiated as standalone objects
+ * or as wrappers for user provided data. Sparse BLAS operations are
+ * implemented in MatrixHandler and VectorHandler classes. The workspace
+ * classes store data that is reusable over several numerical linear algebra
+ * operations. The main Re::Solve functionality is implemented in solver
+ * classes. Re::Solve has three hardware backends -- the CPU backend and
+ * backends to devices supporting CUDA and HIP languages, respectively.
+ *
  * @subsection solvers_subsec Solvers
+ *
+ * Linear solver classes contain iterative (F)GMRES solvers with low-sync
+ * Gram-Schmidt orthogonalization and a variant with randomized Krylov
+ * subspace. Direct solvers are implemented using third party matrix
+ * (re)factorization and triangular solver functions. The SystemSolver class
+ * enables combining these classes into a user specified custom solver.
  *
  * @subsection matvecs_subsec Matrix and Vector Classes
  *
+ * Linear solvers operate on Re::Solve's matrix and vector classes.
+ * Functionality of these classes is minimal -- they manage memory allocation,
+ * initialization, and copying matrix and vector data. They can be also used
+ * as wrappers for existing user provided matrix and vector data.
+ *
  * @subsection handlers_subsec Matrix and Vector Handlers
+ *
+ * Sparse BLAS operations are implemented in MatrixHandler and VectorHandler
+ * classes rather than as standalone functions. The handlers manage access to
+ * workspaces that are needed for many sparse linear algebra functions,
+ * especially in GPUs implementations. This desing allows for reuse of the
+ * workspace and computation results when the linear solver is called to solve
+ * a sequence of similar linear systems.
+ *
+ * Each linear solver object has a dedicated matrix and a vector handler.
  *
  * @subsection workspaces_subsec Workspaces
  *
+ * Workspace classes store data buffers and handles to different third party
+ * objects, such as CUDA SDK and ROCm functions. Currently implemented are
+ * LinAlgWorkspaceCUDA, LinAlgWorkspaceHip, and LinAlgWorkspaceCpu.
+ *
+ * Each linear solver object owns one dedicated workspace, which is shared
+ * with a matrix and a vector handler belonging to the same solver.
+ *
  * @subsection backends_subsec Hardware Backends
  *
+ * In addition to sequential implementation of compute kernels, Re::Solve
+ * has implementations in HIP and CUDA languages.
+ *
  * @subsection utils_subsec Utilities
+ *
+ * Re::Solve implements several utility classes for managing input and
+ * output.
  *
  */

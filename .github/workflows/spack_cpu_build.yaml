@@ -1,5 +1,5 @@
 # https://spack.readthedocs.io/en/latest/binary_caches.html#spack-build-cache-for-github-actions
-name: Spack Ubunutu x86_64 Buildcache
+name: CPU Tests #Spack Ubunutu x86_64 Buildcache
 
 env:
   SPACK_COLOR: always

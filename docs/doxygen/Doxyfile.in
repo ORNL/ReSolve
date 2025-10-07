@@ -23,7 +23,7 @@
 # replacement variables:
 # doxygen -x_noenv [configFile]
 
-## Imporant Resolve settings are at the BOTTOM OF THE PAGE/
+## Imporant Re::Solve settings are at the BOTTOM OF THE PAGE/
 ## SET THE BOTTOM VARIABLE TO OVERIDE THE DEFAULT VALUES
 
 
@@ -46,7 +46,7 @@ DOXYFILE_ENCODING      = UTF-8
 # title of most generated pages and in a few other places.
 # The default value is: My Project.
 
-PROJECT_NAME           = ReSolve
+PROJECT_NAME           = Re::Solve
 
 # The PROJECT_NUMBER tag can be used to enter a project or revision number. This
 # could be handy for archiving the generated documentation or if some version
@@ -65,7 +65,7 @@ PROJECT_BRIEF          = "A library of GPU-resident linear solvers."
 # pixels and the maximum width should not exceed 200 pixels. Doxygen will copy
 # the logo to the output directory.
 
-PROJECT_LOGO           =
+PROJECT_LOGO           = ./images/ReSolve-Icon-Red.png
 
 # With the PROJECT_ICON tag one can specify an icon that is included in the tabs
 # when the HTML document is shown. Doxygen will copy the logo to the output
@@ -1359,6 +1359,7 @@ HTML_STYLESHEET        =
 
 # HTML_EXTRA_STYLESHEET  = doxygen-awesome-css/doxygen-awesome.css
 HTML_EXTRA_STYLESHEET  = doxygen/doxygen-awesome.css
+# HTML_EXTRA_STYLESHEET  = doxygen/doxygen-awesome-sidebar-only-darkmode-toggle.css
 
 
 # The HTML_EXTRA_FILES tag can be used to specify one or more extra images or
@@ -1386,8 +1387,8 @@ HTML_EXTRA_FILES       = doxygen/doxygen-awesome-darkmode-toggle.js \
 # The default value is: AUTO_LIGHT.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-# HTML_COLORSTYLE        = AUTO_LIGHT
-HTML_COLORSTYLE        = LIGHT # required with doxygen-awesome and Doxygen >= 1.9.5
+HTML_COLORSTYLE        = AUTO_LIGHT
+# HTML_COLORSTYLE        = LIGHT # required with doxygen-awesome and Doxygen >= 1.9.5
 
 # The HTML_COLORSTYLE_HUE tag controls the color of the HTML output. Doxygen
 # will adjust the colors in the style sheet and background images according to
@@ -1670,7 +1671,7 @@ ECLIPSE_DOC_ID         = org.doxygen.Project
 # The default value is: NO.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-# DISABLE_INDEX          = NO
+# DISABLE_INDEX          = YES
 
 # The GENERATE_TREEVIEW tag is used to specify whether a tree-like index
 # structure should be generated to display hierarchical information. If the tag
@@ -1699,7 +1700,7 @@ GENERATE_TREEVIEW      = YES
 # The default value is: NO.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-FULL_SIDEBAR           = NO
+FULL_SIDEBAR           = YES
 
 # The ENUM_VALUES_PER_LINE tag can be used to set the number of enum values that
 # doxygen will group on one line in the generated HTML documentation.

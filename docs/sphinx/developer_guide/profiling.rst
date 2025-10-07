@@ -65,7 +65,7 @@ This will generate profiling information using measurements in directory
 ``out.m`` and store it in directory ``out.d``. The data in ``out.d`` can be
 viewed using ``hpcviewer`` tool.
 
-It is recommended to download and install graphical version of
+It is recommended to download and install the graphical version of
 `HPCToolkit viewer <http://hpctoolkit.org/download.html>`_ on your local
 machine and analyze profiling data there. The graphical user interface provides
 many productivity features but often runs slowly over SSH connection. 
@@ -87,7 +87,7 @@ look something like this:
   EXE=resolve_executable.exe
   OUT=hpctoolkit_resolve_profile
 
-  # Profile ReSolve code on a single GPU  
+  # Profile Re::Solve code on a single GPU  
   echo "`date` Starting run"
   srun -N 1 -n 1 -c 1 -G 1 \
     hpcrun -t -e CPUTIME -e gpu=amd -o ${OUT}.m ${EXE}
@@ -98,7 +98,7 @@ look something like this:
   srun -N 1 -n 1 -c 56 hpcprof -o ${OUT}.d ${OUT}.m
 
 Any arguments that the executable takes can be simply added as when the
-executable is called locally. Similar script could be written for LSF or MOAB
+executable is called locally. A similar script could be written for LSF or MOAB
 scheduler.
 
 ###############
