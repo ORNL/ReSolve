@@ -1,6 +1,5 @@
-
 Writing Sphynx Documentation
-----------------------------
+============================
 
 Re::Solve uses Sphynx for online documentation. To write and preview the
 documentation on your local machine use e.g. ``pip`` tool to install following
@@ -31,7 +30,7 @@ subdirectory in your current directory.
 
 
 Using Dev Containers for Writing Documentation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------------------------
 
 In case you cannot install Sphynx and other dependencies on your machine,
 Re::Solve provides scripts for building development container with all
@@ -39,7 +38,7 @@ tools required for Sphynx documentation generation. To create container
 for documentation development follow these straightforward steps:
 
 Prerequisites
-"""""""""""""
+^^^^^^^^^^^^^
 
 #. install Docker Desktop and launch the app
 #. install the "Remote Development" extension in VSCode
@@ -47,7 +46,7 @@ Prerequisites
 
 
 Build Container
-"""""""""""""""
+^^^^^^^^^^^^^
 
 The build info for this container is in `.devcontainer/`. There is a Dockerfile and
 json file associated with the configuration.
@@ -202,21 +201,24 @@ Typically this is done as a part of the release process, so also make sure that 
 
 Note that spack enforces it's own styling, so consider leveraging spack-bot in order to help out. Comment ``@spackbot help`` to get a list of commands, such as ``@spackbot fix style`` to have it try and automatically style your PR for you!
 
-***************
-Developer Guide
-***************
+Refresh GitHub/GitLab Secrets
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The Re::Solve Developer Guide documents software development processes
-followed by the Re::Solve project. The main goal of the guide is to ensure
-all project contributors understand the key elements of the processes so
-that they are consistently applied.
+There are several secrets throughout CI/CD:
 
+* GitHub commit status tokens for posting back to GitHub from GitLab at:
+    * PNNL (Deception, Incline)
+    * ORNL (Crusher, Ascent)
+* GitHub push tokens for update spack build tcl modules from GitLab at:
+    * PNNL (Deception, Incline)
+    * ORNL (Crusher, Ascent)
+* GitLab tokens to allow push mirror from GitHub to GitLab at:
+    * PNNL (Deception, Incline)
+    * ORNL (Crusher, Ascent)
 
+These 6 tokens in total are all generated with different permission scops,
+and across both GitLab and GitHub. They are stored as separate 
+across all the repositories.
 
-.. toctree::
-   :maxdepth: 3
-
-   git_guidelines
-   build_system
-   coding_guidelines
-   documentation
+Ensure not to re-use tokens for multiple purposes, and if a token is ever
+exposed over plaintext, it should be re-generated ASAP.

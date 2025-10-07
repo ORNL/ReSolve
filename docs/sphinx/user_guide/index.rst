@@ -3,7 +3,7 @@ User Guide
 
 Getting started
 ---------------
-ReSolve is maintained and developed at `Github <https://github.com/ORNL/ReSolve>`_.
+Re::Solve is maintained and developed at `Github <https://github.com/ORNL/ReSolve>`_.
 It has following build dependencies:
 
 * C++11 compliant compiler
@@ -42,12 +42,12 @@ and then edit script |runResolve|_
 to match locations of your linear systems and binary installation.
 The script will emulate nonlinear solver calling the linear solver repeatedly.
 
-To use the ReSolve library in your own project
+To use the Re::Solve library in your own project
 ----------------------------------------------
 
 Make sure Resolve library is installed (see above)
 
-Below is an example CMakeList.txt file to use ReSolve library in your project
+Below is an example CMakeList.txt file to use Re::Solve library in your project
 
 .. code:: cmake
 
@@ -67,13 +67,13 @@ Below is an example CMakeList.txt file to use ReSolve library in your project
 Test and Deploy
 ---------------
 
-ReSolve as a library is tested every merge request via Gitlab pipelines
-that execute various library tests including a test of ReSolve being
+Re::Solve as a library is tested every merge request via Gitlab pipelines
+that execute various library tests including a test of Re::Solve being
 consumed as package within an external project as mentioned in `Using
-ReSolve in your own
+Re::Solve in your own
 Project <#to-use-the-resolve-library-in-your-own-project>`__
 
-To test your own install of ReSolve simply cd into your ReSolve build
+To test your own install of Re::Solve simply cd into your Re::Solve build
 directory and run
 
 .. code:: shell
@@ -86,7 +86,7 @@ or
 
    $ ctest
 
-Below is an example of what a functional ReSolve build will ouput on
+Below is an example of what a functional Re::Solve build will ouput on
 Passing tests
 
 .. code:: text
@@ -121,7 +121,7 @@ CmakeUserPresets.json file. To learn more about cmake-presets please
 checkout the cmake
 `docs <https://cmake.org/cmake/help/latest/manual/cmake-presets.7.html>`__.
 
-For example if you wanted to build and install ReSolve on a High
+For example if you wanted to build and install Re::Solve on a High
 Performance Computing Cluster such as PNNL’s Deception or ORNL’s Ascent
 we encourage you to utilize our cluster preset. Using this preset will
 set CMAKE_INSTALL_PREFIX to an install folder. To use this preset simply
@@ -163,6 +163,8 @@ as neccessary.
 See the Quick How-To section below for more information on how to update the
 spack package and typical workflows for building Re::Solve with spack on CI
 platforms for testing.
+
+
 
 Getting Help
 ------------

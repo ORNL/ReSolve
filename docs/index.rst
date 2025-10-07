@@ -1,12 +1,12 @@
 *******
-ReSolve
+Re::Solve
 *******
 
-ReSolve is an open-source library that provides GPU-resident linear solvers. 
+Re::Solve is an open-source library that provides GPU-resident linear solvers. 
 It contains iterative and direct solvers designed to run on NVIDIA and AMD
 GPUs, as well as on CPU devices.
 
-ReSolve source code and documentation are available at
+Re::Solve source code and documentation are available at
 `GitHub <https://github.com/ORNL/ReSolve>`_.
 
 
@@ -18,10 +18,20 @@ Source code documentation generated in Doxygen is also
 `linked <doxygen/html/index.html>`_ to this site.
 
 
+Support
+-------
+For technical questions or to report a bug please submit a
+`GitHub issue <https://github.com/ORNL/ReSolve/issues>`_ or post a question on
+`user mailing list <mailto:resolve-users@elist.ornl.gov>`_.
+For non-technical issues please contact
+`Re::Solve developers <mailto:resolve-devel@elist.ornl.gov>`_.
+
+
+
 Contributing
 ------------
 
-For all contributions to ReSolve please consult 
+For all contributions to Re::Solve please consult 
 `Developer Guide <sphinx/developer_guide/index.html>`_ and follow the 
 `Coding Style Guidelines <sphinx/coding_guidelines/index.html>`_.
 
@@ -34,7 +44,7 @@ The primary authors of this project are:
 * Slaven Peles peless@ornl.gov (ORNL)
 * Shaked Regev regevs@ornl.gov (ORNL)
 
-ReSolve project would not be possible without significant contributions
+Re::Solve project would not be possible without significant contributions
 from (in alphabetic order):
 
 * Maksudul Alam (ORNL)
@@ -57,14 +67,14 @@ imperative.
 License
 -------
 
-ReSolve is a free software distributed under a BSD-style license. See
+Re::Solve is a free software distributed under a BSD-style license. See
 the `LICENSE <sphinx/license.html>`__ and `NOTICE <sphinx/notice.html>`__
-for more details. All new contributions to ReSolve must be made under the
+for more details. All new contributions to Re::Solve must be made under the
 same licensing terms.
 
-**Please Note:** If you are using ReSolve with any third party libraries linked
-in (e.g., KLU), be sure to review the respective license of the package as that
-license may have more restrictive terms than the ReSolve license.
+**Please Note:** If you are using Re::Solve with any third party libraries linked
+in (e.g., SuiteSparse), be sure to review the respective license of the package as that
+license may have more restrictive terms than the Re::Solve license.
 
 Copyright © 2023, UT-Battelle, LLC, and Battelle Memorial Institute.
 
@@ -80,12 +90,10 @@ Copyright © 2023, UT-Battelle, LLC, and Battelle Memorial Institute.
 
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
    :hidden:
    :caption: Developer Resources
 
-   doxygen/index
-   sphinx/developer_guide/coding_guidelines
-   sphinx/developer_guide/git_guidelines
    sphinx/developer_guide/index
+   doxygen/index
    sphinx/developer_guide/profiling
