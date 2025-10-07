@@ -50,6 +50,7 @@ namespace ReSolve
    *
    * Sets up the cuSolverRf factorization for the given matrix A and its
    * L and U factors. The permutation vectors P and Q are also set up.
+   * This function should not be called more than once for the same object.
    *
    * @param[in] A - pointer to the matrix A
    * @param[in] L - pointer to the lower triangular factor L in CSR
@@ -75,31 +76,32 @@ namespace ReSolve
     this->A_      = A;
     index_type n  = A_->getNumRows();
 
-    // Remember - P and Q are generally CPU variables!
-    // Factorization data is stored in the handle.
-    // If function is called again, destroy the old handle to get rid of old data.
-    if (setup_completed_)
-    {
-      cusolverRfDestroy(handle_cusolverrf_);
-      cusolverRfCreate(&handle_cusolverrf_);
-    }
-
     if (d_P_ == nullptr)
     {
       mem_.allocateArrayOnDevice(&d_P_, n);
+    }
+    else
+    {
+      out::error() << "d_P_ should be nullptr on call to LinSolverDirectCuSolverRf::setup" std::endl;
     }
 
     if (d_Q_ == nullptr)
     {
       mem_.allocateArrayOnDevice(&d_Q_, n);
     }
-
-    if (d_T_ != nullptr)
+    else
     {
-      mem_.deleteOnDevice(d_T_);
+      out::error() << "d_Q_ should be nullptr on call to LinSolverDirectCuSolverRf::setup" std::endl;
     }
 
-    mem_.allocateArrayOnDevice(&d_T_, n);
+    if (d_T_ == nullptr)
+    {
+      mem_.allocateArrayOnDevice(&d_T_, n);
+    }
+    else
+    {
+      out::error() << "d_T_ should be nullptr on call to LinSolverDirectCuSolverRf::setup" std::endl;
+    }
 
     mem_.copyArrayHostToDevice(d_P_, P, n);
     mem_.copyArrayHostToDevice(d_Q_, Q, n);
