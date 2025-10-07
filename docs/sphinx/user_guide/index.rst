@@ -180,6 +180,7 @@ Re::Solve Genral API Description
 Solver Subroutines
 -------------------------------
 For direct solvers, the following functions are provided and must be called in this order.
+
 - `analyze()` - Performs symbolic factorization, currently only with KLU on the CPU.
 - `factorize()` - Performs numeric factorization, given a symbolic factorization.
 - `refactorizationSetup()` - Prepares for a new numeric factorization, given a new matrix with the same sparsity structure (required only if using `refactorize()`).
@@ -193,7 +194,6 @@ The user should enforce that symbolic nonzeros are stored explicitly, even if th
 
 Function Requirements
 ---------------------
-
 Functions must be used as in the examples and tests. 
 
 - Workspaces are required for GPU solvers. The generic workspace_type is required for backend agnostic code.
