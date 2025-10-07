@@ -73,7 +73,7 @@ for more details. All new contributions to Re::Solve must be made under the
 same licensing terms.
 
 **Please Note:** If you are using Re::Solve with any third party libraries linked
-in (e.g., KLU), be sure to review the respective license of the package as that
+in (e.g., SuiteSparse), be sure to review the respective license of the package as that
 license may have more restrictive terms than the Re::Solve license.
 
 Copyright © 2023, UT-Battelle, LLC, and Battelle Memorial Institute.
@@ -90,12 +90,10 @@ Copyright © 2023, UT-Battelle, LLC, and Battelle Memorial Institute.
 
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
    :hidden:
    :caption: Developer Resources
 
-   doxygen/index
-   sphinx/developer_guide/coding_guidelines
-   sphinx/developer_guide/git_guidelines
    sphinx/developer_guide/index
+   doxygen/index
    sphinx/developer_guide/profiling

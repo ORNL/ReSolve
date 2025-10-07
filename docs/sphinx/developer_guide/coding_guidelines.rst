@@ -1,11 +1,9 @@
-Code Style Guidelines
-======================
 
 Code Style
-----------
+==========
 
 Error handling
-~~~~~~~~~~~~~~
+--------------
 
 Return values of member functions should be of type ``int`` and used for
 error handling. Functions return 0 if no error is encountered, return
@@ -13,7 +11,7 @@ positive value for warnings and recoverable error, and negative value
 for irrecoverable errors.
 
 Output
-~~~~~~
+------
 
 If an output is needed (for example, a warning needs to be displayed),
 use ``std::cout`` and not ``printf`` as shown below. There should be a
@@ -24,12 +22,12 @@ space before and after each ``<<``.
    std::cout << "index out of bounds. Row " << i << " starts at: " << start << " and ends at " << end << std::endl;
 
 General naming conventions
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------
 
 Do not include words like "function", "variable", "const" or "class" in names. It is clear what they are based on the naming conventions.
 
 Member variable naming
-~~~~~~~~~~~~~~~~~~~~~~
+------------------------------
 
 Member variable names should use C-style name format and end with
 trailing underscore ``_``.
@@ -41,7 +39,7 @@ trailing underscore ``_``.
    double memberVariable_;  // No, using lowercase camel instead of C-style name format
 
 Function names
-~~~~~~~~~~~~~~
+--------------
 
 Use lowercase camel format (camelCase), with no underscore, for function names.
 
@@ -52,13 +50,13 @@ Use lowercase camel format (camelCase), with no underscore, for function names.
    int YetAnotherFunction(); // No, using uppercase camel name format
 
 Class names
-~~~~~~~~~~~
+-----------
 
 Class names should follow uppercase camel format (CamelCase), with no underscore. 
 For instance, `Vector` and `CsrMatrix` are valid class names, while `cartesianPoint` is not.
 
 Enums (enumerated types)
-~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------
 
 Always define ``enum``\ s inside ``ReSolve`` namespace. Type names
 should be capitalized and the constant names should be uppercase with
@@ -71,7 +69,7 @@ underscores (but there is no underscore at the end!).
                         YET_ANOTHER_CONST = 17 };
 
 Constants
-~~~~~~~~~
+---------
 
 If a constant is used in more than one file, define it in ``Common.h``.
 Constants names should be capitalized and words separated by underscores.
@@ -84,7 +82,7 @@ Constants names should be capitalized and words separated by underscores.
       constexpr double EXP = 2.7183 // Yes  
 
 Exceptions to naming conventions
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------------
 
 The following are exceptions to the naming conventions:
 Always capitalize `ReSolve` in this manner. There may be additional words
@@ -96,7 +94,7 @@ This is due to the equation $Ax=b$ and the Householder convention where
 uppercase letters represent matrices and lowercase letter represent vectors.
 
 Pointers and references
-~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------
 
 The pointer ``*`` or reference ``&`` belong to the type and there should
 be no space between them and the type name.
@@ -110,7 +108,7 @@ Declare each variable on a different line.
    int & n;       // No, the reference symbol is a part of `int&` type
 
 Indentation
-~~~~~~~~~~~
+-----------
 
 When writing a function header over multiple lines, 
 indenting of subsequent variables should mimic the first variable.
@@ -136,7 +134,7 @@ each definition (except the first one). See example below.
    };
 
 Braces
-~~~~~~
+------
 
 Namespaces, classes and functions: use new line afterwards, i.e.,
 
@@ -194,7 +192,7 @@ The following are correct uses:
 
 
 Use of spaces and newlines
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------
 
 There should be spaces between arithmetic operators.
 
@@ -251,7 +249,7 @@ includes, i.e.,
 The ``system`` includes should always be listed first.
 
 Using namespaces
-~~~~~~~~~~~~~~~~
+----------------
 
 All classes should be in namespace ``ReSolve``. If needed, define
 additional namespaces inside ``ReSolve``.
@@ -280,7 +278,7 @@ additional namespaces inside ``ReSolve``.
    };
 
 Writing comments
-~~~~~~~~~~~~~~~~
+----------------
 
 Use ``//`` for comments in the code. Do not use ``/* */``.
 
@@ -324,7 +322,8 @@ Overall, the comment should look like this:
        * @param[out] y The output parameter
        * @param[in,out] z The input/output parameter
        *
-       * @return 0 if no error, positive value for warnings and recoverable error, negative value for irrecoverable errors
+       * @return 0 if no error, positive value for warnings and recoverable error, 
+       * negative value for irrecoverable errors
       */
       void logAdd(const real_type x, real_type& y, real_type* z)
       {
@@ -336,13 +335,13 @@ Do not leave commented code used for debugging (or for other purposes).
 Remove it before committing the code.
 
 At the developer's and reviewer's discretion, trivial functions can have one
-line documentation with "//" or none at all. Examples of trivial functions
+line documentation with ``///`` or none at all. Examples of trivial functions
 are getters and setters, or functions that are self-explanatory.
 For example a getter function can be documented as follows:
 
 .. code:: cpp
 
-   // This function returns the x coordinate - this line can be omitted
+   /// This function returns the x coordinate - this line can be omitted
    double getX() const 
    { 
      return x_; 
