@@ -76,13 +76,18 @@ namespace ReSolve
     this->A_      = A;
     index_type n  = A_->getNumRows();
 
+    if (setup_completed_)
+    {
+      out::error() << "LinSolverDirectCuSolverRf::setup should only be called one." << std::endl;
+    }
+
     if (d_P_ == nullptr)
     {
       mem_.allocateArrayOnDevice(&d_P_, n);
     }
     else
     {
-      out::error() << "d_P_ should be nullptr on call to LinSolverDirectCuSolverRf::setup" << std::endl;
+      out::error() << "d_P_ should be nullptr on call to LinSolverDirectCuSolverRf::setup." << std::endl;
     }
 
     if (d_Q_ == nullptr)
@@ -91,7 +96,7 @@ namespace ReSolve
     }
     else
     {
-      out::error() << "d_Q_ should be nullptr on call to LinSolverDirectCuSolverRf::setup" << std::endl;
+      out::error() << "d_Q_ should be nullptr on call to LinSolverDirectCuSolverRf::setup." << std::endl;
     }
 
     if (d_T_ == nullptr)
