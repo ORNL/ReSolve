@@ -85,6 +85,7 @@ namespace ReSolve
     else
     {
       out::error() << "d_P_ should be nullptr on call to LinSolverDirectRocSolverRf::setup." << std::endl;
+      return 1;
     }
 
     if (d_Q_ == nullptr)
@@ -94,6 +95,7 @@ namespace ReSolve
     else
     {
       out::error() << "d_Q_ should be nullptr on call to LinSolverDirectRocSolverRf::setup." << std::endl;
+      return 1;
     }
     mem_.copyArrayHostToDevice(d_P_, P, n);
     mem_.copyArrayHostToDevice(d_Q_, Q, n);
