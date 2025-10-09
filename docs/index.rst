@@ -85,7 +85,6 @@ Copyright © 2023, UT-Battelle, LLC, and Battelle Memorial Institute.
    :caption: User Resources
 
    sphinx/user_guide/index
-   sphinx/user_guide/API_overview
    sphinx/license
    sphinx/notice 
 
