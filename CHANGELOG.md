@@ -8,15 +8,17 @@
 This requires switching $L$ with $U$ and $P$ with $Q$ and reinterpretting them as CSR instead of CSC. 
 It is seamless from the user perspective and fixed many bugs.
 
-2. Added more rigorous checks for PRs for clang formatting and to compile without warnings and memory leaks.
+2. Significant improvements to documentation and instructions inside and outside the code. Added general API description, including details on memory space synchronization.
 
-3. Updated pull request and issue templates.
+3. Added more rigorous checks for PRs for clang formatting and to compile without warnings and memory leaks.
+
+4. Updated pull request and issue templates.
 
 ### Bug Fixes
 
 1. Fixed a bug that produced inaccurate results for some asymmetric matrices with major feature 1.
 
-2. Synchronized devices after HIP functions. HIP executes asynchronously, so bugs occured wihout synchronization.
+2. Synchronized devices after HIP functions. HIP executes asynchronously, so bugs occured without synchronization.
 
 3. Corrected the way cmake finds suitsparse.
 
