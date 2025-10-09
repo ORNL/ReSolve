@@ -153,7 +153,7 @@ Users are encouraged to look at the examples and tests for guidance on how to us
 When there is any conflict between the examples/tests and this documentation, the examples/tests are correct.
 
 Solver Subroutines
-------------------
+~~~~~~~~~~~~~~~~~~~~
 
 For direct solvers, the following functions are provided and must be called in this order:
 
@@ -168,7 +168,7 @@ Subsequent systems only require calls to ``refactorize()`` and ``solve()`` if th
 Note some examples do not reuse the factorization from the 0-th iteration because the numeric sparsity structure changes and that's how the matrices are stored. In a practical application, the sparsity structure is likely to remain the same. If it does not, it is the user's responsibility to reallocate memory and call ``analyze()`` and ``factorize()`` again. The user should enforce that symbolic nonzeros are stored explicitly, even if they are numerically zero.
 
 Function Requirements
----------------------
+~~~~~~~~~~~~~~~~~~~~
 
 Functions must be used as in the examples and tests:
 
@@ -188,7 +188,7 @@ Functions in ReSolve that take pointers as arguments will have the following req
 * Pointers that are marked as const must point to memory that is readable.
 
 Memory Synchronization
-----------------------
+~~~~~~~~~~~~~~~~~~~~
 
 * For CPU solvers, memory is always in sync.
 * For GPU solvers, the user must synchronize memory manually. 
