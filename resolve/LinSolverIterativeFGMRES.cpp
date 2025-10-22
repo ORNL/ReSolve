@@ -202,12 +202,19 @@ namespace ReSolve
         // V_{i+1}=A*Z_i
 
         vec_v.setData(vec_V_->getData(i + 1, memspace_), memspace_);
-
+        vec_v.setToZero(memspace_);
         matrix_handler_->matvec(A_, &vec_z, &vec_v, &ONE, &ZERO, memspace_);
 
         // orthogonalize V[i+1], form a column of h_H_
 
-        GS_->orthogonalize(n_, vec_V_, h_H_, i);
+        int gs_status = GS_->orthogonalize(n_, vec_V_, h_H_, i);
+
+	if (gs_status != 0) // checking for successful breakdown
+        {
+	   notconv = 0; // exiting outer loop
+	   break;
+	}
+
         if (i != 0)
         {
           for (index_type k = 1; k <= i; k++)
