@@ -137,11 +137,6 @@ namespace ReSolve
     // Initializing Residual and Update
     vec_Y_->setToZero(memspace_);
 
-    // V[0] = b-A*x_0
-    // debug
-    vec_Z_->setToZero(memspace_);
-    vec_V_->setToZero(memspace_);
-
     // Computing the first Arnodi basis vector
     vec_R_->copyDataTo(vec_V_->getData(memspace_), 0, memspace_);
     rnorm = 0.0;
