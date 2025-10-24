@@ -172,7 +172,7 @@ namespace ReSolve
       }
       else
       {
-        //assert(0 && "Gram-Schmidt failed, vector with ZERO norm\n");
+        // assert(0 && "Gram-Schmidt failed, vector with ZERO norm\n");
         return 1;
       }
       return 0;
@@ -222,7 +222,7 @@ namespace ReSolve
       }
       else
       {
-        //assert(0 && "Gram-Schmidt failed, vector with ZERO norm\n");
+        // assert(0 && "Gram-Schmidt failed, vector with ZERO norm\n");
         return 1;
       }
       return 0;
@@ -279,7 +279,7 @@ namespace ReSolve
       }
       else
       {
-        //assert(0 && "Iterative refinement failed, Krylov vector with ZERO norm\n");
+        // assert(0 && "Iterative refinement failed, Krylov vector with ZERO norm\n");
         return 1;
       }
       h_rv = nullptr;
@@ -364,7 +364,7 @@ namespace ReSolve
       }
       else
       {
-        //assert(0 && "Iterative refinement failed, Krylov vector with ZERO norm\n");
+        // assert(0 && "Iterative refinement failed, Krylov vector with ZERO norm\n");
         return 1;
       }
       h_rv = nullptr;
@@ -395,13 +395,13 @@ namespace ReSolve
       }
       else
       {
-        //assert(0 && "Gram-Schmidt failed, vector with ZERO norm\n");
+        // assert(0 && "Gram-Schmidt failed, vector with ZERO norm\n");
         return 1;
       }
       return 0;
 
     default:
-      //assert(0 && "Iterative refinement failed, wrong orthogonalization.\n");
+      // assert(0 && "Iterative refinement failed, wrong orthogonalization.\n");
       return 1;
     } // switch
 

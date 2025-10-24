@@ -108,14 +108,14 @@ namespace ReSolve
 
     // io::Logger::setVerbosity(io::Logger::EVERYTHING);
 
-    int outer_flag = 1;
-    int update_flag= 1;
-    int notconv    = 1;
-    int i          = 0;
-    int it         = 0;
-    int j          = 0;
-    int k          = 0;
-    int k1         = 0;
+    int outer_flag  = 1;
+    int update_flag = 1;
+    int notconv     = 1;
+    int i           = 0;
+    int it          = 0;
+    int j           = 0;
+    int k           = 0;
+    int k1          = 0;
 
     real_type   t     = 0.0;
     real_type   rnorm = 0.0;
@@ -166,7 +166,6 @@ namespace ReSolve
                        << rnorm << " Norm of rhs: " << bnorm << "\n";
     initial_residual_norm_ = rnorm;
 
-
     while (outer_flag)
     {
       if (it == 0)
@@ -197,7 +196,7 @@ namespace ReSolve
         outer_flag             = 0;
         final_residual_norm_   = rnorm;
         initial_residual_norm_ = rnorm;
-	update_flag 	       = 1;
+        update_flag            = 1;
         total_iters_           = 0;
         break;
       }
@@ -238,11 +237,11 @@ namespace ReSolve
 
         int gs_status = GS_->orthogonalize(n_, vec_V_, h_H_, i);
 
-	if (gs_status != 0) // checking for successful breakdown
+        if (gs_status != 0) // checking for successful breakdown
         {
-	   notconv = 0; // exiting outer loop
-	   break;
-	}
+          notconv = 0; // exiting outer loop
+          break;
+        }
 
         if (i != 0)
         {
@@ -351,8 +350,8 @@ namespace ReSolve
       }
     } // outer while
 
-   if (update_flag)
-   {
+    if (update_flag)
+    {
       vector_handler_->axpy(&ONE, x, vec_Y_, memspace_);
       vec_R_->copyDataFrom(rhs, memspace_, memspace_);
       matrix_handler_->matvec(A_, vec_Y_, vec_R_, &MINUS_ONE, &ONE, memspace_);
@@ -363,24 +362,24 @@ namespace ReSolve
       if (final_residual_norm_ < initial_residual_norm_)
       {
         std::cout << "Update to intial guess is successful, final residual (solution plus update) "
-                << std::scientific << std::setprecision(16)
-                << final_residual_norm_/rhsnorm << "\n";
+                  << std::scientific << std::setprecision(16)
+                  << final_residual_norm_ / rhsnorm << "\n";
 
         x->copyDataFrom(vec_Y_, memspace_, memspace_);
       }
       else
       {
-	std::cout << "Update to intial guess is not successful, final residual greater than initial residual "
-                << std::scientific << std::setprecision(16)
-                << final_residual_norm_/rhsnorm << "\n";
+        std::cout << "Update to intial guess is not successful, final residual greater than initial residual "
+                  << std::scientific << std::setprecision(16)
+                  << final_residual_norm_ / rhsnorm << "\n";
       }
-   }
-   else
-   {
-       x->copyDataFrom(vec_Y_, memspace_, memspace_);
-   }
+    }
+    else
+    {
+      x->copyDataFrom(vec_Y_, memspace_, memspace_);
+    }
 
-   return 0;
+    return 0;
   }
 
   int LinSolverIterativeFGMRES::setupPreconditioner(std::string type, LinSolverDirect* LU_solver)
