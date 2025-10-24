@@ -138,11 +138,11 @@ namespace ReSolve
 
     // io::Logger::setVerbosity(io::Logger::EVERYTHING);
 
-    int        outer_flag = 1;
-    int        notconv    = 1;
-    int        update_flag= 1;
-    index_type i          = 0;
-    int        it         = 0;
+    int        outer_flag  = 1;
+    int        notconv     = 1;
+    int        update_flag = 1;
+    index_type i           = 0;
+    int        it          = 0;
     int        j;
     int        k;
     int        k1;
