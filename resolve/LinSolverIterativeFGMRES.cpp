@@ -109,6 +109,7 @@ namespace ReSolve
     // io::Logger::setVerbosity(io::Logger::EVERYTHING);
 
     int outer_flag = 1;
+    int update_flag= 1;
     int notconv    = 1;
     int i          = 0;
     int it         = 0;
@@ -120,25 +121,52 @@ namespace ReSolve
     real_type   rnorm = 0.0;
     real_type   bnorm = 0.0;
     real_type   tolrel;
+    real_type   rhsnorm = 0.0;
     vector_type vec_v(n_);
     vector_type vec_z(n_);
+
+    // Compute the residual
+    vec_R_->setToZero(memspace_);
+    vec_R_->copyDataFrom(rhs, memspace_, memspace_);
+    matrix_handler_->matvec(A_, x, vec_R_, &MINUS_ONE, &ONE, memspace_);
+
+    // Arnoldi Basis
+    vec_Z_->setToZero(memspace_);
+    vec_V_->setToZero(memspace_);
+
+    // Initializing Residual and Update
+    vec_Y_->setToZero(memspace_);
+
     // V[0] = b-A*x_0
     // debug
     vec_Z_->setToZero(memspace_);
     vec_V_->setToZero(memspace_);
 
-    rhs->copyDataTo(vec_V_->getData(memspace_), 0, memspace_);
-    matrix_handler_->matvec(A_, x, vec_V_, &MINUS_ONE, &ONE, memspace_);
+    // Computing the first Arnodi basis vector
+    vec_R_->copyDataTo(vec_V_->getData(memspace_), 0, memspace_);
     rnorm = 0.0;
-    bnorm = vector_handler_->dot(rhs, rhs, memspace_);
+    bnorm = vector_handler_->dot(vec_R_, vec_R_, memspace_);
     rnorm = vector_handler_->dot(vec_V_, vec_V_, memspace_);
-    // rnorm = ||V_1||
     rnorm = std::sqrt(rnorm);
+
+    // Checking if rnorm > norm of RHS
+    rhsnorm = vector_handler_->dot(rhs, rhs, memspace_);
+    rhsnorm = std::sqrt(rhsnorm);
+    if (rnorm > rhsnorm)
+    {
+      std::cout << "Initial guess is invalid. Refining Ax = b instead of Ay = r" << std::endl;
+      vec_Y_->copyDataFrom(x, memspace_, memspace_);
+      vec_R_->copyDataFrom(rhs, memspace_, memspace_);
+      update_flag = 0;
+    }
+
     bnorm = std::sqrt(bnorm);
     io::Logger::misc() << "it 0: norm of residual "
                        << std::scientific << std::setprecision(16)
                        << rnorm << " Norm of rhs: " << bnorm << "\n";
     initial_residual_norm_ = rnorm;
+
+
     while (outer_flag)
     {
       if (it == 0)
@@ -169,6 +197,7 @@ namespace ReSolve
         outer_flag             = 0;
         final_residual_norm_   = rnorm;
         initial_residual_norm_ = rnorm;
+	update_flag 	       = 1;
         total_iters_           = 0;
         break;
       }
@@ -278,7 +307,7 @@ namespace ReSolve
         for (j = 0; j <= i; j++)
         {
           vec_z.setData(vec_Z_->getData(j, memspace_), memspace_);
-          vector_handler_->axpy(&h_rs_[j], &vec_z, x, memspace_);
+          vector_handler_->axpy(&h_rs_[j], &vec_z, vec_Y_, memspace_);
         }
       }
       else
@@ -294,11 +323,11 @@ namespace ReSolve
 
         vec_v.setData(vec_V_->getData(memspace_), memspace_);
         this->precV(&vec_z, &vec_v);
-        // and add to x
-        vector_handler_->axpy(&ONE, &vec_v, x, memspace_);
+        // and add to update
+        vector_handler_->axpy(&ONE, &vec_v, vec_Y_, memspace_);
       }
 
-      /* test solution */
+      /* test update */
 
       if (rnorm <= tolrel || it >= maxit_)
       {
@@ -306,8 +335,8 @@ namespace ReSolve
         outer_flag = 0;
       }
 
-      rhs->copyDataTo(vec_V_->getData(memspace_), 0, memspace_);
-      matrix_handler_->matvec(A_, x, vec_V_, &MINUS_ONE, &ONE, memspace_);
+      vec_R_->copyDataTo(vec_V_->getData(memspace_), 0, memspace_);
+      matrix_handler_->matvec(A_, vec_Y_, vec_V_, &MINUS_ONE, &ONE, memspace_);
       rnorm = vector_handler_->dot(vec_V_, vec_V_, memspace_);
       // rnorm = ||V_1||
       rnorm = std::sqrt(rnorm);
@@ -321,7 +350,37 @@ namespace ReSolve
                            << rnorm << "\n";
       }
     } // outer while
-    return 0;
+
+   if (update_flag)
+   {
+      vector_handler_->axpy(&ONE, x, vec_Y_, memspace_);
+      vec_R_->copyDataFrom(rhs, memspace_, memspace_);
+      matrix_handler_->matvec(A_, vec_Y_, vec_R_, &MINUS_ONE, &ONE, memspace_);
+      final_residual_norm_ = vector_handler_->dot(vec_R_, vec_R_, memspace_);
+      final_residual_norm_ = std::sqrt(final_residual_norm_);
+
+      // Compare this with initial and update x accordingly
+      if (final_residual_norm_ < initial_residual_norm_)
+      {
+        std::cout << "Update to intial guess is successful, final residual (solution plus update) "
+                << std::scientific << std::setprecision(16)
+                << final_residual_norm_/rhsnorm << "\n";
+
+        x->copyDataFrom(vec_Y_, memspace_, memspace_);
+      }
+      else
+      {
+	std::cout << "Update to intial guess is not successful, final residual greater than initial residual "
+                << std::scientific << std::setprecision(16)
+                << final_residual_norm_/rhsnorm << "\n";
+      }
+   }
+   else
+   {
+       x->copyDataFrom(vec_Y_, memspace_, memspace_);
+   }
+
+   return 0;
   }
 
   int LinSolverIterativeFGMRES::setupPreconditioner(std::string type, LinSolverDirect* LU_solver)
@@ -566,6 +625,11 @@ namespace ReSolve
   {
     vec_V_ = new vector_type(n_, restart_ + 1);
     vec_V_->allocate(memspace_);
+    vec_Y_ = new vector_type(n_);
+    vec_Y_->allocate(memspace_);
+    vec_R_ = new vector_type(n_);
+    vec_R_->allocate(memspace_);
+
     if (flexible_)
     {
       vec_Z_ = new vector_type(n_, restart_ + 1);
@@ -592,6 +656,8 @@ namespace ReSolve
     delete[] h_rs_;
     delete vec_V_;
     delete vec_Z_;
+    delete vec_R_;
+    delete vec_Y_;
 
     h_H_   = nullptr;
     h_c_   = nullptr;
@@ -599,6 +665,8 @@ namespace ReSolve
     h_rs_  = nullptr;
     vec_V_ = nullptr;
     vec_Z_ = nullptr;
+    vec_Y_ = nullptr;
+    vec_R_ = nullptr;
 
     return 0;
   }
