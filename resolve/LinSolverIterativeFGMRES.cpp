@@ -124,11 +124,19 @@ namespace ReSolve
     real_type   rhsnorm = 0.0;
     vector_type vec_v(n_);
     vector_type vec_z(n_);
+    vector_type vec_u(n_);
 
     // Compute the residual
     vec_R_->setToZero(memspace_);
     vec_R_->copyDataFrom(rhs, memspace_, memspace_);
     matrix_handler_->matvec(A_, x, vec_R_, &MINUS_ONE, &ONE, memspace_);
+
+    // DEBUG: Normalizing RHS
+    bnorm = vector_handler_->dot(vec_R_, vec_R_, memspace_);
+    bnorm = std::sqrt(bnorm);
+    t     = 1.0 / bnorm;
+    vector_handler_->scal(&t, vec_R_, memspace_);
+    std::cout << "DEBUG: Norm of the vec_R_ " << vector_handler_->dot(vec_R_, vec_R_, memspace_) << std::endl;
 
     // Arnoldi Basis
     vec_Z_->setToZero(memspace_);
@@ -139,19 +147,18 @@ namespace ReSolve
 
     // Computing the first Arnodi basis vector
     vec_R_->copyDataTo(vec_V_->getData(memspace_), 0, memspace_);
-    rnorm = 0.0;
-    bnorm = vector_handler_->dot(vec_R_, vec_R_, memspace_);
     rnorm = vector_handler_->dot(vec_V_, vec_V_, memspace_);
     rnorm = std::sqrt(rnorm);
 
-    // Checking if rnorm > norm of RHS
+    std::cout << "DEBUG: Norm of the vec_V_ " << rnorm << std::endl;
+
+    // Checking if bnorm > norm of RHS
     rhsnorm = vector_handler_->dot(rhs, rhs, memspace_);
     rhsnorm = std::sqrt(rhsnorm);
-    if (rnorm > rhsnorm)
+    if (bnorm > rhsnorm)
     {
-      std::cout << "Initial guess is invalid. Refining Ax = b instead of Ay = r" << std::endl;
-      vec_Y_->copyDataFrom(x, memspace_, memspace_);
-      vec_R_->copyDataFrom(rhs, memspace_, memspace_);
+      std::cout << "Initial guess is invalid. Quitting iterative refinement" << std::endl;
+      outer_flag  = 0;
       update_flag = 0;
     }
 
@@ -163,6 +170,7 @@ namespace ReSolve
 
     while (outer_flag)
     {
+      std::cout << "DEBUG: Starting FGMRES outerloop " << std::endl;
       if (it == 0)
       {
         tolrel = tol_ * rnorm;
@@ -211,6 +219,10 @@ namespace ReSolve
 
         // Z_i = (LU)^{-1}*V_i
         vec_v.setData(vec_V_->getData(i, memspace_), memspace_);
+        vec_u.copyDataFrom(&vec_v, memspace_, memspace_);
+        std::cout << "DEBUG: norm of squared norm of vec_v " << vector_handler_->dot(&vec_v, &vec_v, memspace_) << std::endl;
+        std::cout << "DEBUG: norm of squared norm of vec_u " << vector_handler_->dot(&vec_u, &vec_u, memspace_) << std::endl;
+
         if (flexible_)
         {
           vec_z.setData(vec_Z_->getData(i, memspace_), memspace_);
@@ -220,6 +232,8 @@ namespace ReSolve
           vec_z.setData(vec_Z_->getData(0, memspace_), memspace_);
         }
         this->precV(&vec_v, &vec_z);
+        std::cout << "DEBUG: norm of vec_v after preconditioning " << vector_handler_->dot(&vec_z, &vec_z, memspace_) << std::endl;
+
         mem_.deviceSynchronize();
 
         // V_{i+1}=A*Z_i
@@ -227,6 +241,11 @@ namespace ReSolve
         vec_v.setData(vec_V_->getData(i + 1, memspace_), memspace_);
         vec_v.setToZero(memspace_);
         matrix_handler_->matvec(A_, &vec_z, &vec_v, &ONE, &ZERO, memspace_);
+        std::cout << "DEBUG: norm of squared norm of vec_v after A*z_i " << vector_handler_->dot(&vec_v, &vec_v, memspace_) << std::endl;
+
+        // V_{i} - V_{i+1}
+        vector_handler_->axpy(&MINUS_ONE, &vec_v, &vec_u, memspace_);
+        std::cout << "DEBUG: Difference between v_i and Az_i " << vector_handler_->dot(&vec_u, &vec_u, memspace_) << std::endl;
 
         // orthogonalize V[i+1], form a column of h_H_
 
@@ -347,6 +366,8 @@ namespace ReSolve
 
     if (update_flag)
     {
+      t = bnorm;
+      vector_handler_->scal(&t, vec_Y_, memspace_);
       vector_handler_->axpy(&ONE, x, vec_Y_, memspace_);
       vec_R_->copyDataFrom(rhs, memspace_, memspace_);
       matrix_handler_->matvec(A_, vec_Y_, vec_R_, &MINUS_ONE, &ONE, memspace_);
@@ -368,10 +389,6 @@ namespace ReSolve
                   << std::scientific << std::setprecision(16)
                   << final_residual_norm_ / rhsnorm << "\n";
       }
-    }
-    else
-    {
-      x->copyDataFrom(vec_Y_, memspace_, memspace_);
     }
 
     return 0;

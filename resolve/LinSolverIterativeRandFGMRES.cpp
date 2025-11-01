@@ -199,10 +199,9 @@ namespace ReSolve
 
     if (rnorm > rhsnorm)
     {
-      std::cout << "Initial guess is invalid. Refining Ax = b instead of Ay = r" << std::endl;
-      vec_Y_->copyDataFrom(x, memspace_, memspace_);
-      vec_R_->copyDataFrom(rhs, memspace_, memspace_);
+      std::cout << "Initial guess is invalid. Quitting iterative refinement." << std::endl;
       update_flag = 0;
+      outer_flag  = 0;
     }
 
     while (outer_flag)
@@ -452,10 +451,7 @@ namespace ReSolve
                   << final_residual_norm_ / rhsnorm << "\n";
       }
     }
-    else
-    {
-      x->copyDataFrom(vec_Y_, memspace_, memspace_);
-    }
+
     return 0;
   }
 
