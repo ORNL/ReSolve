@@ -10,7 +10,7 @@ It has following build dependencies:
 * CMake >= 3.22
 * KLU, AMD and COLAMD libraries from SuiteSparse >= 5.0 (optional)
 * CUDA >= 11.4 (optional)
-* HIP/ROCm >= 5.6 (optional)
+* HIP/ROCm >= 6.0 (optional)
 
 
 To acquire and build Re::Solve it is as easy as:
@@ -38,9 +38,8 @@ In the directory where you built the library run
 To change the install location please use the CMakePresets.json file as mentioned in `test and deploy <#test-and-deploy>`__
 
 To run it, download `test linear systems <https://github.com/NREL/opf_matrices/tree/master/acopf/activsg10k>`__
-and then edit script |runResolve|_
-to match locations of your linear systems and binary installation.
-The script will emulate nonlinear solver calling the linear solver repeatedly.
+and then try some of Re::Solve's `examples <https://github.com/ORNL/ReSolve/tree/develop/examples>`_.
+The examples will emulate nonlinear solver calling the linear solver repeatedly.
 
 To use the Re::Solve library in your own project
 ----------------------------------------------
@@ -67,7 +66,7 @@ Below is an example CMakeList.txt file to use Re::Solve library in your project
 Test and Deploy
 ---------------
 
-Re::Solve as a library is tested every merge request via Gitlab pipelines
+Re::Solve as a library is tested every pull request via GitHub pipelines
 that execute various library tests including a test of Re::Solve being
 consumed as package within an external project as mentioned in `Using
 Re::Solve in your own
@@ -122,7 +121,7 @@ checkout the cmake
 `docs <https://cmake.org/cmake/help/latest/manual/cmake-presets.7.html>`__.
 
 For example if you wanted to build and install Re::Solve on a High
-Performance Computing Cluster such as PNNL’s Deception or ORNL’s Ascent
+Performance Computing Cluster such as ORNL’s Frontier
 we encourage you to utilize our cluster preset. Using this preset will
 set CMAKE_INSTALL_PREFIX to an install folder. To use this preset simply
 call the preset flag in the cmake build step.

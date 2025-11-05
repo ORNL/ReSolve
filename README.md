@@ -48,9 +48,8 @@ To change the install location please use the CMAkePresets.json file as
 mentioned in [test and deploy](#test-and-deploy)
 
 To run it, download [test linear systems](https://github.com/NREL/opf_matrices/tree/master/acopf/activsg10k)
-and then edit script [`runResolve`](runResolve) to match locations of your
-linear systems and binary installation. The script will emulate nonlinear
-solver calling the linear solver repeatedly.
+and then try some of Re::Solve's [examples](https://github.com/ORNL/ReSolve/tree/develop/examples).
+The examples will emulate nonlinear solver calling the linear solver repeatedly.
 
 ### Create your own CMake configurations
 

@@ -9,7 +9,7 @@
 cmake_minimum_required(VERSION 3.22)
 
 # Adds version settings and set variable CMAKE_PROJECT_VERSION
-project(ReSolve VERSION "0.99.1")
+project(ReSolve VERSION "0.99.2")
 
 set(CMAKE_CXX_STANDARD 11)
 

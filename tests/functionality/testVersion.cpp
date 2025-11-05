@@ -19,7 +19,7 @@
 int main()
 {
   using namespace ReSolve::colors;
-  std::string answer("0.99.1");
+  std::string answer("0.99.2");
   std::string versionstr;
   ReSolve::VersionGetVersionStr(versionstr);
   std::cout << "ReSolveVersionGetVersionStr Test: " << versionstr << std::endl
