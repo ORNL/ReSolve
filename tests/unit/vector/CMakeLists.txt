@@ -19,10 +19,13 @@ add_executable(runGramSchmidtTests.exe runGramSchmidtTests.cpp)
 target_link_libraries(runGramSchmidtTests.exe PRIVATE ReSolve resolve_vector)
 
 # Install tests
-set(installable_tests runVectorTests.exe runVectorHandlerTests.exe runGramSchmidtTests.exe)
-install(TARGETS ${installable_tests} 
-        RUNTIME DESTINATION bin/resolve/tests/unit)
+set(installable_tests runVectorTests.exe runVectorHandlerTests.exe
+                      runGramSchmidtTests.exe
+)
+install(TARGETS ${installable_tests} RUNTIME DESTINATION bin/resolve/tests/unit)
 
 add_test(NAME vector_test COMMAND $<TARGET_FILE:runVectorTests.exe>)
-add_test(NAME vector_handler_test COMMAND $<TARGET_FILE:runVectorHandlerTests.exe>)
+add_test(NAME vector_handler_test
+         COMMAND $<TARGET_FILE:runVectorHandlerTests.exe>
+)
 add_test(NAME gram_schmidt_test COMMAND $<TARGET_FILE:runGramSchmidtTests.exe>)

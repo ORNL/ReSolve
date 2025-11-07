@@ -1,7 +1,7 @@
-# Example of how to consume Resolve as package via cmake
-# Below is a standard example of a CMakeLists.txt file that ultizies Resolve
-# See the Readme on how to build and install ReSolve
-#----------------------------------------------------------------------------------
+# Example of how to consume Resolve as package via cmake Below is a standard
+# example of a CMakeLists.txt file that ultizies Resolve See the Readme on how
+# to build and install ReSolve
+# ----------------------------------------------------------------------------------
 cmake_minimum_required(VERSION 3.20)
 
 project(resolve_consumer LANGUAGES CXX)
@@ -13,9 +13,13 @@ find_package(ReSolve REQUIRED)
 add_executable(consume.exe consumer.cpp)
 target_link_libraries(consume.exe PRIVATE ReSolve::ReSolve)
 
-#------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------------
 # Testing of exported Resolve Configurations
 enable_testing()
 
-# RESOLVE_DATA is set in test.sh and is the file path the matrix data files used in the testKLU_Rf_FGMRES.
-add_test(NAME resolve_consumer COMMAND $<TARGET_FILE:consume.exe> "-d" "${ReSolve_DATA_DIR}" "-i" "-m" "${ReSolve_MATRICES}" "-r" "${ReSolve_RHS}")
+# RESOLVE_DATA is set in test.sh and is the file path the matrix data files used
+# in the testKLU_Rf_FGMRES.
+add_test(NAME resolve_consumer
+         COMMAND $<TARGET_FILE:consume.exe> "-d" "${ReSolve_DATA_DIR}" "-i"
+                 "-m" "${ReSolve_MATRICES}" "-r" "${ReSolve_RHS}"
+)
