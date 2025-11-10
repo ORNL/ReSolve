@@ -21,7 +21,7 @@ if(RESOLVE_USE_PROFILING)
   )
 endif()
 
-# HIP/ROCm targets still don't have include directories set correctly We need
+# HIP/ROCm targets still don't have include directories set correctly. We need
 # this little hack for now :/
 get_target_property(hip_includes hip::device INTERFACE_INCLUDE_DIRECTORIES)
 message(STATUS "HIP include directories found at: ${hip_includes}")
