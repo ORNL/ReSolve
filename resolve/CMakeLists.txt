@@ -22,25 +22,19 @@ set(ReSolve_SRC
     SystemSolver.cpp
 )
 
-set(ReSolve_KLU_SRC
-  LinSolverDirectKLU.cpp
-)
+set(ReSolve_KLU_SRC LinSolverDirectKLU.cpp)
 
-set(ReSolve_LUSOL_SRC
-  LinSolverDirectLUSOL.cpp
-)
+set(ReSolve_LUSOL_SRC LinSolverDirectLUSOL.cpp)
 
 # C++ code that links to CUDA SDK libraries
 set(ReSolve_CUDASDK_SRC
-    LinSolverDirectCuSolverGLU.cpp
-    LinSolverDirectCuSolverRf.cpp
+    LinSolverDirectCuSolverGLU.cpp LinSolverDirectCuSolverRf.cpp
     LinSolverDirectCuSparseILU0.cpp
 )
 
 # C++ code that links to ROCm libraries
-set(ReSolve_ROCM_SRC
-    LinSolverDirectRocSolverRf.cpp
-    LinSolverDirectRocSparseILU0.cpp
+set(ReSolve_ROCM_SRC LinSolverDirectRocSolverRf.cpp
+                     LinSolverDirectRocSparseILU0.cpp
 )
 
 # Header files to be installed
@@ -54,25 +48,20 @@ set(ReSolve_HEADER_INSTALL
     LinSolverDirectCpuILU0.hpp
     SystemSolver.hpp
     GramSchmidt.hpp
-    MemoryUtils.hpp)
-
-set(ReSolve_KLU_HEADER_INSTALL
-    LinSolverDirectKLU.hpp
+    MemoryUtils.hpp
 )
 
-set(ReSolve_LUSOL_HEADER_INSTALL
-  LinSolverDirectLUSOL.hpp
-)
+set(ReSolve_KLU_HEADER_INSTALL LinSolverDirectKLU.hpp)
+
+set(ReSolve_LUSOL_HEADER_INSTALL LinSolverDirectLUSOL.hpp)
 
 set(ReSolve_CUDA_HEADER_INSTALL
-    LinSolverDirectCuSolverGLU.hpp
-    LinSolverDirectCuSolverRf.hpp
+    LinSolverDirectCuSolverGLU.hpp LinSolverDirectCuSolverRf.hpp
     LinSolverDirectCuSparseILU0.hpp
 )
 
-set(ReSolve_ROCM_HEADER_INSTALL
-  LinSolverDirectRocSolverRf.hpp
-  LinSolverDirectRocSparseILU0.hpp
+set(ReSolve_ROCM_HEADER_INSTALL LinSolverDirectRocSolverRf.hpp
+                                LinSolverDirectRocSparseILU0.hpp
 )
 
 # Now, build workspaces
@@ -93,19 +82,11 @@ if(RESOLVE_USE_KLU)
   list(APPEND ReSolve_HEADER_INSTALL ${ReSolve_KLU_HEADER_INSTALL})
 endif()
 
-set(ReSolve_Targets_List
-    resolve_matrix
-    resolve_vector
-    resolve_random
-    resolve_logger
-    resolve_tpl
-    resolve_workspace
+set(ReSolve_Targets_List resolve_matrix resolve_vector resolve_random
+                         resolve_logger resolve_tpl resolve_workspace
 )
 
-set(ReSolve_Object_List
-    resolve_options
-    resolve_version
-)
+set(ReSolve_Object_List resolve_options resolve_version)
 
 if(RESOLVE_USE_LUSOL)
   add_subdirectory(lusol)
@@ -142,7 +123,9 @@ endif()
 if(RESOLVE_USE_ASAN)
   add_library(resolve_asan INTERFACE)
   target_compile_options(resolve_asan INTERFACE "-fsanitize=address")
-  target_link_libraries(resolve_asan INTERFACE "-fsanitize=address -fno-omit-frame-pointer")
+  target_link_libraries(
+    resolve_asan INTERFACE "-fsanitize=address -fno-omit-frame-pointer"
+  )
   target_link_libraries(resolve_tpl INTERFACE resolve_asan)
   list(APPEND ReSolve_Targets_List resolve_asan)
 endif()
@@ -151,7 +134,9 @@ endif()
 if(RESOLVE_USE_UBSAN)
   add_library(resolve_ubsan INTERFACE)
   target_compile_options(resolve_ubsan INTERFACE "-fsanitize=undefined")
-  target_link_libraries(resolve_ubsan INTERFACE "-fsanitize=undefined -fno-omit-frame-pointer")
+  target_link_libraries(
+    resolve_ubsan INTERFACE "-fsanitize=undefined -fno-omit-frame-pointer"
+  )
   target_link_libraries(resolve_tpl INTERFACE resolve_ubsan)
   list(APPEND ReSolve_Targets_List resolve_ubsan)
 endif()
@@ -162,9 +147,9 @@ install(TARGETS ${ReSolve_Targets_List} EXPORT ReSolveTargets)
 # Create ReSolve library
 add_library(ReSolve SHARED ${ReSolve_SRC})
 
-target_include_directories(ReSolve INTERFACE
-    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
-    $<INSTALL_INTERFACE:include>
+target_include_directories(
+  ReSolve INTERFACE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
+                    $<INSTALL_INTERFACE:include>
 )
 
 target_link_libraries(ReSolve PUBLIC ${ReSolve_Targets_List})
@@ -173,20 +158,26 @@ target_link_libraries(ReSolve PRIVATE ${ReSolve_Object_List})
 if(RESOLVE_USE_PROFILING)
   if(NOT RESOLVE_USE_GPU)
     # Noting to do for profiling on the host for now.
-    message(NOTICE "Profiling support enabled, but Re::Solve does not create tracer annotations for host code.")
+    message(
+      NOTICE
+      "Profiling support enabled, but Re::Solve does not create tracer annotations for host code."
+    )
     message(NOTICE "This profiling support option will have no effect.")
   endif()
 endif(RESOLVE_USE_PROFILING)
 
 # Install targets
-install(TARGETS ReSolve
-        EXPORT ReSolveTargets
-        ARCHIVE DESTINATION lib
-        LIBRARY DESTINATION lib)
+install(
+  TARGETS ReSolve
+  EXPORT ReSolveTargets
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+)
 
 # install include headers
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/resolve/ # source directory
-        DESTINATION include/resolve # target directory
-        FILES_MATCHING # install only matched files
-        PATTERN "*.hpp" # select header files
+install(
+  DIRECTORY ${CMAKE_SOURCE_DIR}/resolve/ # source directory
+  DESTINATION include/resolve # target directory
+  FILES_MATCHING # install only matched files
+  PATTERN "*.hpp" # select header files
 )

@@ -1,5 +1,9 @@
 # Re::Solve Changelog
 
+## Changes to Re::Solve since release 0.99.2
+
+- Added cmake-format
+
 ## Changes to Re::Solve in release 0.99.2
 
 ### Major Features

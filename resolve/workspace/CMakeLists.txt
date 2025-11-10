@@ -7,24 +7,16 @@
 ]]
 
 # C++ code
-set(ReSolve_Workspace_SRC
-  LinAlgWorkspaceCpu.cpp
-)
+set(ReSolve_Workspace_SRC LinAlgWorkspaceCpu.cpp)
 
 # C++ code that depends on CUDA SDK libraries
-set(ReSolve_Workspace_CUDASDK_SRC
-    LinAlgWorkspaceCUDA.cpp
-)
+set(ReSolve_Workspace_CUDASDK_SRC LinAlgWorkspaceCUDA.cpp)
 
-set(ReSolve_Workspace_ROCM_SRC
-  LinAlgWorkspaceHIP.cpp
-)
+set(ReSolve_Workspace_ROCM_SRC LinAlgWorkspaceHIP.cpp)
 
 set(ReSolve_Workspace_HEADER_INSTALL
-  LinAlgWorkspace.hpp
-  LinAlgWorkspaceCpu.hpp
-  LinAlgWorkspaceCUDA.hpp
-  LinAlgWorkspaceHIP.hpp
+    LinAlgWorkspace.hpp LinAlgWorkspaceCpu.hpp LinAlgWorkspaceCUDA.hpp
+    LinAlgWorkspaceHIP.hpp
 )
 
 add_library(resolve_workspace SHARED ${ReSolve_Workspace_SRC})
@@ -40,11 +32,13 @@ if(RESOLVE_USE_HIP)
   target_link_libraries(resolve_workspace PUBLIC resolve_backend_hip)
 endif()
 
-target_include_directories(resolve_workspace PUBLIC
-  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
-  $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
-  $<INSTALL_INTERFACE:include>
+target_include_directories(
+  resolve_workspace
+  PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
+         $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}> $<INSTALL_INTERFACE:include>
 )
 
 # install include headers
-install(FILES ${ReSolve_Workspace_HEADER_INSTALL} DESTINATION include/resolve/workspace)
+install(FILES ${ReSolve_Workspace_HEADER_INSTALL}
+        DESTINATION include/resolve/workspace
+)

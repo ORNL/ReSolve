@@ -6,13 +6,9 @@
 
 ]]
 
-set(ReSolve_CPU_SRC
-    MemoryUtils.cpp
-)
+set(ReSolve_CPU_SRC MemoryUtils.cpp)
 
-set(ReSolve_CPU_HEADER_INSTALL
-    CpuMemory.hpp
-)
+set(ReSolve_CPU_HEADER_INSTALL CpuMemory.hpp)
 
 # First create dummy backend
 add_library(resolve_backend_cpu SHARED ${ReSolve_CPU_SRC})

@@ -41,16 +41,15 @@ if(RESOLVE_USE_KLU)
 
 endif(RESOLVE_USE_KLU)
 
-
 set(installable_executables "")
 
 # Install all examples in bin directory
-list(APPEND installable_executables  rand_gmres.exe)
+list(APPEND installable_executables rand_gmres.exe)
 
 if(RESOLVE_USE_KLU)
-  list(APPEND installable_executables kluFactor.exe
-                                      kluRefactor.exe
-                                      sysRefactor.exe)
+  list(APPEND installable_executables kluFactor.exe kluRefactor.exe
+       sysRefactor.exe
+  )
 
   if(RESOLVE_USE_GPU)
     list(APPEND installable_executables gpuRefactor.exe)
@@ -62,8 +61,7 @@ if(RESOLVE_USE_KLU)
 
 endif(RESOLVE_USE_KLU)
 
-install(TARGETS ${installable_executables}
-        RUNTIME DESTINATION bin)
+install(TARGETS ${installable_executables} RUNTIME DESTINATION bin)
 
 add_subdirectory(experimental)
 
@@ -98,10 +96,18 @@ set(asym_rhs_path /data/b_asymmetric)
 
 # Install directory with example on how to consume ReSolve
 install(DIRECTORY resolve_consumer DESTINATION share/examples)
-install(FILES ${PROJECT_SOURCE_DIR}/tests/functionality/${RESOLVE_CONSUMER_APP} DESTINATION share/examples/resolve_consumer RENAME consumer.cpp)
-install(FILES ${PROJECT_SOURCE_DIR}/tests/functionality/TestHelper.hpp DESTINATION share/examples/resolve_consumer)
+install(
+  FILES ${PROJECT_SOURCE_DIR}/tests/functionality/${RESOLVE_CONSUMER_APP}
+  DESTINATION share/examples/resolve_consumer
+  RENAME consumer.cpp
+)
+install(FILES ${PROJECT_SOURCE_DIR}/tests/functionality/TestHelper.hpp
+        DESTINATION share/examples/resolve_consumer
+)
 
-# Shell script argumets:
-#    1. Path to where resolve is installed.
-#    2. Path to data directory
-add_custom_target(test_install COMMAND ${CONSUMER_PATH}/test.sh  ${CMAKE_INSTALL_PREFIX} ${test_data_dir} ${sym_matrix_path} ${sym_rhs_path}) 
+# Shell script argumets: 1. Path to where resolve is installed. 2. Path to data
+# directory
+add_custom_target(
+  test_install COMMAND ${CONSUMER_PATH}/test.sh ${CMAKE_INSTALL_PREFIX}
+                       ${test_data_dir} ${sym_matrix_path} ${sym_rhs_path}
+)
