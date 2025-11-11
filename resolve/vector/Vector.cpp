@@ -681,7 +681,8 @@ namespace ReSolve
       case HOST:
         if (h_data_ == nullptr)
         {
-          out::error() << "Trying to set vector host values, but the values are not allocated!" << std::endl;
+          out::error() << "In Vector setToConst: trying to set host data to constant, "
+                       << "but host data not allocated!" << std::endl;
           return 1;
         }
         mem_.setArrayToConstOnHost(&h_data_[n_size_ * j], constant, n_size_);
@@ -691,7 +692,8 @@ namespace ReSolve
       case DEVICE:
         if (d_data_ == nullptr)
         {
-          out::error() << "Trying to set vector values on the device, but the memory is not allocated!" << std::endl;
+          out::error() << "In Vector setToConst: trying to set device data to constant, "
+                       << "but device data not allocated!" << std::endl;
           return 1;
         }
         mem_.setArrayToConstOnDevice(&d_data_[n_size_ * j], constant, n_size_);
