@@ -388,7 +388,7 @@ namespace ReSolve
       }
       if (p_rhs == nullptr)
       {
-        Logger::error() << "Memory not allocated for updateArrayFromFile function."<< std::endl;
+        Logger::error() << "Memory not allocated for updateArrayFromFile function." << std::endl;
         return;
       }
       real_type*        rhs = *p_rhs;
