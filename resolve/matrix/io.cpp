@@ -383,12 +383,12 @@ namespace ReSolve
     {
       if (!file)
       {
-        Logger::error() << "Empty input to updateArrayFromFile function ..." << std::endl;
+        Logger::error() << "Empty input to updateArrayFromFile function." << std::endl;
         return;
       }
       if (p_rhs == nullptr)
       {
-        Logger::error() << "Null pointer to array in updateArrayFromFile function ..." << std::endl;
+        Logger::error() << "Memory not allocated for updateArrayFromFile function."<< std::endl;
         return;
       }
       real_type*        rhs = *p_rhs;

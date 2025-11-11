@@ -78,7 +78,7 @@ namespace ReSolve
 
     if (setup_completed_)
     {
-      out::error() << "LinSolverDirectCuSolverRf::setup should only be called one." << std::endl;
+      out::error() << "Trying to setup LinSolverDirectCuSolverRf, but the setup has been already done! " << std::endl;
       return 1;
     }
 
@@ -88,7 +88,7 @@ namespace ReSolve
     }
     else
     {
-      out::error() << "d_P_ should be nullptr on call to LinSolverDirectCuSolverRf::setup." << std::endl;
+      out::error() << "Trying to allocate permutation vector P in " << __func__ << " in LinSolverDirectCuSolverRf, but the permutation vector P is already allocated! " << std::endl;
       return 1;
     }
 
@@ -98,7 +98,7 @@ namespace ReSolve
     }
     else
     {
-      out::error() << "d_Q_ should be nullptr on call to LinSolverDirectCuSolverRf::setup." << std::endl;
+      out::error() << "Trying to allocate permutation vector Q in " << __func__ << " in LinSolverDirectCuSolverRf, but the permutation vector Q is already allocated! " << std::endl;
       return 1;
     }
 
@@ -108,7 +108,7 @@ namespace ReSolve
     }
     else
     {
-      out::error() << "d_T_ should be nullptr on call to LinSolverDirectCuSolverRf::setup" << std::endl;
+      out::error() << "Trying to allocate temporary vector T in " << __func__ << " in LinSolverDirectCuSolverRf, but the temporary vector T is already allocated! " << std::endl;
       return 1;
     }
 

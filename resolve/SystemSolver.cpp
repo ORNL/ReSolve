@@ -389,7 +389,8 @@ namespace ReSolve
       factorizationSolver_->setup(A_);
       return factorizationSolver_->analyze();
     }
-    out::error() << "Analyze method not set to a valid method!" << std::endl;
+    out::error() << "Analysis method " << factorizationSolver_ << " not recognized!\n"
+                 << "Available options: klu.\n";
     return 1;
   }
 
@@ -405,7 +406,8 @@ namespace ReSolve
       is_solve_on_device_ = false;
       return factorizationSolver_->factorize();
     }
-    out::error() << "Factorization method not set to a valid method!" << std::endl;
+    out::error() << "Factorization method << factorizationSolver_ << not recognized!\n"
+                 << "Available options: klu.\n";
     return 1;
   }
 
@@ -425,7 +427,8 @@ namespace ReSolve
       is_solve_on_device_ = true;
       return refactorizationSolver_->refactorize();
     }
-    out::error() << "Refactorization method not set to a valid method!" << std::endl;
+    out::error() << "Refactorization method " << refactorizationSolver_ << " not recognized!\n"
+                 << "Available options: klu, glu, cusolverrf, rocsolverrf.\n";
     return 1;
   }
 

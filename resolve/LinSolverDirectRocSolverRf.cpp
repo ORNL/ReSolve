@@ -84,7 +84,7 @@ namespace ReSolve
     }
     else
     {
-      out::error() << "d_P_ should be nullptr on call to LinSolverDirectRocSolverRf::setup." << std::endl;
+      out::error() << "Trying to allocate permutation vector P in " << __func__ << " in LinSolverDirectRocSolverRf, but the permutation vector P is already allocated! " << std::endl;
       return 1;
     }
 
@@ -94,7 +94,7 @@ namespace ReSolve
     }
     else
     {
-      out::error() << "d_Q_ should be nullptr on call to LinSolverDirectRocSolverRf::setup." << std::endl;
+      out::error() << "Trying to allocate permutation vector Q in " << __func__ << " in LinSolverDirectRocSolverRf, but the permutation vector Q is already allocated! " << std::endl;
       return 1;
     }
     mem_.copyArrayHostToDevice(d_P_, P, n);
