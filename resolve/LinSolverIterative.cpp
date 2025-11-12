@@ -26,6 +26,7 @@ namespace ReSolve
   {
     if (A == nullptr)
     {
+      out::error() << "LinSolverIterative::setup: input matrix A is nullptr" << std::endl;
       return 1;
     }
     this->A_ = A;

@@ -82,10 +82,20 @@ namespace ReSolve
     {
       mem_.allocateArrayOnDevice(&d_P_, n);
     }
+    else
+    {
+      out::error() << "Trying to allocate permutation vector P in " << __func__ << " in LinSolverDirectRocSolverRf, but the permutation vector P is already allocated! " << std::endl;
+      return 1;
+    }
 
     if (d_Q_ == nullptr)
     {
       mem_.allocateArrayOnDevice(&d_Q_, n);
+    }
+    else
+    {
+      out::error() << "Trying to allocate permutation vector Q in " << __func__ << " in LinSolverDirectRocSolverRf, but the permutation vector Q is already allocated! " << std::endl;
+      return 1;
     }
     mem_.copyArrayHostToDevice(d_P_, P, n);
     mem_.copyArrayHostToDevice(d_Q_, Q, n);

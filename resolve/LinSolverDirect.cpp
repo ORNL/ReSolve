@@ -55,6 +55,7 @@ namespace ReSolve
   {
     if (A == nullptr)
     {
+      out::error() << "LinSolverDirect::setup: input matrix A is nullptr" << std::endl;
       return 1;
     }
     A_ = A;

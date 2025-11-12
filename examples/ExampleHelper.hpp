@@ -142,14 +142,10 @@ namespace ReSolve
                        ReSolve::vector::Vector* r,
                        ReSolve::vector::Vector* x)
       {
+        assert(res_ != nullptr && "resetSystem should be called after setSystem");
         A_ = A;
         r_ = r;
         x_ = x;
-        if (res_ == nullptr)
-        {
-          res_ = new ReSolve::vector::Vector(A->getNumRows());
-        }
-
         computeNorms();
       }
 

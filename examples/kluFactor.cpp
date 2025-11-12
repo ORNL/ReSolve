@@ -184,8 +184,14 @@ int main(int argc, char* argv[])
 
     status = KLU.solve(vec_rhs, vec_x);
     std::cout << "KLU solve status: " << status << std::endl;
-
-    helper.resetSystem(A, vec_rhs, vec_x);
+    if (i == 0)
+    {
+      helper.setSystem(A, vec_rhs, vec_x);
+    }
+    else
+    {
+      helper.resetSystem(A, vec_rhs, vec_x);
+    }
     helper.printShortSummary();
     if (is_iterative_refinement)
     {

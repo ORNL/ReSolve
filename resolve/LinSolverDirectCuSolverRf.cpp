@@ -50,6 +50,7 @@ namespace ReSolve
    *
    * Sets up the cuSolverRf factorization for the given matrix A and its
    * L and U factors. The permutation vectors P and Q are also set up.
+   * This function should not be called more than once for the same object.
    *
    * @param[in] A - pointer to the matrix A
    * @param[in] L - pointer to the lower triangular factor L in CSR
@@ -75,31 +76,41 @@ namespace ReSolve
     this->A_      = A;
     index_type n  = A_->getNumRows();
 
-    // Remember - P and Q are generally CPU variables!
-    // Factorization data is stored in the handle.
-    // If function is called again, destroy the old handle to get rid of old data.
     if (setup_completed_)
     {
-      cusolverRfDestroy(handle_cusolverrf_);
-      cusolverRfCreate(&handle_cusolverrf_);
+      out::error() << "Trying to setup LinSolverDirectCuSolverRf, but the setup has been already done! " << std::endl;
+      return 1;
     }
 
     if (d_P_ == nullptr)
     {
       mem_.allocateArrayOnDevice(&d_P_, n);
     }
+    else
+    {
+      out::error() << "Trying to allocate permutation vector P in " << __func__ << " in LinSolverDirectCuSolverRf, but the permutation vector P is already allocated! " << std::endl;
+      return 1;
+    }
 
     if (d_Q_ == nullptr)
     {
       mem_.allocateArrayOnDevice(&d_Q_, n);
     }
-
-    if (d_T_ != nullptr)
+    else
     {
-      mem_.deleteOnDevice(d_T_);
+      out::error() << "Trying to allocate permutation vector Q in " << __func__ << " in LinSolverDirectCuSolverRf, but the permutation vector Q is already allocated! " << std::endl;
+      return 1;
     }
 
-    mem_.allocateArrayOnDevice(&d_T_, n);
+    if (d_T_ == nullptr)
+    {
+      mem_.allocateArrayOnDevice(&d_T_, n);
+    }
+    else
+    {
+      out::error() << "Trying to allocate temporary vector T in " << __func__ << " in LinSolverDirectCuSolverRf, but the temporary vector T is already allocated! " << std::endl;
+      return 1;
+    }
 
     mem_.copyArrayHostToDevice(d_P_, P, n);
     mem_.copyArrayHostToDevice(d_Q_, Q, n);

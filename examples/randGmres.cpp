@@ -183,7 +183,7 @@ int runGmresExample(int argc, char* argv[])
   FGMRES.solve(vec_rhs, vec_x);
 
   // Print summary of results
-  helper.resetSystem(A, vec_rhs, vec_x);
+  helper.setSystem(A, vec_rhs, vec_x);
   std::cout << "\nRandomized GMRES result on " << hwbackend << "\n";
   std::cout << "---------------------------------\n";
   helper.printIrSummary(&FGMRES);

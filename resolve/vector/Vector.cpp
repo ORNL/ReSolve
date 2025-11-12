@@ -631,11 +631,11 @@ namespace ReSolve
      *
      * In case of multivectors, entire multivector is set to the constant.
      *
-     * @param[in] C          - Constant (real number)
-     * @param[in] memspace   - Memory space of the data to be set to 0 (HOST or DEVICE)
+     * @param[in] constant   - Constant (real number)
+     * @param[in] memspace   - Memory space of the data to be set to constant (HOST or DEVICE)
      *
      */
-    int Vector::setToConst(real_type C, memory::MemorySpace memspace)
+    int Vector::setToConst(real_type constant, memory::MemorySpace memspace)
     {
       using namespace ReSolve::memory;
       switch (memspace)
@@ -646,7 +646,7 @@ namespace ReSolve
           h_data_        = new real_type[n_capacity_ * k_];
           owns_cpu_data_ = true;
         }
-        mem_.setArrayToConstOnHost(h_data_, C, n_size_ * k_);
+        mem_.setArrayToConstOnHost(h_data_, constant, n_size_ * k_);
         setHostUpdated(true);
         setDeviceUpdated(false);
         break;
@@ -656,7 +656,7 @@ namespace ReSolve
           mem_.allocateArrayOnDevice(&d_data_, n_capacity_ * k_);
           owns_gpu_data_ = true;
         }
-        mem_.setArrayToConstOnDevice(d_data_, C, n_size_ * k_);
+        mem_.setArrayToConstOnDevice(d_data_, constant, n_size_ * k_);
         setHostUpdated(false);
         setDeviceUpdated(true);
         break;
@@ -668,12 +668,12 @@ namespace ReSolve
      * @brief set the data of a single vector in a multivector to a given constant.
      *
      * @param[in] j          - Index of a vector in a multivector
-     * @param[in] C          - Constant (real number)
+     * @param[in] constant   - Constant (real number)
      * @param[in] memspace   - Memory space of the data to be set to 0 (HOST or DEVICE)
      *
      * @pre   _j_ < _k_ i.e,, _j_ is smaller than the total number of vectors in multivector.
      */
-    int Vector::setToConst(index_type j, real_type C, memory::MemorySpace memspace)
+    int Vector::setToConst(index_type j, real_type constant, memory::MemorySpace memspace)
     {
       using namespace ReSolve::memory;
       switch (memspace)
@@ -681,20 +681,22 @@ namespace ReSolve
       case HOST:
         if (h_data_ == nullptr)
         {
-          h_data_        = new real_type[n_capacity_ * k_];
-          owns_cpu_data_ = true;
+          out::error() << "In Vector setToConst: trying to set host data to constant, "
+                       << "but host data not allocated!" << std::endl;
+          return 1;
         }
-        mem_.setArrayToConstOnHost(&h_data_[n_size_ * j], C, n_size_);
+        mem_.setArrayToConstOnHost(&h_data_[n_size_ * j], constant, n_size_);
         cpu_updated_[j] = true;
         gpu_updated_[j] = false;
         break;
       case DEVICE:
         if (d_data_ == nullptr)
         {
-          mem_.allocateArrayOnDevice(&d_data_, n_capacity_ * k_);
-          owns_gpu_data_ = true;
+          out::error() << "In Vector setToConst: trying to set device data to constant, "
+                       << "but device data not allocated!" << std::endl;
+          return 1;
         }
-        mem_.setArrayToConstOnDevice(&d_data_[n_size_ * j], C, n_size_);
+        mem_.setArrayToConstOnDevice(&d_data_[n_size_ * j], constant, n_size_);
         cpu_updated_[j] = false;
         gpu_updated_[j] = true;
         break;

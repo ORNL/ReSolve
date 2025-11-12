@@ -320,7 +320,14 @@ int sysRefactor(int argc, char* argv[])
     std::cout << "Triangular solve status: " << status << std::endl;
 
     // Print summary of results
-    helper.resetSystem(A, vec_rhs, vec_x);
+    if (i == 0)
+    {
+      helper.setSystem(A, vec_rhs, vec_x);
+    }
+    else
+    {
+      helper.resetSystem(A, vec_rhs, vec_x);
+    }
     helper.printShortSummary();
     if ((i > 1) && is_iterative_refinement)
     {
