@@ -260,7 +260,7 @@ int gpuRefactor(int argc, char* argv[])
       std::cout << "KLU solve status: " << status << std::endl;
 
       // Print summary of results
-      helper.resetSystem(A, vec_rhs, vec_x);
+      helper.setSystem(A, vec_rhs, vec_x);
       helper.printShortSummary();
 
       if (i == 1)
