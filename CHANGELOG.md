@@ -2,7 +2,9 @@
 
 ## Changes to Re::Solve since release 0.99.2
 
-- Added cmake-format
+- Added cmake-format.
+
+- Reworked templates to include example tests.
 
 ## Changes to Re::Solve in release 0.99.2
 

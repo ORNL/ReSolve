@@ -21,7 +21,13 @@
  to help! This is simply a reminder of what we are going to look for before
  merging your code._
  
-- [ ] All tests pass. Code tested on
+
+- [ ] All tests pass (`ctest -j` in your `build` directory). Code tested on
+     - [ ] CPU backend
+     - [ ] CUDA backend
+     - [ ] HIP backend
+- [ ] I have manually run the non-experimental examples and verified that residuals are close to machine precision. (In your build directory run:
+`./examples/<your_example>.exe -m <path_to_matrix_or_matrix_prefix> -r <path_to_rhs_or_rhs_prefix> -n <number_of_systems> -b <backend_name>`). Code tested on:
      - [ ] CPU backend
      - [ ] CUDA backend
      - [ ] HIP backend
