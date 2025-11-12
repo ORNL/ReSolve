@@ -202,6 +202,24 @@ namespace ReSolve
         return status.report(testname.c_str());
       }
 
+      TestOutcome scaleAddI(index_type n)
+      {
+        TestStatus   status;
+        std::string  testname(__func__);
+        matrix::Csr* A   = createCsrMatrix(n);
+        real_type    val = 2.;
+
+        handler_.scaleAddI(A, val, memspace_);
+        if (memspace_ == memory::DEVICE)
+        {
+          A->syncData(memory::HOST);
+        }
+        status *= verifyScaleAddICsrMatrix(A, val);
+
+        delete A;
+        return status.report(testname.c_str());
+      }
+
     private:
       ReSolve::MatrixHandler& handler_;
       memory::MemorySpace     memspace_{memory::HOST};
@@ -402,8 +420,8 @@ namespace ReSolve
        * @brief Verify structure of a CSR matrix with preset pattern.
        *
        * The sparsity structure corresponds to the CSR representation of a rectangular matrix
-       * created by createRectangularCscMatrix.
-       * The sparisty structure is upper bidiagonal if n==m,
+       * created by createRectangularCsrMatrix.
+       * The sparsity structure is upper bidiagonal if n==m,
        * with an extra entry in the first column.
        * If n>m A_{ij} is nonzero iff i==j, or i+m==j+n
        * if n<m A_{ij} is nonzero iff i==j, or i+m==j+n
@@ -674,6 +692,58 @@ namespace ReSolve
 
         // Clean up the original matrix
         delete original_A;
+
+        return true;
+      }
+
+      /**
+       * @brief Verify structure of a CSR matrix with preset pattern after scaleAddI
+       *
+       * The sparsity structure corresponds to the CSR representation of a square matrix
+       * created by createCsrMatrix, scaled by a constant and 1. added along the diagonal.
+       *
+       * @pre A is a valid, allocated CSR matrix
+       * @invariant A
+       * @param[in] A matrix::Csr* pointer to the matrix to be verified
+       * @return bool true if the matrix is valid, false otherwise
+       */
+      bool verifyScaleAddICsrMatrix(matrix::Csr* A, real_type scale)
+      {
+        // Check if the matrix is valid
+        if (A == nullptr)
+        {
+          return false;
+        }
+
+        // Get matrix dimensions
+        const index_type n = A->getNumRows();
+        const index_type m = A->getNumColumns();
+
+        if(n != m)
+        {
+          return false;
+        }
+
+        index_type* scaled_row_ptr  = A->getRowData(memory::HOST);
+        index_type* scaled_col_idx = A->getColData(memory::HOST);
+        real_type*  scaled_value    = A->getValues(memory::HOST);
+
+        const real_type expected = 30. * scale + 1.;
+
+        // Verify values - each element scaled by scale. Diagonal elements should be  1.
+        for (index_type i = 0; i < n; ++i)
+        {
+          real_type sum = 0.;
+          for (index_type j = scaled_row_ptr[i]; j < scaled_row_ptr[i + 1]; ++j)
+          {
+            sum += scaled_value[j];
+          }
+          if (sum != expected)
+          {
+            std::cout << "Mismatch at row " << i << ": scaled sum = " << sum << ", expected sum = " << expected << "\n";
+            return false;
+          }
+        }
 
         return true;
       }
