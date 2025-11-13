@@ -9,7 +9,7 @@ Author(s):
 - Cameron Rutherford <cameron.rutherford@pnnl.gov>
 
 ]]
-set(SUITESPARSE_MODULES amd colamd klu suitesparseconfig)
+set(SUITESPARSE_MODULES amd colamd klu cholmod suitesparseconfig)
 
 find_library(
   SUITESPARSE_LIBRARY
@@ -21,11 +21,11 @@ find_library(
         LD_LIBRARY_PATH
         ENV
         DYLD_LIBRARY_PATH
-  PATH_SUFFIXES lib64 lib
+  PATH_SUFFIXES lib/x86_64-linux-gnu lib64 lib
 )
 
 if(SUITESPARSE_LIBRARY)
-  set(SUITESPARSE_LIBRARY CACHE FILEPATH "Path to Suitesparse library")
+  set(SUITESPARSE_LIBRARY CACHE FILEPATH "File path to Suitesparse library")
   get_filename_component(
     SUITESPARSE_LIBRARY_DIR ${SUITESPARSE_LIBRARY} DIRECTORY CACHE
     "Suitesparse library directory"
@@ -87,8 +87,7 @@ else()
   endif()
   if(SUITESPARSE_ROOT_DIR AND NOT SUITESPARSE_INCLUDE_DIR)
     message(
-      STATUS
-        "Suitesparse include dir not found! Please provide correct filepath."
+      STATUS "Suitesparse include dir not found! Please provide correct path."
     )
   endif()
 endif()
