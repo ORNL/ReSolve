@@ -434,7 +434,7 @@ namespace ReSolve
    * @param[in] pattern - precalculated sparsity pattern
    * @return 0 if successful, 1 otherwise
    */
-  static int scaleAddII(matrix::Csr* A, real_type alpha, ScaleAddIBuffer* pattern)
+  static int scaleAddIWithPattern(matrix::Csr* A, real_type alpha, ScaleAddIBuffer* pattern)
   {
     scaleConst(A, alpha);
 
@@ -507,7 +507,7 @@ namespace ReSolve
     if (workspace_->scaleAddISetup())
     {
       ScaleAddIBuffer* pattern = workspace_->getScaleAddIBuffer();
-      return scaleAddII(A, alpha, pattern);
+      return scaleAddIWithPattern(A, alpha, pattern);
     }
 
     scaleConst(A, alpha);
