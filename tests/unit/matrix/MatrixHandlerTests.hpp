@@ -725,7 +725,6 @@ namespace ReSolve
         }
 
         index_type* scaled_row_ptr  = A->getRowData(memory::HOST);
-        index_type* scaled_col_idx = A->getColData(memory::HOST);
         real_type*  scaled_value    = A->getValues(memory::HOST);
 
         const real_type expected = 30. * scale + 1.;

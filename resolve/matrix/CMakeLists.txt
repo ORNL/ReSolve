@@ -30,7 +30,7 @@ set(Matrix_HEADER_INSTALL io.hpp Sparse.hpp Coo.hpp Csr.hpp Csc.hpp
 
 # Build shared library ReSolve::matrix
 add_library(resolve_matrix SHARED ${Matrix_SRC})
-target_link_libraries(resolve_matrix PRIVATE resolve_logger resolve_vector)
+target_link_libraries(resolve_matrix PRIVATE resolve_logger resolve_vector resolve_workspace)
 
 # Link to CUDA ReSolve backend if CUDA is support enabled
 if(RESOLVE_USE_CUDA)

@@ -8,6 +8,7 @@
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/vector/Vector.hpp>
+#include <resolve/workspace/LinAlgWorkspaceCpu.hpp>
 
 namespace ReSolve
 {
@@ -410,6 +411,84 @@ namespace ReSolve
 
   /**
    * @brief Add a constant to the nonzero values of a csr matrix,
+   *       then add the identity matrix.
+   *
+   * @param[in,out] A - Sparse CSR matrix
+   * @param[in] alpha - constant to the added
+   * @return 0 if successful, 1 otherwise
+   */
+  static int scaleAddII(matrix::Csr* A, real_type alpha, ScaleAddIBuffer* pattern)
+  {
+    scaleConst(A, alpha);
+
+    auto new_row_pointers = new index_type[A->getNumRows() + 1];
+    std::copy(pattern->row_data_.begin(), pattern->row_data_.end(), new_row_pointers);
+    auto new_col_indices = new index_type[pattern->nnz];
+    std::copy(pattern->col_data_.begin(), pattern->col_data_.end(), new_col_indices);
+    auto new_values = new real_type[pattern->nnz];
+
+    index_type const* const original_row_pointers = A->getRowData(memory::HOST);
+    index_type const* const original_col_indices  = A->getColData(memory::HOST);
+    real_type const* const  original_values       = A->getValues(memory::HOST);
+
+    index_type new_nnz_count = 0;
+    for (index_type i = 0; i < A->getNumRows(); ++i)
+    {
+      const index_type original_row_start = original_row_pointers[i];
+      const index_type original_row_end   = original_row_pointers[i + 1];
+
+      bool diagonal_added = false;
+      for (index_type j = original_row_start; j < original_row_end; ++j)
+      {
+        if (original_col_indices[j] == i)
+        {
+          // Diagonal element found in original matrix
+          new_values[new_nnz_count] = original_values[j] + 1.0;
+          new_nnz_count++;
+          diagonal_added = true;
+        }
+        else if (original_col_indices[j] < i && !diagonal_added)
+        {
+          // Handle elements before diagonal
+          new_values[new_nnz_count] = original_values[j];
+          new_nnz_count++;
+        }
+        else if (original_col_indices[j] > i && !diagonal_added)
+        {
+          // Insert diagonal if not found yet
+          new_values[new_nnz_count] = 1.;
+          new_nnz_count++;
+          diagonal_added = true; // Mark as added to prevent re-insertion
+          // Then add the current original element
+          new_values[new_nnz_count] = original_values[j];
+          new_nnz_count++;
+        }
+        else
+        {
+          // Elements after diagonal or diagonal already handled
+          new_values[new_nnz_count] = original_values[j];
+          new_nnz_count++;
+        }
+      }
+
+      // If diagonal element was not present in original row
+      if (!diagonal_added)
+      {
+        new_values[new_nnz_count] = 1.;
+        new_nnz_count++;
+      }
+    }
+
+    A->destroyMatrixData(memory::HOST);
+    A->setNnz(new_nnz_count);
+    A->setDataPointers(new_row_pointers, new_col_indices, new_values, memory::HOST);
+    A->setUpdated(memory::HOST);
+
+    return 0;
+  }
+
+  /**
+   * @brief Add a constant to the nonzero values of a csr matrix,
    *        then add the identity matrix.
    *
    * @param[in,out] A - Sparse CSR matrix
@@ -418,6 +497,11 @@ namespace ReSolve
    */
   int MatrixHandlerCpu::scaleAddI(matrix::Csr* A, real_type alpha)
   {
+    if (workspace_->scaleAddISetup())
+    {
+      ScaleAddIBuffer* pattern = workspace_->getScaleAddIBuffer();
+      return scaleAddII(A, alpha, pattern);
+    }
     scaleConst(A, alpha);
 
     auto new_row_pointers = new index_type[A->getNumRows() + 1];
@@ -489,6 +573,14 @@ namespace ReSolve
     A->setNnz(new_nnz_count);
     A->setDataPointers(new_row_pointers, new_col_indices, new_values, memory::HOST);
     A->setUpdated(memory::HOST);
+
+    auto sparsity = new ScaleAddIBuffer;
+    sparsity->row_data_.resize(A->getNumRows() + 1);
+    std::copy_n(A->getRowData(memory::HOST), A->getNumRows() + 1, sparsity->row_data_.begin());
+    sparsity->col_data_.resize(A->getNnz());
+    std::copy_n(A->getColData(memory::HOST), A->getNnz(), sparsity->col_data_.begin());
+    sparsity->nnz = A->getNnz();
+    workspace_->setScaleAddIBuffer(sparsity);
 
     return 0;
   }

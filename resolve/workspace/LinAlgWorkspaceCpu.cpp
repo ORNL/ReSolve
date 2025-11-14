@@ -1,5 +1,6 @@
 #include "LinAlgWorkspaceCpu.hpp"
 
+#include <cassert>
 #include <cstddef>
 
 namespace ReSolve
@@ -10,6 +11,7 @@ namespace ReSolve
 
   LinAlgWorkspaceCpu::~LinAlgWorkspaceCpu()
   {
+    delete scaleaddi_buffer_;
   }
 
   void LinAlgWorkspaceCpu::initializeHandles()
@@ -18,7 +20,29 @@ namespace ReSolve
 
   void LinAlgWorkspaceCpu::resetLinAlgWorkspace()
   {
-    // No resources to reset in CPU workspace
-    return;
+    delete scaleaddi_buffer_;
+    scaleaddi_buffer_ = nullptr;
   }
+
+  bool LinAlgWorkspaceCpu::scaleAddISetup()
+  {
+    return scaleaddi_setup_done_;
+  }
+
+  void LinAlgWorkspaceCpu::scaleAddISetupDone()
+  {
+    scaleaddi_setup_done_ = true;
+  }
+
+  ScaleAddIBuffer* LinAlgWorkspaceCpu::getScaleAddIBuffer()
+  {
+    return scaleaddi_buffer_;
+  }
+
+  void LinAlgWorkspaceCpu::setScaleAddIBuffer(ScaleAddIBuffer* buffer)
+  {
+    assert(scaleaddi_buffer_ == nullptr);
+    scaleaddi_buffer_ = buffer;
+  }
+
 } // namespace ReSolve
