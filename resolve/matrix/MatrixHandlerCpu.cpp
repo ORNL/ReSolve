@@ -447,12 +447,6 @@ namespace ReSolve
           new_nnz_count++;
           diagonal_added = true;
         }
-        else if (original_col_indices[j] < i && !diagonal_added)
-        {
-          // Handle elements before diagonal
-          new_values[new_nnz_count] = original_values[j];
-          new_nnz_count++;
-        }
         else if (original_col_indices[j] > i && !diagonal_added)
         {
           // Insert diagonal if not found yet
@@ -465,7 +459,8 @@ namespace ReSolve
         }
         else
         {
-          // Elements after diagonal or diagonal already handled
+          // Elements before diagonal, elements after diagonal and the
+          // diagonal is already handled
           new_values[new_nnz_count] = original_values[j];
           new_nnz_count++;
         }
@@ -531,13 +526,6 @@ namespace ReSolve
           new_nnz_count++;
           diagonal_added = true;
         }
-        else if (original_col_indices[j] < i && !diagonal_added)
-        {
-          // Handle elements before diagonal
-          new_values[new_nnz_count]      = original_values[j];
-          new_col_indices[new_nnz_count] = original_col_indices[j];
-          new_nnz_count++;
-        }
         else if (original_col_indices[j] > i && !diagonal_added)
         {
           // Insert diagonal if not found yet
@@ -552,7 +540,8 @@ namespace ReSolve
         }
         else
         {
-          // Elements after diagonal or diagonal already handled
+          // Elements before diagonal, elements after diagonal and the
+          // diagonal is already handled
           new_values[new_nnz_count]      = original_values[j];
           new_col_indices[new_nnz_count] = original_col_indices[j];
           new_nnz_count++;
