@@ -421,7 +421,7 @@ namespace ReSolve
    */
   static int updateMatrix(matrix::Sparse* A, index_type* row_data, index_type* col_data, real_type* val_data, index_type nnz)
   {
-    if (A->destroyMatrixData(memory::HOST) == -1)
+    if (A->destroyMatrixData(memory::HOST) != 0)
     {
       return 1;
     }
@@ -502,7 +502,8 @@ namespace ReSolve
    */
   int MatrixHandlerCpu::scaleAddI(matrix::Csr* A, real_type alpha)
   {
-    if (index_type info = scaleConst(A, alpha), info == 1)
+    index_type info = scaleConst(A, alpha);
+    if (info == 1)
     {
       return info;
     }

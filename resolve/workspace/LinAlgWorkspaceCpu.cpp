@@ -19,11 +19,21 @@ namespace ReSolve
   {
   }
 
+  /**
+   * @brief Retrieve row sparsity pattern
+   *
+   * @return precalculated row pointers
+   */
   index_type* ScaleAddIBuffer::getRowData()
   {
     return row_data_.data();
   }
 
+  /**
+   * @brief Retrieve column sparsity pattern
+   *
+   * @return precalculated column indices
+   */
   index_type* ScaleAddIBuffer::getColumnData()
   {
     return col_data_.data();
