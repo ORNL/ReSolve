@@ -6,11 +6,19 @@
 
 namespace ReSolve
 {
-  struct ScaleAddIBuffer
+  class ScaleAddIBuffer
   {
-    std::vector<index_type> row_data_; ///< row data (HOST)
-    std::vector<index_type> col_data_; ///< column data (HOST)
-    index_type              nnz;
+  public:
+    ScaleAddIBuffer(index_type* row_data, index_type nrows, index_type* col_data, index_type nnz);
+    void       getRowData(index_type* row_data, index_type array_size);
+    void       getColumnData(index_type* col_data, index_type array_size);
+    index_type getNumRows();
+    index_type getNumColumns();
+    index_type getNnz();
+
+  private:
+    std::vector<index_type> row_data_;
+    std::vector<index_type> col_data_;
   };
 
   class LinAlgWorkspaceCpu
