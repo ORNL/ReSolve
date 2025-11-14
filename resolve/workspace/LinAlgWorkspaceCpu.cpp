@@ -14,8 +14,8 @@ namespace ReSolve
    * @param[in] col_data - pointer to column data (array of integers, length: nnz)
    * @param[in] nnz - number of non-zeros
    */
-  ScaleAddIBuffer::ScaleAddIBuffer(index_type* row_data, index_type nrows, index_type* col_data, index_type nnz)
-    : row_data_(row_data, row_data + nrows + 1), col_data_(col_data, col_data + nnz)
+  ScaleAddIBuffer::ScaleAddIBuffer(std::vector<index_type> row_data, std::vector<index_type> col_data)
+    : row_data_(std::move(row_data)), col_data_(std::move(col_data))
   {
   }
 

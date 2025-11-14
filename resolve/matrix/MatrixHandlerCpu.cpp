@@ -421,23 +421,22 @@ namespace ReSolve
    */
   static int updateMatrix(matrix::Sparse* A, index_type* row_data, index_type* col_data, real_type* val_data, index_type nnz)
   {
-    A->destroyMatrixData(memory::HOST);
+    if (A->destroyMatrixData(memory::HOST) == -1)
+    {
+      return 1;
+    }
     return A->copyDataFrom(row_data, col_data, val_data, nnz, memory::HOST, memory::HOST);
   }
 
   /**
-   * @brief Multiply a csr matrix by a constant,
-   *        then add the identity matrix.
+   * @brief Add the identity to a CSR matrix.
    *
    * @param[in,out] A - Sparse CSR matrix
-   * @param[in] alpha - constant to the added
    * @param[in] pattern - precalculated sparsity pattern
    * @return 0 if successful, 1 otherwise
    */
-  static int scaleAddIWithPattern(matrix::Csr* A, real_type alpha, ScaleAddIBuffer* pattern)
+  static int addIWithPattern(matrix::Csr* A, ScaleAddIBuffer* pattern)
   {
-    scaleConst(A, alpha);
-
     auto new_values = new real_type[pattern->getNnz()];
 
     index_type const* const original_row_pointers = A->getRowData(memory::HOST);
@@ -488,9 +487,9 @@ namespace ReSolve
     }
 
     assert(new_nnz_count == pattern->getNnz());
-    updateMatrix(A, pattern->getRowData(), pattern->getColumnData(), new_values, pattern->getNnz());
+    index_type info = updateMatrix(A, pattern->getRowData(), pattern->getColumnData(), new_values, pattern->getNnz());
     delete[] new_values;
-    return 0;
+    return info;
   }
 
   /**
@@ -503,20 +502,23 @@ namespace ReSolve
    */
   int MatrixHandlerCpu::scaleAddI(matrix::Csr* A, real_type alpha)
   {
+    if (index_type info = scaleConst(A, alpha), info == 1)
+    {
+      return info;
+    }
+
     // Reuse sparsity pattern if it is available
     if (workspace_->scaleAddISetup())
     {
       ScaleAddIBuffer* pattern = workspace_->getScaleAddIBuffer();
-      return scaleAddIWithPattern(A, alpha, pattern);
+      return addIWithPattern(A, pattern);
     }
 
-    scaleConst(A, alpha);
-
-    auto new_row_pointers = new index_type[A->getNumRows() + 1];
+    std::vector<index_type> new_row_pointers(A->getNumRows() + 1);
     // At most we add one element per row/column
     index_type max_nnz_count   = A->getNnz() + A->getNumRows();
-    auto       new_col_indices = new index_type[max_nnz_count];
-    auto       new_values      = new real_type[max_nnz_count];
+    std::vector<index_type> new_col_indices(max_nnz_count);
+    auto                    new_values = new real_type[max_nnz_count];
 
     index_type const* const original_row_pointers = A->getRowData(memory::HOST);
     index_type const* const original_col_indices  = A->getColData(memory::HOST);
@@ -572,14 +574,12 @@ namespace ReSolve
     }
     new_row_pointers[A->getNumRows()] = new_nnz_count;
     assert(new_nnz_count <= max_nnz_count);
+    new_col_indices.resize(new_nnz_count);
+    auto pattern = new ScaleAddIBuffer(std::move(new_row_pointers), std::move(new_col_indices));
+    // workspace_ owns pattern
+    workspace_->setScaleAddIBuffer(pattern);
+    updateMatrix(A, pattern->getRowData(), pattern->getColumnData(), new_values, pattern->getNnz());
 
-    updateMatrix(A, new_row_pointers, new_col_indices, new_values, new_nnz_count);
-
-    auto sparsity_pattern = new ScaleAddIBuffer(A->getRowData(memory::HOST), A->getNumRows() + 1, A->getColData(memory::HOST), A->getNnz());
-    workspace_->setScaleAddIBuffer(sparsity_pattern);
-
-    delete[] new_row_pointers;
-    delete[] new_col_indices;
     delete[] new_values;
 
     return 0;

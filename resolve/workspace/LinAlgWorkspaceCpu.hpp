@@ -9,7 +9,7 @@ namespace ReSolve
   class ScaleAddIBuffer
   {
   public:
-    ScaleAddIBuffer(index_type* row_data, index_type nrows, index_type* col_data, index_type nnz);
+    ScaleAddIBuffer(std::vector<index_type> row_data, std::vector<index_type> col_data);
     index_type* getRowData();
     index_type* getColumnData();
     index_type getNumRows();
