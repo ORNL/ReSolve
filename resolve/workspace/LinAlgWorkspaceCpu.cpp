@@ -19,18 +19,6 @@ namespace ReSolve
   {
   }
 
-  void ScaleAddIBuffer::setRowData(index_type* row_data, index_type array_size)
-  {
-    assert(static_cast<size_t>(array_size) == row_data_.size());
-    std::copy(row_data_.begin(), row_data_.end(), row_data);
-  }
-
-  void ScaleAddIBuffer::setColumnData(index_type* col_data, index_type array_size)
-  {
-    assert(static_cast<size_t>(array_size) == col_data_.size());
-    std::copy(col_data_.begin(), col_data_.end(), col_data);
-  }
-
   index_type* ScaleAddIBuffer::getRowData()
   {
     return row_data_.data();
@@ -102,7 +90,7 @@ namespace ReSolve
 
   ScaleAddIBuffer* LinAlgWorkspaceCpu::getScaleAddIBuffer()
   {
-    assert(ScaleAddIBuffer != nullptr);
+    assert(scaleaddi_buffer_ != nullptr);
     return scaleaddi_buffer_;
   }
 

@@ -419,12 +419,10 @@ namespace ReSolve
    * @param[in] nnz - number of non-zer
    * @return 0 if successful, 1 otherwise
    */
-  static void updateMatrix(matrix::Sparse* A, index_type* row_data, index_type* col_data, real_type* val_data, index_type nnz)
+  static int updateMatrix(matrix::Sparse* A, index_type* row_data, index_type* col_data, real_type* val_data, index_type nnz)
   {
     A->destroyMatrixData(memory::HOST);
-    A->setNnz(nnz);
-    A->setDataPointers(row_data, col_data, val_data, memory::HOST);
-    A->setUpdated(memory::HOST);
+    return A->copyDataFrom(row_data, col_data, val_data, nnz, memory::HOST, memory::HOST);
   }
 
   /**
@@ -440,10 +438,6 @@ namespace ReSolve
   {
     scaleConst(A, alpha);
 
-    auto new_row_pointers = new index_type[pattern->getNumRows() + 1];
-    pattern->getRowData(new_row_pointers, pattern->getNumRows() + 1);
-    auto new_col_indices = new index_type[pattern->getNnz()];
-    pattern->getColumnData(new_col_indices, pattern->getNnz());
     auto new_values = new real_type[pattern->getNnz()];
 
     index_type const* const original_row_pointers = A->getRowData(memory::HOST);
@@ -494,8 +488,8 @@ namespace ReSolve
     }
 
     assert(new_nnz_count == pattern->getNnz());
-    updateMatrix(A, new_row_pointers, new_col_indices, new_values, new_nnz_count);
-
+    updateMatrix(A, pattern->getRowData(), pattern->getColumnData(), new_values, pattern->getNnz());
+    delete[] new_values;
     return 0;
   }
 
@@ -583,6 +577,10 @@ namespace ReSolve
 
     auto sparsity_pattern = new ScaleAddIBuffer(A->getRowData(memory::HOST), A->getNumRows() + 1, A->getColData(memory::HOST), A->getNnz());
     workspace_->setScaleAddIBuffer(sparsity_pattern);
+
+    delete[] new_row_pointers;
+    delete[] new_col_indices;
+    delete[] new_values;
 
     return 0;
   }

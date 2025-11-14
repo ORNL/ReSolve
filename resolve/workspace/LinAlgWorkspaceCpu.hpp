@@ -10,8 +10,8 @@ namespace ReSolve
   {
   public:
     ScaleAddIBuffer(index_type* row_data, index_type nrows, index_type* col_data, index_type nnz);
-    void       getRowData(index_type* row_data, index_type array_size);
-    void       getColumnData(index_type* col_data, index_type array_size);
+    index_type* getRowData();
+    index_type* getColumnData();
     index_type getNumRows();
     index_type getNumColumns();
     index_type getNnz();
