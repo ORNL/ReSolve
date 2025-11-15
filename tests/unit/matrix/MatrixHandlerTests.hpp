@@ -214,7 +214,17 @@ namespace ReSolve
         {
           A->syncData(memory::HOST);
         }
-        status *= verifyScaleAddICsrMatrix(A, val);
+        // expected sum is 2*30+1
+        status *= verifyScaleAddICsrMatrix(A, 61);
+
+        // run again to reuse sparsity pattern.
+        handler_.scaleAddI(A, val, memspace_);
+        if (memspace_ == memory::DEVICE)
+        {
+          A->syncData(memory::HOST);
+        }
+        // expected sum is 2*61+1
+        status *= verifyScaleAddICsrMatrix(A, 123);
 
         delete A;
         return status.report(testname.c_str());
@@ -705,10 +715,10 @@ namespace ReSolve
        * @pre A is a valid, allocated CSR matrix
        * @invariant A
        * @param[in] A matrix::Csr* pointer to the matrix to be verified
-       * @param[in] alpha matrix scale factor
+       * @param[in] expected sum of row elements
        * @return bool true if the matrix is valid, false otherwise
        */
-      bool verifyScaleAddICsrMatrix(matrix::Csr* A, real_type alpha)
+      bool verifyScaleAddICsrMatrix(matrix::Csr* A, real_type expected)
       {
         // Check if the matrix is valid
         if (A == nullptr)
@@ -727,8 +737,6 @@ namespace ReSolve
 
         index_type* scaled_row_ptr  = A->getRowData(memory::HOST);
         real_type*  scaled_value    = A->getValues(memory::HOST);
-
-        const real_type expected = 30. * alpha + 1.;
 
         // Verify values - each element scaled by scale. Diagonal elements should be  1.
         for (index_type i = 0; i < n; ++i)

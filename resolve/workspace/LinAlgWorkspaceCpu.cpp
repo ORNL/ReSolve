@@ -108,6 +108,7 @@ namespace ReSolve
   {
     assert(scaleaddi_buffer_ == nullptr);
     scaleaddi_buffer_ = buffer;
+    scaleAddISetupDone();
   }
 
 } // namespace ReSolve
