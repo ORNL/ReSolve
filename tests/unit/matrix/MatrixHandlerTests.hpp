@@ -730,13 +730,13 @@ namespace ReSolve
         const index_type n = A->getNumRows();
         const index_type m = A->getNumColumns();
 
-        if(n != m)
+        if (n != m)
         {
           return false;
         }
 
-        index_type* scaled_row_ptr  = A->getRowData(memory::HOST);
-        real_type*  scaled_value    = A->getValues(memory::HOST);
+        index_type* scaled_row_ptr = A->getRowData(memory::HOST);
+        real_type*  scaled_value   = A->getValues(memory::HOST);
 
         // Verify values - each element scaled by scale. Diagonal elements should be  1.
         for (index_type i = 0; i < n; ++i)

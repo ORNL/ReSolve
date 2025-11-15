@@ -400,7 +400,7 @@ namespace ReSolve
    */
   static int scaleConst(matrix::Sparse* A, real_type alpha)
   {
-    real_type* values = A->getValues(memory::HOST);
+    real_type*       values = A->getValues(memory::HOST);
     const index_type nnz    = A->getNnz();
     for (index_type i = 0; i < nnz; ++i)
     {
@@ -517,7 +517,7 @@ namespace ReSolve
 
     std::vector<index_type> new_row_pointers(A->getNumRows() + 1);
     // At most we add one element per row/column
-    index_type max_nnz_count   = A->getNnz() + A->getNumRows();
+    index_type              max_nnz_count = A->getNnz() + A->getNumRows();
     std::vector<index_type> new_col_indices(max_nnz_count);
     auto                    new_values = new real_type[max_nnz_count];
 
