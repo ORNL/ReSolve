@@ -8,6 +8,7 @@
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/vector/Vector.hpp>
+#include <resolve/workspace/LinAlgWorkspaceCpu.hpp>
 
 namespace ReSolve
 {
@@ -387,6 +388,201 @@ namespace ReSolve
     {
       values[i] += alpha;
     }
+    return 0;
+  }
+
+  /**
+   * @brief Multiply all nonzero values of a sparse matrix by a constant
+   *
+   * @param[in,out] A - Sparse matrix
+   * @param[in] alpha - constant to the added
+   * @return 0 if successful, 1 otherwise
+   */
+  static int scaleConst(matrix::Sparse* A, real_type alpha)
+  {
+    real_type*       values = A->getValues(memory::HOST);
+    const index_type nnz    = A->getNnz();
+    for (index_type i = 0; i < nnz; ++i)
+    {
+      values[i] *= alpha;
+    }
+    return 0;
+  }
+
+  /**
+   * @brief Update matrix with a new number of nonzero elements
+   *
+   * @param[in,out] A - Sparse matrix
+   * @param[in] row_data - pointer to row data (array of integers)
+   * @param[in] col_data - pointer to column data (array of integers)
+   * @param[in] val_data - pointer to value data (array of real numbers)
+   * @param[in] nnz - number of non-zer
+   * @return 0 if successful, 1 otherwise
+   */
+  static int updateMatrix(matrix::Sparse* A, index_type* row_data, index_type* col_data, real_type* val_data, index_type nnz)
+  {
+    if (A->destroyMatrixData(memory::HOST) != 0)
+    {
+      return 1;
+    }
+    return A->copyDataFrom(row_data, col_data, val_data, nnz, memory::HOST, memory::HOST);
+  }
+
+  /**
+   * @brief Add the identity to a CSR matrix.
+   *
+   * @param[in,out] A - Sparse CSR matrix
+   * @param[in] pattern - precalculated sparsity pattern
+   * @return 0 if successful, 1 otherwise
+   */
+  static int addIWithPattern(matrix::Csr* A, ScaleAddIBuffer* pattern)
+  {
+    auto new_values = new real_type[pattern->getNnz()];
+
+    index_type const* const original_row_pointers = A->getRowData(memory::HOST);
+    index_type const* const original_col_indices  = A->getColData(memory::HOST);
+    real_type const* const  original_values       = A->getValues(memory::HOST);
+
+    index_type new_nnz_count = 0;
+    for (index_type i = 0; i < A->getNumRows(); ++i)
+    {
+      const index_type original_row_start = original_row_pointers[i];
+      const index_type original_row_end   = original_row_pointers[i + 1];
+
+      bool diagonal_added = false;
+      for (index_type j = original_row_start; j < original_row_end; ++j)
+      {
+        if (original_col_indices[j] == i)
+        {
+          // Diagonal element found in original matrix
+          new_values[new_nnz_count] = original_values[j] + 1.0;
+          new_nnz_count++;
+          diagonal_added = true;
+        }
+        else if (original_col_indices[j] > i && !diagonal_added)
+        {
+          // Insert diagonal if not found yet
+          new_values[new_nnz_count] = 1.;
+          new_nnz_count++;
+          diagonal_added = true; // Mark as added to prevent re-insertion
+          // Then add the current original element
+          new_values[new_nnz_count] = original_values[j];
+          new_nnz_count++;
+        }
+        else
+        {
+          // Elements before diagonal, elements after diagonal and the
+          // diagonal is already handled
+          new_values[new_nnz_count] = original_values[j];
+          new_nnz_count++;
+        }
+      }
+
+      // If diagonal element was not present in original row
+      if (!diagonal_added)
+      {
+        new_values[new_nnz_count] = 1.;
+        new_nnz_count++;
+      }
+    }
+
+    assert(new_nnz_count == pattern->getNnz());
+    index_type info = updateMatrix(A, pattern->getRowData(), pattern->getColumnData(), new_values, pattern->getNnz());
+    delete[] new_values;
+    return info;
+  }
+
+  /**
+   * @brief Add a constant to the nonzero values of a csr matrix,
+   *        then add the identity matrix.
+   *
+   * @param[in,out] A - Sparse CSR matrix
+   * @param[in] alpha - constant to the added
+   * @return 0 if successful, 1 otherwise
+   */
+  int MatrixHandlerCpu::scaleAddI(matrix::Csr* A, real_type alpha)
+  {
+    index_type info = scaleConst(A, alpha);
+    if (info == 1)
+    {
+      return info;
+    }
+
+    // Reuse sparsity pattern if it is available
+    if (workspace_->scaleAddISetup())
+    {
+      ScaleAddIBuffer* pattern = workspace_->getScaleAddIBuffer();
+      return addIWithPattern(A, pattern);
+    }
+
+    std::vector<index_type> new_row_pointers(A->getNumRows() + 1);
+    // At most we add one element per row/column
+    index_type              max_nnz_count = A->getNnz() + A->getNumRows();
+    std::vector<index_type> new_col_indices(max_nnz_count);
+    auto                    new_values = new real_type[max_nnz_count];
+
+    index_type const* const original_row_pointers = A->getRowData(memory::HOST);
+    index_type const* const original_col_indices  = A->getColData(memory::HOST);
+    real_type const* const  original_values       = A->getValues(memory::HOST);
+
+    index_type new_nnz_count = 0;
+    for (index_type i = 0; i < A->getNumRows(); ++i)
+    {
+      new_row_pointers[i]                 = new_nnz_count;
+      const index_type original_row_start = original_row_pointers[i];
+      const index_type original_row_end   = original_row_pointers[i + 1];
+
+      bool diagonal_added = false;
+      for (index_type j = original_row_start; j < original_row_end; ++j)
+      {
+        if (original_col_indices[j] == i)
+        {
+          // Diagonal element found in original matrix
+          new_values[new_nnz_count]      = original_values[j] + 1.0;
+          new_col_indices[new_nnz_count] = i;
+          new_nnz_count++;
+          diagonal_added = true;
+        }
+        else if (original_col_indices[j] > i && !diagonal_added)
+        {
+          // Insert diagonal if not found yet
+          new_values[new_nnz_count]      = 1.;
+          new_col_indices[new_nnz_count] = i;
+          new_nnz_count++;
+          diagonal_added = true; // Mark as added to prevent re-insertion
+          // Then add the current original element
+          new_values[new_nnz_count]      = original_values[j];
+          new_col_indices[new_nnz_count] = original_col_indices[j];
+          new_nnz_count++;
+        }
+        else
+        {
+          // Elements before diagonal, elements after diagonal and the
+          // diagonal is already handled
+          new_values[new_nnz_count]      = original_values[j];
+          new_col_indices[new_nnz_count] = original_col_indices[j];
+          new_nnz_count++;
+        }
+      }
+
+      // If diagonal element was not present in original row
+      if (!diagonal_added)
+      {
+        new_values[new_nnz_count]      = 1.;
+        new_col_indices[new_nnz_count] = i;
+        new_nnz_count++;
+      }
+    }
+    new_row_pointers[A->getNumRows()] = new_nnz_count;
+    assert(new_nnz_count <= max_nnz_count);
+    new_col_indices.resize(new_nnz_count);
+    auto pattern = new ScaleAddIBuffer(std::move(new_row_pointers), std::move(new_col_indices));
+    // workspace_ owns pattern
+    workspace_->setScaleAddIBuffer(pattern);
+    updateMatrix(A, pattern->getRowData(), pattern->getColumnData(), new_values, pattern->getNnz());
+
+    delete[] new_values;
+
     return 0;
   }
 } // namespace ReSolve

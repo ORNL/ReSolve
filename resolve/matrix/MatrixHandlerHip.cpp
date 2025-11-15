@@ -369,4 +369,18 @@ namespace ReSolve
     return 0;
   }
 
+  /**
+   * @brief Add a constant to the nonzero values of a csr matrix,
+   *        then add the identity matrix.
+   *
+   * @param[in,out] A - Sparse CSR matrix
+   * @param[in] alpha - constant to the added
+   * @return 0 if successful, 1 otherwise
+   */
+  int MatrixHandlerCpu::scaleAddI(matrix::Csr* A, real_type alpha)
+  {
+    // NOT IMPLEMENTED
+    return 1;
+  }
+
 } // namespace ReSolve

@@ -45,6 +45,8 @@ namespace ReSolve
 
     int rightScale(matrix::Csr* A, vector_type* diag) override;
 
+    int scaleAddI(matrix::Csr* A, real_type alpha) override;
+
     virtual int matvec(matrix::Sparse*  A,
                        vector_type*     vec_x,
                        vector_type*     vec_result,
