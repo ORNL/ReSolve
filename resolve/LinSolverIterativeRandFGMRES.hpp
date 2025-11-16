@@ -116,6 +116,8 @@ namespace ReSolve
     vector_type* vec_Z_{nullptr};
     // for performing Gram-Schmidt
     vector_type* vec_S_{nullptr}; ///< this is where sketched vectors are stored
+    vector_type* vec_Y_{nullptr};
+    vector_type* vec_R_{nullptr};
 
     real_type*   h_H_{nullptr};
     real_type*   h_c_{nullptr};
