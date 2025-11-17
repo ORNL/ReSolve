@@ -14,7 +14,7 @@ namespace ReSolve
    * @param[in] col_data - pointer to column data (array of integers, length: nnz)
    * @param[in] nnz - number of non-zeros
    */
-  ScaleAddIBuffer::ScaleAddIBuffer(std::vector<index_type> rowData, std::vector<index_type> colData)
+  ScaleAddBuffer::ScaleAddBuffer(std::vector<index_type> rowData, std::vector<index_type> colData)
     : rowData_(std::move(rowData)), colData_(std::move(colData))
   {
   }
@@ -24,7 +24,7 @@ namespace ReSolve
    *
    * @return precalculated row pointers
    */
-  index_type* ScaleAddIBuffer::getRowData()
+  index_type* ScaleAddBuffer::getRowData()
   {
     return rowData_.data();
   }
@@ -34,7 +34,7 @@ namespace ReSolve
    *
    * @return precalculated column indices
    */
-  index_type* ScaleAddIBuffer::getColumnData()
+  index_type* ScaleAddBuffer::getColumnData()
   {
     return colData_.data();
   }
@@ -44,7 +44,7 @@ namespace ReSolve
    *
    * @return number of matrix rows.
    */
-  index_type ScaleAddIBuffer::getNumRows()
+  index_type ScaleAddBuffer::getNumRows()
   {
     return static_cast<index_type>(rowData_.size()) - 1;
   }
@@ -54,7 +54,7 @@ namespace ReSolve
    *
    * @return number of matrix columns.
    */
-  index_type ScaleAddIBuffer::getNumColumns()
+  index_type ScaleAddBuffer::getNumColumns()
   {
     return getNumRows();
   }
@@ -64,7 +64,7 @@ namespace ReSolve
    *
    * @return number of non-zeros
    */
-  index_type ScaleAddIBuffer::getNnz()
+  index_type ScaleAddBuffer::getNnz()
   {
     return static_cast<index_type>(colData_.size());
   }
@@ -76,6 +76,7 @@ namespace ReSolve
   LinAlgWorkspaceCpu::~LinAlgWorkspaceCpu()
   {
     delete scaleAddIBuffer_;
+    delete scaleAddBBuffer_;
   }
 
   void LinAlgWorkspaceCpu::initializeHandles()
@@ -86,6 +87,8 @@ namespace ReSolve
   {
     delete scaleAddIBuffer_;
     scaleAddIBuffer_ = nullptr;
+    delete scaleAddBBuffer_;
+    scaleAddBBuffer_ = nullptr;
   }
 
   bool LinAlgWorkspaceCpu::scaleAddISetup()
@@ -98,13 +101,13 @@ namespace ReSolve
     scaleAddISetupDone_ = true;
   }
 
-  ScaleAddIBuffer* LinAlgWorkspaceCpu::getScaleAddIBuffer()
+  ScaleAddBuffer* LinAlgWorkspaceCpu::getScaleAddIBuffer()
   {
     assert(scaleAddIBuffer_ != nullptr);
     return scaleAddIBuffer_;
   }
 
-  void LinAlgWorkspaceCpu::setScaleAddIBuffer(ScaleAddIBuffer* buffer)
+  void LinAlgWorkspaceCpu::setScaleAddIBuffer(ScaleAddBuffer* buffer)
   {
     assert(scaleAddIBuffer_ == nullptr);
     scaleAddIBuffer_ = buffer;

@@ -435,7 +435,7 @@ namespace ReSolve
    * @param[in] pattern - precalculated sparsity pattern
    * @return 0 if successful, 1 otherwise
    */
-  static int addIWithPattern(matrix::Csr* A, ScaleAddIBuffer* pattern)
+  static int addIWithPattern(matrix::Csr* A, ScaleAddBuffer* pattern)
   {
     std::vector<real_type> newValues(pattern->getNnz());
 
@@ -510,7 +510,7 @@ namespace ReSolve
     // Reuse sparsity pattern if it is available
     if (workspace_->scaleAddISetup())
     {
-      ScaleAddIBuffer* pattern = workspace_->getScaleAddIBuffer();
+      ScaleAddBuffer* pattern = workspace_->getScaleAddIBuffer();
       return addIWithPattern(A, pattern);
     }
 
@@ -575,7 +575,7 @@ namespace ReSolve
     newRowPointers[A->getNumRows()] = newNnzCount;
     assert(newNnzCount <= maxNnzCount);
     newColumnIndices.resize(newNnzCount);
-    auto pattern = new ScaleAddIBuffer(std::move(newRowPointers), std::move(newColumnIndices));
+    auto pattern = new ScaleAddBuffer(std::move(newRowPointers), std::move(newColumnIndices));
     // workspace_ owns pattern
     workspace_->setScaleAddIBuffer(pattern);
     updateMatrix(A, pattern->getRowData(), pattern->getColumnData(), newValues.data(), pattern->getNnz());
