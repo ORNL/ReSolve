@@ -437,7 +437,7 @@ namespace ReSolve
    */
   static int addIWithPattern(matrix::Csr* A, ScaleAddIBuffer* pattern)
   {
-    auto new_values = new real_type[pattern->getNnz()];
+    std::vector<real_type> new_values(pattern->getNnz());
 
     index_type const* const original_row_pointers = A->getRowData(memory::HOST);
     index_type const* const original_col_indices  = A->getColData(memory::HOST);
@@ -487,8 +487,7 @@ namespace ReSolve
     }
 
     assert(new_nnz_count == pattern->getNnz());
-    index_type info = updateMatrix(A, pattern->getRowData(), pattern->getColumnData(), new_values, pattern->getNnz());
-    delete[] new_values;
+    index_type info = updateMatrix(A, pattern->getRowData(), pattern->getColumnData(), new_values.data(), pattern->getNnz());
     return info;
   }
 
@@ -519,7 +518,7 @@ namespace ReSolve
     // At most we add one element per row/column
     index_type              max_nnz_count = A->getNnz() + A->getNumRows();
     std::vector<index_type> new_col_indices(max_nnz_count);
-    auto                    new_values = new real_type[max_nnz_count];
+    std::vector<real_type>  new_values(max_nnz_count);
 
     index_type const* const original_row_pointers = A->getRowData(memory::HOST);
     index_type const* const original_col_indices  = A->getColData(memory::HOST);
@@ -579,10 +578,7 @@ namespace ReSolve
     auto pattern = new ScaleAddIBuffer(std::move(new_row_pointers), std::move(new_col_indices));
     // workspace_ owns pattern
     workspace_->setScaleAddIBuffer(pattern);
-    updateMatrix(A, pattern->getRowData(), pattern->getColumnData(), new_values, pattern->getNnz());
-
-    delete[] new_values;
-
+    updateMatrix(A, pattern->getRowData(), pattern->getColumnData(), new_values.data(), pattern->getNnz());
     return 0;
   }
 } // namespace ReSolve
