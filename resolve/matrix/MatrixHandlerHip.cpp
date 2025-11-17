@@ -379,6 +379,8 @@ namespace ReSolve
    */
   int MatrixHandlerHip::scaleAddI(matrix::Csr* A, real_type alpha)
   {
+    (void)A;
+    (void)alpha;
     // NOT IMPLEMENTED
     return 1;
   }
@@ -393,6 +395,9 @@ namespace ReSolve
    */
   int MatrixHandlerHip::scaleAddB(matrix::Csr* A, real_type alpha, matrix::Csr *B)
   {
+    (void)A;
+    (void)alpha;
+    (void)B;
     // NOT IMPLEMENTED
     return 1;
   }
