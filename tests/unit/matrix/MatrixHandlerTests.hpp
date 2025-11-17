@@ -230,6 +230,36 @@ namespace ReSolve
         return status.report(testname.c_str());
       }
 
+      TestOutcome scaleAddB(index_type n)
+      {
+        TestStatus   status;
+        std::string  testname(__func__);
+        matrix::Csr* A   = createCsrMatrix(n);
+        matrix::Csr* B   = createCsrMatrix(n);
+        real_type    val = 2.;
+
+        handler_.scaleAddB(A, val, B, memspace_);
+        if (memspace_ == memory::DEVICE)
+        {
+          A->syncData(memory::HOST);
+        }
+        // expected sum is 2*30+30
+        status *= verifyScaleAddICsrMatrix(A, 90);
+
+        // run again to reuse sparsity pattern.
+        handler_.scaleAddB(A, val, B, memspace_);
+        if (memspace_ == memory::DEVICE)
+        {
+          A->syncData(memory::HOST);
+        }
+        // expected sum is 2*90+30
+        status *= verifyScaleAddICsrMatrix(A, 210);
+
+        delete A;
+        delete B;
+        return status.report(testname.c_str());
+      }
+
     private:
       ReSolve::MatrixHandler& handler_;
       memory::MemorySpace     memspace_{memory::HOST};

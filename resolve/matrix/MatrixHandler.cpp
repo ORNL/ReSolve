@@ -401,8 +401,6 @@ namespace ReSolve
     }
     return 1;
   }
-  }
-
 
   /**
    * @brief If CUDA support is enabled in the handler.

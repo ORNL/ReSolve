@@ -590,51 +590,90 @@ namespace ReSolve
    * @param[in] B - Sparse CSR matrix
    * @return 0 if successful, 1 otherwise
    */
-  int MatrixHandlerCpu::scaleAddB(matrix::Csr* A, real_type alpha, matrix::Csr *B)
+  int MatrixHandlerCpu::scaleAddB(matrix::Csr* A, real_type alpha, matrix::Csr* B)
   {
-        index_type info = scaleConst(A, alpha);
+    index_type info = scaleConst(A, alpha);
     if (info == 1)
     {
       return info;
     }
 
     // Reuse sparsity pattern if it is available
-    if (workspace_->scaleAddISetup())
-    {
-      ScaleAddIBuffer* pattern = workspace_->getScaleAddIBuffer();
-      return addIWithPattern(A, pattern);
-    }
-
-    std::vector<index_type> newRowPointers(A->getNumRows() + 1);
-    std::vector<index_type> newColIndices();
-    std::vector<real_type>  newValues();
+    // if (workspace_->scaleAddISetup())
+    //{
+    //  ScaleAddIBuffer* pattern = workspace_->getScaleAddIBuffer();
+    //  return addIWithPattern(A, pattern);
+    //}
 
     index_type const* const aRowPointers = A->getRowData(memory::HOST);
     index_type const* const aColIndices  = A->getColData(memory::HOST);
-    real_type const* const  aValues       = A->getValues(memory::HOST);
+    real_type const* const  aValues      = A->getValues(memory::HOST);
 
     index_type const* const bRowPointers = B->getRowData(memory::HOST);
     index_type const* const bColIndices  = B->getColData(memory::HOST);
-    real_type const* const  bValues       = B->getValues(memory::HOST);
+    real_type const* const  bValues      = B->getValues(memory::HOST);
 
-    index_type newNnzCount = 0;
+    std::vector<index_type> newRowPointers;
+    newRowPointers.reserve(A->getNumRows() + 1);
+    std::vector<index_type> newColIndices;
+    std::vector<real_type>  newValues;
+
+    newRowPointers.push_back(0); // First element is always 0
     for (index_type i = 0; i < A->getNumRows(); ++i)
     {
-      newRowPointers.push_back(newNnzCount);
-      const index_type aRowStart = aRowPointers[i];
-      const index_type aRowEnd   = aRowPointers[i + 1];
+      const index_type startA = aRowPointers[i];
+      const index_type endA   = aRowPointers[i + 1];
+      const index_type startB = bRowPointers[i];
+      const index_type endB   = bRowPointers[i + 1];
 
-      const index_type bRowStart = bRowPointers[i];
-      const index_type bRowEnd   = bRowPointers[i + 1];
+      index_type ptrA = startA;
+      index_type ptrB = startB;
 
-      for (index_type j = aRowStart; j < aRowEnd; ++j)
+      // Merge the non-zero elements for the current row
+      while (ptrA < endA || ptrB < endB)
       {
-
+        // Case 1: All remaining elements are in A
+        if (ptrB >= endB)
+        {
+          newColIndices.push_back(aColIndices[ptrA]);
+          newValues.push_back(aValues[ptrA]);
+          ptrA++;
+        }
+        // Case 2: All remaining elements are in B
+        else if (ptrA >= endA)
+        {
+          newColIndices.push_back(bColIndices[ptrB]);
+          newValues.push_back(bValues[ptrB]);
+          ptrB++;
+        }
+        // Case 3: Elements in both A and B. Compare column indices.
+        else
+        {
+          if (aColIndices[ptrA] < bColIndices[ptrB])
+          {
+            newColIndices.push_back(aColIndices[ptrA]);
+            newValues.push_back(aValues[ptrA]);
+            ptrA++;
+          }
+          else if (bColIndices[ptrB] < aColIndices[ptrA])
+          {
+            newColIndices.push_back(bColIndices[ptrB]);
+            newValues.push_back(bValues[ptrB]);
+            ptrB++;
+          }
+          // Case 4: Same column index, add values
+          else
+          {
+            real_type sum = aValues[ptrA] + bValues[ptrB];
+            newColIndices.push_back(aColIndices[ptrA]);
+            newValues.push_back(sum);
+            ptrA++;
+            ptrB++;
+          }
+        }
       }
-
-      
-    
-    return 1;
+      newRowPointers.push_back(static_cast<index_type>(newValues.size()));
+    }
+    return updateMatrix(A, newRowPointers.data(), newColIndices.data(), newValues.data(), static_cast<index_type>(newValues.size()));
   }
-
 } // namespace ReSolve
