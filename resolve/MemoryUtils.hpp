@@ -38,7 +38,7 @@ namespace ReSolve
    *
    * @brief Provides basic memory allocation, free and copy functions.
    *
-   * This class provedes abstractions for memory management functiosn for
+   * This class provedes abstractions for memory management functions for
    * different GPU programming models.
    *
    * @tparam Policy - Memory management policy (vendor specific)

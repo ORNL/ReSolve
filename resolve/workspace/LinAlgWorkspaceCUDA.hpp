@@ -19,16 +19,19 @@ namespace ReSolve
     // accessors
     void* getSpmvBuffer();
     void* getNormBuffer();
+    void* getScaleAddBuffer();
     void* getTransposeBufferWorkspace();
     void  setTransposeBufferWorkspace(size_t bufferSize);
     bool  isTransposeBufferAllocated();
     void  setSpmvBuffer(void* buffer);
     void  setNormBuffer(void* buffer);
+    void  setScaleAddBuffer(void* buffer);
 
     cublasHandle_t       getCublasHandle();
     cusolverSpHandle_t   getCusolverSpHandle(); // needed for 1-norms etc
     cusparseHandle_t     getCusparseHandle();
     cusparseSpMatDescr_t getSpmvMatrixDescriptor();
+    cusparseMatDescr_t   getScaleAddMatrixDescriptor();
     cusparseDnVecDescr_t getVecX();
     cusparseDnVecDescr_t getVecY();
     index_type           getDrSize();
@@ -39,6 +42,7 @@ namespace ReSolve
     void setCusolverSpHandle(cusolverSpHandle_t handle);
     void setCusparseHandle(cusparseHandle_t handle);
     void setSpmvMatrixDescriptor(cusparseSpMatDescr_t mat);
+    void setScaleAddMatrixDescriptor(cusparseMatDescr_t mat);
     void setDrSize(index_type new_sz);
     void setDr(real_type* new_dr);
     void setNormBufferState(bool r);
@@ -48,6 +52,9 @@ namespace ReSolve
     bool matvecSetup();
     void matvecSetupDone();
 
+    bool scaleAddSetup();
+    void scaleAddSetupDone();
+
   private:
     // handles
     cublasHandle_t     handle_cublas_;
@@ -56,6 +63,7 @@ namespace ReSolve
 
     // matrix descriptors
     cusparseSpMatDescr_t mat_A_;
+    cusparseMatDescr_t   mat_B_;
 
     // vector descriptors
     cusparseDnVecDescr_t vec_x_;
@@ -64,8 +72,10 @@ namespace ReSolve
     // buffers
     void* buffer_spmv_{nullptr};
     void* buffer_1norm_{nullptr};
+    void* buffer_scale_add_{nullptr};
 
     bool matvec_setup_done_{false}; // check if setup is done for matvec i.e. if buffer is allocated, csr structure is set etc.
+    bool scale_add_setup_done_{false};
 
     void* transpose_workspace_{nullptr};     // needed for transpose
     bool  transpose_workspace_ready_{false}; // to track if allocated

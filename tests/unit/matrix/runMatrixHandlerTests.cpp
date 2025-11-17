@@ -76,9 +76,9 @@ void runTests(const std::string& backend, ReSolve::tests::TestingResults& result
   result += test.rightScale(1024, 2048);
   workspace.resetLinAlgWorkspace();
   result += test.rightScale(2048, 1024);
-#if !defined(RESOLVE_USE_CUDA) && !defined(RESOLVE_USE_HIP)
   workspace.resetLinAlgWorkspace();
   result += test.scaleAddI(100);
+#if !defined(RESOLVE_USE_CUDA) && !defined(RESOLVE_USE_HIP)
   workspace.resetLinAlgWorkspace();
   result += test.scaleAddB(100);
   workspace.resetLinAlgWorkspace();

@@ -1,6 +1,7 @@
 #include "MatrixHandlerCuda.hpp"
 
 #include <algorithm>
+#include <numeric>
 
 #include <resolve/cuda/cudaKernels.h>
 #include <resolve/cuda/cudaVectorKernels.h>
@@ -401,6 +402,152 @@ namespace ReSolve
     return 0;
   }
 
+  void MatrixHandlerCuda::allocateForSum(matrix::Csr* A, real_type alpha, matrix::Csr* B,
+    real_type beta, matrix::Csr* C, cusparseMatDescr_t& descr_a, void** buffer_add)
+  {
+    auto a_v = A->getValues(memory::DEVICE);
+    auto a_i = A->getRowData(memory::DEVICE);
+    auto a_j = A->getColData(memory::DEVICE);
+
+    auto b_v = A->getValues(memory::DEVICE);
+    auto b_i = A->getRowData(memory::DEVICE);
+    auto b_j = A->getColData(memory::DEVICE);
+
+    size_t     buffer_byte_size_add;
+    index_type nnz_total;
+
+    auto handle = workspace_->getCusparseHandle();
+    cusparseSetPointerMode(handle, CUSPARSE_POINTER_MODE_HOST);
+
+    index_type m = A->getNumRows();
+    assert(m == B->getNumRows());
+    index_type n = A->getNumColumns();
+    assert(n == B->getNumColumns());
+    index_type nnz_a = A->getNnz();
+    index_type nnz_b = B->getNnz();
+
+    real_type*  c_v = nullptr;
+    index_type* c_i = nullptr;
+    index_type* c_j = nullptr;
+
+    mem_.allocateArrayOnDevice(&c_i, n + 1);
+    // calculates sum buffer
+    cusparseDcsrgeam2_bufferSizeExt(handle,
+                                    m,
+                                    n,
+                                    &alpha,
+                                    descr_a,
+                                    nnz_a,
+                                    a_v,
+                                    a_i,
+                                    a_j,
+                                    &beta,
+                                    descr_a,
+                                    nnz_b,
+                                    b_v,
+                                    b_i,
+                                    b_j,
+                                    descr_a,
+                                    c_v,
+                                    c_i,
+                                    c_j,
+                                    &buffer_byte_size_add);
+
+    mem_.allocateBufferOnDevice(buffer_add, buffer_byte_size_add);
+
+    // determines sum row offsets and total number of nonzeros
+    cusparseXcsrgeam2Nnz(handle,
+                         m,
+                         n,
+                         descr_a,
+                         nnz_a,
+                         a_i,
+                         a_j,
+                         descr_a,
+                         nnz_b,
+                         b_i,
+                         b_j,
+                         descr_a,
+                         c_i,
+                         &nnz_total,
+                         *buffer_add);
+
+    C->setNnz(nnz_total);
+    C->allocateMatrixData(memory::DEVICE);
+    mem_.copyArrayDeviceToDevice(C->getRowData(memory::DEVICE), c_i, n + 1);
+    C->setUpdated(memory::DEVICE);
+    mem_.deleteOnDevice(c_i);
+  }
+
+  void MatrixHandlerCuda::compute_sum(matrix::Csr* A, real_type alpha, matrix::Csr* B, real_type beta, matrix::Csr* C, cusparseMatDescr_t& descr_a, void** buffer_add)
+  {
+    auto a_v = A->getValues(memory::DEVICE);
+    auto a_i = A->getRowData(memory::DEVICE);
+    auto a_j = A->getColData(memory::DEVICE);
+
+    auto b_v = A->getValues(memory::DEVICE);
+    auto b_i = A->getRowData(memory::DEVICE);
+    auto b_j = A->getColData(memory::DEVICE);
+
+    auto c_v = C->getValues(memory::DEVICE);
+    auto c_i = C->getRowData(memory::DEVICE);
+    auto c_j = C->getColData(memory::DEVICE);
+
+    auto handle = workspace_->getCusparseHandle();
+    cusparseSetPointerMode(handle, CUSPARSE_POINTER_MODE_HOST);
+
+    index_type m = A->getNumRows();
+    assert(m == B->getNumRows());
+    assert(m == C->getNumRows());
+
+    index_type n = A->getNumColumns();
+    assert(n == B->getNumColumns());
+    assert(n == C->getNumColumns());
+
+    index_type nnz_a = A->getNnz();
+    index_type nnz_b = B->getNnz();
+
+    cusparseDcsrgeam2(handle,
+                      m,
+                      n,
+                      &alpha,
+                      descr_a,
+                      nnz_a,
+                      a_v,
+                      a_i,
+                      a_j,
+                      &beta,
+                      descr_a,
+                      nnz_b,
+                      b_v,
+                      b_i,
+                      b_j,
+                      descr_a,
+                      c_v,
+                      c_i,
+                      c_j,
+                      *buffer_add);
+  }
+
+  /**
+   * @brief Update matrix with a new number of nonzero elements
+   *
+   * @param[in,out] A - Sparse matrix
+   * @param[in] row_data - pointer to row data (array of integers)
+   * @param[in] col_data - pointer to column data (array of integers)
+   * @param[in] val_data - pointer to value data (array of real numbers)
+   * @param[in] nnz - number of non-zer
+   * @return 0 if successful, 1 otherwise
+   */
+  static int updateMatrix(matrix::Sparse* A, index_type* rowData, index_type* columnData, real_type* valData, index_type nnz)
+  {
+    if (A->destroyMatrixData(memory::DEVICE) != 0)
+    {
+      return 1;
+    }
+    return A->copyDataFrom(rowData, columnData, valData, nnz, memory::DEVICE, memory::DEVICE);
+  }
+
   /**
    * @brief Add a constant to the nonzero values of a csr matrix,
    *        then add the identity matrix.
@@ -411,10 +558,34 @@ namespace ReSolve
    */
   int MatrixHandlerCuda::scaleAddI(matrix::Csr* A, real_type alpha)
   {
-    (void) A;
-    (void) alpha;
-    // NOT IMPLEMENTED
-    return 1;
+    index_type n = A->getNumRows();
+
+    std::vector<index_type> I_i(n + 1);
+    std::iota(I_i.begin(), I_i.end(), 0);
+
+    std::vector<index_type> I_j(n);
+    std::iota(I_j.begin(), I_j.end(), 0);
+
+    std::vector<real_type>  I_v(n, 1.0);
+
+    matrix::Csr I(A->getNumRows(), A->getNumColumns(), n);
+    I.copyDataFrom(I_i.data(), I_j.data(), I_v.data(), n, memory::HOST, memory::DEVICE);
+  
+    cusparseMatDescr_t descr_a;
+    cusparseCreateMatDescr(&descr_a);
+    cusparseSetMatType(descr_a, CUSPARSE_MATRIX_TYPE_GENERAL);
+    cusparseSetMatIndexBase(descr_a, CUSPARSE_INDEX_BASE_ZERO);
+
+    void* buffer_add{nullptr};
+   
+    matrix::Csr C(A->getNumRows(), A->getNumColumns(), A->getNnz());
+    allocateForSum(A, alpha, &I, 1., &C, descr_a, &buffer_add);
+
+    compute_sum(A, alpha, &I, 1., &C, descr_a, &buffer_add);
+
+    updateMatrix(A, C.getRowData(memory::DEVICE), C.getColData(memory::DEVICE), C.getValues(memory::DEVICE), C.getNnz());
+
+    return 0;
   }
 
   /**

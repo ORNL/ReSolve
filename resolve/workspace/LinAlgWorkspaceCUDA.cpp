@@ -8,6 +8,7 @@ namespace ReSolve
     handle_cusparse_           = nullptr;
     handle_cublas_             = nullptr;
     buffer_spmv_               = nullptr;
+    buffer_scale_add_          = nullptr;
     buffer_1norm_              = nullptr;
     transpose_workspace_       = nullptr;
     transpose_workspace_ready_ = false;
@@ -21,6 +22,8 @@ namespace ReSolve
   {
     if (buffer_spmv_ != nullptr)
       mem_.deleteOnDevice(buffer_spmv_);
+    if (buffer_scale_add_ != nullptr)
+      mem_.deleteOnDevice(buffer_scale_add_);
     if (d_r_size_ != 0)
       mem_.deleteOnDevice(d_r_);
     if (norm_buffer_ready_)
@@ -83,6 +86,11 @@ namespace ReSolve
     return buffer_1norm_;
   }
 
+  void* LinAlgWorkspaceCUDA::getScaleAddBuffer()
+  {
+    return buffer_scale_add_;
+  }
+
   void* LinAlgWorkspaceCUDA::getTransposeBufferWorkspace()
   {
     return transpose_workspace_;
@@ -112,6 +120,11 @@ namespace ReSolve
   void LinAlgWorkspaceCUDA::setSpmvBuffer(void* buffer)
   {
     buffer_spmv_ = buffer;
+  }
+
+  void LinAlgWorkspaceCUDA::setScaleAddBuffer(void* buffer)
+  {
+    buffer_scale_add_ = buffer;
   }
 
   void LinAlgWorkspaceCUDA::setNormBuffer(void* buffer)
@@ -169,9 +182,19 @@ namespace ReSolve
     return mat_A_;
   }
 
+  cusparseMatDescr_t LinAlgWorkspaceCUDA::getScaleAddMatrixDescriptor()
+  {
+    return mat_B_;
+  }
+
   void LinAlgWorkspaceCUDA::setSpmvMatrixDescriptor(cusparseSpMatDescr_t mat)
   {
     mat_A_ = mat;
+  }
+
+  void LinAlgWorkspaceCUDA::setScaleAddMatrixDescriptor(cusparseMatDescr_t mat)
+  {
+    mat_B_ = mat;
   }
 
   cusparseDnVecDescr_t LinAlgWorkspaceCUDA::getVecX()
@@ -202,6 +225,16 @@ namespace ReSolve
   void LinAlgWorkspaceCUDA::matvecSetupDone()
   {
     matvec_setup_done_ = true;
+  }
+
+  bool LinAlgWorkspaceCUDA::scaleAddSetup()
+  {
+    return scale_add_setup_done_;
+  }
+
+  void LinAlgWorkspaceCUDA::scaleAddSetupDone()
+  {
+    scale_add_setup_done_ = true;
   }
 
   void LinAlgWorkspaceCUDA::initializeHandles()
