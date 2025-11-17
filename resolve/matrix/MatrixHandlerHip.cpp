@@ -379,8 +379,8 @@ namespace ReSolve
    */
   int MatrixHandlerHip::scaleAddI(matrix::Csr* A, real_type alpha)
   {
-    (void)A;
-    (void)alpha;
+    (void) A;
+    (void) alpha;
     // NOT IMPLEMENTED
     return 1;
   }
@@ -393,11 +393,11 @@ namespace ReSolve
    * @param[in] B - Sparse CSR matrix
    * @return 0 if successful, 1 otherwise
    */
-  int MatrixHandlerHip::scaleAddB(matrix::Csr* A, real_type alpha, matrix::Csr *B)
+  int MatrixHandlerHip::scaleAddB(matrix::Csr* A, real_type alpha, matrix::Csr* B)
   {
-    (void)A;
-    (void)alpha;
-    (void)B;
+    (void) A;
+    (void) alpha;
+    (void) B;
     // NOT IMPLEMENTED
     return 1;
   }

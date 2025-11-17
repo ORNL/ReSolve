@@ -26,24 +26,23 @@ namespace ReSolve
   public:
     LinAlgWorkspaceCpu();
     ~LinAlgWorkspaceCpu();
-    void             initializeHandles();
-    void             resetLinAlgWorkspace();
-    bool             scaleAddISetup();
-    void             scaleAddISetupDone();
+    void            initializeHandles();
+    void            resetLinAlgWorkspace();
+    bool            scaleAddISetup();
+    void            scaleAddISetupDone();
     ScaleAddBuffer* getScaleAddIBuffer();
-    void             setScaleAddIBuffer(ScaleAddBuffer* buffer);
-    bool             scaleAddBSetup();
-    void             scaleAddBSetupDone();
+    void            setScaleAddIBuffer(ScaleAddBuffer* buffer);
+    bool            scaleAddBSetup();
+    void            scaleAddBSetupDone();
     ScaleAddBuffer* getScaleAddBBuffer();
-    void             setScaleAddBBuffer(ScaleAddBuffer* buffer);
-
+    void            setScaleAddBBuffer(ScaleAddBuffer* buffer);
 
   private:
     // check if setup is done for scaleAddI i.e. if buffer is allocated, csr structure is set etc.
-    bool             scaleAddISetupDone_{false};
+    bool            scaleAddISetupDone_{false};
     ScaleAddBuffer* scaleAddIBuffer_{nullptr};
     // check if setup is done for scaleAddB i.e. if buffer is allocated, csr structure is set etc.
-    bool             scaleAddBSetupDone_{false};
+    bool            scaleAddBSetupDone_{false};
     ScaleAddBuffer* scaleAddBBuffer_{nullptr};
   };
 
