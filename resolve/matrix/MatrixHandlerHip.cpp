@@ -383,4 +383,18 @@ namespace ReSolve
     return 1;
   }
 
+  /**
+   * @brief Multiply csr matrix by a constant and add B.
+   *
+   * @param[in,out] A - Sparse CSR matrix
+   * @param[in] alpha - constant to the added
+   * @param[in] B - Sparse CSR matrix
+   * @return 0 if successful, 1 otherwise
+   */
+  int MatrixHandlerHip::scaleAddB(matrix::Csr* A, real_type alpha, matrix::Csr *B)
+  {
+    // NOT IMPLEMENTED
+    return 1;
+  }
+
 } // namespace ReSolve

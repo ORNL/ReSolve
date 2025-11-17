@@ -47,6 +47,8 @@ namespace ReSolve
 
     int scaleAddI(matrix::Csr* A, real_type alpha) override;
 
+    int scaleAddB(matrix::Csr* A, real_type alpha, matrix::Csr* B) override;
+
     virtual int matvec(matrix::Sparse*  A,
                        vector_type*     vec_x,
                        vector_type*     vec_result,

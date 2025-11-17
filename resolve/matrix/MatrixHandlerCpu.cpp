@@ -581,4 +581,60 @@ namespace ReSolve
     updateMatrix(A, pattern->getRowData(), pattern->getColumnData(), newValues.data(), pattern->getNnz());
     return 0;
   }
+
+  /**
+   * @brief Multiply csr matrix by a constant and add B.
+   *
+   * @param[in,out] A - Sparse CSR matrix
+   * @param[in] alpha - constant to the added
+   * @param[in] B - Sparse CSR matrix
+   * @return 0 if successful, 1 otherwise
+   */
+  int MatrixHandlerCpu::scaleAddB(matrix::Csr* A, real_type alpha, matrix::Csr *B)
+  {
+        index_type info = scaleConst(A, alpha);
+    if (info == 1)
+    {
+      return info;
+    }
+
+    // Reuse sparsity pattern if it is available
+    if (workspace_->scaleAddISetup())
+    {
+      ScaleAddIBuffer* pattern = workspace_->getScaleAddIBuffer();
+      return addIWithPattern(A, pattern);
+    }
+
+    std::vector<index_type> newRowPointers(A->getNumRows() + 1);
+    std::vector<index_type> newColIndices();
+    std::vector<real_type>  newValues();
+
+    index_type const* const aRowPointers = A->getRowData(memory::HOST);
+    index_type const* const aColIndices  = A->getColData(memory::HOST);
+    real_type const* const  aValues       = A->getValues(memory::HOST);
+
+    index_type const* const bRowPointers = B->getRowData(memory::HOST);
+    index_type const* const bColIndices  = B->getColData(memory::HOST);
+    real_type const* const  bValues       = B->getValues(memory::HOST);
+
+    index_type newNnzCount = 0;
+    for (index_type i = 0; i < A->getNumRows(); ++i)
+    {
+      newRowPointers.push_back(newNnzCount);
+      const index_type aRowStart = aRowPointers[i];
+      const index_type aRowEnd   = aRowPointers[i + 1];
+
+      const index_type bRowStart = bRowPointers[i];
+      const index_type bRowEnd   = bRowPointers[i + 1];
+
+      for (index_type j = aRowStart; j < aRowEnd; ++j)
+      {
+
+      }
+
+      
+    
+    return 1;
+  }
+
 } // namespace ReSolve
