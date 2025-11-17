@@ -423,6 +423,9 @@ namespace ReSolve
     assert(m == B->getNumRows());
     index_type n = A->getNumColumns();
     assert(n == B->getNumColumns());
+
+    assert(m == n);
+
     index_type nnz_a = A->getNnz();
     index_type nnz_b = B->getNnz();
 
@@ -432,45 +435,12 @@ namespace ReSolve
 
     mem_.allocateArrayOnDevice(&c_i, n + 1);
     // calculates sum buffer
-    cusparseDcsrgeam2_bufferSizeExt(handle,
-                                    m,
-                                    n,
-                                    &alpha,
-                                    descr_a,
-                                    nnz_a,
-                                    a_v,
-                                    a_i,
-                                    a_j,
-                                    &beta,
-                                    descr_a,
-                                    nnz_b,
-                                    b_v,
-                                    b_i,
-                                    b_j,
-                                    descr_a,
-                                    c_v,
-                                    c_i,
-                                    c_j,
-                                    &buffer_byte_size_add);
+    cusparseDcsrgeam2_bufferSizeExt(handle, m, n, &alpha, descr_a, nnz_a, a_v, a_i, a_j, &beta, descr_a, nnz_b, b_v, b_i, b_j, descr_a, c_v, c_i, c_j, &buffer_byte_size_add);
 
     mem_.allocateBufferOnDevice(buffer_add, buffer_byte_size_add);
 
     // determines sum row offsets and total number of nonzeros
-    cusparseXcsrgeam2Nnz(handle,
-                         m,
-                         n,
-                         descr_a,
-                         nnz_a,
-                         a_i,
-                         a_j,
-                         descr_a,
-                         nnz_b,
-                         b_i,
-                         b_j,
-                         descr_a,
-                         c_i,
-                         &nnz_total,
-                         *buffer_add);
+    cusparseXcsrgeam2Nnz(handle, m, n, descr_a, nnz_a, a_i, a_j, descr_a, nnz_b, b_i, b_j, descr_a, c_i, &nnz_total, *buffer_add);
 
     C->setNnz(nnz_total);
     C->allocateMatrixData(memory::DEVICE);
@@ -504,29 +474,12 @@ namespace ReSolve
     assert(n == B->getNumColumns());
     assert(n == C->getNumColumns());
 
+    assert(m == n);
+
     index_type nnz_a = A->getNnz();
     index_type nnz_b = B->getNnz();
 
-    cusparseDcsrgeam2(handle,
-                      m,
-                      n,
-                      &alpha,
-                      descr_a,
-                      nnz_a,
-                      a_v,
-                      a_i,
-                      a_j,
-                      &beta,
-                      descr_a,
-                      nnz_b,
-                      b_v,
-                      b_i,
-                      b_j,
-                      descr_a,
-                      c_v,
-                      c_i,
-                      c_j,
-                      *buffer_add);
+    cusparseDcsrgeam2(handle, m, n, &alpha, descr_a, nnz_a, a_v, a_i, a_j, &beta, descr_a, nnz_b, b_v, b_i, b_j, descr_a, c_v, c_i, c_j, *buffer_add);
   }
 
   /**
@@ -584,6 +537,8 @@ namespace ReSolve
     compute_sum(A, alpha, &I, 1., &C, descr_a, &buffer_add);
 
     updateMatrix(A, C.getRowData(memory::DEVICE), C.getColData(memory::DEVICE), C.getValues(memory::DEVICE), C.getNnz());
+
+    mem_.deleteOnDevice(buffer_add);
 
     return 0;
   }
