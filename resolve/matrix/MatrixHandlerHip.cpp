@@ -377,7 +377,7 @@ namespace ReSolve
    * @param[in] alpha - constant to the added
    * @return 0 if successful, 1 otherwise
    */
-  int MatrixHandlerCpu::scaleAddI(matrix::Csr* A, real_type alpha)
+  int MatrixHandlerHip::scaleAddI(matrix::Csr* A, real_type alpha)
   {
     // NOT IMPLEMENTED
     return 1;
