@@ -419,13 +419,13 @@ namespace ReSolve
    * @param[in] nnz - number of non-zer
    * @return 0 if successful, 1 otherwise
    */
-  static int updateMatrix(matrix::Sparse* A, index_type* row_data, index_type* col_data, real_type* val_data, index_type nnz)
+  static int updateMatrix(matrix::Sparse* A, index_type* rowData, index_type* columnData, real_type* valData, index_type nnz)
   {
     if (A->destroyMatrixData(memory::HOST) != 0)
     {
       return 1;
     }
-    return A->copyDataFrom(row_data, col_data, val_data, nnz, memory::HOST, memory::HOST);
+    return A->copyDataFrom(rowData, columnData, valData, nnz, memory::HOST, memory::HOST);
   }
 
   /**
@@ -437,57 +437,57 @@ namespace ReSolve
    */
   static int addIWithPattern(matrix::Csr* A, ScaleAddIBuffer* pattern)
   {
-    std::vector<real_type> new_values(pattern->getNnz());
+    std::vector<real_type> newValues(pattern->getNnz());
 
-    index_type const* const original_row_pointers = A->getRowData(memory::HOST);
-    index_type const* const original_col_indices  = A->getColData(memory::HOST);
-    real_type const* const  original_values       = A->getValues(memory::HOST);
+    index_type const* const originalRowPointers   = A->getRowData(memory::HOST);
+    index_type const* const originalColumnIndices = A->getColData(memory::HOST);
+    real_type const* const  originalValues        = A->getValues(memory::HOST);
 
-    index_type new_nnz_count = 0;
+    index_type newNnzCount = 0;
     for (index_type i = 0; i < A->getNumRows(); ++i)
     {
-      const index_type original_row_start = original_row_pointers[i];
-      const index_type original_row_end   = original_row_pointers[i + 1];
+      const index_type originalRowStart = originalRowPointers[i];
+      const index_type originalRowEnd   = originalRowPointers[i + 1];
 
-      bool diagonal_added = false;
-      for (index_type j = original_row_start; j < original_row_end; ++j)
+      bool diagonalAdded = false;
+      for (index_type j = originalRowStart; j < originalRowEnd; ++j)
       {
-        if (original_col_indices[j] == i)
+        if (originalColumnIndices[j] == i)
         {
           // Diagonal element found in original matrix
-          new_values[new_nnz_count] = original_values[j] + 1.0;
-          new_nnz_count++;
-          diagonal_added = true;
+          newValues[newNnzCount] = originalValues[j] + 1.0;
+          newNnzCount++;
+          diagonalAdded = true;
         }
-        else if (original_col_indices[j] > i && !diagonal_added)
+        else if (originalColumnIndices[j] > i && !diagonalAdded)
         {
           // Insert diagonal if not found yet
-          new_values[new_nnz_count] = 1.;
-          new_nnz_count++;
-          diagonal_added = true; // Mark as added to prevent re-insertion
+          newValues[newNnzCount] = 1.;
+          newNnzCount++;
+          diagonalAdded = true; // Mark as added to prevent re-insertion
           // Then add the current original element
-          new_values[new_nnz_count] = original_values[j];
-          new_nnz_count++;
+          newValues[newNnzCount] = originalValues[j];
+          newNnzCount++;
         }
         else
         {
           // Elements before diagonal, elements after diagonal and the
           // diagonal is already handled
-          new_values[new_nnz_count] = original_values[j];
-          new_nnz_count++;
+          newValues[newNnzCount] = originalValues[j];
+          newNnzCount++;
         }
       }
 
       // If diagonal element was not present in original row
-      if (!diagonal_added)
+      if (!diagonalAdded)
       {
-        new_values[new_nnz_count] = 1.;
-        new_nnz_count++;
+        newValues[newNnzCount] = 1.;
+        newNnzCount++;
       }
     }
 
-    assert(new_nnz_count == pattern->getNnz());
-    index_type info = updateMatrix(A, pattern->getRowData(), pattern->getColumnData(), new_values.data(), pattern->getNnz());
+    assert(newNnzCount == pattern->getNnz());
+    index_type info = updateMatrix(A, pattern->getRowData(), pattern->getColumnData(), newValues.data(), pattern->getNnz());
     return info;
   }
 
@@ -514,71 +514,71 @@ namespace ReSolve
       return addIWithPattern(A, pattern);
     }
 
-    std::vector<index_type> new_row_pointers(A->getNumRows() + 1);
+    std::vector<index_type> newRowPointers(A->getNumRows() + 1);
     // At most we add one element per row/column
-    index_type              max_nnz_count = A->getNnz() + A->getNumRows();
-    std::vector<index_type> new_col_indices(max_nnz_count);
-    std::vector<real_type>  new_values(max_nnz_count);
+    index_type              maxNnzCount = A->getNnz() + A->getNumRows();
+    std::vector<index_type> newColumnIndices(maxNnzCount);
+    std::vector<real_type>  newValues(maxNnzCount);
 
-    index_type const* const original_row_pointers = A->getRowData(memory::HOST);
-    index_type const* const original_col_indices  = A->getColData(memory::HOST);
-    real_type const* const  original_values       = A->getValues(memory::HOST);
+    index_type const* const originalRowPointers = A->getRowData(memory::HOST);
+    index_type const* const originalColIndices  = A->getColData(memory::HOST);
+    real_type const* const  originalValues      = A->getValues(memory::HOST);
 
-    index_type new_nnz_count = 0;
+    index_type newNnzCount = 0;
     for (index_type i = 0; i < A->getNumRows(); ++i)
     {
-      new_row_pointers[i]                 = new_nnz_count;
-      const index_type original_row_start = original_row_pointers[i];
-      const index_type original_row_end   = original_row_pointers[i + 1];
+      newRowPointers[i]                 = newNnzCount;
+      const index_type originalRowStart = originalRowPointers[i];
+      const index_type originalRowEnd   = originalRowPointers[i + 1];
 
-      bool diagonal_added = false;
-      for (index_type j = original_row_start; j < original_row_end; ++j)
+      bool diagonalAdded = false;
+      for (index_type j = originalRowStart; j < originalRowEnd; ++j)
       {
-        if (original_col_indices[j] == i)
+        if (originalColIndices[j] == i)
         {
           // Diagonal element found in original matrix
-          new_values[new_nnz_count]      = original_values[j] + 1.0;
-          new_col_indices[new_nnz_count] = i;
-          new_nnz_count++;
-          diagonal_added = true;
+          newValues[newNnzCount]        = originalValues[j] + 1.0;
+          newColumnIndices[newNnzCount] = i;
+          newNnzCount++;
+          diagonalAdded = true;
         }
-        else if (original_col_indices[j] > i && !diagonal_added)
+        else if (originalColIndices[j] > i && !diagonalAdded)
         {
           // Insert diagonal if not found yet
-          new_values[new_nnz_count]      = 1.;
-          new_col_indices[new_nnz_count] = i;
-          new_nnz_count++;
-          diagonal_added = true; // Mark as added to prevent re-insertion
+          newValues[newNnzCount]        = 1.;
+          newColumnIndices[newNnzCount] = i;
+          newNnzCount++;
+          diagonalAdded = true; // Mark as added to prevent re-insertion
           // Then add the current original element
-          new_values[new_nnz_count]      = original_values[j];
-          new_col_indices[new_nnz_count] = original_col_indices[j];
-          new_nnz_count++;
+          newValues[newNnzCount]        = originalValues[j];
+          newColumnIndices[newNnzCount] = originalColIndices[j];
+          newNnzCount++;
         }
         else
         {
           // Elements before diagonal, elements after diagonal and the
           // diagonal is already handled
-          new_values[new_nnz_count]      = original_values[j];
-          new_col_indices[new_nnz_count] = original_col_indices[j];
-          new_nnz_count++;
+          newValues[newNnzCount]        = originalValues[j];
+          newColumnIndices[newNnzCount] = originalColIndices[j];
+          newNnzCount++;
         }
       }
 
       // If diagonal element was not present in original row
-      if (!diagonal_added)
+      if (!diagonalAdded)
       {
-        new_values[new_nnz_count]      = 1.;
-        new_col_indices[new_nnz_count] = i;
-        new_nnz_count++;
+        newValues[newNnzCount]        = 1.;
+        newColumnIndices[newNnzCount] = i;
+        newNnzCount++;
       }
     }
-    new_row_pointers[A->getNumRows()] = new_nnz_count;
-    assert(new_nnz_count <= max_nnz_count);
-    new_col_indices.resize(new_nnz_count);
-    auto pattern = new ScaleAddIBuffer(std::move(new_row_pointers), std::move(new_col_indices));
+    newRowPointers[A->getNumRows()] = newNnzCount;
+    assert(newNnzCount <= maxNnzCount);
+    newColumnIndices.resize(newNnzCount);
+    auto pattern = new ScaleAddIBuffer(std::move(newRowPointers), std::move(newColumnIndices));
     // workspace_ owns pattern
     workspace_->setScaleAddIBuffer(pattern);
-    updateMatrix(A, pattern->getRowData(), pattern->getColumnData(), new_values.data(), pattern->getNnz());
+    updateMatrix(A, pattern->getRowData(), pattern->getColumnData(), newValues.data(), pattern->getNnz());
     return 0;
   }
 } // namespace ReSolve

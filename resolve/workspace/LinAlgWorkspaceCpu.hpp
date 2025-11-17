@@ -9,7 +9,7 @@ namespace ReSolve
   class ScaleAddIBuffer
   {
   public:
-    ScaleAddIBuffer(std::vector<index_type> row_data, std::vector<index_type> col_data);
+    ScaleAddIBuffer(std::vector<index_type> rowData, std::vector<index_type> colData);
     index_type* getRowData();
     index_type* getColumnData();
     index_type  getNumRows();
@@ -17,8 +17,8 @@ namespace ReSolve
     index_type  getNnz();
 
   private:
-    std::vector<index_type> row_data_;
-    std::vector<index_type> col_data_;
+    std::vector<index_type> rowData_;
+    std::vector<index_type> colData_;
   };
 
   class LinAlgWorkspaceCpu
@@ -35,8 +35,8 @@ namespace ReSolve
 
   private:
     // check if setup is done for scaleAddI i.e. if buffer is allocated, csr structure is set etc.
-    bool             scaleaddi_setup_done_{false};
-    ScaleAddIBuffer* scaleaddi_buffer_{nullptr};
+    bool             scaleAddISetupDone_{false};
+    ScaleAddIBuffer* scaleAddIBuffer_{nullptr};
   };
 
 } // namespace ReSolve
