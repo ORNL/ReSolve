@@ -583,6 +583,80 @@ namespace ReSolve
   }
 
   /**
+   * @brief Add the identity to a CSR matrix.
+   *
+   * @param[in,out] A - Sparse CSR matrix
+   * @param[in,out] B - Sparse CSR matrix
+   * @param[in] pattern - precalculated sparsity pattern
+   * @return 0 if successful, 1 otherwise
+   */
+  static int addBWithPattern(matrix::Csr* A, matrix::Csr* B, ScaleAddBuffer* pattern)
+  {
+    index_type const* const aRowPointers = A->getRowData(memory::HOST);
+    index_type const* const aColIndices  = A->getColData(memory::HOST);
+    real_type const* const  aValues      = A->getValues(memory::HOST);
+
+    index_type const* const bRowPointers = B->getRowData(memory::HOST);
+    index_type const* const bColIndices  = B->getColData(memory::HOST);
+    real_type const* const  bValues      = B->getValues(memory::HOST);
+
+    std::vector<real_type> newValues;
+    newValues.reserve(pattern->getNnz());
+
+    for (index_type i = 0; i < A->getNumRows(); ++i)
+    {
+      const index_type startA = aRowPointers[i];
+      const index_type endA   = aRowPointers[i + 1];
+      const index_type startB = bRowPointers[i];
+      const index_type endB   = bRowPointers[i + 1];
+
+      index_type ptrA = startA;
+      index_type ptrB = startB;
+
+      // Merge the non-zero elements for the current row
+      while (ptrA < endA || ptrB < endB)
+      {
+        // Case 1: All remaining elements are in A
+        if (ptrB >= endB)
+        {
+          newValues.push_back(aValues[ptrA]);
+          ptrA++;
+        }
+        // Case 2: All remaining elements are in B
+        else if (ptrA >= endA)
+        {
+          newValues.push_back(bValues[ptrB]);
+          ptrB++;
+        }
+        // Case 3: Elements in both A and B. Compare column indices.
+        else
+        {
+          if (aColIndices[ptrA] < bColIndices[ptrB])
+          {
+            newValues.push_back(aValues[ptrA]);
+            ptrA++;
+          }
+          else if (bColIndices[ptrB] < aColIndices[ptrA])
+          {
+            newValues.push_back(bValues[ptrB]);
+            ptrB++;
+          }
+          // Case 4: Same column index, add values
+          else
+          {
+            real_type sum = aValues[ptrA] + bValues[ptrB];
+            newValues.push_back(sum);
+            ptrA++;
+            ptrB++;
+          }
+        }
+      }
+    }
+    assert(static_cast<index_type>(newValues.size()) == pattern->getNnz());
+    return updateMatrix(A, pattern->getRowData(), pattern->getColumnData(), newValues.data(), pattern->getNnz());
+  }
+
+  /**
    * @brief Multiply csr matrix by a constant and add B.
    *
    * @param[in,out] A - Sparse CSR matrix
@@ -599,11 +673,11 @@ namespace ReSolve
     }
 
     // Reuse sparsity pattern if it is available
-    // if (workspace_->scaleAddISetup())
-    //{
-    //  ScaleAddIBuffer* pattern = workspace_->getScaleAddIBuffer();
-    //  return addIWithPattern(A, pattern);
-    //}
+    if (workspace_->scaleAddBSetup())
+    {
+      ScaleAddBuffer* pattern = workspace_->getScaleAddBBuffer();
+      return addBWithPattern(A, B, pattern);
+    }
 
     index_type const* const aRowPointers = A->getRowData(memory::HOST);
     index_type const* const aColIndices  = A->getColData(memory::HOST);
@@ -674,6 +748,10 @@ namespace ReSolve
       }
       newRowPointers.push_back(static_cast<index_type>(newValues.size()));
     }
-    return updateMatrix(A, newRowPointers.data(), newColIndices.data(), newValues.data(), static_cast<index_type>(newValues.size()));
+
+    auto pattern = new ScaleAddBuffer(std::move(newRowPointers), std::move(newColIndices));
+    // workspace_ owns pattern
+    workspace_->setScaleAddBBuffer(pattern);
+    return updateMatrix(A, pattern->getRowData(), pattern->getColumnData(), newValues.data(), pattern->getNnz());
   }
 } // namespace ReSolve

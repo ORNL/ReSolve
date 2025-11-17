@@ -109,9 +109,33 @@ namespace ReSolve
 
   void LinAlgWorkspaceCpu::setScaleAddIBuffer(ScaleAddBuffer* buffer)
   {
+    assert(buffer != nullptr);
     assert(scaleAddIBuffer_ == nullptr);
     scaleAddIBuffer_ = buffer;
     scaleAddISetupDone();
+  }
+
+  bool LinAlgWorkspaceCpu::scaleAddBSetup()
+  {
+    return scaleAddBSetupDone_;
+  }
+
+  void LinAlgWorkspaceCpu::scaleAddBSetupDone()
+  {
+    scaleAddBSetupDone_ = true;
+  }
+
+  ScaleAddBuffer* LinAlgWorkspaceCpu::getScaleAddBBuffer()
+  {
+    assert(scaleAddBBuffer_ != nullptr);
+    return scaleAddBBuffer_;
+  }
+
+  void LinAlgWorkspaceCpu::setScaleAddBBuffer(ScaleAddBuffer* buffer)
+  {
+    assert(scaleAddBBuffer_ == nullptr);
+    scaleAddBBuffer_ = buffer;
+    scaleAddBSetupDone();
   }
 
 } // namespace ReSolve
