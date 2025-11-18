@@ -530,7 +530,7 @@ namespace ReSolve
 
     matrix::Csr I(A->getNumRows(), A->getNumColumns(), n);
     I.copyDataFrom(I_i.data(), I_j.data(), I_v.data(), n, memory::HOST, memory::DEVICE);
-  
+
     cusparseMatDescr_t descr_a;
     cusparseCreateMatDescr(&descr_a);
     cusparseSetMatType(descr_a, CUSPARSE_MATRIX_TYPE_GENERAL);
@@ -546,7 +546,6 @@ namespace ReSolve
     updateMatrix(A, C.getRowData(memory::DEVICE), C.getColData(memory::DEVICE), C.getValues(memory::DEVICE), C.getNnz());
 
     mem_.deleteOnDevice(buffer_add);
-
     return 0;
   }
 
@@ -560,11 +559,22 @@ namespace ReSolve
    */
   int MatrixHandlerCuda::scaleAddB(matrix::Csr* A, real_type alpha, matrix::Csr* B)
   {
-    (void) A;
-    (void) alpha;
-    (void) B;
-    // NOT IMPLEMENTED
-    return 1;
+    cusparseMatDescr_t descr_a;
+    cusparseCreateMatDescr(&descr_a);
+    cusparseSetMatType(descr_a, CUSPARSE_MATRIX_TYPE_GENERAL);
+    cusparseSetMatIndexBase(descr_a, CUSPARSE_INDEX_BASE_ZERO);
+
+    void* buffer_add{nullptr};
+
+    matrix::Csr C(A->getNumRows(), A->getNumColumns(), A->getNnz());
+    allocateForSum(A, alpha, B, 1., &C, descr_a, &buffer_add);
+
+    compute_sum(A, alpha, B, 1., &C, descr_a, &buffer_add);
+
+    updateMatrix(A, C.getRowData(memory::DEVICE), C.getColData(memory::DEVICE), C.getValues(memory::DEVICE), C.getNnz());
+
+    mem_.deleteOnDevice(buffer_add);
+    return 0;
   }
 
 } // namespace ReSolve

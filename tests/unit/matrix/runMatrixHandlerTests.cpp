@@ -82,10 +82,8 @@ void runTests(const std::string& backend, ReSolve::tests::TestingResults& result
   workspace.resetLinAlgWorkspace();
   result += test.scaleAddIZero(100);
   workspace.resetLinAlgWorkspace();
-#if 0
   result += test.scaleAddB(100);
   workspace.resetLinAlgWorkspace();
-#endif
 #endif
   std::cout << "\n";
 }
