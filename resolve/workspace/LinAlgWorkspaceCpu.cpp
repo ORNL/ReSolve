@@ -87,8 +87,10 @@ namespace ReSolve
   {
     delete scaleAddIBuffer_;
     scaleAddIBuffer_ = nullptr;
+    scaleAddISetupDone_ = false;
     delete scaleAddBBuffer_;
     scaleAddBBuffer_ = nullptr;
+    scaleAddBSetupDone_ = false;
   }
 
   bool LinAlgWorkspaceCpu::scaleAddISetup()

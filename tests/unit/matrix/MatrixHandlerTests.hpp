@@ -230,6 +230,34 @@ namespace ReSolve
         return status.report(testname.c_str());
       }
 
+      TestOutcome scaleAddIZero(index_type n)
+      {
+        TestStatus   status;
+        std::string  testname(__func__);
+        matrix::Csr* A   = createCsrEmptyMatrix(n);
+        real_type    val = 2.;
+
+        handler_.scaleAddI(A, val, memspace_);
+        if (memspace_ == memory::DEVICE)
+        {
+          A->syncData(memory::HOST);
+        }
+        // expected sum is 1
+        status *= verifyScaleAddICsrMatrix(A, 1);
+
+        // run again to reuse sparsity pattern.
+        handler_.scaleAddI(A, val, memspace_);
+        if (memspace_ == memory::DEVICE)
+        {
+          A->syncData(memory::HOST);
+        }
+        // expected sum is 2*1+1
+        status *= verifyScaleAddICsrMatrix(A, 3);
+
+        delete A;
+        return status.report(testname.c_str());
+      }
+
       TestOutcome scaleAddB(index_type n)
       {
         TestStatus   status;
@@ -575,6 +603,37 @@ namespace ReSolve
           }
         }
         return true;
+      }
+
+      /**
+       * @brief Create a CSR matrix with preset sparsity structure
+       *
+       * The sparisty structure is such that each row has a different number of nonzeros
+       * The values are chosen so that the sum of each row is 30
+       *
+       * @param[in] n number of rows and columns
+       *
+       * @return matrix::Csr*
+       */
+      matrix::Csr* createCsrEmptyMatrix(const index_type n)
+      {
+        index_type   nnz = 0;
+        matrix::Csr* A   = new matrix::Csr(n, n, nnz);
+        A->allocateMatrixData(memory::HOST);
+
+        index_type* rowptr = A->getRowData(memory::HOST);
+
+        for (index_type i = 0; i < n + 1; ++i)
+        {
+          rowptr[i] = 0;
+        }
+        A->setUpdated(memory::HOST);
+
+        if (memspace_ == memory::DEVICE)
+        {
+          A->syncData(memspace_);
+        }
+        return A;
       }
 
       /**
