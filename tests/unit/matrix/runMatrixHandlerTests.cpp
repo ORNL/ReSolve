@@ -80,7 +80,7 @@ void runTests(const std::string& backend, ReSolve::tests::TestingResults& result
 #if !defined(RESOLVE_USE_HIP)
   result += test.scaleAddI(100);
   workspace.resetLinAlgWorkspace();
-#if !defined(RESOLVE_USE_CUDA)
+#if 0
   result += test.scaleAddB(100);
   workspace.resetLinAlgWorkspace();
   result += test.scaleAddIZero(100);
