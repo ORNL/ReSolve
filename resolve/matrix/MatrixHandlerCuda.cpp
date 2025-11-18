@@ -447,7 +447,6 @@ namespace ReSolve
     C->setNnz(nnz_total);
     C->allocateMatrixData(memory::DEVICE);
     mem_.copyArrayDeviceToDevice(C->getRowData(memory::DEVICE), c_i, n + 1);
-    C->setUpdated(memory::DEVICE);
     mem_.deleteOnDevice(c_i);
   }
 
@@ -483,6 +482,7 @@ namespace ReSolve
 
     cusparseStatus_t info = cusparseDcsrgeam2(handle, m, n, &alpha, descr_a, nnz_a, a_v, a_i, a_j, &beta, descr_a, nnz_b, b_v, b_i, b_j, descr_a, c_v, c_i, c_j, *buffer_add);
     assert(info == CUSPARSE_STATUS_SUCCESS);
+    C->setUpdated(memory::DEVICE);
   }
 
   /**
@@ -498,6 +498,10 @@ namespace ReSolve
   static int updateMatrix(matrix::Sparse* A, index_type* rowData, index_type* columnData, real_type* valData, index_type nnz)
   {
     if (A->destroyMatrixData(memory::DEVICE) != 0)
+    {
+      return 1;
+    }
+    if (A->destroyMatrixData(memory::HOST) != 0)
     {
       return 1;
     }
