@@ -65,7 +65,17 @@ namespace ReSolve
    */
   index_type ScaleAddBufferCUDA::getNnz()
   {
-    return rowData_[numRows_];
+    return nnz_;
+  }
+
+  /**
+   * @brief Get number of non-zeros.
+   *
+   * @return number of non-zeros
+   */
+  void ScaleAddBufferCUDA::setNnz(index_type nnz)
+  {
+    nnz_ = nnz;
   }
 
   LinAlgWorkspaceCUDA::LinAlgWorkspaceCUDA()
@@ -141,6 +151,18 @@ namespace ReSolve
       mem_.deleteOnDevice(transpose_workspace_);
       transpose_workspace_       = nullptr;
       transpose_workspace_ready_ = false;
+    }
+    if (scale_add_b_setup_done_)
+    {
+      delete buffer_scale_add_b;
+      buffer_scale_add_b      = nullptr;
+      scale_add_b_setup_done_ = false;
+    }
+    if (scale_add_i_setup_done_)
+    {
+      delete buffer_scale_add_i;
+      buffer_scale_add_i      = nullptr;
+      scale_add_i_setup_done_ = false;
     }
     return;
   }

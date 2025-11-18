@@ -17,12 +17,14 @@ namespace ReSolve
     index_type* getRowData();
     void*       getBuffer();
     index_type  getNumRows();
+    void        setNnz(index_type nnz);
     index_type  getNnz();
 
   private:
     index_type*   rowData_;
     void*         buffer_;
     index_type    numRows_;
+    index_type    nnz_;
     size_t        bufferSize_;
     MemoryHandler mem_;
   };

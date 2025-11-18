@@ -8,6 +8,9 @@
 
 namespace ReSolve
 {
+
+  class ScaleAddBufferCUDA;
+
   namespace vector
   {
     class Vector;
@@ -62,8 +65,8 @@ namespace ReSolve
     void setValuesChanged(bool isValuesChanged) override;
 
   private:
-    void                 allocateForSum(matrix::Csr* A, real_type alpha, matrix::Csr* B, real_type beta, matrix::Csr* C);
-    void                 computeSum(matrix::Csr* A, real_type alpha, matrix::Csr* B, real_type beta, matrix::Csr* C);
+    void                 allocateForSum(matrix::Csr* A, real_type alpha, matrix::Csr* B, real_type beta, ScaleAddBufferCUDA** pattern);
+    void                 computeSum(matrix::Csr* A, real_type alpha, matrix::Csr* B, real_type beta, matrix::Csr* C, ScaleAddBufferCUDA* pattern);
     LinAlgWorkspaceCUDA* workspace_{nullptr};
     bool                 values_changed_{true}; ///< needed for matvec
 

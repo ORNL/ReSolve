@@ -402,7 +402,7 @@ namespace ReSolve
     return 0;
   }
 
-  void MatrixHandlerCuda::allocateForSum(matrix::Csr* A, real_type alpha, matrix::Csr* B, real_type beta, matrix::Csr* C)
+  void MatrixHandlerCuda::allocateForSum(matrix::Csr* A, real_type alpha, matrix::Csr* B, real_type beta, ScaleAddBufferCUDA** pattern)
   {
     auto handle = workspace_->getCusparseHandle();
     cusparseSetPointerMode(handle, CUSPARSE_POINTER_MODE_HOST);
@@ -441,20 +441,16 @@ namespace ReSolve
     cusparseStatus_t info = cusparseDcsrgeam2_bufferSizeExt(handle, m, n, &alpha, descr_a, nnz_a, a_v, a_i, a_j, &beta, descr_a, nnz_b, b_v, b_i, b_j, descr_a, c_v, c_i, c_j, &buffer_byte_size_add);
     assert(info == CUSPARSE_STATUS_SUCCESS);
 
-    auto buffer = new ScaleAddBufferCUDA(n + 1, buffer_byte_size_add);
-    workspace_->setScaleAddBBuffer(buffer);
+    *pattern = new ScaleAddBufferCUDA(n + 1, buffer_byte_size_add);
 
     index_type nnz_total;
     // determines sum row offsets and total number of nonzeros
-    info = cusparseXcsrgeam2Nnz(handle, m, n, descr_a, nnz_a, a_i, a_j, descr_a, nnz_b, b_i, b_j, descr_a, buffer->getRowData(), &nnz_total, buffer->getBuffer());
+    info = cusparseXcsrgeam2Nnz(handle, m, n, descr_a, nnz_a, a_i, a_j, descr_a, nnz_b, b_i, b_j, descr_a, (*pattern)->getRowData(), &nnz_total, (*pattern)->getBuffer());
     assert(info == CUSPARSE_STATUS_SUCCESS);
-
-    C->setNnz(nnz_total);
-    C->allocateMatrixData(memory::DEVICE);
-    mem_.copyArrayDeviceToDevice(C->getRowData(memory::DEVICE), buffer->getRowData(), n + 1);
+    (*pattern)->setNnz(nnz_total);
   }
 
-  void MatrixHandlerCuda::computeSum(matrix::Csr* A, real_type alpha, matrix::Csr* B, real_type beta, matrix::Csr* C)
+  void MatrixHandlerCuda::computeSum(matrix::Csr* A, real_type alpha, matrix::Csr* B, real_type beta, matrix::Csr* C, ScaleAddBufferCUDA* pattern)
   {
     auto a_v = A->getValues(memory::DEVICE);
     auto a_i = A->getRowData(memory::DEVICE);
@@ -483,10 +479,9 @@ namespace ReSolve
     index_type nnz_a = A->getNnz();
     index_type nnz_b = B->getNnz();
 
-    ScaleAddBufferCUDA* buffer = workspace_->getScaleAddBBuffer();
-    mem_.copyArrayDeviceToDevice(c_i, buffer->getRowData(), n + 1);
+    mem_.copyArrayDeviceToDevice(c_i, pattern->getRowData(), n + 1);
     cusparseMatDescr_t descr_a = workspace_->getScaleAddMatrixDescriptor();
-    cusparseStatus_t   info    = cusparseDcsrgeam2(handle, m, n, &alpha, descr_a, nnz_a, a_v, a_i, a_j, &beta, descr_a, nnz_b, b_v, b_i, b_j, descr_a, c_v, c_i, c_j, buffer->getBuffer());
+    cusparseStatus_t   info    = cusparseDcsrgeam2(handle, m, n, &alpha, descr_a, nnz_a, a_v, a_i, a_j, &beta, descr_a, nnz_b, b_v, b_i, b_j, descr_a, c_v, c_i, c_j, pattern->getBuffer());
     assert(info == CUSPARSE_STATUS_SUCCESS);
     C->setUpdated(memory::DEVICE);
   }
@@ -550,12 +545,28 @@ namespace ReSolve
    */
   int MatrixHandlerCuda::scaleAddB(matrix::Csr* A, real_type alpha, matrix::Csr* B)
   {
-    matrix::Csr C(A->getNumRows(), A->getNumColumns(), A->getNnz());
-    allocateForSum(A, alpha, B, 1., &C);
 
-    computeSum(A, alpha, B, 1., &C);
-
-    updateMatrix(A, C.getRowData(memory::DEVICE), C.getColData(memory::DEVICE), C.getValues(memory::DEVICE), C.getNnz());
+    // Reuse sparsity pattern if it is available
+    if (workspace_->scaleAddBSetup())
+    {
+      ScaleAddBufferCUDA* pattern = workspace_->getScaleAddBBuffer();
+      matrix::Csr         C(A->getNumRows(), A->getNumColumns(), pattern->getNnz());
+      C.allocateMatrixData(memory::DEVICE);
+      computeSum(A, alpha, B, 1., &C, pattern);
+      updateMatrix(A, C.getRowData(memory::DEVICE), C.getColData(memory::DEVICE), C.getValues(memory::DEVICE), C.getNnz());
+    }
+    else
+    {
+      ScaleAddBufferCUDA* pattern = nullptr;
+      matrix::Csr         C(A->getNumRows(), A->getNumColumns(), A->getNnz());
+      allocateForSum(A, alpha, B, 1., &pattern);
+      workspace_->setScaleAddBBuffer(pattern);
+      workspace_->scaleAddBSetupDone();
+      C.setNnz(pattern->getNnz());
+      C.allocateMatrixData(memory::DEVICE);
+      computeSum(A, alpha, B, 1., &C, pattern);
+      updateMatrix(A, C.getRowData(memory::DEVICE), C.getColData(memory::DEVICE), C.getValues(memory::DEVICE), C.getNnz());
+    }
     return 0;
   }
 
