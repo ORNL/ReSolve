@@ -361,7 +361,7 @@ namespace ReSolve
   int MatrixHandler::scaleAddI(matrix::Csr* A, real_type alpha, memory::MemorySpace memspace)
   {
     assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW && "Matrix is assumed to be in CSR format.\n");
-    assert(A->getValues(memspace) != nullptr && "Matrix values are null!\n");
+    assert((A->getValues(memspace) != nullptr || A->getNnz() == 0) && "Matrix values are null!\n");
     assert(A->getNumRows() == A->getNumColumns() && "Matrix must be square.\n");
     using namespace ReSolve::memory;
     switch (memspace)

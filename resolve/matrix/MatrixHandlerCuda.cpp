@@ -435,12 +435,14 @@ namespace ReSolve
 
     mem_.allocateArrayOnDevice(&c_i, n + 1);
     // calculates sum buffer
-    cusparseDcsrgeam2_bufferSizeExt(handle, m, n, &alpha, descr_a, nnz_a, a_v, a_i, a_j, &beta, descr_a, nnz_b, b_v, b_i, b_j, descr_a, c_v, c_i, c_j, &buffer_byte_size_add);
+    cusparseStatus_t info = cusparseDcsrgeam2_bufferSizeExt(handle, m, n, &alpha, descr_a, nnz_a, a_v, a_i, a_j, &beta, descr_a, nnz_b, b_v, b_i, b_j, descr_a, c_v, c_i, c_j, &buffer_byte_size_add);
+    assert(info == CUSPARSE_STATUS_SUCCESS);
 
     mem_.allocateBufferOnDevice(buffer_add, buffer_byte_size_add);
 
     // determines sum row offsets and total number of nonzeros
-    cusparseXcsrgeam2Nnz(handle, m, n, descr_a, nnz_a, a_i, a_j, descr_a, nnz_b, b_i, b_j, descr_a, c_i, &nnz_total, *buffer_add);
+    info = cusparseXcsrgeam2Nnz(handle, m, n, descr_a, nnz_a, a_i, a_j, descr_a, nnz_b, b_i, b_j, descr_a, c_i, &nnz_total, *buffer_add);
+    assert(info == CUSPARSE_STATUS_SUCCESS);
 
     C->setNnz(nnz_total);
     C->allocateMatrixData(memory::DEVICE);
@@ -479,7 +481,8 @@ namespace ReSolve
     index_type nnz_a = A->getNnz();
     index_type nnz_b = B->getNnz();
 
-    cusparseDcsrgeam2(handle, m, n, &alpha, descr_a, nnz_a, a_v, a_i, a_j, &beta, descr_a, nnz_b, b_v, b_i, b_j, descr_a, c_v, c_i, c_j, *buffer_add);
+    cusparseStatus_t info = cusparseDcsrgeam2(handle, m, n, &alpha, descr_a, nnz_a, a_v, a_i, a_j, &beta, descr_a, nnz_b, b_v, b_i, b_j, descr_a, c_v, c_i, c_j, *buffer_add);
+    assert(info == CUSPARSE_STATUS_SUCCESS);
   }
 
   /**
