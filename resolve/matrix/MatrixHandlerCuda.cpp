@@ -402,9 +402,18 @@ namespace ReSolve
     return 0;
   }
 
-  void MatrixHandlerCuda::allocateForSum(matrix::Csr* A, real_type alpha, matrix::Csr* B,
-    real_type beta, matrix::Csr* C, cusparseMatDescr_t& descr_a, void** buffer_add)
+  void MatrixHandlerCuda::allocateForSum(matrix::Csr* A, real_type alpha, matrix::Csr* B, real_type beta, matrix::Csr* C)
   {
+    auto handle = workspace_->getCusparseHandle();
+    cusparseSetPointerMode(handle, CUSPARSE_POINTER_MODE_HOST);
+    workspace_->setCusparseHandle(handle);
+
+    cusparseMatDescr_t descr_a = workspace_->getScaleAddMatrixDescriptor();
+    cusparseCreateMatDescr(&descr_a);
+    cusparseSetMatType(descr_a, CUSPARSE_MATRIX_TYPE_GENERAL);
+    cusparseSetMatIndexBase(descr_a, CUSPARSE_INDEX_BASE_ZERO);
+    workspace_->setScaleAddMatrixDescriptor(descr_a);
+
     auto a_v = A->getValues(memory::DEVICE);
     auto a_i = A->getRowData(memory::DEVICE);
     auto a_j = A->getColData(memory::DEVICE);
@@ -412,12 +421,6 @@ namespace ReSolve
     auto b_v = B->getValues(memory::DEVICE);
     auto b_i = B->getRowData(memory::DEVICE);
     auto b_j = B->getColData(memory::DEVICE);
-
-    size_t     buffer_byte_size_add;
-    index_type nnz_total;
-
-    auto handle = workspace_->getCusparseHandle();
-    cusparseSetPointerMode(handle, CUSPARSE_POINTER_MODE_HOST);
 
     index_type m = A->getNumRows();
     assert(m == B->getNumRows());
@@ -433,24 +436,25 @@ namespace ReSolve
     index_type* c_i = nullptr;
     index_type* c_j = nullptr;
 
-    mem_.allocateArrayOnDevice(&c_i, n + 1);
+    size_t buffer_byte_size_add;
     // calculates sum buffer
     cusparseStatus_t info = cusparseDcsrgeam2_bufferSizeExt(handle, m, n, &alpha, descr_a, nnz_a, a_v, a_i, a_j, &beta, descr_a, nnz_b, b_v, b_i, b_j, descr_a, c_v, c_i, c_j, &buffer_byte_size_add);
     assert(info == CUSPARSE_STATUS_SUCCESS);
 
-    mem_.allocateBufferOnDevice(buffer_add, buffer_byte_size_add);
+    auto buffer = new ScaleAddBufferCUDA(n + 1, buffer_byte_size_add);
+    workspace_->setScaleAddBBuffer(buffer);
 
+    index_type nnz_total;
     // determines sum row offsets and total number of nonzeros
-    info = cusparseXcsrgeam2Nnz(handle, m, n, descr_a, nnz_a, a_i, a_j, descr_a, nnz_b, b_i, b_j, descr_a, c_i, &nnz_total, *buffer_add);
+    info = cusparseXcsrgeam2Nnz(handle, m, n, descr_a, nnz_a, a_i, a_j, descr_a, nnz_b, b_i, b_j, descr_a, buffer->getRowData(), &nnz_total, buffer->getBuffer());
     assert(info == CUSPARSE_STATUS_SUCCESS);
 
     C->setNnz(nnz_total);
     C->allocateMatrixData(memory::DEVICE);
-    mem_.copyArrayDeviceToDevice(C->getRowData(memory::DEVICE), c_i, n + 1);
-    mem_.deleteOnDevice(c_i);
+    mem_.copyArrayDeviceToDevice(C->getRowData(memory::DEVICE), buffer->getRowData(), n + 1);
   }
 
-  void MatrixHandlerCuda::compute_sum(matrix::Csr* A, real_type alpha, matrix::Csr* B, real_type beta, matrix::Csr* C, cusparseMatDescr_t& descr_a, void** buffer_add)
+  void MatrixHandlerCuda::computeSum(matrix::Csr* A, real_type alpha, matrix::Csr* B, real_type beta, matrix::Csr* C)
   {
     auto a_v = A->getValues(memory::DEVICE);
     auto a_i = A->getRowData(memory::DEVICE);
@@ -465,7 +469,6 @@ namespace ReSolve
     auto c_j = C->getColData(memory::DEVICE);
 
     auto handle = workspace_->getCusparseHandle();
-    cusparseSetPointerMode(handle, CUSPARSE_POINTER_MODE_HOST);
 
     index_type m = A->getNumRows();
     assert(m == B->getNumRows());
@@ -480,7 +483,10 @@ namespace ReSolve
     index_type nnz_a = A->getNnz();
     index_type nnz_b = B->getNnz();
 
-    cusparseStatus_t info = cusparseDcsrgeam2(handle, m, n, &alpha, descr_a, nnz_a, a_v, a_i, a_j, &beta, descr_a, nnz_b, b_v, b_i, b_j, descr_a, c_v, c_i, c_j, *buffer_add);
+    ScaleAddBufferCUDA* buffer = workspace_->getScaleAddBBuffer();
+    mem_.copyArrayDeviceToDevice(c_i, buffer->getRowData(), n + 1);
+    cusparseMatDescr_t descr_a = workspace_->getScaleAddMatrixDescriptor();
+    cusparseStatus_t   info    = cusparseDcsrgeam2(handle, m, n, &alpha, descr_a, nnz_a, a_v, a_i, a_j, &beta, descr_a, nnz_b, b_v, b_i, b_j, descr_a, c_v, c_i, c_j, buffer->getBuffer());
     assert(info == CUSPARSE_STATUS_SUCCESS);
     C->setUpdated(memory::DEVICE);
   }
@@ -531,22 +537,7 @@ namespace ReSolve
     matrix::Csr I(A->getNumRows(), A->getNumColumns(), n);
     I.copyDataFrom(I_i.data(), I_j.data(), I_v.data(), n, memory::HOST, memory::DEVICE);
 
-    cusparseMatDescr_t descr_a;
-    cusparseCreateMatDescr(&descr_a);
-    cusparseSetMatType(descr_a, CUSPARSE_MATRIX_TYPE_GENERAL);
-    cusparseSetMatIndexBase(descr_a, CUSPARSE_INDEX_BASE_ZERO);
-
-    void* buffer_add{nullptr};
-   
-    matrix::Csr C(A->getNumRows(), A->getNumColumns(), A->getNnz());
-    allocateForSum(A, alpha, &I, 1., &C, descr_a, &buffer_add);
-
-    compute_sum(A, alpha, &I, 1., &C, descr_a, &buffer_add);
-
-    updateMatrix(A, C.getRowData(memory::DEVICE), C.getColData(memory::DEVICE), C.getValues(memory::DEVICE), C.getNnz());
-
-    mem_.deleteOnDevice(buffer_add);
-    return 0;
+    return scaleAddB(A, alpha, &I);
   }
 
   /**
@@ -559,21 +550,12 @@ namespace ReSolve
    */
   int MatrixHandlerCuda::scaleAddB(matrix::Csr* A, real_type alpha, matrix::Csr* B)
   {
-    cusparseMatDescr_t descr_a;
-    cusparseCreateMatDescr(&descr_a);
-    cusparseSetMatType(descr_a, CUSPARSE_MATRIX_TYPE_GENERAL);
-    cusparseSetMatIndexBase(descr_a, CUSPARSE_INDEX_BASE_ZERO);
-
-    void* buffer_add{nullptr};
-
     matrix::Csr C(A->getNumRows(), A->getNumColumns(), A->getNnz());
-    allocateForSum(A, alpha, B, 1., &C, descr_a, &buffer_add);
+    allocateForSum(A, alpha, B, 1., &C);
 
-    compute_sum(A, alpha, B, 1., &C, descr_a, &buffer_add);
+    computeSum(A, alpha, B, 1., &C);
 
     updateMatrix(A, C.getRowData(memory::DEVICE), C.getColData(memory::DEVICE), C.getValues(memory::DEVICE), C.getNnz());
-
-    mem_.deleteOnDevice(buffer_add);
     return 0;
   }
 

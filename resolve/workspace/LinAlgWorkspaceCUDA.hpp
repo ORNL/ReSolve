@@ -8,6 +8,25 @@
 
 namespace ReSolve
 {
+
+  class ScaleAddBufferCUDA
+  {
+  public:
+    ScaleAddBufferCUDA(index_type numRows, size_t bufferSize);
+    ~ScaleAddBufferCUDA();
+    index_type* getRowData();
+    void*       getBuffer();
+    index_type  getNumRows();
+    index_type  getNnz();
+
+  private:
+    index_type*   rowData_;
+    void*         buffer_;
+    index_type    numRows_;
+    size_t        bufferSize_;
+    MemoryHandler mem_;
+  };
+
   class LinAlgWorkspaceCUDA
   {
   public:
@@ -19,13 +38,17 @@ namespace ReSolve
     // accessors
     void* getSpmvBuffer();
     void* getNormBuffer();
-    void* getScaleAddBuffer();
+    ScaleAddBufferCUDA* getScaleAddIBuffer();
+    ScaleAddBufferCUDA* getScaleAddBBuffer();
     void* getTransposeBufferWorkspace();
     void  setTransposeBufferWorkspace(size_t bufferSize);
     bool  isTransposeBufferAllocated();
     void  setSpmvBuffer(void* buffer);
     void  setNormBuffer(void* buffer);
-    void  setScaleAddBuffer(void* buffer);
+    void                setScaleAddIBuffer(ScaleAddBufferCUDA* buffer);
+    void                setScaleAddBBuffer(ScaleAddBufferCUDA* buffer);
+    void                scaleAddISetupDone();
+    void                scaleAddBSetupDone();
 
     cublasHandle_t       getCublasHandle();
     cusolverSpHandle_t   getCusolverSpHandle(); // needed for 1-norms etc
@@ -52,8 +75,8 @@ namespace ReSolve
     bool matvecSetup();
     void matvecSetupDone();
 
-    bool scaleAddSetup();
-    void scaleAddSetupDone();
+    bool scaleAddISetup();
+    bool scaleAddBSetup();
 
   private:
     // handles
@@ -72,10 +95,12 @@ namespace ReSolve
     // buffers
     void* buffer_spmv_{nullptr};
     void* buffer_1norm_{nullptr};
-    void* buffer_scale_add_{nullptr};
+    ScaleAddBufferCUDA* buffer_scale_add_i{nullptr};
+    ScaleAddBufferCUDA* buffer_scale_add_b{nullptr};
 
     bool matvec_setup_done_{false}; // check if setup is done for matvec i.e. if buffer is allocated, csr structure is set etc.
-    bool scale_add_setup_done_{false};
+    bool scale_add_i_setup_done_{false};
+    bool scale_add_b_setup_done_{false};
 
     void* transpose_workspace_{nullptr};     // needed for transpose
     bool  transpose_workspace_ready_{false}; // to track if allocated

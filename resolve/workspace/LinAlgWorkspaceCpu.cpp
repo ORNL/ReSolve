@@ -10,11 +10,9 @@ namespace ReSolve
    * @brief Store sparsity pattern
    *
    * @param[in] row_data - pointer to row data (array of integers, length:nrows+1)
-   * @param[in] nrows - number of rows
    * @param[in] col_data - pointer to column data (array of integers, length: nnz)
-   * @param[in] nnz - number of non-zeros
    */
-  ScaleAddBuffer::ScaleAddBuffer(std::vector<index_type> rowData, std::vector<index_type> colData)
+  ScaleAddBufferCpu::ScaleAddBufferCpu(std::vector<index_type> rowData, std::vector<index_type> colData)
     : rowData_(std::move(rowData)), colData_(std::move(colData))
   {
   }
@@ -24,7 +22,7 @@ namespace ReSolve
    *
    * @return precalculated row pointers
    */
-  index_type* ScaleAddBuffer::getRowData()
+  index_type* ScaleAddBufferCpu::getRowData()
   {
     return rowData_.data();
   }
@@ -34,7 +32,7 @@ namespace ReSolve
    *
    * @return precalculated column indices
    */
-  index_type* ScaleAddBuffer::getColumnData()
+  index_type* ScaleAddBufferCpu::getColumnData()
   {
     return colData_.data();
   }
@@ -44,7 +42,7 @@ namespace ReSolve
    *
    * @return number of matrix rows.
    */
-  index_type ScaleAddBuffer::getNumRows()
+  index_type ScaleAddBufferCpu::getNumRows()
   {
     return static_cast<index_type>(rowData_.size()) - 1;
   }
@@ -54,7 +52,7 @@ namespace ReSolve
    *
    * @return number of matrix columns.
    */
-  index_type ScaleAddBuffer::getNumColumns()
+  index_type ScaleAddBufferCpu::getNumColumns()
   {
     return getNumRows();
   }
@@ -64,7 +62,7 @@ namespace ReSolve
    *
    * @return number of non-zeros
    */
-  index_type ScaleAddBuffer::getNnz()
+  index_type ScaleAddBufferCpu::getNnz()
   {
     return static_cast<index_type>(colData_.size());
   }
@@ -103,13 +101,13 @@ namespace ReSolve
     scaleAddISetupDone_ = true;
   }
 
-  ScaleAddBuffer* LinAlgWorkspaceCpu::getScaleAddIBuffer()
+  ScaleAddBufferCpu* LinAlgWorkspaceCpu::getScaleAddIBuffer()
   {
     assert(scaleAddIBuffer_ != nullptr);
     return scaleAddIBuffer_;
   }
 
-  void LinAlgWorkspaceCpu::setScaleAddIBuffer(ScaleAddBuffer* buffer)
+  void LinAlgWorkspaceCpu::setScaleAddIBuffer(ScaleAddBufferCpu* buffer)
   {
     assert(buffer != nullptr);
     assert(scaleAddIBuffer_ == nullptr);
@@ -127,13 +125,13 @@ namespace ReSolve
     scaleAddBSetupDone_ = true;
   }
 
-  ScaleAddBuffer* LinAlgWorkspaceCpu::getScaleAddBBuffer()
+  ScaleAddBufferCpu* LinAlgWorkspaceCpu::getScaleAddBBuffer()
   {
     assert(scaleAddBBuffer_ != nullptr);
     return scaleAddBBuffer_;
   }
 
-  void LinAlgWorkspaceCpu::setScaleAddBBuffer(ScaleAddBuffer* buffer)
+  void LinAlgWorkspaceCpu::setScaleAddBBuffer(ScaleAddBufferCpu* buffer)
   {
     assert(scaleAddBBuffer_ == nullptr);
     scaleAddBBuffer_ = buffer;

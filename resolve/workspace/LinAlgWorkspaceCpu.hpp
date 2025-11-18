@@ -6,10 +6,10 @@
 
 namespace ReSolve
 {
-  class ScaleAddBuffer
+  class ScaleAddBufferCpu
   {
   public:
-    ScaleAddBuffer(std::vector<index_type> rowData, std::vector<index_type> colData);
+    ScaleAddBufferCpu(std::vector<index_type> rowData, std::vector<index_type> colData);
     index_type* getRowData();
     index_type* getColumnData();
     index_type  getNumRows();
@@ -30,20 +30,20 @@ namespace ReSolve
     void            resetLinAlgWorkspace();
     bool            scaleAddISetup();
     void            scaleAddISetupDone();
-    ScaleAddBuffer* getScaleAddIBuffer();
-    void            setScaleAddIBuffer(ScaleAddBuffer* buffer);
+    ScaleAddBufferCpu* getScaleAddIBuffer();
+    void               setScaleAddIBuffer(ScaleAddBufferCpu* buffer);
     bool            scaleAddBSetup();
     void            scaleAddBSetupDone();
-    ScaleAddBuffer* getScaleAddBBuffer();
-    void            setScaleAddBBuffer(ScaleAddBuffer* buffer);
+    ScaleAddBufferCpu* getScaleAddBBuffer();
+    void               setScaleAddBBuffer(ScaleAddBufferCpu* buffer);
 
   private:
     // check if setup is done for scaleAddI i.e. if buffer is allocated, csr structure is set etc.
     bool            scaleAddISetupDone_{false};
-    ScaleAddBuffer* scaleAddIBuffer_{nullptr};
+    ScaleAddBufferCpu* scaleAddIBuffer_{nullptr};
     // check if setup is done for scaleAddB i.e. if buffer is allocated, csr structure is set etc.
     bool            scaleAddBSetupDone_{false};
-    ScaleAddBuffer* scaleAddBBuffer_{nullptr};
+    ScaleAddBufferCpu* scaleAddBBuffer_{nullptr};
   };
 
 } // namespace ReSolve

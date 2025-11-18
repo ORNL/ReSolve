@@ -435,7 +435,7 @@ namespace ReSolve
    * @param[in] pattern - precalculated sparsity pattern
    * @return 0 if successful, 1 otherwise
    */
-  static int addIWithPattern(matrix::Csr* A, ScaleAddBuffer* pattern)
+  static int addIWithPattern(matrix::Csr* A, ScaleAddBufferCpu* pattern)
   {
     std::vector<real_type> newValues(pattern->getNnz());
 
@@ -510,7 +510,7 @@ namespace ReSolve
     // Reuse sparsity pattern if it is available
     if (workspace_->scaleAddISetup())
     {
-      ScaleAddBuffer* pattern = workspace_->getScaleAddIBuffer();
+      ScaleAddBufferCpu* pattern = workspace_->getScaleAddIBuffer();
       return addIWithPattern(A, pattern);
     }
 
@@ -575,7 +575,7 @@ namespace ReSolve
     newRowPointers[A->getNumRows()] = newNnzCount;
     assert(newNnzCount <= maxNnzCount);
     newColumnIndices.resize(newNnzCount);
-    auto pattern = new ScaleAddBuffer(std::move(newRowPointers), std::move(newColumnIndices));
+    auto pattern = new ScaleAddBufferCpu(std::move(newRowPointers), std::move(newColumnIndices));
     // workspace_ owns pattern
     workspace_->setScaleAddIBuffer(pattern);
     updateMatrix(A, pattern->getRowData(), pattern->getColumnData(), newValues.data(), pattern->getNnz());
@@ -590,7 +590,7 @@ namespace ReSolve
    * @param[in] pattern - precalculated sparsity pattern
    * @return 0 if successful, 1 otherwise
    */
-  static int addBWithPattern(matrix::Csr* A, matrix::Csr* B, ScaleAddBuffer* pattern)
+  static int addBWithPattern(matrix::Csr* A, matrix::Csr* B, ScaleAddBufferCpu* pattern)
   {
     index_type const* const aRowPointers = A->getRowData(memory::HOST);
     index_type const* const aColIndices  = A->getColData(memory::HOST);
@@ -675,7 +675,7 @@ namespace ReSolve
     // Reuse sparsity pattern if it is available
     if (workspace_->scaleAddBSetup())
     {
-      ScaleAddBuffer* pattern = workspace_->getScaleAddBBuffer();
+      ScaleAddBufferCpu* pattern = workspace_->getScaleAddBBuffer();
       return addBWithPattern(A, B, pattern);
     }
 
@@ -749,7 +749,7 @@ namespace ReSolve
       newRowPointers.push_back(static_cast<index_type>(newValues.size()));
     }
 
-    auto pattern = new ScaleAddBuffer(std::move(newRowPointers), std::move(newColIndices));
+    auto pattern = new ScaleAddBufferCpu(std::move(newRowPointers), std::move(newColIndices));
     // workspace_ owns pattern
     workspace_->setScaleAddBBuffer(pattern);
     return updateMatrix(A, pattern->getRowData(), pattern->getColumnData(), newValues.data(), pattern->getNnz());
