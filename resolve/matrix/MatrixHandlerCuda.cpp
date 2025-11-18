@@ -409,9 +409,9 @@ namespace ReSolve
     auto a_i = A->getRowData(memory::DEVICE);
     auto a_j = A->getColData(memory::DEVICE);
 
-    auto b_v = A->getValues(memory::DEVICE);
-    auto b_i = A->getRowData(memory::DEVICE);
-    auto b_j = A->getColData(memory::DEVICE);
+    auto b_v = B->getValues(memory::DEVICE);
+    auto b_i = B->getRowData(memory::DEVICE);
+    auto b_j = B->getColData(memory::DEVICE);
 
     size_t     buffer_byte_size_add;
     index_type nnz_total;
@@ -457,9 +457,9 @@ namespace ReSolve
     auto a_i = A->getRowData(memory::DEVICE);
     auto a_j = A->getColData(memory::DEVICE);
 
-    auto b_v = A->getValues(memory::DEVICE);
-    auto b_i = A->getRowData(memory::DEVICE);
-    auto b_j = A->getColData(memory::DEVICE);
+    auto b_v = B->getValues(memory::DEVICE);
+    auto b_i = B->getRowData(memory::DEVICE);
+    auto b_j = B->getColData(memory::DEVICE);
 
     auto c_v = C->getValues(memory::DEVICE);
     auto c_i = C->getRowData(memory::DEVICE);
