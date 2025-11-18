@@ -86,10 +86,10 @@ namespace ReSolve
   void LinAlgWorkspaceCpu::resetLinAlgWorkspace()
   {
     delete scaleAddIBuffer_;
-    scaleAddIBuffer_ = nullptr;
+    scaleAddIBuffer_    = nullptr;
     scaleAddISetupDone_ = false;
     delete scaleAddBBuffer_;
-    scaleAddBBuffer_ = nullptr;
+    scaleAddBBuffer_    = nullptr;
     scaleAddBSetupDone_ = false;
   }
 
