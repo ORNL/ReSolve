@@ -38,15 +38,15 @@ namespace ReSolve
     void resetLinAlgWorkspace();
 
     // accessors
-    void* getSpmvBuffer();
-    void* getNormBuffer();
+    void*               getSpmvBuffer();
+    void*               getNormBuffer();
     ScaleAddBufferCUDA* getScaleAddIBuffer();
     ScaleAddBufferCUDA* getScaleAddBBuffer();
-    void* getTransposeBufferWorkspace();
-    void  setTransposeBufferWorkspace(size_t bufferSize);
-    bool  isTransposeBufferAllocated();
-    void  setSpmvBuffer(void* buffer);
-    void  setNormBuffer(void* buffer);
+    void*               getTransposeBufferWorkspace();
+    void                setTransposeBufferWorkspace(size_t bufferSize);
+    bool                isTransposeBufferAllocated();
+    void                setSpmvBuffer(void* buffer);
+    void                setNormBuffer(void* buffer);
     void                setScaleAddIBuffer(ScaleAddBufferCUDA* buffer);
     void                setScaleAddBBuffer(ScaleAddBufferCUDA* buffer);
     void                scaleAddISetupDone();
@@ -95,8 +95,8 @@ namespace ReSolve
     cusparseDnVecDescr_t vec_y_;
 
     // buffers
-    void* buffer_spmv_{nullptr};
-    void* buffer_1norm_{nullptr};
+    void*               buffer_spmv_{nullptr};
+    void*               buffer_1norm_{nullptr};
     ScaleAddBufferCUDA* buffer_scale_add_i{nullptr};
     ScaleAddBufferCUDA* buffer_scale_add_b{nullptr};
 

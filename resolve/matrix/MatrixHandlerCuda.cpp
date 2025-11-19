@@ -415,7 +415,7 @@ namespace ReSolve
    */
   int MatrixHandlerCuda::allocateForSum(matrix::Csr* A, real_type alpha, matrix::Csr* B, real_type beta, ScaleAddBufferCUDA** pattern)
   {
-    auto handle = workspace_->getCusparseHandle();
+    auto             handle  = workspace_->getCusparseHandle();
     cusparseStatus_t cu_info = cusparseSetPointerMode(handle, CUSPARSE_POINTER_MODE_HOST);
     int              info    = (cu_info != CUSPARSE_STATUS_SUCCESS);
     workspace_->setCusparseHandle(handle);
@@ -552,7 +552,7 @@ namespace ReSolve
     std::vector<index_type> I_j(n);
     std::iota(I_j.begin(), I_j.end(), 0);
 
-    std::vector<real_type>  I_v(n, 1.0);
+    std::vector<real_type> I_v(n, 1.0);
 
     matrix::Csr I(A->getNumRows(), A->getNumColumns(), n);
     int         info = I.copyDataFrom(I_i.data(), I_j.data(), I_v.data(), n, memory::HOST, memory::DEVICE);
