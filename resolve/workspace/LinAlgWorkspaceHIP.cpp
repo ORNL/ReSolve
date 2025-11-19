@@ -2,11 +2,118 @@
 
 namespace ReSolve
 {
+
+  /**
+   * @brief Store sparsity pattern
+   *
+   * @param[in] row_data - pointer to row data (array of integers, length:nrows+1)
+   * @param[in] nrows - number of rows
+   * @param[in] col_data - pointer to column data (array of integers, length: nnz)
+   * @param[in] nnz - number of non-zeros
+   */
+  ScaleAddBufferHIP::ScaleAddBufferHIP(index_type numRows, size_t bufferSize)
+    : numRows_(numRows), bufferSize_(bufferSize)
+  {
+    mem_.allocateArrayOnDevice(&rowData_, numRows_ + 1);
+    mem_.allocateBufferOnDevice(&buffer_, bufferSize_);
+  }
+
+  /**
+   * @brief Destructor
+   *
+   */
+  ScaleAddBufferHIP::~ScaleAddBufferHIP()
+  {
+    mem_.deleteOnDevice(rowData_);
+    mem_.deleteOnDevice(buffer_);
+  }
+
+  /**
+   * @brief Retrieve row sparsity pattern
+   *
+   * @return precalculated row pointers
+   */
+  index_type* ScaleAddBufferHIP::getRowData()
+  {
+    return rowData_;
+  }
+
+  /**
+   * @brief Retrieve row sparsity pattern
+   *
+   * @return precalculated row pointers
+   */
+  void* ScaleAddBufferHIP::getBuffer()
+  {
+    return buffer_;
+  }
+
+  /**
+   * @brief get number of matrix rows
+   *
+   * @return number of matrix rows.
+   */
+  index_type ScaleAddBufferHIP::getNumRows()
+  {
+    return numRows_;
+  }
+
+  /**
+   * @brief Get number of non-zeros.
+   *
+   * @return number of non-zeros
+   */
+  index_type ScaleAddBufferHIP::getNnz()
+  {
+    return nnz_;
+  }
+
+  /**
+   * @brief Get number of non-zeros.
+   *
+   * @return number of non-zeros
+   */
+  void ScaleAddBufferHIP::setNnz(index_type nnz)
+  {
+    nnz_ = nnz;
+  }
+
+  // Create a shortcut name for Logger static class
+  using out = io::Logger;
+
+  /**
+   * @brief Empty constructor for MatrixHandlerHip object
+   */
+  MatrixHandlerHip::~MatrixHandlerHip()
+  {
+  }
+
+  /**
+   * @brief Constructor for MatrixHandlerHip object
+   *
+   * @param[in] new_workspace - pointer to the workspace object
+   */
+  MatrixHandlerHip::MatrixHandlerHip(LinAlgWorkspaceHIP* new_workspace)
+  {
+    workspace_ = new_workspace;
+  }
+
+  /**
+   * @brief Set values changed flag
+   *
+   * @param[in] values_changed - flag indicating if values have changed
+   */
+  void MatrixHandlerHip::setValuesChanged(bool values_changed)
+  {
+    values_changed_ = values_changed;
+  }
+
   LinAlgWorkspaceHIP::LinAlgWorkspaceHIP()
   {
     handle_rocsparse_ = nullptr;
     handle_rocblas_   = nullptr;
-
+    buffer_scale_add_i         = nullptr;
+    buffer_scale_add_b         = nullptr;
     matvec_setup_done_         = false;
     d_r_                       = nullptr;
     d_r_size_                  = 0;
@@ -23,6 +130,14 @@ namespace ReSolve
     if (matvec_setup_done_)
     {
       rocsparse_destroy_mat_descr(mat_A_);
+    }
+    if (buffer_scale_add_i != nullptr)
+    {
+      delete buffer_scale_add_i;
+    }
+    if (buffer_scale_add_b != nullptr)
+    {
+      delete buffer_scale_add_b;
     }
     if (d_r_size_ != 0)
     {
