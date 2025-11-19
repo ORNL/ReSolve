@@ -161,6 +161,12 @@ namespace ReSolve
     vec_R_->copyDataFrom(rhs, memspace_, memspace_);
     matrix_handler_->matvec(A_, x, vec_R_, &MINUS_ONE, &ONE, memspace_);
 
+    // Normalizing the residual
+    bnorm = vector_handler_->dot(vec_R_, vec_R_, memspace_);
+    bnorm = std::sqrt(bnorm);
+    t     = 1 / bnorm;
+    vector_handler_->scal(&t, vec_R_, memspace_);
+
     // Arnoldi Basis
     vec_Z_->setToZero(memspace_);
     vec_V_->setToZero(memspace_);
@@ -183,25 +189,25 @@ namespace ReSolve
     mem_.deviceSynchronize();
 
     rnorm = 0.0;
-    bnorm = vector_handler_->dot(vec_R_, vec_R_, memspace_);
     rnorm = vector_handler_->dot(&vec_s, &vec_s, memspace_);
     rnorm = std::sqrt(rnorm);
-    bnorm = std::sqrt(bnorm);
     io::Logger::misc() << "it 0: norm of residual "
                        << std::scientific << std::setprecision(16)
                        << rnorm << " Norm of rhs: " << bnorm << "\n";
 
-    initial_residual_norm_ = rnorm;
+    initial_residual_norm_ = bnorm;
 
     // Checking if rnorm > norm of RHS
     rhsnorm = vector_handler_->dot(rhs, rhs, memspace_);
     rhsnorm = std::sqrt(rhsnorm);
 
-    if (rnorm > rhsnorm)
+    if (bnorm > rhsnorm)
     {
-      std::cout << "Initial guess is invalid. Quitting iterative refinement." << std::endl;
-      update_flag = 0;
-      outer_flag  = 0;
+      std::cout << "Initial guess is invalid. Quitting iterative refinement" << std::endl;
+      initial_residual_norm_ = bnorm;
+      final_residual_norm_   = bnorm; // Set final norm to initial norm as no work was done.
+      total_iters_           = 0;
+      return 0;
     }
 
     while (outer_flag)
@@ -429,6 +435,8 @@ namespace ReSolve
 
     if (update_flag)
     {
+      t = bnorm;
+      vector_handler_->scal(&t, vec_Y_, memspace_);
       vector_handler_->axpy(&ONE, x, vec_Y_, memspace_);
       vec_R_->copyDataFrom(rhs, memspace_, memspace_);
       matrix_handler_->matvec(A_, vec_Y_, vec_R_, &MINUS_ONE, &ONE, memspace_);
@@ -449,6 +457,8 @@ namespace ReSolve
         std::cout << "Update to intial guess is not successful, final residual greater than initial residual "
                   << std::scientific << std::setprecision(16)
                   << final_residual_norm_ / rhsnorm << "\n";
+
+        final_residual_norm_ = initial_residual_norm_;
       }
     }
 

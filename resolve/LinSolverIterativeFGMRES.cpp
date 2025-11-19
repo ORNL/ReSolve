@@ -124,19 +124,17 @@ namespace ReSolve
     real_type   rhsnorm = 0.0;
     vector_type vec_v(n_);
     vector_type vec_z(n_);
-    vector_type vec_u(n_);
 
     // Compute the residual
     vec_R_->setToZero(memspace_);
     vec_R_->copyDataFrom(rhs, memspace_, memspace_);
     matrix_handler_->matvec(A_, x, vec_R_, &MINUS_ONE, &ONE, memspace_);
 
-    // DEBUG: Normalizing RHS
+    // Normalizing the RHS
     bnorm = vector_handler_->dot(vec_R_, vec_R_, memspace_);
     bnorm = std::sqrt(bnorm);
-    t     = 1.0 / bnorm;
+    t     = 1 / bnorm;
     vector_handler_->scal(&t, vec_R_, memspace_);
-    std::cout << "DEBUG: Norm of the vec_R_ " << vector_handler_->dot(vec_R_, vec_R_, memspace_) << std::endl;
 
     // Arnoldi Basis
     vec_Z_->setToZero(memspace_);
@@ -150,27 +148,25 @@ namespace ReSolve
     rnorm = vector_handler_->dot(vec_V_, vec_V_, memspace_);
     rnorm = std::sqrt(rnorm);
 
-    std::cout << "DEBUG: Norm of the vec_V_ " << rnorm << std::endl;
-
     // Checking if bnorm > norm of RHS
     rhsnorm = vector_handler_->dot(rhs, rhs, memspace_);
     rhsnorm = std::sqrt(rhsnorm);
     if (bnorm > rhsnorm)
     {
       std::cout << "Initial guess is invalid. Quitting iterative refinement" << std::endl;
-      outer_flag  = 0;
-      update_flag = 0;
+      initial_residual_norm_ = bnorm;
+      final_residual_norm_   = bnorm; // Set final norm to initial norm as no work was done.
+      total_iters_           = 0;
+      return 0;
     }
 
-    bnorm = std::sqrt(bnorm);
     io::Logger::misc() << "it 0: norm of residual "
                        << std::scientific << std::setprecision(16)
                        << rnorm << " Norm of rhs: " << bnorm << "\n";
-    initial_residual_norm_ = rnorm;
+    initial_residual_norm_ = bnorm;
 
     while (outer_flag)
     {
-      std::cout << "DEBUG: Starting FGMRES outerloop " << std::endl;
       if (it == 0)
       {
         tolrel = tol_ * rnorm;
@@ -204,9 +200,6 @@ namespace ReSolve
         break;
       }
 
-      // normalize first vector
-      t = 1.0 / rnorm;
-      vector_handler_->scal(&t, vec_V_, memspace_);
       // initialize norm history
       h_rs_[0] = rnorm;
       i        = -1;
@@ -219,10 +212,6 @@ namespace ReSolve
 
         // Z_i = (LU)^{-1}*V_i
         vec_v.setData(vec_V_->getData(i, memspace_), memspace_);
-        vec_u.copyDataFrom(&vec_v, memspace_, memspace_);
-        std::cout << "DEBUG: norm of squared norm of vec_v " << vector_handler_->dot(&vec_v, &vec_v, memspace_) << std::endl;
-        std::cout << "DEBUG: norm of squared norm of vec_u " << vector_handler_->dot(&vec_u, &vec_u, memspace_) << std::endl;
-
         if (flexible_)
         {
           vec_z.setData(vec_Z_->getData(i, memspace_), memspace_);
@@ -232,20 +221,11 @@ namespace ReSolve
           vec_z.setData(vec_Z_->getData(0, memspace_), memspace_);
         }
         this->precV(&vec_v, &vec_z);
-        std::cout << "DEBUG: norm of vec_v after preconditioning " << vector_handler_->dot(&vec_z, &vec_z, memspace_) << std::endl;
-
         mem_.deviceSynchronize();
 
         // V_{i+1}=A*Z_i
-
         vec_v.setData(vec_V_->getData(i + 1, memspace_), memspace_);
-        vec_v.setToZero(memspace_);
         matrix_handler_->matvec(A_, &vec_z, &vec_v, &ONE, &ZERO, memspace_);
-        std::cout << "DEBUG: norm of squared norm of vec_v after A*z_i " << vector_handler_->dot(&vec_v, &vec_v, memspace_) << std::endl;
-
-        // V_{i} - V_{i+1}
-        vector_handler_->axpy(&MINUS_ONE, &vec_v, &vec_u, memspace_);
-        std::cout << "DEBUG: Difference between v_i and Az_i " << vector_handler_->dot(&vec_u, &vec_u, memspace_) << std::endl;
 
         // orthogonalize V[i+1], form a column of h_H_
 
@@ -253,8 +233,7 @@ namespace ReSolve
 
         if (gs_status != 0) // checking for successful breakdown
         {
-          notconv = 0; // exiting outer loop
-          break;
+          notconv = 0; // exiting outer loop after one inner loop iteration
         }
 
         if (i != 0)
@@ -301,7 +280,18 @@ namespace ReSolve
                          << std::scientific << std::setprecision(16)
                          << rnorm << "\n";
       // solve tri system
-      h_rs_[i] = h_rs_[i] / h_H_[i * (restart_ + 1) + i];
+      real_type H_ii_diag = h_H_[i * (restart_ + 1) + i];
+
+      // FIX: Check for division by zero before starting back-substitution
+      if (std::abs(H_ii_diag) < MACHINE_EPSILON)
+      {
+        h_rs_[i] = ZERO; // Last element of solution is set to 0
+      }
+      else
+      {
+        h_rs_[i] = h_rs_[i] / H_ii_diag;
+      }
+
       for (int ii = 2; ii <= i + 1; ii++)
       {
         k  = i - ii + 1;
@@ -311,7 +301,17 @@ namespace ReSolve
         {
           t -= h_H_[j * (restart_ + 1) + k] * h_rs_[j];
         }
-        h_rs_[k] = t / h_H_[k * (restart_ + 1) + k];
+
+        // Checking for division by zero inside the loop as well
+        real_type H_diag_k = h_H_[k * (restart_ + 1) + k];
+        if (std::abs(H_diag_k) < MACHINE_EPSILON)
+        {
+          h_rs_[k] = ZERO;
+        }
+        else
+        {
+          h_rs_[k] = t / H_diag_k;
+        }
       }
 
       // get solution
@@ -366,6 +366,7 @@ namespace ReSolve
 
     if (update_flag)
     {
+      // renormalizing
       t = bnorm;
       vector_handler_->scal(&t, vec_Y_, memspace_);
       vector_handler_->axpy(&ONE, x, vec_Y_, memspace_);
@@ -388,6 +389,8 @@ namespace ReSolve
         std::cout << "Update to intial guess is not successful, final residual greater than initial residual "
                   << std::scientific << std::setprecision(16)
                   << final_residual_norm_ / rhsnorm << "\n";
+
+        final_residual_norm_ = initial_residual_norm_;
       }
     }
 
