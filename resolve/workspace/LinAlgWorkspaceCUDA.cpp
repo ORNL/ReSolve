@@ -100,9 +100,9 @@ namespace ReSolve
     if (buffer_spmv_ != nullptr)
       mem_.deleteOnDevice(buffer_spmv_);
     if (buffer_scale_add_i != nullptr)
-      mem_.deleteOnDevice(buffer_scale_add_i);
+      delete buffer_scale_add_i;
     if (buffer_scale_add_b != nullptr)
-      mem_.deleteOnDevice(buffer_scale_add_b);
+      delete buffer_scale_add_b;
     if (d_r_size_ != 0)
       mem_.deleteOnDevice(d_r_);
     if (norm_buffer_ready_)
