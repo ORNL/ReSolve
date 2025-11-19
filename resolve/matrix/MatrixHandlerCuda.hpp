@@ -65,8 +65,8 @@ namespace ReSolve
     void setValuesChanged(bool isValuesChanged) override;
 
   private:
-    void                 allocateForSum(matrix::Csr* A, real_type alpha, matrix::Csr* B, real_type beta, ScaleAddBufferCUDA** pattern);
-    void                 computeSum(matrix::Csr* A, real_type alpha, matrix::Csr* B, real_type beta, matrix::Csr* C, ScaleAddBufferCUDA* pattern);
+    int                  allocateForSum(matrix::Csr* A, real_type alpha, matrix::Csr* B, real_type beta, ScaleAddBufferCUDA** pattern);
+    int                  computeSum(matrix::Csr* A, real_type alpha, matrix::Csr* B, real_type beta, matrix::Csr* C, ScaleAddBufferCUDA* pattern);
     LinAlgWorkspaceCUDA* workspace_{nullptr};
     bool                 values_changed_{true}; ///< needed for matvec
 

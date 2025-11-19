@@ -9,8 +9,8 @@ namespace ReSolve
   /**
    * @brief Store sparsity pattern
    *
-   * @param[in] row_data - pointer to row data (array of integers, length:nrows+1)
-   * @param[in] col_data - pointer to column data (array of integers, length: nnz)
+   * @param[in] row_data - row data (array of integers, length:nrows+1)
+   * @param[in] col_data - column data (array of integers, length: nnz)
    */
   ScaleAddBufferCpu::ScaleAddBufferCpu(std::vector<index_type> rowData, std::vector<index_type> colData)
     : rowData_(std::move(rowData)), colData_(std::move(colData))

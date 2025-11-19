@@ -402,10 +402,22 @@ namespace ReSolve
     return 0;
   }
 
-  void MatrixHandlerCuda::allocateForSum(matrix::Csr* A, real_type alpha, matrix::Csr* B, real_type beta, ScaleAddBufferCUDA** pattern)
+  /**
+   * @brief Calculate buffer size and sparsity pattern of alpha*A + beta*B
+   *
+   * @param[in] A - CSR matrix
+   * @param[in] alpha - constant to be added to A
+   * @param[in] B - CSR matrix
+   * @param[in] beta - constant to be added to B
+   * @param[in, out] pattern - sparsity pattern and buffer
+   *
+   * @return int error code, 0 if successful
+   */
+  int MatrixHandlerCuda::allocateForSum(matrix::Csr* A, real_type alpha, matrix::Csr* B, real_type beta, ScaleAddBufferCUDA** pattern)
   {
     auto handle = workspace_->getCusparseHandle();
-    cusparseSetPointerMode(handle, CUSPARSE_POINTER_MODE_HOST);
+    cusparseStatus_t cu_info = cusparseSetPointerMode(handle, CUSPARSE_POINTER_MODE_HOST);
+    int              info    = (cu_info != CUSPARSE_STATUS_SUCCESS);
     workspace_->setCusparseHandle(handle);
 
     cusparseMatDescr_t descr_a = workspace_->getScaleAddMatrixDescriptor();
@@ -438,19 +450,31 @@ namespace ReSolve
 
     size_t buffer_byte_size_add;
     // calculates sum buffer
-    cusparseStatus_t info = cusparseDcsrgeam2_bufferSizeExt(handle, m, n, &alpha, descr_a, nnz_a, a_v, a_i, a_j, &beta, descr_a, nnz_b, b_v, b_i, b_j, descr_a, c_v, c_i, c_j, &buffer_byte_size_add);
-    assert(info == CUSPARSE_STATUS_SUCCESS);
+    cu_info = cusparseDcsrgeam2_bufferSizeExt(handle, m, n, &alpha, descr_a, nnz_a, a_v, a_i, a_j, &beta, descr_a, nnz_b, b_v, b_i, b_j, descr_a, c_v, c_i, c_j, &buffer_byte_size_add);
+    info    = info || (cu_info != CUSPARSE_STATUS_SUCCESS);
 
     *pattern = new ScaleAddBufferCUDA(n + 1, buffer_byte_size_add);
 
     index_type nnz_total;
     // determines sum row offsets and total number of nonzeros
-    info = cusparseXcsrgeam2Nnz(handle, m, n, descr_a, nnz_a, a_i, a_j, descr_a, nnz_b, b_i, b_j, descr_a, (*pattern)->getRowData(), &nnz_total, (*pattern)->getBuffer());
-    assert(info == CUSPARSE_STATUS_SUCCESS);
+    cu_info = cusparseXcsrgeam2Nnz(handle, m, n, descr_a, nnz_a, a_i, a_j, descr_a, nnz_b, b_i, b_j, descr_a, (*pattern)->getRowData(), &nnz_total, (*pattern)->getBuffer());
+    info    = info || (cu_info != CUSPARSE_STATUS_SUCCESS);
     (*pattern)->setNnz(nnz_total);
+    return 0;
   }
 
-  void MatrixHandlerCuda::computeSum(matrix::Csr* A, real_type alpha, matrix::Csr* B, real_type beta, matrix::Csr* C, ScaleAddBufferCUDA* pattern)
+  /**
+   * @brief Given sparsity pattern, calculate alpha*A + beta*B
+   *
+   * @param[in] A - CSR matrix
+   * @param[in] alpha - constant to be added to A
+   * @param[in] B - CSR matrix
+   * @param[in] beta - constant to be added to B
+   * @param[in, out] pattern - sparsity pattern and buffer
+   *
+   * @return int error code, 0 if successful
+   */
+  int MatrixHandlerCuda::computeSum(matrix::Csr* A, real_type alpha, matrix::Csr* B, real_type beta, matrix::Csr* C, ScaleAddBufferCUDA* pattern)
   {
     auto a_v = A->getValues(memory::DEVICE);
     auto a_i = A->getRowData(memory::DEVICE);
@@ -479,11 +503,12 @@ namespace ReSolve
     index_type nnz_a = A->getNnz();
     index_type nnz_b = B->getNnz();
 
-    mem_.copyArrayDeviceToDevice(c_i, pattern->getRowData(), n + 1);
+    int                info    = mem_.copyArrayDeviceToDevice(c_i, pattern->getRowData(), n + 1);
     cusparseMatDescr_t descr_a = workspace_->getScaleAddMatrixDescriptor();
-    cusparseStatus_t   info    = cusparseDcsrgeam2(handle, m, n, &alpha, descr_a, nnz_a, a_v, a_i, a_j, &beta, descr_a, nnz_b, b_v, b_i, b_j, descr_a, c_v, c_i, c_j, pattern->getBuffer());
-    assert(info == CUSPARSE_STATUS_SUCCESS);
-    C->setUpdated(memory::DEVICE);
+    cusparseStatus_t   cu_info = cusparseDcsrgeam2(handle, m, n, &alpha, descr_a, nnz_a, a_v, a_i, a_j, &beta, descr_a, nnz_b, b_v, b_i, b_j, descr_a, c_v, c_i, c_j, pattern->getBuffer());
+    info                       = info || (cu_info != CUSPARSE_STATUS_SUCCESS);
+    info                       = info || C->setUpdated(memory::DEVICE);
+    return info;
   }
 
   /**
@@ -530,9 +555,30 @@ namespace ReSolve
     std::vector<real_type>  I_v(n, 1.0);
 
     matrix::Csr I(A->getNumRows(), A->getNumColumns(), n);
-    I.copyDataFrom(I_i.data(), I_j.data(), I_v.data(), n, memory::HOST, memory::DEVICE);
+    int         info = I.copyDataFrom(I_i.data(), I_j.data(), I_v.data(), n, memory::HOST, memory::DEVICE);
 
-    return scaleAddB(A, alpha, &I);
+    // Reuse sparsity pattern if it is available
+    if (workspace_->scaleAddISetup())
+    {
+      ScaleAddBufferCUDA* pattern = workspace_->getScaleAddIBuffer();
+      matrix::Csr         C(A->getNumRows(), A->getNumColumns(), pattern->getNnz());
+      info = info || C.allocateMatrixData(memory::DEVICE);
+      info = info || computeSum(A, alpha, &I, 1., &C, pattern);
+      info = info || updateMatrix(A, C.getRowData(memory::DEVICE), C.getColData(memory::DEVICE), C.getValues(memory::DEVICE), C.getNnz());
+    }
+    else
+    {
+      ScaleAddBufferCUDA* pattern = nullptr;
+      matrix::Csr         C(A->getNumRows(), A->getNumColumns(), A->getNnz());
+      info = info || allocateForSum(A, alpha, &I, 1., &pattern);
+      workspace_->setScaleAddIBuffer(pattern);
+      workspace_->scaleAddISetupDone();
+      C.setNnz(pattern->getNnz());
+      C.allocateMatrixData(memory::DEVICE);
+      info = info || computeSum(A, alpha, &I, 1., &C, pattern);
+      info = info || updateMatrix(A, C.getRowData(memory::DEVICE), C.getColData(memory::DEVICE), C.getValues(memory::DEVICE), C.getNnz());
+    }
+    return info;
   }
 
   /**
@@ -545,29 +591,29 @@ namespace ReSolve
    */
   int MatrixHandlerCuda::scaleAddB(matrix::Csr* A, real_type alpha, matrix::Csr* B)
   {
-
+    int info = 0;
     // Reuse sparsity pattern if it is available
     if (workspace_->scaleAddBSetup())
     {
       ScaleAddBufferCUDA* pattern = workspace_->getScaleAddBBuffer();
       matrix::Csr         C(A->getNumRows(), A->getNumColumns(), pattern->getNnz());
-      C.allocateMatrixData(memory::DEVICE);
-      computeSum(A, alpha, B, 1., &C, pattern);
-      updateMatrix(A, C.getRowData(memory::DEVICE), C.getColData(memory::DEVICE), C.getValues(memory::DEVICE), C.getNnz());
+      info = info || C.allocateMatrixData(memory::DEVICE);
+      info = info || computeSum(A, alpha, B, 1., &C, pattern);
+      info = info || updateMatrix(A, C.getRowData(memory::DEVICE), C.getColData(memory::DEVICE), C.getValues(memory::DEVICE), C.getNnz());
     }
     else
     {
       ScaleAddBufferCUDA* pattern = nullptr;
       matrix::Csr         C(A->getNumRows(), A->getNumColumns(), A->getNnz());
-      allocateForSum(A, alpha, B, 1., &pattern);
+      info = info || allocateForSum(A, alpha, B, 1., &pattern);
       workspace_->setScaleAddBBuffer(pattern);
       workspace_->scaleAddBSetupDone();
       C.setNnz(pattern->getNnz());
       C.allocateMatrixData(memory::DEVICE);
-      computeSum(A, alpha, B, 1., &C, pattern);
-      updateMatrix(A, C.getRowData(memory::DEVICE), C.getColData(memory::DEVICE), C.getValues(memory::DEVICE), C.getNnz());
+      info = info || computeSum(A, alpha, B, 1., &C, pattern);
+      info = info || updateMatrix(A, C.getRowData(memory::DEVICE), C.getColData(memory::DEVICE), C.getValues(memory::DEVICE), C.getNnz());
     }
-    return 0;
+    return info;
   }
 
 } // namespace ReSolve
