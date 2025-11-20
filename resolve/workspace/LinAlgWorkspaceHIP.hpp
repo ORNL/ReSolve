@@ -15,18 +15,18 @@ namespace ReSolve
   public:
     ScaleAddBufferHIP(index_type numRows);
     ~ScaleAddBufferHIP();
-    index_type* getRowData();
+    index_type*         getRowData();
     rocsparse_mat_descr getMatrixDescriptor();
-    index_type  getNumRows();
-    void        setNnz(index_type nnz);
-    index_type  getNnz();
+    index_type          getNumRows();
+    void                setNnz(index_type nnz);
+    index_type          getNnz();
 
   private:
-    index_type*   rowData_;
+    index_type*         rowData_;
     rocsparse_mat_descr mat_A_;
-    index_type    numRows_;
-    index_type    nnz_;
-    MemoryHandler mem_;
+    index_type          numRows_;
+    index_type          nnz_;
+    MemoryHandler       mem_;
   };
 
   class LinAlgWorkspaceHIP
@@ -91,15 +91,15 @@ namespace ReSolve
     // info - but we need info
     rocsparse_mat_info info_A_;
 
-    real_type*    d_r_{nullptr};                     // needed for inf-norm
-    real_type*    norm_buffer_{nullptr};             // needed for inf-norm
-    void*         transpose_workspace_{nullptr};     // needed for transpose
-    bool          transpose_workspace_ready_{false}; // to track if allocated
-    index_type    d_r_size_{0};
-    bool          norm_buffer_ready_{false}; // to track if allocated
+    real_type*         d_r_{nullptr};                     // needed for inf-norm
+    real_type*         norm_buffer_{nullptr};             // needed for inf-norm
+    void*              transpose_workspace_{nullptr};     // needed for transpose
+    bool               transpose_workspace_ready_{false}; // to track if allocated
+    index_type         d_r_size_{0};
+    bool               norm_buffer_ready_{false}; // to track if allocated
     ScaleAddBufferHIP* buffer_scale_add_i_{nullptr};
     ScaleAddBufferHIP* buffer_scale_add_b_{nullptr};
-    MemoryHandler mem_;                      ///< Memory handler not needed for now
+    MemoryHandler      mem_; ///< Memory handler not needed for now
   };
 
 } // namespace ReSolve

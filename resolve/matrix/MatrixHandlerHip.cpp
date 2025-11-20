@@ -384,9 +384,9 @@ namespace ReSolve
    */
   int MatrixHandlerHip::allocateForSum(matrix::Csr* A, real_type alpha, matrix::Csr* B, real_type beta, ScaleAddBufferHIP** pattern)
   {
-    auto             handle  = workspace_->getRocsparseHandle();
+    auto             handle   = workspace_->getRocsparseHandle();
     rocsparse_status roc_info = rocsparse_set_pointer_mode(handle, rocsparse_pointer_mode_host);
-    int              info    = (roc_info != rocsparse_status_success);
+    int              info     = (roc_info != rocsparse_status_success);
     workspace_->setRocsparseHandle(handle);
 
     auto a_v = A->getValues(memory::DEVICE);
@@ -411,16 +411,15 @@ namespace ReSolve
     index_type* c_i = nullptr;
     index_type* c_j = nullptr;
 
-    *pattern = new ScaleAddBufferHIP(n + 1);
+    *pattern                    = new ScaleAddBufferHIP(n + 1);
     rocsparse_mat_descr descr_a = (*pattern)->getMatrixDescriptor();
-    index_type nnz_total;
+    index_type          nnz_total;
     // determines sum row offsets and total number of nonzeros
     roc_info = rocsparse_bsrgeam_nnzb(handle, rocsparse_direction_row, m, n, 1, descr_a, nnz_a, a_i, a_j, descr_a, nnz_b, b_i, b_j, descr_a, (*pattern)->getRowData(), &nnz_total);
-    info    = info || (roc_info != rocsparse_status_success);
+    info     = info || (roc_info != rocsparse_status_success);
     (*pattern)->setNnz(nnz_total);
     return 0;
   }
-
 
   /**
    * @brief Given sparsity pattern, calculate alpha*A + beta*B
@@ -462,11 +461,11 @@ namespace ReSolve
     index_type nnz_a = A->getNnz();
     index_type nnz_b = B->getNnz();
 
-    int info = mem_.copyArrayDeviceToDevice(c_i, pattern->getRowData(), n + 1);
-    rocsparse_mat_descr descr_a = pattern->getMatrixDescriptor();
-    rocsparse_status roc_info = rocsparse_dbsrgeam(handle, rocsparse_direction_row, m, n, 1, &alpha, descr_a, nnz_a, a_v, a_i, a_j, &beta, descr_a, nnz_b, b_v, b_i, b_j, descr_a, c_v, c_i, c_j);
-    info = info || (roc_info != rocsparse_status_success);
-    info = info || C->setUpdated(memory::DEVICE);
+    int                 info     = mem_.copyArrayDeviceToDevice(c_i, pattern->getRowData(), n + 1);
+    rocsparse_mat_descr descr_a  = pattern->getMatrixDescriptor();
+    rocsparse_status    roc_info = rocsparse_dbsrgeam(handle, rocsparse_direction_row, m, n, 1, &alpha, descr_a, nnz_a, a_v, a_i, a_j, &beta, descr_a, nnz_b, b_v, b_i, b_j, descr_a, c_v, c_i, c_j);
+    info                         = info || (roc_info != rocsparse_status_success);
+    info                         = info || C->setUpdated(memory::DEVICE);
     return info;
   }
 
@@ -520,7 +519,7 @@ namespace ReSolve
     if (workspace_->scaleAddISetup())
     {
       ScaleAddBufferHIP* pattern = workspace_->getScaleAddIBuffer();
-      matrix::Csr C(A->getNumRows(), A->getNumColumns(), pattern->getNnz());
+      matrix::Csr        C(A->getNumRows(), A->getNumColumns(), pattern->getNnz());
       info = info || C.allocateMatrixData(memory::DEVICE);
       info = info || computeSum(A, alpha, &I, 1., &C, pattern);
       info = info || updateMatrix(A, C.getRowData(memory::DEVICE), C.getColData(memory::DEVICE), C.getValues(memory::DEVICE), C.getNnz());
@@ -528,7 +527,7 @@ namespace ReSolve
     else
     {
       ScaleAddBufferHIP* pattern = nullptr;
-      matrix::Csr C(A->getNumRows(), A->getNumColumns(), A->getNnz());
+      matrix::Csr        C(A->getNumRows(), A->getNumColumns(), A->getNnz());
       info = info || allocateForSum(A, alpha, &I, 1., &pattern);
       workspace_->setScaleAddIBuffer(pattern);
       workspace_->scaleAddISetupDone();
@@ -555,7 +554,7 @@ namespace ReSolve
     if (workspace_->scaleAddBSetup())
     {
       ScaleAddBufferHIP* pattern = workspace_->getScaleAddBBuffer();
-      matrix::Csr C(A->getNumRows(), A->getNumColumns(), pattern->getNnz());
+      matrix::Csr        C(A->getNumRows(), A->getNumColumns(), pattern->getNnz());
       info = info || C.allocateMatrixData(memory::DEVICE);
       info = info || computeSum(A, alpha, B, 1., &C, pattern);
       info = info || updateMatrix(A, C.getRowData(memory::DEVICE), C.getColData(memory::DEVICE), C.getValues(memory::DEVICE), C.getNnz());
@@ -563,7 +562,7 @@ namespace ReSolve
     else
     {
       ScaleAddBufferHIP* pattern = nullptr;
-      matrix::Csr C(A->getNumRows(), A->getNumColumns(), A->getNnz());
+      matrix::Csr        C(A->getNumRows(), A->getNumColumns(), A->getNnz());
       info = info || allocateForSum(A, alpha, B, 1., &pattern);
       workspace_->setScaleAddBBuffer(pattern);
       workspace_->scaleAddBSetupDone();

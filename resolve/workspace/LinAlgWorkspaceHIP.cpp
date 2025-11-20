@@ -1,6 +1,6 @@
-#include <resolve/workspace/LinAlgWorkspaceHIP.hpp>
-
 #include <cassert>
+
+#include <resolve/workspace/LinAlgWorkspaceHIP.hpp>
 
 namespace ReSolve
 {
@@ -82,8 +82,8 @@ namespace ReSolve
 
   LinAlgWorkspaceHIP::LinAlgWorkspaceHIP()
   {
-    handle_rocsparse_ = nullptr;
-    handle_rocblas_   = nullptr;
+    handle_rocsparse_          = nullptr;
+    handle_rocblas_            = nullptr;
     buffer_scale_add_i_        = nullptr;
     buffer_scale_add_b_        = nullptr;
     matvec_setup_done_         = false;

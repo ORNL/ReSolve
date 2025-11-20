@@ -444,7 +444,7 @@ namespace ReSolve
 
     *pattern                   = new ScaleAddBufferCUDA(n + 1);
     cusparseMatDescr_t descr_a = (*pattern)->getMatrixDescriptor();
-    size_t buffer_byte_size_add;
+    size_t             buffer_byte_size_add;
     // calculates sum buffer
     cu_info = cusparseDcsrgeam2_bufferSizeExt(handle, m, n, &alpha, descr_a, nnz_a, a_v, a_i, a_j, &beta, descr_a, nnz_b, b_v, b_i, b_j, descr_a, c_v, c_i, c_j, &buffer_byte_size_add);
     info    = info || (cu_info != CUSPARSE_STATUS_SUCCESS);
