@@ -410,7 +410,7 @@ namespace ReSolve
     roc_info = rocsparse_bsrgeam_nnzb(handle, rocsparse_direction_row, m, n, 1, descr_a, nnz_a, a_i, a_j, descr_a, nnz_b, b_i, b_j, descr_a, (*pattern)->getRowData(), &nnz_total);
     info     = info || (roc_info != rocsparse_status_success);
     (*pattern)->setNnz(nnz_total);
-    return 0;
+    return info;
   }
 
   /**

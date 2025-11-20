@@ -456,7 +456,7 @@ namespace ReSolve
     cu_info = cusparseXcsrgeam2Nnz(handle, m, n, descr_a, nnz_a, a_i, a_j, descr_a, nnz_b, b_i, b_j, descr_a, (*pattern)->getRowData(), &nnz_total, (*pattern)->getBuffer());
     info    = info || (cu_info != CUSPARSE_STATUS_SUCCESS);
     (*pattern)->setNnz(nnz_total);
-    return 0;
+    return info;
   }
 
   /**
