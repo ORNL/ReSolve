@@ -54,8 +54,6 @@ namespace ReSolve
     void                setTransposeBufferWorkspace(size_t bufferSize);
     bool                getNormBufferState();
     bool                isTransposeBufferAllocated();
-    void                scaleAddISetupDone();
-    void                scaleAddBSetupDone();
 
     void setRocblasHandle(rocblas_handle handle);
     void setRocsparseHandle(rocsparse_handle handle);

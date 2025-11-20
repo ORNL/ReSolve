@@ -1,6 +1,7 @@
 #include "MatrixHandlerHip.hpp"
 
 #include <algorithm>
+#include <cassert>
 
 #include <resolve/hip/hipKernels.h>
 #include <resolve/hip/hipVectorKernels.h>
