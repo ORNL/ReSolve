@@ -13,11 +13,11 @@ namespace ReSolve
    * @param[in] col_data - pointer to column data (array of integers, length: nnz)
    * @param[in] nnz - number of non-zeros
    */
-  ScaleAddBufferHIP::ScaleAddBufferHIP(index_type numRows, size_t bufferSize)
-    : numRows_(numRows), bufferSize_(bufferSize)
+  ScaleAddBufferHIP::ScaleAddBufferHIP(index_type numRows)
+    : numRows_(numRows)
   {
+    rocsparse_create_mat_descr(&mat_A_);
     mem_.allocateArrayOnDevice(&rowData_, numRows_ + 1);
-    mem_.allocateBufferOnDevice(&buffer_, bufferSize_);
   }
 
   /**
@@ -27,7 +27,7 @@ namespace ReSolve
   ScaleAddBufferHIP::~ScaleAddBufferHIP()
   {
     mem_.deleteOnDevice(rowData_);
-    mem_.deleteOnDevice(buffer_);
+    rocsparse_destroy_mat_descr(mat_A_);
   }
 
   /**
@@ -45,9 +45,9 @@ namespace ReSolve
    *
    * @return precalculated row pointers
    */
-  void* ScaleAddBufferHIP::getBuffer()
+  rocsparse_mat_descr ScaleAddBufferHIP::getMatrixDescriptor()
   {
-    return buffer_;
+    return mat_A_;
   }
 
   /**
@@ -107,13 +107,11 @@ namespace ReSolve
     {
       assert(buffer_scale_add_i_ != nullptr);
       delete buffer_scale_add_i_;
-      rocsparse_destroy_mat_descr(mat_B_);
     }
     if (buffer_scale_add_b_ != nullptr)
     {
       assert(buffer_scale_add_b_ != nullptr);
       delete buffer_scale_add_b_;
-      rocsparse_destroy_mat_descr(mat_B_);
     }
     if (d_r_size_ != 0)
     {
@@ -145,13 +143,14 @@ namespace ReSolve
     }
     if (scale_add_b_setup_done_)
     {
+      assert(buffer_scale_add_b_ != nullptr);
       delete buffer_scale_add_b_;
       buffer_scale_add_b_     = nullptr;
-      rocsparse_destroy_mat_descr(mat_B_);
       scale_add_b_setup_done_ = false;
     }
     if (scale_add_i_setup_done_)
     {
+      assert(buffer_scale_add_i_ != nullptr);
       delete buffer_scale_add_i_;
       buffer_scale_add_i_     = nullptr;
       scale_add_i_setup_done_ = false;
@@ -202,19 +201,9 @@ namespace ReSolve
     return mat_A_;
   }
 
-  rocsparse_mat_descr LinAlgWorkspaceHIP::getScaleAddMatrixDescriptor()
-  {
-    return mat_B_;
-  }
-
   void LinAlgWorkspaceHIP::setSpmvMatrixDescriptor(rocsparse_mat_descr mat)
   {
     mat_A_ = mat;
-  }
-
-  void LinAlgWorkspaceHIP::setScaleAddMatrixDescriptor(rocsparse_mat_descr mat)
-  {
-    mat_B_ = mat;
   }
 
   rocsparse_mat_info LinAlgWorkspaceHIP::getSpmvMatrixInfo()

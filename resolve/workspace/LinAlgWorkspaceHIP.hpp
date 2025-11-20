@@ -13,20 +13,19 @@ namespace ReSolve
   class ScaleAddBufferHIP
   {
   public:
-    ScaleAddBufferHIP(index_type numRows, size_t bufferSize);
+    ScaleAddBufferHIP(index_type numRows);
     ~ScaleAddBufferHIP();
     index_type* getRowData();
-    void*       getBuffer();
+    rocsparse_mat_descr getMatrixDescriptor();
     index_type  getNumRows();
     void        setNnz(index_type nnz);
     index_type  getNnz();
 
   private:
     index_type*   rowData_;
-    void*         buffer_;
+    rocsparse_mat_descr mat_A_;
     index_type    numRows_;
     index_type    nnz_;
-    size_t        bufferSize_;
     MemoryHandler mem_;
   };
 
@@ -41,7 +40,6 @@ namespace ReSolve
     rocblas_handle      getRocblasHandle();
     rocsparse_handle    getRocsparseHandle();
     rocsparse_mat_descr getSpmvMatrixDescriptor();
-    rocsparse_mat_descr getScaleAddMatrixDescriptor();
     rocsparse_mat_info  getSpmvMatrixInfo();
     index_type          getDrSize();
     real_type*          getDr();
@@ -58,7 +56,6 @@ namespace ReSolve
     void setRocblasHandle(rocblas_handle handle);
     void setRocsparseHandle(rocsparse_handle handle);
     void setSpmvMatrixDescriptor(rocsparse_mat_descr mat);
-    void setScaleAddMatrixDescriptor(rocsparse_mat_descr mat);
 
     void setSpmvMatrixInfo(rocsparse_mat_info info);
 
@@ -83,7 +80,6 @@ namespace ReSolve
 
     // matrix descriptors
     rocsparse_mat_descr mat_A_;
-    rocsparse_mat_descr mat_B_;
     // vector descriptors not needed, rocsparse uses RAW pointers.
 
     // buffers

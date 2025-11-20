@@ -389,10 +389,6 @@ namespace ReSolve
     int              info    = (roc_info != rocsparse_status_success);
     workspace_->setRocsparseHandle(handle);
 
-    rocsparse_mat_descr descr_a = workspace_->getScaleAddMatrixDescriptor();
-    rocsparse_create_mat_descr(&descr_a);
-    workspace_->setScaleAddMatrixDescriptor(descr_a);
-
     auto a_v = A->getValues(memory::DEVICE);
     auto a_i = A->getRowData(memory::DEVICE);
     auto a_j = A->getColData(memory::DEVICE);
@@ -415,9 +411,8 @@ namespace ReSolve
     index_type* c_i = nullptr;
     index_type* c_j = nullptr;
 
-    size_t buffer_byte_size_add{0};
-    *pattern = new ScaleAddBufferHIP(n + 1, buffer_byte_size_add);
-
+    *pattern = new ScaleAddBufferHIP(n + 1);
+    rocsparse_mat_descr descr_a = (*pattern)->getMatrixDescriptor();
     index_type nnz_total;
     // determines sum row offsets and total number of nonzeros
     roc_info = rocsparse_bsrgeam_nnzb(handle, rocsparse_direction_row, m, n, 1, descr_a, nnz_a, a_i, a_j, descr_a, nnz_b, b_i, b_j, descr_a, (*pattern)->getRowData(), &nnz_total);
@@ -467,11 +462,11 @@ namespace ReSolve
     index_type nnz_a = A->getNnz();
     index_type nnz_b = B->getNnz();
 
-    int                info    = mem_.copyArrayDeviceToDevice(c_i, pattern->getRowData(), n + 1);
-    rocsparse_mat_descr descr_a = workspace_->getScaleAddMatrixDescriptor();
+    int info = mem_.copyArrayDeviceToDevice(c_i, pattern->getRowData(), n + 1);
+    rocsparse_mat_descr descr_a = pattern->getMatrixDescriptor();
     rocsparse_status roc_info = rocsparse_dbsrgeam(handle, rocsparse_direction_row, m, n, 1, &alpha, descr_a, nnz_a, a_v, a_i, a_j, &beta, descr_a, nnz_b, b_v, b_i, b_j, descr_a, c_v, c_i, c_j);
-    info                       = info || (roc_info != rocsparse_status_success);
-    info                       = info || C->setUpdated(memory::DEVICE);
+    info = info || (roc_info != rocsparse_status_success);
+    info = info || C->setUpdated(memory::DEVICE);
     return info;
   }
 
