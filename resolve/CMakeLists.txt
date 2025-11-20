@@ -141,6 +141,13 @@ if(RESOLVE_USE_UBSAN)
   list(APPEND ReSolve_Targets_List resolve_ubsan)
 endif()
 
+# list(APPEND ReSolve_Targets_List resolve_hykkt)
+
+# Add HyKKT solver
+if(RESOLVE_USE_KLU)
+  add_subdirectory(hykkt)
+endif()
+
 # Set installable targets
 install(TARGETS ${ReSolve_Targets_List} EXPORT ReSolveTargets)
 

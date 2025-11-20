@@ -1,5 +1,9 @@
 # Re::Solve Changelog
 
+## HyKKT Release changes
+
+- Added classes and tests for permutation, Ruiz scaling, Cholesky factorization, and matrix multiplication and addition.
+
 ## Changes to Re::Solve since release 0.99.2
 
 - Added cmake-format
