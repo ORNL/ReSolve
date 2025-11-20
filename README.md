@@ -28,7 +28,7 @@ Dependencies:
 - CMake >= 3.22
 - KLU, AMD and COLAMD libraries from SuiteSparse >= 5.0 (optional)
 - CUDA >= 11.4 (optional)
-- HIP/ROCm >= 6.0 (optional)
+- HIP/ROCm >= 6.4 (optional)
 
 To build it:
 ```shell
