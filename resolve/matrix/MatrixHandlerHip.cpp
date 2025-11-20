@@ -375,25 +375,21 @@ namespace ReSolve
    * @brief Calculate buffer size and sparsity pattern of alpha*A + beta*B
    *
    * @param[in] A - CSR matrix
-   * @param[in] alpha - constant to be added to A
    * @param[in] B - CSR matrix
-   * @param[in] beta - constant to be added to B
    * @param[in, out] pattern - sparsity pattern and buffer
    *
    * @return int error code, 0 if successful
    */
-  int MatrixHandlerHip::allocateForSum(matrix::Csr* A, real_type alpha, matrix::Csr* B, real_type beta, ScaleAddBufferHIP** pattern)
+  int MatrixHandlerHip::allocateForSum(matrix::Csr* A, matrix::Csr* B, ScaleAddBufferHIP** pattern)
   {
     auto             handle   = workspace_->getRocsparseHandle();
     rocsparse_status roc_info = rocsparse_set_pointer_mode(handle, rocsparse_pointer_mode_host);
     int              info     = (roc_info != rocsparse_status_success);
     workspace_->setRocsparseHandle(handle);
 
-    auto a_v = A->getValues(memory::DEVICE);
     auto a_i = A->getRowData(memory::DEVICE);
     auto a_j = A->getColData(memory::DEVICE);
 
-    auto b_v = B->getValues(memory::DEVICE);
     auto b_i = B->getRowData(memory::DEVICE);
     auto b_j = B->getColData(memory::DEVICE);
 
@@ -406,10 +402,6 @@ namespace ReSolve
 
     index_type nnz_a = A->getNnz();
     index_type nnz_b = B->getNnz();
-
-    real_type*  c_v = nullptr;
-    index_type* c_i = nullptr;
-    index_type* c_j = nullptr;
 
     *pattern                    = new ScaleAddBufferHIP(n + 1);
     rocsparse_mat_descr descr_a = (*pattern)->getMatrixDescriptor();
@@ -528,7 +520,8 @@ namespace ReSolve
     {
       ScaleAddBufferHIP* pattern = nullptr;
       matrix::Csr        C(A->getNumRows(), A->getNumColumns(), A->getNnz());
-      info = info || allocateForSum(A, alpha, &I, 1., &pattern);
+      info = info || allocateForSum(A, &I, &pattern);
+
       workspace_->setScaleAddIBuffer(pattern);
       workspace_->scaleAddISetupDone();
       C.setNnz(pattern->getNnz());
@@ -563,7 +556,7 @@ namespace ReSolve
     {
       ScaleAddBufferHIP* pattern = nullptr;
       matrix::Csr        C(A->getNumRows(), A->getNumColumns(), A->getNnz());
-      info = info || allocateForSum(A, alpha, B, 1., &pattern);
+      info = info || allocateForSum(A, B, &pattern);
       workspace_->setScaleAddBBuffer(pattern);
       workspace_->scaleAddBSetupDone();
       C.setNnz(pattern->getNnz());
