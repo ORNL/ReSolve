@@ -17,6 +17,7 @@ namespace ReSolve
     class Csc;
     class Csr;
   } // namespace matrix
+  class ScaleAddBufferHIP;
   class LinAlgWorkspaceHIP;
 } // namespace ReSolve
 
@@ -60,6 +61,9 @@ namespace ReSolve
     void setValuesChanged(bool isValuesChanged) override;
 
   private:
+    int allocateForSum(matrix::Csr* A, real_type alpha, matrix::Csr* B, real_type beta, ScaleAddBufferHIP** pattern);
+    int computeSum(matrix::Csr* A, real_type alpha, matrix::Csr* B, real_type beta, matrix::Csr* C, ScaleAddBufferHIP* pattern);
+
     LinAlgWorkspaceHIP* workspace_{nullptr};
     bool                values_changed_{true}; ///< needed for matvec
 

@@ -83,7 +83,7 @@ namespace ReSolve
 
     // matrix descriptors
     rocsparse_mat_descr mat_A_;
-
+    rocsparse_mat_descr mat_B_;
     // vector descriptors not needed, rocsparse uses RAW pointers.
 
     // buffers
@@ -101,8 +101,8 @@ namespace ReSolve
     bool          transpose_workspace_ready_{false}; // to track if allocated
     index_type    d_r_size_{0};
     bool          norm_buffer_ready_{false}; // to track if allocated
-    ScaleAddBufferHIP* buffer_scale_add_i{nullptr};
-    ScaleAddBufferHIP* buffer_scale_add_b{nullptr};
+    ScaleAddBufferHIP* buffer_scale_add_i_{nullptr};
+    ScaleAddBufferHIP* buffer_scale_add_b_{nullptr};
     MemoryHandler mem_;                      ///< Memory handler not needed for now
   };
 
