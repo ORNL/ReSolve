@@ -41,9 +41,9 @@ namespace ReSolve
   }
 
   /**
-   * @brief Retrieve row sparsity pattern
+   * @brief Retrieve matrix descriptor
    *
-   * @return precalculated row pointers
+   * @return matrix descriptor set for scaleAddB, scaleAddI
    */
   rocsparse_mat_descr ScaleAddBufferHIP::getMatrixDescriptor()
   {
@@ -73,7 +73,7 @@ namespace ReSolve
   /**
    * @brief Get number of non-zeros.
    *
-   * @return number of non-zeros
+   * @param[in] nnz number of non-zeros
    */
   void ScaleAddBufferHIP::setNnz(index_type nnz)
   {

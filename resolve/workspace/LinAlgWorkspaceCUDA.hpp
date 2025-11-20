@@ -12,10 +12,12 @@ namespace ReSolve
   class ScaleAddBufferCUDA
   {
   public:
-    ScaleAddBufferCUDA(index_type numRows, size_t bufferSize);
+    ScaleAddBufferCUDA(index_type numRows);
     ~ScaleAddBufferCUDA();
     index_type* getRowData();
+    void               allocateBuffer(size_t bufferSize);
     void*       getBuffer();
+    cusparseMatDescr_t getMatrixDescriptor();
     index_type  getNumRows();
     void        setNnz(index_type nnz);
     index_type  getNnz();
@@ -23,6 +25,7 @@ namespace ReSolve
   private:
     index_type*   rowData_;
     void*         buffer_;
+    cusparseMatDescr_t mat_A_;
     index_type    numRows_;
     index_type    nnz_;
     size_t        bufferSize_;
@@ -56,7 +59,6 @@ namespace ReSolve
     cusolverSpHandle_t   getCusolverSpHandle(); // needed for 1-norms etc
     cusparseHandle_t     getCusparseHandle();
     cusparseSpMatDescr_t getSpmvMatrixDescriptor();
-    cusparseMatDescr_t   getScaleAddMatrixDescriptor();
     cusparseDnVecDescr_t getVecX();
     cusparseDnVecDescr_t getVecY();
     index_type           getDrSize();
@@ -67,7 +69,6 @@ namespace ReSolve
     void setCusolverSpHandle(cusolverSpHandle_t handle);
     void setCusparseHandle(cusparseHandle_t handle);
     void setSpmvMatrixDescriptor(cusparseSpMatDescr_t mat);
-    void setScaleAddMatrixDescriptor(cusparseMatDescr_t mat);
     void setDrSize(index_type new_sz);
     void setDr(real_type* new_dr);
     void setNormBufferState(bool r);
@@ -88,7 +89,6 @@ namespace ReSolve
 
     // matrix descriptors
     cusparseSpMatDescr_t mat_A_;
-    cusparseMatDescr_t   mat_B_;
 
     // vector descriptors
     cusparseDnVecDescr_t vec_x_;

@@ -6,16 +6,15 @@ namespace ReSolve
   /**
    * @brief Store sparsity pattern
    *
-   * @param[in] row_data - pointer to row data (array of integers, length:nrows+1)
    * @param[in] nrows - number of rows
-   * @param[in] col_data - pointer to column data (array of integers, length: nnz)
-   * @param[in] nnz - number of non-zeros
    */
-  ScaleAddBufferCUDA::ScaleAddBufferCUDA(index_type numRows, size_t bufferSize)
-    : numRows_(numRows), bufferSize_(bufferSize)
+  ScaleAddBufferCUDA::ScaleAddBufferCUDA(index_type numRows)
+    : numRows_(numRows), bufferSize_(0)
   {
     mem_.allocateArrayOnDevice(&rowData_, numRows_ + 1);
-    mem_.allocateBufferOnDevice(&buffer_, bufferSize_);
+    cusparseCreateMatDescr(&mat_A_);
+    cusparseSetMatType(mat_A_, CUSPARSE_MATRIX_TYPE_GENERAL);
+    cusparseSetMatIndexBase(mat_A_, CUSPARSE_INDEX_BASE_ZERO);
   }
 
   /**
@@ -26,6 +25,7 @@ namespace ReSolve
   {
     mem_.deleteOnDevice(rowData_);
     mem_.deleteOnDevice(buffer_);
+    cusparseDestroyMatDescr(mat_A_);
   }
 
   /**
@@ -39,9 +39,30 @@ namespace ReSolve
   }
 
   /**
-   * @brief Retrieve row sparsity pattern
+   * @brief Retrieve matrix descriptor
    *
-   * @return precalculated row pointers
+   * @return matrix descriptor set for scaleAddB, scaleAddI
+   */
+  cusparseMatDescr_t ScaleAddBufferCUDA::getMatrixDescriptor()
+  {
+    return mat_A_;
+  }
+
+  /**
+   * @brief Allocate memory for cusparse buffer
+   *
+   * @param[in] bufferSize calculated array size
+   */
+  void ScaleAddBufferCUDA::allocateBuffer(size_t bufferSize)
+  {
+    bufferSize_ = bufferSize;
+    mem_.allocateBufferOnDevice(&buffer_, bufferSize_);
+  }
+
+  /**
+   * @brief Retrieve cusparse buffer
+   *
+   * @return cusparse buffer
    */
   void* ScaleAddBufferCUDA::getBuffer()
   {
@@ -69,9 +90,9 @@ namespace ReSolve
   }
 
   /**
-   * @brief Get number of non-zeros.
+   * @brief set number of non-zeros.
    *
-   * @return number of non-zeros
+   * @param[in] nnz number of non-zeros
    */
   void ScaleAddBufferCUDA::setNnz(index_type nnz)
   {
@@ -293,19 +314,9 @@ namespace ReSolve
     return mat_A_;
   }
 
-  cusparseMatDescr_t LinAlgWorkspaceCUDA::getScaleAddMatrixDescriptor()
-  {
-    return mat_B_;
-  }
-
   void LinAlgWorkspaceCUDA::setSpmvMatrixDescriptor(cusparseSpMatDescr_t mat)
   {
     mat_A_ = mat;
-  }
-
-  void LinAlgWorkspaceCUDA::setScaleAddMatrixDescriptor(cusparseMatDescr_t mat)
-  {
-    mat_B_ = mat;
   }
 
   cusparseDnVecDescr_t LinAlgWorkspaceCUDA::getVecX()
