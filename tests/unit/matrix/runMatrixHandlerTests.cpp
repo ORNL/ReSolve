@@ -76,6 +76,13 @@ void runTests(const std::string& backend, ReSolve::tests::TestingResults& result
   result += test.rightScale(1024, 2048);
   workspace.resetLinAlgWorkspace();
   result += test.rightScale(2048, 1024);
+  workspace.resetLinAlgWorkspace();
+  result += test.scaleAddI(100);
+  workspace.resetLinAlgWorkspace();
+  result += test.scaleAddIZero(100);
+  workspace.resetLinAlgWorkspace();
+  result += test.scaleAddB(100);
+  workspace.resetLinAlgWorkspace();
   std::cout << "\n";
 }
 

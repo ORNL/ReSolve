@@ -2,12 +2,111 @@
 
 namespace ReSolve
 {
+
+  /**
+   * @brief Store sparsity pattern
+   *
+   * @param[in] nrows - number of rows
+   */
+  ScaleAddBufferCUDA::ScaleAddBufferCUDA(index_type numRows)
+    : numRows_(numRows), bufferSize_(0)
+  {
+    mem_.allocateArrayOnDevice(&rowData_, numRows_ + 1);
+    cusparseCreateMatDescr(&mat_A_);
+    cusparseSetMatType(mat_A_, CUSPARSE_MATRIX_TYPE_GENERAL);
+    cusparseSetMatIndexBase(mat_A_, CUSPARSE_INDEX_BASE_ZERO);
+  }
+
+  /**
+   * @brief Destructor
+   *
+   */
+  ScaleAddBufferCUDA::~ScaleAddBufferCUDA()
+  {
+    mem_.deleteOnDevice(rowData_);
+    mem_.deleteOnDevice(buffer_);
+    cusparseDestroyMatDescr(mat_A_);
+  }
+
+  /**
+   * @brief Retrieve row sparsity pattern
+   *
+   * @return precalculated row pointers
+   */
+  index_type* ScaleAddBufferCUDA::getRowData()
+  {
+    return rowData_;
+  }
+
+  /**
+   * @brief Retrieve matrix descriptor
+   *
+   * @return matrix descriptor set for scaleAddB, scaleAddI
+   */
+  cusparseMatDescr_t ScaleAddBufferCUDA::getMatrixDescriptor()
+  {
+    return mat_A_;
+  }
+
+  /**
+   * @brief Allocate memory for cusparse buffer
+   *
+   * @param[in] bufferSize calculated array size
+   */
+  void ScaleAddBufferCUDA::allocateBuffer(size_t bufferSize)
+  {
+    bufferSize_ = bufferSize;
+    mem_.allocateBufferOnDevice(&buffer_, bufferSize_);
+  }
+
+  /**
+   * @brief Retrieve cusparse buffer
+   *
+   * @return cusparse buffer
+   */
+  void* ScaleAddBufferCUDA::getBuffer()
+  {
+    return buffer_;
+  }
+
+  /**
+   * @brief get number of matrix rows
+   *
+   * @return number of matrix rows.
+   */
+  index_type ScaleAddBufferCUDA::getNumRows()
+  {
+    return numRows_;
+  }
+
+  /**
+   * @brief Get number of non-zeros.
+   *
+   * @return number of non-zeros
+   */
+  index_type ScaleAddBufferCUDA::getNnz()
+  {
+    return nnz_;
+  }
+
+  /**
+   * @brief set number of non-zeros.
+   *
+   * @param[in] nnz number of non-zeros
+   */
+  void ScaleAddBufferCUDA::setNnz(index_type nnz)
+  {
+    nnz_ = nnz;
+  }
+
   LinAlgWorkspaceCUDA::LinAlgWorkspaceCUDA()
   {
     handle_cusolversp_         = nullptr;
     handle_cusparse_           = nullptr;
     handle_cublas_             = nullptr;
     buffer_spmv_               = nullptr;
+    buffer_scale_add_i         = nullptr;
+    buffer_scale_add_b         = nullptr;
     buffer_1norm_              = nullptr;
     transpose_workspace_       = nullptr;
     transpose_workspace_ready_ = false;
@@ -21,6 +120,10 @@ namespace ReSolve
   {
     if (buffer_spmv_ != nullptr)
       mem_.deleteOnDevice(buffer_spmv_);
+    if (buffer_scale_add_i != nullptr)
+      delete buffer_scale_add_i;
+    if (buffer_scale_add_b != nullptr)
+      delete buffer_scale_add_b;
     if (d_r_size_ != 0)
       mem_.deleteOnDevice(d_r_);
     if (norm_buffer_ready_)
@@ -70,6 +173,18 @@ namespace ReSolve
       transpose_workspace_       = nullptr;
       transpose_workspace_ready_ = false;
     }
+    if (scale_add_b_setup_done_)
+    {
+      delete buffer_scale_add_b;
+      buffer_scale_add_b      = nullptr;
+      scale_add_b_setup_done_ = false;
+    }
+    if (scale_add_i_setup_done_)
+    {
+      delete buffer_scale_add_i;
+      buffer_scale_add_i      = nullptr;
+      scale_add_i_setup_done_ = false;
+    }
     return;
   }
 
@@ -81,6 +196,16 @@ namespace ReSolve
   void* LinAlgWorkspaceCUDA::getNormBuffer()
   {
     return buffer_1norm_;
+  }
+
+  ScaleAddBufferCUDA* LinAlgWorkspaceCUDA::getScaleAddIBuffer()
+  {
+    return buffer_scale_add_i;
+  }
+
+  ScaleAddBufferCUDA* LinAlgWorkspaceCUDA::getScaleAddBBuffer()
+  {
+    return buffer_scale_add_b;
   }
 
   void* LinAlgWorkspaceCUDA::getTransposeBufferWorkspace()
@@ -112,6 +237,26 @@ namespace ReSolve
   void LinAlgWorkspaceCUDA::setSpmvBuffer(void* buffer)
   {
     buffer_spmv_ = buffer;
+  }
+
+  void LinAlgWorkspaceCUDA::setScaleAddBBuffer(ScaleAddBufferCUDA* buffer)
+  {
+    buffer_scale_add_b = buffer;
+  }
+
+  void LinAlgWorkspaceCUDA::setScaleAddIBuffer(ScaleAddBufferCUDA* buffer)
+  {
+    buffer_scale_add_i = buffer;
+  }
+
+  void LinAlgWorkspaceCUDA::scaleAddBSetupDone()
+  {
+    scale_add_b_setup_done_ = true;
+  }
+
+  void LinAlgWorkspaceCUDA::scaleAddISetupDone()
+  {
+    scale_add_i_setup_done_ = true;
   }
 
   void LinAlgWorkspaceCUDA::setNormBuffer(void* buffer)
@@ -202,6 +347,16 @@ namespace ReSolve
   void LinAlgWorkspaceCUDA::matvecSetupDone()
   {
     matvec_setup_done_ = true;
+  }
+
+  bool LinAlgWorkspaceCUDA::scaleAddISetup()
+  {
+    return scale_add_i_setup_done_;
+  }
+
+  bool LinAlgWorkspaceCUDA::scaleAddBSetup()
+  {
+    return scale_add_b_setup_done_;
   }
 
   void LinAlgWorkspaceCUDA::initializeHandles()

@@ -8,6 +8,10 @@
 
 - Added cmake-format
 
+- The MatrixHandler::scaleAddI function was added to calculate A := cA + I
+
+- The MatrixHandler::scaleAddB function was added to calculate A := cA + B
+
 ## Changes to Re::Solve in release 0.99.2
 
 ### Major Features

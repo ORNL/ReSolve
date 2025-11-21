@@ -352,6 +352,57 @@ namespace ReSolve
   }
 
   /**
+   * @brief Multiply csr matrix by a constant and add I.
+   * @param[in,out] A - Sparse CSR matrix
+   * @param[in] alpha - scalar parameter
+   * @param[in] memspace - Device where the operation is computed
+   * @return 0 if successful, 1 otherwise
+   */
+  int MatrixHandler::scaleAddI(matrix::Csr* A, real_type alpha, memory::MemorySpace memspace)
+  {
+    assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW && "Matrix is assumed to be in CSR format.\n");
+    assert((A->getValues(memspace) != nullptr || A->getNnz() == 0) && "Matrix values are null!\n");
+    assert(A->getNumRows() == A->getNumColumns() && "Matrix must be square.\n");
+    using namespace ReSolve::memory;
+    switch (memspace)
+    {
+    case HOST:
+      return cpuImpl_->scaleAddI(A, alpha);
+      break;
+    case DEVICE:
+      return devImpl_->scaleAddI(A, alpha);
+      break;
+    }
+    return 1;
+  }
+
+  /**
+   * @brief Multiply csr matrix by a constant and add B.
+   * @param[in,out] A - Sparse CSR matrix
+   * @param[in] alpha - scalar parameter
+   * @param[in] B - Sparse CSR matrix
+   * @param[in] memspace - Device where the operation is computed
+   * @return 0 if successful, 1 otherwise
+   */
+  int MatrixHandler::scaleAddB(matrix::Csr* A, real_type alpha, matrix::Csr* B, memory::MemorySpace memspace)
+  {
+    assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW && "Matrix is assumed to be in CSR format.\n");
+    assert(A->getValues(memspace) != nullptr && "Matrix values are null!\n");
+    assert(A->getNumRows() == A->getNumColumns() && "Matrix must be square.\n");
+    using namespace ReSolve::memory;
+    switch (memspace)
+    {
+    case HOST:
+      return cpuImpl_->scaleAddB(A, alpha, B);
+      break;
+    case DEVICE:
+      return devImpl_->scaleAddB(A, alpha, B);
+      break;
+    }
+    return 1;
+  }
+
+  /**
    * @brief If CUDA support is enabled in the handler.
    *
    * @return true

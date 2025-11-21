@@ -1,12 +1,91 @@
+#include <cassert>
+
 #include <resolve/workspace/LinAlgWorkspaceHIP.hpp>
 
 namespace ReSolve
 {
+
+  /**
+   * @brief Store sparsity pattern
+   *
+   * @param[in] row_data - pointer to row data (array of integers, length:nrows+1)
+   * @param[in] nrows - number of rows
+   * @param[in] col_data - pointer to column data (array of integers, length: nnz)
+   * @param[in] nnz - number of non-zeros
+   */
+  ScaleAddBufferHIP::ScaleAddBufferHIP(index_type numRows)
+    : numRows_(numRows)
+  {
+    rocsparse_create_mat_descr(&mat_A_);
+    mem_.allocateArrayOnDevice(&rowData_, numRows_ + 1);
+  }
+
+  /**
+   * @brief Destructor
+   *
+   */
+  ScaleAddBufferHIP::~ScaleAddBufferHIP()
+  {
+    mem_.deleteOnDevice(rowData_);
+    rocsparse_destroy_mat_descr(mat_A_);
+  }
+
+  /**
+   * @brief Retrieve row sparsity pattern
+   *
+   * @return precalculated row pointers
+   */
+  index_type* ScaleAddBufferHIP::getRowData()
+  {
+    return rowData_;
+  }
+
+  /**
+   * @brief Retrieve matrix descriptor
+   *
+   * @return matrix descriptor set for scaleAddB, scaleAddI
+   */
+  rocsparse_mat_descr ScaleAddBufferHIP::getMatrixDescriptor()
+  {
+    return mat_A_;
+  }
+
+  /**
+   * @brief get number of matrix rows
+   *
+   * @return number of matrix rows.
+   */
+  index_type ScaleAddBufferHIP::getNumRows()
+  {
+    return numRows_;
+  }
+
+  /**
+   * @brief Get number of non-zeros.
+   *
+   * @return number of non-zeros
+   */
+  index_type ScaleAddBufferHIP::getNnz()
+  {
+    return nnz_;
+  }
+
+  /**
+   * @brief Get number of non-zeros.
+   *
+   * @param[in] nnz number of non-zeros
+   */
+  void ScaleAddBufferHIP::setNnz(index_type nnz)
+  {
+    nnz_ = nnz;
+  }
+
   LinAlgWorkspaceHIP::LinAlgWorkspaceHIP()
   {
-    handle_rocsparse_ = nullptr;
-    handle_rocblas_   = nullptr;
-
+    handle_rocsparse_          = nullptr;
+    handle_rocblas_            = nullptr;
+    buffer_scale_add_i_        = nullptr;
+    buffer_scale_add_b_        = nullptr;
     matvec_setup_done_         = false;
     d_r_                       = nullptr;
     d_r_size_                  = 0;
@@ -23,6 +102,16 @@ namespace ReSolve
     if (matvec_setup_done_)
     {
       rocsparse_destroy_mat_descr(mat_A_);
+    }
+    if (scale_add_i_setup_done_)
+    {
+      assert(buffer_scale_add_i_ != nullptr);
+      delete buffer_scale_add_i_;
+    }
+    if (buffer_scale_add_b_ != nullptr)
+    {
+      assert(buffer_scale_add_b_ != nullptr);
+      delete buffer_scale_add_b_;
     }
     if (d_r_size_ != 0)
     {
@@ -51,6 +140,20 @@ namespace ReSolve
     {
       rocsparse_destroy_mat_descr(mat_A_);
       matvec_setup_done_ = false;
+    }
+    if (scale_add_b_setup_done_)
+    {
+      assert(buffer_scale_add_b_ != nullptr);
+      delete buffer_scale_add_b_;
+      buffer_scale_add_b_     = nullptr;
+      scale_add_b_setup_done_ = false;
+    }
+    if (scale_add_i_setup_done_)
+    {
+      assert(buffer_scale_add_i_ != nullptr);
+      delete buffer_scale_add_i_;
+      buffer_scale_add_i_     = nullptr;
+      scale_add_i_setup_done_ = false;
     }
     if (d_r_size_ != 0)
     {
@@ -128,6 +231,36 @@ namespace ReSolve
     norm_buffer_ = nb;
   }
 
+  ScaleAddBufferHIP* LinAlgWorkspaceHIP::getScaleAddIBuffer()
+  {
+    return buffer_scale_add_i_;
+  }
+
+  ScaleAddBufferHIP* LinAlgWorkspaceHIP::getScaleAddBBuffer()
+  {
+    return buffer_scale_add_b_;
+  }
+
+  void LinAlgWorkspaceHIP::setScaleAddBBuffer(ScaleAddBufferHIP* buffer)
+  {
+    buffer_scale_add_b_ = buffer;
+  }
+
+  void LinAlgWorkspaceHIP::setScaleAddIBuffer(ScaleAddBufferHIP* buffer)
+  {
+    buffer_scale_add_i_ = buffer;
+  }
+
+  void LinAlgWorkspaceHIP::scaleAddBSetupDone()
+  {
+    scale_add_b_setup_done_ = true;
+  }
+
+  void LinAlgWorkspaceHIP::scaleAddISetupDone()
+  {
+    scale_add_i_setup_done_ = true;
+  }
+
   void LinAlgWorkspaceHIP::setNormBufferState(bool r)
   {
     norm_buffer_ready_ = r;
@@ -141,6 +274,16 @@ namespace ReSolve
   void LinAlgWorkspaceHIP::matvecSetupDone()
   {
     matvec_setup_done_ = true;
+  }
+
+  bool LinAlgWorkspaceHIP::scaleAddISetup()
+  {
+    return scale_add_i_setup_done_;
+  }
+
+  bool LinAlgWorkspaceHIP::scaleAddBSetup()
+  {
+    return scale_add_b_setup_done_;
   }
 
   void LinAlgWorkspaceHIP::initializeHandles()

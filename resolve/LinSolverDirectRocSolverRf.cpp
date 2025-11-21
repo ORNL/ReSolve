@@ -1,5 +1,7 @@
 #include "LinSolverDirectRocSolverRf.hpp"
 
+#include <cassert>
+
 #include <resolve/hip/hipKernels.h>
 
 #include <resolve/Profiling.hpp>

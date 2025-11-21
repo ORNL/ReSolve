@@ -8,6 +8,30 @@
 
 namespace ReSolve
 {
+
+  class ScaleAddBufferCUDA
+  {
+  public:
+    ScaleAddBufferCUDA(index_type numRows);
+    ~ScaleAddBufferCUDA();
+    index_type*        getRowData();
+    void               allocateBuffer(size_t bufferSize);
+    void*              getBuffer();
+    cusparseMatDescr_t getMatrixDescriptor();
+    index_type         getNumRows();
+    void               setNnz(index_type nnz);
+    index_type         getNnz();
+
+  private:
+    index_type*        rowData_;
+    void*              buffer_;
+    cusparseMatDescr_t mat_A_;
+    index_type         numRows_;
+    index_type         nnz_;
+    size_t             bufferSize_;
+    MemoryHandler      mem_;
+  };
+
   class LinAlgWorkspaceCUDA
   {
   public:
@@ -17,13 +41,19 @@ namespace ReSolve
     void resetLinAlgWorkspace();
 
     // accessors
-    void* getSpmvBuffer();
-    void* getNormBuffer();
-    void* getTransposeBufferWorkspace();
-    void  setTransposeBufferWorkspace(size_t bufferSize);
-    bool  isTransposeBufferAllocated();
-    void  setSpmvBuffer(void* buffer);
-    void  setNormBuffer(void* buffer);
+    void*               getSpmvBuffer();
+    void*               getNormBuffer();
+    ScaleAddBufferCUDA* getScaleAddIBuffer();
+    ScaleAddBufferCUDA* getScaleAddBBuffer();
+    void*               getTransposeBufferWorkspace();
+    void                setTransposeBufferWorkspace(size_t bufferSize);
+    bool                isTransposeBufferAllocated();
+    void                setSpmvBuffer(void* buffer);
+    void                setNormBuffer(void* buffer);
+    void                setScaleAddIBuffer(ScaleAddBufferCUDA* buffer);
+    void                setScaleAddBBuffer(ScaleAddBufferCUDA* buffer);
+    void                scaleAddISetupDone();
+    void                scaleAddBSetupDone();
 
     cublasHandle_t       getCublasHandle();
     cusolverSpHandle_t   getCusolverSpHandle(); // needed for 1-norms etc
@@ -48,6 +78,9 @@ namespace ReSolve
     bool matvecSetup();
     void matvecSetupDone();
 
+    bool scaleAddISetup();
+    bool scaleAddBSetup();
+
   private:
     // handles
     cublasHandle_t     handle_cublas_;
@@ -62,10 +95,14 @@ namespace ReSolve
     cusparseDnVecDescr_t vec_y_;
 
     // buffers
-    void* buffer_spmv_{nullptr};
-    void* buffer_1norm_{nullptr};
+    void*               buffer_spmv_{nullptr};
+    void*               buffer_1norm_{nullptr};
+    ScaleAddBufferCUDA* buffer_scale_add_i{nullptr};
+    ScaleAddBufferCUDA* buffer_scale_add_b{nullptr};
 
     bool matvec_setup_done_{false}; // check if setup is done for matvec i.e. if buffer is allocated, csr structure is set etc.
+    bool scale_add_i_setup_done_{false};
+    bool scale_add_b_setup_done_{false};
 
     void* transpose_workspace_{nullptr};     // needed for transpose
     bool  transpose_workspace_ready_{false}; // to track if allocated
