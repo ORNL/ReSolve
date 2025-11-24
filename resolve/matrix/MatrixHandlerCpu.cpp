@@ -9,6 +9,7 @@
 #include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/workspace/LinAlgWorkspaceCpu.hpp>
+#include <resolve/workspace/ScaleAddBufferCpu.hpp>
 
 namespace ReSolve
 {

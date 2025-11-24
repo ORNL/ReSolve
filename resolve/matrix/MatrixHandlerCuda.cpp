@@ -13,6 +13,7 @@
 #include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/workspace/LinAlgWorkspaceCUDA.hpp>
+#include <resolve/workspace/ScaleAddBufferCUDA.hpp>
 
 namespace ReSolve
 {

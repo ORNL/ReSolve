@@ -13,6 +13,7 @@
 #include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/workspace/LinAlgWorkspaceHIP.hpp>
+#include <resolve/workspace/ScaleAddBufferHIP.hpp>
 
 namespace ReSolve
 {
