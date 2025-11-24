@@ -1,6 +1,6 @@
-#include <resolve/workspace/ScaleAddBufferHIP.hpp>
-
 #include <cassert>
+
+#include <resolve/workspace/ScaleAddBufferHIP.hpp>
 
 namespace ReSolve
 {
@@ -78,4 +78,4 @@ namespace ReSolve
   {
     nnz_ = nnz;
   }
-}
+} // namespace ReSolve

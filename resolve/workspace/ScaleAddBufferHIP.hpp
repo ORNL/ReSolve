@@ -28,5 +28,4 @@ namespace ReSolve
     index_type          nnz_;
     MemoryHandler       mem_;
   };
-}
-
+} // namespace ReSolve
