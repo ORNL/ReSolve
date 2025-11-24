@@ -1,4 +1,5 @@
 #include <resolve/workspace/LinAlgWorkspaceCUDA.hpp>
+#include <resolve/workspace/ScaleAddBufferCUDA.hpp>
 
 namespace ReSolve
 {
@@ -8,6 +9,8 @@ namespace ReSolve
     handle_cusparse_           = nullptr;
     handle_cublas_             = nullptr;
     buffer_spmv_               = nullptr;
+    buffer_scale_add_i         = nullptr;
+    buffer_scale_add_b         = nullptr;
     buffer_1norm_              = nullptr;
     transpose_workspace_       = nullptr;
     transpose_workspace_ready_ = false;
@@ -21,6 +24,10 @@ namespace ReSolve
   {
     if (buffer_spmv_ != nullptr)
       mem_.deleteOnDevice(buffer_spmv_);
+    if (buffer_scale_add_i != nullptr)
+      delete buffer_scale_add_i;
+    if (buffer_scale_add_b != nullptr)
+      delete buffer_scale_add_b;
     if (d_r_size_ != 0)
       mem_.deleteOnDevice(d_r_);
     if (norm_buffer_ready_)
@@ -70,6 +77,18 @@ namespace ReSolve
       transpose_workspace_       = nullptr;
       transpose_workspace_ready_ = false;
     }
+    if (scale_add_b_setup_done_)
+    {
+      delete buffer_scale_add_b;
+      buffer_scale_add_b      = nullptr;
+      scale_add_b_setup_done_ = false;
+    }
+    if (scale_add_i_setup_done_)
+    {
+      delete buffer_scale_add_i;
+      buffer_scale_add_i      = nullptr;
+      scale_add_i_setup_done_ = false;
+    }
     return;
   }
 
@@ -81,6 +100,16 @@ namespace ReSolve
   void* LinAlgWorkspaceCUDA::getNormBuffer()
   {
     return buffer_1norm_;
+  }
+
+  ScaleAddBufferCUDA* LinAlgWorkspaceCUDA::getScaleAddIBuffer()
+  {
+    return buffer_scale_add_i;
+  }
+
+  ScaleAddBufferCUDA* LinAlgWorkspaceCUDA::getScaleAddBBuffer()
+  {
+    return buffer_scale_add_b;
   }
 
   void* LinAlgWorkspaceCUDA::getTransposeBufferWorkspace()
@@ -112,6 +141,26 @@ namespace ReSolve
   void LinAlgWorkspaceCUDA::setSpmvBuffer(void* buffer)
   {
     buffer_spmv_ = buffer;
+  }
+
+  void LinAlgWorkspaceCUDA::setScaleAddBBuffer(ScaleAddBufferCUDA* buffer)
+  {
+    buffer_scale_add_b = buffer;
+  }
+
+  void LinAlgWorkspaceCUDA::setScaleAddIBuffer(ScaleAddBufferCUDA* buffer)
+  {
+    buffer_scale_add_i = buffer;
+  }
+
+  void LinAlgWorkspaceCUDA::scaleAddBSetupDone()
+  {
+    scale_add_b_setup_done_ = true;
+  }
+
+  void LinAlgWorkspaceCUDA::scaleAddISetupDone()
+  {
+    scale_add_i_setup_done_ = true;
   }
 
   void LinAlgWorkspaceCUDA::setNormBuffer(void* buffer)
@@ -202,6 +251,16 @@ namespace ReSolve
   void LinAlgWorkspaceCUDA::matvecSetupDone()
   {
     matvec_setup_done_ = true;
+  }
+
+  bool LinAlgWorkspaceCUDA::scaleAddISetup()
+  {
+    return scale_add_i_setup_done_;
+  }
+
+  bool LinAlgWorkspaceCUDA::scaleAddBSetup()
+  {
+    return scale_add_b_setup_done_;
   }
 
   void LinAlgWorkspaceCUDA::initializeHandles()

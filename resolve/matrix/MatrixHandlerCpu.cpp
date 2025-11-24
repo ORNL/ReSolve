@@ -8,6 +8,8 @@
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/vector/Vector.hpp>
+#include <resolve/workspace/LinAlgWorkspaceCpu.hpp>
+#include <resolve/workspace/ScaleAddBufferCpu.hpp>
 
 namespace ReSolve
 {
@@ -388,5 +390,369 @@ namespace ReSolve
       values[i] += alpha;
     }
     return 0;
+  }
+
+  /**
+   * @brief Multiply all nonzero values of a sparse matrix by a constant
+   *
+   * @param[in,out] A - Sparse matrix
+   * @param[in] alpha - constant to the added
+   * @return 0 if successful, 1 otherwise
+   */
+  static int scaleConst(matrix::Sparse* A, real_type alpha)
+  {
+    real_type*       values = A->getValues(memory::HOST);
+    const index_type nnz    = A->getNnz();
+    for (index_type i = 0; i < nnz; ++i)
+    {
+      values[i] *= alpha;
+    }
+    return 0;
+  }
+
+  /**
+   * @brief Update matrix with a new number of nonzero elements
+   *
+   * @param[in,out] A - Sparse matrix
+   * @param[in] row_data - pointer to row data (array of integers)
+   * @param[in] col_data - pointer to column data (array of integers)
+   * @param[in] val_data - pointer to value data (array of real numbers)
+   * @param[in] nnz - number of non-zer
+   * @return 0 if successful, 1 otherwise
+   */
+  static int updateMatrix(matrix::Sparse* A, index_type* rowData, index_type* columnData, real_type* valData, index_type nnz)
+  {
+    if (A->destroyMatrixData(memory::HOST) != 0)
+    {
+      return 1;
+    }
+    return A->copyDataFrom(rowData, columnData, valData, nnz, memory::HOST, memory::HOST);
+  }
+
+  /**
+   * @brief Add the identity to a CSR matrix.
+   *
+   * @param[in,out] A - Sparse CSR matrix
+   * @param[in] pattern - precalculated sparsity pattern
+   * @return 0 if successful, 1 otherwise
+   */
+  static int addIWithPattern(matrix::Csr* A, ScaleAddBufferCpu* pattern)
+  {
+    std::vector<real_type> newValues(pattern->getNnz());
+
+    index_type const* const originalRowPointers   = A->getRowData(memory::HOST);
+    index_type const* const originalColumnIndices = A->getColData(memory::HOST);
+    real_type const* const  originalValues        = A->getValues(memory::HOST);
+
+    index_type newNnzCount = 0;
+    for (index_type i = 0; i < A->getNumRows(); ++i)
+    {
+      const index_type originalRowStart = originalRowPointers[i];
+      const index_type originalRowEnd   = originalRowPointers[i + 1];
+
+      bool diagonalAdded = false;
+      for (index_type j = originalRowStart; j < originalRowEnd; ++j)
+      {
+        if (originalColumnIndices[j] == i)
+        {
+          // Diagonal element found in original matrix
+          newValues[newNnzCount] = originalValues[j] + 1.0;
+          newNnzCount++;
+          diagonalAdded = true;
+        }
+        else if (originalColumnIndices[j] > i && !diagonalAdded)
+        {
+          // Insert diagonal if not found yet
+          newValues[newNnzCount] = 1.;
+          newNnzCount++;
+          diagonalAdded = true; // Mark as added to prevent re-insertion
+          // Then add the current original element
+          newValues[newNnzCount] = originalValues[j];
+          newNnzCount++;
+        }
+        else
+        {
+          // Elements before diagonal, elements after diagonal and the
+          // diagonal is already handled
+          newValues[newNnzCount] = originalValues[j];
+          newNnzCount++;
+        }
+      }
+
+      // If diagonal element was not present in original row
+      if (!diagonalAdded)
+      {
+        newValues[newNnzCount] = 1.;
+        newNnzCount++;
+      }
+    }
+
+    assert(newNnzCount == pattern->getNnz());
+    index_type info = updateMatrix(A, pattern->getRowData(), pattern->getColumnData(), newValues.data(), pattern->getNnz());
+    return info;
+  }
+
+  /**
+   * @brief Add a constant to the nonzero values of a csr matrix,
+   *        then add the identity matrix.
+   *
+   * @param[in,out] A - Sparse CSR matrix
+   * @param[in] alpha - constant to the added
+   * @return 0 if successful, 1 otherwise
+   */
+  int MatrixHandlerCpu::scaleAddI(matrix::Csr* A, real_type alpha)
+  {
+    index_type info = scaleConst(A, alpha);
+    if (info == 1)
+    {
+      return info;
+    }
+
+    // Reuse sparsity pattern if it is available
+    if (workspace_->scaleAddISetup())
+    {
+      ScaleAddBufferCpu* pattern = workspace_->getScaleAddIBuffer();
+      return addIWithPattern(A, pattern);
+    }
+
+    std::vector<index_type> newRowPointers(A->getNumRows() + 1);
+    // At most we add one element per row/column
+    index_type              maxNnzCount = A->getNnz() + A->getNumRows();
+    std::vector<index_type> newColumnIndices(maxNnzCount);
+    std::vector<real_type>  newValues(maxNnzCount);
+
+    index_type const* const originalRowPointers = A->getRowData(memory::HOST);
+    index_type const* const originalColIndices  = A->getColData(memory::HOST);
+    real_type const* const  originalValues      = A->getValues(memory::HOST);
+
+    index_type newNnzCount = 0;
+    for (index_type i = 0; i < A->getNumRows(); ++i)
+    {
+      newRowPointers[i]                 = newNnzCount;
+      const index_type originalRowStart = originalRowPointers[i];
+      const index_type originalRowEnd   = originalRowPointers[i + 1];
+
+      bool diagonalAdded = false;
+      for (index_type j = originalRowStart; j < originalRowEnd; ++j)
+      {
+        if (originalColIndices[j] == i)
+        {
+          // Diagonal element found in original matrix
+          newValues[newNnzCount]        = originalValues[j] + 1.0;
+          newColumnIndices[newNnzCount] = i;
+          newNnzCount++;
+          diagonalAdded = true;
+        }
+        else if (originalColIndices[j] > i && !diagonalAdded)
+        {
+          // Insert diagonal if not found yet
+          newValues[newNnzCount]        = 1.;
+          newColumnIndices[newNnzCount] = i;
+          newNnzCount++;
+          diagonalAdded = true; // Mark as added to prevent re-insertion
+          // Then add the current original element
+          newValues[newNnzCount]        = originalValues[j];
+          newColumnIndices[newNnzCount] = originalColIndices[j];
+          newNnzCount++;
+        }
+        else
+        {
+          // Elements before diagonal, elements after diagonal and the
+          // diagonal is already handled
+          newValues[newNnzCount]        = originalValues[j];
+          newColumnIndices[newNnzCount] = originalColIndices[j];
+          newNnzCount++;
+        }
+      }
+
+      // If diagonal element was not present in original row
+      if (!diagonalAdded)
+      {
+        newValues[newNnzCount]        = 1.;
+        newColumnIndices[newNnzCount] = i;
+        newNnzCount++;
+      }
+    }
+    newRowPointers[A->getNumRows()] = newNnzCount;
+    assert(newNnzCount <= maxNnzCount);
+    newColumnIndices.resize(newNnzCount);
+    auto pattern = new ScaleAddBufferCpu(std::move(newRowPointers), std::move(newColumnIndices));
+    // workspace_ owns pattern
+    workspace_->setScaleAddIBuffer(pattern);
+    updateMatrix(A, pattern->getRowData(), pattern->getColumnData(), newValues.data(), pattern->getNnz());
+    return 0;
+  }
+
+  /**
+   * @brief Add the identity to a CSR matrix.
+   *
+   * @param[in,out] A - Sparse CSR matrix
+   * @param[in,out] B - Sparse CSR matrix
+   * @param[in] pattern - precalculated sparsity pattern
+   * @return 0 if successful, 1 otherwise
+   */
+  static int addBWithPattern(matrix::Csr* A, matrix::Csr* B, ScaleAddBufferCpu* pattern)
+  {
+    index_type const* const aRowPointers = A->getRowData(memory::HOST);
+    index_type const* const aColIndices  = A->getColData(memory::HOST);
+    real_type const* const  aValues      = A->getValues(memory::HOST);
+
+    index_type const* const bRowPointers = B->getRowData(memory::HOST);
+    index_type const* const bColIndices  = B->getColData(memory::HOST);
+    real_type const* const  bValues      = B->getValues(memory::HOST);
+
+    std::vector<real_type> newValues;
+    newValues.reserve(pattern->getNnz());
+
+    for (index_type i = 0; i < A->getNumRows(); ++i)
+    {
+      const index_type startA = aRowPointers[i];
+      const index_type endA   = aRowPointers[i + 1];
+      const index_type startB = bRowPointers[i];
+      const index_type endB   = bRowPointers[i + 1];
+
+      index_type ptrA = startA;
+      index_type ptrB = startB;
+
+      // Merge the non-zero elements for the current row
+      while (ptrA < endA || ptrB < endB)
+      {
+        // Case 1: All remaining elements are in A
+        if (ptrB >= endB)
+        {
+          newValues.push_back(aValues[ptrA]);
+          ptrA++;
+        }
+        // Case 2: All remaining elements are in B
+        else if (ptrA >= endA)
+        {
+          newValues.push_back(bValues[ptrB]);
+          ptrB++;
+        }
+        // Case 3: Elements in both A and B. Compare column indices.
+        else
+        {
+          if (aColIndices[ptrA] < bColIndices[ptrB])
+          {
+            newValues.push_back(aValues[ptrA]);
+            ptrA++;
+          }
+          else if (bColIndices[ptrB] < aColIndices[ptrA])
+          {
+            newValues.push_back(bValues[ptrB]);
+            ptrB++;
+          }
+          // Case 4: Same column index, add values
+          else
+          {
+            real_type sum = aValues[ptrA] + bValues[ptrB];
+            newValues.push_back(sum);
+            ptrA++;
+            ptrB++;
+          }
+        }
+      }
+    }
+    assert(static_cast<index_type>(newValues.size()) == pattern->getNnz());
+    return updateMatrix(A, pattern->getRowData(), pattern->getColumnData(), newValues.data(), pattern->getNnz());
+  }
+
+  /**
+   * @brief Multiply csr matrix by a constant and add B.
+   *
+   * @param[in,out] A - Sparse CSR matrix
+   * @param[in] alpha - constant to the added
+   * @param[in] B - Sparse CSR matrix
+   * @return 0 if successful, 1 otherwise
+   */
+  int MatrixHandlerCpu::scaleAddB(matrix::Csr* A, real_type alpha, matrix::Csr* B)
+  {
+    index_type info = scaleConst(A, alpha);
+    if (info == 1)
+    {
+      return info;
+    }
+
+    // Reuse sparsity pattern if it is available
+    if (workspace_->scaleAddBSetup())
+    {
+      ScaleAddBufferCpu* pattern = workspace_->getScaleAddBBuffer();
+      return addBWithPattern(A, B, pattern);
+    }
+
+    index_type const* const aRowPointers = A->getRowData(memory::HOST);
+    index_type const* const aColIndices  = A->getColData(memory::HOST);
+    real_type const* const  aValues      = A->getValues(memory::HOST);
+
+    index_type const* const bRowPointers = B->getRowData(memory::HOST);
+    index_type const* const bColIndices  = B->getColData(memory::HOST);
+    real_type const* const  bValues      = B->getValues(memory::HOST);
+
+    std::vector<index_type> newRowPointers;
+    newRowPointers.reserve(A->getNumRows() + 1);
+    std::vector<index_type> newColIndices;
+    std::vector<real_type>  newValues;
+
+    newRowPointers.push_back(0); // First element is always 0
+    for (index_type i = 0; i < A->getNumRows(); ++i)
+    {
+      const index_type startA = aRowPointers[i];
+      const index_type endA   = aRowPointers[i + 1];
+      const index_type startB = bRowPointers[i];
+      const index_type endB   = bRowPointers[i + 1];
+
+      index_type ptrA = startA;
+      index_type ptrB = startB;
+
+      // Merge the non-zero elements for the current row
+      while (ptrA < endA || ptrB < endB)
+      {
+        // Case 1: All remaining elements are in A
+        if (ptrB >= endB)
+        {
+          newColIndices.push_back(aColIndices[ptrA]);
+          newValues.push_back(aValues[ptrA]);
+          ptrA++;
+        }
+        // Case 2: All remaining elements are in B
+        else if (ptrA >= endA)
+        {
+          newColIndices.push_back(bColIndices[ptrB]);
+          newValues.push_back(bValues[ptrB]);
+          ptrB++;
+        }
+        // Case 3: Elements in both A and B. Compare column indices.
+        else
+        {
+          if (aColIndices[ptrA] < bColIndices[ptrB])
+          {
+            newColIndices.push_back(aColIndices[ptrA]);
+            newValues.push_back(aValues[ptrA]);
+            ptrA++;
+          }
+          else if (bColIndices[ptrB] < aColIndices[ptrA])
+          {
+            newColIndices.push_back(bColIndices[ptrB]);
+            newValues.push_back(bValues[ptrB]);
+            ptrB++;
+          }
+          // Case 4: Same column index, add values
+          else
+          {
+            real_type sum = aValues[ptrA] + bValues[ptrB];
+            newColIndices.push_back(aColIndices[ptrA]);
+            newValues.push_back(sum);
+            ptrA++;
+            ptrB++;
+          }
+        }
+      }
+      newRowPointers.push_back(static_cast<index_type>(newValues.size()));
+    }
+
+    auto pattern = new ScaleAddBufferCpu(std::move(newRowPointers), std::move(newColIndices));
+    // workspace_ owns pattern
+    workspace_->setScaleAddBBuffer(pattern);
+    return updateMatrix(A, pattern->getRowData(), pattern->getColumnData(), newValues.data(), pattern->getNnz());
   }
 } // namespace ReSolve

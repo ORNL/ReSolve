@@ -1,6 +1,8 @@
 #include "MatrixHandlerHip.hpp"
 
 #include <algorithm>
+#include <cassert>
+#include <numeric>
 
 #include <resolve/hip/hipKernels.h>
 #include <resolve/hip/hipVectorKernels.h>
@@ -11,6 +13,7 @@
 #include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/workspace/LinAlgWorkspaceHIP.hpp>
+#include <resolve/workspace/ScaleAddBufferHIP.hpp>
 
 namespace ReSolve
 {
@@ -367,6 +370,202 @@ namespace ReSolve
     A->setUpdated(memory::DEVICE);
     mem_.deviceSynchronize();
     return 0;
+  }
+
+  /**
+   * @brief Calculate buffer size and sparsity pattern of alpha*A + beta*B
+   *
+   * @param[in] A - CSR matrix
+   * @param[in] B - CSR matrix
+   * @param[in, out] pattern - sparsity pattern and buffer
+   *
+   * @return int error code, 0 if successful
+   */
+  int MatrixHandlerHip::allocateForSum(matrix::Csr* A, matrix::Csr* B, ScaleAddBufferHIP** pattern)
+  {
+    auto             handle   = workspace_->getRocsparseHandle();
+    rocsparse_status roc_info = rocsparse_set_pointer_mode(handle, rocsparse_pointer_mode_host);
+    int              info     = (roc_info != rocsparse_status_success);
+    workspace_->setRocsparseHandle(handle);
+
+    auto a_i = A->getRowData(memory::DEVICE);
+    auto a_j = A->getColData(memory::DEVICE);
+
+    auto b_i = B->getRowData(memory::DEVICE);
+    auto b_j = B->getColData(memory::DEVICE);
+
+    index_type m = A->getNumRows();
+    assert(m == B->getNumRows());
+    index_type n = A->getNumColumns();
+    assert(n == B->getNumColumns());
+
+    assert(m == n);
+
+    index_type nnz_a = A->getNnz();
+    index_type nnz_b = B->getNnz();
+
+    *pattern                    = new ScaleAddBufferHIP(n + 1);
+    rocsparse_mat_descr descr_a = (*pattern)->getMatrixDescriptor();
+    index_type          nnz_total;
+    // determines sum row offsets and total number of nonzeros
+    roc_info = rocsparse_bsrgeam_nnzb(handle, rocsparse_direction_row, m, n, 1, descr_a, nnz_a, a_i, a_j, descr_a, nnz_b, b_i, b_j, descr_a, (*pattern)->getRowData(), &nnz_total);
+    info     = info || (roc_info != rocsparse_status_success);
+    (*pattern)->setNnz(nnz_total);
+    return info;
+  }
+
+  /**
+   * @brief Given sparsity pattern, calculate alpha*A + beta*B
+   *
+   * @param[in] A - CSR matrix
+   * @param[in] alpha - constant to be added to A
+   * @param[in] B - CSR matrix
+   * @param[in] beta - constant to be added to B
+   * @param[in, out] pattern - sparsity pattern and buffer
+   *
+   * @return int error code, 0 if successful
+   */
+  int MatrixHandlerHip::computeSum(matrix::Csr* A, real_type alpha, matrix::Csr* B, real_type beta, matrix::Csr* C, ScaleAddBufferHIP* pattern)
+  {
+    auto a_v = A->getValues(memory::DEVICE);
+    auto a_i = A->getRowData(memory::DEVICE);
+    auto a_j = A->getColData(memory::DEVICE);
+
+    auto b_v = B->getValues(memory::DEVICE);
+    auto b_i = B->getRowData(memory::DEVICE);
+    auto b_j = B->getColData(memory::DEVICE);
+
+    auto c_v = C->getValues(memory::DEVICE);
+    auto c_i = C->getRowData(memory::DEVICE);
+    auto c_j = C->getColData(memory::DEVICE);
+
+    auto handle = workspace_->getRocsparseHandle();
+
+    index_type m = A->getNumRows();
+    assert(m == B->getNumRows());
+    assert(m == C->getNumRows());
+
+    index_type n = A->getNumColumns();
+    assert(n == B->getNumColumns());
+    assert(n == C->getNumColumns());
+
+    assert(m == n);
+
+    index_type nnz_a = A->getNnz();
+    index_type nnz_b = B->getNnz();
+
+    int                 info     = mem_.copyArrayDeviceToDevice(c_i, pattern->getRowData(), n + 1);
+    rocsparse_mat_descr descr_a  = pattern->getMatrixDescriptor();
+    rocsparse_status    roc_info = rocsparse_dbsrgeam(handle, rocsparse_direction_row, m, n, 1, &alpha, descr_a, nnz_a, a_v, a_i, a_j, &beta, descr_a, nnz_b, b_v, b_i, b_j, descr_a, c_v, c_i, c_j);
+    info                         = info || (roc_info != rocsparse_status_success);
+    info                         = info || C->setUpdated(memory::DEVICE);
+    return info;
+  }
+
+  /**
+   * @brief Update matrix with a new number of nonzero elements
+   *
+   * @param[in,out] A - Sparse matrix
+   * @param[in] row_data - pointer to row data (array of integers)
+   * @param[in] col_data - pointer to column data (array of integers)
+   * @param[in] val_data - pointer to value data (array of real numbers)
+   * @param[in] nnz - number of non-zer
+   * @return 0 if successful, 1 otherwise
+   */
+  static int updateMatrix(matrix::Sparse* A, index_type* rowData, index_type* columnData, real_type* valData, index_type nnz)
+  {
+    if (A->destroyMatrixData(memory::DEVICE) != 0)
+    {
+      return 1;
+    }
+    if (A->destroyMatrixData(memory::HOST) != 0)
+    {
+      return 1;
+    }
+    return A->copyDataFrom(rowData, columnData, valData, nnz, memory::DEVICE, memory::DEVICE);
+  }
+
+  /**
+   * @brief Add a constant to the nonzero values of a csr matrix,
+   *        then add the identity matrix.
+   *
+   * @param[in,out] A - Sparse CSR matrix
+   * @param[in] alpha - constant to the added
+   * @return 0 if successful, 1 otherwise
+   */
+  int MatrixHandlerHip::scaleAddI(matrix::Csr* A, real_type alpha)
+  {
+    index_type n = A->getNumRows();
+
+    std::vector<index_type> I_i(n + 1);
+    std::iota(I_i.begin(), I_i.end(), 0);
+
+    std::vector<index_type> I_j(n);
+    std::iota(I_j.begin(), I_j.end(), 0);
+
+    std::vector<real_type> I_v(n, 1.0);
+
+    matrix::Csr I(A->getNumRows(), A->getNumColumns(), n);
+    int         info = I.copyDataFrom(I_i.data(), I_j.data(), I_v.data(), n, memory::HOST, memory::DEVICE);
+
+    // Reuse sparsity pattern if it is available
+    if (workspace_->scaleAddISetup())
+    {
+      ScaleAddBufferHIP* pattern = workspace_->getScaleAddIBuffer();
+      matrix::Csr        C(A->getNumRows(), A->getNumColumns(), pattern->getNnz());
+      info = info || C.allocateMatrixData(memory::DEVICE);
+      info = info || computeSum(A, alpha, &I, 1., &C, pattern);
+      info = info || updateMatrix(A, C.getRowData(memory::DEVICE), C.getColData(memory::DEVICE), C.getValues(memory::DEVICE), C.getNnz());
+    }
+    else
+    {
+      ScaleAddBufferHIP* pattern = nullptr;
+      matrix::Csr        C(A->getNumRows(), A->getNumColumns(), A->getNnz());
+      info = info || allocateForSum(A, &I, &pattern);
+
+      workspace_->setScaleAddIBuffer(pattern);
+      workspace_->scaleAddISetupDone();
+      C.setNnz(pattern->getNnz());
+      C.allocateMatrixData(memory::DEVICE);
+      info = info || computeSum(A, alpha, &I, 1., &C, pattern);
+      info = info || updateMatrix(A, C.getRowData(memory::DEVICE), C.getColData(memory::DEVICE), C.getValues(memory::DEVICE), C.getNnz());
+    }
+    return info;
+  }
+
+  /**
+   * @brief Multiply csr matrix by a constant and add B.
+   *
+   * @param[in,out] A - Sparse CSR matrix
+   * @param[in] alpha - constant to the added
+   * @param[in] B - Sparse CSR matrix
+   * @return 0 if successful, 1 otherwise
+   */
+  int MatrixHandlerHip::scaleAddB(matrix::Csr* A, real_type alpha, matrix::Csr* B)
+  {
+    int info = 0;
+    // Reuse sparsity pattern if it is available
+    if (workspace_->scaleAddBSetup())
+    {
+      ScaleAddBufferHIP* pattern = workspace_->getScaleAddBBuffer();
+      matrix::Csr        C(A->getNumRows(), A->getNumColumns(), pattern->getNnz());
+      info = info || C.allocateMatrixData(memory::DEVICE);
+      info = info || computeSum(A, alpha, B, 1., &C, pattern);
+      info = info || updateMatrix(A, C.getRowData(memory::DEVICE), C.getColData(memory::DEVICE), C.getValues(memory::DEVICE), C.getNnz());
+    }
+    else
+    {
+      ScaleAddBufferHIP* pattern = nullptr;
+      matrix::Csr        C(A->getNumRows(), A->getNumColumns(), A->getNnz());
+      info = info || allocateForSum(A, B, &pattern);
+      workspace_->setScaleAddBBuffer(pattern);
+      workspace_->scaleAddBSetupDone();
+      C.setNnz(pattern->getNnz());
+      C.allocateMatrixData(memory::DEVICE);
+      info = info || computeSum(A, alpha, B, 1., &C, pattern);
+      info = info || updateMatrix(A, C.getRowData(memory::DEVICE), C.getColData(memory::DEVICE), C.getValues(memory::DEVICE), C.getNnz());
+    }
+    return info;
   }
 
 } // namespace ReSolve

@@ -202,6 +202,92 @@ namespace ReSolve
         return status.report(testname.c_str());
       }
 
+      TestOutcome scaleAddI(index_type n)
+      {
+        TestStatus   status;
+        std::string  testname(__func__);
+        matrix::Csr* A   = createCsrMatrix(n);
+        real_type    val = 2.;
+
+        handler_.scaleAddI(A, val, memspace_);
+        if (memspace_ == memory::DEVICE)
+        {
+          A->syncData(memory::HOST);
+        }
+        // expected sum is 2*30+1
+        status *= verifyScaleAddICsrMatrix(A, 61);
+
+        // run again to reuse sparsity pattern.
+        handler_.scaleAddI(A, val, memspace_);
+        if (memspace_ == memory::DEVICE)
+        {
+          A->syncData(memory::HOST);
+        }
+        // expected sum is 2*61+1
+        status *= verifyScaleAddICsrMatrix(A, 123);
+
+        delete A;
+        return status.report(testname.c_str());
+      }
+
+      TestOutcome scaleAddIZero(index_type n)
+      {
+        TestStatus   status;
+        std::string  testname(__func__);
+        matrix::Csr* A   = createCsrEmptyMatrix(n);
+        real_type    val = 2.;
+
+        handler_.scaleAddI(A, val, memspace_);
+        if (memspace_ == memory::DEVICE)
+        {
+          A->syncData(memory::HOST);
+        }
+        // expected sum is 1
+        status *= verifyScaleAddICsrMatrix(A, 1);
+
+        // run again to reuse sparsity pattern.
+        handler_.scaleAddI(A, val, memspace_);
+        if (memspace_ == memory::DEVICE)
+        {
+          A->syncData(memory::HOST);
+        }
+        // expected sum is 2*1+1
+        status *= verifyScaleAddICsrMatrix(A, 3);
+
+        delete A;
+        return status.report(testname.c_str());
+      }
+
+      TestOutcome scaleAddB(index_type n)
+      {
+        TestStatus   status;
+        std::string  testname(__func__);
+        matrix::Csr* A   = createCsrMatrix(n);
+        matrix::Csr* B   = createCsrMatrix(n);
+        real_type    val = 2.;
+
+        handler_.scaleAddB(A, val, B, memspace_);
+        if (memspace_ == memory::DEVICE)
+        {
+          A->syncData(memory::HOST);
+        }
+        // expected sum is 2*30+30
+        status *= verifyScaleAddICsrMatrix(A, 90);
+
+        // run again to reuse sparsity pattern.
+        handler_.scaleAddB(A, val, B, memspace_);
+        if (memspace_ == memory::DEVICE)
+        {
+          A->syncData(memory::HOST);
+        }
+        // expected sum is 2*90+30
+        status *= verifyScaleAddICsrMatrix(A, 210);
+
+        delete A;
+        delete B;
+        return status.report(testname.c_str());
+      }
+
     private:
       ReSolve::MatrixHandler& handler_;
       memory::MemorySpace     memspace_{memory::HOST};
@@ -402,8 +488,8 @@ namespace ReSolve
        * @brief Verify structure of a CSR matrix with preset pattern.
        *
        * The sparsity structure corresponds to the CSR representation of a rectangular matrix
-       * created by createRectangularCscMatrix.
-       * The sparisty structure is upper bidiagonal if n==m,
+       * created by createRectangularCsrMatrix.
+       * The sparsity structure is upper bidiagonal if n==m,
        * with an extra entry in the first column.
        * If n>m A_{ij} is nonzero iff i==j, or i+m==j+n
        * if n<m A_{ij} is nonzero iff i==j, or i+m==j+n
@@ -517,6 +603,37 @@ namespace ReSolve
           }
         }
         return true;
+      }
+
+      /**
+       * @brief Create a CSR matrix with preset sparsity structure
+       *
+       * The sparisty structure is such that each row has a different number of nonzeros
+       * The values are chosen so that the sum of each row is 30
+       *
+       * @param[in] n number of rows and columns
+       *
+       * @return matrix::Csr*
+       */
+      matrix::Csr* createCsrEmptyMatrix(const index_type n)
+      {
+        index_type   nnz = 0;
+        matrix::Csr* A   = new matrix::Csr(n, n, nnz);
+        A->allocateMatrixData(memory::HOST);
+
+        index_type* rowptr = A->getRowData(memory::HOST);
+
+        for (index_type i = 0; i < n + 1; ++i)
+        {
+          rowptr[i] = 0;
+        }
+        A->setUpdated(memory::HOST);
+
+        if (memspace_ == memory::DEVICE)
+        {
+          A->syncData(memspace_);
+        }
+        return A;
       }
 
       /**
@@ -674,6 +791,56 @@ namespace ReSolve
 
         // Clean up the original matrix
         delete original_A;
+
+        return true;
+      }
+
+      /**
+       * @brief Verify structure of a CSR matrix with preset pattern after scaleAddI
+       *
+       * The sparsity structure corresponds to the CSR representation of a square matrix
+       * created by createCsrMatrix, scaled by a constant and 1. added along the diagonal.
+       *
+       * @pre A is a valid, allocated CSR matrix
+       * @invariant A
+       * @param[in] A matrix::Csr* pointer to the matrix to be verified
+       * @param[in] expected sum of row elements
+       * @return bool true if the matrix is valid, false otherwise
+       */
+      bool verifyScaleAddICsrMatrix(matrix::Csr* A, real_type expected)
+      {
+        // Check if the matrix is valid
+        if (A == nullptr)
+        {
+          return false;
+        }
+
+        // Get matrix dimensions
+        const index_type n = A->getNumRows();
+        const index_type m = A->getNumColumns();
+
+        if (n != m)
+        {
+          return false;
+        }
+
+        index_type* scaled_row_ptr = A->getRowData(memory::HOST);
+        real_type*  scaled_value   = A->getValues(memory::HOST);
+
+        // Verify values - each element scaled by scale. Diagonal elements should be  1.
+        for (index_type i = 0; i < n; ++i)
+        {
+          real_type sum = 0.;
+          for (index_type j = scaled_row_ptr[i]; j < scaled_row_ptr[i + 1]; ++j)
+          {
+            sum += scaled_value[j];
+          }
+          if (sum != expected)
+          {
+            std::cout << "Mismatch at row " << i << ": scaled sum = " << sum << ", expected sum = " << expected << "\n";
+            return false;
+          }
+        }
 
         return true;
       }

@@ -1,12 +1,16 @@
+#include <cassert>
+
 #include <resolve/workspace/LinAlgWorkspaceHIP.hpp>
+#include <resolve/workspace/ScaleAddBufferHIP.hpp>
 
 namespace ReSolve
 {
   LinAlgWorkspaceHIP::LinAlgWorkspaceHIP()
   {
-    handle_rocsparse_ = nullptr;
-    handle_rocblas_   = nullptr;
-
+    handle_rocsparse_          = nullptr;
+    handle_rocblas_            = nullptr;
+    buffer_scale_add_i_        = nullptr;
+    buffer_scale_add_b_        = nullptr;
     matvec_setup_done_         = false;
     d_r_                       = nullptr;
     d_r_size_                  = 0;
@@ -23,6 +27,16 @@ namespace ReSolve
     if (matvec_setup_done_)
     {
       rocsparse_destroy_mat_descr(mat_A_);
+    }
+    if (scale_add_i_setup_done_)
+    {
+      assert(buffer_scale_add_i_ != nullptr);
+      delete buffer_scale_add_i_;
+    }
+    if (buffer_scale_add_b_ != nullptr)
+    {
+      assert(buffer_scale_add_b_ != nullptr);
+      delete buffer_scale_add_b_;
     }
     if (d_r_size_ != 0)
     {
@@ -51,6 +65,20 @@ namespace ReSolve
     {
       rocsparse_destroy_mat_descr(mat_A_);
       matvec_setup_done_ = false;
+    }
+    if (scale_add_b_setup_done_)
+    {
+      assert(buffer_scale_add_b_ != nullptr);
+      delete buffer_scale_add_b_;
+      buffer_scale_add_b_     = nullptr;
+      scale_add_b_setup_done_ = false;
+    }
+    if (scale_add_i_setup_done_)
+    {
+      assert(buffer_scale_add_i_ != nullptr);
+      delete buffer_scale_add_i_;
+      buffer_scale_add_i_     = nullptr;
+      scale_add_i_setup_done_ = false;
     }
     if (d_r_size_ != 0)
     {
@@ -128,6 +156,36 @@ namespace ReSolve
     norm_buffer_ = nb;
   }
 
+  ScaleAddBufferHIP* LinAlgWorkspaceHIP::getScaleAddIBuffer()
+  {
+    return buffer_scale_add_i_;
+  }
+
+  ScaleAddBufferHIP* LinAlgWorkspaceHIP::getScaleAddBBuffer()
+  {
+    return buffer_scale_add_b_;
+  }
+
+  void LinAlgWorkspaceHIP::setScaleAddBBuffer(ScaleAddBufferHIP* buffer)
+  {
+    buffer_scale_add_b_ = buffer;
+  }
+
+  void LinAlgWorkspaceHIP::setScaleAddIBuffer(ScaleAddBufferHIP* buffer)
+  {
+    buffer_scale_add_i_ = buffer;
+  }
+
+  void LinAlgWorkspaceHIP::scaleAddBSetupDone()
+  {
+    scale_add_b_setup_done_ = true;
+  }
+
+  void LinAlgWorkspaceHIP::scaleAddISetupDone()
+  {
+    scale_add_i_setup_done_ = true;
+  }
+
   void LinAlgWorkspaceHIP::setNormBufferState(bool r)
   {
     norm_buffer_ready_ = r;
@@ -141,6 +199,16 @@ namespace ReSolve
   void LinAlgWorkspaceHIP::matvecSetupDone()
   {
     matvec_setup_done_ = true;
+  }
+
+  bool LinAlgWorkspaceHIP::scaleAddISetup()
+  {
+    return scale_add_i_setup_done_;
+  }
+
+  bool LinAlgWorkspaceHIP::scaleAddBSetup()
+  {
+    return scale_add_b_setup_done_;
   }
 
   void LinAlgWorkspaceHIP::initializeHandles()

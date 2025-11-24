@@ -62,6 +62,10 @@ namespace ReSolve
 
     void addConst(matrix::Sparse* A, real_type alpha, memory::MemorySpace memspace);
 
+    int scaleAddI(matrix::Csr* A, real_type alpha, memory::MemorySpace memspace);
+
+    int scaleAddB(matrix::Csr* A, real_type alpha, matrix::Csr* B, memory::MemorySpace memspace);
+
     /// Should compute vec_result := alpha*A*vec_x + beta*vec_result, but at least on cpu alpha and beta are flipped
     int  matvec(matrix::Sparse*     A,
                 vector_type*        vec_x,
