@@ -9,6 +9,7 @@
 
 namespace ReSolve
 {
+  class ScaleAddBufferHIP;
 
   class LinAlgWorkspaceHIP
   {

@@ -1,6 +1,7 @@
 #include <cassert>
 
 #include <resolve/workspace/LinAlgWorkspaceHIP.hpp>
+#include <resolve/workspace/ScaleAddBufferHIP.hpp>
 
 namespace ReSolve
 {
