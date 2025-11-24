@@ -10,13 +10,20 @@
 set(ReSolve_Workspace_SRC ScaleAddBufferCpu.cpp LinAlgWorkspaceCpu.cpp)
 
 # C++ code that depends on CUDA SDK libraries
-set(ReSolve_Workspace_CUDASDK_SRC ScaleAddBufferCUDA.cpp LinAlgWorkspaceCUDA.cpp)
+set(ReSolve_Workspace_CUDASDK_SRC ScaleAddBufferCUDA.cpp
+                                  LinAlgWorkspaceCUDA.cpp
+)
 
 set(ReSolve_Workspace_ROCM_SRC ScaleAddBufferHIP.cpp LinAlgWorkspaceHIP.cpp)
 
 set(ReSolve_Workspace_HEADER_INSTALL
-    ScaleAddBufferCpu.hpp ScaleAddBufferCUDA.upp, ScaleAddBufferHIP.hpp LinAlgWorkspace.hpp 
-    LinAlgWorkspaceCpu.hpp LinAlgWorkspaceCUDA.hpp LinAlgWorkspaceHIP.hpp
+    ScaleAddBufferCpu.hpp
+    ScaleAddBufferCUDA.upp,
+    ScaleAddBufferHIP.hpp
+    LinAlgWorkspace.hpp
+    LinAlgWorkspaceCpu.hpp
+    LinAlgWorkspaceCUDA.hpp
+    LinAlgWorkspaceHIP.hpp
 )
 
 add_library(resolve_workspace SHARED ${ReSolve_Workspace_SRC})
