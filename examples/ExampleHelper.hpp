@@ -99,9 +99,16 @@ namespace ReSolve
         }
       }
 
+      // Returns the configured hardware backend
       std::string getHardwareBackend() const
       {
         return hardware_backend_;
+      }
+
+      /// Returns the configured memory space
+      ReSolve::memory::MemorySpace getMemspace() const
+      {
+        return memspace_;
       }
 
       /**
