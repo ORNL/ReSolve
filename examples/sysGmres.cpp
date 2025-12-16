@@ -37,7 +37,18 @@ void printHelpInfo()
   std::cout << "\t-x <flexible> \tEnable flexible: yes or no (default 'yes')\n\n";
 }
 
-/// Prototype of the example function
+//
+// Forward declarations of functions
+//
+
+/**
+ * @brief Example of solving a linear system with GMRES using SystemSolver.
+ *
+ * @tparam workspace_type - Type of the workspace to use
+ * @param[in] argc - Number of command line arguments
+ * @param[in] argv - Command line arguments
+ * @return 0 if the example ran successfully, 1 otherwise
+ */
 template <class workspace_type>
 static int sysGmres(int argc, char* argv[]);
 
@@ -91,14 +102,10 @@ int main(int argc, char* argv[])
   return 0;
 }
 
-/**
- * @brief Example of solving a linear system with GMRES using SystemSolver.
- *
- * @tparam workspace_type - Type of the workspace to use
- * @param[in] argc - Number of command line arguments
- * @param[in] argv - Command line arguments
- * @return 0 if the example ran successfully, 1 otherwise
- */
+//
+// Definitions of functions
+//
+
 template <class workspace_type>
 int sysGmres(int argc, char* argv[])
 {
@@ -276,7 +283,6 @@ int sysGmres(int argc, char* argv[])
   return return_code;
 }
 
-/// Checks GMRES-related CLI options
 void processInputs(std::string& method, std::string& gs, std::string& sketch, std::string& flexible)
 {
   if (method == "randgmres")

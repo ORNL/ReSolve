@@ -99,7 +99,7 @@ namespace ReSolve
         }
       }
 
-      // Returns the configured hardware backend
+      /// Returns the configured hardware backend
       std::string getHardwareBackend() const
       {
         return hardware_backend_;
