@@ -27,7 +27,7 @@ if(RESOLVE_USE_KLU)
   # Build an example with a configurable and portable system solver
   add_executable(sysRefactor.exe sysRefactor.cpp)
   target_link_libraries(sysRefactor.exe PRIVATE ReSolve)
-  
+
   if(RESOLVE_USE_GPU)
     # Build an example with refactorization on GPU
     add_executable(gpuRefactor.exe gpuRefactor.cpp)
