@@ -61,3 +61,5 @@ It is seamless from the user perspective and fixed many bugs.
 13. Added LUSOL direct solver, which can factorize matrices and extract factors independently of KLU.
 
 14. Various Spack updates.
+
+15. Added examples/sysGmres.cpp to demonstrate how to use SystemSolver with GMRES. 
