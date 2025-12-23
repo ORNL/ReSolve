@@ -170,8 +170,7 @@ int main()
   }
   std::cout << "]" << std::endl;
 
-  helper.resetSystem(A, vec_rhs, vec_x);
-  helper.printShortSummary();
+  helper.printShortSummary(A, vec_rhs, vec_x);
   ReSolve::matrix::Csr* L = (ReSolve::matrix::Csr*) KLU.getLFactor();
   ReSolve::matrix::Csr* U = (ReSolve::matrix::Csr*) KLU.getUFactor();
   if (L == nullptr || U == nullptr)
@@ -214,7 +213,7 @@ int main()
       // Solve with refactorization
       status = Rf.solve(vec_rhs, vec_x);
       std::cout << "RocSolverRf solve status: " << status << std::endl;
-      helper.resetSystem(A, vec_rhs, vec_x);
+      // helper.resetSystem(A, vec_rhs, vec_x);
 
       if (status == 0)
       {

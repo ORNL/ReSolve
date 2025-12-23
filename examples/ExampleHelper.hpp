@@ -92,11 +92,6 @@ namespace ReSolve
           delete res_;
           res_ = nullptr;
         }
-        if (x_true_)
-        {
-          delete x_true_;
-          x_true_ = nullptr;
-        }
       }
 
       /// Returns the configured hardware backend
@@ -109,55 +104,6 @@ namespace ReSolve
       ReSolve::memory::MemorySpace getMemspace() const
       {
         return memspace_;
-      }
-
-      /**
-       * @brief Set the new linear system together with its computed solution
-       * and compute solution error and residual norms.
-       *
-       * This will set the new system A*x = r and compute related error norms.
-       *
-       * @param A[in] - Linear system matrix
-       * @param r[in] - Linear system right-hand side
-       * @param x[in] - Computed solution of the linear system
-       */
-      void setSystem(ReSolve::matrix::Sparse* A,
-                     ReSolve::vector::Vector* r,
-                     ReSolve::vector::Vector* x)
-      {
-        assert((res_ == nullptr) && (x_true_ == nullptr));
-        A_   = A;
-        r_   = r;
-        x_   = x;
-        res_ = new ReSolve::vector::Vector(A->getNumRows());
-        computeNorms();
-      }
-
-      /**
-       * @brief Set the new linear system together with its computed solution
-       * and compute solution error and residual norms.
-       *
-       * This is to be used after values in A and r are updated.
-       *
-       * @todo This method probably does not need any input parameters.
-       *
-       * @param A[in] - Linear system matrix
-       * @param r[in] - Linear system right-hand side
-       * @param x[in] - Computed solution of the linear system
-       */
-      void resetSystem(ReSolve::matrix::Sparse* A,
-                       ReSolve::vector::Vector* r,
-                       ReSolve::vector::Vector* x)
-      {
-        A_ = A;
-        r_ = r;
-        x_ = x;
-        if (res_ == nullptr)
-        {
-          res_ = new ReSolve::vector::Vector(A->getNumRows());
-        }
-
-        computeNorms();
       }
 
       /// Return L2 norm of the linear system residual.
@@ -173,16 +119,60 @@ namespace ReSolve
       }
 
       /// Minimalistic summary
-      void printShortSummary()
+      void printShortSummary(ReSolve::matrix::Sparse* A,
+                        ReSolve::vector::Vector* r,
+                        ReSolve::vector::Vector* x)
       {
+        A_ = A;
+        r_ = r;
+        x_ = x;
+
+        if (res_ == nullptr)
+        {
+          res_ = new ReSolve::vector::Vector(A->getNumRows());
+        }
+        else
+        {
+          if (res_->getSize() != A->getNumRows())
+          {
+            delete res_;
+            res_ = new ReSolve::vector::Vector(A->getNumRows());
+          }
+        }
+
+        res_->copyDataFrom(r_, memspace_, memspace_);
+        real_type norm = computeResidualNorm(*A_, *x_, *res_, memspace_);
+        real_type rnorm  = norm2(*r_, memspace_);
+
         std::cout << "\t2-Norm of the residual: "
                   << std::scientific << std::setprecision(16)
-                  << getNormRelativeResidual() << "\n";
+                  << norm/rnorm << "\n";
       }
 
       /// Summary of direct solve
-      void printSummary()
+      void printSummary(ReSolve::matrix::Sparse* A,
+                        ReSolve::vector::Vector* r,
+                        ReSolve::vector::Vector* x)
       {
+        A_ = A;
+        r_ = r;
+        x_ = x;
+
+        if (res_ == nullptr)
+        {
+          res_ = new ReSolve::vector::Vector(A->getNumRows());
+        }
+        else
+        {
+          if (res_->getSize() != A->getNumRows())
+          {
+            delete res_;
+            res_ = new ReSolve::vector::Vector(A->getNumRows());
+          }
+        }
+
+        computeNorms();
+
         std::cout << "\t 2-Norm of the residual (before IR): "
                   << std::scientific << std::setprecision(16)
                   << getNormRelativeResidual() << "\n";
@@ -391,8 +381,7 @@ namespace ReSolve
       ReSolve::MatrixHandler mh_; ///< matrix handler instance
       ReSolve::VectorHandler vh_; ///< vector handler instance
 
-      ReSolve::vector::Vector* res_{nullptr};    ///< pointer to residual vector
-      ReSolve::vector::Vector* x_true_{nullptr}; ///< pointer to solution error vector
+      ReSolve::vector::Vector* res_{nullptr}; ///< pointer to residual vector
 
       ReSolve::real_type norm_rhs_{0.0}; ///< right-hand side vector norm
       ReSolve::real_type norm_res_{0.0}; ///< residual vector norm

@@ -264,8 +264,7 @@ int gluRefactor(int argc, char* argv[])
     RESOLVE_RANGE_POP("Triangular solve");
 
     // Print summary of the results
-    helper.resetSystem(A, vec_rhs, vec_x);
-    helper.printSummary();
+    helper.printSummary(A, vec_rhs, vec_x);
 
   } // for (int i = 0; i < num_systems; ++i)
   RESOLVE_RANGE_POP(__FUNCTION__);

@@ -268,8 +268,6 @@ int sysGmres(int argc, char* argv[])
 
   if (return_code == 0)
   {
-    helper.resetSystem(A, vec_rhs, vec_x);
-
     // Get reference to iterative solver and print results
     LinSolverIterative& iter_solver = solver.getIterativeSolver();
     helper.printIterativeSolverSummary(&iter_solver);

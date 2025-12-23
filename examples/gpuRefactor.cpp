@@ -260,8 +260,7 @@ int gpuRefactor(int argc, char* argv[])
       std::cout << "KLU solve status: " << status << std::endl;
 
       // Print summary of results
-      helper.resetSystem(A, vec_rhs, vec_x);
-      helper.printShortSummary();
+      helper.printShortSummary(A, vec_rhs, vec_x);
 
       if (i == 1)
       {
@@ -298,8 +297,7 @@ int gpuRefactor(int argc, char* argv[])
       RESOLVE_RANGE_POP("Refactorization");
 
       // Print summary of the results
-      helper.resetSystem(A, vec_rhs, vec_x);
-      helper.printSummary();
+      helper.printSummary(A, vec_rhs, vec_x);
 
       RESOLVE_RANGE_PUSH("Iterative refinement");
       if (is_iterative_refinement)
