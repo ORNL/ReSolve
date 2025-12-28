@@ -792,7 +792,7 @@ namespace ReSolve
 
   void LinSolverIterativeRandFGMRES::precV(vector_type* rhs, vector_type* x)
   {
-    LU_solver_->solve(rhs, x);
+    preconditioner_->apply(rhs, x);
   }
 
   /**

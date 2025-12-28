@@ -125,7 +125,6 @@ namespace ReSolve
     vector_type* vec_aux_{nullptr};
 
     GramSchmidt*     GS_{nullptr};
-    LinSolverDirect* LU_solver_{nullptr};
     index_type       n_{0};
     real_type        one_over_k_{1.0};
 

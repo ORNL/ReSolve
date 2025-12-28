@@ -105,7 +105,6 @@ namespace ReSolve
     real_type* h_rs_{nullptr};
 
     GramSchmidt*     GS_{nullptr};
-    LinSolverDirect* LU_solver_{nullptr};
     index_type       n_{0};
     bool             is_solver_set_{false};
 
