@@ -13,6 +13,7 @@
 #include <resolve/GramSchmidt.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
 #include <resolve/LinSolverIterativeFGMRES.hpp>
+#include <resolve/PreconditionerLU.hpp>
 #include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
@@ -150,7 +151,8 @@ int runTest(int argc, char* argv[], std::string& solver_name)
     status = FGMRES.setup(A);
     error_sum += status;
 
-    status = FGMRES.setupPreconditioner("LU", &KLU);
+    ReSolve::PreconditionerLU precond_lu(&KLU);
+    status = FGMRES.setPreconditioner(&precond_lu);
     error_sum += status;
     status = FGMRES.solve(&vec_rhs, &vec_x);
     error_sum += status;
@@ -197,7 +199,8 @@ int runTest(int argc, char* argv[], std::string& solver_name)
   if (is_ir)
   {
     FGMRES.resetMatrix(A);
-    status = FGMRES.setupPreconditioner("LU", &KLU);
+    ReSolve::PreconditionerLU precond_lu(&KLU);
+    status = FGMRES.setPreconditioner(&precond_lu);
     error_sum += status;
     status = FGMRES.solve(&vec_rhs, &vec_x);
     error_sum += status;

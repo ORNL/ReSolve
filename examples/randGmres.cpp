@@ -7,6 +7,7 @@
 #include <resolve/LinSolverDirectCpuILU0.hpp>
 #include <resolve/LinSolverDirectSerialILU0.hpp>
 #include <resolve/LinSolverIterativeRandFGMRES.hpp>
+#include <resolve/PreconditionerLU.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/matrix/io.hpp>
@@ -177,7 +178,8 @@ int runGmresExample(int argc, char* argv[])
   FGMRES.setup(A);
 
   FGMRES.resetMatrix(A);
-  FGMRES.setupPreconditioner("LU", &Precond);
+  ReSolve::PreconditionerLU precond_lu(&Precond);
+  FGMRES.setPreconditioner(&precond_lu);
   FGMRES.setFlexible(1);
 
   FGMRES.solve(vec_rhs, vec_x);

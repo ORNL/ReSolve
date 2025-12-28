@@ -23,6 +23,7 @@
 #include <resolve/GramSchmidt.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
 #include <resolve/LinSolverIterativeFGMRES.hpp>
+#include <resolve/PreconditionerLU.hpp>
 #include <resolve/Profiling.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
@@ -306,7 +307,8 @@ int gpuRefactor(int argc, char* argv[])
       {
         // Setup iterative refinement
         FGMRES.resetMatrix(A);
-        FGMRES.setupPreconditioner("LU", &Rf);
+        ReSolve::PreconditionerLU precond_lu(&Rf);
+        FGMRES.setPreconditioner(&precond_lu);
 
         // If refactorization produced finite solution do iterative refinement
         if (std::isfinite(helper.getNormRelativeResidual()))

@@ -7,6 +7,7 @@
 #include <resolve/LinSolverDirectCuSolverRf.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
 #include <resolve/LinSolverIterativeFGMRES.hpp>
+#include <resolve/PreconditionerLU.hpp>
 #include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
@@ -185,7 +186,8 @@ int main(int argc, char* argv[])
                   << status << std::endl;
         vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
         status = Rf->solve(vec_rhs, vec_x);
-        FGMRES->setupPreconditioner("LU", Rf);
+        ReSolve::PreconditionerLU precond_lu(Rf);
+        FGMRES->setPreconditioner(&precond_lu);
       }
       // if (i%2!=0)  vec_x->setToZero(ReSolve::memory::DEVICE);
       real_type norm_x = vector_handler->dot(vec_x, vec_x, ReSolve::memory::DEVICE);

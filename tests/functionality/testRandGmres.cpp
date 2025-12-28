@@ -14,6 +14,7 @@
 #include <resolve/GramSchmidt.hpp>
 #include <resolve/LinSolverDirectCpuILU0.hpp>
 #include <resolve/LinSolverIterativeRandFGMRES.hpp>
+#include <resolve/PreconditionerLU.hpp>
 #include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/Csc.hpp>
 #include <resolve/matrix/Csr.hpp>
@@ -132,7 +133,8 @@ int runTest(int argc, char* argv[])
   FGMRES.setRestart(200);
   FGMRES.setSketchingMethod(LinSolverIterativeRandFGMRES::cs);
 
-  status = FGMRES.setupPreconditioner("LU", &ILU);
+  ReSolve::PreconditionerLU precond_lu(&ILU);
+  status = FGMRES.setPreconditioner(&precond_lu);
   error_sum += status;
 
   FGMRES.setFlexible(true);

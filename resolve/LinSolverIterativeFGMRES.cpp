@@ -17,6 +17,7 @@
 #include <resolve/random/SketchingHandler.hpp>
 #include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/vector/Vector.hpp>
+#include <resolve/Preconditioner.hpp>
 
 namespace ReSolve
 {
@@ -317,18 +318,21 @@ namespace ReSolve
     return 0;
   }
 
-  int LinSolverIterativeFGMRES::setupPreconditioner(std::string type, LinSolverDirect* LU_solver)
+  /**
+   * @brief Sets pointer to Preconditioer.
+   * 
+   * @param[in] precontitioner - pointer to Preconditioner class instance.
+   * @return 0 if successful, error code otherwise.
+   */
+  int LinSolverIterativeFGMRES::setPreconditioner(Preconditioner* preconditioner)
   {
-    if (type != "LU")
+    if (preconditioner == nullptr)
     {
-      out::warning() << "Only LU-type solve can be used as a preconditioner at this time." << std::endl;
-      return 1;
+      out::warning() << "preconditioner pointer is null" << "\n";
+      return 1; 
     }
-    else
-    {
-      LU_solver_ = LU_solver;
-      return 0;
-    }
+     preconditioner_ = preconditioner;
+     return 0;
   }
 
   int LinSolverIterativeFGMRES::resetMatrix(matrix::Sparse* new_matrix)
@@ -598,7 +602,7 @@ namespace ReSolve
 
   void LinSolverIterativeFGMRES::precV(vector_type* rhs, vector_type* x)
   {
-    LU_solver_->solve(rhs, x);
+    preconditioner_->apply(rhs, x);
   }
 
   void LinSolverIterativeFGMRES::setMemorySpace()

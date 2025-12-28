@@ -18,6 +18,7 @@
 #include <resolve/random/SketchingHandler.hpp>
 #include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/vector/Vector.hpp>
+#include <resolve/Preconditioner.hpp>
 
 namespace ReSolve
 {
@@ -406,18 +407,21 @@ namespace ReSolve
     return 0;
   }
 
-  int LinSolverIterativeRandFGMRES::setupPreconditioner(std::string type, LinSolverDirect* LU_solver)
+  /**
+   * @brief Sets pointer to Preconditioer.
+   * 
+   * @param[in] precontitioner - pointer to Preconditioner class instance.
+   * @return 0 if successful, error code otherwise.
+   */
+  int LinSolverIterativeRandFGMRES::setPreconditioner(Preconditioner* preconditioner)
   {
-    if (type != "LU")
+    if (preconditioner == nullptr)
     {
-      out::warning() << "Only cusolverRf tri solve can be used as a preconditioner at this time." << std::endl;
-      return 1;
+      out::warning() << "preconditioner pointer is null" << "\n";
+      return 1; 
     }
-    else
-    {
-      LU_solver_ = LU_solver;
-      return 0;
-    }
+     preconditioner_ = preconditioner;
+     return 0;
   }
 
   index_type LinSolverIterativeRandFGMRES::getKrand()

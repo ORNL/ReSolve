@@ -20,6 +20,7 @@
 #include <resolve/GramSchmidt.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
 #include <resolve/LinSolverIterativeFGMRES.hpp>
+#include <resolve/PreconditionerLU.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/matrix/io.hpp>
@@ -197,7 +198,8 @@ int main(int argc, char* argv[])
     {
       // Setup iterative refinement
       FGMRES.setup(A);
-      FGMRES.setupPreconditioner("LU", KLU);
+      ReSolve::PreconditionerLU precond_lu(KLU);
+      FGMRES.setPreconditioner(&precond_lu);
 
       // If refactorization produced finite solution do iterative refinement
       if (std::isfinite(helper.getNormRelativeResidual()))

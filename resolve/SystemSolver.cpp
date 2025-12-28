@@ -5,6 +5,7 @@
 #include <resolve/LinSolverDirectCpuILU0.hpp>
 #include <resolve/LinSolverDirectSerialILU0.hpp>
 #include <resolve/LinSolverIterativeFGMRES.hpp>
+#include <resolve/PreconditionerLU.hpp>
 #include <resolve/matrix/Csc.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/vector/Vector.hpp>
@@ -171,6 +172,7 @@ namespace ReSolve
     {
       delete preconditioner_;
     }
+    
 
     delete matrixHandler_;
     delete vectorHandler_;
@@ -228,6 +230,11 @@ namespace ReSolve
     {
       delete refactorizationSolver_;
       refactorizationSolver_ = nullptr;
+    }
+    if (preconditionSolver_)
+    {
+      delete preconditionSolver_;
+      preconditionSolver_ = nullptr;
     }
     if (preconditioner_)
     {
@@ -312,19 +319,21 @@ namespace ReSolve
     {
       if (memspace_ == "cpu")
       {
-        // preconditioner_ = new LinSolverDirectSerialILU0(workspaceCpu_);
-        preconditioner_ = new LinSolverDirectCpuILU0(workspaceCpu_);
+        preconditionSolver_ = new LinSolverDirectSerialILU0(workspaceCpu_);
+        preconditioner_     = new PreconditionerLU(preconditionSolver_);
 #ifdef RESOLVE_USE_CUDA
       }
       else if (memspace_ == "cuda")
       {
-        preconditioner_ = new LinSolverDirectCuSparseILU0(workspaceCuda_);
+        preconditionSolver_ = new LinSolverDirectCuSparseILU0(workspaceCuda_);
+        preconditioner_     = new PreconditionerLU(preconditionSolver_);
 #endif
 #ifdef RESOLVE_USE_HIP
       }
       else if (memspace_ == "hip")
       {
-        preconditioner_ = new LinSolverDirectRocSparseILU0(workspaceHip_);
+        preconditionSolver_ = new LinSolverDirectRocSparseILU0(workspaceHip_);
+        preconditioner_     = new PreconditionerLU(preconditionSolver_);
 #endif
       }
       else
@@ -482,9 +491,16 @@ namespace ReSolve
     if (irMethod_ == "fgmres")
     {
       status += iterativeSolver_->setup(A_);
-      status += iterativeSolver_->setupPreconditioner("LU", refactorizationSolver_);
-    }
 
+      if (preconditioner_)
+      {
+        delete preconditioner_;
+        preconditioner_ = nullptr;
+      }
+
+      preconditioner_ = new PreconditionerLU(refactorizationSolver_);
+      status += iterativeSolver_->setPreconditioner(preconditioner_);
+    }
     return status;
   }
 
@@ -550,7 +566,7 @@ namespace ReSolve
       {
         is_solve_on_device_ = true;
       }
-      iterativeSolver_->setupPreconditioner("LU", preconditioner_);
+      status += iterativeSolver_->setPreconditioner(preconditioner_);
     }
 
     return status;

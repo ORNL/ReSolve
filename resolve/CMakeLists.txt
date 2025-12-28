@@ -20,6 +20,8 @@ set(ReSolve_SRC
     LinSolverIterativeRandFGMRES.cpp
     LinSolverDirectSerialILU0.cpp
     SystemSolver.cpp
+    Preconditioner.cpp
+    PreconditionerLU.cpp
 )
 
 set(ReSolve_KLU_SRC LinSolverDirectKLU.cpp)
@@ -49,6 +51,8 @@ set(ReSolve_HEADER_INSTALL
     SystemSolver.hpp
     GramSchmidt.hpp
     MemoryUtils.hpp
+    Preconditioner.hpp
+    PreconditionerLU.hpp
 )
 
 set(ReSolve_KLU_HEADER_INSTALL LinSolverDirectKLU.hpp)
