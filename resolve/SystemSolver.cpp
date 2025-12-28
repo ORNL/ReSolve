@@ -172,7 +172,6 @@ namespace ReSolve
     {
       delete preconditioner_;
     }
-    
 
     delete matrixHandler_;
     delete vectorHandler_;

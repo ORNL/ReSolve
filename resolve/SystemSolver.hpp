@@ -93,7 +93,7 @@ namespace ReSolve
     LinSolverDirect*    preconditionSolver_{nullptr};
     LinSolverIterative* iterativeSolver_{nullptr};
     GramSchmidt*        gs_{nullptr};
-    precond_type* preconditioner_{nullptr};
+    precond_type*       preconditioner_{nullptr};
 
     LinAlgWorkspaceCUDA* workspaceCuda_{nullptr};
     LinAlgWorkspaceHIP*  workspaceHip_{nullptr};

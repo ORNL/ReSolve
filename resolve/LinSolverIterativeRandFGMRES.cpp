@@ -13,12 +13,12 @@
 #include <iostream>
 
 #include <resolve/GramSchmidt.hpp>
+#include <resolve/Preconditioner.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/matrix/Sparse.hpp>
 #include <resolve/random/SketchingHandler.hpp>
 #include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/vector/Vector.hpp>
-#include <resolve/Preconditioner.hpp>
 
 namespace ReSolve
 {
@@ -409,7 +409,7 @@ namespace ReSolve
 
   /**
    * @brief Sets pointer to Preconditioer.
-   * 
+   *
    * @param[in] precontitioner - pointer to Preconditioner class instance.
    * @return 0 if successful, error code otherwise.
    */
@@ -418,10 +418,10 @@ namespace ReSolve
     if (preconditioner == nullptr)
     {
       out::warning() << "preconditioner pointer is null" << "\n";
-      return 1; 
+      return 1;
     }
-     preconditioner_ = preconditioner;
-     return 0;
+    preconditioner_ = preconditioner;
+    return 0;
   }
 
   index_type LinSolverIterativeRandFGMRES::getKrand()

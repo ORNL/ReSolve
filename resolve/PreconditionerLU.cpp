@@ -5,8 +5,9 @@
  *
  */
 
-#include <resolve/LinSolverDirect.hpp>
 #include "PreconditionerLU.hpp"
+
+#include <resolve/LinSolverDirect.hpp>
 
 namespace ReSolve
 {

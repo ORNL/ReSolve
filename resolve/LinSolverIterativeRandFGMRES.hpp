@@ -124,9 +124,9 @@ namespace ReSolve
     real_type*   h_rs_{nullptr};
     vector_type* vec_aux_{nullptr};
 
-    GramSchmidt*     GS_{nullptr};
-    index_type       n_{0};
-    real_type        one_over_k_{1.0};
+    GramSchmidt* GS_{nullptr};
+    index_type   n_{0};
+    real_type    one_over_k_{1.0};
 
     index_type         k_rand_{0}; ///< size of sketch space. We need to know it so we can allocate S!
     MemoryHandler      mem_;       ///< Device memory manager object

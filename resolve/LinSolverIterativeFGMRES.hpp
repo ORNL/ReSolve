@@ -104,9 +104,9 @@ namespace ReSolve
     real_type* h_s_{nullptr};
     real_type* h_rs_{nullptr};
 
-    GramSchmidt*     GS_{nullptr};
-    index_type       n_{0};
-    bool             is_solver_set_{false};
+    GramSchmidt* GS_{nullptr};
+    index_type   n_{0};
+    bool         is_solver_set_{false};
 
     MemoryHandler mem_; ///< Device memory manager object
   };

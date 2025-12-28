@@ -43,9 +43,9 @@ namespace ReSolve
   protected:
     Preconditioner* preconditioner_{nullptr};
 
-    real_type       initial_residual_norm_;
-    real_type       final_residual_norm_;
-    index_type      total_iters_;
+    real_type  initial_residual_norm_;
+    real_type  final_residual_norm_;
+    index_type total_iters_;
 
     // Parameters common for all iterative solvers
     real_type  tol_{1e-14}; ///< Solver tolerance
