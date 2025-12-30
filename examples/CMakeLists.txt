@@ -7,8 +7,8 @@
 ]]
 
 # Build portable randomized GMRES example
-add_executable(rand_gmres.exe randGmres.cpp)
-target_link_libraries(rand_gmres.exe PRIVATE ReSolve)
+add_executable(randGmres.exe randGmres.cpp)
+target_link_libraries(randGmres.exe PRIVATE ReSolve)
 
 # Build an example with a system GMRES solver
 add_executable(sysGmres.exe sysGmres.cpp)
@@ -48,9 +48,7 @@ endif(RESOLVE_USE_KLU)
 set(installable_executables "")
 
 # Install all examples in bin directory
-list(APPEND installable_executables rand_gmres.exe)
-
-list(APPEND installable_executables sysGmres.exe)
+list(APPEND installable_executables randGmres.exe sysGmres.exe)
 
 if(RESOLVE_USE_KLU)
   list(APPEND installable_executables kluFactor.exe kluRefactor.exe

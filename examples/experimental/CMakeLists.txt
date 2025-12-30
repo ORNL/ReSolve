@@ -53,7 +53,6 @@ endif(RESOLVE_USE_KLU)
 set(installable_executables "")
 
 # Install all examples in bin directory
-list(APPEND installable_executables rand_gmres.exe)
 
 if(RESOLVE_USE_KLU)
 
