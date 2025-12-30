@@ -28,8 +28,6 @@ namespace ReSolve
     using vector_type = vector::Vector;
     using matrix_type = matrix::Sparse;
 
-    using precond_type = Preconditioner;
-
     SystemSolver(LinAlgWorkspaceCpu* workspaceCpu,
                  std::string         factor   = "klu",
                  std::string         refactor = "klu",
@@ -93,7 +91,7 @@ namespace ReSolve
     LinSolverDirect*    preconditionSolver_{nullptr};
     LinSolverIterative* iterativeSolver_{nullptr};
     GramSchmidt*        gs_{nullptr};
-    precond_type*       preconditioner_{nullptr};
+    Preconditioner*     preconditioner_{nullptr};
 
     LinAlgWorkspaceCUDA* workspaceCuda_{nullptr};
     LinAlgWorkspaceHIP*  workspaceHip_{nullptr};

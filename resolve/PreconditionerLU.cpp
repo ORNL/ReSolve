@@ -11,15 +11,30 @@
 
 namespace ReSolve
 {
+  /**
+   * @brief Constructor for PreconditionerLU.
+   *
+   * @param[in] solver - Pointer to the LinSolverDirect object.
+   */
   PreconditionerLU::PreconditionerLU(LinSolverDirect* solver)
   {
     solver_ = solver;
   }
 
+  /**
+   * @brief Destructor for PreconditionerLU
+   */
   PreconditionerLU::~PreconditionerLU()
   {
   }
 
+  /**
+   * @brief Sets up the preconditioner with the given matrix
+   *
+   * @param[in] A - System matrix to set up the preconditioner with
+   *
+   * @return int 0 if successful, 1 if it fails
+   */
   int PreconditionerLU::setup(matrix::Sparse* A)
   {
     if (A == nullptr)
@@ -31,16 +46,16 @@ namespace ReSolve
     return 0;
   }
 
-  int PreconditionerLU::reset(matrix::Sparse* A)
-  {
-    if (solver_ == nullptr || A == nullptr)
-    {
-      return 1;
-    }
-    // LinSolverDirect doesn't have reset, so call setup instead
-    return solver_->setup(A);
-  }
-
+  /**
+   * @brief Applies the preconditioner to solve the system Mx = rhs
+   *
+   * Computes x = M^(-1) * rhs where M is the preconditioner matrix.
+   *
+   * @param[in] rhs - Right-hand-side vector
+   * @param[in] x   - Solution vector
+   *
+   * @return int 0 if successful, 1 if fails
+   */
   int PreconditionerLU::apply(vector_type* rhs, vector_type* x)
   {
     if (solver_ == nullptr)

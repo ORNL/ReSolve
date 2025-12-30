@@ -133,7 +133,7 @@ int runTest(int argc, char* argv[])
   FGMRES.setRestart(200);
   FGMRES.setSketchingMethod(LinSolverIterativeRandFGMRES::cs);
 
-  ReSolve::PreconditionerLU precond_lu(&ILU);
+  PreconditionerLU precond_lu(&ILU);
   status = FGMRES.setPreconditioner(&precond_lu);
   error_sum += status;
 
