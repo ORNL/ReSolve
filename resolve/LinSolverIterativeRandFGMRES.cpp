@@ -407,23 +407,6 @@ namespace ReSolve
     return 0;
   }
 
-  /**
-   * @brief Sets pointer to Preconditioer.
-   *
-   * @param[in] precontitioner - pointer to Preconditioner class instance.
-   * @return 0 if successful, error code otherwise.
-   */
-  int LinSolverIterativeRandFGMRES::setPreconditioner(Preconditioner* preconditioner)
-  {
-    if (preconditioner == nullptr)
-    {
-      out::warning() << "preconditioner pointer is null" << "\n";
-      return 1;
-    }
-    preconditioner_ = preconditioner;
-    return 0;
-  }
-
   index_type LinSolverIterativeRandFGMRES::getKrand()
   {
     return k_rand_;

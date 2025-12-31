@@ -57,6 +57,16 @@ namespace ReSolve
     return maxit_;
   }
 
+  int LinSolverIterative::setPreconditioner(Preconditioner* preconditioner)
+  {
+    if (preconditioner == nullptr)
+    {
+      return 1;
+    }
+    preconditioner_ = preconditioner;
+    return 0;
+  }
+
   int LinSolverIterative::setOrthogonalization(GramSchmidt* /* gs */)
   {
     out::error() << "Solver does not implement setting orthogonalization.\n";
