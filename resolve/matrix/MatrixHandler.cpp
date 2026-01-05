@@ -337,18 +337,19 @@ namespace ReSolve
    * @param[in] memspace - Device where the operation is computed
    * @return 0 if successful, 1 otherwise
    */
-  void MatrixHandler::addConst(matrix::Sparse* A, real_type alpha, memory::MemorySpace memspace)
+  int MatrixHandler::addConst(matrix::Sparse* A, real_type alpha, memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
     switch (memspace)
     {
     case HOST:
-      cpuImpl_->addConst(A, alpha);
+      return cpuImpl_->addConst(A, alpha);
       break;
     case DEVICE:
-      devImpl_->addConst(A, alpha);
+      return devImpl_->addConst(A, alpha);
       break;
     }
+    return 1;
   }
 
   /**
