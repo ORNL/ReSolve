@@ -10,10 +10,6 @@
 add_executable(rand_gmres.exe randGmres.cpp)
 target_link_libraries(rand_gmres.exe PRIVATE ReSolve)
 
-# Build an example with a system GMRES solver
-add_executable(sysGmres.exe sysGmres.cpp)
-target_link_libraries(sysGmres.exe PRIVATE ReSolve)
-
 if(RESOLVE_USE_KLU)
 
   # Build example with KLU factorization on CPU
@@ -32,6 +28,11 @@ if(RESOLVE_USE_KLU)
     # Build an example with refactorization on GPU
     add_executable(gpuRefactor.exe gpuRefactor.cpp)
     target_link_libraries(gpuRefactor.exe PRIVATE ReSolve)
+
+    add_executable(hybrid_solver.exe hybrid_solver.cpp)
+    target_compile_features(hybrid_solver.exe PRIVATE cxx_std_17)
+    target_compile_options(hybrid_solver.exe PRIVATE -Wno-misleading-indentation)
+    target_link_libraries(hybrid_solver.exe PRIVATE ReSolve stdc++fs)
   endif(RESOLVE_USE_GPU)
 
   # Create KLU+CUDA examples
@@ -40,25 +41,24 @@ if(RESOLVE_USE_KLU)
     # Build example with KLU factorization and GLU refactorization
     add_executable(gluRefactor.exe gluRefactor.cpp)
     target_link_libraries(gluRefactor.exe PRIVATE ReSolve)
-
   endif(RESOLVE_USE_CUDA)
 
 endif(RESOLVE_USE_KLU)
 
+
 set(installable_executables "")
 
 # Install all examples in bin directory
-list(APPEND installable_executables rand_gmres.exe)
-
-list(APPEND installable_executables sysGmres.exe)
+list(APPEND installable_executables  rand_gmres.exe)
 
 if(RESOLVE_USE_KLU)
-  list(APPEND installable_executables kluFactor.exe kluRefactor.exe
-       sysRefactor.exe
-  )
+  list(APPEND installable_executables kluFactor.exe
+                                      kluRefactor.exe
+                                      sysRefactor.exe)
 
   if(RESOLVE_USE_GPU)
     list(APPEND installable_executables gpuRefactor.exe)
+    list(APPEND installable_executables hybrid_solver.exe)
   endif(RESOLVE_USE_GPU)
 
   if(RESOLVE_USE_CUDA)
@@ -67,7 +67,8 @@ if(RESOLVE_USE_KLU)
 
 endif(RESOLVE_USE_KLU)
 
-install(TARGETS ${installable_executables} RUNTIME DESTINATION bin)
+install(TARGETS ${installable_executables}
+        RUNTIME DESTINATION bin)
 
 add_subdirectory(experimental)
 
@@ -102,18 +103,10 @@ set(asym_rhs_path /data/b_asymmetric)
 
 # Install directory with example on how to consume ReSolve
 install(DIRECTORY resolve_consumer DESTINATION share/examples)
-install(
-  FILES ${PROJECT_SOURCE_DIR}/tests/functionality/${RESOLVE_CONSUMER_APP}
-  DESTINATION share/examples/resolve_consumer
-  RENAME consumer.cpp
-)
-install(FILES ${PROJECT_SOURCE_DIR}/tests/functionality/TestHelper.hpp
-        DESTINATION share/examples/resolve_consumer
-)
+install(FILES ${PROJECT_SOURCE_DIR}/tests/functionality/${RESOLVE_CONSUMER_APP} DESTINATION share/examples/resolve_consumer RENAME consumer.cpp)
+install(FILES ${PROJECT_SOURCE_DIR}/tests/functionality/TestHelper.hpp DESTINATION share/examples/resolve_consumer)
 
-# Shell script argumets: 1. Path to where resolve is installed. 2. Path to data
-# directory
-add_custom_target(
-  test_install COMMAND ${CONSUMER_PATH}/test.sh ${CMAKE_INSTALL_PREFIX}
-                       ${test_data_dir} ${sym_matrix_path} ${sym_rhs_path}
-)
+# Shell script argumets:
+#    1. Path to where resolve is installed.
+#    2. Path to data directory
+add_custom_target(test_install COMMAND ${CONSUMER_PATH}/test.sh  ${CMAKE_INSTALL_PREFIX} ${test_data_dir} ${sym_matrix_path} ${sym_rhs_path}) 

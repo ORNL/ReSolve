@@ -206,8 +206,14 @@ namespace ReSolve
         matrix_handler_->matvec(A_, &vec_z, &vec_v, &ONE, &ZERO, memspace_);
 
         // orthogonalize V[i+1], form a column of h_H_
+	int gs_status = GS_->orthogonalize(n_, vec_V_, h_H_, i);
 
-        GS_->orthogonalize(n_, vec_V_, h_H_, i);
+	if (gs_status != 0) // checking for successful breakdown
+        {
+          notconv = 0; // exiting outer loop after one inner loop iteration
+	  outer_flag = 0;
+        }
+
         if (i != 0)
         {
           for (index_type k = 1; k <= i; k++)
