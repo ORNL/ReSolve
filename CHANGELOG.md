@@ -67,3 +67,5 @@ It is seamless from the user perspective and fixed many bugs.
 15. Added examples/sysGmres.cpp to demonstrate how to use SystemSolver with GMRES. 
 
 16. Updated MatrixHandler::addConst to return integer error codes instead of void.
+
+17. Added a preconditioner interface class so users can define thier own preconditioners.
