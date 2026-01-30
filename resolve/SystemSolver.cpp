@@ -177,7 +177,7 @@ namespace ReSolve
     delete vectorHandler_;
   }
 
-  int SystemSolver::setMatrix(matrix::Sparse* A)
+  int SystemSolver::setMatrix(matrix_type* A)
   {
     int status = 0;
     A_         = A;
@@ -555,6 +555,13 @@ namespace ReSolve
     return status;
   }
 
+  /**
+   * @brief Sets up the preconditioner for the system solver
+   *
+   * Initializes and attaches the preconditioner to the iterative solver.
+   *
+   * @return int 0 if successful, 1 if it fails
+   */
   int SystemSolver::preconditionerSetup()
   {
     int status = 0;
@@ -566,6 +573,27 @@ namespace ReSolve
         is_solve_on_device_ = true;
       }
       status += iterativeSolver_->setPreconditioner(preconditioner_);
+    }
+
+    return status;
+  }
+
+  /**
+   * @brief Reset the preconditioner with a new matrix.
+   *
+   * Assumes the matrix sparsity pattern does not change.
+   *
+   * @param[in] A New sparse matrix (values updated).
+   *
+   * @return int 0 if successful, 1 if it fails
+   */
+  int SystemSolver::resetPreconditioner(matrix_type* A)
+  {
+    int status = 0;
+    A_         = A;
+    if (precondition_method_ == "ilu0")
+    {
+      status += preconditioner_->reset(A);
     }
 
     return status;

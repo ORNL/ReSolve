@@ -78,6 +78,14 @@ namespace ReSolve
   }
 
   /**
+   * @brief Placeholder function for resetting a matrix.
+  */
+  int LinSolverDirect::reset(matrix::Sparse* A)
+  {
+    return 1;
+  }
+
+  /**
    * @brief Placeholder function for refactorization.
    */
   int LinSolverDirect::refactorize()

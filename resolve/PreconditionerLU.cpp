@@ -35,7 +35,7 @@ namespace ReSolve
    *
    * @return int 0 if successful, 1 if it fails
    */
-  int PreconditionerLU::setup(matrix::Sparse* A)
+  int PreconditionerLU::setup(matrix_type* A)
   {
     if (A == nullptr)
     {
@@ -63,6 +63,24 @@ namespace ReSolve
       return 1;
     }
     solver_->solve(rhs, x);
+
+    return 0;
+  }
+
+  /**
+   * @brief Resets the preconditioner with the given matrix
+   *
+   * @param[in] A - System matrix to reset the preconditioner with
+   *
+   * @return int 0 if successful, 1 if it fails
+   */
+  int PreconditionerLU::reset(matrix_type* A)
+  {
+    if (A == nullptr)
+    {
+      return 1;
+    }
+    solver_->reset(A);
 
     return 0;
   }

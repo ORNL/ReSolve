@@ -56,7 +56,7 @@ namespace ReSolve
               index_type*     Q   = nullptr,
               vector_type*    rhs = nullptr) override;
     // if values of A change, but the nnz pattern does not, redo the analysis only (reuse buffers though)
-    int reset(matrix::Sparse* A);
+    int reset(matrix::Sparse* A) override;
     int analyze() override;
     int factorize() override;
 

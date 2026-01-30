@@ -33,6 +33,7 @@ namespace ReSolve
 
     int setup(matrix_type* A) override;
     int apply(vector_type* rhs, vector_type* x) override;
+    int reset(matrix_type* A) override;
 
   private:
     LinSolverDirect* solver_{nullptr};

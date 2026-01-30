@@ -17,4 +17,9 @@ namespace ReSolve
   {
   }
 
+  int Preconditioner::reset(matrix_type* A)
+  {
+    return 1;
+  }
+
 } // namespace ReSolve

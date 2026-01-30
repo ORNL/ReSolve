@@ -29,6 +29,7 @@ namespace ReSolve
     virtual int analyze(); // the same as symbolic factorization
     virtual int factorize();
     virtual int refactorize();
+    virtual int reset(matrix::Sparse* A);
     virtual int solve(vector_type* rhs, vector_type* x) = 0;
     virtual int solve(vector_type* x)                   = 0;
 
