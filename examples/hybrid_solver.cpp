@@ -50,6 +50,24 @@ struct GPUTimer {
     }
 };
 
+// VRAM Helper function
+void log_vram(const std::string& label) {
+    size_t free_byte;
+    size_t total_byte;
+    cudaError_t status = cudaMemGetInfo(&free_byte, &total_byte);
+
+    if (status != cudaSuccess) {
+        std::cerr << "Error: cudaMemGetInfo failed: " << cudaGetErrorString(status) << std::endl;
+        return;
+    }
+
+    double free_db  = (double)free_byte  / 1024.0 / 1024.0;
+    double total_db = (double)total_byte / 1024.0 / 1024.0;
+    double used_db  = total_db - free_db;
+
+    std::cout << "  [MEM] " << label << " -> Used: " << used_db
+              << " MB (Free: " << free_db << " MB)" << std::endl;
+}
 
 // Using namespace for convenience
 using namespace ReSolve::constants;
@@ -186,6 +204,13 @@ int main(int argc, char* argv[])
      statsFile.open("/home/axs2061/ACOPF_RESULTS/HybridSolverOutput/CuSolverRf_stats.csv");
      statsFile << "Iteration,Residue,Time_ms(refactorization),Time_ms(solver)\n";
 
+     GPUTimer FGMRESTimer; // FGMRES Profiling
+     std::ofstream FGMRESFile;
+     FGMRESFile.open("/home/axs2061/ACOPF_RESULTS/HybridSolverOutput/FGMRES_stats.csv");
+     FGMRESFile << "Iterations,Residue,Time_ms,VRAM_mb\n";
+
+     log_vram("Baseline"); // Baseline memory consumption
+
     // --- Main loop to process each system ---
     for (int i = 0; i < numSystems; ++i)
     {
@@ -275,7 +300,7 @@ int main(int argc, char* argv[])
             std::cout << "Relative residual after KLU->solve(): " << helper->getNormRelativeResidual() << std::endl;
 
             // Setup CuSolverRf and FGMRES preconditioner after the first system (i=0)
-            if (i > 0) {
+            if (i == 0) {
 		// Extract factors and configure refactorization solver
 		ReSolve::matrix::Csr* L = (ReSolve::matrix::Csr*) KLU->getLFactor();
 		ReSolve::matrix::Csr* U = (ReSolve::matrix::Csr*) KLU->getUFactor();
@@ -286,18 +311,19 @@ int main(int argc, char* argv[])
 		index_type* P = KLU->getPOrdering();
 		index_type* Q = KLU->getQOrdering();
 
-		setupTimer.start_timer();
+		log_vram("Before Initial setup");
 		Rf->setup(A, L, U, P, Q, vec_rhs);
-		float setupTimeMs = setupTimer.stop_timer();
-		std::cout << "Profiler: CuSolverRf->setup() cost in ms: " << setupTimeMs << std::endl;
+                log_vram("After Intial setup");
             }
 
             std::cout << "DEBUG: CSR conversion + CuSolverRf setup complete! " << std::endl;
 
+	    log_vram("Before FGMRES setup");
             FGMRES->setRestart(1000);
             FGMRES->setMaxit(2000);
             FGMRES->setup(A);
             FGMRES->setupPreconditioner("LU", Rf); // Set Rf as preconditioner for FGMRES
+	    log_vram("After FGMRES setup");
 
             // Print FGMRES summary
 	    helper->printIrSummary(FGMRES);
@@ -349,8 +375,8 @@ int main(int argc, char* argv[])
 
 		setupTimer.start_timer();
                 Rf->setup(A, L, U, P, Q, vec_rhs);
-		float setupTimeMs = setupTimer.stop_timer();
-		std::cout << "Profiler: CuSolverRf->setup() cost in ms: " << setupTimeMs << std::endl;
+		float setupTime = setupTimer.stop_timer();
+		std::cout << "CuSolverRf setup time: " << setupTime << std::endl;
             }
 	    else
 	    {
@@ -364,13 +390,23 @@ int main(int argc, char* argv[])
 	        double current_residue = helper->getNormRelativeResidual();
                 std::cout << "Relative residual after cuSolverRf->solve(): " << current_residue << std::endl;
 
+		FGMRESTimer.start_timer();
                 FGMRES->resetMatrix(A); // Reset FGMRES with current matrix A
                 FGMRES->solve(vec_rhs, vec_x); // Refine solution with FGMRES
+		float FGMRES_elapsed = FGMRESTimer.stop_timer();
                 helper->printIrSummary(FGMRES);
 
 		// Save to file
                 statsFile << i << "," << current_residue << "," << elapsed << "," << solve_elapsed << "\n";
 		if (i % 10 == 0) statsFile.flush();
+
+		FGMRESFile << FGMRES->getNumIter() << ","
+           		   << FGMRES->getFinalResidualNorm() << ","
+           		   << FGMRES_elapsed << "," // Added missing comma here
+           		   << ((2.0 * FGMRES->getNumIter() + 1.0) * A->getNumRows() * sizeof(double)) / (1024.0 * 1024.0)
+           		   << "\n";
+
+                if (i % 10 == 0) FGMRESFile.flush();
 
 	    }
 
