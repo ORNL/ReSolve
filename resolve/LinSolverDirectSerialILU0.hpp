@@ -34,7 +34,7 @@ namespace ReSolve
               index_type*     P   = nullptr,
               index_type*     Q   = nullptr,
               vector_type*    rhs = nullptr) override;
-    int reset(matrix::Sparse* A);
+    int reset(matrix::Sparse* A) override;
 
     int solve(vector_type* rhs, vector_type* x) override;
     int solve(vector_type* rhs) override; // the solutuon is returned IN RHS (rhs is overwritten)
