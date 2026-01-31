@@ -26,6 +26,7 @@ namespace ReSolve
    */
   PreconditionerLU::~PreconditionerLU()
   {
+    delete solver_;
   }
 
   /**
