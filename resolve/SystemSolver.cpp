@@ -171,6 +171,7 @@ namespace ReSolve
     if (precondition_method_ != "none")
     {
       delete preconditioner_;
+      delete preconditionSolver_;
     }
 
     delete matrixHandler_;
