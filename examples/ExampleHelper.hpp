@@ -120,8 +120,8 @@ namespace ReSolve
 
       /// Minimalistic summary
       void printShortSummary(ReSolve::matrix::Sparse* A,
-                        ReSolve::vector::Vector* r,
-                        ReSolve::vector::Vector* x)
+                             ReSolve::vector::Vector* r,
+                             ReSolve::vector::Vector* x)
       {
         A_ = A;
         r_ = r;
@@ -141,12 +141,12 @@ namespace ReSolve
         }
 
         res_->copyDataFrom(r_, memspace_, memspace_);
-        real_type norm = computeResidualNorm(*A_, *x_, *res_, memspace_);
-        real_type rnorm  = norm2(*r_, memspace_);
+        real_type norm  = computeResidualNorm(*A_, *x_, *res_, memspace_);
+        real_type rnorm = norm2(*r_, memspace_);
 
         std::cout << "\t2-Norm of the residual: "
                   << std::scientific << std::setprecision(16)
-                  << norm/rnorm << "\n";
+                  << norm / rnorm << "\n";
       }
 
       /// Summary of direct solve
@@ -189,9 +189,9 @@ namespace ReSolve
       {
         std::cout << "FGMRES: init nrm: "
                   << std::scientific << std::setprecision(16)
-                  << ls->getInitResidualNorm() / norm_rhs_
+                  << ls->getInitResidualNorm()
                   << " final nrm: "
-                  << ls->getFinalResidualNorm() / norm_rhs_
+                  << ls->getFinalResidualNorm()
                   << " iter: " << ls->getNumIter() << "\n";
       }
 
@@ -199,10 +199,8 @@ namespace ReSolve
       void printIterativeSolverSummary(ReSolve::LinSolverIterative* ls)
       {
         std::cout << std::setprecision(16) << std::scientific;
-        std::cout << "\t Initial residual norm          ||b-A*x||       : " << ls->getInitResidualNorm() << "\n";
-        std::cout << "\t Initial relative residual norm ||b-A*x||/||b|| : " << ls->getInitResidualNorm() / norm_rhs_ << "\n";
-        std::cout << "\t Final residual norm            ||b-A*x||       : " << ls->getFinalResidualNorm() << "\n";
-        std::cout << "\t Final relative residual norm   ||b-A*x||/||b|| : " << ls->getFinalResidualNorm() / norm_rhs_ << "\n";
+        std::cout << "\t Initial relative residual norm ||b-A*x||/||b|| : " << ls->getInitResidualNorm() << "\n";
+        std::cout << "\t Final relative residual norm   ||b-A*x||/||b|| : " << ls->getFinalResidualNorm() << "\n";
         std::cout << "\t Number of iterations                           : " << ls->getNumIter() << "\n";
       }
 

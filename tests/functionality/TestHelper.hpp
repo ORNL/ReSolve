@@ -362,7 +362,7 @@ public:
    * the residual norm for the system that has been set by the constructor
    * or (re)setSystem functions.
    *
-   * @param rrn_system - residual norm value to be verified
+   * @param rn_system - residual norm value to be verified
    * @return int - 0 if the result is correct, error code otherwise
    */
   int checkResidualNorm(ReSolve::real_type rn_system)
