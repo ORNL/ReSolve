@@ -213,7 +213,6 @@ int main()
       // Solve with refactorization
       status = Rf.solve(vec_rhs, vec_x);
       std::cout << "RocSolverRf solve status: " << status << std::endl;
-      // helper.resetSystem(A, vec_rhs, vec_x);
 
       if (status == 0)
       {
