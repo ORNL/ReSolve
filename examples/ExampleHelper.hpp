@@ -57,7 +57,7 @@ namespace ReSolve
        * @pre Workspace handles are initialized
        *
        * @post Handlers are instantiated.
-       * allocated
+       *
        */
       ExampleHelper(workspace_type& workspace)
         : mh_(&workspace),
@@ -202,26 +202,6 @@ namespace ReSolve
         std::cout << "\t Initial relative residual norm ||b-A*x||/||b|| : " << ls->getInitResidualNorm() << "\n";
         std::cout << "\t Final relative residual norm   ||b-A*x||/||b|| : " << ls->getFinalResidualNorm() << "\n";
         std::cout << "\t Number of iterations                           : " << ls->getNumIter() << "\n";
-      }
-
-      /// Check the relative residual norm against `tolerance`.
-      int checkResult(ReSolve::real_type tolerance)
-      {
-        int                error_sum = 0;
-        ReSolve::real_type norm      = norm_res_ / norm_rhs_;
-
-        if (!std::isfinite(norm))
-        {
-          std::cout << "Result is not a finite number!\n";
-          error_sum++;
-        }
-        if (norm > tolerance)
-        {
-          std::cout << "Result inaccurate!\n";
-          error_sum++;
-        }
-
-        return error_sum;
       }
 
       /**
@@ -372,9 +352,9 @@ namespace ReSolve
       }
 
     private:
-      ReSolve::matrix::Sparse* A_; ///< pointer to system matrix
-      ReSolve::vector::Vector* r_; ///< pointer to system right-hand side
-      ReSolve::vector::Vector* x_; ///< pointer to the computed solution
+      ReSolve::matrix::Sparse* A_{nullptr}; ///< pointer to system matrix
+      ReSolve::vector::Vector* r_{nullptr}; ///< pointer to system right-hand side
+      ReSolve::vector::Vector* x_{nullptr}; ///< pointer to the computed solution
 
       ReSolve::MatrixHandler mh_; ///< matrix handler instance
       ReSolve::VectorHandler vh_; ///< vector handler instance
