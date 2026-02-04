@@ -181,7 +181,7 @@ namespace ReSolve
                        << std::scientific << std::setprecision(16)
                        << rnorm << " Norm of rhs: " << bnorm << "\n";
 
-    initial_residual_norm_ = rnorm/bnorm; // compute relative residual norm
+    initial_residual_norm_ = rnorm / bnorm; // compute relative residual norm
     while (outer_flag)
     {
       if (it == 0)
@@ -399,7 +399,7 @@ namespace ReSolve
                            << std::scientific << std::setprecision(16)
                            << rnorm << "\n";
 
-        final_residual_norm_ = rnorm/bnorm; // relative residual norm
+        final_residual_norm_ = rnorm / bnorm; // relative residual norm
         total_iters_         = it;
       }
     } // outer while

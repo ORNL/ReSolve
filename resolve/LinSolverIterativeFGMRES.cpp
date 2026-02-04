@@ -138,7 +138,7 @@ namespace ReSolve
     io::Logger::misc() << "it 0: norm of residual "
                        << std::scientific << std::setprecision(16)
                        << rnorm << " Norm of rhs: " << bnorm << "\n";
-    initial_residual_norm_ = rnorm/bnorm; // relative residual norm
+    initial_residual_norm_ = rnorm / bnorm; // relative residual norm
     while (outer_flag)
     {
       if (it == 0)
@@ -307,7 +307,7 @@ namespace ReSolve
 
       if (!outer_flag)
       {
-        final_residual_norm_ = rnorm/bnorm; // relative residual norm
+        final_residual_norm_ = rnorm / bnorm; // relative residual norm
         total_iters_         = it;
         io::Logger::misc() << "End of cycle, COMPUTED norm of residual "
                            << std::scientific << std::setprecision(16)
