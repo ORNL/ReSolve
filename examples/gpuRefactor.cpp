@@ -258,23 +258,23 @@ int gpuRefactor(int argc, char* argv[])
 
       // Print summary of results
       helper.printShortSummary(A, vec_rhs, vec_x);
-        // Extract factors and configure refactorization solver
-        matrix::Csr* L = (matrix::Csr*) KLU.getLFactor();
-        matrix::Csr* U = (matrix::Csr*) KLU.getUFactor();
-        if (L == nullptr || U == nullptr)
-        {
-          std::cout << "Factor extraction from KLU failed!\n";
-        }
-        index_type* P = KLU.getPOrdering();
-        index_type* Q = KLU.getQOrdering();
+      // Extract factors and configure refactorization solver
+      matrix::Csr* L = (matrix::Csr*) KLU.getLFactor();
+      matrix::Csr* U = (matrix::Csr*) KLU.getUFactor();
+      if (L == nullptr || U == nullptr)
+      {
+        std::cout << "Factor extraction from KLU failed!\n";
+      }
+      index_type* P = KLU.getPOrdering();
+      index_type* Q = KLU.getQOrdering();
 
-        Rf.setup(A, L, U, P, Q, vec_rhs);
+      Rf.setup(A, L, U, P, Q, vec_rhs);
 
-        // Setup iterative refinement solver
-        if (is_iterative_refinement)
-        {
-          FGMRES.setup(A);
-        }
+      // Setup iterative refinement solver
+      if (is_iterative_refinement)
+      {
+        FGMRES.setup(A);
+      }
       RESOLVE_RANGE_POP("KLU");
     }
     else
