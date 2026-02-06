@@ -185,7 +185,7 @@ int gpuRefactor(int argc, char* argv[])
   vector_type* vec_x   = nullptr;
 
   RESOLVE_RANGE_PUSH(__FUNCTION__);
-  for (int i = 0; i < num_systems; ++i)
+  for (int i = 1; i <= num_systems; ++i)
   {
     std::cout << "System " << i << ":\n";
 
@@ -211,7 +211,7 @@ int gpuRefactor(int argc, char* argv[])
       return -1;
     }
     bool is_expand_symmetric = true;
-    if (i == 0)
+    if (i == 1)
     {
       A       = io::createCsrFromFile(mat_file, is_expand_symmetric);
       vec_rhs = io::createVectorFromFile(rhs_file);
@@ -238,7 +238,7 @@ int gpuRefactor(int argc, char* argv[])
 
     int status = 0;
 
-    if (i == 0)
+    if (i == 1)
     {
       RESOLVE_RANGE_PUSH("KLU");
       // Setup factorization solver
@@ -248,10 +248,6 @@ int gpuRefactor(int argc, char* argv[])
       // Analysis (symbolic factorization)
       status = KLU.analyze();
       std::cout << "KLU analysis status: " << status << std::endl;
-    }
-
-    if (i < 2)
-    {
       // Numeric factorization
       status = KLU.factorize();
       std::cout << "KLU factorization status: " << status << std::endl;
@@ -262,9 +258,6 @@ int gpuRefactor(int argc, char* argv[])
 
       // Print summary of results
       helper.printShortSummary(A, vec_rhs, vec_x);
-
-      if (i == 1)
-      {
         // Extract factors and configure refactorization solver
         matrix::Csr* L = (matrix::Csr*) KLU.getLFactor();
         matrix::Csr* U = (matrix::Csr*) KLU.getUFactor();
@@ -282,7 +275,6 @@ int gpuRefactor(int argc, char* argv[])
         {
           FGMRES.setup(A);
         }
-      }
       RESOLVE_RANGE_POP("KLU");
     }
     else

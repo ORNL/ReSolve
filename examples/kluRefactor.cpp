@@ -130,7 +130,7 @@ int main(int argc, char* argv[])
   LinSolverDirectKLU*      KLU = new LinSolverDirectKLU;
   GramSchmidt              GS(&vector_handler, GramSchmidt::CGS2);
   LinSolverIterativeFGMRES FGMRES(&matrix_handler, &vector_handler, &GS);
-  for (int i = 0; i < num_systems; ++i)
+  for (int i = 1; i <= num_systems; ++i)
   {
     std::cout << "System " << i << ":\n";
 
@@ -153,7 +153,7 @@ int main(int argc, char* argv[])
       return 1;
     }
     bool is_expand_symmetric = true;
-    if (i == 0)
+    if (i == 1)
     {
       A = ReSolve::io::createCsrFromFile(mat_file, is_expand_symmetric);
 
@@ -172,15 +172,12 @@ int main(int argc, char* argv[])
     std::cout << "COO to CSR completed. Expanded NNZ: " << A->getNnz() << std::endl;
     // Now call direct solver
     int status;
-    if (i == 0)
+    if (i == 1)
     {
       vec_rhs->setDataUpdated(ReSolve::memory::HOST);
       KLU->setup(A);
       status = KLU->analyze();
       std::cout << "KLU analysis status: " << status << std::endl;
-    }
-    if (i < 2)
-    {
       status = KLU->factorize();
       std::cout << "KLU factorization status: " << status << std::endl;
     }

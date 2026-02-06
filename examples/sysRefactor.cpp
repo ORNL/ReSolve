@@ -223,7 +223,7 @@ int sysRefactor(int argc, char* argv[])
   }
 
   RESOLVE_RANGE_PUSH(__FUNCTION__);
-  for (int i = 0; i < num_systems; ++i)
+  for (int i = 1; i <= num_systems; ++i)
   {
     std::cout << "System " << i << ":\n";
     RESOLVE_RANGE_PUSH("File input");
@@ -250,7 +250,7 @@ int sysRefactor(int argc, char* argv[])
 
     // Refactorization is LU-based, so need to expand symmetric matrices
     bool is_expand_symmetric = true;
-    if (i == 0)
+    if (i == 1)
     {
       A       = ReSolve::io::createCsrFromFile(mat_file, is_expand_symmetric);
       vec_rhs = ReSolve::io::createVectorFromFile(rhs_file);
@@ -281,7 +281,7 @@ int sysRefactor(int argc, char* argv[])
     printSystemInfo(matrix_pathname_full, A);
 
     // Now call direct solver
-    if (i == 0)
+    if (i == 1)
     {
       // Set matrix in solver after the initial matrix is loaded
       status = solver.setMatrix(A);
@@ -298,13 +298,6 @@ int sysRefactor(int argc, char* argv[])
       // Numeric factorization on the host
       status = solver.factorize();
       std::cout << "Numeric factorization on the host status: " << status << std::endl;
-    }
-    else if (i == 1)
-    {
-      // Numeric factorization on the host
-      status = solver.factorize();
-      std::cout << "Numeric factorization on the host status: " << status << std::endl;
-
       // Set up refactorization solver
       status = solver.refactorizationSetup();
       std::cout << "Refactorization setup status: " << status << std::endl;
