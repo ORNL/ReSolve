@@ -9,6 +9,7 @@
 #include <resolve/matrix/Sparse.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/vector/VectorHandler.hpp>
+#include <resolve/matrix/Csr.hpp>
 
 namespace ReSolve
 {
@@ -235,6 +236,58 @@ namespace ReSolve
 
         return error_sum;
       }
+
+      /**
+       * @breif Enforce row-equilibration for the system A and rhs
+       * Calculates the infinity norm of each row of the matrix
+       * assembles them into a ReSolve::Vector::vector
+       * Scales each row using matrix_handler class
+       * @param in - pointer to A and RHS
+       * @param out - scaled version of A and b
+       */
+
+       void rowEquilibration(ReSolve::matrix::Csr* A, ReSolve::vector::Vector* rhs)
+       {
+	 using namespace ReSolve;
+	 using vector_type = ReSolve::vector::Vector;
+	 using index_type = ReSolve::index_type;
+         using real_type = ReSolve::real_type;
+
+         vector_type* diag = nullptr; // HOST vector for containing the inf norms of A_
+         diag = new vector_type(A->getNumRows());
+	 diag->allocate(ReSolve::memory::HOST);
+         diag->setToZero(ReSolve::memory::HOST);
+
+	 // Extracting row and val data from A_
+         index_type* rowData = A->getRowData(ReSolve::memory::HOST);
+         real_type* values = A->getValues(ReSolve::memory::HOST);
+	 real_type* diagData = new real_type[A->getNumRows()];
+
+	 for (index_type i = 0; i < A->getNumRows(); ++i) {
+	     real_type rowMax = 0.0;
+
+	     // Compute max absolute value in row i
+	     for (index_type j = rowData[i]; j < rowData[i + 1]; ++j) {
+		 real_type absVal = std::abs(values[j]);
+		 if (absVal > rowMax) rowMax = absVal;
+	     }
+
+	     // Store the multiplier
+	     diagData[i] = (rowMax > 0.0) ? (1.0 / rowMax) : 1.0;
+	 }
+
+	    // Wrap raw data into diag vector and sync to DEVICE
+	    diag->copyDataFrom(diagData, ReSolve::memory::HOST, ReSolve::memory::HOST);
+
+	    // Scaling A and RHS
+	    std::cout << "Scaling the matrix A" << std::endl;
+	    mh_.leftScale(diag, A, ReSolve::memory::HOST);
+	    std::cout << "Scaling the RHS" << std::endl;
+	    vh_.scale(diag, rhs, ReSolve::memory::HOST);
+
+	    if (diag) { delete diag; diag = nullptr; }
+       }
+
 
       /**
        * @brief Verify the computation of the norm of scaled residuals.

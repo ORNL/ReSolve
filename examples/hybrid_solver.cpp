@@ -209,7 +209,7 @@ int main(int argc, char* argv[])
      FGMRESFile.open("/home/axs2061/ACOPF_RESULTS/HybridSolverOutput/FGMRES_stats.csv");
      FGMRESFile << "Iterations,Residue,Time_ms,VRAM_mb\n";
 
-     log_vram("Baseline"); // Baseline memory consumption
+     // log_vram("Baseline"); // Baseline memory consumption
 
     // --- Main loop to process each system ---
     for (int i = 0; i < numSystems; ++i)
@@ -264,8 +264,6 @@ int main(int argc, char* argv[])
             ReSolve::io::updateArrayFromFile(rhs_file, &rhs_host_array);
         }
 
-        A->syncData(ReSolve::memory::DEVICE);
-
         std::cout << "Finished reading the matrix and rhs, size: " << A->getNumRows() << " x " << A->getNumColumns()
                   << ", nnz: " << A->getNnz()
                   << ", symmetric? " << A->symmetric()
@@ -276,6 +274,13 @@ int main(int argc, char* argv[])
         // Update host and device data for RHS vector
         vec_rhs->copyDataFrom(rhs_host_array, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
         std::cout << "CSR matrix loaded. Expanded NNZ: " << A->getNnz() << std::endl;
+
+	// Scaling
+	std::cout << "DEBUG: System " << i << ": Performing scaling." << std::endl;
+        helper->rowEquilibration(A, vec_rhs);
+
+	A->syncData(ReSolve::memory::DEVICE);
+	vec_rhs->syncData(ReSolve::memory::DEVICE);
 
         // --- Solver Logic ---
         if (i < 2) // For the first two systems (i=0, i=1), perform full KLU factorization
@@ -311,26 +316,26 @@ int main(int argc, char* argv[])
 		index_type* P = KLU->getPOrdering();
 		index_type* Q = KLU->getQOrdering();
 
-		log_vram("Before Initial setup");
+		// log_vram("Before Initial setup");
 		Rf->setup(A, L, U, P, Q, vec_rhs);
-                log_vram("After Intial setup");
+                // log_vram("After Intial setup");
             }
 
             std::cout << "DEBUG: CSR conversion + CuSolverRf setup complete! " << std::endl;
 
-	    log_vram("Before FGMRES setup");
+	    // log_vram("Before FGMRES setup");
             FGMRES->setRestart(1000);
             FGMRES->setMaxit(2000);
             FGMRES->setup(A);
             FGMRES->setupPreconditioner("LU", Rf); // Set Rf as preconditioner for FGMRES
-	    log_vram("After FGMRES setup");
+	    // log_vram("After FGMRES setup");
 
             // Print FGMRES summary
 	    helper->printIrSummary(FGMRES);
         }
         else // if (i >= 1) -- Use CuSolverRf for refactorization, then FGMRES, with KLU redo logic
         {
-            std::cout << "DEBUG: System " << i << ": Using CuSolverRf refactorization and FGMRES." << std::endl;
+	    std::cout << "DEBUG: System " << i << ": Performing refactorization and solve." << std::endl;
 
 	    iterTimer.start_timer();
             status_refactor = Rf->refactorize(); // Attempt CuSolverRf refactorization

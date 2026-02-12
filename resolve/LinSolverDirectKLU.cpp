@@ -30,7 +30,7 @@ namespace ReSolve
     // Populate KLU data structure holding solver parameters
     klu_defaults(&Common_);
     Common_.btf              = 0;
-    Common_.scale            = -1;
+    Common_.scale            = 2;
     Common_.ordering         = ordering_;
     Common_.tol              = pivot_threshold_tol_;
     Common_.halt_if_singular = halt_if_singular_;
