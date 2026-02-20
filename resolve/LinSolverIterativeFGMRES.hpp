@@ -56,6 +56,7 @@ namespace ReSolve
     int solve(vector_type* rhs, vector_type* x) override;
     int setup(matrix::Sparse* A) override;
     int resetMatrix(matrix::Sparse* new_A) override;
+    int setPreconditioner(matrix::Sparse* B);
     int setOrthogonalization(GramSchmidt* gs) override;
 
     int        setRestart(index_type restart);
@@ -72,6 +73,12 @@ namespace ReSolve
     bool        getCliParamBool(const std::string id) const override;
     int         printCliParam(const std::string id) const override;
 
+    // Some preconditioner setters and getters
+    int        setPreconditionerDir(std::string);
+    int        setPreconditionerType(std::string);
+    std::string getPreconditionerDir() const;
+    std::string getPreconditionerType() const;
+
   private:
     enum ParamaterIDs
     {
@@ -85,6 +92,8 @@ namespace ReSolve
     index_type restart_{10};    ///< GMRES restart
     index_type conv_cond_{2};   ///< GMRES convergence condition
     bool       flexible_{true}; ///< If using flexible GMRES (FGMRES) algorithm
+    std::string preconditioner_direction_{"right"}; ///< Save the direction to allow switching
+    std::string preconditioner_type_{"class"}; ///< Saves the type of preconditioner used
 
   private:
     int  allocateSolverData();
@@ -106,6 +115,8 @@ namespace ReSolve
     GramSchmidt* GS_{nullptr};
     index_type   n_{0};
     bool         is_solver_set_{false};
+
+    matrix::Sparse* B_{nullptr}; ///< Preconditioner matrix
 
     MemoryHandler mem_; ///< Device memory manager object
   };
