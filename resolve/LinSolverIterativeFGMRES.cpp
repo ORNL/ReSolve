@@ -641,6 +641,10 @@ namespace ReSolve
         out::error() << "Left preconditioning is not supported with the Preconditioner class\n";
         return 1;
       }
+      else if (preconditioner_ == nullptr){
+        out::error() << "Preconditioner not set\n";
+        return 1;
+      }
       preconditioner_type_ = "class";
       return 0;
     }
