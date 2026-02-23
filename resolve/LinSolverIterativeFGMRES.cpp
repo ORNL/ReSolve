@@ -145,7 +145,8 @@ namespace ReSolve
       matrix_handler_->matvec(B_, &temp_vec, vec_V_, &MINUS_ONE, &ONE, memspace_);
     }
     // V[0] = b-A*x_0
-    else {
+    else
+    {
       rhs->copyDataTo(vec_V_->getData(memspace_), 0, memspace_);
       matrix_handler_->matvec(A_, x, vec_V_, &MINUS_ONE, &ONE, memspace_);
     }
@@ -225,16 +226,15 @@ namespace ReSolve
         vec_v.setData(vec_V_->getData(i + 1, memspace_), memspace_);
 
         // Right preconditioned
-        if (this->getPreconditionerDir() == "right") 
+        if (this->getPreconditionerDir() == "right")
         {
           matrix_handler_->matvec(A_, &vec_z, &vec_v, &ONE, &ZERO, memspace_);
         }
         // Left Preconditioned
-        else 
+        else
         {
           matrix_handler_->matvec(B_, &vec_z, &vec_v, &ONE, &ZERO, memspace_);
         }
-
 
         // orthogonalize V[i+1], form a column of h_H_
 
@@ -325,7 +325,7 @@ namespace ReSolve
         else
         {
           vector_handler_->axpy(&ONE, &vec_z, x, memspace_);
-        }    
+        }
       }
 
       /* test solution */
@@ -360,11 +360,11 @@ namespace ReSolve
    *        preconditioning inside the FGMRES class itself
    *
    * @param[in] B - pointer to B preconditioner matrix.
-   * @return 0 if successful, error code otherwise.  
-  */
+   * @return 0 if successful, error code otherwise.
+   */
   int LinSolverIterativeFGMRES::setPreconditioner(matrix::Sparse* B)
   {
-    B_ = B;
+    B_                   = B;
     preconditioner_type_ = "matvec";
     return 0;
   }
@@ -590,15 +590,16 @@ namespace ReSolve
   }
 
   /**
-   * @brief Allows for change in preconditioner direction 
+   * @brief Allows for change in preconditioner direction
    *        Only works with matvec
    *
    * @param[in] dir: either left or right
    * @return int - error code, 0 if successful
-  */
+   */
   int LinSolverIterativeFGMRES::setPreconditionerDir(std::string dir)
   {
-    if (this->getPreconditionerType() != "matvec") {
+    if (this->getPreconditionerType() != "matvec")
+    {
       out::error() << "Direction currently only works with matvec\n";
       return 1;
     }
@@ -615,31 +616,38 @@ namespace ReSolve
   */
   int LinSolverIterativeFGMRES::setPreconditionerType(std::string type)
   {
-    if (type == "matvec") {
+    if (type == "matvec")
+    {
       // Check if B has been set by the user
-      if (B_ == nullptr) {
+      if (B_ == nullptr)
+      {
         out::error() << "Preconditioner matrix not provided\n";
         return 1;
       }
-      else {
+      else
+      {
         preconditioner_type_ = "matvec";
         return 0;
       }
     }
     // Use the preconditioner class
-    else if (type == "class") {
-      if (preconditioner_direction_ == "left") {
+    else if (type == "class")
+    {
+      if (preconditioner_direction_ == "left")
+      {
         out::error() << "Left preconditioning is not supported with the Preconditioner class\n";
         return 1;
       }
-      else if (preconditioner_ == nullptr){
+      else if (preconditioner_ == nullptr)
+      {
         out::error() << "Preconditioner not set\n";
         return 1;
       }
       preconditioner_type_ = "class";
       return 0;
     }
-    else { 
+    else
+    {
       out::error() << "Valid preconditioner type not given\n";
       return 1;
     }
@@ -703,17 +711,19 @@ namespace ReSolve
   void LinSolverIterativeFGMRES::precV(vector_type* rhs, vector_type* x)
   {
     using namespace constants;
-    if (this->getPreconditionerType() == "class") 
+    if (this->getPreconditionerType() == "class")
     {
       preconditioner_->apply(rhs, x);
     }
     // Use matvec preconditioner
-    else {
+    else
+    {
       // ABGMRES Preconditioner
-      if (this->getPreconditionerDir() == "right") {
+      if (this->getPreconditionerDir() == "right")
+      {
         matrix_handler_->matvec(B_, rhs, x, &ONE, &ZERO, memspace_);
       }
-      else 
+      else
       // BA GMRES Preconditioner
       {
         matrix_handler_->matvec(A_, rhs, x, &ONE, &ZERO, memspace_);
