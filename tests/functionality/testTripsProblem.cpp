@@ -4,29 +4,26 @@
  * @author Slaven Peles (peless@ornl.gov)
  * @author Jeffery Zhang (jeffzsc594@gmail.com)
  * @brief Functionality test for GMRES using test problem from Trips-PY
- * 
+ *
  */
-#include <string>
-#include <iostream>
-#include <iomanip>
 #include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <string>
 #include <vector>
-#include <resolve/matrix/Coo.hpp>
-#include <resolve/matrix/Csr.hpp>
-#include <resolve/matrix/Csc.hpp>
-#include <resolve/vector/Vector.hpp>
-#include <resolve/matrix/io.hpp>
-#include <resolve/matrix/MatrixHandler.hpp>
-#include <resolve/vector/VectorHandler.hpp>
+
+#include <resolve/GramSchmidt.hpp>
 #include <resolve/LinSolverDirectCpuILU0.hpp>
 #include <resolve/LinSolverIterativeFGMRES.hpp>
 #include <resolve/PreconditionerLU.hpp>
-
-#include <resolve/GramSchmidt.hpp>
+#include <resolve/matrix/Coo.hpp>
+#include <resolve/matrix/Csc.hpp>
+#include <resolve/matrix/Csr.hpp>
+#include <resolve/matrix/MatrixHandler.hpp>
+#include <resolve/matrix/io.hpp>
+#include <resolve/vector/Vector.hpp>
+#include <resolve/vector/VectorHandler.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
-
-#include <resolve/PreconditionerMatvec.hpp>
-
 
 #ifdef RESOLVE_USE_CUDA
 #include <resolve/LinSolverDirectCuSparseILU0.hpp>
@@ -36,7 +33,7 @@
 #include <resolve/LinSolverDirectRocSparseILU0.hpp>
 #endif
 
-using real_type  = ReSolve::real_type;
+using real_type   = ReSolve::real_type;
 using index_type  = ReSolve::index_type;
 using vector_type = ReSolve::vector::Vector;
 using MemorySpace = ReSolve::memory::MemorySpace;
@@ -44,15 +41,15 @@ using MemorySpace = ReSolve::memory::MemorySpace;
 #include "TestHelper.hpp"
 
 template <class workspace_type, class preconditioner_type>
-static int runTest(int argc, char *argv[]);
+static int runTest(int argc, char* argv[]);
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   int error_sum = 0; // If error sum is 0, test passes; fails otherwise
 
   error_sum += runTest<ReSolve::LinAlgWorkspaceCpu,
                        ReSolve::LinSolverDirectCpuILU0>(argc, argv);
- 
+
 #ifdef RESOLVE_USE_CUDA
   error_sum += runTest<ReSolve::LinAlgWorkspaceCUDA,
                        ReSolve::LinSolverDirectCuSparseILU0>(argc, argv);
@@ -67,7 +64,7 @@ int main(int argc, char *argv[])
 }
 
 template <class workspace_type, class preconditioner_type>
-int runTest(int argc, char *argv[])
+int runTest(int argc, char* argv[])
 {
   using namespace ReSolve;
   int error_sum = 0; // If error sum is 0, test passes; fails otherwise
@@ -83,24 +80,27 @@ int runTest(int argc, char *argv[])
   VectorHandler vector_handler(&workspace);
 
   // Set memory space where to run tests
-  std::string hwbackend = "CPU";
-  memory::MemorySpace memspace = memory::HOST;
-  if (matrix_handler.getIsCudaEnabled()) {
-    memspace = memory::DEVICE;
+  std::string         hwbackend = "CPU";
+  memory::MemorySpace memspace  = memory::HOST;
+  if (matrix_handler.getIsCudaEnabled())
+  {
+    memspace  = memory::DEVICE;
     hwbackend = "CUDA";
   }
-  if (matrix_handler.getIsHipEnabled()) {
-    memspace = memory::DEVICE;
+  if (matrix_handler.getIsHipEnabled())
+  {
+    memspace  = memory::DEVICE;
     hwbackend = "HIP";
   }
 
   // Create iterative solver
-  GramSchmidt GS(&vector_handler, GramSchmidt::CGS2);
-  preconditioner_type ILU(&workspace);        
+  GramSchmidt              GS(&vector_handler, GramSchmidt::CGS2);
+  preconditioner_type      ILU(&workspace);
   LinSolverIterativeFGMRES FGMRES(&matrix_handler, &vector_handler, &GS);
 
   // Create test linear system using given arguments
-  if (argc != 4) {
+  if (argc != 4)
+  {
     std::cout << "\nMust provide the following files: A matrix file, rhs file\n"
               << "A^T file\n";
   }
@@ -109,7 +109,7 @@ int runTest(int argc, char *argv[])
   std::ifstream rhs_file(argv[2]);
   std::ifstream At_file(argv[3]);
 
-  matrix::Csr* A = ReSolve::io::createCsrFromFile(A_file, false);
+  matrix::Csr* A       = ReSolve::io::createCsrFromFile(A_file, false);
   vector_type* vec_rhs = ReSolve::io::createVectorFromFile(rhs_file);
 
   // Declare A_t
@@ -121,7 +121,8 @@ int runTest(int argc, char *argv[])
   vec_x.setToZero(memspace);
 
   // Send A, A_t and b to gpu memspace
-  if (matrix_handler.getIsCudaEnabled()) {
+  if (matrix_handler.getIsCudaEnabled())
+  {
     A->allocateMatrixData(memspace);
     A_t->allocateMatrixData(memspace);
     vec_rhs->allocate(memspace);
@@ -160,6 +161,13 @@ int runTest(int argc, char *argv[])
 
   // Use standard GMRES
   FGMRES.setFlexible(false);
+<<<<<<< HEAD
+=======
+
+  std::cout << FGMRES.getPreconditionerDir() << "\n\n";
+  std::cout << FGMRES.getPreconditionerType() << "\n\n";
+  std::cout << FGMRES.getFlexible() << "\n\n";
+>>>>>>> 0b3c99a (Apply pre-commmit fixes)
 
   // Default uses ABGMRES
   FGMRES.setRestart(150);
@@ -210,4 +218,3 @@ int runTest(int argc, char *argv[])
 
   return error_sum;
 }
-

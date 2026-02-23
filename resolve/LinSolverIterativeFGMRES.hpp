@@ -72,6 +72,12 @@ namespace ReSolve
     bool        getCliParamBool(const std::string id) const override;
     int         printCliParam(const std::string id) const override;
 
+    // Some preconditioner setters and getters
+    int         setPreconditionerDir(std::string);
+    int         setPreconditionerType(std::string);
+    std::string getPreconditionerDir() const;
+    std::string getPreconditionerType() const;
+
   private:
     enum ParamaterIDs
     {
@@ -82,9 +88,11 @@ namespace ReSolve
       FLEXIBLE
     };
 
-    index_type restart_{10};    ///< GMRES restart
-    index_type conv_cond_{2};   ///< GMRES convergence condition
-    bool       flexible_{true}; ///< If using flexible GMRES (FGMRES) algorithm
+    index_type  restart_{10};                       ///< GMRES restart
+    index_type  conv_cond_{2};                      ///< GMRES convergence condition
+    bool        flexible_{true};                    ///< If using flexible GMRES (FGMRES) algorithm
+    std::string preconditioner_direction_{"right"}; ///< Save the direction to allow switching
+    std::string preconditioner_type_{"class"};      ///< Saves the type of preconditioner used
 
   private:
     int  allocateSolverData();

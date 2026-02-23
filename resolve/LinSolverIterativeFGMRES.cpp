@@ -129,15 +129,10 @@ namespace ReSolve
     vec_V_->setToZero(memspace_);
 
     // V[0] = b-A*x_0
-    rhs->copyDataTo(vec_V_->getData(memspace_), 0, memspace_);
-    matrix_handler_->matvec(A_, x, vec_V_, &MINUS_ONE, &ONE, memspace_);
-
-    // Calculate r_0 = ||B(b - Ax_0)|| for BAGMRES
-    if (preconditioner_->getSide() == "left")
+    else
     {
-      vector_type temp_vec(n_);
-      temp_vec.copyDataFrom(vec_V_->getData(0, memspace_), memspace_, memspace_);
-      matrix_handler_->matvec(preconditioner_->getPrec(), &temp_vec, vec_V_, &ONE, &ZERO, memspace_);
+      rhs->copyDataTo(vec_V_->getData(memspace_), 0, memspace_);
+      matrix_handler_->matvec(A_, x, vec_V_, &MINUS_ONE, &ONE, memspace_);
     }
 
     rnorm = 0.0;
@@ -215,16 +210,19 @@ namespace ReSolve
         vec_v.setData(vec_V_->getData(i + 1, memspace_), memspace_);
 
         // Right preconditioned
+<<<<<<< HEAD
         if (preconditioner_->getSide() == "right") 
+=======
+        if (this->getPreconditionerDir() == "right")
+>>>>>>> 0b3c99a (Apply pre-commmit fixes)
         {
           matrix_handler_->matvec(A_, &vec_z, &vec_v, &ONE, &ZERO, memspace_);
         }
         // Left Preconditioned
-        else 
+        else
         {
           matrix_handler_->matvec(preconditioner_->getPrec(), &vec_z, &vec_v, &ONE, &ZERO, memspace_);
         }
-
 
         // orthogonalize V[i+1], form a column of h_H_
 
@@ -323,8 +321,12 @@ namespace ReSolve
         else
         {
           vector_handler_->axpy(&ONE, &vec_z, x, memspace_);
+<<<<<<< HEAD
         }    
 >>>>>>> a3cdcbf (ABBA GMRES Commit)
+=======
+        }
+>>>>>>> 0b3c99a (Apply pre-commmit fixes)
       }
 
       /* test solution */
@@ -353,6 +355,24 @@ namespace ReSolve
     return 0;
   }
 
+<<<<<<< HEAD
+=======
+  /**
+   * @brief Sets pointer to B matrix for user configured preconditioner
+   *        Sets the variable preconditioner_type_ to matvec to perform
+   *        preconditioning inside the FGMRES class itself
+   *
+   * @param[in] B - pointer to B preconditioner matrix.
+   * @return 0 if successful, error code otherwise.
+   */
+  int LinSolverIterativeFGMRES::setPreconditioner(matrix::Sparse* B)
+  {
+    B_                   = B;
+    preconditioner_type_ = "matvec";
+    return 0;
+  }
+
+>>>>>>> 0b3c99a (Apply pre-commmit fixes)
   int LinSolverIterativeFGMRES::resetMatrix(matrix::Sparse* new_matrix)
   {
     A_ = new_matrix;
@@ -573,6 +593,83 @@ namespace ReSolve
     return 0;
   }
 
+<<<<<<< HEAD
+=======
+  /**
+   * @brief Allows for change in preconditioner direction
+   *        Only works with matvec
+   *
+   * @param[in] dir: either left or right
+   * @return int - error code, 0 if successful
+   */
+  int LinSolverIterativeFGMRES::setPreconditionerDir(std::string dir)
+  {
+    if (this->getPreconditionerType() != "matvec")
+    {
+      out::error() << "Direction currently only works with matvec\n";
+      return 1;
+    }
+    preconditioner_direction_ = dir;
+    return 0;
+  }
+
+  /**
+   * @brief Allows for change in preconditioner type
+   *
+   * @param[in] type: class: uses the Preconditioner class
+                      matvec: uses the user provided preconditioner matrix
+   * @return int - error code, 0 if successful
+  */
+  int LinSolverIterativeFGMRES::setPreconditionerType(std::string type)
+  {
+    if (type == "matvec")
+    {
+      // Check if B has been set by the user
+      if (B_ == nullptr)
+      {
+        out::error() << "Preconditioner matrix not provided\n";
+        return 1;
+      }
+      else
+      {
+        preconditioner_type_ = "matvec";
+        return 0;
+      }
+    }
+    // Use the preconditioner class
+    else if (type == "class")
+    {
+      if (preconditioner_direction_ == "left")
+      {
+        out::error() << "Left preconditioning is not supported with the Preconditioner class\n";
+        return 1;
+      }
+      else if (preconditioner_ == nullptr)
+      {
+        out::error() << "Preconditioner not set\n";
+        return 1;
+      }
+      preconditioner_type_ = "class";
+      return 0;
+    }
+    else
+    {
+      out::error() << "Valid preconditioner type not given\n";
+      return 1;
+    }
+  }
+
+  std::string LinSolverIterativeFGMRES::getPreconditionerDir() const
+  {
+    return preconditioner_direction_;
+  }
+
+  std::string LinSolverIterativeFGMRES::getPreconditionerType() const
+  {
+    return preconditioner_type_;
+  }
+
+>>>>>>> 0b3c99a (Apply pre-commmit fixes)
   //
   // Private methods
   //
@@ -620,7 +717,29 @@ namespace ReSolve
 
   void LinSolverIterativeFGMRES::precV(vector_type* rhs, vector_type* x)
   {
+<<<<<<< HEAD
     preconditioner_->apply(rhs, x);
+=======
+    using namespace constants;
+    if (this->getPreconditionerType() == "class")
+    {
+      preconditioner_->apply(rhs, x);
+    }
+    // Use matvec preconditioner
+    else
+    {
+      // ABGMRES Preconditioner
+      if (this->getPreconditionerDir() == "right")
+      {
+        matrix_handler_->matvec(B_, rhs, x, &ONE, &ZERO, memspace_);
+      }
+      else
+      // BA GMRES Preconditioner
+      {
+        matrix_handler_->matvec(A_, rhs, x, &ONE, &ZERO, memspace_);
+      }
+    }
+>>>>>>> 0b3c99a (Apply pre-commmit fixes)
   }
 
   void LinSolverIterativeFGMRES::setMemorySpace()
