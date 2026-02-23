@@ -308,6 +308,35 @@ namespace ReSolve
   }
 
   /**
+   * @brief Divide the elements of a vector by the elements of another vector
+   *
+   * @param[in] divisor - vector divisor
+   * @param[in,out] vec - vector to be divided
+   * @param[in] memspace - Device where the operation is computed
+   *
+   * @pre The two vectors must be the same size
+   *
+   * @return 0 if successful, 1 otherwise
+   */
+  int VectorHandler::elementwiseDivide(vector::Vector* divisor, vector::Vector* vec, memory::MemorySpace memspace)
+  {
+    assert(divisor->getSize() == vec->getSize() && "Diagonal vector must be of the same size as the vector.");
+    assert(divisor->getData(memspace) != nullptr && "Diagonal vector data is null!\n");
+    assert(vec->getData(memspace) != nullptr && "Vector data is null!\n");
+    using namespace ReSolve::memory;
+    switch (memspace)
+    {
+    case HOST:
+      return cpuImpl_->elementwiseDivide(divisor, vec);
+      break;
+    case DEVICE:
+      return devImpl_->elementwiseDivide(divisor, vec);
+      break;
+    }
+    return 1;
+  }
+
+  /**
    * @brief If CUDA support is enabled in the handler.
    *
    * @return true

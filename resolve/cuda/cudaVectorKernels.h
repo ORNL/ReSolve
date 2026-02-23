@@ -18,5 +18,6 @@ namespace ReSolve
     void setArrayConst(index_type n, real_type val, real_type* arr);
     void addConst(index_type n, real_type val, real_type* arr);
     void scale(index_type n, const real_type* diag, real_type* vec);
+    void elementwiseDivide(index_type n, const real_type* divisor, real_type* vec);
   } // namespace cuda
 } // namespace ReSolve
