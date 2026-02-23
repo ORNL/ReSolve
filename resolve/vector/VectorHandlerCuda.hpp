@@ -66,6 +66,16 @@ namespace ReSolve
      */
     virtual void scal(vector::Vector* diag, vector::Vector* vec);
 
+    /**
+     * @brief elementwiseDivide: divides a vector's elements by another's
+     *
+     * @param[in] divisor vector of size n x 1
+     * @param[in,out] vec vector of size n x 1 (this is where the result is stored)
+     *
+     * @return 0 if successful, 1 otherwise
+     */
+    virtual int elementwiseDivide(vector::Vector* divisor, vector::Vector* vec);
+
   private:
     MemoryHandler        mem_; ///< Device memory manager object
     LinAlgWorkspaceCUDA* workspace_;

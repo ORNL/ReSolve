@@ -25,6 +25,7 @@ int main(int, char**)
     result += test.axpyMulti(100, 10);
     result += test.massDot(100, 10);
     result += test.scale(100);
+    result += test.elementwiseDivide(100);
 
     std::cout << "\n";
   }

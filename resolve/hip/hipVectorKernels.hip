@@ -69,6 +69,30 @@ namespace ReSolve {
           vec[idx] *= diag[idx];
         }
       }
+
+      /**
+       * @brief Divides a vector's elements by another vector's elements
+       *
+       * @param[in]  n       - size of the vectors
+       * @param[in]  d_val   - divisor values
+       * @param[in, out] vec - vector to be divided. Changes in place.
+       *
+       * @todo Decide how to allow user to configure grid and block sizes.
+       */
+      __global__ void elementwiseDivide(index_type       n,
+                                        const real_type* d_val,
+                                        real_type*       vec)
+      {
+        // Get the index of the element to be processed
+        index_type idx = blockIdx.x * blockDim.x + threadIdx.x;
+
+        // Check if the index is within bounds
+        if (idx < n)
+        {
+          // Divide the vector element by the corresponding divisor value
+          vec[idx] /= d_val[idx];
+        }
+      }
     } // namespace kernels
 
     void setArrayConst(index_type n, real_type c, real_type* v)
@@ -105,6 +129,26 @@ namespace ReSolve {
       int num_blocks = (n + block_size - 1) / block_size;
       // Launch the kernel
       kernels::scale<<<num_blocks, block_size>>>(n, diag, vec);
+    }
+
+    /**
+     * @brief Wrapper that divides a vector's elements by another vector's elements
+     *
+     * @param[in]  n       - size of the vectors
+     * @param[in]  divisor - divisor values
+     * @param[in, out] vec - vector to be divided. Changes in place.
+     *
+     * @todo Decide how to allow user to configure grid and block sizes.
+     */
+    void elementwiseDivide(index_type       n,
+                           const real_type* divisor,
+                           real_type*       vec)
+    {
+      // Define block size and number of blocks
+      const int block_size = 256;
+      int       num_blocks = (n + block_size - 1) / block_size;
+      // Launch the kernel
+      kernels::elementwiseDivide<<<num_blocks, block_size>>>(n, divisor, vec);
     }
   } // namespace hip
 } // namespace ReSolve

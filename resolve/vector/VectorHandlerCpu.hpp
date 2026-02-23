@@ -57,6 +57,8 @@ namespace ReSolve
 
     virtual void scal(vector::Vector* diag, vector::Vector* vec);
 
+    virtual int elementwiseDivide(vector::Vector* divisor, vector::Vector* vec);
+
   private:
     LinAlgWorkspaceCpu* workspace_;
   };

@@ -280,6 +280,48 @@ namespace ReSolve
         return status.report(__func__);
       }
 
+      TestOutcome elementwiseDivide(index_type N)
+      {
+        TestStatus status;
+
+        vector::Vector divisor(N);
+        vector::Vector vec(N);
+
+        // divisor[i] = i, vec[i] = 3.0
+        // expected result vec[i] = i * 3.0
+        divisor.allocate(memspace_);
+        vec.allocate(memspace_);
+
+        vec.setToConst(3.0, memspace_);
+
+        auto divisor_data = std::unique_ptr<real_type[]>(new real_type[N]);
+        for (size_t i = 0; i < static_cast<size_t>(N); ++i)
+        {
+          divisor_data[i] = (real_type) (i + 1);
+        }
+        divisor.copyDataFrom(divisor_data.get(), memory::HOST, memspace_);
+
+        handler_.elementwiseDivide(&divisor, &vec, memspace_);
+
+        if (memspace_ == memory::DEVICE)
+        {
+          vec.syncData(memory::HOST);
+        }
+
+        for (index_type i = 0; i < N; ++i)
+        {
+          if (!isEqual(vec.getData(memory::HOST)[i], (real_type) 3.0 / (i + 1)))
+          {
+            std::cout << "Solution vector element vec[" << i << "] = " << vec.getData(memory::HOST)[i]
+                      << ", expected: " << (real_type) 3.0 / (i + 1) << "\n";
+            status *= false;
+            break;
+          }
+        }
+
+        return status.report(__func__);
+      }
+
     private:
       ReSolve::VectorHandler&      handler_;
       ReSolve::memory::MemorySpace memspace_{memory::HOST};

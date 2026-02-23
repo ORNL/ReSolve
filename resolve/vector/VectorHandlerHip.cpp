@@ -333,4 +333,26 @@ namespace ReSolve
     vec->setDataUpdated(memory::DEVICE);
   }
 
+  /**
+   * @brief Divide a vector's elements by another vector's elements in HIP
+   *
+   * @param[in]  divisor  - vector of divisors
+   * @param[in, out]  vec - vector to be divided
+   *
+   * @pre The diagonal vector must be of the same size as the vector.
+   * @pre vec is undivided
+   * @post vec is divided
+   *
+   * @return 0 if successful, 1 otherwise
+   */
+  int VectorHandlerHip::elementwiseDivide(vector::Vector* divisor, vector::Vector* vec)
+  {
+    real_type* divisor_data = divisor->getData(memory::DEVICE);
+    real_type* vec_data     = vec->getData(memory::DEVICE);
+    index_type n            = vec->getSize();
+    hip::elementwiseDivide(n, divisor_data, vec_data);
+    vec->setDataUpdated(memory::DEVICE);
+    return 0;
+  }
+
 } // namespace ReSolve

@@ -45,6 +45,9 @@ namespace ReSolve
     // Scale a vector by a diagonal matrix
     virtual void scal(vector::Vector* diag, vector::Vector* vec) = 0;
 
+    // Divide the elements of a vector by the elements of another vector
+    virtual int elementwiseDivide(vector::Vector* divisor, vector::Vector* vec) = 0;
+
     /** gemv:
      * if `transpose = N` (no), `x = beta*x +  alpha*V*y`,
      * where `x` is `[n x 1]`, `V` is `[n x k]` and `y` is `[k x 1]`.
