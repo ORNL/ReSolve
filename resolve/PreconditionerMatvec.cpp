@@ -9,15 +9,16 @@
 namespace ReSolve
 {
   using out = io::Logger;
+
   /**
    * @brief Constructor for PreconditionerMatrix.
    *
    * @param[in] A - Pointer to the forward operator
    * @param[in] matrix_handler - Pointer to the matrix handler
-  */
+   */
   PreconditionerMatvec::PreconditionerMatvec(matrix::Sparse* A, MatrixHandler* matrix_handler)
   {
-    A_ = A;
+    A_              = A;
     matrix_handler_ = matrix_handler;
     setMemorySpace();
   }
@@ -29,10 +30,9 @@ namespace ReSolve
   {
   }
 
-
   /**
    * @brief Set the preconditioning matrix
-   * 
+   *
    * @param[in] B - Pointer to the preconditioning matrix
    */
   int PreconditionerMatvec::setup(matrix::Sparse* B)
@@ -43,23 +43,24 @@ namespace ReSolve
 
   /**
    * @brief Get the preconditioner matrix
-   * 
+   *
    * Necessary for some calculations
    *
-  */
+   */
   matrix::Sparse* PreconditionerMatvec::getPrec()
   {
     return B_;
   }
-  
+
   /**
    * @brief Setter for the side
    *
    * @param[in] The new side
-  */
+   */
   int PreconditionerMatvec::setSide(std::string side)
   {
-    if (side == "left" || side == "right") {
+    if (side == "left" || side == "right")
+    {
       side_ = side;
       return 0;
     }
@@ -69,11 +70,11 @@ namespace ReSolve
 
   /**
    * @brief getter for the side
-  */
+   */
   std::string PreconditionerMatvec::getSide()
   {
     return side_;
-  }  
+  }
 
   /**
    * @brief Applies the preconditioner depending on the side
@@ -87,13 +88,14 @@ namespace ReSolve
   {
     using namespace constants;
     // ABGMRES Preconditioner
-    if (side_ == "right") 
+    if (side_ == "right")
     {
       matrix_handler_->matvec(B_, rhs, x, &ONE, &ZERO, memspace_);
       return 0;
     }
     // BA GMRES Preconditioner
-    else {
+    else
+    {
       matrix_handler_->matvec(A_, rhs, x, &ONE, &ZERO, memspace_);
       return 0;
     }

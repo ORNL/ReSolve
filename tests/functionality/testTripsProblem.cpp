@@ -16,6 +16,7 @@
 #include <resolve/LinSolverDirectCpuILU0.hpp>
 #include <resolve/LinSolverIterativeFGMRES.hpp>
 #include <resolve/PreconditionerLU.hpp>
+#include <resolve/PreconditionerMatvec.hpp>
 #include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/Csc.hpp>
 #include <resolve/matrix/Csr.hpp>
@@ -24,9 +25,6 @@
 #include <resolve/vector/Vector.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
-
-#include <resolve/PreconditionerMatvec.hpp>
-
 
 #ifdef RESOLVE_USE_CUDA
 #include <resolve/LinSolverDirectCuSparseILU0.hpp>

@@ -35,10 +35,10 @@ namespace ReSolve
     Preconditioner();
     virtual ~Preconditioner();
 
-    virtual int setup(matrix_type* A)                   = 0;
-    virtual int apply(vector_type* rhs, vector_type* x) = 0;
-    virtual int reset(matrix_type* /* A */);
-    virtual std::string getSide(); // Gets the preconditioning side
+    virtual int          setup(matrix_type* A)                   = 0;
+    virtual int          apply(vector_type* rhs, vector_type* x) = 0;
+    virtual int          reset(matrix_type* /* A */);
+    virtual std::string  getSide(); // Gets the preconditioning side
     virtual matrix_type* getPrec(); // Dummy function only implemented by PreconditionerMatvec
 
   private:
