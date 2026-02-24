@@ -322,4 +322,49 @@ namespace ReSolve
     return 0;
   }
 
+  /**
+   * @brief Take the element-wise max of two vectors.
+   * Each element of the output will be the maximum value of the corresponding elements in the input vectors.
+   *
+   * @param[in]     x - First vector
+   * @param[in,out] y - Second vector (output)
+   *
+   * @pre The two vectors must be the same size
+   *
+   * @return 0 if successful, 1 otherwise
+   */
+  int VectorHandlerCpu::elementwiseMax(vector::Vector* x, vector::Vector* y)
+  {
+    real_type* x_data = x->getData(memory::HOST);
+    real_type* y_data = y->getData(memory::HOST);
+    index_type n      = y->getSize();
+
+    for (index_type i = 0; i < n; ++i)
+    {
+      y_data[i] = std::max(x_data[i], y_data[i]);
+    }
+    y->setDataUpdated(memory::HOST);
+    return 0;
+  }
+
+  /**
+   * @brief Take the element-wise absolute value of a vector.
+   *
+   * @param[in,out] x - Input and output vector
+   *
+   * @return 0 if successful, 1 otherwise
+   */
+  int VectorHandlerCpu::abs(vector::Vector* x)
+  {
+    real_type* x_data = x->getData(memory::HOST);
+    index_type n      = x->getSize();
+
+    for (index_type i = 0; i < n; ++i)
+    {
+      x_data[i] = std::abs(x_data[i]);
+    }
+    x->setDataUpdated(memory::HOST);
+    return 0;
+  }
+
 } // namespace ReSolve

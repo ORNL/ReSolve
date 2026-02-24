@@ -326,4 +326,40 @@ namespace ReSolve
     return 0;
   }
 
+  /**
+   * @brief Calculate element-wise maximum between two vectors in CUDA
+   *
+   * @param[in]      x - The first vector
+   * @param[in, out] y - The second vector (result is returned in y)
+   *
+   * @pre The two vectors must be the same size
+   *
+   * @return 0 if successful, 1 otherwise
+   */
+  int VectorHandlerCuda::elementwiseMax(vector::Vector* x, vector::Vector* y)
+  {
+    real_type* x_data = x->getData(memory::DEVICE);
+    real_type* y_data = y->getData(memory::DEVICE);
+    index_type n      = y->getSize();
+    cuda::elementwiseMax(n, x_data, y_data);
+    y->setDataUpdated(memory::DEVICE);
+    return 0;
+  }
+
+  /**
+   * @brief Calculate element-wise absolute value of a vector in CUDA
+   *
+   * @param[in, out] x - The vector (result is returned in x)
+   *
+   * @return 0 if successful, 1 otherwise
+   */
+  int VectorHandlerCuda::abs(vector::Vector* x)
+  {
+    real_type* x_data = x->getData(memory::DEVICE);
+    index_type n      = x->getSize();
+    cuda::abs(n, x_data);
+    x->setDataUpdated(memory::DEVICE);
+    return 0;
+  }
+
 } // namespace ReSolve

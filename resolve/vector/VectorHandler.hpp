@@ -60,7 +60,10 @@ namespace ReSolve
               memory::MemorySpace memspace);
 
     int scale(vector::Vector* diag, vector::Vector* vec, memory::MemorySpace memspace);
-    int elementwiseDivide(vector::Vector* diag, vector::Vector* vec, memory::MemorySpace memspace);
+    int elementwiseDivide(vector::Vector* divisor, vector::Vector* vec, memory::MemorySpace memspace);
+    int elementwiseMax(vector::Vector* x, vector::Vector* y, memory::MemorySpace memspace);
+
+    int abs(vector::Vector* x, memory::MemorySpace memspace);
 
     /** infNorm:
      * Returns infinity norm of a vector (i.e., entry with max abs value)

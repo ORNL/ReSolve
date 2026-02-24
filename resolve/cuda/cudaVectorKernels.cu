@@ -105,6 +105,51 @@ namespace ReSolve
         }
       }
 
+      /**
+       * @brief Wrapper that computes the element-wise max of two vectors.
+       *
+       * @param[in]      n - size of the vectors
+       * @param[in]      x - First vector values
+       * @param[in, out] y - Second vector values. Changes in place.
+       *
+       * @todo Decide how to allow user to configure grid and block sizes.
+       */
+      __global__ void elementwiseMax(index_type       n,
+                                     const real_type* x,
+                                     real_type*       y)
+      {
+        // Get the index of the element to be processed
+        index_type idx = blockIdx.x * blockDim.x + threadIdx.x;
+
+        // Check if the index is within bounds
+        if (idx < n)
+        {
+          // Compute maximum of elements
+          y[idx] = max(x[idx], y[idx]);
+        }
+      }
+
+      /**
+       * @brief Computes the element-wise absolute value of a vector.
+       *
+       * @param[in]      n - size of the vector
+       * @param[in, out] x - Vector values. Changes in place.
+       *
+       * @todo Decide how to allow user to configure grid and block sizes.
+       */
+      __global__ void abs(index_type n,
+                          real_type* x)
+      {
+        // Get the index of the element to be processed
+        index_type idx = blockIdx.x * blockDim.x + threadIdx.x;
+
+        // Check if the index is within bounds
+        if (idx < n)
+        {
+          // Compute absolute value of element
+          x[idx] = fabs(x[idx]);
+        }
+      }
     } // namespace kernels
 
     void setArrayConst(index_type n, real_type val, real_type* arr)
@@ -161,6 +206,44 @@ namespace ReSolve
       int       num_blocks = (n + block_size - 1) / block_size;
       // Launch the kernel
       kernels::elementwiseDivide<<<num_blocks, block_size>>>(n, divisor, vec);
+    }
+
+    /**
+     * @brief Wrapper that computes the element-wise max of two vectors.
+     *
+     * @param[in]      n - size of the vectors
+     * @param[in]      x - First vector values
+     * @param[in, out] y - Second vector values. Changes in place.
+     *
+     * @todo Decide how to allow user to configure grid and block sizes.
+     */
+    void elementwiseMax(index_type       n,
+                        const real_type* x,
+                        real_type*       y)
+    {
+      // Define block size and number of blocks
+      const int block_size = 256;
+      int       num_blocks = (n + block_size - 1) / block_size;
+      // Launch the kernel
+      kernels::elementwiseMax<<<num_blocks, block_size>>>(n, x, y);
+    }
+
+    /**
+     * @brief Wrapper that computes the element-wise absolute value of a vector.
+     *
+     * @param[in]      n - size of the vector
+     * @param[in, out] x - Vector values. Changes in place.
+     *
+     * @todo Decide how to allow user to configure grid and block sizes.
+     */
+    void abs(index_type n,
+             real_type* x)
+    {
+      // Define block size and number of blocks
+      const int block_size = 256;
+      int       num_blocks = (n + block_size - 1) / block_size;
+      // Launch the kernel
+      kernels::abs<<<num_blocks, block_size>>>(n, x);
     }
   } // namespace cuda
 } // namespace ReSolve

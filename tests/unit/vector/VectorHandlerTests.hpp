@@ -287,8 +287,8 @@ namespace ReSolve
         vector::Vector divisor(N);
         vector::Vector vec(N);
 
-        // divisor[i] = i, vec[i] = 3.0
-        // expected result vec[i] = i * 3.0
+        // divisor[i] = i + 1, vec[i] = 3.0
+        // expected result vec[i] = 3.0 / (i + 1)
         divisor.allocate(memspace_);
         vec.allocate(memspace_);
 
@@ -314,6 +314,98 @@ namespace ReSolve
           {
             std::cout << "Solution vector element vec[" << i << "] = " << vec.getData(memory::HOST)[i]
                       << ", expected: " << (real_type) 3.0 / (i + 1) << "\n";
+            status *= false;
+            break;
+          }
+        }
+
+        return status.report(__func__);
+      }
+
+      TestOutcome elementwiseMax(index_type N)
+      {
+        TestStatus status;
+
+        vector::Vector x(N);
+        vector::Vector y(N);
+
+        x.allocate(memspace_);
+        y.allocate(memspace_);
+
+        auto x_data = std::unique_ptr<real_type[]>(new real_type[N]);
+        auto y_data = std::unique_ptr<real_type[]>(new real_type[N]);
+        for (size_t i = 0; i < static_cast<size_t>(N); ++i)
+        {
+          if (i % 3 == 0)
+          {
+            x_data[i] = (real_type) (i + 1);
+            y_data[i] = (real_type) i * .5;
+          }
+          else
+          {
+            x_data[i] = -(real_type) (i + 1);
+            y_data[i] = (real_type) (i + 1);
+          }
+        }
+        x.copyDataFrom(x_data.get(), memory::HOST, memspace_);
+        y.copyDataFrom(y_data.get(), memory::HOST, memspace_);
+
+        handler_.elementwiseMax(&x, &y, memspace_);
+
+        if (memspace_ == memory::DEVICE)
+        {
+          y.syncData(memory::HOST);
+        }
+
+        for (index_type i = 0; i < N; ++i)
+        {
+          if (!isEqual(y.getData(memory::HOST)[i], (real_type) (i + 1)))
+          {
+            std::cout << "Solution vector element y[" << i << "] = " << y.getData(memory::HOST)[i]
+                      << ", expected: " << (real_type) (i + 1) << "\n";
+            status *= false;
+            break;
+          }
+        }
+
+        return status.report(__func__);
+      }
+
+      TestOutcome abs(index_type N)
+      {
+        TestStatus status;
+
+        vector::Vector x(N);
+
+        x.allocate(memspace_);
+
+        auto x_data = std::unique_ptr<real_type[]>(new real_type[N]);
+        for (size_t i = 0; i < static_cast<size_t>(N); ++i)
+        {
+          if (i % 3 == 0)
+          {
+            x_data[i] = -(real_type) i;
+          }
+          else
+          {
+            x_data[i] = (real_type) i;
+          }
+        }
+        x.copyDataFrom(x_data.get(), memory::HOST, memspace_);
+
+        handler_.abs(&x, memspace_);
+
+        if (memspace_ == memory::DEVICE)
+        {
+          x.syncData(memory::HOST);
+        }
+
+        for (index_type i = 0; i < N; ++i)
+        {
+          if (!isEqual(x.getData(memory::HOST)[i], (real_type) i))
+          {
+            std::cout << "Solution vector element y[" << i << "] = " << x.getData(memory::HOST)[i]
+                      << ", expected: " << (real_type) i << "\n";
             status *= false;
             break;
           }
