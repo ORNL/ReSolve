@@ -22,6 +22,7 @@ set(ReSolve_SRC
     SystemSolver.cpp
     Preconditioner.cpp
     PreconditionerLU.cpp
+    PreconditionerMatvec.cpp
 )
 
 set(ReSolve_KLU_SRC LinSolverDirectKLU.cpp)
@@ -53,6 +54,7 @@ set(ReSolve_HEADER_INSTALL
     MemoryUtils.hpp
     Preconditioner.hpp
     PreconditionerLU.hpp
+    PreconditionerMatvec.hpp
 )
 
 set(ReSolve_KLU_HEADER_INSTALL LinSolverDirectKLU.hpp)

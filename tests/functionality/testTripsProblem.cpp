@@ -25,6 +25,8 @@
 #include <resolve/GramSchmidt.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 
+#include <resolve/PreconditionerMatvec.hpp>
+
 
 #ifdef RESOLVE_USE_CUDA
 #include <resolve/LinSolverDirectCuSparseILU0.hpp>
@@ -134,6 +136,12 @@ int runTest(int argc, char *argv[])
 
   matrix_handler.setValuesChanged(true, memspace);
 
+  // Set up the ABBA preconditioner
+  PreconditionerMatvec precond_matvec(A, &matrix_handler);
+  precond_matvec.setup(A_t);
+  status = FGMRES.setPreconditioner(&precond_matvec);
+  error_sum += status;
+
   real_type tol = 1e-10; // iterative solver tolerance
 
   // Compute error norms for the system
@@ -150,16 +158,8 @@ int runTest(int argc, char *argv[])
   FGMRES.setTol(tol);
   FGMRES.setup(A);
 
-  // Use A_t as the preconditioner
-  status = FGMRES.setPreconditioner(A_t);
-  error_sum += status;
-
   // Use standard GMRES
   FGMRES.setFlexible(false);
-  
-  std::cout << FGMRES.getPreconditionerDir() << "\n\n";
-  std::cout << FGMRES.getPreconditionerType() << "\n\n";
-  std::cout << FGMRES.getFlexible() << "\n\n";
 
   // Default uses ABGMRES
   FGMRES.setRestart(150);
@@ -181,7 +181,7 @@ int runTest(int argc, char *argv[])
   error_sum += ReSolve::io::writeVectorToFile(&vec_x, AB_output_file);
 
   // Change preconditioner direction for BAGMRES
-  status = FGMRES.setPreconditionerDir("left");
+  status = precond_matvec.setSide("left");
   error_sum += status;
 
   // Use BAGMRES
