@@ -18,7 +18,7 @@
 
 - Made Vector::copyDataTo able to copy from device to host and vice versa
 
-- Added `elementwiseDivide` vector operation.
+- Added `elementwiseDivide`, `elementwiseMax`, and `abs` vector operations.
 
 ## Changes to Re::Solve in release 0.99.2
 
