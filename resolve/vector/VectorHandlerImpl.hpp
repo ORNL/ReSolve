@@ -48,6 +48,12 @@ namespace ReSolve
     // Divide the elements of a vector by the elements of another vector
     virtual int elementwiseDivide(vector::Vector* divisor, vector::Vector* vec) = 0;
 
+    // Compute element-wise max of two vectors
+    virtual int elementwiseMax(vector::Vector* x, vector::Vector* y) = 0;
+
+    // Compute element-wise absolute value of a vector
+    virtual int abs(vector::Vector* x) = 0;
+
     /** gemv:
      * if `transpose = N` (no), `x = beta*x +  alpha*V*y`,
      * where `x` is `[n x 1]`, `V` is `[n x k]` and `y` is `[k x 1]`.

@@ -76,6 +76,25 @@ namespace ReSolve
      */
     virtual int elementwiseDivide(vector::Vector* divisor, vector::Vector* vec);
 
+    /**
+     * @brief elementwiseMax: calculate the element-wise maximum of two vectors
+     *
+     * @param[in]     x vector of size n x 1
+     * @param[in,out] y vector of size n x 1 (this is where the result is stored)
+     *
+     * @return 0 if successful, 1 otherwise
+     */
+    virtual int elementwiseMax(vector::Vector* x, vector::Vector* y);
+
+    /**
+     * @brief abs: calculate the element-wise absolute value of a vector
+     *
+     * @param[in,out] x vector of size n x 1 (this is where the result is stored)
+     *
+     * @return 0 if successful, 1 otherwise
+     */
+    virtual int abs(vector::Vector* x);
+
   private:
     MemoryHandler        mem_; ///< Device memory manager object
     LinAlgWorkspaceCUDA* workspace_;

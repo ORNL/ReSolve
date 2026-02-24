@@ -59,6 +59,10 @@ namespace ReSolve
 
     virtual int elementwiseDivide(vector::Vector* divisor, vector::Vector* vec);
 
+    virtual int elementwiseMax(vector::Vector* x, vector::Vector* y);
+
+    virtual int abs(vector::Vector* x);
+
   private:
     LinAlgWorkspaceCpu* workspace_;
   };

@@ -371,6 +371,59 @@ namespace ReSolve
   }
 
   /**
+   * @brief Takes the element-wise max between two vectors.
+   *
+   * @param[in] x        - The first vector
+   * @param[in,out] y    - The second vector (result is returned in y)
+   * @param[in] memspace - Device where the operation is computed
+   *
+   * @pre The two vectors must be the same size
+   *
+   * @return 0 if successful, 1 otherwise
+   */
+  int VectorHandler::elementwiseMax(vector::Vector* x, vector::Vector* y, memory::MemorySpace memspace)
+  {
+    assert(x->getSize() == y->getSize() && "Vectors must be the same size.");
+    assert(x->getData(memspace) != nullptr && "Vector x data is null!\n");
+    assert(y->getData(memspace) != nullptr && "Vector y data is null!\n");
+    using namespace ReSolve::memory;
+    switch (memspace)
+    {
+    case HOST:
+      return cpuImpl_->elementwiseMax(x, y);
+      break;
+    case DEVICE:
+      return devImpl_->elementwiseMax(x, y);
+      break;
+    }
+    return 1;
+  }
+
+  /**
+   * @brief Computes the element-wise absolute value of a vector.
+   *
+   * @param[in,out] x    - Input and output vector
+   * @param[in] memspace - Device where the operation is computed
+   *
+   * @return 0 if successful, 1 otherwise
+   */
+  int VectorHandler::abs(vector::Vector* x, memory::MemorySpace memspace)
+  {
+    assert(x->getData(memspace) != nullptr && "Vector data is null!\n");
+    using namespace ReSolve::memory;
+    switch (memspace)
+    {
+    case HOST:
+      return cpuImpl_->abs(x);
+      break;
+    case DEVICE:
+      return devImpl_->abs(x);
+      break;
+    }
+    return 1;
+  }
+
+  /**
    * @brief If CUDA support is enabled in the handler.
    *
    * @return true

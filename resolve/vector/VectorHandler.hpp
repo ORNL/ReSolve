@@ -67,7 +67,10 @@ namespace ReSolve
               vector::Vector*     x,
               memory::MemorySpace memspace);
 
-    int elementwiseDivide(vector::Vector* diag, vector::Vector* vec, memory::MemorySpace memspace);
+    int elementwiseDivide(vector::Vector* divisor, vector::Vector* vec, memory::MemorySpace memspace);
+    int elementwiseMax(vector::Vector* x, vector::Vector* y, memory::MemorySpace memspace);
+
+    int abs(vector::Vector* x, memory::MemorySpace memspace);
 
     // Vector infinity norm
     real_type amax(vector::Vector* x, memory::MemorySpace memspace);

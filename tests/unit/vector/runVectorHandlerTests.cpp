@@ -26,6 +26,8 @@ int main(int, char**)
     result += test.massDot(100, 10);
     result += test.scale(100);
     result += test.elementwiseDivide(100);
+    result += test.elementwiseMax(100);
+    result += test.abs(100);
 
     std::cout << "\n";
   }
@@ -49,6 +51,9 @@ int main(int, char**)
     result += test.massDot(1000, 30);
     result += test.amax(1000);
     result += test.scale(1000);
+    result += test.elementwiseDivide(1000);
+    result += test.elementwiseMax(1000);
+    result += test.abs(1000);
 
     std::cout << "\n";
   }
@@ -73,6 +78,9 @@ int main(int, char**)
     result += test.massDot(1000, 30);
     result += test.amax(1000);
     result += test.scale(1000);
+    result += test.elementwiseDivide(1000);
+    result += test.elementwiseMax(1000);
+    result += test.abs(1000);
 
     std::cout << "\n";
   }
