@@ -22,4 +22,19 @@ namespace ReSolve
     return 1;
   }
 
+  std::string Preconditioner::getSide()
+  {
+    return side_;
+  }
+
+  /**
+   * @brief Used to get the preconditioning matrix for Preconditioner Matvec
+   * 
+   * Should not be called unless using PreconditionerMatvec
+  */
+  matrix::Sparse* Preconditioner::getPrec()
+  {
+    return nullptr;
+  }
+
 } // namespace ReSolve
