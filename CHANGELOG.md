@@ -12,7 +12,7 @@
 
 - Removed unnecessary full facotorization in the examples and made the input 1 based.
 
-- Added `elementwiseDivide` vector operation.
+- Added `elementwiseDivide`, `elementwiseMax`, and `abs` vector operations.
 
 ## Changes to Re::Solve in release 0.99.2
 
