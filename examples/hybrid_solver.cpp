@@ -140,6 +140,9 @@ int main(int argc, char* argv[])
 
     // --- Declare all pointers (initialized to nullptr) ---
     ReSolve::matrix::Csr* A = nullptr; // Matrix A in CSR format
+    ReSolve::matrix::Csr* P = nullptr; // Pointer to SAM pattern
+    ReSolve::matrix::Csr* Ap = nullptr; // Pointer to Ak*P pattern
+    ReSolve::matrix::Csr* A1 = nullptr; // Pointer to A1 (system we are mapping from)
 
     ReSolve::LinAlgWorkspaceCUDA* workspace_CUDA = nullptr; // GPU workspace
     ReSolve::MatrixHandler* matrix_handler = nullptr;       // Handler for matrix operations
@@ -257,6 +260,7 @@ int main(int argc, char* argv[])
             vec_x->allocate(ReSolve::memory::DEVICE);
             vec_x->setToZero(ReSolve::memory::HOST);
             vec_x->setToZero(ReSolve::memory::DEVICE);
+
         }
         else // Subsequent systems: update existing structures
         {
@@ -281,6 +285,25 @@ int main(int argc, char* argv[])
 
 	A->syncData(ReSolve::memory::DEVICE);
 	vec_rhs->syncData(ReSolve::memory::DEVICE);
+
+	// SAM Computation Setup
+	if (i==3)
+	{
+	  std::string homeDir = std::getenv("HOME");
+	  std::string path = homeDir + "/ACOPFPrecUpdate/ACTIVSg2000_ACTesting/SAMPattern_2k.triplet";
+	  helper->loadSAMPattern(path, A->getNumRows(), A->getNumRows(), P);
+	  helper->spGEMM(A, P, Ap);
+
+	  // preSAM computation
+	  int maxRow = 0;
+	  int maxCol = 0;
+	  helper->preSAM(P, Ap, maxRow, maxCol);
+
+	  // Preserving A1
+	  A1 = new ReSolve::matrix::Csr(A->getNumRows(), A->getNumRows(), A->getNnz());
+	  A1->allocateMatrixData(ReSolve::memory::HOST);
+	  A1->copyDataFrom(A->getRowData(ReSolve::memory::HOST), A->getColData(ReSolve::memory::HOST), A->getValues(ReSolve::memory::HOST), ReSolve::memory::HOST, ReSolve::memory::HOST);
+	}
 
         // --- Solver Logic ---
         if (i < 2) // For the first two systems (i=0, i=1), perform full KLU factorization
@@ -335,6 +358,16 @@ int main(int argc, char* argv[])
         }
         else // if (i >= 1) -- Use CuSolverRf for refactorization, then FGMRES, with KLU redo logic
         {
+
+	    if (i == 5)
+	    {
+	      int maxRow = 1284;
+	      int maxCol = 510;
+	      std::cout << "Starting SAM Numerical Computation..." << std::endl;
+	      helper->computeSAM(A, A1, P, Ap, maxRow, maxCol);
+	      std::cout << "SAM Computation Finished." << std::endl;
+	    }
+
 	    std::cout << "DEBUG: System " << i << ": Performing refactorization and solve." << std::endl;
 
 	    iterTimer.start_timer();

@@ -29,10 +29,12 @@ if(RESOLVE_USE_KLU)
     add_executable(gpuRefactor.exe gpuRefactor.cpp)
     target_link_libraries(gpuRefactor.exe PRIVATE ReSolve)
 
+    find_package(LAPACK REQUIRED)
     add_executable(hybrid_solver.exe hybrid_solver.cpp)
     target_compile_features(hybrid_solver.exe PRIVATE cxx_std_17)
     target_compile_options(hybrid_solver.exe PRIVATE -Wno-misleading-indentation)
     target_link_libraries(hybrid_solver.exe PRIVATE ReSolve stdc++fs)
+    target_link_libraries(hybrid_solver.exe PRIVATE ${LAPACK_LIBRARIES})
   endif(RESOLVE_USE_GPU)
 
   # Create KLU+CUDA examples
