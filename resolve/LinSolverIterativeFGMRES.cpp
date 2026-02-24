@@ -220,11 +220,10 @@ namespace ReSolve
           matrix_handler_->matvec(A_, &vec_z, &vec_v, &ONE, &ZERO, memspace_);
         }
         // Left Preconditioned
-        else 
+        else
         {
           matrix_handler_->matvec(preconditioner_->getPrec(), &vec_z, &vec_v, &ONE, &ZERO, memspace_);
         }
-
 
         // orthogonalize V[i+1], form a column of h_H_
 
@@ -315,7 +314,7 @@ namespace ReSolve
         else
         {
           vector_handler_->axpy(&ONE, &vec_z, x, memspace_);
-        }    
+        }
       }
 
       /* test solution */
