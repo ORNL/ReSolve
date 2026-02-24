@@ -210,11 +210,7 @@ namespace ReSolve
         vec_v.setData(vec_V_->getData(i + 1, memspace_), memspace_);
 
         // Right preconditioned
-<<<<<<< HEAD
-        if (preconditioner_->getSide() == "right") 
-=======
-        if (this->getPreconditionerDir() == "right")
->>>>>>> 0b3c99a (Apply pre-commmit fixes)
+        if (preconditioner_->getSide() == "right")
         {
           matrix_handler_->matvec(A_, &vec_z, &vec_v, &ONE, &ZERO, memspace_);
         }

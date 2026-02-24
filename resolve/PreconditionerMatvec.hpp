@@ -5,10 +5,10 @@
  */
 
 #include <string>
-#include "Common.hpp"
 
-#include <resolve/Preconditioner.hpp>
+#include "Common.hpp"
 #include <resolve/MemoryUtils.hpp>
+#include <resolve/Preconditioner.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 
 namespace ReSolve
@@ -28,13 +28,13 @@ namespace ReSolve
   class MatrixHandler;
 
   /**
-  * @brief Class allows for a user specified matrix to be used for preconditioning
-  * Allows user to switch between right preconditioning (AB) and 
-  * left preconditioning (BA) 
-  * 
-  * @author Jeffery Zhang (jefferyz@vt.edu)
-  * 
-  */
+   * @brief Class allows for a user specified matrix to be used for preconditioning
+   * Allows user to switch between right preconditioning (AB) and
+   * left preconditioning (BA)
+   *
+   * @author Jeffery Zhang (jefferyz@vt.edu)
+   *
+   */
   class PreconditionerMatvec : public Preconditioner
   {
   public:
@@ -43,21 +43,21 @@ namespace ReSolve
 
     PreconditionerMatvec(matrix_type* A, MatrixHandler* matrix_handler);
     ~PreconditionerMatvec();
-    
-    int apply(vector_type* rhs, vector_type* x) override; // Applies preconditioning
-    int setup(matrix_type*) override;
-    std::string getSide() override;
-    matrix_type* getPrec() override; // Used to get the preconditioning matrix for calculation of initial residual for BAGMRES
-    int setPrec(matrix_type* B); // Allows user to change the preconditioning matrix
-    int setSide(std::string side); // Changes the preconditioning side for BAGMRES
+
+    int          apply(vector_type* rhs, vector_type* x) override; // Applies preconditioning
+    int          setup(matrix_type*) override;
+    std::string  getSide() override;
+    matrix_type* getPrec() override;        // Used to get the preconditioning matrix for calculation of initial residual for BAGMRES
+    int          setPrec(matrix_type* B);   // Allows user to change the preconditioning matrix
+    int          setSide(std::string side); // Changes the preconditioning side for BAGMRES
 
   private:
     void setMemorySpace();
 
-    matrix_type* A_{nullptr};
-    matrix_type* B_{nullptr};
-    std::string side_ = "right"; // Defaults to ABGMRES
-    MatrixHandler* matrix_handler_{nullptr};
+    matrix_type*        A_{nullptr};
+    matrix_type*        B_{nullptr};
+    std::string         side_ = "right"; // Defaults to ABGMRES
+    MatrixHandler*      matrix_handler_{nullptr};
     memory::MemorySpace memspace_;
   };
 } // namespace ReSolve

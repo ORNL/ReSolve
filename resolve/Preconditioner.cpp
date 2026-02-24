@@ -29,9 +29,9 @@ namespace ReSolve
 
   /**
    * @brief Used to get the preconditioning matrix for Preconditioner Matvec
-   * 
+   *
    * Should not be called unless using PreconditionerMatvec
-  */
+   */
   matrix::Sparse* Preconditioner::getPrec()
   {
     return nullptr;
