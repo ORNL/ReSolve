@@ -37,11 +37,11 @@ namespace ReSolve
     void scal(const real_type* alpha, vector::Vector* x, memory::MemorySpace memspace);
 
     // mass axpy: x*alpha + y where x is [n x k] and alpha is [k x 1]; x is stored columnwise
-    void massAxpy(index_type size, vector::Vector* alpha, index_type k, vector::Vector* x, vector::Vector* y, memory::MemorySpace memspace);
+    void axpyMulti(index_type size, vector::Vector* alpha, index_type k, vector::Vector* x, vector::Vector* y, memory::MemorySpace memspace);
 
     // mass dot: V^T x, where V is [n x k] and x is [k x 2], everything is stored and returned columnwise
     // Size = n
-    void massDot2Vec(index_type size, vector::Vector* V, index_type k, vector::Vector* x, vector::Vector* res, memory::MemorySpace memspace);
+    void dot2Multi(index_type size, vector::Vector* V, index_type k, vector::Vector* x, vector::Vector* res, memory::MemorySpace memspace);
 
     /** gemv:
      * if `transpose = N` (no), `x = beta*x +  alpha*V*y`,

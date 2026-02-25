@@ -198,7 +198,7 @@ namespace ReSolve
    * @pre   _k_ > 0, _size_ > 0, _size_ = x->getSize()
    *
    */
-  void VectorHandlerHip::massAxpy(index_type size, vector::Vector* alpha, index_type k, vector::Vector* x, vector::Vector* y)
+  void VectorHandlerHip::axpyMulti(index_type size, vector::Vector* alpha, index_type k, vector::Vector* x, vector::Vector* y)
   {
     using namespace constants;
     if (k < 200)
@@ -239,7 +239,7 @@ namespace ReSolve
    * @pre   _size_ > 0, _k_ > 0, size = x->getSize(), _res_ needs to be allocated
    *
    */
-  void VectorHandlerHip::massDot2Vec(index_type size, vector::Vector* V, index_type k, vector::Vector* x, vector::Vector* res)
+  void VectorHandlerHip::dot2Multi(index_type size, vector::Vector* V, index_type k, vector::Vector* x, vector::Vector* res)
   {
     using namespace constants;
 

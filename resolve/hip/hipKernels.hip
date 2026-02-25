@@ -131,7 +131,7 @@ namespace ReSolve {
       * @param[in]  alpha  -
       */
       template <size_t Tmaxk = 1024>
-      __global__ void massAxpy3_kernel(index_type N,
+      __global__ void axpyMulti3_kernel(index_type N,
                                        index_type k,
                                        const real_type* x_data,
                                        real_type* y_data,
@@ -419,7 +419,7 @@ namespace ReSolve {
     */
     void mass_axpy(index_type n, index_type i, real_type* x, real_type* y, real_type* alpha)
     {
-      hipLaunchKernelGGL(kernels::massAxpy3_kernel,
+      hipLaunchKernelGGL(kernels::axpyMulti3_kernel,
                          dim3((n + 384 - 1) / 384),
                          dim3(384),
                          0,

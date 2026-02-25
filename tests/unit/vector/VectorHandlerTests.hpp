@@ -147,7 +147,7 @@ namespace ReSolve
         return status.report(__func__);
       }
 
-      TestOutcome massAxpy(index_type N, index_type K)
+      TestOutcome axpyMulti(index_type N, index_type K)
       {
         TestStatus status;
 
@@ -180,7 +180,7 @@ namespace ReSolve
         index_type r   = K % 2;
         real_type  res = (real_type) ((floor((real_type) K / 2.0) + r) * 1.0 + floor((real_type) K / 2.0) * (-0.5));
 
-        handler_.massAxpy(N, &alpha, K, &x, &y, memspace_);
+        handler_.axpyMulti(N, &alpha, K, &x, &y, memspace_);
         status *= verifyAnswer(y, 2.0 - res);
 
         return status.report(__func__);
@@ -199,7 +199,7 @@ namespace ReSolve
 
         x.setToConst(1.0, memspace_);
         y.setToConst(-1.0, memspace_);
-        handler_.massDot2Vec(N, &x, K, &y, &res, memspace_);
+        handler_.dot2Multi(N, &x, K, &y, &res, memspace_);
 
         status *= verifyAnswer(res, (-1.0) * (real_type) N);
 

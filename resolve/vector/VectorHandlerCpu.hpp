@@ -35,11 +35,11 @@ namespace ReSolve
     virtual real_type infNorm(vector::Vector* x);
 
     // mass axpy: x*alpha + y where x is [n x k] and alpha is [k x 1]; x is stored columnwise
-    virtual void massAxpy(index_type size, vector::Vector* alpha, index_type k, vector::Vector* x, vector::Vector* y);
+    virtual void axpyMulti(index_type size, vector::Vector* alpha, index_type k, vector::Vector* x, vector::Vector* y);
 
     // mass dot: V^T x, where V is [n x k] and x is [k x 2], everything is stored and returned columnwise
     // Size = n
-    virtual void massDot2Vec(index_type size, vector::Vector* V, index_type k, vector::Vector* x, vector::Vector* res);
+    virtual void dot2Multi(index_type size, vector::Vector* V, index_type k, vector::Vector* x, vector::Vector* res);
 
     /** gemv:
      * if `transpose = N` (no), `x = beta*x +  alpha*V*y`,

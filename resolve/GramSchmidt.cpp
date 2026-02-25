@@ -233,7 +233,7 @@ namespace ReSolve
       vec_w_->setData(V->getData(i + 1, memspace_), memspace_);
       vec_rv_->resize(i + 1);
 
-      vector_handler_->massDot2Vec(n, V, i + 1, vec_x_, vec_rv_, memspace_);
+      vector_handler_->dot2Multi(n, V, i + 1, vec_x_, vec_rv_, memspace_);
       vec_rv_->setDataUpdated(memspace_);
       if (memspace_ == memory::DEVICE)
       {
@@ -260,7 +260,7 @@ namespace ReSolve
       } // for j
       vec_Hcolumn_->resize(i + 1);
       vec_Hcolumn_->copyFromExternal(&H[idxmap(i, 0, num_vecs_ + 1)], memory::HOST, memspace_);
-      vector_handler_->massAxpy(n, vec_Hcolumn_, i + 1, V, vec_w_, memspace_);
+      vector_handler_->axpyMulti(n, vec_Hcolumn_, i + 1, V, vec_w_, memspace_);
 
       // normalize (second synch)
       t = vector_handler_->dot(vec_w_, vec_w_, memspace_);
@@ -290,7 +290,7 @@ namespace ReSolve
       vec_w_->setData(V->getData(i + 1, memspace_), memspace_);
       vec_rv_->resize(i + 1);
 
-      vector_handler_->massDot2Vec(n, V, i + 1, vec_x_, vec_rv_, memspace_);
+      vector_handler_->dot2Multi(n, V, i + 1, vec_x_, vec_rv_, memspace_);
       vec_rv_->setDataUpdated(memspace_);
       if (memspace_ == memory::DEVICE)
       {
@@ -351,7 +351,7 @@ namespace ReSolve
       vec_Hcolumn_->resize(i + 1);
       vec_Hcolumn_->copyFromExternal(&H[idxmap(i, 0, num_vecs_ + 1)], memory::HOST, memspace_);
 
-      vector_handler_->massAxpy(n, vec_Hcolumn_, i + 1, V, vec_w_, memspace_);
+      vector_handler_->axpyMulti(n, vec_Hcolumn_, i + 1, V, vec_w_, memspace_);
       // normalize (second synch)
       t = vector_handler_->dot(vec_w_, vec_w_, memspace_);
       // set the last entry in Hessenberg matrix

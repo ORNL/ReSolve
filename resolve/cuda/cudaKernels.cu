@@ -141,7 +141,7 @@ namespace ReSolve
        * @param[in]  alpha  - doble array, size [k x 1]
        */
       template <size_t Tmaxk = 1024>
-      __global__ void massAxpy3(index_type       N,
+      __global__ void axpyMulti3(index_type       N,
                                 index_type       k,
                                 const real_type* x_data,
                                 real_type*       y_data,
@@ -308,7 +308,7 @@ namespace ReSolve
      */
     void mass_axpy(index_type n, index_type i, const real_type* x, real_type* y, const real_type* alpha)
     {
-      kernels::massAxpy3<<<(n + 384 - 1) / 384, 384>>>(n, i, x, y, alpha);
+      kernels::axpyMulti3<<<(n + 384 - 1) / 384, 384>>>(n, i, x, y, alpha);
     }
 
     /**

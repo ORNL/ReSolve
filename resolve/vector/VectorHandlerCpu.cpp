@@ -205,7 +205,7 @@ namespace ReSolve
    * @pre   _k_ > 0, _size_ > 0, _size_ = x->getSize()
    *
    */
-  void VectorHandlerCpu::massAxpy(index_type      size,
+  void VectorHandlerCpu::axpyMulti(index_type      size,
                                   vector::Vector* alpha,
                                   index_type      k,
                                   vector::Vector* x,
@@ -242,7 +242,7 @@ namespace ReSolve
    * @pre   _size_ > 0, _k_ > 0, size = x->getSize(), _res_ needs to be allocated
    *
    */
-  void VectorHandlerCpu::massDot2Vec(index_type      size,
+  void VectorHandlerCpu::dot2Multi(index_type      size,
                                      vector::Vector* V,
                                      index_type      q,
                                      vector::Vector* x,

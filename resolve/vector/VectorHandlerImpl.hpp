@@ -36,11 +36,11 @@ namespace ReSolve
     virtual real_type infNorm(vector::Vector* x) = 0;
 
     // mass axpy: x*alpha + y where x is [n x k] and alpha is [k x 1]; x is stored columnwise
-    virtual void massAxpy(index_type size, vector::Vector* alpha, index_type k, vector::Vector* x, vector::Vector* y) = 0;
+    virtual void axpyMulti(index_type size, vector::Vector* alpha, index_type k, vector::Vector* x, vector::Vector* y) = 0;
 
     // mass dot: V^T x, where V is [n x k] and x is [k x 2], everything is stored and returned columnwise
     // Size = n
-    virtual void massDot2Vec(index_type size, vector::Vector* V, index_type k, vector::Vector* x, vector::Vector* res) = 0;
+    virtual void dot2Multi(index_type size, vector::Vector* V, index_type k, vector::Vector* x, vector::Vector* res) = 0;
 
     // Scale a vector by a diagonal matrix
     virtual int scale(vector::Vector* diag, vector::Vector* vec) = 0;

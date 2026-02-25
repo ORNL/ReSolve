@@ -233,16 +233,16 @@ namespace ReSolve
    * @pre   _k_ > 0, _size_ > 0, _size_ = x->getSize()
    *
    */
-  void VectorHandler::massAxpy(index_type size, vector::Vector* alpha, index_type k, vector::Vector* x, vector::Vector* y, memory::MemorySpace memspace)
+  void VectorHandler::axpyMulti(index_type size, vector::Vector* alpha, index_type k, vector::Vector* x, vector::Vector* y, memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
     switch (memspace)
     {
     case HOST:
-      cpuImpl_->massAxpy(size, alpha, k, x, y);
+      cpuImpl_->axpyMulti(size, alpha, k, x, y);
       break;
     case DEVICE:
-      devImpl_->massAxpy(size, alpha, k, x, y);
+      devImpl_->axpyMulti(size, alpha, k, x, y);
       break;
     }
     y->setDataUpdated(memspace);
@@ -262,16 +262,16 @@ namespace ReSolve
    * @pre   _size_ > 0, _k_ > 0, size = x->getSize(), _res_ needs to be allocated
    *
    */
-  void VectorHandler::massDot2Vec(index_type size, vector::Vector* V, index_type k, vector::Vector* x, vector::Vector* res, memory::MemorySpace memspace)
+  void VectorHandler::dot2Multi(index_type size, vector::Vector* V, index_type k, vector::Vector* x, vector::Vector* res, memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
     switch (memspace)
     {
     case HOST:
-      cpuImpl_->massDot2Vec(size, V, k, x, res);
+      cpuImpl_->dot2Multi(size, V, k, x, res);
       break;
     case DEVICE:
-      devImpl_->massDot2Vec(size, V, k, x, res);
+      devImpl_->dot2Multi(size, V, k, x, res);
       break;
     }
     res->setDataUpdated(memspace);
