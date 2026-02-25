@@ -28,13 +28,13 @@ namespace ReSolve
     ~VectorHandler();
 
     // y = alpha x + y
-    void axpy(const real_type* alpha, vector::Vector* x, vector::Vector* y, memory::MemorySpace memspace);
+    void axpy(const real_type alpha, /* const */ vector::Vector* x, vector::Vector* y, memory::MemorySpace memspace);
 
     // dot: x \cdot y
     real_type dot(vector::Vector* x, vector::Vector* y, memory::MemorySpace memspace);
 
     // scal = alpha * x
-    void scal(const real_type* alpha, vector::Vector* x, memory::MemorySpace memspace);
+    void scal(const real_type alpha, vector::Vector* x, memory::MemorySpace memspace);
 
     // mass axpy: x*alpha + y where x is [n x k] and alpha is [k x 1]; x is stored columnwise
     void axpyMulti(index_type size, vector::Vector* alpha, index_type k, vector::Vector* x, vector::Vector* y, memory::MemorySpace memspace);
@@ -49,14 +49,14 @@ namespace ReSolve
      * if `transpose = T` (yes), `x = beta*x + alpha*V^T*y`,
      * where `x` is `[k x 1]`, `V` is `[n x k]` and `y` is `[n x 1]`.
      */
-    void gemv(char                transpose,
-              index_type          n,
-              index_type          k,
-              const real_type*    alpha,
-              const real_type*    beta,
-              vector::Vector*     V,
-              vector::Vector*     y,
-              vector::Vector*     x,
+    void gemv(char            transpose,
+              index_type      n,
+              index_type      k,
+              const real_type alpha,
+              const real_type beta,
+              vector::Vector* V,
+              vector::Vector* y,
+              vector::Vector* x,
               memory::MemorySpace memspace);
 
     int scal(vector::Vector* diag, vector::Vector* vec, memory::MemorySpace memspace);

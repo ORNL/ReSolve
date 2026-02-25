@@ -169,7 +169,7 @@ namespace ReSolve
 
     if (sketching_method_ == fwht)
     {
-      vector_handler_->scal(&one_over_k_, &vec_s, memspace_);
+      vector_handler_->scal(one_over_k_, &vec_s, memspace_);
     }
     mem_.deviceSynchronize();
 
@@ -219,8 +219,8 @@ namespace ReSolve
 
       // normalize first vector
       t = 1.0 / rnorm;
-      vector_handler_->scal(&t, vec_V_, memspace_);
-      vector_handler_->scal(&t, vec_S_, memspace_);
+      vector_handler_->scal(t, vec_V_, memspace_);
+      vector_handler_->scal(t, vec_S_, memspace_);
 
       mem_.deviceSynchronize();
 
@@ -259,7 +259,7 @@ namespace ReSolve
         sketching_handler_->Theta(&vec_v, &vec_s);
         if (sketching_method_ == fwht)
         {
-          vector_handler_->scal(&one_over_k_, &vec_s, memspace_);
+          vector_handler_->scal(one_over_k_, &vec_s, memspace_);
         }
         mem_.deviceSynchronize();
         GS_->orthogonalize(k_rand_, vec_S_, h_H_, i);
@@ -269,10 +269,10 @@ namespace ReSolve
         vec_aux_->copyFromExternal(&h_H_[i * (restart_ + 1)], memory::HOST, memspace_);
 
         // V(:, i+1) = w - V(:, 1:i)*d_H_col = V(:, i+1) - d_H_col*V(:,1:i);
-        vector_handler_->gemv('N', n_, i + 1, &MINUS_ONE, &ONE, vec_V_, vec_aux_, &vec_v, memspace_);
+        vector_handler_->gemv('N', n_, i + 1, MINUS_ONE, ONE, vec_V_, vec_aux_, &vec_v, memspace_);
 
         t = 1.0 / h_H_[i * (restart_ + 1) + i + 1];
-        vector_handler_->scal(&t, &vec_v, memspace_);
+        vector_handler_->scal(t, &vec_v, memspace_);
         mem_.deviceSynchronize();
         vec_s.setData(vec_S_->getData(i + 1, memspace_), memspace_);
 
@@ -340,7 +340,7 @@ namespace ReSolve
         for (j = 0; j <= i; j++)
         {
           vec_z.setData(vec_Z_->getData(j, memspace_), memspace_);
-          vector_handler_->axpy(&h_rs_[j], &vec_z, x, memspace_);
+          vector_handler_->axpy(h_rs_[j], &vec_z, x, memspace_);
         }
       }
       else
@@ -350,14 +350,14 @@ namespace ReSolve
         for (j = 0; j <= i; j++)
         {
           vec_v.setData(vec_V_->getData(j, memspace_), memspace_);
-          vector_handler_->axpy(&h_rs_[j], &vec_v, &vec_z, memspace_);
+          vector_handler_->axpy(h_rs_[j], &vec_v, &vec_z, memspace_);
         }
         // now multiply d_Z by precon
 
         vec_v.setData(vec_V_->getData(memspace_), memspace_);
         this->precV(&vec_z, &vec_v);
         // and add to x
-        vector_handler_->axpy(&ONE, &vec_v, x, memspace_);
+        vector_handler_->axpy(ONE, &vec_v, x, memspace_);
       }
 
       /* test solution */
@@ -382,7 +382,7 @@ namespace ReSolve
         sketching_handler_->Theta(&vec_v, &vec_s);
         if (sketching_method_ == fwht)
         {
-          vector_handler_->scal(&one_over_k_, &vec_s, memspace_);
+          vector_handler_->scal(one_over_k_, &vec_s, memspace_);
         }
         mem_.deviceSynchronize();
         rnorm = vector_handler_->dot(vec_S_, vec_S_, memspace_);

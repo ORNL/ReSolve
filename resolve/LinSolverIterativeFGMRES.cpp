@@ -176,7 +176,7 @@ namespace ReSolve
 
       // normalize first vector
       t = 1.0 / rnorm;
-      vector_handler_->scal(&t, vec_V_, memspace_);
+      vector_handler_->scal(t, vec_V_, memspace_);
       // initialize norm history
       h_rs_[0] = rnorm;
       i        = -1;
@@ -272,7 +272,7 @@ namespace ReSolve
         for (j = 0; j <= i; j++)
         {
           vec_z.setData(vec_Z_->getData(j, memspace_), memspace_);
-          vector_handler_->axpy(&h_rs_[j], &vec_z, x, memspace_);
+          vector_handler_->axpy(h_rs_[j], &vec_z, x, memspace_);
         }
       }
       else
@@ -282,14 +282,14 @@ namespace ReSolve
         for (j = 0; j <= i; j++)
         {
           vec_v.setData(vec_V_->getData(j, memspace_), memspace_);
-          vector_handler_->axpy(&h_rs_[j], &vec_v, &vec_z, memspace_);
+          vector_handler_->axpy(h_rs_[j], &vec_v, &vec_z, memspace_);
         }
         // now multiply d_Z by precon
 
         vec_v.setData(vec_V_->getData(memspace_), memspace_);
         this->precV(&vec_z, &vec_v);
         // and add to x
-        vector_handler_->axpy(&ONE, &vec_v, x, memspace_);
+        vector_handler_->axpy(ONE, &vec_v, x, memspace_);
       }
 
       /* test solution */

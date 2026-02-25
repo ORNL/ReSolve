@@ -117,12 +117,12 @@ namespace ReSolve
    * @param[in,out] y The second vector (result is return in y)
    *
    */
-  void VectorHandlerCuda::axpy(const real_type* alpha, vector::Vector* x, vector::Vector* y)
+  void VectorHandlerCuda::axpy(const real_type alpha, /* const */ vector::Vector* x, vector::Vector* y)
   {
     cublasHandle_t handle_cublas = workspace_->getCublasHandle();
     cublasDaxpy(handle_cublas,
                 x->getSize(),
-                alpha,
+                &alpha,
                 x->getData(memory::DEVICE),
                 1,
                 y->getData(memory::DEVICE),
@@ -145,14 +145,14 @@ namespace ReSolve
    * @pre   V is stored colum-wise, _n_ > 0, _k_ > 0
    *
    */
-  void VectorHandlerCuda::gemv(char             transpose,
-                               index_type       n,
-                               index_type       k,
-                               const real_type* alpha,
-                               const real_type* beta,
-                               vector::Vector*  V,
-                               vector::Vector*  y,
-                               vector::Vector*  x)
+  void VectorHandlerCuda::gemv(char            transpose,
+                               index_type      n,
+                               index_type      k,
+                               const real_type alpha,
+                               const real_type beta,
+                               vector::Vector* V,
+                               vector::Vector* y,
+                               vector::Vector* x)
   {
     cublasHandle_t handle_cublas = workspace_->getCublasHandle();
     switch (transpose)
@@ -162,12 +162,12 @@ namespace ReSolve
                   CUBLAS_OP_T,
                   n,
                   k,
-                  alpha,
+                  &alpha,
                   V->getData(memory::DEVICE),
                   n,
                   y->getData(memory::DEVICE),
                   1,
-                  beta,
+                  &beta,
                   x->getData(memory::DEVICE),
                   1);
       return;
@@ -176,12 +176,12 @@ namespace ReSolve
                   CUBLAS_OP_N,
                   n,
                   k,
-                  alpha,
+                  &alpha,
                   V->getData(memory::DEVICE),
                   n,
                   y->getData(memory::DEVICE),
                   1,
-                  beta,
+                  &beta,
                   x->getData(memory::DEVICE),
                   1);
       if (transpose != 'N')

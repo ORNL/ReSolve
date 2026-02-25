@@ -469,7 +469,7 @@ private:
                                      ReSolve::memory::MemorySpace memspace)
   {
     using namespace ReSolve::constants;
-    vh_.axpy(&MINUS_ONE, &x_true, &x, memspace); // x := -x_true + x
+    vh_.axpy(MINUS_ONE, &x_true, &x, memspace); // x := -x_true + x
     return norm2(x, memspace);
   }
 

@@ -125,7 +125,7 @@ namespace ReSolve
         real_type nrm = handler_.dot(&V, &V, memspace_);
         nrm           = sqrt(nrm);
         nrm           = 1.0 / nrm;
-        handler_.scal(&nrm, &V, memspace_);
+        handler_.scal(nrm, &V, memspace_);
 
         // Orthogonalize system and verify result
         GS.orthogonalize(N, &V, H, 0);

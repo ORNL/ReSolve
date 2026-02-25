@@ -93,7 +93,7 @@ namespace ReSolve
         real_type alpha = 0.5;
 
         // the result is a vector with y[i] = 2.5 forall i;
-        handler_.axpy(&alpha, &x, &y, memspace_);
+        handler_.axpy(alpha, &x, &y, memspace_);
         status *= verifyAnswer(y, 2.5);
 
         return status.report(__func__);
@@ -141,7 +141,7 @@ namespace ReSolve
 
         // the answer is x[i] = 4.375;
         real_type answer = 4.375;
-        handler_.scal(&alpha, &x, memspace_);
+        handler_.scal(alpha, &x, memspace_);
         status *= verifyAnswer(x, answer);
 
         return status.report(__func__);
@@ -230,9 +230,9 @@ namespace ReSolve
 
         real_type alpha = -1.0;
         real_type beta  = 1.0;
-        handler_.gemv('N', N, K, &alpha, &beta, &V, &yN, &xN, memspace_);
+        handler_.gemv('N', N, K, alpha, beta, &V, &yN, &xN, memspace_);
         status *= verifyAnswer(xN, static_cast<real_type>(K) + 0.5);
-        handler_.gemv('T', N, K, &alpha, &beta, &V, &yT, &xT, memspace_);
+        handler_.gemv('T', N, K, alpha, beta, &V, &yT, &xT, memspace_);
         status *= verifyAnswer(xT, static_cast<real_type>(N) + 0.5);
 
         return status.report(__func__);

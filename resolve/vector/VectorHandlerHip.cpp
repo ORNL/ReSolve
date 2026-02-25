@@ -67,14 +67,19 @@ namespace ReSolve
    * @param[in,out] x The vector
    *
    */
-  void VectorHandlerHip::scal(const real_type* alpha, vector::Vector* x)
+  void VectorHandlerHip::scal(const real_type alpha, vector::Vector* x)
   {
     rocblas_handle handle_rocblas = workspace_->getRocblasHandle();
-    rocblas_status st             = rocblas_dscal(handle_rocblas, x->getSize(), alpha, x->getData(memory::DEVICE), 1);
+
+    rocblas_status st = rocblas_dscal(handle_rocblas,
+                                      x->getSize(),
+                                      &alpha,
+                                      x->getData(memory::DEVICE),
+                                      1);
 
     if (st != 0)
     {
-      ReSolve::io::Logger::error() << "scal crashed with code " << st << "\n";
+      ReSolve::io::Logger::error() << "scal returned error code " << st << "\n";
     }
   }
 
@@ -112,12 +117,12 @@ namespace ReSolve
    * @param[in,out] y The second vector (result is return in y)
    *
    */
-  void VectorHandlerHip::axpy(const real_type* alpha, vector::Vector* x, vector::Vector* y)
+  void VectorHandlerHip::axpy(const real_type alpha, vector::Vector* x, vector::Vector* y)
   {
     rocblas_handle handle_rocblas = workspace_->getRocblasHandle();
     rocblas_daxpy(handle_rocblas,
                   x->getSize(),
-                  alpha,
+                  &alpha,
                   x->getData(memory::DEVICE),
                   1,
                   y->getData(memory::DEVICE),
@@ -140,14 +145,14 @@ namespace ReSolve
    * @pre   V is stored colum-wise, _n_ > 0, _k_ > 0
    *
    */
-  void VectorHandlerHip::gemv(char             transpose,
-                              index_type       n,
-                              index_type       k,
-                              const real_type* alpha,
-                              const real_type* beta,
-                              vector::Vector*  V,
-                              vector::Vector*  y,
-                              vector::Vector*  x)
+  void VectorHandlerHip::gemv(char            transpose,
+                              index_type      n,
+                              index_type      k,
+                              const real_type alpha,
+                              const real_type beta,
+                              vector::Vector* V,
+                              vector::Vector* y,
+                              vector::Vector* x)
   {
     rocblas_handle handle_rocblas = workspace_->getRocblasHandle();
     switch (transpose)
@@ -157,12 +162,12 @@ namespace ReSolve
                     rocblas_operation_transpose,
                     n,
                     k,
-                    alpha,
+                    &alpha,
                     V->getData(memory::DEVICE),
                     n,
                     y->getData(memory::DEVICE),
                     1,
-                    beta,
+                    &beta,
                     x->getData(memory::DEVICE),
                     1);
       return;
@@ -171,12 +176,12 @@ namespace ReSolve
                     rocblas_operation_none,
                     n,
                     k,
-                    alpha,
+                    &alpha,
                     V->getData(memory::DEVICE),
                     n,
                     y->getData(memory::DEVICE),
                     1,
-                    beta,
+                    &beta,
                     x->getData(memory::DEVICE),
                     1);
       if (transpose != 'N')

@@ -24,13 +24,13 @@ namespace ReSolve
     virtual ~VectorHandlerCuda();
 
     // y = alpha x + y
-    virtual void axpy(const real_type* alpha, vector::Vector* x, vector::Vector* y);
+    virtual void axpy(const real_type alpha, /* const */vector::Vector* x, vector::Vector* y);
 
     // dot: x \cdot y
     virtual real_type dot(vector::Vector* x, vector::Vector* y);
 
     // scal = alpha * x
-    virtual void scal(const real_type* alpha, vector::Vector* x);
+    virtual void scal(const real_type alpha, vector::Vector* x);
 
     // vector infinity norm
     virtual real_type iamax(vector::Vector* x);
@@ -48,14 +48,14 @@ namespace ReSolve
      * if `transpose = T` (yes), `x = beta*x + alpha*V^T*y`,
      * where `x` is `[k x 1]`, `V` is `[n x k]` and `y` is `[n x 1]`.
      */
-    virtual void gemv(char             transpose,
-                      index_type       n,
-                      index_type       k,
-                      const real_type* alpha,
-                      const real_type* beta,
-                      vector::Vector*  V,
-                      vector::Vector*  y,
-                      vector::Vector*  x);
+    virtual void gemv(char            transpose,
+                      index_type      n,
+                      index_type      k,
+                      const real_type alpha,
+                      const real_type beta,
+                      vector::Vector* V,
+                      vector::Vector* y,
+                      vector::Vector* x);
 
     /**
      * @brief scale: scales a vector by a diagonal matrix

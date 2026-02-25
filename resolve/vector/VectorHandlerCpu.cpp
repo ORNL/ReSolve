@@ -68,13 +68,13 @@ namespace ReSolve
    * @param[in,out] x The vector
    *
    */
-  void VectorHandlerCpu::scal(const real_type* alpha, vector::Vector* x)
+  void VectorHandlerCpu::scal(const real_type alpha, vector::Vector* x)
   {
     real_type* x_data = x->getData(memory::HOST);
 
     for (int i = 0; i < x->getSize(); ++i)
     {
-      x_data[i] *= (*alpha);
+      x_data[i] *= alpha;
     }
   }
 
@@ -110,14 +110,14 @@ namespace ReSolve
    * @param[in,out] y The second vector (result is return in y)
    *
    */
-  void VectorHandlerCpu::axpy(const real_type* alpha, vector::Vector* x, vector::Vector* y)
+  void VectorHandlerCpu::axpy(const real_type alpha, /* const */ vector::Vector* x, vector::Vector* y)
   {
     // AXPY:  y = alpha * x + y
     real_type* x_data = x->getData(memory::HOST);
     real_type* y_data = y->getData(memory::HOST);
     for (int i = 0; i < x->getSize(); ++i)
     {
-      y_data[i] = (*alpha) * x_data[i] + y_data[i];
+      y_data[i] = alpha * x_data[i] + y_data[i];
     }
   }
 
@@ -137,14 +137,14 @@ namespace ReSolve
    * @pre   V is stored colum-wise, _n_ > 0, _k_ > 0
    *
    */
-  void VectorHandlerCpu::gemv(char             transpose,
-                              index_type       n,
-                              index_type       k,
-                              const real_type* alpha,
-                              const real_type* beta,
-                              vector::Vector*  V,
-                              vector::Vector*  y,
-                              vector::Vector*  x)
+  void VectorHandlerCpu::gemv(char            transpose,
+                              index_type      n,
+                              index_type      k,
+                              const real_type alpha,
+                              const real_type beta,
+                              vector::Vector* V,
+                              vector::Vector* y,
+                              vector::Vector* x)
   {
     // x = beta*x +  alpha*V*y OR x = beta*x + alpha*V^Ty
     real_type* V_data = V->getData(memory::HOST);
@@ -157,11 +157,11 @@ namespace ReSolve
     case 'T':
       for (i = 0; i < k; ++i)
       {
-        sum         = (*beta) * x_data[i];
+        sum         = beta * x_data[i];
         real_type c = 0.0;
         for (j = 0; j < n; ++j)
         {
-          real_type y = ((*alpha) * V_data[i * n + j] * y_data[j]) - c;
+          real_type y = (alpha * V_data[i * n + j] * y_data[j]) - c;
           real_type t = sum + y;
           c           = (t - sum) - y;
           sum         = t;
@@ -173,11 +173,11 @@ namespace ReSolve
     default:
       for (i = 0; i < n; ++i)
       {
-        sum         = (*beta) * x_data[i];
+        sum         = beta * x_data[i];
         real_type c = 0.0;
         for (j = 0; j < k; ++j)
         {
-          real_type y = ((*alpha) * V_data[n * j + i] * y_data[j]) - c;
+          real_type y = (alpha * V_data[n * j + i] * y_data[j]) - c;
           real_type t = sum + y;
           c           = (t - sum) - y;
           sum         = t;

@@ -24,13 +24,13 @@ namespace ReSolve
     }
 
     // y = alpha x + y
-    virtual void axpy(const real_type* alpha, vector::Vector* x, vector::Vector* y) = 0;
+    virtual void axpy(const real_type alpha, vector::Vector* x, vector::Vector* y) = 0;
 
     // dot: x \cdot y
     virtual real_type dot(vector::Vector* x, vector::Vector* y) = 0;
 
     // scal = alpha * x
-    virtual void scal(const real_type* alpha, vector::Vector* x) = 0;
+    virtual void scal(const real_type alpha, vector::Vector* x) = 0;
 
     // iamax = ||x||_\infty
     virtual real_type iamax(vector::Vector* x) = 0;
@@ -51,14 +51,14 @@ namespace ReSolve
      * if `transpose = T` (yes), `x = beta*x + alpha*V^T*y`,
      * where `x` is `[k x 1]`, `V` is `[n x k]` and `y` is `[n x 1]`.
      */
-    virtual void gemv(char             transpose,
-                      index_type       n,
-                      index_type       k,
-                      const real_type* alpha,
-                      const real_type* beta,
-                      vector::Vector*  V,
-                      vector::Vector*  y,
-                      vector::Vector*  x) = 0;
+    virtual void gemv(char            transpose,
+                      index_type      n,
+                      index_type      k,
+                      const real_type alpha,
+                      const real_type beta,
+                      vector::Vector* V,
+                      vector::Vector* y,
+                      vector::Vector* x) = 0;
   };
 
 } // namespace ReSolve

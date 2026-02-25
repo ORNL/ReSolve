@@ -117,7 +117,7 @@ namespace ReSolve
    * @param memspace[in] string containg memspace (cpu or cuda or hip)
    *
    */
-  void VectorHandler::scal(const real_type* alpha, vector::Vector* x, memory::MemorySpace memspace)
+  void VectorHandler::scal(const real_type alpha, vector::Vector* x, memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
     switch (memspace)
@@ -165,7 +165,7 @@ namespace ReSolve
    * @param[in]  memspace String containg memspace (cpu or cuda or hip)
    *
    */
-  void VectorHandler::axpy(const real_type* alpha, vector::Vector* x, vector::Vector* y, memory::MemorySpace memspace)
+  void VectorHandler::axpy(const real_type alpha, /* const */ vector::Vector* x, vector::Vector* y, memory::MemorySpace memspace)
   {
     // AXPY:  y = alpha * x + y
     using namespace ReSolve::memory;
@@ -198,14 +198,14 @@ namespace ReSolve
    * @pre   V is stored colum-wise, _n_ > 0, _k_ > 0
    *
    */
-  void VectorHandler::gemv(char                transpose,
-                           index_type          n,
-                           index_type          k,
-                           const real_type*    alpha,
-                           const real_type*    beta,
-                           vector::Vector*     V,
-                           vector::Vector*     y,
-                           vector::Vector*     x,
+  void VectorHandler::gemv(char            transpose,
+                           index_type      n,
+                           index_type      k,
+                           const real_type alpha,
+                           const real_type beta,
+                           vector::Vector* V,
+                           vector::Vector* y,
+                           vector::Vector* x,
                            memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
