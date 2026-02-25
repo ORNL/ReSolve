@@ -47,7 +47,7 @@ namespace ReSolve
     int          apply(vector_type* rhs, vector_type* x) override; // Applies preconditioning
     int          setup(matrix_type*) override;
     std::string  getSide() override;
-    matrix_type* getPrecMatrix() override;        // Used to get the preconditioning matrix for calculation of initial residual for BAGMRES
+    matrix_type* getPrecMatrix() override;  // Used to get the preconditioning matrix for calculation of initial residual for BAGMRES
     int          setSide(std::string side); // Changes the preconditioning side for BAGMRES
 
   private:
