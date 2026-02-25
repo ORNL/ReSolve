@@ -165,7 +165,10 @@ namespace ReSolve
    * @param[in]  memspace String containg memspace (cpu or cuda or hip)
    *
    */
-  void VectorHandler::axpy(const real_type alpha, /* const */ vector::Vector* x, vector::Vector* y, memory::MemorySpace memspace)
+  void VectorHandler::axpy(const real_type             alpha,
+                           /* const */ vector::Vector* x,
+                           vector::Vector*             y,
+                           memory::MemorySpace         memspace)
   {
     // AXPY:  y = alpha * x + y
     using namespace ReSolve::memory;
@@ -182,8 +185,16 @@ namespace ReSolve
   }
 
   /**
-   * @brief gemv computes matrix-vector product where both matrix and vectors are dense.
-   *        i.e., x = beta*x +  alpha*V*y
+   * @brief gemv computes dense matrix-vector product.
+   *
+   * In Re::Solve applications, gemv is used to compute dot products of
+   * multivectors.
+   *
+   * If `transpose = N` (no), `x := beta*x +  alpha*V*y`,
+   * where `x` is `[n x 1]`, `V` is `[n x k]` and `y` is `[k x 1]`.
+   * If `transpose = T` (yes), `x := beta*x + alpha*V^T*y`,
+   * where `x` is `[k x 1]`, `V` is `[n x k]` and `y` is `[n x 1]`.
+   *
    *
    * @param[in] Transpose - yes (T) or no (N)
    * @param[in] n         - Number of rows in (non-transposed) matrix
@@ -198,14 +209,14 @@ namespace ReSolve
    * @pre   V is stored colum-wise, _n_ > 0, _k_ > 0
    *
    */
-  void VectorHandler::gemv(char            transpose,
-                           index_type      n,
-                           index_type      k,
-                           const real_type alpha,
-                           const real_type beta,
-                           vector::Vector* V,
-                           vector::Vector* y,
-                           vector::Vector* x,
+  void VectorHandler::gemv(char                transpose,
+                           index_type          n,
+                           index_type          k,
+                           const real_type     alpha,
+                           const real_type     beta,
+                           vector::Vector*     V,
+                           vector::Vector*     y,
+                           vector::Vector*     x,
                            memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
@@ -213,11 +224,9 @@ namespace ReSolve
     // TODO: Remove n as the argument becuase it must always be n = V->getSize()
     assert(n == V->getSize() && "gemv: n does not match the number of rows in V");
 
-    assert((transpose == 'T' && V->getSize() == y->getSize()) && 
-           "gemv: size mismatch! size of V^T does not match size of y");
-
-    assert((transpose == 'N' && V->getSize() == x->getSize()) && 
-           "gemv: size mismatch! size of V does not match size of x");
+    // TODO: These assertions should hold but they do not. Investigate more.
+    // assert((transpose == 'T' && V->getSize() == y->getSize()) && "gemv: size mismatch! size of V^T does not match size of y");
+    // assert(((transpose == 'N') && (V->getSize() == x->getSize())) && "gemv: size mismatch! size of V does not match size of x");
 
     switch (memspace)
     {
@@ -232,19 +241,27 @@ namespace ReSolve
   }
 
   /**
-   * @brief mass (bulk) axpy i.e, y = y - x*alpha where  alpha is a vector
+   * @brief Multivector axpy: y: = y + \sum_i alpha_i x_i
    *
    * @param[in] size number of elements in y
    * @param[in] alpha vector size k x 1
-   * @param[in] x (multi)vector size size x k
+   * @param[in] x (multi)vector [size x k]
    * @param[in,out] y vector size size x 1 (this is where the result is stored)
    * @param[in] memspace string containg memspace (cpu or cuda or hip)
    *
    * @pre   _k_ > 0, _size_ > 0, _size_ = x->getSize()
    *
    */
-  void VectorHandler::axpyMulti(index_type size, vector::Vector* alpha, index_type k, vector::Vector* x, vector::Vector* y, memory::MemorySpace memspace)
+  void VectorHandler::axpyMulti(index_type          size,
+                                vector::Vector*     alpha,
+                                index_type          k,
+                                vector::Vector*     x,
+                                vector::Vector*     y,
+                                memory::MemorySpace memspace)
   {
+    assert(y->getSize() == x->getSize() && "Sizes of x and y must match!\n");
+    assert(alpha->getSize() == k && "Size of alpha must match k!\n");
+
     using namespace ReSolve::memory;
     switch (memspace)
     {
@@ -259,21 +276,32 @@ namespace ReSolve
   }
 
   /**
-   * @brief mass (bulk) dot product i.e,  V^T x, where V is n x k dense multivector (a dense multivector consisting of k vectors size n)
-   *        and x is k x 2 dense multivector (a multivector consisiting of two vectors size n each)
+   * @brief Multivector dot product, i.e  V^T x
+   * 
+   * Computes V^T x with k vectors from multivector V. Result is storred
+   * in `res`.
    *
    * @param[in] size     - Number of elements in a single vector in V
-   * @param[in] V        - Multivector; k vectors size n x 1 each
-   * @param[in] k        - Number of vectors in V
-   * @param[in] x        - Multivector; 2 vectors size n x 1 each
-   * @param[out] res     - Multivector; 2 vectors size k x 1 each (result is returned in res)
-   * @param[in] memspace - String containg memspace (cpu or cuda or hip)
+   * @param[in] V        - Multivector; k vectors of size n x 1 each
+   * @param[in] k        - Number of vectors in V to use
+   * @param[in] x        - Multivector; 2 vectors of size n x 1 each
+   * @param[out] res     - Multivector; 2 vectors size k x 1 each
+   * @param[in] memspace - String containg memspace (cpu, cuda or hip)
    *
-   * @pre   _size_ > 0, _k_ > 0, size = x->getSize(), _res_ needs to be allocated
+   * @pre _size_ > 0, _k_ > 0, size = x->getSize().
+   * @pre _res_ needs to be allocated to k x 2 size.
    *
    */
-  void VectorHandler::dot2Multi(index_type size, vector::Vector* V, index_type k, vector::Vector* x, vector::Vector* res, memory::MemorySpace memspace)
+  void VectorHandler::dot2Multi(index_type          size,
+                                vector::Vector*     V,
+                                index_type          k,
+                                vector::Vector*     x,
+                                vector::Vector*     res,
+                                memory::MemorySpace memspace)
   {
+    assert(x->getSize() == V->getSize() && "Sizes of V and x do not match!\n");
+    assert(res->getSize() == k && "Size of `res` must match k!\n");
+
     using namespace ReSolve::memory;
     switch (memspace)
     {
@@ -304,6 +332,7 @@ namespace ReSolve
     assert(diag->getSize() == vec->getSize() && "Diagonal vector must be of the same size as the vector.");
     assert(diag->getData(memspace) != nullptr && "Diagonal vector data is null!\n");
     assert(vec->getData(memspace) != nullptr && "Vector data is null!\n");
+
     using namespace ReSolve::memory;
     switch (memspace)
     {

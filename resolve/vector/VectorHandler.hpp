@@ -16,8 +16,7 @@ namespace ReSolve
 } // namespace ReSolve
 
 namespace ReSolve
-{ // namespace vector {
-
+{
   class VectorHandler
   {
   public:
@@ -27,48 +26,49 @@ namespace ReSolve
     VectorHandler(LinAlgWorkspaceHIP* new_workspace);
     ~VectorHandler();
 
-    // y = alpha x + y
-    void axpy(const real_type alpha, /* const */ vector::Vector* x, vector::Vector* y, memory::MemorySpace memspace);
+    // y := alpha x + y
+    void axpy(const real_type             alpha,
+              /* const */ vector::Vector* x,
+              vector::Vector*             y,
+              memory::MemorySpace         memspace);
 
-    // dot: x \cdot y
+    // Dot product of two vectors
     real_type dot(vector::Vector* x, vector::Vector* y, memory::MemorySpace memspace);
 
-    // scal = alpha * x
+    // Scale vector by scalar
     void scal(const real_type alpha, vector::Vector* x, memory::MemorySpace memspace);
 
-    // mass axpy: x*alpha + y where x is [n x k] and alpha is [k x 1]; x is stored columnwise
-    void axpyMulti(index_type size, vector::Vector* alpha, index_type k, vector::Vector* x, vector::Vector* y, memory::MemorySpace memspace);
-
-    // mass dot: V^T x, where V is [n x k] and x is [k x 2], everything is stored and returned columnwise
-    // Size = n
-    void dot2Multi(index_type size, vector::Vector* V, index_type k, vector::Vector* x, vector::Vector* res, memory::MemorySpace memspace);
-
-    /** 
-     * @brief Dense matrix-vector product.
-     * 
-     * In Re::Solve applications, gemv is used to compute dot products of
-     * multivectors.
-     * 
-     * if `transpose = N` (no), `x := beta*x +  alpha*V*y`,
-     * where `x` is `[n x 1]`, `V` is `[n x k]` and `y` is `[k x 1]`.
-     * if `transpose = T` (yes), `x := beta*x + alpha*V^T*y`,
-     * where `x` is `[k x 1]`, `V` is `[n x k]` and `y` is `[n x 1]`.
-     */
-    void gemv(char            transpose,
-              index_type      n,
-              index_type      k, // how many vectors from multivector V to use
-              const real_type alpha,
-              const real_type beta,
-              vector::Vector* V,
-              vector::Vector* y,
-              vector::Vector* x,
-              memory::MemorySpace memspace);
-
+    // Scale vector by diagonal matrix represented as a vector (i.e., vec = diag*vec)
     int scal(vector::Vector* diag, vector::Vector* vec, memory::MemorySpace memspace);
 
-    /** iamax:
-     * Returns infinity norm of a vector (i.e., entry with max abs value)
-     */
+    // axpy for multivectors
+    void axpyMulti(index_type          size,
+                   vector::Vector*     alpha,
+                   index_type          k,
+                   vector::Vector*     x,
+                   vector::Vector*     y,
+                   memory::MemorySpace memspace);
+
+    // Dot product of two vectors with a multivector V
+    void dot2Multi(index_type          size,
+                   vector::Vector*     V,
+                   index_type          k,
+                   vector::Vector*     x,
+                   vector::Vector*     res,
+                   memory::MemorySpace memspace);
+
+    // Dense matrix-vector product.
+    void gemv(char                transpose,
+              index_type          n,
+              index_type          k, // number of vectors from multivector V to use
+              const real_type     alpha,
+              const real_type     beta,
+              vector::Vector*     V,
+              vector::Vector*     y,
+              vector::Vector*     x,
+              memory::MemorySpace memspace);
+
+    // Vector infinity norm
     real_type iamax(vector::Vector* x, memory::MemorySpace memspace);
 
     bool getIsCudaEnabled() const;
@@ -81,6 +81,6 @@ namespace ReSolve
     bool isCpuEnabled_{false};
     bool isCudaEnabled_{false};
     bool isHipEnabled_{false};
-  };
+  }; // class VectorHandler
 
 } // namespace ReSolve
