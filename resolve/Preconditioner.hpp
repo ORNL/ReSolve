@@ -39,7 +39,7 @@ namespace ReSolve
     virtual int          apply(vector_type* rhs, vector_type* x) = 0;
     virtual int          reset(matrix_type* /* A */);
     virtual std::string  getSide(); // Gets the preconditioning side
-    virtual matrix_type* getPrec(); // Dummy function only implemented by PreconditionerMatvec
+    virtual matrix_type* getPrecMatrix(); // Get the preconditioner matrix
 
   private:
     std::string side_ = "right"; // Right preconditioning by default
