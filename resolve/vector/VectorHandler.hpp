@@ -43,15 +43,20 @@ namespace ReSolve
     // Size = n
     void dot2Multi(index_type size, vector::Vector* V, index_type k, vector::Vector* x, vector::Vector* res, memory::MemorySpace memspace);
 
-    /** gemv:
-     * if `transpose = N` (no), `x = beta*x +  alpha*V*y`,
+    /** 
+     * @brief Dense matrix-vector product.
+     * 
+     * In Re::Solve applications, gemv is used to compute dot products of
+     * multivectors.
+     * 
+     * if `transpose = N` (no), `x := beta*x +  alpha*V*y`,
      * where `x` is `[n x 1]`, `V` is `[n x k]` and `y` is `[k x 1]`.
-     * if `transpose = T` (yes), `x = beta*x + alpha*V^T*y`,
+     * if `transpose = T` (yes), `x := beta*x + alpha*V^T*y`,
      * where `x` is `[k x 1]`, `V` is `[n x k]` and `y` is `[n x 1]`.
      */
     void gemv(char            transpose,
               index_type      n,
-              index_type      k,
+              index_type      k, // how many vectors from multivector V to use
               const real_type alpha,
               const real_type beta,
               vector::Vector* V,

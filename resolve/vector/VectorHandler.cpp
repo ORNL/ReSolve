@@ -209,6 +209,16 @@ namespace ReSolve
                            memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
+
+    // TODO: Remove n as the argument becuase it must always be n = V->getSize()
+    assert(n == V->getSize() && "gemv: n does not match the number of rows in V");
+
+    assert((transpose == 'T' && V->getSize() == y->getSize()) && 
+           "gemv: size mismatch! size of V^T does not match size of y");
+
+    assert((transpose == 'N' && V->getSize() == x->getSize()) && 
+           "gemv: size mismatch! size of V does not match size of x");
+
     switch (memspace)
     {
     case HOST:
