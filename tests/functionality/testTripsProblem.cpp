@@ -15,8 +15,8 @@
 #include <resolve/GramSchmidt.hpp>
 #include <resolve/LinSolverDirectCpuILU0.hpp>
 #include <resolve/LinSolverIterativeFGMRES.hpp>
-#include <resolve/PreconditionerLU.hpp>
 #include <resolve/PreconditionerABBA.hpp>
+#include <resolve/PreconditionerLU.hpp>
 #include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/Csc.hpp>
 #include <resolve/matrix/Csr.hpp>
