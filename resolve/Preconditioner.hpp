@@ -38,7 +38,7 @@ namespace ReSolve
     virtual int          setup(matrix_type* A)                   = 0;
     virtual int          apply(vector_type* rhs, vector_type* x) = 0;
     virtual int          reset(matrix_type* /* A */);
-    virtual std::string  getSide(); // Gets the preconditioning side
+    virtual std::string  getSide();       // Gets the preconditioning side
     virtual matrix_type* getPrecMatrix(); // Get the preconditioner matrix
 
   private:
