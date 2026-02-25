@@ -212,12 +212,18 @@ namespace ReSolve
         // Right preconditioned
         if (preconditioner_->getSide() == "right")
         {
+          this->precV(&vec_v, &vec_z);
+          mem_.deviceSynchronize();
+          vec_v.setData(vec_V_->getData(i + 1, memspace_), memspace_);
           matrix_handler_->matvec(A_, &vec_z, &vec_v, &ONE, &ZERO, memspace_);
         }
         // Left Preconditioned
         else
         {
-          matrix_handler_->matvec(preconditioner_->getPrec(), &vec_z, &vec_v, &ONE, &ZERO, memspace_);
+          matrix_handler_->matvec(A_, &vec_z, &vec_v, &ONE, &ZERO, memspace_);
+          mem_.deviceSynchronize();
+          vec_v.setData(vec_V_->getData(i + 1, memspace_), memspace_);
+          this->precV(&vec_v, &vec_z);
         }
 
         // orthogonalize V[i+1], form a column of h_H_
