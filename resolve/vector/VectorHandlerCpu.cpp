@@ -206,10 +206,10 @@ namespace ReSolve
    *
    */
   void VectorHandlerCpu::axpyMulti(index_type      size,
-                                  vector::Vector* alpha,
-                                  index_type      k,
-                                  vector::Vector* x,
-                                  vector::Vector* y)
+                                   vector::Vector* alpha,
+                                   index_type      k,
+                                   vector::Vector* x,
+                                   vector::Vector* y)
   {
 
     real_type* alpha_data = alpha->getData(memory::HOST);
@@ -243,10 +243,10 @@ namespace ReSolve
    *
    */
   void VectorHandlerCpu::dot2Multi(index_type      size,
-                                     vector::Vector* V,
-                                     index_type      q,
-                                     vector::Vector* x,
-                                     vector::Vector* res)
+                                   vector::Vector* V,
+                                   index_type      q,
+                                   vector::Vector* x,
+                                   vector::Vector* res)
   {
     real_type* res_data = res->getData(memory::HOST);
     real_type* x_data   = x->getData(memory::HOST);

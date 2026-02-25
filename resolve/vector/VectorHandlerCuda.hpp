@@ -24,7 +24,7 @@ namespace ReSolve
     virtual ~VectorHandlerCuda();
 
     // y = alpha x + y
-    virtual void axpy(const real_type alpha, /* const */vector::Vector* x, vector::Vector* y);
+    virtual void axpy(const real_type alpha, /* const */ vector::Vector* x, vector::Vector* y);
 
     // dot: x \cdot y
     virtual real_type dot(vector::Vector* x, vector::Vector* y);

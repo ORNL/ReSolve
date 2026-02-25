@@ -245,10 +245,10 @@ namespace ReSolve
    *
    */
   void VectorHandlerCuda::dot2Multi(index_type      size,
-                                      vector::Vector* V,
-                                      index_type      k,
-                                      vector::Vector* x,
-                                      vector::Vector* res)
+                                    vector::Vector* V,
+                                    index_type      k,
+                                    vector::Vector* x,
+                                    vector::Vector* res)
   {
     using namespace constants;
 

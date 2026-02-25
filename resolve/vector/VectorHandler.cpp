@@ -277,7 +277,7 @@ namespace ReSolve
 
   /**
    * @brief Multivector dot product, i.e  V^T x
-   * 
+   *
    * Computes V^T x with k vectors from multivector V. Result is storred
    * in `res`.
    *

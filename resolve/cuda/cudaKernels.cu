@@ -142,10 +142,10 @@ namespace ReSolve
        */
       template <size_t Tmaxk = 1024>
       __global__ void axpyMulti3(index_type       N,
-                                index_type       k,
-                                const real_type* x_data,
-                                real_type*       y_data,
-                                const real_type* alpha)
+                                 index_type       k,
+                                 const real_type* x_data,
+                                 real_type*       y_data,
+                                 const real_type* alpha)
       {
         index_type           i = blockIdx.x * blockDim.x + threadIdx.x;
         index_type           t = threadIdx.x;
