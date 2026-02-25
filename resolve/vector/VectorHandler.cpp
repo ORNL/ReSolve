@@ -289,7 +289,7 @@ namespace ReSolve
    *
    * @return 0 if successful, 1 otherwise
    */
-  int VectorHandler::scale(vector::Vector* diag, vector::Vector* vec, memory::MemorySpace memspace)
+  int VectorHandler::scal(vector::Vector* diag, vector::Vector* vec, memory::MemorySpace memspace)
   {
     assert(diag->getSize() == vec->getSize() && "Diagonal vector must be of the same size as the vector.");
     assert(diag->getData(memspace) != nullptr && "Diagonal vector data is null!\n");
@@ -298,10 +298,10 @@ namespace ReSolve
     switch (memspace)
     {
     case HOST:
-      return cpuImpl_->scale(diag, vec);
+      return cpuImpl_->scal(diag, vec);
       break;
     case DEVICE:
-      return devImpl_->scale(diag, vec);
+      return devImpl_->scal(diag, vec);
       break;
     }
     return 1;

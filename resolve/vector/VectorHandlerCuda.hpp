@@ -65,7 +65,7 @@ namespace ReSolve
      *
      * @return 0 if successful, 1 otherwise
      */
-    virtual int scale(vector::Vector* diag, vector::Vector* vec);
+    virtual int scal(vector::Vector* diag, vector::Vector* vec);
 
   private:
     MemoryHandler        mem_; ///< Device memory manager object

@@ -259,7 +259,7 @@ namespace ReSolve
         }
         diag.copyFromExternal(diag_data.get(), memory::HOST, memspace_);
 
-        handler_.scale(&diag, &vec, memspace_);
+        handler_.scal(&diag, &vec, memspace_);
 
         if (memspace_ == memory::DEVICE)
         {

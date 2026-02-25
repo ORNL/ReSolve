@@ -284,7 +284,7 @@ namespace ReSolve
    *
    * @return 0 if successful, 1 otherwise
    */
-  int VectorHandlerCpu::scale(vector::Vector* diag, vector::Vector* vec)
+  int VectorHandlerCpu::scal(vector::Vector* diag, vector::Vector* vec)
   {
     real_type* diag_data = diag->getData(memory::HOST);
     real_type* vec_data  = vec->getData(memory::HOST);
