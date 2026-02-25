@@ -26,8 +26,7 @@
      - [ ] CPU backend
      - [ ] CUDA backend
      - [ ] HIP backend
-- [ ] I have manually run the non-experimental examples and verified that residuals are close to machine precision. (In your build directory run:
-`./examples/<your_example>.exe -h` to get instructions how to run examples). Code tested on:
+- [ ] I have manually run the non-experimental examples and verified that residuals are close to machine precision. (In your build directory run: `./examples/<your_example>.exe -h` to get instructions how to run examples). Code tested on:
      - [ ] CPU backend
      - [ ] CUDA backend
      - [ ] HIP backend

@@ -10,7 +10,9 @@
 
 - Reworked templates to include example tests.
 
-- Removed unnecessary full facotorization in the examples and made the input 1 based.
+- Removed unnecessary full facotorization in the examples.
+
+- Update method names in `VectorHandler` to match BLAS naming.
 
 - Added `cons` counterparts to `Vector::getData` methods.
 
