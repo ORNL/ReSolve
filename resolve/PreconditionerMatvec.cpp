@@ -87,20 +87,8 @@ namespace ReSolve
   int PreconditionerMatvec::apply(vector_type* rhs, vector_type* x)
   {
     using namespace constants;
-    // ABGMRES Preconditioner
-    if (side_ == "right")
-    {
-      matrix_handler_->matvec(B_, rhs, x, &ONE, &ZERO, memspace_);
-      return 0;
-    }
-    // BA GMRES Preconditioner
-    else
-    {
-      matrix_handler_->matvec(A_, rhs, x, &ONE, &ZERO, memspace_);
-      return 0;
-    }
-    out::error() << "Appication of Preconditioner Failed\n";
-    return 1;
+    matrix_handler_->matvec(B_, rhs, x, &ONE, &ZERO, memspace_);
+    return 0;
   }
 
   void PreconditionerMatvec::setMemorySpace()
