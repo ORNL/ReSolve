@@ -3,7 +3,6 @@
 
 #include <resolve/GramSchmidt.hpp>
 #include <resolve/LinSolverDirectCpuILU0.hpp>
-#include <resolve/LinSolverDirectSerialILU0.hpp>
 #include <resolve/LinSolverIterativeFGMRES.hpp>
 #include <resolve/PreconditionerLU.hpp>
 #include <resolve/matrix/Csc.hpp>
@@ -319,7 +318,7 @@ namespace ReSolve
     {
       if (memspace_ == "cpu")
       {
-        preconditionSolver_ = new LinSolverDirectSerialILU0(workspaceCpu_);
+        preconditionSolver_ = new LinSolverDirectCpuILU0(workspaceCpu_);
         preconditioner_     = new PreconditionerLU(preconditionSolver_);
 #ifdef RESOLVE_USE_CUDA
       }

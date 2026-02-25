@@ -18,7 +18,6 @@ set(ReSolve_SRC
     LinSolverIterativeFGMRES.cpp
     LinSolverDirectCpuILU0.cpp
     LinSolverIterativeRandFGMRES.cpp
-    LinSolverDirectSerialILU0.cpp
     SystemSolver.cpp
     Preconditioner.cpp
     PreconditionerLU.cpp

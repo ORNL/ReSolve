@@ -5,7 +5,6 @@
 #include "ExampleHelper.hpp"
 #include <resolve/GramSchmidt.hpp>
 #include <resolve/LinSolverDirectCpuILU0.hpp>
-#include <resolve/LinSolverDirectSerialILU0.hpp>
 #include <resolve/LinSolverIterativeRandFGMRES.hpp>
 #include <resolve/PreconditionerLU.hpp>
 #include <resolve/matrix/Csr.hpp>
