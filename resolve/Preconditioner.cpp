@@ -32,7 +32,7 @@ namespace ReSolve
    *
    * Should not be called unless using PreconditionerMatvec
    */
-  matrix::Sparse* Preconditioner::getPrec()
+  matrix::Sparse* Preconditioner::getPrecMatrix()
   {
     return nullptr;
   }

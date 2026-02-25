@@ -129,10 +129,15 @@ namespace ReSolve
     vec_V_->setToZero(memspace_);
 
     // V[0] = b-A*x_0
-    else
+    rhs->copyDataTo(vec_V_->getData(memspace_), 0, memspace_);
+    matrix_handler_->matvec(A_, x, vec_V_, &MINUS_ONE, &ONE, memspace_);
+
+    // Calculate r_0 = ||B(b - Ax_0)|| for BAGMRES
+    if (preconditioner_->getSide() == "left")
     {
-      rhs->copyDataTo(vec_V_->getData(memspace_), 0, memspace_);
-      matrix_handler_->matvec(A_, x, vec_V_, &MINUS_ONE, &ONE, memspace_);
+      vector_type temp_vec(n_);
+      temp_vec.copyDataFrom(vec_V_->getData(0, memspace_), memspace_, memspace_);
+      matrix_handler_->matvec(preconditioner_->getPrecMatrix(), &temp_vec, vec_V_, &ONE, &ZERO, memspace_);
     }
 
     rnorm = 0.0;
@@ -202,12 +207,12 @@ namespace ReSolve
         {
           vec_z.setData(vec_Z_->getData(0, memspace_), memspace_);
         }
-        this->precV(&vec_v, &vec_z);
-        mem_.deviceSynchronize();
+        // this->precV(&vec_v, &vec_z);
+        // mem_.deviceSynchronize();
 
         // V_{i+1}=A*Z_i or B * Z_i for BAGMRES
 
-        vec_v.setData(vec_V_->getData(i + 1, memspace_), memspace_);
+        // vec_v.setData(vec_V_->getData(i + 1, memspace_), memspace_);
 
         // Right preconditioned
         if (preconditioner_->getSide() == "right")
@@ -220,10 +225,10 @@ namespace ReSolve
         // Left Preconditioned
         else
         {
-          matrix_handler_->matvec(A_, &vec_z, &vec_v, &ONE, &ZERO, memspace_);
+          matrix_handler_->matvec(A_, &vec_v, &vec_z, &ONE, &ZERO, memspace_);
           mem_.deviceSynchronize();
           vec_v.setData(vec_V_->getData(i + 1, memspace_), memspace_);
-          this->precV(&vec_v, &vec_z);
+          this->precV(&vec_z, &vec_v);
         }
 
         // orthogonalize V[i+1], form a column of h_H_

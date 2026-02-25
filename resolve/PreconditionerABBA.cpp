@@ -1,10 +1,10 @@
 /**
- * @file   PreconditionerMatvec.cpp
+ * @file   PreconditionerABBA.cpp
  * @author Jeffery Zhang (jefferyz@vt.edu)
  * @brief  Declaration of PreconditionerMatrix class.
  */
 
-#include "PreconditionerMatvec.hpp"
+#include "PreconditionerABBA.hpp"
 
 namespace ReSolve
 {
@@ -16,7 +16,7 @@ namespace ReSolve
    * @param[in] A - Pointer to the forward operator
    * @param[in] matrix_handler - Pointer to the matrix handler
    */
-  PreconditionerMatvec::PreconditionerMatvec(matrix::Sparse* A, MatrixHandler* matrix_handler)
+  PreconditionerABBA::PreconditionerABBA(matrix::Sparse* A, MatrixHandler* matrix_handler)
   {
     A_              = A;
     matrix_handler_ = matrix_handler;
@@ -26,7 +26,7 @@ namespace ReSolve
   /**
    * @brief Destructor for PreconditionerLU
    */
-  PreconditionerMatvec::~PreconditionerMatvec()
+  PreconditionerABBA::~PreconditionerABBA()
   {
   }
 
@@ -35,7 +35,7 @@ namespace ReSolve
    *
    * @param[in] B - Pointer to the preconditioning matrix
    */
-  int PreconditionerMatvec::setup(matrix::Sparse* B)
+  int PreconditionerABBA::setup(matrix::Sparse* B)
   {
     B_ = B;
     return 0;
@@ -47,7 +47,7 @@ namespace ReSolve
    * Necessary for some calculations
    *
    */
-  matrix::Sparse* PreconditionerMatvec::getPrec()
+  matrix::Sparse* PreconditionerABBA::getPrecMatrix()
   {
     return B_;
   }
@@ -57,7 +57,7 @@ namespace ReSolve
    *
    * @param[in] The new side
    */
-  int PreconditionerMatvec::setSide(std::string side)
+  int PreconditionerABBA::setSide(std::string side)
   {
     if (side == "left" || side == "right")
     {
@@ -71,7 +71,7 @@ namespace ReSolve
   /**
    * @brief getter for the side
    */
-  std::string PreconditionerMatvec::getSide()
+  std::string PreconditionerABBA::getSide()
   {
     return side_;
   }
@@ -84,14 +84,14 @@ namespace ReSolve
    *
    * @return int 0 if successful, 1 if fails
    */
-  int PreconditionerMatvec::apply(vector_type* rhs, vector_type* x)
+  int PreconditionerABBA::apply(vector_type* rhs, vector_type* x)
   {
     using namespace constants;
     matrix_handler_->matvec(B_, rhs, x, &ONE, &ZERO, memspace_);
     return 0;
   }
 
-  void PreconditionerMatvec::setMemorySpace()
+  void PreconditionerABBA::setMemorySpace()
   {
     bool is_matrix_handler_cuda = matrix_handler_->getIsCudaEnabled();
     bool is_matrix_handler_hip  = matrix_handler_->getIsHipEnabled();
