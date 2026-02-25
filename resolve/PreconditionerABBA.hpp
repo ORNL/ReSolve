@@ -1,5 +1,5 @@
 /**
- * @file   PreconditionerMatvec.hpp
+ * @file   PreconditionerABBA.hpp
  * @author Jeffery Zhang (jefferyz@vt.edu)
  * @brief  Declaration of left and right preconditioner class
  */
@@ -35,20 +35,19 @@ namespace ReSolve
    * @author Jeffery Zhang (jefferyz@vt.edu)
    *
    */
-  class PreconditionerMatvec : public Preconditioner
+  class PreconditionerABBA : public Preconditioner
   {
   public:
     using vector_type = vector::Vector;
     using matrix_type = matrix::Sparse;
 
-    PreconditionerMatvec(matrix_type* A, MatrixHandler* matrix_handler);
-    ~PreconditionerMatvec();
+    PreconditionerABBA(matrix_type* A, MatrixHandler* matrix_handler);
+    ~PreconditionerABBA();
 
     int          apply(vector_type* rhs, vector_type* x) override; // Applies preconditioning
     int          setup(matrix_type*) override;
     std::string  getSide() override;
-    matrix_type* getPrec() override;        // Used to get the preconditioning matrix for calculation of initial residual for BAGMRES
-    int          setPrec(matrix_type* B);   // Allows user to change the preconditioning matrix
+    matrix_type* getPrecMatrix() override;        // Used to get the preconditioning matrix for calculation of initial residual for BAGMRES
     int          setSide(std::string side); // Changes the preconditioning side for BAGMRES
 
   private:

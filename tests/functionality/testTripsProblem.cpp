@@ -16,7 +16,7 @@
 #include <resolve/LinSolverDirectCpuILU0.hpp>
 #include <resolve/LinSolverIterativeFGMRES.hpp>
 #include <resolve/PreconditionerLU.hpp>
-#include <resolve/PreconditionerMatvec.hpp>
+#include <resolve/PreconditionerABBA.hpp>
 #include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/Csc.hpp>
 #include <resolve/matrix/Csr.hpp>
@@ -139,7 +139,7 @@ int runTest(int argc, char* argv[])
   matrix_handler.setValuesChanged(true, memspace);
 
   // Set up the ABBA preconditioner
-  PreconditionerMatvec precond_matvec(A, &matrix_handler);
+  PreconditionerABBA precond_matvec(A, &matrix_handler);
   precond_matvec.setup(A_t);
   status = FGMRES.setPreconditioner(&precond_matvec);
   error_sum += status;
