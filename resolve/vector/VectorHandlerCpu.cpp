@@ -86,7 +86,7 @@ namespace ReSolve
    * @return infinity norm (real number) of _x_
    *
    */
-  real_type VectorHandlerCpu::infNorm(vector::Vector* x)
+  real_type VectorHandlerCpu::iamax(vector::Vector* x)
   {
     real_type* x_data = x->getData(memory::HOST);
     real_type  vecmax = std::abs(x_data[0]);

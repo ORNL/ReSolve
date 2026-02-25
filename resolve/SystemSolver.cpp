@@ -876,8 +876,8 @@ namespace ReSolve
     }
     matrixHandler_->setValuesChanged(true, ms);
     matrixHandler_->matvec(A_, x, resVector_, &ONE, &MINUS_ONE, ms);
-    resnorm = vectorHandler_->infNorm(resVector_, ms);
-    norm_x  = vectorHandler_->infNorm(x, ms);
+    resnorm = vectorHandler_->iamax(resVector_, ms);
+    norm_x  = vectorHandler_->iamax(x, ms);
     matrixHandler_->matrixInfNorm(A_, &norm_A, ms);
     return resnorm / (norm_x * norm_A);
   }

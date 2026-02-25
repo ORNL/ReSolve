@@ -305,8 +305,8 @@ public:
     // Compute norm of scaled residuals
     real_type inf_norm_A = 0.0;
     mh_.matrixInfNorm(A_, &inf_norm_A, memspace_);
-    real_type inf_norm_x   = vh_.infNorm(x_, memspace_);
-    real_type inf_norm_res = vh_.infNorm(res_, memspace_);
+    real_type inf_norm_x   = vh_.iamax(x_, memspace_);
+    real_type inf_norm_res = vh_.iamax(res_, memspace_);
     real_type nsr_norm     = inf_norm_res / (inf_norm_A * inf_norm_x);
     real_type error        = std::abs(nsr_system - nsr_norm) / nsr_norm;
 

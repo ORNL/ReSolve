@@ -49,7 +49,7 @@ namespace ReSolve
         return status.report(__func__);
       }
 
-      TestOutcome infNorm(index_type N)
+      TestOutcome iamax(index_type N)
       {
         TestStatus status;
         status = true;
@@ -63,7 +63,7 @@ namespace ReSolve
         }
         x.copyFromExternal(data, memory::HOST, memspace_);
 
-        real_type result = handler_.infNorm(&x, memspace_);
+        real_type result = handler_.iamax(&x, memspace_);
         real_type answer = static_cast<real_type>(N - 1) * 0.1;
 
         if (!isEqual(result, answer))

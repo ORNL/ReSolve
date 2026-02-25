@@ -86,7 +86,7 @@ namespace ReSolve
    * @return infinity norm (real number) of _x_
    *
    */
-  real_type VectorHandlerHip::infNorm(vector::Vector* x)
+  real_type VectorHandlerHip::iamax(vector::Vector* x)
   {
 
     if (workspace_->getNormBufferState() == false)

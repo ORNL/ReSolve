@@ -33,7 +33,7 @@ namespace ReSolve
     virtual void scal(const real_type* alpha, vector::Vector* x);
 
     // vector infinity norm
-    virtual real_type infNorm(vector::Vector* x);
+    virtual real_type iamax(vector::Vector* x);
 
     // mass axpy: x*alpha + y where x is [n x k] and alpha is [k x 1]; x is stored columnwise
     virtual void axpyMulti(index_type size, vector::Vector* alpha, index_type k, vector::Vector* x, vector::Vector* y);
