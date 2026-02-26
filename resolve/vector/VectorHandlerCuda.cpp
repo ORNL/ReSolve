@@ -74,10 +74,14 @@ namespace ReSolve
    * @param[in,out] x The vector
    *
    */
-  void VectorHandlerCuda::scal(const real_type* alpha, vector::Vector* x)
+  void VectorHandlerCuda::scal(const real_type alpha, vector::Vector* x)
   {
     cublasHandle_t handle_cublas = workspace_->getCublasHandle();
-    cublasStatus_t st            = cublasDscal(handle_cublas, x->getSize(), alpha, x->getData(memory::DEVICE), 1);
+    cublasStatus_t st            = cublasDscal(handle_cublas,
+                                    x->getSize(),
+                                    &alpha,
+                                    x->getData(memory::DEVICE),
+                                    1);
     if (st != 0)
     {
       out::error() << "scal returned error code " << st << "\n";
