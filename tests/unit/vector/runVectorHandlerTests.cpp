@@ -20,7 +20,7 @@ int main(int, char**)
     result += test.dot(50);
     result += test.axpy(50);
     result += test.scal(50);
-    result += test.iamax(50);
+    result += test.amax(50);
     result += test.gemv(5000, 10);
     result += test.axpyMulti(100, 10);
     result += test.massDot(100, 10);
@@ -46,7 +46,7 @@ int main(int, char**)
     result += test.axpyMulti(1000, 30);
     result += test.massDot(100, 10);
     result += test.massDot(1000, 30);
-    result += test.iamax(1000);
+    result += test.amax(1000);
     result += test.scale(1000);
 
     std::cout << "\n";
@@ -70,7 +70,7 @@ int main(int, char**)
     result += test.axpyMulti(1000, 300);
     result += test.massDot(100, 10);
     result += test.massDot(1000, 30);
-    result += test.iamax(1000);
+    result += test.amax(1000);
     result += test.scale(1000);
 
     std::cout << "\n";

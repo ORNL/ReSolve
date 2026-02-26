@@ -85,7 +85,7 @@ namespace ReSolve
    * @return infinity norm (real number) of _x_
    *
    */
-  real_type VectorHandlerCuda::iamax(vector::Vector* x)
+  real_type VectorHandlerCuda::amax(vector::Vector* x)
   {
 
     if (workspace_->getNormBufferState() == false)

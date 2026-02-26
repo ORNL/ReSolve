@@ -141,16 +141,16 @@ namespace ReSolve
    * @return infinity norm (real number) of _x_
    *
    */
-  real_type VectorHandler::iamax(vector::Vector* x, memory::MemorySpace memspace)
+  real_type VectorHandler::amax(vector::Vector* x, memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
     switch (memspace)
     {
     case HOST:
-      return cpuImpl_->iamax(x);
+      return cpuImpl_->amax(x);
       break;
     case DEVICE:
-      return devImpl_->iamax(x);
+      return devImpl_->amax(x);
       break;
     }
     return -1.0;

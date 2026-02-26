@@ -69,7 +69,7 @@ namespace ReSolve
               memory::MemorySpace memspace);
 
     // Vector infinity norm
-    real_type iamax(vector::Vector* x, memory::MemorySpace memspace);
+    real_type amax(vector::Vector* x, memory::MemorySpace memspace);
 
     bool getIsCudaEnabled() const;
     bool getIsHipEnabled() const;
