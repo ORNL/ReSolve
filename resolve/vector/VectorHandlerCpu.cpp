@@ -45,10 +45,10 @@ namespace ReSolve
 
   real_type VectorHandlerCpu::dot(vector::Vector* x, vector::Vector* y)
   {
-    real_type* x_data = x->getData(memory::HOST);
-    real_type* y_data = y->getData(memory::HOST);
-    real_type  sum    = 0.0;
-    real_type  c      = 0.0;
+    const real_type* x_data = x->getData(memory::HOST);
+    const real_type* y_data = y->getData(memory::HOST);
+    real_type        sum    = 0.0;
+    real_type        c      = 0.0;
     // real_type t, y;
     for (int i = 0; i < x->getSize(); ++i)
     {
@@ -76,6 +76,7 @@ namespace ReSolve
     {
       x_data[i] *= alpha;
     }
+    x->setDataUpdated(memory::HOST);
   }
 
   /**
@@ -88,9 +89,10 @@ namespace ReSolve
    */
   real_type VectorHandlerCpu::amax(vector::Vector* x)
   {
-    real_type* x_data = x->getData(memory::HOST);
-    real_type  vecmax = std::abs(x_data[0]);
-    real_type  v;
+    const real_type* x_data = x->getData(memory::HOST);
+
+    real_type vecmax = std::abs(x_data[0]);
+    real_type v;
     for (int i = 1; i < x->getSize(); ++i)
     {
       v = std::abs(x_data[i]);
@@ -119,6 +121,7 @@ namespace ReSolve
     {
       y_data[i] = alpha * x_data[i] + y_data[i];
     }
+    y->setDataUpdated(memory::HOST);
   }
 
   /**
@@ -147,9 +150,10 @@ namespace ReSolve
                               vector::Vector* x)
   {
     // x = beta*x +  alpha*V*y OR x = beta*x + alpha*V^Ty
-    real_type* V_data = V->getData(memory::HOST);
-    real_type* y_data = y->getData(memory::HOST);
-    real_type* x_data = x->getData(memory::HOST);
+    const real_type* V_data = V->getData(memory::HOST);
+    const real_type* y_data = y->getData(memory::HOST);
+    real_type*       x_data = x->getData(memory::HOST);
+
     index_type i, j;
     real_type  sum;
     switch (transpose)
@@ -192,6 +196,7 @@ namespace ReSolve
       }
       break;
     } // switch
+    x->setDataUpdated(memory::HOST);
   }
 
   /**
@@ -227,6 +232,7 @@ namespace ReSolve
       }
       y_data[i] = y_data[i] - sum;
     }
+    y->setDataUpdated(memory::HOST);
   }
 
   /**
@@ -248,9 +254,9 @@ namespace ReSolve
                                    vector::Vector* x,
                                    vector::Vector* res)
   {
-    real_type* res_data = res->getData(memory::HOST);
-    real_type* x_data   = x->getData(memory::HOST);
-    real_type* V_data   = V->getData(memory::HOST);
+    real_type*       res_data = res->getData(memory::HOST);
+    const real_type* x_data   = x->getData(memory::HOST);
+    const real_type* V_data   = V->getData(memory::HOST);
 
     real_type c0 = 0.0;
     real_type cq = 0.0;
@@ -274,6 +280,7 @@ namespace ReSolve
         res_data[i + q] = tq;
       }
     }
+    res->setDataUpdated(memory::HOST);
   }
 
   /**
@@ -286,9 +293,9 @@ namespace ReSolve
    */
   int VectorHandlerCpu::scal(vector::Vector* diag, vector::Vector* vec)
   {
-    real_type* diag_data = diag->getData(memory::HOST);
-    real_type* vec_data  = vec->getData(memory::HOST);
-    index_type n         = vec->getSize();
+    const real_type* diag_data = diag->getData(memory::HOST);
+    real_type*       vec_data  = vec->getData(memory::HOST);
+    index_type       n         = vec->getSize();
 
     for (index_type i = 0; i < n; ++i)
     {

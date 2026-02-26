@@ -51,11 +51,17 @@ namespace ReSolve
   {
     rocblas_handle handle_rocblas = workspace_->getRocblasHandle();
     double         nrm            = 0.0;
-    rocblas_status st             = rocblas_ddot(handle_rocblas, x->getSize(), x->getData(memory::DEVICE), 1, y->getData(memory::DEVICE), 1, &nrm);
 
+    rocblas_status st = rocblas_ddot(handle_rocblas,
+                                     x->getSize(),
+                                     x->getData(memory::DEVICE),
+                                     1,
+                                     y->getData(memory::DEVICE),
+                                     1,
+                                     &nrm);
     if (st != 0)
     {
-      printf("dot product crashed with code %d \n", st);
+      out::error() << "dot product returned error code " << st << "\n";
     }
     return nrm;
   }
@@ -76,11 +82,11 @@ namespace ReSolve
                                       &alpha,
                                       x->getData(memory::DEVICE),
                                       1);
-
     if (st != 0)
     {
-      ReSolve::io::Logger::error() << "scal returned error code " << st << "\n";
+      out::error() << "scal returned error code " << st << "\n";
     }
+    x->setDataUpdated(memory::DEVICE);
   }
 
   /**
@@ -101,7 +107,7 @@ namespace ReSolve
       workspace_->setNormBuffer(buffer);
       workspace_->setNormBufferState(true);
     }
-    real_type norm;
+    real_type norm{0.0};
     hip::vector_inf_norm(x->getSize(),
                          x->getData(memory::DEVICE),
                          workspace_->getNormBuffer(),
@@ -127,6 +133,7 @@ namespace ReSolve
                   1,
                   y->getData(memory::DEVICE),
                   1);
+    y->setDataUpdated(memory::DEVICE);
   }
 
   /**
@@ -190,6 +197,7 @@ namespace ReSolve
                        << " in gemv. Using non-transposed multivector.\n";
       }
     }
+    x->setDataUpdated(memory::DEVICE);
   }
 
   /**
@@ -203,12 +211,20 @@ namespace ReSolve
    * @pre   _k_ > 0, _size_ > 0, _size_ = x->getSize()
    *
    */
-  void VectorHandlerHip::axpyMulti(index_type size, vector::Vector* alpha, index_type k, vector::Vector* x, vector::Vector* y)
+  void VectorHandlerHip::axpyMulti(index_type      size,
+                                   vector::Vector* alpha,
+                                   index_type      k,
+                                   vector::Vector* x,
+                                   vector::Vector* y)
   {
     using namespace constants;
     if (k < 200)
     {
-      hip::mass_axpy(size, k, x->getData(memory::DEVICE), y->getData(memory::DEVICE), alpha->getData(memory::DEVICE));
+      hip::mass_axpy(size,
+                     k,
+                     x->getData(memory::DEVICE),
+                     y->getData(memory::DEVICE),
+                     alpha->getData(memory::DEVICE));
     }
     else
     {
@@ -228,6 +244,7 @@ namespace ReSolve
                     y->getData(memory::DEVICE), // c
                     size);                      // ldc
     }
+    y->setDataUpdated(memory::DEVICE);
   }
 
   /**
@@ -244,13 +261,22 @@ namespace ReSolve
    * @pre   _size_ > 0, _k_ > 0, size = x->getSize(), _res_ needs to be allocated
    *
    */
-  void VectorHandlerHip::dot2Multi(index_type size, vector::Vector* V, index_type k, vector::Vector* x, vector::Vector* res)
+  void VectorHandlerHip::dot2Multi(index_type      size,
+                                   vector::Vector* V,
+                                   index_type      k,
+                                   vector::Vector* x,
+                                   vector::Vector* res)
   {
     using namespace constants;
 
     if (k < 200)
     {
-      hip::mass_inner_product_two_vectors(size, k, x->getData(0, memory::DEVICE), x->getData(1, memory::DEVICE), V->getData(memory::DEVICE), res->getData(memory::DEVICE));
+      hip::mass_inner_product_two_vectors(size,
+                                          k,
+                                          x->getData(0, memory::DEVICE),
+                                          x->getData(1, memory::DEVICE),
+                                          V->getData(memory::DEVICE),
+                                          res->getData(memory::DEVICE));
     }
     else
     {
@@ -270,6 +296,7 @@ namespace ReSolve
                     res->getData(memory::DEVICE), // c
                     k);                           // ldc
     }
+    res->setDataUpdated(memory::DEVICE);
   }
 
   /**

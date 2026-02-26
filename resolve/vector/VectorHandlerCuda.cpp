@@ -51,8 +51,15 @@ namespace ReSolve
   real_type VectorHandlerCuda::dot(vector::Vector* x, vector::Vector* y)
   {
     cublasHandle_t handle_cublas = workspace_->getCublasHandle();
-    double         nrm           = 0.0;
-    cublasStatus_t st            = cublasDdot(handle_cublas, x->getSize(), x->getData(memory::DEVICE), 1, y->getData(memory::DEVICE), 1, &nrm);
+
+    double         nrm{0.0};
+    cublasStatus_t st = cublasDdot(handle_cublas,
+                                   x->getSize(),
+                                   x->getData(memory::DEVICE),
+                                   1,
+                                   y->getData(memory::DEVICE),
+                                   1,
+                                   &nrm);
     if (st != 0)
     {
       out::error() << "Dot product failed with error code " << st << "\n";
@@ -73,8 +80,9 @@ namespace ReSolve
     cublasStatus_t st            = cublasDscal(handle_cublas, x->getSize(), alpha, x->getData(memory::DEVICE), 1);
     if (st != 0)
     {
-      out::error() << "scal crashed with code " << st << "\n";
+      out::error() << "scal returned error code " << st << "\n";
     }
+    x->setDataUpdated(memory::DEVICE);
   }
 
   /**
@@ -95,7 +103,7 @@ namespace ReSolve
       workspace_->setNormBuffer(buffer);
       workspace_->setNormBufferState(true);
     }
-    real_type norm;
+    real_type norm{0.0};
     // TODO: Shouldn't the return type be cusolverStatus_t ?
     int status = cusolverSpDnrminf(workspace_->getCusolverSpHandle(),
                                    x->getSize(),
@@ -127,6 +135,7 @@ namespace ReSolve
                 1,
                 y->getData(memory::DEVICE),
                 1);
+    y->setDataUpdated(memory::DEVICE);
   }
 
   /**
@@ -190,6 +199,7 @@ namespace ReSolve
                        << " in gemv. Using non-transposed multivector.\n";
       }
     }
+    x->setDataUpdated(memory::DEVICE);
   }
 
   /**
@@ -203,12 +213,20 @@ namespace ReSolve
    * @pre   _k_ > 0, _size_ > 0, _size_ = x->getSize()
    *
    */
-  void VectorHandlerCuda::axpyMulti(index_type size, vector::Vector* alpha, index_type k, vector::Vector* x, vector::Vector* y)
+  void VectorHandlerCuda::axpyMulti(index_type      size,
+                                    vector::Vector* alpha,
+                                    index_type      k,
+                                    vector::Vector* x,
+                                    vector::Vector* y)
   {
     using namespace constants;
     if (k < 200)
     {
-      cuda::mass_axpy(size, k, x->getData(memory::DEVICE), y->getData(memory::DEVICE), alpha->getData(memory::DEVICE));
+      cuda::mass_axpy(size,
+                      k,
+                      x->getData(memory::DEVICE),
+                      y->getData(memory::DEVICE),
+                      alpha->getData(memory::DEVICE));
     }
     else
     {
@@ -228,6 +246,7 @@ namespace ReSolve
                   y->getData(memory::DEVICE), // c
                   size);                      // ldc
     }
+    y->setDataUpdated(memory::DEVICE);
   }
 
   /**
@@ -279,6 +298,7 @@ namespace ReSolve
                   res->getData(memory::DEVICE), // c
                   k);                           // ldc
     }
+    res->setDataUpdated(memory::DEVICE);
   }
 
   /**
