@@ -211,10 +211,10 @@ namespace ReSolve
      *
      * @pre   size of _v_ is equal or larger than the current vector size.
      */
-    int Vector::copyDataFrom(Vector* v, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut)
+    int Vector::copyDataFrom(Vector* source, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut)
     {
-      real_type* data = v->getData(memspaceIn);
-      return copyDataFrom(data, memspaceIn, memspaceOut);
+      real_type* source_data = source->getData(memspaceIn);
+      return copyDataFrom(source_data, memspaceIn, memspaceOut);
     }
 
     /**
@@ -228,7 +228,7 @@ namespace ReSolve
      *
      * @return 0 if successful, -1 otherwise.
      */
-    int Vector::copyDataFrom(const real_type* data, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut)
+    int Vector::copyDataFrom(const real_type* source, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut)
     {
       int control = -1;
       if ((memspaceIn == memory::HOST) && (memspaceOut == memory::HOST))
@@ -264,22 +264,22 @@ namespace ReSolve
       switch (control)
       {
       case 0: // cpu->cpu
-        mem_.copyArrayHostToHost(h_data_, data, n_size_ * k_);
+        mem_.copyArrayHostToHost(h_data_, source, n_size_ * k_);
         setHostUpdated(true);
         setDeviceUpdated(false);
         break;
       case 2: // gpu->cpu
-        mem_.copyArrayDeviceToHost(h_data_, data, n_size_ * k_);
+        mem_.copyArrayDeviceToHost(h_data_, source, n_size_ * k_);
         setHostUpdated(true);
         setDeviceUpdated(false);
         break;
       case 1: // cpu->gpu
-        mem_.copyArrayHostToDevice(d_data_, data, n_size_ * k_);
+        mem_.copyArrayHostToDevice(d_data_, source, n_size_ * k_);
         setHostUpdated(false);
         setDeviceUpdated(true);
         break;
       case 3: // gpu->gpu
-        mem_.copyArrayDeviceToDevice(d_data_, data, n_size_ * k_);
+        mem_.copyArrayDeviceToDevice(d_data_, source, n_size_ * k_);
         setHostUpdated(false);
         setDeviceUpdated(true);
         break;
@@ -858,7 +858,7 @@ namespace ReSolve
      * @pre _dest_ is allocated in memspaceInOut memory space.
      * @post All elements of the vector _i_ are copied to the array _dest_.
      */
-    int Vector::copyDataTo(real_type*          dest,
+    int Vector::copyDataTo(real_type*          destination,
                            index_type          i,
                            memory::MemorySpace memspaceInOut)
     {
@@ -873,10 +873,10 @@ namespace ReSolve
         switch (memspaceInOut)
         {
         case HOST:
-          mem_.copyArrayHostToHost(dest, data, n_size_);
+          mem_.copyArrayHostToHost(destination, data, n_size_);
           break;
         case DEVICE:
-          mem_.copyArrayDeviceToDevice(dest, data, n_size_);
+          mem_.copyArrayDeviceToDevice(destination, data, n_size_);
           break;
         }
         return 0;
@@ -895,17 +895,17 @@ namespace ReSolve
      *
      * @pre _dest_ is allocated, and the size of _dest_ is at least _k_ * _n_ .
      */
-    int Vector::copyDataTo(real_type* dest, memory::MemorySpace memspaceInOut)
+    int Vector::copyDataTo(real_type* destination, memory::MemorySpace memspaceInOut)
     {
       using namespace ReSolve::memory;
       real_type* data = this->getData(memspaceInOut);
       switch (memspaceInOut)
       {
       case HOST:
-        mem_.copyArrayHostToHost(dest, data, n_size_ * k_);
+        mem_.copyArrayHostToHost(destination, data, n_size_ * k_);
         break;
       case DEVICE:
-        mem_.copyArrayDeviceToDevice(dest, data, n_size_ * k_);
+        mem_.copyArrayDeviceToDevice(destination, data, n_size_ * k_);
         break;
       }
       return 0;

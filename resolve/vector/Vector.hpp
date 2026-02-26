@@ -35,8 +35,8 @@ namespace ReSolve
       Vector(index_type n, index_type k);
       ~Vector();
 
-      int              copyDataFrom(const real_type* data, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut);
-      int              copyDataFrom(Vector* v, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut);
+      int              copyDataFrom(const real_type* source, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut);
+      int              copyDataFrom(Vector* source, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut);
       real_type*       getData(memory::MemorySpace memspace);
       real_type*       getData(index_type i, memory::MemorySpace memspace);
       const real_type* getData(memory::MemorySpace memspace) const;
@@ -57,8 +57,8 @@ namespace ReSolve
       int syncData(memory::MemorySpace memspaceOut);
       int syncData(index_type j, memory::MemorySpace memspaceOut);
       int resize(index_type new_n_current);
-      int copyDataTo(real_type* dest, index_type i, memory::MemorySpace memspace);
-      int copyDataTo(real_type* dest, memory::MemorySpace memspace);
+      int copyDataTo(real_type* destination, index_type i, memory::MemorySpace memspace);
+      int copyDataTo(real_type* destination, memory::MemorySpace memspace);
 
     private:
       void setHostUpdated(bool is_updated);
