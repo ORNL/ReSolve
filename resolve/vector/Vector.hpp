@@ -35,10 +35,10 @@ namespace ReSolve
       Vector(index_type n, index_type k);
       ~Vector();
 
-      int        copyDataFrom(const real_type* data, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut);
-      int        copyDataFrom(Vector* v, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut);
-      real_type* getData(memory::MemorySpace memspace);
-      real_type* getData(index_type i, memory::MemorySpace memspace);
+      int              copyDataFrom(const real_type* data, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut);
+      int              copyDataFrom(Vector* v, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut);
+      real_type*       getData(memory::MemorySpace memspace);
+      real_type*       getData(index_type i, memory::MemorySpace memspace);
       const real_type* getData(memory::MemorySpace memspace) const;
       const real_type* getData(index_type i, memory::MemorySpace memspace) const;
 
