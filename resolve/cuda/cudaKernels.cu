@@ -288,11 +288,11 @@ namespace ReSolve
      * @todo Should we use dynamic shared memory here instead?
      */
     void dot_2_multi(index_type       n,
-                                        index_type       i,
-                                        const real_type* vec1,
-                                        const real_type* vec2,
-                                        const real_type* mvec,
-                                        real_type*       result)
+                     index_type       i,
+                     const real_type* vec1,
+                     const real_type* vec2,
+                     const real_type* mvec,
+                     real_type*       result)
     {
       kernels::MassIPTwoVec<<<i, 1024>>>(vec1, vec2, mvec, result, i, n);
     }
