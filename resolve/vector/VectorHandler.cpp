@@ -286,7 +286,7 @@ namespace ReSolve
    * @param[in] k        - Number of vectors in V to use
    * @param[in] x        - Multivector; 2 vectors of size n x 1 each
    * @param[out] res     - Multivector; 2 vectors size k x 1 each
-   * @param[in] memspace - String containg memspace (cpu, cuda or hip)
+   * @param[in] memspace - String containg memspace (cpu, cuda, or hip)
    *
    * @pre _size_ > 0, _k_ > 0, size = x->getSize().
    * @pre _res_ needs to be allocated to k x 2 size.
