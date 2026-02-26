@@ -220,11 +220,11 @@ namespace ReSolve
     using namespace constants;
     if (k < 200)
     {
-      hip::mass_axpy(size,
-                     k,
-                     x->getData(memory::DEVICE),
-                     y->getData(memory::DEVICE),
-                     alpha->getData(memory::DEVICE));
+      hip::axpy_multi(size,
+                      k,
+                      x->getData(memory::DEVICE),
+                      y->getData(memory::DEVICE),
+                      alpha->getData(memory::DEVICE));
     }
     else
     {
@@ -271,12 +271,12 @@ namespace ReSolve
 
     if (k < 200)
     {
-      hip::mass_inner_product_two_vectors(size,
-                                          k,
-                                          x->getData(0, memory::DEVICE),
-                                          x->getData(1, memory::DEVICE),
-                                          V->getData(memory::DEVICE),
-                                          res->getData(memory::DEVICE));
+      hip::dot_2_multi(size,
+                       k,
+                       x->getData(0, memory::DEVICE),
+                       x->getData(1, memory::DEVICE),
+                       V->getData(memory::DEVICE),
+                       res->getData(memory::DEVICE));
     }
     else
     {

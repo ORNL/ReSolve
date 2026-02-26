@@ -287,7 +287,7 @@ namespace ReSolve
      * value of Tv5?
      * @todo Should we use dynamic shared memory here instead?
      */
-    void mass_inner_product_two_vectors(index_type       n,
+    void dot_2_multi(index_type       n,
                                         index_type       i,
                                         const real_type* vec1,
                                         const real_type* vec2,
@@ -306,7 +306,7 @@ namespace ReSolve
      * @param[out] y     - (n x (i+1)) multivector
      * @param[in]  alpha - ((i+1) x 1) vector
      */
-    void mass_axpy(index_type n, index_type i, const real_type* x, real_type* y, const real_type* alpha)
+    void axpy_multi(index_type n, index_type i, const real_type* x, real_type* y, const real_type* alpha)
     {
       kernels::axpyMulti3<<<(n + 384 - 1) / 384, 384>>>(n, i, x, y, alpha);
     }

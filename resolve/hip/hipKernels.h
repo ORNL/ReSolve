@@ -16,13 +16,13 @@ namespace ReSolve
 {
   namespace hip
   {
-    void mass_inner_product_two_vectors(index_type n,
-                                        index_type i,
-                                        real_type* vec1,
-                                        real_type* vec2,
-                                        real_type* mvec,
-                                        real_type* result);
-    void mass_axpy(index_type n, index_type i, real_type* x, real_type* y, real_type* alpha);
+    void dot_2_multi(index_type n,
+                     index_type i,
+                     real_type* vec1,
+                     real_type* vec2,
+                     real_type* mvec,
+                     real_type* result);
+    void axpy_multi(index_type n, index_type i, real_type* x, real_type* y, real_type* alpha);
 
     void leftScale(index_type        n,
                    const index_type* a_row_ptr,

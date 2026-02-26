@@ -15,14 +15,14 @@ namespace ReSolve
 {
   namespace cuda
   {
-    void mass_inner_product_two_vectors(index_type       n,
-                                        index_type       i,
-                                        const real_type* vec1,
-                                        const real_type* vec2,
-                                        const real_type* mvec,
-                                        real_type*       result);
+    void dot_2_multi(index_type       n,
+                     index_type       i,
+                     const real_type* vec1,
+                     const real_type* vec2,
+                     const real_type* mvec,
+                     real_type*       result);
 
-    void mass_axpy(index_type n, index_type i, const real_type* x, real_type* y, const real_type* alpha);
+    void axpy_multi(index_type n, index_type i, const real_type* x, real_type* y, const real_type* alpha);
 
     void leftScale(index_type        n,
                    const index_type* a_row_ptr,
