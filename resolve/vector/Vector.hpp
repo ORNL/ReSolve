@@ -39,6 +39,8 @@ namespace ReSolve
       int        copyDataFrom(Vector* v, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut);
       real_type* getData(memory::MemorySpace memspace);
       real_type* getData(index_type i, memory::MemorySpace memspace);
+      const real_type* getData(memory::MemorySpace memspace) const;
+      const real_type* getData(index_type i, memory::MemorySpace memspace) const;
 
       index_type getCapacity() const;
       index_type getSize() const;

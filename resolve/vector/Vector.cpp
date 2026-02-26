@@ -298,7 +298,9 @@ namespace ReSolve
      * vectors are stored column-wise.
      *
      * @note This function gives you access to the pointer, not to a copy.
-     * If you change the values using the pointer, the vector values will change too.
+     * If you change the values using the pointer, the vector values will
+     * change too. Make sure to use setDataUpdated function to set the update
+     * flags correctly after changing the values.
      */
     real_type* Vector::getData(memory::MemorySpace memspace)
     {
@@ -325,6 +327,42 @@ namespace ReSolve
     }
 
     /**
+     * @brief get a pointer to HOST or DEVICE vector data.
+     *
+     * @param[in] memspace  - Memory space of the pointer (HOST or DEVICE)
+     *
+     * @return pointer to the vector data (HOST or DEVICE). In case of multivectors,
+     * vectors are stored column-wise.
+     */
+    const real_type* Vector::getData(memory::MemorySpace memspace) const
+    {
+      using memory::DEVICE;
+      using memory::HOST;
+
+      switch (memspace)
+      {
+      case HOST:
+        if (cpu_updated_[0] == false)
+        {
+          out::error() << "Trying to get data on the host, but host data is out of date!\n"
+                       << "Use syncData function to sync host data with the device data!\n";
+          return nullptr;
+        }
+        return h_data_;
+      case DEVICE:
+        if (gpu_updated_[0] == false)
+        {
+          out::error() << "Trying to get data on the device, but device data is out of date!\n"
+                       << "Use syncData function to sync device data with the host data!\n";
+          return nullptr;
+        }
+        return d_data_;
+      default:
+        return nullptr;
+      }
+    }
+
+    /**
      * @brief get a pointer to HOST or DEVICE data of a particular vector in a multivector.
      *
      * @param[in] j         - Index of a vector in multivector
@@ -335,7 +373,9 @@ namespace ReSolve
      * @pre `j` < `k_` i.e, `j` is smaller than the total number of vectors in multivector.
      *
      * @note This function gives you access to the pointer, not to a copy.
-     * If you change the values using the pointer, the vector values will change too.
+     * If you change the values using the pointer, the vector values will
+     * change too. Make sure to use setDataUpdated function to set the update
+     * flags correctly after changing the values.
      */
     real_type* Vector::getData(index_type j, memory::MemorySpace memspace)
     {
@@ -361,6 +401,55 @@ namespace ReSolve
         if ((gpu_updated_[j] == false) && (cpu_updated_[j] == true))
         {
           syncData(j, memspace);
+        }
+        return &d_data_[j * n_size_];
+      default:
+        return nullptr;
+      }
+    }
+
+    /**
+     * @brief get a const pointer to HOST or DEVICE data of a particular
+     * vector in a multivector.
+     *
+     * @param[in] j         - Index of a vector in multivector
+     * @param[in] memspace  - Memory space of the pointer (HOST or DEVICE)
+     *
+     * @return pointer to the _i_th vector data (HOST or DEVICE) within a multivector.
+     *
+     * @pre `j` < `k_` i.e, `j` is smaller than the total number of vectors in multivector.
+     *
+     */
+    const real_type* Vector::getData(index_type j, memory::MemorySpace memspace) const
+    {
+      using memory::DEVICE;
+      using memory::HOST;
+
+      if (k_ <= j)
+      {
+        out::error() << "Trying to get data for vector " << j << " in multivector"
+                     << " but there are only " << k_ << " vectors!\n";
+        return nullptr;
+      }
+
+      switch (memspace)
+      {
+      case HOST:
+        if (cpu_updated_[j] == false)
+        {
+          out::error() << "Trying to get data for vector " << j << " on the host, "
+                       << "but host data is out of date!\n"
+                       << "Use syncData function to sync host data with the device data!\n";
+          return nullptr;
+        }
+        return &h_data_[j * n_size_];
+      case DEVICE:
+        if (gpu_updated_[j] == false)
+        {
+          out::error() << "Trying to get data for vector " << j << " on the device, "
+                       << "but device data is out of date!\n"
+                       << "Use syncData function to sync device data with the host data!\n";
+          return nullptr;
         }
         return &d_data_[j * n_size_];
       default:
@@ -543,11 +632,27 @@ namespace ReSolve
         delete[] h_data_;
         h_data_        = new real_type[n_capacity_ * k_];
         owns_cpu_data_ = true;
+        if (gpu_updated_[0])
+        {
+          cpu_updated_[0] = false;
+        }
+        else
+        {
+          cpu_updated_[0] = true;
+        }
         break;
       case DEVICE:
         mem_.deleteOnDevice(d_data_);
         mem_.allocateArrayOnDevice(&d_data_, n_capacity_ * k_);
         owns_gpu_data_ = true;
+        if (cpu_updated_[0])
+        {
+          gpu_updated_[0] = false;
+        }
+        else
+        {
+          gpu_updated_[0] = true;
+        }
         break;
       }
       return 0;
@@ -725,8 +830,8 @@ namespace ReSolve
       if (new_n_size > n_capacity_)
       {
         out::error() << "Trying to resize vector to " << new_n_size
-                     << " elements but memory allocated only for " << n_capacity_ << "elements."
-                     << "\n";
+                     << " elements but memory allocated only for " << n_capacity_
+                     << " elements.\n";
         return 1;
       }
       else
