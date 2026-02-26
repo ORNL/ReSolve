@@ -57,6 +57,8 @@ namespace ReSolve
       int resize(index_type new_n_current);
       int copyDataTo(real_type* dest, index_type i, memory::MemorySpace memspace);
       int copyDataTo(real_type* dest, memory::MemorySpace memspace);
+      int copyDataTo(real_type* dest, index_type i, memory::MemorySpace memspaceSrc, memory::MemorySpace memspaceDst);
+      int copyDataTo(real_type* dest, memory::MemorySpace memspaceSrc, memory::MemorySpace memspaceDst);
 
     private:
       void setHostUpdated(bool is_updated);

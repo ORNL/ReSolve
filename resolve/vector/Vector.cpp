@@ -805,6 +805,84 @@ namespace ReSolve
       }
       return 0;
     }
+    /**
+     * @brief copy HOST or DEVICE data of a specified vector in a multivector to _dest_.
+     * 
+     * This function allows to copy data between different memory spaces in one call.
+     * For example, you can copy data of vector _i_ from HOST to DEVICE, or from DEVICE to HOST.
+     * 
+     * @param[out] dest      - Pointer to the memory to which data is copied
+     * @param[in] i          - Index of a vector in a multivector
+     * @param[in] memspaceInSrc   - Memory space (HOST or DEVICE) of the data to be copied
+     * @param[in] memspaceOutDst  - Memory space (HOST or DEVICE) to which data is copied
+     * 
+     * @return 0 if successful, -1 otherwise.
+     * 
+     * @pre _i_ < _k_ i.e,, _i_ is smaller than the total number of vectors in multivector.
+     * @pre _dest_ is allocated, and the size of _dest_ is at least _n_ (length of a single vector in the multivector).
+     * @pre _dest_ is allocated in memspaceOutDst memory space.
+     * @post All elements of the vector _i_ are copied to the array _dest_.
+     */
+    int Vector::copyDataTo(real_type* dest, index_type i, memory::MemorySpace memspaceSrc, memory::MemorySpace memspaceDst)
+    {
+      using namespace ReSolve::memory;
+      real_type* data = this->getData(i, memspaceSrc);
+      // Check that the source data is not null and up to date
+      if (data == nullptr)
+      {
+        out::error() << "Trying to copy data for vector " << i << " in multivector but the data is not allocated in the source memory space!\n";
+        return -1;
+      }
+      // Check that the destination memory space is allocated
+      if (dest == nullptr)
+      {
+        out::error() << "Trying to copy data for vector " << i << " in multivector but the destination pointer is not allocated!\n";
+        return -1;
+      }
+      if (i > this->k_)
+      {
+        return -1;
+      }
+      else
+      {
+        switch (memspaceSrc)
+        {
+        case HOST:
+          if (!cpu_updated_[i])
+          {
+            out::error() << "Trying to copy data for vector " << i << " in multivector but the data is not up to date in the source memory space!\n";
+            return -1;
+          }
+          switch (memspaceDst)
+          {
+          case HOST:
+            mem_.copyArrayHostToHost(dest, data, n_size_);
+            break;
+          case DEVICE:
+            mem_.copyArrayHostToDevice(dest, data, n_size_);
+            break;
+          }
+          break;
+        case DEVICE:
+          if (!gpu_updated_[i])        {
+            out::error() << "Trying to copy data for vector " << i << " in multivector but the data is not up to date in the source memory space!\n";
+            return -1;
+          }
+          switch (memspaceDst)
+          {
+          case HOST:
+            mem_.copyArrayDeviceToHost(dest, data, n_size_);
+            break;
+          case DEVICE:
+            mem_.copyArrayDeviceToDevice(dest, data, n_size_);
+            break;
+          }
+          break;
+        }
+      }
+      return 0;
+    }
+
 
     //
     // Private methods

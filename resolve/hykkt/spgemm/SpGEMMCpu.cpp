@@ -57,8 +57,8 @@ namespace ReSolve
       {
         B_ = allocateCholmodType(B);
       }
-      copyDataToCholmodType(A, A_);
-      copyDataToCholmodType(B, B_);
+      copyDataCholmodType(A, A_);
+      copyDataCholmodType(B, B_);
     }
 
     void SpGEMMCpu::loadSumMatrix(matrix::Csr* D)
@@ -67,7 +67,7 @@ namespace ReSolve
       {
         D_ = allocateCholmodType(D);
       }
-      copyDataToCholmodType(D, D_);
+      copyDataCholmodType(D, D_);
     }
 
     void SpGEMMCpu::loadResultMatrix(matrix::Csr** E_ptr)
@@ -126,7 +126,7 @@ namespace ReSolve
      * @param A[in] - Pointer to CSR matrix
      * @param A_chol[in] - Pointer to CHOLMOD sparse matrix
      */
-    void SpGEMMCpu::copyDataToCholmodType(matrix::Csr* A, cholmod_sparse* A_chol)
+    void SpGEMMCpu::copyDataCholmodType(matrix::Csr* A, cholmod_sparse* A_chol)
     {
       mem_.copyArrayHostToHost(
           static_cast<int*>(A_chol->p), A->getRowData(memory::HOST), A->getNumRows() + 1);
