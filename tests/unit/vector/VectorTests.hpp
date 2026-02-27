@@ -238,8 +238,8 @@ namespace ReSolve
 
         // Copy data to an array on current memspace
         real_type* dest = new real_type[N];
-        // second argument is in/out
-        x.copyToExternal(dest, memspace_);
+        // second argument is source, third is destination
+        x.copyToExternal(dest, memspace_, memspace_);
 
         // Copy to host to verify
         real_type* dest_h = new real_type[N];

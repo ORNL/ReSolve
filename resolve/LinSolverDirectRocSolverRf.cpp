@@ -1,3 +1,4 @@
+#include <cassert>
 #include "LinSolverDirectRocSolverRf.hpp"
 
 #include <resolve/hip/hipKernels.h>

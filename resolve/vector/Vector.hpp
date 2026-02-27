@@ -55,8 +55,6 @@ namespace ReSolve
       int syncData(memory::MemorySpace memspaceOut);
       int syncData(index_type j, memory::MemorySpace memspaceOut);
       int resize(index_type new_n_current);
-      // int copyToExternal(real_type* dest, index_type i, memory::MemorySpace memspace);
-      // int copyToExternal(real_type* dest, memory::MemorySpace memspace);
       int copyToExternal(real_type* dest, index_type i, memory::MemorySpace memspaceSrc, memory::MemorySpace memspaceDst);
       int copyToExternal(real_type* dest, memory::MemorySpace memspaceSrc, memory::MemorySpace memspaceDst);
 
