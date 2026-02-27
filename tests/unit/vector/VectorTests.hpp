@@ -223,7 +223,7 @@ namespace ReSolve
        * @param[in] N Number of elements in the vector.
        * @return TestOutcome indicating success or failure of the test.
        */
-      TestOutcome copyDataTo(index_type N)
+      TestOutcome copyToExternal(index_type N)
       {
         TestStatus status = true;
 
@@ -239,7 +239,7 @@ namespace ReSolve
         // Copy data to an array on current memspace
         real_type* dest = new real_type[N];
         // second argument is in/out
-        x.copyDataTo(dest, memspace_);
+        x.copyToExternal(dest, memspace_);
 
         // Copy to host to verify
         real_type* dest_h = new real_type[N];
