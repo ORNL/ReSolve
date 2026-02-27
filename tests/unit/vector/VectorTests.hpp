@@ -127,7 +127,7 @@ namespace ReSolve
         }
         x.setData(data, memspace_);
 
-        real_type* x_data = x.getData(memspace_);
+        const real_type* x_data = x.getData(memspace_);
 
         if (x_data == nullptr)
         {
@@ -187,7 +187,7 @@ namespace ReSolve
         vector::Vector z(N);
         z.copyDataFrom(&y, memspace_, memory::HOST);
 
-        real_type* z_data = z.getData(memory::HOST);
+        const real_type* z_data = z.getData(memory::HOST);
 
         if (z_data == nullptr)
         {

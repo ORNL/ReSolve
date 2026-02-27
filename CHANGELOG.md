@@ -12,6 +12,8 @@
 
 - Removed unnecessary full facotorization in the examples and made the input 1 based.
 
+- Added `cons` counterparts to `Vector::getData` methods.
+
 ## Changes to Re::Solve in release 0.99.2
 
 ### Major Features
