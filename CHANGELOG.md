@@ -14,6 +14,8 @@
 
 - Added `cons` counterparts to `Vector::getData` methods.
 
+- Made Vector::copyDataTo able to copy from device to host and vice versa
+
 ## Changes to Re::Solve in release 0.99.2
 
 ### Major Features
