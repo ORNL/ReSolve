@@ -1,5 +1,6 @@
-#include <cassert>
 #include "LinSolverDirectRocSolverRf.hpp"
+
+#include <cassert>
 
 #include <resolve/hip/hipKernels.h>
 

@@ -840,19 +840,20 @@ namespace ReSolve
         return 0;
       }
     }
+
     /**
      * @brief copy HOST or DEVICE data of a specified vector in a multivector to _dest_.
-     * 
+     *
      * This function allows to copy data between different memory spaces in one call.
      * For example, you can copy data of vector _i_ from HOST to DEVICE, or from DEVICE to HOST.
-     * 
+     *
      * @param[out] dest      - Pointer to the memory to which data is copied
      * @param[in] i          - Index of a vector in a multivector
      * @param[in] memspaceInSrc   - Memory space (HOST or DEVICE) of the data to be copied
      * @param[in] memspaceOutDst  - Memory space (HOST or DEVICE) to which data is copied
-     * 
+     *
      * @return 0 if successful, -1 otherwise.
-     * 
+     *
      * @pre _i_ < _k_ i.e,, _i_ is smaller than the total number of vectors in multivector.
      * @pre _dest_ is allocated, and the size of _dest_ is at least _n_ (length of a single vector in the multivector).
      * @pre _dest_ is allocated in memspaceOutDst memory space.
@@ -899,7 +900,8 @@ namespace ReSolve
           }
           break;
         case DEVICE:
-          if (!gpu_updated_[i])        {
+          if (!gpu_updated_[i])
+          {
             out::error() << "Trying to copy data for vector " << i << " in multivector but the data is not up to date in the source memory space!\n";
             return -1;
           }
@@ -920,16 +922,16 @@ namespace ReSolve
 
     /**
      * @brief copy HOST or DEVICE data of multivector to _dest_.
-     * 
+     *
      * This function allows to copy data between different memory spaces in one call.
      * For example, you can copy data of multivector from HOST to DEVICE, or from DEVICE to HOST.
-     * 
+     *
      * @param[out] dest      - Pointer to the memory to which data is copied
      * @param[in] memspaceSrc   - Memory space (HOST or DEVICE) of the data to be copied
      * @param[in] memspaceDst  - Memory space (HOST or DEVICE) to which data is copied
-     * 
+     *
      * @return 0 if successful, -1 otherwise.
-     * 
+     *
      * @pre _dest_ is allocated, and the size of _dest_ is at least _n_ * _k_ (total length of all vectors in the multivector).
      * @pre _dest_ is allocated in memspaceOutDst memory space.
      * @post All elements of all vectors in multivector are copied to the array _dest_.
@@ -953,7 +955,8 @@ namespace ReSolve
       switch (memspaceSrc)
       {
       case HOST:
-        if (!cpu_updated_[0])        {
+        if (!cpu_updated_[0])
+        {
           out::error() << "Trying to copy data for multivector but the data is not up to date in the source memory space!\n";
           return -1;
         }
@@ -968,7 +971,8 @@ namespace ReSolve
         }
         break;
       case DEVICE:
-        if (!gpu_updated_[0])        {
+        if (!gpu_updated_[0])
+        {
           out::error() << "Trying to copy data for multivector but the data is not up to date in the source memory space!\n";
           return -1;
         }
@@ -985,7 +989,6 @@ namespace ReSolve
       }
       return 0;
     }
-
 
     //
     // Private methods
