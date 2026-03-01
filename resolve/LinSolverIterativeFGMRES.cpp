@@ -139,6 +139,7 @@ namespace ReSolve
                        << std::scientific << std::setprecision(16)
                        << rnorm << " Norm of rhs: " << bnorm << "\n";
     initial_residual_norm_ = rnorm;
+    bool activeSAM = (this->m_SAM_map != nullptr); // Checking for user provided SAM
     while (outer_flag)
     {
       if (it == 0)
@@ -199,8 +200,12 @@ namespace ReSolve
         this->precV(&vec_v, &vec_z);
         mem_.deviceSynchronize();
 
-        // V_{i+1}=A*Z_i
+        // Z_i = MAP*Z_i
+	if (activeSAM){
+	   matrix_handler_->matvec(this->m_SAM_map, &vec_z, &vec_z, &ONE, &ZERO, memspace_);
+        }
 
+        // V_{i+1}=A*Z_i
         vec_v.setData(vec_V_->getData(i + 1, memspace_), memspace_);
 
         matrix_handler_->matvec(A_, &vec_z, &vec_v, &ONE, &ZERO, memspace_);
@@ -341,6 +346,7 @@ namespace ReSolve
   {
     A_ = new_matrix;
     matrix_handler_->setValuesChanged(true, memspace_);
+    this->m_SAM_map = nullptr; // reset the SAM pointer to null
     return 0;
   }
 
@@ -628,6 +634,20 @@ namespace ReSolve
       memspace_ = memory::HOST;
     }
   }
+
+  /**
+  * @brief Set pointer to MAP and allocate solver data.
+  *
+  * @param[in] MAP
+  *
+  * @pre MAP is a valid CSR matrix
+  */
+
+  void LinSolverIterativeFGMRES::setupMap(matrix::Csr* MAP)
+  {
+      this->m_SAM_map = MAP;
+  }
+
 
   void LinSolverIterativeFGMRES::initParamList()
   {

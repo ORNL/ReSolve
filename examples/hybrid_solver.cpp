@@ -143,6 +143,7 @@ int main(int argc, char* argv[])
     ReSolve::matrix::Csr* P = nullptr; // Pointer to SAM pattern
     ReSolve::matrix::Csr* Ap = nullptr; // Pointer to Ak*P pattern
     ReSolve::matrix::Csr* A1 = nullptr; // Pointer to A1 (system we are mapping from)
+    ReSolve::matrix::Csr* MAP = nullptr; // Pointer to store the computed SAM
 
     ReSolve::LinAlgWorkspaceCUDA* workspace_CUDA = nullptr; // GPU workspace
     ReSolve::MatrixHandler* matrix_handler = nullptr;       // Handler for matrix operations
@@ -154,6 +155,8 @@ int main(int argc, char* argv[])
     vector_type* vec_rhs = nullptr; // Device vector for RHS
     vector_type* vec_x   = nullptr;   // Device vector for solution
     vector_type* vec_r   = nullptr;   // Device vector for residual
+    vector_type* test_vec = nullptr; // test vector
+    vector_type* test_vec2 = nullptr; // test vector 2
 
     ReSolve::GramSchmidt* GS = nullptr; // Gram-Schmidt orthogonalization (for FGMRES)
 
@@ -255,11 +258,23 @@ int main(int argc, char* argv[])
             vec_rhs = new vector_type(A->getNumRows());
             vec_x   = new vector_type(A->getNumRows());
             vec_r   = new vector_type(A->getNumRows());
+	    test_vec = new vector_type(A->getNumRows());
+	    test_vec2 = new vector_type(A->getNumRows());
 
             vec_x->allocate(ReSolve::memory::HOST);
             vec_x->allocate(ReSolve::memory::DEVICE);
             vec_x->setToZero(ReSolve::memory::HOST);
             vec_x->setToZero(ReSolve::memory::DEVICE);
+
+	    test_vec->allocate(ReSolve::memory::HOST);
+	    test_vec->allocate(ReSolve::memory::DEVICE);
+	    test_vec->setToZero(ReSolve::memory::HOST);
+	    test_vec->setToZero(ReSolve::memory::DEVICE);
+
+	    test_vec2->allocate(ReSolve::memory::HOST);
+	    test_vec2->allocate(ReSolve::memory::DEVICE);
+	    test_vec2->setToZero(ReSolve::memory::HOST);
+	    test_vec2->setToZero(ReSolve::memory::DEVICE);
 
         }
         else // Subsequent systems: update existing structures
@@ -287,7 +302,7 @@ int main(int argc, char* argv[])
 	vec_rhs->syncData(ReSolve::memory::DEVICE);
 
 	// SAM Computation Setup
-	if (i==3)
+	if (i==4)
 	{
 	  std::string homeDir = std::getenv("HOME");
 	  std::string path = homeDir + "/ACOPFPrecUpdate/ACTIVSg2000_ACTesting/SAMPattern_2k.triplet";
@@ -364,8 +379,16 @@ int main(int argc, char* argv[])
 	      int maxRow = 1284;
 	      int maxCol = 510;
 	      std::cout << "Starting SAM Numerical Computation..." << std::endl;
-	      helper->computeSAM(A, A1, P, Ap, maxRow, maxCol);
-	      std::cout << "SAM Computation Finished." << std::endl;
+	      helper->computeSAM(A, A1, P, Ap, maxRow, maxCol, MAP);
+	      cusparseHandle_t handle = workspace_CUDA->getCusparseHandle();
+	      std::cout << "DEBUG: Testing MAP with matvec" << std::endl;
+	      helper->stealth_matvec(handle, MAP, vec_rhs, test_vec, 1.0, 0.0);
+	      test_vec->setDataUpdated(ReSolve::memory::DEVICE);
+	      double norm_map_rhs = vector_handler->dot(test_vec, test_vec, ReSolve::memory::DEVICE);
+	      std::cout << "STEALTH DEBUG: norm of MAP*RHS " << norm_map_rhs << std::endl;
+	      matrix_handler->matvec(A, test_vec, test_vec2, &ONE, &ZERO, ReSolve::memory::DEVICE);
+	      double norm_a_map_rhs = vector_handler->dot(test_vec2, test_vec2, ReSolve::memory::DEVICE);
+	      std::cout << "STEALTH DEBUG: norm of A*MAP*RHS " << norm_a_map_rhs << std::endl;
 	    }
 
 	    std::cout << "DEBUG: System " << i << ": Performing refactorization and solve." << std::endl;
@@ -461,6 +484,10 @@ cleanup: // Central cleanup label for error handling and end of program
     // Delete pointers only if they were successfully allocated (not nullptr)
     if (A) delete A; A = nullptr;
     if (KLU) delete KLU; KLU = nullptr;
+    if (P) delete P; P = nullptr;
+    if (Ap) delete Ap; Ap = nullptr;
+    if (A1) delete A1; A1 = nullptr;
+    if (MAP) delete MAP; MAP = nullptr;
     if (Rf) delete Rf; Rf = nullptr;
     if (helper) delete helper; helper = nullptr;
     if (FGMRES) delete FGMRES; FGMRES = nullptr;
@@ -470,6 +497,8 @@ cleanup: // Central cleanup label for error handling and end of program
     if (vec_r) delete vec_r; vec_r = nullptr;
     if (vec_x) delete vec_x; vec_x = nullptr;
     if (vec_rhs) delete vec_rhs; vec_rhs = nullptr;
+    if (test_vec) delete test_vec; test_vec = nullptr;
+    if (test_vec2) delete test_vec2; test_vec2 = nullptr;
     if (vector_handler) delete vector_handler; vector_handler = nullptr;
     if (matrix_handler) delete matrix_handler; matrix_handler = nullptr;
     if (workspace_CUDA) delete workspace_CUDA; workspace_CUDA = nullptr;

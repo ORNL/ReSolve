@@ -11,6 +11,8 @@
 #include <resolve/vector/Vector.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/matrix/Csr.hpp>
+#include <cuda_runtime.h>
+#include <cusparse.h>
 
 // LAPACK Prototype for Least Squares (G*x = B)
 extern "C" void dgels_(char* trans, int* m, int* n, int* nrhs,
@@ -548,7 +550,7 @@ namespace ReSolve
        * @param out - map
        *
        */
-      void computeSAM(ReSolve::matrix::Csr* A, ReSolve::matrix::Csr* A1, ReSolve::matrix::Csr* P, ReSolve::matrix::Csr* PP3, int maxRow, int maxCol)
+      void computeSAM(ReSolve::matrix::Csr* A, ReSolve::matrix::Csr* A1, ReSolve::matrix::Csr* P, ReSolve::matrix::Csr* PP3, int maxRow, int maxCol, ReSolve::matrix::Csr*& MAP)
        {
 	 using namespace ReSolve;
 	 using index_type = ReSolve::index_type;
@@ -648,7 +650,83 @@ namespace ReSolve
 	    }else{
 	        std::cout << "Warning: valM is empty. No values were extracted." << std::endl;
 	    }
+
+	    MAP = new ReSolve::matrix::Csr(n, n, P->getNnz());
+	    MAP->allocateMatrixData(ReSolve::memory::HOST);
+
+	    MAP->copyDataFrom(
+           	P->getRowData(ReSolve::memory::HOST),
+           	P->getColData(ReSolve::memory::HOST),
+           	valM.data(),
+           	ReSolve::memory::HOST,
+           	ReSolve::memory::HOST
+            );
+
+	    MAP->allocateMatrixData(ReSolve::memory::DEVICE);
+	    MAP->syncData(ReSolve::memory::DEVICE);
+
        }
+
+      /**
+       * @brief A stealth, low-level matvec to avoid changing matrix_handler internal descriptor
+       *
+       * @param-in CUDA workspace handle, MAP
+       * @param-in pointers to DEVCE vectors x and y
+       * @param-in alpha and beta scalars
+       * @param-out y = beta*y + alpha*A*x
+       */
+      void stealth_matvec(cusparseHandle_t handle, ReSolve::matrix::Csr* MAP, ReSolve::vector::Vector* x, ReSolve::vector::Vector* y, double alpha, double beta)
+      {
+	  using namespace ReSolve;
+	  using index_type = ReSolve::index_type;
+	  using real_type  = ReSolve::real_type;
+
+	  cusparseSpMatDescr_t mat_desc;
+	  cusparseDnVecDescr_t vecX_desc, vecY_desc;
+	  index_type rows = MAP->getNumRows();
+	  index_type cols = rows;
+	  index_type nnz = MAP->getNnz();
+
+	 // Extracting DEVICE pointers
+	 const index_type* d_rowPtr = MAP->getRowData(ReSolve::memory::DEVICE);
+	 const index_type* d_colInd = MAP->getColData(ReSolve::memory::DEVICE);
+	 const real_type* d_values = MAP->getValues(ReSolve::memory::DEVICE);
+
+	 real_type* d_x = x->getData(ReSolve::memory::DEVICE);
+         real_type* d_y = y->getData(ReSolve::memory::DEVICE);
+
+	 // Creating temporary descriptors for matrix and vectors
+	 cusparseCreateCsr(&mat_desc, rows, cols, nnz,
+                      (void*)d_rowPtr, (void*)d_colInd, (void*)d_values,
+                      CUSPARSE_INDEX_32I, CUSPARSE_INDEX_32I,
+                      CUSPARSE_INDEX_BASE_ZERO, CUDA_R_64F);
+
+	 cusparseCreateDnVec(&vecX_desc, cols, (void*)d_x, CUDA_R_64F);
+	 cusparseCreateDnVec(&vecY_desc, rows, (void*)d_y, CUDA_R_64F);
+
+	 // Determine buffer size
+	 size_t bufferSize = 0;
+	 void* d_buffer = nullptr;
+	 cusparseSpMV_bufferSize(handle, CUSPARSE_OPERATION_NON_TRANSPOSE,
+                            &alpha, mat_desc, vecX_desc, &beta, vecY_desc,
+                            CUDA_R_64F, CUSPARSE_SPMV_ALG_DEFAULT, &bufferSize);
+
+	 cudaMalloc(&d_buffer, bufferSize);
+
+	 // Perform the matvec
+	 cusparseSpMV(handle, CUSPARSE_OPERATION_NON_TRANSPOSE,
+                 &alpha, mat_desc, vecX_desc, &beta, vecY_desc,
+                 CUDA_R_64F, CUSPARSE_SPMV_ALG_DEFAULT, d_buffer);
+
+	 // CLEANUP (Crucial: Leave no trace)
+    	 cudaFree(d_buffer);
+    	 cusparseDestroySpMat(mat_desc);
+    	 cusparseDestroyDnVec(vecX_desc);
+    	 cusparseDestroyDnVec(vecY_desc);
+
+	 y->setDataUpdated(ReSolve::memory::DEVICE);
+
+      }
 
 
       /**

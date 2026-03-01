@@ -10,6 +10,7 @@
 #include <resolve/LinSolverDirect.hpp>
 #include <resolve/LinSolverIterative.hpp>
 #include <resolve/MemoryUtils.hpp>
+#include <resolve/matrix/Csr.hpp>
 
 namespace ReSolve
 {
@@ -71,6 +72,7 @@ namespace ReSolve
     real_type   getCliParamReal(const std::string id) const override;
     bool        getCliParamBool(const std::string id) const override;
     int         printCliParam(const std::string id) const override;
+    void setupMap(matrix::Csr* MAP); //< Apply SAM
 
   private:
     enum ParamaterIDs
@@ -85,6 +87,8 @@ namespace ReSolve
     index_type restart_{10};    ///< GMRES restart
     index_type conv_cond_{2};   ///< GMRES convergence condition
     bool       flexible_{true}; ///< If using flexible GMRES (FGMRES) algorithm
+    bool       m_use_SAM = false;
+    ReSolve::matrix::Csr* m_SAM_map = nullptr;
 
   private:
     int  allocateSolverData();
