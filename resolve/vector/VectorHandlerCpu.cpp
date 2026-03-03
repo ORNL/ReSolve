@@ -137,7 +137,13 @@ namespace ReSolve
    * @param[in] y Vector, k x 1 if N and n x 1 if T
    * @param[in,out] x Vector, n x 1 if N and k x 1 if T
    *
-   * @pre   V is stored colum-wise, _n_ > 0, _k_ > 0
+   * @note Parameter k is not the total number of columns in V but the number
+   * of columns to use in matrix-vector product.
+   *
+   * @pre _n_ > 0, _k_ > 0
+   * @pre Number of columns in V >= k
+   * @pre If transpose = N, size of y must equal k. If transpose = T, size of
+   * x must equal k.
    *
    */
   void VectorHandlerCpu::gemv(char            transpose,
@@ -159,6 +165,8 @@ namespace ReSolve
     switch (transpose)
     {
     case 'T':
+      assert((V->getSize() == y->getSize())
+             && "gemv: Size mismatch! Size of V does not match size of y.");
       for (i = 0; i < k; ++i)
       {
         sum         = beta * x_data[i];
@@ -175,6 +183,8 @@ namespace ReSolve
       }
       break;
     default:
+      assert((V->getSize() == x->getSize())
+             && "gemv: Size mismatch! Size of V does not match size of x.");
       for (i = 0; i < n; ++i)
       {
         sum         = beta * x_data[i];

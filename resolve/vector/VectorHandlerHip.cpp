@@ -149,7 +149,13 @@ namespace ReSolve
    * @param[in] y Vector, k x 1 if N and n x 1 if T
    * @param[in,out] x Vector, n x 1 if N and k x 1 if T
    *
-   * @pre   V is stored colum-wise, _n_ > 0, _k_ > 0
+   * @note Parameter k is not the total number of columns in V but the number
+   * of columns to use in matrix-vector product.
+   *
+   * @pre _n_ > 0, _k_ > 0
+   * @pre Number of columns in V >= k
+   * @pre If transpose = N, size of y must equal k. If transpose = T, size of
+   * x must equal k.
    *
    */
   void VectorHandlerHip::gemv(char            transpose,
@@ -165,6 +171,8 @@ namespace ReSolve
     switch (transpose)
     {
     case 'T':
+      assert((V->getSize() == y->getSize())
+             && "gemv: Size mismatch! Size of V does not match size of y.");
       rocblas_dgemv(handle_rocblas,
                     rocblas_operation_transpose,
                     n,
@@ -179,6 +187,8 @@ namespace ReSolve
                     1);
       return;
     default:
+      assert((V->getSize() == x->getSize())
+             && "gemv: Size mismatch! Size of V does not match size of x.");
       rocblas_dgemv(handle_rocblas,
                     rocblas_operation_none,
                     n,

@@ -195,10 +195,9 @@ namespace ReSolve
    * If `transpose = T` (yes), `x := beta*x + alpha*V^T*y`,
    * where `x` is `[k x 1]`, `V` is `[n x k]` and `y` is `[n x 1]`.
    *
-   *
    * @param[in] Transpose - yes (T) or no (N)
    * @param[in] n         - Number of rows in (non-transposed) matrix
-   * @param[in] k         - Number of columns in (non-transposed)
+   * @param[in] k         - Number of columns in (non-transposed) matrix to use
    * @param[in] alpha     - Constant real number
    * @param[in] beta      - Constant real number
    * @param[in] V         - Multivector containing the matrix, organized columnwise
@@ -206,7 +205,13 @@ namespace ReSolve
    * @param[in,out] x     - Vector, n x 1 if N and k x 1 if T
    * @param[in] memspace  - cpu or cuda or hip (for now)
    *
-   * @pre   V is stored colum-wise, _n_ > 0, _k_ > 0
+   * @note Parameter k is not the total number of columns in V but the number
+   * of columns to use in matrix-vector product.
+   *
+   * @pre _n_ > 0, _k_ > 0
+   * @pre Number of columns in V >= k
+   * @pre If transpose = N, size of y must equal k. If transpose = T, size of
+   * x must equal k.
    *
    */
   void VectorHandler::gemv(char                transpose,
@@ -223,10 +228,6 @@ namespace ReSolve
 
     // TODO: Remove n as the argument becuase it must always be n = V->getSize()
     assert(n == V->getSize() && "gemv: n does not match the number of rows in V");
-
-    // TODO: These assertions should hold but they do not. Investigate more.
-    // assert((transpose == 'T' && V->getSize() == y->getSize()) && "gemv: size mismatch! size of V^T does not match size of y");
-    // assert(((transpose == 'N') && (V->getSize() == x->getSize())) && "gemv: size mismatch! size of V does not match size of x");
 
     switch (memspace)
     {
