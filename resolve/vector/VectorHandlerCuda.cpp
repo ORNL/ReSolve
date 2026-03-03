@@ -1,5 +1,6 @@
 #include "VectorHandlerCuda.hpp"
 
+#include <cassert>
 #include <iostream>
 
 #include <resolve/cuda/cudaKernels.h>

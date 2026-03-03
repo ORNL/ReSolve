@@ -1,5 +1,6 @@
 #include "VectorHandlerHip.hpp"
 
+#include <cassert>
 #include <iostream>
 
 #include <resolve/hip/hipKernels.h>

@@ -1,5 +1,7 @@
 #include "VectorHandlerCpu.hpp"
 
+#include <cassert>
+
 #include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/vector/VectorHandlerImpl.hpp>
