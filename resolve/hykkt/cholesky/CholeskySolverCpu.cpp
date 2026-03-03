@@ -95,7 +95,7 @@ namespace ReSolve
       {
         out::error() << "Cholesky solve failed with status: " << Common_.status << "\n";
       }
-      x->copyDataFrom(static_cast<real_type*>(x_chol->x), memory::HOST, memory::HOST);
+      x->copyFromExternal(static_cast<real_type*>(x_chol->x), memory::HOST, memory::HOST);
     }
 
     /**

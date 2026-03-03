@@ -185,7 +185,7 @@ namespace ReSolve
   int LinSolverDirectRocSolverRf::solve(vector_type* rhs, vector_type* x)
   {
     RESOLVE_RANGE_PUSH(__FUNCTION__);
-    x->copyDataFrom(rhs->getData(ReSolve::memory::DEVICE), ReSolve::memory::DEVICE, ReSolve::memory::DEVICE);
+    x->copyFromExternal(rhs->getData(ReSolve::memory::DEVICE), ReSolve::memory::DEVICE, ReSolve::memory::DEVICE);
     x->setDataUpdated(ReSolve::memory::DEVICE);
     int error_sum = 0;
     mem_.deviceSynchronize();

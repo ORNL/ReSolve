@@ -175,7 +175,7 @@ static int runTest(int argc, char* argv[], std::string backend)
 
   // Create and set residual vector
   vector_type vec_rhs = (A->getNumRows());
-  vec_rhs.copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_rhs.copyFromExternal(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
 
   // Create and allocate solution vector
   vector_type vec_x(A->getNumRows());
@@ -243,7 +243,7 @@ static int runTest(int argc, char* argv[], std::string backend)
   ReSolve::io::updateArrayFromFile(rhs2_file, &rhs);
   rhs2_file.close();
 
-  vec_rhs.copyDataFrom(rhs, ReSolve::memory::HOST, memspace);
+  vec_rhs.copyFromExternal(rhs, ReSolve::memory::HOST, memspace);
 
   // Refactorize matrix
   status = solver.refactorize();

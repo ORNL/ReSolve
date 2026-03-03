@@ -118,11 +118,11 @@ int main(int argc, char* argv[])
     // Update host and device data.
     if (i < 2)
     {
-      vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+      vec_rhs->copyFromExternal(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
     }
     else
     {
-      vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+      vec_rhs->copyFromExternal(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
     }
     std::cout << "CSR matrix loaded. Expanded NNZ: " << A->getNnz() << std::endl;
 
@@ -143,7 +143,7 @@ int main(int argc, char* argv[])
         ReSolve::matrix::Csr* U = (ReSolve::matrix::Csr*) KLU->getUFactor();
         index_type*           P = KLU->getPOrdering();
         index_type*           Q = KLU->getQOrdering();
-        vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+        vec_rhs->copyFromExternal(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
         Rf->setup(A, L, U, P, Q, vec_rhs);
         Rf->refactorize();
       }
@@ -158,7 +158,7 @@ int main(int argc, char* argv[])
     }
 
     // Check accuracy of the solution
-    vec_r->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+    vec_r->copyFromExternal(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
     matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
     matrix_handler->matvec(A, vec_x, vec_r, &ONE, &MINUS_ONE, ReSolve::memory::DEVICE);
     res_nrm = sqrt(vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE));
@@ -181,8 +181,8 @@ int main(int argc, char* argv[])
         status = KLU->solve(vec_rhs, vec_x);
         std::cout << "KLU solve status: " << status << std::endl;
 
-        vec_rhs->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-        vec_r->copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+        vec_rhs->copyFromExternal(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+        vec_r->copyFromExternal(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
 
         matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
 

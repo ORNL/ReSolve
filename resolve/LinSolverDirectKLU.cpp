@@ -227,7 +227,7 @@ namespace ReSolve
   int LinSolverDirectKLU::solve(vector_type* rhs, vector_type* x)
   {
     // copy the vector
-    x->copyDataFrom(rhs->getData(memory::HOST), memory::HOST, memory::HOST);
+    x->copyFromExternal(rhs->getData(memory::HOST), memory::HOST, memory::HOST);
     x->setDataUpdated(memory::HOST);
     int kluStatus = 1;
     // check sparsity format of A

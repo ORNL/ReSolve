@@ -17,7 +17,7 @@ int main(int, char**)
 
     result += test.setData(50);
 
-    result += test.copyDataFrom(50);
+    result += test.copyFromExternal(50);
     // result += test.copyToExternal(50);
 
     result += test.resize(100, 50);
@@ -36,7 +36,7 @@ int main(int, char**)
 
     result += test.setData(50);
 
-    result += test.copyDataFrom(50);
+    result += test.copyFromExternal(50);
     // result += test.copyToExternal(50);
 
     result += test.resize(100, 50);

@@ -164,7 +164,7 @@ namespace ReSolve
        * @param[in] N Number of elements in the vector.
        * @return TestOutcome indicating success or failure of the test.
        */
-      TestOutcome copyDataFrom(index_type N)
+      TestOutcome copyFromExternal(index_type N)
       {
         TestStatus status;
         status = true;
@@ -177,15 +177,15 @@ namespace ReSolve
         }
 
         // array -> memspace
-        x.copyDataFrom(data, memory::HOST, memspace_);
+        x.copyFromExternal(data, memory::HOST, memspace_);
 
         // memspace -> memspace
         vector::Vector y(N);
-        y.copyDataFrom(&x, memspace_, memspace_);
+        y.copyFromExternal(&x, memspace_, memspace_);
 
         // memspace -> host
         vector::Vector z(N);
-        z.copyDataFrom(&y, memspace_, memory::HOST);
+        z.copyFromExternal(&y, memspace_, memory::HOST);
 
         const real_type* z_data = z.getData(memory::HOST);
 
@@ -234,7 +234,7 @@ namespace ReSolve
           data[i] = 0.1 * (real_type) i;
         }
 
-        x.copyDataFrom(data, memory::HOST, memspace_);
+        x.copyFromExternal(data, memory::HOST, memspace_);
 
         // Copy data to an array on current memspace
         real_type* dest = new real_type[N];

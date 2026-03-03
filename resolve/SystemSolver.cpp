@@ -812,7 +812,7 @@ namespace ReSolve
     memory::MemorySpace ms      = memory::HOST;
     if (memspace_ == "cpu")
     {
-      resVector_->copyDataFrom(rhs, memory::HOST, memory::HOST);
+      resVector_->copyFromExternal(rhs, memory::HOST, memory::HOST);
       norm_b = std::sqrt(vectorHandler_->dot(resVector_, resVector_, memory::HOST));
 #if defined(RESOLVE_USE_HIP) || defined(RESOLVE_USE_CUDA)
     }
@@ -820,12 +820,12 @@ namespace ReSolve
     {
       if (is_solve_on_device_)
       {
-        resVector_->copyDataFrom(rhs, memory::DEVICE, memory::DEVICE);
+        resVector_->copyFromExternal(rhs, memory::DEVICE, memory::DEVICE);
         norm_b = std::sqrt(vectorHandler_->dot(resVector_, resVector_, memory::DEVICE));
       }
       else
       {
-        resVector_->copyDataFrom(rhs, memory::HOST, memory::DEVICE);
+        resVector_->copyFromExternal(rhs, memory::HOST, memory::DEVICE);
         norm_b = std::sqrt(vectorHandler_->dot(resVector_, resVector_, memory::HOST));
         // ms = memory::HOST;
       }
@@ -853,18 +853,18 @@ namespace ReSolve
     memory::MemorySpace ms      = memory::HOST;
     if (memspace_ == "cpu")
     {
-      resVector_->copyDataFrom(rhs, memory::HOST, memory::HOST);
+      resVector_->copyFromExternal(rhs, memory::HOST, memory::HOST);
 #if defined(RESOLVE_USE_HIP) || defined(RESOLVE_USE_CUDA)
     }
     else if (memspace_ == "cuda" || memspace_ == "hip")
     {
       if (is_solve_on_device_)
       {
-        resVector_->copyDataFrom(rhs, memory::DEVICE, memory::DEVICE);
+        resVector_->copyFromExternal(rhs, memory::DEVICE, memory::DEVICE);
       }
       else
       {
-        resVector_->copyDataFrom(rhs, memory::HOST, memory::DEVICE);
+        resVector_->copyFromExternal(rhs, memory::HOST, memory::DEVICE);
       }
       ms = memory::DEVICE;
 #endif

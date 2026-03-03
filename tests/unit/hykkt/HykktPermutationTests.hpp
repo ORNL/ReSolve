@@ -220,9 +220,9 @@ namespace ReSolve
         int    jac_tr_j[4] = {0, 1, 0, 1};
         double jac_tr_v[4] = {0, 1, 2, 3};
 
-        hes->copyDataFrom(hes_i, hes_j, hes_v, memory::HOST, memory::HOST);
-        jac->copyDataFrom(jac_i, jac_j, jac_v, memory::HOST, memory::HOST);
-        jac_tr->copyDataFrom(jac_tr_i, jac_tr_j, jac_tr_v, memory::HOST, memory::HOST);
+        hes->copyFromExternal(hes_i, hes_j, hes_v, memory::HOST, memory::HOST);
+        jac->copyFromExternal(jac_i, jac_j, jac_v, memory::HOST, memory::HOST);
+        jac_tr->copyFromExternal(jac_tr_i, jac_tr_j, jac_tr_v, memory::HOST, memory::HOST);
       }
 
       bool verifyResults(const int* expected, const int* actual, int size)

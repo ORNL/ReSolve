@@ -96,7 +96,7 @@ int main()
   // Create CSR matrix
   ReSolve::matrix::Csr* A = new ReSolve::matrix::Csr(n, n, nnz, false, false);
   A->allocateMatrixData(ReSolve::memory::HOST);
-  A->copyDataFrom(csr_row_ptr.data(), csr_col_ind.data(), csr_values.data(), ReSolve::memory::HOST, ReSolve::memory::HOST);
+  A->copyFromExternal(csr_row_ptr.data(), csr_col_ind.data(), csr_values.data(), ReSolve::memory::HOST, ReSolve::memory::HOST);
   A->allocateMatrixData(ReSolve::memory::DEVICE);
   A->syncData(ReSolve::memory::DEVICE);
 
@@ -121,7 +121,7 @@ int main()
       0.04939382906591484,
       -1.0,
       0.1118034015563139};
-  vec_rhs->copyDataFrom(rhs_data.data(), ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_rhs->copyFromExternal(rhs_data.data(), ReSolve::memory::HOST, ReSolve::memory::HOST);
   vec_rhs->syncData(ReSolve::memory::DEVICE);
 
   std::cout << "Right-hand side vector set\n";

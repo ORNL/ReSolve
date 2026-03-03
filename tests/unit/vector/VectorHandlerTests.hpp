@@ -61,7 +61,7 @@ namespace ReSolve
         {
           data[i] = 0.1 * (real_type) i;
         }
-        x.copyDataFrom(data, memory::HOST, memspace_);
+        x.copyFromExternal(data, memory::HOST, memspace_);
 
         real_type result = handler_.infNorm(&x, memspace_);
         real_type answer = static_cast<real_type>(N - 1) * 0.1;
@@ -257,7 +257,7 @@ namespace ReSolve
         {
           diag_data[i] = (real_type) (i + 1);
         }
-        diag.copyDataFrom(diag_data.get(), memory::HOST, memspace_);
+        diag.copyFromExternal(diag_data.get(), memory::HOST, memspace_);
 
         handler_.scale(&diag, &vec, memspace_);
 

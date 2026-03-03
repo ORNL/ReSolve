@@ -147,7 +147,7 @@ int runTest(int argc, char* argv[], std::string& solver_name)
   }
   real_type*  rhs = ReSolve::io::createArrayFromFile(rhs1_file);
   vector_type vec_rhs(A->getNumRows());
-  vec_rhs.copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_rhs.copyFromExternal(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   vec_rhs.syncData(ReSolve::memory::DEVICE);
   rhs1_file.close();
 
@@ -231,7 +231,7 @@ int runTest(int argc, char* argv[], std::string& solver_name)
   }
   ReSolve::io::updateArrayFromFile(rhs2_file, &rhs);
   rhs2_file.close();
-  vec_rhs.copyDataFrom(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
+  vec_rhs.copyFromExternal(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
 
   // Refactorize second matrix
   status = Rf.refactorize();

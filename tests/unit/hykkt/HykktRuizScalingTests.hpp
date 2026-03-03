@@ -148,7 +148,7 @@ namespace ReSolve
         H_val_data[3 * n - 3] = n;
         H_col_data[3 * n - 3] = n - 1;
 
-        H->copyDataFrom(H_row_data, H_col_data, H_val_data, memory::HOST, memspace_);
+        H->copyFromExternal(H_row_data, H_col_data, H_val_data, memory::HOST, memspace_);
 
         // Define J
         index_type* J_row_data = new index_type[n];
@@ -167,7 +167,7 @@ namespace ReSolve
         }
         J_row_data[n - 1] = 2 * n - 2;
 
-        J->copyDataFrom(J_row_data, J_col_data, J_val_data, memory::HOST, memspace_);
+        J->copyFromExternal(J_row_data, J_col_data, J_val_data, memory::HOST, memspace_);
 
         // Define rhs vectors
         real_type* rhs_data = new real_type[n];
@@ -176,9 +176,9 @@ namespace ReSolve
           rhs_data[i] = 1.0;
         }
 
-        rhs_top->copyDataFrom(rhs_data, memory::HOST, memspace_);
+        rhs_top->copyFromExternal(rhs_data, memory::HOST, memspace_);
 
-        rhs_bottom->copyDataFrom(rhs_data, memory::HOST, memspace_);
+        rhs_bottom->copyFromExternal(rhs_data, memory::HOST, memspace_);
 
         delete[] H_row_data;
         delete[] H_col_data;

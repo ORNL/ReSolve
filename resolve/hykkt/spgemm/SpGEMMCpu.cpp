@@ -97,7 +97,7 @@ namespace ReSolve
 
       // Previous data must be de-allocated and new data copied
       // Cholmod does not allow for reuse of arrays
-      (*E_ptr_)->copyDataFrom(static_cast<index_type*>(E_chol->p),
+      (*E_ptr_)->copyFromExternal(static_cast<index_type*>(E_chol->p),
                               static_cast<index_type*>(E_chol->i),
                               static_cast<real_type*>(E_chol->x),
                               memory::HOST,

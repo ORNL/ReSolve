@@ -99,7 +99,7 @@ namespace ReSolve
         cholmod_sparse* L_chol_tr = cholmod_transpose(L_chol, 1, &Common_);
         L_                        = new matrix::Csr((index_type) L_chol->nrow, (index_type) L_chol->ncol, (index_type) L_chol->nzmax);
         L_->allocateMatrixData(memory::DEVICE);
-        L_->copyDataFrom(static_cast<index_type*>(L_chol_tr->p),
+        L_->copyFromExternal(static_cast<index_type*>(L_chol_tr->p),
                          static_cast<index_type*>(L_chol_tr->i),
                          static_cast<real_type*>(L_chol_tr->x),
                          memory::HOST,
@@ -169,7 +169,7 @@ namespace ReSolve
      */
     void CholeskySolverHip::solve(vector::Vector* x, vector::Vector* b)
     {
-      x->copyDataFrom(b, memory::DEVICE, memory::DEVICE);
+      x->copyFromExternal(b, memory::DEVICE, memory::DEVICE);
       // TODO: currently, this returns status rocblas_status_invalid_pointer
       // but we have verified that none of the inputs are null and need to be non-null
       rocblas_status status = rocsolver_dcsrrf_solve(handle_,

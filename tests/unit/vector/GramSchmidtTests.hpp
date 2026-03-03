@@ -154,8 +154,8 @@ namespace ReSolve
         {
           for (index_type j = 0; j < K; ++j)
           {
-            a.copyDataFrom(x.getData(i, memspace_), memspace_, memory::HOST);
-            b.copyDataFrom(x.getData(j, memspace_), memspace_, memory::HOST);
+            a.copyFromExternal(x.getData(i, memspace_), memspace_, memory::HOST);
+            b.copyFromExternal(x.getData(j, memspace_), memspace_, memory::HOST);
             ip = handler_.dot(&a, &b, memory::HOST);
             if ((i != j) && !isEqual(ip, 0.0))
             {

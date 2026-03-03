@@ -266,7 +266,7 @@ namespace ReSolve
 
         // now post-process
         vec_aux_->resize(i + 1);
-        vec_aux_->copyDataFrom(&h_H_[i * (restart_ + 1)], memory::HOST, memspace_);
+        vec_aux_->copyFromExternal(&h_H_[i * (restart_ + 1)], memory::HOST, memspace_);
 
         // V(:, i+1) = w - V(:, 1:i)*d_H_col = V(:, i+1) - d_H_col*V(:,1:i);
         vector_handler_->gemv('N', n_, i + 1, &MINUS_ONE, &ONE, vec_V_, vec_aux_, &vec_v, memspace_);

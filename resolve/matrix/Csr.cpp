@@ -216,7 +216,7 @@ namespace ReSolve
     }
   }
 
-  int matrix::Csr::copyDataFrom(const index_type*   row_data,
+  int matrix::Csr::copyFromExternal(const index_type*   row_data,
                                 const index_type*   col_data,
                                 const real_type*    val_data,
                                 memory::MemorySpace memspaceIn,
@@ -246,7 +246,7 @@ namespace ReSolve
     if (memspaceOut == memory::HOST)
     {
       // check if cpu data allocated
-      assert(((h_row_data_ == nullptr) == (h_col_data_ == nullptr)) && "In Csr::copyDataFrom one of host row or column data is null!\n");
+      assert(((h_row_data_ == nullptr) == (h_col_data_ == nullptr)) && "In Csr::copyFromExternal one of host row or column data is null!\n");
 
       if ((h_row_data_ == nullptr) && (h_col_data_ == nullptr))
       {
@@ -264,7 +264,7 @@ namespace ReSolve
     if (memspaceOut == memory::DEVICE)
     {
       // check if cuda data allocated
-      assert(((d_row_data_ == nullptr) == (d_col_data_ == nullptr)) && "In Csr::copyDataFrom one of device row or column data is null!\n");
+      assert(((d_row_data_ == nullptr) == (d_col_data_ == nullptr)) && "In Csr::copyFromExternal one of device row or column data is null!\n");
 
       if ((d_row_data_ == nullptr) && (d_col_data_ == nullptr))
       {
@@ -312,7 +312,7 @@ namespace ReSolve
     return 0;
   }
 
-  int matrix::Csr::copyDataFrom(const index_type*   row_data,
+  int matrix::Csr::copyFromExternal(const index_type*   row_data,
                                 const index_type*   col_data,
                                 const real_type*    val_data,
                                 index_type          new_nnz,
@@ -321,7 +321,7 @@ namespace ReSolve
   {
     destroyMatrixData(memspaceOut);
     nnz_ = new_nnz;
-    return copyDataFrom(row_data, col_data, val_data, memspaceIn, memspaceOut);
+    return copyFromExternal(row_data, col_data, val_data, memspaceIn, memspaceOut);
   }
 
   int matrix::Csr::allocateMatrixData(memory::MemorySpace memspace)

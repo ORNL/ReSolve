@@ -22,12 +22,12 @@ namespace ReSolve
       virtual index_type* getColData(memory::MemorySpace memspace);
       virtual real_type*  getValues(memory::MemorySpace memspace);
 
-      virtual int copyDataFrom(const index_type*   row_data,
+      virtual int copyFromExternal(const index_type*   row_data,
                                const index_type*   col_data,
                                const real_type*    val_data,
                                memory::MemorySpace memspaceIn,
                                memory::MemorySpace memspaceOut);
-      virtual int copyDataFrom(const index_type*   row_data,
+      virtual int copyFromExternal(const index_type*   row_data,
                                const index_type*   col_data,
                                const real_type*    val_data,
                                index_type          new_nnz,

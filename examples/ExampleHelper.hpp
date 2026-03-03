@@ -140,7 +140,7 @@ namespace ReSolve
           }
         }
 
-        res_->copyDataFrom(r_, memspace_, memspace_);
+        res_->copyFromExternal(r_, memspace_, memspace_);
         real_type norm  = computeResidualNorm(*A_, *x_, *res_, memspace_);
         real_type rnorm = norm2(*r_, memspace_);
 
@@ -220,7 +220,7 @@ namespace ReSolve
         int error_sum = 0;
 
         // Compute residual norm to get updated vector res_
-        res_->copyDataFrom(r_, memspace_, memspace_);
+        res_->copyFromExternal(r_, memspace_, memspace_);
         norm_res_ = computeResidualNorm(*A_, *x_, *res_, memspace_);
 
         // Compute norm of scaled residuals
@@ -261,7 +261,7 @@ namespace ReSolve
         int error_sum = 0;
 
         // Compute residual norm
-        res_->copyDataFrom(r_, memspace_, memspace_);
+        res_->copyFromExternal(r_, memspace_, memspace_);
         norm_res_ = computeResidualNorm(*A_, *x_, *res_, memspace_);
 
         real_type error = std::abs(norm_rhs_ * rrn_system - norm_res_) / norm_res_;
@@ -292,7 +292,7 @@ namespace ReSolve
         int error_sum = 0;
 
         // Compute residual norm
-        res_->copyDataFrom(r_, memspace_, memspace_);
+        res_->copyFromExternal(r_, memspace_, memspace_);
         norm_res_ = computeResidualNorm(*A_, *x_, *res_, memspace_);
 
         real_type error = std::abs(rn_system - norm_res_) / norm_res_;
@@ -312,7 +312,7 @@ namespace ReSolve
       void computeNorms()
       {
         // Compute rhs and residual norms
-        res_->copyDataFrom(r_, memspace_, memspace_);
+        res_->copyFromExternal(r_, memspace_, memspace_);
         norm_rhs_ = norm2(*r_, memspace_);
         norm_res_ = computeResidualNorm(*A_, *x_, *res_, memspace_);
 

@@ -211,10 +211,10 @@ namespace ReSolve
      *
      * @pre   size of _v_ is equal or larger than the current vector size.
      */
-    int Vector::copyDataFrom(Vector* source, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut)
+    int Vector::copyFromExternal(Vector* source, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut)
     {
       real_type* source_data = source->getData(memspaceIn);
-      return copyDataFrom(source_data, memspaceIn, memspaceOut);
+      return copyFromExternal(source_data, memspaceIn, memspaceOut);
     }
 
     /**
@@ -228,7 +228,7 @@ namespace ReSolve
      *
      * @return 0 if successful, -1 otherwise.
      */
-    int Vector::copyDataFrom(const real_type* source, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut)
+    int Vector::copyFromExternal(const real_type* source, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut)
     {
       int control = -1;
       if ((memspaceIn == memory::HOST) && (memspaceOut == memory::HOST))
@@ -862,7 +862,7 @@ namespace ReSolve
     int Vector::copyToExternal(real_type* dest, index_type i, memory::MemorySpace memspaceSrc, memory::MemorySpace memspaceDst)
     {
       using namespace ReSolve::memory;
-      real_type* data = this->getData(i, memspaceSrc);
+      real_type* data = getData(i, memspaceSrc);
       // Check that the source data is not null and up to date
       if (data == nullptr)
       {

@@ -299,7 +299,7 @@ public:
     int error_sum = 0;
 
     // Compute residual norm to get updated vector res_
-    res_->copyDataFrom(r_, memspace_, memspace_);
+    res_->copyFromExternal(r_, memspace_, memspace_);
     norm_res_ = computeResidualNorm(*A_, *x_, *res_, memspace_);
 
     // Compute norm of scaled residuals
@@ -340,7 +340,7 @@ public:
     int error_sum = 0;
 
     // Compute residual norm
-    res_->copyDataFrom(r_, memspace_, memspace_);
+    res_->copyFromExternal(r_, memspace_, memspace_);
     norm_res_ = computeResidualNorm(*A_, *x_, *res_, memspace_);
 
     real_type error = std::abs(norm_rhs_ * rrn_system - norm_res_) / norm_res_;
@@ -371,7 +371,7 @@ public:
     int error_sum = 0;
 
     // Compute residual norm
-    res_->copyDataFrom(r_, memspace_, memspace_);
+    res_->copyFromExternal(r_, memspace_, memspace_);
     norm_res_ = computeResidualNorm(*A_, *x_, *res_, memspace_);
 
     real_type error = std::abs(rn_system - norm_res_) / norm_res_;
@@ -396,12 +396,12 @@ private:
     }
 
     // Compute rhs and residual norms
-    res_->copyDataFrom(r_, memspace_, memspace_);
+    res_->copyFromExternal(r_, memspace_, memspace_);
     norm_rhs_ = norm2(*r_, memspace_);
     norm_res_ = computeResidualNorm(*A_, *x_, *res_, memspace_);
 
     // Compute residual norm w.r.t. true solution
-    res_->copyDataFrom(r_, memspace_, memspace_);
+    res_->copyFromExternal(r_, memspace_, memspace_);
     norm_res_true_ = computeResidualNorm(*A_, *x_true_, *res_, memspace_);
 
     // Compute residual norm on CPU
@@ -410,12 +410,12 @@ private:
       // A_->syncData(ReSolve::memory::HOST);
       // r_->syncData(ReSolve::memory::HOST);
       // x_->syncData(ReSolve::memory::HOST);
-      res_->copyDataFrom(r_, memspace_, ReSolve::memory::HOST);
+      res_->copyFromExternal(r_, memspace_, ReSolve::memory::HOST);
       norm_res_cpu_ = computeResidualNorm(*A_, *x_, *res_, ReSolve::memory::HOST);
     }
 
     // Compute vector difference norm
-    res_->copyDataFrom(x_, memspace_, memspace_);
+    res_->copyFromExternal(x_, memspace_, memspace_);
     norm_diff_ = computeDiffNorm(*x_true_, *res_, memspace_);
   }
 
