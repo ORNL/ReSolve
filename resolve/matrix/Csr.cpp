@@ -217,10 +217,10 @@ namespace ReSolve
   }
 
   int matrix::Csr::copyFromExternal(const index_type*   row_data,
-                                const index_type*   col_data,
-                                const real_type*    val_data,
-                                memory::MemorySpace memspaceIn,
-                                memory::MemorySpace memspaceOut)
+                                    const index_type*   col_data,
+                                    const real_type*    val_data,
+                                    memory::MemorySpace memspaceIn,
+                                    memory::MemorySpace memspaceOut)
   {
     // four cases (for now)
     index_type nnz_current = nnz_;
@@ -313,11 +313,11 @@ namespace ReSolve
   }
 
   int matrix::Csr::copyFromExternal(const index_type*   row_data,
-                                const index_type*   col_data,
-                                const real_type*    val_data,
-                                index_type          new_nnz,
-                                memory::MemorySpace memspaceIn,
-                                memory::MemorySpace memspaceOut)
+                                    const index_type*   col_data,
+                                    const real_type*    val_data,
+                                    index_type          new_nnz,
+                                    memory::MemorySpace memspaceIn,
+                                    memory::MemorySpace memspaceOut)
   {
     destroyMatrixData(memspaceOut);
     nnz_ = new_nnz;

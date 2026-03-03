@@ -200,10 +200,10 @@ namespace ReSolve
         index_type   size = static_cast<index_type>(valsA_.size());
         matrix::Coo* A    = new matrix::Coo(9, 9, size, true, true);
         A->copyFromExternal(rowsA_.data(),
-                        colsA_.data(),
-                        valsA_.data(),
-                        memory::HOST,
-                        memory::HOST);
+                            colsA_.data(),
+                            valsA_.data(),
+                            memory::HOST,
+                            memory::HOST);
 
         return A;
       }

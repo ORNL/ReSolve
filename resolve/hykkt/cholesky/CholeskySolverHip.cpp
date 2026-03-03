@@ -100,10 +100,10 @@ namespace ReSolve
         L_                        = new matrix::Csr((index_type) L_chol->nrow, (index_type) L_chol->ncol, (index_type) L_chol->nzmax);
         L_->allocateMatrixData(memory::DEVICE);
         L_->copyFromExternal(static_cast<index_type*>(L_chol_tr->p),
-                         static_cast<index_type*>(L_chol_tr->i),
-                         static_cast<real_type*>(L_chol_tr->x),
-                         memory::HOST,
-                         memory::DEVICE);
+                             static_cast<index_type*>(L_chol_tr->i),
+                             static_cast<real_type*>(L_chol_tr->x),
+                             memory::HOST,
+                             memory::DEVICE);
         // Store fill-in reducing permutation.
         // Within HyKKT, this will be the identity permutation because the Permutation class will permute the matrix.
         mem_.allocateArrayOnDevice(&Q_, A_->getNumRows());
