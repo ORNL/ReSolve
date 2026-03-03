@@ -39,7 +39,7 @@ namespace ReSolve
     void scal(const real_type alpha, vector::Vector* x, memory::MemorySpace memspace);
 
     // Scale vector by diagonal matrix represented as a vector (i.e., vec = diag*vec)
-    int scal(vector::Vector* diag, vector::Vector* vec, memory::MemorySpace memspace);
+    void scal(vector::Vector* diag, vector::Vector* vec, memory::MemorySpace memspace);
 
     // axpy for multivectors
     void axpyMulti(index_type          size,

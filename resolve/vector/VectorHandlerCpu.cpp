@@ -301,7 +301,7 @@ namespace ReSolve
    *
    * @return 0 if successful, 1 otherwise
    */
-  int VectorHandlerCpu::scal(vector::Vector* diag, vector::Vector* vec)
+  void VectorHandlerCpu::scal(vector::Vector* diag, vector::Vector* vec)
   {
     const real_type* diag_data = diag->getData(memory::HOST);
     real_type*       vec_data  = vec->getData(memory::HOST);
@@ -312,7 +312,6 @@ namespace ReSolve
       vec_data[i] *= diag_data[i];
     }
     vec->setDataUpdated(memory::HOST);
-    return 0;
   }
 
 } // namespace ReSolve

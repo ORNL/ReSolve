@@ -328,14 +328,13 @@ namespace ReSolve
    *
    * @return 0 if successful, 1 otherwise
    */
-  int VectorHandlerCuda::scal(vector::Vector* diag, vector::Vector* vec)
+  void VectorHandlerCuda::scal(vector::Vector* diag, vector::Vector* vec)
   {
     real_type* diag_data = diag->getData(memory::DEVICE);
     real_type* vec_data  = vec->getData(memory::DEVICE);
     index_type n         = vec->getSize();
     cuda::scale(n, diag_data, vec_data);
     vec->setDataUpdated(memory::DEVICE);
-    return 0;
   }
 
 } // namespace ReSolve

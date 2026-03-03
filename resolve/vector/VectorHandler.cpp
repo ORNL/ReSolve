@@ -326,9 +326,8 @@ namespace ReSolve
    * @pre The diagonal vector must be of the same size as the vector.
    * @invariant diag
    *
-   * @return 0 if successful, 1 otherwise
    */
-  int VectorHandler::scal(vector::Vector* diag, vector::Vector* vec, memory::MemorySpace memspace)
+  void VectorHandler::scal(vector::Vector* diag, vector::Vector* vec, memory::MemorySpace memspace)
   {
     assert(diag->getSize() == vec->getSize() && "Diagonal vector must be of the same size as the vector.");
     assert(diag->getData(memspace) != nullptr && "Diagonal vector data is null!\n");
@@ -344,7 +343,6 @@ namespace ReSolve
       return devImpl_->scal(diag, vec);
       break;
     }
-    return 1;
   }
 
   /**

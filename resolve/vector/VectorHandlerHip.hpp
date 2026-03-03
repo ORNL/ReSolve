@@ -65,7 +65,7 @@ namespace ReSolve
      *
      * @return 0 if successful, 1 otherwise
      */
-    virtual int scal(vector::Vector* diag, vector::Vector* vec);
+    virtual void scal(vector::Vector* diag, vector::Vector* vec);
 
   private:
     LinAlgWorkspaceHIP* workspace_;
