@@ -147,7 +147,6 @@ namespace ReSolve
    *
    */
   void VectorHandlerCpu::gemv(char            transpose,
-                              index_type      n,
                               index_type      k,
                               const real_type alpha,
                               const real_type beta,
@@ -159,6 +158,7 @@ namespace ReSolve
     const real_type* V_data = V->getData(memory::HOST);
     const real_type* y_data = y->getData(memory::HOST);
     real_type*       x_data = x->getData(memory::HOST);
+    const index_type n      = V->getSize();
 
     index_type i, j;
     real_type  sum;

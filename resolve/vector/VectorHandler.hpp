@@ -59,7 +59,6 @@ namespace ReSolve
 
     // Dense matrix-vector product.
     void gemv(char                transpose,
-              index_type          n,
               index_type          k, // number of vectors from multivector V to use
               const real_type     alpha,
               const real_type     beta,

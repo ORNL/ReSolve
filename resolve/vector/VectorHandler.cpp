@@ -203,7 +203,7 @@ namespace ReSolve
    * @param[in] V         - Multivector containing the matrix, organized columnwise
    * @param[in] y         - Vector, k x 1 if N and n x 1 if T
    * @param[in,out] x     - Vector, n x 1 if N and k x 1 if T
-   * @param[in] memspace  - cpu or cuda or hip (for now)
+   * @param[in] memspace  - enum specifying HOST or DEVICE memory space.
    *
    * @note Parameter k is not the total number of columns in V but the number
    * of columns to use in matrix-vector product.
@@ -215,7 +215,6 @@ namespace ReSolve
    *
    */
   void VectorHandler::gemv(char                transpose,
-                           index_type          n,
                            index_type          k,
                            const real_type     alpha,
                            const real_type     beta,
@@ -226,16 +225,13 @@ namespace ReSolve
   {
     using namespace ReSolve::memory;
 
-    // TODO: Remove n as the argument becuase it must always be n = V->getSize()
-    assert(n == V->getSize() && "gemv: n does not match the number of rows in V");
-
     switch (memspace)
     {
     case HOST:
-      cpuImpl_->gemv(transpose, n, k, alpha, beta, V, y, x);
+      cpuImpl_->gemv(transpose, k, alpha, beta, V, y, x);
       break;
     case DEVICE:
-      devImpl_->gemv(transpose, n, k, alpha, beta, V, y, x);
+      devImpl_->gemv(transpose, k, alpha, beta, V, y, x);
       break;
     }
     x->setDataUpdated(memspace);

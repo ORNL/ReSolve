@@ -165,7 +165,6 @@ namespace ReSolve
    *
    */
   void VectorHandlerCuda::gemv(char            transpose,
-                               index_type      n,
                                index_type      k,
                                const real_type alpha,
                                const real_type beta,
@@ -173,7 +172,9 @@ namespace ReSolve
                                vector::Vector* y,
                                vector::Vector* x)
   {
-    cublasHandle_t handle_cublas = workspace_->getCublasHandle();
+    cublasHandle_t   handle_cublas = workspace_->getCublasHandle();
+    const index_type n             = V->getSize();
+
     switch (transpose)
     {
     case 'T':

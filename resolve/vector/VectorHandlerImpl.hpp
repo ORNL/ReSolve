@@ -52,7 +52,6 @@ namespace ReSolve
      * where `x` is `[k x 1]`, `V` is `[n x k]` and `y` is `[n x 1]`.
      */
     virtual void gemv(char            transpose,
-                      index_type      n,
                       index_type      k,
                       const real_type alpha,
                       const real_type beta,

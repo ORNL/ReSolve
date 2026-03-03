@@ -230,9 +230,9 @@ namespace ReSolve
 
         real_type alpha = -1.0;
         real_type beta  = 1.0;
-        handler_.gemv('N', N, K, alpha, beta, &V, &yN, &xN, memspace_);
+        handler_.gemv('N', K, alpha, beta, &V, &yN, &xN, memspace_);
         status *= verifyAnswer(xN, static_cast<real_type>(K) + 0.5);
-        handler_.gemv('T', N, K, alpha, beta, &V, &yT, &xT, memspace_);
+        handler_.gemv('T', K, alpha, beta, &V, &yT, &xT, memspace_);
         status *= verifyAnswer(xT, static_cast<real_type>(N) + 0.5);
 
         return status.report(__func__);

@@ -159,7 +159,6 @@ namespace ReSolve
    *
    */
   void VectorHandlerHip::gemv(char            transpose,
-                              index_type      n,
                               index_type      k,
                               const real_type alpha,
                               const real_type beta,
@@ -167,7 +166,9 @@ namespace ReSolve
                               vector::Vector* y,
                               vector::Vector* x)
   {
-    rocblas_handle handle_rocblas = workspace_->getRocblasHandle();
+    rocblas_handle   handle_rocblas = workspace_->getRocblasHandle();
+    const index_type n              = V->getSize();
+
     switch (transpose)
     {
     case 'T':
