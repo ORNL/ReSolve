@@ -239,7 +239,7 @@ namespace ReSolve
 
     if (memspaceOut == memory::DEVICE)
     {
-      // check if cuda data allocated
+      // Check if Cuda data is allocated.
       assert(((d_row_data_ == nullptr) == (d_col_data_ == nullptr)) && "In Coo::copyFromExternal one of device row or column data is null!\n");
 
       if ((d_row_data_ == nullptr) && (d_col_data_ == nullptr))
