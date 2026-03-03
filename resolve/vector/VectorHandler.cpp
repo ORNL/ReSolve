@@ -279,7 +279,7 @@ namespace ReSolve
   /**
    * @brief Multivector dot product, i.e  V^T x
    *
-   * Computes V^T x with k vectors from multivector V. Result is storred
+   * Computes V^T x with k vectors from multivector V. Result is stored
    * in `res`.
    *
    * @param[in] size     - Number of elements in a single vector in V
