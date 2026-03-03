@@ -170,8 +170,8 @@ namespace ReSolve
     void CholeskySolverHip::solve(vector::Vector* x, vector::Vector* b)
     {
       x->copyFromExternal(b, memory::DEVICE, memory::DEVICE);
-      // TODO: currently, this returns status rocblas_status_invalid_pointer
-      // but we have verified that none of the inputs are null and need to be non-null
+// TODO: currently, this returns status rocblas_status_invalid_pointer
+// but we have verified that none of the inputs are null and need to be non-null.
       rocblas_status status = rocsolver_dcsrrf_solve(handle_,
                                                      L_->getNumRows(),
                                                      1,
