@@ -184,13 +184,8 @@ int main(int argc, char* argv[])
   vec_test->copyFromExternal(x_data_ref, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
 
   // compute ||x_diff|| = ||x - x_true|| norm
-<<<<<<< HEAD
   vec_diff->copyFromExternal(x_data_ref, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-  vector_handler.axpy(&MINUS_ONE, vec_x, vec_diff, ReSolve::memory::DEVICE);
-=======
-  vec_diff->copyDataFrom(x_data_ref, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
   vector_handler.axpy(MINUS_ONE, vec_x, vec_diff, ReSolve::memory::DEVICE);
->>>>>>> 6a3875d7 (Pass scalars by value in VectorHandler.)
   real_type normDiffMatrix1 = sqrt(vector_handler.dot(vec_diff, vec_diff, ReSolve::memory::DEVICE));
 
   // Compute residual norm ON THE GPU using REFERENCE solution
