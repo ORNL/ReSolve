@@ -299,7 +299,7 @@ namespace ReSolve
         {
           divisor_data[i] = (real_type) (i + 1);
         }
-        divisor.copyDataFrom(divisor_data.get(), memory::HOST, memspace_);
+        divisor.copyFromExternal(divisor_data.get(), memory::HOST, memspace_);
 
         handler_.elementwiseDivide(&divisor, &vec, memspace_);
 
@@ -347,8 +347,8 @@ namespace ReSolve
             y_data[i] = (real_type) (i + 1);
           }
         }
-        x.copyDataFrom(x_data.get(), memory::HOST, memspace_);
-        y.copyDataFrom(y_data.get(), memory::HOST, memspace_);
+        x.copyFromExternal(x_data.get(), memory::HOST, memspace_);
+        y.copyFromExternal(y_data.get(), memory::HOST, memspace_);
 
         handler_.elementwiseMax(&x, &y, memspace_);
 
@@ -391,7 +391,7 @@ namespace ReSolve
             x_data[i] = (real_type) i;
           }
         }
-        x.copyDataFrom(x_data.get(), memory::HOST, memspace_);
+        x.copyFromExternal(x_data.get(), memory::HOST, memspace_);
 
         handler_.abs(&x, memspace_);
 
