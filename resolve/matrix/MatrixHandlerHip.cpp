@@ -1,5 +1,5 @@
 #include "MatrixHandlerHip.hpp"
-#include <cassert>
+
 #include <algorithm>
 #include <cassert>
 
