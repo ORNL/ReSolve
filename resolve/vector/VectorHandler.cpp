@@ -244,7 +244,7 @@ namespace ReSolve
    * @param[in] alpha vector size k x 1
    * @param[in] x (multi)vector [size x k]
    * @param[in,out] y vector size size x 1 (this is where the result is stored)
-   * @param[in] memspace string containg memspace (cpu or cuda or hip)
+   * @param[in] memspace string containg memspace (cpu, cuda, or hip)
    *
    * @pre   _k_ > 0, _size_ > 0, _size_ = x->getSize()
    *
