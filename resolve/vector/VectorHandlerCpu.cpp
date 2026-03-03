@@ -326,7 +326,7 @@ namespace ReSolve
    *
    * @return 0 if successful, 1 otherwise
    */
-  int VectorHandlerCpu::elementwiseDivide(vector::Vector* divisor, vector::Vector* vec)
+  int VectorHandlerCpu::scaleInv(vector::Vector* divisor, vector::Vector* vec)
   {
     real_type* divisor_data = divisor->getData(memory::HOST);
     real_type* vec_data     = vec->getData(memory::HOST);
@@ -351,7 +351,7 @@ namespace ReSolve
    *
    * @return 0 if successful, 1 otherwise
    */
-  int VectorHandlerCpu::elementwiseMax(vector::Vector* x, vector::Vector* y)
+  int VectorHandlerCpu::max(vector::Vector* x, vector::Vector* y)
   {
     real_type* x_data = x->getData(memory::HOST);
     real_type* y_data = y->getData(memory::HOST);

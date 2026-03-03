@@ -46,10 +46,10 @@ namespace ReSolve
     virtual void scal(vector::Vector* diag, vector::Vector* vec) = 0;
 
     // Divide the elements of a vector by the elements of another vector
-    virtual int elementwiseDivide(vector::Vector* divisor, vector::Vector* vec) = 0;
+    virtual int scaleInv(vector::Vector* divisor, vector::Vector* vec) = 0;
 
     // Compute element-wise max of two vectors
-    virtual int elementwiseMax(vector::Vector* x, vector::Vector* y) = 0;
+    virtual int max(vector::Vector* x, vector::Vector* y) = 0;
 
     // Compute element-wise absolute value of a vector
     virtual int abs(vector::Vector* x) = 0;

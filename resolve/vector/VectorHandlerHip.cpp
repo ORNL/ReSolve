@@ -345,12 +345,12 @@ namespace ReSolve
    *
    * @return 0 if successful, 1 otherwise
    */
-  int VectorHandlerHip::elementwiseDivide(vector::Vector* divisor, vector::Vector* vec)
+  int VectorHandlerHip::scaleInv(vector::Vector* divisor, vector::Vector* vec)
   {
     real_type* divisor_data = divisor->getData(memory::DEVICE);
     real_type* vec_data     = vec->getData(memory::DEVICE);
     index_type n            = vec->getSize();
-    hip::elementwiseDivide(n, divisor_data, vec_data);
+    hip::scaleInv(n, divisor_data, vec_data);
     vec->setDataUpdated(memory::DEVICE);
     return 0;
   }
@@ -365,12 +365,12 @@ namespace ReSolve
    *
    * @return 0 if successful, 1 otherwise
    */
-  int VectorHandlerHip::elementwiseMax(vector::Vector* x, vector::Vector* y)
+  int VectorHandlerHip::max(vector::Vector* x, vector::Vector* y)
   {
     real_type* x_data = x->getData(memory::DEVICE);
     real_type* y_data = y->getData(memory::DEVICE);
     index_type n      = y->getSize();
-    hip::elementwiseMax(n, x_data, y_data);
+    hip::max(n, x_data, y_data);
     y->setDataUpdated(memory::DEVICE);
     return 0;
   }

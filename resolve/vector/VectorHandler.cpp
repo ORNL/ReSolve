@@ -352,7 +352,7 @@ namespace ReSolve
    *
    * @return 0 if successful, 1 otherwise
    */
-  int VectorHandler::elementwiseDivide(vector::Vector* divisor, vector::Vector* vec, memory::MemorySpace memspace)
+  int VectorHandler::scaleInv(vector::Vector* divisor, vector::Vector* vec, memory::MemorySpace memspace)
   {
     assert(divisor->getSize() == vec->getSize() && "Diagonal vector must be of the same size as the vector.");
     assert(divisor->getData(memspace) != nullptr && "Diagonal vector data is null!\n");
@@ -361,10 +361,10 @@ namespace ReSolve
     switch (memspace)
     {
     case HOST:
-      return cpuImpl_->elementwiseDivide(divisor, vec);
+      return cpuImpl_->scaleInv(divisor, vec);
       break;
     case DEVICE:
-      return devImpl_->elementwiseDivide(divisor, vec);
+      return devImpl_->scaleInv(divisor, vec);
       break;
     }
     return 1;
@@ -381,7 +381,7 @@ namespace ReSolve
    *
    * @return 0 if successful, 1 otherwise
    */
-  int VectorHandler::elementwiseMax(vector::Vector* x, vector::Vector* y, memory::MemorySpace memspace)
+  int VectorHandler::max(vector::Vector* x, vector::Vector* y, memory::MemorySpace memspace)
   {
     assert(x->getSize() == y->getSize() && "Vectors must be the same size.");
     assert(x->getData(memspace) != nullptr && "Vector x data is null!\n");
@@ -390,10 +390,10 @@ namespace ReSolve
     switch (memspace)
     {
     case HOST:
-      return cpuImpl_->elementwiseMax(x, y);
+      return cpuImpl_->max(x, y);
       break;
     case DEVICE:
-      return devImpl_->elementwiseMax(x, y);
+      return devImpl_->max(x, y);
       break;
     }
     return 1;

@@ -280,7 +280,7 @@ namespace ReSolve
         return status.report(__func__);
       }
 
-      TestOutcome elementwiseDivide(index_type N)
+      TestOutcome scaleInv(index_type N)
       {
         TestStatus status;
 
@@ -301,7 +301,7 @@ namespace ReSolve
         }
         divisor.copyFromExternal(divisor_data.get(), memory::HOST, memspace_);
 
-        handler_.elementwiseDivide(&divisor, &vec, memspace_);
+        handler_.scaleInv(&divisor, &vec, memspace_);
 
         if (memspace_ == memory::DEVICE)
         {
@@ -322,7 +322,7 @@ namespace ReSolve
         return status.report(__func__);
       }
 
-      TestOutcome elementwiseMax(index_type N)
+      TestOutcome max(index_type N)
       {
         TestStatus status;
 
@@ -350,7 +350,7 @@ namespace ReSolve
         x.copyFromExternal(x_data.get(), memory::HOST, memspace_);
         y.copyFromExternal(y_data.get(), memory::HOST, memspace_);
 
-        handler_.elementwiseMax(&x, &y, memspace_);
+        handler_.max(&x, &y, memspace_);
 
         if (memspace_ == memory::DEVICE)
         {

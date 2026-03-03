@@ -351,12 +351,12 @@ namespace ReSolve
    *
    * @return 0 if successful, 1 otherwise
    */
-  int VectorHandlerCuda::elementwiseDivide(vector::Vector* divisor, vector::Vector* vec)
+  int VectorHandlerCuda::scaleInv(vector::Vector* divisor, vector::Vector* vec)
   {
     real_type* divisor_data = divisor->getData(memory::DEVICE);
     real_type* vec_data     = vec->getData(memory::DEVICE);
     index_type n            = vec->getSize();
-    cuda::elementwiseDivide(n, divisor_data, vec_data);
+    cuda::scaleInv(n, divisor_data, vec_data);
     vec->setDataUpdated(memory::DEVICE);
     return 0;
   }
@@ -371,12 +371,12 @@ namespace ReSolve
    *
    * @return 0 if successful, 1 otherwise
    */
-  int VectorHandlerCuda::elementwiseMax(vector::Vector* x, vector::Vector* y)
+  int VectorHandlerCuda::max(vector::Vector* x, vector::Vector* y)
   {
     real_type* x_data = x->getData(memory::DEVICE);
     real_type* y_data = y->getData(memory::DEVICE);
     index_type n      = y->getSize();
-    cuda::elementwiseMax(n, x_data, y_data);
+    cuda::max(n, x_data, y_data);
     y->setDataUpdated(memory::DEVICE);
     return 0;
   }

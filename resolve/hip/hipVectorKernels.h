@@ -18,8 +18,8 @@ namespace ReSolve
     void setArrayConst(index_type n, real_type val, real_type* arr);
     void addConst(index_type n, real_type val, real_type* arr);
     void scale(index_type n, const real_type* diag, real_type* vec);
-    void elementwiseDivide(index_type n, const real_type* divisor, real_type* vec);
-    void elementwiseMax(index_type n, const real_type* x, real_type* y);
+    void scaleInv(index_type n, const real_type* divisor, real_type* vec);
+    void max(index_type n, const real_type* x, real_type* y);
     void abs(index_type n, real_type* x);
   } // namespace hip
 } // namespace ReSolve

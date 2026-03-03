@@ -90,9 +90,9 @@ namespace ReSolve
        *
        * @todo Decide how to allow user to configure grid and block sizes.
        */
-      __global__ void elementwiseDivide(index_type       n,
-                                        const real_type* d_val,
-                                        real_type*       vec)
+      __global__ void scaleInv(index_type       n,
+                               const real_type* d_val,
+                               real_type*       vec)
       {
         // Get the index of the element to be processed
         index_type idx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -114,9 +114,9 @@ namespace ReSolve
        *
        * @todo Decide how to allow user to configure grid and block sizes.
        */
-      __global__ void elementwiseMax(index_type       n,
-                                     const real_type* x,
-                                     real_type*       y)
+      __global__ void max(index_type       n,
+                          const real_type* x,
+                          real_type*       y)
       {
         // Get the index of the element to be processed
         index_type idx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -197,15 +197,15 @@ namespace ReSolve
      *
      * @todo Decide how to allow user to configure grid and block sizes.
      */
-    void elementwiseDivide(index_type       n,
-                           const real_type* divisor,
-                           real_type*       vec)
+    void scaleInv(index_type       n,
+                  const real_type* divisor,
+                  real_type*       vec)
     {
       // Define block size and number of blocks
       const int block_size = 256;
       int       num_blocks = (n + block_size - 1) / block_size;
       // Launch the kernel
-      kernels::elementwiseDivide<<<num_blocks, block_size>>>(n, divisor, vec);
+      kernels::scaleInv<<<num_blocks, block_size>>>(n, divisor, vec);
     }
 
     /**
@@ -217,15 +217,15 @@ namespace ReSolve
      *
      * @todo Decide how to allow user to configure grid and block sizes.
      */
-    void elementwiseMax(index_type       n,
-                        const real_type* x,
-                        real_type*       y)
+    void max(index_type       n,
+             const real_type* x,
+             real_type*       y)
     {
       // Define block size and number of blocks
       const int block_size = 256;
       int       num_blocks = (n + block_size - 1) / block_size;
       // Launch the kernel
-      kernels::elementwiseMax<<<num_blocks, block_size>>>(n, x, y);
+      kernels::max<<<num_blocks, block_size>>>(n, x, y);
     }
 
     /**

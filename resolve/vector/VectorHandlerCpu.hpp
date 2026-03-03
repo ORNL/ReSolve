@@ -57,9 +57,9 @@ namespace ReSolve
 
     virtual void scal(vector::Vector* diag, vector::Vector* vec);
 
-    virtual int elementwiseDivide(vector::Vector* divisor, vector::Vector* vec);
+    virtual int scaleInv(vector::Vector* divisor, vector::Vector* vec);
 
-    virtual int elementwiseMax(vector::Vector* x, vector::Vector* y);
+    virtual int max(vector::Vector* x, vector::Vector* y);
 
     virtual int abs(vector::Vector* x);
 
