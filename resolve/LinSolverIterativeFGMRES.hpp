@@ -82,9 +82,9 @@ namespace ReSolve
       FLEXIBLE
     };
 
-    index_type  restart_{10};                       ///< GMRES restart
-    index_type  conv_cond_{2};                      ///< GMRES convergence condition
-    bool        flexible_{true};                    ///< If using flexible GMRES (FGMRES) algorithm
+    index_type restart_{10};    ///< GMRES restart
+    index_type conv_cond_{2};   ///< GMRES convergence condition
+    bool       flexible_{true}; ///< If using flexible GMRES (FGMRES) algorithm
 
   private:
     int  allocateSolverData();
