@@ -562,18 +562,18 @@ namespace ReSolve
    *
    * @return int 0 if successful, 1 if it fails
    */
-  int SystemSolver::preconditionerSetup()
+  int SystemSolver::preconditionerSetup(std::string side)
   {
     int status = 0;
-    if (precondition_method_ == "ilu0")
+
+    status += preconditioner_->setup(A_);
+    preconditioner_->setSide(side);
+
+    if (memspace_ != "cpu")
     {
-      status += preconditioner_->setup(A_);
-      if (memspace_ != "cpu")
-      {
-        is_solve_on_device_ = true;
-      }
-      status += iterativeSolver_->setPreconditioner(preconditioner_);
+      is_solve_on_device_ = true;
     }
+    status += iterativeSolver_->setPreconditioner(preconditioner_);
 
     return status;
   }
@@ -591,10 +591,8 @@ namespace ReSolve
   {
     int status = 0;
     A_         = A;
-    if (precondition_method_ == "ilu0")
-    {
-      status += preconditioner_->reset(A);
-    }
+
+    status += preconditioner_->reset(A);
 
     return status;
   }
@@ -621,6 +619,11 @@ namespace ReSolve
   LinSolverIterative& SystemSolver::getIterativeSolver()
   {
     return *iterativeSolver_;
+  }
+
+  Preconditioner& SystemSolver::getPreconditioner()
+  {
+    return *preconditioner_;
   }
 
   void SystemSolver::setFactorizationMethod(std::string method)

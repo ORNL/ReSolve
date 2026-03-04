@@ -35,11 +35,12 @@ namespace ReSolve
     Preconditioner();
     virtual ~Preconditioner();
 
-    virtual int          setup(matrix_type* A)                   = 0;
-    virtual int          apply(vector_type* rhs, vector_type* x) = 0;
-    virtual int          reset(matrix_type* /* A */);
-    virtual std::string  getSide();       // Gets the preconditioning side
-    virtual matrix_type* getPrecMatrix(); // Get the preconditioner matrix
+    virtual int apply(vector_type* rhs, vector_type* x) = 0;
+    virtual int setup(matrix_type* A)                   = 0;
+    virtual int reset(matrix_type* /* A */);
+
+    std::string getSide() const;                  // Gets the preconditioning side
+    int         setSide(const std::string& side); // Sets the preconditioning side
 
   private:
     std::string side_ = "right"; // Right preconditioning by default

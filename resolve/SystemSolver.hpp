@@ -55,7 +55,7 @@ namespace ReSolve
     int factorize(); //  numeric part
     int refactorize();
     int refactorizationSetup();
-    int preconditionerSetup();
+    int preconditionerSetup(std::string side = "right");
     int resetPreconditioner(matrix_type* A);
     int solve(vector_type* rhs, vector_type* x);  // for direct and iterative
     int refine(vector_type* rhs, vector_type* x); // for iterative refinement
@@ -66,6 +66,7 @@ namespace ReSolve
     LinSolverDirect&    getFactorizationSolver();
     LinSolverDirect&    getRefactorizationSolver();
     LinSolverIterative& getIterativeSolver();
+    Preconditioner&     getPreconditioner();
 
     real_type getVectorNorm(vector_type* rhs);
     real_type getResidualNorm(vector_type* rhs, vector_type* x);

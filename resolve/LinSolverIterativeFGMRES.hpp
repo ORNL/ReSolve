@@ -99,7 +99,6 @@ namespace ReSolve
     int  freeSolverData();
     void setMemorySpace();
     void initParamList();
-    void precV(vector_type* rhs, vector_type* x); ///< Apply preconditioner
 
     memory::MemorySpace memspace_;
 

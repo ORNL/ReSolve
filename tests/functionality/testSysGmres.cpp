@@ -25,6 +25,7 @@
 #include <resolve/vector/Vector.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
+#include <resolve/Preconditioner.hpp>
 
 // Use ReSolve data types.
 using real_type   = ReSolve::real_type;
@@ -102,6 +103,9 @@ int test(int argc, char* argv[])
   opt                  = options.getParamFromKey("-x");
   std::string flexible = opt ? (*opt).second : "yes";
 
+  opt                      = options.getParamFromKey("-p");
+  std::string precond_side = opt ? (*opt).second : "right";
+
   processInputs(method, gs, sketch);
 
   // Create workspace and initialize its handles.
@@ -166,7 +170,7 @@ int test(int argc, char* argv[])
   solver.getIterativeSolver().setCliParam("restart", "200");
 
   // Set preconditioner (default in this case ILU0)
-  status = solver.preconditionerSetup();
+  status = solver.preconditionerSetup(precond_side);
   error_sum += status;
 
   // Solve system
@@ -182,7 +186,11 @@ int test(int argc, char* argv[])
             << "\t Solver tolerance:               " << tol_out << "\n";
   helper.printIterativeSolverSummary(&(solver.getIterativeSolver()));
 
-  error_sum += helper.checkRelativeResidualNorm(solver.getIterativeSolver().getFinalResidualNorm());
+  // TODO: Remove this if statement and let TestHelper report left-preconditioned residuals.
+  if (solver.getPreconditioner().getSide() == "right")
+  {
+    error_sum += helper.checkRelativeResidualNorm(solver.getIterativeSolver().getFinalResidualNorm());
+  }
   error_sum += helper.checkResult(10.0 * tol_out);
   isTestPass(error_sum, "Test");
 

@@ -107,6 +107,14 @@ namespace ReSolve
   {
     using namespace constants;
 
+    // FGMRES only supports right preconditioning.
+    if (flexible_ && preconditioner_->getSide() == "left")
+    {
+      out::warning() << "Flexible GMRES does not support left preconditioning. "
+                     << "Switching preconditioner to right side.\n";
+      preconditioner_->setSide("right");
+    }
+
     // io::Logger::setVerbosity(io::Logger::EVERYTHING);
 
     int outer_flag = 1;
@@ -128,28 +136,41 @@ namespace ReSolve
     vec_Z_->setToZero(memspace_);
     vec_V_->setToZero(memspace_);
 
-    // V[0] = b-A*x_0
     rhs->copyDataTo(vec_V_->getData(memspace_), 0, memspace_);
     matrix_handler_->matvec(A_, x, vec_V_, &MINUS_ONE, &ONE, memspace_);
 
-    // Calculate r_0 = ||B(b - Ax_0)|| for BAGMRES
-    if (preconditioner_->getSide() == "left")
+    vec_v.setData(vec_V_->getData(0, memspace_), memspace_);
+    vec_z.setData(vec_Z_->getData(0, memspace_), memspace_);
+
+    // Left preconditioning applies M^{-1} to the initial residual
+    if (!flexible_ && preconditioner_->getSide() == "left")
     {
-      vector_type temp_vec(n_);
-      temp_vec.copyDataFrom(vec_V_->getData(0, memspace_), memspace_, memspace_);
-      matrix_handler_->matvec(preconditioner_->getPrecMatrix(), &temp_vec, vec_V_, &ONE, &ZERO, memspace_);
+      preconditioner_->apply(&vec_v, &vec_z);
+      vec_v.copyDataFrom(&vec_z, memspace_, memspace_);
     }
 
-    rnorm = 0.0;
-    bnorm = vector_handler_->dot(rhs, rhs, memspace_);
     rnorm = vector_handler_->dot(vec_V_, vec_V_, memspace_);
+    bnorm = vector_handler_->dot(rhs, rhs, memspace_);
+
+    // Left preconditioning applies M^{-1} to bnorm
+    if (!flexible_ && preconditioner_->getSide() == "left")
+    {
+      vec_v.setData(rhs->getData(memspace_), memspace_);
+      preconditioner_->apply(&vec_v, &vec_z);
+      bnorm = vector_handler_->dot(&vec_z, &vec_z, memspace_);
+      vec_v.setData(vec_V_->getData(0, memspace_), memspace_);
+    }
+
     // rnorm = ||V_1||
     rnorm = std::sqrt(rnorm);
     bnorm = std::sqrt(bnorm);
+
     io::Logger::misc() << "it 0: norm of residual "
                        << std::scientific << std::setprecision(16)
                        << rnorm << " Norm of rhs: " << bnorm << "\n";
+
     initial_residual_norm_ = rnorm / bnorm; // relative residual norm
+
     while (outer_flag)
     {
       if (it == 0)
@@ -197,7 +218,6 @@ namespace ReSolve
         i++;
         it++;
 
-        // Z_i = (LU)^{-1}*V_i
         vec_v.setData(vec_V_->getData(i, memspace_), memspace_);
         if (flexible_)
         {
@@ -207,29 +227,40 @@ namespace ReSolve
         {
           vec_z.setData(vec_Z_->getData(0, memspace_), memspace_);
         }
-        // this->precV(&vec_v, &vec_z);
-        // mem_.deviceSynchronize();
 
-        // V_{i+1}=A*Z_i or B * Z_i for BAGMRES
+        // Apply left/right preconditioner
 
-        // vec_v.setData(vec_V_->getData(i + 1, memspace_), memspace_);
-
-        // Right preconditioned
-        if (preconditioner_->getSide() == "right")
+        if (flexible_)
         {
-          this->precV(&vec_v, &vec_z);
+          // FGMRES supports only right preconditioning
+          preconditioner_->apply(&vec_v, &vec_z);
           mem_.deviceSynchronize();
+
           vec_v.setData(vec_V_->getData(i + 1, memspace_), memspace_);
           matrix_handler_->matvec(A_, &vec_z, &vec_v, &ONE, &ZERO, memspace_);
         }
-        // Left Preconditioned
         else
         {
-          matrix_handler_->matvec(A_, &vec_v, &vec_z, &ONE, &ZERO, memspace_);
-          mem_.deviceSynchronize();
-          vec_v.setData(vec_V_->getData(i + 1, memspace_), memspace_);
-          this->precV(&vec_z, &vec_v);
+          // Standard GMRES allows both left and right preconditioning
+          if (preconditioner_->getSide() == "right")
+          {
+            preconditioner_->apply(&vec_v, &vec_z);
+            mem_.deviceSynchronize();
+
+            vec_v.setData(vec_V_->getData(i + 1, memspace_), memspace_);
+            matrix_handler_->matvec(A_, &vec_z, &vec_v, &ONE, &ZERO, memspace_);
+          }
+          else
+          {
+            matrix_handler_->matvec(A_, &vec_v, &vec_z, &ONE, &ZERO, memspace_);
+            mem_.deviceSynchronize();
+
+            vec_v.setData(vec_V_->getData(i + 1, memspace_), memspace_);
+            preconditioner_->apply(&vec_z, &vec_v);
+          }
         }
+
+        mem_.deviceSynchronize();
 
         // orthogonalize V[i+1], form a column of h_H_
 
@@ -309,22 +340,11 @@ namespace ReSolve
           vec_v.setData(vec_V_->getData(j, memspace_), memspace_);
           vector_handler_->axpy(h_rs_[j], &vec_v, &vec_z, memspace_);
         }
-<<<<<<< HEAD
-        // now multiply d_Z by precon
-
-        vec_v.setData(vec_V_->getData(memspace_), memspace_);
-        this->precV(&vec_z, &vec_v);
-        // and add to x
-        vector_handler_->axpy(ONE, &vec_v, x, memspace_);
-=======
-        // now multiply d_Z by precon for left preconditioned
         if (preconditioner_->getSide() == "right")
         {
-          this->precV(&vec_z, &vec_v);
-          // and add to x
+          preconditioner_->apply(&vec_z, &vec_v);
           vector_handler_->axpy(&ONE, &vec_v, x, memspace_);
         }
-        // Directly use vec_z for right preconditioned
         else
         {
           vector_handler_->axpy(&ONE, &vec_z, x, memspace_);
@@ -346,7 +366,16 @@ namespace ReSolve
 
       rhs->copyToExternal(vec_V_->getData(memspace_), 0, memspace_, memspace_);
       matrix_handler_->matvec(A_, x, vec_V_, &MINUS_ONE, &ONE, memspace_);
+
+      // Left-preconditioned GMRES applies M^{-1} to the residual
+      if (!flexible_ && preconditioner_->getSide() == "left")
+      {
+        vec_v.setData(vec_V_->getData(0, memspace_), memspace_);
+        preconditioner_->apply(&vec_v, &vec_z);
+        vec_v.copyDataFrom(&vec_z, memspace_, memspace_);
+      }
       rnorm = vector_handler_->dot(vec_V_, vec_V_, memspace_);
+
       // rnorm = ||V_1||
       rnorm = std::sqrt(rnorm);
 
@@ -724,29 +753,7 @@ namespace ReSolve
 
   void LinSolverIterativeFGMRES::precV(vector_type* rhs, vector_type* x)
   {
-<<<<<<< HEAD
     preconditioner_->apply(rhs, x);
-=======
-    using namespace constants;
-    if (this->getPreconditionerType() == "class")
-    {
-      preconditioner_->apply(rhs, x);
-    }
-    // Use matvec preconditioner
-    else
-    {
-      // ABGMRES Preconditioner
-      if (this->getPreconditionerDir() == "right")
-      {
-        matrix_handler_->matvec(B_, rhs, x, &ONE, &ZERO, memspace_);
-      }
-      else
-      // BA GMRES Preconditioner
-      {
-        matrix_handler_->matvec(A_, rhs, x, &ONE, &ZERO, memspace_);
-      }
-    }
->>>>>>> 0b3c99a (Apply pre-commmit fixes)
   }
 
   void LinSolverIterativeFGMRES::setMemorySpace()

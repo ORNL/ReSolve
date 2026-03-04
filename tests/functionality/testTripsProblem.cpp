@@ -162,13 +162,10 @@ int runTest(int argc, char* argv[])
 
   // Use standard GMRES
   FGMRES.setFlexible(false);
-<<<<<<< HEAD
-=======
 
   std::cout << FGMRES.getPreconditionerDir() << "\n\n";
   std::cout << FGMRES.getPreconditionerType() << "\n\n";
   std::cout << FGMRES.getFlexible() << "\n\n";
->>>>>>> 0b3c99a (Apply pre-commmit fixes)
 
   // Default uses ABGMRES
   FGMRES.setRestart(150);

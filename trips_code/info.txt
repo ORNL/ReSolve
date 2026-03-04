@@ -1,5 +1,0 @@
-The test problem here comes from the TRIPS-py library
-
-It has a delta of 0.25004630650990484
-
-To use the files and tests from this folder place it in build/tests/functionality

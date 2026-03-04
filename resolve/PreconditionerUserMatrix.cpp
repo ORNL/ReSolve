@@ -1,41 +1,48 @@
 /**
- * @file   PreconditionerABBA.cpp
+ * @file   PreconditionerUserMatrix.cpp
  * @author Jeffery Zhang (jefferyz@vt.edu)
- * @brief  Declaration of PreconditionerMatrix class.
+ * @author Kakeru Ueda (k.ueda.2290@m.isct.ac.jp)
+ * @brief  Declaration of PreconditionerUserMatrix class.
+ *
  */
 
-#include "PreconditionerABBA.hpp"
+#include "PreconditionerUserMatrix.hpp"
 
 namespace ReSolve
 {
-  using out = io::Logger;
-
   /**
-   * @brief Constructor for PreconditionerMatrix.
+   * @brief Constructor for PreconditionerUserMatrix.
    *
    * @param[in] A - Pointer to the forward operator
    * @param[in] matrix_handler - Pointer to the matrix handler
    */
-  PreconditionerABBA::PreconditionerABBA(matrix::Sparse* A, MatrixHandler* matrix_handler)
+  PreconditionerUserMatrix::PreconditionerUserMatrix(MatrixHandler* matrix_handler)
   {
-    A_              = A;
     matrix_handler_ = matrix_handler;
     setMemorySpace();
   }
 
   /**
-   * @brief Destructor for PreconditionerLU
+   * @brief Destructor for PreconditionerUserMatrix
    */
-  PreconditionerABBA::~PreconditionerABBA()
+  PreconditionerUserMatrix::~PreconditionerUserMatrix()
   {
   }
 
   /**
-   * @brief Set the preconditioning matrix
+   * @brief This preconditioner does not depend on A.
+   */
+  int PreconditionerUserMatrix::setup(matrix_type* /* A */)
+  {
+    return 0;
+  }
+
+  /**
+   * @brief Set the explicit preconditioner matrix B.
    *
    * @param[in] B - Pointer to the preconditioning matrix
    */
-  int PreconditionerABBA::setup(matrix::Sparse* B)
+  int PreconditionerUserMatrix::setPrecMatrix(matrix_type* B)
   {
     B_ = B;
     return 0;
@@ -47,33 +54,9 @@ namespace ReSolve
    * Necessary for some calculations
    *
    */
-  matrix::Sparse* PreconditionerABBA::getPrecMatrix()
+  matrix::Sparse* PreconditionerUserMatrix::getPrecMatrix()
   {
     return B_;
-  }
-
-  /**
-   * @brief Setter for the side
-   *
-   * @param[in] The new side
-   */
-  int PreconditionerABBA::setSide(std::string side)
-  {
-    if (side == "left" || side == "right")
-    {
-      side_ = side;
-      return 0;
-    }
-    out::error() << "Choose either left (BA) or right (AB)\n";
-    return 1;
-  }
-
-  /**
-   * @brief getter for the side
-   */
-  std::string PreconditionerABBA::getSide()
-  {
-    return side_;
   }
 
   /**
@@ -84,14 +67,14 @@ namespace ReSolve
    *
    * @return int 0 if successful, 1 if fails
    */
-  int PreconditionerABBA::apply(vector_type* rhs, vector_type* x)
+  int PreconditionerUserMatrix::apply(vector_type* rhs, vector_type* x)
   {
     using namespace constants;
     matrix_handler_->matvec(B_, rhs, x, &ONE, &ZERO, memspace_);
     return 0;
   }
 
-  void PreconditionerABBA::setMemorySpace()
+  void PreconditionerUserMatrix::setMemorySpace()
   {
     bool is_matrix_handler_cuda = matrix_handler_->getIsCudaEnabled();
     bool is_matrix_handler_hip  = matrix_handler_->getIsHipEnabled();

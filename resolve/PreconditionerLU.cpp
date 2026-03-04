@@ -29,7 +29,7 @@ namespace ReSolve
   }
 
   /**
-   * @brief Sets up the preconditioner with the given matrix
+   * @brief Sets up the lu solver with the given matrix
    *
    * @param[in] A - System matrix to set up the preconditioner with
    *

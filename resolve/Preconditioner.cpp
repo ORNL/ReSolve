@@ -22,19 +22,24 @@ namespace ReSolve
     return 1;
   }
 
-  std::string Preconditioner::getSide()
+  std::string Preconditioner::getSide() const
   {
     return side_;
   }
 
   /**
-   * @brief Used to get the preconditioning matrix for Preconditioner Matvec
+   * @brief Set the preconditioning side
    *
-   * Should not be called unless using PreconditionerMatvec
+   * @param[in] side - "left" or "right"
+   * @return 0 if successful, 1 if invalid value
    */
-  matrix::Sparse* Preconditioner::getPrecMatrix()
+  int Preconditioner::setSide(const std::string& side)
   {
-    return nullptr;
+    if (side == "left" || side == "right") {
+      side_ = side;
+      return 0;
+    }
+    return 1;
   }
 
 } // namespace ReSolve

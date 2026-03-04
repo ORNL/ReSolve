@@ -17,10 +17,6 @@ target_link_libraries(rand_gmres_test.exe PRIVATE ReSolve)
 add_executable(sys_rand_gmres_test.exe testSysGmres.cpp)
 target_link_libraries(sys_rand_gmres_test.exe PRIVATE ReSolve)
 
-# Test for ABBA GMRES
-add_executable(trips_py_test.exe testTripsProblem.cpp)
-target_link_libraries(trips_py_test.exe PRIVATE ReSolve)
-
 if(RESOLVE_USE_KLU)
   # Build KLU+KLU test
   add_executable(klu_klu_test.exe testKlu.cpp)
@@ -52,7 +48,6 @@ endif()
 set(installable_tests version.exe)
 list(APPEND installable_tests rand_gmres_test.exe)
 list(APPEND installable_tests sys_rand_gmres_test.exe)
-list(APPEND installable_tests trips_py_test.exe)
 
 if(RESOLVE_USE_KLU)
   list(APPEND installable_tests klu_klu_test.exe)
@@ -186,6 +181,22 @@ add_test(NAME sys_gmres_mgs2sync_test
 add_test(NAME sys_gmres_mgspm_test
          COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-x" "no" "-i" "fgmres"
                  "-g" "mgs_pm"
+)
+add_test(NAME sys_rand_count_gmres_left_cgs2_test
+         COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-x" "no" "-i"
+                 "randgmres" "-g" "cgs2" "-s" "count" "-p" "left"
+)
+add_test(NAME sys_rand_count_gmres_left_mgs_test
+         COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-x" "no" "-i"
+                 "randgmres" "-g" "mgs" "-s" "count" "-p" "left"
+)
+add_test(NAME sys_gmres_left_cgs2_test 
+         COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe>
+                 "-x" "no" "-i" "fgmres" "-g" "cgs2" "-p" "left"
+)
+add_test(NAME sys_gmres_left_mgs_test 
+         COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe>
+                 "-x" "no" "-i" "fgmres" "-g" "mgs" "-p" "left"
 )
 
 # Randomized GMRES solvers tested without SystemSolver class
