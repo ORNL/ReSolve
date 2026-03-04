@@ -72,12 +72,6 @@ namespace ReSolve
     bool        getCliParamBool(const std::string id) const override;
     int         printCliParam(const std::string id) const override;
 
-    // Some preconditioner setters and getters
-    int         setPreconditionerDir(std::string);
-    int         setPreconditionerType(std::string);
-    std::string getPreconditionerDir() const;
-    std::string getPreconditionerType() const;
-
   private:
     enum ParamaterIDs
     {

@@ -113,10 +113,12 @@ namespace ReSolve
         const index_type n           = 3;
         const index_type nnz         = 3;
         matrix::Csr*     B           = new matrix::Csr(n, n, nnz);
+
         index_type       row_data[4] = {0, 1, 2, 3};
         index_type       col_data[3] = {0, 1, 2};
         real_type        val_data[3] = {2.0, 3.0, 4.0};
-        B->copyDataFrom(row_data, col_data, val_data, memory::HOST, memory::HOST);
+
+        B->copyFromExternal(row_data, col_data, val_data, memory::HOST, memory::HOST);
 
         if (memspace_ == memory::DEVICE)
         {

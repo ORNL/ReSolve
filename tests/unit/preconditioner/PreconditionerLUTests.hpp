@@ -42,7 +42,6 @@ namespace ReSolve
       /**
        * @brief Solve a 3x3 diagonal system through PreconditionerLU
        *
-       * A = diag(4, 5, 6). ILU0 is exact on diagonal matrices
        */
       TestOutcome solve()
       {
@@ -56,7 +55,9 @@ namespace ReSolve
         index_type   row_data[4] = {0, 1, 2, 3};
         index_type   col_data[3] = {0, 1, 2};
         real_type    val_data[3] = {4.0, 5.0, 6.0};
-        A->copyDataFrom(row_data, col_data, val_data, memory::HOST, memory::HOST);
+
+        A->copyFromExternal(row_data, col_data, val_data, memory::HOST, memory::HOST);
+
         if (memspace_ == memory::DEVICE)
         {
           A->syncData(memory::DEVICE);
@@ -67,7 +68,7 @@ namespace ReSolve
 
         real_type       rhs_data[3] = {4.0, 10.0, 18.0};
         vector::Vector* rhs         = new vector::Vector(n);
-        rhs->copyDataFrom(rhs_data, memory::HOST, memspace_);
+        rhs->copyFromExternal(rhs_data, memory::HOST, memspace_);
 
         vector::Vector* x = new vector::Vector(n);
         x->allocate(memspace_);
@@ -108,14 +109,14 @@ namespace ReSolve
         if (precond.getSide() != "right")
         {
           status *= false;
-          std::cout << testname << ": default side should be 'right', got '" << precond.getSide() << "'\n";
+          std::cout << "Default side should be 'right', got '" << precond.getSide() << "'\n";
         }
 
         precond.setSide("left");
         if (precond.getSide() != "left")
         {
           status *= false;
-          std::cout << testname << ": after setSide(\"left\"), got '" << precond.getSide() << "'\n";
+          std::cout << "After setSide(\"left\"), got '" << precond.getSide() << "'\n";
         }
 
         return status.report(testname.c_str());

@@ -177,7 +177,7 @@ namespace ReSolve
     if (!flexible_ && preconditioner_->getSide() == "left")
     {
       preconditioner_->apply(&vec_v, &vec_z);
-      vec_v.copyDataFrom(&vec_z, memspace_, memspace_);
+      vec_v.copyFromExternal(&vec_z, memspace_, memspace_);
     }
 
     vec_s.setData(vec_S_->getData(0, memspace_), memspace_);
@@ -189,17 +189,27 @@ namespace ReSolve
       vector_handler_->scal(one_over_k_, &vec_s, memspace_);
     }
     mem_.deviceSynchronize();
-
-    rnorm = 0.0;
-    bnorm = vector_handler_->dot(rhs, rhs, memspace_);
     rnorm = vector_handler_->dot(&vec_s, &vec_s, memspace_);
+    bnorm = vector_handler_->dot(rhs, rhs, memspace_);
+
+    // Left preconditioning applies M^{-1} to bnorm
+    if (!flexible_ && preconditioner_->getSide() == "left")
+    {
+      vec_v.setData(rhs->getData(memspace_), memspace_);
+      preconditioner_->apply(&vec_v, &vec_z);
+      bnorm = vector_handler_->dot(&vec_z, &vec_z, memspace_);
+      vec_v.setData(vec_V_->getData(0, memspace_), memspace_);
+    }
+
     rnorm = std::sqrt(rnorm); // rnorm = ||V_1||
     bnorm = std::sqrt(bnorm);
+
     io::Logger::misc() << "it 0: norm of residual "
                        << std::scientific << std::setprecision(16)
                        << rnorm << " Norm of rhs: " << bnorm << "\n";
 
     initial_residual_norm_ = rnorm / bnorm; // compute relative residual norm
+
     while (outer_flag)
     {
       if (it == 0)
@@ -274,9 +284,10 @@ namespace ReSolve
         }
         else
         {
-          // Standard GMRES allows both left and right preconditioning
           if (preconditioner_->getSide() == "right")
-          {
+          {            
+            // vec_z = M^{-1}*vec_v,
+            // then vec_v = A_*vec_z
             preconditioner_->apply(&vec_v, &vec_z);
             mem_.deviceSynchronize();
 
@@ -284,7 +295,9 @@ namespace ReSolve
             matrix_handler_->matvec(A_, &vec_z, &vec_v, &ONE, &ZERO, memspace_);
           }
           else
-          {
+          {            
+            // vec_z = A*vec_v,
+            // then vec_v = M^{-1}*vec_z
             matrix_handler_->matvec(A_, &vec_v, &vec_z, &ONE, &ZERO, memspace_);
             mem_.deviceSynchronize();
 
@@ -392,28 +405,18 @@ namespace ReSolve
           vec_v.setData(vec_V_->getData(j, memspace_), memspace_);
           vector_handler_->axpy(h_rs_[j], &vec_v, &vec_z, memspace_);
         }
-<<<<<<< HEAD
-        // now multiply d_Z by precon
-
-        vec_v.setData(vec_V_->getData(memspace_), memspace_);
-        this->precV(&vec_z, &vec_v);
-        // and add to x
-        vector_handler_->axpy(ONE, &vec_v, x, memspace_);
-=======
-        // now multiply d_Z by precon for right preconditioned, or use directly for left
         if (preconditioner_->getSide() == "right")
         {
-          vec_v.setData(vec_V_->getData(memspace_), memspace_);
+          // The correction is M^{-1}*vec_z for right preconditioning
           preconditioner_->apply(&vec_z, &vec_v);
-          // and add to x
-          vector_handler_->axpy(&ONE, &vec_v, x, memspace_);
+          // Add the correction to x
+          vector_handler_->axpy(ONE, &vec_v, x, memspace_);
         }
         else
         {
-          // Left preconditioned: x = x + vec_z (already holds sum of V vectors)
-          vector_handler_->axpy(&ONE, &vec_z, x, memspace_);
+          // Add the correction to x directry for left preconditioning
+          vector_handler_->axpy(ONE, &vec_z, x, memspace_);
         }
->>>>>>> c086b98 (Fix left preconditioning and add corresponding tests)
       }
 
       /* test solution */
@@ -431,7 +434,7 @@ namespace ReSolve
         {
           vec_v.setData(vec_V_->getData(0, memspace_), memspace_);
           preconditioner_->apply(&vec_v, &vec_z);
-          vec_v.copyDataFrom(&vec_z, memspace_, memspace_);
+          vec_v.copyFromExternal(&vec_z, memspace_, memspace_);
         }
 
         sketching_handler_->reset();
