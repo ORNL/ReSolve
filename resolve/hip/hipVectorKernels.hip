@@ -145,6 +145,8 @@ namespace ReSolve {
       }
     } // namespace kernels
 
+    constexpr index_type block_size = 256;
+
     void setArrayConst(index_type n, real_type c, real_type* v)
     {
       index_type num_blocks;
@@ -194,9 +196,7 @@ namespace ReSolve {
                            const real_type* divisor,
                            real_type*       vec)
     {
-      // Define block size and number of blocks
-      const int block_size = 256;
-      int       num_blocks = (n + block_size - 1) / block_size;
+      int num_blocks = (n + block_size - 1) / block_size;
       // Launch the kernel
       kernels::scaleInv<<<num_blocks, block_size>>>(n, divisor, vec);
     }
@@ -216,9 +216,7 @@ namespace ReSolve {
              const real_type* y,
              real_type*       out)
     {
-      // Define block size and number of blocks
-      const int block_size = 256;
-      int       num_blocks = (n + block_size - 1) / block_size;
+      int num_blocks = (n + block_size - 1) / block_size;
       // Launch the kernel
       kernels::max<<<num_blocks, block_size>>>(n, x, y, out);
     }
@@ -236,9 +234,7 @@ namespace ReSolve {
              const real_type* in,
              real_type*       out)
     {
-      // Define block size and number of blocks
-      const int block_size = 256;
-      int       num_blocks = (n + block_size - 1) / block_size;
+      int num_blocks = (n + block_size - 1) / block_size;
       // Launch the kernel
       kernels::abs<<<num_blocks, block_size>>>(n, in, out);
     }
