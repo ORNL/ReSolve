@@ -95,17 +95,19 @@ namespace ReSolve {
       }
 
       /**
-       * @brief Wrapper that computes the element-wise max of two vectors.
+       * @brief Computes the element-wise max of two vectors.
        *
-       * @param[in]      n - size of the vectors
-       * @param[in]      x - First vector values
-       * @param[in, out] y - Second vector values. Changes in place.
+       * @param[in]  n   - size of the vectors
+       * @param[in]  x   - First vector values
+       * @param[in]  y   - Second vector values
+       * @param[out] out - Output vector values
        *
        * @todo Decide how to allow user to configure grid and block sizes.
        */
       __global__ void max(index_type       n,
-                                     const real_type* x,
-                                     real_type*       y)
+                          const real_type* x,
+                          const real_type* y,
+                          real_type*       out)
       {
         // Get the index of the element to be processed
         index_type idx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -114,7 +116,7 @@ namespace ReSolve {
         if (idx < n)
         {
           // Compute maximum of elements
-          y[idx] = max(x[idx], y[idx]);
+          out[idx] = max(x[idx], y[idx]);
         }
       }
 
@@ -202,21 +204,23 @@ namespace ReSolve {
     /**
      * @brief Wrapper that computes the element-wise max of two vectors.
      *
-     * @param[in]      n - size of the vectors
-     * @param[in]      x - First vector values
-     * @param[in, out] y - Second vector values. Changes in place.
+     * @param[in]  n   - size of the vectors
+     * @param[in]  x   - First vector values
+     * @param[in]  y   - Second vector values
+     * @param[out] out - Output vector values
      *
      * @todo Decide how to allow user to configure grid and block sizes.
      */
     void max(index_type       n,
-                        const real_type* x,
-                        real_type*       y)
+             const real_type* x,
+             const real_type* y,
+             real_type*       out)
     {
       // Define block size and number of blocks
       const int block_size = 256;
       int       num_blocks = (n + block_size - 1) / block_size;
       // Launch the kernel
-      kernels::max<<<num_blocks, block_size>>>(n, x, y);
+      kernels::max<<<num_blocks, block_size>>>(n, x, y, out);
     }
 
     /**

@@ -68,7 +68,7 @@ namespace ReSolve
               memory::MemorySpace memspace);
 
     int scaleInv(vector::Vector* divisor, vector::Vector* vec, memory::MemorySpace memspace);
-    int max(vector::Vector* x, vector::Vector* y, memory::MemorySpace memspace);
+    int max(const vector::Vector* x, const vector::Vector* y, vector::Vector* out, memory::MemorySpace memspace);
 
     int abs(const vector::Vector* in, vector::Vector* out, memory::MemorySpace memspace);
 

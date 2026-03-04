@@ -328,9 +328,11 @@ namespace ReSolve
 
         vector::Vector x(N);
         vector::Vector y(N);
+        vector::Vector z(N);
 
         x.allocate(memspace_);
         y.allocate(memspace_);
+        z.allocate(memspace_);
 
         auto x_data = std::unique_ptr<real_type[]>(new real_type[N]);
         auto y_data = std::unique_ptr<real_type[]>(new real_type[N]);
@@ -350,7 +352,8 @@ namespace ReSolve
         x.copyFromExternal(x_data.get(), memory::HOST, memspace_);
         y.copyFromExternal(y_data.get(), memory::HOST, memspace_);
 
-        handler_.max(&x, &y, memspace_);
+        handler_.max(&x, &y, &z, memspace_);
+        handler_.max(&x, &y, &y, memspace_);
 
         if (memspace_ == memory::DEVICE)
         {
@@ -362,6 +365,14 @@ namespace ReSolve
           if (!isEqual(y.getData(memory::HOST)[i], (real_type) (i + 1)))
           {
             std::cout << "Solution vector element y[" << i << "] = " << y.getData(memory::HOST)[i]
+                      << ", expected: " << (real_type) (i + 1) << "\n";
+            status *= false;
+            break;
+          }
+
+          if (!isEqual(z.getData(memory::HOST)[i], (real_type) (i + 1)))
+          {
+            std::cout << "Solution vector element z[" << i << "] = " << z.getData(memory::HOST)[i]
                       << ", expected: " << (real_type) (i + 1) << "\n";
             status *= false;
             break;

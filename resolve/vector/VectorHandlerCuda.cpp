@@ -364,20 +364,22 @@ namespace ReSolve
   /**
    * @brief Calculate element-wise maximum between two vectors in CUDA
    *
-   * @param[in]      x - The first vector
-   * @param[in, out] y - The second vector (result is returned in y)
+   * @param[in]  x   - The first vector
+   * @param[in]  y   - The second vector
+   * @param[out] out - The output vector
    *
-   * @pre The two vectors must be the same size
+   * @pre The three vectors must be the same size
    *
    * @return 0 if successful, 1 otherwise
    */
-  int VectorHandlerCuda::max(vector::Vector* x, vector::Vector* y)
+  int VectorHandlerCuda::max(const vector::Vector* x, const vector::Vector* y, vector::Vector* out)
   {
-    real_type* x_data = x->getData(memory::DEVICE);
-    real_type* y_data = y->getData(memory::DEVICE);
-    index_type n      = y->getSize();
-    cuda::max(n, x_data, y_data);
-    y->setDataUpdated(memory::DEVICE);
+    real_type* x_data   = x->getData(memory::DEVICE);
+    real_type* y_data   = y->getData(memory::DEVICE);
+    real_type* out_data = out->getData(memory::DEVICE);
+    index_type n        = y->getSize();
+    cuda::max(n, x_data, y_data, out_data);
+    out->setDataUpdated(memory::DEVICE);
     return 0;
   }
 

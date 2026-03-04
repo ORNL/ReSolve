@@ -373,27 +373,30 @@ namespace ReSolve
   /**
    * @brief Takes the element-wise max between two vectors.
    *
-   * @param[in] x        - The first vector
-   * @param[in,out] y    - The second vector (result is returned in y)
-   * @param[in] memspace - Device where the operation is computed
+   * @param[in]  x        - The first vector
+   * @param[in]  y        - The second vector
+   * @param[out] out      - The output vector
+   * @param[in]  memspace - Device where the operation is computed
    *
    * @pre The two vectors must be the same size
    *
    * @return 0 if successful, 1 otherwise
    */
-  int VectorHandler::max(vector::Vector* x, vector::Vector* y, memory::MemorySpace memspace)
+  int VectorHandler::max(const vector::Vector* x, const vector::Vector* y, vector::Vector* out, memory::MemorySpace memspace)
   {
     assert(x->getSize() == y->getSize() && "Vectors must be the same size.");
-    assert(x->getData(memspace) != nullptr && "Vector x data is null!\n");
-    assert(y->getData(memspace) != nullptr && "Vector y data is null!\n");
+    assert(x->getSize() == out->getSize() && "Vectors must be the same size.");
+    assert(x->getData(memspace) != nullptr && "Vector x data is null!");
+    assert(y->getData(memspace) != nullptr && "Vector y data is null!");
+    assert(out->getData(memspace) != nullptr && "Vector out data is null!");
     using namespace ReSolve::memory;
     switch (memspace)
     {
     case HOST:
-      return cpuImpl_->max(x, y);
+      return cpuImpl_->max(x, y, out);
       break;
     case DEVICE:
-      return devImpl_->max(x, y);
+      return devImpl_->max(x, y, out);
       break;
     }
     return 1;

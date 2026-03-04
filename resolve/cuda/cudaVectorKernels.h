@@ -19,7 +19,7 @@ namespace ReSolve
     void addConst(index_type n, real_type val, real_type* arr);
     void scale(index_type n, const real_type* diag, real_type* vec);
     void scaleInv(index_type n, const real_type* divisor, real_type* vec);
-    void max(index_type n, const real_type* x, real_type* y);
+    void max(index_type n, const real_type* x, const real_type* y, real_type* out);
     void abs(index_type n, const real_type* in, real_type* out);
   } // namespace cuda
 } // namespace ReSolve
