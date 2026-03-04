@@ -85,8 +85,6 @@ namespace ReSolve
     index_type  restart_{10};                       ///< GMRES restart
     index_type  conv_cond_{2};                      ///< GMRES convergence condition
     bool        flexible_{true};                    ///< If using flexible GMRES (FGMRES) algorithm
-    std::string preconditioner_direction_{"right"}; ///< Save the direction to allow switching
-    std::string preconditioner_type_{"class"};      ///< Saves the type of preconditioner used
 
   private:
     int  allocateSolverData();
