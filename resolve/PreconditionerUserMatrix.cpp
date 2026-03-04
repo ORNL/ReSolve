@@ -2,7 +2,7 @@
  * @file   PreconditionerUserMatrix.cpp
  * @author Jeffery Zhang (jefferyz@vt.edu)
  * @author Kakeru Ueda (k.ueda.2290@m.isct.ac.jp)
- * @brief  Declaration of PreconditionerUserMatrix class.
+ * @brief  Implementation of preconditioner class with user matrix
  *
  */
 

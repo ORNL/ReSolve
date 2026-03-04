@@ -1,7 +1,7 @@
 /**
  * @file   PreconditionerLU.cpp
  * @author Kakeru Ueda (k.ueda.2290@m.isct.ac.jp)
- * @brief  Declaration of preconditioner ILU0 class.
+ * @brief  Implementation of preconditioner LU class.
  *
  */
 
