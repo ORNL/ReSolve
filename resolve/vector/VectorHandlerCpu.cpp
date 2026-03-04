@@ -372,16 +372,17 @@ namespace ReSolve
    *
    * @return 0 if successful, 1 otherwise
    */
-  int VectorHandlerCpu::abs(vector::Vector* x)
+  int VectorHandlerCpu::abs(const vector::Vector* in, vector::Vector* out)
   {
-    real_type* x_data = x->getData(memory::HOST);
-    index_type n      = x->getSize();
+    const real_type* in_data  = in->getData(memory::HOST);
+    real_type*       out_data = out->getData(memory::HOST);
+    index_type       n        = in->getSize();
 
     for (index_type i = 0; i < n; ++i)
     {
-      x_data[i] = std::abs(x_data[i]);
+      out_data[i] = std::abs(in_data[i]);
     }
-    x->setDataUpdated(memory::HOST);
+    out->setDataUpdated(memory::HOST);
     return 0;
   }
 

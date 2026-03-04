@@ -52,7 +52,7 @@ namespace ReSolve
     virtual int max(vector::Vector* x, vector::Vector* y) = 0;
 
     // Compute element-wise absolute value of a vector
-    virtual int abs(vector::Vector* x) = 0;
+    virtual int abs(const vector::Vector* in, vector::Vector* out) = 0;
 
     /** gemv:
      * if `transpose = N` (no), `x = beta*x +  alpha*V*y`,

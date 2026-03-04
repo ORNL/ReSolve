@@ -12,6 +12,8 @@
 #include <resolve/cuda/cudaKernels.h>
 #include <resolve/cuda/cudaVectorKernels.h>
 
+#include "resolve/Common.hpp"
+
 namespace ReSolve
 {
   namespace cuda
@@ -132,13 +134,15 @@ namespace ReSolve
       /**
        * @brief Computes the element-wise absolute value of a vector.
        *
-       * @param[in]      n - size of the vector
-       * @param[in, out] x - Vector values. Changes in place.
+       * @param[in]  n   - size of the vector
+       * @param[in]  in  - Vector input
+       * @param[out] out - Vector output
        *
        * @todo Decide how to allow user to configure grid and block sizes.
        */
-      __global__ void abs(index_type n,
-                          real_type* x)
+      __global__ void abs(index_type       n,
+                          const real_type* in,
+                          real_type*       out)
       {
         // Get the index of the element to be processed
         index_type idx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -147,7 +151,7 @@ namespace ReSolve
         if (idx < n)
         {
           // Compute absolute value of element
-          x[idx] = fabs(x[idx]);
+          out[idx] = fabs(in[idx]);
         }
       }
     } // namespace kernels
@@ -231,19 +235,21 @@ namespace ReSolve
     /**
      * @brief Wrapper that computes the element-wise absolute value of a vector.
      *
-     * @param[in]      n - size of the vector
-     * @param[in, out] x - Vector values. Changes in place.
+     * @param[in]  n   - size of the vector
+     * @param[in]  in  - Vector input
+     * @param[out] out - Vector output
      *
      * @todo Decide how to allow user to configure grid and block sizes.
      */
-    void abs(index_type n,
-             real_type* x)
+    void abs(index_type       n,
+             const real_type* in,
+             real_type*       out)
     {
       // Define block size and number of blocks
       const int block_size = 256;
       int       num_blocks = (n + block_size - 1) / block_size;
       // Launch the kernel
-      kernels::abs<<<num_blocks, block_size>>>(n, x);
+      kernels::abs<<<num_blocks, block_size>>>(n, in, out);
     }
   } // namespace cuda
 } // namespace ReSolve

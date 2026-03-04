@@ -93,7 +93,7 @@ namespace ReSolve
      *
      * @return 0 if successful, 1 otherwise
      */
-    virtual int abs(vector::Vector* x);
+    virtual int abs(const vector::Vector* in, vector::Vector* out);
 
   private:
     LinAlgWorkspaceHIP* workspace_;

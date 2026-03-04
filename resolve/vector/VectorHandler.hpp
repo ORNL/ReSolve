@@ -70,7 +70,7 @@ namespace ReSolve
     int scaleInv(vector::Vector* divisor, vector::Vector* vec, memory::MemorySpace memspace);
     int max(vector::Vector* x, vector::Vector* y, memory::MemorySpace memspace);
 
-    int abs(vector::Vector* x, memory::MemorySpace memspace);
+    int abs(const vector::Vector* in, vector::Vector* out, memory::MemorySpace memspace);
 
     // Vector infinity norm
     real_type amax(vector::Vector* x, memory::MemorySpace memspace);

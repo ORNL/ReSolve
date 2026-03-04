@@ -384,16 +384,18 @@ namespace ReSolve
   /**
    * @brief Calculate element-wise absolute value of a vector in CUDA
    *
-   * @param[in, out] x - The vector (result is returned in x)
+   * @param[in]  in  - The input vector
+   * @param[out] out - The output
    *
    * @return 0 if successful, 1 otherwise
    */
-  int VectorHandlerCuda::abs(vector::Vector* x)
+  int VectorHandlerCuda::abs(const vector::Vector* in, vector::Vector* out)
   {
-    real_type* x_data = x->getData(memory::DEVICE);
-    index_type n      = x->getSize();
-    cuda::abs(n, x_data);
-    x->setDataUpdated(memory::DEVICE);
+    const real_type* in_data  = in->getData(memory::DEVICE);
+    real_type*       out_data = out->getData(memory::DEVICE);
+    index_type       n        = in->getSize();
+    cuda::abs(n, in_data, out_data);
+    out->setDataUpdated(memory::DEVICE);
     return 0;
   }
 

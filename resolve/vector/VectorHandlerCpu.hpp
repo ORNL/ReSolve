@@ -61,7 +61,7 @@ namespace ReSolve
 
     virtual int max(vector::Vector* x, vector::Vector* y);
 
-    virtual int abs(vector::Vector* x);
+    virtual int abs(const vector::Vector* in, vector::Vector* out);
 
   private:
     LinAlgWorkspaceCpu* workspace_;

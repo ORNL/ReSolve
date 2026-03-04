@@ -376,8 +376,10 @@ namespace ReSolve
         TestStatus status;
 
         vector::Vector x(N);
+        vector::Vector y(N);
 
         x.allocate(memspace_);
+        y.allocate(memspace_);
 
         auto x_data = std::unique_ptr<real_type[]>(new real_type[N]);
         for (size_t i = 0; i < static_cast<size_t>(N); ++i)
@@ -393,18 +395,28 @@ namespace ReSolve
         }
         x.copyFromExternal(x_data.get(), memory::HOST, memspace_);
 
-        handler_.abs(&x, memspace_);
+        handler_.abs(&x, &y, memspace_);
+        handler_.abs(&x, &x, memspace_);
 
         if (memspace_ == memory::DEVICE)
         {
           x.syncData(memory::HOST);
+          y.syncData(memory::HOST);
         }
 
         for (index_type i = 0; i < N; ++i)
         {
           if (!isEqual(x.getData(memory::HOST)[i], (real_type) i))
           {
-            std::cout << "Solution vector element y[" << i << "] = " << x.getData(memory::HOST)[i]
+            std::cout << "Solution vector element x[" << i << "] = " << x.getData(memory::HOST)[i]
+                      << ", expected: " << (real_type) i << "\n";
+            status *= false;
+            break;
+          }
+
+          if (!isEqual(y.getData(memory::HOST)[i], (real_type) i))
+          {
+            std::cout << "Solution vector element y[" << i << "] = " << y.getData(memory::HOST)[i]
                       << ", expected: " << (real_type) i << "\n";
             status *= false;
             break;

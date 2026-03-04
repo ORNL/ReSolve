@@ -402,22 +402,26 @@ namespace ReSolve
   /**
    * @brief Computes the element-wise absolute value of a vector.
    *
-   * @param[in,out] x    - Input and output vector
-   * @param[in] memspace - Device where the operation is computed
+   * @param[in]  in       - Input vector
+   * @param[out] out      - Output vector
+   * @param[in]  memspace - Device where the operation is computed
    *
    * @return 0 if successful, 1 otherwise
    */
-  int VectorHandler::abs(vector::Vector* x, memory::MemorySpace memspace)
+  int VectorHandler::abs(const vector::Vector* in, vector::Vector* out, memory::MemorySpace memspace)
   {
-    assert(x->getData(memspace) != nullptr && "Vector data is null!\n");
+    assert(in->getData(memspace) != nullptr && "Vector in data is null!");
+    assert(out->getData(memspace) != nullptr && "Vector out data is null!");
+    assert(in->getSize() == out->getSize() && "Vector sizes do not match!");
+
     using namespace ReSolve::memory;
     switch (memspace)
     {
     case HOST:
-      return cpuImpl_->abs(x);
+      return cpuImpl_->abs(in, out);
       break;
     case DEVICE:
-      return devImpl_->abs(x);
+      return devImpl_->abs(in, out);
       break;
     }
     return 1;
