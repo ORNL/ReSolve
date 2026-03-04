@@ -1,25 +1,24 @@
 /**
  * @file runPreconditionerUserMatrixTests.cpp
  * @brief Tests for PreconditionerUserMatrix class.
- * 
+ *
  */
 
 #include <iostream>
 #include <string>
 
+#include "PreconditionerUserMatrixTests.hpp"
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 
-#include "PreconditionerUserMatrixTests.hpp"
-
 /**
  * @brief Run PreconditionerUserMatrix tests with a given backend.
- * 
+ *
  */
 template <typename WorkspaceType>
-void runExplicitMatrixTests(const std::string& backend,
-                             ReSolve::memory::MemorySpace memspace,
-                             ReSolve::tests::TestingResults& result)
+void runExplicitMatrixTests(const std::string&              backend,
+                            ReSolve::memory::MemorySpace    memspace,
+                            ReSolve::tests::TestingResults& result)
 {
   std::cout << "Running PreconditionerUserMatrix tests on " << backend << ":\n";
 

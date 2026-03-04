@@ -265,7 +265,7 @@ namespace ReSolve
 
         if (flexible_)
         {
-          // FGMRES supports only right preconditioning 
+          // FGMRES supports only right preconditioning
           preconditioner_->apply(&vec_v, &vec_z);
           mem_.deviceSynchronize();
 

@@ -16,6 +16,7 @@
 #include "TestHelper.hpp"
 #include <resolve/GramSchmidt.hpp>
 #include <resolve/LinSolverIterativeRandFGMRES.hpp>
+#include <resolve/Preconditioner.hpp>
 #include <resolve/SystemSolver.hpp>
 #include <resolve/matrix/Csc.hpp>
 #include <resolve/matrix/Csr.hpp>
@@ -25,7 +26,6 @@
 #include <resolve/vector/Vector.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
-#include <resolve/Preconditioner.hpp>
 
 // Use ReSolve data types.
 using real_type   = ReSolve::real_type;

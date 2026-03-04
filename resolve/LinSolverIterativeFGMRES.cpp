@@ -352,47 +352,49 @@ namespace ReSolve
         }    
 >>>>>>> a3cdcbf (ABBA GMRES Commit)
 =======
-        }
+      }
 >>>>>>> 0b3c99a (Apply pre-commmit fixes)
-      }
+    }
 
-      /* test solution */
+    /* test solution */
 
-      if (rnorm <= tolrel || it >= maxit_)
-      {
-        // rnorm_aux = rnorm;
-        outer_flag = 0;
-      }
+    if (rnorm <= tolrel || it >= maxit_)
+    {
+      // rnorm_aux = rnorm;
+      outer_flag = 0;
+    }
 
-      rhs->copyToExternal(vec_V_->getData(memspace_), 0, memspace_, memspace_);
-      matrix_handler_->matvec(A_, x, vec_V_, &MINUS_ONE, &ONE, memspace_);
+    rhs->copyToExternal(vec_V_->getData(memspace_), 0, memspace_, memspace_);
+    matrix_handler_->matvec(A_, x, vec_V_, &MINUS_ONE, &ONE, memspace_);
 
-      // Left-preconditioned GMRES applies M^{-1} to the residual
-      if (!flexible_ && preconditioner_->getSide() == "left")
-      {
-        vec_v.setData(vec_V_->getData(0, memspace_), memspace_);
-        preconditioner_->apply(&vec_v, &vec_z);
-        vec_v.copyDataFrom(&vec_z, memspace_, memspace_);
-      }
-      rnorm = vector_handler_->dot(vec_V_, vec_V_, memspace_);
+    // Left-preconditioned GMRES applies M^{-1} to the residual
+    if (!flexible_ && preconditioner_->getSide() == "left")
+    {
+      vec_v.setData(vec_V_->getData(0, memspace_), memspace_);
+      preconditioner_->apply(&vec_v, &vec_z);
+      vec_v.copyDataFrom(&vec_z, memspace_, memspace_);
+    }
+    rnorm = vector_handler_->dot(vec_V_, vec_V_, memspace_);
 
-      // rnorm = ||V_1||
-      rnorm = std::sqrt(rnorm);
+    // rnorm = ||V_1||
+    rnorm = std::sqrt(rnorm);
 
-      if (!outer_flag)
-      {
-        final_residual_norm_ = rnorm / bnorm; // relative residual norm
-        total_iters_         = it;
-        io::Logger::misc() << "End of cycle, COMPUTED norm of residual "
-                           << std::scientific << std::setprecision(16)
-                           << rnorm << "\n";
-      }
-    } // outer while
-    return 0;
-  }
+    if (!outer_flag)
+    {
+      final_residual_norm_ = rnorm / bnorm; // relative residual norm
+      total_iters_         = it;
+      io::Logger::misc() << "End of cycle, COMPUTED norm of residual "
+                         << std::scientific << std::setprecision(16)
+                         << rnorm << "\n";
+    }
+  } // outer while
+
+  return 0;
+}
 
 <<<<<<< HEAD
 =======
+
   /**
    * @brief Sets pointer to B matrix for user configured preconditioner
    *        Sets the variable preconditioner_type_ to matvec to perform
@@ -409,228 +411,230 @@ namespace ReSolve
   }
 
 >>>>>>> 0b3c99a (Apply pre-commmit fixes)
-  int LinSolverIterativeFGMRES::resetMatrix(matrix::Sparse* new_matrix)
+
+int LinSolverIterativeFGMRES::resetMatrix(matrix::Sparse* new_matrix)
+{
+  A_ = new_matrix;
+  matrix_handler_->setValuesChanged(true, memspace_);
+  return 0;
+}
+
+/**
+ * @brief Sets pointer to Gram-Schmidt (re)orthogonalization.
+ *
+ * @param[in] gs - pointer to Gram-Schmidt class instance.
+ * @return 0 if successful, error code otherwise.
+ */
+int LinSolverIterativeFGMRES::setOrthogonalization(GramSchmidt* gs)
+{
+  GS_ = gs;
+  return 0;
+}
+
+/**
+ * @brief Set/change GMRES restart value
+ *
+ * This function should leave solver instance in the same state but with
+ * the new restart value.
+ *
+ * @param[in] restart - the restart value
+ * @return 0 if successful, error code otherwise.
+ *
+ * @todo Consider not setting up GS, if it was not previously set up.
+ */
+int LinSolverIterativeFGMRES::setRestart(index_type restart)
+{
+  // If the new restart value is the same as the old, do nothing.
+  if (restart_ == restart)
   {
-    A_ = new_matrix;
-    matrix_handler_->setValuesChanged(true, memspace_);
     return 0;
   }
 
-  /**
-   * @brief Sets pointer to Gram-Schmidt (re)orthogonalization.
-   *
-   * @param[in] gs - pointer to Gram-Schmidt class instance.
-   * @return 0 if successful, error code otherwise.
-   */
-  int LinSolverIterativeFGMRES::setOrthogonalization(GramSchmidt* gs)
+  // Otherwise, set new restart value
+  restart_ = restart;
+
+  // If solver is already set, reallocate solver data
+  if (is_solver_set_)
   {
-    GS_ = gs;
-    return 0;
+    freeSolverData();
+    allocateSolverData();
   }
 
-  /**
-   * @brief Set/change GMRES restart value
-   *
-   * This function should leave solver instance in the same state but with
-   * the new restart value.
-   *
-   * @param[in] restart - the restart value
-   * @return 0 if successful, error code otherwise.
-   *
-   * @todo Consider not setting up GS, if it was not previously set up.
-   */
-  int LinSolverIterativeFGMRES::setRestart(index_type restart)
+  matrix_handler_->setValuesChanged(true, memspace_);
+
+  // If Gram-Schmidt is already set, we need to reallocate it since the
+  // restart value has changed.
+  // if (GS_->isSetupComplete()) {
+  GS_->setup(n_, restart_);
+  // }
+
+  return 0;
+}
+
+/**
+ * @brief Switches between flexible and standard GMRES
+ *
+ * @param is_flexible - true means set flexible GMRES
+ * @return 0 if successful, error code otherwise.
+ */
+int LinSolverIterativeFGMRES::setFlexible(bool is_flexible)
+{
+  // TODO: Add vector method resize
+  if (vec_Z_)
   {
-    // If the new restart value is the same as the old, do nothing.
-    if (restart_ == restart)
+    delete vec_Z_;
+    if (is_flexible)
     {
-      return 0;
+      vec_Z_ = new vector_type(n_, restart_ + 1);
     }
-
-    // Otherwise, set new restart value
-    restart_ = restart;
-
-    // If solver is already set, reallocate solver data
-    if (is_solver_set_)
+    else
     {
-      freeSolverData();
-      allocateSolverData();
+      // otherwise Z is just a one vector, not multivector and we dont keep it
+      vec_Z_ = new vector_type(n_);
     }
-
-    matrix_handler_->setValuesChanged(true, memspace_);
-
-    // If Gram-Schmidt is already set, we need to reallocate it since the
-    // restart value has changed.
-    // if (GS_->isSetupComplete()) {
-    GS_->setup(n_, restart_);
-    // }
-
-    return 0;
+    vec_Z_->allocate(memspace_);
   }
+  flexible_ = is_flexible;
+  matrix_handler_->setValuesChanged(true, memspace_);
+  return 0;
+}
 
-  /**
-   * @brief Switches between flexible and standard GMRES
-   *
-   * @param is_flexible - true means set flexible GMRES
-   * @return 0 if successful, error code otherwise.
-   */
-  int LinSolverIterativeFGMRES::setFlexible(bool is_flexible)
+/**
+ * @brief Set the convergence condition for GMRES solver
+ *
+ * @param[in] conv_cond - Possible values: 0, 1, 2
+ * @return int - error code, 0 if successful
+ */
+int LinSolverIterativeFGMRES::setConvergenceCondition(index_type conv_cond)
+{
+  conv_cond_ = conv_cond;
+  return 0;
+}
+
+index_type LinSolverIterativeFGMRES::getRestart() const
+{
+  return restart_;
+}
+
+index_type LinSolverIterativeFGMRES::getConvCond() const
+{
+  return conv_cond_;
+}
+
+bool LinSolverIterativeFGMRES::getFlexible() const
+{
+  return flexible_;
+}
+
+int LinSolverIterativeFGMRES::setCliParam(const std::string id, const std::string value)
+{
+  switch (getParamId(id))
   {
-    // TODO: Add vector method resize
-    if (vec_Z_)
-    {
-      delete vec_Z_;
-      if (is_flexible)
-      {
-        vec_Z_ = new vector_type(n_, restart_ + 1);
-      }
-      else
-      {
-        // otherwise Z is just a one vector, not multivector and we dont keep it
-        vec_Z_ = new vector_type(n_);
-      }
-      vec_Z_->allocate(memspace_);
-    }
-    flexible_ = is_flexible;
-    matrix_handler_->setValuesChanged(true, memspace_);
-    return 0;
+  case TOL:
+    setTol(atof(value.c_str()));
+    break;
+  case MAXIT:
+    setMaxit(atoi(value.c_str()));
+    break;
+  case RESTART:
+    setRestart(atoi(value.c_str()));
+    break;
+  case CONV_COND:
+    setConvergenceCondition(atoi(value.c_str()));
+    break;
+  case FLEXIBLE:
+    setFlexible(value == "yes");
+    break;
+  default:
+    std::cout << "Setting parameter failed!\n";
   }
+  return 0;
+}
 
-  /**
-   * @brief Set the convergence condition for GMRES solver
-   *
-   * @param[in] conv_cond - Possible values: 0, 1, 2
-   * @return int - error code, 0 if successful
-   */
-  int LinSolverIterativeFGMRES::setConvergenceCondition(index_type conv_cond)
+std::string LinSolverIterativeFGMRES::getCliParamString(const std::string id) const
+{
+  switch (getParamId(id))
   {
-    conv_cond_ = conv_cond;
-    return 0;
+  default:
+    out::error() << "Trying to get unknown string parameter " << id << "\n";
   }
+  return "";
+}
 
-  index_type LinSolverIterativeFGMRES::getRestart() const
+index_type LinSolverIterativeFGMRES::getCliParamInt(const std::string id) const
+{
+  switch (getParamId(id))
   {
-    return restart_;
+  case MAXIT:
+    return getMaxit();
+    break;
+  case RESTART:
+    return getRestart();
+    break;
+  case CONV_COND:
+    return getConvCond();
+    break;
+  default:
+    out::error() << "Trying to get unknown integer parameter " << id << "\n";
   }
+  return -1;
+}
 
-  index_type LinSolverIterativeFGMRES::getConvCond() const
+real_type LinSolverIterativeFGMRES::getCliParamReal(const std::string id) const
+{
+  switch (getParamId(id))
   {
-    return conv_cond_;
+  case TOL:
+    return getTol();
+    break;
+  default:
+    out::error() << "Trying to get unknown real parameter " << id << "\n";
   }
+  return std::numeric_limits<real_type>::quiet_NaN();
+}
 
-  bool LinSolverIterativeFGMRES::getFlexible() const
+bool LinSolverIterativeFGMRES::getCliParamBool(const std::string id) const
+{
+  switch (getParamId(id))
   {
-    return flexible_;
+  case FLEXIBLE:
+    return getFlexible();
+    break;
+  default:
+    out::error() << "Trying to get unknown boolean parameter " << id << "\n";
   }
+  return false;
+}
 
-  int LinSolverIterativeFGMRES::setCliParam(const std::string id, const std::string value)
+int LinSolverIterativeFGMRES::printCliParam(const std::string id) const
+{
+  switch (getParamId(id))
   {
-    switch (getParamId(id))
-    {
-    case TOL:
-      setTol(atof(value.c_str()));
-      break;
-    case MAXIT:
-      setMaxit(atoi(value.c_str()));
-      break;
-    case RESTART:
-      setRestart(atoi(value.c_str()));
-      break;
-    case CONV_COND:
-      setConvergenceCondition(atoi(value.c_str()));
-      break;
-    case FLEXIBLE:
-      setFlexible(value == "yes");
-      break;
-    default:
-      std::cout << "Setting parameter failed!\n";
-    }
-    return 0;
+  case TOL:
+    std::cout << getTol() << "\n";
+    break;
+  case MAXIT:
+    std::cout << getMaxit() << "\n";
+    break;
+  case RESTART:
+    std::cout << getRestart() << "\n";
+    break;
+  case CONV_COND:
+    std::cout << getConvCond() << "\n";
+    break;
+  case FLEXIBLE:
+    std::cout << getFlexible() << "\n";
+    break;
+  default:
+    out::error() << "Trying to print unknown parameter " << id << "\n";
+    return 1;
   }
-
-  std::string LinSolverIterativeFGMRES::getCliParamString(const std::string id) const
-  {
-    switch (getParamId(id))
-    {
-    default:
-      out::error() << "Trying to get unknown string parameter " << id << "\n";
-    }
-    return "";
-  }
-
-  index_type LinSolverIterativeFGMRES::getCliParamInt(const std::string id) const
-  {
-    switch (getParamId(id))
-    {
-    case MAXIT:
-      return getMaxit();
-      break;
-    case RESTART:
-      return getRestart();
-      break;
-    case CONV_COND:
-      return getConvCond();
-      break;
-    default:
-      out::error() << "Trying to get unknown integer parameter " << id << "\n";
-    }
-    return -1;
-  }
-
-  real_type LinSolverIterativeFGMRES::getCliParamReal(const std::string id) const
-  {
-    switch (getParamId(id))
-    {
-    case TOL:
-      return getTol();
-      break;
-    default:
-      out::error() << "Trying to get unknown real parameter " << id << "\n";
-    }
-    return std::numeric_limits<real_type>::quiet_NaN();
-  }
-
-  bool LinSolverIterativeFGMRES::getCliParamBool(const std::string id) const
-  {
-    switch (getParamId(id))
-    {
-    case FLEXIBLE:
-      return getFlexible();
-      break;
-    default:
-      out::error() << "Trying to get unknown boolean parameter " << id << "\n";
-    }
-    return false;
-  }
-
-  int LinSolverIterativeFGMRES::printCliParam(const std::string id) const
-  {
-    switch (getParamId(id))
-    {
-    case TOL:
-      std::cout << getTol() << "\n";
-      break;
-    case MAXIT:
-      std::cout << getMaxit() << "\n";
-      break;
-    case RESTART:
-      std::cout << getRestart() << "\n";
-      break;
-    case CONV_COND:
-      std::cout << getConvCond() << "\n";
-      break;
-    case FLEXIBLE:
-      std::cout << getFlexible() << "\n";
-      break;
-    default:
-      out::error() << "Trying to print unknown parameter " << id << "\n";
-      return 1;
-    }
-    return 0;
-  }
+  return 0;
+}
 
 <<<<<<< HEAD
 =======
+
   /**
    * @brief Allows for change in preconditioner direction
    *        Only works with matvec
@@ -706,85 +710,86 @@ namespace ReSolve
   }
 
 >>>>>>> 0b3c99a (Apply pre-commmit fixes)
-  //
-  // Private methods
-  //
 
-  int LinSolverIterativeFGMRES::allocateSolverData()
+//
+// Private methods
+//
+
+int LinSolverIterativeFGMRES::allocateSolverData()
+{
+  vec_V_ = new vector_type(n_, restart_ + 1);
+  vec_V_->allocate(memspace_);
+  if (flexible_)
   {
-    vec_V_ = new vector_type(n_, restart_ + 1);
-    vec_V_->allocate(memspace_);
-    if (flexible_)
-    {
-      vec_Z_ = new vector_type(n_, restart_ + 1);
-    }
-    else
-    {
-      // otherwise Z is just a one vector, not multivector and we dont keep it
-      vec_Z_ = new vector_type(n_);
-    }
-    vec_Z_->allocate(memspace_);
-    h_H_  = new real_type[restart_ * (restart_ + 1)];
-    h_c_  = new real_type[restart_];     // needed for givens
-    h_s_  = new real_type[restart_];     // same
-    h_rs_ = new real_type[restart_ + 1]; // for residual norm history
+    vec_Z_ = new vector_type(n_, restart_ + 1);
+  }
+  else
+  {
+    // otherwise Z is just a one vector, not multivector and we dont keep it
+    vec_Z_ = new vector_type(n_);
+  }
+  vec_Z_->allocate(memspace_);
+  h_H_  = new real_type[restart_ * (restart_ + 1)];
+  h_c_  = new real_type[restart_];     // needed for givens
+  h_s_  = new real_type[restart_];     // same
+  h_rs_ = new real_type[restart_ + 1]; // for residual norm history
 
-    return 0;
+  return 0;
+}
+
+int LinSolverIterativeFGMRES::freeSolverData()
+{
+  delete[] h_H_;
+  delete[] h_c_;
+  delete[] h_s_;
+  delete[] h_rs_;
+  delete vec_V_;
+  delete vec_Z_;
+
+  h_H_   = nullptr;
+  h_c_   = nullptr;
+  h_s_   = nullptr;
+  h_rs_  = nullptr;
+  vec_V_ = nullptr;
+  vec_Z_ = nullptr;
+
+  return 0;
+}
+
+void LinSolverIterativeFGMRES::precV(vector_type* rhs, vector_type* x)
+{
+  preconditioner_->apply(rhs, x);
+}
+
+void LinSolverIterativeFGMRES::setMemorySpace()
+{
+  bool is_matrix_handler_cuda = matrix_handler_->getIsCudaEnabled();
+  bool is_matrix_handler_hip  = matrix_handler_->getIsHipEnabled();
+  bool is_vector_handler_cuda = matrix_handler_->getIsCudaEnabled();
+  bool is_vector_handler_hip  = matrix_handler_->getIsHipEnabled();
+
+  if ((is_matrix_handler_cuda != is_vector_handler_cuda) || (is_matrix_handler_hip != is_vector_handler_hip))
+  {
+    out::error() << "Matrix and vector handler backends are incompatible!\n";
   }
 
-  int LinSolverIterativeFGMRES::freeSolverData()
+  if (is_matrix_handler_cuda || is_matrix_handler_hip)
   {
-    delete[] h_H_;
-    delete[] h_c_;
-    delete[] h_s_;
-    delete[] h_rs_;
-    delete vec_V_;
-    delete vec_Z_;
-
-    h_H_   = nullptr;
-    h_c_   = nullptr;
-    h_s_   = nullptr;
-    h_rs_  = nullptr;
-    vec_V_ = nullptr;
-    vec_Z_ = nullptr;
-
-    return 0;
+    memspace_ = memory::DEVICE;
   }
-
-  void LinSolverIterativeFGMRES::precV(vector_type* rhs, vector_type* x)
+  else
   {
-    preconditioner_->apply(rhs, x);
+    memspace_ = memory::HOST;
   }
+}
 
-  void LinSolverIterativeFGMRES::setMemorySpace()
-  {
-    bool is_matrix_handler_cuda = matrix_handler_->getIsCudaEnabled();
-    bool is_matrix_handler_hip  = matrix_handler_->getIsHipEnabled();
-    bool is_vector_handler_cuda = matrix_handler_->getIsCudaEnabled();
-    bool is_vector_handler_hip  = matrix_handler_->getIsHipEnabled();
-
-    if ((is_matrix_handler_cuda != is_vector_handler_cuda) || (is_matrix_handler_hip != is_vector_handler_hip))
-    {
-      out::error() << "Matrix and vector handler backends are incompatible!\n";
-    }
-
-    if (is_matrix_handler_cuda || is_matrix_handler_hip)
-    {
-      memspace_ = memory::DEVICE;
-    }
-    else
-    {
-      memspace_ = memory::HOST;
-    }
-  }
-
-  void LinSolverIterativeFGMRES::initParamList()
-  {
-    params_list_["tol"]       = TOL;
-    params_list_["maxit"]     = MAXIT;
-    params_list_["restart"]   = RESTART;
-    params_list_["conv_cond"] = CONV_COND;
-    params_list_["flexible"]  = FLEXIBLE;
-  }
+void LinSolverIterativeFGMRES::initParamList()
+{
+  params_list_["tol"]       = TOL;
+  params_list_["maxit"]     = MAXIT;
+  params_list_["restart"]   = RESTART;
+  params_list_["conv_cond"] = CONV_COND;
+  params_list_["flexible"]  = FLEXIBLE;
+}
 
 } // namespace ReSolve

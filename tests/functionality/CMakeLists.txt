@@ -190,13 +190,13 @@ add_test(NAME sys_rand_count_gmres_left_mgs_test
          COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-x" "no" "-i"
                  "randgmres" "-g" "mgs" "-s" "count" "-p" "left"
 )
-add_test(NAME sys_gmres_left_cgs2_test 
-         COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe>
-                 "-x" "no" "-i" "fgmres" "-g" "cgs2" "-p" "left"
+add_test(NAME sys_gmres_left_cgs2_test
+         COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-x" "no" "-i" "fgmres"
+                 "-g" "cgs2" "-p" "left"
 )
-add_test(NAME sys_gmres_left_mgs_test 
-         COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe>
-                 "-x" "no" "-i" "fgmres" "-g" "mgs" "-p" "left"
+add_test(NAME sys_gmres_left_mgs_test
+         COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-x" "no" "-i" "fgmres"
+                 "-g" "mgs" "-p" "left"
 )
 
 # Randomized GMRES solvers tested without SystemSolver class

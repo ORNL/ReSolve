@@ -35,7 +35,8 @@ namespace ReSolve
    */
   int Preconditioner::setSide(const std::string& side)
   {
-    if (side == "left" || side == "right") {
+    if (side == "left" || side == "right")
+    {
       side_ = side;
       return 0;
     }

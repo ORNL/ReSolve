@@ -164,7 +164,7 @@ int sysGmres(int argc, char* argv[])
   opt                  = options.getParamFromKey("-x");
   std::string flexible = opt ? (*opt).second : "yes";
 
-  opt                  = options.getParamFromKey("-p");
+  opt                      = options.getParamFromKey("-p");
   std::string precond_side = opt ? (*opt).second : "right";
 
   processInputs(method, gs, sketch, flexible);

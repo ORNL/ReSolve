@@ -3,9 +3,9 @@
  * @author Jeffery Zhang (jefferyz@vt.edu)
  * @author Kakeru Ueda (k.ueda.2290@m.isct.ac.jp)
  * @brief  Declaration of preconditioner class with user matrix
- * 
+ *
  */
- 
+
 #pragma once
 
 #include <string>
@@ -45,7 +45,7 @@ namespace ReSolve
     ~PreconditionerUserMatrix();
 
     int setup(matrix_type* A) override;
-    int setPrecMatrix(matrix_type* B); 
+    int setPrecMatrix(matrix_type* B);
     int apply(vector_type* rhs, vector_type* x) override;
 
     matrix_type* getPrecMatrix();

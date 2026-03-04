@@ -1,7 +1,7 @@
 /**
  * @file runPreconditionerLUTests.cpp
  * @brief Tests for PreconditionerLU class.
- * 
+ *
  */
 
 #include <iostream>
@@ -22,11 +22,11 @@
 
 /**
  * @brief Run PreconditionerLU tests with a given backend.
- * 
+ *
  */
 template <typename WorkspaceType, typename ILUSolverType>
-void runTests(const std::string& backend,
-              ReSolve::memory::MemorySpace memspace,
+void runTests(const std::string&              backend,
+              ReSolve::memory::MemorySpace    memspace,
               ReSolve::tests::TestingResults& result)
 {
   std::cout << "Running PreconditionerLU tests on " << backend << ":\n";

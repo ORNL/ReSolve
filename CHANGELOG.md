@@ -81,3 +81,5 @@ It is seamless from the user perspective and fixed many bugs.
 16. Updated MatrixHandler::addConst to return integer error codes instead of void.
 
 17. Added a preconditioner interface class so users can define thier own preconditioners.
+
+18. Added left preconditioning support for GMRES and a user-defined preconditnioer class.
