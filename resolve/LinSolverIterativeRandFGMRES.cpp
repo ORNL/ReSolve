@@ -285,7 +285,7 @@ namespace ReSolve
         else
         {
           if (preconditioner_->getSide() == "right")
-          {            
+          {
             // vec_z = M^{-1}*vec_v,
             // then vec_v = A_*vec_z
             preconditioner_->apply(&vec_v, &vec_z);
@@ -295,7 +295,7 @@ namespace ReSolve
             matrix_handler_->matvec(A_, &vec_z, &vec_v, &ONE, &ZERO, memspace_);
           }
           else
-          {            
+          {
             // vec_z = A*vec_v,
             // then vec_v = M^{-1}*vec_z
             matrix_handler_->matvec(A_, &vec_v, &vec_z, &ONE, &ZERO, memspace_);
