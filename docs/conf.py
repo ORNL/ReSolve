@@ -44,15 +44,15 @@ conf_directory = os.path.dirname(os.path.realpath(__file__))
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'setuptools',
+    #'setuptools',
     'sphinx.ext.graphviz',
     'sphinx.ext.autodoc',
     'sphinx.ext.doctest',
     'sphinxcontrib.jquery',
     'sphinx.ext.todo',
     'sphinx.ext.coverage',
-    'sphinx.ext.mathjax',
-    'm2r2'
+    'sphinx.ext.mathjax'#,
+    #'m2r2'
 ]
 
 # The main toctree document.
