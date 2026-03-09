@@ -44,6 +44,7 @@ conf_directory = os.path.dirname(os.path.realpath(__file__))
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    'setuptools',
     'sphinx.ext.graphviz',
     'sphinx.ext.autodoc',
     'sphinx.ext.doctest',

@@ -5,6 +5,7 @@ FROM python:3.13.0a1-alpine
 RUN pip3 install --no-cache-dir \
         sphinx \
         docutils \
+        setuptools \
         sphinx_rtd_theme \
         breathe \
         m2r2
