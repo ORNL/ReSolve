@@ -1,5 +1,6 @@
 docutils
+setuptools
 sphinx==6.2.1
 sphinx-rtd-theme==1.2.2
-breathe 
+breathe
 m2r2
