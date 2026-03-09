@@ -1,6 +1,6 @@
-*******
+*********
 Re::Solve
-*******
+*********
 
 Re::Solve is an open-source library that provides GPU-resident linear solvers. 
 It contains iterative and direct solvers designed to run on NVIDIA and AMD

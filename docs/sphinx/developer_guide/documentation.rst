@@ -46,7 +46,7 @@ Prerequisites
 
 
 Build Container
-^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^
 
 The build info for this container is in `.devcontainer/`. There is a Dockerfile and
 json file associated with the configuration.
@@ -71,19 +71,20 @@ Devcontainer Configuration
 ----------------------------
 
 ``Dockerfile``
-~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Installs pip and apt dependencies in Python container for doc development.
 
 ``devcontainer.json``
-~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Configures devcontainer through devcontainer features and sets up extensions.
 
 ``renderDocs.sh``
-~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Small shell script that renders documentation and hosts it for quick development.
+
 
 GitHub Actions
 ----------------------------
@@ -91,20 +92,20 @@ GitHub Actions
 This is a quick summary of the workflows performed in each GitHub Action. For more information see the ``.github/workflows`` folder where each file is located.
 
 ``documentation.yml``
-~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ``ornl_ascent_mirror.yml``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Pushes to ORNL GitLab and triggers CI/CD pipelines there that are posted back to GitHub through commit messages.
 
 ``ornl_crusher_mirror.yml``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Pushes to ORNL Crusher GitLab...
 
 ``pnnl_mirror.yml``
-~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Pushes to PNNL GitLab...
 
@@ -114,32 +115,32 @@ GitLab Pipelines
 This is a quick summary of the workflows performed in each GitLab Pipeline. For more information see the ``yml`` file for each associated pipeline.
 
 ``ornl/crusher.gitlab-ci.yml``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Defines CI/CD for Crusher at ORNL.
 
 ``.gitlab-ci.yml``
-~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Located in the root git directory, this defines the CI/CD pipelines for Ascent at ORNL.
 
 ``pnnl/.gitlab-ci.yml``
-~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Since single GitLab repo triggers many pipelines as downstream dependents, we need a core config file to kick all of these builds off.
 
 ``pnnl/base.gitlab-ci.yml``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Describes core config shared across each job. This could be in ``pnnl/.gitlab-ci.yml`` but we keep it separate for clarity.
 
 ``pnnl/deception.gitlab-ci.yml``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Deception specific CI.
 
 ``pnnl/incline.gitlab-ci.yml``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Incline specific CI.
 
@@ -147,7 +148,7 @@ Quick How-To guides
 -------------------
 
 Re-build Spack tcl modules on CI platforms
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You can rebuild dependencies and spack tcl modules on CI platforms by doing the following using automated CI/CD:
 
@@ -184,7 +185,7 @@ Each cluster also supports submitting this job to the job scheduler by doing the
 * ``sbatch ./buildsystem/spack/<cluster>/install.sh`` to submit the workflow to the job scheduler
 
 Update Re::Solve spack package
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In order to test any modifications to the spack package, it is suggested that you use the above automated workflows to make testing as seamless as possible.
 
@@ -202,7 +203,7 @@ Typically this is done as a part of the release process, so also make sure that 
 Note that spack enforces it's own styling, so consider leveraging spack-bot in order to help out. Comment ``@spackbot help`` to get a list of commands, such as ``@spackbot fix style`` to have it try and automatically style your PR for you!
 
 Refresh GitHub/GitLab Secrets
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 There are several secrets throughout CI/CD:
 

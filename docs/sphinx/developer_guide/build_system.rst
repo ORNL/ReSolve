@@ -1,6 +1,8 @@
+Build System
+================
 
-CMake Build System
-------------------
+CMake Configuration
+-------------------
 
 Our ``cmake`` folder contains some basic CMake modules that help manage resolve:
 

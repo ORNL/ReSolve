@@ -23,25 +23,25 @@ with respect to `develop` to keep it up to date.
 
 
 Creating a GitHub Issue
-------------
+-----------------------
 
 When creating an issue, check that it is not a duplicate.
 Provide a clear and concise description, using the issue template.
 
 GitHub Pull Requests 
-------------
+--------------------
 
 When creating a pull request (PR), make sure to select the correct base branch.
 If there are merge conflicts, use ``git rebase`` to resolve them before requesting a review.
 
 Detail changes made in your PR in the description.
-^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 1. What new features were added?
 2. What bugs were fixed?
 3. What tests were added?
 
 When reviewing a PR consider the following:
-^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 1. Does the PR address the issue?
 2. Do existing and new tests pass on all supported platforms?
 3. Is the code clean, readable, and properly documented?
@@ -57,7 +57,7 @@ Add a comment to the PR with the minor concern and request the author to address
 
 
 Major concern options:
-^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 1. Suggest a change with the Github suggest feature within the PR for the author to commit before merging.
 2. Request the author to make the change and wait to approve the merge.
 3. Branch off the PR, make the change, and submit a new PR with the change. Make the assignee the author of the current PR and request the author to merge the new PR.
