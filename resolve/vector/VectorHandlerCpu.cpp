@@ -352,7 +352,7 @@ namespace ReSolve
    *
    * @return 0 if successful, 1 otherwise
    */
-  int VectorHandlerCpu::max(const vector::Vector* x, const vector::Vector* y, vector::Vector* out)
+  int VectorHandlerCpu::max(/* const */ vector::Vector* x, /* const */ vector::Vector* y, vector::Vector* out)
   {
     const real_type* x_data   = x->getData(memory::HOST);
     const real_type* y_data   = y->getData(memory::HOST);
@@ -374,7 +374,7 @@ namespace ReSolve
    *
    * @return 0 if successful, 1 otherwise
    */
-  int VectorHandlerCpu::abs(const vector::Vector* in, vector::Vector* out)
+  int VectorHandlerCpu::abs(/* const */ vector::Vector* in, vector::Vector* out)
   {
     const real_type* in_data  = in->getData(memory::HOST);
     real_type*       out_data = out->getData(memory::HOST);

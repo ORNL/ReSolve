@@ -85,7 +85,7 @@ namespace ReSolve
      *
      * @return 0 if successful, 1 otherwise
      */
-    virtual int max(const vector::Vector* x, const vector::Vector* y, vector::Vector* out);
+    virtual int max(/* const */ vector::Vector* x, /* const */ vector::Vector* y, vector::Vector* out);
 
     /**
      * @brief abs: calculate the element-wise absolute value of a vector
@@ -94,7 +94,7 @@ namespace ReSolve
      *
      * @return 0 if successful, 1 otherwise
      */
-    virtual int abs(const vector::Vector* in, vector::Vector* out);
+    virtual int abs(/* const */ vector::Vector* in, vector::Vector* out);
 
   private:
     LinAlgWorkspaceHIP* workspace_;

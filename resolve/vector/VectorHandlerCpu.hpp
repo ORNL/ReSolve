@@ -59,9 +59,9 @@ namespace ReSolve
 
     virtual int scaleInv(vector::Vector* divisor, vector::Vector* vec);
 
-    virtual int max(const vector::Vector* x, const vector::Vector* y, vector::Vector* out);
+    virtual int max(/* const */ vector::Vector* x, /* const */ vector::Vector* y, vector::Vector* out);
 
-    virtual int abs(const vector::Vector* in, vector::Vector* out);
+    virtual int abs(/* const */ vector::Vector* in, vector::Vector* out);
 
   private:
     LinAlgWorkspaceCpu* workspace_;

@@ -382,7 +382,7 @@ namespace ReSolve
    *
    * @return 0 if successful, 1 otherwise
    */
-  int VectorHandler::max(const vector::Vector* x, const vector::Vector* y, vector::Vector* out, memory::MemorySpace memspace)
+  int VectorHandler::max(/* const */ vector::Vector* x, /* const */ vector::Vector* y, vector::Vector* out, memory::MemorySpace memspace)
   {
     assert(x->getSize() == y->getSize() && "Vectors must be the same size.");
     assert(x->getSize() == out->getSize() && "Vectors must be the same size.");
@@ -411,7 +411,7 @@ namespace ReSolve
    *
    * @return 0 if successful, 1 otherwise
    */
-  int VectorHandler::abs(const vector::Vector* in, vector::Vector* out, memory::MemorySpace memspace)
+  int VectorHandler::abs(/* const */ vector::Vector* in, vector::Vector* out, memory::MemorySpace memspace)
   {
     assert(in->getData(memspace) != nullptr && "Vector in data is null!");
     assert(out->getData(memspace) != nullptr && "Vector out data is null!");

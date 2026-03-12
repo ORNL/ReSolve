@@ -372,7 +372,7 @@ namespace ReSolve
    *
    * @return 0 if successful, 1 otherwise
    */
-  int VectorHandlerCuda::max(const vector::Vector* x, const vector::Vector* y, vector::Vector* out)
+  int VectorHandlerCuda::max(/* const */ vector::Vector* x, /* const */ vector::Vector* y, vector::Vector* out)
   {
     real_type* x_data   = x->getData(memory::DEVICE);
     real_type* y_data   = y->getData(memory::DEVICE);
@@ -391,7 +391,7 @@ namespace ReSolve
    *
    * @return 0 if successful, 1 otherwise
    */
-  int VectorHandlerCuda::abs(const vector::Vector* in, vector::Vector* out)
+  int VectorHandlerCuda::abs(/* const */ vector::Vector* in, vector::Vector* out)
   {
     const real_type* in_data  = in->getData(memory::DEVICE);
     real_type*       out_data = out->getData(memory::DEVICE);

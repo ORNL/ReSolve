@@ -49,10 +49,10 @@ namespace ReSolve
     virtual int scaleInv(vector::Vector* divisor, vector::Vector* vec) = 0;
 
     // Compute element-wise max of two vectors
-    virtual int max(const vector::Vector* x, const vector::Vector* y, vector::Vector* out) = 0;
+    virtual int max(/* const */ vector::Vector* x, /* const */ vector::Vector* y, vector::Vector* out) = 0;
 
     // Compute element-wise absolute value of a vector
-    virtual int abs(const vector::Vector* in, vector::Vector* out) = 0;
+    virtual int abs(/* const */ vector::Vector* in, vector::Vector* out) = 0;
 
     /** gemv:
      * if `transpose = N` (no), `x = beta*x +  alpha*V*y`,
