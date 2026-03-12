@@ -341,7 +341,7 @@ namespace ReSolve
           if (i % 3 == 0)
           {
             x_data[i] = (real_type) (i + 1);
-            y_data[i] = (real_type) i * .5;
+            y_data[i] = (real_type) i * 0.5;
           }
           else
           {
