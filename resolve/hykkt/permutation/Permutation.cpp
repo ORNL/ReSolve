@@ -247,8 +247,8 @@ namespace ReSolve
                                real_type*      old_val,
                                real_type*      new_val)
     {
-      index_type  length;
-      index_type* apply_perm_;
+      index_type  length{0};
+      index_type* apply_perm_{nullptr};
       switch (permutation)
       {
       case PERM_V:

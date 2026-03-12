@@ -129,7 +129,7 @@ namespace ReSolve
         if (idx < n)
         {
           // Compute maximum of elements
-          out[idx] = max(x[idx], y[idx]);
+          out[idx] = fmax(x[idx], y[idx]);
         }
       }
 
