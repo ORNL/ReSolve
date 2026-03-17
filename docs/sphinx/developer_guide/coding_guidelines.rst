@@ -81,6 +81,12 @@ Constants names should be capitalized and words separated by underscores.
       constexpr double SQRTTWO_ = 1.4142 // No, there is a trailing underscore but not between words
       constexpr double EXP = 2.7183 // Yes  
 
+Floating point variables
+------------------------------
+
+Use ``real_type`` for floating point variables. This is a typedef defined in ``Common.h`` and can be set to either ``float`` or ``double`` depending on the precision needed.
+Always use a leading 0 for floating point numbers less than 1 and use a trailing 0 for whole numbers used as floating point numbers.
+
 Exceptions to naming conventions
 --------------------------------
 

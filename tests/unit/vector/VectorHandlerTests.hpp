@@ -7,6 +7,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <resolve/Common.hpp>
 
 #include <resolve/vector/Vector.hpp>
 #include <resolve/vector/VectorHandler.hpp>
@@ -90,7 +91,7 @@ namespace ReSolve
         x.setToConst(3.0, memspace_);
         y.setToConst(1.0, memspace_);
 
-        real_type alpha = 0.5;
+        real_type alpha = ReSolve::constants::HALF;
 
         // the result is a vector with y[i] = 2.5 forall i;
         handler_.axpy(alpha, &x, &y, memspace_);
@@ -172,7 +173,7 @@ namespace ReSolve
           }
           else
           {
-            c = 0.5;
+            c = ReSolve::constants::HALF;
           }
           x.setToConst(ii, c, memspace_);
         }
@@ -224,16 +225,16 @@ namespace ReSolve
 
         V.setToConst(1.0, memspace_);
         yN.setToConst(-1.0, memspace_);
-        xN.setToConst(.5, memspace_);
+        xN.setToConst(ReSolve::constants::HALF, memspace_);
         yT.setToConst(-1.0, memspace_);
-        xT.setToConst(.5, memspace_);
+        xT.setToConst(ReSolve::constants::HALF, memspace_);
 
         real_type alpha = -1.0;
         real_type beta  = 1.0;
         handler_.gemv('N', K, alpha, beta, &V, &yN, &xN, memspace_);
-        status *= verifyAnswer(xN, static_cast<real_type>(K) + 0.5);
+        status *= verifyAnswer(xN, static_cast<real_type>(K) + ReSolve::constants::HALF);
         handler_.gemv('T', K, alpha, beta, &V, &yT, &xT, memspace_);
-        status *= verifyAnswer(xT, static_cast<real_type>(N) + 0.5);
+        status *= verifyAnswer(xT, static_cast<real_type>(N) + ReSolve::constants::HALF);
 
         return status.report(__func__);
       }

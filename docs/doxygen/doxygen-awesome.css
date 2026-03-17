@@ -316,7 +316,7 @@ body, table, div, p, dl, #nav-tree .label, .title,
 }
 
 h1, h2, h3, h4, h5 {
-    margin-top: .9em;
+    margin-top: 0.9em;
     font-weight: 600;
     line-height: initial;
 }
@@ -901,7 +901,7 @@ div.contents, div.header .title, div.header .summary {
 
 div.contents, div.header .title  {
     line-height: initial;
-    margin: calc(var(--spacing-medium) + .2em) auto var(--spacing-medium) auto;
+    margin: calc(var(--spacing-medium) + 0.2em) auto var(--spacing-medium) auto;
 }
 
 div.header .summary {
@@ -1019,7 +1019,7 @@ blockquote::before, blockquote::after {
     font-weight: bold;
     font-family: serif;
     font-size: 360%;
-    opacity: .15;
+    opacity: 0.15;
     position: absolute;
 }
 
@@ -1945,7 +1945,7 @@ div.dynheader img[src="closed.png"] {
         display: block !important;
         visibility: visible;
         width: calc(100vw - 2 * var(--spacing-large));
-        animation: fade .5s;
+        animation: fade 0.5s;
     }
 
     @keyframes fade {
@@ -2344,7 +2344,7 @@ doxygen-awesome-dark-mode-toggle {
 }
 
 doxygen-awesome-dark-mode-toggle > svg {
-    transition: transform .1s ease-in-out;
+    transition: transform 0.1s ease-in-out;
 }
 
 doxygen-awesome-dark-mode-toggle:active > svg {
@@ -2383,7 +2383,7 @@ doxygen-awesome-fragment-copy-button {
 }
 
 .doxygen-awesome-fragment-wrapper:hover doxygen-awesome-fragment-copy-button, doxygen-awesome-fragment-copy-button.success {
-    opacity: .28;
+    opacity: 0.28;
 }
 
 doxygen-awesome-fragment-copy-button:hover, doxygen-awesome-fragment-copy-button.success {
@@ -2427,9 +2427,9 @@ a.anchorlink {
     margin-left: var(--spacing-small);
     color: var(--page-foreground-color) !important;
     text-decoration: none;
-    opacity: .15;
+    opacity: 0.15;
     display: none;
-    transition: opacity .1s ease-in-out, color .1s ease-in-out;
+    transition: opacity 0.1s ease-in-out, color 0.1s ease-in-out;
 }
 
 a.anchorlink svg {
@@ -2442,7 +2442,7 @@ h3 a.anchorlink svg, h4 a.anchorlink svg {
 }
 
 a.anchorlink:hover {
-    opacity: .45;
+    opacity: 0.45;
 }
 
 h2:hover a.anchorlink, h1:hover a.anchorlink, h3:hover a.anchorlink, h4:hover a.anchorlink  {

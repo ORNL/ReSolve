@@ -20,6 +20,8 @@
 
 - Added `diagSolve`, `max`, and `abs` vector operations.
 
+- Improved coding guidelines for developers.
+
 ## Changes to Re::Solve in release 0.99.2
 
 ### Major Features
