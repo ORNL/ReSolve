@@ -20,7 +20,7 @@
 
 - Added `diagSolve`, `max`, and `abs` vector operations.
 
-- Improved coding guidelines for developers.
+- Improved coding guidelines for developers on floating point conventions.
 
 ## Changes to Re::Solve in release 0.99.2
 
