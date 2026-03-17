@@ -7,8 +7,8 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include <resolve/Common.hpp>
 
+#include <resolve/Common.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
