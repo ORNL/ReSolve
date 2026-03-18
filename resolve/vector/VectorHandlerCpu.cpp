@@ -329,8 +329,8 @@ namespace ReSolve
   int VectorHandlerCpu::diagSolve(vector::Vector* diag, vector::Vector* vec)
   {
     real_type* diag_data = diag->getData(memory::HOST);
-    real_type* vec_data     = vec->getData(memory::HOST);
-    index_type n            = vec->getSize();
+    real_type* vec_data  = vec->getData(memory::HOST);
+    index_type n         = vec->getSize();
 
     for (index_type i = 0; i < n; ++i)
     {

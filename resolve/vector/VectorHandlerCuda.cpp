@@ -354,8 +354,8 @@ namespace ReSolve
   int VectorHandlerCuda::diagSolve(vector::Vector* diag, vector::Vector* vec)
   {
     real_type* diag_data = diag->getData(memory::DEVICE);
-    real_type* vec_data     = vec->getData(memory::DEVICE);
-    index_type n            = vec->getSize();
+    real_type* vec_data  = vec->getData(memory::DEVICE);
+    index_type n         = vec->getSize();
     cuda::diagSolve(n, diag_data, vec_data);
     vec->setDataUpdated(memory::DEVICE);
     return 0;

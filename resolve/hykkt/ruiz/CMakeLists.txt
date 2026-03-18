@@ -18,7 +18,9 @@ set(RUIZ_HEADER_INSTALL
 # Build shared library ReSolve::hykkt
 add_library(resolve_hykkt_ruiz SHARED ${RUIZ_SRC})
 
-target_link_libraries(resolve_hykkt_ruiz PRIVATE resolve_logger resolve_vector resolve_matrix)
+target_link_libraries(
+  resolve_hykkt_ruiz PRIVATE resolve_logger resolve_vector resolve_matrix
+)
 
 # Link to CUDA ReSolve backend if CUDA is support enabled
 if(RESOLVE_USE_CUDA)
