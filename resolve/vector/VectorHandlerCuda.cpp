@@ -340,9 +340,9 @@ namespace ReSolve
   }
 
   /**
-   * @brief Divide a vector's elements by another vector's elements in CUDA
+   * @brief Multiplies vector by an inverse of a diagonal matrix.
    *
-   * @param[in]  divisor  - vector of divisors
+   * @param[in]  diag   - diagonal matrix stored in a vector object
    * @param[in, out]  vec - vector to be divided
    *
    * @pre The diagonal vector must be of the same size as the vector.
@@ -351,12 +351,12 @@ namespace ReSolve
    *
    * @return 0 if successful, 1 otherwise
    */
-  int VectorHandlerCuda::scaleInv(vector::Vector* divisor, vector::Vector* vec)
+  int VectorHandlerCuda::diagSolve(vector::Vector* diag, vector::Vector* vec)
   {
-    real_type* divisor_data = divisor->getData(memory::DEVICE);
+    real_type* diag_data = diag->getData(memory::DEVICE);
     real_type* vec_data     = vec->getData(memory::DEVICE);
     index_type n            = vec->getSize();
-    cuda::scaleInv(n, divisor_data, vec_data);
+    cuda::diagSolve(n, diag_data, vec_data);
     vec->setDataUpdated(memory::DEVICE);
     return 0;
   }

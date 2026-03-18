@@ -84,17 +84,17 @@ namespace ReSolve
       }
 
       /**
-       * @brief Divides a vector's elements by another vector's elements
+       * @brief Multiplies vector by an inverse of a diagonal matrix.
        *
        * @param[in]  n       - size of the vectors
-       * @param[in]  d_val   - divisor values
+       * @param[in]  d_val   - diagonal matrix values
        * @param[in, out] vec - vector to be divided. Changes in place.
        *
        * @todo Decide how to allow user to configure grid and block sizes.
        */
-      __global__ void scaleInv(index_type       n,
-                               const real_type* d_val,
-                               real_type*       vec)
+      __global__ void diagSolve(index_type       n,
+                                const real_type* d_val,
+                                real_type*       vec)
       {
         // Get the index of the element to be processed
         index_type idx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -102,7 +102,7 @@ namespace ReSolve
         // Check if the index is within bounds
         if (idx < n)
         {
-          // Divide the vector element by the corresponding divisor value
+          // Divide the vector element by the corresponding diag value
           vec[idx] /= d_val[idx];
         }
       }
@@ -200,18 +200,18 @@ namespace ReSolve
      * @brief Wrapper that divides a vector's elements by another vector's elements
      *
      * @param[in]  n       - size of the vectors
-     * @param[in]  divisor - divisor values
+     * @param[in]  diag - diag values
      * @param[in, out] vec - vector to be divided. Changes in place.
      *
      * @todo Decide how to allow user to configure grid and block sizes.
      */
-    void scaleInv(index_type       n,
-                  const real_type* divisor,
-                  real_type*       vec)
+    void diagSolve(index_type       n,
+                   const real_type* diag,
+                   real_type*       vec)
     {
       int num_blocks = (n + block_size - 1) / block_size;
       // Launch the kernel
-      kernels::scaleInv<<<num_blocks, block_size>>>(n, divisor, vec);
+      kernels::diagSolve<<<num_blocks, block_size>>>(n, diag, vec);
     }
 
     /**

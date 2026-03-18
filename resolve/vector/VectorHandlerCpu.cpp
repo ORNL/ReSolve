@@ -317,24 +317,24 @@ namespace ReSolve
   }
 
   /**
-   * @brief Divide the elements of a vector by the elements of another vector
+   * @brief Multiplies vector by an inverse of a diagonal matrix.
    *
-   * @param[in] divisor - vector divisor
+   * @param[in]  diag   - diagonal matrix stored in a vector object
    * @param[in,out] vec - vector to be divided
    *
    * @pre The two vectors must be the same size
    *
    * @return 0 if successful, 1 otherwise
    */
-  int VectorHandlerCpu::scaleInv(vector::Vector* divisor, vector::Vector* vec)
+  int VectorHandlerCpu::diagSolve(vector::Vector* diag, vector::Vector* vec)
   {
-    real_type* divisor_data = divisor->getData(memory::HOST);
+    real_type* diag_data = diag->getData(memory::HOST);
     real_type* vec_data     = vec->getData(memory::HOST);
     index_type n            = vec->getSize();
 
     for (index_type i = 0; i < n; ++i)
     {
-      vec_data[i] /= divisor_data[i];
+      vec_data[i] /= diag_data[i];
     }
     vec->setDataUpdated(memory::HOST);
     return 0;

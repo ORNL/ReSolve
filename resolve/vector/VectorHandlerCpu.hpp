@@ -57,7 +57,7 @@ namespace ReSolve
 
     virtual void scal(vector::Vector* diag, vector::Vector* vec);
 
-    virtual int scaleInv(vector::Vector* divisor, vector::Vector* vec);
+    virtual int diagSolve(vector::Vector* diag, vector::Vector* vec);
 
     virtual int max(/* const */ vector::Vector* x, /* const */ vector::Vector* y, vector::Vector* out);
 

@@ -18,7 +18,7 @@
 
 - Made Vector::copyDataTo able to copy from device to host and vice versa
 
-- Added `scaleInv`, `max`, and `abs` vector operations.
+- Added `diagSolve`, `max`, and `abs` vector operations.
 
 ## Changes to Re::Solve in release 0.99.2
 

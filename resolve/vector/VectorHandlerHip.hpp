@@ -67,14 +67,14 @@ namespace ReSolve
     virtual void scal(vector::Vector* diag, vector::Vector* vec);
 
     /**
-     * @brief scaleInv: divides a vector's elements by another's
+     * @brief Multiplies vector by an inverse of a diagonal matrix.
      *
-     * @param[in] divisor vector of size n x 1
+     * @param[in] diag vector of size n x 1
      * @param[in,out] vec vector of size n x 1 (this is where the result is stored)
      *
      * @return 0 if successful, 1 otherwise
      */
-    virtual int scaleInv(vector::Vector* divisor, vector::Vector* vec);
+    virtual int diagSolve(vector::Vector* diag, vector::Vector* vec);
 
     /**
      * @brief max: calculate the element-wise maximum of two vectors

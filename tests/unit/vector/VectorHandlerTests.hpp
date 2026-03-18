@@ -280,28 +280,28 @@ namespace ReSolve
         return status.report(__func__);
       }
 
-      TestOutcome scaleInv(index_type N)
+      TestOutcome diagSolve(index_type N)
       {
         TestStatus status;
 
-        vector::Vector divisor(N);
+        vector::Vector diag(N);
         vector::Vector vec(N);
 
-        // divisor[i] = i + 1, vec[i] = 3.0
+        // diag[i] = i + 1, vec[i] = 3.0
         // expected result vec[i] = 3.0 / (i + 1)
-        divisor.allocate(memspace_);
+        diag.allocate(memspace_);
         vec.allocate(memspace_);
 
         vec.setToConst(3.0, memspace_);
 
-        auto divisor_data = std::unique_ptr<real_type[]>(new real_type[N]);
+        auto diag_data = std::unique_ptr<real_type[]>(new real_type[N]);
         for (size_t i = 0; i < static_cast<size_t>(N); ++i)
         {
-          divisor_data[i] = (real_type) (i + 1);
+          diag_data[i] = (real_type) (i + 1);
         }
-        divisor.copyFromExternal(divisor_data.get(), memory::HOST, memspace_);
+        diag.copyFromExternal(diag_data.get(), memory::HOST, memspace_);
 
-        handler_.scaleInv(&divisor, &vec, memspace_);
+        handler_.diagSolve(&diag, &vec, memspace_);
 
         if (memspace_ == memory::DEVICE)
         {

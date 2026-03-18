@@ -342,9 +342,9 @@ namespace ReSolve
   }
 
   /**
-   * @brief Divide the elements of a vector by the elements of another vector
+   * @brief Multiplies vector by an inverse of a diagonal matrix.
    *
-   * @param[in] divisor - vector divisor
+   * @param[in]  diag   - diagonal matrix stored in a vector object
    * @param[in,out] vec - vector to be divided
    * @param[in] memspace - Device where the operation is computed
    *
@@ -352,19 +352,19 @@ namespace ReSolve
    *
    * @return 0 if successful, 1 otherwise
    */
-  int VectorHandler::scaleInv(vector::Vector* divisor, vector::Vector* vec, memory::MemorySpace memspace)
+  int VectorHandler::diagSolve(vector::Vector* diag, vector::Vector* vec, memory::MemorySpace memspace)
   {
-    assert(divisor->getSize() == vec->getSize() && "Diagonal vector must be of the same size as the vector.");
-    assert(divisor->getData(memspace) != nullptr && "Diagonal vector data is null!\n");
+    assert(diag->getSize() == vec->getSize() && "Diagonal vector must be of the same size as the vector.");
+    assert(diag->getData(memspace) != nullptr && "Diagonal vector data is null!\n");
     assert(vec->getData(memspace) != nullptr && "Vector data is null!\n");
     using namespace ReSolve::memory;
     switch (memspace)
     {
     case HOST:
-      return cpuImpl_->scaleInv(divisor, vec);
+      return cpuImpl_->diagSolve(diag, vec);
       break;
     case DEVICE:
-      return devImpl_->scaleInv(divisor, vec);
+      return devImpl_->diagSolve(diag, vec);
       break;
     }
     return 1;
