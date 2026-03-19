@@ -356,7 +356,7 @@ namespace ReSolve
         }
         else
         {
-          // Add the correction to x directry for left preconditioning
+          // Add the correction to x directly for left preconditioning.
           vector_handler_->axpy(ONE, &vec_z, x, memspace_);
         }
       }
