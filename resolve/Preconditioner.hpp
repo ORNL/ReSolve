@@ -4,10 +4,9 @@
  * @brief  Declaration of preconditioner base class.
  *
  */
+#pragma once
 
 #include <string>
-
-#pragma once
 
 namespace ReSolve
 {
