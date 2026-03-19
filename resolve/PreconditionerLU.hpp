@@ -1,5 +1,5 @@
 /**
- * @file   PreconditionerLU.cpp
+ * @file   PreconditionerLU.hpp
  * @author Kakeru Ueda (k.ueda.2290@m.isct.ac.jp)
  * @brief  Declaration of preconditioner LU class.
  *
