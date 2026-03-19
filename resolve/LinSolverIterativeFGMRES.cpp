@@ -110,9 +110,8 @@ namespace ReSolve
     // FGMRES only supports right preconditioning
     if (flexible_ && preconditioner_->getSide() == "left")
     {
-      out::warning() << "Flexible GMRES does not support left preconditioning. "
-                     << "Switching preconditioner to right side.\n";
-      preconditioner_->setSide("right");
+      out::error() << "Flexible GMRES does not support left preconditioning.\n";
+      return 1;
     }
 
     // io::Logger::setVerbosity(io::Logger::EVERYTHING);
@@ -125,9 +124,11 @@ namespace ReSolve
     int k          = 0;
     int k1         = 0;
 
-    real_type   t     = 0.0;
-    real_type   rnorm = 0.0;
-    real_type   bnorm = 0.0;
+    real_type   t          = 0.0;
+    real_type   rnorm      = 0.0;
+    real_type   bnorm      = 0.0;
+    real_type   true_rnorm = 0.0;
+    real_type   true_bnorm = 0.0;
     real_type   tolrel;
     vector_type vec_v(n_);
     vector_type vec_z(n_);
@@ -142,34 +143,41 @@ namespace ReSolve
     vec_v.setData(vec_V_->getData(0, memspace_), memspace_);
     vec_z.setData(vec_Z_->getData(0, memspace_), memspace_);
 
-    // Left preconditioning applies M^{-1} to the initial residual
+    // Residual norm ||b - A*x0||
+    true_rnorm = vector_handler_->dot(&vec_v, &vec_v, memspace_);
+    true_rnorm = std::sqrt(true_rnorm);
+
+    // Right-hand norm ||b||
+    true_bnorm = vector_handler_->dot(rhs, rhs, memspace_);
+    true_bnorm = std::sqrt(true_bnorm);
+
+    // Left preconditioning uses preconditioned norms for convergence
     if (!flexible_ && preconditioner_->getSide() == "left")
     {
+      // Left preconditioned residual norm ||M^{-1}*(b - A*x0)||
       preconditioner_->apply(&vec_v, &vec_z);
       vec_v.copyFromExternal(&vec_z, memspace_, memspace_);
-    }
+      rnorm = vector_handler_->dot(vec_V_, vec_V_, memspace_);
+      rnorm = std::sqrt(rnorm);
 
-    rnorm = vector_handler_->dot(vec_V_, vec_V_, memspace_);
-    bnorm = vector_handler_->dot(rhs, rhs, memspace_);
-
-    // Left preconditioning applies M^{-1} to bnorm
-    if (!flexible_ && preconditioner_->getSide() == "left")
-    {
+      // Left preconditioned right-hand norm ||M^{-1}*b||
       vec_v.setData(rhs->getData(memspace_), memspace_);
       preconditioner_->apply(&vec_v, &vec_z);
       bnorm = vector_handler_->dot(&vec_z, &vec_z, memspace_);
-      vec_v.setData(vec_V_->getData(0, memspace_), memspace_);
+      bnorm = std::sqrt(bnorm);
     }
-
-    // rnorm = ||V_1||
-    rnorm = std::sqrt(rnorm);
-    bnorm = std::sqrt(bnorm);
+    else
+    {
+      rnorm = true_rnorm;
+      bnorm = true_bnorm;
+    }
 
     io::Logger::misc() << "it 0: norm of residual "
                        << std::scientific << std::setprecision(16)
                        << rnorm << " Norm of rhs: " << bnorm << "\n";
 
-    initial_residual_norm_ = rnorm / bnorm; // relative residual norm
+    // Report true norms
+    initial_residual_norm_ = true_rnorm / true_bnorm;
 
     while (outer_flag)
     {
@@ -243,8 +251,7 @@ namespace ReSolve
         {
           if (preconditioner_->getSide() == "right")
           {
-            // vec_z = M^{-1}*vec_v,
-            // then vec_v = A_*vec_z
+            // vec_z = M^{-1}*vec_v, then vec_v = A_*vec_z
             preconditioner_->apply(&vec_v, &vec_z);
             mem_.deviceSynchronize();
 
@@ -253,17 +260,14 @@ namespace ReSolve
           }
           else
           {
-            // vec_z = A*vec_v,
-            // then vec_v = M^{-1}*vec_z
+            // vec_z = A*vec_v, then vec_v = M^{-1}*vec_z
             matrix_handler_->matvec(A_, &vec_v, &vec_z, &ONE, &ZERO, memspace_);
-            mem_.deviceSynchronize();
 
             vec_v.setData(vec_V_->getData(i + 1, memspace_), memspace_);
             preconditioner_->apply(&vec_z, &vec_v);
+            mem_.deviceSynchronize();
           }
         }
-
-        mem_.deviceSynchronize();
 
         // orthogonalize V[i+1], form a column of h_H_
 
@@ -368,10 +372,13 @@ namespace ReSolve
       rhs->copyToExternal(vec_V_->getData(memspace_), 0, memspace_, memspace_);
       matrix_handler_->matvec(A_, x, vec_V_, &MINUS_ONE, &ONE, memspace_);
 
+      vec_v.setData(vec_V_->getData(0, memspace_), memspace_);
+      true_rnorm = vector_handler_->dot(&vec_v, &vec_v, memspace_);
+      true_rnorm = std::sqrt(true_rnorm);
+
       // Left-preconditioned GMRES applies M^{-1} to the residual
       if (!flexible_ && preconditioner_->getSide() == "left")
       {
-        vec_v.setData(vec_V_->getData(0, memspace_), memspace_);
         preconditioner_->apply(&vec_v, &vec_z);
         vec_v.copyFromExternal(&vec_z, memspace_, memspace_);
       }
@@ -382,7 +389,8 @@ namespace ReSolve
 
       if (!outer_flag)
       {
-        final_residual_norm_ = rnorm / bnorm; // relative residual norm
+        // Report true norms
+        final_residual_norm_ = true_rnorm / true_bnorm; // relative residual norm
         total_iters_         = it;
         io::Logger::misc() << "End of cycle, COMPUTED norm of residual "
                            << std::scientific << std::setprecision(16)

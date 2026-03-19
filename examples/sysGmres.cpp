@@ -35,6 +35,7 @@ void printHelpInfo()
   std::cout << "\t-g <gs method> \tGram-Schmidt method: cgs1, cgs2, or mgs (default 'cgs2').\n";
   std::cout << "\t-s <sketching method> \tSketching method: count or fwht (default 'count')\n";
   std::cout << "\t-x <flexible> \tEnable flexible: yes or no (default 'yes')\n\n";
+  std::cout << "\t-p <preconditioner side> \tPreconditioner side: left or right (default 'right')\n\n";
 }
 
 //

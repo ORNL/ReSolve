@@ -567,7 +567,7 @@ namespace ReSolve
     int status = 0;
 
     status += preconditioner_->setup(A_);
-    preconditioner_->setSide(side);
+    status += preconditioner_->setSide(side);
 
     if (memspace_ != "cpu")
     {

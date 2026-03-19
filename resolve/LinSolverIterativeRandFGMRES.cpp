@@ -137,12 +137,11 @@ namespace ReSolve
   {
     using namespace constants;
 
-    // FGMRES only supports right preconditioning.
+    // FGMRES only supports right preconditioning
     if (flexible_ && preconditioner_->getSide() == "left")
     {
-      out::warning() << "Flexible GMRES does not support left preconditioning. "
-                     << "Switching preconditioner to right side.\n";
-      preconditioner_->setSide("right");
+      out::error() << "Flexible GMRES does not support left preconditioning.\n";
+      return 1;
     }
 
     // io::Logger::setVerbosity(io::Logger::EVERYTHING);
@@ -155,9 +154,11 @@ namespace ReSolve
     int        k;
     int        k1;
 
-    real_type   t;
-    real_type   rnorm;
-    real_type   bnorm;
+    real_type   t          = 0.0;
+    real_type   rnorm      = 0.0;
+    real_type   bnorm      = 0.0;
+    real_type   true_rnorm = 0.0;
+    real_type   true_bnorm = 0.0;
     real_type   tolrel;
     vector_type vec_v(n_);
     vector_type vec_z(n_);
@@ -173,7 +174,15 @@ namespace ReSolve
     vec_v.setData(vec_V_->getData(0, memspace_), memspace_);
     vec_z.setData(vec_Z_->getData(0, memspace_), memspace_);
 
-    // Left-preconditioned GMRES applies M^{-1} to the initial residual
+    // Residual norm ||b - A*x0||
+    true_rnorm = vector_handler_->dot(&vec_v, &vec_v, memspace_);
+    true_rnorm = std::sqrt(true_rnorm);
+
+    // Right-hand norm ||b||
+    true_bnorm = vector_handler_->dot(rhs, rhs, memspace_);
+    true_bnorm = std::sqrt(true_bnorm);
+
+    // Left preconditioning uses preconditioned norms for convergence
     if (!flexible_ && preconditioner_->getSide() == "left")
     {
       preconditioner_->apply(&vec_v, &vec_z);
@@ -201,14 +210,15 @@ namespace ReSolve
       vec_v.setData(vec_V_->getData(0, memspace_), memspace_);
     }
 
-    rnorm = std::sqrt(rnorm); // rnorm = ||V_1||
+    rnorm = std::sqrt(rnorm); // rnorm = ||S_0||
     bnorm = std::sqrt(bnorm);
 
     io::Logger::misc() << "it 0: norm of residual "
                        << std::scientific << std::setprecision(16)
                        << rnorm << " Norm of rhs: " << bnorm << "\n";
 
-    initial_residual_norm_ = rnorm / bnorm; // compute relative residual norm
+    // Report true norms
+    initial_residual_norm_ = true_rnorm / true_bnorm;
 
     while (outer_flag)
     {
@@ -286,8 +296,7 @@ namespace ReSolve
         {
           if (preconditioner_->getSide() == "right")
           {
-            // vec_z = M^{-1}*vec_v,
-            // then vec_v = A_*vec_z
+            // vec_z = M^{-1}*vec_v, then vec_v = A_*vec_z
             preconditioner_->apply(&vec_v, &vec_z);
             mem_.deviceSynchronize();
 
@@ -296,13 +305,12 @@ namespace ReSolve
           }
           else
           {
-            // vec_z = A*vec_v,
-            // then vec_v = M^{-1}*vec_z
+            // vec_z = A*vec_v, then vec_v = M^{-1}*vec_z
             matrix_handler_->matvec(A_, &vec_v, &vec_z, &ONE, &ZERO, memspace_);
-            mem_.deviceSynchronize();
 
             vec_v.setData(vec_V_->getData(i + 1, memspace_), memspace_);
             preconditioner_->apply(&vec_z, &vec_v);
+            mem_.deviceSynchronize();
           }
         }
 
@@ -429,7 +437,7 @@ namespace ReSolve
       matrix_handler_->matvec(A_, x, vec_V_, &MINUS_ONE, &ONE, memspace_);
       if (outer_flag)
       {
-        // Left-preconditioned GMRES applies M^{-1} to the residual
+        // Left-preconditioned GMRES applies M^{-1} to the residual before sketching
         if (!flexible_ && preconditioner_->getSide() == "left")
         {
           vec_v.setData(vec_V_->getData(0, memspace_), memspace_);
@@ -458,15 +466,16 @@ namespace ReSolve
 
       if (!outer_flag)
       {
-        rnorm = vector_handler_->dot(vec_V_, vec_V_, memspace_);
-        // rnorm = ||V_0||
-        rnorm = std::sqrt(rnorm);
+        // true_rnorm = ||b - A*x||
+        true_rnorm = vector_handler_->dot(vec_V_, vec_V_, memspace_);
+        true_rnorm = std::sqrt(true_rnorm);
 
         io::Logger::misc() << "End of cycle, COMPUTED norm of residual "
                            << std::scientific << std::setprecision(16)
-                           << rnorm << "\n";
+                           << true_rnorm << "\n";
 
-        final_residual_norm_ = rnorm / bnorm; // relative residual norm
+        // Report true norms
+        final_residual_norm_ = true_rnorm / true_bnorm; // relative residual norm
         total_iters_         = it;
       }
     } // outer while

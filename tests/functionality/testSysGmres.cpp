@@ -186,11 +186,7 @@ int test(int argc, char* argv[])
             << "\t Solver tolerance:               " << tol_out << "\n";
   helper.printIterativeSolverSummary(&(solver.getIterativeSolver()));
 
-  // TODO: Remove this if statement and let TestHelper report left-preconditioned residuals.
-  if (solver.getPreconditioner().getSide() == "right")
-  {
-    error_sum += helper.checkRelativeResidualNorm(solver.getIterativeSolver().getFinalResidualNorm());
-  }
+  error_sum += helper.checkRelativeResidualNorm(solver.getIterativeSolver().getFinalResidualNorm());
   error_sum += helper.checkResult(10.0 * tol_out);
   isTestPass(error_sum, "Test");
 

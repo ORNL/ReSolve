@@ -13,7 +13,6 @@ namespace ReSolve
   /**
    * @brief Constructor for PreconditionerUserMatrix.
    *
-   * @param[in] A - Pointer to the forward operator
    * @param[in] matrix_handler - Pointer to the matrix handler
    */
   PreconditionerUserMatrix::PreconditionerUserMatrix(MatrixHandler* matrix_handler)
@@ -70,6 +69,12 @@ namespace ReSolve
   int PreconditionerUserMatrix::apply(vector_type* rhs, vector_type* x)
   {
     using namespace constants;
+
+    if (matrix_handler_ == nullptr || B_ == nullptr)
+    {
+      return 1;
+    }
+
     matrix_handler_->matvec(B_, rhs, x, &ONE, &ZERO, memspace_);
     return 0;
   }
