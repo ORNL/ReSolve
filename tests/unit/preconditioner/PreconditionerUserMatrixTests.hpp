@@ -103,7 +103,7 @@ namespace ReSolve
       /**
        * @brief Test apply() performs correct matvec with B.
        *
-       * B = diag(2, 3, 4), x = [1, 1, 1]^T => y = [2, 3, 4]^T.
+       * B = diag(2, 3, 4), x = [1, 1, 1] => y = [2, 3, 4].
        */
       TestOutcome apply()
       {

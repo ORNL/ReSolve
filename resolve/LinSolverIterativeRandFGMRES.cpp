@@ -154,11 +154,11 @@ namespace ReSolve
     int        k;
     int        k1;
 
-    real_type   t          = 0.0;
-    real_type   rnorm      = 0.0;
-    real_type   bnorm      = 0.0;
-    real_type   true_rnorm = 0.0;
-    real_type   true_bnorm = 0.0;
+    real_type   t             = 0.0;
+    real_type   res_norm      = 0.0;
+    real_type   rhs_norm      = 0.0;
+    real_type   true_res_norm = 0.0;
+    real_type   true_rhs_norm = 0.0;
     real_type   tolrel;
     vector_type vec_v(n_);
     vector_type vec_z(n_);
@@ -175,12 +175,12 @@ namespace ReSolve
     vec_z.setData(vec_Z_->getData(0, memspace_), memspace_);
 
     // Residual norm ||b - A*x0||
-    true_rnorm = vector_handler_->dot(&vec_v, &vec_v, memspace_);
-    true_rnorm = std::sqrt(true_rnorm);
+    true_res_norm = vector_handler_->dot(&vec_v, &vec_v, memspace_);
+    true_res_norm = std::sqrt(true_res_norm);
 
     // Right-hand side norm ||b||
-    true_bnorm = vector_handler_->dot(rhs, rhs, memspace_);
-    true_bnorm = std::sqrt(true_bnorm);
+    true_rhs_norm = vector_handler_->dot(rhs, rhs, memspace_);
+    true_rhs_norm = std::sqrt(true_rhs_norm);
 
     // Left preconditioning uses preconditioned norms for convergence
     if (!flexible_ && preconditioner_->getSide() == "left")
@@ -198,33 +198,33 @@ namespace ReSolve
       vector_handler_->scal(one_over_k_, &vec_s, memspace_);
     }
     mem_.deviceSynchronize();
-    rnorm = vector_handler_->dot(&vec_s, &vec_s, memspace_);
-    bnorm = vector_handler_->dot(rhs, rhs, memspace_);
+    res_norm = vector_handler_->dot(&vec_s, &vec_s, memspace_);
+    rhs_norm = vector_handler_->dot(rhs, rhs, memspace_);
 
     // Left-preconditioned right-hand side norm ||M^{-1}*b||
     if (!flexible_ && preconditioner_->getSide() == "left")
     {
       vec_v.setData(rhs->getData(memspace_), memspace_);
       preconditioner_->apply(&vec_v, &vec_z);
-      bnorm = vector_handler_->dot(&vec_z, &vec_z, memspace_);
+      rhs_norm = vector_handler_->dot(&vec_z, &vec_z, memspace_);
       vec_v.setData(vec_V_->getData(0, memspace_), memspace_);
     }
 
-    rnorm = std::sqrt(rnorm); // rnorm = ||S_0||
-    bnorm = std::sqrt(bnorm);
+    res_norm = std::sqrt(res_norm); // res_norm = ||S_0||
+    rhs_norm = std::sqrt(rhs_norm);
 
     io::Logger::misc() << "it 0: norm of residual "
                        << std::scientific << std::setprecision(16)
-                       << rnorm << " Norm of rhs: " << bnorm << "\n";
+                       << res_norm << " Norm of rhs: " << rhs_norm << "\n";
 
     // Report the true initial relative residual norm
-    initial_residual_norm_ = true_rnorm / true_bnorm;
+    initial_residual_norm_ = true_res_norm / true_rhs_norm;
 
     while (outer_flag)
     {
       if (it == 0)
       {
-        tolrel = tol_ * rnorm;
+        tolrel = tol_ * res_norm;
         if (std::abs(tolrel) < MACHINE_EPSILON)
         {
           tolrel = MACHINE_EPSILON;
@@ -235,34 +235,34 @@ namespace ReSolve
       switch (conv_cond_)
       {
       case 0:
-        exit_cond = ((std::abs(rnorm - ZERO) <= MACHINE_EPSILON));
+        exit_cond = ((std::abs(res_norm - ZERO) <= MACHINE_EPSILON));
         break;
       case 1:
-        exit_cond = ((std::abs(rnorm - ZERO) <= MACHINE_EPSILON) || (rnorm < tol_));
+        exit_cond = ((std::abs(res_norm - ZERO) <= MACHINE_EPSILON) || (res_norm < tol_));
         break;
       case 2:
-        exit_cond = ((std::abs(rnorm - ZERO) <= MACHINE_EPSILON) || (rnorm < (tol_ * bnorm)));
+        exit_cond = ((std::abs(res_norm - ZERO) <= MACHINE_EPSILON) || (res_norm < (tol_ * rhs_norm)));
         break;
       }
 
       if (exit_cond)
       {
         outer_flag             = 0;
-        final_residual_norm_   = rnorm;
-        initial_residual_norm_ = rnorm;
+        final_residual_norm_   = res_norm;
+        initial_residual_norm_ = res_norm;
         total_iters_           = 0;
         break;
       }
 
       // normalize first vector
-      t = 1.0 / rnorm;
+      t = 1.0 / res_norm;
       vector_handler_->scal(t, vec_V_, memspace_);
       vector_handler_->scal(t, vec_S_, memspace_);
 
       mem_.deviceSynchronize();
 
       // initialize norm history
-      h_rs_[0] = rnorm;
+      h_rs_[0] = res_norm;
       i        = -1;
       notconv  = 1;
 
@@ -366,13 +366,13 @@ namespace ReSolve
         h_H_[(i) * (restart_ + 1) + (i + 1)] = h_c_[i] * Hii1 - h_s_[i] * Hii;
 
         // residual norm estimate
-        rnorm = std::abs(h_rs_[i + 1]);
+        res_norm = std::abs(h_rs_[i + 1]);
 
         io::Logger::misc() << "it: " << it << " --> norm of the residual "
                            << std::scientific << std::setprecision(16)
-                           << rnorm << "\n";
+                           << res_norm << "\n";
         // check convergence
-        if (i + 1 >= restart_ || rnorm <= tolrel || it >= maxit_)
+        if (i + 1 >= restart_ || res_norm <= tolrel || it >= maxit_)
         {
           notconv = 0;
         }
@@ -380,7 +380,7 @@ namespace ReSolve
 
       io::Logger::misc() << "End of cycle, ESTIMATED norm of residual "
                          << std::scientific << std::setprecision(16)
-                         << rnorm << "\n";
+                         << res_norm << "\n";
       // solve tri system
       h_rs_[i] = h_rs_[i] / h_H_[i * (restart_ + 1) + i];
       for (int ii = 2; ii <= i + 1; ii++)
@@ -428,7 +428,7 @@ namespace ReSolve
       }
 
       /* test solution */
-      if (rnorm <= tolrel || it >= maxit_)
+      if (res_norm <= tolrel || it >= maxit_)
       {
         outer_flag = 0;
       }
@@ -459,23 +459,23 @@ namespace ReSolve
           vector_handler_->scal(one_over_k_, &vec_s, memspace_);
         }
         mem_.deviceSynchronize();
-        rnorm = vector_handler_->dot(vec_S_, vec_S_, memspace_);
-        // rnorm = ||S_0||
-        rnorm = std::sqrt(rnorm);
+        res_norm = vector_handler_->dot(vec_S_, vec_S_, memspace_);
+        // res_norm = ||S_0||
+        res_norm = std::sqrt(res_norm);
       }
 
       if (!outer_flag)
       {
-        // true rnorm = ||b - A*x||
-        true_rnorm = vector_handler_->dot(vec_V_, vec_V_, memspace_);
-        true_rnorm = std::sqrt(true_rnorm);
+        // true res_norm = ||b - A*x||
+        true_res_norm = vector_handler_->dot(vec_V_, vec_V_, memspace_);
+        true_res_norm = std::sqrt(true_res_norm);
 
         io::Logger::misc() << "End of cycle, COMPUTED norm of residual "
                            << std::scientific << std::setprecision(16)
-                           << true_rnorm << "\n";
+                           << true_res_norm << "\n";
 
         // Report the true relative residual norm
-        final_residual_norm_ = true_rnorm / true_bnorm;
+        final_residual_norm_ = true_res_norm / true_rhs_norm;
         total_iters_         = it;
       }
     } // outer while
