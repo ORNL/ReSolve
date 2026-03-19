@@ -103,8 +103,8 @@ int test(int argc, char* argv[])
   opt                  = options.getParamFromKey("-x");
   std::string flexible = opt ? (*opt).second : "yes";
 
-  opt                      = options.getParamFromKey("-p");
-  std::string precond_side = opt ? (*opt).second : "right";
+  opt              = options.getParamFromKey("-p");
+  std::string side = opt ? (*opt).second : "right";
 
   processInputs(method, gs, sketch);
 
@@ -170,7 +170,7 @@ int test(int argc, char* argv[])
   solver.getIterativeSolver().setCliParam("restart", "200");
 
   // Set preconditioner (default in this case ILU0)
-  status = solver.preconditionerSetup(precond_side);
+  status = solver.preconditionerSetup(side);
   error_sum += status;
 
   // Solve system

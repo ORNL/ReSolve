@@ -165,8 +165,8 @@ int sysGmres(int argc, char* argv[])
   opt                  = options.getParamFromKey("-x");
   std::string flexible = opt ? (*opt).second : "yes";
 
-  opt                      = options.getParamFromKey("-p");
-  std::string precond_side = opt ? (*opt).second : "right";
+  opt              = options.getParamFromKey("-p");
+  std::string side = opt ? (*opt).second : "right";
 
   processInputs(method, gs, sketch, flexible);
 
@@ -251,7 +251,7 @@ int sysGmres(int argc, char* argv[])
   // Set up the preconditioner
   if (return_code == 0)
   {
-    status = solver.preconditionerSetup(precond_side);
+    status = solver.preconditionerSetup(side);
     std::cout << "solver.preconditionerSetup returned status: " << status << "\n";
     if (status != 0)
     {

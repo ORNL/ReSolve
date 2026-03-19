@@ -178,7 +178,7 @@ namespace ReSolve
     true_rnorm = vector_handler_->dot(&vec_v, &vec_v, memspace_);
     true_rnorm = std::sqrt(true_rnorm);
 
-    // Right-hand norm ||b||
+    // Right-hand side norm ||b||
     true_bnorm = vector_handler_->dot(rhs, rhs, memspace_);
     true_bnorm = std::sqrt(true_bnorm);
 
@@ -201,7 +201,7 @@ namespace ReSolve
     rnorm = vector_handler_->dot(&vec_s, &vec_s, memspace_);
     bnorm = vector_handler_->dot(rhs, rhs, memspace_);
 
-    // Left preconditioning applies M^{-1} to bnorm
+    // Left-preconditioned right-hand side norm ||M^{-1}*b||
     if (!flexible_ && preconditioner_->getSide() == "left")
     {
       vec_v.setData(rhs->getData(memspace_), memspace_);
@@ -217,7 +217,7 @@ namespace ReSolve
                        << std::scientific << std::setprecision(16)
                        << rnorm << " Norm of rhs: " << bnorm << "\n";
 
-    // Report true norms
+    // Report the true initial relative residual norm
     initial_residual_norm_ = true_rnorm / true_bnorm;
 
     while (outer_flag)
@@ -466,7 +466,7 @@ namespace ReSolve
 
       if (!outer_flag)
       {
-        // true_rnorm = ||b - A*x||
+        // true rnorm = ||b - A*x||
         true_rnorm = vector_handler_->dot(vec_V_, vec_V_, memspace_);
         true_rnorm = std::sqrt(true_rnorm);
 
@@ -474,8 +474,8 @@ namespace ReSolve
                            << std::scientific << std::setprecision(16)
                            << true_rnorm << "\n";
 
-        // Report true norms
-        final_residual_norm_ = true_rnorm / true_bnorm; // relative residual norm
+        // Report the true relative residual norm
+        final_residual_norm_ = true_rnorm / true_bnorm;
         total_iters_         = it;
       }
     } // outer while

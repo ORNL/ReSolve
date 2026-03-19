@@ -566,6 +566,18 @@ namespace ReSolve
   {
     int status = 0;
 
+    if (preconditioner_ == nullptr)
+    {
+      out::error() << "Preconditioner not initialized!\n";
+      status += 1;
+    }
+
+    if (iterativeSolver_ == nullptr)
+    {
+      out::error() << "Iterative solver not initialized!\n";
+      status += 1;
+    }
+
     status += preconditioner_->setup(A_);
     status += preconditioner_->setSide(side);
 
@@ -591,6 +603,12 @@ namespace ReSolve
   {
     int status = 0;
     A_         = A;
+
+    if (preconditioner_ == nullptr)
+    {
+      out::error() << "Preconditioner not initialized!\n";
+      status += 1;
+    }
 
     status += preconditioner_->reset(A);
 
