@@ -17,6 +17,7 @@ namespace ReSolve
   class LinAlgWorkspaceCpu;
   class MatrixHandler;
   class VectorHandler;
+
   namespace vector
   {
     class Vector;

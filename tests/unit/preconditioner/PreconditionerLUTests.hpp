@@ -8,6 +8,7 @@
 #pragma once
 
 #include <cmath>
+
 #include <resolve/LinSolverDirect.hpp>
 #include <resolve/LinSolverDirectCpuILU0.hpp>
 #include <resolve/PreconditionerLU.hpp>

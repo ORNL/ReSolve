@@ -157,7 +157,6 @@ namespace ReSolve
       preconditioner_->setSide(Preconditioner::Side::RIGHT);
     }
 
-
     // io::Logger::setVerbosity(io::Logger::EVERYTHING);
 
     int        outer_flag = 1;

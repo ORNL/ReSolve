@@ -107,20 +107,20 @@ namespace ReSolve
    * @brief Solve linear system A*x = rhs
    *
    * Implements restarted GMRES with optional flexible (FGMRES) variant.
-   * 
-   * Flexible GMRES allows the preconditioner to vary periteration and 
-   * uses right preconditioning. Standard GMRES supports both left and 
+   *
+   * Flexible GMRES allows the preconditioner to vary periteration and
+   * uses right preconditioning. Standard GMRES supports both left and
    * right preconditioning.
    *
    * Left preconditioning solves M^{-1}Ax = M^{-1}b and checks convergence
    * with ||M^{-1}(b - Ax)||. Right preconditioning solves AM^{-1}(Mx) = b
    * and checks convergence with ||b - Ax||. Both report the true relative
    * residual ||b - Ax||/||b||.
-   * 
+   *
    * @param rhs - right hand side vector
    * @param x   - solution vector
    * @return int - zero if successful, error code otherwise
-   * 
+   *
    * @invariant rhs vector is unchanged.
    * @post x is overwritten with the solution to the linear system.
    */

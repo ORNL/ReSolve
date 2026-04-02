@@ -325,6 +325,4 @@ void processInputs(std::string& method, std::string& gs, std::string& sketch, st
     std::cout << "Preconditioning side " << side << " not recognized.\n";
     std::cout << "Setting preconditioning side to the default (right).\n\n";
   }
-
 }
-
