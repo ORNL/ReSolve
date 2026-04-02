@@ -6,8 +6,6 @@
  */
 #pragma once
 
-#include <string>
-
 namespace ReSolve
 {
   namespace matrix
@@ -31,6 +29,12 @@ namespace ReSolve
     using vector_type = vector::Vector;
     using matrix_type = matrix::Sparse;
 
+    enum Side
+    {
+      LEFT = 0,
+      RIGHT
+    };
+
     Preconditioner();
     virtual ~Preconditioner();
 
@@ -38,10 +42,10 @@ namespace ReSolve
     virtual int setup(matrix_type* A)                   = 0;
     virtual int reset(matrix_type* /* A */);
 
-    std::string getSide() const;                  // Gets the preconditioning side
-    int         setSide(const std::string& side); // Sets the preconditioning side
+    Side getSide() const;    // Gets the preconditioning side
+    int  setSide(Side side); // Sets the preconditioning side
 
   private:
-    std::string side_ = "right"; // Right preconditioning by default
+    Side side_{Side::RIGHT}; // Right preconditioning by default
   };
 } // namespace ReSolve

@@ -36,7 +36,7 @@ namespace ReSolve
       }
 
       /**
-       * @brief Test default side is "right", setSide works, invalid value is rejected.
+       * @brief Test default side is right and setSide works for both enum values.
        *
        */
       TestOutcome checkSide()
@@ -46,29 +46,24 @@ namespace ReSolve
 
         PreconditionerUserMatrix precond(&handler_);
 
-        if (precond.getSide() != "right")
+        if (precond.getSide() != Preconditioner::Side::RIGHT)
         {
           status *= false;
-          std::cout << testname << ": default side is '" << precond.getSide() << "', expected 'right'\n";
+          std::cout << testname << ": default side is not Side::RIGHT\n";
         }
 
-        if (precond.setSide("left") != 0 || precond.getSide() != "left")
+        if (precond.setSide(Preconditioner::Side::LEFT) != 0
+            || precond.getSide() != Preconditioner::Side::LEFT)
         {
           status *= false;
-          std::cout << testname << ": setSide(\"left\") failed\n";
+          std::cout << testname << ": setSide(Side::LEFT) failed\n";
         }
 
-        if (precond.setSide("right") != 0 || precond.getSide() != "right")
+        if (precond.setSide(Preconditioner::Side::RIGHT) != 0
+            || precond.getSide() != Preconditioner::Side::RIGHT)
         {
           status *= false;
-          std::cout << testname << ": setSide(\"right\") failed\n";
-        }
-
-        // Invalid value: should return 1 and leave side unchanged
-        if (precond.setSide("invalid") != 1 || precond.getSide() != "right")
-        {
-          status *= false;
-          std::cout << testname << ": setSide(\"invalid\") should return 1 and leave side as 'right'\n";
+          std::cout << testname << ": setSide(Side::RIGHT) failed\n";
         }
 
         return status.report(testname.c_str());

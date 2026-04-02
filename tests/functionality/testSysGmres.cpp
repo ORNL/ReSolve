@@ -42,7 +42,7 @@ template <class workspace_type>
 static int test(int argc, char* argv[]);
 
 /// Checks if inputs are valid, otherwise sets defaults
-static void processInputs(std::string& method, std::string& gs, std::string& sketch);
+static void processInputs(std::string& method, std::string& gs, std::string& sketch, std::string& side);
 
 /// Creates string with test description
 static std::string headerInfo(const std::string& method,
@@ -106,7 +106,7 @@ int test(int argc, char* argv[])
   opt              = options.getParamFromKey("-p");
   std::string side = opt ? (*opt).second : "right";
 
-  processInputs(method, gs, sketch);
+  processInputs(method, gs, sketch, side);
 
   // Create workspace and initialize its handles.
   workspace_type workspace;
@@ -200,7 +200,7 @@ int test(int argc, char* argv[])
 // Definitions of helper functions
 //
 
-void processInputs(std::string& method, std::string& gs, std::string& sketch)
+void processInputs(std::string& method, std::string& gs, std::string& sketch, std::string& side)
 {
   if (method == "randgmres")
   {
@@ -218,12 +218,20 @@ void processInputs(std::string& method, std::string& gs, std::string& sketch)
     std::cout << "Setting iterative solver method to the default (FGMRES).\n\n";
     method = "fgmres";
   }
+
   if (gs != "cgs1" && gs != "cgs2" && gs != "mgs" && gs != "mgs_two_sync"
       && gs != "mgs_pm")
   {
     std::cout << "Unknown orthogonalization " << gs << "\n";
     std::cout << "Setting orthogonalization to the default (CGS2).\n\n";
     gs = "cgs2";
+  }
+
+  if ((side != "left") && (side != "right"))
+  {
+    std::cout << "Preconditioning side " << side << " not recognized.\n";
+    std::cout << "Setting preconditioning side to the default (right).\n\n";
+    side = "right";
   }
 }
 

@@ -22,7 +22,7 @@ namespace ReSolve
     return 1;
   }
 
-  std::string Preconditioner::getSide() const
+  Preconditioner::Side Preconditioner::getSide() const
   {
     return side_;
   }
@@ -30,17 +30,13 @@ namespace ReSolve
   /**
    * @brief Set the preconditioning side
    *
-   * @param[in] side - "left" or "right"
-   * @return 0 if successful, 1 if invalid value
+   * @param[in] side - side of preconditioning
+   * @return 0 if successful
    */
-  int Preconditioner::setSide(const std::string& side)
+  int Preconditioner::setSide(Side side)
   {
-    if (side == "left" || side == "right")
-    {
-      side_ = side;
-      return 0;
-    }
-    return 1;
+    side_ = side;
+    return 0;
   }
 
 } // namespace ReSolve

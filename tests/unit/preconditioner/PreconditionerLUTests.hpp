@@ -8,8 +8,6 @@
 #pragma once
 
 #include <cmath>
-#include <string>
-
 #include <resolve/LinSolverDirect.hpp>
 #include <resolve/LinSolverDirectCpuILU0.hpp>
 #include <resolve/PreconditionerLU.hpp>
@@ -106,17 +104,17 @@ namespace ReSolve
 
         PreconditionerLU precond(lu_solver_);
 
-        if (precond.getSide() != "right")
+        if (precond.getSide() != Preconditioner::Side::RIGHT)
         {
           status *= false;
-          std::cout << "Default side should be 'right', got '" << precond.getSide() << "'\n";
+          std::cout << "Default side should be Side::RIGHT\n";
         }
 
-        precond.setSide("left");
-        if (precond.getSide() != "left")
+        precond.setSide(Preconditioner::Side::LEFT);
+        if (precond.getSide() != Preconditioner::Side::LEFT)
         {
           status *= false;
-          std::cout << "After setSide(\"left\"), got '" << precond.getSide() << "'\n";
+          std::cout << "After setSide(Side::LEFT), side was not updated\n";
         }
 
         return status.report(testname.c_str());

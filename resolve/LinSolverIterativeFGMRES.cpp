@@ -103,15 +103,37 @@ namespace ReSolve
     return 0;
   }
 
+  /**
+   * @brief Solve linear system A*x = rhs
+   *
+   * Implements restarted GMRES with optional flexible (FGMRES) variant.
+   * 
+   * Flexible GMRES allows the preconditioner to vary periteration and 
+   * uses right preconditioning. Standard GMRES supports both left and 
+   * right preconditioning.
+   *
+   * Left preconditioning solves M^{-1}Ax = M^{-1}b and checks convergence
+   * with ||M^{-1}(b - Ax)||. Right preconditioning solves AM^{-1}(Mx) = b
+   * and checks convergence with ||b - Ax||. Both report the true relative
+   * residual ||b - Ax||/||b||.
+   * 
+   * @param rhs - right hand side vector
+   * @param x   - solution vector
+   * @return int - zero if successful, error code otherwise
+   * 
+   * @invariant rhs vector is unchanged.
+   * @post x is overwritten with the solution to the linear system.
+   */
   int LinSolverIterativeFGMRES::solve(vector_type* rhs, vector_type* x)
   {
     using namespace constants;
 
-    // FGMRES only supports right preconditioning
-    if (flexible_ && preconditioner_->getSide() == "left")
+    // Flexible GMRES only supports right preconditioning
+    if (flexible_ && preconditioner_->getSide() == Preconditioner::Side::LEFT)
     {
-      out::error() << "Flexible GMRES does not support left preconditioning.\n";
-      return 1;
+      out::warning() << "Flexible GMRES does not support left preconditioning. "
+                     << "Switching to right preconditioning.\n";
+      preconditioner_->setSide(Preconditioner::Side::RIGHT);
     }
 
     // io::Logger::setVerbosity(io::Logger::EVERYTHING);
@@ -125,15 +147,18 @@ namespace ReSolve
     int k1         = 0;
 
     real_type   t             = 0.0;
-    real_type   res_norm      = 0.0;
-    real_type   rhs_norm      = 0.0;
-    real_type   true_res_norm = 0.0;
-    real_type   true_rhs_norm = 0.0;
+    real_type   res_norm      = 0.0; // Residual norm used used for convergence
+    real_type   rhs_norm      = 0.0; // Right-hand side norm used for convergence
+    real_type   true_res_norm = 0.0; // True (unpreconditioned) residual norm ||b - Ax|| for reporting
+    real_type   true_rhs_norm = 0.0; // True (unpreconditioned) right-hand side norm ||b|| for reporting
     real_type   tolrel;
     vector_type vec_v(n_);
     vector_type vec_z(n_);
-    // V[0] = b-A*x_0
-    // debug
+
+    // Compute initial residual norm.
+    // V[0] = ||b - A*x0||         for right preconditioning
+    // V[0] = ||M^{-1}{b - A*x0}|| for left preconditioning
+
     vec_Z_->setToZero(memspace_);
     vec_V_->setToZero(memspace_);
 
@@ -143,33 +168,37 @@ namespace ReSolve
     vec_v.setData(vec_V_->getData(0, memspace_), memspace_);
     vec_z.setData(vec_Z_->getData(0, memspace_), memspace_);
 
-    // Residual norm ||b - A*x0||
+    // True residual norm ||b - A*x0||
     true_res_norm = vector_handler_->dot(&vec_v, &vec_v, memspace_);
     true_res_norm = std::sqrt(true_res_norm);
 
-    // Right-hand side norm ||b||
+    // True right-hand side norm ||b||
     true_rhs_norm = vector_handler_->dot(rhs, rhs, memspace_);
     true_rhs_norm = std::sqrt(true_rhs_norm);
 
-    // Left preconditioning uses preconditioned norms for convergence
-    if (!flexible_ && preconditioner_->getSide() == "left")
+    switch (preconditioner_->getSide())
     {
-      // Left-preconditioned residual norm ||M^{-1}*(b - A*x0)||
+    case Preconditioner::Side::RIGHT:
+      // Right preconditioning uses true norms for convergence
+      res_norm = true_res_norm;
+      rhs_norm = true_rhs_norm;
+      break;
+    case Preconditioner::Side::LEFT:
+      // Left preconditioning uses preconditioned norms for convergence
+      // Left-preconditioned residual norm ||M^{-1}*(b-A*x0)||
       preconditioner_->apply(&vec_v, &vec_z);
       vec_v.copyFromExternal(&vec_z, memspace_, memspace_);
       res_norm = vector_handler_->dot(vec_V_, vec_V_, memspace_);
       res_norm = std::sqrt(res_norm);
 
       // Left-preconditioned right-hand side norm ||M^{-1}*b||
-      vec_v.setData(rhs->getData(memspace_), memspace_);
-      preconditioner_->apply(&vec_v, &vec_z);
+      preconditioner_->apply(rhs, &vec_z);
       rhs_norm = vector_handler_->dot(&vec_z, &vec_z, memspace_);
       rhs_norm = std::sqrt(rhs_norm);
-    }
-    else
-    {
-      res_norm = true_res_norm;
-      rhs_norm = true_rhs_norm;
+      break;
+    default:
+      out::error() << "Unknown preconditioner side.\n";
+      return 1;
     }
 
     io::Logger::misc() << "it 0: norm of residual "
@@ -236,37 +265,33 @@ namespace ReSolve
           vec_z.setData(vec_Z_->getData(0, memspace_), memspace_);
         }
 
-        // Apply left/right preconditioner
+        // Expand the Krylov subspace.
+        //
+        // New basis vector:
+        //   V[i+1] = A*M^{-1}*V[i] (right preconditioning)
+        //   V[i+1] = M^{-1}*A*V[i] (left preconditioning)
 
-        if (flexible_)
+        switch (preconditioner_->getSide())
         {
-          // FGMRES supports only right preconditioning
+        case Preconditioner::Side::RIGHT:
+          // Compute vec_z = M^{-1}*V[i], then V[i+1] = A*vec_z
           preconditioner_->apply(&vec_v, &vec_z);
           mem_.deviceSynchronize();
 
           vec_v.setData(vec_V_->getData(i + 1, memspace_), memspace_);
           matrix_handler_->matvec(A_, &vec_z, &vec_v, &ONE, &ZERO, memspace_);
-        }
-        else
-        {
-          if (preconditioner_->getSide() == "right")
-          {
-            // vec_z = M^{-1}*vec_v, then vec_v = A_*vec_z
-            preconditioner_->apply(&vec_v, &vec_z);
-            mem_.deviceSynchronize();
+          break;
+        case Preconditioner::Side::LEFT:
+          // Compute vec_z = A*V[i], then V[i+1] = M^{-1}*vec_z
+          matrix_handler_->matvec(A_, &vec_v, &vec_z, &ONE, &ZERO, memspace_);
 
-            vec_v.setData(vec_V_->getData(i + 1, memspace_), memspace_);
-            matrix_handler_->matvec(A_, &vec_z, &vec_v, &ONE, &ZERO, memspace_);
-          }
-          else
-          {
-            // vec_z = A*vec_v, then vec_v = M^{-1}*vec_z
-            matrix_handler_->matvec(A_, &vec_v, &vec_z, &ONE, &ZERO, memspace_);
-
-            vec_v.setData(vec_V_->getData(i + 1, memspace_), memspace_);
-            preconditioner_->apply(&vec_z, &vec_v);
-            mem_.deviceSynchronize();
-          }
+          vec_v.setData(vec_V_->getData(i + 1, memspace_), memspace_);
+          preconditioner_->apply(&vec_z, &vec_v);
+          mem_.deviceSynchronize();
+          break;
+        default:
+          out::error() << "Unknown preconditioner side.\n";
+          return 1;
         }
 
         // orthogonalize V[i+1], form a column of h_H_
@@ -329,7 +354,11 @@ namespace ReSolve
         h_rs_[k] = t / h_H_[k * (restart_ + 1) + k];
       }
 
-      // get solution
+      // Update the approximate solution x using h_rs_.
+      // Flexible GMRES uses the preconditioned basis Z[j] directly.
+      // Standard GMRES first forms vec_z from V[j], then applies M^{-1}
+      // only for right preconditioning.
+
       if (flexible_)
       {
         for (j = 0; j <= i; j++)
@@ -340,6 +369,7 @@ namespace ReSolve
       }
       else
       {
+        // Accumulate the correction vec_z = sum_j h_rs_[j] * V[j]
         vec_Z_->setToZero(memspace_);
         vec_z.setData(vec_Z_->getData(0, memspace_), memspace_);
         for (j = 0; j <= i; j++)
@@ -347,17 +377,21 @@ namespace ReSolve
           vec_v.setData(vec_V_->getData(j, memspace_), memspace_);
           vector_handler_->axpy(h_rs_[j], &vec_v, &vec_z, memspace_);
         }
-        if (preconditioner_->getSide() == "right")
+        // Apply the correction to x based on preconditioning side
+        switch (preconditioner_->getSide())
         {
-          // The correction is M^{-1}*vec_z for right preconditioning
+        case Preconditioner::Side::RIGHT:
+          // Right preconditioning: x += M^{-1} * vec_z
           preconditioner_->apply(&vec_z, &vec_v);
-          // Add the correction to x
           vector_handler_->axpy(ONE, &vec_v, x, memspace_);
-        }
-        else
-        {
-          // Add the correction to x directly for left preconditioning.
+          break;
+        case Preconditioner::Side::LEFT:
+          // Left preconditioning: x += vec_z
           vector_handler_->axpy(ONE, &vec_z, x, memspace_);
+          break;
+        default:
+          out::error() << "Unknown preconditioner side.\n";
+          return 1;
         }
       }
 
@@ -377,7 +411,7 @@ namespace ReSolve
       true_res_norm = std::sqrt(true_res_norm);
 
       // Left-preconditioned GMRES applies M^{-1} to the residual
-      if (!flexible_ && preconditioner_->getSide() == "left")
+      if (preconditioner_->getSide() == Preconditioner::Side::LEFT)
       {
         preconditioner_->apply(&vec_v, &vec_z);
         vec_v.copyFromExternal(&vec_z, memspace_, memspace_);

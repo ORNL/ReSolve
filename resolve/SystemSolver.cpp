@@ -578,8 +578,24 @@ namespace ReSolve
       status += 1;
     }
 
+    Preconditioner::Side prec_side;
+    if (side == "left")
+    {
+      prec_side = Preconditioner::LEFT;
+    }
+    else if (side == "right")
+    {
+      prec_side = Preconditioner::RIGHT;
+    }
+    else
+    {
+      out::warning() << "Preconditioning side " << " not recognized.\n";
+      out::warning() << "Using default preconditioning side (right).\n";
+      prec_side = Preconditioner::RIGHT;
+    }
+
+    status += preconditioner_->setSide(prec_side);
     status += preconditioner_->setup(A_);
-    status += preconditioner_->setSide(side);
 
     if (memspace_ != "cpu")
     {
