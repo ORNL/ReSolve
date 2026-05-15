@@ -90,11 +90,6 @@ namespace ReSolve
         sccg.setup();
         sccg.solve();
 
-        // real_type* x0_output_data = x0.getData(0, memspace_);
-        // for (index_type i = 0; i < n; i++) {
-        //   std::cout << x0_output_data[i] << ", ";
-        // }
-
         TestStatus  status;
         std::string testname(__func__);
         testname += " n=" + std::to_string(n) + ", m=" + std::to_string(m) + ", nnz =" + std::to_string(nnz);
