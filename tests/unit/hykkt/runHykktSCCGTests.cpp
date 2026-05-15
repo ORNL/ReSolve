@@ -16,9 +16,8 @@
 #include <resolve/workspace/LinAlgWorkspaceHIP.hpp>
 #endif
 
-#include <resolve/vector/Vector.hpp>
-
 #include "HykktSCCGTests.hpp"
+#include <resolve/vector/Vector.hpp>
 
 /**
  * @brief Run tests with a given backend
