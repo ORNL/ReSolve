@@ -26,7 +26,9 @@ namespace ReSolve
   matrix::Sparse::Sparse(index_type n,
                          index_type m,
                          index_type nnz)
-    : Matrix(n, m, nnz)
+    : n_{n},
+      m_{m},
+      nnz_{nnz}
   {
     this->is_symmetric_ = false;
     this->is_expanded_  = true; // default is a normal non-symmetric fully expanded matrix
@@ -63,7 +65,9 @@ namespace ReSolve
                          index_type nnz,
                          bool       symmetric,
                          bool       expanded)
-    : Matrix(n, m, nnz),
+    : n_{n},
+      m_{m},
+      nnz_{nnz},
       is_symmetric_{symmetric},
       is_expanded_{expanded}
   {
@@ -101,6 +105,36 @@ namespace ReSolve
   {
     h_data_updated_ = false;
     d_data_updated_ = false;
+  }
+
+  /**
+   * @brief get number of matrix rows
+   *
+   * @return number of matrix rows.
+   */
+  index_type matrix::Sparse::getNumRows()
+  {
+    return this->n_;
+  }
+
+  /**
+   * @brief get number of matrix columns
+   *
+   * @return number of matrix columns.
+   */
+  index_type matrix::Sparse::getNumColumns()
+  {
+    return this->m_;
+  }
+
+  /**
+   * @brief get number of non-zeros in the matrix.
+   *
+   * @return number of non-zeros.
+   */
+  index_type matrix::Sparse::getNnz()
+  {
+    return this->nnz_;
   }
 
   matrix::Sparse::SparseFormat matrix::Sparse::getSparseFormat() const
@@ -146,6 +180,16 @@ namespace ReSolve
   void matrix::Sparse::setExpanded(bool expanded)
   {
     this->is_expanded_ = expanded;
+  }
+
+  /**
+   * @brief Set number of non-zeros.
+   *
+   * @param[in] nnz_new - new number of non-zeros
+   */
+  void matrix::Sparse::setNnz(index_type nnz_new)
+  {
+    this->nnz_ = nnz_new;
   }
 
   /**
@@ -428,52 +472,6 @@ namespace ReSolve
       return -1;
     }
     return 0;
-  }
-
-  /**
-   * @brief Add a constant to the nonzero values of this sparse matrix.
-   * @param[in] alpha - scalar parameter
-   * @param[in] memspace - Device where the operation is computed
-   * @return 0 if successful, 1 otherwise
-   */
-  int matrix::Sparse::addConst(real_type alpha, memory::MemorySpace memspace)
-  {
-    return matrixHandler_->addConst(this, alpha, memspace);
-  }
-
-  /**
-   * @brief Matrix vector product: result = alpha * this * x + beta * result
-   *
-   * @param[in]  vec_x - Vector multiplied by the matrix
-   * @param[out] vec_result - Vector where the result is stored
-   * @param[in]  alpha - scalar parameter
-   * @param[in]  beta  - scalar parameter
-   * @param[in]  memspace     - Device where the product is computed
-   * @param[in,out] result := alpha * this * x + beta * result
-   *
-   * @return 0 if successful, 1 otherwise
-   */
-  int matrix::Sparse::matvec(
-    vector_type*        vec_x,
-    vector_type*        vec_result,
-    const real_type*    alpha,
-    const real_type*    beta,
-    memory::MemorySpace memspace)
-  {
-    return matrixHandler_->matvec(this, vec_x, vec_result, alpha, beta, memspace);
-  }
-
-  /**
-   * @bried Matrix infinity norm (maximum absolute row sum)
-   *
-   * @param[out] norm - Maximum absolute row sum
-   * @param[in]  memspace - Device where the norm is computed
-   *
-   * @return 0 if successful, 1 otherwise
-   */
-  int matrix::Sparse::matrixInfNorm(real_type* norm, memory::MemorySpace memspace)
-  {
-    return matrixHandler_->matrixInfNorm(this, norm, memspace);
   }
 
 } // namespace ReSolve
