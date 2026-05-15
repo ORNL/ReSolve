@@ -1,6 +1,8 @@
 #include "SchurComplementConjugateGradient.hpp"
 #include <resolve/Common.hpp>
 
+#include <cmath>
+
 namespace ReSolve
 {
   namespace hykkt
@@ -105,7 +107,7 @@ namespace ReSolve
       delta_ = vectorhandler_.dot(&w_, &r_, memspace_);
       alpha_ = gam_i_ / delta_;
 
-      size_t i;
+      int i;
       for (i = 0; i < itmax_; i++) {
         vectorhandler_.scal(beta_, &p_, memspace_);
         vectorhandler_.axpy(ONE, &r_, &p_, memspace_);
