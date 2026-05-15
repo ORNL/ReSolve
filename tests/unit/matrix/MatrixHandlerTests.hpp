@@ -187,9 +187,9 @@ namespace ReSolve
 
       TestOutcome rightScale(index_type n, index_type m)
       {
-        TestStatus     status;
-        std::string    testname(__func__);
-        matrix::Csr*   A     = createRectangularCsrMatrix(n, m);
+        TestStatus      status;
+        std::string     testname(__func__);
+        matrix::Csr*    A    = createRectangularCsrMatrix(n, m);
         vector::Vector* diag = createIncrementingVector(m);
 
         handler_.rightScale(A, diag, memspace_);
