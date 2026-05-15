@@ -3,6 +3,8 @@
 #include <cmath>
 #include <resolve/Common.hpp>
 
+#include <resolve/Common.hpp>
+
 namespace ReSolve
 {
   namespace hykkt
