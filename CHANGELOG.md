@@ -2,19 +2,7 @@
 
 ## HyKKT Release changes
 
-- Added classes and tests for HyKKT solver, permutation, Ruiz scaling, Cholesky factorization, Schur complement conjugate gradient and matrix multiplication and addition.
-
-- Changed random number generation int tests to be C++ style and fixed-seed, to avoid random failures.
-
-- Changed random number generation int tests to be C++ style and fixed-seed, to avoid random failures.
-
-- Changed random number generation int tests to be C++ style and fixed-seed, to avoid random failures.
-
-- Added Schur Complement Conjugate Gradient class.
-
-- Changed random number generation int tests to be C++ style and fixed-seed, to avoid random failures.
-
-- Added Schur Complement Conjugate Gradient class.
+- Added classes and tests for permutation, Ruiz scaling, Cholesky factorization, Schur complement conjugate gradient and matrix multiplication and addition.
 
 ## Changes to Re::Solve since release 0.99.2
 
