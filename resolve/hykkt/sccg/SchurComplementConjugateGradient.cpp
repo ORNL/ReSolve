@@ -1,8 +1,8 @@
 #include "SchurComplementConjugateGradient.hpp"
 
-#include <resolve/Common.hpp>
-
 #include <cmath>
+
+#include <resolve/Common.hpp>
 
 namespace ReSolve
 {
