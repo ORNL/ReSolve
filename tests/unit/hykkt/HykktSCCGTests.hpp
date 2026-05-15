@@ -90,8 +90,6 @@ namespace ReSolve
         sccg.setup();
         sccg.solve();
 
-)
-
         TestStatus  status;
         std::string testname(__func__);
         testname += " n=" + std::to_string(n) + ", m=" + std::to_string(m) + ", nnz =" + std::to_string(nnz);
