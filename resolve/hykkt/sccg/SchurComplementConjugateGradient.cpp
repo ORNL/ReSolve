@@ -94,7 +94,6 @@ namespace ReSolve
     int SchurComplementConjugateGradient::solve() {
       using namespace constants;
 
-      // MatrixHandler.hpp says: "Should compute vec_result := alpha*A*vec_x + beta*vec_result, but at least on cpu alpha and beta are flipped". MatrixHandlerCpu.cpp seems correct however. Fix?
       matrixhandler_.matvec(jc_tr_, x0_, &y_, &ONE, &ZERO, memspace_);
       choleskySolver_->solve(&z_, &y_);
       matrixhandler_.matvec(jc_, &z_, &r_, &MINUS_ONE, &ONE, memspace_);
@@ -120,8 +119,6 @@ namespace ReSolve
           printf("Convergence occured at iteration %d\n", i);
           break;
         }
-
-        // Product with w=Ar starts here
         matrixhandler_.matvec(jc_tr_, &r_, &y_, &ONE, &ZERO, memspace_);
         choleskySolver_->solve(&z_, &y_);
         matrixhandler_.matvec(jc_, &z_, &w_, &ONE, &ZERO, memspace_);
@@ -136,8 +133,6 @@ namespace ReSolve
         printf("No CG convergence in %d iterations\n", itmax_);
         return 1;
       }
-
-      ;
 
       return 0;
     }
