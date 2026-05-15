@@ -7,6 +7,7 @@
 
 #include <resolve/Common.hpp>
 #include <resolve/MemoryUtils.hpp>
+#include <resolve/matrix/Matrix.hpp>
 
 namespace ReSolve
 {
@@ -25,7 +26,7 @@ namespace ReSolve
      *
      * @author Kasia Swirydowicz <kasia.swirydowicz@pnnl.gov>
      */
-    class Sparse
+    class Sparse : public Matrix
     {
     public:
       /// Supported sparse matrix formats
@@ -48,17 +49,12 @@ namespace ReSolve
              bool       expanded);
       virtual ~Sparse();
 
-      // accessors
-      index_type   getNumRows();
-      index_type   getNumColumns();
-      index_type   getNnz();
       SparseFormat getSparseFormat() const;
 
       bool symmetric();
       bool expanded();
       void setSymmetric(bool symmetric);
       void setExpanded(bool expanded);
-      void setNnz(index_type nnz_new); // for resetting when removing duplicates
       int  setUpdated(memory::MemorySpace what);
 
       virtual index_type* getRowData(memory::MemorySpace memspace) = 0;
@@ -89,8 +85,6 @@ namespace ReSolve
 
       int destroyMatrixData(memory::MemorySpace memspace);
 
-      virtual void print(std::ostream& file_out, index_type indexing_base) = 0;
-
       virtual int syncData(memory::MemorySpace memspaceOut) = 0;
 
       // update Values just updates values; it allocates if necessary.
@@ -103,11 +97,18 @@ namespace ReSolve
       virtual int setValuesPointer(real_type*          new_vals,
                                    memory::MemorySpace memspace);
 
+      // matrix operations
+      virtual int addConst(real_type alpha, memory::MemorySpace memspace);
+      virtual int matvec(
+        vector_type*        vec_x,
+        vector_type*        vec_result,
+        const real_type*    alpha,
+        const real_type*    beta,
+        memory::MemorySpace memspace);
+      virtual int matrixInfNorm(real_type* norm, memory::MemorySpace memspace);
+
     protected:
       SparseFormat sparse_format_{NONE}; ///< Matrix format
-      index_type   n_{0};                ///< number of rows
-      index_type   m_{0};                ///< number of columns
-      index_type   nnz_{0};              ///< number of non-zeros
 
       bool is_symmetric_{false}; ///< symmetry flag
       bool is_expanded_{false};  ///< "expanded" flag
