@@ -26,7 +26,6 @@ set(Matrix_ROCM_SRC MatrixHandlerHip.cpp)
 # Header files to be installed
 set(Matrix_HEADER_INSTALL
     io.hpp
-    Matrix.hpp
     Sparse.hpp
     Coo.hpp
     Csr.hpp
