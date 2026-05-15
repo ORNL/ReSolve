@@ -2,7 +2,7 @@
 
 ## HyKKT Release changes
 
-- Added classes and tests for permutation, Ruiz scaling, Cholesky factorization, and matrix multiplication and addition.
+- Added classes and tests for permutation, Ruiz scaling, Cholesky factorization, Schur complement conjugate gradient and matrix multiplication and addition.
 
 ## Changes to Re::Solve since release 0.99.2
 
