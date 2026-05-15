@@ -43,7 +43,7 @@ namespace ReSolve
 
 #ifdef RESOLVE_USE_CUDA
       LinAlgWorkspaceCUDA workspace_;
-#elif RESOLVE_USE_HIP
+#elif defined(RESOLVE_USE_HIP)
       LinAlgWorkspaceHIP workspace_;
 #else
       LinAlgWorkspaceCpu workspace_;
