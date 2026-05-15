@@ -56,11 +56,6 @@ namespace ReSolve
       virtual void print(std::ostream& file_out = std::cout, index_type indexing_base = 0);
 
       virtual int syncData(memory::MemorySpace memspaceOut);
-      
-      // Matrix operations
-      virtual int transpose(Csr* At, memory::MemorySpace memspace);
-      virtual int leftScale(vector_type* diag, memory::MemorySpace memspace);
-      virtual int rightScale(vector_type* diag, memory::MemorySpace memspace);
     };
 
   } // namespace matrix
