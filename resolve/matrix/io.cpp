@@ -736,7 +736,13 @@ namespace ReSolve
     int removeDuplicates(std::list<MatrixElementTriplet>& tmp)
     {
       std::list<MatrixElementTriplet>::iterator it = tmp.begin();
-      while (it != tmp.end())
+
+      if (it == tmp.end())
+      {
+        return 0;
+      }
+
+      while (it != std::prev(tmp.end()))
       {
         std::list<MatrixElementTriplet>::iterator it_tmp = it;
         it++;

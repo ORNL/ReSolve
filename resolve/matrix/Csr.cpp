@@ -440,6 +440,57 @@ namespace ReSolve
   }
 
   /**
+   * @brief Transpose the sparse CSR matrix.
+   *
+   * @param[out] At - Transposed matrix
+   * @param[in]  memspace - Device where the transpose is computed
+   *
+   * @return 0 if successful, 1 otherwise
+   */
+  int matrix::Csr::transpose(Csr* At, memory::MemorySpace memspace)
+  {
+    return matrixHandler_->transpose(this, At, memspace);
+  }
+
+  
+  /**
+   * @brief Left diagonal scaling of the sparse CSR matrix
+   *
+   * @param[in]  diag - vector representing the diagonal matrix
+   * @param[in]  memspace - Device where the operation is computed
+   *
+   * @pre The diagonal vector must be of the same size as the number of rows in the matrix.
+   * @pre Current CSR matrix is unscaled and allocated
+   * @post Current CSR matrix is scaled
+   * @invariant diag
+   *
+   * @return 0 if successful, 1 otherwise
+   */
+  int matrix::Csr::leftScale(vector_type* diag, memory::MemorySpace memspace)
+  {
+    return matrixHandler_->leftScale(diag, this, memspace);
+  }
+
+  /**
+   * @brief Right diagonal scaling of the sparse CSR matrix
+   *
+   * @param[in]  diag - vector representing the diagonal matrix
+   * @param[in]  memspace - Device where the operation is computed
+   *
+   * @pre The diagonal vector must be of the same size as the number of columns in the matrix.
+   * @pre Current CSR matrix is unscaled and allocated
+   * @post Current CSR matrix is scaled
+   * @invariant diag
+   *
+   * @return 0 if successful, 1 otherwise
+   */
+  int matrix::Csr::rightScale(vector_type* diag, memory::MemorySpace memspace)
+  {
+    return matrixHandler_->rightScale(this, diag, memspace);
+  }
+
+
+  /**
    * @brief Prints matrix data.
    *
    * @param out - Output stream where the matrix data is printed
