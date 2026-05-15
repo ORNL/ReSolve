@@ -1,16 +1,14 @@
-
 # Add source files for the SCCG module
-set(SCCG_SRC SchurComplementConjugateGradient.cpp
-)
-set(SCCG_HEADER_INSTALL
-    SchurComplementConjugateGradient.hpp
-)
+set(SCCG_SRC SchurComplementConjugateGradient.cpp)
+set(SCCG_HEADER_INSTALL SchurComplementConjugateGradient.hpp)
 
 # Build shared library ReSolve::hykkt
 add_library(resolve_hykkt_sccg SHARED ${SCCG_SRC})
 
 target_link_libraries(
-  resolve_hykkt_sccg PRIVATE resolve_hykkt resolve_hykkt_chol resolve_logger resolve_vector resolve_matrix ${suitesparse_cholmod}
+  resolve_hykkt_sccg
+  PRIVATE resolve_hykkt resolve_hykkt_chol resolve_logger resolve_vector
+          resolve_matrix ${suitesparse_cholmod}
 )
 
 # Link to CUDA ReSolve backend if CUDA is support enabled

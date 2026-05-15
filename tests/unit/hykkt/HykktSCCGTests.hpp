@@ -44,10 +44,10 @@ namespace ReSolve
       {
         constexpr double tol = 1e-12;
 
-        std::string sourceDir  = std::string(SOURCE_DIR);
-        std::string jcFileName = sourceDir + "/SCCGTestMatrices/JC_matrix_ACTIVSg200_AC_00.mtx";
-        std::string hFileName  = sourceDir + "/SCCGTestMatrices/H_matrix_ACTIVSg200_AC_00.mtx";
-        std::string bFileName  = sourceDir + "/SCCGTestMatrices/CG_rhs_ACTIVSg200_AC_00.mtx"; // rhs
+        std::string   sourceDir  = std::string(SOURCE_DIR);
+        std::string   jcFileName = sourceDir + "/SCCGTestMatrices/JC_matrix_ACTIVSg200_AC_00.mtx";
+        std::string   hFileName  = sourceDir + "/SCCGTestMatrices/H_matrix_ACTIVSg200_AC_00.mtx";
+        std::string   bFileName  = sourceDir + "/SCCGTestMatrices/CG_rhs_ACTIVSg200_AC_00.mtx"; // rhs
         std::ifstream jcFile(jcFileName);
         std::ifstream hFile(hFileName);
         std::ifstream bFile(bFileName);
@@ -64,19 +64,19 @@ namespace ReSolve
         matrix::Csr* jc = new matrix::Csr(1386, 2278, 6784, false, false);
         jc->allocateMatrixData(memspace_);
         io::updateMatrixFromFile(jcFile, jc);
-          
-        index_type n = jc->getNumRows();
-        index_type m = jc->getNumColumns();
-        index_type nnz = jc->getNnz();
+
+        index_type                              n   = jc->getNumRows();
+        index_type                              m   = jc->getNumColumns();
+        index_type                              nnz = jc->getNnz();
         hykkt::SchurComplementConjugateGradient sccg(n, m, &choleskySolver, memspace_);
         sccg.setSolverTolerance(tol);
         LinAlgWorkspaceCpu workspace;
-        MatrixHandler matrix_handler(&workspace);
+        MatrixHandler      matrix_handler(&workspace);
 
         matrix::Csr* jc_tr = new matrix::Csr(m, n, nnz);
         jc_tr->allocateMatrixData(memspace_);
         matrix_handler.transpose(jc, jc_tr, memspace_);
-          
+
         vector::Vector* x0 = new vector::Vector(n);
         x0->allocate(memspace_);
         randomVector(x0);
@@ -89,11 +89,6 @@ namespace ReSolve
         sccg.addVectorInfo(x0, b);
         sccg.setup();
         sccg.solve();
-
-        // real_type* x0_output_data = x0.getData(0, memspace_);
-        // for (index_type i = 0; i < n; i++) {
-        //   std::cout << x0_output_data[i] << ", ";
-        // }
 
         TestStatus  status;
         std::string testname(__func__);
@@ -114,9 +109,9 @@ namespace ReSolve
       MatrixHandler&      matrixHandler_;
 
       /**
-      * @brief Generate a random vector of doubles between 0 and RAND_MAX. Copied from HykktCholeskyTests.hpp.
-      * @param[in] vec Target vector to write to.
-      */
+       * @brief Generate a random vector of doubles between 0 and RAND_MAX. Copied from HykktCholeskyTests.hpp.
+       * @param[in] vec Target vector to write to.
+       */
       void randomVector(vector::Vector* vec)
       {
         for (index_type i = 0; i < vec->getSize(); ++i)
