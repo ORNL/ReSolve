@@ -7,12 +7,12 @@
 
 #include <resolve/Common.hpp>
 #include <resolve/MemoryUtils.hpp>
+#include <resolve/hykkt/cholesky/CholeskySolver.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
+#include <resolve/vector/Vector.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
-#include <resolve/vector/Vector.hpp>
-#include <resolve/hykkt/cholesky/CholeskySolver.hpp>
 
 namespace ReSolve
 {
@@ -33,13 +33,13 @@ namespace ReSolve
       void setSolverItmax(int itmax);
 
       void setup();
-      int solve();
-      
+      int  solve();
+
     private:
-      index_type n_; // Dimension of outer system
-      index_type m_; // Dimension of inner system
-      int itmax_ = 100; // Maximum iterations for conjugate gradient
-      double tol_ = 1e-12; // Solver tolerance for Schur
+      index_type n_;             // Dimension of outer system
+      index_type m_;             // Dimension of inner system
+      int        itmax_ = 100;   // Maximum iterations for conjugate gradient
+      double     tol_   = 1e-12; // Solver tolerance for Schur
 
 #ifdef RESOLVE_USE_CUDA
       LinAlgWorkspaceCUDA workspace_;
@@ -75,7 +75,7 @@ namespace ReSolve
       vector::Vector s_;
       vector::Vector w_;
 
-      MemoryHandler mem_;
+      MemoryHandler       mem_;
       memory::MemorySpace memspace_;
     }; // class SchurComplementConjugateGradient
   } // namespace hykkt
