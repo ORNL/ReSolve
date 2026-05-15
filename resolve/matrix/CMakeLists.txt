@@ -24,13 +24,8 @@ set(Matrix_CUDASDK_SRC MatrixHandlerCuda.cpp)
 set(Matrix_ROCM_SRC MatrixHandlerHip.cpp)
 
 # Header files to be installed
-set(Matrix_HEADER_INSTALL
-    io.hpp
-    Sparse.hpp
-    Coo.hpp
-    Csr.hpp
-    Csc.hpp
-    MatrixHandler.hpp
+set(Matrix_HEADER_INSTALL io.hpp Sparse.hpp Coo.hpp Csr.hpp Csc.hpp
+                          MatrixHandler.hpp
 )
 
 # Build shared library ReSolve::matrix
