@@ -96,11 +96,11 @@ namespace ReSolve
       // matrix operations
       virtual int addConst(real_type alpha, memory::MemorySpace memspace);
       virtual int matvec(
-        vector_type*        vec_x,
-        vector_type*        vec_result,
-        const real_type*    alpha,
-        const real_type*    beta,
-        memory::MemorySpace memspace);
+          vector_type*        vec_x,
+          vector_type*        vec_result,
+          const real_type*    alpha,
+          const real_type*    beta,
+          memory::MemorySpace memspace);
       virtual int matrixInfNorm(real_type* norm, memory::MemorySpace memspace);
 
     protected:

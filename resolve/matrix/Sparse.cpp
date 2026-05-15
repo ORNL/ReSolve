@@ -454,11 +454,11 @@ namespace ReSolve
    * @return 0 if successful, 1 otherwise
    */
   int matrix::Sparse::matvec(
-    vector_type*        vec_x,
-    vector_type*        vec_result,
-    const real_type*    alpha,
-    const real_type*    beta,
-    memory::MemorySpace memspace)
+      vector_type*        vec_x,
+      vector_type*        vec_result,
+      const real_type*    alpha,
+      const real_type*    beta,
+      memory::MemorySpace memspace)
   {
     return matrixHandler_->matvec(this, vec_x, vec_result, alpha, beta, memspace);
   }

@@ -2,13 +2,13 @@
 
 #include <resolve/Common.hpp>
 #include <resolve/MemoryUtils.hpp>
-#include <resolve/vector/Vector.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
+#include <resolve/vector/Vector.hpp>
 
 namespace ReSolve
 {
   using vector_type = vector::Vector;
-  
+
   namespace matrix
   {
     /**
@@ -57,5 +57,5 @@ namespace ReSolve
 
       MatrixHandler* matrixHandler_{nullptr};
     };
-  }
-}
+  } // namespace matrix
+} // namespace ReSolve

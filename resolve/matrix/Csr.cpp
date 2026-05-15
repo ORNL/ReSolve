@@ -452,7 +452,6 @@ namespace ReSolve
     return matrixHandler_->transpose(this, At, memspace);
   }
 
-  
   /**
    * @brief Left diagonal scaling of the sparse CSR matrix
    *
@@ -488,7 +487,6 @@ namespace ReSolve
   {
     return matrixHandler_->rightScale(this, diag, memspace);
   }
-
 
   /**
    * @brief Prints matrix data.

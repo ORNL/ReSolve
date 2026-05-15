@@ -1,6 +1,7 @@
 #include "Matrix.hpp"
 
-namespace ReSolve {
+namespace ReSolve
+{
   /**
    * @brief empty constructor that does absolutely nothing
    */
@@ -65,66 +66,66 @@ namespace ReSolve {
   }
 
   /**
-  * @brief Loads or reloads pointer to the matrix handler for matrix operations.
-  * @param[in] matrixHandler - New matrix handler
-  */
+   * @brief Loads or reloads pointer to the matrix handler for matrix operations.
+   * @param[in] matrixHandler - New matrix handler
+   */
   void matrix::Matrix::addMatrixHandler(MatrixHandler* matrixHandler)
   {
     this->matrixHandler_ = matrixHandler;
   }
 
   /**
-  * @brief Implementation missing.
-  */
+   * @brief Implementation missing.
+   */
   int matrix::Matrix::transpose(Matrix* At, memory::MemorySpace memspace)
   {
     return -1;
   }
 
   /**
-  * @brief Implementation missing.
-  */
+   * @brief Implementation missing.
+   */
   int matrix::Matrix::leftScale(vector_type* diag, memory::MemorySpace memspace)
   {
     return -1;
   }
 
   /**
-  * @brief Implementation missing.
-  */
+   * @brief Implementation missing.
+   */
   int matrix::Matrix::rightScale(vector_type* diag, memory::MemorySpace memspace)
   {
     return -1;
   }
 
   /**
-  * @brief Implementation missing.
-  */
+   * @brief Implementation missing.
+   */
   int matrix::Matrix::addConst(real_type alpha, memory::MemorySpace memspace)
   {
     return -1;
   }
 
   int matrix::Matrix::matvec(
-      vector_type*        vec_x,
-      vector_type*        vec_result,
-      const real_type*    alpha,
+      vector_type*     vec_x,
+      vector_type*     vec_result,
+      const real_type* alpha,
 
-  /**
-  * @brief Implementation missing.
-  */
-  const real_type*    beta,
+      /**
+       * @brief Implementation missing.
+       */
+      const real_type*    beta,
       memory::MemorySpace memspace)
   {
     return -1;
   }
 
   /**
-  * @brief Implementation missing.
-  */
+   * @brief Implementation missing.
+   */
   int matrix::Matrix::matrixInfNorm(real_type* norm, memory::MemorySpace memspace)
   {
     return -1;
   }
 
-}
+} // namespace ReSolve
