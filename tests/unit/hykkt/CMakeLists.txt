@@ -33,29 +33,10 @@ target_link_libraries(
 
 add_executable(runHykktSCCGTests.exe runHykktSCCGTests.cpp)
 target_link_libraries(
-  runHykktSCCGTests.exe
-  PRIVATE resolve_hykkt resolve_hykkt_sccg resolve_hykkt_chol resolve_matrix
-          resolve_vector
+  runHykktSCCGTests.exe PRIVATE resolve_hykkt resolve_hykkt_sccg resolve_hykkt_chol resolve_matrix
+                                    resolve_vector
 )
-target_compile_definitions(
-  runHykktSCCGTests.exe PRIVATE SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
-) # For file paths
-
-add_executable(runHykktSolverTests.exe runHykktSolverTests.cpp)
-target_link_libraries(
-  runHykktSolverTests.exe
-  PRIVATE resolve_hykkt
-          resolve_hykkt_ruiz
-          resolve_hykkt_chol
-          resolve_hykkt_spgemm
-          resolve_hykkt_sccg
-          resolve_hykkt_solver
-          resolve_vector
-          resolve_matrix
-)
-target_compile_definitions(
-  runHykktSolverTests.exe PRIVATE SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
-) # For file paths
+target_compile_definitions(runHykktSCCGTests.exe PRIVATE SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}") # For file paths
 
 # Install tests
 set(installable_tests
@@ -74,4 +55,3 @@ add_test(NAME hykkt_ruiz_test
 add_test(NAME hykkt_chol_test COMMAND $<TARGET_FILE:runHykktCholeskyTests.exe>)
 add_test(NAME hykkt_spgemm_test COMMAND $<TARGET_FILE:runHykktSpGEMMTests.exe>)
 add_test(NAME hykkt_sccg_test COMMAND $<TARGET_FILE:runHykktSCCGTests.exe>)
-add_test(NAME hykkt_solver_test COMMAND $<TARGET_FILE:runHykktSolverTests.exe>)
