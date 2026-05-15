@@ -1,4 +1,5 @@
 #include "SchurComplementConjugateGradient.hpp"
+
 #include <resolve/Common.hpp>
 
 #include <cmath>
@@ -14,11 +15,10 @@ namespace ReSolve
      *  @param memspace[in] - Memory space of incoming data and for computation.
      */
     SchurComplementConjugateGradient::SchurComplementConjugateGradient(
-      index_type n,
-      index_type m,
-      CholeskySolver* choleskySolver,
-      memory::MemorySpace memspace
-    )
+        index_type          n,
+        index_type          m,
+        CholeskySolver*     choleskySolver,
+        memory::MemorySpace memspace)
       : n_(n),
         m_(m),
         choleskySolver_(choleskySolver),
@@ -42,8 +42,9 @@ namespace ReSolve
      * @param[in] jc - Pointer to the JC matrix in CSR format.
      * @param[in] jc_tr - Pointer to the transposed JC matrix in CSR format.
      */
-    void SchurComplementConjugateGradient::addMatrixInfo(matrix::Csr* jc, matrix::Csr* jc_tr) {
-      jc_ = jc;
+    void SchurComplementConjugateGradient::addMatrixInfo(matrix::Csr* jc, matrix::Csr* jc_tr)
+    {
+      jc_    = jc;
       jc_tr_ = jc_tr;
     }
 
@@ -52,16 +53,18 @@ namespace ReSolve
      * @param[in] x0 - Pointer to the left-hand side vector.
      * @param[in] b - Pointer to the right-hand side vector.
      */
-    void SchurComplementConjugateGradient::addVectorInfo(vector::Vector* x0, vector::Vector* b) {
+    void SchurComplementConjugateGradient::addVectorInfo(vector::Vector* x0, vector::Vector* b)
+    {
       x0_ = x0;
-      b_ = b;
+      b_  = b;
     }
 
     /**
      * @brief Reloads pointer to the Cholesky solver
      * @param[in] choleskySolver - Factorization of Hgamma to use for direct solve.
      */
-    void SchurComplementConjugateGradient::updateCholeskySolver(CholeskySolver* choleskySolver) {
+    void SchurComplementConjugateGradient::updateCholeskySolver(CholeskySolver* choleskySolver)
+    {
       choleskySolver_ = choleskySolver;
     }
 
@@ -75,7 +78,8 @@ namespace ReSolve
       itmax_ = itmax;
     }
 
-    void SchurComplementConjugateGradient::setup() {
+    void SchurComplementConjugateGradient::setup()
+    {
       y_.allocate(memspace_);
       z_.allocate(memspace_);
       r_.allocate(memspace_);
@@ -89,11 +93,12 @@ namespace ReSolve
       p_.setToZero(memspace_);
       s_.setToZero(memspace_);
       w_.setToZero(memspace_);
-      
+
       beta_ = 0;
     }
 
-    int SchurComplementConjugateGradient::solve() {
+    int SchurComplementConjugateGradient::solve()
+    {
       using namespace constants;
 
       matrixhandler_.matvec(jc_tr_, x0_, &y_, &ONE, &ZERO, memspace_);
@@ -107,8 +112,9 @@ namespace ReSolve
       delta_ = vectorhandler_.dot(&w_, &r_, memspace_);
       alpha_ = gam_i_ / delta_;
 
-      int i;
-      for (i = 0; i < itmax_; i++) {
+      size_t i;
+      for (i = 0; i < itmax_; i++)
+      {
         vectorhandler_.scal(beta_, &p_, memspace_);
         vectorhandler_.axpy(ONE, &r_, &p_, memspace_);
         vectorhandler_.scal(beta_, &s_, memspace_);
@@ -117,7 +123,8 @@ namespace ReSolve
         minalpha_ = -alpha_;
         vectorhandler_.axpy(minalpha_, &s_, &r_, memspace_);
         gam_i1_ = vectorhandler_.dot(&r_, &r_, memspace_);
-        if(sqrt(gam_i1_) < tol_){
+        if (sqrt(gam_i1_) < tol_)
+        {
           printf("Convergence occured at iteration %d\n", i);
           break;
         }
@@ -125,19 +132,20 @@ namespace ReSolve
         choleskySolver_->solve(&z_, &y_);
         matrixhandler_.matvec(jc_, &z_, &w_, &ONE, &ZERO, memspace_);
         delta_ = vectorhandler_.dot(&w_, &r_, memspace_);
-        beta_ = gam_i1_ / gam_i_;
+        beta_  = gam_i1_ / gam_i_;
         gam_i_ = gam_i1_;
         alpha_ = gam_i_ / (delta_ - beta_ * gam_i_ / alpha_);
       }
 
       printf("Error is %32.32g \n", sqrt(gam_i1_));
-      if (i == itmax_){
+      if (i == itmax_)
+      {
         printf("No CG convergence in %d iterations\n", itmax_);
         return 1;
       }
 
       return 0;
     }
-    
+
   } // namespace hykkt
 } // namespace ReSolve

@@ -33,10 +33,13 @@ target_link_libraries(
 
 add_executable(runHykktSCCGTests.exe runHykktSCCGTests.cpp)
 target_link_libraries(
-  runHykktSCCGTests.exe PRIVATE resolve_hykkt resolve_hykkt_sccg resolve_hykkt_chol resolve_matrix
-                                    resolve_vector
+  runHykktSCCGTests.exe
+  PRIVATE resolve_hykkt resolve_hykkt_sccg resolve_hykkt_chol resolve_matrix
+          resolve_vector
 )
-target_compile_definitions(runHykktSCCGTests.exe PRIVATE SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}") # For file paths
+target_compile_definitions(
+  runHykktSCCGTests.exe PRIVATE SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
+) # For file paths
 
 # Install tests
 set(installable_tests
