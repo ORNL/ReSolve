@@ -1,7 +1,6 @@
 #include "SchurComplementConjugateGradient.hpp"
 
 #include <cmath>
-#include <resolve/Common.hpp>
 
 #include <resolve/Common.hpp>
 
