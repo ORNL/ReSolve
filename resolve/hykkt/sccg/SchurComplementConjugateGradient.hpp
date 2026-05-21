@@ -24,7 +24,7 @@ namespace ReSolve
     class SchurComplementConjugateGradient
     {
     public:
-      SchurComplementConjugateGradient(index_type n, index_type m, CholeskySolver* choleskySolver, memory::MemorySpace memspace);
+      SchurComplementConjugateGradient(index_type n, index_type m, CholeskySolver* choleskySolver, memory::MemorySpace memspace, MatrixHandler& matrixHandler, VectorHandler& vectorHandler);
 
       void addMatrixInfo(matrix::Csr* jc, matrix::Csr* jc_tr);
       void addVectorInfo(vector::Vector* x0, vector::Vector* b);
@@ -41,15 +41,8 @@ namespace ReSolve
       int        itmax_ = 100;   // Maximum iterations for conjugate gradient
       double     tol_   = 1e-12; // Solver tolerance for Schur
 
-#ifdef RESOLVE_USE_CUDA
-      LinAlgWorkspaceCUDA workspace_;
-#elif defined(RESOLVE_USE_HIP)
-      LinAlgWorkspaceHIP workspace_;
-#else
-      LinAlgWorkspaceCpu workspace_;
-#endif
-      MatrixHandler matrixhandler_;
-      VectorHandler vectorhandler_;
+      MatrixHandler& matrixhandler_;
+      VectorHandler& vectorhandler_;
 
       CholeskySolver* choleskySolver_; // Cholesky factorization on 1,1 block
 
