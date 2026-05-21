@@ -11,6 +11,7 @@
 #include <resolve/hykkt/sccg/SchurComplementConjugateGradient.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
+#include <resolve/vector/VectorHandler.hpp>
 #include <resolve/matrix/io.hpp>
 #include <tests/unit/TestBase.hpp>
 
@@ -26,8 +27,8 @@ namespace ReSolve
     class HykktSchurComplementConjugateGradientTests : public TestBase
     {
     public:
-      HykktSchurComplementConjugateGradientTests(memory::MemorySpace memspace, MatrixHandler& matrixHandler)
-        : memspace_(memspace), matrixHandler_(matrixHandler)
+      HykktSchurComplementConjugateGradientTests(memory::MemorySpace memspace, MatrixHandler& matrixHandler, VectorHandler& vectorHandler)
+        : memspace_(memspace), matrixHandler_(matrixHandler), vectorHandler_(vectorHandler)
       {
       }
 
@@ -68,14 +69,12 @@ namespace ReSolve
         index_type                              n   = jc->getNumRows();
         index_type                              m   = jc->getNumColumns();
         index_type                              nnz = jc->getNnz();
-        hykkt::SchurComplementConjugateGradient sccg(n, m, &choleskySolver, memspace_);
+        hykkt::SchurComplementConjugateGradient sccg(n, m, &choleskySolver, memspace_, matrixHandler_, vectorHandler_);
         sccg.setSolverTolerance(tol);
-        LinAlgWorkspaceCpu workspace;
-        MatrixHandler      matrix_handler(&workspace);
 
         matrix::Csr* jc_tr = new matrix::Csr(m, n, nnz);
         jc_tr->allocateMatrixData(memspace_);
-        matrix_handler.transpose(jc, jc_tr, memspace_);
+        matrixHandler_.transpose(jc, jc_tr, memspace_);
 
         vector::Vector* x0 = new vector::Vector(n);
         x0->allocate(memspace_);
@@ -107,6 +106,7 @@ namespace ReSolve
     private:
       memory::MemorySpace memspace_;
       MatrixHandler&      matrixHandler_;
+      VectorHandler&      vectorHandler_;
 
       /**
        * @brief Generate a random vector of doubles between 0 and RAND_MAX. Copied from HykktCholeskyTests.hpp.

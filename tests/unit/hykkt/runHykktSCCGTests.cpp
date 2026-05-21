@@ -8,6 +8,7 @@
 #include <string>
 
 #include <resolve/matrix/MatrixHandler.hpp>
+#include <resolve/vector/VectorHandler.hpp>
 #include <resolve/workspace/LinAlgWorkspaceCpu.hpp>
 #ifdef RESOLVE_USE_CUDA
 #include <resolve/workspace/LinAlgWorkspaceCUDA.hpp>
@@ -32,9 +33,9 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
 
   WorkspaceType workspace;
   workspace.initializeHandles();
-  ReSolve::MatrixHandler handler(&workspace);
-
-  ReSolve::tests::HykktSchurComplementConjugateGradientTests test(memspace, handler);
+  ReSolve::MatrixHandler matrixHandler(&workspace);
+  ReSolve::VectorHandler vectorHandler(&workspace);
+  ReSolve::tests::HykktSchurComplementConjugateGradientTests test(memspace, matrixHandler, vectorHandler);
 
   result += test.SCCGTest();
 
