@@ -76,34 +76,34 @@ namespace ReSolve
     // result = alpha *A*x + beta * result
     cusparseStatus_t     status;
     cusparseDnVecDescr_t vecx = workspace_->getVecX();
-    cusparseCreateDnVec(&vecx, A->getNumRows(), vec_x->getData(memory::DEVICE), CUDA_R_64F);
+    cusparseCreateDnVec(&vecx, A->getNumColumns(), vec_x->getData(memory::DEVICE), CUDA_R_64F);
 
     cusparseDnVecDescr_t vecAx = workspace_->getVecY();
     cusparseCreateDnVec(&vecAx, A->getNumRows(), vec_result->getData(memory::DEVICE), CUDA_R_64F);
 
-    cusparseSpMatDescr_t matA = workspace_->getSpmvMatrixDescriptor();
-
-    void*            buffer_spmv     = workspace_->getSpmvBuffer();
     cusparseHandle_t handle_cusparse = workspace_->getCusparseHandle();
-    if (values_changed_)
+    bool matrix_changed = (matrix_for_matvec_ != A) || (matvec_num_rows_ != A->getNumRows()) || (matvec_num_cols_ != A->getNumColumns()) || (matvec_nnz_ != A->getNnz());
+    if (matrix_changed || values_changed_)
     {
-      status = cusparseCreateCsr(&matA,
-                                 A->getNumRows(),
-                                 A->getNumColumns(),
-                                 A->getNnz(),
-                                 A->getRowData(memory::DEVICE),
-                                 A->getColData(memory::DEVICE),
-                                 A->getValues(memory::DEVICE),
-                                 CUSPARSE_INDEX_32I,
-                                 CUSPARSE_INDEX_32I,
-                                 CUSPARSE_INDEX_BASE_ZERO,
-                                 CUDA_R_64F);
-      error_sum += status;
-      values_changed_ = false;
+      workspace_->resetMatvecSetup();
     }
+    cusparseSpMatDescr_t matA          = workspace_->getSpmvMatrixDescriptor();
+    void*            buffer_spmv     = workspace_->getSpmvBuffer();
     if (!workspace_->matvecSetup())
     {
       // setup first, allocate, etc.
+      status = cusparseCreateCsr(&matA,
+                                  A->getNumRows(),
+                                  A->getNumColumns(),
+                                  A->getNnz(),
+                                  A->getRowData(memory::DEVICE),
+                                  A->getColData(memory::DEVICE),
+                                  A->getValues(memory::DEVICE),
+                                  CUSPARSE_INDEX_32I,
+                                  CUSPARSE_INDEX_32I,
+                                  CUSPARSE_INDEX_BASE_ZERO,
+                                  CUDA_R_64F);
+      error_sum += status;
       size_t bufferSize = 0;
 
       status = cusparseSpMV_bufferSize(handle_cusparse,
@@ -122,6 +122,13 @@ namespace ReSolve
       workspace_->setSpmvBuffer(buffer_spmv);
 
       workspace_->matvecSetupDone();
+
+      matrix_for_matvec_ = A;
+      matvec_num_rows_   = A->getNumRows();
+      matvec_num_cols_   = A->getNumColumns();
+      matvec_nnz_        = A->getNnz();
+
+      values_changed_ = false;
     }
 
     status = cusparseSpMV(handle_cusparse,

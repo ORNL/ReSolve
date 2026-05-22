@@ -58,6 +58,11 @@ namespace ReSolve
     LinAlgWorkspaceCUDA* workspace_{nullptr};
     bool                 values_changed_{true}; ///< needed for matvec
 
+    matrix::Sparse* matrix_for_matvec_{nullptr}; ///< matrix for cached matvec setup
+    index_type       matvec_num_rows_{0};        ///< number of rows in matrix used for matvec
+    index_type       matvec_num_cols_{0};        ///< number of columns in matrix used for matvec
+    index_type       matvec_nnz_{0};              ///< number of nonzeros in matrix used for matvec
+
     MemoryHandler mem_; ///< Device memory manager object
   };
 
