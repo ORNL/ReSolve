@@ -54,8 +54,12 @@ namespace ReSolve
         std::ifstream bFile(bFileName);
 
         matrix::Csr* h = new matrix::Csr(2278, 2278, 11304, true, false);
-        h->allocateMatrixData(memspace_);
+        h->allocateMatrixData(memory::HOST);
         io::updateMatrixFromFile(hFile, h);
+        if (memspace_ == memory::DEVICE)
+        {
+          h->syncData(memory::DEVICE);
+        }
         hykkt::CholeskySolver choleskySolver(memspace_);
         choleskySolver.addMatrixInfo(h);
         choleskySolver.symbolicAnalysis();
@@ -63,8 +67,12 @@ namespace ReSolve
         choleskySolver.numericalFactorization();
 
         matrix::Csr* jc = new matrix::Csr(1386, 2278, 6784, false, false);
-        jc->allocateMatrixData(memspace_);
+        jc->allocateMatrixData(memory::HOST);
         io::updateMatrixFromFile(jcFile, jc);
+        if (memspace_ == memory::DEVICE)
+        {
+          jc->syncData(memory::DEVICE);
+        }
 
         index_type                              n   = jc->getNumRows();
         index_type                              m   = jc->getNumColumns();
@@ -77,12 +85,16 @@ namespace ReSolve
         matrixHandler_.transpose(jc, jc_tr, memspace_);
 
         vector::Vector* x0 = new vector::Vector(n);
-        x0->allocate(memspace_);
+        x0->allocate(memory::HOST);
         randomVector(x0);
 
         vector::Vector* b = new vector::Vector(n);
-        b->allocate(memspace_);
+        b->allocate(memory::HOST);
         io::updateVectorFromFile(bFile, b);
+        if (memspace_ == memory::DEVICE)
+        {
+          b->syncData(memory::DEVICE);
+        }
 
         sccg.addMatrixInfo(jc, jc_tr);
         sccg.addVectorInfo(x0, b);
