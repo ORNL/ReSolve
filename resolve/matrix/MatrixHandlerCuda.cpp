@@ -82,27 +82,27 @@ namespace ReSolve
     cusparseCreateDnVec(&vecAx, A->getNumRows(), vec_result->getData(memory::DEVICE), CUDA_R_64F);
 
     cusparseHandle_t handle_cusparse = workspace_->getCusparseHandle();
-    bool matrix_changed = (matrix_for_matvec_ != A) || (matvec_num_rows_ != A->getNumRows()) || (matvec_num_cols_ != A->getNumColumns()) || (matvec_nnz_ != A->getNnz());
+    bool             matrix_changed  = (matrix_for_matvec_ != A) || (matvec_num_rows_ != A->getNumRows()) || (matvec_num_cols_ != A->getNumColumns()) || (matvec_nnz_ != A->getNnz());
     if (matrix_changed || values_changed_)
     {
       workspace_->resetMatvecSetup();
     }
-    cusparseSpMatDescr_t matA          = workspace_->getSpmvMatrixDescriptor();
-    void*            buffer_spmv     = workspace_->getSpmvBuffer();
+    cusparseSpMatDescr_t matA        = workspace_->getSpmvMatrixDescriptor();
+    void*                buffer_spmv = workspace_->getSpmvBuffer();
     if (!workspace_->matvecSetup())
     {
       // setup first, allocate, etc.
       status = cusparseCreateCsr(&matA,
-                                  A->getNumRows(),
-                                  A->getNumColumns(),
-                                  A->getNnz(),
-                                  A->getRowData(memory::DEVICE),
-                                  A->getColData(memory::DEVICE),
-                                  A->getValues(memory::DEVICE),
-                                  CUSPARSE_INDEX_32I,
-                                  CUSPARSE_INDEX_32I,
-                                  CUSPARSE_INDEX_BASE_ZERO,
-                                  CUDA_R_64F);
+                                 A->getNumRows(),
+                                 A->getNumColumns(),
+                                 A->getNnz(),
+                                 A->getRowData(memory::DEVICE),
+                                 A->getColData(memory::DEVICE),
+                                 A->getValues(memory::DEVICE),
+                                 CUSPARSE_INDEX_32I,
+                                 CUSPARSE_INDEX_32I,
+                                 CUSPARSE_INDEX_BASE_ZERO,
+                                 CUDA_R_64F);
       error_sum += status;
       size_t bufferSize = 0;
 

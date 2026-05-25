@@ -11,8 +11,8 @@
 #include <resolve/hykkt/sccg/SchurComplementConjugateGradient.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
-#include <resolve/vector/VectorHandler.hpp>
 #include <resolve/matrix/io.hpp>
+#include <resolve/vector/VectorHandler.hpp>
 #include <tests/unit/TestBase.hpp>
 
 namespace ReSolve

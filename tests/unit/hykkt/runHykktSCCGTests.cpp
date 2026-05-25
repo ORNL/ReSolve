@@ -33,8 +33,8 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
 
   WorkspaceType workspace;
   workspace.initializeHandles();
-  ReSolve::MatrixHandler matrixHandler(&workspace);
-  ReSolve::VectorHandler vectorHandler(&workspace);
+  ReSolve::MatrixHandler                                     matrixHandler(&workspace);
+  ReSolve::VectorHandler                                     vectorHandler(&workspace);
   ReSolve::tests::HykktSchurComplementConjugateGradientTests test(memspace, matrixHandler, vectorHandler);
 
   result += test.SCCGTest();
