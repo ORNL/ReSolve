@@ -6,6 +6,8 @@ namespace ReSolve
   {
     handle_rocsparse_ = nullptr;
     handle_rocblas_   = nullptr;
+    mat_A_            = nullptr;
+    info_A_           = nullptr;
 
     matvec_setup_done_         = false;
     d_r_                       = nullptr;
@@ -18,12 +20,11 @@ namespace ReSolve
 
   LinAlgWorkspaceHIP::~LinAlgWorkspaceHIP()
   {
+    resetMatvecSetup();
+
     rocsparse_destroy_handle(handle_rocsparse_);
     rocblas_destroy_handle(handle_rocblas_);
-    if (matvec_setup_done_)
-    {
-      rocsparse_destroy_mat_descr(mat_A_);
-    }
+
     if (d_r_size_ != 0)
     {
       mem_.deleteOnDevice(d_r_);
@@ -47,11 +48,7 @@ namespace ReSolve
    */
   void LinAlgWorkspaceHIP::resetLinAlgWorkspace()
   {
-    if (matvec_setup_done_)
-    {
-      rocsparse_destroy_mat_descr(mat_A_);
-      matvec_setup_done_ = false;
-    }
+    resetMatvecSetup();
     if (d_r_size_ != 0)
     {
       mem_.deleteOnDevice(d_r_);
@@ -141,6 +138,21 @@ namespace ReSolve
   void LinAlgWorkspaceHIP::matvecSetupDone()
   {
     matvec_setup_done_ = true;
+  }
+
+  void LinAlgWorkspaceHIP::resetMatvecSetup()
+  {
+    if (mat_A_ != nullptr)
+    {
+      rocsparse_destroy_mat_descr(mat_A_);
+      mat_A_ = nullptr;
+    }
+    if (info_A_ != nullptr)
+    {
+      rocsparse_destroy_mat_info(info_A_);
+      info_A_ = nullptr;
+    }
+    matvec_setup_done_ = false;
   }
 
   void LinAlgWorkspaceHIP::initializeHandles()
