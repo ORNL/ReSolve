@@ -27,6 +27,15 @@ namespace ReSolve
     class HykktSchurComplementConjugateGradientTests : public TestBase
     {
     public:
+      /**
+       * @brief Constructs the SCCG test fixture with the specified memory space and handlers.
+       *
+       * The test fixture uses caller-provided matrix and vector handlers so the same test can be run with CPU, CUDA, or HIP backends.
+       *
+       * @param[in] memspace Memory space for the test (HOST or DEVICE).
+       * @param[in] matrixHandler Reference to a matrix handler for the selected backend.
+       * @param[in] vectorHandler Reference to a vector handler for the selected backend.
+       */
       HykktSchurComplementConjugateGradientTests(memory::MemorySpace memspace, MatrixHandler& matrixHandler, VectorHandler& vectorHandler)
         : memspace_(memspace), matrixHandler_(matrixHandler), vectorHandler_(vectorHandler)
       {
@@ -53,6 +62,8 @@ namespace ReSolve
         std::ifstream hFile(hFileName);
         std::ifstream bFile(bFileName);
 
+        // The .mtx file readers write into host accessible memory.
+        // Load test data into HOST first, then sync to DEVICE for CUDA and HIP backends.
         matrix::Csr* h = new matrix::Csr(2278, 2278, 11304, true, false);
         h->allocateMatrixData(memory::HOST);
         io::updateMatrixFromFile(hFile, h);
@@ -116,9 +127,9 @@ namespace ReSolve
       }
 
     private:
-      memory::MemorySpace memspace_;
-      MatrixHandler&      matrixHandler_;
-      VectorHandler&      vectorHandler_;
+      memory::MemorySpace memspace_;      ///< Memory space used by the test.
+      MatrixHandler&      matrixHandler_; ///< Backend-specific matrix handler.
+      VectorHandler&      vectorHandler_; ///< Backend-specific vector handler.
 
       /**
        * @brief Generate a random vector of doubles between 0 and RAND_MAX. Copied from HykktCholeskyTests.hpp.
@@ -138,9 +149,9 @@ namespace ReSolve
       }
 
       /**
-       * @brief Validate the results of the scaling
-       * @param[in] x0 Pointer to the output x0 vector
-       * @param[in] tol Solver tolerance
+       * @brief Validate the SCCG result.
+       * @param[in] x0 Pointer to the output x0 vector.
+       * @param[in] tol Solver tolerance.
        */
       bool validateResult(vector::Vector* x0, real_type tol)
       {
@@ -150,6 +161,6 @@ namespace ReSolve
 
         return test_passed;
       }
-    }; // class HykktPermutationTests
+    }; // class HykktSchurComplementConjugateGradientTests
   } // namespace tests
 } // namespace ReSolve

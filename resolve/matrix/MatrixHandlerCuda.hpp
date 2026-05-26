@@ -56,12 +56,12 @@ namespace ReSolve
 
   private:
     LinAlgWorkspaceCUDA* workspace_{nullptr};
-    bool                 values_changed_{true}; ///< needed for matvec
+    bool                 values_changed_{true}; ///< Flag to indicate if matrix values changed since the cached SpMV setup.
 
-    matrix::Sparse* matrix_for_matvec_{nullptr}; ///< matrix for cached matvec setup
-    index_type      matvec_num_rows_{0};         ///< number of rows in matrix used for matvec
-    index_type      matvec_num_cols_{0};         ///< number of columns in matrix used for matvec
-    index_type      matvec_nnz_{0};              ///< number of nonzeros in matrix used for matvec
+    matrix::Sparse* matrix_for_matvec_{nullptr}; ///< Matrix used for cached SpMV setup.
+    index_type      matvec_num_rows_{0};         ///< Number of rows in cached SpMV matrix.
+    index_type      matvec_num_cols_{0};         ///< Number of columns in cached SpMV matrix.
+    index_type      matvec_nnz_{0};              ///< Number of nonzeros in cached SpMV matrix.
 
     MemoryHandler mem_; ///< Device memory manager object
   };
