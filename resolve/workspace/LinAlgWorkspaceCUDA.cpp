@@ -203,7 +203,9 @@ namespace ReSolve
   {
     matvec_setup_done_ = true;
   }
-
+  /**
+   * @brief Reset cached SpMV resources.
+   */
   void LinAlgWorkspaceCUDA::resetMatvecSetup()
   {
     if (matvec_setup_done_)

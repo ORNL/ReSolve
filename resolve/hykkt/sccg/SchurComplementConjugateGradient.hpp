@@ -1,6 +1,6 @@
 /**
  * @file SchurComplementConjugateGradient.hpp
- * @brief Currently CPU-only.
+ * @brief Schur complement conjugate gradient solver for HyKKT.
  */
 
 #pragma once
@@ -12,7 +12,6 @@
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/vector/VectorHandler.hpp>
-#include <resolve/workspace/LinAlgWorkspace.hpp>
 
 namespace ReSolve
 {
@@ -24,6 +23,18 @@ namespace ReSolve
     class SchurComplementConjugateGradient
     {
     public:
+      /**
+       * @brief Constructor for SchurComplementConjugateGradient.
+       *
+       * The solver uses caller-provided matrix and vector handlers so the same solver can be run with CPU, CUDA, or HIP backends.
+       *
+       * @param[in] n Dimension of outer system.
+       * @param[in] m Dimension of inner system.
+       * @param[in] choleskySolver Factorization of Hgamma to use for direct solves.
+       * @param[in] memspace Memory space of incoming data and for computation.
+       * @param[in] matrixHandler Matrix handler for the selected backend.
+       * @param[in] vectorHandler Vector handler for the selected backend.
+       */
       SchurComplementConjugateGradient(index_type n, index_type m, CholeskySolver* choleskySolver, memory::MemorySpace memspace, MatrixHandler& matrixHandler, VectorHandler& vectorHandler);
 
       void addMatrixInfo(matrix::Csr* jc, matrix::Csr* jc_tr);
@@ -41,8 +52,8 @@ namespace ReSolve
       int        itmax_ = 100;   // Maximum iterations for conjugate gradient
       double     tol_   = 1e-12; // Solver tolerance for Schur
 
-      MatrixHandler& matrixhandler_;
-      VectorHandler& vectorhandler_;
+      MatrixHandler& matrixhandler_; ///< Backend-specific matrix handler.
+      VectorHandler& vectorhandler_; ///< Backend-specific vector handler.
 
       CholeskySolver* choleskySolver_; // Cholesky factorization on 1,1 block
 

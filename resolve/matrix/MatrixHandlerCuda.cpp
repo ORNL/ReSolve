@@ -82,6 +82,7 @@ namespace ReSolve
     cusparseCreateDnVec(&vecAx, A->getNumRows(), vec_result->getData(memory::DEVICE), CUDA_R_64F);
 
     cusparseHandle_t handle_cusparse = workspace_->getCusparseHandle();
+    // Rebuild cached SpMV setup if the matrix object or dimensions changed.
     bool             matrix_changed  = (matrix_for_matvec_ != A) || (matvec_num_rows_ != A->getNumRows()) || (matvec_num_cols_ != A->getNumColumns()) || (matvec_nnz_ != A->getNnz());
     if (matrix_changed || values_changed_)
     {

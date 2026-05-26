@@ -13,6 +13,8 @@ namespace ReSolve
      *  @param m[in] - Dimension of inner system.
      *  @param choleskySolver[in] - Factorization of Hgamma to use for direct solve.
      *  @param memspace[in] - Memory space of incoming data and for computation.
+     *  @param matrixHandler[in] - Matrix handler for the selected backend.
+     *  @param vectorHandler[in] - Vector handler for the selected backend.
      */
     SchurComplementConjugateGradient::SchurComplementConjugateGradient(
         index_type          n,
