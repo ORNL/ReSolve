@@ -83,7 +83,7 @@ namespace ReSolve
 
     cusparseHandle_t handle_cusparse = workspace_->getCusparseHandle();
     // Rebuild cached SpMV setup if the matrix object or dimensions changed.
-    bool             matrix_changed  = (matrix_for_matvec_ != A) || (matvec_num_rows_ != A->getNumRows()) || (matvec_num_cols_ != A->getNumColumns()) || (matvec_nnz_ != A->getNnz());
+    bool matrix_changed = (matrix_for_matvec_ != A) || (matvec_num_rows_ != A->getNumRows()) || (matvec_num_cols_ != A->getNumColumns()) || (matvec_nnz_ != A->getNnz());
     if (matrix_changed || values_changed_)
     {
       workspace_->resetMatvecSetup();

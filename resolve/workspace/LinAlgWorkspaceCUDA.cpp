@@ -203,6 +203,7 @@ namespace ReSolve
   {
     matvec_setup_done_ = true;
   }
+
   /**
    * @brief Reset cached SpMV resources.
    */
