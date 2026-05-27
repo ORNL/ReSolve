@@ -32,10 +32,10 @@ namespace ReSolve
        * @param[in] m Dimension of inner system.
        * @param[in] choleskySolver Factorization of Hgamma to use for direct solves.
        * @param[in] memspace Memory space of incoming data and for computation.
-       * @param[in] matrixHandler Matrix handler for the selected backend.
-       * @param[in] vectorHandler Vector handler for the selected backend.
+       * @param[in] matrix_handler Matrix handler for the selected backend.
+       * @param[in] vector_handler Vector handler for the selected backend.
        */
-      SchurComplementConjugateGradient(index_type n, index_type m, CholeskySolver* choleskySolver, memory::MemorySpace memspace, MatrixHandler& matrixHandler, VectorHandler& vectorHandler);
+      SchurComplementConjugateGradient(index_type n, index_type m, CholeskySolver* choleskySolver, memory::MemorySpace memspace, MatrixHandler& matrix_handler, VectorHandler& vector_handler);
 
       void addMatrixInfo(matrix::Csr* jc, matrix::Csr* jc_tr);
       void addVectorInfo(vector::Vector* x0, vector::Vector* b);
@@ -52,8 +52,8 @@ namespace ReSolve
       int        itmax_ = 100;   // Maximum iterations for conjugate gradient
       double     tol_   = 1e-12; // Solver tolerance for Schur
 
-      MatrixHandler& matrixhandler_; ///< Backend-specific matrix handler.
-      VectorHandler& vectorhandler_; ///< Backend-specific vector handler.
+      MatrixHandler& matrix_handler_; ///< Backend-specific matrix handler.
+      VectorHandler& vector_handler_; ///< Backend-specific vector handler.
 
       CholeskySolver* choleskySolver_; // Cholesky factorization on 1,1 block
 

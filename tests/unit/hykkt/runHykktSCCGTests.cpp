@@ -33,9 +33,9 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
 
   WorkspaceType workspace;
   workspace.initializeHandles();
-  ReSolve::MatrixHandler                                     matrixHandler(&workspace);
-  ReSolve::VectorHandler                                     vectorHandler(&workspace);
-  ReSolve::tests::HykktSchurComplementConjugateGradientTests test(memspace, matrixHandler, vectorHandler);
+  ReSolve::MatrixHandler                                     matrix_handler(&workspace);
+  ReSolve::VectorHandler                                     vector_handler(&workspace);
+  ReSolve::tests::HykktSchurComplementConjugateGradientTests test(memspace, matrix_handler, vector_handler);
 
   result += test.SCCGTest();
 
