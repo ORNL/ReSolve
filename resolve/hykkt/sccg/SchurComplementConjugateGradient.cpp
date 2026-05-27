@@ -25,17 +25,16 @@ namespace ReSolve
         VectorHandler&      vectorHandler)
       : n_(n),
         m_(m),
-        choleskySolver_(choleskySolver),
-        memspace_(memspace),
-        mem_(),
         matrixhandler_(matrixHandler),
         vectorhandler_(vectorHandler),
+        choleskySolver_(choleskySolver),
         y_(m_),
         z_(m_),
         r_(n_),
         p_(n_),
         s_(n_),
-        w_(n_)
+        w_(n_),
+        memspace_(memspace)
     {
       ;
     }

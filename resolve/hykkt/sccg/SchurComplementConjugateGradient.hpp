@@ -79,7 +79,6 @@ namespace ReSolve
       vector::Vector s_;
       vector::Vector w_;
 
-      MemoryHandler       mem_;
       memory::MemorySpace memspace_;
     }; // class SchurComplementConjugateGradient
   } // namespace hykkt

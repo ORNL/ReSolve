@@ -153,7 +153,7 @@ namespace ReSolve
        * @param[in] x0 Pointer to the output x0 vector.
        * @param[in] tol Solver tolerance.
        */
-      bool validateResult(vector::Vector* x0, real_type tol)
+      bool validateResult(vector::Vector*, real_type)
       {
         bool test_passed = true;
 
