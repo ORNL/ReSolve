@@ -54,7 +54,7 @@ namespace ReSolve
       {
         constexpr double tol = 1e-12;
 
-        std::string   source_dir  = std::string(SOURCE_DIR);
+        std::string   source_dir   = std::string(SOURCE_DIR);
         std::string   jc_file_name = source_dir + "/SCCGTestMatrices/JC_matrix_ACTIVSg200_AC_00.mtx";
         std::string   h_file_name  = source_dir + "/SCCGTestMatrices/H_matrix_ACTIVSg200_AC_00.mtx";
         std::string   b_file_name  = source_dir + "/SCCGTestMatrices/CG_rhs_ACTIVSg200_AC_00.mtx"; // rhs
@@ -127,7 +127,7 @@ namespace ReSolve
       }
 
     private:
-      memory::MemorySpace memspace_;      ///< Memory space used by the test.
+      memory::MemorySpace memspace_;       ///< Memory space used by the test.
       MatrixHandler&      matrix_handler_; ///< Backend-specific matrix handler.
       VectorHandler&      vector_handler_; ///< Backend-specific vector handler.
 
