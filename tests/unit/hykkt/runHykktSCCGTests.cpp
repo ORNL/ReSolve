@@ -36,7 +36,7 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
   workspace.initializeHandles();
   ReSolve::MatrixHandler                                     matrix_handler(&workspace);
   ReSolve::VectorHandler                                     vector_handler(&workspace);
-  std::mt19937 generator(ReSolve::constants::SEED);
+  std::mt19937                                               generator(ReSolve::constants::SEED);
   ReSolve::tests::HykktSchurComplementConjugateGradientTests test(memspace, matrix_handler, vector_handler, generator);
 
   result += test.SCCGTest();

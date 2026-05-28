@@ -73,7 +73,6 @@ namespace ReSolve
       }
       mem_.deviceSynchronize();
     }
-    
 
     /**
      * @brief Perform numerical factorization for the Cholesky factorization
