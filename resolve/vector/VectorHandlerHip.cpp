@@ -322,6 +322,7 @@ namespace ReSolve
    *
    * @param[in]  diag - vector representing the diagonal matrix
    * @param[in, out]  vec - vector to be scaled
+   * @param[in] diag_offset - the index of diag where the diagonal matrix begins
    *
    * @pre The diagonal vector must be of the same size as the vector.
    * @pre vec is unscaled
@@ -330,9 +331,9 @@ namespace ReSolve
    *
    * @return 0 if successful, 1 otherwise
    */
-  void VectorHandlerHip::scal(vector::Vector* diag, vector::Vector* vec)
+  void VectorHandlerHip::scal(vector::Vector* diag, vector::Vector* vec, index_type diag_offset)
   {
-    real_type* diag_data = diag->getData(memory::DEVICE);
+    real_type* diag_data = &diag->getData(memory::DEVICE)[diag_offset];
     real_type* vec_data  = vec->getData(memory::DEVICE);
     index_type n         = vec->getSize();
     hip::scale(n, diag_data, vec_data);
