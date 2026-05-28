@@ -5,6 +5,7 @@
  */
 #include <fstream>
 #include <iostream>
+#include <random>
 #include <string>
 
 #include <resolve/matrix/MatrixHandler.hpp>
@@ -35,7 +36,8 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
   workspace.initializeHandles();
   ReSolve::MatrixHandler                                     matrix_handler(&workspace);
   ReSolve::VectorHandler                                     vector_handler(&workspace);
-  ReSolve::tests::HykktSchurComplementConjugateGradientTests test(memspace, matrix_handler, vector_handler);
+  std::mt19937                                               generator(ReSolve::constants::SEED);
+  ReSolve::tests::HykktSchurComplementConjugateGradientTests test(memspace, matrix_handler, vector_handler, generator);
 
   result += test.SCCGTest();
 
