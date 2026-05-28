@@ -17,3 +17,4 @@ that they are consistently applied.
    build_system
    coding_guidelines
    documentation
+   vector_matrix_handlers
