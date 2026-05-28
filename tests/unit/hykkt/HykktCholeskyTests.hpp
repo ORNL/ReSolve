@@ -127,7 +127,6 @@ namespace ReSolve
         solver.addMatrixInfo(A);
         solver.symbolicAnalysis();
         solver.numericalFactorization();
-
         // Generate a random vector x_expected and compute b = A * x_expected
         vector::Vector* x_expected = randomVector(n);
 

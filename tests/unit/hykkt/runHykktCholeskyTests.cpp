@@ -8,7 +8,7 @@
 #include <fstream>
 #include <iostream>
 #include <string>
-
+#include "resolve/Common.hpp"
 #include "tests/unit/hykkt/HykktCholeskyTests.hpp"
 
 /**
@@ -25,7 +25,7 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
   WorkspaceType workspace;
   workspace.initializeHandles();
   ReSolve::MatrixHandler handler(&workspace);
-
+  srand(ReSolve::constants::SEED); // set random seed for reproducibility
   ReSolve::tests::HykktCholeskyTests test(memspace, handler);
 
   result += test.minimalCorrectness();
