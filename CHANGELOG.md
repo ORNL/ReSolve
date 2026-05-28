@@ -22,6 +22,8 @@
 
 - Improved coding guidelines for developers on floating point conventions.
 
+- Added Developer Guide documentation for vector and matrix classes and handlers.
+
 ## Changes to Re::Solve in release 0.99.2
 
 ### Major Features

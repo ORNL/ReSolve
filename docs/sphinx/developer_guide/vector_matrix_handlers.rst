@@ -73,7 +73,7 @@ vector. Before a vector is used, it must be allocated in a memory space.
 
 Simplified example:
 
-.. code-block:: cpp
+.. code:: cpp
 
    vector::Vector* x = new vector::Vector(n);
    x->allocate(memory::HOST);
@@ -83,7 +83,7 @@ backend, the data may need to be synchronized to the device.
 
 Simplified example:
 
-.. code-block:: cpp
+.. code:: cpp
 
    if (memspace == memory::DEVICE)
    {
@@ -117,7 +117,7 @@ it is used.
 
 Simplified example:
 
-.. code-block:: cpp
+.. code:: cpp
 
    matrix::Csr* A = new matrix::Csr(num_rows, num_cols, nnz);
    A->allocateMatrixData(memory::HOST);
@@ -129,7 +129,7 @@ synchronized to device memory.
 
 SCCG test path example:
 
-.. code-block:: cpp
+.. code:: cpp
 
    matrix::Csr* h = new matrix::Csr(2278, 2278, 11304, true, false);
    h->allocateMatrixData(memory::HOST);
@@ -189,7 +189,7 @@ Handler Setup
 Handlers are created using a workspace for the selected backend. A simplified
 setup pattern is:
 
-.. code-block:: cpp
+.. code:: cpp
 
    WorkspaceType workspace;
    workspace.initializeHandles();
@@ -218,7 +218,7 @@ The general setup is:
 
 Simplified SCCG setup example:
 
-.. code-block:: cpp
+.. code:: cpp
 
    WorkspaceType workspace;
    workspace.initializeHandles();
@@ -401,7 +401,7 @@ and running the SCCG test executable.
 
 Example commands may vary by environment, but the basic checks are:
 
-.. code-block:: bash
+.. code:: shell
 
    cmake --build build-cpu
    ./build-cpu/tests/unit/hykkt/hykkt_sccg_test
