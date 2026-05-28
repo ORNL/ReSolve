@@ -6,6 +6,7 @@
 #pragma once
 
 #include <filesystem>
+#include <random>
 
 #include <resolve/MemoryUtils.hpp>
 #include <resolve/hykkt/sccg/SchurComplementConjugateGradient.hpp>
@@ -35,9 +36,10 @@ namespace ReSolve
        * @param[in] memspace Memory space for the test (HOST or DEVICE).
        * @param[in] matrix_handler Reference to a matrix handler for the selected backend.
        * @param[in] vector_handler Reference to a vector handler for the selected backend.
+       * @param[in] generator Reference to a C++ random number generator.
        */
-      HykktSchurComplementConjugateGradientTests(memory::MemorySpace memspace, MatrixHandler& matrix_handler, VectorHandler& vector_handler)
-        : memspace_(memspace), matrix_handler_(matrix_handler), vector_handler_(vector_handler)
+      HykktSchurComplementConjugateGradientTests(memory::MemorySpace memspace, MatrixHandler& matrix_handler, VectorHandler& vector_handler, std::mt19937& generator)
+        : memspace_(memspace), matrix_handler_(matrix_handler), vector_handler_(vector_handler), generator_(generator)
       {
       }
 
@@ -130,16 +132,18 @@ namespace ReSolve
       memory::MemorySpace memspace_;       ///< Memory space used by the test.
       MatrixHandler&      matrix_handler_; ///< Backend-specific matrix handler.
       VectorHandler&      vector_handler_; ///< Backend-specific vector handler.
+      std::mt19937&       generator_;      ///< C++ random number generator.
 
       /**
-       * @brief Generate a random vector of doubles between 0 and RAND_MAX. Copied from HykktCholeskyTests.hpp.
+       * @brief Generate a random vector of doubles between 0 and 1. Copied from HykktCholeskyTests.hpp.
        * @param[in] vec Target vector to write to.
        */
       void randomVector(vector::Vector* vec)
       {
+        std::uniform_real_distribution<double> distribution(0.0, 1.0);
         for (index_type i = 0; i < vec->getSize(); ++i)
         {
-          vec->getData(memory::HOST)[i] = static_cast<double>(rand()) / RAND_MAX;
+          vec->getData(memory::HOST)[i] = distribution(generator_);
         }
         vec->setDataUpdated(memory::HOST);
         if (memspace_ == memory::DEVICE)
