@@ -227,6 +227,48 @@ namespace ReSolve
     }
     return 0;
   }
+  
+  /**
+   * @brief Allocate the values array and set pointers to external arrays
+   * containing row and column data.
+   *
+   * @param src_row_data - the row data to be borrowed by the matrix
+   * @param src_col_data - the column data to be borrowed by the matrix
+   * @param new_nnz - the number of nonzero entries of the source matrix
+   * (length of src_row_data and src_col_data)
+   * @param memspace - memory space to be synced up (HOST or DEVICE)
+   * @return int - 0 if successful, error code otherwise
+   */
+  int matrix::Sparse::allocateWithExternalSparsityPattern(index_type* src_row_data,
+                                                          index_type* src_col_data,
+                                                          index_type new_nnz,
+                                                          memory::MemorySpace memspace)
+  {
+    nnz_ = new_nnz;
+    destroyMatrixData(memspace); // just in case
+
+    if (memspace == memory::HOST)
+    {
+      this->h_row_data_ = src_row_data;
+      this->h_col_data_ = src_col_data;
+      this->h_val_data_ = new real_type[new_nnz];
+      std::fill(h_val_data_, h_val_data_ + new_nnz, 0.0);
+      owns_cpu_sparsity_pattern_ = false;
+      owns_cpu_values_           = true;
+      return 0;
+    }
+
+    if (memspace == memory::DEVICE)
+    {
+      this->d_row_data_ = src_row_data;
+      this->d_col_data_ = src_col_data;
+      mem_.allocateArrayOnDevice(&d_val_data_, new_nnz);
+      owns_gpu_sparsity_pattern_ = false;
+      owns_gpu_values_           = true;
+      return 0;
+    }
+    return -1;
+  }
 
   /**
    * @brief Set the pointers for matrix row, column, value data.
