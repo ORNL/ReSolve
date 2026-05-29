@@ -12,7 +12,7 @@ them.
 
 The main distinction is that vector and matrix classes store data, while
 handler classes perform operations on that data. This distinction is important
-when writing code that needs to run on CPU, CUDA, and HIP backends.
+when writing code that needs to port to different backends run (e.g. CPU, CUDA, and HIP).
 
 This separation allows solver logic to remain independent of backend-specific
 vector and matrix operations.
