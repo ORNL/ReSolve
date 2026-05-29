@@ -1,6 +1,6 @@
 /**
  * @file SchurComplementConjugateGradient.hpp
- * @brief Currently CPU-only.
+ * @brief Schur complement conjugate gradient solver for HyKKT.
  */
 
 #pragma once
@@ -12,7 +12,6 @@
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/vector/VectorHandler.hpp>
-#include <resolve/workspace/LinAlgWorkspace.hpp>
 
 namespace ReSolve
 {
@@ -24,7 +23,24 @@ namespace ReSolve
     class SchurComplementConjugateGradient
     {
     public:
-      SchurComplementConjugateGradient(index_type n, index_type m, CholeskySolver* choleskySolver, memory::MemorySpace memspace);
+      /**
+       * @brief Constructor for SchurComplementConjugateGradient.
+       *
+       * The solver uses caller-provided matrix and vector handlers so the same solver can be run with CPU, CUDA, or HIP backends.
+       *
+       * @param[in] n Dimension of outer system.
+       * @param[in] m Dimension of inner system.
+       * @param[in] choleskySolver Factorization of Hgamma to use for direct solves.
+       * @param[in] matrix_handler Matrix handler for the selected backend.
+       * @param[in] vector_handler Vector handler for the selected backend.
+       * @param[in] memspace Memory space of incoming data and for computation.
+       */
+      SchurComplementConjugateGradient(index_type n,
+                                       index_type m,
+                                       CholeskySolver* choleskySolver,
+                                       MatrixHandler* matrix_handler_,
+                                       VectorHandler* vector_handler_,
+                                       memory::MemorySpace memspace);
       ~SchurComplementConjugateGradient();
 
       void addMatrixInfo(matrix::Csr* jc, matrix::Csr* jc_tr);
@@ -42,15 +58,8 @@ namespace ReSolve
       int        itmax_ = 100;   // Maximum iterations for conjugate gradient
       double     tol_   = 1e-12; // Solver tolerance for Schur
 
-#ifdef RESOLVE_USE_CUDA
-      LinAlgWorkspaceCUDA workspace_;
-#elif defined(RESOLVE_USE_HIP)
-      LinAlgWorkspaceHIP workspace_;
-#else
-      LinAlgWorkspaceCpu workspace_;
-#endif
-      MatrixHandler matrixhandler_;
-      VectorHandler vectorhandler_;
+      MatrixHandler& matrix_handler_; ///< Backend-specific matrix handler.
+      VectorHandler& vector_handler_; ///< Backend-specific vector handler.
 
       CholeskySolver* choleskySolver_{nullptr}; // Cholesky factorization on 1,1 block
 
@@ -76,7 +85,6 @@ namespace ReSolve
       vector::Vector* s_{nullptr};
       vector::Vector* w_{nullptr};
 
-      MemoryHandler       mem_;
       memory::MemorySpace memspace_;
     }; // class SchurComplementConjugateGradient
   } // namespace hykkt

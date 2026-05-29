@@ -13,9 +13,7 @@ target_link_libraries(
 
 # Link to CUDA ReSolve backend if CUDA is support enabled
 
-target_include_directories(
-  resolve_hykkt_spgemm PUBLIC ${SUITESPARSE_INCLUDE_DIR}
-)
+target_include_directories(resolve_hykkt_sccg PUBLIC ${SUITESPARSE_INCLUDE_DIR})
 
 if(RESOLVE_USE_CUDA)
   target_sources(resolve_hykkt_sccg PRIVATE ${Matrix_CUDASDK_SRC})

@@ -5,9 +5,11 @@
  */
 #include <fstream>
 #include <iostream>
+#include <random>
 #include <string>
 
 #include <resolve/matrix/MatrixHandler.hpp>
+#include <resolve/vector/VectorHandler.hpp>
 #include <resolve/workspace/LinAlgWorkspaceCpu.hpp>
 #ifdef RESOLVE_USE_CUDA
 #include <resolve/workspace/LinAlgWorkspaceCUDA.hpp>
@@ -32,9 +34,10 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
 
   WorkspaceType workspace;
   workspace.initializeHandles();
-  ReSolve::MatrixHandler handler(&workspace);
-
-  ReSolve::tests::HykktSchurComplementConjugateGradientTests test(memspace, handler);
+  ReSolve::MatrixHandler                                     matrix_handler(&workspace);
+  ReSolve::VectorHandler                                     vector_handler(&workspace);
+  std::mt19937                                               generator(ReSolve::constants::SEED);
+  ReSolve::tests::HykktSchurComplementConjugateGradientTests test(memspace, matrix_handler, vector_handler, generator);
 
   result += test.SCCGTest();
 

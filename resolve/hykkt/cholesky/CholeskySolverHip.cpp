@@ -60,6 +60,7 @@ namespace ReSolve
       }
       A_chol_ = convertToCholmod(A);
       A_      = A;
+      mem_.deviceSynchronize();
     }
 
     void CholeskySolverHip::symbolicAnalysis()
@@ -70,6 +71,7 @@ namespace ReSolve
       {
         out::error() << "Cholesky symbolic analysis failed with status: " << Common_.status << "\n";
       }
+      mem_.deviceSynchronize();
     }
 
     /**
@@ -156,6 +158,7 @@ namespace ReSolve
           out::error() << "Refactorization step failed with status: " << status << "\n";
         }
         L_->setUpdated(memory::DEVICE);
+        mem_.deviceSynchronize();
       }
     }
 
