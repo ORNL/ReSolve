@@ -6,12 +6,14 @@
 #pragma once
 
 #include <filesystem>
+#include <random>
 
 #include <resolve/MemoryUtils.hpp>
 #include <resolve/hykkt/sccg/SchurComplementConjugateGradient.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/matrix/io.hpp>
+#include <resolve/vector/VectorHandler.hpp>
 #include <tests/unit/TestBase.hpp>
 
 namespace ReSolve
@@ -26,8 +28,18 @@ namespace ReSolve
     class HykktSchurComplementConjugateGradientTests : public TestBase
     {
     public:
-      HykktSchurComplementConjugateGradientTests(memory::MemorySpace memspace, MatrixHandler& matrixHandler)
-        : memspace_(memspace), matrixHandler_(matrixHandler)
+      /**
+       * @brief Constructs the SCCG test fixture with the specified memory space and handlers.
+       *
+       * The test fixture uses caller-provided matrix and vector handlers so the same test can be run with CPU, CUDA, or HIP backends.
+       *
+       * @param[in] memspace Memory space for the test (HOST or DEVICE).
+       * @param[in] matrix_handler Reference to a matrix handler for the selected backend.
+       * @param[in] vector_handler Reference to a vector handler for the selected backend.
+       * @param[in] generator Reference to a C++ random number generator.
+       */
+      HykktSchurComplementConjugateGradientTests(memory::MemorySpace memspace, MatrixHandler& matrix_handler, VectorHandler& vector_handler, std::mt19937& generator)
+        : memspace_(memspace), matrix_handler_(matrix_handler), vector_handler_(vector_handler), generator_(generator)
       {
       }
 
@@ -44,17 +56,23 @@ namespace ReSolve
       {
         constexpr double tol = 1e-12;
 
-        std::string   sourceDir  = std::string(SOURCE_DIR);
-        std::string   jcFileName = sourceDir + "/SCCGTestMatrices/JC_matrix_ACTIVSg200_AC_00.mtx";
-        std::string   hFileName  = sourceDir + "/SCCGTestMatrices/H_matrix_ACTIVSg200_AC_00.mtx";
-        std::string   bFileName  = sourceDir + "/SCCGTestMatrices/CG_rhs_ACTIVSg200_AC_00.mtx"; // rhs
-        std::ifstream jcFile(jcFileName);
-        std::ifstream hFile(hFileName);
-        std::ifstream bFile(bFileName);
+        std::string   source_dir   = std::string(SOURCE_DIR);
+        std::string   jc_file_name = source_dir + "/SCCGTestMatrices/JC_matrix_ACTIVSg200_AC_00.mtx";
+        std::string   h_file_name  = source_dir + "/SCCGTestMatrices/H_matrix_ACTIVSg200_AC_00.mtx";
+        std::string   b_file_name  = source_dir + "/SCCGTestMatrices/CG_rhs_ACTIVSg200_AC_00.mtx"; // rhs
+        std::ifstream jc_file(jc_file_name);
+        std::ifstream h_file(h_file_name);
+        std::ifstream b_file(b_file_name);
 
+        // The .mtx file readers write into host accessible memory.
+        // Load test data into HOST first, then sync to DEVICE for CUDA and HIP backends.
         matrix::Csr* h = new matrix::Csr(2278, 2278, 11304, true, false);
-        h->allocateMatrixData(memspace_);
-        io::updateMatrixFromFile(hFile, h);
+        h->allocateMatrixData(memory::HOST);
+        io::updateMatrixFromFile(h_file, h);
+        if (memspace_ == memory::DEVICE)
+        {
+          h->syncData(memory::DEVICE);
+        }
         hykkt::CholeskySolver choleskySolver(memspace_);
         choleskySolver.addMatrixInfo(h);
         choleskySolver.symbolicAnalysis();
@@ -62,28 +80,34 @@ namespace ReSolve
         choleskySolver.numericalFactorization();
 
         matrix::Csr* jc = new matrix::Csr(1386, 2278, 6784, false, false);
-        jc->allocateMatrixData(memspace_);
-        io::updateMatrixFromFile(jcFile, jc);
+        jc->allocateMatrixData(memory::HOST);
+        io::updateMatrixFromFile(jc_file, jc);
+        if (memspace_ == memory::DEVICE)
+        {
+          jc->syncData(memory::DEVICE);
+        }
 
         index_type                              n   = jc->getNumRows();
         index_type                              m   = jc->getNumColumns();
         index_type                              nnz = jc->getNnz();
-        hykkt::SchurComplementConjugateGradient sccg(n, m, &choleskySolver, memspace_);
+        hykkt::SchurComplementConjugateGradient sccg(n, m, &choleskySolver, memspace_, matrix_handler_, vector_handler_);
         sccg.setSolverTolerance(tol);
-        LinAlgWorkspaceCpu workspace;
-        MatrixHandler      matrix_handler(&workspace);
 
         matrix::Csr* jc_tr = new matrix::Csr(m, n, nnz);
         jc_tr->allocateMatrixData(memspace_);
-        matrix_handler.transpose(jc, jc_tr, memspace_);
+        matrix_handler_.transpose(jc, jc_tr, memspace_);
 
         vector::Vector* x0 = new vector::Vector(n);
-        x0->allocate(memspace_);
+        x0->allocate(memory::HOST);
         randomVector(x0);
 
         vector::Vector* b = new vector::Vector(n);
-        b->allocate(memspace_);
-        io::updateVectorFromFile(bFile, b);
+        b->allocate(memory::HOST);
+        io::updateVectorFromFile(b_file, b);
+        if (memspace_ == memory::DEVICE)
+        {
+          b->syncData(memory::DEVICE);
+        }
 
         sccg.addMatrixInfo(jc, jc_tr);
         sccg.addVectorInfo(x0, b);
@@ -105,18 +129,21 @@ namespace ReSolve
       }
 
     private:
-      memory::MemorySpace memspace_;
-      MatrixHandler&      matrixHandler_;
+      memory::MemorySpace memspace_;       ///< Memory space used by the test.
+      MatrixHandler&      matrix_handler_; ///< Backend-specific matrix handler.
+      VectorHandler&      vector_handler_; ///< Backend-specific vector handler.
+      std::mt19937&       generator_;      ///< C++ random number generator.
 
       /**
-       * @brief Generate a random vector of doubles between 0 and RAND_MAX. Copied from HykktCholeskyTests.hpp.
+       * @brief Generate a random vector of doubles between 0 and 1. Copied from HykktCholeskyTests.hpp.
        * @param[in] vec Target vector to write to.
        */
       void randomVector(vector::Vector* vec)
       {
+        std::uniform_real_distribution<double> distribution(0.0, 1.0);
         for (index_type i = 0; i < vec->getSize(); ++i)
         {
-          vec->getData(memory::HOST)[i] = static_cast<double>(rand()) / RAND_MAX;
+          vec->getData(memory::HOST)[i] = distribution(generator_);
         }
         vec->setDataUpdated(memory::HOST);
         if (memspace_ == memory::DEVICE)
@@ -126,11 +153,11 @@ namespace ReSolve
       }
 
       /**
-       * @brief Validate the results of the scaling
-       * @param[in] x0 Pointer to the output x0 vector
-       * @param[in] tol Solver tolerance
+       * @brief Validate the SCCG result.
+       * @param[in] x0 Pointer to the output x0 vector.
+       * @param[in] tol Solver tolerance.
        */
-      bool validateResult(vector::Vector* x0, real_type tol)
+      bool validateResult(vector::Vector*, real_type)
       {
         bool test_passed = true;
 
@@ -138,6 +165,6 @@ namespace ReSolve
 
         return test_passed;
       }
-    }; // class HykktPermutationTests
+    }; // class HykktSchurComplementConjugateGradientTests
   } // namespace tests
 } // namespace ReSolve
