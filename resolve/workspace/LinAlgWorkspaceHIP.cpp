@@ -140,12 +140,6 @@ namespace ReSolve
     matvec_setup_done_ = true;
   }
 
-  /**
-   * @brief Reset the cached HIP SpMV setup.
-   *
-   * Destroys the cached rocSPARSE matrix descriptor and matrix info so the
-   * next matvec call can rebuild the setup if the matrix or its dimensions have changed.
-   */
   void LinAlgWorkspaceHIP::resetMatvecSetup()
   {
     if (mat_A_ != nullptr)
