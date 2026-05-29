@@ -16,7 +16,7 @@
 
 - Added `cons` counterparts to `Vector::getData` methods.
 
-- Made Vector::copyDataTo able to copy from device to host and vice versa
+- Made Vector::copyToExternal able to copy from device to host and vice versa
 
 - Added `diagSolve`, `max`, and `abs` vector operations.
 
