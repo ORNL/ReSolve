@@ -80,101 +80,62 @@ namespace ReSolve {
   }
 
   /**
-   * @brief Sets Hessian matrix block (square, nx x nx) in to user 
-   * provided values. It will only set pointers to user provided 
-   * data; it is user's responsibility to supply and later delete 
-   * that data.
+   * @brief Sets blocks of the KKT matrix in CSR format to user provided
+   * values. It will only set pointers to user provided data; it is user's 
+   * responsibility to supply and later delete that memory.
    * 
-   * @param[in] H - Pointer to the H matrix in CSR format.
+   * @param[in] H - Pointer to the Hessian matrix block (nx x nx).
+   * @param[in] Dx - Pointer to the Dx matrix block (nx x nx).
+   * @param[in] Ds - Pointer to the slack variables derivatives matrix block
+   * (md x md).
+   * @param[in] J - Pointer to the equality constraints Jacobian block
+   * (mc x nx).
+   * @param[in] Jd - Pointer to the inequality constraints Jacobian block
+   * (md x nx)
    */
-  void hykkt::HyKKTSolver::set_H(matrix::Csr* H)
+  void hykkt::HyKKTSolver::setMatrixBlocks(matrix::Csr* H, matrix::Csr* Dx, matrix::Csr* Ds, matrix::Csr* J, matrix::Csr* Jd)
   {
     H_ = H;
-  }
-
-  /**
-   * @brief Sets slack variables derivatives matrix block (square, 
-   * nx x nx) in to user provided values. It will only set pointers 
-   * to user provided data; it is user's responsibility to supply 
-   * and later delete that data.
-   * 
-   * @param[in] Ds - Pointer to the Ds matrix in CSR format.
-   */
-  void hykkt::HyKKTSolver::set_Ds(matrix::Csr* Ds)
-  {
+    Dx_ = Dx;
     Ds_ = Ds;
-  }
-
-  /**
-   * @brief Sets equality constraints Jacobian block (mc x nx)
-   * in to user provided values. It will only set pointers to 
-   * user provided data; it is user's responsibility to supply 
-   * and later delete that data.
-   * 
-   * @param[in] J - Pointer to the J matrix in CSR format.
-   * @param[in] J_tr - Pointer to the transposed J matrix in CSR format.
-   */
-  void hykkt::HyKKTSolver::set_J(matrix::Csr* J, matrix::Csr* J_tr)
-  {
     J_ = J;
-    J_tr_ = J_tr;
+    Jd_ = Jd;
   }
 
   /**
-   * @brief Sets inequality constraints Jacobian block (md x nx) in to user
-   * provided values. It will only set pointers to user provided data; it 
-   * is user's responsibility to supply and later delete that data.
+   * @brief Sets the blocks of the RHS vector of the system to user provided
+   * values. It will only set pointers to user provided data; it is user's 
+   * responsibility to supply and later delete that memory.
    * 
-   * @param[in] Jd - Pointer to the Jd matrix in CSR format.
-   * @param[in] Jd_tr - Pointer to the transposed Jd matrix in CSR format.
+   * @param[in] rx - Pointer to the rx vector (shape: nx)
+   * @param[in] rs - Pointer to the rs vector (shape: md)
+   * @param[in] ry - Pointer to the ry vector (shape: mc)
+   * @param[in] ryd - Pointer to the ryd vector (shape: md)
    */
-  void hykkt::HyKKTSolver::set_Jd(matrix::Csr* Jd, matrix::Csr* Jd_tr)
-  {
-    Jd_ = Jd;
-    Jd_tr_ = Jd_tr;
-    // bool jd_flag = mat_jd_.nnz_ > 0;
-    // // status_ = (jd_flag_ == jd_flag);
-    // status_ = true; // when using API, we can't check if sparsity pattern changed
-    // jd_flag_ = jd_flag;
-  }
-
-  void hykkt::HyKKTSolver::set_rx(vector::Vector* rx)
+  void hykkt::HyKKTSolver::setRHSBlocks(vector::Vector* rx, vector::Vector* rs, vector::Vector* ry, vector::Vector* ryd)
   {
     rx_ = rx;
-  }
-
-  void hykkt::HyKKTSolver::set_rs(vector::Vector* rs)
-  {
     rs_ = rs;
-  }
-
-  void hykkt::HyKKTSolver::set_ry(vector::Vector* ry)
-  {
     ry_ = ry;
-  }
-
-  void hykkt::HyKKTSolver::set_ryd(vector::Vector* ryd)
-  {
     ryd_ = ryd;
   }
 
-  void hykkt::HyKKTSolver::set_x(vector::Vector* x)
+  /**
+   * @brief Sets the pointers to the blocks of the LHS (output) vector of the 
+   * system. It will set pointers to the vector object that will contain the 
+   * solver's solutions. Existing values will not be used and will be overridden.
+   * It is user's responsibility to supply and later delete that memory.
+   *
+   * @param[in] x - Pointer to the x vector (shape: nx)
+   * @param[in] s - Pointer to the s vector (shape: md)
+   * @param[in] y - Pointer to the y vector (shape: mc)
+   * @param[in] yd - Pointer to the yd vector (shape: md)
+   */
+  void hykkt::HyKKTSolver::setLHSPointers(vector::Vector* x, vector::Vector* s, vector::Vector* y, vector::Vector* yd)
   {
     x_ = x;
-  }
-
-  void hykkt::HyKKTSolver::set_s(vector::Vector* s)
-  {
     s_ = s;
-  }
-
-  void hykkt::HyKKTSolver::set_y(vector::Vector* y)
-  {
     y_ = y;
-  }
-
-  void hykkt::HyKKTSolver::set_yd(vector::Vector* yd)
-  {
     yd_ = yd;
   }
 

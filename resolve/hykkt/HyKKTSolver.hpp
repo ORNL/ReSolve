@@ -23,7 +23,8 @@ namespace ReSolve
     class HyKKTSolver
     {
     public:
-      HyKKTSolver(index_type nx, index_type mc, index_type md, memory::MemorySpace memspace);
+      HyKKTSolver(index_type nx, index_type md, index_type mc, memory::MemorySpace memspace);
+      ~HyKKTSolver();
 
       void readMatrixFiles(
           std::istream& H_file,
@@ -36,18 +37,9 @@ namespace ReSolve
           std::istream& ry_file,
           std::istream& ryd_file);
           
-      void set_H(matrix::Csr* H);
-      void set_Ds(matrix::Csr* Ds);
-      void set_J(matrix::Csr* J, matrix::Csr* J_tr);
-      void set_Jd(matrix::Csr* Jd, matrix::Csr* Jd_tr);
-      void set_rx(vector::Vector* rx);
-      void set_rs(vector::Vector* rs);
-      void set_ry(vector::Vector* ry);
-      void set_ryd(vector::Vector* ryd);
-      void set_x(vector::Vector* x);
-      void set_s(vector::Vector* s);
-      void set_y(vector::Vector* y);
-      void set_yd(vector::Vector* yd);
+      void setMatrixBlocks(matrix::Csr* H, matrix::Csr* Dx, matrix::Csr* Ds, matrix::Csr* J, matrix::Csr* Jd);
+      void setRHSBlocks(vector::Vector* rx, vector::Vector* rs, vector::Vector* ry, vector::Vector* ryd);
+      void setLHSPointers(vector::Vector* x, vector::Vector* s, vector::Vector* y, vector::Vector* yd);
 
       void setGamma(real_type gamma);
 
