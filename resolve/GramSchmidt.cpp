@@ -187,26 +187,21 @@ namespace ReSolve
       vector_handler_->gemv('T', i + 1, ONE, ZERO, V, vec_v_, vec_Hcolumn_, memspace_);
       // V(:,i+1) = V(:, i+1) -  V(:,1:i)*Hcol
       vector_handler_->gemv('N', i + 1, ONE, MINUS_ONE, V, vec_Hcolumn_, vec_v_, memspace_);
-      mem_.deviceSynchronize();
 
       // copy H_col to aux, we will need it later
       vec_Hcolumn_->setDataUpdated(memspace_);
       vec_Hcolumn_->resize(i + 1);
       vec_Hcolumn_->copyToExternal(h_aux_, 0, memory::HOST, memory::HOST);
-      mem_.deviceSynchronize();
 
       // Hcol = V(:,1:i)^T*V(:,i+1);
       vector_handler_->gemv('T', i + 1, ONE, ZERO, V, vec_v_, vec_Hcolumn_, memspace_);
-      mem_.deviceSynchronize();
 
       // V(:,i+1) = V(:, i+1) -  V(:,1:i)*Hcol
       vector_handler_->gemv('N', i + 1, ONE, MINUS_ONE, V, vec_Hcolumn_, vec_v_, memspace_);
-      mem_.deviceSynchronize();
 
       // copy H_col to H
       vec_Hcolumn_->setDataUpdated(memspace_);
       vec_Hcolumn_->copyToExternal(&H[idxmap(i, 0, num_vecs_ + 1)], 0, memory::HOST, memory::HOST);
-      mem_.deviceSynchronize();
 
       // add both pieces together (unstable otherwise, careful here!!)
       t = 0.0;
@@ -381,13 +376,11 @@ namespace ReSolve
       vector_handler_->gemv('T', i + 1, ONE, ZERO, V, vec_v_, vec_Hcolumn_, memspace_);
       // V(:,i+1) = V(:, i+1) -  V(:,1:i)*Hcol
       vector_handler_->gemv('N', i + 1, ONE, MINUS_ONE, V, vec_Hcolumn_, vec_v_, memspace_);
-      mem_.deviceSynchronize();
 
       // copy H_col to H
       vec_Hcolumn_->setDataUpdated(memspace_);
       vec_Hcolumn_->resize(i + 1);
       vec_Hcolumn_->copyToExternal(&H[idxmap(i, 0, num_vecs_ + 1)], 0, memory::HOST, memory::HOST);
-      mem_.deviceSynchronize();
 
       t = vector_handler_->dot(vec_v_, vec_v_, memspace_);
       // set the last entry in Hessenberg matrix
