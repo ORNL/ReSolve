@@ -14,18 +14,8 @@ The main distinction is that vector and matrix classes store data, while
 handler classes perform operations on that data. This distinction is important
 when writing code that needs to run on CPU, CUDA, and HIP backends.
 
-Public Re::Solve documentation describes Re::Solve as an open-source library
-that provides GPU-resident linear solvers. The library contains iterative and
-direct solvers designed to run on NVIDIA GPUs, AMD GPUs, and CPU devices.
-Because of this, Re::Solve code often needs to separate the high-level solver
-logic from the backend-specific details needed to perform matrix and vector
-operations.
-
-This separation is useful in scientific computing and optimization workflows.
-ORNL publications on GPU-resident sparse linear solvers describe linear systems
-as a major computational cost in applications such as economic dispatch and
-alternating current optimal power flow. In these workflows, improving the
-linear solver path can improve the larger application runtime.
+This separation allows solver logic to remain independent of backend-specific
+vector and matrix operations.
 
 The main questions this page is meant to answer are:
 
@@ -161,7 +151,7 @@ A useful way to think about the difference is:
 * ``vector::Vector`` stores the vector data.
 * ``VectorHandler`` performs vector operations on that data.
 
-A useful way to separate the roles is that ``vector::Vector`` sotres the data, while ``VectorHandler`` performs operations on that data. 
+A useful way to separate the roles is that ``vector::Vector`` stores the data, while ``VectorHandler`` performs operations on that data.
 For example, a vector object may hold the entries of a residual vector, while a
 vector handler may compute a dot product, scale the vector, or add one vector
 to another.
@@ -178,7 +168,7 @@ A ``MatrixHandler`` may perform operations such as:
 * ``matvec``
 * ``transpose``
 
-A useful way to separate the roles is that ``matrix::Csr`` stores the data, while ``MatrixHandler`` performs matrix operations on that data. 
+A useful way to separate the roles is that ``matrix::Csr`` stores the data, while ``MatrixHandler`` performs matrix operations on that data.
 For example, a matrix object may hold the CSR representation of a sparse
 matrix, while a matrix handler may perform a sparse matrix-vector product or
 construct a transpose.
