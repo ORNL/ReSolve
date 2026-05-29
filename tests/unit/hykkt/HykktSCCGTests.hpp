@@ -6,6 +6,7 @@
 #pragma once
 
 #include <filesystem>
+#include <random>
 
 #include <resolve/MemoryUtils.hpp>
 #include <resolve/hykkt/sccg/SchurComplementConjugateGradient.hpp>

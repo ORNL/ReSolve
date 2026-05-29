@@ -5,6 +5,7 @@
  */
 #include <fstream>
 #include <iostream>
+#include <random>
 #include <string>
 
 #include <resolve/matrix/MatrixHandler.hpp>
