@@ -262,6 +262,8 @@ namespace ReSolve {
       z_->allocate(memspace_);
       J_perm_->allocateMatrixData(memspace_);
       J_tr_perm_->allocateMatrixData(memspace_);
+      J_perm_->allocateMatrixData(memspace_);
+      Jd_scaled_->allocateWithExternalSparsityPattern(Jd_->getRowData(memspace_), Jd_->getColData(memspace_), Jd_->getNnz(), memspace_);
     }
     else if (memspace_ == memory::DEVICE)
     {
@@ -372,8 +374,6 @@ namespace ReSolve {
     {
       matrixHandler_->transpose(Jd_, Jd_tr_, memspace_);
       
-      Jd_scaled_->setDataPointers(Jd_->getRowData(memspace_), Jd_->getColData(memspace_), nullptr, memspace_);
-      Jd_scaled_->copyValues(Jd_->getValues(memspace_), memspace_, memspace_);
       matrixHandler_->leftScale(Ds_vals_, Jd_scaled_, memspace_);
 
       ryd_scaled_->copyFromExternal(ryd_, memspace_, memspace_);
