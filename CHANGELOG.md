@@ -16,11 +16,15 @@
 
 - Added `cons` counterparts to `Vector::getData` methods.
 
-- Made Vector::copyToExternal able to copy from device to host and vice versa
+- Made Vector::copyToExternal able to copy from device to host and vice versa.
 
 - Added `diagSolve`, `max`, and `abs` vector operations.
 
 - Improved coding guidelines for developers on floating point conventions.
+
+- Removed unnecessary device synchronization.
+
+- Changed variable and function names to be more explanatory.
 
 ## Changes to Re::Solve in release 0.99.2
 
