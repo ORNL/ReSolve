@@ -29,6 +29,7 @@
 - Added `SchurComplementConjugateGradient` with CPU implementation.
 
 - Created `Matrix`, a parent class for all matrix classes.
+- Added Developer Guide documentation for vector and matrix classes and handlers.
 
 ## Changes to Re::Solve in release 0.99.2
 
