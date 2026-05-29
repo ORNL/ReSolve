@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cholmod.h>
 #include <iterator>
+#include <random>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -26,8 +27,8 @@ namespace ReSolve
     class HykktCholeskyTests : public TestBase
     {
     public:
-      HykktCholeskyTests(memory::MemorySpace memspace, MatrixHandler& matrixHandler)
-        : memspace_(memspace), matrixHandler_(matrixHandler)
+      HykktCholeskyTests(memory::MemorySpace memspace, MatrixHandler& matrixHandler, std::mt19937& generator)
+        : memspace_(memspace), matrixHandler_(matrixHandler), generator_(generator)
       {
         cholmod_start(&Common);
       }
@@ -127,7 +128,6 @@ namespace ReSolve
         solver.addMatrixInfo(A);
         solver.symbolicAnalysis();
         solver.numericalFactorization();
-
         // Generate a random vector x_expected and compute b = A * x_expected
         vector::Vector* x_expected = randomVector(n);
 
@@ -242,7 +242,8 @@ namespace ReSolve
           // reset values
           for (size_t j = 0; j < L->nzmax; j++)
           {
-            static_cast<double*>(L->x)[j] = 2.0 * static_cast<double>(rand()) / RAND_MAX - 1.0;
+            std::uniform_real_distribution<double> distribution(-1.0, 1.0);
+            static_cast<double*>(L->x)[j] = 2.0 * distribution(generator_) - 1.0;
           }
           cholmod_free_sparse(&L_tr, &Common);
           cholmod_free_sparse(&A_chol, &Common);
@@ -266,6 +267,7 @@ namespace ReSolve
     private:
       ReSolve::memory::MemorySpace memspace_;
       MatrixHandler&               matrixHandler_;
+      std::mt19937&                generator_;
 
       cholmod_common Common;
 
@@ -281,14 +283,16 @@ namespace ReSolve
           L_p[i + 1] = L_p[i];
           for (size_t j = i; j < n; ++j)
           {
-            // with probability 'density', add a non-zero entry
-            if (i == j || static_cast<double>(rand()) / RAND_MAX < density)
+            std::uniform_real_distribution<double> rand_dist(0.0, 1.0);
+            if (i == j || rand_dist(generator_) < density)
             {
               L_i.push_back((int) j);
               // force diagonal entry to be non-zero
               double value = 2.0;
               if (i != j)
               {
+                std::uniform_real_distribution<double> value_dist(-1.0, 1.0);
+                value = 2.0 * value_dist(generator_);
                 value = 2.0 * static_cast<double>(rand()) / RAND_MAX - 1.0;
               }
               L_x.push_back(value);
@@ -311,9 +315,10 @@ namespace ReSolve
       {
         vector::Vector* v = new vector::Vector(n);
         v->allocate(memory::HOST);
+        std::uniform_real_distribution<double> distribution(0.0, 1.0);
         for (index_type i = 0; i < n; ++i)
         {
-          v->getData(memory::HOST)[i] = static_cast<double>(rand()) / RAND_MAX;
+          v->getData(memory::HOST)[i] = distribution(generator_);
         }
         v->setDataUpdated(memory::HOST);
         if (memspace_ == memory::DEVICE)

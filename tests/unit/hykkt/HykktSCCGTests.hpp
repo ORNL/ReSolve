@@ -6,12 +6,14 @@
 #pragma once
 
 #include <filesystem>
+#include <random>
 
 #include <resolve/MemoryUtils.hpp>
 #include <resolve/hykkt/sccg/SchurComplementConjugateGradient.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/matrix/io.hpp>
+#include <resolve/vector/VectorHandler.hpp>
 #include <tests/unit/TestBase.hpp>
 
 namespace ReSolve
@@ -25,8 +27,18 @@ namespace ReSolve
     class HykktSchurComplementConjugateGradientTests : public TestBase
     {
     public:
-      HykktSchurComplementConjugateGradientTests(memory::MemorySpace memspace, MatrixHandler& matrixHandler)
-        : memspace_(memspace), matrixHandler_(matrixHandler)
+      /**
+       * @brief Constructs the SCCG test fixture with the specified memory space and handlers.
+       *
+       * The test fixture uses caller-provided matrix and vector handlers so the same test can be run with CPU, CUDA, or HIP backends.
+       *
+       * @param[in] memspace Memory space for the test (HOST or DEVICE).
+       * @param[in] matrix_handler Reference to a matrix handler for the selected backend.
+       * @param[in] vector_handler Reference to a vector handler for the selected backend.
+       * @param[in] generator Reference to a C++ random number generator.
+       */
+      HykktSchurComplementConjugateGradientTests(memory::MemorySpace memspace, MatrixHandler& matrix_handler, VectorHandler& vector_handler, std::mt19937& generator)
+        : memspace_(memspace), matrix_handler_(matrix_handler), vector_handler_(vector_handler), generator_(generator)
       {
       }
 
@@ -97,8 +109,10 @@ namespace ReSolve
       }
 
     private:
-      memory::MemorySpace memspace_;
-      MatrixHandler&      matrixHandler_;
+      memory::MemorySpace memspace_;       ///< Memory space used by the test.
+      MatrixHandler&      matrix_handler_; ///< Backend-specific matrix handler.
+      VectorHandler&      vector_handler_; ///< Backend-specific vector handler.
+      std::mt19937&       generator_;      ///< C++ random number generator.
 
       static constexpr real_type cholesky_tol = 1e-12;
       static constexpr real_type sccg_tol = 1e-12;
@@ -138,6 +152,6 @@ namespace ReSolve
         }
         return true;
       }
-    }; // class HykktPermutationTests
+    }; // class HykktSchurComplementConjugateGradientTests
   } // namespace tests
 } // namespace ReSolve

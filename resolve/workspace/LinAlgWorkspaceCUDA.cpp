@@ -204,6 +204,23 @@ namespace ReSolve
     matvec_setup_done_ = true;
   }
 
+  /**
+   * @brief Reset cached SpMV resources.
+   */
+  void LinAlgWorkspaceCUDA::resetMatvecSetup()
+  {
+    if (matvec_setup_done_)
+    {
+      cusparseDestroySpMat(mat_A_);
+      matvec_setup_done_ = false;
+    }
+    if (buffer_spmv_ != nullptr)
+    {
+      mem_.deleteOnDevice(buffer_spmv_);
+      buffer_spmv_ = nullptr;
+    }
+  }
+
   void LinAlgWorkspaceCUDA::initializeHandles()
   {
     cusparseCreate(&handle_cusparse_);
