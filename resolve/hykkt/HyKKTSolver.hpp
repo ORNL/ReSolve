@@ -1,3 +1,8 @@
+/**
+ * @file HyKKTSolver.hpp
+ * @author Andrew Xu (xua1@ornl.gov)
+ */
+
 #pragma once
 
 #include <resolve/Common.hpp>
@@ -45,7 +50,7 @@ namespace ReSolve
 
       void addHandlers(MatrixHandler* matrixHandler, VectorHandler* vectorHandler);
 
-      int solve();
+      real_type solve();
 
     private:
       void setupParameters();
@@ -68,11 +73,10 @@ namespace ReSolve
       
       void recoverSolution();
       void setupSolutionCheck();
-      int checkError();
+      real_type checkError();
 
       static constexpr int ruiz_its_ = 2;
-      static constexpr double norm_tol_ = 1e-2;
-      static constexpr double tol_ = 1e-12;
+      static constexpr double cholesky_tol_ = 1e-12;
       
       real_type gamma_; // gamma value used in HYKKT
 
@@ -103,9 +107,9 @@ namespace ReSolve
       matrix::Csr* Dx_{nullptr}; // nx x nx
       matrix::Csr* Ds_{nullptr}; // md x md
       matrix::Csr* J_{nullptr}; // mc x nx
-      matrix::Csr* J_tr_{nullptr}; // mx x nc
+      matrix::Csr* J_tr_{nullptr}; // nx x mc
       matrix::Csr* Jd_{nullptr}; // md x nx
-      matrix::Csr* Jd_tr_{nullptr}; // mx x nd
+      matrix::Csr* Jd_tr_{nullptr}; // nx x md
 
       // Blocks of input vector (RHS) r
       vector::Vector* rx_{nullptr}; // Shape: nx

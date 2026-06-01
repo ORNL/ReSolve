@@ -86,20 +86,20 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
   //   source_dir + std::string("/HyKKTSolverTestMatrices/block_ryd_ACTIVSg200_AC_10.mtx"),
   //   gamma
   // );
-  // result += test.testSolver(
-  //   25910, 6412, 16933,
-  //   38469, 38469, 6412, 86139, 12824,
-  //   source_dir + std::string("/HyKKTSolverTestMatrices/block_H_matrix_ACTIVSg2000_AC_09.mtx"),
-  //   source_dir + std::string("/HyKKTSolverTestMatrices/block_Dx_matrix_ACTIVSg2000_AC_09.mtx"),
-  //   source_dir + std::string("/HyKKTSolverTestMatrices/block_Dd_matrix_ACTIVSg2000_AC_09.mtx"),
-  //   source_dir + std::string("/HyKKTSolverTestMatrices/block_J_matrix_ACTIVSg2000_AC_09.mtx"),
-  //   source_dir + std::string("/HyKKTSolverTestMatrices/block_Jd_matrix_ACTIVSg2000_AC_09.mtx"),
-  //   source_dir + std::string("/HyKKTSolverTestMatrices/block_rx_ACTIVSg2000_AC_09.mtx"),
-  //   source_dir + std::string("/HyKKTSolverTestMatrices/block_rs_ACTIVSg2000_AC_09.mtx"),
-  //   source_dir + std::string("/HyKKTSolverTestMatrices/block_ry_ACTIVSg2000_AC_09.mtx"),
-  //   source_dir + std::string("/HyKKTSolverTestMatrices/block_ryd_ACTIVSg2000_AC_09.mtx"),
-  //   gamma
-  // );
+  result += test.testSolver(
+    25910, 6412, 16933,
+    38469, 38469, 6412, 86139, 12824,
+    source_dir + std::string("/HyKKTSolverTestMatrices/block_H_matrix_ACTIVSg2000_AC_09.mtx"),
+    source_dir + std::string("/HyKKTSolverTestMatrices/block_Dx_matrix_ACTIVSg2000_AC_09.mtx"),
+    source_dir + std::string("/HyKKTSolverTestMatrices/block_Dd_matrix_ACTIVSg2000_AC_09.mtx"),
+    source_dir + std::string("/HyKKTSolverTestMatrices/block_J_matrix_ACTIVSg2000_AC_09.mtx"),
+    source_dir + std::string("/HyKKTSolverTestMatrices/block_Jd_matrix_ACTIVSg2000_AC_09.mtx"),
+    source_dir + std::string("/HyKKTSolverTestMatrices/block_rx_ACTIVSg2000_AC_09.mtx"),
+    source_dir + std::string("/HyKKTSolverTestMatrices/block_rs_ACTIVSg2000_AC_09.mtx"),
+    source_dir + std::string("/HyKKTSolverTestMatrices/block_ry_ACTIVSg2000_AC_09.mtx"),
+    source_dir + std::string("/HyKKTSolverTestMatrices/block_ryd_ACTIVSg2000_AC_09.mtx"),
+    gamma
+  );
   result += test.testSolver(
     25910, 6412, 16933,
     38469, 38469, 6412, 86139, 12824,

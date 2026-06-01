@@ -8,7 +8,7 @@
 #pragma once
 
 #include <resolve/Common.hpp>
-
+#include <stdio.h>
 namespace ReSolve
 {
   using index_type = ReSolve::index_type;

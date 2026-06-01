@@ -76,7 +76,8 @@ namespace ReSolve
       double beta_product = 0.0;
       double alpha_sum    = 1.0;
 
-      if (!(*E_ptr_))
+      // If running compute() for the first time (first iteration)
+      if (!allocated_)
       {
         size_t temp_buffer_size_1 = 0;
         size_t temp_buffer_size_2 = 0;
@@ -198,7 +199,7 @@ namespace ReSolve
                                   CUSPARSE_SPGEMM_DEFAULT,
                                   spgemm_desc_);
 
-      if (!(*E_ptr_))
+      if (!allocated_)
       {
         // Begin set up for addition
         mem_.allocateArrayOnDevice(&E_row_ptr_, (index_type) n_ + 1);
@@ -249,6 +250,8 @@ namespace ReSolve
 
         (*E_ptr_) = new matrix::Csr((index_type) n_, D_->getNumColumns(), (index_type) E_nnz_);
         (*E_ptr_)->setDataPointers(E_row_ptr_, E_col_ind_, E_val_, memory::DEVICE);
+
+        allocated_ = true;
       }
 
       cusparseDcsrgeam2(handle_,

@@ -16,7 +16,7 @@
 #include <resolve/matrix/io.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <tests/unit/TestBase.hpp>
-
+#include <resolve/matrix/Coo.hpp>
 namespace ReSolve
 {
   namespace tests
@@ -47,6 +47,43 @@ namespace ReSolve
       virtual ~HykktSolverTests()
       {
       }
+      int coo2csr(ReSolve::matrix::Coo* A_coo, ReSolve::matrix::Csr* A_csr, ReSolve::memory::MemorySpace memspace)
+{
+  index_type n            = A_coo->getNumRows();
+  index_type m            = A_coo->getNumColumns();
+  index_type nnz          = A_coo->getNnz();
+  bool       is_symmetric = A_coo->symmetric();
+  bool       is_expanded  = A_coo->expanded();
+
+  // First make sure the input is correct or the test fails.
+  if (n != A_csr->getNumRows() || m != A_csr->getNumColumns() || nnz != A_csr->getNnz() || is_symmetric != A_csr->symmetric() || is_expanded != A_csr->expanded())
+  {
+    std::cout << "COO and CSR matrices don't match!\n";
+    return 1;
+  }
+
+  /* const */ index_type* rows_coo = A_coo->getRowData(ReSolve::memory::HOST);
+  /* const */ index_type* cols_coo = A_coo->getColData(ReSolve::memory::HOST);
+  /* const */ real_type*  vals_coo = A_coo->getValues(ReSolve::memory::HOST);
+  index_type*             row_csr  = new index_type[n + 1];
+  row_csr[0]                       = 0;
+  index_type i_csr                 = 0;
+  for (index_type i = 1; i < nnz; ++i)
+  {
+    if (rows_coo[i] != rows_coo[i - 1])
+    {
+      i_csr++;
+      row_csr[i_csr] = i;
+    }
+  }
+  row_csr[n] = nnz;
+  A_csr->copyFromExternal(row_csr, cols_coo, vals_coo, ReSolve::memory::HOST, memspace);
+
+  delete[] row_csr;
+
+  return 0;
+}
+
 
       /**
        * @brief Test the HyKKTSolver implementation with matrices provided by the user or by runHykktSolverTests.cpp
@@ -86,16 +123,14 @@ namespace ReSolve
 
         // The .mtx file readers write into host accessible memory.
         // Load test data into HOST first, then sync to DEVICE for CUDA and HIP backends.
-        matrix::Csr* H = new matrix::Csr(nx, nx, H_nnz);
-        matrix::Csr* Dx = new matrix::Csr(nx, nx, Dx_nnz); // H and Dx need to be combined. The test matrices doesn't have Dx, so we'll reuse H as Dx
-        matrix::Csr* Ds = new matrix::Csr(md, md, Ds_nnz);
-        matrix::Csr* J = new matrix::Csr(mc, nx, J_nnz);
-        matrix::Csr* Jd = new matrix::Csr(md, nx, Jd_nnz);
-        H->allocateMatrixData(memory::HOST);
-        Dx->allocateMatrixData(memory::HOST);
-        Ds->allocateMatrixData(memory::HOST);
-        J->allocateMatrixData(memory::HOST);
-        Jd->allocateMatrixData(memory::HOST);
+        // matrix::Coo* H_coo = io::createCooFromFile(H_file, true);
+        matrix::Csr* H = new matrix::Csr(H_coo->getNumRows(), H_coo->getNumColumns(), H_coo->getNnz(), true, true);
+        // H->allocateMatrixData(memspace_);
+        // H->copyFromExternal(H_coo->getRowData(memspace_), H_coo->getColData(memspace_), H_coo->getValues(memspace_), memspace_, memspace_);
+        matrix::Csr* Dx = io::createCsrFromFile(Dx_file, false);
+        matrix::Csr* Ds = io::createCsrFromFile(Ds_file, false);
+        matrix::Csr* J = io::createCsrFromFile(J_file, false);
+        matrix::Csr* Jd = io::createCsrFromFile(Jd_file, false);
         if (memspace_ == memory::DEVICE)
         {
           H->syncData(memory::DEVICE);
@@ -106,14 +141,10 @@ namespace ReSolve
         }
 
         // RHS vector blocks
-        vector::Vector* rx = new vector::Vector(nx);
-        vector::Vector* rs = new vector::Vector(md);
-        vector::Vector* ry = new vector::Vector(mc);
-        vector::Vector* ryd = new vector::Vector(md);
-        rx->allocate(memory::HOST);
-        rs->allocate(memory::HOST);
-        ry->allocate(memory::HOST);
-        ryd->allocate(memory::HOST);
+        vector::Vector* rx = io::createVectorFromFile(rx_file);
+        vector::Vector* rs = io::createVectorFromFile(rs_file);
+        vector::Vector* ry = io::createVectorFromFile(ry_file);
+        vector::Vector* ryd = io::createVectorFromFile(ryd_file);
         if (memspace_ == memory::DEVICE)
         {
           rx->syncData(memory::DEVICE);
@@ -136,7 +167,6 @@ namespace ReSolve
         hykktSolver.setMatrixBlocks(H, Dx, Ds, J, Jd);
         hykktSolver.setRHSBlocks(rx, rs, ry, ryd);
         hykktSolver.setLHSPointers(x, s, y, yd);
-        hykktSolver.readMatrixFiles(H_file, Dx_file, Ds_file, J_file, Jd_file, rx_file, rs_file, ry_file, ryd_file);
         hykktSolver.setGamma(gamma);
         hykktSolver.addHandlers(&matrixHandler_, &vectorHandler_);
 
