@@ -18,8 +18,11 @@ namespace ReSolve
      * @param beta[in] - Scalar multiplier for the sum.
      */
     SpGEMMCpu::SpGEMMCpu(real_type alpha, real_type beta)
-      : alpha_(alpha), beta_(beta)
     {
+      alpha_[0] = alpha;
+      alpha_[1] = 0.0;
+      beta_[0] = beta;
+      beta_[1] = 0.0;
       cholmod_start(&Common_);
 
       A_ = nullptr;
@@ -83,12 +86,12 @@ namespace ReSolve
      */
     void SpGEMMCpu::compute()
     {
-      cholmod_sparse* C_chol = cholmod_ssmult(B_, A_, 0, 1, 0, &Common_);
-      cholmod_sparse* E_chol = cholmod_add(C_chol, D_, &alpha_, &beta_, 1, 0, &Common_);
+      cholmod_sparse* C_chol = cholmod_ssmult(B_, A_, 0, 1, 0, &Common_); // B_ and A_ are reversed because cholmod_sparse is a CSC matrix
+      cholmod_sparse* E_chol = cholmod_add(C_chol, D_, alpha_, beta_, 1, 0, &Common_);
 
       if (!(*E_ptr_))
       {
-        *E_ptr_ = new matrix::Csr((index_type) E_chol->nrow, (index_type) E_chol->ncol, (index_type) E_chol->nzmax);
+        *E_ptr_ = new matrix::Csr((index_type) E_chol->ncol, (index_type) E_chol->nrow, (index_type) E_chol->nzmax);
       }
       else
       {
@@ -102,6 +105,9 @@ namespace ReSolve
                                   static_cast<real_type*>(E_chol->x),
                                   memory::HOST,
                                   memory::HOST);
+      
+      cholmod_free_sparse(&C_chol, &Common_);
+      cholmod_free_sparse(&E_chol, &Common_);
     }
 
     /**
@@ -111,8 +117,8 @@ namespace ReSolve
      */
     cholmod_sparse* SpGEMMCpu::allocateCholmodType(matrix::Csr* A)
     {
-      return cholmod_allocate_sparse((size_t) A->getNumRows(),
-                                     (size_t) A->getNumColumns(),
+      return cholmod_allocate_sparse((size_t) A->getNumColumns(),
+                                     (size_t) A->getNumRows(),
                                      (size_t) A->getNnz(),
                                      1,
                                      1,

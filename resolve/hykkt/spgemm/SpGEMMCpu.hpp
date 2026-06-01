@@ -25,8 +25,8 @@ namespace ReSolve
     private:
       MemoryHandler mem_;
 
-      real_type alpha_;
-      real_type beta_;
+      real_type alpha_[2];
+      real_type beta_[2];
 
       cholmod_common Common_;
 

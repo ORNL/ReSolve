@@ -175,6 +175,8 @@ namespace ReSolve
     void Permutation::vecMapRC(index_type* perm_i, index_type* perm_j)
     {
 
+      double a;
+      a++;
       cpuImpl_->makeVecMapRC(n_hes_, hes_i_, hes_j_, perm_, rev_perm_, perm_i, perm_j, perm_map_hes_);
       if (memspace_ == memory::DEVICE)
       {

@@ -40,6 +40,8 @@ namespace ReSolve
       cusparseHandle_t      handle_      = nullptr;
       cusparseSpGEMMDescr_t spgemm_desc_ = nullptr;
 
+      bool allocated_ = false;
+
       size_t buffer_size_4_ = 0;
       size_t buffer_size_5_ = 0;
       void*  buffer_4_      = nullptr;
