@@ -369,7 +369,7 @@ namespace ReSolve
      *
      * @todo Decide how to allow user to configure grid and block sizes.
      */
-    void matrix_row_sums(index_type        n,
+    void matrixRowSums(index_type        n,
                          index_type        nnz,
                          const index_type* a_ia,
                          const real_type*  a_val,

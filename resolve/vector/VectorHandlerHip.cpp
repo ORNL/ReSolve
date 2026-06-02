@@ -88,6 +88,7 @@ namespace ReSolve
       out::error() << "scal returned error code " << st << "\n";
     }
     x->setDataUpdated(memory::DEVICE);
+    mem_.deviceSynchronize();
   }
 
   /**
@@ -109,7 +110,7 @@ namespace ReSolve
       workspace_->setNormBufferState(true);
     }
     real_type norm{0.0};
-    hip::vector_inf_norm(x->getSize(),
+    hip::vectorInfNorm(x->getSize(),
                          x->getData(memory::DEVICE),
                          workspace_->getNormBuffer(),
                          &norm);
@@ -135,6 +136,7 @@ namespace ReSolve
                   y->getData(memory::DEVICE),
                   1);
     y->setDataUpdated(memory::DEVICE);
+    mem_.deviceSynchronize();
   }
 
   /**
@@ -257,6 +259,7 @@ namespace ReSolve
                     size);                      // ldc
     }
     y->setDataUpdated(memory::DEVICE);
+    mem_.deviceSynchronize();
   }
 
   /**
@@ -309,6 +312,7 @@ namespace ReSolve
                     k);                           // ldc
     }
     res->setDataUpdated(memory::DEVICE);
+    mem_.deviceSynchronize();
   }
 
   /**
@@ -330,7 +334,8 @@ namespace ReSolve
     real_type* vec_data  = vec->getData(memory::DEVICE);
     index_type n         = vec->getSize();
     hip::scale(n, diag_data, vec_data);
-    vec->setDataUpdated(memory::DEVICE);
+    vec->setDataUpdated(memory::DEVICE);   
+    mem_.deviceSynchronize();
   }
 
   /**
@@ -352,6 +357,7 @@ namespace ReSolve
     index_type n         = vec->getSize();
     hip::diagSolve(n, diag_data, vec_data);
     vec->setDataUpdated(memory::DEVICE);
+    mem_.deviceSynchronize();
     return 0;
   }
 

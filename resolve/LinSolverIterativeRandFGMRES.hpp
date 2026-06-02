@@ -128,7 +128,6 @@ namespace ReSolve
     real_type    one_over_k_{1.0};
 
     index_type         k_rand_{0}; ///< size of sketch space. We need to know it so we can allocate S!
-    MemoryHandler      mem_;       ///< Device memory manager object
     SketchingHandler*  sketching_handler_{nullptr};
     SketchingMethod    sketching_method_;
     memory::DeviceType device_type_{memory::NONE};

@@ -36,7 +36,7 @@ namespace ReSolve
                     const real_type*  diag);
 
     // needed for matrix inf nrm
-    void matrix_row_sums(index_type        n,
+    void matrixRowSums(index_type        n,
                          index_type        nnz,
                          const index_type* a_ia,
                          const real_type*  a_val,
