@@ -33,7 +33,6 @@ namespace ReSolve
 
       void readMatrixFiles(
           std::istream& H_file,
-          std::istream& Dx_file,
           std::istream& Ds_file,
           std::istream& J_file,
           std::istream& Jd_file,
@@ -42,7 +41,7 @@ namespace ReSolve
           std::istream& ry_file,
           std::istream& ryd_file);
           
-      void setMatrixBlocks(matrix::Csr* H, matrix::Csr* Dx, matrix::Csr* Ds, matrix::Csr* J, matrix::Csr* Jd);
+      void setMatrixBlocks(matrix::Csr* H, matrix::Csr* Ds, matrix::Csr* J, matrix::Csr* Jd);
       void setRHSBlocks(vector::Vector* rx, vector::Vector* rs, vector::Vector* ry, vector::Vector* ryd);
       void setLHSPointers(vector::Vector* x, vector::Vector* s, vector::Vector* y, vector::Vector* yd);
 
@@ -104,7 +103,6 @@ namespace ReSolve
 
       // Blocks of input matrix K
       matrix::Csr* H_{nullptr}; // nx x nx
-      matrix::Csr* Dx_{nullptr}; // nx x nx
       matrix::Csr* Ds_{nullptr}; // md x md
       matrix::Csr* J_{nullptr}; // mc x nx
       matrix::Csr* J_tr_{nullptr}; // nx x mc

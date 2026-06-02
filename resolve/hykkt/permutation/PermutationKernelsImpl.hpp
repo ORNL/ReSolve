@@ -313,6 +313,8 @@ namespace ReSolve
                         index_type*       perm_cols,
                         index_type*       perm_map)
       {
+        // n = perm size = 25910
+        // perm_map: nnz_hes_
         perm_rows[0]     = 0;
         index_type count = 0;
         index_type idx;
@@ -333,6 +335,7 @@ namespace ReSolve
           insertionSort(row_len, &perm_cols[count], &perm_map[count]);
           count += row_len;
         }
+        // FOR DEBUGGING. count at the end: 293049
       }
     }; // class
   } // namespace hykkt

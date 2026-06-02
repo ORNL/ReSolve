@@ -94,12 +94,10 @@ namespace ReSolve
                              index_type md,
                              index_type mc,
                              index_type H_nnz,
-                             index_type Dx_nnz,
                              index_type Ds_nnz,
                              index_type J_nnz,
                              index_type Jd_nnz,
                              const std::string& H_file_name,
-                             const std::string& Dx_file_name,
                              const std::string& Ds_file_name,
                              const std::string& J_file_name,
                              const std::string& Jd_file_name,
@@ -112,7 +110,6 @@ namespace ReSolve
         constexpr double tol = 1e-12;
         
         std::ifstream H_file(H_file_name);
-        std::ifstream Dx_file(Dx_file_name);
         std::ifstream Ds_file(Ds_file_name);
         std::ifstream J_file(J_file_name);
         std::ifstream Jd_file(Jd_file_name);
@@ -124,18 +121,17 @@ namespace ReSolve
         // The .mtx file readers write into host accessible memory.
         // Load test data into HOST first, then sync to DEVICE for CUDA and HIP backends.
         // matrix::Coo* H_coo = io::createCooFromFile(H_file, true);
-        matrix::Csr* H = io::createCsrFromFile(H_file, true);
+        matrix::Csr* H = io::createCsrFromFile(H_file, false);
         // matrix::Csr* H = new matrix::Csr(H_coo->getNumRows(), H_coo->getNumColumns(), H_coo->getNnz(), true, true);
-        // H->allocateMatrixData(memspace_);
-        // H->copyFromExternal(H_coo->getRowData(memspace_), H_coo->getColData(memspace_), H_coo->getValues(memspace_), memspace_, memspace_);
-        matrix::Csr* Dx = io::createCsrFromFile(Dx_file, false);
+        // H->allocateMatrixData(memory::HOST); // Later: copy to device directly
+        // coo2csr(H_coo, H, memory::HOST);
+        // H->copyFromExternal(H_coo->getRowData(memory::HOST), H_coo->getColData(memory::HOST), H_coo->getValues(memory::HOST), memory::HOST, memory::HOST);
         matrix::Csr* Ds = io::createCsrFromFile(Ds_file, false);
         matrix::Csr* J = io::createCsrFromFile(J_file, false);
         matrix::Csr* Jd = io::createCsrFromFile(Jd_file, false);
         if (memspace_ == memory::DEVICE)
         {
           H->syncData(memory::DEVICE);
-          Dx->syncData(memory::DEVICE);
           Ds->syncData(memory::DEVICE);
           J->syncData(memory::DEVICE);
           Jd->syncData(memory::DEVICE);
@@ -165,7 +161,7 @@ namespace ReSolve
         yd->allocate(memspace_);
 
         hykkt::HyKKTSolver hykktSolver(nx, md, mc, memspace_);
-        hykktSolver.setMatrixBlocks(H, Dx, Ds, J, Jd);
+        hykktSolver.setMatrixBlocks(H, Ds, J, Jd);
         hykktSolver.setRHSBlocks(rx, rs, ry, ryd);
         hykktSolver.setLHSPointers(x, s, y, yd);
         hykktSolver.setGamma(gamma);
@@ -176,12 +172,11 @@ namespace ReSolve
         TestStatus  status;
         std::string testname(__func__);
         index_type N = nx + mc + 2 * md;
-        index_type nnz = H_nnz + Dx_nnz + Ds_nnz + J_nnz + Jd_nnz;
+        index_type nnz = H_nnz + Ds_nnz + J_nnz + Jd_nnz;
         testname += " N=" + std::to_string(N) + ", nnz =" + std::to_string(nnz);
         status *= validateResult(error, tol);
 
         delete H;
-        delete Dx;
         delete Ds;
         delete J;
         delete Jd;

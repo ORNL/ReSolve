@@ -66,14 +66,13 @@ namespace ReSolve {
    * @param file names for different components of KKT system
    *        with same nonzero structure
    *
-   * @post H_, Dx_, Ds_, J_, Jd_, rx_, rs_, ry_,
+   * @post H_, Ds_, J_, Jd_, rx_, rs_, ry_,
    *       ryd_ have new values for the system in a following
    *       solver iteration with same nonzero structure as
    *       previous iterations
    */
   void hykkt::HyKKTSolver::readMatrixFiles(
       std::istream& H_file,
-      std::istream& Dx_file,
       std::istream& Ds_file,
       std::istream& J_file,
       std::istream& Jd_file,
@@ -83,7 +82,6 @@ namespace ReSolve {
       std::istream& ryd_file)
   {
     io::updateMatrixFromFile(H_file, H_); // is_expand_symmetric?
-    io::updateMatrixFromFile(Dx_file, Dx_);
     io::updateMatrixFromFile(Ds_file, Ds_);
     io::updateMatrixFromFile(J_file, J_);
     io::updateMatrixFromFile(Jd_file, Jd_); // Jd_tr_ will be populated later
@@ -96,7 +94,6 @@ namespace ReSolve {
     if (memspace_ == memory::DEVICE)
     {
       H_->syncData(memory::DEVICE);
-      Dx_->syncData(memory::DEVICE);
       Ds_->syncData(memory::DEVICE);
       J_->syncData(memory::DEVICE);
       Jd_->syncData(memory::DEVICE);
@@ -117,7 +114,6 @@ namespace ReSolve {
    * responsibility to supply and later delete that memory.
    * 
    * @param[in] H - Pointer to the Hessian matrix block (nx x nx).
-   * @param[in] Dx - Pointer to the Dx matrix block (nx x nx).
    * @param[in] Ds - Pointter to the slack variables derivatives matrix block
    * (md x md).
    * @param[in] J - Pointer to the equality constraints Jacobian block
@@ -125,10 +121,9 @@ namespace ReSolve {
    * @param[in] Jd - Pointer to the inequality constraints Jacobian block
    * (md x nx)
    */
-  void hykkt::HyKKTSolver::setMatrixBlocks(matrix::Csr* H, matrix::Csr* Dx, matrix::Csr* Ds, matrix::Csr* J, matrix::Csr* Jd)
+  void hykkt::HyKKTSolver::setMatrixBlocks(matrix::Csr* H, matrix::Csr* Ds, matrix::Csr* J, matrix::Csr* Jd)
   {
     H_ = H;
-    Dx_ = Dx;
     Ds_ = Ds;
     J_ = J;
     Jd_ = Jd;
@@ -426,24 +421,27 @@ namespace ReSolve {
     if (memspace_ == memory::DEVICE)
     {
       HGam_->syncData(memory::HOST);
+      J_tr_->syncData(memory::HOST);
+
+      HGam_perm_->allocateMatrixData(memory::DEVICE);
+      J_perm_->allocateMatrixData(memory::DEVICE);
+      J_tr_perm_->allocateMatrixData(memory::DEVICE);
     }
 
     // These permutation steps are device-only
-    permutation_ = new Permutation(nx_, mc_, H_->getNnz(), J_->getNnz(), memspace_);
+    permutation_ = new Permutation(nx_, mc_, HGam_->getNnz(), J_->getNnz(), memspace_);
     permutation_->addMatrixInfo(HGam_, J_, J_tr_);
     permutation_->symAmd();
     permutation_->invertPerm();
 
     permutation_->vecMapRC(HGam_perm_->getRowData(memory::HOST), HGam_perm_->getColData(memory::HOST));
     HGam_perm_->setUpdated(memory::HOST);
+    
     permutation_->vecMapC(J_perm_->getColData(memory::HOST));
-
-    if (memspace_ == memory::DEVICE)
-    {
-      J_tr_->syncData(memory::HOST);
-    }
+    J_perm_->setUpdated(memory::HOST);
 
     permutation_->vecMapR(J_tr_perm_->getRowData(memory::HOST), J_tr_perm_->getColData(memory::HOST));
+    J_tr_perm_->setUpdated(memory::HOST);
 
     if (memspace_ == memory::DEVICE)
     {

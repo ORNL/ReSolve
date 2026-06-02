@@ -170,7 +170,7 @@ namespace ReSolve
     {
       if (!file)
       {
-        Logger::error() << "Empty input to createCooFromFile function ... \n"
+        Logger::error() << "Empty input to createCsrFromFile function ... \n"
                         << std::endl;
         return nullptr;
       }
@@ -182,6 +182,10 @@ namespace ReSolve
       std::list<MatrixElementTriplet> tmp;
 
       createMatrixFromFileAsList(file, is_expand_symmetric, tmp, n, m, nnz, symmetric, expanded);
+      if (nnz == 0)
+      {
+        Logger::error() << "nnz is 0.\n";
+      }
 
       // Create matrix
       matrix::Coo* B = new matrix::Coo(n, m, nnz, symmetric, expanded);
@@ -221,6 +225,11 @@ namespace ReSolve
 
       createMatrixFromFileAsList(file, is_expand_symmetric, tmp, n, m, nnz, symmetric, expanded);
 
+      if (nnz == 0)
+      {
+        Logger::error() << "nnz is 0.\n";
+      }
+      
       // Create matrix
       matrix::Csr* A = new matrix::Csr(n, m, nnz, symmetric, expanded);
       A->allocateMatrixData(memory::HOST);

@@ -89,17 +89,14 @@ namespace ReSolve
       cholmod_sparse* C_chol = cholmod_ssmult(B_, A_, 0, 1, 0, &Common_); // B_ and A_ are reversed because cholmod_sparse is a CSC matrix
       cholmod_sparse* E_chol = cholmod_add(C_chol, D_, alpha_, beta_, 1, 0, &Common_);
 
-      if (!(*E_ptr_))
-      {
-        *E_ptr_ = new matrix::Csr((index_type) E_chol->ncol, (index_type) E_chol->nrow, (index_type) E_chol->nzmax);
-      }
-      else
-      {
-        (*E_ptr_)->destroyMatrixData(memory::HOST);
-      }
-
       // Previous data must be de-allocated and new data copied.
       // Cholmod does not allow for reuse of arrays.
+      if (*E_ptr_)
+      {
+        delete *E_ptr_;
+      }
+      index_type new_nnz = static_cast<index_type*>(E_chol->p)[E_chol->ncol];
+      *E_ptr_ = new matrix::Csr((index_type) E_chol->ncol, (index_type) E_chol->nrow, new_nnz);
       (*E_ptr_)->copyFromExternal(static_cast<index_type*>(E_chol->p),
                                   static_cast<index_type*>(E_chol->i),
                                   static_cast<real_type*>(E_chol->x),

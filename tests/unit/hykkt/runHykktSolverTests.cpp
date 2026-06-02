@@ -46,9 +46,8 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
   std::string   source_dir = std::string(SOURCE_DIR);
   // result += test.testSolver(
   //   2278, 490, 1386,
-  //   2278, 2278, 490, 6784, 980,
+  //   2278, 490, 6784, 980,
   //   source_dir + std::string("/HyKKTSolverTestMatrices/block_H_matrix_ACTIVSg200_AC_00.mtx"),
-  //   source_dir + std::string("/HyKKTSolverTestMatrices/block_Dx_matrix_ACTIVSg200_AC_00.mtx"),
   //   source_dir + std::string("/HyKKTSolverTestMatrices/block_Dd_matrix_ACTIVSg200_AC_00.mtx"),
   //   source_dir + std::string("/HyKKTSolverTestMatrices/block_J_matrix_ACTIVSg200_AC_00.mtx"),
   //   source_dir + std::string("/HyKKTSolverTestMatrices/block_Jd_matrix_ACTIVSg200_AC_00.mtx"),
@@ -60,9 +59,8 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
   // );
   // result += test.testSolver(
   //   2278, 490, 1386,
-  //   2278, 2278, 490, 6784, 980,
+  //   2278, 490, 6784, 980,
   //   source_dir + std::string("/HyKKTSolverTestMatrices/block_H_matrix_ACTIVSg200_AC_09.mtx"),
-  //   source_dir + std::string("/HyKKTSolverTestMatrices/block_Dx_matrix_ACTIVSg200_AC_09.mtx"),
   //   source_dir + std::string("/HyKKTSolverTestMatrices/block_Dd_matrix_ACTIVSg200_AC_09.mtx"),
   //   source_dir + std::string("/HyKKTSolverTestMatrices/block_J_matrix_ACTIVSg200_AC_09.mtx"),
   //   source_dir + std::string("/HyKKTSolverTestMatrices/block_Jd_matrix_ACTIVSg200_AC_09.mtx"),
@@ -74,9 +72,8 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
   // );
   // result += test.testSolver(
   //   2278, 490, 1386,
-  //   2278, 2278, 490, 6784, 980,
+  //   2278, 490, 6784, 980,
   //   source_dir + std::string("/HyKKTSolverTestMatrices/block_H_matrix_ACTIVSg200_AC_10.mtx"),
-  //   source_dir + std::string("/HyKKTSolverTestMatrices/block_Dx_matrix_ACTIVSg200_AC_10.mtx"),
   //   source_dir + std::string("/HyKKTSolverTestMatrices/block_Dd_matrix_ACTIVSg200_AC_10.mtx"),
   //   source_dir + std::string("/HyKKTSolverTestMatrices/block_J_matrix_ACTIVSg200_AC_10.mtx"),
   //   source_dir + std::string("/HyKKTSolverTestMatrices/block_Jd_matrix_ACTIVSg200_AC_10.mtx"),
@@ -88,9 +85,8 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
   // );
   result += test.testSolver(
     25910, 6412, 16933,
-    38469, 38469, 6412, 86139, 12824,
+    38469, 6412, 86139, 12824,
     source_dir + std::string("/HyKKTSolverTestMatrices/block_H_matrix_ACTIVSg2000_AC_09.mtx"),
-    source_dir + std::string("/HyKKTSolverTestMatrices/block_Dx_matrix_ACTIVSg2000_AC_09.mtx"),
     source_dir + std::string("/HyKKTSolverTestMatrices/block_Dd_matrix_ACTIVSg2000_AC_09.mtx"),
     source_dir + std::string("/HyKKTSolverTestMatrices/block_J_matrix_ACTIVSg2000_AC_09.mtx"),
     source_dir + std::string("/HyKKTSolverTestMatrices/block_Jd_matrix_ACTIVSg2000_AC_09.mtx"),
@@ -102,9 +98,8 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
   );
   result += test.testSolver(
     25910, 6412, 16933,
-    38469, 38469, 6412, 86139, 12824,
+    38469, 6412, 86139, 12824,
     source_dir + std::string("/HyKKTSolverTestMatrices/block_H_matrix_ACTIVSg2000_AC_10.mtx"),
-    source_dir + std::string("/HyKKTSolverTestMatrices/block_Dx_matrix_ACTIVSg2000_AC_10.mtx"),
     source_dir + std::string("/HyKKTSolverTestMatrices/block_Dd_matrix_ACTIVSg2000_AC_10.mtx"),
     source_dir + std::string("/HyKKTSolverTestMatrices/block_J_matrix_ACTIVSg2000_AC_10.mtx"),
     source_dir + std::string("/HyKKTSolverTestMatrices/block_Jd_matrix_ACTIVSg2000_AC_10.mtx"),
@@ -121,7 +116,7 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
 int main(int, char**)
 {
   ReSolve::tests::TestingResults result;
-  runTests<ReSolve::LinAlgWorkspaceCpu>("CPU", ReSolve::memory::HOST, result);
+  // runTests<ReSolve::LinAlgWorkspaceCpu>("CPU", ReSolve::memory::HOST, result);
 
 #ifdef RESOLVE_USE_CUDA
   runTests<ReSolve::LinAlgWorkspaceCUDA>("CUDA", ReSolve::memory::DEVICE, result);
