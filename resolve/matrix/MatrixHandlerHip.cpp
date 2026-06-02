@@ -78,8 +78,13 @@ namespace ReSolve
 
     rocsparse_handle handle_rocsparse = workspace_->getRocsparseHandle();
 
-    // Rebuild cached SpMV setup if the matrix object or dimensions changed.
-    bool matrix_changed = (matrix_for_matvec_ != A) || (matvec_num_rows_ != A->getNumRows()) || (matvec_num_cols_ != A->getNumColumns()) || (matvec_nnz_ != A->getNnz());
+    // The workspace caches one backend SpMV setup and temporary buffer between
+    // matvec calls. SCCG can call matvec with different matrices, such as JC and
+    // JC^T, so the cached setup may no longer match the current matrix structure.
+    // Track the matrix pointer and dimensions/nnz so stale setup data is reset
+    // before running SpMV with a different matrix.
+    bool matrix_changed =
+        (matrix_for_matvec_ != A) || (matvec_num_rows_ != A->getNumRows()) || (matvec_num_cols_ != A->getNumColumns()) || (matvec_nnz_ != A->getNnz());
     if (matrix_changed || values_changed_)
     {
       workspace_->resetMatvecSetup();
