@@ -25,6 +25,7 @@
 - Removed unnecessary device synchronization and added where needed (HIP only calls).
 
 - Changed variable and function names to be more explanatory.
+
 - Added Developer Guide documentation for vector and matrix classes and handlers.
 
 ## Changes to Re::Solve in release 0.99.2
