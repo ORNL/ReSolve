@@ -123,7 +123,7 @@ namespace ReSolve
   int LinSolverDirectRocSolverRf::refactorize()
   {
     RESOLVE_RANGE_PUSH(__FUNCTION__);
-    int error_sum = 0;
+    int error_sum   = 0;
     status_rocblas_ = rocsolver_dcsrrf_refactlu(workspace_->getRocblasHandle(),
                                                 A_->getNumRows(),
                                                 A_->getNnz(),
@@ -153,7 +153,7 @@ namespace ReSolve
   int LinSolverDirectRocSolverRf::solve(vector_type* rhs)
   {
     RESOLVE_RANGE_PUSH(__FUNCTION__);
-    int error_sum = 0;
+    int error_sum   = 0;
     status_rocblas_ = rocsolver_dcsrrf_solve(workspace_->getRocblasHandle(),
                                              A_->getNumRows(),
                                              1,
@@ -184,7 +184,7 @@ namespace ReSolve
     RESOLVE_RANGE_PUSH(__FUNCTION__);
     x->copyFromExternal(rhs->getData(ReSolve::memory::DEVICE), ReSolve::memory::DEVICE, ReSolve::memory::DEVICE);
     x->setDataUpdated(ReSolve::memory::DEVICE);
-    int error_sum = 0;
+    int error_sum   = 0;
     status_rocblas_ = rocsolver_dcsrrf_solve(workspace_->getRocblasHandle(),
                                              A_->getNumRows(),
                                              1,
