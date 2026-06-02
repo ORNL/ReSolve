@@ -111,9 +111,9 @@ namespace ReSolve
     }
     real_type norm{0.0};
     hip::vectorInfNorm(x->getSize(),
-                         x->getData(memory::DEVICE),
-                         workspace_->getNormBuffer(),
-                         &norm);
+                       x->getData(memory::DEVICE),
+                       workspace_->getNormBuffer(),
+                       &norm);
     return norm;
   }
 
@@ -334,7 +334,7 @@ namespace ReSolve
     real_type* vec_data  = vec->getData(memory::DEVICE);
     index_type n         = vec->getSize();
     hip::scale(n, diag_data, vec_data);
-    vec->setDataUpdated(memory::DEVICE);   
+    vec->setDataUpdated(memory::DEVICE);
     mem_.deviceSynchronize();
   }
 

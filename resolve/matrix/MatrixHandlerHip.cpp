@@ -177,16 +177,16 @@ namespace ReSolve
 
     mem_.deviceSynchronize();
     hip::matrixRowSums(A->getNumRows(),
-                         A->getNnz(),
-                         A->getRowData(memory::DEVICE),
-                         A->getValues(memory::DEVICE),
-                         d_r);
+                       A->getNnz(),
+                       A->getRowData(memory::DEVICE),
+                       A->getValues(memory::DEVICE),
+                       d_r);
     mem_.deviceSynchronize();
 
     hip::vectorInfNorm(A->getNumRows(),
-                         d_r,
-                         workspace_->getNormBuffer(),
-                         norm);
+                       d_r,
+                       workspace_->getNormBuffer(),
+                       norm);
     return 0;
   }
 

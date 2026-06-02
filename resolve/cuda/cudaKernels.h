@@ -37,10 +37,10 @@ namespace ReSolve
 
     // needed for matrix inf nrm
     void matrixRowSums(index_type        n,
-                         index_type        nnz,
-                         const index_type* a_ia,
-                         const real_type*  a_val,
-                         real_type*        result);
+                       index_type        nnz,
+                       const index_type* a_ia,
+                       const real_type*  a_val,
+                       real_type*        result);
 
   } // namespace cuda
 } // namespace ReSolve

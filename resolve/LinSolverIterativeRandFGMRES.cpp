@@ -221,7 +221,6 @@ namespace ReSolve
       vector_handler_->scal(t, vec_V_, memspace_);
       vector_handler_->scal(t, vec_S_, memspace_);
 
-
       // initialize norm history
       h_rs_[0] = rnorm;
       i        = -1;
@@ -243,7 +242,6 @@ namespace ReSolve
           vec_z.setData(vec_Z_->getData(0, memspace_), memspace_);
         }
         this->precV(&vec_v, &vec_z);
-
 
         // V_{i+1}=A*Z_i
         vec_v.setData(vec_V_->getData(i + 1, memspace_), memspace_);
