@@ -107,6 +107,5 @@ namespace ReSolve
     index_type   n_{0};
     bool         is_solver_set_{false};
 
-    MemoryHandler mem_; ///< Device memory manager object
   };
 } // namespace ReSolve
