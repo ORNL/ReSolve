@@ -212,6 +212,7 @@ namespace ReSolve
       }
     }
     x->setDataUpdated(memory::DEVICE);
+    mem_.deviceSynchronize();
   }
 
   /**

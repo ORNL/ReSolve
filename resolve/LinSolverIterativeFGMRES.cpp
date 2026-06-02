@@ -198,7 +198,6 @@ namespace ReSolve
           vec_z.setData(vec_Z_->getData(0, memspace_), memspace_);
         }
         this->precV(&vec_v, &vec_z);
-        mem_.deviceSynchronize();
 
         // V_{i+1}=A*Z_i
 
