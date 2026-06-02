@@ -37,8 +37,14 @@ namespace ReSolve
        * @param[in] vector_handler Reference to a vector handler for the selected backend.
        * @param[in] generator Reference to a C++ random number generator.
        */
-      HykktSchurComplementConjugateGradientTests(memory::MemorySpace memspace, MatrixHandler& matrix_handler, VectorHandler& vector_handler, std::mt19937& generator)
-        : memspace_(memspace), matrix_handler_(matrix_handler), vector_handler_(vector_handler), generator_(generator)
+      HykktSchurComplementConjugateGradientTests(memory::MemorySpace memspace,
+                                                 MatrixHandler&      matrix_handler,
+                                                 VectorHandler&      vector_handler,
+                                                 std::mt19937&       generator)
+        : memspace_(memspace),
+          matrix_handler_(matrix_handler),
+          vector_handler_(vector_handler),
+          generator_(generator)
       {
       }
 

@@ -58,6 +58,9 @@ namespace ReSolve
     LinAlgWorkspaceCUDA* workspace_{nullptr};
     bool                 values_changed_{true}; ///< Flag to indicate if matrix values changed since the cached SpMV setup.
 
+    // The handler does not own or copy this matrix. It only tracks which matrix
+    // structure was used to build the cached backend SpMV setup so the setup can
+    // be reset when a different matrix is passed to matvec().
     matrix::Sparse* matrix_for_matvec_{nullptr}; ///< Matrix used for cached SpMV setup.
     index_type      matvec_num_rows_{0};         ///< Number of rows in cached SpMV matrix.
     index_type      matvec_num_cols_{0};         ///< Number of columns in cached SpMV matrix.
