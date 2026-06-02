@@ -22,7 +22,7 @@
 
 - Improved coding guidelines for developers on floating point conventions.
 
-- Removed unnecessary device synchronization.
+- Removed unnecessary device synchronization and added where needed (HIP only calls).
 
 - Changed variable and function names to be more explanatory.
 - Added Developer Guide documentation for vector and matrix classes and handlers.
