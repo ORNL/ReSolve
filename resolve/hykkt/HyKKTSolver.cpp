@@ -32,7 +32,7 @@ namespace ReSolve {
 
   hykkt::HyKKTSolver::~HyKKTSolver()
   {
-    delete max_d_;
+    // delete max_d_; is owned by ruiz_ do not delete it here
     delete rxp_;
     delete hrxp_;
     delete schur_;
@@ -347,12 +347,13 @@ namespace ReSolve {
       // Htil_ (output): wrong
       ryd_scaled_->copyFromExternal(ryd_, memspace_, memspace_);
       vectorHandler_->scal(Ds_vals_, ryd_scaled_, memspace_);
-      vectorHandler_->axpy(ONE, ryd_scaled_, rs_, memspace_);
+      // ryd_scaled_ = rs + Ds * ryd
+      vectorHandler_->axpy(ONE, rs_, ryd_scaled_, memspace_);
+      rx_til_->copyFromExternal(rx_, memspace_, memspace_);
       matrixHandler_->matvec(Jd_tr_, ryd_scaled_, rx_til_, &ONE, &ONE, memspace_);
       // Jd_tr_->syncData(memory::HOST);
       spgemm_htil_->compute();
       // Htil_->syncData(memory::HOST);;
-      printf("i"); // HTIL IS WRONG
     }
     else
     {
@@ -362,6 +363,8 @@ namespace ReSolve {
                               H_->getNnz(),
                               memspace_,
                               memspace_);
+
+      rx_til_->copyFromExternal(rx_, memspace_, memspace_);
     }
   }
   
@@ -415,7 +418,7 @@ namespace ReSolve {
   
   void hykkt::HyKKTSolver::setupPermutation()
   {
-    HGam_perm_ = new matrix::Csr(nx_ + 1, nx_ + 1, HGam_->getNnz()); // Nnz not known at setupParameters(), so we have to create it here
+    HGam_perm_ = new matrix::Csr(nx_, nx_, HGam_->getNnz()); // Nnz not known at setupParameters(), so we have to create it here
     HGam_perm_->allocateMatrixData(memory::HOST);
 
     if (memspace_ == memory::DEVICE)
@@ -436,7 +439,14 @@ namespace ReSolve {
 
     permutation_->vecMapRC(HGam_perm_->getRowData(memory::HOST), HGam_perm_->getColData(memory::HOST));
     HGam_perm_->setUpdated(memory::HOST);
-    
+    index_type* j_rows      = J_->getRowData(memory::HOST);
+    index_type* j_perm_rows = J_perm_->getRowData(memory::HOST);
+
+    for (index_type i = 0; i <= J_->getNumRows(); ++i)
+    {
+      j_perm_rows[i] = j_rows[i];
+    }
+
     permutation_->vecMapC(J_perm_->getColData(memory::HOST));
     J_perm_->setUpdated(memory::HOST);
 
@@ -476,6 +486,7 @@ namespace ReSolve {
     permutation_->mapIndex(PERM_V,
                              rx_hat_->getData(memspace_),
                              rxp_->getData(memspace_));
+    rxp_->setDataUpdated(memspace_);
   }
   
   void hykkt::HyKKTSolver::setupHGammaFactorization()
@@ -504,14 +515,15 @@ namespace ReSolve {
   void hykkt::HyKKTSolver::setupConjugateGradient()
   {
     cholesky_->solve(hrxp_, rxp_);
-    schur_->setData(ry_->getData(memspace_), memspace_);
+    schur_->copyFromExternal(ry_, memspace_, memspace_);
     matrixHandler_->matvec(J_perm_, hrxp_, schur_, &ONE, &MINUS_ONE, memspace_);
     
     if (!allocated_)
     {
       sccg_ = new SchurComplementConjugateGradient(J_->getNumRows(), J_->getNumColumns(), cholesky_, memspace_, *matrixHandler_, *vectorHandler_);
     }
-    sccg_->addMatrixInfo(J_, J_tr_);
+    sccg_->addMatrixInfo(J_perm_, J_tr_perm_);
+    y_->setToZero(memspace_);
     sccg_->addVectorInfo(y_, schur_);
     sccg_->setup();
   }
@@ -577,6 +589,7 @@ namespace ReSolve {
     // this part is to recover delta_x
     cholesky_->solve(z_, rxp_);
     permutation_->mapIndex(REV_PERM_V, z_->getData(memspace_), x_->getData(memspace_));
+    x_->setDataUpdated(memspace_);
     
     // scale back delta_y and delta_x (every iteration)
     vectorHandler_->scal(max_d_, x_, 0, nx_, memspace_);
@@ -638,7 +651,7 @@ namespace ReSolve {
     {
       matrixHandler_->matvec(Jd_tr_, yd_, rx_, &MINUS_ONE, &ONE, memspace_);
     }
-    matrixHandler_->matvec(J_tr_, y_, rx_, &MINUS_ONE, &ONE, memspace_);
+    matrixHandler_->matvec(J_tr_copy_, y_, rx_, &MINUS_ONE, &ONE, memspace_);
     norm_resx_sq = vectorHandler_->dot(rx_, rx_, memspace_);
 
     // Calculate error in ry

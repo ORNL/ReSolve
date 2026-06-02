@@ -103,6 +103,9 @@ namespace ReSolve
     {
       using namespace constants;
 
+      // Makes r = b - S*x0 instead of r = -S*x0
+      r_.copyFromExternal(b_, memspace_, memspace_);
+
       matrix_handler_.matvec(jc_tr_, x0_, &y_, &ONE, &ZERO, memspace_);
       choleskySolver_->solve(&z_, &y_);
       matrix_handler_.matvec(jc_, &z_, &r_, &MINUS_ONE, &ONE, memspace_);
@@ -139,7 +142,7 @@ namespace ReSolve
         alpha_ = gam_i_ / (delta_ - beta_ * gam_i_ / alpha_);
       }
 
-      printf("Error is %32.32g \n", sqrt(gam_i1_));
+      printf("Conjugate gradient error is %32.32g \n", sqrt(gam_i1_));
       if (i == itmax_)
       {
         printf("No CG convergence in %d iterations\n", itmax_);
