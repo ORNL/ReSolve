@@ -109,7 +109,7 @@ namespace ReSolve
                              const std::string& ryd_file_name,
                              real_type gamma)
       {
-        constexpr double tol = 1e-12;
+        constexpr double tol = 1e-10;
         
         std::ifstream H_file(H_file_name);
         std::ifstream Dx_file(Dx_file_name);

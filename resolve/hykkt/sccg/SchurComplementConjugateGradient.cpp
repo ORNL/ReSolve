@@ -103,6 +103,9 @@ namespace ReSolve
     {
       using namespace constants;
 
+      // Makes r = b - S*x0 instead of r = -S*x0
+      r_.copyFromExternal(b_, memspace_, memspace_);
+
       matrix_handler_.matvec(jc_tr_, x0_, &y_, &ONE, &ZERO, memspace_);
       choleskySolver_->solve(&z_, &y_);
       matrix_handler_.matvec(jc_, &z_, &r_, &MINUS_ONE, &ONE, memspace_);

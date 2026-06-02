@@ -830,6 +830,19 @@ namespace ReSolve
       }
       A->setNnz(nnz);
 
+      const index_type n = A->getNumRows();
+
+      if (nnz == 0)
+      {
+        // If there are no nonzeros, set row pointers to zero and return.
+        for (index_type i = 0; i <= n; ++i)
+        {
+          csr_rows[i] = 0;
+        }
+        A->setUpdated(memory::HOST);
+        return 0;
+      }
+
       // Set all iterators
       index_type                                      column_index_counter = 0;
       index_type                                      row_pointer_counter  = 0;
@@ -837,6 +850,14 @@ namespace ReSolve
 
       // Set first row pointer to zero
       csr_rows[0] = 0;
+
+      // Fill leading empty rows if needed
+      while (row_pointer_counter < it->getRowIdx())
+      {
+        row_pointer_counter++;
+        csr_rows[row_pointer_counter] = 0;
+      }
+
       csr_cols[0] = it->getColIdx();
       csr_vals[0] = it->getValue();
 
@@ -846,15 +867,22 @@ namespace ReSolve
         it++;
         if (it->getRowIdx() != it_tmp->getRowIdx())
         {
-          row_pointer_counter++;
-          csr_rows[row_pointer_counter] = i;
+          while (row_pointer_counter < it->getRowIdx())
+          {
+            row_pointer_counter++;
+            csr_rows[row_pointer_counter] = i;
+          }
         }
         column_index_counter++;
         csr_cols[column_index_counter] = it->getColIdx();
         csr_vals[column_index_counter] = it->getValue();
       }
-      row_pointer_counter++;
-      csr_rows[row_pointer_counter] = nnz;
+      // Fill trailing empty rows
+      while (row_pointer_counter < n)
+      {
+        row_pointer_counter++;
+        csr_rows[row_pointer_counter] = nnz;
+      }
 
       // We updated matrix values outside Matrix API. We need to note that.
       A->setUpdated(memory::HOST);
