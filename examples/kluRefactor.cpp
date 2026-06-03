@@ -199,7 +199,7 @@ int main(int argc, char* argv[])
     solve_time_ms = std::chrono::duration<double, std::milli>(solve_end - solve_start).count();
     std::cout << "KLU solve status: " << status << std::endl;
 
-    helper.printShortSummary(A, vec_rhs, vec_x);
+    helper.printSummary(A, vec_rhs, vec_x);
     if (is_iterative_refinement)
     {
       // Setup iterative refinement
