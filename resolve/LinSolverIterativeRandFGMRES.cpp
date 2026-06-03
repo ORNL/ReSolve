@@ -171,7 +171,6 @@ namespace ReSolve
     {
       vector_handler_->scal(one_over_k_, &vec_s, memspace_);
     }
-    mem_.deviceSynchronize();
 
     rnorm = 0.0;
     bnorm = vector_handler_->dot(rhs, rhs, memspace_);
@@ -222,8 +221,6 @@ namespace ReSolve
       vector_handler_->scal(t, vec_V_, memspace_);
       vector_handler_->scal(t, vec_S_, memspace_);
 
-      mem_.deviceSynchronize();
-
       // initialize norm history
       h_rs_[0] = rnorm;
       i        = -1;
@@ -246,8 +243,6 @@ namespace ReSolve
         }
         this->precV(&vec_v, &vec_z);
 
-        mem_.deviceSynchronize();
-
         // V_{i+1}=A*Z_i
         vec_v.setData(vec_V_->getData(i + 1, memspace_), memspace_);
 
@@ -261,7 +256,7 @@ namespace ReSolve
         {
           vector_handler_->scal(one_over_k_, &vec_s, memspace_);
         }
-        mem_.deviceSynchronize();
+
         GS_->orthogonalize(k_rand_, vec_S_, h_H_, i);
 
         // now post-process
@@ -273,7 +268,6 @@ namespace ReSolve
 
         t = 1.0 / h_H_[i * (restart_ + 1) + i + 1];
         vector_handler_->scal(t, &vec_v, memspace_);
-        mem_.deviceSynchronize();
         vec_s.setData(vec_S_->getData(i + 1, memspace_), memspace_);
 
         if (i != 0)
@@ -384,7 +378,7 @@ namespace ReSolve
         {
           vector_handler_->scal(one_over_k_, &vec_s, memspace_);
         }
-        mem_.deviceSynchronize();
+
         rnorm = vector_handler_->dot(vec_S_, vec_S_, memspace_);
         // rnorm = ||S_0||
         rnorm = std::sqrt(rnorm);
