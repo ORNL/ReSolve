@@ -32,8 +32,7 @@ namespace ReSolve
       ~HyKKTSolver();
 
       void readMatrixFiles(
-          std::istream& H_file,
-          std::istream& Dx_file,
+          std::istream& H_plus_Dx_file,
           std::istream& Ds_file,
           std::istream& J_file,
           std::istream& Jd_file,
@@ -42,7 +41,7 @@ namespace ReSolve
           std::istream& ry_file,
           std::istream& ryd_file);
           
-      void setMatrixBlocks(matrix::Csr* H, matrix::Csr* Dx, matrix::Csr* Ds, matrix::Csr* J, matrix::Csr* Jd);
+      void setMatrixBlocks(matrix::Csr* H_plus_Dx, matrix::Csr* Ds, matrix::Csr* J, matrix::Csr* Jd);
       void setRHSBlocks(vector::Vector* rx, vector::Vector* rs, vector::Vector* ry, vector::Vector* ryd);
       void setLHSPointers(vector::Vector* x, vector::Vector* s, vector::Vector* y, vector::Vector* yd);
 
@@ -103,8 +102,7 @@ namespace ReSolve
       index_type N_{0}; // Size of matrix K (square) and vector x
 
       // Blocks of input matrix K
-      matrix::Csr* H_{nullptr}; // nx x nx
-      matrix::Csr* Dx_{nullptr}; // nx x nx
+      matrix::Csr* H_{nullptr}; // nx x nx. Actually stores H + Dx, but it is named H_ for brevity
       matrix::Csr* Ds_{nullptr}; // md x md
       matrix::Csr* J_{nullptr}; // mc x nx
       matrix::Csr* J_tr_{nullptr}; // nx x mc

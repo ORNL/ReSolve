@@ -94,12 +94,10 @@ namespace ReSolve
                              index_type md,
                              index_type mc,
                              index_type H_nnz,
-                             index_type Dx_nnz,
                              index_type Ds_nnz,
                              index_type J_nnz,
                              index_type Jd_nnz,
                              const std::string& H_file_name,
-                             const std::string& Dx_file_name,
                              const std::string& Ds_file_name,
                              const std::string& J_file_name,
                              const std::string& Jd_file_name,
@@ -135,7 +133,6 @@ namespace ReSolve
         if (memspace_ == memory::DEVICE)
         {
           H->syncData(memory::DEVICE);
-          Dx->syncData(memory::DEVICE);
           Ds->syncData(memory::DEVICE);
           J->syncData(memory::DEVICE);
           Jd->syncData(memory::DEVICE);
@@ -165,7 +162,7 @@ namespace ReSolve
         yd->allocate(memspace_);
 
         hykkt::HyKKTSolver hykktSolver(nx, md, mc, memspace_);
-        hykktSolver.setMatrixBlocks(H, Dx, Ds, J, Jd);
+        hykktSolver.setMatrixBlocks(H, Ds, J, Jd);
         hykktSolver.setRHSBlocks(rx, rs, ry, ryd);
         hykktSolver.setLHSPointers(x, s, y, yd);
         hykktSolver.setGamma(gamma);
@@ -176,12 +173,11 @@ namespace ReSolve
         TestStatus  status;
         std::string testname(__func__);
         index_type N = nx + mc + 2 * md;
-        index_type nnz = H_nnz + Dx_nnz + Ds_nnz + J_nnz + Jd_nnz;
-        testname += " N=" + std::to_string(N) + ", nnz =" + std::to_string(nnz);
+        index_type nnz = H_nnz + Ds_nnz + J_nnz + Jd_nnz;
+        testname += " N=" + std::to_string(N) + ", nnz =" + std::to_string(nnz) + '\n';
         status *= validateResult(error, tol);
 
         delete H;
-        delete Dx;
         delete Ds;
         delete J;
         delete Jd;
