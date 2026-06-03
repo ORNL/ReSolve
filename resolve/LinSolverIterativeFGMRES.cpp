@@ -282,7 +282,6 @@ namespace ReSolve
         case Preconditioner::Side::RIGHT:
           // Compute vec_z = M^{-1}*V[i], then V[i+1] = A*vec_z
           preconditioner_->apply(&vec_v, &vec_z);
-          mem_.deviceSynchronize();
 
           vec_v.setData(vec_V_->getData(i + 1, memspace_), memspace_);
           matrix_handler_->matvec(A_, &vec_z, &vec_v, &ONE, &ZERO, memspace_);
@@ -293,7 +292,6 @@ namespace ReSolve
 
           vec_v.setData(vec_V_->getData(i + 1, memspace_), memspace_);
           preconditioner_->apply(&vec_z, &vec_v);
-          mem_.deviceSynchronize();
           break;
         default:
           out::error() << "Unknown preconditioner side.\n";
