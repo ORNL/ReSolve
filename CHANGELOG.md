@@ -20,6 +20,8 @@
 
 - Added `diagSolve`, `max`, and `abs` vector operations.
 
+- Added initial guess support for FGMRES and randomized FGMRES iterative solvers.
+
 - Improved coding guidelines for developers on floating point conventions.
 
 - Made spack builds more robust.
