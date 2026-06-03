@@ -47,14 +47,12 @@ namespace ReSolve
    */
   int RandomSketchingCountCuda::Theta(vector_type* input, vector_type* output)
   {
-    mem_.deviceSynchronize();
     cuda::count_sketch_theta(n_,
                              k_rand_,
                              d_labels_,
                              d_flip_,
                              input->getData(memory::DEVICE),
                              output->getData(memory::DEVICE));
-    mem_.deviceSynchronize();
     return 0;
   }
 
@@ -107,7 +105,6 @@ namespace ReSolve
     // then copy
     mem_.copyArrayHostToDevice(d_labels_, h_labels_, n_);
     mem_.copyArrayHostToDevice(d_flip_, h_flip_, n_);
-    mem_.deviceSynchronize();
 
     return 0;
   }
@@ -148,7 +145,6 @@ namespace ReSolve
 
     mem_.copyArrayHostToDevice(d_labels_, h_labels_, n_);
     mem_.copyArrayHostToDevice(d_flip_, h_flip_, n_);
-    mem_.deviceSynchronize();
 
     return 0;
   }

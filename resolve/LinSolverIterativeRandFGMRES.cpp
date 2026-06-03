@@ -219,7 +219,6 @@ namespace ReSolve
     {
       vector_handler_->scal(one_over_k_, &vec_s, memspace_);
     }
-    mem_.deviceSynchronize();
     res_norm = vector_handler_->dot(&vec_s, &vec_s, memspace_);
     rhs_norm = vector_handler_->dot(rhs, rhs, memspace_);
 
@@ -279,8 +278,6 @@ namespace ReSolve
       vector_handler_->scal(t, vec_V_, memspace_);
       vector_handler_->scal(t, vec_S_, memspace_);
 
-      mem_.deviceSynchronize();
-
       // initialize norm history
       h_rs_[0] = res_norm;
       i        = -1;
@@ -338,7 +335,7 @@ namespace ReSolve
         {
           vector_handler_->scal(one_over_k_, &vec_s, memspace_);
         }
-        mem_.deviceSynchronize();
+
         GS_->orthogonalize(k_rand_, vec_S_, h_H_, i);
 
         // now post-process
@@ -350,7 +347,6 @@ namespace ReSolve
 
         t = 1.0 / h_H_[i * (restart_ + 1) + i + 1];
         vector_handler_->scal(t, &vec_v, memspace_);
-        mem_.deviceSynchronize();
         vec_s.setData(vec_S_->getData(i + 1, memspace_), memspace_);
 
         if (i != 0)
@@ -483,7 +479,6 @@ namespace ReSolve
         {
           vector_handler_->scal(one_over_k_, &vec_s, memspace_);
         }
-        mem_.deviceSynchronize();
         res_norm = vector_handler_->dot(vec_S_, vec_S_, memspace_);
         // res_norm = ||S_0||
         res_norm = std::sqrt(res_norm);

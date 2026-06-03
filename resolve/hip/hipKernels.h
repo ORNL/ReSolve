@@ -36,11 +36,11 @@ namespace ReSolve
                     const real_type*  diag);
 
     // needed for matrix inf nrm
-    void matrix_row_sums(index_type  n,
-                         index_type  nnz,
-                         index_type* a_ia,
-                         real_type*  a_val,
-                         real_type*  result);
+    void matrixRowSums(index_type  n,
+                       index_type  nnz,
+                       index_type* a_ia,
+                       real_type*  a_val,
+                       real_type*  result);
 
     // needed for triangular solve
 
@@ -54,9 +54,9 @@ namespace ReSolve
                         real_type*  vec_in,
                         real_type*  vec_out);
 
-    void vector_inf_norm(index_type n,
-                         real_type* input,
-                         real_type* buffer,
-                         real_type* result);
+    void vectorInfNorm(index_type n,
+                       real_type* input,
+                       real_type* buffer,
+                       real_type* result);
   } // namespace hip
 } // namespace ReSolve

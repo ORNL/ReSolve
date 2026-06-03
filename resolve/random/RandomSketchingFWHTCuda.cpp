@@ -66,15 +66,12 @@ namespace ReSolve
                         input->getData(memory::DEVICE),
                         d_aux_);
 
-    mem_.deviceSynchronize();
     cuda::FWHT(1, log2N_, d_aux_);
 
-    mem_.deviceSynchronize();
     cuda::FWHT_select(k_rand_,
                       d_perm_,
                       d_aux_,
                       output->getData(memory::DEVICE));
-    mem_.deviceSynchronize();
     return 0;
   }
 
@@ -210,7 +207,6 @@ namespace ReSolve
 
     mem_.copyArrayHostToDevice(d_perm_, h_perm_, k_rand_);
     mem_.copyArrayHostToDevice(d_D_, h_D_, n_);
-    mem_.deviceSynchronize();
 
     return 0;
   }
