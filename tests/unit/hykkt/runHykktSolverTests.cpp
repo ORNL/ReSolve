@@ -57,6 +57,7 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
     source_dir + std::string("/HyKKTSolverTestMatrices/block_ryd_ACTIVSg200_AC_00.mtx"),
     gamma
   );
+  workspace.resetLinAlgWorkspace();
   result += test.testSolver(
     2278, 490, 1386,
     2278, 490, 6784, 980,
@@ -70,6 +71,7 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
     source_dir + std::string("/HyKKTSolverTestMatrices/block_ryd_ACTIVSg200_AC_09.mtx"),
     gamma
   );
+  workspace.resetLinAlgWorkspace();
   result += test.testSolver(
     2278, 490, 1386,
     2278, 490, 6784, 980,
@@ -83,6 +85,8 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
     source_dir + std::string("/HyKKTSolverTestMatrices/block_ryd_ACTIVSg200_AC_10.mtx"),
     gamma
   );
+  workspace.resetLinAlgWorkspace();
+  
   result += test.testSolver(
     25910, 6412, 16933,
     38469, 6412, 86139, 12824,
@@ -96,6 +100,7 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
     source_dir + std::string("/HyKKTSolverTestMatrices/block_ryd_ACTIVSg2000_AC_09.mtx"),
     gamma
   );
+  workspace.resetLinAlgWorkspace();
   result += test.testSolver(
     25910, 6412, 16933,
     38469, 6412, 86139, 12824,
@@ -109,6 +114,7 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
     source_dir + std::string("/HyKKTSolverTestMatrices/block_ryd_ACTIVSg2000_AC_10.mtx"),
     gamma
   );
+  workspace.resetLinAlgWorkspace();
 
   std::cout << "\n";
 }
