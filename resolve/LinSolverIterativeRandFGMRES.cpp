@@ -149,12 +149,18 @@ namespace ReSolve
   {
     using namespace constants;
 
-    // Flexible GMRES only supports right preconditioning
+    if (preconditioner_ == nullptr)
+    {
+      out::error() << "Preconditioner not set for randomized GMRES solver.\n";
+      return 1;
+    }
+
+    // Flexible GMRES only supports right preconditioning.
     if (flexible_ && preconditioner_->getSide() == Preconditioner::Side::LEFT)
     {
-      out::warning() << "Flexible GMRES does not support left preconditioning. "
-                     << "Switching to right preconditioning.\n";
-      preconditioner_->setSide(Preconditioner::Side::RIGHT);
+      out::error() << "Flexible GMRES does not support left preconditioning. "
+                   << "Use right preconditioning or disable flexible GMRES.\n";
+      return 1;
     }
 
     // io::Logger::setVerbosity(io::Logger::EVERYTHING);

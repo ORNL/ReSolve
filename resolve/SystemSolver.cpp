@@ -589,9 +589,9 @@ namespace ReSolve
     }
     else
     {
-      out::warning() << "Preconditioning side " << " not recognized.\n";
-      out::warning() << "Using default preconditioning side (right).\n";
-      prec_side = Preconditioner::RIGHT;
+      out::error() << "Preconditioning side '" << side
+                   << "' not recognized. Use 'left' or 'right'.\n";
+      return 1;
     }
 
     status += preconditioner_->setSide(prec_side);
