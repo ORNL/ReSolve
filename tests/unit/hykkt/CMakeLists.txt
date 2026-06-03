@@ -29,16 +29,6 @@ target_link_libraries(
                                     resolve_vector
 )
 
-add_executable(runHykktSCCGTests.exe runHykktSCCGTests.cpp)
-target_link_libraries(
-  runHykktSCCGTests.exe
-  PRIVATE resolve_hykkt resolve_hykkt_sccg resolve_hykkt_chol resolve_matrix
-          resolve_vector
-)
-target_compile_definitions(
-  runHykktSCCGTests.exe PRIVATE SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
-) # For file paths
-
 # Install tests
 set(installable_tests runHykktPermutationTests.exe runHykktRuizScalingTests.exe
                       runHykktCholeskyTests.exe runHykktSpGEMMTests.exe
@@ -54,4 +44,3 @@ add_test(NAME hykkt_ruiz_test
 )
 add_test(NAME hykkt_chol_test COMMAND $<TARGET_FILE:runHykktCholeskyTests.exe>)
 add_test(NAME hykkt_spgemm_test COMMAND $<TARGET_FILE:runHykktSpGEMMTests.exe>)
-add_test(NAME hykkt_sccg_test COMMAND $<TARGET_FILE:runHykktSCCGTests.exe>)

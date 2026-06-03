@@ -76,35 +76,17 @@ namespace ReSolve
     // result = alpha *A*x + beta * result
     cusparseStatus_t     status;
     cusparseDnVecDescr_t vecx = workspace_->getVecX();
-
-    // In SpMV, A is m x n and the operation is y = A*x so
-    // x must have length n, the number of columns of A and
-    // y must have length m, the number of rows of A.
-    // This matters for non-square matrices used in SCCG.
-    cusparseCreateDnVec(&vecx, A->getNumColumns(), vec_x->getData(memory::DEVICE), CUDA_R_64F);
+    cusparseCreateDnVec(&vecx, A->getNumRows(), vec_x->getData(memory::DEVICE), CUDA_R_64F);
 
     cusparseDnVecDescr_t vecAx = workspace_->getVecY();
     cusparseCreateDnVec(&vecAx, A->getNumRows(), vec_result->getData(memory::DEVICE), CUDA_R_64F);
 
+    cusparseSpMatDescr_t matA = workspace_->getSpmvMatrixDescriptor();
+
+    void*            buffer_spmv     = workspace_->getSpmvBuffer();
     cusparseHandle_t handle_cusparse = workspace_->getCusparseHandle();
-
-    // The workspace caches one backend SpMV setup and temporary buffer between
-    // matvec calls. SCCG can call matvec with different matrices, such as JC and
-    // JC^T, so the cached setup may no longer match the current matrix structure.
-    // Track the matrix pointer and dimensions/nnz so stale setup data is reset
-    // before running SpMV with a different matrix.
-    bool matrix_changed =
-        (matrix_for_matvec_ != A) || (matvec_num_rows_ != A->getNumRows()) || (matvec_num_cols_ != A->getNumColumns()) || (matvec_nnz_ != A->getNnz());
-
-    if (matrix_changed || values_changed_)
+    if (values_changed_)
     {
-      workspace_->resetMatvecSetup();
-    }
-    cusparseSpMatDescr_t matA        = workspace_->getSpmvMatrixDescriptor();
-    void*                buffer_spmv = workspace_->getSpmvBuffer();
-    if (!workspace_->matvecSetup())
-    {
-      // setup first, allocate, etc.
       status = cusparseCreateCsr(&matA,
                                  A->getNumRows(),
                                  A->getNumColumns(),
@@ -117,6 +99,11 @@ namespace ReSolve
                                  CUSPARSE_INDEX_BASE_ZERO,
                                  CUDA_R_64F);
       error_sum += status;
+      values_changed_ = false;
+    }
+    if (!workspace_->matvecSetup())
+    {
+      // setup first, allocate, etc.
       size_t bufferSize = 0;
 
       status = cusparseSpMV_bufferSize(handle_cusparse,
@@ -135,13 +122,6 @@ namespace ReSolve
       workspace_->setSpmvBuffer(buffer_spmv);
 
       workspace_->matvecSetupDone();
-
-      matrix_for_matvec_ = A;
-      matvec_num_rows_   = A->getNumRows();
-      matvec_num_cols_   = A->getNumColumns();
-      matvec_nnz_        = A->getNnz();
-
-      values_changed_ = false;
     }
 
     status = cusparseSpMV(handle_cusparse,

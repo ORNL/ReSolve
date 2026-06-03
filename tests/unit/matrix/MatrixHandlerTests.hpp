@@ -168,12 +168,12 @@ namespace ReSolve
 
       TestOutcome leftScale(index_type n, index_type m)
       {
-        TestStatus      status;
-        std::string     testname(__func__);
-        matrix::Csr*    A    = createRectangularCsrMatrix(n, m);
-        vector::Vector* diag = createIncrementingVector(n);
+        TestStatus     status;
+        std::string    testname(__func__);
+        matrix::Csr*   A    = createRectangularCsrMatrix(n, m);
+        vector::Vector diag = createIncrementingVector(n);
 
-        handler_.leftScale(diag, A, memspace_);
+        handler_.leftScale(&diag, A, memspace_);
         if (memspace_ == memory::DEVICE)
         {
           A->syncData(memory::HOST);
@@ -181,18 +181,17 @@ namespace ReSolve
         status *= verifyLeftScaledCsrMatrix(A);
 
         delete A;
-        delete diag;
         return status.report(testname.c_str());
       }
 
       TestOutcome rightScale(index_type n, index_type m)
       {
-        TestStatus      status;
-        std::string     testname(__func__);
-        matrix::Csr*    A    = createRectangularCsrMatrix(n, m);
-        vector::Vector* diag = createIncrementingVector(m);
+        TestStatus     status;
+        std::string    testname(__func__);
+        matrix::Csr*   A    = createRectangularCsrMatrix(n, m);
+        vector::Vector diag = createIncrementingVector(m);
 
-        handler_.rightScale(A, diag, memspace_);
+        handler_.rightScale(A, &diag, memspace_);
         if (memspace_ == memory::DEVICE)
         {
           A->syncData(memory::HOST);
@@ -200,7 +199,6 @@ namespace ReSolve
         status *= verifyRightScaledCsrMatrix(A);
 
         delete A;
-        delete diag;
         return status.report(testname.c_str());
       }
 
@@ -586,19 +584,19 @@ namespace ReSolve
        *
        * @param[in] n number of elements
        */
-      vector::Vector* createIncrementingVector(const index_type n)
+      vector::Vector createIncrementingVector(const index_type n)
       {
-        vector::Vector* vec = new vector::Vector(n);
-        vec->allocate(memory::HOST);
-        real_type* data = vec->getData(memory::HOST);
+        vector::Vector vec(n);
+        vec.allocate(memory::HOST);
+        real_type* data = vec.getData(memory::HOST);
         for (index_type i = 0; i < n; ++i)
         {
           data[i] = static_cast<real_type>(i + 1.0);
         }
-        vec->setDataUpdated(memory::HOST);
+        vec.setDataUpdated(memory::HOST);
         if (memspace_ == memory::DEVICE)
         {
-          vec->syncData(memspace_);
+          vec.syncData(memspace_);
         }
         return vec;
       }
@@ -789,8 +787,8 @@ namespace ReSolve
         const index_type n = scaled_vec->getSize();
 
         // Create the original unscaled vector to compare against
-        vector::Vector* original_vec  = createIncrementingVector(n);
-        real_type*      original_data = original_vec->getData(memory::HOST);
+        vector::Vector original_vec  = createIncrementingVector(n);
+        real_type*     original_data = original_vec.getData(memory::HOST);
 
         // Get data from the vector
         real_type* data = scaled_vec->getData(memory::HOST);
