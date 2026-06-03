@@ -1,5 +1,0 @@
-========= COMPUTE-SANITIZER
-========= Target application returned an error
-========= ERROR SUMMARY: 0 errors
-
-compute-sanitizer --log-file sanitizer.txt  build/tests/unit/hykkt/runHykktSolverTests.exe
