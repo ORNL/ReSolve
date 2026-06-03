@@ -36,10 +36,12 @@
 
 #ifdef RESOLVE_USE_CUDA
 #include <cuda_runtime.h>
+
 #include <resolve/LinSolverDirectCuSolverRf.hpp>
 #endif
 #ifdef RESOLVE_USE_HIP
 #include <hip/hip_runtime.h>
+
 #include <resolve/LinSolverDirectRocSolverRf.hpp>
 #endif
 
@@ -253,7 +255,7 @@ int gpuRefactor(int argc, char* argv[])
     printSystemInfo(matrix_pathname_full, A);
     std::cout << "CSR matrix loaded. Expanded NNZ: " << A->getNnz() << std::endl;
 
-    int status = 0;
+    int    status        = 0;
     double solve_time_ms = 0.0;
 
     syncDevice();
@@ -278,7 +280,7 @@ int gpuRefactor(int argc, char* argv[])
 
       syncDevice();
       auto solve_end = std::chrono::high_resolution_clock::now();
-      solve_time_ms = std::chrono::duration<double, std::milli>(solve_end - solve_start).count();
+      solve_time_ms  = std::chrono::duration<double, std::milli>(solve_end - solve_start).count();
       std::cout << "KLU solve status: " << status << std::endl;
 
       // Print summary of results
@@ -314,7 +316,7 @@ int gpuRefactor(int argc, char* argv[])
       status = Rf.solve(vec_rhs, vec_x);
       syncDevice();
       auto solve_end = std::chrono::high_resolution_clock::now();
-      solve_time_ms = std::chrono::duration<double, std::milli>(solve_end - solve_start).count();
+      solve_time_ms  = std::chrono::duration<double, std::milli>(solve_end - solve_start).count();
       std::cout << "Refactorization solve status: " << status << std::endl;
       RESOLVE_RANGE_POP("Refactorization");
 

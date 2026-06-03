@@ -246,6 +246,3 @@ rm -rf issue326_local_plots
 
 The local smoke test only verifies that parsing and plotting work. The final
 benchmark should use the GridKit cases on Frontier.
-
-
-

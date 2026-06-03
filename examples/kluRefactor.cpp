@@ -194,9 +194,9 @@ int main(int argc, char* argv[])
       status = KLU->refactorize();
       std::cout << "KLU re-factorization status: " << status << std::endl;
     }
-    status = KLU->solve(vec_rhs, vec_x);
+    status         = KLU->solve(vec_rhs, vec_x);
     auto solve_end = std::chrono::high_resolution_clock::now();
-    solve_time_ms = std::chrono::duration<double, std::milli>(solve_end - solve_start).count();
+    solve_time_ms  = std::chrono::duration<double, std::milli>(solve_end - solve_start).count();
     std::cout << "KLU solve status: " << status << std::endl;
 
     helper.printSummary(A, vec_rhs, vec_x);
