@@ -226,10 +226,8 @@ namespace ReSolve
     // Left-preconditioned right-hand side norm ||M^{-1}*b||
     if (!flexible_ && preconditioner_->getSide() == Preconditioner::LEFT)
     {
-      vec_v.setData(rhs->getData(memspace_), memspace_);
-      preconditioner_->apply(&vec_v, &vec_z);
+      preconditioner_->apply(rhs, &vec_z);
       rhs_norm = vector_handler_->dot(&vec_z, &vec_z, memspace_);
-      vec_v.setData(vec_V_->getData(0, memspace_), memspace_);
     }
 
     res_norm = std::sqrt(res_norm); // res_norm = ||S_0||
