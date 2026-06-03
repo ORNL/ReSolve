@@ -52,11 +52,11 @@ namespace ReSolve
       real_type solve();
 
     private:
-      void setupParameters();
-
       // Intermediate steps of solving the system
+      void setupParameters();
       void setupSpGEMMHtil();
       void computeSpGEMMHtil();
+      void setupSolutionCheck();
       void setupRuizScaling();
       void computeRuizScaling();
       void setupSpGEMMHGamma();
@@ -67,9 +67,7 @@ namespace ReSolve
       void computeHGammaFactorization();
       void setupConjugateGradient();
       void computeConjugateGradient();
-      
       void recoverSolution();
-      void setupSolutionCheck();
       real_type checkError();
 
       static constexpr int ruiz_its_ = 2;
@@ -86,7 +84,7 @@ namespace ReSolve
 
       RuizScaling* ruiz_{nullptr};
       SpGEMM* spgemm_htil_{nullptr};
-      SpGEMM* spgemm_gamma_{nullptr};
+      SpGEMM* spgemm_hgamma_{nullptr};
       Permutation* permutation_{nullptr};
       CholeskySolver* cholesky_{nullptr};
       SchurComplementConjugateGradient* sccg_{nullptr};
@@ -121,8 +119,8 @@ namespace ReSolve
       
       // Intermediate matrices and vectors
       vector::Vector* max_d_{nullptr}; // For Ruiz scaling
-      vector::Vector* rxp_{nullptr};
-      vector::Vector* hrxp_{nullptr};
+      vector::Vector* rx_perm_{nullptr};
+      vector::Vector* Hrx_perm_{nullptr};
       vector::Vector* schur_{nullptr};
       vector::Vector* Ds_vals_{nullptr}; // = Ds_->getValues()
       vector::Vector* ryd_scaled_{nullptr};
