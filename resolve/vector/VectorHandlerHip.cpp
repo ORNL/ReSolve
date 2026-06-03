@@ -190,7 +190,7 @@ namespace ReSolve
                     x->getData(memory::DEVICE),
                     1);
       return;
-    default:
+    case 'N':
       assert((V->getSize() == x->getSize())
              && "gemv: Size mismatch! Size of V does not match size of x.");
       rocblas_dgemv(handle_rocblas,
@@ -205,14 +205,15 @@ namespace ReSolve
                     &beta,
                     x->getData(memory::DEVICE),
                     1);
-      if (transpose != 'N')
-      {
-        out::warning() << "Unrecognized transpose option " << transpose
-                       << " in gemv. Using non-transposed multivector.\n";
-      }
+      break;
+    default:
+      out::error() << "Unrecognized transpose option " << transpose
+                   << " in gemv. Valid options are 'N' (not transposed) and 'T' (transposed).\n";
+      break;
     }
     x->setDataUpdated(memory::DEVICE);
     mem_.deviceSynchronize();
+    return;
   }
 
   /**
