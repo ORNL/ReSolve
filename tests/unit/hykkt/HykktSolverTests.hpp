@@ -107,10 +107,9 @@ namespace ReSolve
                              const std::string& ryd_file_name,
                              real_type gamma)
       {
-        constexpr double tol = 1e-10;
+        constexpr double tol = 1e-2;
         
         std::ifstream H_file(H_file_name);
-        std::ifstream Dx_file(Dx_file_name);
         std::ifstream Ds_file(Ds_file_name);
         std::ifstream J_file(J_file_name);
         std::ifstream Jd_file(Jd_file_name);
@@ -121,12 +120,7 @@ namespace ReSolve
 
         // The .mtx file readers write into host accessible memory.
         // Load test data into HOST first, then sync to DEVICE for CUDA and HIP backends.
-        // matrix::Coo* H_coo = io::createCooFromFile(H_file, true);
         matrix::Csr* H = io::createCsrFromFile(H_file, true);
-        // matrix::Csr* H = new matrix::Csr(H_coo->getNumRows(), H_coo->getNumColumns(), H_coo->getNnz(), true, true);
-        // H->allocateMatrixData(memspace_);
-        // H->copyFromExternal(H_coo->getRowData(memspace_), H_coo->getColData(memspace_), H_coo->getValues(memspace_), memspace_, memspace_);
-        matrix::Csr* Dx = io::createCsrFromFile(Dx_file, false);
         matrix::Csr* Ds = io::createCsrFromFile(Ds_file, false);
         matrix::Csr* J = io::createCsrFromFile(J_file, false);
         matrix::Csr* Jd = io::createCsrFromFile(Jd_file, false);

@@ -142,11 +142,11 @@ namespace ReSolve
         alpha_ = gam_i_ / (delta_ - beta_ * gam_i_ / alpha_);
       }
 
-      printf("Error is %32.32g \n", sqrt(gam_i1_));
+      printf("Conjugate gradient error is %32.32g \n", sqrt(gam_i1_));
       if (i == itmax_)
       {
         printf("No CG convergence in %d iterations\n", itmax_);
-        return 1;
+        return 1; 
       }
 
       return 0;

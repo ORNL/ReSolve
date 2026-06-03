@@ -23,7 +23,7 @@ namespace ReSolve
   namespace hykkt
   {
     /**
-     * @brief WRITE
+     * @brief This class solves a HyKKT system defined by user-supplied matrix and RHS blocks.
      */
     class HyKKTSolver
     {
@@ -54,20 +54,18 @@ namespace ReSolve
     private:
       void setupParameters();
 
-      // Set up solvers
-      void setupSpGEMMHtil();
-      void setupRuizScaling();
-      void setupSpGEMMHGamma();
-      void setupPermutation();
-      void setupHGammaFactorization();
-      void setupConjugateGradient();
-
       // Intermediate steps of solving the system
+      void setupSpGEMMHtil();
       void computeSpGEMMHtil();
+      void setupRuizScaling();
       void computeRuizScaling();
+      void setupSpGEMMHGamma();
       void computeSpGEMMHGamma();
+      void setupPermutation();
       void applyPermutation();
-      void computeHGammaFactorization(); // Uses Cholesky
+      void setupHGammaFactorization(); // Uses Cholesky
+      void computeHGammaFactorization();
+      void setupConjugateGradient();
       void computeConjugateGradient();
       
       void recoverSolution();
