@@ -158,7 +158,8 @@ namespace ReSolve
      * file.
      *
      * @param file - input Matrix Market file
-     * @param is_expand_symmetric - whether to expand symmetric matrix to general format
+     * @param is_expand_symmetric - whether to expand symmetric matrix to general format. If set to true,
+     * the matrix will be read as symmetric regardless of whether the file has the "symmetric" label.
      * @return matrix::Coo* - pointer to COO matrix
      *
      * @pre file is a valid std::istream with Matrix Market data.
@@ -176,7 +177,7 @@ namespace ReSolve
       }
 
       index_type m = 0, n = 0, nnz = 0;
-      bool       symmetric = false;
+      bool       symmetric = (false || is_expand_symmetric);
       bool       expanded  = true;
 
       std::list<MatrixElementTriplet> tmp;
@@ -196,7 +197,8 @@ namespace ReSolve
      * @brief
      *
      * @param file - input Matrix Market file
-     * @param is_expand_symmetric - whether to expand symmetric matrix to general format
+     * @param is_expand_symmetric - whether to expand symmetric matrix to general format. If set to true,
+     * the matrix will be read as symmetric regardless of whether the file has the "symmetric" label.
      * @return matrix::Csr* - pointer to COO matrix
      *
      * @pre file is a valid std::istream with Matrix Market data.
@@ -214,7 +216,7 @@ namespace ReSolve
       }
 
       index_type m = 0, n = 0, nnz = 0;
-      bool       symmetric = false;
+      bool       symmetric = (false || is_expand_symmetric);
       bool       expanded  = true;
 
       std::list<MatrixElementTriplet> tmp;
