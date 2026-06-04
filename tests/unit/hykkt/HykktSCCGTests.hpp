@@ -19,9 +19,8 @@ namespace ReSolve
   namespace tests
   {
     /**
-     * @brief Tests for class hykkt::SchurComplementConjugateGradient. This is only
-     * a placeholder test. The test will always pass, and a proper validateResult()
-     * function needs to be written.
+     * @brief Tests for class hykkt::SchurComplementConjugateGradient. There is currently only
+     * one set of input matrices being tested.
      */
     class HykktSchurComplementConjugateGradientTests : public TestBase
     {
@@ -42,58 +41,51 @@ namespace ReSolve
        */
       TestOutcome SCCGTest()
       {
-        constexpr double tol = 1e-12;
-
-        std::string   sourceDir  = std::string(SOURCE_DIR);
-        std::string   jcFileName = sourceDir + "/SCCGTestMatrices/JC_matrix_ACTIVSg200_AC_00.mtx";
-        std::string   hFileName  = sourceDir + "/SCCGTestMatrices/H_matrix_ACTIVSg200_AC_00.mtx";
-        std::string   bFileName  = sourceDir + "/SCCGTestMatrices/CG_rhs_ACTIVSg200_AC_00.mtx"; // rhs
         std::ifstream jcFile(jcFileName);
         std::ifstream hFile(hFileName);
         std::ifstream bFile(bFileName);
 
-        matrix::Csr* h = new matrix::Csr(2278, 2278, 11304, true, false);
-        h->allocateMatrixData(memspace_);
-        io::updateMatrixFromFile(hFile, h);
+        matrix::Csr* h = io::createCsrFromFile(hFile, true);
+        matrix::Csr* jc = io::createCsrFromFile(jcFile, false);
+        if (memspace_ == memory::DEVICE)
+        {
+          h->syncData(memory::DEVICE);
+          jc->syncData(memory::DEVICE);
+        }
         hykkt::CholeskySolver choleskySolver(memspace_);
         choleskySolver.addMatrixInfo(h);
         choleskySolver.symbolicAnalysis();
-        choleskySolver.setPivotTolerance(tol);
+        choleskySolver.setPivotTolerance(cholesky_tol);
         choleskySolver.numericalFactorization();
-
-        matrix::Csr* jc = new matrix::Csr(1386, 2278, 6784, false, false);
-        jc->allocateMatrixData(memspace_);
-        io::updateMatrixFromFile(jcFile, jc);
 
         index_type                              n   = jc->getNumRows();
         index_type                              m   = jc->getNumColumns();
         index_type                              nnz = jc->getNnz();
         hykkt::SchurComplementConjugateGradient sccg(n, m, &choleskySolver, memspace_);
-        sccg.setSolverTolerance(tol);
-        LinAlgWorkspaceCpu workspace;
-        MatrixHandler      matrix_handler(&workspace);
+        sccg.setSolverTolerance(sccg_tol);
 
         matrix::Csr* jc_tr = new matrix::Csr(m, n, nnz);
         jc_tr->allocateMatrixData(memspace_);
-        matrix_handler.transpose(jc, jc_tr, memspace_);
+        matrixHandler_.transpose(jc, jc_tr, memspace_);
 
         vector::Vector* x0 = new vector::Vector(n);
         x0->allocate(memspace_);
-        randomVector(x0);
 
-        vector::Vector* b = new vector::Vector(n);
-        b->allocate(memspace_);
-        io::updateVectorFromFile(bFile, b);
+        vector::Vector* b = io::createVectorFromFile(bFile);
+        if (memspace_ == memory::DEVICE)
+        {
+          b->syncData(memory::DEVICE);
+        }
 
         sccg.addMatrixInfo(jc, jc_tr);
         sccg.addVectorInfo(x0, b);
         sccg.setup();
-        sccg.solve();
+        int converged_n = sccg.solve(); // 0 if converged, 1 if not
 
         TestStatus  status;
         std::string testname(__func__);
         testname += " n=" + std::to_string(n) + ", m=" + std::to_string(m) + ", nnz =" + std::to_string(nnz);
-        status *= validateResult(x0, tol);
+        status *= validateResult(x0, converged_n);
 
         delete h;
         delete jc;
@@ -108,35 +100,43 @@ namespace ReSolve
       memory::MemorySpace memspace_;
       MatrixHandler&      matrixHandler_;
 
+      static constexpr real_type cholesky_tol = 1e-12;
+      static constexpr real_type sccg_tol = 1e-12;
+      static constexpr real_type entry_tol = 1e-6; // Tolerance for checking individual entries
+
+      // Expected outputs. Currently they are only available for the set of matrix files below
+      static constexpr real_type x_0_expected = 22.171865776354700;
+      static constexpr real_type x_6_expected = -4.446628667344612e+03;
+
+      std::string   source_dir   = std::string(SOURCE_DIR);
+      std::string   jcFileName = source_dir + "/SCCGTestMatrices/JC_matrix_ACTIVSg200_AC_00.mtx";
+      std::string   hFileName  = source_dir + "/SCCGTestMatrices/H_matrix_ACTIVSg200_AC_00.mtx";
+      std::string   bFileName  = source_dir + "/SCCGTestMatrices/CG_rhs_ACTIVSg200_AC_00.mtx"; // rhs
+
       /**
-       * @brief Generate a random vector of doubles between 0 and RAND_MAX. Copied from HykktCholeskyTests.hpp.
-       * @param[in] vec Target vector to write to.
+       * @brief Validate the SCCG result.
+       * @param[in] x0 Pointer to the output x0 vector.
        */
-      void randomVector(vector::Vector* vec)
+      bool validateResult(vector::Vector* x0, int converged_n)
       {
-        for (index_type i = 0; i < vec->getSize(); ++i)
+        if (converged_n != 0)
         {
-          vec->getData(memory::HOST)[i] = static_cast<double>(rand()) / RAND_MAX;
+          return false;
         }
-        vec->setDataUpdated(memory::HOST);
+        // Ensure host copy is available for validation when running on device
         if (memspace_ == memory::DEVICE)
         {
-          vec->syncData(memory::DEVICE);
+          x0->syncData(memory::HOST);
         }
-      }
-
-      /**
-       * @brief Validate the results of the scaling
-       * @param[in] x0 Pointer to the output x0 vector
-       * @param[in] tol Solver tolerance
-       */
-      bool validateResult(vector::Vector* x0, real_type tol)
-      {
-        bool test_passed = true;
-
-        // To be implemented
-
-        return test_passed;
+        if (std::abs(x0->getData(memory::HOST)[0] - x_0_expected) > entry_tol)
+        {
+          return false;
+        }
+        if (std::abs(x0->getData(memory::HOST)[6] - x_6_expected) > entry_tol)
+        {
+          return false;
+        }
+        return true;
       }
     }; // class HykktPermutationTests
   } // namespace tests
