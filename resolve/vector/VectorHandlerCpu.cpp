@@ -184,7 +184,7 @@ namespace ReSolve
         x_data[i] = sum;
       }
       break;
-    default:
+    case 'N':
       assert((V->getSize() == x->getSize())
              && "gemv: Size mismatch! Size of V does not match size of x.");
       for (i = 0; i < n; ++i)
@@ -201,14 +201,13 @@ namespace ReSolve
         }
         x_data[i] = sum;
       }
-      if (transpose != 'N')
-      {
-        out::warning() << "Unrecognized transpose option " << transpose
-                       << " in gemv. Using non-transposed multivector.\n";
-      }
       break;
+    default:
+      out::error() << "Unrecognized transpose option " << transpose
+                   << " in gemv. Valid options are 'N' (not transposed) and 'T' (transposed).\n";
     } // switch
     x->setDataUpdated(memory::HOST);
+    return;
   }
 
   /**

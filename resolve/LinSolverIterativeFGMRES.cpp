@@ -103,9 +103,44 @@ namespace ReSolve
     return 0;
   }
 
+  /**
+   * @brief Solve linear system A*x = rhs
+   *
+   * Implements restarted GMRES with optional flexible (FGMRES) variant.
+   *
+   * Flexible GMRES allows the preconditioner to vary periteration and
+   * uses right preconditioning. Standard GMRES supports both left and
+   * right preconditioning.
+   *
+   * Left preconditioning solves M^{-1}Ax = M^{-1}b and checks convergence
+   * with ||M^{-1}(b - Ax)||. Right preconditioning solves AM^{-1}(Mx) = b
+   * and checks convergence with ||b - Ax||. Both report the true relative
+   * residual ||b - Ax||/||b||.
+   *
+   * @param rhs - right hand side vector
+   * @param x   - solution vector
+   * @return int - zero if successful, error code otherwise
+   *
+   * @invariant rhs vector is unchanged.
+   * @post x is overwritten with the solution to the linear system.
+   */
   int LinSolverIterativeFGMRES::solve(vector_type* rhs, vector_type* x)
   {
     using namespace constants;
+
+    if (preconditioner_ == nullptr)
+    {
+      out::error() << "Preconditioner not set for GMRES solver.\n";
+      return 1;
+    }
+
+    // Flexible GMRES only supports right preconditioning.
+    if (flexible_ && preconditioner_->getSide() == Preconditioner::Side::LEFT)
+    {
+      out::error() << "Flexible GMRES does not support left preconditioning. "
+                   << "Use right preconditioning or disable flexible GMRES.\n";
+      return 1;
+    }
 
     // io::Logger::setVerbosity(io::Logger::EVERYTHING);
 
@@ -117,37 +152,111 @@ namespace ReSolve
     int k          = 0;
     int k1         = 0;
 
-    real_type   t     = 0.0;
-    real_type   rnorm = 0.0;
-    real_type   bnorm = 0.0;
-    real_type   tolrel;
+    real_type   t              = 0.0;
+    real_type   res_norm       = 0.0; // Residual norm used for convergence
+    real_type   rhs_norm       = 0.0; // Right-hand side norm used for convergence
+    real_type   true_res_norm  = 0.0; // True (unpreconditioned) residual norm ||b - Ax|| for reporting
+    real_type   true_rhs_norm  = 0.0; // True (unpreconditioned) right-hand side norm ||b|| for reporting
+    real_type   initial_r_norm = 0.0;
+    real_type   final_r_norm   = 0.0;
+    real_type   x_norm         = 0.0;
+    real_type   tol_rel;
     vector_type vec_v(n_);
     vector_type vec_z(n_);
-    // V[0] = b-A*x_0
-    // debug
+    vector_type x_initial(x->getSize());
+
+    x_initial.allocate(memspace_);
+    x_initial.copyFromExternal(x, memspace_, memspace_);
+
+    x_norm = vector_handler_->dot(&x_initial, &x_initial, memspace_);
+    x_norm = std::sqrt(x_norm);
+
+    bool check_initial_guess = (x_norm > MACHINE_EPSILON);
+
+    // Compute initial residual norm.
+    // V[0] = ||b - A*x0||         for right preconditioning
+    // V[0] = ||M^{-1}{b - A*x0}|| for left preconditioning
+
     vec_Z_->setToZero(memspace_);
     vec_V_->setToZero(memspace_);
 
     rhs->copyToExternal(vec_V_->getData(memspace_), 0, memspace_, memspace_);
     matrix_handler_->matvec(A_, x, vec_V_, &MINUS_ONE, &ONE, memspace_);
-    rnorm = 0.0;
-    bnorm = vector_handler_->dot(rhs, rhs, memspace_);
-    rnorm = vector_handler_->dot(vec_V_, vec_V_, memspace_);
-    // rnorm = ||V_1||
-    rnorm = std::sqrt(rnorm);
-    bnorm = std::sqrt(bnorm);
+
+    vec_v.setData(vec_V_->getData(0, memspace_), memspace_);
+    vec_z.setData(vec_Z_->getData(0, memspace_), memspace_);
+
+    // True residual norm ||b - A*x0||
+    true_res_norm = vector_handler_->dot(&vec_v, &vec_v, memspace_);
+    true_res_norm = std::sqrt(true_res_norm);
+
+    // True right-hand side norm ||b||
+    true_rhs_norm = vector_handler_->dot(rhs, rhs, memspace_);
+    true_rhs_norm = std::sqrt(true_rhs_norm);
+
+    initial_r_norm = true_res_norm;
+
+    if (check_initial_guess && initial_r_norm > true_rhs_norm)
+    {
+      out::warning() << "Initial guess has a larger residual than the zero vector. Ignoring initial guess.\n";
+
+      x->setToZero(memspace_);
+      x_initial.copyFromExternal(x, memspace_, memspace_);
+      check_initial_guess = false;
+
+      vec_Z_->setToZero(memspace_);
+      vec_V_->setToZero(memspace_);
+
+      rhs->copyToExternal(vec_V_->getData(memspace_), 0, memspace_, memspace_);
+      matrix_handler_->matvec(A_, x, vec_V_, &MINUS_ONE, &ONE, memspace_);
+
+      vec_v.setData(vec_V_->getData(0, memspace_), memspace_);
+
+      true_res_norm  = vector_handler_->dot(&vec_v, &vec_v, memspace_);
+      true_res_norm  = std::sqrt(true_res_norm);
+      initial_r_norm = true_res_norm;
+    }
+
+    switch (preconditioner_->getSide())
+    {
+    case Preconditioner::Side::RIGHT:
+      // Right preconditioning uses true norms for convergence
+      res_norm = true_res_norm;
+      rhs_norm = true_rhs_norm;
+      break;
+    case Preconditioner::Side::LEFT:
+      // Left preconditioning uses preconditioned norms for convergence
+      // Left-preconditioned residual norm ||M^{-1}*(b-A*x0)||
+      preconditioner_->apply(&vec_v, &vec_z);
+      vec_v.copyFromExternal(&vec_z, memspace_, memspace_);
+      res_norm = vector_handler_->dot(vec_V_, vec_V_, memspace_);
+      res_norm = std::sqrt(res_norm);
+
+      // Left-preconditioned right-hand side norm ||M^{-1}*b||
+      preconditioner_->apply(rhs, &vec_z);
+      rhs_norm = vector_handler_->dot(&vec_z, &vec_z, memspace_);
+      rhs_norm = std::sqrt(rhs_norm);
+      break;
+    default:
+      out::error() << "Unknown preconditioner side.\n";
+      return 1;
+    }
+
     io::Logger::misc() << "it 0: norm of residual "
                        << std::scientific << std::setprecision(16)
-                       << rnorm << " Norm of rhs: " << bnorm << "\n";
-    initial_residual_norm_ = rnorm / bnorm; // relative residual norm
+                       << res_norm << " Norm of rhs: " << rhs_norm << "\n";
+
+    // Report the true initial relative residual norm
+    initial_residual_norm_ = true_res_norm / true_rhs_norm;
+
     while (outer_flag)
     {
       if (it == 0)
       {
-        tolrel = tol_ * rnorm;
-        if (std::abs(tolrel) < MACHINE_EPSILON)
+        tol_rel = tol_ * res_norm;
+        if (std::abs(tol_rel) < MACHINE_EPSILON)
         {
-          tolrel = MACHINE_EPSILON;
+          tol_rel = MACHINE_EPSILON;
         }
       }
 
@@ -155,30 +264,30 @@ namespace ReSolve
       switch (conv_cond_)
       {
       case 0:
-        exit_cond = ((std::abs(rnorm - ZERO) <= MACHINE_EPSILON));
+        exit_cond = ((std::abs(res_norm - ZERO) <= MACHINE_EPSILON));
         break;
       case 1:
-        exit_cond = ((std::abs(rnorm - ZERO) <= MACHINE_EPSILON) || (rnorm < tol_));
+        exit_cond = ((std::abs(res_norm - ZERO) <= MACHINE_EPSILON) || (res_norm < tol_));
         break;
       case 2:
-        exit_cond = ((std::abs(rnorm - ZERO) <= MACHINE_EPSILON) || (rnorm < (tol_ * bnorm)));
+        exit_cond = ((std::abs(res_norm - ZERO) <= MACHINE_EPSILON) || (res_norm < (tol_ * rhs_norm)));
         break;
       }
 
       if (exit_cond)
       {
         outer_flag             = 0;
-        final_residual_norm_   = rnorm;
-        initial_residual_norm_ = rnorm;
+        final_residual_norm_   = res_norm;
+        initial_residual_norm_ = res_norm;
         total_iters_           = 0;
         break;
       }
 
       // normalize first vector
-      t = 1.0 / rnorm;
+      t = 1.0 / res_norm;
       vector_handler_->scal(t, vec_V_, memspace_);
       // initialize norm history
-      h_rs_[0] = rnorm;
+      h_rs_[0] = res_norm;
       i        = -1;
       notconv  = 1;
 
@@ -187,7 +296,6 @@ namespace ReSolve
         i++;
         it++;
 
-        // Z_i = (LU)^{-1}*V_i
         vec_v.setData(vec_V_->getData(i, memspace_), memspace_);
         if (flexible_)
         {
@@ -197,14 +305,33 @@ namespace ReSolve
         {
           vec_z.setData(vec_Z_->getData(0, memspace_), memspace_);
         }
-        this->precV(&vec_v, &vec_z);
-        mem_.deviceSynchronize();
 
-        // V_{i+1}=A*Z_i
+        // Expand the Krylov subspace.
+        //
+        // New basis vector:
+        //   V[i+1] = A*M^{-1}*V[i] (right preconditioning)
+        //   V[i+1] = M^{-1}*A*V[i] (left preconditioning)
 
-        vec_v.setData(vec_V_->getData(i + 1, memspace_), memspace_);
+        switch (preconditioner_->getSide())
+        {
+        case Preconditioner::Side::RIGHT:
+          // Compute vec_z = M^{-1}*V[i], then V[i+1] = A*vec_z
+          preconditioner_->apply(&vec_v, &vec_z);
 
-        matrix_handler_->matvec(A_, &vec_z, &vec_v, &ONE, &ZERO, memspace_);
+          vec_v.setData(vec_V_->getData(i + 1, memspace_), memspace_);
+          matrix_handler_->matvec(A_, &vec_z, &vec_v, &ONE, &ZERO, memspace_);
+          break;
+        case Preconditioner::Side::LEFT:
+          // Compute vec_z = A*V[i], then V[i+1] = M^{-1}*vec_z
+          matrix_handler_->matvec(A_, &vec_v, &vec_z, &ONE, &ZERO, memspace_);
+
+          vec_v.setData(vec_V_->getData(i + 1, memspace_), memspace_);
+          preconditioner_->apply(&vec_z, &vec_v);
+          break;
+        default:
+          out::error() << "Unknown preconditioner side.\n";
+          return 1;
+        }
 
         // orthogonalize V[i+1], form a column of h_H_
 
@@ -238,12 +365,12 @@ namespace ReSolve
         h_H_[(i) * (restart_ + 1) + (i + 1)] = h_c_[i] * Hii1 - h_s_[i] * Hii;
 
         // residual norm estimate
-        rnorm = std::abs(h_rs_[i + 1]);
+        res_norm = std::abs(h_rs_[i + 1]);
         io::Logger::misc() << "it: " << it << " --> norm of the residual "
                            << std::scientific << std::setprecision(16)
-                           << rnorm << "\n";
+                           << res_norm << "\n";
         // check convergence
-        if (i + 1 >= restart_ || rnorm <= tolrel || it >= maxit_)
+        if (i + 1 >= restart_ || res_norm <= tol_rel || it >= maxit_)
         {
           notconv = 0;
         }
@@ -251,7 +378,7 @@ namespace ReSolve
 
       io::Logger::misc() << "End of cycle, ESTIMATED norm of residual "
                          << std::scientific << std::setprecision(16)
-                         << rnorm << "\n";
+                         << res_norm << "\n";
       // solve tri system
       h_rs_[i] = h_rs_[i] / h_H_[i * (restart_ + 1) + i];
       for (int ii = 2; ii <= i + 1; ii++)
@@ -266,7 +393,11 @@ namespace ReSolve
         h_rs_[k] = t / h_H_[k * (restart_ + 1) + k];
       }
 
-      // get solution
+      // Update the approximate solution x using h_rs_.
+      // Flexible GMRES uses the preconditioned basis Z[j] directly.
+      // Standard GMRES first forms vec_z from V[j], then applies M^{-1}
+      // only for right preconditioning.
+
       if (flexible_)
       {
         for (j = 0; j <= i; j++)
@@ -277,6 +408,7 @@ namespace ReSolve
       }
       else
       {
+        // Accumulate the correction vec_z = sum_j h_rs_[j] * V[j]
         vec_Z_->setToZero(memspace_);
         vec_z.setData(vec_Z_->getData(0, memspace_), memspace_);
         for (j = 0; j <= i; j++)
@@ -284,37 +416,71 @@ namespace ReSolve
           vec_v.setData(vec_V_->getData(j, memspace_), memspace_);
           vector_handler_->axpy(h_rs_[j], &vec_v, &vec_z, memspace_);
         }
-        // now multiply d_Z by precon
-
-        vec_v.setData(vec_V_->getData(memspace_), memspace_);
-        this->precV(&vec_z, &vec_v);
-        // and add to x
-        vector_handler_->axpy(ONE, &vec_v, x, memspace_);
+        // Apply the correction to x based on preconditioning side
+        switch (preconditioner_->getSide())
+        {
+        case Preconditioner::Side::RIGHT:
+          // Right preconditioning: x += M^{-1} * vec_z
+          preconditioner_->apply(&vec_z, &vec_v);
+          vector_handler_->axpy(ONE, &vec_v, x, memspace_);
+          break;
+        case Preconditioner::Side::LEFT:
+          // Left preconditioning: x += vec_z
+          vector_handler_->axpy(ONE, &vec_z, x, memspace_);
+          break;
+        default:
+          out::error() << "Unknown preconditioner side.\n";
+          return 1;
+        }
       }
 
       /* test solution */
 
-      if (rnorm <= tolrel || it >= maxit_)
+      if (res_norm <= tol_rel || it >= maxit_)
       {
-        // rnorm_aux = rnorm;
+        // res_norm_aux = res_norm;
         outer_flag = 0;
       }
 
       rhs->copyToExternal(vec_V_->getData(memspace_), 0, memspace_, memspace_);
       matrix_handler_->matvec(A_, x, vec_V_, &MINUS_ONE, &ONE, memspace_);
-      rnorm = vector_handler_->dot(vec_V_, vec_V_, memspace_);
-      // rnorm = ||V_1||
-      rnorm = std::sqrt(rnorm);
+
+      vec_v.setData(vec_V_->getData(0, memspace_), memspace_);
+      true_res_norm = vector_handler_->dot(&vec_v, &vec_v, memspace_);
+      true_res_norm = std::sqrt(true_res_norm);
+
+      // Left-preconditioned GMRES applies M^{-1} to the residual
+      if (preconditioner_->getSide() == Preconditioner::Side::LEFT)
+      {
+        preconditioner_->apply(&vec_v, &vec_z);
+        vec_v.copyFromExternal(&vec_z, memspace_, memspace_);
+      }
+      res_norm = vector_handler_->dot(vec_V_, vec_V_, memspace_);
+
+      // res_norm = ||V_1||
+      res_norm = std::sqrt(res_norm);
 
       if (!outer_flag)
       {
-        final_residual_norm_ = rnorm / bnorm; // relative residual norm
+        final_r_norm = true_res_norm;
+
+        if (check_initial_guess && final_r_norm > initial_r_norm)
+        {
+          out::warning() << "Iterative solver did not improve the initial guess. Returning the initial guess.\n";
+          x->copyFromExternal(&x_initial, memspace_, memspace_);
+          final_r_norm  = initial_r_norm;
+          true_res_norm = final_r_norm;
+        }
+
+        // Report the true relative residual norm
+        final_residual_norm_ = true_res_norm / true_rhs_norm;
         total_iters_         = it;
         io::Logger::misc() << "End of cycle, COMPUTED norm of residual "
                            << std::scientific << std::setprecision(16)
-                           << rnorm << "\n";
+                           << res_norm << "\n";
       }
     } // outer while
+
     return 0;
   }
 
@@ -581,11 +747,6 @@ namespace ReSolve
     vec_Z_ = nullptr;
 
     return 0;
-  }
-
-  void LinSolverIterativeFGMRES::precV(vector_type* rhs, vector_type* x)
-  {
-    preconditioner_->apply(rhs, x);
   }
 
   void LinSolverIterativeFGMRES::setMemorySpace()

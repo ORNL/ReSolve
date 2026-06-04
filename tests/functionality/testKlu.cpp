@@ -151,8 +151,8 @@ int runTest(int argc, char* argv[], std::string& solver_name)
     status = FGMRES.setup(A);
     error_sum += status;
 
-    ReSolve::PreconditionerLU precond_lu(&KLU);
-    status = FGMRES.setPreconditioner(&precond_lu);
+    ReSolve::PreconditionerLU precond(&KLU);
+    status = FGMRES.setPreconditioner(&precond);
     error_sum += status;
     status = FGMRES.solve(&vec_rhs, &vec_x);
     error_sum += status;
@@ -199,8 +199,8 @@ int runTest(int argc, char* argv[], std::string& solver_name)
   if (is_ir)
   {
     FGMRES.resetMatrix(A);
-    ReSolve::PreconditionerLU precond_lu(&KLU);
-    status = FGMRES.setPreconditioner(&precond_lu);
+    ReSolve::PreconditionerLU precond(&KLU);
+    status = FGMRES.setPreconditioner(&precond);
     error_sum += status;
     status = FGMRES.solve(&vec_rhs, &vec_x);
     error_sum += status;

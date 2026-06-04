@@ -442,7 +442,7 @@ namespace ReSolve {
     *
     * @todo Decide how to allow user to configure grid and block sizes.
     */
-    void matrix_row_sums(index_type n,
+    void matrixRowSums(index_type n,
                         index_type nnz,
                         index_type* a_ia,
                         real_type* a_val,
@@ -461,7 +461,7 @@ namespace ReSolve {
     *
     * @todo Decide how to allow user to configure grid and block sizes.
     */
-    void vector_inf_norm(index_type n,
+    void vectorInfNorm(index_type n,
                         real_type* input,
                         real_type* buffer,
                         real_type* result)

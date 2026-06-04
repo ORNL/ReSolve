@@ -369,11 +369,11 @@ namespace ReSolve
      *
      * @todo Decide how to allow user to configure grid and block sizes.
      */
-    void matrix_row_sums(index_type        n,
-                         index_type        nnz,
-                         const index_type* a_ia,
-                         const real_type*  a_val,
-                         real_type*        result)
+    void matrixRowSums(index_type        n,
+                       index_type        nnz,
+                       const index_type* a_ia,
+                       const real_type*  a_val,
+                       real_type*        result)
     {
       kernels::matrixInfNormPart1<<<1000, 1024>>>(n, nnz, a_ia, a_val, result);
     }

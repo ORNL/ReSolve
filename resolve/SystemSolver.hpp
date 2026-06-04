@@ -1,3 +1,10 @@
+#pragma once
+
+#include <string>
+
+#include <resolve/Common.hpp>
+#include <resolve/Preconditioner.hpp>
+
 // this is to solve the system, can call different linear solvers if necessary
 namespace ReSolve
 {
@@ -10,7 +17,6 @@ namespace ReSolve
   class LinAlgWorkspaceCpu;
   class MatrixHandler;
   class VectorHandler;
-  class Preconditioner;
 
   namespace vector
   {
@@ -55,7 +61,7 @@ namespace ReSolve
     int factorize(); //  numeric part
     int refactorize();
     int refactorizationSetup();
-    int preconditionerSetup();
+    int preconditionerSetup(std::string side);
     int resetPreconditioner(matrix_type* A);
     int solve(vector_type* rhs, vector_type* x);  // for direct and iterative
     int refine(vector_type* rhs, vector_type* x); // for iterative refinement
@@ -66,6 +72,7 @@ namespace ReSolve
     LinSolverDirect&    getFactorizationSolver();
     LinSolverDirect&    getRefactorizationSolver();
     LinSolverIterative& getIterativeSolver();
+    Preconditioner&     getPreconditioner();
 
     real_type getVectorNorm(vector_type* rhs);
     real_type getResidualNorm(vector_type* rhs, vector_type* x);
