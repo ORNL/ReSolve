@@ -91,75 +91,75 @@ namespace ReSolve
        *
        * @return TestOutcome Result of the test
        */
-      TestOutcome testSolver(index_type         nx,
-                             index_type         md,
-                             index_type         mc,
+      TestOutcome testSolver(index_type         n_x,
+                             index_type         m_d,
+                             index_type         m_c,
                              index_type         H_nnz,
-                             index_type         Ds_nnz,
+                             index_type         D_s_nnz,
                              index_type         J_nnz,
-                             index_type         Jd_nnz,
+                             index_type         J_d_nnz,
                              const std::string& H_file_name,
-                             const std::string& Ds_file_name,
+                             const std::string& D_s_file_name,
                              const std::string& J_file_name,
-                             const std::string& Jd_file_name,
-                             const std::string& rx_file_name,
-                             const std::string& rs_file_name,
-                             const std::string& ry_file_name,
-                             const std::string& ryd_file_name,
+                             const std::string& J_d_file_name,
+                             const std::string& r_x_file_name,
+                             const std::string& r_s_file_name,
+                             const std::string& r_y_file_name,
+                             const std::string& r_yd_file_name,
                              real_type          gamma)
       {
         constexpr double tol = 1e-2;
 
         std::ifstream H_file(H_file_name);
-        std::ifstream Ds_file(Ds_file_name);
+        std::ifstream D_s_file(D_s_file_name);
         std::ifstream J_file(J_file_name);
-        std::ifstream Jd_file(Jd_file_name);
-        std::ifstream rx_file(rx_file_name);
-        std::ifstream rs_file(rs_file_name);
-        std::ifstream ry_file(ry_file_name);
-        std::ifstream ryd_file(ryd_file_name);
+        std::ifstream J_d_file(J_d_file_name);
+        std::ifstream r_x_file(r_x_file_name);
+        std::ifstream r_s_file(r_s_file_name);
+        std::ifstream r_y_file(r_y_file_name);
+        std::ifstream r_yd_file(r_yd_file_name);
 
         // The .mtx file readers write into host accessible memory.
         // Load test data into HOST first, then sync to DEVICE for CUDA and HIP backends.
         matrix::Csr* H  = io::createCsrFromFile(H_file, true);
-        matrix::Csr* Ds = io::createCsrFromFile(Ds_file, false);
+        matrix::Csr* D_s = io::createCsrFromFile(D_s_file, false);
         matrix::Csr* J  = io::createCsrFromFile(J_file, false);
-        matrix::Csr* Jd = io::createCsrFromFile(Jd_file, false);
+        matrix::Csr* J_d = io::createCsrFromFile(J_d_file, false);
         if (memspace_ == memory::DEVICE)
         {
           H->syncData(memory::DEVICE);
-          Ds->syncData(memory::DEVICE);
+          D_s->syncData(memory::DEVICE);
           J->syncData(memory::DEVICE);
-          Jd->syncData(memory::DEVICE);
+          J_d->syncData(memory::DEVICE);
         }
 
         // RHS vector blocks
-        vector::Vector* rx  = io::createVectorFromFile(rx_file);
-        vector::Vector* rs  = io::createVectorFromFile(rs_file);
-        vector::Vector* ry  = io::createVectorFromFile(ry_file);
-        vector::Vector* ryd = io::createVectorFromFile(ryd_file);
+        vector::Vector* r_x  = io::createVectorFromFile(r_x_file);
+        vector::Vector* r_s  = io::createVectorFromFile(r_s_file);
+        vector::Vector* r_y  = io::createVectorFromFile(r_y_file);
+        vector::Vector* r_yd = io::createVectorFromFile(r_yd_file);
         if (memspace_ == memory::DEVICE)
         {
-          rx->syncData(memory::DEVICE);
-          rs->syncData(memory::DEVICE);
-          ry->syncData(memory::DEVICE);
-          ryd->syncData(memory::DEVICE);
+          r_x->syncData(memory::DEVICE);
+          r_s->syncData(memory::DEVICE);
+          r_y->syncData(memory::DEVICE);
+          r_yd->syncData(memory::DEVICE);
         }
 
         // LHS vector blocks
-        vector::Vector* x  = new vector::Vector(nx);
-        vector::Vector* s  = new vector::Vector(md);
-        vector::Vector* y  = new vector::Vector(mc);
-        vector::Vector* yd = new vector::Vector(md);
+        vector::Vector* x  = new vector::Vector(n_x);
+        vector::Vector* s  = new vector::Vector(m_d);
+        vector::Vector* y  = new vector::Vector(m_c);
+        vector::Vector* y_d = new vector::Vector(m_d);
         x->allocate(memspace_);
         s->allocate(memspace_);
         y->allocate(memspace_);
-        yd->allocate(memspace_);
+        y_d->allocate(memspace_);
 
-        hykkt::HyKKTSolver hykktSolver(nx, md, mc, memspace_);
-        hykktSolver.setMatrixBlocks(H, Ds, J, Jd);
-        hykktSolver.setRHSBlocks(rx, rs, ry, ryd);
-        hykktSolver.setLHSPointers(x, s, y, yd);
+        hykkt::HyKKTSolver hykktSolver(n_x, m_d, m_c, memspace_);
+        hykktSolver.setMatrixBlocks(H, D_s, J, J_d);
+        hykktSolver.setRHSBlocks(r_x, r_s, r_y, r_yd);
+        hykktSolver.setLHSPointers(x, s, y, y_d);
         hykktSolver.setGamma(gamma);
         hykktSolver.addHandlers(&matrixHandler_, &vectorHandler_);
 
@@ -167,23 +167,23 @@ namespace ReSolve
 
         TestStatus  status;
         std::string testname(__func__);
-        index_type  N   = nx + mc + 2 * md;
-        index_type  nnz = H_nnz + Ds_nnz + J_nnz + Jd_nnz;
+        index_type  N   = n_x + m_c + 2 * m_d;
+        index_type  nnz = H_nnz + D_s_nnz + J_nnz + J_d_nnz;
         testname += " N=" + std::to_string(N) + ", nnz =" + std::to_string(nnz) + '\n';
         status *= validateResult(error, tol);
 
         delete H;
-        delete Ds;
+        delete D_s;
         delete J;
-        delete Jd;
-        delete rx;
-        delete rs;
-        delete ry;
-        delete ryd;
+        delete J_d;
+        delete r_x;
+        delete r_s;
+        delete r_y;
+        delete r_yd;
         delete x;
         delete s;
         delete y;
-        delete yd;
+        delete y_d;
 
         return status.report(testname.c_str());
       }
