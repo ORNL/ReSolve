@@ -22,11 +22,12 @@ from collections import defaultdict
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
 
 
 FIGURE_SIZE = (10, 6)
 DPI = 200
-GRID_ALPHA = 0.4
+GRID_ALPHA = 0.3
 
 LEGEND_OPTIONS = {
     "loc": "center left",
@@ -103,15 +104,17 @@ def plot_problem_metric(problem_size: str,
     plt.xlabel("Linear system")
     plt.ylabel(y_label)
     plt.title(title)
-    plt.xticks(sorted_systems(rows))
+
+    ax = plt.gca()
+    ax.xaxis.set_major_locator(MaxNLocator(nbins=12, integer=True))
 
     if log_scale:
         # Residuals can vary by orders of magnitude, especially after
         # iterative refinement.
         plt.yscale("log")
-        plt.grid(True, alpha=GRID_ALPHA, which="both")
+        plt.grid(True, axis="y", alpha=GRID_ALPHA, which="both")
     else:
-        plt.grid(True, alpha=GRID_ALPHA)
+        plt.grid(True, axis="y", alpha=GRID_ALPHA)
 
     save_current_plot(output_path)
 
