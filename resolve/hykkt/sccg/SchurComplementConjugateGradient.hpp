@@ -58,8 +58,8 @@ namespace ReSolve
       int        itmax_ = 100;   // Maximum iterations for conjugate gradient
       double     tol_   = 1e-12; // Solver tolerance for Schur
 
-      MatrixHandler* matrix_handler_; ///< Backend-specific matrix handler.
-      VectorHandler* vector_handler_; ///< Backend-specific vector handler.
+      MatrixHandler* matrix_handler_{nullptr}; ///< Backend-specific matrix handler.
+      VectorHandler* vector_handler_{nullptr}; ///< Backend-specific vector handler.
 
       CholeskySolver* choleskySolver_{nullptr}; // Cholesky factorization on 1,1 block
 
