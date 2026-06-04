@@ -173,15 +173,27 @@ namespace ReSolve
     int        k;
     int        k1;
 
-    real_type   t             = 0.0;
-    real_type   res_norm      = 0.0; // Residual norm used used for convergence
-    real_type   rhs_norm      = 0.0; // Right-hand side norm used for convergence
-    real_type   true_res_norm = 0.0; // True (unpreconditioned) residual norm ||b - Ax|| for reporting
-    real_type   true_rhs_norm = 0.0; // True (unpreconditioned) right-hand side norm ||b|| for reporting
-    real_type   tolrel;
+    real_type   t              = 0.0;
+    real_type   res_norm       = 0.0; // Residual norm used for convergence
+    real_type   rhs_norm       = 0.0; // Right-hand side norm used for convergence
+    real_type   true_res_norm  = 0.0; // True (unpreconditioned) residual norm ||b - Ax|| for reporting
+    real_type   true_rhs_norm  = 0.0; // True (unpreconditioned) right-hand side norm ||b|| for reporting
+    real_type   initial_r_norm = 0.0;
+    real_type   final_r_norm   = 0.0;
+    real_type   x_norm         = 0.0;
+    real_type   tol_rel;
     vector_type vec_v(n_);
     vector_type vec_z(n_);
     vector_type vec_s(k_rand_);
+    vector_type x_initial(x->getSize());
+
+    x_initial.allocate(memspace_);
+    x_initial.copyFromExternal(x, memspace_, memspace_);
+
+    x_norm = vector_handler_->dot(&x_initial, &x_initial, memspace_);
+    x_norm = std::sqrt(x_norm);
+
+    bool check_initial_guess = (x_norm > MACHINE_EPSILON);
 
     // Compute initial residual norm.
     // V[0] = ||b - A*x0||         for right preconditioning
@@ -203,6 +215,29 @@ namespace ReSolve
     // True right-hand side norm ||b||
     true_rhs_norm = vector_handler_->dot(rhs, rhs, memspace_);
     true_rhs_norm = std::sqrt(true_rhs_norm);
+
+    initial_r_norm = true_res_norm;
+
+    if (check_initial_guess && initial_r_norm > true_rhs_norm)
+    {
+      out::warning() << "Initial guess has a larger residual than the zero vector. Ignoring initial guess.\n";
+
+      x->setToZero(memspace_);
+      x_initial.copyFromExternal(x, memspace_, memspace_);
+      check_initial_guess = false;
+
+      vec_Z_->setToZero(memspace_);
+      vec_V_->setToZero(memspace_);
+
+      rhs->copyToExternal(vec_V_->getData(memspace_), 0, memspace_, memspace_);
+      matrix_handler_->matvec(A_, x, vec_V_, &MINUS_ONE, &ONE, memspace_);
+
+      vec_v.setData(vec_V_->getData(0, memspace_), memspace_);
+
+      true_res_norm  = vector_handler_->dot(&vec_v, &vec_v, memspace_);
+      true_res_norm  = std::sqrt(true_res_norm);
+      initial_r_norm = true_res_norm;
+    }
 
     // Left preconditioning uses preconditioned norms for convergence
     if (preconditioner_->getSide() == Preconditioner::LEFT)
@@ -243,10 +278,10 @@ namespace ReSolve
     {
       if (it == 0)
       {
-        tolrel = tol_ * res_norm;
-        if (std::abs(tolrel) < MACHINE_EPSILON)
+        tol_rel = tol_ * res_norm;
+        if (std::abs(tol_rel) < MACHINE_EPSILON)
         {
-          tolrel = MACHINE_EPSILON;
+          tol_rel = MACHINE_EPSILON;
         }
       }
 
@@ -382,7 +417,7 @@ namespace ReSolve
                            << std::scientific << std::setprecision(16)
                            << res_norm << "\n";
         // check convergence
-        if (i + 1 >= restart_ || res_norm <= tolrel || it >= maxit_)
+        if (i + 1 >= restart_ || res_norm <= tol_rel || it >= maxit_)
         {
           notconv = 0;
         }
@@ -447,7 +482,7 @@ namespace ReSolve
       }
 
       /* test solution */
-      if (res_norm <= tolrel || it >= maxit_)
+      if (res_norm <= tol_rel || it >= maxit_)
       {
         outer_flag = 0;
       }
@@ -487,6 +522,15 @@ namespace ReSolve
         // Compute the true residual norm = ||b - A*x||
         true_res_norm = vector_handler_->dot(vec_V_, vec_V_, memspace_);
         true_res_norm = std::sqrt(true_res_norm);
+        final_r_norm  = true_res_norm;
+
+        if (check_initial_guess && final_r_norm > initial_r_norm)
+        {
+          out::warning() << "Iterative solver did not improve the initial guess. Returning the initial guess.\n";
+          x->copyFromExternal(&x_initial, memspace_, memspace_);
+          final_r_norm  = initial_r_norm;
+          true_res_norm = final_r_norm;
+        }
 
         io::Logger::misc() << "End of cycle, COMPUTED norm of residual "
                            << std::scientific << std::setprecision(16)

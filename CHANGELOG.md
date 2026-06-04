@@ -26,6 +26,8 @@
 
 - Added `allocateWithExternalSparsityPattern` for sparse matrices.
 
+- Added initial guess support for FGMRES and randomized FGMRES iterative solvers.
+
 - Improved coding guidelines for developers on floating point conventions.
 
 - Made spack builds more robust.

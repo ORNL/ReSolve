@@ -177,6 +177,110 @@ int test(int argc, char* argv[])
   status = solver.solve(vec_rhs, &vec_x);
   error_sum += status;
 
+  // Test initial guess handling with separate solver objects.
+  //
+  // A large initial guess should be rejected because it increases the
+  // residual compared with the zero vector. A later accepted initial guess
+  // should not be returned with a larger residual than it had on input.
+  const real_type residual_tol = 1e-10;
+
+  // Create a large initial guess with a larger residual than the zero vector.
+  vector_type bad_guess_x(A->getNumRows());
+  bad_guess_x.allocate(ReSolve::memory::HOST);
+  bad_guess_x.allocate(memspace);
+  bad_guess_x.setToConst(1.0e6, memspace);
+
+  ReSolve::SystemSolver bad_guess_solver(&workspace, "none", "none", method, "ilu0", "none");
+  bad_guess_solver.setGramSchmidtMethod(gs);
+  bad_guess_solver.getIterativeSolver().setCliParam("maxit", "2500");
+  bad_guess_solver.getIterativeSolver().setCliParam("tol", "1e-12");
+
+  matrix_handler.setValuesChanged(true, memspace);
+
+  status = bad_guess_solver.setMatrix(A);
+  error_sum += status;
+
+  if (method == "randgmres")
+  {
+    bad_guess_solver.setSketchingMethod(sketch);
+  }
+
+  bad_guess_solver.getIterativeSolver().setCliParam("flexible", flexible);
+  bad_guess_solver.getIterativeSolver().setCliParam("restart", "200");
+
+  status = bad_guess_solver.preconditionerSetup(side);
+  error_sum += status;
+
+  const real_type bad_guess_rnorm = bad_guess_solver.getResidualNorm(vec_rhs, &bad_guess_x);
+
+  if (bad_guess_rnorm <= 1.0)
+  {
+    std::cout << "Bad initial guess test setup failed:\n";
+    std::cout << std::scientific << std::setprecision(16)
+              << "\tInitial guess residual : " << bad_guess_rnorm << "\n"
+              << "\tZero-vector residual   : " << 1.0 << "\n\n";
+    error_sum++;
+  }
+
+  status = bad_guess_solver.solve(vec_rhs, &bad_guess_x);
+  error_sum += status;
+
+  const real_type rejected_guess_rnorm = bad_guess_solver.getResidualNorm(vec_rhs, &bad_guess_x);
+
+  if (rejected_guess_rnorm > bad_guess_rnorm + residual_tol)
+  {
+    std::cout << "Bad initial guess rejection check failed:\n";
+    std::cout << std::scientific << std::setprecision(16)
+              << "\tInitial guess residual : " << bad_guess_rnorm << "\n"
+              << "\tReturned residual      : " << rejected_guess_rnorm << "\n\n";
+    error_sum++;
+  }
+
+  // Use a scaled converged solution as a nonzero initial guess.
+  vector_type vec_x_guess(vec_x.getSize());
+  vec_x_guess.copyFromExternal(&vec_x, memspace, memspace);
+  vector_handler.scal(0.9, &vec_x_guess, memspace);
+
+  ReSolve::SystemSolver accepted_guess_solver(&workspace, "none", "none", method, "ilu0", "none");
+  accepted_guess_solver.setGramSchmidtMethod(gs);
+  accepted_guess_solver.getIterativeSolver().setCliParam("maxit", "2500");
+  accepted_guess_solver.getIterativeSolver().setCliParam("tol", "1e-12");
+
+  matrix_handler.setValuesChanged(true, memspace);
+
+  status = accepted_guess_solver.setMatrix(A);
+  error_sum += status;
+
+  if (method == "randgmres")
+  {
+    accepted_guess_solver.setSketchingMethod(sketch);
+  }
+
+  accepted_guess_solver.getIterativeSolver().setCliParam("flexible", flexible);
+  accepted_guess_solver.getIterativeSolver().setCliParam("restart", "200");
+
+  status = accepted_guess_solver.preconditionerSetup(side);
+  error_sum += status;
+
+  const real_type initial_guess_rnorm = accepted_guess_solver.getResidualNorm(vec_rhs, &vec_x_guess);
+
+  if (initial_guess_rnorm < 1.0)
+  {
+    status = accepted_guess_solver.solve(vec_rhs, &vec_x_guess);
+    error_sum += status;
+
+    const real_type final_guess_rnorm = accepted_guess_solver.getResidualNorm(vec_rhs, &vec_x_guess);
+
+    if (final_guess_rnorm > initial_guess_rnorm + residual_tol)
+    {
+      std::cout << "Initial guess correction check failed:\n";
+      std::cout << std::scientific << std::setprecision(16)
+                << "\tInitial guess residual : " << initial_guess_rnorm << "\n"
+                << "\tFinal residual         : " << final_guess_rnorm << "\n\n";
+      error_sum++;
+    }
+  }
+
   // Check results and print summary
   helper.setSystem(A, vec_rhs, &vec_x);
 
