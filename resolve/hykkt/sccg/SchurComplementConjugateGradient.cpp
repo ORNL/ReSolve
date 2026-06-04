@@ -145,10 +145,10 @@ namespace ReSolve
         matrix_handler_->matvec(J_tr_, r_, y_, &ONE, &ZERO, memspace_);
         choleskySolver_->solve(z_, y_);
         matrix_handler_->matvec(J_, z_, w_, &ONE, &ZERO, memspace_);
-        delta_ = vector_handler_->dot(w_, r_, memspace_);
-        beta_  = gamma_i1_ / gamma_i_;
+        delta_   = vector_handler_->dot(w_, r_, memspace_);
+        beta_    = gamma_i1_ / gamma_i_;
         gamma_i_ = gamma_i1_;
-        alpha_ = gamma_i_ / (delta_ - beta_ * gamma_i_ / alpha_);
+        alpha_   = gamma_i_ / (delta_ - beta_ * gamma_i_ / alpha_);
       }
 
       printf("Conjugate gradient error is %32.32g \n", sqrt(gamma_i1_));

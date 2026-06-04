@@ -67,7 +67,7 @@ namespace ReSolve
       matrix::Csr* J_tr_{nullptr};
 
       vector::Vector* x_0_{nullptr}; // LHS of entire system
-      vector::Vector* b_{nullptr};  // RHS of entire system
+      vector::Vector* b_{nullptr};   // RHS of entire system
 
       // scalars used for conjugate gradient
       double beta_;

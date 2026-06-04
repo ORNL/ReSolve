@@ -76,7 +76,7 @@ namespace ReSolve
       real_type gamma_; // gamma value used in HYKKT
 
       bool allocated_ = false;
-      bool J_d_flag_   = false;
+      bool J_d_flag_  = false;
 
       // Whether the solver is correctly used with matrices of
       // the same nonzero structure
@@ -98,10 +98,10 @@ namespace ReSolve
       index_type N_{0}; // Size of matrix K (square) and vector x
 
       // Blocks of input matrix K
-      matrix::Csr* H_{nullptr};     // nx x nx. Actually stores H + D_x, but it is named H_ for brevity
+      matrix::Csr* H_{nullptr};      // nx x nx. Actually stores H + D_x, but it is named H_ for brevity
       matrix::Csr* D_s_{nullptr};    // md x md
-      matrix::Csr* J_{nullptr};     // mc x nx
-      matrix::Csr* J_tr_{nullptr};  // nx x mc
+      matrix::Csr* J_{nullptr};      // mc x nx
+      matrix::Csr* J_tr_{nullptr};   // nx x mc
       matrix::Csr* J_d_{nullptr};    // md x nx
       matrix::Csr* J_d_tr_{nullptr}; // nx x md
 
@@ -112,9 +112,9 @@ namespace ReSolve
       vector::Vector* r_yd_{nullptr}; // Shape: md
 
       // Blocks of output vector (LHS) x
-      vector::Vector* x_{nullptr};  // Shape: nx
-      vector::Vector* s_{nullptr};  // Shape: md
-      vector::Vector* y_{nullptr};  // Shape: mc
+      vector::Vector* x_{nullptr};   // Shape: nx
+      vector::Vector* s_{nullptr};   // Shape: md
+      vector::Vector* y_{nullptr};   // Shape: mc
       vector::Vector* y_d_{nullptr}; // Shape: md
 
       // Intermediate matrices and vectors
