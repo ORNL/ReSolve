@@ -35,11 +35,11 @@ namespace ReSolve
        * @param[in] vector_handler Vector handler for the selected backend.
        * @param[in] memspace Memory space of incoming data and for computation.
        */
-      SchurComplementConjugateGradient(index_type n,
-                                       index_type m,
-                                       CholeskySolver* choleskySolver,
-                                       MatrixHandler* matrix_handler_,
-                                       VectorHandler* vector_handler_,
+      SchurComplementConjugateGradient(index_type          n,
+                                       index_type          m,
+                                       CholeskySolver*     choleskySolver,
+                                       MatrixHandler*      matrix_handler_,
+                                       VectorHandler*      vector_handler_,
                                        memory::MemorySpace memspace);
       ~SchurComplementConjugateGradient();
 
