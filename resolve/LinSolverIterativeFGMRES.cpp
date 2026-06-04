@@ -160,7 +160,7 @@ namespace ReSolve
     real_type   initial_r_norm = 0.0;
     real_type   final_r_norm   = 0.0;
     real_type   x_norm         = 0.0;
-    real_type   tolrel;
+    real_type   tol_rel;
     vector_type vec_v(n_);
     vector_type vec_z(n_);
     vector_type x_initial(x->getSize());
@@ -253,10 +253,10 @@ namespace ReSolve
     {
       if (it == 0)
       {
-        tolrel = tol_ * res_norm;
-        if (std::abs(tolrel) < MACHINE_EPSILON)
+        tol_rel = tol_ * res_norm;
+        if (std::abs(tol_rel) < MACHINE_EPSILON)
         {
-          tolrel = MACHINE_EPSILON;
+          tol_rel = MACHINE_EPSILON;
         }
       }
 
@@ -370,7 +370,7 @@ namespace ReSolve
                            << std::scientific << std::setprecision(16)
                            << res_norm << "\n";
         // check convergence
-        if (i + 1 >= restart_ || res_norm <= tolrel || it >= maxit_)
+        if (i + 1 >= restart_ || res_norm <= tol_rel || it >= maxit_)
         {
           notconv = 0;
         }
@@ -436,7 +436,7 @@ namespace ReSolve
 
       /* test solution */
 
-      if (res_norm <= tolrel || it >= maxit_)
+      if (res_norm <= tol_rel || it >= maxit_)
       {
         // res_norm_aux = res_norm;
         outer_flag = 0;
