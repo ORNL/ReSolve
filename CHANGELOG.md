@@ -83,3 +83,5 @@ It is seamless from the user perspective and fixed many bugs.
 16. Updated MatrixHandler::addConst to return integer error codes instead of void.
 
 17. Added a preconditioner interface class so users can define thier own preconditioners.
+
+19. Added optional timing output to `gpuRefactor` and `kluRefactor`, plus benchmark utilities for parsing logs and generating timing/residual plots.
