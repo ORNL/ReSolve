@@ -128,12 +128,13 @@ Re::Solve project would not be possible without significant contributions from
 - Maksudul Alam
 - Kaleb Brunhoeber
 - Ryan Danehy
-- Tamar DeWilde
-- Adham Ibrahim 
+- Tamar Dewilde
+- Adham Ibrahim
 - Nicholson Koukpaizan
 - Jaelyn Litzinger
 - Phil Roth
 - Cameron Rutherford
+- Andrew Xu
 
 Development of this code was supported by the Exascale Computing Project (ECP),
 Project Number: 17-SC-20-SC, a collaborative effort of two DOE organizations—the

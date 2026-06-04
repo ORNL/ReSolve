@@ -43,8 +43,8 @@ namespace ReSolve
                                        memory::MemorySpace memspace);
       ~SchurComplementConjugateGradient();
 
-      void addMatrixInfo(matrix::Csr* jc, matrix::Csr* jc_tr);
-      void addVectorInfo(vector::Vector* x0, vector::Vector* b);
+      void addMatrixInfo(matrix::Csr* J, matrix::Csr* J_tr);
+      void addVectorInfo(vector::Vector* x_0, vector::Vector* b);
       void updateCholeskySolver(CholeskySolver* choleskySolver);
       void setSolverTolerance(double tol);
       void setSolverItmax(int itmax);
@@ -63,19 +63,19 @@ namespace ReSolve
       MatrixHandler* matrix_handler_{nullptr}; ///< Backend-specific matrix handler.
       VectorHandler* vector_handler_{nullptr}; ///< Backend-specific vector handler.
 
-      matrix::Csr* jc_{nullptr};
-      matrix::Csr* jc_tr_{nullptr};
+      matrix::Csr* J_{nullptr};
+      matrix::Csr* J_tr_{nullptr};
 
-      vector::Vector* x0_{nullptr}; // LHS of entire system
-      vector::Vector* b_{nullptr};  // RHS of entire system
+      vector::Vector* x_0_{nullptr}; // LHS of entire system
+      vector::Vector* b_{nullptr};   // RHS of entire system
 
       // scalars used for conjugate gradient
       double beta_;
       double delta_;
       double alpha_;
       double minalpha_;
-      double gam_i_;
-      double gam_i1_;
+      double gamma_i_;
+      double gamma_i1_;
 
       // Vectors used for conjugate gradient
       vector::Vector* y_{nullptr}; // Internal RHS of system

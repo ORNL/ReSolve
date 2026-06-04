@@ -9,15 +9,17 @@
 # Build HyKKT tests
 
 add_executable(runHykktPermutationTests.exe runHykktPermutationTests.cpp)
-add_executable(runHykktRuizScalingTests.exe runHykktRuizScalingTests.cpp)
-add_executable(runHykktSpGEMMTests.exe runHykktSpGEMMTests.cpp)
 target_link_libraries(
   runHykktPermutationTests.exe PRIVATE resolve_hykkt resolve_matrix
 )
+
+add_executable(runHykktRuizScalingTests.exe runHykktRuizScalingTests.cpp)
 target_link_libraries(
   runHykktRuizScalingTests.exe PRIVATE resolve_hykkt resolve_hykkt_ruiz
                                        resolve_matrix
 )
+
+add_executable(runHykktSpGEMMTests.exe runHykktSpGEMMTests.cpp)
 target_link_libraries(
   runHykktSpGEMMTests.exe PRIVATE resolve_hykkt resolve_hykkt_spgemm
                                   resolve_matrix
@@ -39,9 +41,26 @@ target_compile_definitions(
   runHykktSCCGTests.exe PRIVATE SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
 ) # For file paths
 
+add_executable(runHykktSolverTests.exe runHykktSolverTests.cpp)
+target_link_libraries(
+  runHykktSolverTests.exe
+  PRIVATE resolve_hykkt
+          resolve_hykkt_ruiz
+          resolve_hykkt_chol
+          resolve_hykkt_spgemm
+          resolve_hykkt_sccg
+          resolve_hykkt_solver
+          resolve_vector
+          resolve_matrix
+)
+target_compile_definitions(
+  runHykktSolverTests.exe PRIVATE SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
+) # For file paths
+
 # Install tests
-set(installable_tests runHykktPermutationTests.exe runHykktRuizScalingTests.exe
-                      runHykktCholeskyTests.exe runHykktSpGEMMTests.exe
+set(installable_tests
+    runHykktPermutationTests.exe runHykktRuizScalingTests.exe
+    runHykktCholeskyTests.exe runHykktSpGEMMTests.exe runHykktSolverTests.exe
 )
 
 install(TARGETS ${installable_tests} RUNTIME DESTINATION bin/resolve/tests/unit)
@@ -55,3 +74,4 @@ add_test(NAME hykkt_ruiz_test
 add_test(NAME hykkt_chol_test COMMAND $<TARGET_FILE:runHykktCholeskyTests.exe>)
 add_test(NAME hykkt_spgemm_test COMMAND $<TARGET_FILE:runHykktSpGEMMTests.exe>)
 add_test(NAME hykkt_sccg_test COMMAND $<TARGET_FILE:runHykktSCCGTests.exe>)
+add_test(NAME hykkt_solver_test COMMAND $<TARGET_FILE:runHykktSolverTests.exe>)

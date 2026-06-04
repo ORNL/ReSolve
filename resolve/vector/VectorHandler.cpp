@@ -342,6 +342,39 @@ namespace ReSolve
   }
 
   /**
+   * @brief Scale a vector by a diagonal matrix represented by a contiguous subvector of an input vector
+   *
+   * @param[in] diag - vector representing the diagonal matrix
+   * @param[in,out] vec - vector to be scaled
+   * @param[in] diag_begin - the index of diag where the diagonal matrix begins (inclusive)
+   * @param[in] diag_end - the index of diag where the diagonal matrix ends (exclusive)
+   * @param[in] memspace - Device where the operation is computed
+   *
+   * @pre The diagonal vector must be of the same size as the vector.
+   * @invariant diag
+   *
+   */
+  void VectorHandler::scal(vector::Vector*     diag,
+                           vector::Vector*     vec,
+                           index_type          diag_offset,
+                           memory::MemorySpace memspace)
+  {
+    assert(diag->getData(memspace) != nullptr && "Diagonal vector data is null!\n");
+    assert(vec->getData(memspace) != nullptr && "Vector data is null!\n");
+
+    using namespace ReSolve::memory;
+    switch (memspace)
+    {
+    case HOST:
+      return cpuImpl_->scal(diag, vec, diag_offset);
+      break;
+    case DEVICE:
+      return devImpl_->scal(diag, vec, diag_offset);
+      break;
+    }
+  }
+
+  /**
    * @brief Multiplies vector by an inverse of a diagonal matrix.
    *
    * @param[in]  diag   - diagonal matrix stored in a vector object
