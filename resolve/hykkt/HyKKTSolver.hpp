@@ -89,9 +89,9 @@ namespace ReSolve
       CholeskySolver*                   cholesky_{nullptr};
       SchurComplementConjugateGradient* sccg_{nullptr};
 
-      index_type mc_{0};
-      index_type md_{0};
       index_type nx_{0};
+      index_type md_{0};
+      index_type mc_{0};
       index_type n_total_{0};
       index_type m_{0};
       index_type n_{0};
