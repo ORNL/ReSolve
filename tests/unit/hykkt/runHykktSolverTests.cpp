@@ -7,7 +7,6 @@
 
 #include <fstream>
 #include <iostream>
-#include <random>
 #include <string>
 
 #include <resolve/Common.hpp>
@@ -39,8 +38,7 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
   workspace.initializeHandles();
   ReSolve::MatrixHandler           matrix_handler(&workspace);
   ReSolve::VectorHandler           vector_handler(&workspace);
-  std::mt19937                     generator(ReSolve::constants::SEED);
-  ReSolve::tests::HykktSolverTests test(memspace, matrix_handler, vector_handler, generator);
+  ReSolve::tests::HykktSolverTests test(memspace, matrix_handler, vector_handler);
 
   ReSolve::real_type gamma      = 10000.0;
   std::string        source_dir = std::string(SOURCE_DIR);

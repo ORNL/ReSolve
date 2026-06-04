@@ -15,15 +15,7 @@
             "generator": "Unix Makefiles",
             "cacheVariables": {
                 "RESOLVE_USE_CUDA": "ON",
-                "CMAKE_CUDA_ARCHITECTURES": "70",
-                "CMAKE_BUILD_TYPE": "Debug",
-                "CMAKE_CUDA_FLAGS": "-g -G", 
-                "CMAKE_CXX_FLAGS": "-Wall -Wextra",
-                "RESOLVE_USE_LUSOL": "ON",
-                "CMAKE_INSTALL_PREFIX": "../bin",
-                "RESOLVE_USE_KLU": "ON",
-                "SUITESPARSE_DIR": "/usr/lib/x86_64-linux-gnu",
-                "SUITESPARSE_INCLUDE_DIR": "/usr/include/suitesparse"
+		        "CMAKE_CUDA_ARCHITECTURES": "60"
             }
         },
         {
@@ -45,6 +37,32 @@
             "installDir": "${sourceDir}/install",
             "generator": "Unix Makefiles"
         },
+	    {
+            "name": "ascent",
+            "inherits": "cuda",
+            "displayName": "Ascent Build",
+            "description": "Custom changes specific for Ascent",
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "$env{OLCF_GCC_ROOT}/bin/gcc",
+                "CMAKE_CXX_COMPILER": "$env{OLCF_GCC_ROOT}/bin/g++",
+		        "CMAKE_CUDA_ARCHITECTURES": "70"
+	        }
+        },
+	    {
+            "name": "ascent-clang",
+            "inherits": "cuda",
+            "displayName": "Ascent Build with Clang",
+            "description": "Custom changes specific for Ascent with Clang",
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "$env{OLCF_LLVM_ROOT}/bin/clang",
+                "CMAKE_CXX_COMPILER": "$env{OLCF_LLVM_ROOT}/bin/clang++",
+                "CMAKE_CUDA_COMPILER": "nvcc",
+                "CMAKE_CUDA_HOST_COMPILER": "$env{OLCF_LLVM_ROOT}/bin/clang++",
+                "CMAKE_CUDA_FLAGS": "-allow-unsupported-compiler",
+                "RESOLVE_USE_ASAN": "OFF",
+		        "CMAKE_CUDA_ARCHITECTURES": "70"
+	    }
+        },
         {
             "name": "deception",
             "inherits": "cuda",
@@ -60,34 +78,26 @@
             "displayName": "Incline Build with rocm",
             "description": "Custom changes specific for Incline",
             "cacheVariables": {
-                "CMAKE_HIP_ARCHITECTURES": "gfx908",
-                "CMAKE_BUILD_TYPE": "Debug"
+                "CMAKE_HIP_ARCHITECTURES" : "gfx908",
+                "CMAKE_BUILD_TYPE" : "Debug"
             },
             "environment": {
-                "CC": "clang",
-                "CXX": "clang++",
-                "FC": "gfortran"
+                "CC" : "clang",
+                "CXX" : "clang++",
+                "FC" : "gfortran"
             }
         },
         {
-            "name": "frontier",
-            "inherits": "rocm",
-            "displayName": "Frontier Build",
-            "description": "Custom changes specific for Frontier",
-            "cacheVariables": {
+            "name": "crusher",
+	        "inherits": "rocm",
+            "displayName": "Crusher Build",
+            "description": "Custom changes specific for Crusher",
+	        "cacheVariables": {
                 "CMAKE_HIP_ARCHITECTURES": "gfx90a",
                 "CMAKE_BUILD_TYPE": "Debug",
-                "CMAKE_C_COMPILER": "/opt/rocm-6.3.1/llvm/bin/clang",
-                "CMAKE_CXX_COMPILER": "/opt/rocm-6.3.1/llvm/bin/clang++"
-            }
-        }
-    ],
-    "buildPresets": [
-        {
-            "name": "Debug CUDA",
-            "description": "",
-            "displayName": "",
-            "configurePreset": "cuda"
-        }
+	            "CMAKE_C_COMPILER": "/opt/rocm-5.6.0/llvm/bin/clang",
+                "CMAKE_CXX_COMPILER": "/opt/rocm-5.6.0/llvm/bin/clang++"
+	        }  
+	    }
     ]
 }

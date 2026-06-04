@@ -7,7 +7,6 @@
 #pragma once
 
 #include <filesystem>
-#include <random>
 
 #include <resolve/MemoryUtils.hpp>
 #include <resolve/hykkt/HyKKTSolver.hpp>
@@ -38,10 +37,9 @@ namespace ReSolve
        * @param[in] memspace Memory space for the test (HOST or DEVICE).
        * @param[in] matrix_handler Reference to a matrix handler for the selected backend.
        * @param[in] vector_handler Reference to a vector handler for the selected backend.
-       * @param[in] generator Reference to a C++ random number generator.
        */
-      HykktSolverTests(memory::MemorySpace memspace, MatrixHandler& matrix_handler, VectorHandler& vector_handler, std::mt19937& generator)
-        : memspace_(memspace), matrixHandler_(matrix_handler), vectorHandler_(vector_handler), generator_(generator)
+      HykktSolverTests(memory::MemorySpace memspace, MatrixHandler& matrix_handler, VectorHandler& vector_handler)
+        : memspace_(memspace), matrixHandler_(matrix_handler), vectorHandler_(vector_handler)
       {
       }
 
@@ -192,7 +190,6 @@ namespace ReSolve
       memory::MemorySpace memspace_;      ///< Memory space used by the test.
       MatrixHandler&      matrixHandler_; ///< Backend-specific matrix handler.
       VectorHandler&      vectorHandler_; ///< Backend-specific vector handler.
-      std::mt19937&       generator_;     ///< C++ random number generator.
 
       /**
        * @brief Validate the solver result.

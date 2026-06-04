@@ -26,7 +26,6 @@ namespace ReSolve
       n_total_{n_x + m_c},
       m_{m_c + m_d},
       n_{n_x + m_d},
-      N_{m_ + n_},
       memspace_{memspace}
   {
   }
