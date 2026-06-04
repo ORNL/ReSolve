@@ -85,7 +85,7 @@ namespace ReSolve
     {
       cholmod_sparse* C_chol = cholmod_ssmult(B_, A_, 0, 1, 0, &Common_);
       // B_ and A_ are reversed because cholmod_sparse is a CSC matrix
-      // and (B^TA^T)^T=AB
+      // and (B^TA^T)^T=AB.
       cholmod_sparse* E_chol = cholmod_add(C_chol, D_, &alpha_, &beta_, 1, 0, &Common_);
 
       int*       chol_row_data = static_cast<int*>(E_chol->p);
