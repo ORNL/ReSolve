@@ -135,8 +135,7 @@ namespace ReSolve
         vector_handler_->scal(beta_, s_, memspace_);
         vector_handler_->axpy(ONE, w_, s_, memspace_);
         vector_handler_->axpy(alpha_, p_, x0_, memspace_);
-        minalpha_ = -alpha_;
-        vector_handler_->axpy(minalpha_, s_, r_, memspace_);
+        vector_handler_->axpy(-alpha_, s_, r_, memspace_);
         gam_i1_ = vector_handler_->dot(r_, r_, memspace_);
         if (sqrt(gam_i1_) < tol_)
         {

@@ -100,12 +100,12 @@ namespace ReSolve
     {
       workspace_->resetMatvecSetup();
     }
-    cusparseSpMatDescr_t matA        = workspace_->getSpmvMatrixDescriptor();
+    cusparseSpMatDescr_t mat_A        = workspace_->getSpmvMatrixDescriptor();
     void*                buffer_spmv = workspace_->getSpmvBuffer();
     if (!workspace_->matvecSetup())
     {
       // setup first, allocate, etc.
-      status = cusparseCreateCsr(&matA,
+      status = cusparseCreateCsr(&mat_A,
                                  A->getNumRows(),
                                  A->getNumColumns(),
                                  A->getNnz(),
