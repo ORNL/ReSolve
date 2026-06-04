@@ -31,7 +31,7 @@ target_link_libraries(
           resolve_matrix
 )
 
-# Link to CUDA ReSolve backend if CUDA is support enabled
+# Link to CUDA ReSolve backend if CUDA is support enabled.
 
 # target_include_directories(resolve_hykkt_solver PUBLIC
 # ${SUITESPARSE_INCLUDE_DIR})
