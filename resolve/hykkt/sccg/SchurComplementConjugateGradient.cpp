@@ -87,14 +87,14 @@ namespace ReSolve
     void SchurComplementConjugateGradient::setup()
     {
       workspace_.initializeHandles();
-      
+
       y_ = new vector::Vector(m_);
       z_ = new vector::Vector(m_);
       r_ = new vector::Vector(n_);
       p_ = new vector::Vector(n_);
       s_ = new vector::Vector(n_);
       w_ = new vector::Vector(n_);
-      
+
       y_->allocate(memspace_);
       z_->allocate(memspace_);
       r_->allocate(memspace_);
