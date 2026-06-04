@@ -79,7 +79,7 @@ namespace ReSolve
         index_type                              n   = jc->getNumRows();
         index_type                              m   = jc->getNumColumns();
         index_type                              nnz = jc->getNnz();
-        hykkt::SchurComplementConjugateGradient sccg(n, m, &choleskySolver, memspace_, matrix_handler_, vector_handler_);
+        hykkt::SchurComplementConjugateGradient sccg(n, m, &choleskySolver, &matrix_handler_, &vector_handler_, memspace_);
         sccg.setSolverTolerance(sccg_tol);
 
         matrix::Csr* jc_tr = new matrix::Csr(m, n, nnz);
