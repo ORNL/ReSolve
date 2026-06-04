@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# This script get executed in `make test_install`. 
+# This script get executed in `make test_install`.
 
 # Defines where Resolve is and is set in line #47 in examples/CMakeLists.txt
 export ReSolve_DIR=${1}
@@ -18,6 +18,9 @@ echo ${MATRICES}
 export RHS=${4}
 echo ${RHS}
 
+# CXX compiler used to build ReSolve -- must match to avoid ABI mismatch
+export CXX_COMPILER=${5}
+
 # Locate source of the consumer test app
 export INSTALL_BUILD_CONSUME=${ReSolve_DIR}/share/examples/resolve_consumer
 echo ${INSTALL_BUILD_CONSUME}
@@ -27,7 +30,8 @@ mkdir -p ${INSTALL_BUILD_CONSUME}/build
 rm -rf ${INSTALL_BUILD_CONSUME}/build/* &&
 
 cmake -B ${INSTALL_BUILD_CONSUME}/build -S ${INSTALL_BUILD_CONSUME} -DReSolve_DATA_DIR=${DATA_DIR} \
-  -DReSolve_MATRICES=${MATRICES} -DReSolve_RHS=${RHS} -DReSolve_DIR=${ReSolve_DIR} &&
+  -DReSolve_MATRICES=${MATRICES} -DReSolve_RHS=${RHS} -DReSolve_DIR=${ReSolve_DIR} \
+  ${CXX_COMPILER:+-DCMAKE_CXX_COMPILER=${CXX_COMPILER}} &&
 
 cmake --build ${INSTALL_BUILD_CONSUME}/build -- -j 12 &&
 
