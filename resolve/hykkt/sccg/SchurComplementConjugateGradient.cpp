@@ -127,7 +127,7 @@ namespace ReSolve
       delta_ = vector_handler_->dot(w_, r_, memspace_);
       alpha_ = gamma_i_ / delta_;
 
-      size_t i;
+      int i;
       for (i = 0; i < itmax_; i++)
       {
         vector_handler_->scal(beta_, p_, memspace_);
