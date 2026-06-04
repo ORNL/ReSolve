@@ -55,56 +55,56 @@ namespace ReSolve
        */
       TestOutcome SCCGTest()
       {
-        std::ifstream jcFile(jcFileName);
-        std::ifstream hFile(hFileName);
-        std::ifstream bFile(bFileName);
+        std::ifstream J_file(J_filename);
+        std::ifstream H_file(H_filename);
+        std::ifstream b_file(b_filename);
 
-        matrix::Csr* h  = io::createCsrFromFile(hFile, true);
-        matrix::Csr* jc = io::createCsrFromFile(jcFile, false);
+        matrix::Csr* H  = io::createCsrFromFile(H_file, true);
+        matrix::Csr* J = io::createCsrFromFile(J_file, false);
         if (memspace_ == memory::DEVICE)
         {
-          h->syncData(memory::DEVICE);
-          jc->syncData(memory::DEVICE);
+          H->syncData(memory::DEVICE);
+          J->syncData(memory::DEVICE);
         }
         hykkt::CholeskySolver choleskySolver(memspace_);
-        choleskySolver.addMatrixInfo(h);
+        choleskySolver.addMatrixInfo(H);
         choleskySolver.symbolicAnalysis();
         choleskySolver.setPivotTolerance(cholesky_tol);
         choleskySolver.numericalFactorization();
 
-        index_type                              n   = jc->getNumRows();
-        index_type                              m   = jc->getNumColumns();
-        index_type                              nnz = jc->getNnz();
+        index_type                              n   = J->getNumRows();
+        index_type                              m   = J->getNumColumns();
+        index_type                              nnz = J->getNnz();
         hykkt::SchurComplementConjugateGradient sccg(n, m, &choleskySolver, &matrix_handler_, &vector_handler_, memspace_);
         sccg.setSolverTolerance(sccg_tol);
 
-        matrix::Csr* jc_tr = new matrix::Csr(m, n, nnz);
-        jc_tr->allocateMatrixData(memspace_);
-        matrix_handler_.transpose(jc, jc_tr, memspace_);
+        matrix::Csr* J_tr = new matrix::Csr(m, n, nnz);
+        J_tr->allocateMatrixData(memspace_);
+        matrix_handler_.transpose(J, J_tr, memspace_);
 
-        vector::Vector* x0 = new vector::Vector(n);
-        x0->allocate(memspace_);
+        vector::Vector* x_0 = new vector::Vector(n);
+        x_0->allocate(memspace_);
 
-        vector::Vector* b = io::createVectorFromFile(bFile);
+        vector::Vector* b = io::createVectorFromFile(b_file);
         if (memspace_ == memory::DEVICE)
         {
           b->syncData(memory::DEVICE);
         }
 
-        sccg.addMatrixInfo(jc, jc_tr);
-        sccg.addVectorInfo(x0, b);
+        sccg.addMatrixInfo(J, J_tr);
+        sccg.addVectorInfo(x_0, b);
         sccg.setup();
         int converged_n = sccg.solve(); // 0 if converged, 1 if not
 
         TestStatus  status;
         std::string testname(__func__);
         testname += " n=" + std::to_string(n) + ", m=" + std::to_string(m) + ", nnz =" + std::to_string(nnz);
-        status *= validateResult(x0, converged_n);
+        status *= validateResult(x_0, converged_n);
 
-        delete h;
-        delete jc;
-        delete jc_tr;
-        delete x0;
+        delete H;
+        delete J;
+        delete J_tr;
+        delete x_0;
         delete b;
 
         return status.report(testname.c_str());
@@ -120,19 +120,19 @@ namespace ReSolve
       static constexpr real_type entry_tol    = 1e-6; // Tolerance for checking individual entries
 
       // Expected outputs. Currently they are only available for the set of matrix files below
-      static constexpr real_type x_0_expected = 22.171865776354700;
-      static constexpr real_type x_6_expected = -4.446628667344612e+03;
+      static constexpr real_type x_idx_0_expected = 22.171865776354700;
+      static constexpr real_type x_idx_6_expected = -4.446628667344612e+03;
 
       std::string source_dir = std::string(SOURCE_DIR);
-      std::string jcFileName = source_dir + "/SCCGTestMatrices/JC_matrix_ACTIVSg200_AC_00.mtx";
-      std::string hFileName  = source_dir + "/SCCGTestMatrices/H_matrix_ACTIVSg200_AC_00.mtx";
-      std::string bFileName  = source_dir + "/SCCGTestMatrices/CG_rhs_ACTIVSg200_AC_00.mtx"; // rhs
+      std::string J_filename = source_dir + "/SCCGTestMatrices/JC_matrix_ACTIVSg200_AC_00.mtx";
+      std::string H_filename  = source_dir + "/SCCGTestMatrices/H_matrix_ACTIVSg200_AC_00.mtx";
+      std::string b_filename  = source_dir + "/SCCGTestMatrices/CG_rhs_ACTIVSg200_AC_00.mtx"; // rhs
 
       /**
        * @brief Validate the SCCG result.
-       * @param[in] x0 Pointer to the output x0 vector.
+       * @param[in] x_0 Pointer to the output x_0 vector.
        */
-      bool validateResult(vector::Vector* x0, int converged_n)
+      bool validateResult(vector::Vector* x_0, int converged_n)
       {
         if (converged_n != 0)
         {
@@ -140,13 +140,13 @@ namespace ReSolve
         }
         if (memspace_ == memory::DEVICE)
         {
-          x0->syncData(memory::HOST);
+          x_0->syncData(memory::HOST);
         }
-        if (std::abs(x0->getData(memory::HOST)[0] - x_0_expected) > entry_tol)
+        if (std::abs(x_0->getData(memory::HOST)[0] - x_idx_0_expected) > entry_tol)
         {
           return false;
         }
-        if (std::abs(x0->getData(memory::HOST)[6] - x_6_expected) > entry_tol)
+        if (std::abs(x_0->getData(memory::HOST)[6] - x_idx_6_expected) > entry_tol)
         {
           return false;
         }

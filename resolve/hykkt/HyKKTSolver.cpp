@@ -15,17 +15,17 @@ namespace ReSolve
   /**
    * @brief basic constructor
    *
-   * @param[in] nx   - Number of rows of the 1st row of blocks of the system
-   * @param[in] md   - Number of rows of the 2nd row of blocks of the system
-   * @param[in] mc   - Number of rows of the 3rd row of blocks of the system
+   * @param[in] n_x   - Number of rows of the 1st row of blocks of the system
+   * @param[in] m_d   - Number of rows of the 2nd row of blocks of the system
+   * @param[in] m_c   - Number of rows of the 3rd row of blocks of the system
    */
-  hykkt::HyKKTSolver::HyKKTSolver(index_type nx, index_type md, index_type mc, memory::MemorySpace memspace)
-    : nx_{nx},
-      md_{md},
-      mc_{mc},
-      n_total_{nx + mc},
-      m_{mc + md},
-      n_{nx + md},
+  hykkt::HyKKTSolver::HyKKTSolver(index_type n_x, index_type m_d, index_type m_c, memory::MemorySpace memspace)
+    : n_x_{n_x},
+      m_d_{m_d},
+      m_c_{m_c},
+      n_total_{n_x + m_c},
+      m_{m_c + m_d},
+      n_{n_x + m_d},
       N_{m_ + n_},
       memspace_{memspace}
   {
@@ -33,23 +33,23 @@ namespace ReSolve
 
   hykkt::HyKKTSolver::~HyKKTSolver()
   {
-    delete rx_perm_;
-    delete Hrx_perm_;
+    delete r_x_perm_;
+    delete omega_perm_;
     delete schur_;
-    delete Ds_vals_;
-    delete ryd_scaled_;
-    delete rx_til_;
-    delete rx_hat_;
+    delete D_s_vals_;
+    delete r_yd_scaled_;
+    delete r_x_til_;
+    delete r_x_hat_;
     delete z_;
-    delete ry_copy_;
+    delete r_y_copy_;
     delete J_tr_;
-    delete Jd_tr_;
-    delete HGam_perm_;
+    delete J_d_tr_;
+    delete H_gamma_perm_;
     delete J_perm_;
     delete J_tr_perm_;
-    delete Jd_scaled_;
-    delete Htil_;
-    delete HGam_;
+    delete J_d_scaled_;
+    delete H_tilde_;
+    delete H_gamma_;
     delete J_copy_;
     delete J_tr_copy_;
     delete ruiz_;
@@ -68,46 +68,46 @@ namespace ReSolve
    * @param file names for different components of KKT system
    *        with same nonzero structure
    *
-   * @post H_, Ds_, J_, Jd_, rx_, rs_, ry_,
-   *       ryd_ have new values for the system in a following
+   * @post H_, D_s_, J_, J_d_, r_x_, r_s_, r_y_,
+   *       r_yd_ have new values for the system in a following
    *       solver iteration with same nonzero structure as
    *       previous iterations
    */
   void hykkt::HyKKTSolver::readMatrixFiles(
       std::istream& H_file,
-      std::istream& Ds_file,
+      std::istream& D_s_file,
       std::istream& J_file,
-      std::istream& Jd_file,
-      std::istream& rx_file,
+      std::istream& J_d_file,
+      std::istream& r_x_file,
       std::istream& rs_file,
-      std::istream& ry_file,
-      std::istream& ryd_file)
+      std::istream& r_y_file,
+      std::istream& r_yd_file)
   {
-    io::updateMatrixFromFile(H_file, H_); // is_expand_symmetric?
-    io::updateMatrixFromFile(Ds_file, Ds_);
+    io::updateMatrixFromFile(H_file, H_);
+    io::updateMatrixFromFile(D_s_file, D_s_);
     io::updateMatrixFromFile(J_file, J_);
-    io::updateMatrixFromFile(Jd_file, Jd_); // Jd_tr_ will be populated later
+    io::updateMatrixFromFile(J_d_file, J_d_); // J_d_tr_ will be populated later
 
-    io::updateVectorFromFile(rx_file, rx_);
-    io::updateVectorFromFile(rs_file, rs_);
-    io::updateVectorFromFile(ry_file, ry_);
-    io::updateVectorFromFile(ryd_file, ryd_);
+    io::updateVectorFromFile(r_x_file, r_x_);
+    io::updateVectorFromFile(rs_file, r_s_);
+    io::updateVectorFromFile(r_y_file, r_y_);
+    io::updateVectorFromFile(r_yd_file, r_yd_);
 
     if (memspace_ == memory::DEVICE)
     {
       H_->syncData(memory::DEVICE);
-      Ds_->syncData(memory::DEVICE);
+      D_s_->syncData(memory::DEVICE);
       J_->syncData(memory::DEVICE);
-      Jd_->syncData(memory::DEVICE);
-      rx_->syncData(memory::DEVICE);
-      rs_->syncData(memory::DEVICE);
-      ry_->syncData(memory::DEVICE);
-      ryd_->syncData(memory::DEVICE);
+      J_d_->syncData(memory::DEVICE);
+      r_x_->syncData(memory::DEVICE);
+      r_s_->syncData(memory::DEVICE);
+      r_y_->syncData(memory::DEVICE);
+      r_yd_->syncData(memory::DEVICE);
     }
 
-    bool Jd_flag = Jd_->getNnz() > 0;
-    status_      = (Jd_flag_ == Jd_flag); // if new nonzero structure then broken
-    Jd_flag_     = Jd_flag;
+    bool J_d_flag = J_d_->getNnz() > 0;
+    status_      = (J_d_flag_ == J_d_flag); // if new nonzero structure then broken
+    J_d_flag_     = J_d_flag;
   }
 
   /**
@@ -115,26 +115,26 @@ namespace ReSolve
    * values. It will only set pointers to user provided data; it is user's
    * responsibility to supply and later delete that memory.
    *
-   * @param[in] H_plus_Dx - Pointer to the Hessian matrix block (nx x nx),
-   * corresponding to H + Dx in the HyKKT paper.
-   * @param[in] Ds - Pointter to the slack variables derivatives matrix block
-   * (md x md).
+   * @param[in] H_plus_D_x - Pointer to the Hessian matrix block (n_x x n_x),
+   * corresponding to H + D_x in the HyKKT paper.
+   * @param[in] D_s - Pointer to the slack variables derivatives matrix block
+   * (m_d x m_d).
    * @param[in] J - Pointer to the equality constraints Jacobian block
-   * (mc x nx).
-   * @param[in] Jd - Pointer to the inequality constraints Jacobian block
-   * (md x nx)
+   * (m_c x n_x).
+   * @param[in] J_d - Pointer to the inequality constraints Jacobian block
+   * (m_d x n_x)
    */
-  void hykkt::HyKKTSolver::setMatrixBlocks(matrix::Csr* H_plus_Dx, matrix::Csr* Ds, matrix::Csr* J, matrix::Csr* Jd)
+  void hykkt::HyKKTSolver::setMatrixBlocks(matrix::Csr* H_plus_D_x, matrix::Csr* D_s, matrix::Csr* J, matrix::Csr* J_d)
   {
-    H_  = H_plus_Dx;
-    Ds_ = Ds;
+    H_  = H_plus_D_x;
+    D_s_ = D_s;
     J_  = J;
-    Jd_ = Jd;
+    J_d_ = J_d;
 
-    bool Jd_flag = Jd->getNnz() > 0;
-    // status_ = (Jd_flag_ == Jd_flag);
+    bool J_d_flag = J_d->getNnz() > 0;
+    // status_ = (J_d_flag_ == J_d_flag);
     status_  = true; // when using API, we can't check if sparsity pattern changed
-    Jd_flag_ = Jd_flag;
+    J_d_flag_ = J_d_flag;
   }
 
   /**
@@ -142,17 +142,17 @@ namespace ReSolve
    * values. It will only set pointers to user provided data; it is user's
    * responsibility to supply and later delete that memory.
    *
-   * @param[in] rx - Pointer to the rx vector (shape: nx)
-   * @param[in] rs - Pointer to the rs vector (shape: md)
-   * @param[in] ry - Pointer to the ry vector (shape: mc)
-   * @param[in] ryd - Pointer to the ryd vector (shape: md)
+   * @param[in] r_x - Pointer to the r_x vector (shape: n_x)
+   * @param[in] r_s - Pointer to the r_s vector (shape: m_d)
+   * @param[in] r_y - Pointer to the r_y vector (shape: m_c)
+   * @param[in] r_yd - Pointer to the r_yd vector (shape: m_d)
    */
-  void hykkt::HyKKTSolver::setRHSBlocks(vector::Vector* rx, vector::Vector* rs, vector::Vector* ry, vector::Vector* ryd)
+  void hykkt::HyKKTSolver::setRHSBlocks(vector::Vector* r_x, vector::Vector* r_s, vector::Vector* r_y, vector::Vector* r_yd)
   {
-    rx_  = rx;
-    rs_  = rs;
-    ry_  = ry;
-    ryd_ = ryd;
+    r_x_  = r_x;
+    r_s_  = r_s;
+    r_y_  = r_y;
+    r_yd_ = r_yd;
   }
 
   /**
@@ -161,17 +161,17 @@ namespace ReSolve
    * solver's solutions. Existing values will not be used and will be overridden.
    * It is user's responsibility to supply and later delete that memory.
    *
-   * @param[in] x - Pointer to the x vector (shape: nx)
-   * @param[in] s - Pointer to the s vector (shape: md)
-   * @param[in] y - Pointer to the y vector (shape: mc)
-   * @param[in] yd - Pointer to the yd vector (shape: md)
+   * @param[in] x - Pointer to the x vector (shape: n_x)
+   * @param[in] s - Pointer to the s vector (shape: m_d)
+   * @param[in] y - Pointer to the y vector (shape: m_c)
+   * @param[in] y_d - Pointer to the y_d vector (shape: m_d)
    */
-  void hykkt::HyKKTSolver::setLHSPointers(vector::Vector* x, vector::Vector* s, vector::Vector* y, vector::Vector* yd)
+  void hykkt::HyKKTSolver::setLHSPointers(vector::Vector* x, vector::Vector* s, vector::Vector* y, vector::Vector* y_d)
   {
     x_  = x;
     s_  = s;
     y_  = y;
-    yd_ = yd;
+    y_d_ = y_d;
   }
 
   /*
@@ -223,9 +223,9 @@ namespace ReSolve
 
     if (!allocated_)
     {
-      setupSpGEMMHtil();
+      setupSpGEMMHtilde();
     }
-    computeSpGEMMHtil();
+    computeSpGEMMHtilde();
 
     setupSolutionCheck();
 
@@ -237,9 +237,9 @@ namespace ReSolve
 
     if (!allocated_)
     {
-      setupSpGEMMHGamma();
+      setupSpGEMMHgamma();
     }
-    computeSpGEMMHGamma();
+    computeSpGEMMHgamma();
 
     if (!allocated_)
     {
@@ -249,9 +249,9 @@ namespace ReSolve
 
     if (!allocated_)
     {
-      setupHGammaFactorization();
+      setupHgammaFactorization();
     }
-    computeHGammaFactorization();
+    computeHgammaFactorization();
 
     setupConjugateGradient();
     computeConjugateGradient();
@@ -263,11 +263,11 @@ namespace ReSolve
   /**
    * @brief allocates and initiates variables for KKT system
    *
-   * @pre jd_flag_ determines if variables used for Spgemm Htil
+   * @pre jd_flag_ determines if variables used for Spgemm H_tilde
    *      should be initiated
    *
-   * @post all variables used for hykkt are allocated for; Jd-
-   *       related variables are not initiated if Jd nnz == 0
+   * @post all variables used for hykkt are allocated for; J_d-
+   *       related variables are not initiated if J_d nnz == 0
    */
   void hykkt::HyKKTSolver::setupParameters()
   {
@@ -275,102 +275,102 @@ namespace ReSolve
 
     std::cout << "H size: " << H_->getNumRows() << " " << H_->getNumColumns() << " " << H_->getNnz() << " \n";
     std::cout << "J size: " << J_->getNumRows() << "  " << J_->getNumColumns() << "  " << J_->getNnz() << " \n";
-    std::cout << "Ds nnz = " << Ds_->getNnz() << "\n";
+    std::cout << "D_s nnz = " << D_s_->getNnz() << "\n";
 
     if (!allocated_)
     {
-      rx_perm_    = new vector::Vector(nx_);
-      Hrx_perm_   = new vector::Vector(nx_);
-      schur_      = new vector::Vector(mc_);
-      Ds_vals_    = new vector::Vector(md_);
-      ryd_scaled_ = new vector::Vector(ryd_->getSize());
-      rx_til_     = new vector::Vector(nx_);
-      rx_hat_     = new vector::Vector(nx_);
-      z_          = new vector::Vector(nx_);
-      ry_copy_    = new vector::Vector(mc_);
+      r_x_perm_    = new vector::Vector(n_x_);
+      omega_perm_   = new vector::Vector(n_x_);
+      schur_      = new vector::Vector(m_c_);
+      D_s_vals_    = new vector::Vector(m_d_);
+      r_yd_scaled_ = new vector::Vector(r_yd_->getSize());
+      r_x_til_     = new vector::Vector(n_x_);
+      r_x_hat_     = new vector::Vector(n_x_);
+      z_          = new vector::Vector(n_x_);
+      r_y_copy_    = new vector::Vector(m_c_);
       J_tr_       = new matrix::Csr(J_->getNumColumns(), J_->getNumRows(), J_->getNnz());
-      Jd_tr_      = new matrix::Csr(Jd_->getNumColumns(), Jd_->getNumRows(), Jd_->getNnz());
-      Htil_       = new matrix::Csr(H_->getNumRows(), H_->getNumColumns(), H_->getNnz());
+      J_d_tr_      = new matrix::Csr(J_d_->getNumColumns(), J_d_->getNumRows(), J_d_->getNnz());
+      H_tilde_       = new matrix::Csr(H_->getNumRows(), H_->getNumColumns(), H_->getNnz());
       J_perm_     = new matrix::Csr(J_->getNumRows(), J_->getNumColumns(), J_->getNnz());
       J_tr_perm_  = new matrix::Csr(J_tr_->getNumRows(), J_tr_->getNumColumns(), J_tr_->getNnz());
-      Jd_scaled_  = new matrix::Csr(Jd_->getNumRows(), Jd_->getNumColumns(), Jd_->getNnz());
+      J_d_scaled_  = new matrix::Csr(J_d_->getNumRows(), J_d_->getNumColumns(), J_d_->getNnz());
 
-      Ds_vals_->setData(Ds_->getValues(memspace_), memspace_);
-      rx_perm_->allocate(memspace_);
-      Hrx_perm_->allocate(memspace_);
+      D_s_vals_->setData(D_s_->getValues(memspace_), memspace_);
+      r_x_perm_->allocate(memspace_);
+      omega_perm_->allocate(memspace_);
       schur_->allocate(memspace_);
-      rx_til_->allocate(memspace_);
-      rx_hat_->allocate(memspace_);
+      r_x_til_->allocate(memspace_);
+      r_x_hat_->allocate(memspace_);
       z_->allocate(memspace_);
       J_tr_->allocateMatrixData(memspace_);
-      Jd_tr_->allocateMatrixData(memspace_);
+      J_d_tr_->allocateMatrixData(memspace_);
       J_tr_perm_->allocateMatrixData(memory::HOST);
       J_perm_->allocateMatrixData(memory::HOST);
-      Jd_scaled_->allocateWithExternalSparsityPattern(Jd_->getRowData(memspace_), Jd_->getColData(memspace_), Jd_->getNnz(), memspace_);
+      J_d_scaled_->allocateWithExternalSparsityPattern(J_d_->getRowData(memspace_), J_d_->getColData(memspace_), J_d_->getNnz(), memspace_);
     }
     else if (memspace_ == memory::DEVICE)
     {
-      Jd_->syncData(memory::DEVICE); // check if this is redundant
+      J_d_->syncData(memory::DEVICE); // check if this is redundant
     }
 
-    ry_copy_->copyFromExternal(ry_, memspace_, memspace_);
+    r_y_copy_->copyFromExternal(r_y_, memspace_, memspace_);
 
     // check if this is redundant in later iterations
     matrixHandler_->transpose(J_, J_tr_, memspace_);
-    if (Jd_flag_)
+    if (J_d_flag_)
     {
-      matrixHandler_->transpose(Jd_, Jd_tr_, memspace_);
-      Jd_scaled_->copyValues(Jd_->getValues(memspace_), memspace_, memspace_);
+      matrixHandler_->transpose(J_d_, J_d_tr_, memspace_);
+      J_d_scaled_->copyValues(J_d_->getValues(memspace_), memspace_, memspace_);
     }
   }
 
   /**
-   * @brief Creates the SpGEMM solver for the Htilda matrix and
+   * @brief Creates the SpGEMM solver for the H_tildeda matrix and
    * loads the result matrix pointer
-   * @post The result of the solver is set to be written into Htil_
+   * @post The result of the solver is set to be written into H_tilde_
    */
-  void hykkt::HyKKTSolver::setupSpGEMMHtil()
+  void hykkt::HyKKTSolver::setupSpGEMMHtilde()
   {
     spgemm_htil_ = new SpGEMM(memspace_, ONE, ONE);
-    spgemm_htil_->loadResultMatrix(&Htil_); // Htil_ will be created by SpGEMM at this step
+    spgemm_htil_->loadResultMatrix(&H_tilde_); // H_tilde_ will be created by SpGEMM at this step
   }
 
   /*
-   * @brief computes SpGEMM to calculate Htilda matrix
+   * @brief computes SpGEMM to calculate H_tildeda matrix
    *
    * @pre matrices and spgemm_htil_ properly allocated using setup
    *      method for spgemm_htil_
    *
-   * @post Htilda calculated using Jd matrix if Jd nnz > 0 and
-   *       is set to H if Jd nnz == 0
+   * @post H_tildeda calculated using J_d matrix if J_d nnz > 0 and
+   *       is set to H if J_d nnz == 0
    */
-  void hykkt::HyKKTSolver::computeSpGEMMHtil()
+  void hykkt::HyKKTSolver::computeSpGEMMHtilde()
   {
-    if (Jd_flag_)
+    if (J_d_flag_)
     {
-      matrixHandler_->leftScale(Ds_vals_, Jd_scaled_, memspace_);
-      spgemm_htil_->loadProductMatrices(Jd_tr_, Jd_scaled_);
+      matrixHandler_->leftScale(D_s_vals_, J_d_scaled_, memspace_);
+      spgemm_htil_->loadProductMatrices(J_d_tr_, J_d_scaled_);
       spgemm_htil_->loadSumMatrix(H_);
 
-      ryd_scaled_->copyFromExternal(ryd_, memspace_, memspace_);
-      vectorHandler_->scal(Ds_vals_, ryd_scaled_, memspace_);
+      r_yd_scaled_->copyFromExternal(r_yd_, memspace_, memspace_);
+      vectorHandler_->scal(D_s_vals_, r_yd_scaled_, memspace_);
 
-      // ryd_scaled_ = rs + Ds * ryd
-      vectorHandler_->axpy(ONE, rs_, ryd_scaled_, memspace_);
-      rx_til_->copyFromExternal(rx_, memspace_, memspace_);
-      matrixHandler_->matvec(Jd_tr_, ryd_scaled_, rx_til_, &ONE, &ONE, memspace_);
+      // r_yd_scaled_ = r_s + D_s * r_yd
+      vectorHandler_->axpy(ONE, r_s_, r_yd_scaled_, memspace_);
+      r_x_til_->copyFromExternal(r_x_, memspace_, memspace_);
+      matrixHandler_->matvec(J_d_tr_, r_yd_scaled_, r_x_til_, &ONE, &ONE, memspace_);
       spgemm_htil_->compute();
     }
     else
     {
-      Htil_->copyFromExternal(H_->getRowData(memspace_),
+      H_tilde_->copyFromExternal(H_->getRowData(memspace_),
                               H_->getColData(memspace_),
                               H_->getValues(memspace_),
                               H_->getNnz(),
                               memspace_,
                               memspace_);
 
-      rx_til_->copyFromExternal(rx_, memspace_, memspace_);
+      r_x_til_->copyFromExternal(r_x_, memspace_, memspace_);
     }
   }
 
@@ -407,7 +407,7 @@ namespace ReSolve
    */
   void hykkt::HyKKTSolver::setupRuizScaling()
   {
-    ruiz_ = new RuizScaling(nx_, n_total_, memspace_);
+    ruiz_ = new RuizScaling(n_x_, n_total_, memspace_);
   }
 
   /*
@@ -421,63 +421,63 @@ namespace ReSolve
    */
   void hykkt::HyKKTSolver::computeRuizScaling()
   {
-    ruiz_->addMatrixData(Htil_, J_, J_tr_);
-    ruiz_->addRhsData(rx_til_, ry_);
+    ruiz_->addMatrixData(H_tilde_, J_, J_tr_);
+    ruiz_->addRhsData(r_x_til_, r_y_);
     ruiz_->scale(ruiz_its_);
     max_d_ = ruiz_->getAggregateScalingVector();
   }
 
   /**
-   * @brief Creates the SpGEMM solver for the HGamma matrix and
+   * @brief Creates the SpGEMM solver for the H_gamma matrix and
    * loads the result matrix pointer
-   * @post The result of the solver is set to be written into HGam_
+   * @post The result of the solver is set to be written into H_gamma_
    */
-  void hykkt::HyKKTSolver::setupSpGEMMHGamma()
+  void hykkt::HyKKTSolver::setupSpGEMMHgamma()
   {
     spgemm_hgamma_ = new SpGEMM(memspace_, gamma_, ONE);
     spgemm_hgamma_->loadProductMatrices(J_tr_, J_);
-    spgemm_hgamma_->loadSumMatrix(Htil_);
-    spgemm_hgamma_->loadResultMatrix(&HGam_); // HGam_ will be created by SpGEMM at this step
+    spgemm_hgamma_->loadSumMatrix(H_tilde_);
+    spgemm_hgamma_->loadResultMatrix(&H_gamma_); // H_gamma_ will be created by SpGEMM at this step
   }
 
   /*
-   * @brief computes SpGEMM to calculate HGamma matrix
+   * @brief computes SpGEMM to calculate H_gamma matrix
    *
    * @pre matrices and spgemm_hgamma properly allocated using setup
    *      method for spgemm_hgamma
    *
-   * @post HGamma CSR now represents J_tr * J + Htil
+   * @post H_gamma CSR now represents J_tr * J + H_tilde
    */
-  void hykkt::HyKKTSolver::computeSpGEMMHGamma()
+  void hykkt::HyKKTSolver::computeSpGEMMHgamma()
   {
     spgemm_hgamma_->compute();
-    rx_hat_->copyFromExternal(rx_til_, memspace_, memspace_);
-    matrixHandler_->matvec(J_tr_, ry_, rx_hat_, &gamma_, &ONE, memspace_);
+    r_x_hat_->copyFromExternal(r_x_til_, memspace_, memspace_);
+    matrixHandler_->matvec(J_tr_, r_y_, r_x_hat_, &gamma_, &ONE, memspace_);
   }
 
   void hykkt::HyKKTSolver::setupPermutation()
   {
-    HGam_perm_ = new matrix::Csr(nx_, nx_, HGam_->getNnz()); // Nnz not known at setupParameters(), so we have to create it here
-    HGam_perm_->allocateMatrixData(memory::HOST);
+    H_gamma_perm_ = new matrix::Csr(n_x_, n_x_, H_gamma_->getNnz()); // Nnz not known at setupParameters(), so we have to create it here
+    H_gamma_perm_->allocateMatrixData(memory::HOST);
 
     if (memspace_ == memory::DEVICE)
     {
-      HGam_->syncData(memory::HOST);
+      H_gamma_->syncData(memory::HOST);
       J_tr_->syncData(memory::HOST);
 
-      HGam_perm_->allocateMatrixData(memory::DEVICE);
+      H_gamma_perm_->allocateMatrixData(memory::DEVICE);
       J_perm_->allocateMatrixData(memory::DEVICE);
       J_tr_perm_->allocateMatrixData(memory::DEVICE);
     }
 
     // These permutation steps are device-only
-    permutation_ = new Permutation(nx_, mc_, HGam_->getNnz(), J_->getNnz(), memspace_);
-    permutation_->addMatrixInfo(HGam_, J_, J_tr_);
+    permutation_ = new Permutation(n_x_, m_c_, H_gamma_->getNnz(), J_->getNnz(), memspace_);
+    permutation_->addMatrixInfo(H_gamma_, J_, J_tr_);
     permutation_->symAmd();
     permutation_->invertPerm();
 
-    permutation_->vecMapRC(HGam_perm_->getRowData(memory::HOST), HGam_perm_->getColData(memory::HOST));
-    HGam_perm_->setUpdated(memory::HOST);
+    permutation_->vecMapRC(H_gamma_perm_->getRowData(memory::HOST), H_gamma_perm_->getColData(memory::HOST));
+    H_gamma_perm_->setUpdated(memory::HOST);
     index_type* j_rows      = J_->getRowData(memory::HOST);
     index_type* j_perm_rows = J_perm_->getRowData(memory::HOST);
 
@@ -494,28 +494,28 @@ namespace ReSolve
 
     if (memspace_ == memory::DEVICE)
     {
-      HGam_perm_->syncData(memory::DEVICE);
+      H_gamma_perm_->syncData(memory::DEVICE);
       J_perm_->syncData(memory::DEVICE);
       J_tr_perm_->syncData(memory::DEVICE);
     }
   }
 
   /*
-  * @brief Applies permutations to values of HGam, J, J^T matrices
-            and rx_hat vector
+  * @brief Applies permutations to values of H_gamma, J, J^T matrices
+            and r_x_hat vector
   *
   * @pre Permutation maps for the matrices and vector
   *      computed using setupPermutation()
   *
   *
-  * @post HGam_perm_, J_perm_, J_tr_perm_, rx_perm_ now contain permuted
-  *       values of HGam_, J_, J_tr_, rx_hat_
+  * @post H_gamma_perm_, J_perm_, J_tr_perm_, r_x_perm_ now contain permuted
+  *       values of H_gamma_, J_, J_tr_, r_x_hat_
   */
   void hykkt::HyKKTSolver::applyPermutation()
   {
     permutation_->mapIndex(PERM_HES_V,
-                           HGam_->getValues(memspace_),
-                           HGam_perm_->getValues(memspace_));
+                           H_gamma_->getValues(memspace_),
+                           H_gamma_perm_->getValues(memspace_));
     permutation_->mapIndex(PERM_JAC_V,
                            J_->getValues(memspace_),
                            J_perm_->getValues(memspace_));
@@ -523,15 +523,15 @@ namespace ReSolve
                            J_tr_->getValues(memspace_),
                            J_tr_perm_->getValues(memspace_));
     permutation_->mapIndex(PERM_V,
-                           rx_hat_->getData(memspace_),
-                           rx_perm_->getData(memspace_));
-    rx_perm_->setDataUpdated(memspace_);
+                           r_x_hat_->getData(memspace_),
+                           r_x_perm_->getData(memspace_));
+    r_x_perm_->setDataUpdated(memspace_);
   }
 
-  void hykkt::HyKKTSolver::setupHGammaFactorization()
+  void hykkt::HyKKTSolver::setupHgammaFactorization()
   {
     cholesky_ = new CholeskySolver(memspace_);
-    cholesky_->addMatrixInfo(HGam_perm_);
+    cholesky_->addMatrixInfo(H_gamma_perm_);
     cholesky_->symbolicAnalysis();
     cholesky_->setPivotTolerance(cholesky_tol_);
   }
@@ -543,19 +543,19 @@ namespace ReSolve
    * @pre symbolic analysis already computed using setup method
    *      for hgamma_factorization
    *
-   * @post HGamma numerical factorization is computed, thus updating
-   *       HGam_perm_
+   * @post H_gamma numerical factorization is computed, thus updating
+   *       H_gamma_perm_
    */
-  void hykkt::HyKKTSolver::computeHGammaFactorization()
+  void hykkt::HyKKTSolver::computeHgammaFactorization()
   {
     cholesky_->numericalFactorization();
   }
 
   void hykkt::HyKKTSolver::setupConjugateGradient()
   {
-    cholesky_->solve(Hrx_perm_, rx_perm_);
-    schur_->copyFromExternal(ry_, memspace_, memspace_);
-    matrixHandler_->matvec(J_perm_, Hrx_perm_, schur_, &ONE, &MINUS_ONE, memspace_);
+    cholesky_->solve(omega_perm_, r_x_perm_);
+    schur_->copyFromExternal(r_y_, memspace_, memspace_);
+    matrixHandler_->matvec(J_perm_, omega_perm_, schur_, &ONE, &MINUS_ONE, memspace_);
 
     sccg_ = new SchurComplementConjugateGradient(J_->getNumRows(), J_->getNumColumns(), cholesky_, matrixHandler_, vectorHandler_, memspace_);
     sccg_->addMatrixInfo(J_perm_, J_tr_perm_);
@@ -582,48 +582,48 @@ namespace ReSolve
    *
    * @pre execute functions setup and computed correctly
    *
-   * @post rx_, rs_, ry_copy_, and ryd_ contain the solution
+   * @post r_x_, r_s_, r_y_copy_, and r_yd_ contain the solution
    *       on the device
    */
   void hykkt::HyKKTSolver::recoverSolution()
   {
     matrixHandler_->matvec(J_tr_perm_,
                            y_,
-                           rx_perm_,
+                           r_x_perm_,
                            &MINUS_ONE,
                            &ONE,
                            memspace_);
     // block-recovering the solution to the original system by parts
     // this part is to recover delta_x
-    cholesky_->solve(z_, rx_perm_);
+    cholesky_->solve(z_, r_x_perm_);
     permutation_->mapIndex(REV_PERM_V, z_->getData(memspace_), x_->getData(memspace_));
     x_->setDataUpdated(memspace_);
 
-    // scale back delta_y and delta_x (every iteration)
-    vectorHandler_->scal(max_d_, x_, 0, nx_, memspace_);
-    vectorHandler_->scal(max_d_, y_, nx_, n_total_, memspace_);
+    // scale back delta_y and delta_x (ever_y iteration)
+    vectorHandler_->scal(max_d_, x_, 0, memspace_);
+    vectorHandler_->scal(max_d_, y_, n_x_, memspace_);
 
-    s_->copyFromExternal(ryd_->getData(memspace_), memspace_, memspace_);
+    s_->copyFromExternal(r_yd_->getData(memspace_), memspace_, memspace_);
 
-    if (Jd_flag_)
+    if (J_d_flag_)
     {
-      matrixHandler_->matvec(Jd_, x_, s_, &ONE, &MINUS_ONE, memspace_);
+      matrixHandler_->matvec(J_d_, x_, s_, &ONE, &MINUS_ONE, memspace_);
     }
     else
     {
       vectorHandler_->scal(MINUS_ONE, s_, memspace_);
     }
 
-    yd_->copyFromExternal(s_, memspace_, memspace_);
-    vectorHandler_->scal(Ds_vals_, yd_, memspace_);
-    vectorHandler_->axpy(MINUS_ONE, rs_, yd_, memspace_);
+    y_d_->copyFromExternal(s_, memspace_, memspace_);
+    vectorHandler_->scal(D_s_vals_, y_d_, memspace_);
+    vectorHandler_->axpy(MINUS_ONE, r_s_, y_d_, memspace_);
 
     if (memspace_ == memory::DEVICE)
     {
       x_->syncData(memory::HOST);
       s_->syncData(memory::HOST);
       y_->syncData(memory::HOST);
-      yd_->syncData(memory::HOST);
+      y_d_->syncData(memory::HOST);
     }
   }
 
@@ -637,38 +637,38 @@ namespace ReSolve
   real_type hykkt::HyKKTSolver::checkError()
   {
     //  Start of block, calculate error of Ax-b
-    //  Calculate error in rx
-    real_type norm_rx_sq   = 0;
+    //  Calculate error in r_x
+    real_type norm_r_x_sq   = 0;
     real_type norm_rs_sq   = 0;
-    real_type norm_ry_sq   = 0;
-    real_type norm_ryd_sq  = 0;
+    real_type norm_r_y_sq   = 0;
+    real_type norm_r_yd_sq  = 0;
     real_type norm_resx_sq = 0;
     real_type norm_resy_sq = 0;
 
     // This will aggregate the squared norms of the residual and rhs
-    // Note that by construction the residuals of rs and ryd are 0
-    norm_rx_sq  = vectorHandler_->dot(rx_, rx_, memspace_);
-    norm_rs_sq  = vectorHandler_->dot(rs_, rs_, memspace_);
-    norm_ry_sq  = vectorHandler_->dot(ry_copy_, ry_copy_, memspace_);
-    norm_ryd_sq = vectorHandler_->dot(ryd_, ryd_, memspace_);
+    // Note that by construction the residuals of r_s and r_yd are 0
+    norm_r_x_sq  = vectorHandler_->dot(r_x_, r_x_, memspace_);
+    norm_rs_sq  = vectorHandler_->dot(r_s_, r_s_, memspace_);
+    norm_r_y_sq  = vectorHandler_->dot(r_y_copy_, r_y_copy_, memspace_);
+    norm_r_yd_sq = vectorHandler_->dot(r_yd_, r_yd_, memspace_);
 
-    norm_rx_sq += norm_rs_sq + norm_ry_sq + norm_ryd_sq;
+    norm_r_x_sq += norm_rs_sq + norm_r_y_sq + norm_r_yd_sq;
 
-    matrixHandler_->matvec(H_, x_, rx_, &MINUS_ONE, &ONE, memspace_);
-    if (Jd_flag_)
+    matrixHandler_->matvec(H_, x_, r_x_, &MINUS_ONE, &ONE, memspace_);
+    if (J_d_flag_)
     {
-      matrixHandler_->matvec(Jd_tr_, yd_, rx_, &MINUS_ONE, &ONE, memspace_);
+      matrixHandler_->matvec(J_d_tr_, y_d_, r_x_, &MINUS_ONE, &ONE, memspace_);
     }
-    matrixHandler_->matvec(J_tr_copy_, y_, rx_, &MINUS_ONE, &ONE, memspace_);
-    norm_resx_sq = vectorHandler_->dot(rx_, rx_, memspace_);
+    matrixHandler_->matvec(J_tr_copy_, y_, r_x_, &MINUS_ONE, &ONE, memspace_);
+    norm_resx_sq = vectorHandler_->dot(r_x_, r_x_, memspace_);
 
-    // Calculate error in ry
-    matrixHandler_->matvec(J_copy_, x_, ry_copy_, &MINUS_ONE, &ONE, memspace_);
-    norm_resy_sq = vectorHandler_->dot(ry_copy_, ry_copy_, memspace_);
+    // Calculate error in r_y
+    matrixHandler_->matvec(J_copy_, x_, r_y_copy_, &MINUS_ONE, &ONE, memspace_);
+    norm_resy_sq = vectorHandler_->dot(r_y_copy_, r_y_copy_, memspace_);
 
     // Calculate final relative norm
     norm_resx_sq += norm_resy_sq;
-    real_type norm_res = sqrt(norm_resx_sq) / sqrt(norm_rx_sq);
+    real_type norm_res = sqrt(norm_resx_sq) / sqrt(norm_r_x_sq);
     printf("||Ax-b||/||b|| = %32.32g\n\n", norm_res);
 
     allocated_ = true;
