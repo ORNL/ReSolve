@@ -128,6 +128,19 @@ namespace ReSolve
       std::string hFileName  = source_dir + "/SCCGTestMatrices/H_matrix_ACTIVSg200_AC_00.mtx";
       std::string bFileName  = source_dir + "/SCCGTestMatrices/CG_rhs_ACTIVSg200_AC_00.mtx"; // rhs
 
+      static constexpr real_type cholesky_tol = 1e-12;
+      static constexpr real_type sccg_tol = 1e-12;
+      static constexpr real_type entry_tol = 1e-6; // Tolerance for checking individual entries
+
+      // Expected outputs. Currently they are only available for the set of matrix files below
+      static constexpr real_type x_0_expected = 22.171865776354700;
+      static constexpr real_type x_6_expected = -4.446628667344612e+03;
+
+      std::string   source_dir   = std::string(SOURCE_DIR);
+      std::string   jcFileName = source_dir + "/SCCGTestMatrices/JC_matrix_ACTIVSg200_AC_00.mtx";
+      std::string   hFileName  = source_dir + "/SCCGTestMatrices/H_matrix_ACTIVSg200_AC_00.mtx";
+      std::string   bFileName  = source_dir + "/SCCGTestMatrices/CG_rhs_ACTIVSg200_AC_00.mtx"; // rhs
+
       /**
        * @brief Validate the SCCG result.
        * @param[in] x0 Pointer to the output x0 vector.
