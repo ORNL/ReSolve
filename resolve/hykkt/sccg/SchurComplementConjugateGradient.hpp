@@ -35,12 +35,12 @@ namespace ReSolve
        * @param[in] matrix_handler Matrix handler for the selected backend.
        * @param[in] vector_handler Vector handler for the selected backend.
        */
-      SchurComplementConjugateGradient(index_type n,
-                                       index_type m,
-                                       CholeskySolver* choleskySolver,
-                                       memory::MemorySpace memspace,
-                                       MatrixHandler& matrix_handler,
-                                       VectorHandler& vector_handler);
+      SchurComplementConjugateGradient(index_type          n,
+                                       index_type          m,
+                                       CholeskySolver*     choleskySolver,
+                                       MatrixHandler*      matrix_handler,
+                                       VectorHandler*      vector_handler,
+                                       memory::MemorySpace memspace);
       ~SchurComplementConjugateGradient();
 
       void addMatrixInfo(matrix::Csr* jc, matrix::Csr* jc_tr);
@@ -60,8 +60,8 @@ namespace ReSolve
 
       CholeskySolver* choleskySolver_{nullptr}; // Cholesky factorization on 1,1 block
 
-      MatrixHandler& matrix_handler_; ///< Backend-specific matrix handler.
-      VectorHandler& vector_handler_; ///< Backend-specific vector handler.
+      MatrixHandler* matrix_handler_{nullptr}; ///< Backend-specific matrix handler.
+      VectorHandler* vector_handler_{nullptr}; ///< Backend-specific vector handler.
 
       matrix::Csr* jc_{nullptr};
       matrix::Csr* jc_tr_{nullptr};

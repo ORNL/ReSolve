@@ -100,12 +100,12 @@ namespace ReSolve
     {
       workspace_->resetMatvecSetup();
     }
-    cusparseSpMatDescr_t matA        = workspace_->getSpmvMatrixDescriptor();
+    cusparseSpMatDescr_t mat_A       = workspace_->getSpmvMatrixDescriptor();
     void*                buffer_spmv = workspace_->getSpmvBuffer();
     if (!workspace_->matvecSetup())
     {
       // setup first, allocate, etc.
-      status = cusparseCreateCsr(&matA,
+      status = cusparseCreateCsr(&mat_A,
                                  A->getNumRows(),
                                  A->getNumColumns(),
                                  A->getNnz(),
@@ -122,7 +122,7 @@ namespace ReSolve
       status = cusparseSpMV_bufferSize(handle_cusparse,
                                        CUSPARSE_OPERATION_NON_TRANSPOSE,
                                        &MINUS_ONE,
-                                       matA,
+                                       mat_A,
                                        vecx,
                                        &ONE,
                                        vecAx,
@@ -131,7 +131,7 @@ namespace ReSolve
                                        &bufferSize);
       error_sum += status;
       mem_.allocateBufferOnDevice(&buffer_spmv, bufferSize);
-      workspace_->setSpmvMatrixDescriptor(matA);
+      workspace_->setSpmvMatrixDescriptor(mat_A);
       workspace_->setSpmvBuffer(buffer_spmv);
 
       workspace_->matvecSetupDone();
@@ -147,7 +147,7 @@ namespace ReSolve
     status = cusparseSpMV(handle_cusparse,
                           CUSPARSE_OPERATION_NON_TRANSPOSE,
                           alpha,
-                          matA,
+                          mat_A,
                           vecx,
                           beta,
                           vecAx,

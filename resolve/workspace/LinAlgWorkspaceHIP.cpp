@@ -8,6 +8,8 @@ namespace ReSolve
     handle_rocblas_   = nullptr;
     mat_A_            = nullptr;
     info_A_           = nullptr;
+    mat_A_            = nullptr;
+    info_A_           = nullptr;
 
     matvec_setup_done_         = false;
     d_r_                       = nullptr;
@@ -20,6 +22,8 @@ namespace ReSolve
 
   LinAlgWorkspaceHIP::~LinAlgWorkspaceHIP()
   {
+    resetMatvecSetup();
+
     resetMatvecSetup();
 
     rocsparse_destroy_handle(handle_rocsparse_);

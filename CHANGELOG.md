@@ -8,6 +8,10 @@
 
 - Changed random number generation int tests to be C++ style and fixed-seed, to avoid random failures.
 
+- Changed random number generation int tests to be C++ style and fixed-seed, to avoid random failures.
+
+- Added Schur Complement Conjugate Gradient class.
+
 ## Changes to Re::Solve since release 0.99.2
 
 - Added cmake-format.

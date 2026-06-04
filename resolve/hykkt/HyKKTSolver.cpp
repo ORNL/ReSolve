@@ -551,7 +551,7 @@ namespace ReSolve {
     schur_->copyFromExternal(ry_, memspace_, memspace_);
     matrixHandler_->matvec(J_perm_, Hrx_perm_, schur_, &ONE, &MINUS_ONE, memspace_);
 
-    sccg_ = new SchurComplementConjugateGradient(J_->getNumRows(), J_->getNumColumns(), cholesky_, memspace_, *matrixHandler_, *vectorHandler_);
+    sccg_ = new SchurComplementConjugateGradient(J_->getNumRows(), J_->getNumColumns(), cholesky_, matrixHandler_, vectorHandler_, memspace_);
     sccg_->addMatrixInfo(J_perm_, J_tr_perm_);
     y_->setToZero(memspace_);
     sccg_->addVectorInfo(y_, schur_);
