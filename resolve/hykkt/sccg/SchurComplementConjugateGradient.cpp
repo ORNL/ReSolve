@@ -116,37 +116,37 @@ namespace ReSolve
     {
       using namespace constants;
 
-      matrix_handler_.matvec(jc_tr_, x0_, y_, &ONE, &ZERO, memspace_);
+      matrix_handler_->matvec(jc_tr_, x0_, y_, &ONE, &ZERO, memspace_);
       choleskySolver_->solve(z_, y_);
-      matrix_handler_.matvec(jc_, z_, r_, &MINUS_ONE, &ONE, memspace_);
-      gam_i_ = vector_handler_.dot(r_, r_, memspace_);
+      matrix_handler_->matvec(jc_, z_, r_, &MINUS_ONE, &ONE, memspace_);
+      gam_i_ = vector_handler_->dot(r_, r_, memspace_);
 
-      matrix_handler_.matvec(jc_tr_, r_, y_, &ONE, &ZERO, memspace_);
+      matrix_handler_->matvec(jc_tr_, r_, y_, &ONE, &ZERO, memspace_);
       choleskySolver_->solve(z_, y_);
-      matrix_handler_.matvec(jc_, z_, w_, &ONE, &ZERO, memspace_);
-      delta_ = vector_handler_.dot(w_, r_, memspace_);
+      matrix_handler_->matvec(jc_, z_, w_, &ONE, &ZERO, memspace_);
+      delta_ = vector_handler_->dot(w_, r_, memspace_);
       alpha_ = gam_i_ / delta_;
 
       size_t i;
       for (i = 0; i < itmax_; i++)
       {
-        vector_handler_.scal(beta_, p_, memspace_);
-        vector_handler_.axpy(ONE, r_, p_, memspace_);
-        vector_handler_.scal(beta_, s_, memspace_);
-        vector_handler_.axpy(ONE, w_, s_, memspace_);
-        vector_handler_.axpy(alpha_, p_, x0_, memspace_);
+        vector_handler_->scal(beta_, p_, memspace_);
+        vector_handler_->axpy(ONE, r_, p_, memspace_);
+        vector_handler_->scal(beta_, s_, memspace_);
+        vector_handler_->axpy(ONE, w_, s_, memspace_);
+        vector_handler_->axpy(alpha_, p_, x0_, memspace_);
         minalpha_ = -alpha_;
-        vector_handler_.axpy(minalpha_, s_, r_, memspace_);
-        gam_i1_ = vector_handler_.dot(r_, r_, memspace_);
+        vector_handler_->axpy(minalpha_, s_, r_, memspace_);
+        gam_i1_ = vector_handler_->dot(r_, r_, memspace_);
         if (sqrt(gam_i1_) < tol_)
         {
           printf("Convergence occured at iteration %d\n", i);
           break;
         }
-        matrix_handler_.matvec(jc_tr_, r_, y_, &ONE, &ZERO, memspace_);
+        matrix_handler_->matvec(jc_tr_, r_, y_, &ONE, &ZERO, memspace_);
         choleskySolver_->solve(z_, y_);
-        matrix_handler_.matvec(jc_, z_, w_, &ONE, &ZERO, memspace_);
-        delta_ = vector_handler_.dot(w_, r_, memspace_);
+        matrix_handler_->matvec(jc_, z_, w_, &ONE, &ZERO, memspace_);
+        delta_ = vector_handler_->dot(w_, r_, memspace_);
         beta_  = gam_i1_ / gam_i_;
         gam_i_ = gam_i1_;
         alpha_ = gam_i_ / (delta_ - beta_ * gam_i_ / alpha_);
