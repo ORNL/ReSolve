@@ -116,8 +116,8 @@ namespace ReSolve
         col_data[i] = static_cast<index_type>(chol_col_data[i]);
         val_data[i] = chol_val_data[i];
       }
-// Previous data must be de-allocated and the new data must be copied.
-// Cholmod does not allow for reuse of arrays.
+      // Previous data must be de-allocated and the new data must be copied.
+      // Cholmod does not allow for reuse of arrays.
       (*E_ptr_)->setUpdated(memory::HOST);
 
       cholmod_free_sparse(&C_chol, &Common_);
