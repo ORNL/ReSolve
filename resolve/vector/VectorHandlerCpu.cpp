@@ -314,7 +314,7 @@ namespace ReSolve
     }
     vec->setDataUpdated(memory::HOST);
   }
-  
+
   /**
    * @brief Scale a vector by a diagonal matrix
    *

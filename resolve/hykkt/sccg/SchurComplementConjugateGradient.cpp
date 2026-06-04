@@ -155,7 +155,7 @@ namespace ReSolve
       if (i == itmax_)
       {
         printf("No CG convergence in %d iterations\n", itmax_);
-        return 1; 
+        return 1;
       }
 
       return 0;

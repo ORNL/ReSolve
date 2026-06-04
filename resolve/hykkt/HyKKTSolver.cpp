@@ -8,7 +8,8 @@
 
 #include <resolve/matrix/io.hpp>
 
-namespace ReSolve {
+namespace ReSolve
+{
   using namespace constants;
 
   /**
@@ -105,8 +106,8 @@ namespace ReSolve {
     }
 
     bool Jd_flag = Jd_->getNnz() > 0;
-    status_ = (Jd_flag_ == Jd_flag); //if new nonzero structure then broken
-    Jd_flag_ = Jd_flag;
+    status_      = (Jd_flag_ == Jd_flag); // if new nonzero structure then broken
+    Jd_flag_     = Jd_flag;
   }
 
   /**
@@ -125,14 +126,14 @@ namespace ReSolve {
    */
   void hykkt::HyKKTSolver::setMatrixBlocks(matrix::Csr* H_plus_Dx, matrix::Csr* Ds, matrix::Csr* J, matrix::Csr* Jd)
   {
-    H_ = H_plus_Dx;
+    H_  = H_plus_Dx;
     Ds_ = Ds;
-    J_ = J;
+    J_  = J;
     Jd_ = Jd;
 
     bool Jd_flag = Jd->getNnz() > 0;
     // status_ = (Jd_flag_ == Jd_flag);
-    status_ = true; // when using API, we can't check if sparsity pattern changed
+    status_  = true; // when using API, we can't check if sparsity pattern changed
     Jd_flag_ = Jd_flag;
   }
 
@@ -148,9 +149,9 @@ namespace ReSolve {
    */
   void hykkt::HyKKTSolver::setRHSBlocks(vector::Vector* rx, vector::Vector* rs, vector::Vector* ry, vector::Vector* ryd)
   {
-    rx_ = rx;
-    rs_ = rs;
-    ry_ = ry;
+    rx_  = rx;
+    rs_  = rs;
+    ry_  = ry;
     ryd_ = ryd;
   }
 
@@ -167,9 +168,9 @@ namespace ReSolve {
    */
   void hykkt::HyKKTSolver::setLHSPointers(vector::Vector* x, vector::Vector* s, vector::Vector* y, vector::Vector* yd)
   {
-    x_ = x;
-    s_ = s;
-    y_ = y;
+    x_  = x;
+    s_  = s;
+    y_  = y;
     yd_ = yd;
   }
 
@@ -205,13 +206,14 @@ namespace ReSolve {
    * @param[out] - Error of Ax - b
    *
    * @post solution to given KKT system is computed using Hykkt
-  */
+   */
   real_type hykkt::HyKKTSolver::solve()
   {
     // TODO: Review sparsity pattern checking in HyKKT
-    if(!status_ && allocated_){
+    if (!status_ && allocated_)
+    {
       printf("\n\nERROR: USING HYKKT WITH NEW NONZERO STRUCTURE\n\n");
-      std::cout << "status = "      << status_
+      std::cout << "status = " << status_
                 << ", allocated = " << allocated_
                 << "\n";
       return 1;
@@ -219,29 +221,34 @@ namespace ReSolve {
 
     setupParameters();
 
-    if(!allocated_){
+    if (!allocated_)
+    {
       setupSpGEMMHtil();
     }
     computeSpGEMMHtil();
 
     setupSolutionCheck();
 
-    if(!allocated_){
+    if (!allocated_)
+    {
       setupRuizScaling();
     }
     computeRuizScaling();
 
-    if(!allocated_){
+    if (!allocated_)
+    {
       setupSpGEMMHGamma();
     }
     computeSpGEMMHGamma();
 
-    if(!allocated_){
+    if (!allocated_)
+    {
       setupPermutation();
     }
     applyPermutation();
 
-    if(!allocated_){
+    if (!allocated_)
+    {
       setupHGammaFactorization();
     }
     computeHGammaFactorization();
@@ -266,27 +273,27 @@ namespace ReSolve {
   {
     // Assume all matrix blocks and RHS blocks are already set
 
-    std::cout << "H size: " << H_->getNumRows() << " "<< H_->getNumColumns() << " "<< H_->getNnz() << " \n";
-    std::cout << "J size: " << J_->getNumRows() << "  " << J_->getNumColumns() << "  "<< J_->getNnz() << " \n";
+    std::cout << "H size: " << H_->getNumRows() << " " << H_->getNumColumns() << " " << H_->getNnz() << " \n";
+    std::cout << "J size: " << J_->getNumRows() << "  " << J_->getNumColumns() << "  " << J_->getNnz() << " \n";
     std::cout << "Ds nnz = " << Ds_->getNnz() << "\n";
 
     if (!allocated_)
     {
-      rx_perm_   = new vector::Vector(nx_);
-      Hrx_perm_  = new vector::Vector(nx_);
-      schur_ = new vector::Vector(mc_);
-      Ds_vals_ = new vector::Vector(md_);
+      rx_perm_    = new vector::Vector(nx_);
+      Hrx_perm_   = new vector::Vector(nx_);
+      schur_      = new vector::Vector(mc_);
+      Ds_vals_    = new vector::Vector(md_);
       ryd_scaled_ = new vector::Vector(ryd_->getSize());
-      rx_til_ = new vector::Vector(nx_);
-      rx_hat_ = new vector::Vector(nx_);
-      z_ = new vector::Vector(nx_);
-      ry_copy_ = new vector::Vector(mc_);
-      J_tr_ = new matrix::Csr(J_->getNumColumns(), J_->getNumRows(), J_->getNnz());
-      Jd_tr_ = new matrix::Csr(Jd_->getNumColumns(), Jd_->getNumRows(), Jd_->getNnz());
-      Htil_ = new matrix::Csr(H_->getNumRows(), H_->getNumColumns(), H_->getNnz());
-      J_perm_ = new matrix::Csr(J_->getNumRows(), J_->getNumColumns(), J_->getNnz());
-      J_tr_perm_ = new matrix::Csr(J_tr_->getNumRows(), J_tr_->getNumColumns(), J_tr_->getNnz());
-      Jd_scaled_ = new matrix::Csr(Jd_->getNumRows(), Jd_->getNumColumns(), Jd_->getNnz());
+      rx_til_     = new vector::Vector(nx_);
+      rx_hat_     = new vector::Vector(nx_);
+      z_          = new vector::Vector(nx_);
+      ry_copy_    = new vector::Vector(mc_);
+      J_tr_       = new matrix::Csr(J_->getNumColumns(), J_->getNumRows(), J_->getNnz());
+      Jd_tr_      = new matrix::Csr(Jd_->getNumColumns(), Jd_->getNumRows(), Jd_->getNnz());
+      Htil_       = new matrix::Csr(H_->getNumRows(), H_->getNumColumns(), H_->getNnz());
+      J_perm_     = new matrix::Csr(J_->getNumRows(), J_->getNumColumns(), J_->getNnz());
+      J_tr_perm_  = new matrix::Csr(J_tr_->getNumRows(), J_tr_->getNumColumns(), J_tr_->getNnz());
+      Jd_scaled_  = new matrix::Csr(Jd_->getNumRows(), Jd_->getNumColumns(), Jd_->getNnz());
 
       Ds_vals_->setData(Ds_->getValues(memspace_), memspace_);
       rx_perm_->allocate(memspace_);
@@ -312,7 +319,7 @@ namespace ReSolve {
     matrixHandler_->transpose(J_, J_tr_, memspace_);
     if (Jd_flag_)
     {
-    matrixHandler_->transpose(Jd_, Jd_tr_, memspace_);
+      matrixHandler_->transpose(Jd_, Jd_tr_, memspace_);
       Jd_scaled_->copyValues(Jd_->getValues(memspace_), memspace_, memspace_);
     }
   }
@@ -380,7 +387,7 @@ namespace ReSolve {
   {
     if (!allocated_)
     {
-      J_copy_ = new matrix::Csr(J_->getNumRows(), J_->getNumColumns(), J_->getNnz());
+      J_copy_    = new matrix::Csr(J_->getNumRows(), J_->getNumColumns(), J_->getNnz());
       J_tr_copy_ = new matrix::Csr(J_tr_->getNumRows(), J_tr_->getNumColumns(), J_tr_->getNnz());
     }
     J_copy_->copyFromExternal(J_->getRowData(memspace_),
@@ -404,14 +411,14 @@ namespace ReSolve {
   }
 
   /*
-  * @brief computes Ruiz scaling so we can judge the size of
-  *        Gamma and delta min relative to H Gammma system
-  *
-  * @pre matrices, RHS, and aggregate scaling vector updated
-  * using setup method for ruiz_scaling
-  *
-  * @post max_d_ now contains the aggregated Ruiz scaling
-  */
+   * @brief computes Ruiz scaling so we can judge the size of
+   *        Gamma and delta min relative to H Gammma system
+   *
+   * @pre matrices, RHS, and aggregate scaling vector updated
+   * using setup method for ruiz_scaling
+   *
+   * @post max_d_ now contains the aggregated Ruiz scaling
+   */
   void hykkt::HyKKTSolver::computeRuizScaling()
   {
     ruiz_->addMatrixData(Htil_, J_, J_tr_);
@@ -431,17 +438,16 @@ namespace ReSolve {
     spgemm_hgamma_->loadProductMatrices(J_tr_, J_);
     spgemm_hgamma_->loadSumMatrix(Htil_);
     spgemm_hgamma_->loadResultMatrix(&HGam_); // HGam_ will be created by SpGEMM at this step
-
   }
 
   /*
-  * @brief computes SpGEMM to calculate HGamma matrix
-  *
-  * @pre matrices and spgemm_hgamma properly allocated using setup
-  *      method for spgemm_hgamma
-  *
-  * @post HGamma CSR now represents J_tr * J + Htil
-  */
+   * @brief computes SpGEMM to calculate HGamma matrix
+   *
+   * @pre matrices and spgemm_hgamma properly allocated using setup
+   *      method for spgemm_hgamma
+   *
+   * @post HGamma CSR now represents J_tr * J + Htil
+   */
   void hykkt::HyKKTSolver::computeSpGEMMHGamma()
   {
     spgemm_hgamma_->compute();
@@ -508,8 +514,8 @@ namespace ReSolve {
   void hykkt::HyKKTSolver::applyPermutation()
   {
     permutation_->mapIndex(PERM_HES_V,
-                          HGam_->getValues(memspace_),
-                          HGam_perm_->getValues(memspace_));
+                           HGam_->getValues(memspace_),
+                           HGam_perm_->getValues(memspace_));
     permutation_->mapIndex(PERM_JAC_V,
                            J_->getValues(memspace_),
                            J_perm_->getValues(memspace_));
@@ -517,8 +523,8 @@ namespace ReSolve {
                            J_tr_->getValues(memspace_),
                            J_tr_perm_->getValues(memspace_));
     permutation_->mapIndex(PERM_V,
-                             rx_hat_->getData(memspace_),
-                             rx_perm_->getData(memspace_));
+                           rx_hat_->getData(memspace_),
+                           rx_perm_->getData(memspace_));
     rx_perm_->setDataUpdated(memspace_);
   }
 
@@ -641,9 +647,9 @@ namespace ReSolve {
 
     // This will aggregate the squared norms of the residual and rhs
     // Note that by construction the residuals of rs and ryd are 0
-    norm_rx_sq = vectorHandler_->dot(rx_, rx_, memspace_);
-    norm_rs_sq = vectorHandler_->dot(rs_, rs_, memspace_);
-    norm_ry_sq = vectorHandler_->dot(ry_copy_, ry_copy_, memspace_);
+    norm_rx_sq  = vectorHandler_->dot(rx_, rx_, memspace_);
+    norm_rs_sq  = vectorHandler_->dot(rs_, rs_, memspace_);
+    norm_ry_sq  = vectorHandler_->dot(ry_copy_, ry_copy_, memspace_);
     norm_ryd_sq = vectorHandler_->dot(ryd_, ryd_, memspace_);
 
     norm_rx_sq += norm_rs_sq + norm_ry_sq + norm_ryd_sq;
@@ -669,4 +675,4 @@ namespace ReSolve {
 
     return norm_res;
   }
-}
+} // namespace ReSolve

@@ -119,7 +119,7 @@ namespace ReSolve
       // Previous data must be de-allocated and new data copied.
       // Cholmod does not allow for reuse of arrays.
       (*E_ptr_)->setUpdated(memory::HOST);
-      
+
       cholmod_free_sparse(&C_chol, &Common_);
       cholmod_free_sparse(&E_chol, &Common_);
     }

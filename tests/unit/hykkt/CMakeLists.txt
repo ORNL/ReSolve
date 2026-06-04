@@ -44,16 +44,23 @@ target_compile_definitions(
 add_executable(runHykktSolverTests.exe runHykktSolverTests.cpp)
 target_link_libraries(
   runHykktSolverTests.exe
-  PRIVATE resolve_hykkt resolve_hykkt_ruiz resolve_hykkt_chol resolve_hykkt_spgemm
-          resolve_hykkt_sccg  resolve_hykkt_solver resolve_vector resolve_matrix
+  PRIVATE resolve_hykkt
+          resolve_hykkt_ruiz
+          resolve_hykkt_chol
+          resolve_hykkt_spgemm
+          resolve_hykkt_sccg
+          resolve_hykkt_solver
+          resolve_vector
+          resolve_matrix
 )
 target_compile_definitions(
   runHykktSolverTests.exe PRIVATE SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
 ) # For file paths
 
 # Install tests
-set(installable_tests runHykktPermutationTests.exe runHykktRuizScalingTests.exe
-                      runHykktCholeskyTests.exe runHykktSpGEMMTests.exe runHykktSolverTests.exe
+set(installable_tests
+    runHykktPermutationTests.exe runHykktRuizScalingTests.exe
+    runHykktCholeskyTests.exe runHykktSpGEMMTests.exe runHykktSolverTests.exe
 )
 
 install(TARGETS ${installable_tests} RUNTIME DESTINATION bin/resolve/tests/unit)

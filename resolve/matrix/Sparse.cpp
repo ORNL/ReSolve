@@ -227,7 +227,7 @@ namespace ReSolve
     }
     return 0;
   }
-  
+
   /**
    * @brief Allocate the values array and set pointers to external arrays
    * containing row and column data.
@@ -239,9 +239,9 @@ namespace ReSolve
    * @param memspace - memory space to be synced up (HOST or DEVICE)
    * @return int - 0 if successful, error code otherwise
    */
-  int matrix::Sparse::allocateWithExternalSparsityPattern(index_type* src_row_data,
-                                                          index_type* src_col_data,
-                                                          index_type new_nnz,
+  int matrix::Sparse::allocateWithExternalSparsityPattern(index_type*         src_row_data,
+                                                          index_type*         src_col_data,
+                                                          index_type          new_nnz,
                                                           memory::MemorySpace memspace)
   {
     nnz_ = new_nnz;

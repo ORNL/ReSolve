@@ -354,10 +354,10 @@ namespace ReSolve
    * @invariant diag
    *
    */
-  void VectorHandler::scal(vector::Vector* diag,
-                           vector::Vector* vec,
-                           index_type diag_begin,
-                           index_type diag_end,
+  void VectorHandler::scal(vector::Vector*     diag,
+                           vector::Vector*     vec,
+                           index_type          diag_begin,
+                           index_type          diag_end,
                            memory::MemorySpace memspace)
   {
     assert(diag_end <= diag->getSize() && "Diagonal vector indexing out of bounds!\n");

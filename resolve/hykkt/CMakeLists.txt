@@ -20,20 +20,21 @@ set(HYKKT_SOLVER_HEADER_INSTALL HyKKTSolver.hpp)
 add_library(resolve_hykkt_solver SHARED ${HYKKT_SOLVER_SRC})
 
 target_link_libraries(
-    resolve_hykkt_solver
-    PRIVATE resolve_hykkt
-            resolve_hykkt_ruiz
-            resolve_hykkt_chol
-            resolve_hykkt_spgemm
-            resolve_hykkt_sccg
-            resolve_logger
-            resolve_vector
-            resolve_matrix
+  resolve_hykkt_solver
+  PRIVATE resolve_hykkt
+          resolve_hykkt_ruiz
+          resolve_hykkt_chol
+          resolve_hykkt_spgemm
+          resolve_hykkt_sccg
+          resolve_logger
+          resolve_vector
+          resolve_matrix
 )
 
 # Link to CUDA ReSolve backend if CUDA is support enabled
 
-# target_include_directories(resolve_hykkt_solver PUBLIC ${SUITESPARSE_INCLUDE_DIR})
+# target_include_directories(resolve_hykkt_solver PUBLIC
+# ${SUITESPARSE_INCLUDE_DIR})
 
 if(RESOLVE_USE_CUDA)
   target_sources(resolve_hykkt_solver PRIVATE ${Matrix_CUDASDK_SRC})
@@ -54,7 +55,7 @@ endif()
 
 target_include_directories(
   resolve_hykkt_solver INTERFACE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
-                               $<INSTALL_INTERFACE:include>
+                                 $<INSTALL_INTERFACE:include>
 )
 
 install(FILES ${HYKKT_SOLVER_HEADER_INSTALL} DESTINATION include/resolve/hykkt)
