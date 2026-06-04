@@ -89,10 +89,10 @@ namespace ReSolve
 
       y_.setToZero(memspace_);
       z_.setToZero(memspace_);
-      r_.setToZero(memspace_);
-      p_.setToZero(memspace_);
-      s_.setToZero(memspace_);
-      w_.setToZero(memspace_);
+      r_.copyFromExternal(b_, memspace_, memspace_);
+      p_.copyFromExternal(b_, memspace_, memspace_);
+      s_.copyFromExternal(b_, memspace_, memspace_);
+      w_.copyFromExternal(b_, memspace_, memspace_);
 
       beta_ = 0;
     }
