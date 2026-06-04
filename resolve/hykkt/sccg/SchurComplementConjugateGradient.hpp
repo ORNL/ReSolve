@@ -31,9 +31,9 @@ namespace ReSolve
        * @param[in] n Dimension of outer system.
        * @param[in] m Dimension of inner system.
        * @param[in] choleskySolver Factorization of Hgamma to use for direct solves.
-       * @param[in] memspace Memory space of incoming data and for computation.
        * @param[in] matrix_handler Matrix handler for the selected backend.
        * @param[in] vector_handler Vector handler for the selected backend.
+       * @param[in] memspace Memory space of incoming data and for computation.
        */
       SchurComplementConjugateGradient(index_type          n,
                                        index_type          m,
