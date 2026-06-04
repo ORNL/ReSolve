@@ -67,6 +67,17 @@ namespace ReSolve
     virtual void scal(vector::Vector* diag, vector::Vector* vec);
 
     /**
+     * @brief scale: scales a vector by a diagonal matrix represented by a contiguous subvector of an input vector
+     *
+     * @param[in] diag diagonal vector of size n x 1
+     * @param[in,out] vec vector of size n x 1 (this is where the result is stored)
+     * @param[in] diag_offset - the index of diag where the diagonal matrix begins offset
+     *
+     * @return 0 if successful, 1 otherwise
+     */
+    virtual void scal(vector::Vector* diag, vector::Vector* vec, index_type diag_offset);
+
+    /**
      * @brief Multiplies vector by an inverse of a diagonal matrix.
      *
      *

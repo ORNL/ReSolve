@@ -56,6 +56,7 @@ namespace ReSolve
                       vector::Vector* x);
 
     virtual void scal(vector::Vector* diag, vector::Vector* vec);
+    virtual void scal(vector::Vector* diag, vector::Vector* vec, index_type diag_offset);
 
     virtual int diagSolve(vector::Vector* diag, vector::Vector* vec);
 

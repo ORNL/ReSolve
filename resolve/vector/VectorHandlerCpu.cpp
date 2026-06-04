@@ -316,6 +316,28 @@ namespace ReSolve
   }
 
   /**
+   * @brief Scale a vector by a diagonal matrix
+   *
+   * @param[in] diag Diagonal vector
+   * @param[in] vec Vector to be scaled
+   * @param[in] diag_offset - the index of diag where the diagonal matrix begins
+   *
+   * @return 0 if successful, 1 otherwise
+   */
+  void VectorHandlerCpu::scal(vector::Vector* diag, vector::Vector* vec, index_type diag_offset)
+  {
+    const real_type* diag_data = &diag->getData(memory::HOST)[diag_offset];
+    real_type*       vec_data  = vec->getData(memory::HOST);
+    index_type       n         = vec->getSize();
+
+    for (index_type i = 0; i < n; ++i)
+    {
+      vec_data[i] *= diag_data[i];
+    }
+    vec->setDataUpdated(memory::HOST);
+  }
+
+  /**
    * @brief Multiplies vector by an inverse of a diagonal matrix.
    *
    * @param[in]  diag   - diagonal matrix stored in a vector object

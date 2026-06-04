@@ -23,8 +23,6 @@ namespace ReSolve
       void compute();
 
     private:
-      MemoryHandler mem_;
-
       real_type alpha_;
       real_type beta_;
 

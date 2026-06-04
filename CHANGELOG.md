@@ -24,8 +24,12 @@
 
 - Added `diagSolve`, `max`, and `abs` vector operations.
 
+- Added `allocateWithExternalSparsityPattern` for sparse matrices.
+
 - Improved coding guidelines for developers on floating point conventions.
 
+- Made spack builds more robust.
+- 
 - Removed unnecessary device synchronization and added where needed (HIP only calls).
 
 - Changed variable and function names to be more explanatory.

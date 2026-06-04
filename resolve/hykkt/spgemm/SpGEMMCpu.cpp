@@ -84,24 +84,46 @@ namespace ReSolve
     void SpGEMMCpu::compute()
     {
       cholmod_sparse* C_chol = cholmod_ssmult(B_, A_, 0, 1, 0, &Common_);
+      // B_ and A_ are reversed because cholmod_sparse is a CSC matrix
+      // and (B^TA^T)^T=AB.
       cholmod_sparse* E_chol = cholmod_add(C_chol, D_, &alpha_, &beta_, 1, 0, &Common_);
 
-      if (!(*E_ptr_))
+      int*       chol_row_data = static_cast<int*>(E_chol->p);
+      int*       chol_col_data = static_cast<int*>(E_chol->i);
+      real_type* chol_val_data = static_cast<real_type*>(E_chol->x);
+
+      const index_type num_rows = static_cast<index_type>(E_chol->ncol);
+      const index_type num_cols = static_cast<index_type>(E_chol->nrow);
+      const index_type nnz      = static_cast<index_type>(chol_row_data[E_chol->ncol]);
+
+      if (*E_ptr_)
       {
-        *E_ptr_ = new matrix::Csr((index_type) E_chol->nrow, (index_type) E_chol->ncol, (index_type) E_chol->nzmax);
-      }
-      else
-      {
-        (*E_ptr_)->destroyMatrixData(memory::HOST);
+        delete *E_ptr_;
+        *E_ptr_ = nullptr;
       }
 
-      // Previous data must be de-allocated and new data copied.
+      *E_ptr_ = new matrix::Csr(num_rows, num_cols, nnz);
+      (*E_ptr_)->allocateMatrixData(memory::HOST);
+
+      index_type* row_data = (*E_ptr_)->getRowData(memory::HOST);
+      index_type* col_data = (*E_ptr_)->getColData(memory::HOST);
+      real_type*  val_data = (*E_ptr_)->getValues(memory::HOST);
+
+      for (index_type i = 0; i <= num_rows; ++i)
+      {
+        row_data[i] = static_cast<index_type>(chol_row_data[i]);
+      }
+      for (index_type i = 0; i < nnz; ++i)
+      {
+        col_data[i] = static_cast<index_type>(chol_col_data[i]);
+        val_data[i] = chol_val_data[i];
+      }
+      // Previous data must be de-allocated and the new data must be copied.
       // Cholmod does not allow for reuse of arrays.
-      (*E_ptr_)->copyFromExternal(static_cast<index_type*>(E_chol->p),
-                                  static_cast<index_type*>(E_chol->i),
-                                  static_cast<real_type*>(E_chol->x),
-                                  memory::HOST,
-                                  memory::HOST);
+      (*E_ptr_)->setUpdated(memory::HOST);
+
+      cholmod_free_sparse(&C_chol, &Common_);
+      cholmod_free_sparse(&E_chol, &Common_);
     }
 
     /**
@@ -111,8 +133,8 @@ namespace ReSolve
      */
     cholmod_sparse* SpGEMMCpu::allocateCholmodType(matrix::Csr* A)
     {
-      return cholmod_allocate_sparse((size_t) A->getNumRows(),
-                                     (size_t) A->getNumColumns(),
+      return cholmod_allocate_sparse((size_t) A->getNumColumns(),
+                                     (size_t) A->getNumRows(),
                                      (size_t) A->getNnz(),
                                      1,
                                      1,
@@ -128,12 +150,24 @@ namespace ReSolve
      */
     void SpGEMMCpu::copyDataCholmodType(matrix::Csr* A, cholmod_sparse* A_chol)
     {
-      mem_.copyArrayHostToHost(
-          static_cast<int*>(A_chol->p), A->getRowData(memory::HOST), A->getNumRows() + 1);
-      mem_.copyArrayHostToHost(
-          static_cast<int*>(A_chol->i), A->getColData(memory::HOST), A->getNnz());
-      mem_.copyArrayHostToHost(
-          static_cast<double*>(A_chol->x), A->getValues(memory::HOST), A->getNnz());
+      int*       chol_row_data = static_cast<int*>(A_chol->p);
+      int*       chol_col_data = static_cast<int*>(A_chol->i);
+      real_type* chol_val_data = static_cast<real_type*>(A_chol->x);
+
+      index_type* row_data = A->getRowData(memory::HOST);
+      index_type* col_data = A->getColData(memory::HOST);
+      real_type*  val_data = A->getValues(memory::HOST);
+
+      for (index_type i = 0; i < A->getNumRows() + 1; ++i)
+      {
+        chol_row_data[i] = static_cast<int>(row_data[i]);
+      }
+
+      for (index_type i = 0; i < A->getNnz(); ++i)
+      {
+        chol_col_data[i] = static_cast<int>(col_data[i]);
+        chol_val_data[i] = val_data[i];
+      }
     }
   } // namespace hykkt
 } // namespace ReSolve

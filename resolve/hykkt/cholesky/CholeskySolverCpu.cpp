@@ -106,7 +106,7 @@ namespace ReSolve
      */
     cholmod_sparse* CholeskySolverCpu::convertToCholmod(matrix::Csr* A)
     {
-      A_chol_ = cholmod_allocate_sparse((size_t) A->getNumRows(),
+      A_chol_                  = cholmod_allocate_sparse((size_t) A->getNumRows(),
                                         (size_t) A->getNumColumns(),
                                         (size_t) A->getNnz(),
                                         1,
@@ -114,12 +114,24 @@ namespace ReSolve
                                         1,
                                         CHOLMOD_REAL,
                                         &Common_);
-      mem_.copyArrayHostToHost(
-          static_cast<int*>(A_chol_->p), A->getRowData(memory::HOST), A->getNumRows() + 1);
-      mem_.copyArrayHostToHost(
-          static_cast<int*>(A_chol_->i), A->getColData(memory::HOST), A->getNnz());
-      mem_.copyArrayHostToHost(
-          static_cast<double*>(A_chol_->x), A->getValues(memory::HOST), A->getNnz());
+      int*       chol_row_data = static_cast<int*>(A_chol_->p);
+      int*       chol_col_data = static_cast<int*>(A_chol_->i);
+      real_type* chol_val_data = static_cast<real_type*>(A_chol_->x);
+
+      index_type* row_data = A->getRowData(memory::HOST);
+      index_type* col_data = A->getColData(memory::HOST);
+      real_type*  val_data = A->getValues(memory::HOST);
+
+      for (index_type i = 0; i < A->getNumRows() + 1; ++i)
+      {
+        chol_row_data[i] = static_cast<int>(row_data[i]);
+      }
+
+      for (index_type i = 0; i < A->getNnz(); ++i)
+      {
+        chol_col_data[i] = static_cast<int>(col_data[i]);
+        chol_val_data[i] = val_data[i];
+      }
 
       return A_chol_;
     }

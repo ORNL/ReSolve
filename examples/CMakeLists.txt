@@ -110,8 +110,9 @@ install(FILES ${PROJECT_SOURCE_DIR}/tests/functionality/TestHelper.hpp
 )
 
 # Shell script argumets: 1. Path to where resolve is installed. 2. Path to data
-# directory
+# directory. 3. CXX compiler (propagated so consumer uses same API as ReSolve).
 add_custom_target(
-  test_install COMMAND ${CONSUMER_PATH}/test.sh ${CMAKE_INSTALL_PREFIX}
-                       ${test_data_dir} ${sym_matrix_path} ${sym_rhs_path}
+  test_install
+  COMMAND ${CONSUMER_PATH}/test.sh ${CMAKE_INSTALL_PREFIX} ${test_data_dir}
+          ${sym_matrix_path} ${sym_rhs_path} ${CMAKE_CXX_COMPILER}
 )

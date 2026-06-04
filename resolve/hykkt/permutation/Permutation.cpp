@@ -128,7 +128,7 @@ namespace ReSolve
 
       int result = amd_order(n_hes_, hes_i_, hes_j_, perm_, Control, Info);
 
-      if (result != AMD_OK)
+      if (result != AMD_OK && result != AMD_OK_BUT_JUMBLED)
       {
         out::error() << "AMD failed\n";
         exit(1);
@@ -174,7 +174,6 @@ namespace ReSolve
      */
     void Permutation::vecMapRC(index_type* perm_i, index_type* perm_j)
     {
-
       cpuImpl_->makeVecMapRC(n_hes_, hes_i_, hes_j_, perm_, rev_perm_, perm_i, perm_j, perm_map_hes_);
       if (memspace_ == memory::DEVICE)
       {
