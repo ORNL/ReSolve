@@ -22,6 +22,8 @@
 
 - Improved coding guidelines for developers on floating point conventions.
 
+- Made spack builds more robust.
+
 ## Changes to Re::Solve in release 0.99.2
 
 ### Major Features
