@@ -173,11 +173,11 @@ namespace ReSolve
     int        k;
     int        k1;
 
-    real_type   t             = 0.0;
-    real_type   res_norm      = 0.0; // Residual norm used for convergence
-    real_type   rhs_norm      = 0.0; // Right-hand side norm used for convergence
-    real_type   true_res_norm = 0.0; // True (unpreconditioned) residual norm ||b - Ax|| for reporting
-    real_type   true_rhs_norm = 0.0; // True (unpreconditioned) right-hand side norm ||b|| for reporting
+    real_type   t              = 0.0;
+    real_type   res_norm       = 0.0; // Residual norm used for convergence
+    real_type   rhs_norm       = 0.0; // Right-hand side norm used for convergence
+    real_type   true_res_norm  = 0.0; // True (unpreconditioned) residual norm ||b - Ax|| for reporting
+    real_type   true_rhs_norm  = 0.0; // True (unpreconditioned) right-hand side norm ||b|| for reporting
     real_type   initial_r_norm = 0.0;
     real_type   final_r_norm   = 0.0;
     real_type   x_norm         = 0.0;
@@ -234,8 +234,8 @@ namespace ReSolve
 
       vec_v.setData(vec_V_->getData(0, memspace_), memspace_);
 
-      true_res_norm = vector_handler_->dot(&vec_v, &vec_v, memspace_);
-      true_res_norm = std::sqrt(true_res_norm);
+      true_res_norm  = vector_handler_->dot(&vec_v, &vec_v, memspace_);
+      true_res_norm  = std::sqrt(true_res_norm);
       initial_r_norm = true_res_norm;
     }
 
@@ -522,13 +522,13 @@ namespace ReSolve
         // Compute the true residual norm = ||b - A*x||
         true_res_norm = vector_handler_->dot(vec_V_, vec_V_, memspace_);
         true_res_norm = std::sqrt(true_res_norm);
-        final_r_norm   = true_res_norm;
+        final_r_norm  = true_res_norm;
 
         if (check_initial_guess && final_r_norm > initial_r_norm)
         {
           out::warning() << "Iterative solver did not improve the initial guess. Returning the initial guess.\n";
           x->copyFromExternal(&x_initial, memspace_, memspace_);
-          final_r_norm   = initial_r_norm;
+          final_r_norm  = initial_r_norm;
           true_res_norm = final_r_norm;
         }
 
