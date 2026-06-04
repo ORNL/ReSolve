@@ -84,7 +84,7 @@ namespace ReSolve
 
         matrix::Csr* jc_tr = new matrix::Csr(m, n, nnz);
         jc_tr->allocateMatrixData(memspace_);
-        matrixHandler_.transpose(jc, jc_tr, memspace_);
+        matrix_handler_.transpose(jc, jc_tr, memspace_);
 
         vector::Vector* x0 = new vector::Vector(n);
         x0->allocate(memspace_);
@@ -143,7 +143,6 @@ namespace ReSolve
         {
           return false;
         }
-        // Ensure host copy is available for validation when running on device
         if (memspace_ == memory::DEVICE)
         {
           x0->syncData(memory::HOST);
