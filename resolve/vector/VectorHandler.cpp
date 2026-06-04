@@ -356,12 +356,9 @@ namespace ReSolve
    */
   void VectorHandler::scal(vector::Vector*     diag,
                            vector::Vector*     vec,
-                           index_type          diag_begin,
-                           index_type          diag_end,
+                           index_type          diag_offset,
                            memory::MemorySpace memspace)
   {
-    assert(diag_end <= diag->getSize() && "Diagonal vector indexing out of bounds!\n");
-    assert(diag_end - diag_begin == vec->getSize() && "Diagonal subvector must be of the same size as the vector.");
     assert(diag->getData(memspace) != nullptr && "Diagonal vector data is null!\n");
     assert(vec->getData(memspace) != nullptr && "Vector data is null!\n");
 
@@ -369,10 +366,10 @@ namespace ReSolve
     switch (memspace)
     {
     case HOST:
-      return cpuImpl_->scal(diag, vec, diag_begin);
+      return cpuImpl_->scal(diag, vec, diag_offset);
       break;
     case DEVICE:
-      return devImpl_->scal(diag, vec, diag_begin);
+      return devImpl_->scal(diag, vec, diag_offset);
       break;
     }
   }
