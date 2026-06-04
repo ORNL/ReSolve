@@ -104,7 +104,7 @@ namespace ReSolve
     void*                buffer_spmv = workspace_->getSpmvBuffer();
     if (!workspace_->matvecSetup())
     {
-      // setup first, allocate, etc.
+      // Setup, allocate, then compute.
       status = cusparseCreateCsr(&mat_A,
                                  A->getNumRows(),
                                  A->getNumColumns(),
