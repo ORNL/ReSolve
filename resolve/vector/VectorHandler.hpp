@@ -42,8 +42,7 @@ namespace ReSolve
     void scal(vector::Vector* diag, vector::Vector* vec, memory::MemorySpace memspace);
     void scal(vector::Vector*     diag,
               vector::Vector*     vec,
-              index_type          diag_begin,
-              index_type          diag_end,
+              index_type          diag_offset,
               memory::MemorySpace memspace);
 
     // axpy for multivectors

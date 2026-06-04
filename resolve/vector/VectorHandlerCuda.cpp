@@ -318,7 +318,7 @@ namespace ReSolve
   }
 
   /**
-   * @brief Scale a vector by a diagonal matrix in HIP
+   * @brief Scale a vector by a diagonal matrix in CUDA
    *
    * @param[in]  diag - vector representing the diagonal matrix
    * @param[in, out]  vec - vector to be scaled
@@ -340,7 +340,7 @@ namespace ReSolve
   }
 
   /**
-   * @brief Scale a vector by a diagonal matrix in HIP
+   * @brief Scale a vector by a diagonal matrix in CUDA
    *
    * @param[in]  diag - vector representing the diagonal matrix
    * @param[in, out]  vec - vector to be scaled
