@@ -205,7 +205,10 @@ namespace ReSolve
   }
 
   /**
-   * @brief Reset cached SpMV resources.
+   * @brief Reset the cached CUDA SpMV setup.
+   *
+   * Destroys the cached sparse matrix descriptor and frees the SpMV buffer so
+   * the next matvec call can rebuild the SpMV setup if the matrix or its dimensions have changed.
    */
   void LinAlgWorkspaceCUDA::resetMatvecSetup()
   {

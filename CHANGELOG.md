@@ -6,6 +6,8 @@
 
 - Changed random number generation int tests to be C++ style and fixed-seed, to avoid random failures.
 
+- Changed random number generation int tests to be C++ style and fixed-seed, to avoid random failures.
+
 ## Changes to Re::Solve since release 0.99.2
 
 - Added cmake-format.
@@ -21,6 +23,8 @@
 - Made Vector::copyToExternal able to copy from device to host and vice versa.
 
 - Added `diagSolve`, `max`, and `abs` vector operations.
+
+- Added `allocateWithExternalSparsityPattern` for sparse matrices.
 
 - Improved coding guidelines for developers on floating point conventions.
 

@@ -15,7 +15,15 @@
             "generator": "Unix Makefiles",
             "cacheVariables": {
                 "RESOLVE_USE_CUDA": "ON",
-		        "CMAKE_CUDA_ARCHITECTURES": "60"
+                "CMAKE_CUDA_ARCHITECTURES": "70",
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_CUDA_FLAGS": "-g -G", 
+                "CMAKE_CXX_FLAGS": "-Wall -Wextra",
+                "RESOLVE_USE_LUSOL": "ON",
+                "CMAKE_INSTALL_PREFIX": "../bin",
+                "RESOLVE_USE_KLU": "ON",
+                "SUITESPARSE_DIR": "/usr/lib/x86_64-linux-gnu",
+                "SUITESPARSE_INCLUDE_DIR": "/usr/include/suitesparse"
             }
         },
         {
@@ -37,7 +45,7 @@
             "installDir": "${sourceDir}/install",
             "generator": "Unix Makefiles"
         },
-	{
+        {
             "name": "deception",
             "inherits": "cuda",
             "displayName": "Deception Build",
@@ -52,26 +60,34 @@
             "displayName": "Incline Build with rocm",
             "description": "Custom changes specific for Incline",
             "cacheVariables": {
-                "CMAKE_HIP_ARCHITECTURES" : "gfx908",
-                "CMAKE_BUILD_TYPE" : "Debug"
+                "CMAKE_HIP_ARCHITECTURES": "gfx908",
+                "CMAKE_BUILD_TYPE": "Debug"
             },
             "environment": {
-                "CC" : "clang",
-                "CXX" : "clang++",
-                "FC" : "gfortran"
+                "CC": "clang",
+                "CXX": "clang++",
+                "FC": "gfortran"
             }
         },
         {
             "name": "frontier",
-	        "inherits": "rocm",
+            "inherits": "rocm",
             "displayName": "Frontier Build",
             "description": "Custom changes specific for Frontier",
-	        "cacheVariables": {
+            "cacheVariables": {
                 "CMAKE_HIP_ARCHITECTURES": "gfx90a",
                 "CMAKE_BUILD_TYPE": "Debug",
-	        "CMAKE_C_COMPILER": "/opt/rocm-6.3.1/llvm/bin/clang",
+                "CMAKE_C_COMPILER": "/opt/rocm-6.3.1/llvm/bin/clang",
                 "CMAKE_CXX_COMPILER": "/opt/rocm-6.3.1/llvm/bin/clang++"
-	        }  
-	}
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "Debug CUDA",
+            "description": "",
+            "displayName": "",
+            "configurePreset": "cuda"
+        }
     ]
 }

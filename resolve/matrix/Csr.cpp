@@ -328,7 +328,6 @@ namespace ReSolve
   {
     index_type nnz_current = nnz_;
     destroyMatrixData(memspace); // just in case
-    setNotUpdated();
 
     if (memspace == memory::HOST)
     {

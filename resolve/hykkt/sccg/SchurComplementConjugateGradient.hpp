@@ -35,7 +35,13 @@ namespace ReSolve
        * @param[in] matrix_handler Matrix handler for the selected backend.
        * @param[in] vector_handler Vector handler for the selected backend.
        */
-      SchurComplementConjugateGradient(index_type n, index_type m, CholeskySolver* choleskySolver, memory::MemorySpace memspace, MatrixHandler& matrix_handler, VectorHandler& vector_handler);
+      SchurComplementConjugateGradient(index_type n,
+                                       index_type m,
+                                       CholeskySolver* choleskySolver,
+                                       memory::MemorySpace memspace,
+                                       MatrixHandler& matrix_handler,
+                                       VectorHandler& vector_handler);
+      ~SchurComplementConjugateGradient();
 
       void addMatrixInfo(matrix::Csr* jc, matrix::Csr* jc_tr);
       void addVectorInfo(vector::Vector* x0, vector::Vector* b);
@@ -52,16 +58,16 @@ namespace ReSolve
       int        itmax_ = 100;   // Maximum iterations for conjugate gradient
       double     tol_   = 1e-12; // Solver tolerance for Schur
 
+      CholeskySolver* choleskySolver_{nullptr}; // Cholesky factorization on 1,1 block
+
       MatrixHandler& matrix_handler_; ///< Backend-specific matrix handler.
       VectorHandler& vector_handler_; ///< Backend-specific vector handler.
 
-      CholeskySolver* choleskySolver_; // Cholesky factorization on 1,1 block
+      matrix::Csr* jc_{nullptr};
+      matrix::Csr* jc_tr_{nullptr};
 
-      matrix::Csr* jc_;
-      matrix::Csr* jc_tr_;
-
-      vector::Vector* x0_; // LHS of entire system
-      vector::Vector* b_;  // RHS of entire system
+      vector::Vector* x0_{nullptr}; // LHS of entire system
+      vector::Vector* b_{nullptr};  // RHS of entire system
 
       // scalars used for conjugate gradient
       double beta_;
@@ -72,12 +78,12 @@ namespace ReSolve
       double gam_i1_;
 
       // Vectors used for conjugate gradient
-      vector::Vector y_; // Internal RHS of system
-      vector::Vector z_; // Internal LHS of system
-      vector::Vector r_; // Residual
-      vector::Vector p_;
-      vector::Vector s_;
-      vector::Vector w_;
+      vector::Vector* y_{nullptr}; // Internal RHS of system
+      vector::Vector* z_{nullptr}; // Internal LHS of system
+      vector::Vector* r_{nullptr}; // Residual
+      vector::Vector* p_{nullptr};
+      vector::Vector* s_{nullptr};
+      vector::Vector* w_{nullptr};
 
       memory::MemorySpace memspace_;
     }; // class SchurComplementConjugateGradient
