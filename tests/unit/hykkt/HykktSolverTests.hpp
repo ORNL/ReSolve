@@ -121,9 +121,9 @@ namespace ReSolve
 
         // The .mtx file readers write into host accessible memory.
         // Load test data into HOST first, then sync to DEVICE for CUDA and HIP backends.
-        matrix::Csr* H  = io::createCsrFromFile(H_file, true);
+        matrix::Csr* H   = io::createCsrFromFile(H_file, true);
         matrix::Csr* D_s = io::createCsrFromFile(D_s_file, false);
-        matrix::Csr* J  = io::createCsrFromFile(J_file, false);
+        matrix::Csr* J   = io::createCsrFromFile(J_file, false);
         matrix::Csr* J_d = io::createCsrFromFile(J_d_file, false);
         if (memspace_ == memory::DEVICE)
         {
@@ -147,9 +147,9 @@ namespace ReSolve
         }
 
         // LHS vector blocks
-        vector::Vector* x  = new vector::Vector(n_x);
-        vector::Vector* s  = new vector::Vector(m_d);
-        vector::Vector* y  = new vector::Vector(m_c);
+        vector::Vector* x   = new vector::Vector(n_x);
+        vector::Vector* s   = new vector::Vector(m_d);
+        vector::Vector* y   = new vector::Vector(m_c);
         vector::Vector* y_d = new vector::Vector(m_d);
         x->allocate(memspace_);
         s->allocate(memspace_);

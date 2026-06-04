@@ -106,7 +106,7 @@ namespace ReSolve
     }
 
     bool J_d_flag = J_d_->getNnz() > 0;
-    status_      = (J_d_flag_ == J_d_flag); // if new nonzero structure then broken
+    status_       = (J_d_flag_ == J_d_flag); // if new nonzero structure then broken
     J_d_flag_     = J_d_flag;
   }
 
@@ -126,14 +126,14 @@ namespace ReSolve
    */
   void hykkt::HyKKTSolver::setMatrixBlocks(matrix::Csr* H_plus_D_x, matrix::Csr* D_s, matrix::Csr* J, matrix::Csr* J_d)
   {
-    H_  = H_plus_D_x;
+    H_   = H_plus_D_x;
     D_s_ = D_s;
-    J_  = J;
+    J_   = J;
     J_d_ = J_d;
 
     bool J_d_flag = J_d->getNnz() > 0;
     // status_ = (J_d_flag_ == J_d_flag);
-    status_  = true; // when using API, we can't check if sparsity pattern changed
+    status_   = true; // when using API, we can't check if sparsity pattern changed
     J_d_flag_ = J_d_flag;
   }
 
@@ -168,9 +168,9 @@ namespace ReSolve
    */
   void hykkt::HyKKTSolver::setLHSPointers(vector::Vector* x, vector::Vector* s, vector::Vector* y, vector::Vector* y_d)
   {
-    x_  = x;
-    s_  = s;
-    y_  = y;
+    x_   = x;
+    s_   = s;
+    y_   = y;
     y_d_ = y_d;
   }
 
@@ -280,19 +280,19 @@ namespace ReSolve
     if (!allocated_)
     {
       r_x_perm_    = new vector::Vector(n_x_);
-      omega_perm_   = new vector::Vector(n_x_);
-      schur_      = new vector::Vector(m_c_);
+      omega_perm_  = new vector::Vector(n_x_);
+      schur_       = new vector::Vector(m_c_);
       D_s_vals_    = new vector::Vector(m_d_);
       r_yd_scaled_ = new vector::Vector(r_yd_->getSize());
       r_x_til_     = new vector::Vector(n_x_);
       r_x_hat_     = new vector::Vector(n_x_);
-      z_          = new vector::Vector(n_x_);
+      z_           = new vector::Vector(n_x_);
       r_y_copy_    = new vector::Vector(m_c_);
-      J_tr_       = new matrix::Csr(J_->getNumColumns(), J_->getNumRows(), J_->getNnz());
+      J_tr_        = new matrix::Csr(J_->getNumColumns(), J_->getNumRows(), J_->getNnz());
       J_d_tr_      = new matrix::Csr(J_d_->getNumColumns(), J_d_->getNumRows(), J_d_->getNnz());
-      H_tilde_       = new matrix::Csr(H_->getNumRows(), H_->getNumColumns(), H_->getNnz());
-      J_perm_     = new matrix::Csr(J_->getNumRows(), J_->getNumColumns(), J_->getNnz());
-      J_tr_perm_  = new matrix::Csr(J_tr_->getNumRows(), J_tr_->getNumColumns(), J_tr_->getNnz());
+      H_tilde_     = new matrix::Csr(H_->getNumRows(), H_->getNumColumns(), H_->getNnz());
+      J_perm_      = new matrix::Csr(J_->getNumRows(), J_->getNumColumns(), J_->getNnz());
+      J_tr_perm_   = new matrix::Csr(J_tr_->getNumRows(), J_tr_->getNumColumns(), J_tr_->getNnz());
       J_d_scaled_  = new matrix::Csr(J_d_->getNumRows(), J_d_->getNumColumns(), J_d_->getNnz());
 
       D_s_vals_->setData(D_s_->getValues(memspace_), memspace_);
@@ -364,11 +364,11 @@ namespace ReSolve
     else
     {
       H_tilde_->copyFromExternal(H_->getRowData(memspace_),
-                              H_->getColData(memspace_),
-                              H_->getValues(memspace_),
-                              H_->getNnz(),
-                              memspace_,
-                              memspace_);
+                                 H_->getColData(memspace_),
+                                 H_->getValues(memspace_),
+                                 H_->getNnz(),
+                                 memspace_,
+                                 memspace_);
 
       r_x_til_->copyFromExternal(r_x_, memspace_, memspace_);
     }
@@ -638,17 +638,17 @@ namespace ReSolve
   {
     //  Start of block, calculate error of Ax-b
     //  Calculate error in r_x
-    real_type norm_r_x_sq   = 0;
+    real_type norm_r_x_sq  = 0;
     real_type norm_rs_sq   = 0;
-    real_type norm_r_y_sq   = 0;
-    real_type norm_r_yd_sq  = 0;
+    real_type norm_r_y_sq  = 0;
+    real_type norm_r_yd_sq = 0;
     real_type norm_resx_sq = 0;
     real_type norm_resy_sq = 0;
 
     // This will aggregate the squared norms of the residual and rhs
     // Note that by construction the residuals of r_s and r_yd are 0
     norm_r_x_sq  = vectorHandler_->dot(r_x_, r_x_, memspace_);
-    norm_rs_sq  = vectorHandler_->dot(r_s_, r_s_, memspace_);
+    norm_rs_sq   = vectorHandler_->dot(r_s_, r_s_, memspace_);
     norm_r_y_sq  = vectorHandler_->dot(r_y_copy_, r_y_copy_, memspace_);
     norm_r_yd_sq = vectorHandler_->dot(r_yd_, r_yd_, memspace_);
 

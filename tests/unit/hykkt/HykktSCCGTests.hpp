@@ -59,7 +59,7 @@ namespace ReSolve
         std::ifstream H_file(H_filename);
         std::ifstream b_file(b_filename);
 
-        matrix::Csr* H  = io::createCsrFromFile(H_file, true);
+        matrix::Csr* H = io::createCsrFromFile(H_file, true);
         matrix::Csr* J = io::createCsrFromFile(J_file, false);
         if (memspace_ == memory::DEVICE)
         {
@@ -125,8 +125,8 @@ namespace ReSolve
 
       std::string source_dir = std::string(SOURCE_DIR);
       std::string J_filename = source_dir + "/SCCGTestMatrices/JC_matrix_ACTIVSg200_AC_00.mtx";
-      std::string H_filename  = source_dir + "/SCCGTestMatrices/H_matrix_ACTIVSg200_AC_00.mtx";
-      std::string b_filename  = source_dir + "/SCCGTestMatrices/CG_rhs_ACTIVSg200_AC_00.mtx"; // rhs
+      std::string H_filename = source_dir + "/SCCGTestMatrices/H_matrix_ACTIVSg200_AC_00.mtx";
+      std::string b_filename = source_dir + "/SCCGTestMatrices/CG_rhs_ACTIVSg200_AC_00.mtx"; // rhs
 
       /**
        * @brief Validate the SCCG result.
