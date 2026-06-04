@@ -13,6 +13,7 @@
  * sparsity pattern, so the analysis is done only once for the entire series.
  *
  */
+#include <chrono>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -29,10 +30,20 @@
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 
 #ifdef RESOLVE_USE_CUDA
+#include <cuda_runtime.h>
+
 #include <resolve/LinSolverDirectCuSolverGLU.hpp>
 #endif
 
 #include "ExampleHelper.hpp"
+
+/// Sync active GPU backend before reading host-side timing.
+static void syncDevice()
+{
+#ifdef RESOLVE_USE_CUDA
+  cudaDeviceSynchronize();
+#endif
+}
 
 /// Prints help message describing system usage.
 void printHelpInfo()
@@ -47,6 +58,7 @@ void printHelpInfo()
   std::cout << "Optional features:\n";
   std::cout << "\t-e <ext> \tSelects custom extension for input files (default 'mtx').\n";
   std::cout << "\t-h\tPrints this message.\n";
+  std::cout << "\t-t, --time\tPrint solve timing for each linear system.\n\n";
 }
 
 /// Prototype of the example function
@@ -89,6 +101,8 @@ int gluRefactor(int argc, char* argv[])
     printHelpInfo();
     return 0;
   }
+
+  bool is_timing = options.hasKey("-t") || options.hasKey("--time");
 
   index_type num_systems = 0;
   auto       opt         = options.getParamFromKey("-n");
@@ -214,7 +228,11 @@ int gluRefactor(int argc, char* argv[])
     printSystemInfo(matrix_pathname_full, A);
     std::cout << "CSR matrix loaded. Expanded NNZ: " << A->getNnz() << std::endl;
 
-    int status = 0;
+    int    status        = 0;
+    double solve_time_ms = 0.0;
+
+    syncDevice();
+    auto solve_start = std::chrono::high_resolution_clock::now();
 
     if (i < 2)
     {
@@ -263,8 +281,22 @@ int gluRefactor(int argc, char* argv[])
     status = Rf.solve(vec_rhs, vec_x);
     RESOLVE_RANGE_POP("Triangular solve");
 
+    syncDevice();
+    auto solve_end = std::chrono::high_resolution_clock::now();
+    solve_time_ms  = std::chrono::duration<double, std::milli>(solve_end - solve_start).count();
     // Print summary of the results
     helper.printSummary(A, vec_rhs, vec_x);
+
+    if (is_timing)
+    {
+      std::cout << "TIMING,"
+                << "gluRefactor,"
+                << helper.getHardwareBackend() << ","
+                << false << ","
+                << i << ","
+                << solve_time_ms
+                << std::endl;
+    }
 
   } // for (int i = 0; i < num_systems; ++i)
   RESOLVE_RANGE_POP(__FUNCTION__);

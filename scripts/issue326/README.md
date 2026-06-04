@@ -1,7 +1,7 @@
 # Issue 326 benchmark utilities
 
 This directory contains scripts for parsing and plotting timing data from
-`gpuRefactor` and `kluRefactor`.
+`gpuRefactor`, `kluRefactor`, `gluRefactor`, and `sysRefactor`.
 
 The scripts support ReSolve issue 326. They do not change solver behavior.
 
@@ -74,9 +74,12 @@ kluRefactor
 kluRefactor -i
 gpuRefactor
 gpuRefactor -i
+gluRefactor
+sysRefactor
+sysRefactor -i
 ```
 
-Run the benchmark cases for both CUDA and HIP builds.
+Run the benchmark cases for the supported backends. `gpuRefactor` and `sysRefactor` support CUDA and HIP builds while `gluRefactor` is only CUDA.
 
 ## Output directory
 
@@ -129,10 +132,15 @@ cuda_N125_klu.log
 cuda_N125_klu_ir.log
 cuda_N125_gpu.log
 cuda_N125_gpu_ir.log
+cuda_N125_glu.log
+cuda_N125_sys.log
+cuda_N125_sys_ir.log
 hip_N125_klu.log
 hip_N125_klu_ir.log
 hip_N125_gpu.log
 hip_N125_gpu_ir.log
+hip_N125_sys.log
+hip_N125_sys_ir.log
 ```
 
 Repeat the same naming pattern for:
@@ -221,6 +229,9 @@ python3 scripts/issue326/parse_refactor_logs.py \
   /tmp/klu_timing_ir_test.log \
   /tmp/gpu_timing_test.log \
   /tmp/gpu_timing_ir_test.log \
+  /tmp/glu_timing_test.log \
+  /tmp/sys_timing_test.log \
+  /tmp/sys_timing_ir_test.log \
   --N 2000 \
   -o /tmp/issue326_local_timings.csv
 

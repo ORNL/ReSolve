@@ -8,7 +8,7 @@ Expected timing row format:
     TIMING,example,backend,ir_enabled,system,time_ms
 
 The script combines timing rows with residuals already printed by
-gpuRefactor and kluRefactor, then writes one CSV file for plotting.
+gpuRefactor, kluRefactor, gluRefactor, and sysRefactor then writes one CSV file for plotting.
 """
 
 import argparse
@@ -32,6 +32,8 @@ FIELDNAMES = [
 METHOD_LABELS = {
     "kluRefactor": "klu",
     "gpuRefactor": "gpu_refactor",
+    "gluRefactor": "glu_refactor",
+    "sysRefactor": "sys_refactor",
 }
 
 SYSTEM_RE = re.compile(r"^System\s+(\d+):")
@@ -133,7 +135,7 @@ def parse_args() -> argparse.Namespace:
         "logs",
         nargs="+",
         type=Path,
-        help="Log files produced by gpuRefactor or kluRefactor with -t.",
+        help="Log files produced by refactor examples with -t.",
     )
     parser.add_argument(
         "-o",

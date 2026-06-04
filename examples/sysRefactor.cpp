@@ -1,3 +1,4 @@
+#include <chrono>
 #include <cmath>
 #include <iomanip>
 #include <iostream>
@@ -16,6 +17,36 @@
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 
+#ifdef RESOLVE_USE_CUDA
+#include <cuda_runtime.h>
+#endif
+
+#ifdef RESOLVE_USE_HIP
+#include <hip/hip_runtime.h>
+#endif
+
+/// Sync active GPU backend before reading host-side timing.
+///
+/// This example can be built with multiple backends and can still be run with
+/// the CPU backend. Only synchronize the backend selected for this run so CPU
+/// timing does not make an unnecessary CUDA or HIP runtime call.
+static void syncDevice(const std::string& hw_backend)
+{
+#ifdef RESOLVE_USE_CUDA
+  if (hw_backend == "CUDA")
+  {
+    cudaDeviceSynchronize();
+  }
+#endif
+
+#ifdef RESOLVE_USE_HIP
+  if (hw_backend == "HIP")
+  {
+    hipDeviceSynchronize();
+  }
+#endif
+}
+
 /// Prints help message describing system usage.
 void printHelpInfo()
 {
@@ -30,7 +61,8 @@ void printHelpInfo()
   std::cout << "\t-b <cpu|cuda|hip> \tSelects hardware backend.\n";
   std::cout << "\t-e <ext> \tSelects custom extension for input files (default 'mtx').\n";
   std::cout << "\t-h\tPrints this message.\n";
-  std::cout << "\t-i\tEnables iterative refinement.\n\n";
+  std::cout << "\t-i\tEnables iterative refinement.\n";
+  std::cout << "\t-t, --time\tPrint solve timing for each linear system.\n\n";
 }
 
 using namespace ReSolve::constants;
@@ -113,6 +145,7 @@ int sysRefactor(int argc, char* argv[])
   }
 
   bool is_iterative_refinement = options.hasKey("-i");
+  bool is_timing               = options.hasKey("-t") || options.hasKey("--time");
 
   index_type num_systems = 0;
   auto       opt         = options.getParamFromKey("-n");
@@ -280,6 +313,11 @@ int sysRefactor(int argc, char* argv[])
     std::cout << "CSR matrix loaded. Expanded NNZ: " << A->getNnz() << std::endl;
     printSystemInfo(matrix_pathname_full, A);
 
+    double solve_time_ms = 0.0;
+
+    syncDevice(hw_backend);
+    auto solve_start = std::chrono::high_resolution_clock::now();
+
     // Now call direct solver
     if (i == 1)
     {
@@ -310,6 +348,9 @@ int sysRefactor(int argc, char* argv[])
     }
 
     status = solver.solve(vec_rhs, vec_x);
+    syncDevice(hw_backend);
+    auto solve_end = std::chrono::high_resolution_clock::now();
+    solve_time_ms  = std::chrono::duration<double, std::milli>(solve_end - solve_start).count();
     std::cout << "Triangular solve status: " << status << std::endl;
 
     // Print summary of results
@@ -317,6 +358,17 @@ int sysRefactor(int argc, char* argv[])
     if ((i > 1) && is_iterative_refinement)
     {
       helper.printIrSummary(&(solver.getIterativeSolver()));
+    }
+
+    if (is_timing)
+    {
+      std::cout << "TIMING,"
+                << "sysRefactor,"
+                << hw_backend << ","
+                << is_iterative_refinement << ","
+                << i << ","
+                << solve_time_ms
+                << std::endl;
     }
   }
 

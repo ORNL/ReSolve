@@ -39,6 +39,7 @@
 
 #include <resolve/LinSolverDirectCuSolverRf.hpp>
 #endif
+
 #ifdef RESOLVE_USE_HIP
 #include <hip/hip_runtime.h>
 
