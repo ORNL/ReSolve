@@ -1,7 +1,7 @@
 /**
  * @file   PreconditionerLU.cpp
  * @author Kakeru Ueda (k.ueda.2290@m.isct.ac.jp)
- * @brief  Declaration of preconditioner ILU0 class.
+ * @brief  Implementation of preconditioner LU class.
  *
  */
 
@@ -29,7 +29,7 @@ namespace ReSolve
   }
 
   /**
-   * @brief Sets up the preconditioner with the given matrix
+   * @brief Sets up the lu solver with the given matrix
    *
    * @param[in] A - System matrix to set up the preconditioner with
    *

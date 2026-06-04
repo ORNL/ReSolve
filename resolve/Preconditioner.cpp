@@ -22,4 +22,21 @@ namespace ReSolve
     return 1;
   }
 
+  Preconditioner::Side Preconditioner::getSide() const
+  {
+    return side_;
+  }
+
+  /**
+   * @brief Set the preconditioning side
+   *
+   * @param[in] side - side of preconditioning
+   * @return 0 if successful
+   */
+  int Preconditioner::setSide(Side side)
+  {
+    side_ = side;
+    return 0;
+  }
+
 } // namespace ReSolve

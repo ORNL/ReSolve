@@ -186,8 +186,8 @@ int main(int argc, char* argv[])
                   << status << std::endl;
         vec_rhs->copyFromExternal(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
         status = Rf->solve(vec_rhs, vec_x);
-        ReSolve::PreconditionerLU precond_lu(Rf);
-        FGMRES->setPreconditioner(&precond_lu);
+        ReSolve::PreconditionerLU preconditioner(Rf);
+        FGMRES->setPreconditioner(&preconditioner);
       }
       // if (i%2!=0)  vec_x->setToZero(ReSolve::memory::DEVICE);
       real_type norm_x = vector_handler->dot(vec_x, vec_x, ReSolve::memory::DEVICE);

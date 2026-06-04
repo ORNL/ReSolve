@@ -125,7 +125,6 @@ namespace ReSolve
                                                d_Q_,
                                                handle_cusolverrf_);
     error_sum += status_cusolverrf_;
-    mem_.deviceSynchronize();
     status_cusolverrf_ = cusolverRfAnalyze(handle_cusolverrf_);
     error_sum += status_cusolverrf_;
     const cusolverRfFactorization_t fact_alg =
@@ -194,7 +193,6 @@ namespace ReSolve
                                                handle_cusolverrf_);
     error_sum += status_cusolverrf_;
 
-    mem_.deviceSynchronize();
     status_cusolverrf_ = cusolverRfRefactor(handle_cusolverrf_);
     error_sum += status_cusolverrf_;
 

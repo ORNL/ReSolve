@@ -562,18 +562,46 @@ namespace ReSolve
    *
    * @return int 0 if successful, 1 if it fails
    */
-  int SystemSolver::preconditionerSetup()
+  int SystemSolver::preconditionerSetup(std::string side)
   {
     int status = 0;
-    if (precondition_method_ == "ilu0")
+
+    if (preconditioner_ == nullptr)
     {
-      status += preconditioner_->setup(A_);
-      if (memspace_ != "cpu")
-      {
-        is_solve_on_device_ = true;
-      }
-      status += iterativeSolver_->setPreconditioner(preconditioner_);
+      out::error() << "Preconditioner not initialized!\n";
+      status += 1;
     }
+
+    if (iterativeSolver_ == nullptr)
+    {
+      out::error() << "Iterative solver not initialized!\n";
+      status += 1;
+    }
+
+    Preconditioner::Side prec_side;
+    if (side == "left")
+    {
+      prec_side = Preconditioner::LEFT;
+    }
+    else if (side == "right")
+    {
+      prec_side = Preconditioner::RIGHT;
+    }
+    else
+    {
+      out::error() << "Preconditioning side '" << side
+                   << "' not recognized. Use 'left' or 'right'.\n";
+      return 1;
+    }
+
+    status += preconditioner_->setSide(prec_side);
+    status += preconditioner_->setup(A_);
+
+    if (memspace_ != "cpu")
+    {
+      is_solve_on_device_ = true;
+    }
+    status += iterativeSolver_->setPreconditioner(preconditioner_);
 
     return status;
   }
@@ -591,10 +619,14 @@ namespace ReSolve
   {
     int status = 0;
     A_         = A;
-    if (precondition_method_ == "ilu0")
+
+    if (preconditioner_ == nullptr)
     {
-      status += preconditioner_->reset(A);
+      out::error() << "Preconditioner not initialized!\n";
+      status += 1;
     }
+
+    status += preconditioner_->reset(A);
 
     return status;
   }
@@ -621,6 +653,11 @@ namespace ReSolve
   LinSolverIterative& SystemSolver::getIterativeSolver()
   {
     return *iterativeSolver_;
+  }
+
+  Preconditioner& SystemSolver::getPreconditioner()
+  {
+    return *preconditioner_;
   }
 
   void SystemSolver::setFactorizationMethod(std::string method)

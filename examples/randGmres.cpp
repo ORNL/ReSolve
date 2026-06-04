@@ -116,7 +116,7 @@ int runGmresExample(int argc, char* argv[])
 
   GramSchmidt GS(&vector_handler, GramSchmidt::CGS2);
 
-  precon_type                  Precond(&workspace);
+  precon_type                  precondition_solver(&workspace);
   LinSolverIterativeRandFGMRES FGMRES(&matrix_handler,
                                       &vector_handler,
                                       LinSolverIterativeRandFGMRES::cs,
@@ -170,15 +170,16 @@ int runGmresExample(int argc, char* argv[])
 
   matrix_handler.setValuesChanged(true, memspace);
 
-  Precond.setup(A);
   FGMRES.setRestart(150);
   FGMRES.setMaxit(2500);
   FGMRES.setTol(1e-12);
   FGMRES.setup(A);
-
   FGMRES.resetMatrix(A);
-  ReSolve::PreconditionerLU precond_lu(&Precond);
-  FGMRES.setPreconditioner(&precond_lu);
+
+  ReSolve::PreconditionerLU preconditioner(&precondition_solver);
+  preconditioner.setup(A);
+
+  FGMRES.setPreconditioner(&preconditioner);
   FGMRES.setFlexible(1);
 
   FGMRES.solve(vec_rhs, vec_x);

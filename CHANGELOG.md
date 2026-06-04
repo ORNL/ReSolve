@@ -16,13 +16,19 @@
 
 - Added `cons` counterparts to `Vector::getData` methods.
 
-- Made Vector::copyDataTo able to copy from device to host and vice versa
+- Made Vector::copyToExternal able to copy from device to host and vice versa.
 
 - Added `diagSolve`, `max`, and `abs` vector operations.
 
 - Improved coding guidelines for developers on floating point conventions.
 
 - Made spack builds more robust.
+- 
+- Removed unnecessary device synchronization and added where needed (HIP only calls).
+
+- Changed variable and function names to be more explanatory.
+
+- Added Developer Guide documentation for vector and matrix classes and handlers.
 
 ## Changes to Re::Solve in release 0.99.2
 
@@ -82,4 +88,6 @@ It is seamless from the user perspective and fixed many bugs.
 
 16. Updated MatrixHandler::addConst to return integer error codes instead of void.
 
-17. Added a preconditioner interface class so users can define thier own preconditioners.
+17. Added a preconditioner interface class so users can define their own preconditioners.
+
+18. Added left preconditioning support for GMRES and a user-defined preconditioner class.

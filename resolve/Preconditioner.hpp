@@ -29,11 +29,23 @@ namespace ReSolve
     using vector_type = vector::Vector;
     using matrix_type = matrix::Sparse;
 
+    enum Side
+    {
+      LEFT = 0,
+      RIGHT
+    };
+
     Preconditioner();
     virtual ~Preconditioner();
 
-    virtual int setup(matrix_type* A)                   = 0;
     virtual int apply(vector_type* rhs, vector_type* x) = 0;
+    virtual int setup(matrix_type* A)                   = 0;
     virtual int reset(matrix_type* /* A */);
+
+    Side getSide() const;    // Gets the preconditioning side
+    int  setSide(Side side); // Sets the preconditioning side
+
+  private:
+    Side side_{Side::RIGHT}; // Right preconditioning by default
   };
 } // namespace ReSolve

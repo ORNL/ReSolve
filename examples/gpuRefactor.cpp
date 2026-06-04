@@ -297,8 +297,8 @@ int gpuRefactor(int argc, char* argv[])
       {
         // Setup iterative refinement
         FGMRES.resetMatrix(A);
-        ReSolve::PreconditionerLU precond_lu(&Rf);
-        FGMRES.setPreconditioner(&precond_lu);
+        ReSolve::PreconditionerLU preconditioner(&Rf);
+        FGMRES.setPreconditioner(&preconditioner);
 
         // If refactorization produced finite solution do iterative refinement
         if (std::isfinite(helper.getNormRelativeResidual()))

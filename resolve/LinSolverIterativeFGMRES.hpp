@@ -91,7 +91,6 @@ namespace ReSolve
     int  freeSolverData();
     void setMemorySpace();
     void initParamList();
-    void precV(vector_type* rhs, vector_type* x); ///< Apply preconditioner
 
     memory::MemorySpace memspace_;
 
@@ -106,7 +105,5 @@ namespace ReSolve
     GramSchmidt* GS_{nullptr};
     index_type   n_{0};
     bool         is_solver_set_{false};
-
-    MemoryHandler mem_; ///< Device memory manager object
   };
 } // namespace ReSolve

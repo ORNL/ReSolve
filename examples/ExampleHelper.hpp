@@ -141,12 +141,12 @@ namespace ReSolve
         }
 
         res_->copyFromExternal(r_, memspace_, memspace_);
-        real_type norm  = computeResidualNorm(*A_, *x_, *res_, memspace_);
-        real_type rnorm = norm2(*r_, memspace_);
+        real_type norm     = computeResidualNorm(*A_, *x_, *res_, memspace_);
+        real_type rhs_norm = norm2(*r_, memspace_);
 
         std::cout << "\t2-Norm of the residual: "
                   << std::scientific << std::setprecision(16)
-                  << norm / rnorm << "\n";
+                  << norm / rhs_norm << "\n";
       }
 
       /// Summary of direct solve

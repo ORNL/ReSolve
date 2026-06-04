@@ -47,7 +47,6 @@ namespace ReSolve
    */
   int RandomSketchingCountHip::Theta(vector_type* input, vector_type* output)
   {
-    mem_.deviceSynchronize();
     hip::count_sketch_theta(n_,
                             k_rand_,
                             d_labels_,

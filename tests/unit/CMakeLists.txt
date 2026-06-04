@@ -8,6 +8,7 @@
 
 add_subdirectory(matrix)
 add_subdirectory(vector)
+add_subdirectory(preconditioner)
 add_subdirectory(utilities)
 add_subdirectory(memory)
 add_subdirectory(params)

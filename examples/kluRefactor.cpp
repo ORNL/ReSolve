@@ -194,8 +194,8 @@ int main(int argc, char* argv[])
     {
       // Setup iterative refinement
       FGMRES.setup(A);
-      ReSolve::PreconditionerLU precond_lu(KLU);
-      FGMRES.setPreconditioner(&precond_lu);
+      ReSolve::PreconditionerLU preconditioner(KLU);
+      FGMRES.setPreconditioner(&preconditioner);
 
       // If refactorization produced finite solution do iterative refinement
       if (std::isfinite(helper.getNormRelativeResidual()))

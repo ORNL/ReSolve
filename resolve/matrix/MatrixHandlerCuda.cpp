@@ -117,7 +117,6 @@ namespace ReSolve
                                        CUSPARSE_SPMV_CSR_ALG2,
                                        &bufferSize);
       error_sum += status;
-      mem_.deviceSynchronize();
       mem_.allocateBufferOnDevice(&buffer_spmv, bufferSize);
       workspace_->setSpmvMatrixDescriptor(matA);
       workspace_->setSpmvBuffer(buffer_spmv);
@@ -136,7 +135,6 @@ namespace ReSolve
                           CUSPARSE_SPMV_CSR_ALG2,
                           buffer_spmv);
     error_sum += status;
-    mem_.deviceSynchronize();
     if (status)
       out::error() << "Matvec status: " << status << ". "
                    << "Last error code: " << mem_.getLastDeviceError() << ".\n";
@@ -185,11 +183,11 @@ namespace ReSolve
       workspace_->setDr(d_r);
     }
 
-    cuda::matrix_row_sums(A->getNumRows(),
-                          A->getNnz(),
-                          A->getRowData(memory::DEVICE),
-                          A->getValues(memory::DEVICE),
-                          d_r);
+    cuda::matrixRowSums(A->getNumRows(),
+                        A->getNnz(),
+                        A->getRowData(memory::DEVICE),
+                        A->getValues(memory::DEVICE),
+                        d_r);
 
     int status = cusolverSpDnrminf(workspace_->getCusolverSpHandle(),
                                    A->getNumRows(),

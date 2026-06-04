@@ -183,6 +183,56 @@ add_test(NAME sys_gmres_mgspm_test
                  "-g" "mgs_pm"
 )
 
+# Left-preconditioned Krylov solvers tests (GMRES)
+add_test(NAME sys_rand_count_gmres_left_cgs2_test
+         COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-x" "no" "-i"
+                 "randgmres" "-g" "cgs2" "-s" "count" "-p" "left"
+)
+add_test(NAME sys_rand_count_gmres_left_mgs_test
+         COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-x" "no" "-i"
+                 "randgmres" "-g" "mgs" "-s" "count" "-p" "left"
+)
+add_test(NAME sys_rand_count_gmres_left_mgs2sync_test
+         COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-x" "no" "-i"
+                 "randgmres" "-g" "mgs_two_sync" "-s" "count" "-p" "left"
+)
+add_test(NAME sys_rand_count_gmres_left_mgspm_test
+         COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-x" "no" "-i"
+                 "randgmres" "-g" "mgs_pm" "-s" "count" "-p" "left"
+)
+add_test(NAME sys_rand_fwht_gmres_left_cgs2_test
+         COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-x" "no" "-i"
+                 "randgmres" "-g" "cgs2" "-s" "fwht" "-p" "left"
+)
+add_test(NAME sys_rand_fwht_gmres_left_mgs_test
+         COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-x" "no" "-i"
+                 "randgmres" "-g" "mgs" "-s" "fwht" "-p" "left"
+)
+add_test(NAME sys_rand_fwht_gmres_left_mgs2sync_test
+         COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-x" "no" "-i"
+                 "randgmres" "-g" "mgs_two_sync" "-s" "fwht" "-p" "left"
+)
+add_test(NAME sys_rand_fwht_gmres_left_mgspm_test
+         COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-x" "no" "-i"
+                 "randgmres" "-g" "mgs_pm" "-s" "fwht" "-p" "left"
+)
+add_test(NAME sys_gmres_left_cgs2_test
+         COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-x" "no" "-i" "fgmres"
+                 "-g" "cgs2" "-p" "left"
+)
+add_test(NAME sys_gmres_left_mgs_test
+         COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-x" "no" "-i" "fgmres"
+                 "-g" "mgs" "-p" "left"
+)
+add_test(NAME sys_gmres_left_mgs2sync_test
+         COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-x" "no" "-i" "fgmres"
+                 "-g" "mgs_two_sync" "-p" "left"
+)
+add_test(NAME sys_gmres_left_mgspm_test
+         COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-x" "no" "-i" "fgmres"
+                 "-g" "mgs_pm" "-p" "left"
+)
+
 # Randomized GMRES solvers tested without SystemSolver class
 add_test(NAME rand_gmres_test COMMAND $<TARGET_FILE:rand_gmres_test.exe>)
 
