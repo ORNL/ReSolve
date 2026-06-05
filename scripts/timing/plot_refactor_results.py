@@ -203,7 +203,7 @@ def plot_average_runtime_scaling(rows: list[dict[str, str]],
 def parse_args() -> argparse.Namespace:
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
-        description="Plot GridKit refactor benchmark results."
+        description="Plot ReSolve refactor benchmark results."
     )
     parser.add_argument(
         "csv_path",
@@ -214,7 +214,7 @@ def parse_args() -> argparse.Namespace:
         "-o",
         "--output-dir",
         type=Path,
-        default=Path("gridkit_plots"),
+        default=Path("refactor_plots"),
         help="Directory where plot images will be written.",
     )
 

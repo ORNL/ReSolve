@@ -141,7 +141,7 @@ def parse_args() -> argparse.Namespace:
         "-o",
         "--output",
         type=Path,
-        default=Path("gridkit_timings.csv"),
+        default=Path("refactor_timings.csv"),
         help="Output CSV path.",
     )
     parser.add_argument(

@@ -1,9 +1,12 @@
-# GridKit timing utilities
+# Refactor timing utilities
 
 This directory contains scripts for parsing and plotting timing data from
 `gpuRefactor`, `kluRefactor`, `gluRefactor`, and `sysRefactor`.
 
-The scripts support the GridKit timing workflow. They do not change solver behavior.
+The scripts process timing logs emitted by ReSolve refactor examples. They do not change solver behavior.
+
+The GridKit workflow below is one benchmark use case for these utilities.
+Other benchmark data can be used if the logs follow the same timing row format.
 
 ## Scripts
 
@@ -31,9 +34,9 @@ python -m pip install matplotlib
 
 Do not commit virtual environments, logs, CSV files, or generated plots.
 
-## Benchmark workflow
+## Example GridKit benchmark workflow
 
-The timing workflow is split between Frontier and a local CUDA machine.
+The example GridKit benchmark workflow is split between Frontier and a local CUDA machine.
 
 Frontier is used for:
 
@@ -43,8 +46,8 @@ Frontier is used for:
 The local CUDA machine is used for:
 
 - CUDA timing logs from `gpuRefactor`, `gpuRefactor -i`, `gluRefactor`, `sysRefactor`, and `sysRefactor -i`
-- combining CPU, HIP, and CUDA logs into one CSV
-- generating the final plots
+- combining CPU, HIP, and CUDA timing logs into one CSV
+- generating plots from the combined CSV
 
 Recommended workflow:
 
@@ -88,7 +91,7 @@ time_ms      Solve time in milliseconds
 
 ## Expected benchmark cases
 
-The timing workflow uses the GridKit cases on Frontier for:
+The example workflow uses the GridKit cases on Frontier for:
 
 ```text
 N=125
@@ -116,15 +119,15 @@ Run the benchmark cases for the supported backends. `gpuRefactor` and `sysRefact
 Use an output directory outside tracked source files:
 
 ```bash
-mkdir -p gridkit_outputs/logs
-mkdir -p gridkit_outputs/plots
+mkdir -p timing_outputs/logs
+mkdir -p timing_outputs/plots
 ```
 
 To keep generated files out of local `git status`, add the output directory to
 the local exclude file:
 
 ```bash
-echo "gridkit_outputs/" >> .git/info/exclude
+echo "timing_outputs/" >> .git/info/exclude
 ```
 
 ## Frontier environment setup
@@ -229,7 +232,7 @@ Example CPU/KLU run without iterative refinement:
   -m <matrix_prefix> \
   -r <rhs_prefix> \
   -n <num_systems> \
-  -t | tee gridkit_outputs/logs/cpu_N125_klu.log
+  -t | tee timing_outputs/logs/cpu_N125_klu.log
 ```
 
 Example CPU/KLU run with iterative refinement:
@@ -240,7 +243,7 @@ Example CPU/KLU run with iterative refinement:
   -r <rhs_prefix> \
   -n <num_systems> \
   -i \
-  -t | tee gridkit_outputs/logs/cpu_N125_klu_ir.log
+  -t | tee timing_outputs/logs/cpu_N125_klu_ir.log
 ```
 
 Example HIP `gpuRefactor` run without iterative refinement:
@@ -250,7 +253,7 @@ Example HIP `gpuRefactor` run without iterative refinement:
   -m <matrix_prefix> \
   -r <rhs_prefix> \
   -n <num_systems> \
-  -t | tee gridkit_outputs/logs/hip_N125_gpu.log
+  -t | tee timing_outputs/logs/hip_N125_gpu.log
 ```
 
 Example HIP `gpuRefactor` run with iterative refinement:
@@ -261,7 +264,7 @@ Example HIP `gpuRefactor` run with iterative refinement:
   -r <rhs_prefix> \
   -n <num_systems> \
   -i \
-  -t | tee gridkit_outputs/logs/hip_N125_gpu_ir.log
+  -t | tee timing_outputs/logs/hip_N125_gpu_ir.log
 ```
 
 Example HIP `sysRefactor` run without iterative refinement:
@@ -271,7 +274,7 @@ Example HIP `sysRefactor` run without iterative refinement:
   -m <matrix_prefix> \
   -r <rhs_prefix> \
   -n <num_systems> \
-  -t | tee gridkit_outputs/logs/hip_N125_sys.log
+  -t | tee timing_outputs/logs/hip_N125_sys.log
 ```
 
 Example HIP `sysRefactor` run with iterative refinement:
@@ -282,7 +285,7 @@ Example HIP `sysRefactor` run with iterative refinement:
   -r <rhs_prefix> \
   -n <num_systems> \
   -i \
-  -t | tee gridkit_outputs/logs/hip_N125_sys_ir.log
+  -t | tee timing_outputs/logs/hip_N125_sys_ir.log
 ```
 
 Use log names that include the backend, problem size, and method:
@@ -303,9 +306,6 @@ N250
 N500
 N1000
 ```
-
-The `N` value in the log filename allows `parse_refactor_logs.py` to infer the
-GridKit problem size automatically.
 
 ## Copy Frontier outputs to a local machine
 
@@ -334,7 +334,7 @@ Example CUDA `gpuRefactor` run without iterative refinement:
   -m <matrix_prefix> \
   -r <rhs_prefix> \
   -n <num_systems> \
-  -t | tee gridkit_outputs/logs/cuda_N125_gpu.log
+  -t | tee timing_outputs/logs/cuda_N125_gpu.log
 ```
 
 Example CUDA `gpuRefactor` run with iterative refinement:
@@ -345,7 +345,7 @@ Example CUDA `gpuRefactor` run with iterative refinement:
   -r <rhs_prefix> \
   -n <num_systems> \
   -i \
-  -t | tee gridkit_outputs/logs/cuda_N125_gpu_ir.log
+  -t | tee timing_outputs/logs/cuda_N125_gpu_ir.log
 ```
 
 Example CUDA `gluRefactor` run without iterative refinement:
@@ -355,7 +355,7 @@ Example CUDA `gluRefactor` run without iterative refinement:
   -m <matrix_prefix> \
   -r <rhs_prefix> \
   -n <num_systems> \
-  -t | tee gridkit_outputs/logs/cuda_N125_glu.log
+  -t | tee timing_outputs/logs/cuda_N125_glu.log
 ```
 
 Example CUDA `sysRefactor` run without iterative refinement:
@@ -365,7 +365,7 @@ Example CUDA `sysRefactor` run without iterative refinement:
   -m <matrix_prefix> \
   -r <rhs_prefix> \
   -n <num_systems> \
-  -t | tee gridkit_outputs/logs/cuda_N125_sys.log
+  -t | tee timing_outputs/logs/cuda_N125_sys.log
 ```
 
 Example CUDA `sysRefactor` run with iterative refinement:
@@ -376,7 +376,7 @@ Example CUDA `sysRefactor` run with iterative refinement:
   -r <rhs_prefix> \
   -n <num_systems> \
   -i \
-  -t | tee gridkit_outputs/logs/cuda_N125_sys_ir.log
+  -t | tee timing_outputs/logs/cuda_N125_sys_ir.log
 ```
 
 Use log names that include the backend, problem size, and method:
@@ -397,17 +397,17 @@ N500
 N1000
 ```
 
-The `N` value in the log filename allows `parse_refactor_logs.py` to infer the
-GridKit problem size automatically.
-
 ## Parse logs
+
+For GridKit logs, the `N` value in the log filename allows `parse_refactor_logs.py` to infer the
+GridKit problem size automatically.
 
 After CPU/KLU, HIP, and CUDA logs are collected, parse them into one CSV file:
 
 ```bash
 python3 scripts/timing/parse_refactor_logs.py \
-  gridkit_outputs/logs/*.log \
-  -o gridkit_outputs/gridkit_timings.csv
+  timing_outputs/logs/*.log \
+  -o timing_outputs/refactor_timings.csv
 ```
 
 If the GridKit problem size cannot be inferred from the log filename, pass it
@@ -415,9 +415,9 @@ explicitly:
 
 ```bash
 python3 scripts/timing/parse_refactor_logs.py \
-  gridkit_outputs/logs/*.log \
+  timing_outputs/logs/*.log \
   --N 125 \
-  -o gridkit_outputs/gridkit_timings.csv
+  -o timing_outputs/refactor_timings.csv
 ```
 
 The parser writes:
@@ -432,11 +432,11 @@ Generate plots from the parsed CSV:
 
 ```bash
 python3 scripts/timing/plot_refactor_results.py \
-  gridkit_outputs/gridkit_timings.csv \
-  -o gridkit_outputs/plots
+  timing_outputs/refactor_timings.csv \
+  -o timing_outputs/plots
 ```
 
-With all four GridKit sizes present, the script generates nine plots:
+With all four GridKit sizes present in the parsed CSV, the script generates nine plots:
 
 ```text
 N125_solve_time.png
@@ -455,7 +455,7 @@ average_solve_time_scaling.png
 Open the plot directory in VS Code:
 
 ```bash
-code gridkit_outputs/plots
+code timing_outputs/plots
 ```
 
 Click each `.png` file in the VS Code Explorer to preview it.
@@ -479,27 +479,27 @@ python3 scripts/timing/parse_refactor_logs.py \
   /tmp/sys_timing_test.log \
   /tmp/sys_timing_ir_test.log \
   --N 2000 \
-  -o /tmp/gridkit_local_timings.csv
+  -o /tmp/refactor_local_timings.csv
 
 python3 scripts/timing/plot_refactor_results.py \
-  /tmp/gridkit_local_timings.csv \
-  -o /tmp/gridkit_local_plots
+  /tmp/refactor_local_timings.csv \
+  -o /tmp/refactor_local_plots
 ```
 
 To view temporary local smoke-test plots in VS Code:
 
 ```bash
-rm -rf gridkit_local_plots
-mkdir -p gridkit_local_plots
-cp /tmp/gridkit_local_plots/*.png gridkit_local_plots/
-code gridkit_local_plots
+rm -rf refactor_local_plots
+mkdir -p refactor_local_plots
+cp /tmp/refactor_local_plots/*.png refactor_local_plots/
+code refactor_local_plots
 ```
 
 After checking the images, remove the temporary folder:
 
 ```bash
-rm -rf gridkit_local_plots
+rm -rf refactor_local_plots
 ```
 
-The local smoke test only verifies that parsing and plotting work. The final
-benchmark should use the GridKit cases on Frontier.
+The local smoke test only verifies that parsing and plotting work. The GridKit
+benchmark workflow should use the GridKit data on Frontier.
