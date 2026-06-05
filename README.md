@@ -128,6 +128,7 @@ Re::Solve project would not be possible without significant contributions from
 - Maksudul Alam
 - Kaleb Brunhoeber
 - Ryan Danehy
+- Tamar DeWilde
 - Adham Ibrahim 
 - Nicholson Koukpaizan
 - Jaelyn Litzinger
