@@ -113,6 +113,7 @@ install(FILES ${PROJECT_SOURCE_DIR}/tests/functionality/TestHelper.hpp
 # directory. 3. CXX compiler (propagated so consumer uses same API as ReSolve).
 add_custom_target(
   test_install
+  COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target install
   COMMAND ${CONSUMER_PATH}/test.sh ${CMAKE_INSTALL_PREFIX} ${test_data_dir}
           ${sym_matrix_path} ${sym_rhs_path} ${CMAKE_CXX_COMPILER}
 )

@@ -31,7 +31,7 @@
 - Improved coding guidelines for developers on floating point conventions.
 
 - Made spack builds more robust.
-- 
+
 - Removed unnecessary device synchronization and added where needed (HIP only calls).
 
 - Changed variable and function names to be more explanatory.
@@ -99,3 +99,5 @@ It is seamless from the user perspective and fixed many bugs.
 17. Added a preconditioner interface class so users can define their own preconditioners.
 
 18. Added left preconditioning support for GMRES and a user-defined preconditioner class.
+
+19. Added optional timing output to `gpuRefactor`, `kluRefactor`, `gluRefactor`, and `sysRefactor` plus benchmark utilities for parsing logs and generating timing/residual plots.

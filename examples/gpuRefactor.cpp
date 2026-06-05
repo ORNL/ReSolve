@@ -15,6 +15,7 @@
  * entire series.
  *
  */
+#include <chrono>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -34,13 +35,30 @@
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 
 #ifdef RESOLVE_USE_CUDA
+#include <cuda_runtime.h>
+
 #include <resolve/LinSolverDirectCuSolverRf.hpp>
 #endif
+
 #ifdef RESOLVE_USE_HIP
+#include <hip/hip_runtime.h>
+
 #include <resolve/LinSolverDirectRocSolverRf.hpp>
 #endif
 
 #include "ExampleHelper.hpp"
+
+/// Sync active GPU backend before reading host-side timing.
+static void syncDevice()
+{
+#ifdef RESOLVE_USE_CUDA
+  cudaDeviceSynchronize();
+#endif
+
+#ifdef RESOLVE_USE_HIP
+  hipDeviceSynchronize();
+#endif
+}
 
 /// Prints help message describing system usage.
 void printHelpInfo()
@@ -54,7 +72,8 @@ void printHelpInfo()
   std::cout << "gpuRefactor.exe -m <matrix pathname> -r <rhs pathname> -n <number of systems>\n\n";
   std::cout << "Optional features:\n";
   std::cout << "\t-h\tPrints this message.\n";
-  std::cout << "\t-i\tEnables iterative refinement.\n\n";
+  std::cout << "\t-i\tEnables iterative refinement.\n";
+  std::cout << "\t-t, --time\tPrint solve timing for each linear system.\n\n";
 }
 
 /// Prototype of the example function
@@ -103,6 +122,7 @@ int gpuRefactor(int argc, char* argv[])
   }
 
   bool is_iterative_refinement = options.hasKey("-i");
+  bool is_timing               = options.hasKey("-t") || options.hasKey("--time");
 
   index_type num_systems = 0;
   auto       opt         = options.getParamFromKey("-n");
@@ -236,7 +256,11 @@ int gpuRefactor(int argc, char* argv[])
     printSystemInfo(matrix_pathname_full, A);
     std::cout << "CSR matrix loaded. Expanded NNZ: " << A->getNnz() << std::endl;
 
-    int status = 0;
+    int    status        = 0;
+    double solve_time_ms = 0.0;
+
+    syncDevice();
+    auto solve_start = std::chrono::high_resolution_clock::now();
 
     if (i == 1)
     {
@@ -254,6 +278,10 @@ int gpuRefactor(int argc, char* argv[])
 
       // Triangular solve
       status = KLU.solve(vec_rhs, vec_x);
+
+      syncDevice();
+      auto solve_end = std::chrono::high_resolution_clock::now();
+      solve_time_ms  = std::chrono::duration<double, std::milli>(solve_end - solve_start).count();
       std::cout << "KLU solve status: " << status << std::endl;
 
       // Print summary of results
@@ -287,6 +315,10 @@ int gpuRefactor(int argc, char* argv[])
 
       // Triangular solve on the device
       status = Rf.solve(vec_rhs, vec_x);
+      syncDevice();
+      auto solve_end = std::chrono::high_resolution_clock::now();
+      solve_time_ms  = std::chrono::duration<double, std::milli>(solve_end - solve_start).count();
+      std::cout << "Refactorization solve status: " << status << std::endl;
       RESOLVE_RANGE_POP("Refactorization");
 
       // Print summary of the results
@@ -303,13 +335,29 @@ int gpuRefactor(int argc, char* argv[])
         // If refactorization produced finite solution do iterative refinement
         if (std::isfinite(helper.getNormRelativeResidual()))
         {
+          syncDevice();
+          solve_start = std::chrono::high_resolution_clock::now();
           FGMRES.solve(vec_rhs, vec_x);
+          syncDevice();
+          solve_end = std::chrono::high_resolution_clock::now();
+          solve_time_ms += std::chrono::duration<double, std::milli>(solve_end - solve_start).count();
 
           // Print summary
           helper.printIrSummary(&FGMRES);
         }
       }
       RESOLVE_RANGE_POP("Iterative refinement");
+    }
+
+    if (is_timing)
+    {
+      std::cout << "TIMING,"
+                << "gpuRefactor,"
+                << helper.getHardwareBackend() << ","
+                << is_iterative_refinement << ","
+                << i << ","
+                << solve_time_ms
+                << std::endl;
     }
 
   } // for (int i = 0; i < num_systems; ++i)

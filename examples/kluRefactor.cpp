@@ -12,6 +12,7 @@
  * done only once for the entire series.
  *
  */
+#include <chrono>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -42,7 +43,8 @@ void printHelpInfo()
   std::cout << "Usage:\n\t./";
   std::cout << "kluRefactor.exe -m <matrix pathname> -r <rhs pathname> -n <number of systems>\n\n";
   std::cout << "Optional features:\n\t-h\tPrints this message.\n";
-  std::cout << "\t-i\tEnables iterative refinement.\n\n";
+  std::cout << "\t-i\tEnables iterative refinement.\n";
+  std::cout << "\t-t, --time\tPrint solve timing for each linear system.\n\n";
 }
 
 int main(int argc, char* argv[])
@@ -62,6 +64,7 @@ int main(int argc, char* argv[])
   }
 
   bool is_iterative_refinement = options.hasKey("-i");
+  bool is_timing               = options.hasKey("-t") || options.hasKey("--time");
 
   index_type num_systems = 0;
   auto       opt         = options.getParamFromKey("-n");
@@ -170,6 +173,11 @@ int main(int argc, char* argv[])
     rhs_file.close();
 
     std::cout << "COO to CSR completed. Expanded NNZ: " << A->getNnz() << std::endl;
+
+    double solve_time_ms = 0.0;
+
+    auto solve_start = std::chrono::high_resolution_clock::now();
+
     // Now call direct solver
     int status;
     if (i == 1)
@@ -186,10 +194,12 @@ int main(int argc, char* argv[])
       status = KLU->refactorize();
       std::cout << "KLU re-factorization status: " << status << std::endl;
     }
-    status = KLU->solve(vec_rhs, vec_x);
+    status         = KLU->solve(vec_rhs, vec_x);
+    auto solve_end = std::chrono::high_resolution_clock::now();
+    solve_time_ms  = std::chrono::duration<double, std::milli>(solve_end - solve_start).count();
     std::cout << "KLU solve status: " << status << std::endl;
 
-    helper.printShortSummary(A, vec_rhs, vec_x);
+    helper.printSummary(A, vec_rhs, vec_x);
     if (is_iterative_refinement)
     {
       // Setup iterative refinement
@@ -200,11 +210,27 @@ int main(int argc, char* argv[])
       // If refactorization produced finite solution do iterative refinement
       if (std::isfinite(helper.getNormRelativeResidual()))
       {
+        solve_start = std::chrono::high_resolution_clock::now();
+
         FGMRES.solve(vec_rhs, vec_x);
+
+        solve_end = std::chrono::high_resolution_clock::now();
+        solve_time_ms += std::chrono::duration<double, std::milli>(solve_end - solve_start).count();
 
         // Print summary
         helper.printIrSummary(&FGMRES);
       }
+    }
+
+    if (is_timing)
+    {
+      std::cout << "TIMING,"
+                << "kluRefactor,"
+                << "CPU,"
+                << is_iterative_refinement << ","
+                << i << ","
+                << solve_time_ms
+                << std::endl;
     }
   }
 
