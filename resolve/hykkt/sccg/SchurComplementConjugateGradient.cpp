@@ -130,6 +130,7 @@ namespace ReSolve
       int i;
       for (i = 0; i < itmax_; i++)
       {
+        printf("Starting iteration %d\n", i);
         vector_handler_->scal(beta_, p_, memspace_);
         vector_handler_->axpy(ONE, r_, p_, memspace_);
         vector_handler_->scal(beta_, s_, memspace_);
