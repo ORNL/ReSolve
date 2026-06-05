@@ -73,7 +73,6 @@ namespace ReSolve
       double beta_;
       double delta_;
       double alpha_;
-      double minalpha_;
       double gamma_i_;
       double gamma_i1_;
 

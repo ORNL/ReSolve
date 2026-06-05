@@ -93,8 +93,6 @@ namespace ReSolve
       index_type m_d_{0};
       index_type m_c_{0};
       index_type n_total_{0};
-      index_type m_{0};
-      index_type n_{0};
 
       // Blocks of input matrix K
       matrix::Csr* H_{nullptr};      // nx x nx. Actually stores H + D_x, but it is named H_ for brevity
