@@ -132,7 +132,12 @@ echo "gridkit_outputs/" >> .git/info/exclude
 Before collecting Frontier logs, configure a Frontier environment with HIP,
 ROCm, KLU, and the AMD GPU target available. The exact module stack is
 site-specific and may change, so verify the environment before configuring
-ReSolve.
+ReSolve. See the OLCF Frontier User Guide for the maintained documentation on
+Frontier programming environments, compiler wrappers, ROCm modules, and
+compiling on Frontier:
+
+* [Frontier User Guide: Programming Environment](https://docs.olcf.ornl.gov/systems/frontier_user_guide.html#programming-environment)
+* [Frontier User Guide: Compiling](https://docs.olcf.ornl.gov/systems/frontier_user_guide.html#compiling)
 
 Check that the HIP compiler is visible:
 
@@ -166,6 +171,45 @@ find ../build-hip-klu \
 ```
 
 Run HIP benchmark commands from an allocated Frontier compute node.
+
+## Frontier allocation
+
+HIP benchmark commands should be run from a Frontier compute-node allocation.
+Frontier uses Slurm for scheduled compute resources. See the OLCF Frontier User
+Guide for the maintained documentation on Frontier batch scripts, interactive
+jobs, common Slurm options, and monitoring/modifying jobs:
+
+* [Frontier User Guide: Running Jobs](https://docs.olcf.ornl.gov/systems/frontier_user_guide.html#running-jobs)
+* [Slurm command documentation](https://slurm.schedmd.com/man_index.html)
+
+For a one-node interactive allocation, use the project account and walltime
+appropriate for the benchmark run:
+
+```bash
+salloc -A <project> -N 1 -t 02:00:00
+```
+
+Useful queue checks are:
+
+```bash
+squeue -u $USER
+squeue --start -j <job_id>
+scontrol show job <job_id> | grep -E 'JobState|Reason|StartTime|EndTime|RunTime|TimeLimit|Partition|NumNodes'
+```
+
+After the allocation starts, run the Frontier benchmark commands from the
+ReSolve source directory. If the benchmark commands are saved in a script, they
+can be launched on the active allocation with:
+
+```bash
+srun --jobid=<job_id> -N1 -n1 bash -lc ./run_final_benchmarks.sh
+```
+
+The exact account, queue time, module stack, and preferred batch/interactive
+workflow are site-specific. This section is intended to provide enough
+ReSolve-specific information to use the timing scripts to benchmark the
+examples. Use the OLCF documentation as the source of truth for Frontier
+allocation details.
 
 ## Frontier log collection
 
@@ -262,6 +306,22 @@ N1000
 
 The `N` value in the log filename allows `parse_refactor_logs.py` to infer the
 GridKit problem size automatically.
+
+## Copy Frontier outputs to a local machine
+
+After the Frontier CPU/KLU and HIP runs are complete, copy the logs back to the
+local CUDA machine before parsing and plotting. Use the transfer method
+appropriate for the amount of data being moved. See the OLCF documentation for
+maintained guidance on Frontier storage and data transfer:
+
+* [Frontier User Guide: Data and Storage](https://docs.olcf.ornl.gov/systems/frontier_user_guide.html#data-and-storage)
+* [Frontier User Guide: Using Globus to Move Data to and from Orion](https://docs.olcf.ornl.gov/systems/frontier_user_guide.html#using-globus-to-move-data-to-and-from-orion)
+
+For small log files, `scp` may be sufficient. For larger matrix/output
+transfers, use the OLCF-recommended transfer workflow.
+
+After the Frontier logs are copied locally, collect or add the local CUDA logs
+before parsing all logs into the combined CSV.
 
 ## Local CUDA log collection
 
