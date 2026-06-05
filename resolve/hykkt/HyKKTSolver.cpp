@@ -220,39 +220,53 @@ namespace ReSolve
 
     if (!allocated_)
     {
+      printf("Starting setupSpGEMMHtilde().\n");
       setupSpGEMMHtilde();
     }
+    printf("Starting computeSpGEMMHtilde().\n");
     computeSpGEMMHtilde();
 
     setupSolutionCheck();
 
     if (!allocated_)
     {
+      printf("Starting setupRuizScaling().\n");
       setupRuizScaling();
     }
+    printf("Starting computeRuizScaling().\n");
     computeRuizScaling();
 
     if (!allocated_)
     {
+      printf("Starting setupSpGEMMHgamma().\n");
       setupSpGEMMHgamma();
     }
+    printf("Starting computeSpGEMMHgamma().\n");
     computeSpGEMMHgamma();
 
     if (!allocated_)
     {
+      printf("Starting setupPermutation().\n");
       setupPermutation();
     }
+    printf("Starting applyPermutation().\n");
     applyPermutation();
 
     if (!allocated_)
     {
+      printf("Starting setupHgammaFactorization().\n");
       setupHgammaFactorization();
     }
+    printf("Starting computeHgammaFactorization().\n");
     computeHgammaFactorization();
 
+    printf("Starting setupConjugateGradient().\n");
     setupConjugateGradient();
+    printf("Starting computeConjugateGradient().\n");
     computeConjugateGradient();
 
+    
+    printf("Starting recoverSolution().\n");
     recoverSolution();
     return checkError();
   }
