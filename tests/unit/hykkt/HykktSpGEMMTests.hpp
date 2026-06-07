@@ -165,6 +165,10 @@ namespace ReSolve
         matrix::Csr* B = new matrix::Csr(n, n, nnz);
         matrix::Csr* D = new matrix::Csr(n, n, n - 2);
 
+        A->allocateMatrixData(memspace_);
+        B->allocateMatrixData(memspace_);
+        D->allocateMatrixData(memspace_);
+
         A->copyFromExternal(A_row_ptr, A_col_ind, A_values, memory::HOST, memspace_);
         B->copyFromExternal(B_row_ptr, B_col_ind, B_values, memory::HOST, memspace_);
         D->copyFromExternal(D_row_ptr, D_col_ind, D_values, memory::HOST, memspace_);
@@ -340,6 +344,10 @@ namespace ReSolve
         *A = new matrix::Csr(3, 3, 5);
         *B = new matrix::Csr(3, 3, 5);
         *D = new matrix::Csr(3, 3, 6);
+
+        (*A)->allocateMatrixData(memspace_);
+        (*B)->allocateMatrixData(memspace_);
+        (*D)->allocateMatrixData(memspace_);
 
         (*A)->copyFromExternal(A_row_ptr, A_col_ind, A_values, memory::HOST, memspace_);
         (*B)->copyFromExternal(B_row_ptr, B_col_ind, B_values, memory::HOST, memspace_);

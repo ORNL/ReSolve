@@ -145,7 +145,9 @@ namespace ReSolve
       bool verifyAnswer(vector::Vector& x, index_type K)
       {
         vector::Vector a(x.getSize());
+        a.allocate(memory::HOST);
         vector::Vector b(x.getSize());
+        b.allocate(memory::HOST);
 
         real_type ip;
         bool      status = true;

@@ -245,37 +245,16 @@ namespace ReSolve
 
     if (memspaceOut == memory::HOST)
     {
-      // check if cpu data allocated
-      assert(((h_row_data_ == nullptr) == (h_col_data_ == nullptr)) && "In Csr::copyFromExternal one of host row or column data is null!\n");
-
-      if ((h_row_data_ == nullptr) && (h_col_data_ == nullptr))
+      if ((h_row_data_ == nullptr) || (h_col_data_ == nullptr) || (h_val_data_ == nullptr))
       {
-        this->h_row_data_          = new index_type[n_ + 1];
-        this->h_col_data_          = new index_type[nnz_current];
-        owns_cpu_sparsity_pattern_ = true;
-      }
-      if (h_val_data_ == nullptr)
-      {
-        this->h_val_data_ = new real_type[nnz_current];
-        owns_cpu_values_  = true;
+        out::error() << "Trying to copy from external COO matrix, but destination (host) is not allocated!\n";
       }
     }
-
-    if (memspaceOut == memory::DEVICE)
+    else if (memspaceOut == memory::DEVICE)
     {
-      // check if cuda data allocated
-      assert(((d_row_data_ == nullptr) == (d_col_data_ == nullptr)) && "In Csr::copyFromExternal one of device row or column data is null!\n");
-
-      if ((d_row_data_ == nullptr) && (d_col_data_ == nullptr))
+      if ((d_row_data_ == nullptr) || (d_col_data_ == nullptr) || (d_val_data_ == nullptr))
       {
-        mem_.allocateArrayOnDevice(&d_row_data_, n_ + 1);
-        mem_.allocateArrayOnDevice(&d_col_data_, nnz_current);
-        owns_gpu_values_ = true;
-      }
-      if (d_val_data_ == nullptr)
-      {
-        mem_.allocateArrayOnDevice(&d_val_data_, nnz_current);
-        owns_gpu_sparsity_pattern_ = true;
+        out::error() << "Trying to copy from external COO matrix, but destination (device) is not allocated!\n";
       }
     }
 

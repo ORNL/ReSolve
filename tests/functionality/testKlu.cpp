@@ -122,6 +122,7 @@ int runTest(int argc, char* argv[], std::string& solver_name)
   }
   real_type*  rhs = ReSolve::io::createArrayFromFile(rhs1_file);
   vector_type vec_rhs(A->getNumRows());
+  vec_rhs.allocate(ReSolve::memory::HOST);
   vec_rhs.copyFromExternal(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   rhs1_file.close();
 

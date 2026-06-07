@@ -177,14 +177,17 @@ namespace ReSolve
         }
 
         // array -> memspace
+        x.allocate(memspace_);
         x.copyFromExternal(data, memory::HOST, memspace_);
 
         // memspace -> memspace
         vector::Vector y(N);
+        y.allocate(memspace_);
         y.copyFromExternal(&x, memspace_, memspace_);
 
         // memspace -> host
         vector::Vector z(N);
+        z.allocate(memory::HOST);
         z.copyFromExternal(&y, memspace_, memory::HOST);
 
         const real_type* z_data = z.getData(memory::HOST);

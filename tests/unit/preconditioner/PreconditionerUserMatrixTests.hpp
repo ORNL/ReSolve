@@ -113,6 +113,7 @@ namespace ReSolve
         index_type col_data[3] = {0, 1, 2};
         real_type  val_data[3] = {2.0, 3.0, 4.0};
 
+        B->allocateMatrixData(memory::HOST);
         B->copyFromExternal(row_data, col_data, val_data, memory::HOST, memory::HOST);
 
         if (memspace_ == memory::DEVICE)

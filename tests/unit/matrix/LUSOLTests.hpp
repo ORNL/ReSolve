@@ -199,6 +199,7 @@ namespace ReSolve
         // NOTE: these are hardcoded for now
         index_type   size = static_cast<index_type>(valsA_.size());
         matrix::Coo* A    = new matrix::Coo(9, 9, size, true, true);
+        A->allocateMatrixData(memory::HOST);
         A->copyFromExternal(rowsA_.data(),
                             colsA_.data(),
                             valsA_.data(),

@@ -234,7 +234,7 @@ namespace ReSolve
    * @return 0 if successful, 1 otherwise
    */
   int LinSolverDirectCuSolverRf::solve(vector_type* rhs, vector_type* x)
-  {
+  { // CAREFUL: ANYTHING THAT CALLS THIS. DELETE THIS COMMENT
     x->copyFromExternal(rhs->getData(memory::DEVICE), memory::DEVICE, memory::DEVICE);
     x->setDataUpdated(memory::DEVICE);
     status_cusolverrf_ = cusolverRfSolve(handle_cusolverrf_,

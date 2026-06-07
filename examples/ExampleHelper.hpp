@@ -130,6 +130,7 @@ namespace ReSolve
         if (res_ == nullptr)
         {
           res_ = new ReSolve::vector::Vector(A->getNumRows());
+          res_->allocate(memspace_);
         }
         else
         {
@@ -137,6 +138,7 @@ namespace ReSolve
           {
             delete res_;
             res_ = new ReSolve::vector::Vector(A->getNumRows());
+            res_->allocate(memspace_);
           }
         }
 

@@ -62,6 +62,7 @@ namespace ReSolve
         {
           data[i] = 0.1 * (real_type) i;
         }
+        x.allocate(memspace_);
         x.copyFromExternal(data, memory::HOST, memspace_);
 
         real_type result = handler_.amax(&x, memspace_);

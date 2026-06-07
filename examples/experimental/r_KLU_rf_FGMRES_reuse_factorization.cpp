@@ -107,6 +107,7 @@ int main(int argc, char* argv[])
       vec_x->allocate(ReSolve::memory::HOST); // for KLU
       vec_x->allocate(ReSolve::memory::DEVICE);
       vec_r = new vector_type(A->getNumRows());
+      vec_r->allocate(ReSolve::memory::DEVICE);
     }
     else
     {
@@ -126,11 +127,14 @@ int main(int argc, char* argv[])
     // Update host and device data.
     if (i < 2)
     {
+      vec_rhs->allocate(ReSolve::memory::HOST);
       vec_rhs->copyFromExternal(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
       vec_rhs->setDataUpdated(ReSolve::memory::HOST);
     }
     else
     {
+      vec_rhs->allocate(ReSolve::memory::HOST);
+      vec_rhs->allocate(ReSolve::memory::DEVICE);
       A->setUpdated(ReSolve::memory::HOST);
       A->syncData(ReSolve::memory::DEVICE);
       vec_rhs->copyFromExternal(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
