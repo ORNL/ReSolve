@@ -108,6 +108,22 @@ namespace ReSolve
   }
 
   /**
+   * @brief set the matrix update flags to false for either HOST or DEVICE.
+   * @param memspace - the memory space whose data to set as not updated.
+   */
+  void matrix::Sparse::setNotUpdated(memory::MemorySpace memspace)
+  {
+    if (memspace == memory::HOST)
+    {
+      h_data_updated_ = false;
+    }
+    else if (memspace == memory::DEVICE)
+    {
+      d_data_updated_ = false;
+    }
+  }
+
+  /**
    * @brief get number of matrix rows
    *
    * @return number of matrix rows.
