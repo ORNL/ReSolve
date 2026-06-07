@@ -47,29 +47,6 @@ namespace ReSolve
       {
       }
 
-      /* const */ index_type* rows_coo = A_coo->getRowData(ReSolve::memory::HOST);
-      /* const */ index_type* cols_coo = A_coo->getColData(ReSolve::memory::HOST);
-      /* const */ real_type*  vals_coo = A_coo->getValues(ReSolve::memory::HOST);
-      index_type*             row_csr  = new index_type[n + 1];
-      row_csr[0]                       = 0;
-      index_type i_csr                 = 0;
-      for (index_type i = 1; i < nnz; ++i)
-      {
-        if (rows_coo[i] != rows_coo[i - 1])
-        {
-          i_csr++;
-          row_csr[i_csr] = i;
-        }
-      }
-      row_csr[n] = nnz;
-      A_csr->copyFromExternal(row_csr, cols_coo, vals_coo, ReSolve::memory::HOST, memspace);
-
-      delete[] row_csr;
-
-      return 0;
-
-    }
-
     /**
      * @brief Test the HyKKTSolver implementation with matrices provided by the user or by runHykktSolverTests.cpp
      *
