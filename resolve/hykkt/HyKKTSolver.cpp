@@ -363,11 +363,11 @@ namespace ReSolve
     }
     else
     {
+      H_tilde_->setNnz(H_->getNnz());
       H_tilde_->allocateMatrixData(memspace_);
       H_tilde_->copyFromExternal(H_->getRowData(memspace_),
                                  H_->getColData(memspace_),
                                  H_->getValues(memspace_),
-                                 H_->getNnz(),
                                  memspace_,
                                  memspace_);
 
