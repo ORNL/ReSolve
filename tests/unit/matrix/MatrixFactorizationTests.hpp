@@ -167,6 +167,7 @@ namespace ReSolve
 
         if ((memspace == "cuda") || (memspace == "hip"))
         {
+          A->allocateMatrixData(memory::DEVICE);
           A->syncData(memory::DEVICE);
         }
 

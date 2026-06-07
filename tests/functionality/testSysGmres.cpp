@@ -238,6 +238,7 @@ int test(int argc, char* argv[])
 
   // Use a scaled converged solution as a nonzero initial guess.
   vector_type vec_x_guess(vec_x.getSize());
+  vec_x_guess.allocate(memspace);
   vec_x_guess.copyFromExternal(&vec_x, memspace, memspace);
   vector_handler.scal(0.9, &vec_x_guess, memspace);
 

@@ -293,17 +293,20 @@ namespace ReSolve
       J_d_scaled_  = new matrix::Csr(J_d_->getNumRows(), J_d_->getNumColumns(), J_d_->getNnz());
 
       D_s_vals_->setData(D_s_->getValues(memspace_), memspace_);
+      r_yd_scaled_->allocate(memspace_);
       r_x_perm_->allocate(memspace_);
       omega_perm_->allocate(memspace_);
       schur_->allocate(memspace_);
       r_x_til_->allocate(memspace_);
       r_x_hat_->allocate(memspace_);
       z_->allocate(memspace_);
+      r_y_copy_->allocate(memspace_);
       J_tr_->allocateMatrixData(memspace_);
       J_d_tr_->allocateMatrixData(memspace_);
-      J_tr_perm_->allocateMatrixData(memory::HOST);
       J_perm_->allocateMatrixData(memory::HOST);
+      J_tr_perm_->allocateMatrixData(memory::HOST);
       J_d_scaled_->allocateWithExternalSparsityPattern(J_d_->getRowData(memspace_), J_d_->getColData(memspace_), J_d_->getNnz(), memspace_);
+      // H_tilde_ does not need to be allocated because loadResultMatrix() does it later
     }
     else if (memspace_ == memory::DEVICE)
     {
@@ -360,6 +363,7 @@ namespace ReSolve
     }
     else
     {
+      H_tilde_->allocateMatrixData(memspace_);
       H_tilde_->copyFromExternal(H_->getRowData(memspace_),
                                  H_->getColData(memspace_),
                                  H_->getValues(memspace_),
@@ -385,7 +389,9 @@ namespace ReSolve
     if (!allocated_)
     {
       J_copy_    = new matrix::Csr(J_->getNumRows(), J_->getNumColumns(), J_->getNnz());
+      J_copy_->allocateMatrixData(memspace_);
       J_tr_copy_ = new matrix::Csr(J_tr_->getNumRows(), J_tr_->getNumColumns(), J_tr_->getNnz());
+      J_tr_copy_->allocateMatrixData(memspace_);
     }
     J_copy_->copyFromExternal(J_->getRowData(memspace_),
                               J_->getColData(memspace_),

@@ -250,15 +250,11 @@ namespace ReSolve
 
       if ((memspaceOut == memory::HOST) && (h_data_ == nullptr))
       {
-        // allocate first
-        h_data_        = new real_type[n_capacity_ * k_];
-        owns_cpu_data_ = true;
+        out::error() << "Trying to copy from external vector, but destination (host) is not allocated!\n";
       }
-      if ((memspaceOut == memory::DEVICE) && (d_data_ == nullptr))
+      else if ((memspaceOut == memory::DEVICE) && (d_data_ == nullptr))
       {
-        // allocate first
-        mem_.allocateArrayOnDevice(&d_data_, n_capacity_ * k_);
-        owns_gpu_data_ = true;
+        out::error() << "Trying to copy from external vector, but destination (device) is not allocated!\n";
       }
 
       switch (control)

@@ -54,9 +54,13 @@ namespace ReSolve
       {
         matrix::Csr* H = new matrix::Csr(n, n, 3 * n - 2);
         matrix::Csr* J = new matrix::Csr(n - 1, n, 2 * n - 2);
+        H->allocateMatrixData(memspace_);
+        J->allocateMatrixData(memspace_);
 
         vector::Vector* rhs_top    = new vector::Vector(n);
         vector::Vector* rhs_bottom = new vector::Vector(n - 1);
+        rhs_top->allocate(memspace_);
+        rhs_bottom->allocate(memspace_);
         generateMatrixData(H, J, rhs_top, rhs_bottom, n);
 
         // Transpose J and store in J_tr

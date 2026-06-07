@@ -58,7 +58,7 @@ namespace ReSolve
       static int allocateArrayOnDevice(T** v, I n)
       {
         return checkCudaErrors(cudaMalloc((void**) v, sizeof(T) * n));
-      }
+        }
 
       /**
        * @brief allocates buffer v onto device.

@@ -76,7 +76,8 @@ int main(int argc, char* argv[])
   vector_type vec_rhs(A->getNumRows());
   vector_type vec_x(A->getNumRows());
   vector_type vec_r(A->getNumRows());
-
+  
+  vec_rhs.allocate(ReSolve::memory::HOST);
   vec_rhs.copyFromExternal(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   vec_rhs.setDataUpdated(ReSolve::memory::HOST);
   vec_x.allocate(ReSolve::memory::HOST);
@@ -106,12 +107,16 @@ int main(int argc, char* argv[])
   real_type* x_data = new real_type[A->getNumRows()];
   std::fill_n(x_data, A->getNumRows(), 1.0);
 
+  vec_test.allocate(ReSolve::memory::HOST);
   vec_test.copyFromExternal(x_data, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_r.allocate(ReSolve::memory::HOST);
   vec_r.copyFromExternal(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+  vec_diff.allocate(ReSolve::memory::HOST);
   vec_diff.copyFromExternal(x_data, ReSolve::memory::HOST, ReSolve::memory::HOST);
 
   // Matrix-vector product does not support COO format so we need to convert to CSR
   ReSolve::matrix::Csr A_csr(A->getNumRows(), A->getNumColumns(), A->getNnz(), A->symmetric(), A->expanded());
+  A_csr.allocateMatrixData(ReSolve::memory::HOST);
   error_sum += coo2csr(A.get(), &A_csr, ReSolve::memory::HOST);
 
   // Tell matrix handler this is a new matrix
@@ -186,7 +191,6 @@ int main(int argc, char* argv[])
 
   vec_rhs.copyFromExternal(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   vec_rhs.setDataUpdated(ReSolve::memory::HOST);
-  vec_x.allocate(ReSolve::memory::HOST);
 
   error_sum += lusol.setup(A.get());
   error_sum += lusol.analyze();

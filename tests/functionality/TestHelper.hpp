@@ -151,6 +151,7 @@ public:
     r_      = r;
     x_      = x;
     res_    = new ReSolve::vector::Vector(A->getNumRows());
+    res_->allocate(memspace_);
     x_true_ = new ReSolve::vector::Vector(A->getNumRows());
     setSolutionVector();
     computeNorms();
@@ -410,6 +411,7 @@ private:
       // A_->syncData(ReSolve::memory::HOST);
       // r_->syncData(ReSolve::memory::HOST);
       // x_->syncData(ReSolve::memory::HOST);
+      res_->allocate(ReSolve::memory::HOST);
       res_->copyFromExternal(r_, memspace_, ReSolve::memory::HOST);
       norm_res_cpu_ = computeResidualNorm(*A_, *x_, *res_, ReSolve::memory::HOST);
     }

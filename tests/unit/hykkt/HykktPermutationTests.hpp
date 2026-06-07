@@ -49,6 +49,9 @@ namespace ReSolve
         matrix::Csr hes(n, n, nnz_hes);
         matrix::Csr jac(m, n, nnz_jac);
         matrix::Csr jac_tr(n, m, nnz_jac);
+        hes.allocateMatrixData(memory::HOST);
+        jac.allocateMatrixData(memory::HOST);
+        jac_tr.allocateMatrixData(memory::HOST);
         getTestData(&hes, &jac, &jac_tr);
 
         // correct results
