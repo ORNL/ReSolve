@@ -291,18 +291,6 @@ namespace ReSolve
     return 0;
   }
 
-  int matrix::Csr::copyFromExternal(const index_type*   row_data,
-                                    const index_type*   col_data,
-                                    const real_type*    val_data,
-                                    index_type          new_nnz,
-                                    memory::MemorySpace memspaceIn,
-                                    memory::MemorySpace memspaceOut)
-  {
-    destroyMatrixData(memspaceOut);
-    nnz_ = new_nnz;
-    return copyFromExternal(row_data, col_data, val_data, memspaceIn, memspaceOut);
-  }
-
   int matrix::Csr::allocateMatrixData(memory::MemorySpace memspace)
   {
     index_type nnz_current = nnz_;
