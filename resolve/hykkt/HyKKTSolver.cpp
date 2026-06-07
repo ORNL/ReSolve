@@ -329,7 +329,6 @@ namespace ReSolve
   void hykkt::HyKKTSolver::setupSpGEMMHtilde()
   {
     spgemm_htil_ = new SpGEMM(memspace_, ONE, ONE);
-    spgemm_htil_->loadResultMatrix(&H_tilde_); // H_tilde_ will be created by SpGEMM at this step
   }
 
   /*
@@ -348,6 +347,7 @@ namespace ReSolve
       matrixHandler_->leftScale(D_s_vals_, J_d_scaled_, memspace_);
       spgemm_htil_->loadProductMatrices(J_d_tr_, J_d_scaled_);
       spgemm_htil_->loadSumMatrix(H_);
+      spgemm_htil_->loadResultMatrix(&H_tilde_); // H_tilde_ will be created by SpGEMM at this step
 
       r_yd_scaled_->copyFromExternal(r_yd_, memspace_, memspace_);
       vectorHandler_->scal(D_s_vals_, r_yd_scaled_, memspace_);
