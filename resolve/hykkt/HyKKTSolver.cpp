@@ -522,6 +522,13 @@ namespace ReSolve
     permutation_->mapIndex(PERM_V,
                            r_x_hat_->getData(memspace_),
                            r_x_perm_->getData(memspace_));
+    if (memspace_ == memory::DEVICE)
+    {
+      H_gamma_perm_->setNotUpdated(memory::HOST);
+      H_gamma_perm_->syncData(memory::HOST);
+      J_perm_->setNotUpdated(memory::HOST);
+      J_tr_perm_->setNotUpdated(memory::HOST);
+    }
     r_x_perm_->setDataUpdated(memspace_);
   }
 
