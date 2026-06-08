@@ -158,10 +158,13 @@ namespace ReSolve
   int matrix::Csc::allocateMatrixData(memory::MemorySpace memspace)
   {
     index_type nnz_current = nnz_;
-    destroyMatrixData(memspace); // just in case
 
     if (memspace == memory::HOST)
     {
+      if (h_row_data_ || h_col_data_ || h_val_data_)
+      {
+        out::error() << "Trying to allocate CSC matrix host data, but matrix host data has already been allocated!\n";
+      }
       this->h_col_data_ = new index_type[m_ + 1];
       std::fill(h_col_data_, h_col_data_ + m_ + 1, 0);
       this->h_row_data_ = new index_type[nnz_current];
@@ -175,6 +178,10 @@ namespace ReSolve
 
     if (memspace == memory::DEVICE)
     {
+      if (d_row_data_ || d_col_data_ || d_val_data_)
+      {
+        out::error() << "Trying to allocate CSC matrix device data, but matrix device data has already been allocated!\n";
+      }
       mem_.allocateArrayOnDevice(&d_col_data_, m_ + 1);
       mem_.allocateArrayOnDevice(&d_row_data_, nnz_current);
       mem_.allocateArrayOnDevice(&d_val_data_, nnz_current);
@@ -217,17 +224,6 @@ namespace ReSolve
                      << "See Csc::syncData documentation\n.";
         assert(d_data_updated_);
       }
-      if ((h_col_data_ == nullptr) && (h_row_data_ == nullptr))
-      {
-        h_col_data_                = new index_type[m_ + 1];
-        h_row_data_                = new index_type[nnz_];
-        owns_cpu_sparsity_pattern_ = true;
-      }
-      if (h_val_data_ == nullptr)
-      {
-        h_val_data_      = new real_type[nnz_];
-        owns_cpu_values_ = true;
-      }
       mem_.copyArrayDeviceToHost(h_col_data_, d_col_data_, m_ + 1);
       mem_.copyArrayDeviceToHost(h_row_data_, d_row_data_, nnz_);
       mem_.copyArrayDeviceToHost(h_val_data_, d_val_data_, nnz_);
@@ -247,17 +243,6 @@ namespace ReSolve
         out::error() << "Csc::syncData is trying to sync device with host, but host is out of date!\n"
                      << "See Csc::syncData documentation\n.";
         assert(h_data_updated_);
-      }
-      if ((d_col_data_ == nullptr) && (d_row_data_ == nullptr))
-      {
-        mem_.allocateArrayOnDevice(&d_col_data_, m_ + 1);
-        mem_.allocateArrayOnDevice(&d_row_data_, nnz_);
-        owns_gpu_sparsity_pattern_ = true;
-      }
-      if (d_val_data_ == nullptr)
-      {
-        mem_.allocateArrayOnDevice(&d_val_data_, nnz_);
-        owns_gpu_values_ = true;
       }
       mem_.copyArrayHostToDevice(d_col_data_, h_col_data_, m_ + 1);
       mem_.copyArrayHostToDevice(d_row_data_, h_row_data_, nnz_);

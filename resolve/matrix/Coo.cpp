@@ -269,10 +269,13 @@ namespace ReSolve
   int matrix::Coo::allocateMatrixData(memory::MemorySpace memspace)
   {
     index_type nnz_current = nnz_;
-    destroyMatrixData(memspace); // just in case
 
     if (memspace == memory::HOST)
     {
+      if (h_row_data_ || h_col_data_ || h_val_data_)
+      {
+        out::error() << "Trying to allocate COO matrix host data, but matrix host data has already been allocated!\n";
+      }
       this->h_row_data_ = new index_type[nnz_current];
       std::fill(h_row_data_, h_row_data_ + nnz_current, 0);
       this->h_col_data_ = new index_type[nnz_current];
@@ -286,6 +289,10 @@ namespace ReSolve
 
     if (memspace == memory::DEVICE)
     {
+      if (d_row_data_ || d_col_data_ || d_val_data_)
+      {
+        out::error() << "Trying to allocate COO matrix device data, but matrix device data has already been allocated!\n";
+      }
       mem_.allocateArrayOnDevice(&d_row_data_, nnz_current);
       mem_.allocateArrayOnDevice(&d_col_data_, nnz_current);
       mem_.allocateArrayOnDevice(&d_val_data_, nnz_current);
@@ -327,17 +334,6 @@ namespace ReSolve
         out::error() << "Coo::syncData is trying to sync host with device, but device is out of date!\n"
                      << "See Coo::syncData documentation\n.";
         assert(d_data_updated_);
-      }
-      if ((h_row_data_ == nullptr) && (h_col_data_ == nullptr))
-      {
-        h_row_data_                = new index_type[nnz_];
-        h_col_data_                = new index_type[nnz_];
-        owns_cpu_sparsity_pattern_ = true;
-      }
-      if (h_val_data_ == nullptr)
-      {
-        h_val_data_      = new real_type[nnz_];
-        owns_cpu_values_ = true;
       }
       mem_.copyArrayDeviceToHost(h_row_data_, d_row_data_, nnz_);
       mem_.copyArrayDeviceToHost(h_col_data_, d_col_data_, nnz_);

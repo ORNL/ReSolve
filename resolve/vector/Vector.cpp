@@ -578,7 +578,10 @@ namespace ReSolve
       switch (memspace)
       {
       case HOST:
-        delete[] h_data_;
+        if (h_data_)
+        {
+          out::error() << "Trying to allocate vector host data, but vector host data has already been allocated!\n";
+        }
         h_data_        = new real_type[n_capacity_ * k_];
         owns_cpu_data_ = true;
         // Set updated flags for each vector in multivector
@@ -595,7 +598,10 @@ namespace ReSolve
         }
         break;
       case DEVICE:
-        mem_.deleteOnDevice(d_data_);
+        if (d_data_)
+        {
+          out::error() << "Trying to allocate vector device data, but vector device data has already been allocated!\n";
+        }
         mem_.allocateArrayOnDevice(&d_data_, n_capacity_ * k_);
         owns_gpu_data_ = true;
         // Set updated flags for each vector in multivector
