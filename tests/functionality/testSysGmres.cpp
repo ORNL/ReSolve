@@ -142,10 +142,13 @@ int test(int argc, char* argv[])
 
   // Create solution vector
   vector_type vec_x(A->getNumRows());
-  vec_x.allocate(ReSolve::memory::HOST);
 
   // Set the initial guess to 0
   vec_x.allocate(memspace);
+  if (memspace == ReSolve::memory::DEVICE)
+  {
+    vec_x.allocate(ReSolve::memory::HOST);
+  }
   vec_x.setToZero(memspace);
 
   // Set solver options
@@ -453,6 +456,10 @@ ReSolve::matrix::Csr* generateMatrix(const index_type N, ReSolve::memory::Memory
   // Allocate NxN CSR matrix with NNZ nonzeros
   ReSolve::matrix::Csr* A = new ReSolve::matrix::Csr(N, N, NNZ);
   A->allocateMatrixData(ReSolve::memory::HOST);
+  if (memspace == ReSolve::memory::DEVICE)
+  {
+    A->allocateMatrixData(ReSolve::memory::DEVICE);
+  }
 
   index_type* rowptr = A->getRowData(ReSolve::memory::HOST);
   index_type* colidx = A->getColData(ReSolve::memory::HOST);

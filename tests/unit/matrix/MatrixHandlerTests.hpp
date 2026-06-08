@@ -112,6 +112,7 @@ namespace ReSolve
         // Move data to the host for the result verification
         if (memspace_ == memory::DEVICE)
         {
+          A_csr->allocateMatrixData(memory::HOST);
           A_csr->syncData(memory::HOST);
         }
 
@@ -132,14 +133,27 @@ namespace ReSolve
         testname += matrix_size.str();
 
         matrix::Csr* At = new matrix::Csr(m, n, 2 * std::min(n, m));
+        At->allocateMatrixData(memory::HOST);
         matrix::Csr* A  = nullptr; // Declare A outside
+        if (memspace_ == memory::DEVICE)
+        {
+          At->allocateMatrixData(memory::DEVICE);
+        }
 
         for (real_type val = 0.0; val <= 1.0; val += 1.0)
         { // Use a step to prevent infinite loop
           if (val == 0.0)
           {
-            A = createRectangularCsrMatrix(n, m);
-            At->allocateMatrixData(memspace_);
+            if (A)
+            {
+              A->destroyMatrixData(memory::HOST);
+              if (memspace_ = memory::DEVICE)
+              {
+                A->destroyMatrixData(memory::DEVICE);
+              }
+            }
+
+            A = createRectangularCsrMatrix(n, m); // Allocates A
             handler_.transpose(A, At, memspace_);
 
             status *= (At->getNumRows() == A->getNumColumns());
@@ -308,7 +322,8 @@ namespace ReSolve
         A->setUpdated(memory::HOST);
         if (memspace_ == memory::DEVICE)
         {
-          A->syncData(memspace_);
+          A->allocateMatrixData(memory::DEVICE);
+          A->syncData(memory::DEVICE);
         }
         return A;
       }
@@ -395,6 +410,7 @@ namespace ReSolve
         A->setUpdated(memory::HOST);
         if (memspace_ == memory::DEVICE)
         {
+          A->allocateMatrixData(memspace_);
           A->syncData(memspace_);
         }
         return A;
@@ -573,7 +589,8 @@ namespace ReSolve
 
         if (memspace_ == memory::DEVICE)
         {
-          A->syncData(memspace_);
+          A->allocateMatrixData(memory::DEVICE);
+          A->syncData(memory::DEVICE);
         }
 
         return A;

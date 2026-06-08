@@ -257,6 +257,11 @@ namespace ReSolve
       J_tr_perm_->allocateMatrixData(memory::HOST);
       J_d_scaled_->allocateWithExternalSparsityPattern(J_d_->getRowData(memspace_), J_d_->getColData(memspace_), J_d_->getNnz(), memspace_);
       // H_tilde_ does not need to be allocated because loadResultMatrix() does it later
+
+      if (memspace_ == memory::DEVICE)
+      {
+        J_tr_->allocateMatrixData(memory::HOST);
+      }
     }
     else if (memspace_ == memory::DEVICE)
     {
@@ -392,7 +397,7 @@ namespace ReSolve
     spgemm_hgamma_ = new SpGEMM(memspace_, gamma_, ONE);
     spgemm_hgamma_->loadProductMatrices(J_tr_, J_);
     spgemm_hgamma_->loadSumMatrix(H_tilde_);
-    spgemm_hgamma_->loadResultMatrix(&H_gamma_); // H_gamma_ will be created by SpGEMM at this step
+    spgemm_hgamma_->loadResultMatrix(&H_gamma_); // H_gamma_ will be created by SpGEMM atcompute()
   }
 
   /*
@@ -417,6 +422,7 @@ namespace ReSolve
 
     if (memspace_ == memory::DEVICE)
     {
+      H_gamma_->allocateMatrixData(memory::HOST);
       H_gamma_->syncData(memory::HOST);
       J_tr_->syncData(memory::HOST);
 
@@ -558,6 +564,10 @@ namespace ReSolve
     // block-recovering the solution to the original system by parts
     // this part is to recover delta_x
     cholesky_->solve(z_, r_x_perm_);
+    if (memspace_ == memory::DEVICE)
+    {
+      x_->syncData(memory::DEVICE);
+    }
     permutation_->mapIndex(REV_PERM_V, z_->getData(memspace_), x_->getData(memspace_));
     x_->setDataUpdated(memspace_);
 

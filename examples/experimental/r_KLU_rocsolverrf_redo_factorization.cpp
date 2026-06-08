@@ -106,6 +106,7 @@ int main(int argc, char* argv[])
       ReSolve::io::updateArrayFromFile(rhs_file, &rhs);
     }
     // Copy matrix data to device
+    A->allocateMatrixData(ReSolve::memory::DEVICE);
     A->syncData(ReSolve::memory::DEVICE);
 
     std::cout << "Finished reading the matrix and rhs, size: " << A->getNumRows() << " x " << A->getNumColumns()

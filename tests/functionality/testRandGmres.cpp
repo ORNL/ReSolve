@@ -250,6 +250,10 @@ ReSolve::matrix::Csr* generateMatrix(const index_type n, ReSolve::memory::Memory
   // Allocate CSR matrix structure
   ReSolve::matrix::Csr* matrix = new ReSolve::matrix::Csr(n, n, static_cast<index_type>(total_nonzeros));
   matrix->allocateMatrixData(ReSolve::memory::HOST);
+  if (memory_space == ReSolve::memory::DEVICE)
+  {
+    matrix->allocateMatrixData(ReSolve::memory::DEVICE);
+  }
 
   // Get pointers to CSR data structures
   index_type* row_offsets    = matrix->getRowData(ReSolve::memory::HOST);

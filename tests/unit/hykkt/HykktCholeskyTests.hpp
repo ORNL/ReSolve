@@ -67,7 +67,12 @@ namespace ReSolve
         solver.setPivotTolerance(1e-12);
         solver.numericalFactorization();
         vector::Vector* x = new vector::Vector(3);
-        x->allocate(memspace_);
+        x->allocate(memory::HOST);
+        if (memspace_ == memory::DEVICE)
+        {
+          x->allocate(memory::DEVICE);
+        }
+        x->setDataUpdated(memory::DEVICE);
         vector::Vector* b         = new vector::Vector(3);
         real_type       b_data[3] = {-6.0, -17.25, 30.0};
         b->allocate(memspace_);
@@ -123,6 +128,7 @@ namespace ReSolve
 
         if (memspace_ == memory::DEVICE)
         {
+          A->allocateMatrixData(memory::HOST);
           A->syncData(memory::HOST);
         }
 
@@ -195,6 +201,7 @@ namespace ReSolve
 
         if (memspace_ == memory::DEVICE)
         {
+          A->allocateMatrixData(memory::HOST);
           A->syncData(memory::HOST);
         }
 
@@ -328,6 +335,7 @@ namespace ReSolve
         v->setDataUpdated(memory::HOST);
         if (memspace_ == memory::DEVICE)
         {
+          v->allocate(memory::DEVICE);
           v->syncData(memory::DEVICE);
         }
         return v;

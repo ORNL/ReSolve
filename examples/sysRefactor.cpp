@@ -306,7 +306,9 @@ int sysRefactor(int argc, char* argv[])
     // Ensure matrix data is synced to the device before any GPU operations
     if (hw_backend == "CUDA" || hw_backend == "HIP")
     {
+      A->allocateMatrixData(memory::DEVICE);
       A->syncData(memory::DEVICE);
+      vec_rhs->allocate(memory::DEVICE);
       vec_rhs->syncData(memory::DEVICE);
     }
 

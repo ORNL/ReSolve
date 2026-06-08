@@ -162,8 +162,10 @@ int runGmresExample(int argc, char* argv[])
   vec_x->allocate(memspace);
   if (memspace == memory::DEVICE)
   {
-    A->syncData(memspace);
-    vec_rhs->syncData(memspace);
+    A->allocateMatrixData(memory::DEVICE);
+    A->syncData(memory::DEVICE);
+    vec_rhs->allocate(memory::DEVICE);
+    vec_rhs->syncData(memory::DEVICE);
   }
 
   printSystemInfo(matrix_pathname, A);

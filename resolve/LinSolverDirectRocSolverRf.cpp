@@ -77,6 +77,7 @@ namespace ReSolve
     combineFactors(L, U);
 
     M_->setUpdated(ReSolve::memory::HOST);
+    M_->allocateMatrixData(ReSolve::memory::DEVICE);
     M_->syncData(ReSolve::memory::DEVICE);
 
     // remember - P and Q are generally CPU variables

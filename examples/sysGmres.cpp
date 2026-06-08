@@ -223,8 +223,10 @@ int sysGmres(int argc, char* argv[])
   if (memspace == memory::DEVICE)
   {
     // Copy data to the device
-    A->syncData(memspace);
-    vec_rhs->syncData(memspace);
+    A->allocateMatrixData(memory::DEVICE);
+    A->syncData(memory::DEVICE);
+    vec_rhs->allocate(memory::DEVICE);
+    vec_rhs->syncData(memory::DEVICE);
   }
 
   mat_file.close();

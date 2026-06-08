@@ -350,6 +350,7 @@ namespace ReSolve
         bool status = true;
         if (memspace != "cpu")
         {
+          x.allocate(memory::DEVICE);
           x.syncData(memory::HOST);
         }
 

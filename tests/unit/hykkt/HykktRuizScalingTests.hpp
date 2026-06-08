@@ -54,18 +54,32 @@ namespace ReSolve
       {
         matrix::Csr* H = new matrix::Csr(n, n, 3 * n - 2);
         matrix::Csr* J = new matrix::Csr(n - 1, n, 2 * n - 2);
-        H->allocateMatrixData(memspace_);
-        J->allocateMatrixData(memspace_);
+        H->allocateMatrixData(memory::HOST);
+        J->allocateMatrixData(memory::HOST);
+        if (memspace_ == memory::DEVICE)
+        {
+          H->allocateMatrixData(memory::DEVICE);
+          J->allocateMatrixData(memory::DEVICE);
+        }
 
         vector::Vector* rhs_top    = new vector::Vector(n);
         vector::Vector* rhs_bottom = new vector::Vector(n - 1);
-        rhs_top->allocate(memspace_);
-        rhs_bottom->allocate(memspace_);
+        rhs_top->allocate(memory::HOST);
+        rhs_bottom->allocate(memory::HOST);
+        if (memspace_ == memory::DEVICE)
+        {
+          rhs_top->allocate(memory::DEVICE);
+          rhs_bottom->allocate(memory::DEVICE);
+        }
         generateMatrixData(H, J, rhs_top, rhs_bottom, n);
 
         // Transpose J and store in J_tr
         matrix::Csr* J_tr = new matrix::Csr(n, n - 1, 2 * n - 2);
-        J_tr->allocateMatrixData(memspace_);
+        J_tr->allocateMatrixData(memory::HOST);
+        if (memspace_ == memory::DEVICE)
+        {
+          J_tr->allocateMatrixData(memory::DEVICE);
+        }
         matrixHandler_.transpose(J, J_tr, memspace_);
 
         // Perform scaling
