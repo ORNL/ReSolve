@@ -20,7 +20,7 @@ if(RESOLVE_USE_CUDA)
   target_link_libraries(resolve_hykkt_sccg PUBLIC resolve_backend_cuda)
 endif()
 
-# Link to HIP ReSolve backend if HIP is support enabled
+# Link to HIP ReSolve backend if HIP is support enabled.
 
 if(RESOLVE_USE_HIP)
   target_sources(resolve_hykkt_sccg PRIVATE ${Matrix_ROCM_SRC})

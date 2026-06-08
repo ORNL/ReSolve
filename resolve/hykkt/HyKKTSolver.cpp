@@ -324,6 +324,7 @@ namespace ReSolve
     }
   }
 
+  
   /**
    * @brief Creates the SpGEMM solver for the H_tildeda matrix and
    * loads the result matrix pointer
@@ -332,7 +333,6 @@ namespace ReSolve
   void hykkt::HyKKTSolver::setupSpGEMMHtilde()
   {
     spgemm_htil_ = new SpGEMM(memspace_, ONE, ONE);
-    spgemm_htil_->loadResultMatrix(&H_tilde_); // H_tilde_ will be created by SpGEMM at this step
   }
 
   /*
@@ -351,6 +351,7 @@ namespace ReSolve
       matrixHandler_->leftScale(D_s_vals_, J_d_scaled_, memspace_);
       spgemm_htil_->loadProductMatrices(J_d_tr_, J_d_scaled_);
       spgemm_htil_->loadSumMatrix(H_);
+      spgemm_htil_->loadResultMatrix(&H_tilde_); // H_tilde_ will be created by SpGEMM at this step
 
       r_yd_scaled_->copyFromExternal(r_yd_, memspace_, memspace_);
       vectorHandler_->scal(D_s_vals_, r_yd_scaled_, memspace_);
@@ -375,6 +376,7 @@ namespace ReSolve
     }
   }
 
+  
   /*
    * @brief Copies the matrices J and J^T which are later overwritten so
    *        the solution can be checked
@@ -514,7 +516,7 @@ namespace ReSolve
   * @post H_gamma_perm_, J_perm_, J_tr_perm_, r_x_perm_ now contain permuted
   *       values of H_gamma_, J_, J_tr_, r_x_hat_
   */
-  void hykkt::HyKKTSolver::applyPermutation()
+    void hykkt::HyKKTSolver::applyPermutation()
   {
     permutation_->mapIndex(PERM_HES_V,
                            H_gamma_->getValues(memspace_),
@@ -528,6 +530,13 @@ namespace ReSolve
     permutation_->mapIndex(PERM_V,
                            r_x_hat_->getData(memspace_),
                            r_x_perm_->getData(memspace_));
+    if (memspace_ == memory::DEVICE)
+    {
+      H_gamma_perm_->setNotUpdated(memory::HOST);
+      H_gamma_perm_->syncData(memory::HOST);
+      J_perm_->setNotUpdated(memory::HOST);
+      J_tr_perm_->setNotUpdated(memory::HOST);
+    }
     r_x_perm_->setDataUpdated(memspace_);
   }
 

@@ -52,22 +52,23 @@ namespace ReSolve
        *
        * @return TestOutcome Result of the test
        */
-      TestOutcome testSolver(index_type         n_x,
-                             index_type         m_d,
-                             index_type         m_c,
-                             index_type         H_nnz,
-                             index_type         D_s_nnz,
-                             index_type         J_nnz,
-                             index_type         J_d_nnz,
-                             const std::string& H_file_name,
-                             const std::string& D_s_file_name,
-                             const std::string& J_file_name,
-                             const std::string& J_d_file_name,
-                             const std::string& r_x_file_name,
-                             const std::string& r_s_file_name,
-                             const std::string& r_y_file_name,
-                             const std::string& r_yd_file_name,
-                             real_type          gamma)
+      TestOutcome
+      testSolver(index_type         n_x,
+                 index_type         m_d,
+                 index_type         m_c,
+                 index_type         H_nnz,
+                 index_type         D_s_nnz,
+                 index_type         J_nnz,
+                 index_type         J_d_nnz,
+                 const std::string& H_file_name,
+                 const std::string& D_s_file_name,
+                 const std::string& J_file_name,
+                 const std::string& J_d_file_name,
+                 const std::string& r_x_file_name,
+                 const std::string& r_s_file_name,
+                 const std::string& r_y_file_name,
+                 const std::string& r_yd_file_name,
+                 real_type          gamma)
       {
         constexpr double tol = 1e-2;
 
