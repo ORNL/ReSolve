@@ -2,6 +2,8 @@
 .DS_Store
 build/*
 _build
+LastTest.log
+CTestCostData.txt
 install/*
 *~
 *.swp
