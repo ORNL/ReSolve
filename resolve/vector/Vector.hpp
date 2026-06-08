@@ -53,6 +53,7 @@ namespace ReSolve
       int setDataUpdated(index_type j, memory::MemorySpace memspace);
       int setData(real_type* data, memory::MemorySpace memspace);
       int allocate(memory::MemorySpace memspace);
+      int allocateAll(memory::MemorySpace memspace);
       int setToZero(memory::MemorySpace memspace);
       int setToZero(index_type i, memory::MemorySpace memspace);
       int setToConst(real_type C, memory::MemorySpace memspace);

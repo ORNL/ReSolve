@@ -152,10 +152,7 @@ public:
     r_      = r;
     x_      = x;
     res_    = new ReSolve::vector::Vector(A->getNumRows());
-    res_->allocate(ReSolve::memory::HOST);
-    if (memspace_ == ReSolve::memory::DEVICE) {
-      res_->allocate(ReSolve::memory::DEVICE);
-    }
+    res_->allocateAll(memspace_);
     x_true_ = new ReSolve::vector::Vector(A->getNumRows());
     setSolutionVector();
     computeNorms();

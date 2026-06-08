@@ -122,17 +122,10 @@ namespace ReSolve
         vector::Vector* s   = new vector::Vector(m_d);
         vector::Vector* y   = new vector::Vector(m_c);
         vector::Vector* y_d = new vector::Vector(m_d);
-        x->allocate(memory::HOST);
-        s->allocate(memory::HOST);
-        y->allocate(memory::HOST);
-        y_d->allocate(memory::HOST);
-        if (memspace_ == memory::DEVICE)
-        {
-          x->allocate(memory::DEVICE);
-          s->allocate(memory::DEVICE);
-          y->allocate(memory::DEVICE);
-          y_d->allocate(memory::DEVICE);
-        }
+        x->allocateAll(memspace_);
+        s->allocateAll(memspace_);
+        y->allocateAll(memspace_);
+        y_d->allocateAll(memspace_);
 
         hykkt::HyKKTSolver hykktSolver(n_x, m_d, m_c, memspace_);
         hykktSolver.setMatrixBlocks(H, D_s, J, J_d);

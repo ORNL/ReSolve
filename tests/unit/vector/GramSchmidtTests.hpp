@@ -79,12 +79,11 @@ namespace ReSolve
         real_type* H = new real_type[restart * (restart + 1)];
 
         // Allocate Krylov subspace
-        V.allocate(memspace_);
+        V.allocateAll(memspace_);;
         V.setDataUpdated(memspace_);
         if (memspace_ == memory::DEVICE)
         {
-          V.allocate(memory::HOST);
-        V.setDataUpdated(memory::HOST);
+          V.setDataUpdated(memory::HOST);
         }
 
         // Create and allocate Gram-Schmidt orthogonalization

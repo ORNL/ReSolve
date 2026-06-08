@@ -55,12 +55,11 @@ namespace ReSolve
         index_type   col_data[3] = {0, 1, 2};
         real_type    val_data[3] = {4.0, 5.0, 6.0};
 
-        A->allocateMatrixData(memory::HOST);
+        A->allocateAll(memspace_);
         A->copyFromExternal(row_data, col_data, val_data, memory::HOST, memory::HOST);
 
         if (memspace_ == memory::DEVICE)
         {
-          A->allocateMatrixData(memory::DEVICE);
           A->syncData(memory::DEVICE);
         }
 
@@ -73,13 +72,12 @@ namespace ReSolve
         rhs->copyFromExternal(rhs_data, memory::HOST, memspace_);
 
         vector::Vector* x = new vector::Vector(n);
-        x->allocate(memspace_);
+        x->allocateAll(memspace_);
 
         precond.apply(rhs, x);
 
         if (memspace_ == memory::DEVICE)
         {
-          x->allocate(memory::HOST);
           x->syncData(memory::HOST);
         }
 

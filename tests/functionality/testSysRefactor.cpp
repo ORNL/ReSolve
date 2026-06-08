@@ -181,11 +181,7 @@ static int runTest(int argc, char* argv[], std::string backend)
 
   // Create and allocate solution vector
   vector_type vec_x(A->getNumRows());
-  if (memspace != memory::HOST)
-  {
-    vec_x.allocate(ReSolve::memory::HOST); // for KLU
-  }
-  vec_x.allocate(memspace);
+  vec_x.allocateAll(memspace);
 
   // Add system matrix to the solver
   status = solver.setMatrix(A);

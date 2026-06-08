@@ -113,21 +113,16 @@ namespace ReSolve
         index_type col_data[3] = {0, 1, 2};
         real_type  val_data[3] = {2.0, 3.0, 4.0};
 
-        B->allocateMatrixData(memory::HOST);
+        B->allocateAll(memspace_);
         B->copyFromExternal(row_data, col_data, val_data, memory::HOST, memory::HOST);
 
         if (memspace_ == memory::DEVICE)
         {
-          B->allocateMatrixData(memspace_);
           B->syncData(memspace_);
         }
 
         vector::Vector x(n);
-        x.allocate(memory::HOST);
-        if (memspace_ == memory::DEVICE)
-        {
-          x.allocate(memory::DEVICE);
-        }
+        x.allocateAll(memspace_);
 
         for (index_type i = 0; i < n; ++i)
         {
@@ -142,11 +137,7 @@ namespace ReSolve
         }
 
         vector::Vector y(n);
-        y.allocate(memory::HOST);
-        if (memspace_ == memory::DEVICE)
-        {
-          y.allocate(memory::DEVICE);
-        }
+        y.allocateAll(memspace_);
         y.setToZero(memspace_);
 
         PreconditionerUserMatrix precond(&handler_);

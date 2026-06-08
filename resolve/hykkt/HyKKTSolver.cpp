@@ -249,17 +249,13 @@ namespace ReSolve
       r_x_til_->allocate(memspace_);
       r_x_hat_->allocate(memspace_);
       z_->allocate(memspace_);
-      J_tr_->allocateMatrixData(memspace_);
+      r_y_copy_->allocate(memspace_);
+      J_tr_->allocateAll(memspace_);
       J_d_tr_->allocateMatrixData(memspace_);
-      J_tr_perm_->allocateMatrixData(memory::HOST);
-      J_perm_->allocateMatrixData(memory::HOST);
+      J_perm_->allocateAll(memspace_);
+      J_tr_perm_->allocateAll(memspace_);
       J_d_scaled_->allocateWithExternalSparsityPattern(J_d_->getRowData(memspace_), J_d_->getColData(memspace_), J_d_->getNnz(), memspace_);
       // H_tilde_ does not need to be allocated because loadResultMatrix() does it later
-
-      if (memspace_ == memory::DEVICE)
-      {
-        J_tr_->allocateMatrixData(memory::HOST);
-      }
     }
     else if (memspace_ == memory::DEVICE)
     {
@@ -411,17 +407,13 @@ namespace ReSolve
   void hykkt::HyKKTSolver::setupPermutation()
   {
     H_gamma_perm_ = new matrix::Csr(n_x_, n_x_, H_gamma_->getNnz()); // Nnz not known at setupParameters(), so we have to create it here
-    H_gamma_perm_->allocateMatrixData(memory::HOST);
+    H_gamma_perm_->allocateAll(memspace_);
 
     if (memspace_ == memory::DEVICE)
     {
       H_gamma_->allocateMatrixData(memory::HOST);
       H_gamma_->syncData(memory::HOST);
       J_tr_->syncData(memory::HOST);
-
-      H_gamma_perm_->allocateMatrixData(memory::DEVICE);
-      J_perm_->allocateMatrixData(memory::DEVICE);
-      J_tr_perm_->allocateMatrixData(memory::DEVICE);
     }
 
     // These permutation steps are device-only

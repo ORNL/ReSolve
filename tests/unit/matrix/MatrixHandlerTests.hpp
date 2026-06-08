@@ -101,7 +101,7 @@ namespace ReSolve
 
         matrix::Csc* A_csc = createRectangularCscMatrix(n, m);
         matrix::Csr* A_csr = new matrix::Csr(m, n, A_csc->getNnz());
-        A_csr->allocateMatrixData(memspace_);
+        A_csr->allocateAll(memspace_);
 
         handler_.csc2csr(A_csc, A_csr, memspace_);
 
@@ -112,7 +112,6 @@ namespace ReSolve
         // Move data to the host for the result verification
         if (memspace_ == memory::DEVICE)
         {
-          A_csr->allocateMatrixData(memory::HOST);
           A_csr->syncData(memory::HOST);
         }
 
@@ -133,12 +132,8 @@ namespace ReSolve
         testname += matrix_size.str();
 
         matrix::Csr* At = new matrix::Csr(m, n, 2 * std::min(n, m));
-        At->allocateMatrixData(memory::HOST);
+        At->allocateAll(memspace_);
         matrix::Csr* A  = nullptr; // Declare A outside
-        if (memspace_ == memory::DEVICE)
-        {
-          At->allocateMatrixData(memory::DEVICE);
-        }
 
         for (real_type val = 0.0; val <= 1.0; val += 1.0)
         { // Use a step to prevent infinite loop

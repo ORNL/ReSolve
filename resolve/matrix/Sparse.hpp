@@ -74,6 +74,7 @@ namespace ReSolve
                                    memory::MemorySpace memspaceOut) = 0;
 
       virtual int allocateMatrixData(memory::MemorySpace memspace) = 0;
+      virtual int allocateAll(memory::MemorySpace memspace);
       virtual int allocateWithExternalSparsityPattern(index_type*         src_row_data,
                                                       index_type*         src_col_data,
                                                       index_type          new_nnz,
