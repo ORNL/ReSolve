@@ -124,7 +124,10 @@ namespace ReSolve
 
         vector::Vector x(n);
         x.allocate(memory::HOST);
-        x.allocate(memspace_);
+        if (memspace_ == memory::DEVICE)
+        {
+          x.allocate(memory::DEVICE);
+        }
 
         for (index_type i = 0; i < n; ++i)
         {
@@ -140,7 +143,10 @@ namespace ReSolve
 
         vector::Vector y(n);
         y.allocate(memory::HOST);
-        y.allocate(memspace_);
+        if (memspace_ == memory::DEVICE)
+        {
+          y.allocate(memory::DEVICE);
+        }
         y.setToZero(memspace_);
 
         PreconditionerUserMatrix precond(&handler_);

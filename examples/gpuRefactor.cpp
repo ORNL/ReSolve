@@ -249,7 +249,9 @@ int gpuRefactor(int argc, char* argv[])
     rhs_file.close();
 
     // Copy data to device
+    A->allocateMatrixData(memory::DEVICE);
     A->syncData(memory::DEVICE);
+    vec_rhs->allocate(memory::DEVICE);
     vec_rhs->syncData(memory::DEVICE);
     RESOLVE_RANGE_POP("File input");
 

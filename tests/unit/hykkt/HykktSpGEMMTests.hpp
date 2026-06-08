@@ -62,6 +62,7 @@ namespace ReSolve
 
         if (memspace_ == memory::DEVICE)
         {
+          E->allocateMatrixData(memory::HOST);
           E->syncData(memory::HOST);
         }
 
@@ -182,6 +183,7 @@ namespace ReSolve
 
         if (memspace_ == memory::DEVICE)
         {
+          E->allocateMatrixData(memory::HOST);
           E->syncData(memory::HOST);
         }
 
@@ -280,8 +282,10 @@ namespace ReSolve
 
         if (memspace_ == memory::DEVICE)
         {
+          E->allocateMatrixData(memory::HOST);
+          A->allocateMatrixData(memory::HOST);
+          D->allocateMatrixData(memory::HOST);
           E->syncData(memory::HOST);
-
           A->syncData(memory::HOST);
           D->syncData(memory::HOST);
         }

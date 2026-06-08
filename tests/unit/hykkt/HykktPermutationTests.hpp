@@ -52,6 +52,12 @@ namespace ReSolve
         hes.allocateMatrixData(memory::HOST);
         jac.allocateMatrixData(memory::HOST);
         jac_tr.allocateMatrixData(memory::HOST);
+        if (memspace_ == memory::DEVICE)
+        {
+          hes.allocateMatrixData(memory::DEVICE);
+          jac.allocateMatrixData(memory::DEVICE);
+          jac_tr.allocateMatrixData(memory::DEVICE);
+        }
         getTestData(&hes, &jac, &jac_tr);
 
         // correct results

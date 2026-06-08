@@ -89,6 +89,7 @@ int main(int argc, char* argv[])
     return -1;
   }
   ReSolve::matrix::Csr* A = ReSolve::io::createCsrFromFile(mat1);
+  A->allocateMatrixData(ReSolve::memory::DEVICE);
   A->syncData(ReSolve::memory::DEVICE);
   mat1.close();
 

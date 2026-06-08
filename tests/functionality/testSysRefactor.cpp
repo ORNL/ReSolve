@@ -157,9 +157,10 @@ static int runTest(int argc, char* argv[], std::string backend)
     return -1;
   }
   ReSolve::matrix::Csr* A = ReSolve::io::createCsrFromFile(mat1, true);
-  if (memspace != memory::HOST)
+  if (memspace == memory::DEVICE)
   {
-    A->syncData(memspace);
+    A->allocateMatrixData(memory::DEVICE);
+    A->syncData(memory::DEVICE);
   }
   mat1.close();
 
@@ -266,6 +267,10 @@ static int runTest(int argc, char* argv[], std::string backend)
   // Compute error norms for the system
   if (memspace == ReSolve::memory::DEVICE)
   {
+    if (!vec_rhs.isUpdated(ReSolve::memory::HOST))
+    {
+      vec_rhs.syncData(ReSolve::memory::HOST);
+    }
     vec_x.syncData(ReSolve::memory::HOST);
   }
   helper.resetSystem(A, &vec_rhs, &vec_x);

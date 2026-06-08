@@ -79,6 +79,7 @@ namespace ReSolve
 
         if (memspace_ == memory::DEVICE)
         {
+          x->allocate(memory::HOST);
           x->syncData(memory::HOST);
         }
 

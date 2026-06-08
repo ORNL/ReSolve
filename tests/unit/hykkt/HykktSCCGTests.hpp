@@ -63,6 +63,8 @@ namespace ReSolve
         matrix::Csr* J = io::createCsrFromFile(J_file, false);
         if (memspace_ == memory::DEVICE)
         {
+          H->allocateMatrixData(memory::DEVICE);
+          J->allocateMatrixData(memory::DEVICE);
           H->syncData(memory::DEVICE);
           J->syncData(memory::DEVICE);
         }
@@ -79,15 +81,24 @@ namespace ReSolve
         sccg.setSolverTolerance(sccg_tol);
 
         matrix::Csr* J_tr = new matrix::Csr(m, n, nnz);
-        J_tr->allocateMatrixData(memspace_);
+        J_tr->allocateMatrixData(memory::HOST);
+        if (memspace_ == memory::DEVICE)
+        {
+          J_tr->allocateMatrixData(memory::DEVICE);
+        }
         matrix_handler_.transpose(J, J_tr, memspace_);
 
         vector::Vector* x_0 = new vector::Vector(n);
-        x_0->allocate(memspace_);
+        x_0->allocate(memory::HOST);
+        if (memspace_ == memory::DEVICE)
+        {
+          x_0->allocate(memory::DEVICE);
+        }
 
         vector::Vector* b = io::createVectorFromFile(b_file);
         if (memspace_ == memory::DEVICE)
         {
+          b->allocate(memory::DEVICE);
           b->syncData(memory::DEVICE);
         }
 
