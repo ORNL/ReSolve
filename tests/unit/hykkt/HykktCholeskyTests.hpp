@@ -53,11 +53,10 @@ namespace ReSolve
         index_type   A_row_data[4] = {0, 3, 6, 9};
         index_type   A_col_data[9] = {0, 1, 2, 0, 1, 2, 0, 1, 2};
         real_type    A_values[9]   = {4.0, 12.0, -16.0, 12.0, 37.0, -43.0, -16.0, -43.0, 98.0};
-        A->allocateMatrixData(memory::HOST);
+        A->allocateAll(memspace_);
         A->copyFromExternal(A_row_data, A_col_data, A_values, memory::HOST, memory::HOST);
         if (memspace_ == memory::DEVICE)
         {
-          A->allocateMatrixData(memory::DEVICE);
           A->syncData(memory::DEVICE);
         }
 
@@ -67,11 +66,7 @@ namespace ReSolve
         solver.setPivotTolerance(1e-12);
         solver.numericalFactorization();
         vector::Vector* x = new vector::Vector(3);
-        x->allocate(memory::HOST);
-        if (memspace_ == memory::DEVICE)
-        {
-          x->allocate(memory::DEVICE);
-        }
+        x->allocateAll(memspace_);
         x->setDataUpdated(memory::DEVICE);
         vector::Vector* b         = new vector::Vector(3);
         real_type       b_data[3] = {-6.0, -17.25, 30.0};
@@ -118,7 +113,7 @@ namespace ReSolve
         matrix::Csr* A = new matrix::Csr((index_type) L_times_L_tr->nrow,
                                          (index_type) L_times_L_tr->ncol,
                                          (index_type) L_times_L_tr->nzmax);
-        A->allocateMatrixData(memspace_);
+        A->allocateAll(memspace_);
         A->copyFromExternal(
             static_cast<int*>(L_times_L_tr->p),
             static_cast<int*>(L_times_L_tr->i),
@@ -128,7 +123,6 @@ namespace ReSolve
 
         if (memspace_ == memory::DEVICE)
         {
-          A->allocateMatrixData(memory::HOST);
           A->syncData(memory::HOST);
         }
 
@@ -195,13 +189,12 @@ namespace ReSolve
         cholmod_sparse* A_chol = cholmod_ssmult(L, L_tr, 0, 1, 0, &Common);
 
         matrix::Csr* A = new matrix::Csr((index_type) A_chol->nrow, (index_type) A_chol->ncol, (index_type) A_chol->nzmax);
-        A->allocateMatrixData(memspace_);
+        A->allocateAll(memspace_);
         A->copyFromExternal(
             static_cast<int*>(A_chol->p), static_cast<int*>(A_chol->i), static_cast<double*>(A_chol->x), memory::HOST, memspace_);
 
         if (memspace_ == memory::DEVICE)
         {
-          A->allocateMatrixData(memory::HOST);
           A->syncData(memory::HOST);
         }
 
@@ -326,7 +319,7 @@ namespace ReSolve
       vector::Vector* randomVector(index_type n)
       {
         vector::Vector* v = new vector::Vector(n);
-        v->allocate(memory::HOST);
+        v->allocateAll(memspace_);
         std::uniform_real_distribution<double> distribution(0.0, 1.0);
         for (index_type i = 0; i < n; ++i)
         {
@@ -335,7 +328,6 @@ namespace ReSolve
         v->setDataUpdated(memory::HOST);
         if (memspace_ == memory::DEVICE)
         {
-          v->allocate(memory::DEVICE);
           v->syncData(memory::DEVICE);
         }
         return v;

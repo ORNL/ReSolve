@@ -250,11 +250,7 @@ namespace ReSolve
         // diag[i] = i, vec[i] = 3.0
         // expected result vec[i] = i * 3.0
         diag.allocate(memspace_);
-        vec.allocate(memory::HOST);
-        if (memspace_ == memory::DEVICE)
-        {
-          vec.allocate(memory::DEVICE);
-        }
+        vec.allocateAll(memspace_);
 
         vec.setToConst(3.0, memspace_);
 
@@ -337,8 +333,8 @@ namespace ReSolve
         vector::Vector z(N);
 
         x.allocate(memspace_);
-        y.allocate(memspace_);
-        z.allocate(memspace_);
+        y.allocateAll(memspace_);
+        z.allocateAll(memspace_);
 
         auto x_data = std::unique_ptr<real_type[]>(new real_type[N]);
         auto y_data = std::unique_ptr<real_type[]>(new real_type[N]);
@@ -363,8 +359,6 @@ namespace ReSolve
 
         if (memspace_ == memory::DEVICE)
         {
-          y.allocate(memory::HOST);
-          z.allocate(memory::HOST);
           y.syncData(memory::HOST);
           z.syncData(memory::HOST);
         }
@@ -398,8 +392,8 @@ namespace ReSolve
         vector::Vector x(N);
         vector::Vector y(N);
 
-        x.allocate(memspace_);
-        y.allocate(memspace_);
+        x.allocateAll(memspace_);
+        y.allocateAll(memspace_);
 
         auto x_data = std::unique_ptr<real_type[]>(new real_type[N]);
         for (size_t i = 0; i < static_cast<size_t>(N); ++i)
@@ -420,8 +414,6 @@ namespace ReSolve
 
         if (memspace_ == memory::DEVICE)
         {
-          x.allocate(memory::HOST);
-          y.allocate(memory::HOST);
           x.syncData(memory::HOST);
           y.syncData(memory::HOST);
         }

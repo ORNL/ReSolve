@@ -376,11 +376,11 @@ namespace ReSolve
       using memory::HOST;
 
       if (k_ <= j)
-        {
+      {
         out::error() << "Trying to get data for vector " << j << " in multivector"
                      << " but there are only " << k_ << " vectors!\n";
-          return nullptr;
-        }
+        return nullptr;
+      }
 
       switch (memspace)
       {
@@ -667,6 +667,27 @@ namespace ReSolve
         break;
       }
       return 0;
+    }
+
+    /**
+     * @brief If memspace is HOST, allocate on HOST. If it is DEVICE, alloate
+     * on both HOST and DEVICE.
+     *
+     * @param[in] memspace   - Memory space of the data to be allocated
+     *
+     */
+    int Vector::allocateAll(memory::MemorySpace memspace)
+    {
+      using namespace ReSolve::memory;
+      switch (memspace)
+      {
+      case HOST:
+        return allocate(memory::HOST);
+      case DEVICE:
+        return allocate(memory::HOST) | allocate(memory::DEVICE);
+      default:
+        return -1;
+      }
     }
 
     /**
