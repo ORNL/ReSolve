@@ -134,6 +134,24 @@ namespace ReSolve
     }
 
     /**
+     * @brief Get whether the data of a vector is allocated in the given memory space.
+     * 
+     * @param[in] memspace - Memory space (HOST or DEVICE)
+     * 
+     * @return Whether data in memspace is allocated.
+     */
+    bool Vector::isAllocated(memory::MemorySpace memspace) const
+    {
+      switch (memspace)
+      {
+      case ReSolve::memory::HOST:
+        return h_data_ != nullptr;
+      case ReSolve::memory::DEVICE:
+        return d_data_ != nullptr;
+      }
+    }
+
+    /**
      * @brief Set the vector data pointer (HOST or DEVICE) to an external data.
      *
      * @param[in] data     - Pointer to data
