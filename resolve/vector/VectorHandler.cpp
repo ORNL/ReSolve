@@ -419,8 +419,8 @@ namespace ReSolve
   {
     assert(x->getSize() == y->getSize() && "Vectors must be the same size.");
     assert(x->getSize() == out->getSize() && "Vectors must be the same size.");
-    assert(x->getData(memspace) != nullptr && "Vector x data is null!");
-    assert(y->getData(memspace) != nullptr && "Vector y data is null!");
+    assert(x->isAllocated(memspace) && "Vector x data is null!");
+    assert(y->isAllocated(memspace) && "Vector y data is null!");
     assert(out->getData(memspace) != nullptr && "Vector out data is null!");
     using namespace ReSolve::memory;
     switch (memspace)
