@@ -57,56 +57,6 @@ namespace ReSolve
     delete sccg_;
   }
 
-  /*
-   * @brief loads KKT system into solver. Note: matrices and vectors,
-   * including the LHS (output) vectors, must be allocated by the
-   * caller beforehand and destroyed after.
-   *
-   * @param file names for different components of KKT system
-   *        with same nonzero structure
-   *
-   * @post H_, D_s_, J_, J_d_, r_x_, r_s_, r_y_,
-   *       r_yd_ have new values for the system in a following
-   *       solver iteration with same nonzero structure as
-   *       previous iterations
-   */
-  void hykkt::HyKKTSolver::readMatrixFiles(
-      std::istream& H_file,
-      std::istream& D_s_file,
-      std::istream& J_file,
-      std::istream& J_d_file,
-      std::istream& r_x_file,
-      std::istream& rs_file,
-      std::istream& r_y_file,
-      std::istream& r_yd_file)
-  {
-    io::updateMatrixFromFile(H_file, H_);
-    io::updateMatrixFromFile(D_s_file, D_s_);
-    io::updateMatrixFromFile(J_file, J_);
-    io::updateMatrixFromFile(J_d_file, J_d_); // J_d_tr_ will be populated later
-
-    io::updateVectorFromFile(r_x_file, r_x_);
-    io::updateVectorFromFile(rs_file, r_s_);
-    io::updateVectorFromFile(r_y_file, r_y_);
-    io::updateVectorFromFile(r_yd_file, r_yd_);
-
-    if (memspace_ == memory::DEVICE)
-    {
-      H_->syncData(memory::DEVICE);
-      D_s_->syncData(memory::DEVICE);
-      J_->syncData(memory::DEVICE);
-      J_d_->syncData(memory::DEVICE);
-      r_x_->syncData(memory::DEVICE);
-      r_s_->syncData(memory::DEVICE);
-      r_y_->syncData(memory::DEVICE);
-      r_yd_->syncData(memory::DEVICE);
-    }
-
-    bool J_d_flag = J_d_->getNnz() > 0;
-    status_       = (J_d_flag_ == J_d_flag); // if new nonzero structure then broken
-    J_d_flag_     = J_d_flag;
-  }
-
   /**
    * @brief Sets blocks of the KKT matrix in CSR format to user provided
    * values. It will only set pointers to user provided data; it is user's
