@@ -346,39 +346,63 @@ namespace ReSolve
     }
 
     /**
-     * @brief get a pointer to HOST or DEVICE vector data.
+     * @brief get a non-const (writable) pointer to HOST or DEVICE vector data.
      *
      * @param[in] memspace  - Memory space of the pointer (HOST or DEVICE)
      *
      * @return pointer to the vector data (HOST or DEVICE). In case of multivectors,
      * vectors are stored column-wise.
      */
-    real_type* Vector::getData(memory::MemorySpace memspace) const
+    real_type* Vector::getData(memory::MemorySpace memspace)
+    {
+      return getData(0, memspace);
+    }
+
+    /**
+     * @brief get a non-const (writable) pointer to HOST or DEVICE data of a particular
+     * vector in a multivector.
+     *
+     * @param[in] j         - Index of a vector in multivector
+     * @param[in] memspace  - Memory space of the pointer (HOST or DEVICE)
+     *
+     * @return pointer to the _i_th vector data (HOST or DEVICE) within a multivector.
+     *
+     * @pre `j` < `k_` i.e, `j` is smaller than the total number of vectors in multivector.
+     *
+     */
+    real_type* Vector::getData(index_type j, memory::MemorySpace memspace)
     {
       using memory::DEVICE;
       using memory::HOST;
 
+      if (k_ <= j)
+        {
+        out::error() << "Trying to get data for vector " << j << " in multivector"
+                     << " but there are only " << k_ << " vectors!\n";
+          return nullptr;
+        }
+
       switch (memspace)
       {
       case HOST:
-        if (cpu_updated_[0] == false)
-        {
-          out::error() << "Trying to get data on the host, but host data is out of date!\n"
-                       << "Use syncData function to sync host data with the device data!\n";
-          return nullptr;
-        }
-        return h_data_;
+        return &h_data_[j * n_size_];
       case DEVICE:
-        if (gpu_updated_[0] == false)
-        {
-          out::error() << "Trying to get data on the device, but device data is out of date!\n"
-                       << "Use syncData function to sync device data with the host data!\n";
-          return nullptr;
-        }
-        return d_data_;
+        return &d_data_[j * n_size_];
       default:
         return nullptr;
       }
+    }
+
+    /**
+     * @brief get a const pointer to HOST or DEVICE vector data.
+     *
+     * @param[in] memspace  - Memory space of the pointer (HOST or DEVICE)
+     *
+     * @return pointer to the vector data (HOST or DEVICE).
+     */
+    const real_type* Vector::getData(memory::MemorySpace memspace) const
+    {
+      return getData(0, memspace);
     }
 
     /**
@@ -393,7 +417,7 @@ namespace ReSolve
      * @pre `j` < `k_` i.e, `j` is smaller than the total number of vectors in multivector.
      *
      */
-    real_type* Vector::getData(index_type j, memory::MemorySpace memspace) const
+    const real_type* Vector::getData(index_type j, memory::MemorySpace memspace) const
     {
       using memory::DEVICE;
       using memory::HOST;
