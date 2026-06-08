@@ -209,6 +209,7 @@ int main(int argc, char* argv[])
   real_type normRmatrix1CPU = sqrt(vector_handler.dot(vec_r, vec_r, ReSolve::memory::HOST));
 
   // Verify relative residual norm computation in SystemSolver
+  vec_x->syncData(ReSolve::memory::DEVICE);
   real_type rel_residual_norm = solver.getResidualNorm(vec_rhs, vec_x);
   error                       = std::abs(normB1 * rel_residual_norm - normRmatrix1) / normRmatrix1;
   if (error > 10.0 * std::numeric_limits<real_type>::epsilon())

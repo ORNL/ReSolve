@@ -80,9 +80,11 @@ namespace ReSolve
 
         // Allocate Krylov subspace
         V.allocate(memspace_);
+        V.setDataUpdated(memspace_);
         if (memspace_ == memory::DEVICE)
         {
           V.allocate(memory::HOST);
+        V.setDataUpdated(memory::HOST);
         }
 
         // Create and allocate Gram-Schmidt orthogonalization
@@ -128,6 +130,10 @@ namespace ReSolve
         handler_.scal(nrm, &V, memspace_);
 
         // Orthogonalize system and verify result
+        if (memspace_ == memory::DEVICE)
+        {
+          V.syncData(memory::HOST);
+        }
         GS.orthogonalize(N, &V, H, 0);
         GS.orthogonalize(N, &V, H, 1);
         status *= verifyAnswer(V, restart + 1);

@@ -143,6 +143,10 @@ int runTest(int argc, char* argv[])
   error_sum += status;
 
   // Compute error norms for the system
+  if (memspace == ReSolve::memory::DEVICE)
+  {
+    vec_x.syncData(ReSolve::memory::HOST);
+  }
   helper.setSystem(A, vec_rhs, &vec_x);
 
   // Print result summary and check solution

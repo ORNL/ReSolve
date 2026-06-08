@@ -283,6 +283,10 @@ int test(int argc, char* argv[])
   }
 
   // Check results and print summary
+  if (memspace == ReSolve::memory::DEVICE)
+  {
+    vec_x.syncData(ReSolve::memory::HOST);
+  }
   helper.setSystem(A, vec_rhs, &vec_x);
 
   std::cout << std::defaultfloat

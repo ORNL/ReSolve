@@ -220,8 +220,6 @@ namespace ReSolve
     /**
      * @brief Copy vector data from input array.
      *
-     * This function allocates (if necessary) and copies the data.
-     *
      * @param[in] data        - Data that is to be copied
      * @param[in] memspaceIn  - Memory space of the incoming data (HOST or DEVICE)
      * @param[in] memspaceOut - Memory space the data will be copied to (HOST or DEVICE)
@@ -292,45 +290,8 @@ namespace ReSolve
      *
      * @return pointer to the vector data (HOST or DEVICE). In case of multivectors,
      * vectors are stored column-wise.
-     *
-     * @note This function gives you access to the pointer, not to a copy.
-     * If you change the values using the pointer, the vector values will
-     * change too. Make sure to use setDataUpdated function to set the update
-     * flags correctly after changing the values.
      */
-    real_type* Vector::getData(memory::MemorySpace memspace)
-    {
-      using memory::DEVICE;
-      using memory::HOST;
-
-      switch (memspace)
-      {
-      case HOST:
-        if ((cpu_updated_[0] == false) && (gpu_updated_[0] == true))
-        {
-          syncData(memspace);
-        }
-        return h_data_;
-      case DEVICE:
-        if ((gpu_updated_[0] == false) && (cpu_updated_[0] == true))
-        {
-          syncData(memspace);
-        }
-        return d_data_;
-      default:
-        return nullptr;
-      }
-    }
-
-    /**
-     * @brief get a pointer to HOST or DEVICE vector data.
-     *
-     * @param[in] memspace  - Memory space of the pointer (HOST or DEVICE)
-     *
-     * @return pointer to the vector data (HOST or DEVICE). In case of multivectors,
-     * vectors are stored column-wise.
-     */
-    const real_type* Vector::getData(memory::MemorySpace memspace) const
+    real_type* Vector::getData(memory::MemorySpace memspace) const
     {
       using memory::DEVICE;
       using memory::HOST;
@@ -359,52 +320,6 @@ namespace ReSolve
     }
 
     /**
-     * @brief get a pointer to HOST or DEVICE data of a particular vector in a multivector.
-     *
-     * @param[in] j         - Index of a vector in multivector
-     * @param[in] memspace  - Memory space of the pointer (HOST or DEVICE)
-     *
-     * @return pointer to the _i_th vector data (HOST or DEVICE) within a multivector.
-     *
-     * @pre `j` < `k_` i.e, `j` is smaller than the total number of vectors in multivector.
-     *
-     * @note This function gives you access to the pointer, not to a copy.
-     * If you change the values using the pointer, the vector values will
-     * change too. Make sure to use setDataUpdated function to set the update
-     * flags correctly after changing the values.
-     */
-    real_type* Vector::getData(index_type j, memory::MemorySpace memspace)
-    {
-      using memory::DEVICE;
-      using memory::HOST;
-
-      if (k_ <= j)
-      {
-        out::error() << "Trying to get data for vector " << j << " in multivector"
-                     << " but there are only " << k_ << " vectors!\n";
-        return nullptr;
-      }
-
-      switch (memspace)
-      {
-      case HOST:
-        if ((cpu_updated_[j] == false) && (gpu_updated_[j] == true))
-        {
-          syncData(j, memspace);
-        }
-        return &h_data_[j * n_size_];
-      case DEVICE:
-        if ((gpu_updated_[j] == false) && (cpu_updated_[j] == true))
-        {
-          syncData(j, memspace);
-        }
-        return &d_data_[j * n_size_];
-      default:
-        return nullptr;
-      }
-    }
-
-    /**
      * @brief get a const pointer to HOST or DEVICE data of a particular
      * vector in a multivector.
      *
@@ -416,7 +331,7 @@ namespace ReSolve
      * @pre `j` < `k_` i.e, `j` is smaller than the total number of vectors in multivector.
      *
      */
-    const real_type* Vector::getData(index_type j, memory::MemorySpace memspace) const
+    real_type* Vector::getData(index_type j, memory::MemorySpace memspace) const
     {
       using memory::DEVICE;
       using memory::HOST;
@@ -628,26 +543,34 @@ namespace ReSolve
         delete[] h_data_;
         h_data_        = new real_type[n_capacity_ * k_];
         owns_cpu_data_ = true;
-        if (gpu_updated_[0])
+        // Set updated flags for each vector in multivector
+        for (index_type j=0; j < k_; j++)
         {
-          cpu_updated_[0] = false;
-        }
-        else
-        {
-          cpu_updated_[0] = true;
+          if (gpu_updated_[j])
+          {
+            cpu_updated_[j] = false;
+          }
+          else
+          {
+            cpu_updated_[j] = true;
+          }
         }
         break;
       case DEVICE:
         mem_.deleteOnDevice(d_data_);
         mem_.allocateArrayOnDevice(&d_data_, n_capacity_ * k_);
         owns_gpu_data_ = true;
-        if (cpu_updated_[0])
+        // Set updated flags for each vector in multivector
+        for (index_type j=0; j < k_; j++)
         {
-          gpu_updated_[0] = false;
-        }
-        else
-        {
-          gpu_updated_[0] = true;
+          if (cpu_updated_[j])
+          {
+            gpu_updated_[j] = false;
+          }
+          else
+          {
+            gpu_updated_[j] = true;
+          }
         }
         break;
       }

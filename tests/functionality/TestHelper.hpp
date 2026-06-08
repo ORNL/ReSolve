@@ -134,7 +134,8 @@ public:
 
   /**
    * @brief Set the new linear system together with its computed solution
-   * and compute solution error and residual norms.
+   * and compute solution error and residual norms. All input matrix and
+   * vector data arrays must be updated on the current memory space.
    *
    * This will set the new system A*x = r and compute related error norms.
    *
@@ -161,7 +162,8 @@ public:
    * @brief Set the new linear system together with its computed solution
    * and compute solution error and residual norms.
    *
-   * This is to be used after values in A and r are updated.
+   * This is to be used after values in A and r are updated and synced on
+   * the host.
    *
    * @todo This method probably does not need any input parameters.
    *
