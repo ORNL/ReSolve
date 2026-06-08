@@ -201,6 +201,11 @@ static int runTest(int argc, char* argv[], std::string backend)
   error_sum += status;
 
   // Compute error norms for the system
+  if (memspace == ReSolve::memory::DEVICE)
+  {
+    vec_x.syncData(ReSolve::memory::DEVICE);
+    vec_rhs.syncData(ReSolve::memory::DEVICE);
+  }
   helper.setSystem(A, &vec_rhs, &vec_x);
 
   // Print result summary and check solution
@@ -259,6 +264,10 @@ static int runTest(int argc, char* argv[], std::string backend)
   error_sum += status;
 
   // Compute error norms for the system
+  if (memspace == ReSolve::memory::DEVICE)
+  {
+    vec_x.syncData(ReSolve::memory::HOST);
+  }
   helper.resetSystem(A, &vec_rhs, &vec_x);
 
   // Print result summary and check solution

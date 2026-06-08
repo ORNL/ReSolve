@@ -191,6 +191,10 @@ namespace ReSolve
       // copy H_col to aux, we will need it later
       vec_Hcolumn_->setDataUpdated(memspace_);
       vec_Hcolumn_->resize(i + 1);
+      if (memspace_ == memory::DEVICE)
+      {
+        vec_Hcolumn_->syncData(memory::HOST);
+      }
       vec_Hcolumn_->copyToExternal(h_aux_, 0, memory::HOST, memory::HOST);
 
       // Hcol = V(:,1:i)^T*V(:,i+1);
@@ -201,6 +205,10 @@ namespace ReSolve
 
       // copy H_col to H
       vec_Hcolumn_->setDataUpdated(memspace_);
+      if (memspace_ == memory::DEVICE)
+      {
+        vec_Hcolumn_->syncData(memory::HOST);
+      }
       vec_Hcolumn_->copyToExternal(&H[idxmap(i, 0, num_vecs_ + 1)], 0, memory::HOST, memory::HOST);
 
       // add both pieces together (unstable otherwise, careful here!!)
@@ -379,6 +387,10 @@ namespace ReSolve
 
       // copy H_col to H
       vec_Hcolumn_->setDataUpdated(memspace_);
+      if (memspace_ == memory::DEVICE)
+      {
+        vec_Hcolumn_->syncData(memory::HOST);
+      }
       vec_Hcolumn_->resize(i + 1);
       vec_Hcolumn_->copyToExternal(&H[idxmap(i, 0, num_vecs_ + 1)], 0, memory::HOST, memory::HOST);
 

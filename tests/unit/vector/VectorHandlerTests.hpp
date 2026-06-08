@@ -360,6 +360,7 @@ namespace ReSolve
         if (memspace_ == memory::DEVICE)
         {
           y.syncData(memory::HOST);
+          z.syncData(memory::HOST);
         }
 
         for (index_type i = 0; i < N; ++i)

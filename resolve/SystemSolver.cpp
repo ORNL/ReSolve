@@ -862,6 +862,7 @@ namespace ReSolve
       else
       {
         resVector_->copyFromExternal(rhs, memory::HOST, memory::DEVICE);
+        resVector_->syncData(memory::HOST);
         norm_b = std::sqrt(vectorHandler_->dot(resVector_, resVector_, memory::HOST));
         // ms = memory::HOST;
       }

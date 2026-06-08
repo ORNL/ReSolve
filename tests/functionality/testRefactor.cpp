@@ -182,6 +182,7 @@ int runTest(int argc, char* argv[], std::string& solver_name)
   error_sum += status;
 
   // Solve system (on device where available)
+  vec_x.syncData(ReSolve::memory::DEVICE);
   status = Rf.solve(&vec_rhs, &vec_x);
   error_sum += status;
 
@@ -202,6 +203,7 @@ int runTest(int argc, char* argv[], std::string& solver_name)
   }
 
   // Compute error norms for the system
+  vec_x.syncData(ReSolve::memory::HOST);
   helper.setSystem(A, &vec_rhs, &vec_x);
 
   // Print result summary and check solution
@@ -258,6 +260,7 @@ int runTest(int argc, char* argv[], std::string& solver_name)
   }
 
   // Recompute error norms for the second system and print summary
+  vec_rhs.syncData(ReSolve::memory::HOST);
   helper.resetSystem(A, &vec_rhs, &vec_x);
 
   std::cout << "\nResults (second matrix): \n\n";

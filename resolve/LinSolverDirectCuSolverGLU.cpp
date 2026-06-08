@@ -184,6 +184,9 @@ namespace ReSolve
     return error_sum;
   }
 
+  /**
+   * @brief Solve the system. Input vector data must be synced on the device.
+   */
   int LinSolverDirectCuSolverGLU::solve(vector_type* rhs, vector_type* x)
   {
     RESOLVE_RANGE_PUSH(__FUNCTION__);
