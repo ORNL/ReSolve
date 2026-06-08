@@ -110,6 +110,8 @@ namespace ReSolve
         return cpu_updated_[0];
       case ReSolve::memory::DEVICE:
         return gpu_updated_[0];
+      default:
+        return false;
       }
     }
     
@@ -130,6 +132,8 @@ namespace ReSolve
         return cpu_updated_[j];
       case ReSolve::memory::DEVICE:
         return gpu_updated_[j];
+      default:
+        return false;
       }
     }
 
@@ -148,6 +152,8 @@ namespace ReSolve
         return h_data_ != nullptr;
       case ReSolve::memory::DEVICE:
         return d_data_ != nullptr;
+      default:
+        return false;
       }
     }
 
