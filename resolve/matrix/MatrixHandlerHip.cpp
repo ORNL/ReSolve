@@ -220,8 +220,7 @@ namespace ReSolve
     index_type error_sum = 0;
 
     rocsparse_status status;
-
-    A_csr->allocateMatrixData(memory::DEVICE);
+    
     index_type m   = A_csc->getNumColumns();
     index_type n   = A_csc->getNumRows();
     index_type nnz = A_csc->getNnz();
