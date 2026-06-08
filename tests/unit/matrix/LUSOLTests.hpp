@@ -51,6 +51,7 @@ namespace ReSolve
         matrix::Coo*         A = createMatrix();
 
         vector::Vector rhs(A->getNumRows());
+        rhs.allocate(memory::HOST);
         rhs.setToConst(constants::ONE, memory::HOST);
 
         vector::Vector x(A->getNumColumns());
@@ -80,6 +81,7 @@ namespace ReSolve
         matrix::Coo*         A = createMatrix();
 
         vector::Vector rhs(A->getNumRows());
+        rhs.allocate(memory::HOST);
         rhs.setToConst(constants::ONE, memory::HOST);
 
         vector::Vector x(A->getNumColumns());
@@ -113,6 +115,7 @@ namespace ReSolve
         matrix::Coo*         A = createMatrix();
 
         vector::Vector rhs(A->getNumRows());
+        rhs.allocate(memory::HOST);
         rhs.setToConst(constants::ONE, memory::HOST);
 
         vector::Vector x(A->getNumColumns());

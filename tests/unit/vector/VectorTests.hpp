@@ -294,6 +294,7 @@ namespace ReSolve
 
         vector::Vector x(vector_size, number_vectors);
 
+        x.allocate(memspace_);
         x.setToZero(memspace_);
         success *= verifyAnswer(x, ZERO);
 
@@ -339,6 +340,8 @@ namespace ReSolve
         index_type number_vectors = 3;
 
         vector::Vector x(vector_size, number_vectors);
+        x.allocate(memory::HOST);
+        x.allocate(memory::DEVICE);
 
         // Set all vectors in x on device to ones
         x.setToConst(ONE, memspace_);

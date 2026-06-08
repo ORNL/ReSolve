@@ -199,6 +199,8 @@ namespace ReSolve
     // V[0] = ||b - A*x0||         for right preconditioning
     // V[0] = ||M^{-1}{b - A*x0}|| for left preconditioning
 
+    vec_Z_->allocate(memspace_);
+    vec_V_->allocate(memspace_);
     vec_Z_->setToZero(memspace_);
     vec_V_->setToZero(memspace_);
 

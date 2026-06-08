@@ -44,7 +44,7 @@ namespace ReSolve
       index_type getSize() const;
       index_type getNumVectors() const;
       bool isUpdated(memory::MemorySpace memspace) const;
-      bool isUpdated(index_type j; memory::MemorySpace memspace) const;
+      bool isUpdated(index_type j, memory::MemorySpace memspace) const;
 
       int setDataUpdated(memory::MemorySpace memspace);
       int setDataUpdated(index_type j, memory::MemorySpace memspace);
