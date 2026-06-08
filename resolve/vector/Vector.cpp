@@ -96,6 +96,44 @@ namespace ReSolve
     }
 
     /**
+     * @brief Get whether the data of a vector is updated in the given memory space.
+     * 
+     * @param[in] memspace - Memory space (HOST or DEVICE)
+     * 
+     * @return Whether data in memspace is updated.
+     */
+    bool isUpdated(memory::MemorySpace memspace) const
+    {
+      switch (memspace)
+      {
+      case HOST:
+        return cpu_updated_[0];
+      case DEVICE:
+        return gpu_updated_[0];
+      }
+    }
+    
+    /**
+     * @brief Get whether the data of a specific vector in a multivector is updated
+     * in the given memory space.
+     * 
+     * @param[in] memspace - Memory space (HOST or DEVICE)
+     * @param[in] j - Index of vector in multivector to check.
+     * 
+     * @return Whether data in memspace is updated.
+     */
+    bool isUpdated(index_type j, memory::MemorySpace memspace) const
+    {
+      switch (memspace)
+      {
+      case HOST:
+        return cpu_updated_[j];
+      case DEVICE:
+        return gpu_updated_[j];
+      }
+    }
+
+    /**
      * @brief Set the vector data pointer (HOST or DEVICE) to an external data.
      *
      * @param[in] data     - Pointer to data
