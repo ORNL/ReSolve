@@ -293,20 +293,17 @@ namespace ReSolve
       J_d_scaled_  = new matrix::Csr(J_d_->getNumRows(), J_d_->getNumColumns(), J_d_->getNnz());
 
       D_s_vals_->setData(D_s_->getValues(memspace_), memspace_);
-      r_yd_scaled_->allocate(memspace_);
       r_x_perm_->allocate(memspace_);
       omega_perm_->allocate(memspace_);
       schur_->allocate(memspace_);
       r_x_til_->allocate(memspace_);
       r_x_hat_->allocate(memspace_);
       z_->allocate(memspace_);
-      r_y_copy_->allocate(memspace_);
       J_tr_->allocateMatrixData(memspace_);
       J_d_tr_->allocateMatrixData(memspace_);
-      J_perm_->allocateMatrixData(memory::HOST);
       J_tr_perm_->allocateMatrixData(memory::HOST);
+      J_perm_->allocateMatrixData(memory::HOST);
       J_d_scaled_->allocateWithExternalSparsityPattern(J_d_->getRowData(memspace_), J_d_->getColData(memspace_), J_d_->getNnz(), memspace_);
-      // H_tilde_ does not need to be allocated because loadResultMatrix() does it later
     }
     else if (memspace_ == memory::DEVICE)
     {
@@ -332,7 +329,6 @@ namespace ReSolve
   void hykkt::HyKKTSolver::setupSpGEMMHtilde()
   {
     spgemm_htil_ = new SpGEMM(memspace_, ONE, ONE);
-    spgemm_htil_->loadResultMatrix(&H_tilde_); // H_tilde_ will be created by SpGEMM at this step
   }
 
   /*
@@ -351,6 +347,7 @@ namespace ReSolve
       matrixHandler_->leftScale(D_s_vals_, J_d_scaled_, memspace_);
       spgemm_htil_->loadProductMatrices(J_d_tr_, J_d_scaled_);
       spgemm_htil_->loadSumMatrix(H_);
+      spgemm_htil_->loadResultMatrix(&H_tilde_); // H_tilde_ will be created by SpGEMM at this step
 
       r_yd_scaled_->copyFromExternal(r_yd_, memspace_, memspace_);
       vectorHandler_->scal(D_s_vals_, r_yd_scaled_, memspace_);
@@ -363,11 +360,10 @@ namespace ReSolve
     }
     else
     {
-      H_tilde_->setNnz(H_->getNnz());
-      H_tilde_->allocateMatrixData(memspace_);
       H_tilde_->copyFromExternal(H_->getRowData(memspace_),
                                  H_->getColData(memspace_),
                                  H_->getValues(memspace_),
+                                 H_->getNnz(),
                                  memspace_,
                                  memspace_);
 
@@ -389,9 +385,7 @@ namespace ReSolve
     if (!allocated_)
     {
       J_copy_    = new matrix::Csr(J_->getNumRows(), J_->getNumColumns(), J_->getNnz());
-      J_copy_->allocateMatrixData(memspace_);
       J_tr_copy_ = new matrix::Csr(J_tr_->getNumRows(), J_tr_->getNumColumns(), J_tr_->getNnz());
-      J_tr_copy_->allocateMatrixData(memspace_);
     }
     J_copy_->copyFromExternal(J_->getRowData(memspace_),
                               J_->getColData(memspace_),
@@ -528,6 +522,13 @@ namespace ReSolve
     permutation_->mapIndex(PERM_V,
                            r_x_hat_->getData(memspace_),
                            r_x_perm_->getData(memspace_));
+    if (memspace_ == memory::DEVICE)
+    {
+      H_gamma_perm_->setNotUpdated(memory::HOST);
+      H_gamma_perm_->syncData(memory::HOST);
+      J_perm_->setNotUpdated(memory::HOST);
+      J_tr_perm_->setNotUpdated(memory::HOST);
+    }
     r_x_perm_->setDataUpdated(memspace_);
   }
 

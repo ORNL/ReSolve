@@ -60,6 +60,8 @@ namespace ReSolve
       void setExpanded(bool expanded);
       void setNnz(index_type nnz_new); // for resetting when removing duplicates
       int  setUpdated(memory::MemorySpace what);
+      void setNotUpdated();
+      void setNotUpdated(memory::MemorySpace memspace);
 
       virtual index_type* getRowData(memory::MemorySpace memspace) = 0;
       virtual index_type* getColData(memory::MemorySpace memspace) = 0;
@@ -117,8 +119,6 @@ namespace ReSolve
       index_type* d_col_data_{nullptr};   ///< column data (DEVICE)
       real_type*  d_val_data_{nullptr};   ///< value data (DEVICE)
       bool        d_data_updated_{false}; ///< DEVICE update flag
-
-      void setNotUpdated();
 
       // Data ownership flags
       bool owns_cpu_sparsity_pattern_{false}; ///< for row/col data

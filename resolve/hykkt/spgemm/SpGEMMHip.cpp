@@ -57,6 +57,12 @@ namespace ReSolve
       D_descr_ = convertToRocsparseType(D);
     }
 
+    /**
+     * @brief Load the matrix that the result will be written into and create it
+     * if it was not previously created. When called for the first time, this must
+     * be called after loadProductMatrices() and loadSumMatrix().
+     * @param E_ptr - double pointer to result matrix
+     */
     void SpGEMMHip::loadResultMatrix(matrix::Csr** E_ptr)
     {
       if (!E_ptr_)
