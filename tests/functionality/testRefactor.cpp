@@ -261,6 +261,10 @@ int runTest(int argc, char* argv[], std::string& solver_name)
 
   // Recompute error norms for the second system and print summary
   vec_rhs.syncData(ReSolve::memory::HOST);
+  if (!vec_x.isUpdated(ReSolve::memory::HOST))
+  {
+    vec_x.syncData(ReSolve::memory::HOST);
+  }
   helper.resetSystem(A, &vec_rhs, &vec_x);
 
   std::cout << "\nResults (second matrix): \n\n";

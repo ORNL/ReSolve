@@ -102,13 +102,13 @@ namespace ReSolve
      * 
      * @return Whether data in memspace is updated.
      */
-    bool isUpdated(memory::MemorySpace memspace) const
+    bool Vector::isUpdated(memory::MemorySpace memspace) const
     {
       switch (memspace)
       {
-      case HOST:
+      case ReSolve::memory::HOST:
         return cpu_updated_[0];
-      case DEVICE:
+      case ReSolve::memory::DEVICE:
         return gpu_updated_[0];
       }
     }
@@ -122,13 +122,13 @@ namespace ReSolve
      * 
      * @return Whether data in memspace is updated.
      */
-    bool isUpdated(index_type j, memory::MemorySpace memspace) const
+    bool Vector::isUpdated(index_type j, memory::MemorySpace memspace) const
     {
       switch (memspace)
       {
-      case HOST:
+      case ReSolve::memory::HOST:
         return cpu_updated_[j];
-      case DEVICE:
+      case ReSolve::memory::DEVICE:
         return gpu_updated_[j];
       }
     }
@@ -627,21 +627,11 @@ namespace ReSolve
       switch (memspace)
       {
       case HOST:
-        if (h_data_ == nullptr)
-        {
-          h_data_        = new real_type[n_capacity_ * k_];
-          owns_cpu_data_ = true;
-        }
         mem_.setZeroArrayOnHost(h_data_, n_capacity_ * k_);
         setHostUpdated(true);
         setDeviceUpdated(false);
         break;
       case DEVICE:
-        if (d_data_ == nullptr)
-        {
-          mem_.allocateArrayOnDevice(&d_data_, n_capacity_ * k_);
-          owns_gpu_data_ = true;
-        }
         mem_.setZeroArrayOnDevice(d_data_, n_capacity_ * k_);
         setHostUpdated(false);
         setDeviceUpdated(true);
@@ -664,21 +654,11 @@ namespace ReSolve
       switch (memspace)
       {
       case HOST:
-        if (h_data_ == nullptr)
-        {
-          h_data_        = new real_type[n_capacity_ * k_];
-          owns_cpu_data_ = true;
-        }
         mem_.setZeroArrayOnHost(&h_data_[j * n_size_], n_size_);
         cpu_updated_[j] = true;
         gpu_updated_[j] = false;
         break;
       case DEVICE:
-        if (d_data_ == nullptr)
-        {
-          mem_.allocateArrayOnDevice(&d_data_, n_capacity_ * k_);
-          owns_gpu_data_ = true;
-        }
         // TODO: We should not need to access raw data in this class
         mem_.setZeroArrayOnDevice(&d_data_[j * n_size_], n_size_);
         cpu_updated_[j] = false;
@@ -703,21 +683,11 @@ namespace ReSolve
       switch (memspace)
       {
       case HOST:
-        if (h_data_ == nullptr)
-        {
-          h_data_        = new real_type[n_capacity_ * k_];
-          owns_cpu_data_ = true;
-        }
         mem_.setArrayToConstOnHost(h_data_, C, n_size_ * k_);
         setHostUpdated(true);
         setDeviceUpdated(false);
         break;
       case DEVICE:
-        if (d_data_ == nullptr)
-        {
-          mem_.allocateArrayOnDevice(&d_data_, n_capacity_ * k_);
-          owns_gpu_data_ = true;
-        }
         mem_.setArrayToConstOnDevice(d_data_, C, n_size_ * k_);
         setHostUpdated(false);
         setDeviceUpdated(true);
@@ -741,21 +711,11 @@ namespace ReSolve
       switch (memspace)
       {
       case HOST:
-        if (h_data_ == nullptr)
-        {
-          h_data_        = new real_type[n_capacity_ * k_];
-          owns_cpu_data_ = true;
-        }
         mem_.setArrayToConstOnHost(&h_data_[n_size_ * j], C, n_size_);
         cpu_updated_[j] = true;
         gpu_updated_[j] = false;
         break;
       case DEVICE:
-        if (d_data_ == nullptr)
-        {
-          mem_.allocateArrayOnDevice(&d_data_, n_capacity_ * k_);
-          owns_gpu_data_ = true;
-        }
         mem_.setArrayToConstOnDevice(&d_data_[n_size_ * j], C, n_size_);
         cpu_updated_[j] = false;
         gpu_updated_[j] = true;
