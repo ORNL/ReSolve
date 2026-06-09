@@ -131,7 +131,7 @@ namespace ReSolve
         matrix_size << " for " << n << " x " << m << " matrix";
         testname += matrix_size.str();
 
-        matrix::Csr* A = createRectangularCsrMatrix(n, m); 
+        matrix::Csr* A  = createRectangularCsrMatrix(n, m);
         matrix::Csr* At = new matrix::Csr(m, n, 2 * std::min(n, m));
         At->allocateAll(memspace_);
 
@@ -145,10 +145,10 @@ namespace ReSolve
           At->syncData(memory::HOST);
         }
         verifyCsrMatrix(At, 0.0);
-        
+
         handler_.addConst(A, 1.0, memspace_);
         handler_.transpose(A, At, memspace_);
-        
+
         if (memspace_ == memory::DEVICE)
         {
           At->syncData(memory::HOST);
