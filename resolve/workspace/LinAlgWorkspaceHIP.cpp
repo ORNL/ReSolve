@@ -1,5 +1,7 @@
 #include <resolve/workspace/LinAlgWorkspaceHIP.hpp>
 
+#include <cassert>
+
 namespace ReSolve
 {
   LinAlgWorkspaceHIP::LinAlgWorkspaceHIP()
@@ -188,10 +190,7 @@ namespace ReSolve
 
   void LinAlgWorkspaceHIP::setTransposeBufferWorkspace(size_t bufferSize)
   {
-    if (transpose_workspace_ready_)
-    {
-      mem_.deleteOnDevice(transpose_workspace_);
-    }
+    assert(!transpose_workspace_ready_ && "Transpose workspace already set!\n");
     mem_.allocateBufferOnDevice(&transpose_workspace_, bufferSize);
     transpose_workspace_ready_ = true;
   }
