@@ -131,43 +131,29 @@ namespace ReSolve
         matrix_size << " for " << n << " x " << m << " matrix";
         testname += matrix_size.str();
 
+        matrix::Csr* A = createRectangularCsrMatrix(n, m); 
         matrix::Csr* At = new matrix::Csr(m, n, 2 * std::min(n, m));
         At->allocateAll(memspace_);
-        matrix::Csr* A = nullptr; // Declare A outside
 
-        for (real_type val = 0.0; val <= 1.0; val += 1.0)
-        { // Use a step to prevent infinite loop
-          if (val == 0.0)
-          {
-            if (A)
-            {
-              A->destroyMatrixData(memory::HOST);
-              if (memspace_ == memory::DEVICE)
-              {
-                A->destroyMatrixData(memory::DEVICE);
-              }
-            }
+        handler_.transpose(A, At, memspace_);
+        status *= (At->getNumRows() == A->getNumColumns());
+        status *= (At->getNumColumns() == A->getNumRows());
+        status *= (At->getNnz() == A->getNnz());
 
-            A = createRectangularCsrMatrix(n, m); // Allocates A
-            handler_.transpose(A, At, memspace_);
-
-            status *= (At->getNumRows() == A->getNumColumns());
-            status *= (At->getNumColumns() == A->getNumRows());
-            status *= (At->getNnz() == A->getNnz());
-          }
-          else
-          {
-            handler_.addConst(A, val, memspace_);
-            handler_.transpose(A, At, memspace_);
-          }
-
-          if (memspace_ == memory::DEVICE)
-          {
-            At->syncData(memory::HOST);
-          }
-
-          verifyCsrMatrix(At, val);
+        if (memspace_ == memory::DEVICE)
+        {
+          At->syncData(memory::HOST);
         }
+        verifyCsrMatrix(At, 0.0);
+        
+        handler_.addConst(A, 1.0, memspace_);
+        handler_.transpose(A, At, memspace_);
+        
+        if (memspace_ == memory::DEVICE)
+        {
+          At->syncData(memory::HOST);
+        }
+        verifyCsrMatrix(At, 1.0);
 
         delete A; // Delete after loop
         delete At;
