@@ -38,6 +38,8 @@
 
 - Added Developer Guide documentation for vector and matrix classes and handlers.
 
+- Remove automatic memory allocation and memory syncing in various memory management functions and require the user to explicitly manage their own memory.
+
 ## Changes to Re::Solve in release 0.99.2
 
 ### Major Features
