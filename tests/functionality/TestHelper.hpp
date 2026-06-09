@@ -148,10 +148,10 @@ public:
                  ReSolve::vector::Vector* x)
   {
     assert((res_ == nullptr) && (x_true_ == nullptr));
-    A_      = A;
-    r_      = r;
-    x_      = x;
-    res_    = new ReSolve::vector::Vector(A->getNumRows());
+    A_   = A;
+    r_   = r;
+    x_   = x;
+    res_ = new ReSolve::vector::Vector(A->getNumRows());
     res_->allocateAll(memspace_);
     x_true_ = new ReSolve::vector::Vector(A->getNumRows());
     setSolutionVector();

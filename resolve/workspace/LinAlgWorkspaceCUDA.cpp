@@ -1,6 +1,6 @@
-#include <resolve/workspace/LinAlgWorkspaceCUDA.hpp>
-
 #include <cassert>
+
+#include <resolve/workspace/LinAlgWorkspaceCUDA.hpp>
 
 namespace ReSolve
 {

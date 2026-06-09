@@ -336,7 +336,8 @@ namespace ReSolve
   {
     if (!allocated_)
     {
-      J_copy_    = new matrix::Csr(J_->getNumRows(), J_->getNumColumns(), J_->getNnz());
+      J_copy_ = new matrix::Csr(J_->getNumRows(), J_->getNumColumns(), J_->getNnz());
+      J_copy_->allocateMatrixData(memspace_);
       J_tr_copy_ = new matrix::Csr(J_tr_->getNumRows(), J_tr_->getNumColumns(), J_tr_->getNnz());
     }
     J_copy_->copyFromExternal(J_->getRowData(memspace_),

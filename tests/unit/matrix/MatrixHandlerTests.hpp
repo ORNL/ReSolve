@@ -133,7 +133,7 @@ namespace ReSolve
 
         matrix::Csr* At = new matrix::Csr(m, n, 2 * std::min(n, m));
         At->allocateAll(memspace_);
-        matrix::Csr* A  = nullptr; // Declare A outside
+        matrix::Csr* A = nullptr; // Declare A outside
 
         for (real_type val = 0.0; val <= 1.0; val += 1.0)
         { // Use a step to prevent infinite loop
