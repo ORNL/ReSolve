@@ -107,7 +107,6 @@ int main(int argc, char* argv[])
   vector_type* vec_r   = new vector_type(A->getNumRows());
   rhs1_file.close();
 
-
   // Set RHS vector on CPU
   vec_rhs->allocate(ReSolve::memory::HOST);
   vec_rhs->copyFromExternal(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);

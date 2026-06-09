@@ -274,7 +274,6 @@ namespace ReSolve
     }
   }
 
-  
   /**
    * @brief Creates the SpGEMM solver for the H_tildeda matrix and
    * loads the result matrix pointer
@@ -326,7 +325,6 @@ namespace ReSolve
     }
   }
 
-  
   /*
    * @brief Copies the matrices J and J^T which are later overwritten so
    *        the solution can be checked
@@ -340,7 +338,7 @@ namespace ReSolve
   {
     if (!allocated_)
     {
-      J_copy_    = new matrix::Csr(J_->getNumRows(), J_->getNumColumns(), J_->getNnz());
+      J_copy_ = new matrix::Csr(J_->getNumRows(), J_->getNumColumns(), J_->getNnz());
       J_copy_->allocateMatrixData(memspace_);
       J_tr_copy_ = new matrix::Csr(J_tr_->getNumRows(), J_tr_->getNumColumns(), J_tr_->getNnz());
       J_tr_copy_->allocateMatrixData(memspace_);
@@ -463,7 +461,7 @@ namespace ReSolve
   * @post H_gamma_perm_, J_perm_, J_tr_perm_, r_x_perm_ now contain permuted
   *       values of H_gamma_, J_, J_tr_, r_x_hat_
   */
-    void hykkt::HyKKTSolver::applyPermutation()
+  void hykkt::HyKKTSolver::applyPermutation()
   {
     permutation_->mapIndex(PERM_HES_V,
                            H_gamma_->getValues(memspace_),

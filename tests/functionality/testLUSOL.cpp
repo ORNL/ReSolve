@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
   vector_type vec_rhs(A->getNumRows());
   vector_type vec_x(A->getNumRows());
   vector_type vec_r(A->getNumRows());
-  
+
   vec_rhs.allocate(ReSolve::memory::HOST);
   vec_rhs.copyFromExternal(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
   vec_rhs.setDataUpdated(ReSolve::memory::HOST);

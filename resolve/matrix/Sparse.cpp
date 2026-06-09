@@ -243,7 +243,7 @@ namespace ReSolve
     }
     return 0;
   }
-  
+
   /**
    * @brief If memspace is HOST, allocate on HOST. If it is DEVICE, alloate
    * on both HOST and DEVICE.

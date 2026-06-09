@@ -97,9 +97,9 @@ namespace ReSolve
 
     /**
      * @brief Get whether the data of a vector is updated in the given memory space.
-     * 
+     *
      * @param[in] memspace - Memory space (HOST or DEVICE)
-     * 
+     *
      * @return Whether data in memspace is updated.
      */
     bool Vector::isUpdated(memory::MemorySpace memspace) const
@@ -114,14 +114,14 @@ namespace ReSolve
         return false;
       }
     }
-    
+
     /**
      * @brief Get whether the data of a specific vector in a multivector is updated
      * in the given memory space.
-     * 
+     *
      * @param[in] memspace - Memory space (HOST or DEVICE)
      * @param[in] j - Index of vector in multivector to check.
-     * 
+     *
      * @return Whether data in memspace is updated.
      */
     bool Vector::isUpdated(index_type j, memory::MemorySpace memspace) const
@@ -139,9 +139,9 @@ namespace ReSolve
 
     /**
      * @brief Get whether the data of a vector is allocated in the given memory space.
-     * 
+     *
      * @param[in] memspace - Memory space (HOST or DEVICE)
-     * 
+     *
      * @return Whether data in memspace is allocated.
      */
     bool Vector::isAllocated(memory::MemorySpace memspace) const
@@ -633,7 +633,7 @@ namespace ReSolve
         h_data_        = new real_type[n_capacity_ * k_];
         owns_cpu_data_ = true;
         // Set updated flags for each vector in multivector
-        for (index_type j=0; j < k_; j++)
+        for (index_type j = 0; j < k_; j++)
         {
           if (gpu_updated_[j])
           {
@@ -653,7 +653,7 @@ namespace ReSolve
         mem_.allocateArrayOnDevice(&d_data_, n_capacity_ * k_);
         owns_gpu_data_ = true;
         // Set updated flags for each vector in multivector
-        for (index_type j=0; j < k_; j++)
+        for (index_type j = 0; j < k_; j++)
         {
           if (cpu_updated_[j])
           {

@@ -79,7 +79,8 @@ namespace ReSolve
         real_type* H = new real_type[restart * (restart + 1)];
 
         // Allocate Krylov subspace
-        V.allocateAll(memspace_);;
+        V.allocateAll(memspace_);
+        ;
         V.setDataUpdated(memspace_);
         if (memspace_ == memory::DEVICE)
         {

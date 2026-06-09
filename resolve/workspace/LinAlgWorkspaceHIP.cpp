@@ -1,6 +1,6 @@
-#include <resolve/workspace/LinAlgWorkspaceHIP.hpp>
-
 #include <cassert>
+
+#include <resolve/workspace/LinAlgWorkspaceHIP.hpp>
 
 namespace ReSolve
 {

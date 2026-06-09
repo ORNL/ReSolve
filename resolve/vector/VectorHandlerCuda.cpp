@@ -108,12 +108,12 @@ namespace ReSolve
       workspace_->setNormBuffer(buffer);
       workspace_->setNormBufferState(true);
     }
-    real_type norm{0.0};
+    real_type        norm{0.0};
     cusolverStatus_t status = cusolverSpDnrminf(workspace_->getCusolverSpHandle(),
-                                   x->getSize(),
-                                   x->getData(memory::DEVICE),
-                                   &norm,
-                                   workspace_->getNormBuffer() /* at least 8192 bytes */);
+                                                x->getSize(),
+                                                x->getData(memory::DEVICE),
+                                                &norm,
+                                                workspace_->getNormBuffer() /* at least 8192 bytes */);
     if (status != CUSOLVER_STATUS_SUCCESS)
     {
       out::error() << "cusolverSpDnrminf failed with error code " << status << "\n";
