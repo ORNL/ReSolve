@@ -25,7 +25,7 @@ namespace ReSolve
     real_type*          getDr();
     real_type*          getNormBuffer();
     void*               getTransposeBufferWorkspace();
-    int                setTransposeBufferWorkspace(size_t bufferSize);
+    void                setTransposeBufferWorkspace(size_t bufferSize);
     bool                getNormBufferState();
     bool                isTransposeBufferAllocated();
 
@@ -34,11 +34,17 @@ namespace ReSolve
     void setSpmvMatrixDescriptor(rocsparse_mat_descr mat);
     void setSpmvMatrixInfo(rocsparse_mat_info info);
 
-    int initializeHandles();
+    void initializeHandles();
 
     bool matvecSetup();
     void matvecSetupDone();
-    int resetMatvecSetup();
+    /**
+     * @brief Reset the cached HIP SpMV setup.
+     *
+     * Destroys the cached rocSPARSE matrix descriptor and matrix info so the
+     * next matvec call can rebuild the setup if the matrix or its dimensions have changed.
+     */
+    void resetMatvecSetup();
 
     void setDrSize(index_type new_sz);
     void setDr(real_type* new_dr);
