@@ -142,7 +142,7 @@ namespace ReSolve
             if (A)
             {
               A->destroyMatrixData(memory::HOST);
-              if (memspace_ = memory::DEVICE)
+              if (memspace_ == memory::DEVICE)
               {
                 A->destroyMatrixData(memory::DEVICE);
               }
