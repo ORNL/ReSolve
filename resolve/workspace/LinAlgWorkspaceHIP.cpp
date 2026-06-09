@@ -175,7 +175,6 @@ namespace ReSolve
   {
     if (rocsparse_create_handle(&handle_rocsparse_) != rocsparse_status_success) return -1;
     if (rocblas_create_handle(&handle_rocblas_)     != rocblas_status_success)   return -1;
-    return 0;
   }
 
   index_type LinAlgWorkspaceHIP::getDrSize()
