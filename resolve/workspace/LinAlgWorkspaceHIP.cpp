@@ -188,14 +188,16 @@ namespace ReSolve
     return transpose_workspace_;
   }
 
-  void LinAlgWorkspaceHIP::setTransposeBufferWorkspace(size_t bufferSize)
+  int LinAlgWorkspaceHIP::setTransposeBufferWorkspace(size_t bufferSize)
   {
     if (!transpose_workspace_ready_)
     {
       out::error() << "Transpose workspace already set!\n";
+      return 1;
     }
     mem_.allocateBufferOnDevice(&transpose_workspace_, bufferSize);
     transpose_workspace_ready_ = true;
+    return 0;
   }
 
   bool LinAlgWorkspaceHIP::isTransposeBufferAllocated()

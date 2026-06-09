@@ -248,6 +248,7 @@ namespace ReSolve
       if ((h_row_data_ == nullptr) || (h_col_data_ == nullptr) || (h_val_data_ == nullptr))
       {
         out::error() << "Trying to copy from external COO matrix, but destination (host) is not allocated!\n";
+        return -1;
       }
     }
     else if (memspaceOut == memory::DEVICE)
@@ -255,6 +256,7 @@ namespace ReSolve
       if ((d_row_data_ == nullptr) || (d_col_data_ == nullptr) || (d_val_data_ == nullptr))
       {
         out::error() << "Trying to copy from external COO matrix, but destination (device) is not allocated!\n";
+        return -1;
       }
     }
 
