@@ -1,9 +1,12 @@
 #include <cassert>
 
 #include <resolve/workspace/LinAlgWorkspaceCUDA.hpp>
+#include <resolve/utilities/logger/Logger.hpp>
 
 namespace ReSolve
 {
+  using out = io::Logger;
+
   LinAlgWorkspaceCUDA::LinAlgWorkspaceCUDA()
   {
     handle_cusolversp_         = nullptr;
