@@ -346,7 +346,7 @@ namespace ReSolve
     }
 
     /**
-     * @brief get a non-const (writable) pointer to HOST or DEVICE vector data.
+     * @brief get a pointer to HOST or DEVICE vector data.
      *
      * @param[in] memspace  - Memory space of the pointer (HOST or DEVICE)
      *
@@ -359,7 +359,7 @@ namespace ReSolve
     }
 
     /**
-     * @brief get a non-const (writable) pointer to HOST or DEVICE data of a particular
+     * @brief get a pointer to HOST or DEVICE data of a particular
      * vector in a multivector.
      *
      * @param[in] j         - Index of a vector in multivector
