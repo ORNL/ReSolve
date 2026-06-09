@@ -1,7 +1,7 @@
 #include <cassert>
 
-#include <resolve/workspace/LinAlgWorkspaceCUDA.hpp>
 #include <resolve/utilities/logger/Logger.hpp>
+#include <resolve/workspace/LinAlgWorkspaceCUDA.hpp>
 
 namespace ReSolve
 {
