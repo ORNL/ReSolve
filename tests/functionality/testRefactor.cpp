@@ -180,11 +180,11 @@ int runTest(int argc, char* argv[], std::string& solver_name)
   status = Rf.setup(A, L, U, P, Q, &vec_rhs);
   error_sum += status;
 
-  // Refactorize (on device where available)
+  // Refactorize
   status = Rf.refactorize();
   error_sum += status;
 
-  // Solve system (on device where available)
+  // Solve system
   vec_x.syncData(ReSolve::memory::DEVICE);
   status = Rf.solve(&vec_rhs, &vec_x);
   error_sum += status;
