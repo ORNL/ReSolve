@@ -1,9 +1,12 @@
 #include <cassert>
 
 #include <resolve/workspace/LinAlgWorkspaceHIP.hpp>
+#include <resolve/utilities/logger/Logger.hpp>
 
 namespace ReSolve
 {
+  using out = io::Logger;
+  
   LinAlgWorkspaceHIP::LinAlgWorkspaceHIP()
   {
     handle_rocsparse_ = nullptr;
