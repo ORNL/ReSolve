@@ -185,8 +185,7 @@ int test(int argc, char* argv[])
 
   // Create a large initial guess with a larger residual than the zero vector.
   vector_type bad_guess_x(A->getNumRows());
-  bad_guess_x.allocate(ReSolve::memory::HOST);
-  bad_guess_x.allocate(memspace);
+  bad_guess_x.allocateAll(memspace);
   bad_guess_x.setToConst(1.0e6, memspace);
 
   ReSolve::SystemSolver bad_guess_solver(&workspace, "none", "none", method, "ilu0", "none");
@@ -407,8 +406,7 @@ std::string headerInfo(const std::string& method,
 ReSolve::vector::Vector* generateRhs(const index_type N, ReSolve::memory::MemorySpace memspace)
 {
   vector_type* vec_rhs = new vector_type(N);
-  vec_rhs->allocate(ReSolve::memory::HOST);
-  vec_rhs->allocate(memspace);
+  vec_rhs->allocateAll(memspace);
 
   real_type* data = vec_rhs->getData(ReSolve::memory::HOST);
   for (int i = 0; i < N; ++i)
