@@ -7,7 +7,7 @@ namespace ReSolve
   public:
     LinAlgWorkspaceCpu();
     ~LinAlgWorkspaceCpu();
-    int initializeHandles();
+    void initializeHandles();
     void resetLinAlgWorkspace();
   };
 
