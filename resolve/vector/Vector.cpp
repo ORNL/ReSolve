@@ -631,7 +631,7 @@ namespace ReSolve
         if (h_data_)
         {
           out::error() << "Trying to allocate vector host data, but vector host data has already been allocated!\n";
-        return 1;
+          return 1;
         }
         h_data_        = new real_type[n_capacity_ * k_];
         owns_cpu_data_ = true;
