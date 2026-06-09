@@ -277,6 +277,7 @@ namespace ReSolve
       if (h_row_data_ || h_col_data_ || h_val_data_)
       {
         out::error() << "Trying to allocate COO matrix host data, but matrix host data has already been allocated!\n";
+        return 1;
       }
       this->h_row_data_ = new index_type[nnz_current];
       std::fill(h_row_data_, h_row_data_ + nnz_current, 0);
@@ -294,6 +295,7 @@ namespace ReSolve
       if (d_row_data_ || d_col_data_ || d_val_data_)
       {
         out::error() << "Trying to allocate COO matrix device data, but matrix device data has already been allocated!\n";
+        return 1;
       }
       mem_.allocateArrayOnDevice(&d_row_data_, nnz_current);
       mem_.allocateArrayOnDevice(&d_col_data_, nnz_current);

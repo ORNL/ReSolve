@@ -302,6 +302,7 @@ namespace ReSolve
       if (h_row_data_ || h_col_data_ || h_val_data_)
       {
         out::error() << "Trying to allocate CSR matrix host data, but matrix host data has already been allocated!\n";
+        return 1;
       }
       this->h_row_data_ = new index_type[n_ + 1];
       std::fill(h_row_data_, h_row_data_ + n_ + 1, 0);
@@ -319,6 +320,7 @@ namespace ReSolve
       if (d_row_data_ || d_col_data_ || d_val_data_)
       {
         out::error() << "Trying to allocate CSR matrix host data, but matrix host data has already been allocated!\n";
+        return 1;
       }
       mem_.allocateArrayOnDevice(&d_row_data_, n_ + 1);
       mem_.allocateArrayOnDevice(&d_col_data_, nnz_current);
