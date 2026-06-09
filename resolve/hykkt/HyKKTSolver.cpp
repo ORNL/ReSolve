@@ -387,7 +387,7 @@ namespace ReSolve
     spgemm_hgamma_ = new SpGEMM(memspace_, gamma_, ONE);
     spgemm_hgamma_->loadProductMatrices(J_tr_, J_);
     spgemm_hgamma_->loadSumMatrix(H_tilde_);
-    spgemm_hgamma_->loadResultMatrix(&H_gamma_); // H_gamma_ will be created by SpGEMM atcompute()
+    spgemm_hgamma_->loadResultMatrix(&H_gamma_); // H_gamma_ will be created when calling SpGEMM->compute()
   }
 
   /*
