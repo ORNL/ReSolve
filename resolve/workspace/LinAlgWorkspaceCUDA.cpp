@@ -90,12 +90,11 @@ namespace ReSolve
     return transpose_workspace_;
   }
 
-  void LinAlgWorkspaceCUDA::setTransposeBufferWorkspace(size_t bufferSize)
+  int LinAlgWorkspaceCUDA::setTransposeBufferWorkspace(size_t bufferSize)
   {
     assert(!transpose_workspace_ready_ && "Transpose workspace already set!\n");
-    mem_.allocateBufferOnDevice(&transpose_workspace_, bufferSize);
     transpose_workspace_ready_ = true;
-    return;
+    return mem_.allocateBufferOnDevice(&transpose_workspace_, bufferSize);
   }
 
   bool LinAlgWorkspaceCUDA::isTransposeBufferAllocated()
@@ -204,26 +203,37 @@ namespace ReSolve
   }
 
   /**
-   * @brief Reset cached SpMV resources.
+   * @brief Reset the cached CUDA SpMV setup.
+   *
+   * Destroys the cached sparse matrix descriptor and frees the SpMV buffer so
+   * the next matvec call can rebuild the SpMV setup if the matrix or its dimensions have changed.
    */
-  void LinAlgWorkspaceCUDA::resetMatvecSetup()
+  int LinAlgWorkspaceCUDA::resetMatvecSetup()
   {
     if (matvec_setup_done_)
     {
-      cusparseDestroySpMat(mat_A_);
       matvec_setup_done_ = false;
+      if (cusparseDestroySpMat(mat_A_) != CUSPARSE_STATUS_SUCCESS)
+      {
+        return -1;
+      }
     }
     if (buffer_spmv_ != nullptr)
     {
-      mem_.deleteOnDevice(buffer_spmv_);
+      int status = mem_.deleteOnDevice(buffer_spmv_);
       buffer_spmv_ = nullptr;
+      if (status != 0)
+      {
+        return -1;
+      }
     }
   }
 
-  void LinAlgWorkspaceCUDA::initializeHandles()
+  int LinAlgWorkspaceCUDA::initializeHandles()
   {
-    cusparseCreate(&handle_cusparse_);
-    cublasCreate(&handle_cublas_);
-    cusolverSpCreate(&handle_cusolversp_);
+    if (cusparseCreate(&handle_cusparse_)     != CUSPARSE_STATUS_SUCCESS) return -1;
+    if (cublasCreate(&handle_cublas_)         != CUBLAS_STATUS_SUCCESS)   return -1;
+    if (cusolverSpCreate(&handle_cusolversp_) != CUSOLVER_STATUS_SUCCESS) return -1;
+    return 0;
   }
 } // namespace ReSolve

@@ -142,25 +142,39 @@ namespace ReSolve
     matvec_setup_done_ = true;
   }
 
-  void LinAlgWorkspaceHIP::resetMatvecSetup()
+  /**
+   * @brief Reset the cached HIP SpMV setup.
+   *
+   * Destroys the cached rocSPARSE matrix descriptor and matrix info so the
+   * next matvec call can rebuild the setup if the matrix or its dimensions have changed.
+   */
+  int LinAlgWorkspaceHIP::resetMatvecSetup()
   {
     if (mat_A_ != nullptr)
     {
-      rocsparse_destroy_mat_descr(mat_A_);
+      rocsparse_status status = rocsparse_destroy_mat_descr(mat_A_);
       mat_A_ = nullptr;
+      if (status != rocsparse_status_success)
+      {
+        return -1;
+      }
     }
     if (info_A_ != nullptr)
     {
-      rocsparse_destroy_mat_info(info_A_);
+      rocsparse_status status = rocsparse_destroy_mat_info(info_A_);
       info_A_ = nullptr;
+      if (status != rocsparse_status_success)
+      {
+        return -1;
+      }
     }
     matvec_setup_done_ = false;
   }
 
-  void LinAlgWorkspaceHIP::initializeHandles()
+  int LinAlgWorkspaceHIP::initializeHandles()
   {
-    rocsparse_create_handle(&handle_rocsparse_);
-    rocblas_create_handle(&handle_rocblas_);
+    if (rocsparse_create_handle(&handle_rocsparse_) != rocsparse_status_success) return -1;
+    if (rocblas_create_handle(&handle_rocblas_)     != rocblas_status_success)   return -1;
   }
 
   index_type LinAlgWorkspaceHIP::getDrSize()
@@ -188,11 +202,11 @@ namespace ReSolve
     return transpose_workspace_;
   }
 
-  void LinAlgWorkspaceHIP::setTransposeBufferWorkspace(size_t bufferSize)
+  int LinAlgWorkspaceHIP::setTransposeBufferWorkspace(size_t bufferSize)
   {
     assert(!transpose_workspace_ready_ && "Transpose workspace already set!\n");
-    mem_.allocateBufferOnDevice(&transpose_workspace_, bufferSize);
     transpose_workspace_ready_ = true;
+    return mem_.allocateBufferOnDevice(&transpose_workspace_, bufferSize);
   }
 
   bool LinAlgWorkspaceHIP::isTransposeBufferAllocated()

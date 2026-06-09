@@ -12,8 +12,9 @@ namespace ReSolve
   {
   }
 
-  void LinAlgWorkspaceCpu::initializeHandles()
+  int LinAlgWorkspaceCpu::initializeHandles()
   {
+    return 0;
   }
 
   void LinAlgWorkspaceCpu::resetLinAlgWorkspace()

@@ -20,7 +20,7 @@ namespace ReSolve
     void* getSpmvBuffer();
     void* getNormBuffer();
     void* getTransposeBufferWorkspace();
-    void  setTransposeBufferWorkspace(size_t bufferSize);
+    int  setTransposeBufferWorkspace(size_t bufferSize);
     bool  isTransposeBufferAllocated();
     void  setSpmvBuffer(void* buffer);
     void  setNormBuffer(void* buffer);
@@ -43,17 +43,11 @@ namespace ReSolve
     void setDr(real_type* new_dr);
     void setNormBufferState(bool r);
 
-    void initializeHandles();
+    int initializeHandles();
 
     bool matvecSetup();
     void matvecSetupDone();
-    /**
-     * @brief Reset the cached CUDA SpMV setup.
-     *
-     * Destroys the cached sparse matrix descriptor and frees the SpMV buffer so
-     * the next matvec call can rebuild the SpMV setup if the matrix or its dimensions have changed.
-     */
-    void resetMatvecSetup();
+    int resetMatvecSetup();
 
   private:
     // handles
