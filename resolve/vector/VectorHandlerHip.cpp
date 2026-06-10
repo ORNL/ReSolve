@@ -257,6 +257,7 @@ namespace ReSolve
       assert((A->getSize() == m)
               && "gemm: Shape mismatch! Shape of A does not match shape of C.");
       k = A->getNumVectors();
+      break;
     default:
       out::error() << "Unrecognized transpose option " << transpose_A
                    << " in gemm. Valid options are 'N' (not transposed) and 'T' (transposed).\n";
@@ -292,12 +293,12 @@ namespace ReSolve
                   m,
                   n,
                   k,
-                  alpha,
+                  &alpha,
                   A->getData(memory::DEVICE),
                   A->getSize(),
                   B->getData(memory::DEVICE),
                   B->getSize(),
-                  beta,
+                  &beta,
                   C->getData(memory::DEVICE),
                   C->getSize());
     C->setDataUpdated(memory::DEVICE);
