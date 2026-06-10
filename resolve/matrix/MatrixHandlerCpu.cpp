@@ -127,8 +127,42 @@ namespace ReSolve
                                const real_type* alpha,
                                const real_type* beta)
   {
-    // placeholder
-    return 1;
+    using namespace constants;
+
+    assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW && "Matrix has to be in CSR format for matrix-vector product.\n");
+
+    index_type* ia = A->getRowData(memory::HOST);
+    index_type* ja = A->getColData(memory::HOST);
+    real_type*  a  = A->getValues(memory::HOST);
+
+    for (int i = 0; i < vec_x->getNumVectors(); ++i)
+    {
+      real_type* x_data      = vec_x->getData(i, memory::HOST);
+      real_type* result_data = vec_result->getData(i, memory::HOST);
+      real_type  sum;
+      real_type  y;
+      real_type  t;
+      real_type  c;
+
+      // Kahan algorithm for stability
+      for (int j = 0; j < A->getNumRows(); ++j)
+      {
+        sum = 0.0;
+        c   = 0.0;
+        for (int k = ia[j]; k < ia[j + 1]; ++k)
+        {
+          y   = (a[k] * x_data[ja[k]]) - c;
+          t   = sum + y;
+          c   = (t - sum) - y;
+          sum = t;
+          //  sum += (a[k] * x_data[ja[k]]);
+        }
+        sum *= (*alpha);
+        result_data[j] = result_data[j] * (*beta) + sum;
+      }
+    }
+    vec_result->setDataUpdated(memory::HOST);
+    return 0;
   }
 
   /**
