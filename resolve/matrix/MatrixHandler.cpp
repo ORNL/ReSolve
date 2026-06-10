@@ -150,10 +150,24 @@ namespace ReSolve
     switch (memspace)
     {
     case HOST:
-      return cpuImpl_->matvec(A, vec_x, vec_result, alpha, beta);
+      if (vec_x->getNumVectors() == 1)
+      {
+        return cpuImpl_->matvec(A, vec_x, vec_result, alpha, beta);
+      }
+      else
+      {
+        return cpuImpl_->matMultivec(A, vec_x, vec_result, alpha, beta);
+      }
       break;
     case DEVICE:
-      return devImpl_->matvec(A, vec_x, vec_result, alpha, beta);
+      if (vec_x->getNumVectors() == 1)
+      {
+        return devImpl_->matvec(A, vec_x, vec_result, alpha, beta);
+      }
+      else
+      {
+        return devImpl_->matMultivec(A, vec_x, vec_result, alpha, beta);
+      }
       break;
     }
     return 1;

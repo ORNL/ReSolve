@@ -180,6 +180,16 @@ namespace ReSolve
     mat_A_ = mat;
   }
 
+  cusparseDnMatDescr_t LinAlgWorkspaceCUDA::getMatX()
+  {
+    return mat_X_;
+  }
+
+  cusparseDnMatDescr_t LinAlgWorkspaceCUDA::getMatY()
+  {
+    return mat_Y_;
+  }
+
   cusparseDnVecDescr_t LinAlgWorkspaceCUDA::getVecX()
   {
     return vec_x_;

@@ -154,6 +154,97 @@ namespace ReSolve
   }
 
   /**
+   * @brief result := alpha * A * x + beta * result
+   *
+   * @param[in]     A - matrix
+   * @param[in]     vec_x - multivector multiplied by A
+   * @param[in,out] vec_result - resulting multivector
+   * @param[in]     alpha - matrix-vector multiplication factor
+   * @param[in]     beta - sum into result factor
+   * @return rocsparse_status    error code, 0 if successful
+   *
+   * @pre Matrix `A` is in CSR format.
+   *
+   * @note If we decide to implement this function for different matrix
+   * format, the check for CSR matrix will be replaced with a switch
+   * statement to select implementation for recognized input matrix
+   * format.
+   */
+  rocsparse_status MatrixHandlerHip::matMultivec(matrix::Sparse*  A,
+                               vector_type*     vec_x,
+                               vector_type*     vec_result,
+                               const real_type* alpha,
+                               const real_type* beta)
+  {
+    using namespace constants;
+
+    assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW && "Matrix has to be in CSR format for matrix-vector product.\n");
+
+    // result = alpha *A*x + beta * result
+    rocsparse_status status;
+
+    rocsparse_handle handle_rocsparse = workspace_->getRocsparseHandle();
+
+    // The workspace caches one backend SpMV setup and temporary buffer between
+    // matvec calls. SCCG can call matvec with different matrices, such as JC and
+    // JC^T, so the cached setup may no longer match the current matrix structure.
+    // Track the matrix pointer and dimensions/nnz so stale setup data is reset
+    // before running SpMV with a different matrix.
+    bool matrix_changed =
+        (matrix_for_matvec_ != A) || (matvec_num_rows_ != A->getNumRows()) || (matvec_num_cols_ != A->getNumColumns()) || (matvec_nnz_ != A->getNnz());
+    if (matrix_changed || values_changed_)
+    {
+      workspace_->resetMatvecSetup();
+    }
+
+    rocsparse_mat_info  infoA  = workspace_->getSpmvMatrixInfo();
+    rocsparse_mat_descr descrA = workspace_->getSpmvMatrixDescriptor();
+    
+    if (!workspace_->matvecSetup())
+    {
+      // setup first, allocate, etc.
+      rocsparse_create_mat_descr(&(descrA));
+      rocsparse_set_mat_index_base(descrA, rocsparse_index_base_zero);
+      rocsparse_set_mat_type(descrA, rocsparse_matrix_type_general);
+
+      workspace_->setSpmvMatrixDescriptor(descrA
+      workspace_->matvecSetupDone();
+
+      matrix_for_matvec_ = A;
+      matvec_num_rows_   = A->getNumRows();
+      matvec_num_cols_   = A->getNumColumns();
+      matvec_nnz_        = A->getNnz();
+      values_changed_    = false;
+    }
+
+    status = rocsparse_dcsrmm(handle_rocsparse,
+                              rocsparse_operation_none,
+                              rocsparse_operation_none,
+                              A->getNumRows(),
+                              A->getNumColumns(),
+                              A->getNnz(),
+                              alpha,
+                              descrA,
+                              A->getValues(memory::DEVICE),
+                              A->getRowData(memory::DEVICE),
+                              A->getColData(memory::DEVICE),
+                              vec_x->getData(memory::DEVICE),
+                              beta,
+                              vec_result->getData(memory::DEVICE),
+                              vec_x->getSize());
+
+    mem_.deviceSynchronize();
+    if (status)
+    {
+      out::error() << "MatMultivec status: " << status << ". "
+                   << "Last error code: " << mem_.getLastDeviceError() << ".\n";
+    }
+    vec_result->setDataUpdated(memory::DEVICE);
+
+    return status;
+  }
+
+  /**
    * @brief Matrix infinity norm
    *
    * @param[in]  A - matrix

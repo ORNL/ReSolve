@@ -103,6 +103,33 @@ namespace ReSolve
     vec_result->setDataUpdated(memory::HOST);
     return 0;
   }
+  
+  /**
+   * @brief result := alpha * A * x + beta * result
+   *
+   * @param[in]     A - matrix
+   * @param[in]     vec_x - vector multiplied by A
+   * @param[in,out] vec_result - resulting vector
+   * @param[in]     alpha - matrix-vector multiplication factor
+   * @param[in]     beta - sum into result factor
+   * @return int    error code, 0 if successful
+   *
+   * @pre Matrix `A` is in CSR format.
+   *
+   * @note If we decide to implement this function for different matrix
+   * format, the check for CSR matrix will be replaced with a switch
+   * statement to select implementation for recognized input matrix
+   * format.
+   */
+  int MatrixHandlerCpu::matMultivec(matrix::Sparse*  A,
+                               vector_type*     vec_x,
+                               vector_type*     vec_result,
+                               const real_type* alpha,
+                               const real_type* beta)
+  {
+    // placeholder
+    return 1;
+  }
 
   /**
    * @brief Matrix infinity norm

@@ -110,6 +110,16 @@ namespace ReSolve
     return info_A_;
   }
 
+  rocsparse_mat_descr LinAlgWorkspaceHIP::getMatrixXDescriptor()
+  {
+    return mat_X_;
+  }
+
+  rocsparse_mat_descr LinAlgWorkspaceHIP::getMatrixYDescriptor()
+  {
+    return mat_Y_;
+  }
+
   void LinAlgWorkspaceHIP::setSpmvMatrixInfo(rocsparse_mat_info info)
   {
     info_A_ = info;

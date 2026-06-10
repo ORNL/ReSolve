@@ -90,6 +90,34 @@ namespace ReSolve
         return status.report(__func__);
       }
 
+      TestOutcome matMultivec(index_type n, index_type k)
+      {
+        TestStatus status;
+
+        matrix::Csr*   A = createCsrMatrix(n);
+        vector::Vector x(n, k);
+        vector::Vector y(n, k);
+        x.allocate(memspace_);
+        if (x.getData(memspace_) == NULL)
+          std::cout << "The memory space was not allocated \n"
+                    << std::endl;
+        y.allocate(memspace_);
+
+        x.setToConst(1.0, memspace_);
+        y.setToConst(1.0, memspace_);
+
+        real_type alpha = 2.0 / 30.0;
+        real_type beta  = 2.0;
+        handler_.setValuesChanged(true, memspace_);
+        handler_.matvec(A, &x, &y, &alpha, &beta, memspace_);
+
+        status *= verifyAnswer(y, 4.0);
+
+        delete A;
+
+        return status.report(__func__);
+      }
+
       TestOutcome csc2csr(index_type n, index_type m)
       {
         TestStatus status;
@@ -211,14 +239,17 @@ namespace ReSolve
           x.syncData(memory::HOST);
         }
 
-        for (index_type i = 0; i < x.getSize(); ++i)
+        for (index_type i = 0; i < x.getNumVectors(); ++i)
         {
-          if (!isEqual(x.getData(memory::HOST)[i], answer))
+          for (index_type j = 0; j < x.getSize(); ++j)
           {
-            status = false;
-            std::cout << "Solution vector element x[" << i << "] = " << x.getData(memory::HOST)[i]
-                      << ", expected: " << answer << "\n";
-            break;
+            if (!isEqual(x.getData(i, memory::HOST)[j], answer))
+            {
+              status = false;
+              std::cout << "Solution vector " << i << " element x[" << j << "] = " << x.getData(i, memory::HOST)[j]
+                        << ", expected: " << answer << "\n";
+              break;
+            }
           }
         }
         return status;

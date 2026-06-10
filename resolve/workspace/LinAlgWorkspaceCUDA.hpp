@@ -29,6 +29,8 @@ namespace ReSolve
     cusolverSpHandle_t   getCusolverSpHandle(); // needed for 1-norms etc
     cusparseHandle_t     getCusparseHandle();
     cusparseSpMatDescr_t getSpmvMatrixDescriptor();
+    cusparseDnMatDescr_t getMatX();
+    cusparseDnMatDescr_t getMatY();
     cusparseDnVecDescr_t getVecX();
     cusparseDnVecDescr_t getVecY();
     index_type           getDrSize();
@@ -63,6 +65,8 @@ namespace ReSolve
 
     // matrix descriptors
     cusparseSpMatDescr_t mat_A_;
+    cusparseDnMatDescr_t mat_X_;
+    cusparseDnMatDescr_t mat_Y_;
 
     // vector descriptors
     cusparseDnVecDescr_t vec_x_;
