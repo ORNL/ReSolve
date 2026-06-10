@@ -71,6 +71,16 @@ namespace ReSolve
               vector::Vector*     x,
               memory::MemorySpace memspace);
 
+    // Dense multivector-multivector product.
+    void gemm(char transpose_A,
+              char transpose_B,
+              const real_type alpha,
+              const real_type beta,
+              vector::Vector* A,
+              vector::Vector* B,
+              vector::Vector* C,
+              memory::MemorySpace memspace);
+
     int diagSolve(vector::Vector* diag, vector::Vector* vec, memory::MemorySpace memspace);
     int max(/* const */ vector::Vector* x, /* const */ vector::Vector* y, vector::Vector* out, memory::MemorySpace memspace);
 

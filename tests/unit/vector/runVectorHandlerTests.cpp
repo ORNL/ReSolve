@@ -22,6 +22,7 @@ int main(int, char**)
     result += test.scal(50);
     result += test.amax(50);
     result += test.gemv(5000, 10);
+    result += test.gemm(5000, 30, 10);
     result += test.axpyMulti(100, 10);
     result += test.massDot(100, 10);
     result += test.scale(100);
@@ -45,6 +46,7 @@ int main(int, char**)
     result += test.axpy(5000);
     result += test.scal(5000);
     result += test.gemv(5000, 10);
+    result += test.gemm(5000, 30, 10);
     result += test.axpyMulti(100, 10);
     result += test.axpyMulti(1000, 30);
     result += test.massDot(100, 10);

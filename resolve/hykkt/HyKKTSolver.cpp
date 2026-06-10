@@ -243,6 +243,7 @@ namespace ReSolve
       J_d_scaled_  = new matrix::Csr(J_d_->getNumRows(), J_d_->getNumColumns(), J_d_->getNnz());
 
       D_s_vals_->setData(D_s_->getValues(memspace_), memspace_);
+      r_yd_scaled_->allocate(memspace_);
       r_x_perm_->allocate(memspace_);
       omega_perm_->allocate(memspace_);
       schur_->allocate(memspace_);
@@ -312,10 +313,11 @@ namespace ReSolve
     }
     else
     {
+      H_tilde_->setNnz(H_->getNnz());
+      H_tilde_->allocateMatrixData(memspace_);
       H_tilde_->copyFromExternal(H_->getRowData(memspace_),
                                  H_->getColData(memspace_),
                                  H_->getValues(memspace_),
-                                 H_->getNnz(),
                                  memspace_,
                                  memspace_);
 
@@ -339,6 +341,7 @@ namespace ReSolve
       J_copy_ = new matrix::Csr(J_->getNumRows(), J_->getNumColumns(), J_->getNnz());
       J_copy_->allocateMatrixData(memspace_);
       J_tr_copy_ = new matrix::Csr(J_tr_->getNumRows(), J_tr_->getNumColumns(), J_tr_->getNnz());
+      J_tr_copy_->allocateMatrixData(memspace_);
     }
     J_copy_->copyFromExternal(J_->getRowData(memspace_),
                               J_->getColData(memspace_),

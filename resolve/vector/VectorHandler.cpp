@@ -238,6 +238,45 @@ namespace ReSolve
   }
 
   /**
+   * @brief gemm computes dense matrix-matrix (or multivector-multivector) product.
+   *
+   * Compute C := alpha * A * B + beta * C.
+   * A is replaced with A^T if transpose_A = T.
+   * B is replaced with B^T if transpose_A = T.
+   *
+   * @param[in] transpose_A - yes (T) or no (N)
+   * @param[in] transpose_B - yes (T) or no (N)
+   * @param[in] alpha     - Constant real number
+   * @param[in] beta      - Constant real number
+   * @param[in] A         - Multivector containing the A matrix, organized columnwise
+   * @param[in] B         - Multivector containing the B matrix, organized columnwise
+   * @param[in] C         - Multivector containing the C (result) matrix, organized columnwise
+   * @param[in] memspace  - enum specifying HOST or DEVICE memory space.
+   */
+  void VectorHandler::gemm(char                transpose_A,
+                           char                transpose_B,
+                           const real_type     alpha,
+                           const real_type     beta,
+                           vector::Vector*     A,
+                           vector::Vector*     B,
+                           vector::Vector*     C,
+                           memory::MemorySpace memspace)
+  {
+    using namespace ReSolve::memory;
+
+    switch (memspace)
+    {
+    case HOST:
+      cpuImpl_->gemm(transpose_A, transpose_B, alpha, beta, A, B, C);
+      break;
+    case DEVICE:
+      devImpl_->gemm(transpose_A, transpose_B, alpha, beta, A, B, C);
+      break;
+    }
+    C->setDataUpdated(memspace);
+  }
+
+  /**
    * @brief Multivector axpy: y: = y + \sum_i alpha_i x_i
    *
    * @param[in] size number of elements in y

@@ -68,6 +68,15 @@ namespace ReSolve
                       vector::Vector* V,
                       vector::Vector* y,
                       vector::Vector* x) = 0;
+
+    // Dense multivector-multivector product.
+    virtual void gemm(char transpose_A,
+                      char transpose_B,
+                      const real_type alpha,
+                      const real_type beta,
+                      vector::Vector* A,
+                      vector::Vector* B,
+                      vector::Vector* C) = 0;
   };
 
 } // namespace ReSolve

@@ -240,6 +240,51 @@ namespace ReSolve
         return status.report(__func__);
       }
 
+      TestOutcome gemm(index_type N, index_type M, index_type K)
+      {
+        TestStatus status;
+
+        vector::Vector A_N(M, K); ///< For the test with NO TRANSPOSE
+        vector::Vector B_N(K, N);
+        vector::Vector A_T(K, M); ///< for the test with TRANSPOSE
+        vector::Vector B_T(N, K);
+        vector::Vector C_NN(M, N);
+        vector::Vector C_NT(M, N);
+        vector::Vector C_TN(M, N);
+        vector::Vector C_TT(M, N);
+
+        A_N.allocate(memspace_);
+        B_N.allocate(memspace_);
+        A_T.allocate(memspace_);
+        B_T.allocate(memspace_);
+        C_NN.allocate(memspace_);
+        C_NT.allocate(memspace_);
+        C_TN.allocate(memspace_);
+        C_TT.allocate(memspace_);
+
+        A_N.setToConst(1.0, memspace_);
+        B_N.setToConst(-1.0, memspace_);
+        A_T.setToConst(1.0, memspace_);
+        B_T.setToConst(-1.0, memspace_);
+        C_NN.setToConst(ReSolve::constants::HALF, memspace_);
+        C_NT.setToConst(ReSolve::constants::HALF, memspace_);
+        C_TN.setToConst(ReSolve::constants::HALF, memspace_);
+        C_TT.setToConst(ReSolve::constants::HALF, memspace_);
+
+        real_type alpha = -1.0;
+        real_type beta  = 1.0;
+        handler_.gemm('N', 'N', alpha, beta, &A_N, &B_N, &C_NN, memspace_);
+        status *= verifyAnswer(C_NN, static_cast<real_type>(K) + ReSolve::constants::HALF);
+        handler_.gemm('N', 'T', alpha, beta, &A_N, &B_T, &C_NT, memspace_);
+        status *= verifyAnswer(C_NT, static_cast<real_type>(K) + ReSolve::constants::HALF);
+        handler_.gemm('T', 'N', alpha, beta, &A_T, &B_N, &C_TN, memspace_);
+        status *= verifyAnswer(C_TN, static_cast<real_type>(K) + ReSolve::constants::HALF);
+        handler_.gemm('T', 'T', alpha, beta, &A_T, &B_T, &C_TT, memspace_);
+        status *= verifyAnswer(C_TT, static_cast<real_type>(K) + ReSolve::constants::HALF);
+
+        return status.report(__func__);
+      }
+
       TestOutcome scale(index_type N)
       {
         TestStatus status;
