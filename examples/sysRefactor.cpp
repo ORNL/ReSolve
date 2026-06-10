@@ -318,70 +318,72 @@ int sysRefactor(int argc, char* argv[])
     double solve_time_ms = 0.0;
 
     if (hw_backend == "CUDA" || hw_backend == "HIP")
-      syncDevice(hw_backend);
     {
-      auto solve_start = std::chrono::high_resolution_clock::now();
-
-      // Now call direct solver
-      if (i == 1)
-      {
-        // Set matrix in solver after the initial matrix is loaded
-        status = solver.setMatrix(A);
-        if (status != 0)
-        {
-          std::cout << "Failed to set matrix in solver. Status: " << status << std::endl;
-          return 1;
-        }
-
-        // Analysis (symbolic factorization)
-        status = solver.analyze();
-        std::cout << "Analysis on the host status: " << status << std::endl;
-
-        // Numeric factorization on the host
-        status = solver.factorize();
-        std::cout << "Numeric factorization on the host status: " << status << std::endl;
-        // Set up refactorization solver
-        status = solver.refactorizationSetup();
-        std::cout << "Refactorization setup status: " << status << std::endl;
-      }
-      else
-      {
-        // Refactorize on the device
-        status = solver.refactorize();
-        std::cout << "Refactorization on the device status: " << status << std::endl;
-      }
-
-      status = solver.solve(vec_rhs, vec_x);
-      if (hw_backend == "CUDA" || hw_backend == "HIP")
-        syncDevice(hw_backend);
-      {
-        auto solve_end = std::chrono::high_resolution_clock::now();
-        solve_time_ms  = std::chrono::duration<double, std::milli>(solve_end - solve_start).count();
-        std::cout << "Triangular solve status: " << status << std::endl;
-
-        // Print summary of results
-        helper.printShortSummary(A, vec_rhs, vec_x);
-        if ((i > 1) && is_iterative_refinement)
-        {
-          helper.printIrSummary(&(solver.getIterativeSolver()));
-        }
-
-        if (is_timing)
-        {
-          std::cout << "TIMING,"
-                    << "sysRefactor,"
-                    << hw_backend << ","
-                    << is_iterative_refinement << ","
-                    << i << ","
-                    << solve_time_ms
-                    << std::endl;
-        }
-      }
-
-      // Delete objects created on heap
-      delete A;
-      delete vec_x;   // Delete the solution vector
-      delete vec_rhs; // Delete the RHS vector
-
-      return 0;
+      syncDevice(hw_backend);
     }
+    auto solve_start = std::chrono::high_resolution_clock::now();
+
+    // Now call direct solver
+    if (i == 1)
+    {
+      // Set matrix in solver after the initial matrix is loaded
+      status = solver.setMatrix(A);
+      if (status != 0)
+      {
+        std::cout << "Failed to set matrix in solver. Status: " << status << std::endl;
+        return 1;
+      }
+
+      // Analysis (symbolic factorization)
+      status = solver.analyze();
+      std::cout << "Analysis on the host status: " << status << std::endl;
+
+      // Numeric factorization on the host
+      status = solver.factorize();
+      std::cout << "Numeric factorization on the host status: " << status << std::endl;
+      // Set up refactorization solver
+      status = solver.refactorizationSetup();
+      std::cout << "Refactorization setup status: " << status << std::endl;
+    }
+    else
+    {
+      // Refactorize on the device
+      status = solver.refactorize();
+      std::cout << "Refactorization on the device status: " << status << std::endl;
+    }
+
+    status = solver.solve(vec_rhs, vec_x);
+    if (hw_backend == "CUDA" || hw_backend == "HIP")
+    {
+      syncDevice(hw_backend);
+    }
+    auto solve_end = std::chrono::high_resolution_clock::now();
+    solve_time_ms  = std::chrono::duration<double, std::milli>(solve_end - solve_start).count();
+    std::cout << "Triangular solve status: " << status << std::endl;
+
+    // Print summary of results
+    helper.printShortSummary(A, vec_rhs, vec_x);
+    if ((i > 1) && is_iterative_refinement)
+    {
+      helper.printIrSummary(&(solver.getIterativeSolver()));
+    }
+
+    if (is_timing)
+    {
+      std::cout << "TIMING,"
+                << "sysRefactor,"
+                << hw_backend << ","
+                << is_iterative_refinement << ","
+                << i << ","
+                << solve_time_ms
+                << std::endl;
+    }
+  }
+
+  // Delete objects created on heap
+  delete A;
+  delete vec_x;   // Delete the solution vector
+  delete vec_rhs; // Delete the RHS vector
+
+  return 0;
+}
