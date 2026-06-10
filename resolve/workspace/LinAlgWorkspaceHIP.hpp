@@ -58,8 +58,6 @@ namespace ReSolve
 
     // matrix descriptors
     rocsparse_mat_descr mat_A_;
-    rocsparse_mat_descr mat_X_;
-    rocsparse_mat_descr mat_Y_;
 
     // vector descriptors not needed, rocsparse uses RAW pointers.
 

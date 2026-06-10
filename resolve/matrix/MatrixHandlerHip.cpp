@@ -161,7 +161,7 @@ namespace ReSolve
    * @param[in,out] vec_result - resulting multivector
    * @param[in]     alpha - matrix-vector multiplication factor
    * @param[in]     beta - sum into result factor
-   * @return rocsparse_status    error code, 0 if successful
+   * @return int    error code, 0 if successful
    *
    * @pre Matrix `A` is in CSR format.
    *
@@ -170,7 +170,7 @@ namespace ReSolve
    * statement to select implementation for recognized input matrix
    * format.
    */
-  rocsparse_status MatrixHandlerHip::matMultivec(matrix::Sparse*  A,
+  int MatrixHandlerHip::matMultivec(matrix::Sparse*  A,
                                vector_type*     vec_x,
                                vector_type*     vec_result,
                                const real_type* alpha,
@@ -197,7 +197,6 @@ namespace ReSolve
       workspace_->resetMatvecSetup();
     }
 
-    rocsparse_mat_info  infoA  = workspace_->getSpmvMatrixInfo();
     rocsparse_mat_descr descrA = workspace_->getSpmvMatrixDescriptor();
     
     if (!workspace_->matvecSetup())
@@ -207,7 +206,7 @@ namespace ReSolve
       rocsparse_set_mat_index_base(descrA, rocsparse_index_base_zero);
       rocsparse_set_mat_type(descrA, rocsparse_matrix_type_general);
 
-      workspace_->setSpmvMatrixDescriptor(descrA
+      workspace_->setSpmvMatrixDescriptor(descrA);
       workspace_->matvecSetupDone();
 
       matrix_for_matvec_ = A;
@@ -222,6 +221,7 @@ namespace ReSolve
                               rocsparse_operation_none,
                               A->getNumRows(),
                               A->getNumColumns(),
+                              vec_x->getNumVectors(),
                               A->getNnz(),
                               alpha,
                               descrA,
@@ -229,9 +229,10 @@ namespace ReSolve
                               A->getRowData(memory::DEVICE),
                               A->getColData(memory::DEVICE),
                               vec_x->getData(memory::DEVICE),
+                              vec_x->getSize(),
                               beta,
                               vec_result->getData(memory::DEVICE),
-                              vec_x->getSize());
+                              vec_result->getSize());
 
     mem_.deviceSynchronize();
     if (status)
@@ -241,7 +242,7 @@ namespace ReSolve
     }
     vec_result->setDataUpdated(memory::DEVICE);
 
-    return status;
+    return static_cast<int>(status);
   }
 
   /**
