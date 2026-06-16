@@ -133,6 +133,29 @@ namespace ReSolve
   }
 
   /**
+   * @brief scale a vector by a constant i.e, x = alpha*x where alpha is a constant
+   *
+   * @param[in] alpha The constant
+   * @param[in,out] x The vector
+   * @param memspace[in] string containg memspace (cpu or cuda or hip)
+   *
+   */
+  void VectorHandler::scal(const real_type alpha, vector::Vector* x, memory::MemorySpace memspace)
+  {
+    using namespace ReSolve::memory;
+    switch (memspace)
+    {
+    case HOST:
+      cpuImpl_->scal(alpha, x);
+      break;
+    case DEVICE:
+      devImpl_->scal(alpha, x);
+      break;
+    }
+    x->setDataUpdated(memspace);
+  }
+
+  /**
    * @brief compute infinity norm of a vector (i.e., find an entry with largest absolute value)
    *
    * @param[in] The vector
