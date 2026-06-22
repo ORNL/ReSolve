@@ -33,6 +33,7 @@ namespace ReSolve
 
     int  setup(index_type n, index_type restart);
     int  orthogonalize(index_type n, vector_type* V, real_type* H, index_type i);
+    int  qr(index_type n, vector::Vector* V, real_type* H, index_type i);
     bool isSetupComplete();
 
   private:

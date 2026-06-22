@@ -33,6 +33,9 @@ namespace ReSolve
 
     // vector infinity norm
     virtual real_type amax(vector::Vector* x);
+    
+    // vector norm
+    virtual real_type norm(vector::Vector* x) {return -1.0;}
 
     // mass axpy: x*alpha + y where x is [n x k] and alpha is [k x 1]; x is stored columnwise
     virtual void axpyMulti(index_type size, vector::Vector* alpha, index_type k, vector::Vector* x, vector::Vector* y);
@@ -67,7 +70,11 @@ namespace ReSolve
     virtual void scal(vector::Vector* diag, vector::Vector* vec);
     virtual void scal(vector::Vector* diag, vector::Vector* vec, index_type diag_offset);
 
+    virtual int choleskyFactorize(vector::Vector* A, char uplo) {return 1;};
+    virtual int choleskySolve(const real_type* L, vector::Vector* B, char side) {return 1;}
     virtual int diagSolve(vector::Vector* diag, vector::Vector* vec);
+    
+    virtual int choleskyQr(vector::Vector* A, vector::Vector* R) {return 1;};
 
     virtual int max(/* const */ vector::Vector* x, /* const */ vector::Vector* y, vector::Vector* out);
 

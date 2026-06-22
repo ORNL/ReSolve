@@ -34,6 +34,9 @@ namespace ReSolve
 
     // amax = ||x||_\infty
     virtual real_type amax(vector::Vector* x) = 0;
+    
+    // norm = ||x||_2
+    virtual real_type norm(vector::Vector* x) = 0;
 
     // mass axpy: x*alpha + y where x is [n x k] and alpha is [k x 1]; x is stored columnwise
     virtual void axpyMulti(index_type size, vector::Vector* alpha, index_type k, vector::Vector* x, vector::Vector* y) = 0;
@@ -46,8 +49,16 @@ namespace ReSolve
     virtual void scal(vector::Vector* diag, vector::Vector* vec)                    = 0;
     virtual void scal(vector::Vector* diag, vector::Vector* vec, index_type offset) = 0;
 
+    // ...
+    virtual int choleskyFactorize(vector::Vector* A, char uplo) = 0;
+
+    // Solve a dense symmetric positive-definite linear system using Cholesky factorization
+    virtual int choleskySolve(const real_type* L, vector::Vector* B, char side) = 0;
+
     // Divide the elements of a vector by the elements of another vector
     virtual int diagSolve(vector::Vector* diag, vector::Vector* vec) = 0;
+
+    virtual int choleskyQr(vector::Vector* A, vector::Vector* R) = 0;
 
     // Compute element-wise max of two vectors
     virtual int max(/* const */ vector::Vector* x, /* const */ vector::Vector* y, vector::Vector* out) = 0;

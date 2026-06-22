@@ -9,28 +9,28 @@ int main(int, char**)
   ReSolve::tests::TestingResults result;
 
   {
-    std::cout << "Running tests on CPU:\n";
+    // std::cout << "Running tests on CPU:\n";
 
-    ReSolve::LinAlgWorkspaceCpu workspace;
-    workspace.initializeHandles();
-    ReSolve::VectorHandler handler(&workspace);
+    // ReSolve::LinAlgWorkspaceCpu workspace;
+    // workspace.initializeHandles();
+    // ReSolve::VectorHandler handler(&workspace);
 
-    ReSolve::tests::VectorHandlerTests test(handler);
-    result += test.vectorHandlerConstructor();
-    result += test.dot(50);
-    result += test.axpy(50);
-    result += test.scal(50);
-    result += test.amax(50);
-    result += test.gemv(5000, 10);
-    result += test.gemm(5000, 30, 10);
-    result += test.axpyMulti(100, 10);
-    result += test.massDot(100, 10);
-    result += test.scale(100);
-    result += test.diagSolve(100);
-    result += test.max(100);
-    result += test.abs(100);
+    // ReSolve::tests::VectorHandlerTests test(handler);
+    // result += test.vectorHandlerConstructor();
+    // result += test.dot(50);
+    // result += test.axpy(50);
+    // result += test.scal(50);
+    // result += test.amax(50);
+    // result += test.gemv(5000, 10);
+    // result += test.gemm(5000, 30, 10);
+    // result += test.axpyMulti(100, 10);
+    // result += test.massDot(100, 10);
+    // result += test.scale(100);
+    // result += test.diagSolve(100);
+    // result += test.max(100);
+    // result += test.abs(100);
 
-    std::cout << "\n";
+    // std::cout << "\n";
   }
 
 #ifdef RESOLVE_USE_CUDA
@@ -42,22 +42,43 @@ int main(int, char**)
     ReSolve::VectorHandler handler(&workspace);
 
     ReSolve::tests::VectorHandlerTests test(handler);
-    result += test.dot(5000);
-    result += test.axpy(5000);
-    result += test.scal(5000);
-    result += test.gemv(5000, 10);
-    result += test.gemm(5000, 30, 10);
-    result += test.axpyMulti(100, 10);
-    result += test.axpyMulti(1000, 30);
-    result += test.massDot(100, 10);
-    result += test.massDot(1000, 30);
-    result += test.amax(1000);
-    result += test.scale(1000);
-    result += test.diagSolve(1000);
-    result += test.max(1000);
-    result += test.abs(1000);
+    // result += test.gemmSpeedTest(30000, 1);
+    // workspace.resetLinAlgWorkspace();
+    // result += test.gemmSpeedTest(30000, 2);
+    // workspace.resetLinAlgWorkspace();
+    // result += test.gemmSpeedTest(30000, 1);
+    // workspace.resetLinAlgWorkspace();
+    // result += test.gemmSpeedTest(30000, 2);
+    // workspace.resetLinAlgWorkspace();
+    result += test.gemmSpeedTest(30000, 64 * 1);
+    workspace.resetLinAlgWorkspace();
+    result += test.gemmSpeedTest(30000, 64 * 2);
+    workspace.resetLinAlgWorkspace();
+    result += test.gemmSpeedTest(30000, 64 * 4);
+    workspace.resetLinAlgWorkspace();
+    result += test.gemmSpeedTest(30000, 64 * 8);
+    // workspace.resetLinAlgWorkspace();
+    // result += test.gemmSpeedTest(30000, 16);
+    // workspace.resetLinAlgWorkspace();
+    // result += test.gemmSpeedTest(30000, 32);
+    // workspace.resetLinAlgWorkspace();
+    // result += test.gemmSpeedTest(30000, 64);
+    // result += test.dot(5000);
+    // result += test.axpy(5000);
+    // result += test.scal(5000);
+    // result += test.gemv(5000, 10);
+    // result += test.gemm(5000, 30, 10);
+    // result += test.axpyMulti(100, 10);
+    // result += test.axpyMulti(1000, 30);
+    // result += test.massDot(100, 10);
+    // result += test.massDot(1000, 30);
+    // result += test.amax(1000);
+    // result += test.scale(1000);
+    // result += test.diagSolve(1000);
+    // result += test.max(1000);
+    // result += test.abs(1000);
 
-    std::cout << "\n";
+    // std::cout << "\n";
   }
 #endif
 

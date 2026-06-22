@@ -11,6 +11,10 @@ add_subdirectory(ruiz)
 add_subdirectory(cholesky)
 add_subdirectory(spgemm)
 add_subdirectory(sccg)
+add_subdirectory(randomized_cg)
+add_subdirectory(cg)
+add_subdirectory(randomized_dense_cg)
+add_subdirectory(dense_cg)
 
 # Build shared library ReSolve::hykkt
 set(HYKKT_SOLVER_SRC HyKKTSolver.cpp)

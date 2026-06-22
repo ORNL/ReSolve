@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <string>
 #include <vector>
+#include <chrono>
 
 #include <resolve/GramSchmidt.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
@@ -134,8 +135,14 @@ namespace ReSolve
         {
           V.syncData(memory::HOST);
         }
+        auto start = std::chrono::steady_clock::now();
         GS.orthogonalize(N, &V, H, 0);
         GS.orthogonalize(N, &V, H, 1);
+
+        auto end = std::chrono::steady_clock::now();
+        std::chrono::duration<double, std::milli> elapsed = (end - start);
+        printf("n = %d, time = %f\n", N, elapsed.count());
+
         status *= verifyAnswer(V, restart + 1);
 
         delete[] H;

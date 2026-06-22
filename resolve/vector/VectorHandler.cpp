@@ -133,26 +133,28 @@ namespace ReSolve
   }
 
   /**
-   * @brief scale a vector by a constant i.e, x = alpha*x where alpha is a constant
+   * @brief scale a vector by a constant, then store it in another vector.
+   * i.e, y = alpha*x where alpha is a constant
    *
    * @param[in] alpha The constant
-   * @param[in,out] x The vector
+   * @param[in] in The input vector to be scaled
+   * @param[out] out The vector to store the output in 
    * @param memspace[in] string containg memspace (cpu or cuda or hip)
    *
    */
-  void VectorHandler::scal(const real_type alpha, vector::Vector* x, memory::MemorySpace memspace)
+  void VectorHandler::scal(const real_type alpha, vector::Vector* in, vector::Vector* out, memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
     switch (memspace)
     {
     case HOST:
-      cpuImpl_->scal(alpha, x);
+      cpuImpl_->scal(alpha, in);
       break;
     case DEVICE:
-      devImpl_->scal(alpha, x);
+      devImpl_->scal(alpha, in);
       break;
     }
-    x->setDataUpdated(memspace);
+    in->setDataUpdated(memspace);
   }
 
   /**
@@ -174,6 +176,30 @@ namespace ReSolve
       break;
     case DEVICE:
       return devImpl_->amax(x);
+      break;
+    }
+    return -1.0;
+  }
+
+  /**
+   * @brief compute norm of a vector or Frobenius norm of a multivector
+   *
+   * @param[in] The vector
+   * @param[in] memspace string containg memspace (cpu or cuda or hip)
+   *
+   * @return Norm of _x_
+   *
+   */
+  real_type VectorHandler::norm(vector::Vector* x, memory::MemorySpace memspace)
+  {
+    using namespace ReSolve::memory;
+    switch (memspace)
+    {
+    case HOST:
+      return cpuImpl_->norm(x);
+      break;
+    case DEVICE:
+      return devImpl_->norm(x);
       break;
     }
     return -1.0;
@@ -286,6 +312,8 @@ namespace ReSolve
                            memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
+
+    assert((A != C) && "In-place gemm is not allowed!");
 
     switch (memspace)
     {
@@ -436,6 +464,44 @@ namespace ReSolve
     }
   }
 
+    /**
+   * @brief ... overrides B
+   */
+  int VectorHandler::choleskyFactorize(vector::Vector* A, char uplo, memory::MemorySpace memspace)
+  {
+    // asserts
+    using namespace ReSolve::memory;
+    switch (memspace)
+    {
+    case HOST:
+      return cpuImpl_->choleskyFactorize(A, uplo);
+      break;
+    case DEVICE:
+      return devImpl_->choleskyFactorize(A, uplo);
+      break;
+    }
+    return 1;
+  }
+
+  /**
+   * @brief ... overrides B
+   */
+  int VectorHandler::choleskySolve(const real_type* L, vector::Vector* B, char side, memory::MemorySpace memspace)
+  {
+    // asserts
+    using namespace ReSolve::memory;
+    switch (memspace)
+    {
+    case HOST:
+      return cpuImpl_->choleskySolve(L, B, side);
+      break;
+    case DEVICE:
+      return devImpl_->choleskySolve(L, B, side);
+      break;
+    }
+    return 1;
+  }
+
   /**
    * @brief Multiplies vector by an inverse of a diagonal matrix.
    *
@@ -460,6 +526,34 @@ namespace ReSolve
       break;
     case DEVICE:
       return devImpl_->diagSolve(diag, vec);
+      break;
+    }
+    return 1;
+  }
+
+  /**
+   * @brief Multiplies vector by an inverse of a diagonal matrix.
+   *
+   * @param[in]  diag   - diagonal matrix stored in a vector object
+   * @param[in,out] vec - vector to be divided
+   * @param[in] memspace - Device where the operation is computed
+   *
+   * @pre The two vectors must be the same size
+   *
+   * @return 0 if successful, 1 otherwise
+   */
+  int VectorHandler::choleskyQr(vector::Vector* A, vector::Vector* R, memory::MemorySpace memspace)
+  {
+    assert((A->getNumVectors() == R->getSize() && R->getSize() == R->getNumVectors())
+            && "Dimension mismatch!");
+    using namespace ReSolve::memory;
+    switch (memspace)
+    {
+    case HOST:
+      return cpuImpl_->choleskyQr(A, R);
+      break;
+    case DEVICE:
+      return devImpl_->choleskyQr(A, R);
       break;
     }
     return 1;

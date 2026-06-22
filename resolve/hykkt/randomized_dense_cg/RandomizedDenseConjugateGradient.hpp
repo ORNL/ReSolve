@@ -1,5 +1,5 @@
 /**
- * @file RandomizedConjugateGradient.hpp
+ * @file RandomizedDenseConjugateGradient.hpp
  * @brief Schur complement conjugate gradient solver for HyKKT.
  */
 
@@ -22,11 +22,11 @@ namespace ReSolve
 
   namespace hykkt
   {
-    class RandomizedConjugateGradient
+    class RandomizedDenseConjugateGradient
     {
     public:
       /**
-       * @brief Constructor for RandomizedConjugateGradient.
+       * @brief Constructor for RandomizedDenseConjugateGradient.
        *
        * The solver uses caller-provided matrix and vector handlers so the same solver can be run with CPU, CUDA, or HIP backends.
        *
@@ -36,14 +36,14 @@ namespace ReSolve
        * @param[in] vector_handler Vector handler for the selected backend.
        * @param[in] memspace Memory space of incoming data and for computation.
        */
-      RandomizedConjugateGradient(index_type          n,
+      RandomizedDenseConjugateGradient(index_type          n,
                                   index_type          k,
                                   MatrixHandler*      matrix_handler_,
                                   VectorHandler*      vector_handler_,
                                   memory::MemorySpace memspace);
-      ~RandomizedConjugateGradient();
+      ~RandomizedDenseConjugateGradient();
 
-      void addMatrixInfo(matrix::Csr* A);
+      void addMatrixInfo(vector::Vector* A);
       void addVectorInfo(vector::Vector* x_0, vector::Vector* b);
       void addPreconditionerInfo(matrix::Csr* L, matrix::Csr* L_tr);
       void setSolverTolerance(double tol);
@@ -67,13 +67,13 @@ namespace ReSolve
       
       GramSchmidt gram_schmidt_;
 
-      matrix::Csr* A_{nullptr};
+      vector::Vector* A_{nullptr};
       vector::Vector* x_{nullptr};   // LHS of entire system
       vector::Vector* b_{nullptr};   // RHS of entire system
       
       // Matrices used for conjugate gradient
-      matrix::Csr* A_prec_{nullptr};
-      matrix::Csr* A_tr_prec_{nullptr};
+      vector::Vector* A_prec_{nullptr};
+      vector::Vector* A_tr_prec_{nullptr};
       matrix::Csr* L_{nullptr};
       matrix::Csr* L_tr_{nullptr};
 
@@ -95,6 +95,6 @@ namespace ReSolve
       std::mt19937 generator_;
 
       memory::MemorySpace memspace_;
-    }; // class RandomizedConjugateGradient
+    }; // class RandomizedDenseConjugateGradient
   } // namespace hykkt
 } // namespace ReSolve

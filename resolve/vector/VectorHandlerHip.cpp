@@ -116,6 +116,33 @@ namespace ReSolve
                        &norm);
     return norm;
   }
+  
+  /**
+   * @brief compute norm of a vector or Frobenius norm of a multivector
+   *
+   * @param[in] x The vector
+   *
+   * @return Norm of _x_
+   *
+   */
+  real_type VectorHandlerHip::norm(vector::Vector* x)
+  {
+    rocblas_handle handle_rocblas = workspace_->getRocblasHandle();
+    double         nrm            = 0.0;
+
+    rocblas_status st = rocblas_ddot(handle_rocblas,
+                                     x->getSize() * x->getNumVectors(),
+                                     x->getData(memory::DEVICE),
+                                     1,
+                                     x->getData(memory::DEVICE),
+                                     1,
+                                     &nrm);
+    if (st != 0)
+    {
+      out::error() << "vector norm returned error code " << st << "\n";
+    }
+    return sqrt(nrm);
+  }
 
   /**
    * @brief axpy i.e, y = alpha*x + y where alpha is a constant

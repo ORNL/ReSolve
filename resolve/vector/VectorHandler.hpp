@@ -37,6 +37,7 @@ namespace ReSolve
 
     // Scale vector by scalar
     void scal(const real_type alpha, vector::Vector* x, memory::MemorySpace memspace);
+    void scal(const real_type alpha, vector::Vector* in, vector::Vector* out, memory::MemorySpace memspace);
 
     // Scale vector by diagonal matrix represented as a vector (i.e., vec = diag*vec)
     void scal(vector::Vector* diag, vector::Vector* vec, memory::MemorySpace memspace);
@@ -80,14 +81,19 @@ namespace ReSolve
               vector::Vector* B,
               vector::Vector* C,
               memory::MemorySpace memspace);
-
+    
+    int choleskyFactorize(vector::Vector* A, char uplo, memory::MemorySpace memspace);
+    int choleskySolve(const real_type* L, vector::Vector* B, char side, memory::MemorySpace memspace);
     int diagSolve(vector::Vector* diag, vector::Vector* vec, memory::MemorySpace memspace);
+    int choleskyQr(vector::Vector* A, vector::Vector* R, memory::MemorySpace memspace);
     int max(/* const */ vector::Vector* x, /* const */ vector::Vector* y, vector::Vector* out, memory::MemorySpace memspace);
 
     int abs(/* const */ vector::Vector* in, vector::Vector* out, memory::MemorySpace memspace);
 
     // Vector infinity norm
     real_type amax(vector::Vector* x, memory::MemorySpace memspace);
+    
+    real_type norm(vector::Vector* x, memory::MemorySpace memspace);
 
     bool getIsCudaEnabled() const;
     bool getIsHipEnabled() const;

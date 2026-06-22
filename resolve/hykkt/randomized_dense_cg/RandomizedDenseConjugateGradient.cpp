@@ -1,4 +1,4 @@
-#include "RandomizedConjugateGradient.hpp"
+#include "RandomizedDenseConjugateGradient.hpp"
 
 #include <cmath>
 #include <chrono>
@@ -14,7 +14,7 @@ namespace ReSolve
 
   namespace hykkt
   {
-    /** Constructor for RandomizedConjugateGradient.
+    /** Constructor for RandomizedDenseConjugateGradient.
      *  @param n[in] - Dimension of outer system.
      *  @param m[in] - Dimension of inner system.
      *  @param choleskySolver[in] - Factorization of H_gamma to use for direct solve.
@@ -22,7 +22,7 @@ namespace ReSolve
      *  @param matrix_handler[in] - Matrix handler for the selected backend.
      *  @param vector_handler[in] - Vector handler for the selected backend.
      */
-    RandomizedConjugateGradient::RandomizedConjugateGradient(
+    RandomizedDenseConjugateGradient::RandomizedDenseConjugateGradient(
         index_type          n,
         index_type          k,
         MatrixHandler*      matrix_handler,
@@ -39,7 +39,7 @@ namespace ReSolve
       ;
     }
 
-    RandomizedConjugateGradient::~RandomizedConjugateGradient()
+    RandomizedDenseConjugateGradient::~RandomizedDenseConjugateGradient()
     {
       delete X_0_;
       delete X_res_;
@@ -59,7 +59,7 @@ namespace ReSolve
      * @brief Loads or reloads matrix pointers to the solver
      * @param[in] J - Pointer to the JC matrix in CSR format.
      */
-    void RandomizedConjugateGradient::addMatrixInfo(matrix::Csr* A)
+    void RandomizedDenseConjugateGradient::addMatrixInfo(vector::Vector* A)
     {
       A_ = A;
     }
@@ -69,7 +69,7 @@ namespace ReSolve
      * @param[in] x - Pointer to the left-hand side vector.
      * @param[in] b - Pointer to the right-hand side vector.
      */
-    void RandomizedConjugateGradient::addVectorInfo(vector::Vector* x, vector::Vector* b)
+    void RandomizedDenseConjugateGradient::addVectorInfo(vector::Vector* x, vector::Vector* b)
     {
       x_ = x;
       b_ = b;
@@ -81,23 +81,23 @@ namespace ReSolve
      * @param[in] L - Pointer to the lower triangular preconditioner matrix (L) in CSR format.
      * @param[in] L_tr_ - Pointer to the transpose preconditioner matrix (L^T) in CSR format.
      */
-    void RandomizedConjugateGradient::addPreconditionerInfo(matrix::Csr* L, matrix::Csr* L_tr)
+    void RandomizedDenseConjugateGradient::addPreconditionerInfo(matrix::Csr* L, matrix::Csr* L_tr)
     {
       L_ = L;
       L_tr_ = L_tr;
     }
 
-    void RandomizedConjugateGradient::setSolverTolerance(double tol)
+    void RandomizedDenseConjugateGradient::setSolverTolerance(double tol)
     {
       tol_ = tol;
     }
 
-    void RandomizedConjugateGradient::setSolverItmax(int itmax)
+    void RandomizedDenseConjugateGradient::setSolverItmax(int itmax)
     {
       itmax_ = itmax;
     }
 
-    void RandomizedConjugateGradient::setup()
+    void RandomizedDenseConjugateGradient::setup()
     {
       X_0_ = new vector::Vector(n_, k_);
       X_res_ = new vector::Vector(n_, k_);
@@ -129,7 +129,7 @@ namespace ReSolve
     }
 
     // write gpu implementation later, possibly in vector class
-    void RandomizedConjugateGradient::randomVector(vector::Vector* v, real_type min, real_type max)
+    void RandomizedDenseConjugateGradient::randomVector(vector::Vector* v, real_type min, real_type max)
     {
       std::uniform_real_distribution<real_type> distribution(min, max);
       for (index_type i = 0; i < v->getSize() * v->getNumVectors(); ++i)
@@ -140,7 +140,7 @@ namespace ReSolve
     }
 
     // Generate starting guesses and set up residual space matrices & vectors
-    void RandomizedConjugateGradient::generateGuesses()
+    void RandomizedDenseConjugateGradient::generateGuesses()
     {
       using namespace constants;
 
@@ -155,7 +155,7 @@ namespace ReSolve
       {
         X_0_->syncData(memory::DEVICE);
       }
-      matrix_handler_->matvec(A_, X_0_, Temp_nxk_, &ONE, &ZERO, memspace_);
+      vector_handler_->gemm('N', 'N', ONE, ZERO, A_, X_0_, Temp_nxk_, memspace_);
       real_type AX_0_norm = vector_handler_->norm(Temp_nxk_, memspace_);
       real_type B_norm = sqrt(static_cast<double>(k_)) * vector_handler_->norm(b_, memspace_);
       real_type normalization_factor = B_norm / AX_0_norm;
@@ -166,7 +166,7 @@ namespace ReSolve
     }
 
     // todo: "X_res = X_res + P @ M" and "Tau = S * Xi" can be done in parallel
-    int RandomizedConjugateGradient::solve()
+    int RandomizedDenseConjugateGradient::solve()
     {
       using namespace constants;
 
@@ -201,7 +201,7 @@ namespace ReSolve
 // cudaEventRecord(start, 0);
         auto start = std::chrono::steady_clock::now();
         // Xi_inv = S^T * (A * S)
-        matrix_handler_->matvec(A_, S_, Temp_nxk_, &ONE, &ZERO, memspace_);
+        vector_handler_->gemm('N', 'N', ONE, ZERO, A_, S_, Temp_nxk_, memspace_);
         vector_handler_->gemm('T', 'N', ONE, ZERO, S_, Temp_nxk_, Xi_inv_, memspace_);
 
         // X_res = X_res + S * (Xi * Sigma)
@@ -242,6 +242,12 @@ namespace ReSolve
         auto end = std::chrono::steady_clock::now();
         std::chrono::duration<double, std::milli> elapsed = (end - start);
         printf("%f\n", elapsed.count());
+        
+// cudaEventRecord(stop, 0);
+// cudaEventSynchronize(stop);
+// float ms = 0;
+// cudaEventElapsedTime(&ms, start, stop);
+// std::cout << ms << '\n';
       }
 
       printf("Conjugate gradient error is %32.32g \n", 101010101010.1);

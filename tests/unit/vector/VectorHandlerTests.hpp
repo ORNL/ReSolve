@@ -7,12 +7,16 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <chrono>
+#include <random>
 
 #include <resolve/Common.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 #include <tests/unit/TestBase.hpp>
+
+#include <cuda_runtime.h>
 
 namespace ReSolve
 {
@@ -25,8 +29,9 @@ namespace ReSolve
     class VectorHandlerTests : TestBase
     {
     public:
+      std::mt19937                generator_;
       VectorHandlerTests(ReSolve::VectorHandler& handler)
-        : handler_(handler)
+        : handler_(handler), generator_(ReSolve::constants::SEED)
       {
         if (handler_.getIsCudaEnabled() || handler_.getIsHipEnabled())
         {
@@ -281,6 +286,70 @@ namespace ReSolve
         status *= verifyAnswer(C_TN, static_cast<real_type>(K) + ReSolve::constants::HALF);
         handler_.gemm('T', 'T', alpha, beta, &A_T, &B_T, &C_TT, memspace_);
         status *= verifyAnswer(C_TT, static_cast<real_type>(K) + ReSolve::constants::HALF);
+
+        return status.report(__func__);
+      }
+
+      vector::Vector* randomVector(index_type N, index_type K)
+      {
+        vector::Vector* v = new vector::Vector(N, K);
+        v->allocateAll(memspace_);
+        std::uniform_real_distribution<double> distribution(-1.0, 1.0);
+        for (index_type i = 0; i < K; ++i)
+        {
+          for (index_type j = 0; j < N; ++j)
+          {
+            v->getData(i, memory::HOST)[j] = distribution(generator_);
+          }
+        }
+        v->setDataUpdated(memory::HOST);
+        if (memspace_ == memory::DEVICE)
+        {
+          v->syncData(memory::DEVICE);
+        }
+        return v;
+      }
+      
+      TestOutcome gemmSpeedTest(index_type N, index_type K)
+      {
+        TestStatus status;
+        
+        vector::Vector* V = randomVector(N, N);
+        vector::Vector* W = randomVector(N, K);
+        vector::Vector* result = new vector::Vector(N, K);
+        result->allocate(memspace_);
+
+        real_type alpha = 1.0;
+        real_type beta  = 0.0;
+
+        // if (K == 1) {
+        //   auto start = std::chrono::steady_clock::now();
+        //   handler_.dot(V, W, memspace_);
+        //   auto end = std::chrono::steady_clock::now();
+        //   std::chrono::duration<double, std::milli> elapsed = (end - start);
+        //   printf("n = %d, k = %d, time = %f\n", N, K, elapsed.count());
+        // } else {
+        for (int i=0; i < 8; i++) {
+          auto start = std::chrono::steady_clock::now();
+          handler_.gemm('N', 'N', alpha, beta, V, W, result, memspace_);
+          auto end = std::chrono::steady_clock::now();
+          std::chrono::duration<double, std::milli> elapsed = (end - start);
+          cudaDeviceSynchronize();
+          printf("n = %d, k = %d, time = %f\n", N, K, elapsed.count());
+          
+          
+          start = std::chrono::steady_clock::now();
+          handler_.gemm('N', 'N', alpha, beta, V, result, W, memspace_);
+          end = std::chrono::steady_clock::now();
+          elapsed = (end - start);
+          cudaDeviceSynchronize();
+          printf("n = %d, k = %d, time = %f\n", N, K, elapsed.count());
+        }
+        // }
+
+        delete V;
+        delete W;
+        delete result;
 
         return status.report(__func__);
       }

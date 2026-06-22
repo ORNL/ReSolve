@@ -504,6 +504,40 @@ namespace ReSolve
     vec->setDataUpdated(memory::HOST);
   }
 
+  // temporary
+  index_type idxmap(index_type i, index_type j, index_type col_length)
+  {
+    return i * (col_length) + j;
+  }
+
+  // // ... grabbed this off the internet. not production code
+  // int VectorHandlerCpu::choleskyFactorize(const vector::Vector* A, real_type* out)
+  // {
+  //   int n = A->getSize();
+  //   const real_type* A_data = A->getData(memory::HOST);
+
+  //   // Decomposing a matrix into Lower Triangular
+  //   for (int i = 0; i < n; i++) {
+  //       for (int j = 0; j <= i; j++) {
+  //           int sum = 0;
+
+  //           // summation for diagonals
+  //           if (j == i) {
+  //               for (int k = 0; k < j; k++)
+  //                   sum += pow(out[idxmap(j, k, n)], 2);
+  //               out[idxmap(j, j, n)] = sqrt(A_data[idxmap(j, j, n)] - sum);
+  //           } else {
+
+  //               // Evaluating L(i, j) using L(j, j)
+  //               for (int k = 0; k < j; k++)
+  //                   sum += (out[idxmap(i, k, n)] * out[idxmap(j, k, n)]);
+  //               out[idxmap(i, j, n)] = (A_data[idxmap(i, j, n)] - sum) / out[idxmap(j, j, n)];
+  //           }
+  //       }
+  //   }
+  //   return 0;
+  // }
+
   /**
    * @brief Multiplies vector by an inverse of a diagonal matrix.
    *

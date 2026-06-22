@@ -35,6 +35,9 @@ namespace ReSolve
     // vector infinity norm
     virtual real_type amax(vector::Vector* x);
 
+    // vector norm
+    virtual real_type norm(vector::Vector* x);
+
     // mass axpy: x*alpha + y where x is [n x k] and alpha is [k x 1]; x is stored columnwise
     virtual void axpyMulti(index_type size, vector::Vector* alpha, index_type k, vector::Vector* x, vector::Vector* y);
 
@@ -86,6 +89,12 @@ namespace ReSolve
      */
     virtual void scal(vector::Vector* diag, vector::Vector* vec, index_type diag_offset);
 
+    // .. .. ..
+    virtual int choleskyFactorize(vector::Vector* A, char uplo);
+
+    // .. .. .. ..
+    virtual int choleskySolve(const real_type* L, vector::Vector* B, char side);
+
     /**
      * @brief Multiplies vector by an inverse of a diagonal matrix.
      *
@@ -96,6 +105,8 @@ namespace ReSolve
      * @return 0 if successful, 1 otherwise
      */
     virtual int diagSolve(vector::Vector* diag, vector::Vector* vec);
+
+    virtual int choleskyQr(vector::Vector* A, vector::Vector* R);
 
     /**
      * @brief max: calculate the element-wise maximum of two vectors

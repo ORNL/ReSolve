@@ -10,16 +10,20 @@ namespace ReSolve
   LinAlgWorkspaceCUDA::LinAlgWorkspaceCUDA()
   {
     handle_cusolversp_         = nullptr;
+    handle_cusolverdn_         = nullptr;
     handle_cusparse_           = nullptr;
     handle_cublas_             = nullptr;
     buffer_spmv_               = nullptr;
     buffer_1norm_              = nullptr;
+    buffer_qr_                 = nullptr;
     transpose_workspace_       = nullptr;
     transpose_workspace_ready_ = false;
     d_r_                       = nullptr;
     d_r_size_                  = 0;
     matvec_setup_done_         = false;
     norm_buffer_ready_         = false;
+    qr_buffer_ready_           = false;
+    qr_buffer_size_            = 0;
   }
 
   LinAlgWorkspaceCUDA::~LinAlgWorkspaceCUDA()
@@ -30,8 +34,12 @@ namespace ReSolve
       mem_.deleteOnDevice(d_r_);
     if (norm_buffer_ready_)
       mem_.deleteOnDevice(buffer_1norm_);
+    if (qr_buffer_ready_)
+      mem_.deleteOnDevice(buffer_qr_);
+      mem_.deleteOnDevice(qr_dev_info_);
     cusparseDestroy(handle_cusparse_);
     cusolverSpDestroy(handle_cusolversp_);
+    cusolverDnDestroy(handle_cusolverdn_);
     cublasDestroy(handle_cublas_);
     if (matvec_setup_done_)
     {
@@ -63,11 +71,19 @@ namespace ReSolve
       d_r_      = nullptr;
       d_r_size_ = 0;
     }
-    if (norm_buffer_ready_ == true)
+    if (norm_buffer_ready_)
     {
       mem_.deleteOnDevice(buffer_1norm_);
       buffer_1norm_      = nullptr;
       norm_buffer_ready_ = false;
+    }
+    if (qr_buffer_ready_)
+    {
+      mem_.deleteOnDevice(buffer_qr_);
+      buffer_qr_      = nullptr;
+      qr_buffer_size_ = 0;
+      qr_buffer_ready_ = false;
+      cudaFree(qr_dev_info_);
     }
     if (transpose_workspace_ready_)
     {
@@ -88,19 +104,29 @@ namespace ReSolve
     return buffer_1norm_;
   }
 
+  real_type* LinAlgWorkspaceCUDA::getQrBuffer()
+  {
+    return buffer_qr_;
+  }
+
+  index_type LinAlgWorkspaceCUDA::getQrBufferSize()
+  {
+    return qr_buffer_size_;
+  }
+
   void* LinAlgWorkspaceCUDA::getTransposeBufferWorkspace()
   {
     return transpose_workspace_;
   }
 
-  int LinAlgWorkspaceCUDA::setTransposeBufferWorkspace(size_t bufferSize)
+  int LinAlgWorkspaceCUDA::setTransposeBufferWorkspace(size_t buffer_size)
   {
     if (transpose_workspace_ready_)
     {
       out::error() << "Transpose workspace already set!\n";
       return 1;
     }
-    mem_.allocateBufferOnDevice(&transpose_workspace_, bufferSize);
+    mem_.allocateBufferOnDevice(&transpose_workspace_, buffer_size);
     transpose_workspace_ready_ = true;
     return 0;
   }
@@ -115,6 +141,11 @@ namespace ReSolve
     return norm_buffer_ready_;
   }
 
+  bool LinAlgWorkspaceCUDA::getQrBufferState()
+  {
+    return qr_buffer_ready_;
+  }
+
   void LinAlgWorkspaceCUDA::setSpmvBuffer(void* buffer)
   {
     buffer_spmv_ = buffer;
@@ -125,9 +156,20 @@ namespace ReSolve
     buffer_1norm_ = buffer;
   }
 
+  void LinAlgWorkspaceCUDA::setQrBuffer(real_type* buffer, index_type buffer_size)
+  {
+    buffer_qr_ = buffer;
+    qr_buffer_size_ = buffer_size;
+  }
+
   void LinAlgWorkspaceCUDA::setNormBufferState(bool r)
   {
     norm_buffer_ready_ = r;
+  }
+
+  void LinAlgWorkspaceCUDA::setQrBufferState(bool r)
+  {
+    qr_buffer_ready_ = r;
   }
 
   cusparseHandle_t LinAlgWorkspaceCUDA::getCusparseHandle()
@@ -165,9 +207,19 @@ namespace ReSolve
     return handle_cusolversp_;
   }
 
+  cusolverDnHandle_t LinAlgWorkspaceCUDA::getCusolverDnHandle()
+  {
+    return handle_cusolverdn_;
+  }
+
   void LinAlgWorkspaceCUDA::setCusolverSpHandle(cusolverSpHandle_t handle)
   {
     handle_cusolversp_ = handle;
+  }
+
+  void LinAlgWorkspaceCUDA::setCusolverDnHandle(cusolverDnHandle_t handle)
+  {
+    handle_cusolverdn_ = handle;
   }
 
   cusparseSpMatDescr_t LinAlgWorkspaceCUDA::getSpmvMatrixDescriptor()
@@ -237,10 +289,22 @@ namespace ReSolve
     }
   }
 
+  void LinAlgWorkspaceCUDA::allocateQrDevInfo()
+  {
+    // todo: use memory handler
+    mem_.allocateArrayOnDevice(&qr_dev_info_, 1);
+  }
+
+  int* LinAlgWorkspaceCUDA::getQrDevInfo()
+  {
+    return qr_dev_info_;
+  }
+
   void LinAlgWorkspaceCUDA::initializeHandles()
   {
     cusparseCreate(&handle_cusparse_);
     cublasCreate(&handle_cublas_);
     cusolverSpCreate(&handle_cusolversp_);
+    cusolverDnCreate(&handle_cusolverdn_);
   }
 } // namespace ReSolve

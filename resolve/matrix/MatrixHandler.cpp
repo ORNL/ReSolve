@@ -147,6 +147,9 @@ namespace ReSolve
                             memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
+
+    assert((vec_x != vec_result) && "In-place matvec is not allowed!");
+
     switch (memspace)
     {
     case HOST:

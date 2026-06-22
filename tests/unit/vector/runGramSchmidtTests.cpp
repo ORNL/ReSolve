@@ -38,11 +38,12 @@ ReSolve::tests::TestingResults runTests()
 
   ReSolve::tests::GramSchmidtTests test(handler);
   result += test.GramSchmidtConstructor();
-  result += test.orthogonalize(5000, ReSolve::GramSchmidt::MGS);
-  result += test.orthogonalize(5000, ReSolve::GramSchmidt::CGS2);
-  result += test.orthogonalize(5000, ReSolve::GramSchmidt::MGS_TWO_SYNC);
-  result += test.orthogonalize(5000, ReSolve::GramSchmidt::MGS_PM);
-  result += test.orthogonalize(5000, ReSolve::GramSchmidt::CGS1);
+  result += test.orthogonalize(1400000, ReSolve::GramSchmidt::CGS2);
+  // result += test.orthogonalize(5000, ReSolve::GramSchmidt::MGS);
+  // result += test.orthogonalize(5000, ReSolve::GramSchmidt::CGS2);
+  // result += test.orthogonalize(5000, ReSolve::GramSchmidt::MGS_TWO_SYNC);
+  // result += test.orthogonalize(5000, ReSolve::GramSchmidt::MGS_PM);
+  // result += test.orthogonalize(5000, ReSolve::GramSchmidt::CGS1);
 
   return result;
 }

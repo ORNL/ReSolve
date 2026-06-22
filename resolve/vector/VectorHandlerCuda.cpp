@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <iostream>
+#include <chrono>
 
 #include <resolve/cuda/cudaKernels.h>
 
@@ -449,6 +450,111 @@ namespace ReSolve
     cuda::scale(n, diag_data, vec_data);
     vec->setDataUpdated(memory::DEVICE);
   }
+  
+  int VectorHandlerCuda::choleskyFactorize(vector::Vector* A, char uplo)
+  {
+    using namespace constants;
+
+    index_type n = A->getSize();
+    assert((n == A->getNumVectors()) && "Cholesky input is not square!");
+
+    cublasFillMode_t fill_mode;
+    switch (uplo)
+    {
+    case 'U':
+      fill_mode = CUBLAS_FILL_MODE_UPPER;
+      break;
+    case 'L':
+      fill_mode = CUBLAS_FILL_MODE_LOWER;
+      break;
+    default:
+      break;
+    }
+
+    cusolverDnHandle_t handle_cusolver_dn = workspace_->getCusolverDnHandle();
+    int status = 0;
+
+    // Allocate workspace for Cholesky
+    if (workspace_->getQrBufferState() == false)
+    { // not allocated
+      int buffer_size;
+      status += cusolverDnDpotrf_bufferSize(handle_cusolver_dn,
+                                            fill_mode,
+                                            n,
+                                            A->getData(memory::DEVICE),
+                                            n,
+                                            &buffer_size);
+      // todo: error checking for buffer_size
+      real_type* buffer;
+      mem_.allocateArrayOnDevice(&buffer, buffer_size);
+      workspace_->setQrBuffer(buffer, buffer_size);
+      workspace_->setQrBufferState(true);
+      workspace_->allocateQrDevInfo();
+    }
+
+    status += cusolverDnDpotrf(handle_cusolver_dn,
+                               fill_mode,
+                               n,
+                               A->getData(memory::DEVICE),
+                               n,
+                               workspace_->getQrBuffer(),
+                               workspace_->getQrBufferSize(),
+                               workspace_->getQrDevInfo());
+    
+    return status;
+  }
+
+  // .. .. .. .. L must be on the device already
+  int VectorHandlerCuda::choleskySolve(const real_type* L, vector::Vector* B, char side)
+  {
+    using namespace constants;
+
+    cublasHandle_t handle_cublas = workspace_->getCublasHandle();
+    cublasSideMode_t cublas_side = (side == 'L') ? CUBLAS_SIDE_LEFT : CUBLAS_SIDE_RIGHT;
+
+    int status = 0;
+
+    // L * Y = B, or
+    // Y * L^T = B
+    status += static_cast<int>(cublasDtrsm(
+      handle_cublas,
+      cublas_side,
+      CUBLAS_FILL_MODE_LOWER,
+      (side == 'L') ? CUBLAS_OP_N : CUBLAS_OP_T,
+      CUBLAS_DIAG_NON_UNIT,
+      B->getSize(),
+      B->getNumVectors(),
+      &ONE,
+      L,
+      B->getNumVectors(),
+      B->getData(memory::DEVICE),
+      B->getSize()
+    ));
+
+    // L^T * X = Y, or
+    // X * L = Y
+    status += static_cast<int>(cublasDtrsm(
+      handle_cublas,
+      cublas_side,
+      CUBLAS_FILL_MODE_LOWER,
+      (side == 'L') ? CUBLAS_OP_T : CUBLAS_OP_N,
+      CUBLAS_DIAG_NON_UNIT,
+      B->getSize(),
+      B->getNumVectors(),
+      &ONE,
+      L,
+      B->getNumVectors(),
+      B->getData(memory::DEVICE),
+      B->getSize()
+    ));
+
+    if (status != 0)
+    {
+      return 1;
+    }
+
+    return 0;
+  }
 
   /**
    * @brief Multiplies vector by an inverse of a diagonal matrix.
@@ -472,6 +578,83 @@ namespace ReSolve
     return 0;
   }
 
+  int VectorHandlerCuda::choleskyQr(vector::Vector* A, vector::Vector* R)
+  {
+    using namespace constants;
+
+    index_type n = A->getSize();
+    index_type k = A->getNumVectors();
+    
+    cublasHandle_t handle_cublas = workspace_->getCublasHandle();
+
+    int status = 0;
+    
+            // auto start = std::chrono::steady_clock::now();
+
+//             cudaEvent_t start, stop;
+// cudaEventCreate(&start);
+// cudaEventCreate(&stop);
+
+// // Start right before the first GPU call
+// cudaEventRecord(start, 0);
+
+    // Compute Gram matrix (G = A^T * A)
+    // Note: cublasDsyrk is also possible here, but empirically it's a lot slower. Might be worth testing further
+    status += cublasDgemm(handle_cublas,
+                          CUBLAS_OP_T,
+                          CUBLAS_OP_N,
+                          k,
+                          k,
+                          n,
+                          &ONE,
+                          A->getData(memory::DEVICE),
+                          n,
+                          A->getData(memory::DEVICE),
+                          n,
+                          &ZERO,
+                          R->getData(memory::DEVICE),
+                          k);
+    
+    // can't do this in general if mixing dimensions between calls to choleskyFactorize
+    choleskyFactorize(R, 'U');
+
+    // cudaDeviceSynchronize();
+    // int h_dev_info;
+    // status += cudaMemcpy(&h_dev_info, workspace_->getQrDevInfo(), sizeof(int), cudaMemcpyDeviceToHost);
+
+    // if (h_dev_info != 0)
+    // {
+      // todo: fallback householder qr
+
+      // R->syncData(memory::HOST);
+      // return 1;
+    // }
+
+    // Zero out the upper triangle of R (need custom kernel)
+    
+    // Compute Q (A = Q * R)
+    status += cublasDtrsm(handle_cublas,
+                          CUBLAS_SIDE_RIGHT,
+                          CUBLAS_FILL_MODE_LOWER,
+                          CUBLAS_OP_N,
+                          CUBLAS_DIAG_NON_UNIT,
+                          n,
+                          k,
+                          &ONE,
+                          R->getData(memory::DEVICE),
+                          k,
+                          A->getData(memory::DEVICE),
+                          n);
+                          // Stop immediately after the last GPU call
+// cudaEvent< ms << " ms\n";
+        // mem_.deviceSynchronize();
+        // auto end = std::chrono::steady_clock::now();
+        // std::chrono::duration<double, std::milli> elapsed = (end - start);
+        // printf("%f\n", elapsed.count());
+
+    return status;
+  }
+
   /**
    * @brief Calculate element-wise maximum between two vectors in CUDA
    *
@@ -493,6 +676,33 @@ namespace ReSolve
     out->setDataUpdated(memory::DEVICE);
     return 0;
   }
+  
+  /**
+   * @brief compute norm of a vector or Frobenius norm of a multivector
+   *
+   * @param[in] x The vector
+   *
+   * @return Norm of _x_
+   *
+   */
+  real_type VectorHandlerCuda::norm(vector::Vector* x)
+  {
+    cublasHandle_t handle_cublas = workspace_->getCublasHandle();
+
+    double         nrm{0.0};
+    cublasStatus_t st = cublasDdot(handle_cublas,
+                                   x->getSize() * x->getNumVectors(),
+                                   x->getData(memory::DEVICE),
+                                   1,
+                                   x->getData(memory::DEVICE),
+                                   1,
+                                   &nrm);
+    if (st != 0)
+    {
+      out::error() << "vector norm returned error code " << st << "\n";
+    }
+    return sqrt(nrm);
+  }
 
   /**
    * @brief Calculate element-wise absolute value of a vector in CUDA
@@ -512,4 +722,9 @@ namespace ReSolve
     return 0;
   }
 
-} // namespace ReSolve
+} // namespace ReSolveRecord(stop, 0);
+// cudaEventSynchronize(stop); // Wait for the stop event to record
+
+// float ms = 0;
+// cudaEventElapsedTime(&ms, start, stop);
+// std::cout << "Pure GPU Execution Time: " <
