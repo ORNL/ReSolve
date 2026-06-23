@@ -127,6 +127,8 @@ namespace ReSolve
      * @return 0 if successful, 1 otherwise
      */
     virtual int abs(/* const */ vector::Vector* in, vector::Vector* out);
+    
+    virtual void randomVector(vector::Vector* x, real_type min, real_type max);
 
   private:
     MemoryHandler        mem_; ///< Device memory manager object

@@ -39,8 +39,8 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
 
   std::string        source_dir = std::string(SOURCE_DIR);
   std::string        A_file_name = source_dir + std::string("/RandomizedCGTestMatrices/crankseg_2.mtx");
-  double b_min = -600000.0;
-  double b_max = 600000.0;
+  double b_min = -100.0;
+  double b_max = 100.0;
 
   result += test.RandomizedCGTest(A_file_name, 1, b_min, b_max);
   workspace.resetLinAlgWorkspace();

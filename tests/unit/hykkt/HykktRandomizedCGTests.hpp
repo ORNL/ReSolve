@@ -74,11 +74,7 @@ namespace ReSolve
 
         vector::Vector* b = new vector::Vector(n);
         b->allocateAll(memspace_);
-        randomized_cg.randomVector(b, b_min, b_max);
-        if (memspace_ == memory::DEVICE)
-        {
-          b->syncData(memory::DEVICE);
-        }
+        vector_handler_.randomVector(b, b_min, b_max, memspace_);
 
         randomized_cg.addMatrixInfo(A);
         randomized_cg.addVectorInfo(x, b);

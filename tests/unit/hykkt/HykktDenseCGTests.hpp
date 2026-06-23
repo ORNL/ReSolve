@@ -6,7 +6,6 @@
 #pragma once
 
 #include <filesystem>
-#include <random>
 
 #include <resolve/MemoryUtils.hpp>
 #include <resolve/hykkt/dense_cg/DenseConjugateGradient.hpp>
@@ -41,23 +40,12 @@ namespace ReSolve
                                                  VectorHandler&      vector_handler)
         : memspace_(memspace),
           matrix_handler_(matrix_handler),
-          vector_handler_(vector_handler),
-          generator_(constants::SEED)
+          vector_handler_(vector_handler)
       {
       }
 
       virtual ~HykktDenseConjugateGradientTests()
       {
-      }
-
-      void randomVector(vector::Vector* v, real_type min, real_type max)
-      {
-        std::uniform_real_distribution<real_type> distribution(min, max);
-        for (index_type i = 0; i < v->getSize(); ++i)
-        {
-          v->getData(memory::HOST)[i] = distribution(generator_);
-        }
-        v->setDataUpdated(memory::HOST);
       }
 
       /**
@@ -72,11 +60,7 @@ namespace ReSolve
         
         vector::Vector* L = new vector::Vector(n, n);
         L->allocateAll(memspace_);
-        randomVector(L, b_min, b_max);
-        if (memspace_ == memory::DEVICE)
-        {
-          L->syncData(memory::DEVICE);
-        }
+        vector_handler_.randomVector(L, b_min, b_max, memspace_);
 
         vector::Vector* A = new vector::Vector(n, n);
         A->allocateAll(memspace_);
@@ -94,11 +78,7 @@ namespace ReSolve
 
         vector::Vector* b = new vector::Vector(n);
         b->allocateAll(memspace_);
-        randomVector(b, b_min, b_max);
-        if (memspace_ == memory::DEVICE)
-        {
-          b->syncData(memory::DEVICE);
-        }
+        vector_handler_.randomVector(b, b_min, b_max, memspace_);
 
         cg.addMatrixInfo(A);
         cg.addVectorInfo(x, b);
@@ -126,8 +106,6 @@ namespace ReSolve
       static constexpr real_type cholesky_tol = 1e-12;
       static constexpr real_type cg_tol     = 1e-12;
       static constexpr real_type entry_tol    = 1e-6; // Tolerance for checking individual entries
-
-      std::mt19937 generator_;
 
       /**
        * @brief Validate the CG result.

@@ -4,6 +4,7 @@
 #include "cusolverSp.h"
 #include "cusolverDn.h"
 #include "cusparse.h"
+#include "curand_kernel.h"
 #include <resolve/Common.hpp>
 #include <resolve/MemoryUtils.hpp>
 
@@ -42,6 +43,9 @@ namespace ReSolve
     real_type*           getDr();
     bool                 getNormBufferState();
     bool                 getQrBufferState();
+    bool                 isRngReady();
+    curandState*         getRngState();
+    index_type           getRngStateSize();
 
     void setCublasHandle(cublasHandle_t handle);
     void setCusolverSpHandle(cusolverSpHandle_t handle);
@@ -54,6 +58,10 @@ namespace ReSolve
     void setQrBufferState(bool r);
 
     void initializeHandles();
+    void initializeRng(index_type size);
+    void resetRng();
+    void computeTotalThreads();
+    index_type getTotalThreads();
 
     bool matvecSetup();
     void matvecSetupDone();
@@ -100,6 +108,11 @@ namespace ReSolve
     index_type qr_buffer_size_{0};
     bool       qr_buffer_ready_{false}; // to track if allocated
     int*       qr_dev_info_{nullptr};
+
+    bool rng_ready_{false};
+    index_type rng_state_size_{0};
+    curandState* rng_state_;
+    index_type total_threads_;
 
     MemoryHandler mem_;
   };

@@ -8,6 +8,9 @@
  * agnostic code.
  */
 #include <cuda_runtime.h>
+#include "curand.h"
+#include "curand_kernel.h"
+#include <algorithm>
 
 #include <resolve/cuda/cudaKernels.h>
 #include <resolve/cuda/cudaVectorKernels.h>
@@ -107,6 +110,22 @@ namespace ReSolve
         }
       }
 
+      // .. .. ..
+      __global__ void clearUpper(index_type n, real_type* vec)
+      {
+        index_type idx = blockIdx.x * blockDim.x + threadIdx.x;
+
+        if (idx < n)
+        {
+          index_type row = idx % n;
+          index_type col = idx / n;
+          if (row < col)
+          {
+            vec[idx] = 0.0;
+          }
+        }
+      }
+
       /**
        * @brief Computes the element-wise max of two vectors.
        *
@@ -154,6 +173,31 @@ namespace ReSolve
         {
           // Compute absolute value of element
           out[idx] = fabs(in[idx]);
+        }
+      }
+      
+      __global__ void initializeRng(index_type n, curandState* state)
+      {
+        index_type idx = blockIdx.x * blockDim.x + threadIdx.x;
+        if (idx < n)
+        {
+          curand_init(constants::SEED, idx, 0, &state[idx]);
+        }
+      }
+
+      __global__ void randomVector(index_type n, real_type* x, real_type min, real_type max, curandState* state)
+      {
+        index_type idx = blockIdx.x * blockDim.x + threadIdx.x;
+        index_type grid_size = gridDim.x * blockDim.x;
+
+        if (idx < n)
+        {
+          curandState state_cached = state[idx];
+          for (index_type j = idx; j < n; j += grid_size)
+          {
+            x[j] = curand_uniform_double(&state_cached) * (max - min) + min;
+          }
+          state[idx] = state_cached;
         }
       }
     } // namespace kernels
@@ -214,6 +258,13 @@ namespace ReSolve
       kernels::diagSolve<<<num_blocks, block_size>>>(n, diag, vec);
     }
 
+    // .....
+    void clearUpper(index_type n, real_type* vec)
+    {
+      int num_blocks = (n + block_size - 1) / block_size;
+      kernels::clearUpper<<<num_blocks, block_size>>>(n, vec);
+    }
+
     /**
      * @brief Wrapper that computes the element-wise max of two vectors.
      *
@@ -250,6 +301,21 @@ namespace ReSolve
       int num_blocks = (n + block_size - 1) / block_size;
       // Launch the kernel
       kernels::abs<<<num_blocks, block_size>>>(n, in, out);
+    }
+
+    void initializeRng(index_type n, index_type total_threads, curandState** state)
+    {
+      index_type threads_to_use = std::min(n, total_threads);
+      int num_blocks = (threads_to_use + block_size - 1) / block_size;
+
+      cudaMalloc((void**)state, threads_to_use * sizeof(curandState));
+      kernels::initializeRng<<<num_blocks, block_size>>>(threads_to_use, *state);
+    }
+    
+    void randomVector(index_type n, real_type* x, real_type min, real_type max, index_type total_threads, curandState* state)
+    {
+      int num_blocks = std::min((n + block_size - 1), total_threads) / block_size;
+      kernels::randomVector<<<num_blocks, block_size>>>(n, x, min, max, state);
     }
   } // namespace cuda
 } // namespace ReSolve

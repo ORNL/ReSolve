@@ -11,6 +11,8 @@
 
 #include <resolve/Common.hpp>
 
+#include "curand_kernel.h"
+
 namespace ReSolve
 {
   namespace cuda
@@ -19,7 +21,10 @@ namespace ReSolve
     void addConst(index_type n, real_type val, real_type* arr);
     void scale(index_type n, const real_type* diag, real_type* vec);
     void diagSolve(index_type n, const real_type* diag, real_type* vec);
+    void clearUpper(index_type n, real_type* vec);
     void max(index_type n, const real_type* x, const real_type* y, real_type* out);
     void abs(index_type n, const real_type* in, real_type* out);
+    void initializeRng(index_type n, index_type total_threads, curandState** state);
+    void randomVector(index_type n, real_type* x, real_type min, real_type max, index_type num_threads, curandState* state);
   } // namespace cuda
 } // namespace ReSolve

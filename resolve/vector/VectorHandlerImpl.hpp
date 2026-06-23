@@ -88,6 +88,9 @@ namespace ReSolve
                       vector::Vector* A,
                       vector::Vector* B,
                       vector::Vector* C) = 0;
+
+    // ....
+    virtual void randomVector(vector::Vector* x, real_type min, real_type max) = 0;
   };
 
 } // namespace ReSolve

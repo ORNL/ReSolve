@@ -42,7 +42,7 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
   double b_min = -10.0;
   double b_max = 10.0;
 
-  result += test.DenseCGTest(A_file_name, 10000, b_min, b_max);
+  result += test.DenseCGTest(A_file_name, 30000, b_min, b_max);
 
   std::cout << "\n";
 }

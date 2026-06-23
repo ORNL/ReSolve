@@ -1,6 +1,7 @@
 #include "VectorHandlerCpu.hpp"
 
 #include <cassert>
+#include <random>
 
 #include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/vector/Vector.hpp>
@@ -608,6 +609,16 @@ namespace ReSolve
     }
     out->setDataUpdated(memory::HOST);
     return 0;
+  }
+
+  void VectorHandlerCpu::randomVector(vector::Vector* v, real_type min, real_type max)
+  {
+    std::uniform_real_distribution<real_type> distribution(min, max);
+    for (index_type i = 0; i < v->getSize() * v->getNumVectors(); ++i)
+    {
+      v->getData(memory::HOST)[i] = distribution(workspace_->getRng());
+    }
+    v->setDataUpdated(memory::HOST);
   }
 
 } // namespace ReSolve

@@ -619,6 +619,20 @@ namespace ReSolve
     return 1;
   }
 
+  void VectorHandler::randomVector(vector::Vector* x, real_type min, real_type max, memory::MemorySpace memspace)
+  {
+    using namespace ReSolve::memory;
+    switch (memspace)
+    {
+    case HOST:
+      return cpuImpl_->randomVector(x, min, max);
+      break;
+    case DEVICE:
+      return devImpl_->randomVector(x, min, max);
+      break;
+    }
+  }
+
   /**
    * @brief If CUDA support is enabled in the handler.
    *

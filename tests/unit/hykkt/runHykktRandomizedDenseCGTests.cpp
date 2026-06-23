@@ -42,17 +42,17 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
   double b_min = -10.0;
   double b_max = 10.0;
 
-  result += test.RandomizedDenseCGTest(A_file_name, 10000, 1, b_min, b_max);
+  // result += test.RandomizedDenseCGTest(A_file_name, 30000, 1, b_min, b_max);
+  // workspace.resetLinAlgWorkspace();
+  result += test.RandomizedDenseCGTest(A_file_name, 30000, 2, b_min, b_max);
   workspace.resetLinAlgWorkspace();
-  result += test.RandomizedDenseCGTest(A_file_name, 10000, 2, b_min, b_max);
+  result += test.RandomizedDenseCGTest(A_file_name, 30000, 4, b_min, b_max);
   workspace.resetLinAlgWorkspace();
-  result += test.RandomizedDenseCGTest(A_file_name, 10000, 4, b_min, b_max);
+  result += test.RandomizedDenseCGTest(A_file_name, 30000, 8, b_min, b_max);
   workspace.resetLinAlgWorkspace();
-  result += test.RandomizedDenseCGTest(A_file_name, 10000, 8, b_min, b_max);
+  result += test.RandomizedDenseCGTest(A_file_name, 30000, 16, b_min, b_max);
   workspace.resetLinAlgWorkspace();
-  result += test.RandomizedDenseCGTest(A_file_name, 10000, 16, b_min, b_max);
-  workspace.resetLinAlgWorkspace();
-  result += test.RandomizedDenseCGTest(A_file_name, 10000, 32, b_min, b_max);
+  result += test.RandomizedDenseCGTest(A_file_name, 30000, 32, b_min, b_max);
 
   std::cout << "\n";
 }

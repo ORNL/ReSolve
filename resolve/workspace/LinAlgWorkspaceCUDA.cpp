@@ -1,7 +1,9 @@
+#include <algorithm>
 #include <cassert>
 
 #include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/workspace/LinAlgWorkspaceCUDA.hpp>
+#include <resolve/cuda/cudaVectorKernels.h>
 
 namespace ReSolve
 {
@@ -24,6 +26,9 @@ namespace ReSolve
     norm_buffer_ready_         = false;
     qr_buffer_ready_           = false;
     qr_buffer_size_            = 0;
+    rng_state_                 = nullptr;
+    rng_ready_                 = false;
+    rng_state_size_            = 0;
   }
 
   LinAlgWorkspaceCUDA::~LinAlgWorkspaceCUDA()
@@ -35,8 +40,10 @@ namespace ReSolve
     if (norm_buffer_ready_)
       mem_.deleteOnDevice(buffer_1norm_);
     if (qr_buffer_ready_)
+    {
       mem_.deleteOnDevice(buffer_qr_);
       mem_.deleteOnDevice(qr_dev_info_);
+    }
     cusparseDestroy(handle_cusparse_);
     cusolverSpDestroy(handle_cusolversp_);
     cusolverDnDestroy(handle_cusolverdn_);
@@ -48,6 +55,10 @@ namespace ReSolve
     if (transpose_workspace_ready_)
     {
       mem_.deleteOnDevice(transpose_workspace_);
+    }
+    if (rng_ready_)
+    {
+      mem_.deleteOnDevice(rng_state_);
     }
   }
 
@@ -90,6 +101,13 @@ namespace ReSolve
       mem_.deleteOnDevice(transpose_workspace_);
       transpose_workspace_       = nullptr;
       transpose_workspace_ready_ = false;
+    }
+    if (rng_ready_)
+    {
+      mem_.deleteOnDevice(rng_state_);
+      rng_state_size_ = 0;
+      total_threads_ = 0;
+      rng_ready_ = false;
     }
     return;
   }
@@ -144,6 +162,33 @@ namespace ReSolve
   bool LinAlgWorkspaceCUDA::getQrBufferState()
   {
     return qr_buffer_ready_;
+  }
+  
+  bool LinAlgWorkspaceCUDA::isRngReady()
+  {
+    return rng_ready_;
+  }
+  
+  curandState* LinAlgWorkspaceCUDA::getRngState()
+  {
+    return rng_state_;
+  }
+
+  index_type LinAlgWorkspaceCUDA::getRngStateSize()
+  {
+    return rng_state_size_;
+  }
+
+  void LinAlgWorkspaceCUDA::computeTotalThreads()
+  {
+    int device_id = 0;
+    cudaDeviceProp properties;
+    total_threads_ = properties.multiProcessorCount * properties.maxThreadsPerMultiProcessor;
+  }
+
+  index_type LinAlgWorkspaceCUDA::getTotalThreads()
+  {
+    return total_threads_;
   }
 
   void LinAlgWorkspaceCUDA::setSpmvBuffer(void* buffer)
@@ -306,5 +351,18 @@ namespace ReSolve
     cublasCreate(&handle_cublas_);
     cusolverSpCreate(&handle_cusolversp_);
     cusolverDnCreate(&handle_cusolverdn_);
+  }
+  
+  void LinAlgWorkspaceCUDA::initializeRng(index_type size)
+  {
+    cuda::initializeRng(size, total_threads_, &rng_state_);
+    rng_state_size_ = std::min(size, total_threads_);
+    rng_ready_ = true;
+  }
+
+  void LinAlgWorkspaceCUDA::resetRng()
+  {
+    mem_.deleteOnDevice(rng_state_);
+    rng_ready_ = false;
   }
 } // namespace ReSolve

@@ -128,17 +128,6 @@ namespace ReSolve
       gram_schmidt_.setup(n_, k_);
     }
 
-    // write gpu implementation later, possibly in vector class
-    void RandomizedDenseConjugateGradient::randomVector(vector::Vector* v, real_type min, real_type max)
-    {
-      std::uniform_real_distribution<real_type> distribution(min, max);
-      for (index_type i = 0; i < v->getSize() * v->getNumVectors(); ++i)
-      {
-        v->getData(memory::HOST)[i] = distribution(generator_);
-      }
-      v->setDataUpdated(memory::HOST);
-    }
-
     // Generate starting guesses and set up residual space matrices & vectors
     void RandomizedDenseConjugateGradient::generateGuesses()
     {
@@ -150,11 +139,7 @@ namespace ReSolve
         b_->copyToExternal(B_res_->getData(i, memspace_), memspace_, memspace_);
       }
 
-      randomVector(X_0_, -1.0, 1.0);
-      if (memspace_ == memory::DEVICE)
-      {
-        X_0_->syncData(memory::DEVICE);
-      }
+      vector_handler_->randomVector(X_0_, -1.0, 1.0, memspace_);
       vector_handler_->gemm('N', 'N', ONE, ZERO, A_, X_0_, Temp_nxk_, memspace_);
       real_type AX_0_norm = vector_handler_->norm(Temp_nxk_, memspace_);
       real_type B_norm = sqrt(static_cast<double>(k_)) * vector_handler_->norm(b_, memspace_);

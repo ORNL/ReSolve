@@ -1,5 +1,6 @@
 #include "VectorHandlerCuda.hpp"
 
+#include <algorithm>
 #include <cassert>
 #include <iostream>
 #include <chrono>
@@ -492,6 +493,12 @@ namespace ReSolve
       workspace_->allocateQrDevInfo();
     }
 
+    if (n > 1) {
+      
+      A->syncData(memory::HOST);
+      int a = 1;
+    }
+
     status += cusolverDnDpotrf(handle_cusolver_dn,
                                fill_mode,
                                n,
@@ -500,6 +507,19 @@ namespace ReSolve
                                workspace_->getQrBuffer(),
                                workspace_->getQrBufferSize(),
                                workspace_->getQrDevInfo());
+    
+    // cudaDeviceSynchronize();
+    // A->setDataUpdated(memory::DEVICE);
+    // int h_dev_info;
+    // status += cudaMemcpy(&h_dev_info, workspace_->getQrDevInfo(), sizeof(int), cudaMemcpyDeviceToHost);
+
+    // if (h_dev_info != 0)
+    // {
+    //   // todo: fallback householder qr
+
+    //   // A->syncData(memory::HOST);
+    //   return 1;
+    // }
     
     return status;
   }
@@ -580,6 +600,7 @@ namespace ReSolve
 
   int VectorHandlerCuda::choleskyQr(vector::Vector* A, vector::Vector* R)
   {
+    R->setDataUpdated(memory::DEVICE); // REMOVE LATER
     using namespace constants;
 
     index_type n = A->getSize();
@@ -618,19 +639,8 @@ namespace ReSolve
     // can't do this in general if mixing dimensions between calls to choleskyFactorize
     choleskyFactorize(R, 'U');
 
-    // cudaDeviceSynchronize();
-    // int h_dev_info;
-    // status += cudaMemcpy(&h_dev_info, workspace_->getQrDevInfo(), sizeof(int), cudaMemcpyDeviceToHost);
-
-    // if (h_dev_info != 0)
-    // {
-      // todo: fallback householder qr
-
-      // R->syncData(memory::HOST);
-      // return 1;
-    // }
-
     // Zero out the upper triangle of R (need custom kernel)
+    cuda::clearUpper(k, R->getData(memory::DEVICE));
     
     // Compute Q (A = Q * R)
     status += cublasDtrsm(handle_cublas,
@@ -720,6 +730,24 @@ namespace ReSolve
     cuda::abs(n, in_data, out_data);
     out->setDataUpdated(memory::DEVICE);
     return 0;
+  }
+
+  // ...
+  void VectorHandlerCuda::randomVector(vector::Vector* x, real_type min, real_type max)
+  {
+    index_type n = x->getSize() * x->getNumVectors();
+    if (!workspace_->isRngReady())
+    {
+      workspace_->computeTotalThreads();
+      workspace_->initializeRng(n);
+    }
+    else if (workspace_->getRngStateSize() > std::min(n, workspace_->getTotalThreads()))
+    {
+      workspace_->resetRng();
+      workspace_->initializeRng(n);
+    }
+    cuda::randomVector(n, x->getData(memory::DEVICE), min, max, workspace_->getTotalThreads(), workspace_->getRngState());
+    x->setDataUpdated(memory::DEVICE);
   }
 
 } // namespace ReSolveRecord(stop, 0);

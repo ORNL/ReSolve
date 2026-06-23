@@ -79,6 +79,8 @@ namespace ReSolve
     virtual int max(/* const */ vector::Vector* x, /* const */ vector::Vector* y, vector::Vector* out);
 
     virtual int abs(/* const */ vector::Vector* in, vector::Vector* out);
+    
+    virtual void randomVector(vector::Vector* x, real_type min, real_type max);
 
   private:
     LinAlgWorkspaceCpu* workspace_;
