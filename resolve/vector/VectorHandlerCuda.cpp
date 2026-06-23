@@ -135,7 +135,7 @@ namespace ReSolve
   {
     cublasHandle_t handle_cublas = workspace_->getCublasHandle();
     cublasDaxpy(handle_cublas,
-                x->getSize(),
+                x->getSize() * x->getNumVectors(),
                 &alpha,
                 x->getData(memory::DEVICE),
                 1,

@@ -156,7 +156,7 @@ namespace ReSolve
   {
     rocblas_handle handle_rocblas = workspace_->getRocblasHandle();
     rocblas_daxpy(handle_rocblas,
-                  x->getSize(),
+                  x->getSize() * x->getNumVectors(),
                   &alpha,
                   x->getData(memory::DEVICE),
                   1,

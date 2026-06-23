@@ -120,7 +120,7 @@ namespace ReSolve
     // AXPY:  y = alpha * x + y
     real_type* x_data = x->getData(memory::HOST);
     real_type* y_data = y->getData(memory::HOST);
-    for (int i = 0; i < x->getSize(); ++i)
+    for (int i = 0; i < x->getSize() * x->getNumVectors(); ++i)
     {
       y_data[i] = alpha * x_data[i] + y_data[i];
     }
