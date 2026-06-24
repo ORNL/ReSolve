@@ -50,7 +50,7 @@ namespace ReSolve
 
     private:
       index_type n_;             // Dimension of outer system
-      int        itmax_ = 100;   // Maximum iterations for conjugate gradient
+      int        itmax_ = 10000;   // Maximum iterations for conjugate gradient
       double     tol_   = 1e-12; // Solver tolerance for Schur
 
       MatrixHandler* matrix_handler_{nullptr}; ///< Backend-specific matrix handler.

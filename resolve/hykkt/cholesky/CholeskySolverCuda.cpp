@@ -107,12 +107,15 @@ namespace ReSolve
      */
     void CholeskySolverCuda::solve(vector::Vector* x, vector::Vector* b)
     {
-      cusolverSpDcsrcholSolve(cusolverHandle_,
-                              A_->getNumRows(),
-                              b->getData(memory::DEVICE),
-                              x->getData(memory::DEVICE),
-                              factorizationInfo_,
-                              buffer_);
+      for (index_type i = 0; i < x->getNumVectors(); i++)
+      {
+        cusolverSpDcsrcholSolve(cusolverHandle_,
+                                A_->getNumRows(),
+                                b->getData(i, memory::DEVICE),
+                                x->getData(i, memory::DEVICE),
+                                factorizationInfo_,
+                                buffer_);
+      }
       x->setDataUpdated(memory::DEVICE);
     }
   } // namespace hykkt

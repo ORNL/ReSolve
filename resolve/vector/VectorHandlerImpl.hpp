@@ -37,6 +37,7 @@ namespace ReSolve
     
     // norm = ||x||_2
     virtual real_type norm(vector::Vector* x) = 0;
+    virtual real_type norm(vector::Vector* x, index_type i) = 0;
 
     // mass axpy: x*alpha + y where x is [n x k] and alpha is [k x 1]; x is stored columnwise
     virtual void axpyMulti(index_type size, vector::Vector* alpha, index_type k, vector::Vector* x, vector::Vector* y) = 0;
@@ -90,7 +91,9 @@ namespace ReSolve
                       vector::Vector* C) = 0;
 
     // ....
-    virtual void randomVector(vector::Vector* x, real_type min, real_type max) = 0;
+    virtual void randomVector(vector::Vector* v, real_type min, real_type max) = 0;
+
+    virtual void addIdentity(vector::Vector* x, real_type alpha) = 0;
   };
 
 } // namespace ReSolve

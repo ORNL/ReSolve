@@ -493,11 +493,11 @@ namespace ReSolve
       workspace_->allocateQrDevInfo();
     }
 
-    if (n > 1) {
+    // if (n > 1) {
       
-      A->syncData(memory::HOST);
-      int a = 1;
-    }
+    //   A->syncData(memory::HOST);
+    //   int a = 1;
+    // }
 
     status += cusolverDnDpotrf(handle_cusolver_dn,
                                fill_mode,
@@ -508,10 +508,22 @@ namespace ReSolve
                                workspace_->getQrBufferSize(),
                                workspace_->getQrDevInfo());
     
+    // // async memcpy?
     // cudaDeviceSynchronize();
     // A->setDataUpdated(memory::DEVICE);
     // int h_dev_info;
-    // status += cudaMemcpy(&h_dev_info, workspace_->getQrDevInfo(), sizeof(int), cudaMemcpyDeviceToHost);
+    // cudaMemcpy(&h_dev_info, workspace_->getQrDevInfo(), sizeof(int), cudaMemcpyDeviceToHost);
+    // status += h_dev_info;
+
+    // switch (uplo)
+    // {
+    //   case 'U':
+    //     cuda::clearLower(n, A->getData(memory::DEVICE));
+    //     break;
+    //   case 'L':
+    //     cuda::clearUpper(n, A->getData(memory::DEVICE));
+    //     break;
+    // }
 
     // if (h_dev_info != 0)
     // {
@@ -531,6 +543,7 @@ namespace ReSolve
 
     cublasHandle_t handle_cublas = workspace_->getCublasHandle();
     cublasSideMode_t cublas_side = (side == 'L') ? CUBLAS_SIDE_LEFT : CUBLAS_SIDE_RIGHT;
+    index_type lda = (side == 'L') ? B->getSize() : B->getNumVectors();
 
     int status = 0;
 
@@ -546,7 +559,7 @@ namespace ReSolve
       B->getNumVectors(),
       &ONE,
       L,
-      B->getNumVectors(),
+      lda,
       B->getData(memory::DEVICE),
       B->getSize()
     ));
@@ -563,7 +576,7 @@ namespace ReSolve
       B->getNumVectors(),
       &ONE,
       L,
-      B->getNumVectors(),
+      lda,
       B->getData(memory::DEVICE),
       B->getSize()
     ));
@@ -637,15 +650,15 @@ namespace ReSolve
                           k);
     
     // can't do this in general if mixing dimensions between calls to choleskyFactorize
-    choleskyFactorize(R, 'U');
+    status += choleskyFactorize(R, 'U');
 
-    // Zero out the upper triangle of R (need custom kernel)
-    cuda::clearUpper(k, R->getData(memory::DEVICE));
+    // Zero out the lower triangle of R (excluding diagonal) REDUNDANT. remove that step from choleskyFactorize
+    cuda::clearLower(k, R->getData(memory::DEVICE));
     
     // Compute Q (A = Q * R)
     status += cublasDtrsm(handle_cublas,
                           CUBLAS_SIDE_RIGHT,
-                          CUBLAS_FILL_MODE_LOWER,
+                          CUBLAS_FILL_MODE_UPPER,
                           CUBLAS_OP_N,
                           CUBLAS_DIAG_NON_UNIT,
                           n,
@@ -713,6 +726,33 @@ namespace ReSolve
     }
     return sqrt(nrm);
   }
+  
+  /**
+   * @brief compute norm of a vector or Frobenius norm of a multivector
+   *
+   * @param[in] x The vector
+   *
+   * @return Norm of _x_
+   *
+   */
+  real_type VectorHandlerCuda::norm(vector::Vector* x, index_type i)
+  {
+    cublasHandle_t handle_cublas = workspace_->getCublasHandle();
+
+    double         nrm{0.0};
+    cublasStatus_t st = cublasDdot(handle_cublas,
+                                   x->getSize(),
+                                   x->getData(i, memory::DEVICE),
+                                   1,
+                                   x->getData(i, memory::DEVICE),
+                                   1,
+                                   &nrm);
+    if (st != 0)
+    {
+      out::error() << "vector norm returned error code " << st << "\n";
+    }
+    return sqrt(nrm);
+  }
 
   /**
    * @brief Calculate element-wise absolute value of a vector in CUDA
@@ -738,16 +778,24 @@ namespace ReSolve
     index_type n = x->getSize() * x->getNumVectors();
     if (!workspace_->isRngReady())
     {
-      workspace_->computeTotalThreads();
+      if (workspace_->computeTotalThreads() != 0)
+      {
+        out::error() << "Can't compute total GPU threads!";
+      }
       workspace_->initializeRng(n);
     }
-    else if (workspace_->getRngStateSize() > std::min(n, workspace_->getTotalThreads()))
+    else if (workspace_->getRngStateSize() < std::min(n, workspace_->getTotalThreads()))
     {
       workspace_->resetRng();
       workspace_->initializeRng(n);
     }
     cuda::randomVector(n, x->getData(memory::DEVICE), min, max, workspace_->getTotalThreads(), workspace_->getRngState());
     x->setDataUpdated(memory::DEVICE);
+  }
+
+  void VectorHandlerCuda::addIdentity(vector::Vector* v, real_type alpha)
+  {
+    cuda::addIdentity(v->getSize(), v->getData(memory::DEVICE), alpha);
   }
 
 } // namespace ReSolveRecord(stop, 0);

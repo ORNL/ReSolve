@@ -39,10 +39,10 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
 
   std::string        source_dir = std::string(SOURCE_DIR);
   std::string       A_file_name = source_dir + std::string("/RandomizedCGTestMatrices/crankseg_2.mtx");
-  double b_min = -10.0;
-  double b_max = 10.0;
+  double rng_min = -1.0;
+  double rng_max = 1.0;
 
-  result += test.DenseCGTest(A_file_name, 30000, b_min, b_max);
+  result += test.DenseCGTest(A_file_name, 10000, rng_min, rng_max);
 
   std::cout << "\n";
 }

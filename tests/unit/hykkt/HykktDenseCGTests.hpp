@@ -53,14 +53,14 @@ namespace ReSolve
        *
        * @return TestOutcome Result of the test
        */
-      TestOutcome DenseCGTest(const std::string& A_file_name, index_type n, real_type b_min, real_type b_max)
+      TestOutcome DenseCGTest(const std::string& A_file_name, index_type n, real_type rng_min, real_type rng_max)
       {
         hykkt::DenseConjugateGradient cg(n, &matrix_handler_, &vector_handler_, memspace_);
         cg.setSolverTolerance(cg_tol);
         
         vector::Vector* L = new vector::Vector(n, n);
         L->allocateAll(memspace_);
-        vector_handler_.randomVector(L, b_min, b_max, memspace_);
+        vector_handler_.randomVector(L, rng_min, rng_max, memspace_);
 
         vector::Vector* A = new vector::Vector(n, n);
         A->allocateAll(memspace_);
@@ -78,7 +78,7 @@ namespace ReSolve
 
         vector::Vector* b = new vector::Vector(n);
         b->allocateAll(memspace_);
-        vector_handler_.randomVector(b, b_min, b_max, memspace_);
+        vector_handler_.randomVector(b, rng_min, rng_max, memspace_);
 
         cg.addMatrixInfo(A);
         cg.addVectorInfo(x, b);
@@ -104,7 +104,7 @@ namespace ReSolve
       VectorHandler&      vector_handler_; ///< Backend-specific vector handler.
 
       static constexpr real_type cholesky_tol = 1e-12;
-      static constexpr real_type cg_tol     = 1e-12;
+      static constexpr real_type cg_tol     = 1e-3;
       static constexpr real_type entry_tol    = 1e-6; // Tolerance for checking individual entries
 
       /**

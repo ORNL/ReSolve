@@ -37,22 +37,26 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
   ReSolve::VectorHandler                                     vector_handler(&workspace);
   ReSolve::tests::HykktRandomizedDenseConjugateGradientTests test(memspace, matrix_handler, vector_handler);
 
+  size_t n = 1 << 14;
   std::string        source_dir = std::string(SOURCE_DIR);
-  std::string        A_file_name = source_dir + std::string("/RandomizedDenseCGTestMatrices/crankseg_2.mtx");
-  double b_min = -10.0;
-  double b_max = 10.0;
+  std::string        A_file_name = source_dir + std::string("/RandomizedDenseCGTestMatrices/A_") + std::to_string(n) + std::string(".mtx");
+  std::string        b_file_name = source_dir + std::string("/RandomizedDenseCGTestMatrices/b_") + std::to_string(n) + std::string(".mtx");
+  double rng_min = -1.0;
+  double rng_max = 1.0;
 
-  // result += test.RandomizedDenseCGTest(A_file_name, 30000, 1, b_min, b_max);
-  // workspace.resetLinAlgWorkspace();
-  result += test.RandomizedDenseCGTest(A_file_name, 30000, 2, b_min, b_max);
+  // test.generateVectors(A_file_name, b_file_name, n, rng_min, rng_max);
+  // test.choleskyTests(A_file_name, b_file_name, n);
+  result += test.RandomizedDenseCGTest(A_file_name, b_file_name, n, 1, rng_min, rng_max);
   workspace.resetLinAlgWorkspace();
-  result += test.RandomizedDenseCGTest(A_file_name, 30000, 4, b_min, b_max);
+  result += test.RandomizedDenseCGTest(A_file_name, b_file_name, n, 2, rng_min, rng_max);
   workspace.resetLinAlgWorkspace();
-  result += test.RandomizedDenseCGTest(A_file_name, 30000, 8, b_min, b_max);
+  result += test.RandomizedDenseCGTest(A_file_name, b_file_name, n, 4, rng_min, rng_max);
   workspace.resetLinAlgWorkspace();
-  result += test.RandomizedDenseCGTest(A_file_name, 30000, 16, b_min, b_max);
+  result += test.RandomizedDenseCGTest(A_file_name, b_file_name, n, 8, rng_min, rng_max);
   workspace.resetLinAlgWorkspace();
-  result += test.RandomizedDenseCGTest(A_file_name, 30000, 32, b_min, b_max);
+  result += test.RandomizedDenseCGTest(A_file_name, b_file_name, n, 16, rng_min, rng_max);
+  workspace.resetLinAlgWorkspace();
+  result += test.RandomizedDenseCGTest(A_file_name, b_file_name, n, 32, rng_min, rng_max);
 
   std::cout << "\n";
 }

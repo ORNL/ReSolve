@@ -37,6 +37,7 @@ namespace ReSolve
 
     // vector norm
     virtual real_type norm(vector::Vector* x);
+    virtual real_type norm(vector::Vector* x, index_type i);
 
     // mass axpy: x*alpha + y where x is [n x k] and alpha is [k x 1]; x is stored columnwise
     virtual void axpyMulti(index_type size, vector::Vector* alpha, index_type k, vector::Vector* x, vector::Vector* y);
@@ -128,7 +129,9 @@ namespace ReSolve
      */
     virtual int abs(/* const */ vector::Vector* in, vector::Vector* out);
     
-    virtual void randomVector(vector::Vector* x, real_type min, real_type max);
+    virtual void randomVector(vector::Vector* v, real_type min, real_type max);
+    
+    virtual void addIdentity(vector::Vector* v, real_type alpha);
 
   private:
     MemoryHandler        mem_; ///< Device memory manager object

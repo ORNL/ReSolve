@@ -53,7 +53,7 @@ namespace ReSolve
        *
        * @return TestOutcome Result of the test
        */
-      TestOutcome CGTest(const std::string& A_file_name, real_type b_min, real_type b_max)
+      TestOutcome CGTest(const std::string& A_file_name, real_type rng_min, real_type rng_max)
       {
         std::ifstream A_file(A_file_name);
 
@@ -74,7 +74,7 @@ namespace ReSolve
 
         vector::Vector* b = new vector::Vector(n);
         b->allocateAll(memspace_);
-        vector_handler_.randomVector(b, b_min, b_max, memspace_);
+        vector_handler_.randomVector(b, rng_min, rng_max, memspace_);
 
         cg.addMatrixInfo(A);
         cg.addVectorInfo(x, b);

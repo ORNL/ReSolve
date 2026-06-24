@@ -155,10 +155,14 @@ namespace ReSolve
     {
       using namespace constants;
 
+      real_type  best_basis_error = std::numeric_limits<real_type>::infinity();
+
+      std::chrono::time_point<std::chrono::steady_clock> start;
+      std::chrono::time_point<std::chrono::steady_clock> end;
+      start = std::chrono::steady_clock::now();
+
       generateGuesses();
-
-      X_res_->setToZero(memspace_);
-
+      
       R_->copyFromExternal(B_res_, memspace_, memspace_);
       
       // ADD PRECONDITIONER LATER. W = L^-1 * R
@@ -190,49 +194,72 @@ namespace ReSolve
         vector_handler_->gemm('T', 'N', ONE, ZERO, S_, Temp_nxk_, Xi_inv_, memspace_);
 
         // X_res = X_res + S * (Xi * Sigma)
-        vector_handler_->choleskyFactorize(Xi_inv_, 'L', memspace_);
+        if (vector_handler_->choleskyFactorize(Xi_inv_, 'L', memspace_) != 0)
+        {
+          out::error() << "Cholesky failed!";
+          return 1;
+        }
         Temp_kxk_->copyFromExternal(Sigma_, memspace_, memspace_);
-        vector_handler_->choleskySolve(Xi_inv_->getData(memspace_), Temp_kxk_, 'L', memspace_);
+        vector_handler_->choleskySolve(Xi_inv_->getData(memspace_), Temp_kxk_, 'L', memspace_); // Temp_kxk = Xi * Sigma
         vector_handler_->gemm('N', 'N', ONE, ONE, S_, Temp_kxk_, X_res_, memspace_);
       
         // check residual. not important. implement later
-        // Temp_kxk_ = Xi * Sigma
+        // R = R - (A * S) * Xi * Sigma. Temp_kxk_ = Xi * Sigma
         vector_handler_->gemm('N', 'N', MINUS_ONE, ONE, Temp_nxk_, Temp_kxk_, R_, memspace_);
-        if (10000.0 < tol_)
+
+        // cudaDeviceSynchronize();
+        // end = std::chrono::steady_clock::now();
+        // std::chrono::duration<double, std::milli> elapsed = (end - start);
+        // printf("Time: %f, error: %f\n", elapsed.count(), best_basis_error);
+
+        best_basis_error = std::numeric_limits<real_type>::infinity();
+        for (index_type j = 0; j < k_; j++)
         {
+          best_basis_error = std::min(vector_handler_->norm(R_, j, memspace_), best_basis_error);
+        }
+        printf("%f\n", best_basis_error);
+        if (best_basis_error < tol_)
+        {
+          end = std::chrono::steady_clock::now();
+          std::chrono::duration<double, std::milli> elapsed = (end - start);
           printf("Convergence occured at iteration %d\n", i);
-          break;
+          printf("Time: %f, error: %f\n", elapsed.count(), best_basis_error);
+          return 0;
         }
 
         // W = W - (A * S) * Xi. Temp_nxk_ overriden
         vector_handler_->choleskySolve(Xi_inv_->getData(memspace_), Temp_nxk_, 'R', memspace_); // "Temp_nxk_" now contains A * S * Xi
         vector_handler_->axpy(MINUS_ONE, Temp_nxk_, W_, memspace_);
         // add preconditioner later. L is lower triangular. might need a new solver
-        // TODO: reuse Xi * Sigma !!!!!!!!!!!!!!!!!!!!!!!!!
+        // TODO: reuse Xi * Sigma !!!!!!!!!!!!!!!!!!!!!!!!! POTENTIALLY REAL
         
         if (vector_handler_->choleskyQr(W_, Zeta_, memspace_) != 0)
         {
-          printf("QR failed!\n");
+          out::error() << "QR failed!";
           return 1; // todo: fallback qr
         }
         // S = L_inv * W + S * Zeta.T. T is recycled as intermediate memory storage. do preconditioner later
         Temp_nxk_->copyFromExternal(W_, memspace_, memspace_);
         vector_handler_->gemm('N', 'T', ONE, ONE, S_, Zeta_, Temp_nxk_, memspace_);
+        S_->copyFromExternal(Temp_nxk_, memspace_, memspace_);
         
         // Sigma = Zeta * Sigma
         vector_handler_->gemm('N', 'N', ONE, ZERO, Zeta_, Sigma_, Temp_kxk_, memspace_);
         Sigma_->copyFromExternal(Temp_kxk_, memspace_, memspace_);
-        
-        cudaDeviceSynchronize();
-        auto end = std::chrono::steady_clock::now();
-        std::chrono::duration<double, std::milli> elapsed = (end - start);
-        printf("%f\n", elapsed.count());
+
+// cudaEventRecord(stop, 0);
+// cudaEventSynchronize(stop);
+// float ms = 0;
+// cudaEventElapsedTime(&ms, start, stop);
+// std::cout << ms << '\n';
       }
 
-      printf("Conjugate gradient error is %32.32g \n", 101010101010.1);
       if (i == itmax_)
       {
+        end = std::chrono::steady_clock::now();
+        std::chrono::duration<double, std::milli> elapsed = (end - start);
         printf("No CG convergence in %d iterations\n", itmax_);
+        printf("Time: %f, error: %f\n", elapsed.count(), best_basis_error);
         return 1;
       }
 

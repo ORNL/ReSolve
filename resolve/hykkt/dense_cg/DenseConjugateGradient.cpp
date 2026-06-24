@@ -88,7 +88,7 @@ namespace ReSolve
       s_->copyFromExternal(b_, memspace_, memspace_);
       w_->copyFromExternal(b_, memspace_, memspace_);
 
-      x_0_->setToZero(memspace_);
+      vector_handler_->randomVector(x_0_, -1.0, 1.0, memspace_);
 
       beta_ = 0;
     }
@@ -96,6 +96,9 @@ namespace ReSolve
     int DenseConjugateGradient::solve()
     {
       using namespace constants;
+      
+        auto start = std::chrono::steady_clock::now();
+
       vector_handler_->gemm('N', 'N', ONE, ZERO, A_, x_0_, r_, memspace_);
       gamma_i_ = vector_handler_->dot(r_, r_, memspace_);
 
@@ -111,7 +114,6 @@ namespace ReSolve
 // cudaEventCreate(&stop);
 // // Start right before the first GPU call
 // cudaEventRecord(start, 0);
-        auto start = std::chrono::steady_clock::now();
         vector_handler_->scal(beta_, p_, memspace_);
         vector_handler_->axpy(ONE, r_, p_, memspace_);
         vector_handler_->scal(beta_, s_, memspace_);
@@ -126,7 +128,9 @@ namespace ReSolve
 // std::cout << ms << '\n';
         if (sqrt(gamma_i1_) < tol_)
         {
-          printf("Convergence occured at iteration %d\n", i);
+          auto end = std::chrono::steady_clock::now();
+          std::chrono::duration<double, std::milli> elapsed = (end - start);
+          printf("Convergence occured at iteration %d. Time: %f\n", i, elapsed);
           break;
         }
         vector_handler_->gemm('N', 'N', ONE, ZERO, A_, r_, w_, memspace_);
@@ -135,16 +139,18 @@ namespace ReSolve
         gamma_i_ = gamma_i1_;
         alpha_   = gamma_i_ / (delta_ - beta_ * gamma_i_ / alpha_);
         
-        cudaDeviceSynchronize();
-        auto end = std::chrono::steady_clock::now();
-        std::chrono::duration<double, std::milli> elapsed = (end - start);
-        printf("time = %f\n", elapsed.count());
+        // cudaDeviceSynchronize();
+        // auto end = std::chrono::steady_clock::now();
+        // std::chrono::duration<double, std::milli> elapsed = (end - start);
+        // printf("time = %f, error = %f\n", elapsed.count(), gamma_i1_);
       }
 
       printf("Conjugate gradient error is %32.32g \n", sqrt(gamma_i1_));
       if (i == itmax_)
-      {
-        printf("No CG convergence in %d iterations\n", itmax_);
+      {        
+        auto end = std::chrono::steady_clock::now();
+        std::chrono::duration<double, std::milli> elapsed = (end - start);
+        printf("No CG convergence in %d iterations. Time: %f\n", itmax_, elapsed);
         return 1;
       }
       return 0;

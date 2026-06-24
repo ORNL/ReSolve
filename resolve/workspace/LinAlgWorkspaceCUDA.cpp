@@ -179,11 +179,13 @@ namespace ReSolve
     return rng_state_size_;
   }
 
-  void LinAlgWorkspaceCUDA::computeTotalThreads()
+  int LinAlgWorkspaceCUDA::computeTotalThreads()
   {
     int device_id = 0;
     cudaDeviceProp properties;
+    cudaError_t status = cudaGetDeviceProperties(&properties, device_id);
     total_threads_ = properties.multiProcessorCount * properties.maxThreadsPerMultiProcessor;
+    return status;
   }
 
   index_type LinAlgWorkspaceCUDA::getTotalThreads()

@@ -110,15 +110,31 @@ namespace ReSolve
         }
       }
 
-      // .. .. ..
+      // .. .. .. can optimize more. some wasted kernel launches
+      __global__ void clearLower(index_type n, real_type* vec)
+      {
+        index_type idx = blockIdx.x * blockDim.x + threadIdx.x;
+
+        if (idx < n * n)
+        {
+          index_type col = idx / n;
+          index_type row = idx - col * n;
+          if (row > col)
+          {
+            vec[idx] = 0.0;
+          }
+        }
+      }
+
+      // .. .. .. must be square
       __global__ void clearUpper(index_type n, real_type* vec)
       {
         index_type idx = blockIdx.x * blockDim.x + threadIdx.x;
 
-        if (idx < n)
+        if (idx < n * n)
         {
-          index_type row = idx % n;
           index_type col = idx / n;
+          index_type row = idx - col * n;
           if (row < col)
           {
             vec[idx] = 0.0;
@@ -200,6 +216,16 @@ namespace ReSolve
           state[idx] = state_cached;
         }
       }
+
+      __global__ void addIdentity(index_type n, real_type* x, real_type alpha)
+      {
+        index_type idx = blockIdx.x * blockDim.x + threadIdx.x;
+
+        if (idx < n)
+        {
+          x[idx * n + idx] += alpha;
+        }
+      }
     } // namespace kernels
 
     constexpr index_type block_size = 256;
@@ -256,6 +282,13 @@ namespace ReSolve
       int num_blocks = (n + block_size - 1) / block_size;
       // Launch the kernel
       kernels::diagSolve<<<num_blocks, block_size>>>(n, diag, vec);
+    }
+    
+    // .....
+    void clearLower(index_type n, real_type* vec)
+    {
+      int num_blocks = (n + block_size - 1) / block_size;
+      kernels::clearLower<<<num_blocks, block_size>>>(n, vec);
     }
 
     // .....
@@ -316,6 +349,12 @@ namespace ReSolve
     {
       int num_blocks = std::min((n + block_size - 1), total_threads) / block_size;
       kernels::randomVector<<<num_blocks, block_size>>>(n, x, min, max, state);
+    };
+
+    void addIdentity(index_type n, real_type* x, real_type alpha)
+    {
+      int num_blocks = (n + block_size - 1) / block_size;
+      kernels::addIdentity<<<num_blocks, block_size>>>(n, x, alpha);
     }
   } // namespace cuda
 } // namespace ReSolve

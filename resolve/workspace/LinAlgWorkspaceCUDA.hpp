@@ -60,7 +60,7 @@ namespace ReSolve
     void initializeHandles();
     void initializeRng(index_type size);
     void resetRng();
-    void computeTotalThreads();
+    int computeTotalThreads();
     index_type getTotalThreads();
 
     bool matvecSetup();

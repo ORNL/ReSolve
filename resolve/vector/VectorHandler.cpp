@@ -204,6 +204,30 @@ namespace ReSolve
     }
     return -1.0;
   }
+  
+  /**
+   * @brief compute norm of a vector or Frobenius norm of a multivector
+   *
+   * @param[in] The vector
+   * @param[in] memspace string containg memspace (cpu or cuda or hip)
+   *
+   * @return Norm of _x_
+   *
+   */
+  real_type VectorHandler::norm(vector::Vector* x, index_type i, memory::MemorySpace memspace)
+  {
+    using namespace ReSolve::memory;
+    switch (memspace)
+    {
+    case HOST:
+      return cpuImpl_->norm(x, i);
+      break;
+    case DEVICE:
+      return devImpl_->norm(x, i);
+      break;
+    }
+    return -1.0;
+  }
 
   /**
    * @brief axpy i.e, y = alpha*x+y where alpha is a constant
@@ -631,6 +655,11 @@ namespace ReSolve
       return devImpl_->randomVector(x, min, max);
       break;
     }
+  }
+
+  void VectorHandler::addIdentity(vector::Vector* x, real_type alpha, memory::MemorySpace memspace)
+  {
+    devImpl_->addIdentity(x, alpha);
   }
 
   /**
