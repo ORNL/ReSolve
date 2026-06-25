@@ -200,6 +200,22 @@ namespace ReSolve
     return 1;
   }
 
+  ////.. 
+  real_type MatrixHandler::norm(matrix::Sparse* A, memory::MemorySpace memspace)
+  {
+    using namespace ReSolve::memory;
+    switch (memspace)
+    {
+    case HOST:
+      return cpuImpl_->norm(A);
+      break;
+    case DEVICE:
+      return devImpl_->norm(A);
+      break;
+    }
+    return 1;
+  }
+
   /**
    * @brief Converts a CSC matrix to a CSR matrix
    *
@@ -342,6 +358,21 @@ namespace ReSolve
       break;
     case DEVICE:
       return devImpl_->rightScale(A, diag);
+      break;
+    }
+    return 1;
+  }
+  
+  int MatrixHandler::extractInverseRootDiagonal(matrix::Csr* A, vector_type* diag, memory::MemorySpace memspace)
+  {
+    using namespace ReSolve::memory;
+    switch (memspace)
+    {
+    case HOST:
+      return cpuImpl_->extractInverseRootDiagonal(A, diag);
+      break;
+    case DEVICE:
+      return devImpl_->extractInverseRootDiagonal(A, diag);
       break;
     }
     return 1;

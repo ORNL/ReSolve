@@ -38,18 +38,18 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
   ReSolve::tests::HykktRandomizedConjugateGradientTests test(memspace, matrix_handler, vector_handler);
 
   std::string        source_dir = std::string(SOURCE_DIR);
-  std::string        A_file_name = source_dir + std::string("/RandomizedCGTestMatrices/bcsstk18.mtx");
+  std::string        A_file_name = source_dir + std::string("/RandomizedCGTestMatrices/crankseg_2.mtx");
   double rng_min = -100.0;
   double rng_max = 100.0;
 
-  // result += test.RandomizedCGTest(A_file_name, 1, rng_min, rng_max);
-  // workspace.resetLinAlgWorkspace();
-  // result += test.RandomizedCGTest(A_file_name, 2, rng_min, rng_max);
-  // workspace.resetLinAlgWorkspace();
-  // result += test.RandomizedCGTest(A_file_name, 4, rng_min, rng_max);
-  // workspace.resetLinAlgWorkspace();
-  // result += test.RandomizedCGTest(A_file_name, 8, rng_min, rng_max);
-  // workspace.resetLinAlgWorkspace();
+  result += test.RandomizedCGTest(A_file_name, 1, rng_min, rng_max);
+  workspace.resetLinAlgWorkspace();
+  result += test.RandomizedCGTest(A_file_name, 2, rng_min, rng_max);
+  workspace.resetLinAlgWorkspace();
+  result += test.RandomizedCGTest(A_file_name, 4, rng_min, rng_max);
+  workspace.resetLinAlgWorkspace();
+  result += test.RandomizedCGTest(A_file_name, 8, rng_min, rng_max);
+  workspace.resetLinAlgWorkspace();
   result += test.RandomizedCGTest(A_file_name, 16, rng_min, rng_max);
 
   std::cout << "\n";

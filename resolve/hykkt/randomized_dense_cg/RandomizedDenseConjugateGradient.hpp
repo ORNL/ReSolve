@@ -62,8 +62,8 @@ namespace ReSolve
       index_type n_;             // Dimension of outer system
       index_type k_;             // 
       int        itmax_ = 3000;   // Maximum iterations for conjugate gradient
-      real_type  initial_tol_   = 1.0; // Solver tolerance for Schur
-      real_type  convergence_tol_   = 1.0; // Solver tolerance for Schur
+      real_type  initial_tol_   = 1e-12; // Solver tolerance for Schur
+      real_type  convergence_tol_   = 1e-12; // Solver tolerance for Schur
     
       MatrixHandler* matrix_handler_{nullptr}; ///< Backend-specific matrix handler.
       VectorHandler* vector_handler_{nullptr}; ///< Backend-specific vector handler.

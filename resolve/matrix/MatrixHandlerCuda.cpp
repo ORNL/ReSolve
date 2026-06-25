@@ -345,6 +345,26 @@ namespace ReSolve
     return status;
   }
 
+  real_type MatrixHandlerCuda::norm(matrix::Sparse* A)
+  {
+    
+    cublasHandle_t handle_cublas = workspace_->getCublasHandle();
+
+    double         nrm{0.0};
+    cublasStatus_t st = cublasDdot(handle_cublas,
+                                   A->getNnz(),
+                                   A->getValues(memory::DEVICE),
+                                   1,
+                                   A->getValues(memory::DEVICE),
+                                   1,
+                                   &nrm);
+    if (st != 0)
+    {
+      out::error() << "matrix norm returned error code " << st << "\n";
+    }
+    return sqrt(nrm);
+  }
+
   /**
    * @brief convert a CSC matrix to a CSR matrix in CUDA
    *
@@ -521,6 +541,18 @@ namespace ReSolve
     real_type*  a_vals    = A->getValues(memory::DEVICE);
     index_type  n         = A->getNumRows();
     cuda::rightScale(n, a_row_ptr, a_col_idx, a_vals, diag_data);
+    A->setUpdated(memory::DEVICE);
+    return 0;
+  }
+
+  int MatrixHandlerCuda::extractInverseRootDiagonal(matrix::Csr* A, vector_type* diag)
+  {
+    real_type*  diag_data = diag->getData(memory::DEVICE);
+    index_type* a_row_ptr = A->getRowData(memory::DEVICE);
+    index_type* a_col_idx = A->getColData(memory::DEVICE);
+    real_type*  a_vals    = A->getValues(memory::DEVICE);
+    index_type  n         = A->getNumRows();
+    cuda::extractInverseRootDiagonal(n, a_row_ptr, a_col_idx, a_vals, diag_data);
     A->setUpdated(memory::DEVICE);
     return 0;
   }

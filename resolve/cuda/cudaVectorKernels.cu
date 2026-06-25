@@ -87,6 +87,7 @@ namespace ReSolve
       }
 
       /**
+       * TODO- OVERLOAD THIS TO AVOID MOD FOR SINGLE VECTORS
        * @brief Multiplies vector by an inverse of a diagonal matrix.
        *
        * @param[in]  n       - size of the vectors
@@ -96,6 +97,7 @@ namespace ReSolve
        * @todo Decide how to allow user to configure grid and block sizes.
        */
       __global__ void diagSolve(index_type       n,
+                                index_type       k,
                                 const real_type* d_val,
                                 real_type*       vec)
       {
@@ -103,10 +105,10 @@ namespace ReSolve
         index_type idx = blockIdx.x * blockDim.x + threadIdx.x;
 
         // Check if the index is within bounds
-        if (idx < n)
+        if (idx < n * k)
         {
           // Divide the vector element by the corresponding diag value
-          vec[idx] /= d_val[idx];
+          vec[idx] /= d_val[idx % n];
         }
       }
 
@@ -276,12 +278,13 @@ namespace ReSolve
      * @todo Decide how to allow user to configure grid and block sizes.
      */
     void diagSolve(index_type       n,
+                   index_type       k,
                    const real_type* diag,
                    real_type*       vec)
     {
-      int num_blocks = (n + block_size - 1) / block_size;
+      int num_blocks = (n * k + block_size - 1) / block_size;
       // Launch the kernel
-      kernels::diagSolve<<<num_blocks, block_size>>>(n, diag, vec);
+      kernels::diagSolve<<<num_blocks, block_size>>>(n, k, diag, vec);
     }
     
     // .....

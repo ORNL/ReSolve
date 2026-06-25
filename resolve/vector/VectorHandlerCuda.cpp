@@ -597,11 +597,11 @@ namespace ReSolve
                                workspace_->getQrDevInfo());
     
     // // async memcpy?
-    // cudaDeviceSynchronize();
-    // A->setDataUpdated(memory::DEVICE);
-    // int h_dev_info;
-    // cudaMemcpy(&h_dev_info, workspace_->getQrDevInfo(), sizeof(int), cudaMemcpyDeviceToHost);
-    // status += h_dev_info;
+    cudaDeviceSynchronize();
+    A->setDataUpdated(memory::DEVICE);
+    int h_dev_info;
+    cudaMemcpy(&h_dev_info, workspace_->getQrDevInfo(), sizeof(int), cudaMemcpyDeviceToHost);
+    status += h_dev_info;
 
     // switch (uplo)
     // {
@@ -678,6 +678,7 @@ namespace ReSolve
   }
 
   /**
+   * LEFT SCALE FOR MULTIVECTORS
    * @brief Multiplies vector by an inverse of a diagonal matrix.
    *
    * @param[in]  diag   - diagonal matrix stored in a vector object
@@ -694,7 +695,8 @@ namespace ReSolve
     real_type* diag_data = diag->getData(memory::DEVICE);
     real_type* vec_data  = vec->getData(memory::DEVICE);
     index_type n         = vec->getSize();
-    cuda::diagSolve(n, diag_data, vec_data);
+    index_type k         = vec->getNumVectors();
+    cuda::diagSolve(n, k, diag_data, vec_data);
     vec->setDataUpdated(memory::DEVICE);
     return 0;
   }

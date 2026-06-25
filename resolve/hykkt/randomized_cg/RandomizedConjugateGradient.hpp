@@ -38,15 +38,15 @@ namespace ReSolve
        */
       RandomizedConjugateGradient(index_type          n,
                                   index_type          k,
-                                  MatrixHandler*      matrix_handler_,
-                                  VectorHandler*      vector_handler_,
+                                  MatrixHandler*      matrix_handler,
+                                  VectorHandler*      vector_handler,
                                   memory::MemorySpace memspace);
       ~RandomizedConjugateGradient();
 
       void addMatrixInfo(matrix::Csr* A);
       void addVectorInfo(vector::Vector* x_0, vector::Vector* b);
-      void addPreconditionerInfo(matrix::Csr* L, matrix::Csr* L_tr);
-      void setSolverTolerance(double tol);
+      void addPreconditionerInfo(vector::Vector* d_inv);
+      void setSolverTolerance(double initial_tol, double convergence_tol);
       void setSolverItmax(int itmax);
 
       void setup();
@@ -59,8 +59,10 @@ namespace ReSolve
     private:
       index_type n_;             // Dimension of outer system
       index_type k_;             // 
-      int        itmax_ = 1000;   // Maximum iterations for conjugate gradient
-      double     tol_   = 1e-12; // Solver tolerance for Schur
+      index_type nnz_;
+      int        itmax_ = 3000;   // Maximum iterations for conjugate gradient
+      real_type  initial_tol_   = 1e-12; // Solver tolerance for Schur
+      real_type  convergence_tol_   = 1e-12; // Solver tolerance for Schur
     
       MatrixHandler* matrix_handler_{nullptr}; ///< Backend-specific matrix handler.
       VectorHandler* vector_handler_{nullptr}; ///< Backend-specific vector handler.
@@ -70,27 +72,33 @@ namespace ReSolve
       matrix::Csr* A_{nullptr};
       vector::Vector* x_{nullptr};   // LHS of entire system
       vector::Vector* b_{nullptr};   // RHS of entire system
+
+      real_type A_norm_ = 0.0;
+      real_type b_norm_ = 0.0;
       
       // Matrices used for conjugate gradient
       matrix::Csr* A_prec_{nullptr};
-      matrix::Csr* A_tr_prec_{nullptr};
-      matrix::Csr* L_{nullptr};
-      matrix::Csr* L_tr_{nullptr};
 
       // Vectors used for conjugate gradient
-      vector::Vector* X_0_{nullptr};
+      vector::Vector* d_inv_{nullptr};
+      vector::Vector* X_prec_0_{nullptr};
       vector::Vector* X_res_{nullptr};
+      vector::Vector* b_prec_{nullptr};   // RHS of entire system
       vector::Vector* B_res_{nullptr};
+      vector::Vector* B_{nullptr};
       vector::Vector* R_{nullptr};
+      vector::Vector* R_prec_{nullptr};
       vector::Vector* S_{nullptr};
       vector::Vector* Xi_inv_{nullptr};
       vector::Vector* W_{nullptr};
       vector::Vector* Sigma_{nullptr};
       vector::Vector* Zeta_{nullptr};
       vector::Vector* Temp_nxk_{nullptr};
+      vector::Vector* Temp_nxk1_{nullptr};
       vector::Vector* Temp_kxk_{nullptr};
       vector::Vector* A_S_{nullptr};
-      vector::Vector* Xi_Sigma_{nullptr};
+      vector::Vector* c_{nullptr};
+      vector::Vector* r_{nullptr};
 
       std::mt19937 generator_;
 

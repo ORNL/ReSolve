@@ -67,17 +67,22 @@ namespace ReSolve
         index_type                              n   = A->getNumRows();
         index_type                              nnz = A->getNnz();
         hykkt::RandomizedConjugateGradient randomized_cg(n, k, &matrix_handler_, &vector_handler_, memspace_);
-        randomized_cg.setSolverTolerance(randomized_cg_tol);
+        randomized_cg.setSolverTolerance(initial_tol, convergence_tol);
 
         vector::Vector* x = new vector::Vector(n);
-        x->allocateAll(memspace_);
+        x->allocate(memspace_);
 
         vector::Vector* b = new vector::Vector(n);
-        b->allocateAll(memspace_);
+        b->allocate(memspace_);
         vector_handler_.randomVector(b, rng_min, rng_max, memspace_);
+        
+        vector::Vector* d = new vector::Vector(n);
+        d->allocate(memspace_);
+        matrix_handler_.extractInverseRootDiagonal(A, d, memspace_);
 
         randomized_cg.addMatrixInfo(A);
         randomized_cg.addVectorInfo(x, b);
+        randomized_cg.addPreconditionerInfo(d);
         randomized_cg.setup();
         int converged_n = randomized_cg.solve(); // 0 if converged, 1 if not
 
@@ -98,8 +103,8 @@ namespace ReSolve
       MatrixHandler&      matrix_handler_; ///< Backend-specific matrix handler.
       VectorHandler&      vector_handler_; ///< Backend-specific vector handler.
 
-      static constexpr real_type cholesky_tol = 1e-12;
-      static constexpr real_type randomized_cg_tol     = 1e-12;
+      static constexpr real_type initial_tol = 1e-10;
+      static constexpr real_type convergence_tol     = 1e-10;
       static constexpr real_type entry_tol    = 1e-6; // Tolerance for checking individual entries
 
       /**

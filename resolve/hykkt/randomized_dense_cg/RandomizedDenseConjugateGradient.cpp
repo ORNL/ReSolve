@@ -34,10 +34,10 @@ namespace ReSolve
         memory::MemorySpace memspace)
       : n_(n),
         k_(k),
+        cholesky_solver_(cholesky_solver),
         matrix_handler_(matrix_handler),
         vector_handler_(vector_handler),
         memspace_(memspace),
-        cholesky_solver_(cholesky_solver),
         gram_schmidt_(vector_handler_, GramSchmidt::GSVariant::CGS2),
         generator_(constants::SEED)
     {
@@ -115,7 +115,7 @@ namespace ReSolve
       A_prec_tr_ = new vector::Vector(n_, n_);
       X_prec_0_ = new vector::Vector(n_, k_);
       X_res_ = new vector::Vector(n_, k_);
-      b_prec_ = new vector::Vector(n_, 1);
+      b_prec_ = new vector::Vector(n_);
       B_res_ = new vector::Vector(n_, k_);
       B_ = new vector::Vector(n_, k_);
       R_ = new vector::Vector(n_, k_);
@@ -152,11 +152,11 @@ namespace ReSolve
       A_S_->allocate(memspace_);
       c_->allocate(memspace_);
       r_->allocate(memspace_);
-
-      gram_schmidt_.setup(n_, k_);
-
+      
       A_norm_ = vector_handler_->norm(A_, memspace_);
       b_norm_ = vector_handler_->norm(b_, memspace_);
+
+      gram_schmidt_.setup(n_, k_);
     }
 
     void RandomizedDenseConjugateGradient::precondition()
