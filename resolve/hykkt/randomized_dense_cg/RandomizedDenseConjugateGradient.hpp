@@ -61,7 +61,7 @@ namespace ReSolve
     private:
       index_type n_;             // Dimension of outer system
       index_type k_;             // 
-      int        itmax_ = 100;   // Maximum iterations for conjugate gradient
+      int        itmax_ = 3000;   // Maximum iterations for conjugate gradient
       real_type  initial_tol_   = 1.0; // Solver tolerance for Schur
       real_type  convergence_tol_   = 1.0; // Solver tolerance for Schur
     
@@ -80,15 +80,17 @@ namespace ReSolve
       
       // Matrices used for conjugate gradient
       vector::Vector* A_prec_{nullptr};
-      vector::Vector* A_tr_prec_{nullptr};
+      vector::Vector* A_prec_tr_{nullptr};
       matrix::Csr* L_{nullptr};
 
       // Vectors used for conjugate gradient
-      vector::Vector* X_0_{nullptr};
+      vector::Vector* X_prec_0_{nullptr};
       vector::Vector* X_res_{nullptr};
+      vector::Vector* b_prec_{nullptr};   // RHS of entire system
       vector::Vector* B_res_{nullptr};
       vector::Vector* B_{nullptr};
       vector::Vector* R_{nullptr};
+      vector::Vector* R_prec_{nullptr};
       vector::Vector* S_{nullptr};
       vector::Vector* Xi_inv_{nullptr};
       vector::Vector* W_{nullptr};
@@ -98,7 +100,6 @@ namespace ReSolve
       vector::Vector* Temp_nxk1_{nullptr};
       vector::Vector* Temp_kxk_{nullptr};
       vector::Vector* A_S_{nullptr};
-      vector::Vector* Xi_Sigma_{nullptr};
       vector::Vector* c_{nullptr};
       vector::Vector* r_{nullptr};
 

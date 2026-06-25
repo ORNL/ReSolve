@@ -46,20 +46,24 @@ namespace ReSolve
 
     RandomizedDenseConjugateGradient::~RandomizedDenseConjugateGradient()
     {
-      delete X_0_;
+      delete A_prec_;
+      delete A_prec_tr_;
+      delete X_prec_0_;
       delete X_res_;
+      delete b_prec_;
       delete B_res_;
       delete B_;
       delete R_;
+      delete R_prec_;
       delete S_;
       delete Xi_inv_;
       delete W_;
       delete Sigma_;
       delete Zeta_;
-      delete A_S_;
       delete Temp_nxk_;
       delete Temp_nxk1_;
       delete Temp_kxk_;
+      delete A_S_;
       delete c_;
       delete r_;
     }
@@ -107,37 +111,45 @@ namespace ReSolve
 
     void RandomizedDenseConjugateGradient::setup()
     {
-      X_0_ = new vector::Vector(n_, k_);
+      A_prec_ = new vector::Vector(n_, n_);
+      A_prec_tr_ = new vector::Vector(n_, n_);
+      X_prec_0_ = new vector::Vector(n_, k_);
       X_res_ = new vector::Vector(n_, k_);
+      b_prec_ = new vector::Vector(n_, 1);
       B_res_ = new vector::Vector(n_, k_);
       B_ = new vector::Vector(n_, k_);
       R_ = new vector::Vector(n_, k_);
+      R_prec_ = new vector::Vector(n_, k_);
       S_ = new vector::Vector(n_, k_);
       Xi_inv_ = new vector::Vector(k_, k_);
       W_ = new vector::Vector(n_, k_);
       Sigma_ = new vector::Vector(k_, k_);
       Zeta_ = new vector::Vector(k_, k_);
-      A_S_ = new vector::Vector(n_, k_);
       Temp_nxk_ = new vector::Vector(n_, k_);
       Temp_nxk1_ = new vector::Vector(n_, k_);
       Temp_kxk_ = new vector::Vector(k_, k_);
+      A_S_ = new vector::Vector(n_, k_);
       c_ = new vector::Vector(k_);
       r_ = new vector::Vector(n_);
 
-      X_0_->allocate(memspace_);
+      A_prec_->allocate(memspace_);
+      A_prec_tr_->allocate(memspace_);
+      X_prec_0_->allocate(memspace_);
       X_res_->allocate(memspace_);
+      b_prec_->allocate(memspace_);
       B_res_->allocate(memspace_);
       B_->allocate(memspace_);
       R_->allocate(memspace_);
+      R_prec_->allocate(memspace_);
       S_->allocate(memspace_);
       Xi_inv_->allocate(memspace_);
       W_->allocate(memspace_);
       Sigma_->allocate(memspace_);
       Zeta_->allocate(memspace_);
-      A_S_->allocate(memspace_);
       Temp_nxk_->allocate(memspace_);
       Temp_nxk1_->allocate(memspace_);
       Temp_kxk_->allocate(memspace_);
+      A_S_->allocate(memspace_);
       c_->allocate(memspace_);
       r_->allocate(memspace_);
 
@@ -145,6 +157,22 @@ namespace ReSolve
 
       A_norm_ = vector_handler_->norm(A_, memspace_);
       b_norm_ = vector_handler_->norm(b_, memspace_);
+    }
+
+    void RandomizedDenseConjugateGradient::precondition()
+    {
+      using namespace constants;
+
+      // A_prec = L^-1 * A * L^-T
+      // variable names are a bit messed up
+      cholesky_solver_->solve(A_prec_tr_, A_);
+      vector_handler_->geam('T', 'N', ONE, ZERO, A_prec_tr_, A_prec_tr_, A_prec_, memspace_); // operand B doesn't matter
+      cholesky_solver_->solve(A_prec_tr_, A_prec_);
+      vector_handler_->geam('T', 'N', ONE, ZERO, A_prec_tr_, A_prec_tr_, A_prec_, memspace_);
+
+      // b_prec = 1 / b_norm * L^-1 * b
+      cholesky_solver_->solve(b_prec_, b_);
+      vector_handler_->scal(1.0 / b_norm_, b_prec_, memspace_);
     }
 
     // Generate starting guesses and set up residual space matrices & vectors
@@ -156,15 +184,15 @@ namespace ReSolve
       for (index_type i=0; i < k_; i++)
       {
         b_->copyToExternal(B_->getData(i, memspace_), memspace_, memspace_);
+        b_prec_->copyToExternal(B_res_->getData(i, memspace_), memspace_, memspace_);
       }
-      B_res_->copyFromExternal(B_, memspace_, memspace_);
 
-      vector_handler_->randomVector(X_0_, -1.0, 1.0, memspace_);
-      vector_handler_->gemm('N', 'N', ONE, ZERO, A_, X_0_, Temp_nxk_, memspace_);
-      real_type AX_0_norm = vector_handler_->norm(Temp_nxk_, memspace_);
-      real_type B_norm = sqrt(static_cast<double>(k_)) * b_norm_;
-      real_type normalization_factor = B_norm / AX_0_norm;
-      vector_handler_->scal(normalization_factor, X_0_, memspace_);
+      vector_handler_->randomVector(X_prec_0_, -1.0, 1.0, memspace_);
+      vector_handler_->gemm('N', 'N', ONE, ZERO, A_prec_, X_prec_0_, Temp_nxk_, memspace_);
+      real_type AX_prec_0_norm = vector_handler_->norm(Temp_nxk_, memspace_);
+      real_type B_prec_norm = sqrt(static_cast<double>(k_)) * vector_handler_->norm(b_prec_, memspace_);
+      real_type normalization_factor = B_prec_norm / AX_prec_0_norm;
+      vector_handler_->scal(normalization_factor, X_prec_0_, memspace_);
 
       X_res_->setToZero(memspace_);
       vector_handler_->axpy(-normalization_factor, Temp_nxk_, B_res_, memspace_);
@@ -178,16 +206,16 @@ namespace ReSolve
       real_type best_basis_error = std::numeric_limits<real_type>::infinity();
       real_type lincomb_error = std::numeric_limits<real_type>::infinity();
 
+      precondition();
+
       std::chrono::time_point<std::chrono::steady_clock> start;
       std::chrono::time_point<std::chrono::steady_clock> end;
-      start = std::chrono::steady_clock::now();
-
       generateGuesses();
 
-      R_->copyFromExternal(B_res_, memspace_, memspace_);
+      R_prec_->copyFromExternal(B_res_, memspace_, memspace_);
       
       // ADD PRECONDITIONER LATER. W = L^-1 * R
-      cholesky_solver_->solve(W_, R_);
+      W_->copyFromExternal(R_prec_, memspace_, memspace_); // with preconditioner, this is L_inv * R_res
       if (vector_handler_->choleskyQr(W_, Sigma_, memspace_) != 0)
       {
         printf("QR failed!\n");
@@ -198,7 +226,9 @@ namespace ReSolve
         // return 0; /////////
 
       // S = L^-1 * W
-      cholesky_solver_->solve(S_, W_);
+      S_->copyFromExternal(W_, memspace_, memspace_);
+      start = std::chrono::steady_clock::now();
+
 
       int i;
       for (i = 0; i < itmax_; i++)
@@ -208,7 +238,7 @@ namespace ReSolve
 // cudaEventCreate(&stop);
 // cudaEventRecord(start, 0);
         // Xi_inv = S^T * (A * S)
-        vector_handler_->gemm('N', 'N', ONE, ZERO, A_, S_, Temp_nxk_, memspace_);
+        vector_handler_->gemm('N', 'N', ONE, ZERO, A_prec_, S_, Temp_nxk_, memspace_);
         vector_handler_->gemm('T', 'N', ONE, ZERO, S_, Temp_nxk_, Xi_inv_, memspace_);
 
         // X_res = X_res + S * (Xi * Sigma)
@@ -222,40 +252,36 @@ namespace ReSolve
         vector_handler_->gemm('N', 'N', ONE, ONE, S_, Temp_kxk_, X_res_, memspace_);
       
         // check residual. not important. implement later
-        // R = R - (A * S) * Xi * Sigma. Temp_kxk_ = Xi * Sigma
-        vector_handler_->gemm('N', 'N', MINUS_ONE, ONE, Temp_nxk_, Temp_kxk_, R_, memspace_);
+        // R = R - (A * S) * Xi * Sigma (residual space). Temp_kxk_ = Xi * Sigma
+        vector_handler_->gemm('N', 'N', MINUS_ONE, ONE, Temp_nxk_, Temp_kxk_, R_prec_, memspace_);
 
         // cudaDeviceSynchronize();
         // end = std::chrono::steady_clock::now();
         // std::chrono::duration<double, std::milli> elapsed = (end - start);
         // printf("Time: %f, error: %f\n", elapsed.count(), best_basis_error);
 
-        // W = W - L^-1 (A * S) * Xi. Temp_nxk_ overriden
+        // W = W - (A * S) * Xi
         vector_handler_->choleskySolve(Xi_inv_->getData(memspace_), Temp_nxk_, 'R', memspace_); // "Temp_nxk_" now contains A * S * Xi
-        cholesky_solver_->solve(Temp_nxk1_, Temp_nxk_);
-        vector_handler_->axpy(MINUS_ONE, Temp_nxk1_, W_, memspace_);
+        vector_handler_->axpy(MINUS_ONE, Temp_nxk_, W_, memspace_);
+        // add preconditioner later. L is lower triangular. might need a new solver
         // TODO: reuse Xi * Sigma !!!!!!!!!!!!!!!!!!!!!!!!! POTENTIALLY REAL
 
-        
+        // RECOVER R (not preconditioned)
+        matrix_handler_->matvec(L_, R_prec_, R_, &b_norm_, &ZERO, memspace_);
+
         // BEST BASIS VECTOR NORM
-        // r = b - Ax, but actually r = Ax - b
-        Temp_nxk_->copyFromExternal(X_res_, memspace_, memspace_);
-        vector_handler_->axpy(ONE, X_0_, Temp_nxk_, memspace_);
         index_type best_basis = -1;
         best_basis_error = std::numeric_limits<real_type>::infinity();
-        real_type best_basis_x_norm = std::numeric_limits<real_type>::infinity();
         real_type best_basis_r_norm = std::numeric_limits<real_type>::infinity();
         for (index_type j = 0; j < k_; j++)
         {
-          real_type basis_x_norm = vector_handler_->norm(Temp_nxk_, j, memspace_);
           real_type basis_r_norm = vector_handler_->norm(R_, j, memspace_);
-          real_type basis_error = basis_r_norm / (A_norm_ * basis_x_norm + b_norm_);
+          real_type basis_error = basis_r_norm / b_norm_;
           if (basis_error < best_basis_error)
           {
             best_basis = j;
-            best_basis_error = basis_error;
-            best_basis_x_norm = basis_x_norm;
             best_basis_r_norm = basis_r_norm;
+            best_basis_error = basis_error;
           }
         }
 
@@ -286,20 +312,29 @@ namespace ReSolve
               
             // r = b - AX * c, but it's actually r = AX * c - b because sign doesn't matter
             vector_handler_->gemv('N', k_, ONE, ZERO, Temp_nxk_, c_, r_, memspace_);
-            x_norm = vector_handler_->norm(r_, memspace_);
+            x_norm = vector_handler_->norm(r_, memspace_); // later: remove this from main loop
             vector_handler_->axpy(MINUS_ONE, b_, r_, memspace_);
             r_norm = vector_handler_->norm(r_, memspace_);
-            lincomb_error = r_norm / (A_norm_ * x_norm + b_norm_);
+            lincomb_error = r_norm / b_norm_;
           }
           // printf("Linear combination error: %.5e. Best basis error: %.5e\n", lincomb_error, best_basis_error);
           
           if (lincomb_error < convergence_tol_)
           {
+            // Get ||r|| / (||A|| * ||x|| + ||b||) error    
+            // R = B - AX, but actually R = AX - b
+            Temp_nxk_->copyFromExternal(X_res_, memspace_, memspace_);
+            vector_handler_->axpy(ONE, X_prec_0_, Temp_nxk_, memspace_);
+            real_type best_basis_x_norm = vector_handler_->norm(Temp_nxk_, best_basis, memspace_);
+
+            // Recover X
             end = std::chrono::steady_clock::now();
             std::chrono::duration<double, std::milli> elapsed = (end - start);
             printf("Convergence occured at iteration %d. Time: %f\n", i, elapsed.count());
-            printf("||r|| / (||A|| * ||x|| + ||b||) error: %.5e, best basis error: %.5e\n", lincomb_error, best_basis_error);
-            printf("||r|| / ||b|| error: %.5e, best basis error: %.5e\n", r_norm / b_norm_, best_basis_r_norm / b_norm_);
+            printf("||r|| / (||A|| * ||x|| + ||b||) error: %.5e, best basis error: %.5e\n",
+                   r_norm / (A_norm_ * x_norm + b_norm_),
+                   best_basis_r_norm / (A_norm_ * best_basis_x_norm + b_norm_));
+            printf("||r|| / ||b|| error: %.5e, best basis error: %.5e\n", lincomb_error, best_basis_error);
             return 0;
           }
         }
@@ -309,8 +344,9 @@ namespace ReSolve
           out::error() << "QR failed!";
           return 1; // todo: fallback qr
         }
-        // S = L^-1 * W + S * Zeta.T. T is recycled as intermediate memory storage. do preconditioner later
-        cholesky_solver_->solve(Temp_nxk_, W_);
+
+        // S = L_inv * W + S * Zeta.T. T is recycled as intermediate memory storage. do preconditioner later
+        Temp_nxk_->copyFromExternal(W_, memspace_, memspace_);
         vector_handler_->gemm('N', 'T', ONE, ONE, S_, Zeta_, Temp_nxk_, memspace_);
         S_->copyFromExternal(Temp_nxk_, memspace_, memspace_);
         

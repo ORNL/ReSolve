@@ -89,6 +89,15 @@ namespace ReSolve
                       vector::Vector* A,
                       vector::Vector* B,
                       vector::Vector* C) = 0;
+                      
+    // ....
+    virtual void geam(char transpose_A,
+                      char transpose_B,
+                      const real_type alpha,
+                      const real_type beta,
+                      vector::Vector* A,
+                      vector::Vector* B,
+                      vector::Vector* C) = 0;
 
     // ....
     virtual void randomVector(vector::Vector* v, real_type min, real_type max) = 0;

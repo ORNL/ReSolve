@@ -81,6 +81,16 @@ namespace ReSolve
               vector::Vector* B,
               vector::Vector* C,
               memory::MemorySpace memspace);
+
+    // Dense adition and trnapose
+    void geam(char transpose_A,
+              char transpose_B,
+              const real_type alpha,
+              const real_type beta,
+              vector::Vector* A,
+              vector::Vector* B,
+              vector::Vector* C,
+              memory::MemorySpace memspace);
     
     int choleskyFactorize(vector::Vector* A, char uplo, memory::MemorySpace memspace);
     int choleskySolve(const real_type* L, vector::Vector* B, char side, memory::MemorySpace memspace);

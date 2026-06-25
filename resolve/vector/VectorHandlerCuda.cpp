@@ -308,6 +308,94 @@ namespace ReSolve
     C->setDataUpdated(memory::DEVICE);
   }
 
+    /** UPDATE COMMENT
+   * @brief gemm computes dense matrix-matrix (or multivector-multivector) product.
+   *
+   * Compute C := alpha * A * B + beta * C.
+   * A is replaced with A^T if transpose_A = T.
+   * B is replaced with B^T if transpose_A = T.
+   *
+   * @param[in] transpose_A - yes (T) or no (N)
+   * @param[in] transpose_B - yes (T) or no (N)
+   * @param[in] alpha     - Constant real number
+   * @param[in] beta      - Constant real number
+   * @param[in] A         - Multivector containing the A matrix, organized columnwise
+   * @param[in] B         - Multivector containing the B matrix, organized columnwise
+   * @param[in] C         - Multivector containing the C (result) matrix, organized columnwise
+   */
+  void VectorHandlerCuda::geam(char transpose_A,
+                               char transpose_B,
+                               const real_type alpha,
+                               const real_type beta,
+                               vector::Vector* A,
+                               vector::Vector* B,
+                               vector::Vector* C)
+  {
+    using namespace constants;
+    
+    cublasHandle_t   handle_cublas = workspace_->getCublasHandle();
+
+    // Shape is post-transpose, if applicable
+    index_type m = C->getSize();
+    index_type n = C->getNumVectors();
+
+    // switch (transpose_A)
+    // {
+    // case 'T':
+    //   assert((A->getNumVectors() == m)
+    //           && "gemm: Shape mismatch! Shape of A does not match shape of C.");
+    //   k = A->getSize();
+    //   break;
+    // case 'N':
+    //   assert((A->getSize() == m)
+    //           && "gemm: Shape mismatch! Shape of A does not match shape of C.");
+    //   k = A->getNumVectors();
+    //   break;
+    // default:
+    //   out::error() << "Unrecognized transpose option " << transpose_A
+    //                << " in gemm. Valid options are 'N' (not transposed) and 'T' (transposed).\n";
+    //   break;
+    // }
+
+    // switch (transpose_B)
+    // {
+    // case 'T':
+    //   assert((B->getNumVectors() == k)
+    //           && "gemm: Shape mismatch! Shape of A does not match shape of B.");
+    //   assert((B->getSize() == n)
+    //           && "gemm: Shape mismatch! Shape of A does not match shape of C.");
+    //   break;
+    // case 'N':
+    //   assert((B->getSize() == k)
+    //           && "gemm: Shape mismatch! Shape of A does not match shape of B.");
+    //   assert((B->getNumVectors() == n)
+    //           && "gemm: Shape mismatch! Shape of A does not match shape of C.");
+    //   break;
+    // default:
+    //   out::error() << "Unrecognized transpose option " << transpose_B
+    //                << " in gemm. Valid options are 'N' (not transposed) and 'T' (transposed).\n";
+    //   break;
+    // }
+
+    cublasOperation_t transpose_A_cublas = (transpose_A == 'T') ? CUBLAS_OP_T : CUBLAS_OP_N;
+    cublasOperation_t transpose_B_cublas = (transpose_B == 'T') ? CUBLAS_OP_T : CUBLAS_OP_N; 
+
+    cublasDgeam(handle_cublas,
+                transpose_A_cublas,
+                transpose_B_cublas,
+                m,
+                n,
+                &alpha,
+                A->getData(memory::DEVICE),
+                A->getSize(),
+                &beta,
+                B->getData(memory::DEVICE),
+                B->getSize(),
+                C->getData(memory::DEVICE),
+                C->getSize());
+    C->setDataUpdated(memory::DEVICE);
+  }
+
   /**
    * @brief mass (bulk) axpy i.e, y = y - x*alpha where  alpha is a vector
    *
