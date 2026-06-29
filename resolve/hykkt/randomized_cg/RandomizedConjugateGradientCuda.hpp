@@ -21,7 +21,7 @@ namespace ReSolve
       RandomizedConjugateGradientCuda();
       ~RandomizedConjugateGradientCuda();
 
-      int SpMMTallSkinny(matrix::Csr* A, vector::Vector* X, vector::Vector* result);
+      int SpMMTallSkinny(matrix::Csr* A, const vector::Vector* X, vector::Vector* result);
 
     private:
       MemoryHandler mem_;

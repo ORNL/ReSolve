@@ -83,7 +83,7 @@ namespace ReSolve
       mem_.deleteOnDevice(buffer_);
     }
 
-    int RandomizedConjugateGradientCuda::SpMMTallSkinny(matrix::Csr* A, vector::Vector* X, vector::Vector* result)
+    int RandomizedConjugateGradientCuda::SpMMTallSkinny(matrix::Csr* A, const vector::Vector* X, vector::Vector* result)
     {
       index_type n = A->getNumRows();
       index_type k = X->getNumVectors();
@@ -133,7 +133,11 @@ namespace ReSolve
                                                                 result->getData(memory::DEVICE),
                                                                 n);
         break;
+      default:
+        return 1;
       }
+      
+      return 0;
     }
   } // namespace hykkt
 } // namespace ReSolve
