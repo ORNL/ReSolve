@@ -1,6 +1,6 @@
 # Add source files for the RandomizedCG module
-set(RandomizedCG_SRC RandomizedConjugateGradient.cpp)
-set(RandomizedCG_HEADER_INSTALL RandomizedConjugateGradient.hpp)
+set(RandomizedCG_SRC RandomizedConjugateGradient.cpp RandomizedConjugateGradientCuda.cu)
+set(RandomizedCG_HEADER_INSTALL RandomizedConjugateGradient.hpp RandomizedConjugateGradientCuda.hpp)
 
 # Build shared library ReSolve::hykkt
 add_library(resolve_hykkt_randomized_cg SHARED ${RandomizedCG_SRC})

@@ -34,8 +34,7 @@ namespace ReSolve
         matrix_handler_(matrix_handler),
         vector_handler_(vector_handler),
         memspace_(memspace),
-        gram_schmidt_(vector_handler_, GramSchmidt::GSVariant::CGS2),
-        generator_(constants::SEED)
+        gram_schmidt_(vector_handler_, GramSchmidt::GSVariant::CGS2)
     {
       ;
     }
@@ -61,6 +60,7 @@ namespace ReSolve
       delete A_S_;
       delete c_;
       delete r_;
+      delete impl_;
     }
 
     /**
@@ -108,6 +108,8 @@ namespace ReSolve
 
     void RandomizedConjugateGradient::setup()
     {
+      impl_ = new RandomizedConjugateGradientCuda();
+
       A_prec_ = new matrix::Csr(n_, n_, nnz_);
       X_prec_0_ = new vector::Vector(n_, k_);
       X_res_ = new vector::Vector(n_, k_);
@@ -231,13 +233,16 @@ namespace ReSolve
 
       int i;
       for (i = 0; i < itmax_; i++)
-      {        
-// cudaEvent_t start, stop;
-// cudaEventCreate(&start);
-// cudaEventCreate(&stop);
-// cudaEventRecord(start, 0);
+      {
+        auto it_start = std::chrono::steady_clock::now();
+        
+        auto spmv_start = std::chrono::steady_clock::now();
         // Xi_inv = S^T * (A * S)
-        matrix_handler_->matvec(A_prec_, S_, Temp_nxk_, &ONE, &ZERO, memspace_);
+        // matrix_handler_->matvec(A_prec_, S_, Temp_nxk_, &ONE, &ZERO, memspace_);
+        impl_->SpMMTallSkinny(A_prec_, S_, Temp_nxk_);
+        cudaDeviceSynchronize();
+        auto spmv_end = std::chrono::steady_clock::now();
+        printf("spmv %f\n", static_cast<std::chrono::duration<double, std::milli>>(spmv_end - spmv_start));
         vector_handler_->gemm('T', 'N', ONE, ZERO, S_, Temp_nxk_, Xi_inv_, memspace_);
 
         // X_res = X_res + S * (Xi * Sigma)
@@ -265,6 +270,7 @@ namespace ReSolve
         // add preconditioner later. L is lower triangular. might need a new solver
         // TODO: reuse Xi * Sigma !!!!!!!!!!!!!!!!!!!!!!!!! POTENTIALLY REAL
 
+        auto residual_check_start = std::chrono::steady_clock::now();
         // R = b_norm * L * R_prec
         R_->copyFromExternal(R_prec_, memspace_, memspace_);
         vector_handler_->diagSolve(d_inv_, R_, memspace_);
@@ -346,12 +352,19 @@ namespace ReSolve
             return 0;
           }
         }
+        cudaDeviceSynchronize();
+        auto residual_check_end = std::chrono::steady_clock::now();
+        printf("residual check %f\n", static_cast<std::chrono::duration<double, std::milli>>(residual_check_end - residual_check_start));
         
+        auto qr_start = std::chrono::steady_clock::now();
         if (vector_handler_->choleskyQr(W_, Zeta_, memspace_) != 0)
         {
           out::error() << "QR failed!";
           return 1; // todo: fallback qr
         }
+        cudaDeviceSynchronize();
+        auto qr_end = std::chrono::steady_clock::now();
+        printf("qr %f\n", static_cast<std::chrono::duration<double, std::milli>>(qr_end - qr_start));
 
         // S = L_inv * W + S * Zeta.T. T is recycled as intermediate memory storage. do preconditioner later
         Temp_nxk_->copyFromExternal(W_, memspace_, memspace_);
@@ -362,11 +375,8 @@ namespace ReSolve
         vector_handler_->gemm('N', 'N', ONE, ZERO, Zeta_, Sigma_, Temp_kxk_, memspace_);
         Sigma_->copyFromExternal(Temp_kxk_, memspace_, memspace_);
 
-// cudaEventRecord(stop, 0);
-// cudaEventSynchronize(stop);
-// float ms = 0;
-// cudaEventElapsedTime(&ms, start, stop);
-// std::cout << ms << '\n';
+        auto it_end = std::chrono::steady_clock::now();
+        printf("it %f\n", static_cast<std::chrono::duration<double, std::milli>>(it_end - it_start));
       }
 
       if (i == itmax_)

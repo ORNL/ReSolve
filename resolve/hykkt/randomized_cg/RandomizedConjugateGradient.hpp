@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include "RandomizedConjugateGradientCuda.hpp"
+
 #include <resolve/Common.hpp>
 #include <resolve/MemoryUtils.hpp>
 #include <resolve/matrix/Csr.hpp>
@@ -60,7 +62,7 @@ namespace ReSolve
       index_type n_;             // Dimension of outer system
       index_type k_;             // 
       index_type nnz_;
-      int        itmax_ = 3000;   // Maximum iterations for conjugate gradient
+      int        itmax_ = 50;   // Maximum iterations for conjugate gradient
       real_type  initial_tol_   = 1e-12; // Solver tolerance for Schur
       real_type  convergence_tol_   = 1e-12; // Solver tolerance for Schur
     
@@ -99,8 +101,8 @@ namespace ReSolve
       vector::Vector* A_S_{nullptr};
       vector::Vector* c_{nullptr};
       vector::Vector* r_{nullptr};
-
-      std::mt19937 generator_;
+      
+      RandomizedConjugateGradientCuda* impl_{nullptr};
 
       memory::MemorySpace memspace_;
     }; // class RandomizedConjugateGradient

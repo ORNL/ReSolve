@@ -165,7 +165,7 @@ namespace ReSolve
     return error_sum;
   }
 
-    /**
+  /**
    * @brief result := alpha * A * x + beta * result
    *
    * @param[in]     A - matrix
