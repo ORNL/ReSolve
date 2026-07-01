@@ -1,6 +1,6 @@
 # Add source files for the CG module
-set(CG_SRC ConjugateGradient.cpp)
-set(CG_HEADER_INSTALL ConjugateGradient.hpp)
+set(CG_SRC ConjugateGradient.cpp ${CMAKE_SOURCE_DIR}/resolve/hykkt/randomized_cg/RandomizedConjugateGradientCuda.cu)
+set(CG_HEADER_INSTALL ConjugateGradient.hpp ${CMAKE_SOURCE_DIR}/resolve/hykkt/randomized_cg/RandomizedConjugateGradientCuda.hpp)
 
 # Build shared library ReSolve::hykkt
 add_library(resolve_hykkt_cg SHARED ${CG_SRC})

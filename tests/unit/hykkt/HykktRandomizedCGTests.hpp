@@ -103,8 +103,8 @@ namespace ReSolve
       MatrixHandler&      matrix_handler_; ///< Backend-specific matrix handler.
       VectorHandler&      vector_handler_; ///< Backend-specific vector handler.
 
-      static constexpr real_type initial_tol = 1e-10;
-      static constexpr real_type convergence_tol     = 1e-10;
+      static constexpr real_type initial_tol = 1e-12;
+      static constexpr real_type convergence_tol     = 1e-12;
       static constexpr real_type entry_tol    = 1e-6; // Tolerance for checking individual entries
 
       /**

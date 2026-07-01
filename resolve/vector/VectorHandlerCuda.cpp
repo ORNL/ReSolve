@@ -597,11 +597,11 @@ namespace ReSolve
                                workspace_->getQrDevInfo());
     
     // // async memcpy?
-    cudaDeviceSynchronize();
-    A->setDataUpdated(memory::DEVICE);
-    int h_dev_info;
-    cudaMemcpy(&h_dev_info, workspace_->getQrDevInfo(), sizeof(int), cudaMemcpyDeviceToHost);
-    status += h_dev_info;
+    // cudaDeviceSynchronize();
+    // A->setDataUpdated(memory::DEVICE);
+    // int h_dev_info;
+    // cudaMemcpy(&h_dev_info, workspace_->getQrDevInfo(), sizeof(int), cudaMemcpyDeviceToHost);
+    // status += h_dev_info;
 
     // switch (uplo)
     // {

@@ -124,6 +124,7 @@ if(RESOLVE_USE_CUDA)
   endif()
 
   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-extended-lambda")
+  set(CMAKE_CUDA_FLAGS_DEBUG "${CMAKE_CUDA_FLAGS_DEBUG} -g -G")
 
   include(ReSolveFindCudaLibraries)
 else()

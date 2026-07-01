@@ -71,13 +71,19 @@ namespace ReSolve
 
         vector::Vector* x = new vector::Vector(n);
         x->allocateAll(memspace_);
+        x->setToZero(memspace_);
 
         vector::Vector* b = new vector::Vector(n);
         b->allocateAll(memspace_);
         vector_handler_.randomVector(b, rng_min, rng_max, memspace_);
 
+        vector::Vector* d_inv = new vector::Vector(n);
+        d_inv->allocate(memspace_);
+        matrix_handler_.extractInverseRootDiagonal(A, d_inv, memspace_);
+
         cg.addMatrixInfo(A);
         cg.addVectorInfo(x, b);
+        cg.addPreconditionerInfo(d_inv);
         cg.setup();
         int converged_n = cg.solve(); // 0 if converged, 1 if not
 
