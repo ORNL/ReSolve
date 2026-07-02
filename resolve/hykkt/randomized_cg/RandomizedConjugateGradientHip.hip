@@ -1,7 +1,7 @@
-#include "RandomizedConjugateGradientCuda.hpp"
+#include "RandomizedConjugateGradientHip.hpp"
 
-#include <cub/cub.cuh>
-#include <cooperative_groups.h>
+#include <hip/hip_runtime.h>
+#include <hip/hip_cooperative_groups.h>
 
 namespace ReSolve
 {
@@ -58,9 +58,9 @@ namespace ReSolve
       {
         // Always same i within the same warp
         const index_type thread = blockIdx.x * blockDim.x + threadIdx.x;
-        const index_type row = thread / 32;
+        const index_type row = thread / 64;
         const index_type i = threadIdx.y;
-        const index_type lane = thread % 32;
+        const index_type lane = thread % 64;
 
         if (row >= n) return;
 
@@ -69,7 +69,7 @@ namespace ReSolve
 
         real_type sum = 0.0;
 
-        for (index_type j = col_start + lane; j < col_end; j += 32)
+        for (index_type j = col_start + lane; j < col_end; j += 64)
         {
           index_type col = A_col_idx[j];
           real_type a = A_val[j];
@@ -77,7 +77,7 @@ namespace ReSolve
           sum += a * B[i * n + col];
         }
 
-        for (index_type offset = 32 / 2; offset > 0; offset /= 2)
+        for (index_type offset = 64 / 2; offset > 0; offset /= 2)
         {
           sum += __shfl_down_sync(0xffffffff, sum, offset);
         }
@@ -98,10 +98,10 @@ namespace ReSolve
         index_type n)
       {
         const index_type thread = blockIdx.x * blockDim.x + threadIdx.x;
-        const index_type warp = threadIdx.x / 32;
-        const index_type row = thread / 32;
-        const index_type lane = thread % 32;
-        const index_type rows_per_block = BLOCK_SIZE / 32;
+        const index_type warp = threadIdx.x / 64;
+        const index_type row = thread / 64;
+        const index_type lane = thread % 64;
+        const index_type rows_per_block = BLOCK_SIZE / 64;
 
         __shared__ real_type result_shared[rows_per_block * K];
 
@@ -109,14 +109,14 @@ namespace ReSolve
 
         if (row >= n) return;
 
-        // for (index_type row = row_offset; row < n; row += gridDim.x * blockDim.x / 32)
+        // for (index_type row = row_offset; row < n; row += gridDim.x * blockDim.x / 64)
         {
           index_type col_start = A_row_ptr[row];
           index_type col_end   = A_row_ptr[row + 1];
 
           real_type sum[K] = { 0.0 };
 
-          for (index_type j = col_start + lane; j < col_end; j += 32)
+          for (index_type j = col_start + lane; j < col_end; j += 64)
           {
             index_type col = A_col_idx[j];
             real_type a = A_val[j];
@@ -131,7 +131,7 @@ namespace ReSolve
           // #pragma unroll
           for (int i = 0; i < k; ++i)
           {
-            for (index_type offset = 32 / 2; offset > 0; offset /= 2)
+            for (index_type offset = 64 / 2; offset > 0; offset /= 2)
             {
               sum[i] += __shfl_down_sync(0xffffffff, sum[i], offset);
             }
@@ -140,7 +140,7 @@ namespace ReSolve
           if (lane == 0)
           {
             for (int i = 0; i < k; ++i)
-            // result_shared[lane * rows_per_block + threadIdx.x / 32];
+            // result_shared[lane * rows_per_block + threadIdx.x / 64];
               result[i * n + row] = sum[i];
           }
 
@@ -260,8 +260,8 @@ namespace ReSolve
         // } else
         {
             // CSR-Vector / VectorL Case// CSR-Vector / VectorL Case
-            const index_type lane    = threadIdx.x % 32;
-            const index_type warp_id = threadIdx.x / 32;
+            const index_type lane    = threadIdx.x % 64;
+            const index_type warp_id = threadIdx.x / 64;
 
             // Each warp gets its own distinct row within the block's range
             const index_type row     = block_row_begin + warp_id; 
@@ -273,7 +273,7 @@ namespace ReSolve
                 const index_type row_start = A_row_ptr[row];
                 const index_type row_end   = A_row_ptr[row + 1];
 
-                for (index_type element = row_start + lane; element < row_end; element += 32) {
+                for (index_type element = row_start + lane; element < row_end; element += 64) {
                     const real_type a_val = A_val[element];
                     const index_type col  = A_col_idx[element];
 
@@ -326,7 +326,7 @@ namespace ReSolve
             //     if (lane == 0) {
             //         #pragma unroll
             //         for (int k = 0; k < K; ++k) {
-            //             cache[k * (BLOCK_SIZE / 32) + warp_id] = dot[k];
+            //             cache[k * (BLOCK_SIZE / 64) + warp_id] = dot[k];
             //         }
             //     }
             //     __syncthreads();
@@ -335,10 +335,10 @@ namespace ReSolve
             //         #pragma unroll
             //         for (int k = 0; k < K; ++k) dot[k] = 0.0;
 
-            //         if (lane < (BLOCK_SIZE / 32)) {
+            //         if (lane < (BLOCK_SIZE / 64)) {
             //             #pragma unroll
             //             for (int k = 0; k < K; ++k) {
-            //                 dot[k] = cache[k * (BLOCK_SIZE / 32) + lane];
+            //                 dot[k] = cache[k * (BLOCK_SIZE / 64) + lane];
             //             }
             //         }
 
@@ -369,7 +369,7 @@ namespace ReSolve
         {
           r_sq += R[col * n + row] * R[col * n + row];
         }
-        for (index_type offset = 32 / 2; offset > 0; offset /= 2)
+        for (index_type offset = 64 / 2; offset > 0; offset /= 2)
         {
           r_sq += __shfl_down_sync(0xffffffff, r_sq, offset);
         }
@@ -464,11 +464,11 @@ namespace ReSolve
             real_type g = G_local[indexSymmetricUpper<k>(i, j)];
 
             #pragma unroll
-            for (index_type offset = 32 / 2; offset > 0; offset /= 2)
+            for (index_type offset = 64 / 2; offset > 0; offset /= 2)
             {
               g += __shfl_down_sync(0xffffffff, g, offset);
             }
-            if (threadIdx.x % 32 == 0)
+            if (threadIdx.x % 64 == 0)
             {
               atomicAdd(&R[j * k + i], g);
             }
@@ -727,7 +727,7 @@ namespace ReSolve
       }
     } // namespace kernels
     
-    RandomizedConjugateGradientCuda::RandomizedConjugateGradientCuda(VectorHandler* vector_handler)
+    RandomizedConjugateGradientHip::RandomizedConjugateGradientHip(VectorHandler* vector_handler)
     {
       vector_handler_ = vector_handler;
       cusolverSpCreate(&cusolverHandle_);
@@ -736,14 +736,14 @@ namespace ReSolve
       buffer_ = nullptr;
 
       int device_id = 0;
-      cudaDeviceProp properties;
-      cudaGetDeviceProperties(&properties, device_id);
+      hipDeviceProp_t properties;
+      hipGetDeviceProperties(&properties, device_id);
       num_sms_     = properties.multiProcessorCount; // 80
       num_threads_ = num_sms_ * properties.maxThreadsPerMultiProcessor; // 163840
       printf("Total SMs: %d, total threads: %d\n", num_sms_, num_threads_);
     }
 
-    RandomizedConjugateGradientCuda::~RandomizedConjugateGradientCuda()
+    RandomizedConjugateGradientHip::~RandomizedConjugateGradientHip()
     {
       cusolverSpDestroy(cusolverHandle_);
       cusparseDestroyMatDescr(descrA_);
@@ -751,7 +751,7 @@ namespace ReSolve
       mem_.deleteOnDevice(buffer_);
     }
 
-    int RandomizedConjugateGradientCuda::setup(index_type k)
+    int RandomizedConjugateGradientHip::setup(index_type k)
     {
       // For choleskyQr()
       switch (k)
@@ -774,7 +774,7 @@ namespace ReSolve
       default:
         return 1;
       }
-      cudaOccupancyMaxActiveBlocksPerMultiprocessor(&qr_blocks_per_sm_,
+      hipOccupancyMaxActiveBlocksPerMultiprocessor(&qr_blocks_per_sm_,
                                                     cholesky_qr_kernel_,
                                                     256,
                                                     0);
@@ -793,14 +793,14 @@ namespace ReSolve
 
       return 0;
     }
-    
-// int RandomizedConjugateGradientCuda::SpMMTallSkinny(matrix::Csr* A, vector::Vector* X, vector::Vector* result)
+
+// int RandomizedConjugateGradientHip::SpMMTallSkinny(matrix::Csr* A, vector::Vector* X, vector::Vector* result)
 //   {
 //     index_type n = A->getNumRows();
 //     index_type k = X->getNumVectors();
 
 //     dim3      block_size = dim3(256 / k, k);
-//     int       num_blocks = (n * 32 + block_size.x - 1) / block_size.x;
+//     int       num_blocks = (n * 64 + block_size.x - 1) / block_size.x;
 
 //     switch (k)
 //     {
@@ -851,13 +851,13 @@ namespace ReSolve
 //     return 0;
 //   }
 
-int RandomizedConjugateGradientCuda::SpMMTallSkinny(matrix::Csr* A, vector::Vector* X, vector::Vector* result)
+int RandomizedConjugateGradientHip::SpMMTallSkinny(matrix::Csr* A, vector::Vector* X, vector::Vector* result)
     {
       index_type n = A->getNumRows();
       index_type k = X->getNumVectors();
 
       constexpr int       block_size = 256;
-      int       num_blocks = (n * 32 + block_size - 1) / block_size;
+      int       num_blocks = (n * 64 + block_size - 1) / block_size;
 
       switch (k)
       {
@@ -908,14 +908,14 @@ int RandomizedConjugateGradientCuda::SpMMTallSkinny(matrix::Csr* A, vector::Vect
       return 0;
     }
     
-    int RandomizedConjugateGradientCuda::bestBasis(vector::Vector* R, index_type* h_best_basis, real_type* h_best_basis_norm)
+    int RandomizedConjugateGradientHip::bestBasis(vector::Vector* R, index_type* h_best_basis, real_type* h_best_basis_norm)
     {
       index_type n = R->getSize();
       index_type k = R->getNumVectors();
 
-      dim3       block_size(32, k);
+      dim3       block_size(64, k);
       int        num_blocks = num_sms_ * 4; // Pretty arbitrary. Tune this later
-      cudaMemsetAsync(d_sq_norms_, 0.0, k * sizeof(real_type));
+      hipMemsetAsync(d_sq_norms_, 0.0, k * sizeof(real_type));
       kernels::columnWiseSquaredNorms<<<num_blocks, block_size>>>(R->getData(memory::DEVICE), d_sq_norms_, n);
 
       // Kernel writes back into first entry of d_sq_norms_
@@ -940,14 +940,14 @@ int RandomizedConjugateGradientCuda::SpMMTallSkinny(matrix::Csr* A, vector::Vect
         return 1;
       }
 
-      cudaMemcpyAsync(h_best_basis, d_best_basis_, sizeof(real_type), cudaMemcpyDeviceToHost);
-      cudaMemcpyAsync(h_best_basis_norm, d_sq_norms_, sizeof(real_type), cudaMemcpyDeviceToHost);
+      hipMemcpyAsync(h_best_basis, d_best_basis_, sizeof(real_type), hipMemcpyDeviceToHost);
+      hipMemcpyAsync(h_best_basis_norm, d_sq_norms_, sizeof(real_type), hipMemcpyDeviceToHost);
 
       return 0;
     }
 
     // R must be zeroed
-    int RandomizedConjugateGradientCuda::choleskyQr(vector::Vector* W, vector::Vector* R, memory::MemorySpace memspace)
+    int RandomizedConjugateGradientHip::choleskyQr(vector::Vector* W, vector::Vector* R, memory::MemorySpace memspace)
     {
       index_type n = W->getSize();
       index_type k = W->getNumVectors();
@@ -960,7 +960,7 @@ int RandomizedConjugateGradientCuda::SpMMTallSkinny(matrix::Csr* A, vector::Vect
         return 0;
       }
 
-      cudaError_t status;
+      hipError_t status;
 
       real_type* d_W = W->getData(memory::DEVICE);
       real_type* d_R = R->getData(memory::DEVICE);
@@ -974,22 +974,22 @@ int RandomizedConjugateGradientCuda::SpMMTallSkinny(matrix::Csr* A, vector::Vect
       int       block_size = 256; // Must be at least k^2
       int       num_blocks = num_sms_ * qr_blocks_per_sm_;
 
-      status = cudaLaunchCooperativeKernel((void*)cholesky_qr_kernel_, num_blocks, block_size, args, 0, 0);
+      status = hipLaunchCooperativeKernel((void*)cholesky_qr_kernel_, num_blocks, block_size, args, 0, 0);
       
-      if (status != cudaSuccess) {
+      if (status != hipSuccess) {
           return 1;
       }
 
       return 0;
     }
 
-    int RandomizedConjugateGradientCuda::updateW(vector::Vector* W, vector::Vector* L, vector::Vector* B, memory::MemorySpace memspace)
+    int RandomizedConjugateGradientHip::updateW(vector::Vector* W, vector::Vector* L, vector::Vector* B, memory::MemorySpace memspace)
     {
       index_type n = B->getSize();
       index_type k = B->getNumVectors();
 
       int       block_size = 256; // Must be at least k^2
-      int       num_blocks = num_sms_ * 32; // quite arbitrary
+      int       num_blocks = num_sms_ * 64; // quite arbitrary
 
       switch (k)
       {
@@ -1031,13 +1031,13 @@ int RandomizedConjugateGradientCuda::SpMMTallSkinny(matrix::Csr* A, vector::Vect
     }
 
     // C = A^T * B
-    int RandomizedConjugateGradientCuda::multTSMTTSM(vector::Vector* A, vector::Vector* B, vector::Vector* C, memory::MemorySpace memspace)
+    int RandomizedConjugateGradientHip::multTSMTTSM(vector::Vector* A, vector::Vector* B, vector::Vector* C, memory::MemorySpace memspace)
     {
       index_type n = A->getSize();
       index_type k = A->getNumVectors();
 
       int       block_size = 256;
-      int       num_blocks = num_sms_ * 32;
+      int       num_blocks = num_sms_ * 64;
       
       C->setToZero(memory::DEVICE);
       switch (k)
@@ -1079,7 +1079,7 @@ int RandomizedConjugateGradientCuda::SpMMTallSkinny(matrix::Csr* A, vector::Vect
       return 0;
     }
 
-    int RandomizedConjugateGradientCuda::updateSSigma(vector::Vector* W, vector::Vector* S, vector::Vector* Zeta, vector::Vector* Sigma, memory::MemorySpace memspace)
+    int RandomizedConjugateGradientHip::updateSSigma(vector::Vector* W, vector::Vector* S, vector::Vector* Zeta, vector::Vector* Sigma, memory::MemorySpace memspace)
     {
       index_type n = W->getSize();
       index_type k = W->getNumVectors();  

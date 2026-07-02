@@ -156,10 +156,11 @@ namespace ReSolve
       delta_ = vector_handler_->dot(w_, r_prec_, memspace_);
       alpha_ = gamma_i_ / delta_;
 
+      auto start = std::chrono::steady_clock::now();
       int i;
       for (i = 0; i < itmax_; i++)
       {
-      auto start = std::chrono::steady_clock::now();
+      // auto start = std::chrono::steady_clock::now();
         vector_handler_->scal(beta_, p_, memspace_);
         vector_handler_->axpy(ONE, r_prec_, p_, memspace_);
         vector_handler_->scal(beta_, s_, memspace_);
@@ -175,9 +176,9 @@ namespace ReSolve
         error_ = r_norm_ / b_norm_;
         if (error_ < tol_)
         {
-          // auto end = std::chrono::steady_clock::now();
-          // std::chrono::duration<double, std::milli> elapsed = (end - start);
-          // printf("Convergence occured at iteration %d. Took %f ms.\n", i, elapsed.count());
+          auto end = std::chrono::steady_clock::now();
+          std::chrono::duration<double, std::milli> elapsed = (end - start);
+          printf("Convergence occured at iteration %d. Took %f ms.\n", i, elapsed.count());
           break;
         }
         matrix_handler_->matvec(A_prec_, r_prec_, w_, &ONE, &ZERO, memspace_);
@@ -188,7 +189,7 @@ namespace ReSolve
         alpha_   = gamma_i_ / (delta_ - beta_ * gamma_i_ / alpha_);
         auto end = std::chrono::steady_clock::now();
         std::chrono::duration<double, std::milli> elapsed = (end - start);
-        printf("time = %f, error = %f\n", elapsed.count(), error_);
+        // printf("time = %f, error = %f\n", elapsed.count(), error_);
       }
 
       printf("Conjugate gradient error is %32.32g \n", error_);

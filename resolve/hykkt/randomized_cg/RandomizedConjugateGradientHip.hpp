@@ -9,23 +9,18 @@
 #include <resolve/vector/Vector.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 
-#include <cublas_v2.h>
-#include <cuda_runtime.h>
-#include <cusolverSp.h>
-#include <cusolverSp_LOWLEVEL_PREVIEW.h>
-#include <cusparse.h>
-
 namespace ReSolve
 {
   namespace hykkt
   {
-    class RandomizedConjugateGradientCuda : public RandomizedConjugateGradientImpl
+    class RandomizedConjugateGradientHip : public RandomizedConjugateGradientImpl
     {
     public:
-      RandomizedConjugateGradientCuda(VectorHandler* vector_handler);
-      ~RandomizedConjugateGradientCuda();
+      RandomizedConjugateGradientHip(VectorHandler* vector_handler);
+      ~RandomizedConjugateGradientHip();
 
       int setup(index_type k);
+      void AnalyzeSpMM(matrix::Csr* A);
       int SpMMTallSkinny(matrix::Csr* A, vector::Vector* X, vector::Vector* result);
       int bestBasis(vector::Vector* R, index_type* h_best_basis, real_type* h_best_basis_norm);
       int choleskyQr(vector::Vector* W, vector::Vector* R, memory::MemorySpace memspace);

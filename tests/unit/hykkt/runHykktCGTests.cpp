@@ -38,7 +38,7 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
   ReSolve::tests::HykktConjugateGradientTests test(memspace, matrix_handler, vector_handler);
 
   std::string        source_dir = std::string(SOURCE_DIR);
-  std::string       A_file_name = source_dir + std::string("/RandomizedCGTestMatrices/Fault_639.mtx");
+  std::string       A_file_name = source_dir + std::string("/RandomizedCGTestMatrices/hood.mtx");
   double rng_min = -100.0;
   double rng_max = 100.0;
 

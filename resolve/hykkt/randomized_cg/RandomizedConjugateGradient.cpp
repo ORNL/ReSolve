@@ -130,7 +130,7 @@ namespace ReSolve
       c_ = new vector::Vector(k_);
       r_ = new vector::Vector(n_);
 
-      A_prec_->allocateMatrixData(memspace_);
+      A_prec_->allocateAll(memspace_);
       X_prec_0_->allocate(memspace_);
       X_res_->allocate(memspace_);
       b_prec_->allocate(memspace_);
@@ -235,9 +235,11 @@ namespace ReSolve
           out::error() << "QR failed!";
           return 1;
         }
-        // cudaDeviceSynchronize();
+        cudaDeviceSynchronize();
         auto qr_end = std::chrono::steady_clock::now();
-        // printf("  [it] qr: %f ms\n", static_cast<std::chrono::duration<double, std::milli>>(qr_end - qr_start).count());
+        printf("  [it] qr: %f ms\n", static_cast<std::chrono::duration<double, std::milli>>(qr_end - qr_start).count());
+
+        A_prec_->syncData(memory::HOST);
 
 
       // S = L^-1 * W
@@ -247,24 +249,24 @@ namespace ReSolve
       int i;
       for (i = 0; i < itmax_; i++)
       {
-        // cudaDeviceSynchronize();
+        cudaDeviceSynchronize();
         auto it_start = std::chrono::steady_clock::now();
         
         // 1. SpMM / SpMV Section
         auto spmv_start = std::chrono::steady_clock::now();
         // matrix_handler_->matvec(A_prec_, S_, Temp_nxk_, &ONE, &ZERO, memspace_);
         impl_->SpMMTallSkinny(A_prec_, S_, Temp_nxk_);
-        // cudaDeviceSynchronize();
+        cudaDeviceSynchronize();
         auto spmv_end = std::chrono::steady_clock::now();
-        // printf("  [it %d] spmv: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(spmv_end - spmv_start).count());
+        printf("  [it %d] spmv: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(spmv_end - spmv_start).count());
 
         // 2. S^T * (A * S) GEMM Section
         auto gemm_xi_start = std::chrono::steady_clock::now();
         // vector_handler_->gemm('T', 'N', ONE, ZERO, S_, Temp_nxk_, Xi_inv_, memspace_);
         impl_->multTSMTTSM(S_, Temp_nxk_, Xi_inv_, memspace_);
-        // cudaDeviceSynchronize();
+        cudaDeviceSynchronize();
         auto gemm_xi_end = std::chrono::steady_clock::now();
-        // printf("  [it %d] gemm_xi: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(gemm_xi_end - gemm_xi_start).count());
+        printf("  [it %d] gemm_xi: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(gemm_xi_end - gemm_xi_start).count());
 
         // 3. Cholesky & X_res/R_prec Update Section
         auto chol_update_start = std::chrono::steady_clock::now();
@@ -277,27 +279,27 @@ namespace ReSolve
         vector_handler_->choleskySolve(Xi_inv_->getData(memspace_), Temp_kxk_, 'L', memspace_); // Temp_kxk = Xi * Sigma
         vector_handler_->gemm('N', 'N', ONE, ONE, S_, Temp_kxk_, X_res_, memspace_);
         vector_handler_->gemm('N', 'N', MINUS_ONE, ONE, Temp_nxk_, Temp_kxk_, R_prec_, memspace_);
-        // cudaDeviceSynchronize();
+        cudaDeviceSynchronize();
         auto chol_update_end = std::chrono::steady_clock::now();
-        // printf("  [it %d] cholesky & update: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(chol_update_end - chol_update_start).count());
+        printf("  [it %d] cholesky & update: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(chol_update_end - chol_update_start).count());
 
         // 4. Update W Section (W = W - A * S * Xi)
         auto w_update_start = std::chrono::steady_clock::now();
-        // vector_handler_->choleskySolve(Xi_inv_->getData(memspace_), Temp_nxk_, 'R', memspace_); // Temp_nxk_ now contains A * S * Xi
-        // vector_handler_->axpy(MINUS_ONE, Temp_nxk_, W_, memspace_);
-        impl_->updateW(W_, Temp_nxk_, Xi_inv_, memspace_);
-        // cudaDeviceSynchronize();
+        vector_handler_->choleskySolve(Xi_inv_->getData(memspace_), Temp_nxk_, 'R', memspace_); // Temp_nxk_ now contains A * S * Xi
+        vector_handler_->axpy(MINUS_ONE, Temp_nxk_, W_, memspace_);
+        // impl_->updateW(W_, Xi_inv_, Temp_nxk_, memspace_); // This is wrong I think. accessing garbage half of Xi_inv_?
+        cudaDeviceSynchronize();
         auto w_update_end = std::chrono::steady_clock::now();
-        // printf("  [it %d] w_update: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(w_update_end - w_update_start).count());
+        printf("  [it %d] w_update: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(w_update_end - w_update_start).count());
 
         // 5. Scale & Diagonal Solve R Section
         auto r_scale_start = std::chrono::steady_clock::now();
         R_->copyFromExternal(R_prec_, memspace_, memspace_);
         vector_handler_->diagSolve(d_inv_, R_, memspace_);
         vector_handler_->scal(b_norm_, R_, memspace_);
-        // cudaDeviceSynchronize();
+        cudaDeviceSynchronize();
         auto r_scale_end = std::chrono::steady_clock::now();
-        // printf("  [it %d] r_scale: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(r_scale_end - r_scale_start).count());
+        printf("  [it %d] r_scale: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(r_scale_end - r_scale_start).count());
 
         // 6. Best Basis Vector Norm Loop Section
         auto basis_loop_start = std::chrono::steady_clock::now();
@@ -319,9 +321,9 @@ namespace ReSolve
         // }
         
         best_basis_error = best_basis_r_norm / b_norm_;
-        // cudaDeviceSynchronize();
+        cudaDeviceSynchronize();
         auto basis_loop_end = std::chrono::steady_clock::now();
-        // printf("  [it %d] basis_norm_loop: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(basis_loop_end - basis_loop_start).count());
+        printf("  [it %d] basis_norm_loop: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(basis_loop_end - basis_loop_start).count());
         // printf("error %f\n", best_basis_error);
 
         // 7. Convergence Checking & Final Calculations Block
@@ -374,18 +376,18 @@ namespace ReSolve
 
             cudaDeviceSynchronize();
             auto conv_block_end = std::chrono::steady_clock::now();
-            // printf("  [it %d] convergence_overhead: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(conv_block_end - conv_block_start).count());
+            printf("  [it %d] convergence_overhead: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(conv_block_end - conv_block_start).count());
 
-            printf("Convergence occured at iteration %d. Total Solve Time: %f ms\n", i, elapsed.count());
+            // printf("Convergence occured at iteration %d. Total Solve Time: %f ms\n", i, elapsed.count());
             printf("||r|| / (||A|| * ||x|| + ||b||) error: %.5e, best basis error: %.5e\n",
                    r_norm / (A_norm_ * x_norm + b_norm_),
                    best_basis_r_norm / (A_norm_ * best_basis_x_norm + b_norm_));
             printf("||r|| / ||b|| error: %.5e, best basis error: %.5e\n", lincomb_error, best_basis_error);
             return 0;
           }
-          // cudaDeviceSynchronize();
+          cudaDeviceSynchronize();
           auto conv_block_end = std::chrono::steady_clock::now();
-          // printf("  [it %d] convergence_overhead (failed conv_tol): %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(conv_block_end - conv_block_start).count());
+          printf("  [it %d] convergence_overhead (failed conv_tol): %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(conv_block_end - conv_block_start).count());
         }
 
         // 8. Cholesky QR Section
@@ -396,27 +398,27 @@ namespace ReSolve
           out::error() << "QR failed!";
           return 1;
         }
-        // cudaDeviceSynchronize();
+        cudaDeviceSynchronize();
         auto qr_end = std::chrono::steady_clock::now();
-        // printf("  [it %d] qr: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(qr_end - qr_start).count());
+        printf("  [it %d] qr: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(qr_end - qr_start).count());
 
         // 9. S and Sigma Base Orthogonalization Update Section
         auto s_sigma_update_start = std::chrono::steady_clock::now();
 
-        impl_->updateSSigma(W_, S_, Zeta_, Sigma_, memspace_);
+        // impl_->updateSSigma(W_, S_, Zeta_, Sigma_, memspace_);
 
-        // Temp_nxk_->copyFromExternal(W_, memspace_, memspace_);
-        // vector_handler_->gemm('N', 'T', ONE, ONE, S_, Zeta_, Temp_nxk_, memspace_);
-        // S_->copyFromExternal(Temp_nxk_, memspace_, memspace_);
+        Temp_nxk_->copyFromExternal(W_, memspace_, memspace_);
+        vector_handler_->gemm('N', 'T', ONE, ONE, S_, Zeta_, Temp_nxk_, memspace_);
+        S_->copyFromExternal(Temp_nxk_, memspace_, memspace_);
         
-        // vector_handler_->gemm('N', 'N', ONE, ZERO, Zeta_, Sigma_, Temp_kxk_, memspace_);
-        // Sigma_->copyFromExternal(Temp_kxk_, memspace_, memspace_);
-        // cudaDeviceSynchronize();
+        vector_handler_->gemm('N', 'N', ONE, ZERO, Zeta_, Sigma_, Temp_kxk_, memspace_);
+        Sigma_->copyFromExternal(Temp_kxk_, memspace_, memspace_);
+        cudaDeviceSynchronize();
         auto s_sigma_update_end = std::chrono::steady_clock::now();
-        // printf("  [it %d] s_sigma_update: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(s_sigma_update_end - s_sigma_update_start).count());
+        printf("  [it %d] s_sigma_update: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(s_sigma_update_end - s_sigma_update_start).count());
 
         auto it_end = std::chrono::steady_clock::now();
-        // printf("[Iteration %d Total]: %f ms\n\n", i, static_cast<std::chrono::duration<double, std::milli>>(it_end - it_start).count());
+        printf("[Iteration %d Total]: %f ms\n\n", i, static_cast<std::chrono::duration<double, std::milli>>(it_end - it_start).count());
       }
 
       if (i == itmax_)
