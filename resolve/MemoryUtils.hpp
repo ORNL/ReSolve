@@ -84,9 +84,8 @@ namespace ReSolve
     template <typename I, typename T>
     int allocateArrayOnHost(T** v, I n)
     {
-      std::size_t arraysize = static_cast<std::size_t>(n) * sizeof(T);
-      *v                    = new T[arraysize];
-      return *v == nullptr ? 1 : 0;
+      *v = new T[static_cast<std::size_t>(n)];
+      return 0;
     }
 
     template <typename T>
