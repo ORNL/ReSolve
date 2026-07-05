@@ -143,6 +143,33 @@ namespace ReSolve
     }
     return sqrt(nrm);
   }
+  
+  /**
+   * @brief compute norm of a vector or Frobenius norm of a multivector
+   *
+   * @param[in] x The vector
+   *
+   * @return Norm of _x_
+   *
+   */
+  real_type VectorHandlerHip::norm(vector::Vector* x, index_type i)
+  {
+    rocblas_handle handle_rocblas = workspace_->getRocblasHandle();
+    double         nrm            = 0.0;
+
+    rocblas_status st = rocblas_ddot(handle_rocblas,
+                                     x->getSize() * x->getNumVectors(),
+                                     x->getData(i, memory::DEVICE),
+                                     1,
+                                     x->getData(i, memory::DEVICE),
+                                     1,
+                                     &nrm);
+    if (st != 0)
+    {
+      out::error() << "vector norm returned error code " << st << "\n";
+    }
+    return sqrt(nrm);
+  }
 
   /**
    * @brief axpy i.e, y = alpha*x + y where alpha is a constant
@@ -332,6 +359,94 @@ namespace ReSolve
     mem_.deviceSynchronize();
     return;
   }
+  
+  /** UPDATE COMMENT
+   * @brief gemm computes dense matrix-matrix (or multivector-multivector) product.
+   *
+   * Compute C := alpha * A * B + beta * C.
+   * A is replaced with A^T if transpose_A = T.
+   * B is replaced with B^T if transpose_A = T.
+   *
+   * @param[in] transpose_A - yes (T) or no (N)
+   * @param[in] transpose_B - yes (T) or no (N)
+   * @param[in] alpha     - Constant real number
+   * @param[in] beta      - Constant real number
+   * @param[in] A         - Multivector containing the A matrix, organized columnwise
+   * @param[in] B         - Multivector containing the B matrix, organized columnwise
+   * @param[in] C         - Multivector containing the C (result) matrix, organized columnwise
+   */
+  void VectorHandlerHip::geam(char transpose_A,
+                               char transpose_B,
+                               const real_type alpha,
+                               const real_type beta,
+                               vector::Vector* A,
+                               vector::Vector* B,
+                               vector::Vector* C)
+  {
+    using namespace constants;
+    
+    rocblas_handle   handle_rocblas = workspace_->getRocblasHandle();
+
+    // Shape is post-transpose, if applicable
+    index_type m = C->getSize();
+    index_type n = C->getNumVectors();
+
+    // switch (transpose_A)
+    // {
+    // case 'T':
+    //   assert((A->getNumVectors() == m)
+    //           && "gemm: Shape mismatch! Shape of A does not match shape of C.");
+    //   k = A->getSize();
+    //   break;
+    // case 'N':
+    //   assert((A->getSize() == m)
+    //           && "gemm: Shape mismatch! Shape of A does not match shape of C.");
+    //   k = A->getNumVectors();
+    //   break;
+    // default:
+    //   out::error() << "Unrecognized transpose option " << transpose_A
+    //                << " in gemm. Valid options are 'N' (not transposed) and 'T' (transposed).\n";
+    //   break;
+    // }
+
+    // switch (transpose_B)
+    // {
+    // case 'T':
+    //   assert((B->getNumVectors() == k)
+    //           && "gemm: Shape mismatch! Shape of A does not match shape of B.");
+    //   assert((B->getSize() == n)
+    //           && "gemm: Shape mismatch! Shape of A does not match shape of C.");
+    //   break;
+    // case 'N':
+    //   assert((B->getSize() == k)
+    //           && "gemm: Shape mismatch! Shape of A does not match shape of B.");
+    //   assert((B->getNumVectors() == n)
+    //           && "gemm: Shape mismatch! Shape of A does not match shape of C.");
+    //   break;
+    // default:
+    //   out::error() << "Unrecognized transpose option " << transpose_B
+    //                << " in gemm. Valid options are 'N' (not transposed) and 'T' (transposed).\n";
+    //   break;
+    // }
+
+    rocblas_operation transpose_A_rocblas = (transpose_A == 'T') ? rocblas_operation_transpose : rocblas_operation_none;
+    rocblas_operation transpose_B_rocblas = (transpose_B == 'T') ? rocblas_operation_transpose : rocblas_operation_none; 
+
+    rocblas_dgeam(handle_rocblas,
+                transpose_A_rocblas,
+                transpose_B_rocblas,
+                m,
+                n,
+                &alpha,
+                A->getData(memory::DEVICE),
+                A->getSize(),
+                &beta,
+                B->getData(memory::DEVICE),
+                B->getSize(),
+                C->getData(memory::DEVICE),
+                C->getSize());
+    C->setDataUpdated(memory::DEVICE);
+  }
 
   /**
    * @brief mass (bulk) axpy i.e, y = y - x*alpha where  alpha is a vector
@@ -497,7 +612,7 @@ namespace ReSolve
     real_type* diag_data = diag->getData(memory::DEVICE);
     real_type* vec_data  = vec->getData(memory::DEVICE);
     index_type n         = vec->getSize();
-    hip::diagSolve(n, diag_data, vec_data);
+    hip::diagSolve(n, vec->getNumVectors(), diag_data, vec_data);
     vec->setDataUpdated(memory::DEVICE);
     mem_.deviceSynchronize();
     return 0;
@@ -541,6 +656,32 @@ namespace ReSolve
     hip::abs(n, in_data, out_data);
     out->setDataUpdated(memory::DEVICE);
     return 0;
+  }
+
+  // ...
+  void VectorHandlerHip::randomVector(vector::Vector* x, real_type min, real_type max)
+  {
+    index_type n = x->getSize() * x->getNumVectors();
+    if (!workspace_->isRngReady())
+    {
+      if (workspace_->computeTotalThreads() != 0)
+      {
+        out::error() << "Can't compute total GPU threads!";
+      }
+      workspace_->initializeRng(n);
+    }
+    else if (workspace_->getRngStateSize() < std::min(n, workspace_->getTotalThreads()))
+    {
+      workspace_->resetRng();
+      workspace_->initializeRng(n);
+    }
+    hip::randomVector(n, x->getData(memory::DEVICE), min, max, workspace_->getTotalThreads(), workspace_->getRngState());
+    x->setDataUpdated(memory::DEVICE);
+  }
+
+  void VectorHandlerHip::addIdentity(vector::Vector* v, real_type alpha)
+  {
+    hip::addIdentity(v->getSize(), v->getData(memory::DEVICE), alpha);
   }
 
 } // namespace ReSolve

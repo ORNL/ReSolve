@@ -308,7 +308,7 @@ namespace ReSolve
     C->setDataUpdated(memory::DEVICE);
   }
 
-    /** UPDATE COMMENT
+  /** UPDATE COMMENT
    * @brief gemm computes dense matrix-matrix (or multivector-multivector) product.
    *
    * Compute C := alpha * A * B + beta * C.

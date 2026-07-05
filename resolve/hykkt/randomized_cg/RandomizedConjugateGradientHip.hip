@@ -3,6 +3,8 @@
 #include <hip/hip_runtime.h>
 #include <hip/hip_cooperative_groups.h>
 
+#define HIP_ENABLE_WARP_SYNC_BUILTINS 1
+
 namespace ReSolve
 {
   using real_type = ReSolve::real_type;
@@ -79,7 +81,7 @@ namespace ReSolve
 
         for (index_type offset = 64 / 2; offset > 0; offset /= 2)
         {
-          sum += __shfl_down_sync(0xffffffff, sum, offset);
+          sum += __shfl_down(sum, offset);
         }
 
         if (lane == 0)
@@ -89,7 +91,7 @@ namespace ReSolve
       }
 
       template <index_type K, index_type BLOCK_SIZE>
-      __global__ void SpMMTallSkinnyKernelVector(
+      __global__ void __launch_bounds__(BLOCK_SIZE) SpMMTallSkinnyKernelVector(
         const index_type* __restrict__ A_row_ptr,
         const index_type* __restrict__ A_col_idx,
         const real_type* __restrict__ A_val,
@@ -105,7 +107,7 @@ namespace ReSolve
 
         __shared__ real_type result_shared[rows_per_block * K];
 
-        index_type k = K;
+        // index_type k = K;
 
         if (row >= n) return;
 
@@ -121,25 +123,26 @@ namespace ReSolve
             index_type col = A_col_idx[j];
             real_type a = A_val[j];
 
-            // #pragma unroll
-            for (int i = 0; i < k; ++i)
+            #pragma unroll
+            for (int i = 0; i < K; ++i)
             {
               sum[i] += a * B[i * n + col];
             }
           }
 
-          // #pragma unroll
-          for (int i = 0; i < k; ++i)
+          #pragma unroll
+          for (int i = 0; i < K; ++i)
           {
             for (index_type offset = 64 / 2; offset > 0; offset /= 2)
             {
-              sum[i] += __shfl_down_sync(0xffffffff, sum[i], offset);
+              sum[i] += __shfl_down(sum[i], offset);
             }
           }
 
           if (lane == 0)
           {
-            for (int i = 0; i < k; ++i)
+            #pragma unroll
+            for (int i = 0; i < K; ++i)
             // result_shared[lane * rows_per_block + threadIdx.x / 64];
               result[i * n + row] = sum[i];
           }
@@ -290,7 +293,7 @@ namespace ReSolve
                 #pragma unroll
                 for (int k = 0; k < K; ++k) {
                     for (int offset = 16; offset > 0; offset /= 2) {
-                        dot[k] += __shfl_down_sync(0xffffffff, dot[k], offset);
+                        dot[k] += __shfl_down(dot[k], offset);
                     }
                 }
 
@@ -319,7 +322,7 @@ namespace ReSolve
             //     #pragma unroll
             //     for (int k = 0; k < K; ++k) {
             //         for (int offset = 16; offset > 0; offset /= 2) {
-            //             dot[k] += __shfl_down_sync(0xffffffff, dot[k], offset);
+            //             dot[k] += __shfl_down(dot[k], offset);
             //         }
             //     }
 
@@ -345,7 +348,7 @@ namespace ReSolve
             //         #pragma unroll
             //         for (int k = 0; k < K; ++k) {
             //             for (int offset = 16; offset > 0; offset /= 2) {
-            //                 dot[k] += __shfl_down_sync(0xffffffff, dot[k], offset);
+            //                 dot[k] += __shfl_down(dot[k], offset);
             //             }
             //         }
 
@@ -371,7 +374,7 @@ namespace ReSolve
         }
         for (index_type offset = 64 / 2; offset > 0; offset /= 2)
         {
-          r_sq += __shfl_down_sync(0xffffffff, r_sq, offset);
+          r_sq += __shfl_down(r_sq, offset);
         }
         if (threadIdx.x == 0)
         {
@@ -390,16 +393,15 @@ namespace ReSolve
         #pragma unroll
         for (index_type offset = k / 2; offset > 0; offset /= 2)
         {
-          constexpr unsigned int REDUCTION_MASK = (1u << k) - 1;
-          index_type target_index = __shfl_down_sync(REDUCTION_MASK, best_basis_local, offset);
-          real_type target_norm = __shfl_down_sync(REDUCTION_MASK, sq_norm_local, offset);
+          constexpr unsigned long long REDUCTION_MASK = (1u << k) - 1;
+          index_type target_index = __shfl_down(best_basis_local, offset);
+          real_type target_norm = __shfl_down(sq_norm_local, offset);
           if (target_norm < sq_norm_local)
           {
             best_basis_local = target_index;
             sq_norm_local = target_norm;
           }
         }
-        __syncwarp();
 
         if (thread == 0)
         {
@@ -466,7 +468,7 @@ namespace ReSolve
             #pragma unroll
             for (index_type offset = 64 / 2; offset > 0; offset /= 2)
             {
-              g += __shfl_down_sync(0xffffffff, g, offset);
+              g += __shfl_down(g, offset);
             }
             if (threadIdx.x % 64 == 0)
             {
@@ -551,7 +553,7 @@ namespace ReSolve
 
       // W = W - B * L^-1
       template <index_type k>
-      __global__ void updateW(__restrict__ real_type* W, const __restrict__ real_type* L, const __restrict__ real_type* B, __restrict__ index_type n)
+      __global__ void updateW(real_type* __restrict__ W, const real_type* __restrict__ L, const real_type* __restrict__ B, index_type n)
       {
         index_type thread = blockIdx.x * blockDim.x + threadIdx.x;
         index_type stride = gridDim.x * blockDim.x;
@@ -635,7 +637,7 @@ namespace ReSolve
       }
     
       template <index_type k, index_type BLOCK_DIM>
-      __global__ void updateSSigma(const __restrict__ real_type* W, __restrict__ real_type* S, const __restrict__ real_type* Zeta, __restrict__ real_type* Sigma, index_type n)
+      __global__ void updateSSigma(const real_type* __restrict__ W, real_type* __restrict__ S, const real_type* __restrict__ Zeta, real_type* __restrict__ Sigma, index_type n)
       {
         index_type thread = blockIdx.x * BLOCK_DIM + threadIdx.x;
 
@@ -730,10 +732,6 @@ namespace ReSolve
     RandomizedConjugateGradientHip::RandomizedConjugateGradientHip(VectorHandler* vector_handler)
     {
       vector_handler_ = vector_handler;
-      cusolverSpCreate(&cusolverHandle_);
-      cusparseCreateMatDescr(&descrA_);
-      cusolverSpCreateCsrcholInfo(&factorizationInfo_);
-      buffer_ = nullptr;
 
       int device_id = 0;
       hipDeviceProp_t properties;
@@ -745,10 +743,6 @@ namespace ReSolve
 
     RandomizedConjugateGradientHip::~RandomizedConjugateGradientHip()
     {
-      cusolverSpDestroy(cusolverHandle_);
-      cusparseDestroyMatDescr(descrA_);
-      cusolverSpDestroyCsrcholInfo(factorizationInfo_);
-      mem_.deleteOnDevice(buffer_);
     }
 
     int RandomizedConjugateGradientHip::setup(index_type k)

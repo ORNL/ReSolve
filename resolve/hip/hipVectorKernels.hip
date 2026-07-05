@@ -71,6 +71,7 @@ namespace ReSolve {
       }
 
       /**
+       * TODO- OVERLOAD THIS TO AVOID MOD FOR SINGLE VECTORS
        * @brief Multiplies vector by an inverse of a diagonal matrix.
        *
        * @param[in]  n       - size of the vectors
@@ -80,6 +81,7 @@ namespace ReSolve {
        * @todo Decide how to allow user to configure grid and block sizes.
        */
       __global__ void diagSolve(index_type       n,
+                                index_type       k,
                                 const real_type* d_val,
                                 real_type*       vec)
       {
@@ -87,10 +89,10 @@ namespace ReSolve {
         index_type idx = blockIdx.x * blockDim.x + threadIdx.x;
 
         // Check if the index is within bounds
-        if (idx < n)
+        if (idx < n * k)
         {
           // Divide the vector element by the corresponding diag value
-          vec[idx] /= d_val[idx];
+          vec[idx] /= d_val[idx % n];
         }
       }
 
@@ -143,6 +145,42 @@ namespace ReSolve {
           out[idx] = fabs(in[idx]);
         }
       }
+      
+      __global__ void initializeRng(index_type n, hiprandState* state)
+      {
+        index_type idx = blockIdx.x * blockDim.x + threadIdx.x;
+        if (idx < n)
+        {
+          hiprand_init(constants::SEED, idx, 0, &state[idx]);
+        }
+      }
+
+      __global__ void randomVector(index_type n, real_type* x, real_type min, real_type max, hiprandState* state)
+      {
+        index_type idx = blockIdx.x * blockDim.x + threadIdx.x;
+        index_type grid_size = gridDim.x * blockDim.x;
+
+        if (idx < n)
+        {
+          hiprandState state_cached = state[idx];
+          for (index_type j = idx; j < n; j += grid_size)
+          {
+            x[j] = hiprand_uniform_double(&state_cached) * (max - min) + min;
+          }
+          state[idx] = state_cached;
+        }
+      }
+
+      __global__ void addIdentity(index_type n, real_type* x, real_type alpha)
+      {
+        index_type idx = blockIdx.x * blockDim.x + threadIdx.x;
+
+        if (idx < n)
+        {
+          x[idx * n + idx] += alpha;
+        }
+      }
+
     } // namespace kernels
 
     constexpr index_type block_size = 256;
@@ -193,12 +231,13 @@ namespace ReSolve {
      * @todo Decide how to allow user to configure grid and block sizes.
      */
     void diagSolve(index_type       n,
-                           const real_type* diag,
-                           real_type*       vec)
+                   index_type       k,
+                   const real_type* diag,
+                   real_type*       vec)
     {
-      int num_blocks = (n + block_size - 1) / block_size;
+      int num_blocks = (n * k + block_size - 1) / block_size;
       // Launch the kernel
-      kernels::diagSolve<<<num_blocks, block_size>>>(n, diag, vec);
+      kernels::diagSolve<<<num_blocks, block_size>>>(n, k, diag, vec);
     }
 
     /**
@@ -237,6 +276,27 @@ namespace ReSolve {
       int num_blocks = (n + block_size - 1) / block_size;
       // Launch the kernel
       kernels::abs<<<num_blocks, block_size>>>(n, in, out);
+    }
+
+    void initializeRng(index_type n, index_type total_threads, hiprandState** state)
+    {
+      index_type threads_to_use = std::min(n, total_threads);
+      int num_blocks = (threads_to_use + block_size - 1) / block_size;
+
+      hipMalloc((void**)state, threads_to_use * sizeof(hiprandState));
+      kernels::initializeRng<<<num_blocks, block_size>>>(threads_to_use, *state);
+    }
+    
+    void randomVector(index_type n, real_type* x, real_type min, real_type max, index_type total_threads, hiprandState* state)
+    {
+      int num_blocks = std::min((n + block_size - 1), total_threads) / block_size;
+      kernels::randomVector<<<num_blocks, block_size>>>(n, x, min, max, state);
+    };
+
+    void addIdentity(index_type n, real_type* x, real_type alpha)
+    {
+      int num_blocks = (n + block_size - 1) / block_size;
+      kernels::addIdentity<<<num_blocks, block_size>>>(n, x, alpha);
     }
   } // namespace hip
 } // namespace ReSolve

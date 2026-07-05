@@ -21,6 +21,12 @@ namespace ReSolve
     norm_buffer_ready_         = false;
     transpose_workspace_       = nullptr;
     transpose_workspace_ready_ = false;
+    qr_buffer_ready_           = false;
+    qr_buffer_size_            = 0;
+    rng_state_                 = nullptr;
+    rng_ready_                 = false;
+    rng_state_size_            = 0;
+    spmv_buffer_size_ = 0;
   }
 
   LinAlgWorkspaceHIP::~LinAlgWorkspaceHIP()
@@ -41,6 +47,15 @@ namespace ReSolve
     if (transpose_workspace_ready_)
     {
       mem_.deleteOnDevice(transpose_workspace_);
+    }
+    if (qr_buffer_ready_)
+    {
+      mem_.deleteOnDevice(buffer_qr_);
+      mem_.deleteOnDevice(qr_dev_info_);
+    }
+    if (rng_ready_)
+    {
+      mem_.deleteOnDevice(rng_state_);
     }
   }
 
@@ -71,6 +86,21 @@ namespace ReSolve
       mem_.deleteOnDevice(transpose_workspace_);
       transpose_workspace_       = nullptr;
       transpose_workspace_ready_ = false;
+    }
+    if (qr_buffer_ready_)
+    {
+      mem_.deleteOnDevice(buffer_qr_);
+      buffer_qr_      = nullptr;
+      qr_buffer_size_ = 0;
+      qr_buffer_ready_ = false;
+      hipFree(qr_dev_info_);
+    }
+    if (rng_ready_)
+    {
+      mem_.deleteOnDevice(rng_state_);
+      rng_state_size_ = 0;
+      total_threads_ = 0;
+      rng_ready_ = false;
     }
     return;
   }
@@ -134,6 +164,19 @@ namespace ReSolve
   {
     norm_buffer_ready_ = r;
   }
+  
+
+  void LinAlgWorkspaceHIP::setSpmvBuffer(void* buffer, index_type buffer_size)
+  {
+    buffer_spmv_ = buffer;
+    spmv_buffer_size_ = buffer_size;
+  }
+
+  void LinAlgWorkspaceHIP::setQrBuffer(real_type* buffer, index_type buffer_size)
+  {
+    buffer_qr_ = buffer;
+    qr_buffer_size_ = buffer_size;
+  }
 
   bool LinAlgWorkspaceHIP::matvecSetup()
   {
@@ -165,6 +208,19 @@ namespace ReSolve
     rocsparse_create_handle(&handle_rocsparse_);
     rocblas_create_handle(&handle_rocblas_);
   }
+  
+  void LinAlgWorkspaceHIP::initializeRng(index_type size)
+  {
+    hip::initializeRng(size, total_threads_, &rng_state_);
+    rng_state_size_ = std::min(size, total_threads_);
+    rng_ready_ = true;
+  }
+
+  void LinAlgWorkspaceHIP::resetRng()
+  {
+    mem_.deleteOnDevice(rng_state_);
+    rng_ready_ = false;
+  }
 
   index_type LinAlgWorkspaceHIP::getDrSize()
   {
@@ -184,6 +240,45 @@ namespace ReSolve
   real_type* LinAlgWorkspaceHIP::getNormBuffer()
   {
     return norm_buffer_;
+  }
+
+  bool LinAlgWorkspaceHIP::getQrBufferState()
+  {
+    return qr_buffer_ready_;
+  }
+  
+  bool LinAlgWorkspaceHIP::isRngReady()
+  {
+    return rng_ready_;
+  }
+  
+  hiprandState* LinAlgWorkspaceHIP::getRngState()
+  {
+    return rng_state_;
+  }
+
+  index_type LinAlgWorkspaceHIP::getRngStateSize()
+  {
+    return rng_state_size_;
+  }
+
+  index_type LinAlgWorkspaceHIP::getSpmvBufferSize()
+  {
+    return spmv_buffer_size_;
+  }
+
+  int LinAlgWorkspaceHIP::computeTotalThreads()
+  {
+    int device_id = 0;
+    hipDeviceProp_t properties;
+    hipError_t status = hipGetDeviceProperties(&properties, device_id);
+    total_threads_ = properties.multiProcessorCount * properties.maxThreadsPerMultiProcessor;
+    return status;
+  }
+
+  index_type LinAlgWorkspaceHIP::getTotalThreads()
+  {
+    return total_threads_;
   }
 
   void* LinAlgWorkspaceHIP::getTransposeBufferWorkspace()

@@ -1,6 +1,6 @@
 # Add source files for the RandomizedCG module
-set(RandomizedCG_SRC RandomizedConjugateGradient.cpp RandomizedConjugateGradientCuda.cu)
-set(RandomizedCG_HEADER_INSTALL RandomizedConjugateGradient.hpp RandomizedConjugateGradientCuda.hpp)
+set(RandomizedCG_SRC RandomizedConjugateGradient.cpp RandomizedConjugateGradientCuda.cu RandomizedConjugateGradientHip.hip)
+set(RandomizedCG_HEADER_INSTALL RandomizedConjugateGradient.hpp RandomizedConjugateGradientImpl.hpp RandomizedConjugateGradientCuda.hpp RandomizedConjugateGradientHip.hpp)
 
 # Build shared library ReSolve::hykkt
 add_library(resolve_hykkt_randomized_cg SHARED ${RandomizedCG_SRC})
@@ -35,6 +35,10 @@ endif()
 target_include_directories(
   resolve_hykkt_randomized_cg INTERFACE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
                                $<INSTALL_INTERFACE:include>
+)
+
+target_compile_definitions(resolve_hykkt_randomized_cg 
+    PRIVATE HIP_ENABLE_WARP_SYNC_BUILTINS=1
 )
 
 install(FILES ${RandomizedCG_HEADER_INSTALL} DESTINATION include/resolve/hykkt)

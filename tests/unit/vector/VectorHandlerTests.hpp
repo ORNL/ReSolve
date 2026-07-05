@@ -16,7 +16,13 @@
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 #include <tests/unit/TestBase.hpp>
 
+#ifdef RESOLVE_USE_CUDA
 #include <cuda_runtime.h>
+#define deviceSynchronize cudaDeviceSynchronize
+#elif defined(RESOLVE_USE_HIP)
+#include <hip/hip_runtime.h>
+#define deviceSynchronize hipDeviceSynchronize
+#endif
 
 namespace ReSolve
 {
@@ -334,7 +340,7 @@ namespace ReSolve
           handler_.gemm('N', 'N', alpha, beta, V, W, result, memspace_);
           auto end = std::chrono::steady_clock::now();
           std::chrono::duration<double, std::milli> elapsed = (end - start);
-          cudaDeviceSynchronize();
+          deviceSynchronize();
           printf("n = %d, k = %d, time = %f\n", N, K, elapsed.count());
           
           
@@ -342,7 +348,7 @@ namespace ReSolve
           handler_.gemm('N', 'N', alpha, beta, V, result, W, memspace_);
           end = std::chrono::steady_clock::now();
           elapsed = (end - start);
-          cudaDeviceSynchronize();
+          deviceSynchronize();
           printf("n = %d, k = %d, time = %f\n", N, K, elapsed.count());
         }
         // }

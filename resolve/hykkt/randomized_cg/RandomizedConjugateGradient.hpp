@@ -5,7 +5,12 @@
 
 #pragma once
 
+#include "RandomizedConjugateGradientImpl.hpp"
+#ifdef RESOLVE_USE_CUDA
 #include "RandomizedConjugateGradientCuda.hpp"
+#elif defined(RESOLVE_USE_HIP)
+#include "RandomizedConjugateGradientHip.hpp"
+#endif
 
 #include <resolve/Common.hpp>
 #include <resolve/MemoryUtils.hpp>
@@ -102,7 +107,7 @@ namespace ReSolve
       vector::Vector* c_{nullptr};
       vector::Vector* r_{nullptr};
       
-      RandomizedConjugateGradientCuda* impl_{nullptr};
+      RandomizedConjugateGradientImpl* impl_{nullptr};
 
       memory::MemorySpace memspace_;
     }; // class RandomizedConjugateGradient

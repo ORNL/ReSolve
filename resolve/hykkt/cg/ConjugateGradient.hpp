@@ -6,7 +6,12 @@
 #pragma once
 
 #include <resolve/Common.hpp>
+#include <resolve/hykkt/randomized_cg/RandomizedConjugateGradientImpl.hpp>
+#ifdef RESOLVE_USE_CUDA
 #include <resolve/hykkt/randomized_cg/RandomizedConjugateGradientCuda.hpp>
+#elif defined(RESOLVE_USE_HIP)
+#include <resolve/hykkt/randomized_cg/RandomizedConjugateGradientHip.hpp>
+#endif
 #include <resolve/MemoryUtils.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
@@ -59,7 +64,7 @@ namespace ReSolve
       MatrixHandler* matrix_handler_{nullptr}; ///< Backend-specific matrix handler.
       VectorHandler* vector_handler_{nullptr}; ///< Backend-specific vector handler.
       
-      RandomizedConjugateGradientCuda* impl_{nullptr};
+      RandomizedConjugateGradientImpl* impl_{nullptr};
 
       matrix::Csr* A_{nullptr};
 

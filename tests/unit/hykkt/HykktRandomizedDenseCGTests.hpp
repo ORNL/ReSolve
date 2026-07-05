@@ -20,7 +20,13 @@
 #include <resolve/vector/VectorHandler.hpp>
 #include <tests/unit/TestBase.hpp>
 
+#ifdef RESOLVE_USE_CUDA
 #include <cuda_runtime.h>
+#define deviceSynchronize cudaDeviceSynchronize
+#elif defined(RESOLVE_USE_HIP)
+#include <hip/hip_runtime.h>
+#define deviceSynchronize hipDeviceSynchronize
+#endif
 
 namespace ReSolve
 {
@@ -123,7 +129,7 @@ namespace ReSolve
         auto start = std::chrono::steady_clock::now();
         vector_handler_.choleskyFactorize(A, 'L', memspace_);
         vector_handler_.choleskySolve(A->getData(memspace_), b, 'L', memspace_);
-        cudaDeviceSynchronize();
+        deviceSynchronize();
 
         auto end = std::chrono::steady_clock::now();
         std::chrono::duration<double, std::milli> elapsed = (end - start);
@@ -143,7 +149,7 @@ namespace ReSolve
         auto start = std::chrono::steady_clock::now();
         printf("Factorize status: %d\n", vector_handler_.choleskyFactorize(A_chol, 'L', memspace_));
         printf("Solve status: %d\n", vector_handler_.choleskySolve(A_chol->getData(memspace_), x, 'L', memspace_));
-        cudaDeviceSynchronize();
+        deviceSynchronize();
 
         auto end = std::chrono::steady_clock::now();
         std::chrono::duration<double, std::milli> elapsed = (end - start);

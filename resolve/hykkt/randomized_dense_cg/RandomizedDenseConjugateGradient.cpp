@@ -9,7 +9,7 @@
 #include <resolve/hykkt/cholesky/CholeskySolver.hpp>
 #include <resolve/utilities/logger/Logger.hpp>
 
-#include <cuda_runtime.h>
+// #include <cuda_runtime.h>
 
 namespace ReSolve
 {

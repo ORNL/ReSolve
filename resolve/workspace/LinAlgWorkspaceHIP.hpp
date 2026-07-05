@@ -1,6 +1,7 @@
 #pragma once
 
 #include <hip/hip_runtime.h>
+#include <hiprand/hiprand_kernel.h>
 #include <rocblas/rocblas.h>
 #include <rocsparse/rocsparse.h>
 
@@ -26,15 +27,28 @@ namespace ReSolve
     real_type*          getNormBuffer();
     void*               getTransposeBufferWorkspace();
     int                 setTransposeBufferWorkspace(size_t bufferSize);
-    bool                getNormBufferState();
     bool                isTransposeBufferAllocated();
+    void  setSpmvBuffer(void* buffer, index_type buffer_size);
+    void  setNormBuffer(void* buffer);
+    void  setQrBuffer(real_type* buffer, index_type buffer_size);
 
     void setRocblasHandle(rocblas_handle handle);
     void setRocsparseHandle(rocsparse_handle handle);
     void setSpmvMatrixDescriptor(rocsparse_mat_descr mat);
     void setSpmvMatrixInfo(rocsparse_mat_info info);
+    
+    bool                 getNormBufferState();
+    bool                 getQrBufferState();
+    bool                 isRngReady();
+    hiprandState*         getRngState();
+    index_type           getRngStateSize();
+    index_type getSpmvBufferSize();
 
     void initializeHandles();
+    void initializeRng(index_type size);
+    void resetRng();
+    int computeTotalThreads();
+    index_type getTotalThreads();
 
     bool matvecSetup();
     void matvecSetupDone();
@@ -62,6 +76,11 @@ namespace ReSolve
     // vector descriptors not needed, rocsparse uses RAW pointers.
 
     // buffers
+    void* buffer_spmv_{nullptr};
+    index_type spmv_buffer_size_{0};
+    void* buffer_1norm_{nullptr};
+    real_type* buffer_qr_{nullptr};
+
     //  there is no buffer needed in matvec
     bool matvec_setup_done_{false}; // check if setup is done for matvec (note: no buffer but there is analysis)
 
@@ -75,6 +94,16 @@ namespace ReSolve
     index_type    d_r_size_{0};
     bool          norm_buffer_ready_{false}; // to track if allocated
     MemoryHandler mem_;                      ///< Memory handler not needed for now
+    
+    index_type qr_buffer_size_{0};
+    bool       qr_buffer_ready_{false}; // to track if allocated
+    int*       qr_dev_info_{nullptr};
+
+    bool rng_ready_{false};
+    index_type rng_state_size_{0};
+    hiprandState* rng_state_;
+    index_type total_threads_;
+
   };
 
 } // namespace ReSolve

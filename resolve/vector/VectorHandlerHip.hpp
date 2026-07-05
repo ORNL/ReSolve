@@ -37,6 +37,7 @@ namespace ReSolve
 
     // vector norm
     virtual real_type norm(vector::Vector* x);
+    virtual real_type norm(vector::Vector* x, index_type i);
 
     // mass axpy: x*alpha + y where x is [n x k] and alpha is [k x 1]; x is stored columnwise
     virtual void axpyMulti(index_type size, vector::Vector* alpha, index_type k, vector::Vector* x, vector::Vector* y);
@@ -68,6 +69,15 @@ namespace ReSolve
                       vector::Vector* B,
                       vector::Vector* C);
 
+    // .....
+    virtual void geam(char transpose_A,
+                      char transpose_B,
+                      const real_type alpha,
+                      const real_type beta,
+                      vector::Vector* A,
+                      vector::Vector* B,
+                      vector::Vector* C);
+
     /**
      * @brief scale: scales a vector by a diagonal matrix
      *
@@ -88,6 +98,12 @@ namespace ReSolve
      * @return 0 if successful, 1 otherwise
      */
     virtual void scal(vector::Vector* diag, vector::Vector* vec, index_type diag_offset);
+    
+    // .. .. ..
+    virtual int choleskyFactorize(vector::Vector* A, char uplo) { return 1; };
+
+    // .. .. .. ..
+    virtual int choleskySolve(const real_type* L, vector::Vector* B, char side) { return 1; };
 
     /**
      * @brief Multiplies vector by an inverse of a diagonal matrix.
@@ -98,6 +114,8 @@ namespace ReSolve
      * @return 0 if successful, 1 otherwise
      */
     virtual int diagSolve(vector::Vector* diag, vector::Vector* vec);
+    
+    virtual int choleskyQr(vector::Vector* A, vector::Vector* R) { return 1; };
 
     /**
      * @brief max: calculate the element-wise maximum of two vectors
@@ -118,6 +136,10 @@ namespace ReSolve
      * @return 0 if successful, 1 otherwise
      */
     virtual int abs(/* const */ vector::Vector* in, vector::Vector* out);
+    
+    virtual void randomVector(vector::Vector* v, real_type min, real_type max);
+    
+    virtual void addIdentity(vector::Vector* v, real_type alpha);
 
   private:
     LinAlgWorkspaceHIP* workspace_;

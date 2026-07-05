@@ -5,7 +5,7 @@
 
 #include <resolve/Common.hpp>
 
-#include <cuda_runtime.h>
+// #include <cuda_runtime.h>
 
 namespace ReSolve
 {

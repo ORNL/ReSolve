@@ -35,12 +35,6 @@ namespace ReSolve
 
       matrix::Csr* A_; // pointer to the input matrix
 
-      // handle to the cuSPARSE library context
-      cusolverSpHandle_t cusolverHandle_;
-      cusparseMatDescr_t descrA_;            // descriptor for matrix A
-      csrcholInfo_t      factorizationInfo_; // stores Cholesky factorization
-      void*              buffer_;            // buffer for Cholesky factorization
-
       index_type num_sms_;
       index_type num_threads_;
       index_type qr_blocks_per_sm_;
