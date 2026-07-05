@@ -88,7 +88,7 @@ namespace ReSolve
 
     void ConjugateGradient::setup()
     {
-      impl_ = new RandomizedConjugateGradientHip(vector_handler_);
+      impl_ = new RandomizedConjugateGradientCuda(vector_handler_);
 
       A_prec_ = new matrix::Csr(n_, n_, A_->getNnz());
       r_ = new vector::Vector(n_);

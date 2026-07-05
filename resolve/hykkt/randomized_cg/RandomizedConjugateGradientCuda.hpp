@@ -58,6 +58,8 @@ namespace ReSolve
       void* h_best_basis_result_{nullptr};
       index_type* d_best_basis_{nullptr};
       real_type* d_sq_norms_{nullptr};
+
+      std::vector<cudaStream_t> streams_;
     };
   } // namespace hykkt
 } // namespace ReSolve
