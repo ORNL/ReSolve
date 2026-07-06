@@ -728,7 +728,6 @@ namespace ReSolve
     } // namespace kernels
     
     RandomizedConjugateGradientCuda::RandomizedConjugateGradientCuda(VectorHandler* vector_handler)
-      : streams_()
     {
       vector_handler_ = vector_handler;
       cusolverSpCreate(&cusolverHandle_);
@@ -742,11 +741,6 @@ namespace ReSolve
       num_sms_     = properties.multiProcessorCount; // 80
       num_threads_ = num_sms_ * properties.maxThreadsPerMultiProcessor; // 163840
       printf("Total SMs: %d, total threads: %d\n", num_sms_, num_threads_);
-
-      if (!properties.deviceOverlap)
-      {
-        printf("Not compatible with streams!");
-      }
     }
 
     RandomizedConjugateGradientCuda::~RandomizedConjugateGradientCuda()
@@ -796,12 +790,6 @@ namespace ReSolve
         d_sq_norms_ = nullptr;
       }
       mem_.allocateArrayOnDevice(&d_sq_norms_, k);
-
-      streams_.resize(k);
-      for (index_type i = 0; i < streams_.size(); i++)
-      {
-        cudaStreamCreate(&streams_[i]);
-      }
 
       return 0;
     }
@@ -871,65 +859,51 @@ int RandomizedConjugateGradientCuda::SpMMTallSkinny(matrix::Csr* A, vector::Vect
       constexpr int       block_size = 256;
       int       num_blocks = (n * 32 + block_size - 1) / block_size;
 
-      for (index_type i = 0; i < k; i++)
+      switch (k)
       {
-        kernels::SpMMTallSkinnyKernelVector<1, block_size><<<num_blocks, block_size, 0, streams_[i]>>>(A->getRowData(memory::DEVICE),
+      case 1:
+        kernels::SpMMTallSkinnyKernelVector<1, block_size><<<num_blocks, block_size>>>(A->getRowData(memory::DEVICE),
                                                                 A->getColData(memory::DEVICE),
                                                                 A->getValues(memory::DEVICE),
-                                                                X->getData(i, memory::DEVICE),
-                                                                result->getData(i, memory::DEVICE),
-                                                                n); 
+                                                                X->getData(memory::DEVICE),
+                                                                result->getData(memory::DEVICE),
+                                                                n);
+        break;
+      case 2:
+        kernels::SpMMTallSkinnyKernelVector<2, block_size><<<num_blocks, block_size>>>(A->getRowData(memory::DEVICE),
+                                                                A->getColData(memory::DEVICE),
+                                                                A->getValues(memory::DEVICE),
+                                                                X->getData(memory::DEVICE),
+                                                                result->getData(memory::DEVICE),
+                                                                n);
+        break;
+      case 4:
+        kernels::SpMMTallSkinnyKernelVector<4, block_size><<<num_blocks, block_size>>>(A->getRowData(memory::DEVICE),
+                                                                A->getColData(memory::DEVICE),
+                                                                A->getValues(memory::DEVICE),
+                                                                X->getData(memory::DEVICE),
+                                                                result->getData(memory::DEVICE),
+                                                                n);
+        break;
+      case 8:
+        kernels::SpMMTallSkinnyKernelVector<8, block_size><<<num_blocks, block_size>>>(A->getRowData(memory::DEVICE),
+                                                                A->getColData(memory::DEVICE),
+                                                                A->getValues(memory::DEVICE),
+                                                                X->getData(memory::DEVICE),
+                                                                result->getData(memory::DEVICE),
+                                                                n);
+        break;
+      case 16:
+        kernels::SpMMTallSkinnyKernelVector<16, block_size><<<num_blocks, block_size>>>(A->getRowData(memory::DEVICE),
+                                                                A->getColData(memory::DEVICE),
+                                                                A->getValues(memory::DEVICE),
+                                                                X->getData(memory::DEVICE),
+                                                                result->getData(memory::DEVICE),
+                                                                n);
+        break;
+      default:
+        return 1;
       }
-      for (index_type i = 0; i < k; i++)
-      {
-        cudaStreamSynchronize(streams_[i]);
-      }
-
-      // switch (k)
-      // {
-      // case 1:
-      //   kernels::SpMMTallSkinnyKernelVector<1, block_size><<<num_blocks, block_size>>>(A->getRowData(memory::DEVICE),
-      //                                                           A->getColData(memory::DEVICE),
-      //                                                           A->getValues(memory::DEVICE),
-      //                                                           X->getData(memory::DEVICE),
-      //                                                           result->getData(memory::DEVICE),
-      //                                                           n);
-      //   break;
-      // case 2:
-      //   kernels::SpMMTallSkinnyKernelVector<2, block_size><<<num_blocks, block_size>>>(A->getRowData(memory::DEVICE),
-      //                                                           A->getColData(memory::DEVICE),
-      //                                                           A->getValues(memory::DEVICE),
-      //                                                           X->getData(memory::DEVICE),
-      //                                                           result->getData(memory::DEVICE),
-      //                                                           n);
-      //   break;
-      // case 4:
-      //   kernels::SpMMTallSkinnyKernelVector<4, block_size><<<num_blocks, block_size>>>(A->getRowData(memory::DEVICE),
-      //                                                           A->getColData(memory::DEVICE),
-      //                                                           A->getValues(memory::DEVICE),
-      //                                                           X->getData(memory::DEVICE),
-      //                                                           result->getData(memory::DEVICE),
-      //                                                           n);
-      //   break;
-      // case 8:
-      //   kernels::SpMMTallSkinnyKernelVector<8, block_size><<<num_blocks, block_size>>>(A->getRowData(memory::DEVICE),
-      //                                                           A->getColData(memory::DEVICE),
-      //                                                           A->getValues(memory::DEVICE),
-      //                                                           X->getData(memory::DEVICE),
-      //                                                           result->getData(memory::DEVICE),
-      //                                                           n);
-      //   break;
-      // case 16:
-      //   kernels::SpMMTallSkinnyKernelVector<16, block_size><<<num_blocks, block_size>>>(A->getRowData(memory::DEVICE),
-      //                                                           A->getColData(memory::DEVICE),
-      //                                                           A->getValues(memory::DEVICE),
-      //                                                           X->getData(memory::DEVICE),
-      //                                                           result->getData(memory::DEVICE),
-      //                                                           n);
-      //   break;
-      // default:
-      //   return 1;
-      // }
       
       return 0;
     }
