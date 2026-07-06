@@ -29,6 +29,12 @@
 template <typename WorkspaceType>
 void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace, ReSolve::tests::TestingResults& result)
 {
+  // std::FILE* f = std::freopen("/lustre/orion/eng151/scratch/2ox/output.txt", "w", stdout);
+
+  // if (f == nullptr) {
+  //     std::perror("Failed to redirect stdout");
+  // }
+
   std::cout << "Running tests on " << backend << " device:\n";
 
   WorkspaceType workspace;
@@ -53,6 +59,7 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
   result += test.RandomizedCGTest(A_file_name, 16, rng_min, rng_max);
 
   std::cout << "\n";
+  std::fclose(stdout);
 }
 
 int main(int, char**)
