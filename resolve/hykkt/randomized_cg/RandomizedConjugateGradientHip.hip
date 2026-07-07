@@ -14,79 +14,83 @@ namespace ReSolve
   {
     namespace kernels
     {
-      template <index_type K>
-      __global__ void SpMMTallSkinnyKernelScalar(
+      template <index_type K, index_type BLOCK_SIZE>
+      __global__ void __launch_bounds__(BLOCK_SIZE) SpMMTallSkinnyKernelVectorDistributed(
         const index_type* __restrict__ A_row_ptr,
         const index_type* __restrict__ A_col_idx,
         const real_type* __restrict__ A_val,
         const real_type* __restrict__ B,
         real_type* __restrict__ result,
-        index_type n)
+        index_type n,
+        index_type devices_per_vector,
+        index_type device_in_vector)
       {
-        const index_type row = blockIdx.x * blockDim.x + threadIdx.x;
+        const index_type thread = blockIdx.x * blockDim.x + threadIdx.x;
+        const index_type warp = threadIdx.x / 64;
+        const index_type max_rows_per_device = (n + devices_per_vector - 1) / devices_per_vector;
+        const index_type row_start = max_rows_per_device * device_in_vector;
+        const index_type row = row_start + thread / 64;
+        const index_type lane = thread % 64;
+        const index_type rows_per_block = BLOCK_SIZE / 64;
 
-        if (row >= n) return;
+        __shared__ real_type result_shared[rows_per_block * K];
 
-        index_type col_start = A_row_ptr[row];
-        index_type col_end   = A_row_ptr[row + 1];
+        // index_type k = K;
 
-        real_type sum[K] = { 0.0 };
+        if (row >= n || row >= row_start + max_rows_per_device) return;
 
-        for (index_type j = col_start; j < col_end; j++)
+        // for (index_type row = row_offset; row < n; row += gridDim.x * blockDim.x / 64)
         {
-          index_type col = A_col_idx[j];
-          real_type a = A_val[j];
+          index_type col_start = A_row_ptr[row];
+          index_type col_end   = A_row_ptr[row + 1];
+
+          real_type sum[K] = { 0.0 };
+
+          for (index_type j = col_start + lane; j < col_end; j += 64)
+          {
+            index_type col = A_col_idx[j];
+            real_type a = A_val[j];
+
+            #pragma unroll
+            for (int i = 0; i < K; ++i)
+            {
+              sum[i] += a * B[i * n + col];
+            }
+          }
 
           #pragma unroll
           for (int i = 0; i < K; ++i)
           {
-            sum[i] += a * B[i * n + col];
+            for (index_type offset = 64 / 2; offset > 0; offset /= 2)
+            {
+              sum[i] += __shfl_down(sum[i], offset);
+            }
           }
-        }
 
-        for (int i = 0; i < K; ++i) {
-          result[i * n + row] = sum[i];
-        }
-      }
-      
-      template <index_type K>
-      __global__ void SpMMTallSkinnyKernelVectorMod(
-        const index_type* __restrict__ A_row_ptr,
-        const index_type* __restrict__ A_col_idx,
-        const real_type* __restrict__ A_val,
-        const real_type* __restrict__ B,
-        real_type* __restrict__ result,
-        index_type n)
-      {
-        // Always same i within the same warp
-        const index_type thread = blockIdx.x * blockDim.x + threadIdx.x;
-        const index_type row = thread / 64;
-        const index_type i = threadIdx.y;
-        const index_type lane = thread % 64;
+          if (lane == 0)
+          {
+            #pragma unroll
+            for (int i = 0; i < K; ++i)
+            // result_shared[lane * rows_per_block + threadIdx.x / 64];
+              result[i * n + row] = sum[i];
+          }
 
-        if (row >= n) return;
+          // if (lane == 0)
+          // {
+          //   for (int i = 0; i < k; ++i)
+          //   {
+          //     result_shared[i * rows_per_block + warp] = sum[i];
+          //     // result[i * n + row] = sum[i];
+          //   }
+          // }
 
-        index_type col_start = A_row_ptr[row];
-        index_type col_end   = A_row_ptr[row + 1];
-
-        real_type sum = 0.0;
-
-        for (index_type j = col_start + lane; j < col_end; j += 64)
-        {
-          index_type col = A_col_idx[j];
-          real_type a = A_val[j];
-
-          sum += a * B[i * n + col];
-        }
-
-        for (index_type offset = 64 / 2; offset > 0; offset /= 2)
-        {
-          sum += __shfl_down(sum, offset);
-        }
-
-        if (lane == 0)
-        {
-          result[i * n + row] = sum;
+          // __syncthreads();
+          // if (threadIdx.x < (rows_per_block * k))
+          // {
+          //   index_type row = threadIdx.x % rows_per_block + blockIdx.x * rows_per_block;
+          //   index_type col = threadIdx.x / rows_per_block;
+          //   result[col * n + row] = result_shared[threadIdx.x];
+          // }
         }
       }
 
@@ -165,201 +169,6 @@ namespace ReSolve
           // }
         }
       }
-
-    template <index_type K, int BLOCK_SIZE>
-    __global__ void SpMMAdaptiveTallSkinnyKernelAdaptive(
-        const index_type* __restrict__ A_row_ptr,
-        const index_type* __restrict__ A_col_idx,
-        const real_type* __restrict__ A_val,
-        const real_type* __restrict__ B,
-        real_type* __restrict__ result,
-        const index_type* __restrict__ row_blocks,
-        index_type n)
-    {
-        const index_type block_row_begin = row_blocks[blockIdx.x];
-        const index_type block_row_end   = row_blocks[blockIdx.x + 1];
-        const index_type num_rows        = block_row_end - block_row_begin;
-        const index_type nnz             = A_row_ptr[block_row_end] - A_row_ptr[block_row_begin];
-
-        // __shared__ real_type cache[K * BLOCK_SIZE];
-
-        // if (false) {
-        //     // CSR-Stream Case
-        //     const index_type i = threadIdx.x;
-        //     const index_type block_data_begin = A_row_ptr[block_row_begin];
-
-        //     if (i < nnz) {
-        //         const index_type data_idx = block_data_begin + i;
-        //         const real_type a_val     = A_val[data_idx];
-        //         const index_type col      = A_col_idx[data_idx];
-
-        //         #pragma unroll
-        //         for (int k = 0; k < K; ++k) {
-        //             cache[k * BLOCK_SIZE + i] = a_val * __ldg(&B[k * n + col]);
-        //         }
-        //     }
-        //     __syncthreads();
-
-        //     const index_type threads_for_reduction = prev_power_of_2(BLOCK_SIZE / num_rows);
-
-        //     if (threads_for_reduction > 1) {
-        //         const index_type thread_in_block = i % threads_for_reduction;
-        //         const index_type local_row       = block_row_begin + (i / threads_for_reduction);
-
-        //         real_type dot[K] = {0.0};
-
-        //         if (local_row < block_row_end) {
-        //             const index_type local_first = A_row_ptr[local_row] - block_data_begin;
-        //             const index_type local_last  = A_row_ptr[local_row + 1] - block_data_begin;
-
-        //             for (index_type j = local_first + thread_in_block; j < local_last; j += threads_for_reduction) {
-        //                 #pragma unroll
-        //                 for (int k = 0; k < K; ++k) dot[k] += cache[k * BLOCK_SIZE + j];
-        //             }
-        //         }
-        //         __syncthreads();
-
-        //         if (local_row < block_row_end) {
-        //             #pragma unroll
-        //             for (int k = 0; k < K; ++k) cache[k * BLOCK_SIZE + i] = dot[k];
-        //         }
-
-        //         for (int step = threads_for_reduction / 2; step > 0; step /= 2) {
-        //             __syncthreads();
-        //             bool use_result = (thread_in_block < step) && (i + step < BLOCK_SIZE) && (local_row < block_row_end);
-        //             if (use_result) {
-        //                 #pragma unroll
-        //                 for (int k = 0; k < K; ++k) {
-        //                     cache[k * BLOCK_SIZE + i] += cache[k * BLOCK_SIZE + i + step];
-        //                 }
-        //             }
-        //         }
-
-        //         if (thread_in_block == 0 && local_row < block_row_end) {
-        //             #pragma unroll
-        //             for (int k = 0; k < K; ++k) {
-        //                 result[k * n + local_row] = cache[k * BLOCK_SIZE + i];
-        //             }
-        //         }
-        //     } else {
-        //         index_type local_row = block_row_begin + i;
-        //         while (local_row < block_row_end) {
-        //             real_type dot[K] = {0.0};
-        //             index_type local_first = A_row_ptr[local_row] - block_data_begin;
-        //             index_type local_last  = A_row_ptr[local_row + 1] - block_data_begin;
-
-        //             for (index_type j = local_first; j < local_last; ++j) {
-        //                 #pragma unroll
-        //                 for (int k = 0; k < K; ++k) dot[k] += cache[k * BLOCK_SIZE + j];
-        //             }
-
-        //             #pragma unroll
-        //             for (int k = 0; k < K; ++k) {
-        //                 result[k * n + local_row] = dot[k];
-        //             }
-        //             local_row += BLOCK_SIZE;
-        //         }
-        //     }
-        // } else
-        {
-            // CSR-Vector / VectorL Case// CSR-Vector / VectorL Case
-            const index_type lane    = threadIdx.x % 64;
-            const index_type warp_id = threadIdx.x / 64;
-
-            // Each warp gets its own distinct row within the block's range
-            const index_type row     = block_row_begin + warp_id; 
-
-            real_type dot[K] = {0.0};
-
-            // Ensure the row is valid and falls within this block's designated row chunk
-            if (row < block_row_end && row < n) {
-                const index_type row_start = A_row_ptr[row];
-                const index_type row_end   = A_row_ptr[row + 1];
-
-                for (index_type element = row_start + lane; element < row_end; element += 64) {
-                    const real_type a_val = A_val[element];
-                    const index_type col  = A_col_idx[element];
-
-                    #pragma unroll
-                    for (int k = 0; k < K; ++k) {
-                        dot[k] += a_val * __ldg(&B[k * n + col]);
-                    }
-                }
-
-                // Determine active threads in this warp for safe reduction
-                // (Important if rows are short or threads diverge)
-                // unsigned int active_mask = __activemask();
-
-                #pragma unroll
-                for (int k = 0; k < K; ++k) {
-                    for (int offset = 16; offset > 0; offset /= 2) {
-                        dot[k] += __shfl_down(dot[k], offset);
-                    }
-                }
-
-                // Only the first lane of the warp writes out the final dot product for this row
-                if (lane == 0) {
-                    #pragma unroll
-                    for (int k = 0; k < K; ++k) {
-                        result[k * n + row] = dot[k];
-                    }
-                }
-            }
-            // else {
-            //     if (row < n) {
-            //         const index_type row_start = A_row_ptr[row];
-            //         const index_type row_end   = A_row_ptr[row + 1];
-
-            //         for (index_type element = row_start + threadIdx.x; element < row_end; element += BLOCK_SIZE) {
-            //             const real_type a_val = A_val[element];
-            //             const index_type col  = A_col_idx[element];
-
-            //             #pragma unroll
-            //             for (int k = 0; k < K; ++k) dot[k] += a_val * __ldg(&B[k * n + col]);
-            //         }
-            //     }
-
-            //     #pragma unroll
-            //     for (int k = 0; k < K; ++k) {
-            //         for (int offset = 16; offset > 0; offset /= 2) {
-            //             dot[k] += __shfl_down(dot[k], offset);
-            //         }
-            //     }
-
-            //     if (lane == 0) {
-            //         #pragma unroll
-            //         for (int k = 0; k < K; ++k) {
-            //             cache[k * (BLOCK_SIZE / 64) + warp_id] = dot[k];
-            //         }
-            //     }
-            //     __syncthreads();
-
-            //     if (warp_id == 0) {
-            //         #pragma unroll
-            //         for (int k = 0; k < K; ++k) dot[k] = 0.0;
-
-            //         if (lane < (BLOCK_SIZE / 64)) {
-            //             #pragma unroll
-            //             for (int k = 0; k < K; ++k) {
-            //                 dot[k] = cache[k * (BLOCK_SIZE / 64) + lane];
-            //             }
-            //         }
-
-            //         #pragma unroll
-            //         for (int k = 0; k < K; ++k) {
-            //             for (int offset = 16; offset > 0; offset /= 2) {
-            //                 dot[k] += __shfl_down(dot[k], offset);
-            //             }
-            //         }
-
-            //         if (lane == 0 && row < n) {
-            //             #pragma unroll
-            //             for (int k = 0; k < K; ++k) result[k * n + row] = dot[k];
-            //         }
-            //     }
-            // }
-        }
-    }
       
       __global__ void columnWiseSquaredNorms(real_type* R, real_type* sq_norms, index_type n)
       {
@@ -411,13 +220,13 @@ namespace ReSolve
       }
 
       template <index_type k>
-      __device__ constexpr index_type indexSymmetricUpper(index_type i, index_type j)
+      __device__ constexpr index_type indexUpperTriangular(index_type i, index_type j)
       {
         return (j * (j + 1)) / 2 + i;
       }
 
       template <index_type k>
-      __device__ constexpr index_type indexSymmetricLower(index_type i, index_type j)
+      __device__ constexpr index_type indexLowerTriangular(index_type i, index_type j)
       {
         return (j * (2 * k - 1 - j)) / 2 + i;
       }
@@ -451,7 +260,7 @@ namespace ReSolve
             #pragma unroll
             for (index_type j = i; j < k; j++) // Only use upper triangle
             {
-              G_local[indexSymmetricUpper<k>(i, j)] += w_row[i] * w_row[j];
+              G_local[indexUpperTriangular<k>(i, j)] += w_row[i] * w_row[j];
             }
           }
         }
@@ -463,7 +272,7 @@ namespace ReSolve
           #pragma unroll
           for (index_type j = i; j < k; j++)
           {
-            real_type g = G_local[indexSymmetricUpper<k>(i, j)];
+            real_type g = G_local[indexUpperTriangular<k>(i, j)];
 
             #pragma unroll
             for (index_type offset = 64 / 2; offset > 0; offset /= 2)
@@ -487,7 +296,7 @@ namespace ReSolve
           index_type j = threadIdx.x / k;
           if ((i < k) && (j < k) && (i <= j))
           {
-            R_shared[indexSymmetricUpper<k>(i, j)] = R[j * k + i];
+            R_shared[indexUpperTriangular<k>(i, j)] = R[j * k + i];
           }
           __syncthreads();
 
@@ -496,17 +305,17 @@ namespace ReSolve
           {
             if (threadIdx.x == 0)
             {
-              R_shared[indexSymmetricUpper<k>(h, h)] = sqrt(R_shared[indexSymmetricUpper<k>(h, h)]);
+              R_shared[indexUpperTriangular<k>(h, h)] = sqrt(R_shared[indexUpperTriangular<k>(h, h)]);
             }
             __syncthreads();
             if (threadIdx.x > h && threadIdx.x < k)
             {
-              R_shared[indexSymmetricUpper<k>(h, threadIdx.x)] /= R_shared[indexSymmetricUpper<k>(h, h)];
+              R_shared[indexUpperTriangular<k>(h, threadIdx.x)] /= R_shared[indexUpperTriangular<k>(h, h)];
             }
             __syncthreads();
             if ((i < k) && (i > h) && (j < k) && (i <= j))
             {
-              R_shared[indexSymmetricUpper<k>(i, j)] -= R_shared[indexSymmetricUpper<k>(h, i)] * R_shared[indexSymmetricUpper<k>(h, j)];
+              R_shared[indexUpperTriangular<k>(i, j)] -= R_shared[indexUpperTriangular<k>(h, i)] * R_shared[indexUpperTriangular<k>(h, j)];
             }
             __syncthreads();
           }
@@ -515,7 +324,7 @@ namespace ReSolve
           {
             if (i <= j)
             {
-              R[j * k + i] = R_shared[indexSymmetricUpper<k>(i, j)];
+              R[j * k + i] = R_shared[indexUpperTriangular<k>(i, j)];
             }
             else
             {
@@ -537,9 +346,9 @@ namespace ReSolve
             #pragma unroll
             for (index_type i = 0; i < col; i++)
             {
-              q_local -= q_row[i] * R_shared[indexSymmetricUpper<k>(i, col)];
+              q_local -= q_row[i] * R_shared[indexUpperTriangular<k>(i, col)];
             }
-            q_local /= R_shared[indexSymmetricUpper<k>(col, col)];
+            q_local /= R_shared[indexUpperTriangular<k>(col, col)];
             q_row[col] = q_local;
           }
 
@@ -551,9 +360,9 @@ namespace ReSolve
         }
       }
 
-      // W = W - B * L^-1
+      // W = W - B * L^-T * L^-1
       template <index_type k>
-      __global__ void updateW(real_type* __restrict__ W, const real_type* __restrict__ L, const real_type* __restrict__ B, index_type n)
+      __global__ void updateW(real_type* __restrict__ W, const real_type* __restrict__ L, real_type* __restrict__ B, index_type n)
       {
         index_type thread = blockIdx.x * blockDim.x + threadIdx.x;
         index_type stride = gridDim.x * blockDim.x;
@@ -565,32 +374,55 @@ namespace ReSolve
           index_type j = threadIdx.x / k;
           if ((i < k) && (j < k) && (i >= j))
           {
-            L_shared[indexSymmetricLower<k>(i, j)] = L[j * k + i];
+            L_shared[indexLowerTriangular<k>(i, j)] = L[j * k + i];
           }
         }
         __syncthreads();
-        
+
         for (index_type row = thread; row < n; row += stride)
         {
+          //  Y * L^T = B
+          real_type y_row[k];
+
+          #pragma unroll
+          for (index_type col = 0; col < k; col++)
+          {
+            real_type y_local = B[col * n + row];
+            #pragma unroll
+            for (index_type i = 0; i < col; i++)
+            {
+              y_local -= y_row[i] * L_shared[indexLowerTriangular<k>(col, i)]; // L^T[i, col]
+            }
+            y_local /= L_shared[indexLowerTriangular<k>(col, col)];
+            y_row[col] = y_local;
+          }
+
+          #pragma unroll
+          for (index_type col = 0; col < k; col++)
+          {
+            B[col * n + row] = y_row[col]; // Y is stored in B. B is overridden
+          }
+        
+          // X * L = Y
           real_type x_row[k];
 
           #pragma unroll
           for (index_type col = k - 1; col >= 0; col--)
           {
-            real_type x_local = B[col * n + row];
+            real_type x_local = Y[col * n + row];
             #pragma unroll
             for (index_type i = col + 1; i < k; i++)
             {
-              x_local -= x_row[i] * L_shared[indexSymmetricLower<k>(i, col)];
+              x_local -= x_row[i] * L_shared[indexLowerTriangular<k>(i, col)];
             }
-            x_local /= L_shared[indexSymmetricLower<k>(col, col)];
+            x_local /= L_shared[indexLowerTriangular<k>(col, col)];
             x_row[col] = x_local;
           }
 
           #pragma unroll
           for (index_type col = 0; col < k; col++)
           {
-            W[col * n + row] -= x_row[col];
+            W[col * n + row] = x_row[col];
           }
         }
       }
@@ -736,16 +568,19 @@ namespace ReSolve
       int device_id = 0;
       hipDeviceProp_t properties;
       hipGetDeviceProperties(&properties, device_id);
-      num_sms_     = properties.multiProcessorCount; // 80
-      num_threads_ = num_sms_ * properties.maxThreadsPerMultiProcessor; // 163840
-      printf("Total SMs: %d, total threads: %d\n", num_sms_, num_threads_);
+      num_sms_     = properties.multiProcessorCount; // 110
+      num_threads_ = num_sms_ * properties.maxThreadsPerMultiProcessor; // 225280
+      hipGetDeviceCount(&num_devices_);
+      printf("Total devices: %d, total SMs: %d, total threads: %d\n", num_devices_, num_sms_, num_threads_);
+
+      streams_ = std::vector<hipStream_t>(num_devices_);
     }
 
     RandomizedConjugateGradientHip::~RandomizedConjugateGradientHip()
     {
     }
 
-    int RandomizedConjugateGradientHip::setup(index_type k)
+    int RandomizedConjugateGradientHip::setup(matrix::Csr* A, index_type k)
     {
       // For choleskyQr()
       switch (k)
@@ -784,68 +619,123 @@ namespace ReSolve
         d_sq_norms_ = nullptr;
       }
       mem_.allocateArrayOnDevice(&d_sq_norms_, k);
+      
+      index_type n = A->getNumRows();
+      index_type nnz = A->getNnz();
+
+      d_A_row_ptr.resize(num_devices_);
+      d_A_col_idx.resize(num_devices_);
+      d_A_val.resize(num_devices_);
+      for (index_type i = 0; i < num_devices_; i++)
+      {
+        hipSetDevice(i);
+        hipStreamCreate(&streams_[i]);
+        
+        mem_.allocateArrayOnDevice(&d_A_row_ptr[i], n + 1);
+        mem_.allocateArrayOnDevice(&d_A_col_idx[i], nnz);
+        mem_.allocateArrayOnDevice(&d_A_val[i], nnz);
+
+        hipMemcpyAsync(d_A_row_ptr[i], A->getRowData(memory::DEVICE), (n + 1) * sizeof(index_type), hipMemcpyDeviceToDevice);
+        hipMemcpyAsync(d_A_col_idx[i], A->getColData(memory::DEVICE), nnz * sizeof(index_type), hipMemcpyDeviceToDevice);
+        hipMemcpyAsync(d_A_val[i], A->getValues(memory::DEVICE), nnz * sizeof(real_type), hipMemcpyDeviceToDevice);
+        hipStreamSynchronize(streams_[i]);
+      }
+      hipSetDevice(0);
+
+      return 0;
+    }
+  
+  int RandomizedConjugateGradientHip::SpMMTallSkinnyDistributed(matrix::Csr* A, vector::VectorDistributed* X, vector::VectorDistributed* result)
+    {
+      index_type n = A->getNumRows();
+      index_type k = X->getNumVectors();
+
+      int devices_per_vector = std::max(num_devices_ / k, 1);
+      constexpr int       block_size = 256;
+      int max_rows_per_device = (n + devices_per_vector - 1) / devices_per_vector;
+      int       num_blocks = (max_rows_per_device * 64 + block_size - 1) / block_size;
+
+      for (index_type i = 0; i < num_devices_; i++)
+      {
+        hipSetDevice(i);
+        index_type vector = i % devices_per_vector;
+        
+        if (i != 0)
+          hipMemcpyAsync(X->getData(vector, i, memory::DEVICE), X->getData(vector, 0, memory::DEVICE), n * sizeof(real_type), hipMemcpyDeviceToDevice, streams_[i]);
+        
+        switch (std::max(k / num_devices_, 1))
+        {
+        case 1:
+          kernels::SpMMTallSkinnyKernelVectorDistributed<1, block_size><<<num_blocks, block_size, 0, streams_[i]>>>(
+                                                                  d_A_row_ptr[i],
+                                                                  d_A_col_idx[i],
+                                                                  d_A_val[i],
+                                                                  X->getData(vector, i, memory::DEVICE),
+                                                                  result->getData(vector, i, memory::DEVICE),
+                                                                  n,
+                                                                  devices_per_vector,
+                                                                  vector); 
+          break;
+        case 2:
+          kernels::SpMMTallSkinnyKernelVectorDistributed<2, block_size><<<num_blocks, block_size, 0, streams_[i]>>>(
+                                                                  d_A_row_ptr[i],
+                                                                  d_A_col_idx[i],
+                                                                  d_A_val[i],
+                                                                  X->getData(vector, i, memory::DEVICE),
+                                                                  result->getData(vector, i, memory::DEVICE),
+                                                                  n,
+                                                                  devices_per_vector,
+                                                                  vector); 
+          break;
+        case 4:
+          kernels::SpMMTallSkinnyKernelVectorDistributed<4, block_size><<<num_blocks, block_size, 0, streams_[i]>>>(
+                                                                  d_A_row_ptr[i],
+                                                                  d_A_col_idx[i],
+                                                                  d_A_val[i],
+                                                                  X->getData(vector, i, memory::DEVICE),
+                                                                  result->getData(vector, i, memory::DEVICE),
+                                                                  n,
+                                                                  devices_per_vector,
+                                                                  vector); 
+          break;
+        case 8:
+          kernels::SpMMTallSkinnyKernelVectorDistributed<8, block_size><<<num_blocks, block_size, 0, streams_[i]>>>(
+                                                                  d_A_row_ptr[i],
+                                                                  d_A_col_idx[i],
+                                                                  d_A_val[i],
+                                                                  X->getData(vector, i, memory::DEVICE),
+                                                                  result->getData(vector, i, memory::DEVICE),
+                                                                  n,
+                                                                  devices_per_vector,
+                                                                  vector); 
+          break;
+        case 16:
+          kernels::SpMMTallSkinnyKernelVectorDistributed<16, block_size><<<num_blocks, block_size, 0, streams_[i]>>>(
+                                                                  d_A_row_ptr[i],
+                                                                  d_A_col_idx[i],
+                                                                  d_A_val[i],
+                                                                  X->getData(vector, i, memory::DEVICE),
+                                                                  result->getData(vector, i, memory::DEVICE),
+                                                                  n,
+                                                                  devices_per_vector,
+                                                                  vector); 
+          break;
+        }
+
+        if (i != 0)
+          hipMemcpyAsync(result->getData(vector, 0, memory::DEVICE), result->getData(vector, i, memory::DEVICE), n * sizeof(real_type), hipMemcpyDeviceToDevice, streams_[i]);
+      }
+      for (index_type i = 0; i < num_devices_; i++)
+      {
+        hipSetDevice(i);
+        hipStreamSynchronize(streams_[i]);
+      }
+      hipSetDevice(0);
 
       return 0;
     }
 
-// int RandomizedConjugateGradientHip::SpMMTallSkinny(matrix::Csr* A, vector::Vector* X, vector::Vector* result)
-//   {
-//     index_type n = A->getNumRows();
-//     index_type k = X->getNumVectors();
-
-//     dim3      block_size = dim3(256 / k, k);
-//     int       num_blocks = (n * 64 + block_size.x - 1) / block_size.x;
-
-//     switch (k)
-//     {
-//     case 1:
-//       kernels::SpMMTallSkinnyKernelVectorMod<1><<<num_blocks, block_size>>>(A->getRowData(memory::DEVICE),
-//                                                               A->getColData(memory::DEVICE),
-//                                                               A->getValues(memory::DEVICE),
-//                                                               X->getData(memory::DEVICE),
-//                                                               result->getData(memory::DEVICE),
-//                                                               n);
-//       break;
-//     case 2:
-//       kernels::SpMMTallSkinnyKernelVectorMod<2><<<num_blocks, block_size>>>(A->getRowData(memory::DEVICE),
-//                                                               A->getColData(memory::DEVICE),
-//                                                               A->getValues(memory::DEVICE),
-//                                                               X->getData(memory::DEVICE),
-//                                                               result->getData(memory::DEVICE),
-//                                                               n);
-//       break;
-//     case 4:
-//       kernels::SpMMTallSkinnyKernelVectorMod<4><<<num_blocks, block_size>>>(A->getRowData(memory::DEVICE),
-//                                                               A->getColData(memory::DEVICE),
-//                                                               A->getValues(memory::DEVICE),
-//                                                               X->getData(memory::DEVICE),
-//                                                               result->getData(memory::DEVICE),
-//                                                               n);
-//       break;
-//     case 8:
-//       kernels::SpMMTallSkinnyKernelVectorMod<8><<<num_blocks, block_size>>>(A->getRowData(memory::DEVICE),
-//                                                               A->getColData(memory::DEVICE),
-//                                                               A->getValues(memory::DEVICE),
-//                                                               X->getData(memory::DEVICE),
-//                                                               result->getData(memory::DEVICE),
-//                                                               n);
-//       break;
-//     case 16:
-//       kernels::SpMMTallSkinnyKernelVectorMod<16><<<num_blocks, block_size>>>(A->getRowData(memory::DEVICE),
-//                                                               A->getColData(memory::DEVICE),
-//                                                               A->getValues(memory::DEVICE),
-//                                                               X->getData(memory::DEVICE),
-//                                                               result->getData(memory::DEVICE),
-//                                                               n);
-//       break;
-//     default:
-//       return 1;
-//     }
-    
-//     return 0;
-//   }
-
-int RandomizedConjugateGradientHip::SpMMTallSkinny(matrix::Csr* A, vector::Vector* X, vector::Vector* result)
+  int RandomizedConjugateGradientHip::SpMMTallSkinny(matrix::Csr* A, vector::Vector* X, vector::Vector* result)
     {
       index_type n = A->getNumRows();
       index_type k = X->getNumVectors();
