@@ -164,7 +164,10 @@ namespace ReSolve
 
   SystemSolver::~SystemSolver()
   {
-    delete resVector_;
+    if (resVector_ != nullptr)
+    {
+      delete resVector_;
+    }
 
     if (factorizationMethod_ != "none")
     {
