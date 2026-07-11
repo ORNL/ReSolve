@@ -131,10 +131,8 @@ namespace ReSolve
 // Check if GPU support is enabled in Re::Solve and set appropriate device memory manager.
 #if defined RESOLVE_USE_CUDA
 #include <resolve/cuda/CudaMemory.hpp>
-using MemoryHandler = ReSolve::MemoryUtils<ReSolve::memory::Cuda>;
 #elif defined RESOLVE_USE_HIP
 #include <resolve/hip/HipMemory.hpp>
-using MemoryHandler = ReSolve::MemoryUtils<ReSolve::memory::Hip>;
 #else
 #error Unrecognized device, probably bug in CMake configuration
 #endif
@@ -143,6 +141,18 @@ using MemoryHandler = ReSolve::MemoryUtils<ReSolve::memory::Hip>;
 
 // If no GPU support is present, set device memory manager to a dummy object.
 #include <resolve/cpu/CpuMemory.hpp>
-using MemoryHandler = ReSolve::MemoryUtils<ReSolve::memory::Cpu>;
 
 #endif
+
+namespace ReSolve
+{
+#ifdef RESOLVE_USE_GPU
+#if defined RESOLVE_USE_CUDA
+  using MemoryHandler = MemoryUtils<memory::Cuda>;
+#elif defined RESOLVE_USE_HIP
+  using MemoryHandler = MemoryUtils<memory::Hip>;
+#endif
+#else
+  using MemoryHandler = MemoryUtils<memory::Cpu>;
+#endif
+} // namespace ReSolve
