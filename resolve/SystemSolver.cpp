@@ -63,6 +63,14 @@ namespace ReSolve
       precondition_method_   = "none";
     }
 
+    if ((solve == "randgmres" || solve == "fgmres") && (ir != "none"))
+    {
+      out::warning() << "Incorrect input: "
+                     << "Iterative refinement cannot be enabled together with an iterative solve method.\n"
+                     << "Setting refinement method to 'none' ...\n";
+      irMethod_ = "none";
+    }
+
     // Instantiate handlers
     matrixHandler_ = new MatrixHandler(workspaceCpu_);
     vectorHandler_ = new VectorHandler(workspaceCpu_);
@@ -93,6 +101,14 @@ namespace ReSolve
                      << "Setting both to 'none' ...\n";
       refactorizationMethod_ = "none";
       precondition_method_   = "none";
+    }
+
+    if ((solve == "randgmres" || solve == "fgmres") && (ir != "none"))
+    {
+      out::warning() << "Incorrect input: "
+                     << "Iterative refinement cannot be enabled together with an iterative solve method.\n"
+                     << "Setting refinement method to 'none' ...\n";
+      irMethod_ = "none";
     }
 
     // Instantiate handlers
@@ -126,6 +142,14 @@ namespace ReSolve
                      << "Setting both to 'none' ...\n";
       refactorizationMethod_ = "none";
       precondition_method_   = "none";
+    }
+
+    if ((solve == "randgmres" || solve == "fgmres") && (ir != "none"))
+    {
+      out::warning() << "Incorrect input: "
+                     << "Iterative refinement cannot be enabled together with an iterative solve method.\n"
+                     << "Setting refinement method to 'none' ...\n";
+      irMethod_ = "none";
     }
 
     // Instantiate handlers
@@ -804,6 +828,14 @@ namespace ReSolve
 
     if (method == "none")
       return;
+
+    if (solveMethod_ == "randgmres" || solveMethod_ == "fgmres")
+    {
+      out::warning() << "Iterative refinement cannot be enabled together with an "
+                     << "iterative solve method ('randgmres' or 'fgmres'). "
+                     << "Keeping refinement method 'none'.\n";
+      return;
+    }
 
     if (memspace_ == "cpu")
     {
