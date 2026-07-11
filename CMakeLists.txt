@@ -49,6 +49,52 @@ set(RESOLVE_CTEST_OUTPUT_DIR
     CACHE PATH "Directory where CTest outputs are saved"
 )
 
+# Configurable Re::Solve scalar types (see resolve/Common.hpp). Cache
+# variables with a STRINGS property show up as a pull-down menu in cmake-gui
+# and ccmake.
+set(RESOLVE_REAL_TYPE
+    "double"
+    CACHE STRING "Floating-point type used for ReSolve::real_type"
+)
+set_property(CACHE RESOLVE_REAL_TYPE PROPERTY STRINGS "double" "float")
+
+set(RESOLVE_INDEX_TYPE
+    "int32"
+    CACHE STRING "Integer type used for ReSolve::index_type"
+)
+set_property(CACHE RESOLVE_INDEX_TYPE PROPERTY STRINGS "int32" "int64" "uint32"
+                                                "uint64"
+)
+
+if(RESOLVE_REAL_TYPE STREQUAL "double")
+  set(RESOLVE_REAL_TYPE_CPP "double")
+elseif(RESOLVE_REAL_TYPE STREQUAL "float")
+  set(RESOLVE_REAL_TYPE_CPP "float")
+else()
+  message(
+    FATAL_ERROR
+    "Unsupported RESOLVE_REAL_TYPE '${RESOLVE_REAL_TYPE}'. Valid options are: double, float."
+  )
+endif()
+
+if(RESOLVE_INDEX_TYPE STREQUAL "int32")
+  set(RESOLVE_INDEX_TYPE_CPP "std::int32_t")
+elseif(RESOLVE_INDEX_TYPE STREQUAL "int64")
+  set(RESOLVE_INDEX_TYPE_CPP "std::int64_t")
+elseif(RESOLVE_INDEX_TYPE STREQUAL "uint32")
+  set(RESOLVE_INDEX_TYPE_CPP "std::uint32_t")
+elseif(RESOLVE_INDEX_TYPE STREQUAL "uint64")
+  set(RESOLVE_INDEX_TYPE_CPP "std::uint64_t")
+else()
+  message(
+    FATAL_ERROR
+    "Unsupported RESOLVE_INDEX_TYPE '${RESOLVE_INDEX_TYPE}'. Valid options are: int32, int64, uint32, uint64."
+  )
+endif()
+
+message(STATUS "Re::Solve real_type set to ${RESOLVE_REAL_TYPE_CPP}")
+message(STATUS "Re::Solve index_type set to ${RESOLVE_INDEX_TYPE_CPP}")
+
 # update this if more fortran code is added. this should be good enough for now
 # though
 if(RESOLVE_USE_LUSOL)

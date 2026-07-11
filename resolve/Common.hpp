@@ -1,16 +1,10 @@
 #pragma once
 
 #include <limits>
-
-// TODO: temporary
-#include <cstdint>
+#include <resolve/resolve_defs.hpp>
 
 namespace ReSolve
 {
-
-  /// @todo Provide CMake option to se these types at config time
-  using real_type  = double;
-  using index_type = std::int32_t;
 
   namespace constants
   {

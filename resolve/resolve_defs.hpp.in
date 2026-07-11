@@ -3,6 +3,8 @@
 #ifndef __RESOLVE_DEFINITIONS_HPP__
 #define __RESOLVE_DEFINITIONS_HPP__
 
+#include <cstdint>
+
 #cmakedefine RESOLVE_USE_GPU
 #cmakedefine RESOLVE_USE_CUDA
 #cmakedefine RESOLVE_USE_HIP
@@ -26,5 +28,12 @@
 #endif
 #endif
 
+namespace ReSolve
+{
+  // Set at configure time via the RESOLVE_REAL_TYPE / RESOLVE_INDEX_TYPE
+  // CMake cache variables.
+  using real_type  = @RESOLVE_REAL_TYPE_CPP@;
+  using index_type = @RESOLVE_INDEX_TYPE_CPP@;
+} // namespace ReSolve
 
 #endif // __RESOLVE_DEFINITIONS_HPP__
