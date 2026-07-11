@@ -181,6 +181,7 @@ namespace ReSolve
   {
     int status = 0;
     A_         = A;
+    delete resVector_;
     resVector_ = new vector_type(A->getNumRows());
     if (memspace_ == "cpu")
     {
@@ -580,6 +581,11 @@ namespace ReSolve
       status += 1;
     }
 
+    if (status != 0)
+    {
+      return status;
+    }
+
     Preconditioner::Side prec_side;
     if (side == "left")
     {
@@ -625,7 +631,7 @@ namespace ReSolve
     if (preconditioner_ == nullptr)
     {
       out::error() << "Preconditioner not initialized!\n";
-      status += 1;
+      return 1;
     }
 
     status += preconditioner_->reset(A);
@@ -727,7 +733,10 @@ namespace ReSolve
     // Remove existing iterative solver and set IR to "none".
     irMethod_ = "none";
     if (iterativeSolver_)
+    {
       delete iterativeSolver_;
+      iterativeSolver_ = nullptr;
+    }
 
     if (method == "randgmres")
     {
@@ -780,17 +789,24 @@ namespace ReSolve
   void SystemSolver::setRefinementMethod(std::string method, std::string gsMethod)
   {
     if (iterativeSolver_ != nullptr)
+    {
       delete iterativeSolver_;
+      iterativeSolver_ = nullptr;
+    }
 
     if (gs_ != nullptr)
+    {
       delete gs_;
+      gs_ = nullptr;
+    }
+
+    irMethod_ = "none";
 
     if (method == "none")
       return;
 
     if (memspace_ == "cpu")
     {
-      method = "none";
       out::warning() << "Iterative refinement not supported on CPU. "
                      << "Turning off ...\n";
       return;
@@ -924,6 +940,26 @@ namespace ReSolve
   const std::string SystemSolver::getFactorizationMethod() const
   {
     return factorizationMethod_;
+  }
+
+  const std::string SystemSolver::getRefactorizationMethod() const
+  {
+    return refactorizationMethod_;
+  }
+
+  const std::string SystemSolver::getSolveMethod() const
+  {
+    return solveMethod_;
+  }
+
+  const std::string SystemSolver::getRefinementMethod() const
+  {
+    return irMethod_;
+  }
+
+  const std::string SystemSolver::getOrthogonalizationMethod() const
+  {
+    return gsMethod_;
   }
 
   /**
