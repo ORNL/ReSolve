@@ -1,6 +1,7 @@
 #pragma once
 
 #include <limits>
+
 #include <resolve/resolve_defs.hpp>
 
 namespace ReSolve

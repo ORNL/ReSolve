@@ -49,9 +49,8 @@ set(RESOLVE_CTEST_OUTPUT_DIR
     CACHE PATH "Directory where CTest outputs are saved"
 )
 
-# Configurable Re::Solve scalar types (see resolve/Common.hpp). Cache
-# variables with a STRINGS property show up as a pull-down menu in cmake-gui
-# and ccmake.
+# Configurable Re::Solve scalar types (see resolve/Common.hpp). Cache variables
+# with a STRINGS property show up as a pull-down menu in cmake-gui and ccmake.
 set(RESOLVE_REAL_TYPE
     "double"
     CACHE STRING "Floating-point type used for ReSolve::real_type"
@@ -62,8 +61,8 @@ set(RESOLVE_INDEX_TYPE
     "int32"
     CACHE STRING "Integer type used for ReSolve::index_type"
 )
-set_property(CACHE RESOLVE_INDEX_TYPE PROPERTY STRINGS "int32" "int64" "uint32"
-                                                "uint64"
+set_property(
+  CACHE RESOLVE_INDEX_TYPE PROPERTY STRINGS "int32" "int64" "uint32" "uint64"
 )
 
 if(RESOLVE_REAL_TYPE STREQUAL "double")
@@ -73,7 +72,7 @@ elseif(RESOLVE_REAL_TYPE STREQUAL "float")
 else()
   message(
     FATAL_ERROR
-    "Unsupported RESOLVE_REAL_TYPE '${RESOLVE_REAL_TYPE}'. Valid options are: double, float."
+      "Unsupported RESOLVE_REAL_TYPE '${RESOLVE_REAL_TYPE}'. Valid options are: double, float."
   )
 endif()
 
@@ -88,7 +87,7 @@ elseif(RESOLVE_INDEX_TYPE STREQUAL "uint64")
 else()
   message(
     FATAL_ERROR
-    "Unsupported RESOLVE_INDEX_TYPE '${RESOLVE_INDEX_TYPE}'. Valid options are: int32, int64, uint32, uint64."
+      "Unsupported RESOLVE_INDEX_TYPE '${RESOLVE_INDEX_TYPE}'. Valid options are: int32, int64, uint32, uint64."
   )
 endif()
 
