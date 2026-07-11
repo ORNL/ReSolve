@@ -205,7 +205,10 @@ namespace ReSolve
   {
     int status = 0;
     A_         = A;
-    delete resVector_;
+    if (resVector_)
+    {
+      delete resVector_;
+    }
     resVector_ = new vector_type(A->getNumRows());
     if (memspace_ == "cpu")
     {
