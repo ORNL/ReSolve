@@ -29,6 +29,7 @@
 template <typename WorkspaceType>
 void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace, ReSolve::tests::TestingResults& result)
 {
+// std::freopen("log.txt", "w", stdout);
   std::cout << "Running tests on " << backend << " device:\n";
 
   WorkspaceType workspace;
@@ -38,13 +39,14 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
   ReSolve::tests::HykktConjugateGradientTests test(memspace, matrix_handler, vector_handler);
 
   std::string        source_dir = std::string(SOURCE_DIR);
-  std::string       A_file_name = source_dir + std::string("/RandomizedCGTestMatrices/hood.mtx");
+  std::string       A_file_name = source_dir + std::string("/RandomizedCGTestMatrices/ldoor.mtx");
   double rng_min = -100.0;
   double rng_max = 100.0;
 
   result += test.CGTest(A_file_name, rng_min, rng_max);
 
   std::cout << "\n";
+    // std::fclose(stdout);
 }
 
 int main(int, char**)

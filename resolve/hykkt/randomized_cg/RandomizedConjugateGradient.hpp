@@ -52,7 +52,7 @@ namespace ReSolve
 
       void addMatrixInfo(matrix::Csr* A);
       void addVectorInfo(vector::Vector* x_0, vector::Vector* b);
-      void addPreconditionerInfo(vector::Vector* d_inv);
+      void addPreconditionerInfo(vector::Vector* d_, vector::Vector* d_inv);
       void setSolverTolerance(double initial_tol, double convergence_tol);
       void setSolverItmax(int itmax);
 
@@ -67,7 +67,7 @@ namespace ReSolve
       index_type n_;             // Dimension of outer system
       index_type k_;             // 
       index_type nnz_;
-      int        itmax_ = 50;   // Maximum iterations for conjugate gradient
+      int        itmax_ = 400000;   // Maximum iterations for conjugate gradient
       real_type  initial_tol_   = 1e-12; // Solver tolerance for Schur
       real_type  convergence_tol_   = 1e-12; // Solver tolerance for Schur
     
@@ -87,6 +87,7 @@ namespace ReSolve
       matrix::Csr* A_prec_{nullptr};
 
       // Vectors used for conjugate gradient
+      vector::Vector* d_{nullptr};
       vector::Vector* d_inv_{nullptr};
       vector::Vector* X_prec_0_{nullptr};
       vector::Vector* X_res_{nullptr};

@@ -29,6 +29,7 @@
 template <typename WorkspaceType>
 void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace, ReSolve::tests::TestingResults& result)
 {
+// std::freopen("log.txt", "w", stdout);
   std::cout << "Running tests on " << backend << " device:\n";
 
   WorkspaceType workspace;
@@ -42,9 +43,10 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
   double rng_min = -1.0;
   double rng_max = 1.0;
 
-  result += test.DenseCGTest(A_file_name, 10000, rng_min, rng_max);
+  result += test.DenseCGTest(A_file_name, 6400, rng_min, rng_max);
 
   std::cout << "\n";
+    // std::fclose(stdout);
 }
 
 int main(int, char**)

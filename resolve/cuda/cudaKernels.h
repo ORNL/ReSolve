@@ -35,6 +35,12 @@ namespace ReSolve
                     real_type*        a_val,
                     const real_type*  diag);
                     
+    void extractRootDiagonal(index_type        n,
+                    const index_type* a_row_ptr,
+                    const index_type* a_col_idx,
+                    const real_type*        a_val,
+                    real_type*  diag);
+                    
     void extractInverseRootDiagonal(index_type        n,
                     const index_type* a_row_ptr,
                     const index_type* a_col_idx,

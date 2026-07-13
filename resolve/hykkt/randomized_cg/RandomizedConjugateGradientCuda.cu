@@ -88,20 +88,26 @@ namespace ReSolve
         }
       }
 
-      template <index_type K, index_type BLOCK_SIZE>
+      template<typename T>
+__device__ __forceinline__ T load_global_cg(const T* ptr) {
+    T val;
+    asm volatile("ld.global.cg.f64 %0, [%1];" : "=d"(val) : "l"(ptr));
+    return val;
+}
+
+      template <index_type K, index_type BLOCK_SIZE, index_type THREADS_PER_ROW>
       __global__ void SpMMTallSkinnyKernelVector(
         const index_type* __restrict__ A_row_ptr,
         const index_type* __restrict__ A_col_idx,
         const real_type* __restrict__ A_val,
         const real_type* __restrict__ B,
-        real_type* __restrict__ result,
+        real_type*  result,
         index_type n)
       {
         const index_type thread = blockIdx.x * blockDim.x + threadIdx.x;
-        const index_type warp = threadIdx.x / 32;
-        const index_type row = thread / 32;
-        const index_type lane = thread % 32;
-        const index_type rows_per_block = BLOCK_SIZE / 32;
+        const index_type row = thread / THREADS_PER_ROW;
+        const index_type lane = thread % THREADS_PER_ROW;
+        constexpr index_type rows_per_block = BLOCK_SIZE / THREADS_PER_ROW;
 
         __shared__ real_type result_shared[rows_per_block * K];
 
@@ -116,22 +122,28 @@ namespace ReSolve
 
           real_type sum[K] = { 0.0 };
 
-          for (index_type j = col_start + lane; j < col_end; j += 32)
+          for (index_type j = col_start + lane; j < col_end; j += THREADS_PER_ROW)
           {
             index_type col = A_col_idx[j];
             real_type a = A_val[j];
+            real_type b_local[K];
 
             // #pragma unroll
             for (int i = 0; i < k; ++i)
             {
-              sum[i] += a * B[i * n + col];
+              b_local[i] = B[i * n + col];
+            }
+
+            for (int i = 0; i < k; ++i)
+            {
+              sum[i] += a * b_local[i];
             }
           }
 
           // #pragma unroll
           for (int i = 0; i < k; ++i)
           {
-            for (index_type offset = 32 / 2; offset > 0; offset /= 2)
+            for (index_type offset = THREADS_PER_ROW / 2; offset > 0; offset /= 2)
             {
               sum[i] += __shfl_down_sync(0xffffffff, sum[i], offset);
             }
@@ -409,13 +421,13 @@ namespace ReSolve
       }
 
       template <index_type k>
-      __device__ constexpr index_type indexSymmetricUpper(index_type i, index_type j)
+      __device__ __forceinline__ index_type indexUpperTriangular(index_type i, index_type j)
       {
         return (j * (j + 1)) / 2 + i;
       }
 
       template <index_type k>
-      __device__ constexpr index_type indexSymmetricLower(index_type i, index_type j)
+      __device__ __forceinline__ index_type indexLowerTriangular(index_type i, index_type j)
       {
         return (j * (2 * k - 1 - j)) / 2 + i;
       }
@@ -449,7 +461,7 @@ namespace ReSolve
             #pragma unroll
             for (index_type j = i; j < k; j++) // Only use upper triangle
             {
-              G_local[indexSymmetricUpper<k>(i, j)] += w_row[i] * w_row[j];
+              G_local[indexUpperTriangular<k>(i, j)] += w_row[i] * w_row[j];
             }
           }
         }
@@ -461,7 +473,7 @@ namespace ReSolve
           #pragma unroll
           for (index_type j = i; j < k; j++)
           {
-            real_type g = G_local[indexSymmetricUpper<k>(i, j)];
+            real_type g = G_local[indexUpperTriangular<k>(i, j)];
 
             #pragma unroll
             for (index_type offset = 32 / 2; offset > 0; offset /= 2)
@@ -474,18 +486,65 @@ namespace ReSolve
             }
           }
         }
-      // Now R = W^T * W
+        // Now R = W^T * W. Lower half is garbage and doesn't matter though, because everything well get overridden soon
 
         grid.sync();
       
       // Upper Cholesky factorization
         __shared__ real_type R_shared[k * (k + 1) / 2]; // Only need this much for kxk symmetric matrix
+        if constexpr (k <= 0) // CAREFUL: SHOULD BE 4?
+        {
+          if (threadIdx.x < 32)
+          {
+            index_type i = threadIdx.x % k;
+            index_type j = threadIdx.x / k;
+            if ((i < k) && (j < k) && (i <= j))
+            {
+              R_shared[indexUpperTriangular<k>(i, j)] = R[j * k + i];
+            }
+            __syncwarp();
+
+            // Do all of this inside one warp
+            for (index_type h = 0; h < k; h++)
+            {
+              if (threadIdx.x == 0)
+              {
+                R_shared[indexUpperTriangular<k>(h, h)] = sqrt(R_shared[indexUpperTriangular<k>(h, h)]);
+              }
+              __syncwarp();
+              if (threadIdx.x > h && threadIdx.x < k)
+              {
+                R_shared[indexUpperTriangular<k>(h, threadIdx.x)] /= R_shared[indexUpperTriangular<k>(h, h)];
+              }
+              __syncwarp();
+              if ((i < k) && (i > h) && (j < k) && (i <= j))
+              {
+                R_shared[indexUpperTriangular<k>(i, j)] -= R_shared[indexUpperTriangular<k>(h, i)] * R_shared[indexUpperTriangular<k>(h, j)];
+              }
+              __syncwarp();
+            }
+            
+            if ((i < k) && (j < k) && (blockIdx.x == 0))
+            {
+              if (i <= j)
+              {
+                R[j * k + i] = R_shared[indexUpperTriangular<k>(i, j)];
+              }
+              else
+              {
+                R[j * k + i] = 0.0;
+              }
+            }
+          }
+          __syncthreads();
+        }
+        else
         {
           index_type i = threadIdx.x % k;
           index_type j = threadIdx.x / k;
           if ((i < k) && (j < k) && (i <= j))
           {
-            R_shared[indexSymmetricUpper<k>(i, j)] = R[j * k + i];
+            R_shared[indexUpperTriangular<k>(i, j)] = R[j * k + i];
           }
           __syncthreads();
 
@@ -494,17 +553,17 @@ namespace ReSolve
           {
             if (threadIdx.x == 0)
             {
-              R_shared[indexSymmetricUpper<k>(h, h)] = sqrt(R_shared[indexSymmetricUpper<k>(h, h)]);
+              R_shared[indexUpperTriangular<k>(h, h)] = sqrt(R_shared[indexUpperTriangular<k>(h, h)]);
             }
             __syncthreads();
             if (threadIdx.x > h && threadIdx.x < k)
             {
-              R_shared[indexSymmetricUpper<k>(h, threadIdx.x)] /= R_shared[indexSymmetricUpper<k>(h, h)];
+              R_shared[indexUpperTriangular<k>(h, threadIdx.x)] /= R_shared[indexUpperTriangular<k>(h, h)];
             }
             __syncthreads();
             if ((i < k) && (i > h) && (j < k) && (i <= j))
             {
-              R_shared[indexSymmetricUpper<k>(i, j)] -= R_shared[indexSymmetricUpper<k>(h, i)] * R_shared[indexSymmetricUpper<k>(h, j)];
+              R_shared[indexUpperTriangular<k>(i, j)] -= R_shared[indexUpperTriangular<k>(h, i)] * R_shared[indexUpperTriangular<k>(h, j)];
             }
             __syncthreads();
           }
@@ -513,7 +572,7 @@ namespace ReSolve
           {
             if (i <= j)
             {
-              R[j * k + i] = R_shared[indexSymmetricUpper<k>(i, j)];
+              R[j * k + i] = R_shared[indexUpperTriangular<k>(i, j)];
             }
             else
             {
@@ -521,7 +580,7 @@ namespace ReSolve
             }
           }
         }
-      // No sync needed because every block computes R_shared
+      // No grid-wise sync needed because every block computes R_shared
       
       // Back substitution, QR = A
       // each q is dependent only on q's to the left of it, as well as R and A (W)
@@ -535,9 +594,9 @@ namespace ReSolve
             #pragma unroll
             for (index_type i = 0; i < col; i++)
             {
-              q_local -= q_row[i] * R_shared[indexSymmetricUpper<k>(i, col)];
+              q_local -= q_row[i] * R_shared[indexUpperTriangular<k>(i, col)];
             }
-            q_local /= R_shared[indexSymmetricUpper<k>(col, col)];
+            q_local /= R_shared[indexUpperTriangular<k>(col, col)];
             q_row[col] = q_local;
           }
 
@@ -548,10 +607,491 @@ namespace ReSolve
           }
         }
       }
+            
+      template <index_type k>
+      __global__ void choleskyFactorizeSolve(real_type* __restrict__ A,
+                               const real_type* B,
+                               real_type* X)
+      {
+        index_type thread = blockIdx.x * blockDim.x + threadIdx.x;
+        index_type stride = gridDim.x * blockDim.x;
+      
+      // choleskyFactorize(A), lower
+        __shared__ real_type A_shared[k * (k + 1) / 2]; // Only need this much for kxk symmetric matrix
+        if constexpr (k <= 4)
+        {
+          if (threadIdx.x < 32) // k <= 4 for now
+          {
+            index_type i = threadIdx.x % k;
+            index_type j = threadIdx.x / k;
+            if ((i < k) && (j < k) && (i >= j))
+            {
+              A_shared[indexLowerTriangular<k>(i, j)] = A[j * k + i];
+            }
+            __syncwarp();
+
+            // // For warp size 64 and k <= 8, everything can be done in one warp
+            // if constexpr (k * (k + 1) / 2 > 64)
+            // {
+            //   __syncthreads();
+            // }
+
+            // Do all of this inside one warp. One thread per entry
+            // #pragma unroll 1
+            for (index_type h = 0; h < k; h++)
+            {
+              if (threadIdx.x == 0)
+              {
+                A_shared[indexLowerTriangular<k>(h, h)] = sqrt(A_shared[indexLowerTriangular<k>(h, h)]);
+              }
+              __syncwarp();
+              if (threadIdx.x > h && threadIdx.x < k)
+              {
+                A_shared[indexLowerTriangular<k>(threadIdx.x, h)] /= A_shared[indexLowerTriangular<k>(h, h)];
+              }
+              __syncwarp();
+              if ((j < k) && (j > h) && (i < k) && (i >= j))
+              {
+                A_shared[indexLowerTriangular<k>(i, j)] -= A_shared[indexLowerTriangular<k>(i, h)] * A_shared[indexLowerTriangular<k>(j, h)];
+              }
+              __syncwarp();
+            }
+            
+            if ((i < k) && (j < k) && (blockIdx.x == 0))
+            {
+              if (i >= j)
+              {
+                A[j * k + i] = A_shared[indexLowerTriangular<k>(i, j)];
+              }
+              else
+              {
+                A[j * k + i] = 0.0;
+              }
+            }
+          }
+        }
+        else
+        {
+          index_type i = threadIdx.x % k;
+          index_type j = threadIdx.x / k;
+          if ((i < k) && (j < k) && (i >= j))
+          {
+            A_shared[indexLowerTriangular<k>(i, j)] = A[j * k + i];
+          }
+          __syncthreads();
+
+          // #pragma unroll 1
+          for (index_type h = 0; h < k; h++)
+          {
+            if (threadIdx.x == 0)
+            {
+              A_shared[indexLowerTriangular<k>(h, h)] = sqrt(A_shared[indexLowerTriangular<k>(h, h)]);
+            }
+            __syncthreads();
+            if (threadIdx.x > h && threadIdx.x < k)
+            {
+              A_shared[indexLowerTriangular<k>(threadIdx.x, h)] /= A_shared[indexLowerTriangular<k>(h, h)];
+            }
+            __syncthreads();
+            if ((j < k) && (j > h) && (i < k) && (i >= j))
+            {
+              A_shared[indexLowerTriangular<k>(i, j)] -= A_shared[indexLowerTriangular<k>(i, h)] * A_shared[indexLowerTriangular<k>(j, h)];
+            }
+            __syncthreads();
+          }
+          __syncthreads();
+          
+          if ((i < k) && (j < k) && (blockIdx.x == 0))
+          {
+            if (i >= j)
+            {
+              A[j * k + i] = A_shared[indexLowerTriangular<k>(i, j)];
+            }
+            else
+            {
+              A[j * k + i] = 0.0;
+            }
+          }
+        }
+
+      // X = Xi * B => A * X = B => L * L^T * X = B, choleskySolve
+        __shared__ real_type Xi_Sigma_shared[k * k];
+        if constexpr (k <= 4)
+        {
+          if (threadIdx.x < 32) // k <= 4 for now. Still only one warp
+          {
+            if (threadIdx.x < k * k)
+            {
+              Xi_Sigma_shared[threadIdx.x] = B[threadIdx.x];
+            }
+            __syncwarp(); // CUDA needs to __syncwarp() at all these places
+
+            //  L * Y = B
+            if (threadIdx.x < k)
+            {
+              index_type col = threadIdx.x; // Talking about rows and columns of B
+
+              // #pragma unroll 1
+              for (index_type row = 0; row < k; row++)
+              {
+                real_type y_local = Xi_Sigma_shared[col * k + row];
+                // #pragma unroll 1
+                for (index_type i = 0; i < row; i++)
+                {
+                  y_local -= Xi_Sigma_shared[col * k + i] * A_shared[indexLowerTriangular<k>(row, i)]; // A_shared can be overridden. Here it contains Y
+                }
+                y_local /= A_shared[indexLowerTriangular<k>(row, row)];
+                Xi_Sigma_shared[col * k + row] = y_local;
+              }
+            }
+            __syncwarp();
+
+            //  L^T * X = Y
+            if (threadIdx.x < k)
+            {
+              index_type col = threadIdx.x; // Talking about rows and columns of B
+
+              // #pragma unroll 1
+              for (index_type row = k - 1; row >= 0; row--)
+              {
+                real_type y_local = Xi_Sigma_shared[col * k + row];
+                // #pragma unroll 1
+                for (index_type i = row + 1; i < k; i++)
+                {
+                  y_local -= Xi_Sigma_shared[col * k + i] * A_shared[indexLowerTriangular<k>(i, row)]; // A_shared can be overridden. Here it contains Y
+                }
+                y_local /= A_shared[indexLowerTriangular<k>(row, row)];
+                Xi_Sigma_shared[col * k + row] = y_local;
+              }
+            }
+          }
+        }
+        else
+        {
+          if (threadIdx.x < k * k)
+          {
+            Xi_Sigma_shared[threadIdx.x] = B[threadIdx.x];
+          }
+          __syncthreads();
+
+          //  L * Y = B
+          if (threadIdx.x < k)
+          {
+            index_type col = threadIdx.x; // Talking about rows and columns of B
+
+            // #pragma unroll 1
+            for (index_type row = 0; row < k; row++)
+            {
+              real_type y_local = Xi_Sigma_shared[col * k + row];
+              // #pragma unroll 1
+              for (index_type i = 0; i < row; i++)
+              {
+                y_local -= Xi_Sigma_shared[col * k + i] * A_shared[indexLowerTriangular<k>(row, i)]; // A_shared can be overridden. Here it contains Y
+              }
+              y_local /= A_shared[indexLowerTriangular<k>(row, row)];
+              Xi_Sigma_shared[col * k + row] = y_local;
+            }
+          }
+          __syncthreads();
+
+          //  L^T * X = Y
+          if (threadIdx.x < k)
+          {
+            index_type col = threadIdx.x; // Talking about rows and columns of B
+
+            // #pragma unroll 1
+            for (index_type row = k - 1; row >= 0; row--)
+            {
+              real_type y_local = Xi_Sigma_shared[col * k + row];
+              // #pragma unroll 1
+              for (index_type i = row + 1; i < k; i++)
+              {
+                y_local -= Xi_Sigma_shared[col * k + i] * A_shared[indexLowerTriangular<k>(i, row)]; // A_shared can be overridden. Here it contains Y
+              }
+              y_local /= A_shared[indexLowerTriangular<k>(row, row)];
+              Xi_Sigma_shared[col * k + row] = y_local;
+            }
+          }
+        }
+        __syncthreads();
+        
+        if (threadIdx.x < k * k)
+        {
+          X[threadIdx.x] = Xi_Sigma_shared[threadIdx.x];
+        }
+      }
+
+      template <index_type k>
+      __global__ void updateXRSplit(real_type* __restrict__ Xi_inv,
+                               const real_type* __restrict__ Sigma,
+                               const real_type* __restrict__ S,
+                               const real_type* __restrict__ A_S,
+                               real_type* __restrict__ Xi_Sigma,
+                               real_type* __restrict__ X_res,
+                               real_type* __restrict__ R_prec,
+                               index_type n)
+      {
+        index_type thread = blockIdx.x * blockDim.x + threadIdx.x;
+        index_type stride = gridDim.x * blockDim.x;
+
+        __shared__ real_type Xi_Sigma_shared[k * k];
+        if (threadIdx.x < k * k)
+        {
+          Xi_Sigma_shared[threadIdx.x] = Xi_Sigma[threadIdx.x];
+        }
+        __syncthreads();
+
+        for (index_type row = thread; row < n; row += gridDim.x * blockDim.x)
+        {
+          // #pragma unroll 1
+          for (index_type col = 0; col < k; col++)
+          {
+            real_type x_dot = 0;
+            real_type r_dot = 0;
+            // #pragma unroll 1
+            for (index_type i = 0; i < k; i++)
+            {
+              x_dot +=   S[i * n + row] * Xi_Sigma_shared[col * k + i];
+              r_dot -= A_S[i * n + row] * Xi_Sigma_shared[col * k + i];
+            }
+            X_res[col * n + row] += x_dot;
+            R_prec[col * n + row] += r_dot;
+          }
+        }
+      }
+      
+      template <index_type k>
+      __global__ void updateXR(real_type* __restrict__ Xi_inv,
+                               const real_type* __restrict__ Sigma,
+                               const real_type* __restrict__ S,
+                               const real_type* __restrict__ A_S,
+                               real_type* __restrict__ X_res,
+                               real_type* __restrict__ R_prec,
+                               index_type n)
+      {
+        index_type thread = blockIdx.x * blockDim.x + threadIdx.x;
+        index_type stride = gridDim.x * blockDim.x;
+      
+      // choleskyFactorize(Xi_inv), lower
+        __shared__ real_type Xi_inv_shared[k * (k + 1) / 2]; // Only need this much for kxk symmetric matrix
+        if constexpr (k <= 4)
+        {
+          if (threadIdx.x < 32) // k <= 4 for now
+          {
+            index_type i = threadIdx.x % k;
+            index_type j = threadIdx.x / k;
+            if ((i < k) && (j < k) && (i >= j))
+            {
+              Xi_inv_shared[indexLowerTriangular<k>(i, j)] = Xi_inv[j * k + i];
+            }
+            __syncwarp();
+
+            // // For warp size 64 and k <= 8, everything can be done in one warp
+            // if constexpr (k * (k + 1) / 2 > 64)
+            // {
+            //   __syncthreads();
+            // }
+
+            // Do all of this inside one warp. One thread per entry
+            // #pragma unroll 1
+            for (index_type h = 0; h < k; h++)
+            {
+              if (threadIdx.x == 0)
+              {
+                Xi_inv_shared[indexLowerTriangular<k>(h, h)] = sqrt(Xi_inv_shared[indexLowerTriangular<k>(h, h)]);
+              }
+              __syncwarp();
+              if (threadIdx.x > h && threadIdx.x < k)
+              {
+                Xi_inv_shared[indexLowerTriangular<k>(threadIdx.x, h)] /= Xi_inv_shared[indexLowerTriangular<k>(h, h)];
+              }
+              __syncwarp();
+              if ((j < k) && (j > h) && (i < k) && (i >= j))
+              {
+                Xi_inv_shared[indexLowerTriangular<k>(i, j)] -= Xi_inv_shared[indexLowerTriangular<k>(i, h)] * Xi_inv_shared[indexLowerTriangular<k>(j, h)];
+              }
+              __syncwarp();
+            }
+            
+            if ((i < k) && (j < k) && (blockIdx.x == 0))
+            {
+              if (i >= j)
+              {
+                Xi_inv[j * k + i] = Xi_inv_shared[indexLowerTriangular<k>(i, j)];
+              }
+              else
+              {
+                Xi_inv[j * k + i] = 0.0;
+              }
+            }
+          }
+        }
+        else
+        {
+          index_type i = threadIdx.x % k;
+          index_type j = threadIdx.x / k;
+          if ((i < k) && (j < k) && (i >= j))
+          {
+            Xi_inv_shared[indexLowerTriangular<k>(i, j)] = Xi_inv[j * k + i];
+          }
+          __syncthreads();
+
+          // #pragma unroll 1
+          for (index_type h = 0; h < k; h++)
+          {
+            if (threadIdx.x == 0)
+            {
+              Xi_inv_shared[indexLowerTriangular<k>(h, h)] = sqrt(Xi_inv_shared[indexLowerTriangular<k>(h, h)]);
+            }
+            __syncthreads();
+            if (threadIdx.x > h && threadIdx.x < k)
+            {
+              Xi_inv_shared[indexLowerTriangular<k>(threadIdx.x, h)] /= Xi_inv_shared[indexLowerTriangular<k>(h, h)];
+            }
+            __syncthreads();
+            if ((j < k) && (j > h) && (i < k) && (i >= j))
+            {
+              Xi_inv_shared[indexLowerTriangular<k>(i, j)] -= Xi_inv_shared[indexLowerTriangular<k>(i, h)] * Xi_inv_shared[indexLowerTriangular<k>(j, h)];
+            }
+            __syncthreads();
+          }
+          
+          if ((i < k) && (j < k) && (blockIdx.x == 0))
+          {
+            if (i >= j)
+            {
+              Xi_inv[j * k + i] = Xi_inv_shared[indexLowerTriangular<k>(i, j)];
+            }
+            else
+            {
+              Xi_inv[j * k + i] = 0.0;
+            }
+          }
+        }
+
+      // X = Xi * Sigma => Xi_inv * X = Sigma => L * L^T * X = Sigma, choleskySolve
+        __shared__ real_type Xi_Sigma_shared[k * k];
+        if constexpr (k <= 4)
+        {
+          if (threadIdx.x < 32) // k <= 4 for now. Still only one warp
+          {
+            if (threadIdx.x < k * k)
+            {
+              Xi_Sigma_shared[threadIdx.x] = Sigma[threadIdx.x];
+            }
+            __syncwarp(); // CUDA needs to __syncwarp() at all these places
+
+            //  L * Y = Sigma
+            if (threadIdx.x < k)
+            {
+              index_type col = threadIdx.x; // Talking about rows and columns of Sigma
+
+              // #pragma unroll 1
+              for (index_type row = 0; row < k; row++)
+              {
+                real_type y_local = Xi_Sigma_shared[col * k + row];
+                // #pragma unroll 1
+                for (index_type i = 0; i < row; i++)
+                {
+                  y_local -= Xi_Sigma_shared[col * k + i] * Xi_inv_shared[indexLowerTriangular<k>(row, i)]; // Xi_inv_shared can be overridden. Here it contains Y
+                }
+                y_local /= Xi_inv_shared[indexLowerTriangular<k>(row, row)];
+                Xi_Sigma_shared[col * k + row] = y_local;
+              }
+            }
+            __syncwarp();
+
+            //  L^T * X = Y
+            if (threadIdx.x < k)
+            {
+              index_type col = threadIdx.x; // Talking about rows and columns of Sigma
+
+              // #pragma unroll 1
+              for (index_type row = k - 1; row >= 0; row--)
+              {
+                real_type y_local = Xi_Sigma_shared[col * k + row];
+                // #pragma unroll 1
+                for (index_type i = row + 1; i < k; i++)
+                {
+                  y_local -= Xi_Sigma_shared[col * k + i] * Xi_inv_shared[indexLowerTriangular<k>(i, row)]; // Xi_inv_shared can be overridden. Here it contains Y
+                }
+                y_local /= Xi_inv_shared[indexLowerTriangular<k>(row, row)];
+                Xi_Sigma_shared[col * k + row] = y_local;
+              }
+            }
+          }
+        }
+        else
+        {
+          if (threadIdx.x < k * k)
+          {
+            Xi_Sigma_shared[threadIdx.x] = Sigma[threadIdx.x];
+          }
+          __syncthreads();
+
+          //  L * Y = Sigma
+          if (threadIdx.x < k)
+          {
+            index_type col = threadIdx.x; // Talking about rows and columns of Sigma
+
+            // #pragma unroll 1
+            for (index_type row = 0; row < k; row++)
+            {
+              real_type y_local = Xi_Sigma_shared[col * k + row];
+              // #pragma unroll 1
+              for (index_type i = 0; i < row; i++)
+              {
+                y_local -= Xi_Sigma_shared[col * k + i] * Xi_inv_shared[indexLowerTriangular<k>(row, i)]; // Xi_inv_shared can be overridden. Here it contains Y
+              }
+              y_local /= Xi_inv_shared[indexLowerTriangular<k>(row, row)];
+              Xi_Sigma_shared[col * k + row] = y_local;
+            }
+          }
+          __syncthreads();
+
+          //  L^T * X = Y
+          if (threadIdx.x < k)
+          {
+            index_type col = threadIdx.x; // Talking about rows and columns of Sigma
+
+            // #pragma unroll 1
+            for (index_type row = k - 1; row >= 0; row--)
+            {
+              real_type y_local = Xi_Sigma_shared[col * k + row];
+              // #pragma unroll 1
+              for (index_type i = row + 1; i < k; i++)
+              {
+                y_local -= Xi_Sigma_shared[col * k + i] * Xi_inv_shared[indexLowerTriangular<k>(i, row)]; // Xi_inv_shared can be overridden. Here it contains Y
+              }
+              y_local /= Xi_inv_shared[indexLowerTriangular<k>(row, row)];
+              Xi_Sigma_shared[col * k + row] = y_local;
+            }
+          }
+        }
+        __syncthreads();
+
+        for (index_type row = thread; row < n; row += gridDim.x * blockDim.x)
+        {
+          // #pragma unroll 1
+          for (index_type col = 0; col < k; col++)
+          {
+            real_type x_dot = 0;
+            real_type r_dot = 0;
+            // #pragma unroll 1
+            for (index_type i = 0; i < k; i++)
+            {
+              x_dot +=   S[i * n + row] * Xi_Sigma_shared[col * k + i];
+              r_dot -= A_S[i * n + row] * Xi_Sigma_shared[col * k + i];
+            }
+            X_res[col * n + row] += x_dot;
+            R_prec[col * n + row] += r_dot;
+          }
+        }
+      }
 
       // W = W - B * L^-1
       template <index_type k>
-      __global__ void updateW(__restrict__ real_type* W, const __restrict__ real_type* L, const __restrict__ real_type* B, __restrict__ index_type n)
+      __global__ void updateW(real_type* __restrict__ W, const real_type* __restrict__ L, real_type* __restrict__ B, index_type n)
       {
         index_type thread = blockIdx.x * blockDim.x + threadIdx.x;
         index_type stride = gridDim.x * blockDim.x;
@@ -563,13 +1103,36 @@ namespace ReSolve
           index_type j = threadIdx.x / k;
           if ((i < k) && (j < k) && (i >= j))
           {
-            L_shared[indexSymmetricLower<k>(i, j)] = L[j * k + i];
+            L_shared[indexLowerTriangular<k>(i, j)] = L[j * k + i];
           }
         }
         __syncthreads();
         
         for (index_type row = thread; row < n; row += stride)
         {
+          //  Y * L^T = B
+          real_type y_row[k];
+
+          #pragma unroll
+          for (index_type col = 0; col < k; col++)
+          {
+            real_type y_local = B[col * n + row];
+            #pragma unroll
+            for (index_type i = 0; i < col; i++)
+            {
+              y_local -= y_row[i] * L_shared[indexLowerTriangular<k>(col, i)]; // L^T[i, col]
+            }
+            y_local /= L_shared[indexLowerTriangular<k>(col, col)];
+            y_row[col] = y_local;
+          }
+
+          #pragma unroll
+          for (index_type col = 0; col < k; col++)
+          {
+            B[col * n + row] = y_row[col]; // Y is stored in B. B is overridden
+          }
+        
+          // X * L = Y
           real_type x_row[k];
 
           #pragma unroll
@@ -579,9 +1142,9 @@ namespace ReSolve
             #pragma unroll
             for (index_type i = col + 1; i < k; i++)
             {
-              x_local -= x_row[i] * L_shared[indexSymmetricLower<k>(i, col)];
+              x_local -= x_row[i] * L_shared[indexLowerTriangular<k>(i, col)];
             }
-            x_local /= L_shared[indexSymmetricLower<k>(col, col)];
+            x_local /= L_shared[indexLowerTriangular<k>(col, col)];
             x_row[col] = x_local;
           }
 
@@ -594,7 +1157,7 @@ namespace ReSolve
       }
 
       template <index_type k>
-      __global__ void multTSMTTSM(real_type* A, real_type* B, real_type* C, index_type n)
+      __global__ void multTSMTTSM(const real_type* A, const real_type* B, real_type* __restrict__ C, index_type n)
       {
         index_type thread = blockIdx.x * blockDim.x + threadIdx.x;
         index_type stride = gridDim.x * blockDim.x;
@@ -635,7 +1198,7 @@ namespace ReSolve
       }
     
       template <index_type k, index_type BLOCK_DIM>
-      __global__ void updateSSigma(const __restrict__ real_type* W, __restrict__ real_type* S, const __restrict__ real_type* Zeta, __restrict__ real_type* Sigma, index_type n)
+      __global__ void updateSSigma(const real_type* __restrict__ W, real_type* __restrict__ S, const real_type* __restrict__ Zeta, real_type* __restrict__ Sigma, index_type n)
       {
         index_type thread = blockIdx.x * BLOCK_DIM + threadIdx.x;
 
@@ -725,6 +1288,18 @@ namespace ReSolve
           Sigma[thread] = result_shared[thread];
         }
       }
+
+      __global__ void preconditionDense(real_type* __restrict__ A, const real_type* __restrict__ d, index_type n)
+      {
+        int thread = blockIdx.x * blockDim.x + threadIdx.x;
+        
+        if (thread < n * n)
+        {
+          int row = thread % n;
+          int col = thread / n;
+          A[thread] *= (d[row] * d[col]);
+        }
+      }
     } // namespace kernels
     
     RandomizedConjugateGradientCuda::RandomizedConjugateGradientCuda(VectorHandler* vector_handler)
@@ -749,6 +1324,8 @@ namespace ReSolve
       cusparseDestroyMatDescr(descrA_);
       cusolverSpDestroyCsrcholInfo(factorizationInfo_);
       mem_.deleteOnDevice(buffer_);
+      mem_.deleteOnDevice(d_best_basis_);
+      mem_.deleteOnDevice(d_sq_norms_);
     }
 
     int RandomizedConjugateGradientCuda::setup(index_type k)
@@ -793,65 +1370,8 @@ namespace ReSolve
 
       return 0;
     }
-    
-// int RandomizedConjugateGradientCuda::SpMMTallSkinny(matrix::Csr* A, vector::Vector* X, vector::Vector* result)
-//   {
-//     index_type n = A->getNumRows();
-//     index_type k = X->getNumVectors();
 
-//     dim3      block_size = dim3(256 / k, k);
-//     int       num_blocks = (n * 32 + block_size.x - 1) / block_size.x;
-
-//     switch (k)
-//     {
-//     case 1:
-//       kernels::SpMMTallSkinnyKernelVectorMod<1><<<num_blocks, block_size>>>(A->getRowData(memory::DEVICE),
-//                                                               A->getColData(memory::DEVICE),
-//                                                               A->getValues(memory::DEVICE),
-//                                                               X->getData(memory::DEVICE),
-//                                                               result->getData(memory::DEVICE),
-//                                                               n);
-//       break;
-//     case 2:
-//       kernels::SpMMTallSkinnyKernelVectorMod<2><<<num_blocks, block_size>>>(A->getRowData(memory::DEVICE),
-//                                                               A->getColData(memory::DEVICE),
-//                                                               A->getValues(memory::DEVICE),
-//                                                               X->getData(memory::DEVICE),
-//                                                               result->getData(memory::DEVICE),
-//                                                               n);
-//       break;
-//     case 4:
-//       kernels::SpMMTallSkinnyKernelVectorMod<4><<<num_blocks, block_size>>>(A->getRowData(memory::DEVICE),
-//                                                               A->getColData(memory::DEVICE),
-//                                                               A->getValues(memory::DEVICE),
-//                                                               X->getData(memory::DEVICE),
-//                                                               result->getData(memory::DEVICE),
-//                                                               n);
-//       break;
-//     case 8:
-//       kernels::SpMMTallSkinnyKernelVectorMod<8><<<num_blocks, block_size>>>(A->getRowData(memory::DEVICE),
-//                                                               A->getColData(memory::DEVICE),
-//                                                               A->getValues(memory::DEVICE),
-//                                                               X->getData(memory::DEVICE),
-//                                                               result->getData(memory::DEVICE),
-//                                                               n);
-//       break;
-//     case 16:
-//       kernels::SpMMTallSkinnyKernelVectorMod<16><<<num_blocks, block_size>>>(A->getRowData(memory::DEVICE),
-//                                                               A->getColData(memory::DEVICE),
-//                                                               A->getValues(memory::DEVICE),
-//                                                               X->getData(memory::DEVICE),
-//                                                               result->getData(memory::DEVICE),
-//                                                               n);
-//       break;
-//     default:
-//       return 1;
-//     }
-    
-//     return 0;
-//   }
-
-int RandomizedConjugateGradientCuda::SpMMTallSkinny(matrix::Csr* A, vector::Vector* X, vector::Vector* result)
+  int RandomizedConjugateGradientCuda::SpMMTallSkinny(matrix::Csr* A, vector::Vector* X, vector::Vector* result)
     {
       index_type n = A->getNumRows();
       index_type k = X->getNumVectors();
@@ -859,50 +1379,66 @@ int RandomizedConjugateGradientCuda::SpMMTallSkinny(matrix::Csr* A, vector::Vect
       constexpr int       block_size = 256;
       int       num_blocks = (n * 32 + block_size - 1) / block_size;
 
-      switch (k)
+      
+      #define SPMM_LAUNCH(THREADS_PER_ROW) \
+        switch (k) \
+        { \
+        case 1: \
+          kernels::SpMMTallSkinnyKernelVector<1, block_size, THREADS_PER_ROW><<<num_blocks, block_size>>>(A->getRowData(memory::DEVICE), \
+                                                                  A->getColData(memory::DEVICE), \
+                                                                  A->getValues(memory::DEVICE), \
+                                                                  X->getData(memory::DEVICE), \
+                                                                  result->getData(memory::DEVICE), \
+                                                                  n); \
+          break; \
+        case 2: \
+          kernels::SpMMTallSkinnyKernelVector<2, block_size, THREADS_PER_ROW><<<num_blocks, block_size>>>(A->getRowData(memory::DEVICE), \
+                                                                  A->getColData(memory::DEVICE), \
+                                                                  A->getValues(memory::DEVICE), \
+                                                                  X->getData(memory::DEVICE), \
+                                                                  result->getData(memory::DEVICE), \
+                                                                  n); \
+          break; \
+        case 4: \
+          kernels::SpMMTallSkinnyKernelVector<4, block_size, THREADS_PER_ROW><<<num_blocks, block_size>>>(A->getRowData(memory::DEVICE), \
+                                                                  A->getColData(memory::DEVICE), \
+                                                                  A->getValues(memory::DEVICE), \
+                                                                  X->getData(memory::DEVICE), \
+                                                                  result->getData(memory::DEVICE), \
+                                                                  n); \
+          break; \
+        case 8: \
+          kernels::SpMMTallSkinnyKernelVector<8, block_size, THREADS_PER_ROW><<<num_blocks, block_size>>>(A->getRowData(memory::DEVICE), \
+                                                                  A->getColData(memory::DEVICE), \
+                                                                  A->getValues(memory::DEVICE), \
+                                                                  X->getData(memory::DEVICE), \
+                                                                  result->getData(memory::DEVICE), \
+                                                                  n); \
+          break; \
+        case 16: \
+          kernels::SpMMTallSkinnyKernelVector<16, block_size, THREADS_PER_ROW><<<num_blocks, block_size>>>(A->getRowData(memory::DEVICE), \
+                                                                  A->getColData(memory::DEVICE), \
+                                                                  A->getValues(memory::DEVICE), \
+                                                                  X->getData(memory::DEVICE), \
+                                                                  result->getData(memory::DEVICE), \
+                                                                  n); \
+          break; \
+        default: \
+          return 1; \
+        }
+
+      int nnz_ratio = A->getNnz() / n;
+      if (nnz_ratio >= 32)
       {
-      case 1:
-        kernels::SpMMTallSkinnyKernelVector<1, block_size><<<num_blocks, block_size>>>(A->getRowData(memory::DEVICE),
-                                                                A->getColData(memory::DEVICE),
-                                                                A->getValues(memory::DEVICE),
-                                                                X->getData(memory::DEVICE),
-                                                                result->getData(memory::DEVICE),
-                                                                n);
-        break;
-      case 2:
-        kernels::SpMMTallSkinnyKernelVector<2, block_size><<<num_blocks, block_size>>>(A->getRowData(memory::DEVICE),
-                                                                A->getColData(memory::DEVICE),
-                                                                A->getValues(memory::DEVICE),
-                                                                X->getData(memory::DEVICE),
-                                                                result->getData(memory::DEVICE),
-                                                                n);
-        break;
-      case 4:
-        kernels::SpMMTallSkinnyKernelVector<4, block_size><<<num_blocks, block_size>>>(A->getRowData(memory::DEVICE),
-                                                                A->getColData(memory::DEVICE),
-                                                                A->getValues(memory::DEVICE),
-                                                                X->getData(memory::DEVICE),
-                                                                result->getData(memory::DEVICE),
-                                                                n);
-        break;
-      case 8:
-        kernels::SpMMTallSkinnyKernelVector<8, block_size><<<num_blocks, block_size>>>(A->getRowData(memory::DEVICE),
-                                                                A->getColData(memory::DEVICE),
-                                                                A->getValues(memory::DEVICE),
-                                                                X->getData(memory::DEVICE),
-                                                                result->getData(memory::DEVICE),
-                                                                n);
-        break;
-      case 16:
-        kernels::SpMMTallSkinnyKernelVector<16, block_size><<<num_blocks, block_size>>>(A->getRowData(memory::DEVICE),
-                                                                A->getColData(memory::DEVICE),
-                                                                A->getValues(memory::DEVICE),
-                                                                X->getData(memory::DEVICE),
-                                                                result->getData(memory::DEVICE),
-                                                                n);
-        break;
-      default:
-        return 1;
+        SPMM_LAUNCH(32);
+      }
+      else if (nnz_ratio >= 5) // up to 25
+      {
+        SPMM_LAUNCH(8);
+      }
+      else
+      {
+        SPMM_LAUNCH(2);
       }
       
       return 0;
@@ -940,7 +1476,7 @@ int RandomizedConjugateGradientCuda::SpMMTallSkinny(matrix::Csr* A, vector::Vect
         return 1;
       }
 
-      cudaMemcpyAsync(h_best_basis, d_best_basis_, sizeof(real_type), cudaMemcpyDeviceToHost);
+      cudaMemcpyAsync(h_best_basis, d_best_basis_, sizeof(index_type), cudaMemcpyDeviceToHost);
       cudaMemcpyAsync(h_best_basis_norm, d_sq_norms_, sizeof(real_type), cudaMemcpyDeviceToHost);
 
       return 0;
@@ -978,6 +1514,210 @@ int RandomizedConjugateGradientCuda::SpMMTallSkinny(matrix::Csr* A, vector::Vect
       
       if (status != cudaSuccess) {
           return 1;
+      }
+
+      return 0;
+    }
+    
+    int RandomizedConjugateGradientCuda::updateXRSplit(vector::Vector* Xi_inv, vector::Vector* Sigma, vector::Vector* S, vector::Vector* A_S, vector::Vector* Xi_Sigma, vector::Vector* X_res, vector::Vector* R_prec)
+    {
+      index_type n = A_S->getSize();
+      index_type k = A_S->getNumVectors();
+
+      int       block_size = (k <= 4) ? 32 : 64; // Must be at least k^2
+      int       num_blocks = 1; // quite arbitrary
+
+      switch (k)
+      {
+      case 1:
+        kernels::choleskyFactorizeSolve<1><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+                                                         Sigma->getData(memory::DEVICE),
+                                                         Xi_Sigma->getData(memory::DEVICE));
+        break;
+      case 2:
+        kernels::choleskyFactorizeSolve<2><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+                                                         Sigma->getData(memory::DEVICE),
+                                                         Xi_Sigma->getData(memory::DEVICE));
+        break;
+      case 4:
+        kernels::choleskyFactorizeSolve<4><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+                                                         Sigma->getData(memory::DEVICE),
+                                                         Xi_Sigma->getData(memory::DEVICE));
+        break;
+      case 8:
+        kernels::choleskyFactorizeSolve<8><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+                                                         Sigma->getData(memory::DEVICE),
+                                                         Xi_Sigma->getData(memory::DEVICE));
+        break;
+      case 16:
+        kernels::choleskyFactorizeSolve<16><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+                                                         Sigma->getData(memory::DEVICE),
+                                                         Xi_Sigma->getData(memory::DEVICE));
+        break;
+      default:
+        return 1;
+      }
+
+      block_size = 256; // Must be at least k^2
+      num_blocks = num_sms_ * 64; // quite arbitrary
+
+      switch (k)
+      {
+      case 1:
+        kernels::updateXRSplit<1><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+                                                         Sigma->getData(memory::DEVICE),
+                                                         S->getData(memory::DEVICE),
+                                                         A_S->getData(memory::DEVICE),
+                                                         Xi_Sigma->getData(memory::DEVICE),
+                                                         X_res->getData(memory::DEVICE),
+                                                         R_prec->getData(memory::DEVICE),
+                                                         n);
+        break;
+      case 2:
+        kernels::updateXRSplit<2><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+                                                         Sigma->getData(memory::DEVICE),
+                                                         S->getData(memory::DEVICE),
+                                                         A_S->getData(memory::DEVICE),
+                                                         Xi_Sigma->getData(memory::DEVICE),
+                                                         X_res->getData(memory::DEVICE),
+                                                         R_prec->getData(memory::DEVICE),
+                                                         n);
+        break;
+      case 4:
+        kernels::updateXRSplit<4><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+                                                         Sigma->getData(memory::DEVICE),
+                                                         S->getData(memory::DEVICE),
+                                                         A_S->getData(memory::DEVICE),
+                                                         Xi_Sigma->getData(memory::DEVICE),
+                                                         X_res->getData(memory::DEVICE),
+                                                         R_prec->getData(memory::DEVICE),
+                                                         n);
+        break;
+      case 8:
+        kernels::updateXRSplit<8><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+                                                         Sigma->getData(memory::DEVICE),
+                                                         S->getData(memory::DEVICE),
+                                                         A_S->getData(memory::DEVICE),
+                                                         Xi_Sigma->getData(memory::DEVICE),
+                                                         X_res->getData(memory::DEVICE),
+                                                         R_prec->getData(memory::DEVICE),
+                                                         n);
+        break;
+      case 16:
+        kernels::updateXRSplit<16><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+                                                         Sigma->getData(memory::DEVICE),
+                                                         S->getData(memory::DEVICE),
+                                                         A_S->getData(memory::DEVICE),
+                                                         Xi_Sigma->getData(memory::DEVICE),
+                                                         X_res->getData(memory::DEVICE),
+                                                         R_prec->getData(memory::DEVICE),
+                                                         n);
+        break;
+      default:
+        return 1;
+      }
+
+      return 0;
+    }
+
+    int RandomizedConjugateGradientCuda::choleskyFactorizeSolve(vector::Vector* A, vector::Vector* B, vector::Vector* X)
+    {
+      index_type k = A->getSize();
+
+      int       block_size = (k <= 4) ? 32 : 64; // Must be at least k^2
+      int       num_blocks = 1; // quite arbitrary
+
+      switch (k)
+      {
+      case 1:
+        kernels::choleskyFactorizeSolve<1><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
+                                                         B->getData(memory::DEVICE),
+                                                         X->getData(memory::DEVICE));
+        break;
+      case 2:
+        kernels::choleskyFactorizeSolve<2><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
+                                                         B->getData(memory::DEVICE),
+                                                         X->getData(memory::DEVICE));
+        break;
+      case 4:
+        kernels::choleskyFactorizeSolve<4><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
+                                                         B->getData(memory::DEVICE),
+                                                         X->getData(memory::DEVICE));
+        break;
+      case 8:
+        kernels::choleskyFactorizeSolve<8><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
+                                                         B->getData(memory::DEVICE),
+                                                         X->getData(memory::DEVICE));
+        break;
+      case 16:
+        kernels::choleskyFactorizeSolve<16><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
+                                                         B->getData(memory::DEVICE),
+                                                         X->getData(memory::DEVICE));
+        break;
+      default:
+        return 1;
+      }
+
+      return 0;
+    }
+    
+    int RandomizedConjugateGradientCuda::updateXR(vector::Vector* Xi_inv, vector::Vector* Sigma, vector::Vector* S, vector::Vector* A_S, vector::Vector* X_res, vector::Vector* R_prec)
+    {
+      index_type n = A_S->getSize();
+      index_type k = A_S->getNumVectors();
+
+      int       block_size = 256; // Must be at least k^2
+      int       num_blocks = num_sms_ * 64; // quite arbitrary
+
+      switch (k)
+      {
+      case 1:
+        kernels::updateXR<1><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+                                                         Sigma->getData(memory::DEVICE),
+                                                         S->getData(memory::DEVICE),
+                                                         A_S->getData(memory::DEVICE),
+                                                         X_res->getData(memory::DEVICE),
+                                                         R_prec->getData(memory::DEVICE),
+                                                         n);
+        break;
+      case 2:
+        kernels::updateXR<2><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+                                                         Sigma->getData(memory::DEVICE),
+                                                         S->getData(memory::DEVICE),
+                                                         A_S->getData(memory::DEVICE),
+                                                         X_res->getData(memory::DEVICE),
+                                                         R_prec->getData(memory::DEVICE),
+                                                         n);
+        break;
+      case 4:
+        kernels::updateXR<4><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+                                                         Sigma->getData(memory::DEVICE),
+                                                         S->getData(memory::DEVICE),
+                                                         A_S->getData(memory::DEVICE),
+                                                         X_res->getData(memory::DEVICE),
+                                                         R_prec->getData(memory::DEVICE),
+                                                         n);
+        break;
+      case 8:
+        kernels::updateXR<8><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+                                                         Sigma->getData(memory::DEVICE),
+                                                         S->getData(memory::DEVICE),
+                                                         A_S->getData(memory::DEVICE),
+                                                         X_res->getData(memory::DEVICE),
+                                                         R_prec->getData(memory::DEVICE),
+                                                         n);
+        break;
+      case 16:
+        kernels::updateXR<16><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+                                                         Sigma->getData(memory::DEVICE),
+                                                         S->getData(memory::DEVICE),
+                                                         A_S->getData(memory::DEVICE),
+                                                         X_res->getData(memory::DEVICE),
+                                                         R_prec->getData(memory::DEVICE),
+                                                         n);
+        break;
+      default:
+        return 1;
       }
 
       return 0;
@@ -1086,7 +1826,7 @@ int RandomizedConjugateGradientCuda::SpMMTallSkinny(matrix::Csr* A, vector::Vect
 
       // One thread per row for S = W + S * Zeta^T
       // One block for Sigma = Zeta * Sigma
-      constexpr int block_size = 128; // Must be at least k^2
+      constexpr int block_size = 128; // Must be at least k^2. IMPROVE UPON THIS??
       int           num_blocks = (n + block_size - 1) / block_size + 1;
 
       switch (k)
@@ -1129,6 +1869,17 @@ int RandomizedConjugateGradientCuda::SpMMTallSkinny(matrix::Csr* A, vector::Vect
       default:
         return 1;
       }
+
+      return 0;
+    }
+
+    int RandomizedConjugateGradientCuda::preconditionDense(vector::Vector* A, vector::Vector* d)
+    {
+      index_type n = A->getSize();
+
+      constexpr int block_size = 256;
+      int num_blocks = (n * n + block_size - 1) / block_size;
+      kernels::preconditionDense<<<num_blocks, block_size>>>(A->getData(memory::DEVICE), d->getData(memory::DEVICE), n);
 
       return 0;
     }

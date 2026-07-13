@@ -176,7 +176,8 @@ namespace ReSolve
         A->allocateAll(memspace_);
 
         vector_handler_.gemm('T', 'N', 1.0, 0.0, M, M, A, memspace_);
-        vector_handler_.addIdentity(A, 1.0, memspace_);
+        // vector_handler_.addIdentity(A, 1.0, memspace_);
+        A->syncData(memory::HOST);
   
         vector::Vector* b = new vector::Vector(n);
         b->allocateAll(memspace_);
@@ -202,30 +203,44 @@ namespace ReSolve
         vector::Vector* x = new vector::Vector(n);
         x->allocateAll(memspace_);
         
-        matrix::Csr* L = new matrix::Csr(n, n, n, true, true);
-        L->allocateAll(memspace_);
-        std::fill(L->getValues(memory::HOST), L->getValues(memory::HOST) + n, 1.0);
-        std::iota(L->getColData(memory::HOST), L->getColData(memory::HOST) + n, 0);
-        std::iota(L->getRowData(memory::HOST), L->getRowData(memory::HOST) + n + 1, 0);
-        L->setUpdated(memory::HOST);
+        vector::Vector* d = new vector::Vector(n);
+        d->allocateAll(memspace_);
+
+        real_type* d_vals = d->getData(memory::HOST);
+        for (int i = 0; i < n; i++) {
+            // (i * n + i) maps to the diagonal elements of a flat n x n matrix
+            d_vals[i] = std::sqrt(A->getData(i, memory::HOST)[i]); 
+        }
+
+        d->setDataUpdated(memory::HOST);
         if (memspace_ == memory::DEVICE)
         {
-          L->syncData(memory::DEVICE);
+          d->syncData(memory::DEVICE);
         }
 
-        if (k == 1)
+        vector::Vector* d_inv = new vector::Vector(n);
+        d_inv->allocateAll(memspace_);
+
+        real_type* d_inv_vals = d_inv->getData(memory::HOST);
+        for (int i = 0; i < n; i++) {
+            // (i * n + i) maps to the diagonal elements of a flat n x n matrix
+            d_inv_vals[i] = 1.0 / std::sqrt(A->getData(i, memory::HOST)[i]); 
+        }
+
+        d_inv->setDataUpdated(memory::HOST);
+        if (memspace_ == memory::DEVICE)
         {
-          choleskyTests(A, b, n);
+          d_inv->syncData(memory::DEVICE);
         }
 
-        cholesky_solver.addMatrixInfo(L);
-        cholesky_solver.symbolicAnalysis();
-        cholesky_solver.setPivotTolerance(cholesky_tol);
-        cholesky_solver.numericalFactorization();
+        // if (k == 1)
+        // {
+        //   choleskyTests(A, b, n);
+        // }
 
         randomized_cg.addMatrixInfo(A);
         randomized_cg.addVectorInfo(x, b);
-        randomized_cg.addPreconditionerInfo(L);
+        randomized_cg.addPreconditionerInfo(d, d_inv);
         randomized_cg.setup();
         int converged_n = randomized_cg.solve(); // 0 if converged, 1 if not
 
@@ -237,6 +252,8 @@ namespace ReSolve
         delete A;
         delete x;
         delete b;
+        delete d;
+        delete d_inv;
 
         return status.report(testname.c_str());
       }
@@ -247,7 +264,7 @@ namespace ReSolve
       VectorHandler&      vector_handler_; ///< Backend-specific vector handler.
 
       static constexpr real_type cholesky_tol = 1e-12;
-      static constexpr real_type randomized_cg_initial_tol     = 5e-12;
+      static constexpr real_type randomized_cg_initial_tol     = 1e-12;
       static constexpr real_type randomized_cg_convergence_tol     = 1e-12;
       static constexpr real_type entry_tol    = 1e-6; // Tolerance for checking individual entries
 

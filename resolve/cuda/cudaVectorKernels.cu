@@ -72,6 +72,7 @@ namespace ReSolve
        * @todo Decide how to allow user to configure grid and block sizes.
        */
       __global__ void scale(index_type       n,
+                            index_type       k,
                             const real_type* d_val,
                             real_type*       vec)
       {
@@ -79,10 +80,10 @@ namespace ReSolve
         index_type idx = blockIdx.x * blockDim.x + threadIdx.x;
 
         // Check if the index is within bounds
-        if (idx < n)
+        if (idx < n * k)
         {
           // Scale the vector element by the corresponding diagonal value
-          vec[idx] *= d_val[idx];
+          vec[idx] *= d_val[idx & (k - 1)]; // k is a power of 2
         }
       }
 
@@ -258,14 +259,15 @@ namespace ReSolve
      * @todo Decide how to allow user to configure grid and block sizes.
      */
     void scale(index_type       n,
+               index_type       k,
                const real_type* diag,
                real_type*       vec)
     {
       // Define block size and number of blocks
       const int block_size = 256;
-      int       num_blocks = (n + block_size - 1) / block_size;
+      int       num_blocks = (n * k + block_size - 1) / block_size;
       // Launch the kernel
-      kernels::scale<<<num_blocks, block_size>>>(n, diag, vec);
+      kernels::scale<<<num_blocks, block_size>>>(n, k, diag, vec);
     }
 
     /**

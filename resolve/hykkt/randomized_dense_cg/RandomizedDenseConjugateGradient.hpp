@@ -8,6 +8,7 @@
 #include <resolve/Common.hpp>
 #include <resolve/GramSchmidt.hpp>
 #include <resolve/hykkt/cholesky/CholeskySolver.hpp>
+#include <resolve/hykkt/randomized_cg/RandomizedConjugateGradientImpl.hpp>
 #include <resolve/MemoryUtils.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
@@ -47,7 +48,7 @@ namespace ReSolve
 
       void addMatrixInfo(vector::Vector* A);
       void addVectorInfo(vector::Vector* x_0, vector::Vector* b);
-      void addPreconditionerInfo(matrix::Csr* L);
+      void addPreconditionerInfo(vector::Vector* d_, vector::Vector* d_inv_);
       void setSolverTolerance(double initial_tol, double convergence_tol);
       void setSolverItmax(int itmax);
 
@@ -61,7 +62,7 @@ namespace ReSolve
     private:
       index_type n_;             // Dimension of outer system
       index_type k_;             // 
-      int        itmax_ = 3000;   // Maximum iterations for conjugate gradient
+      int        itmax_ = 28000;   // Maximum iterations for conjugate gradient
       real_type  initial_tol_   = 1e-12; // Solver tolerance for Schur
       real_type  convergence_tol_   = 1e-12; // Solver tolerance for Schur
     
@@ -70,6 +71,7 @@ namespace ReSolve
       
       CholeskySolver* cholesky_solver_{nullptr};
       GramSchmidt gram_schmidt_;
+      RandomizedConjugateGradientImpl* impl_{nullptr};
 
       vector::Vector* A_{nullptr};
       vector::Vector* x_{nullptr};   // LHS of entire system
@@ -81,7 +83,8 @@ namespace ReSolve
       // Matrices used for conjugate gradient
       vector::Vector* A_prec_{nullptr};
       vector::Vector* A_prec_tr_{nullptr};
-      matrix::Csr* L_{nullptr};
+      vector::Vector* d_{nullptr};
+      vector::Vector* d_inv_{nullptr};
 
       // Vectors used for conjugate gradient
       vector::Vector* X_prec_0_{nullptr};

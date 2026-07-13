@@ -1,6 +1,6 @@
 # Add source files for the RandomizedDenseCG module
-set(RandomizedDenseCG_SRC RandomizedDenseConjugateGradient.cpp)
-set(RandomizedDenseCG_HEADER_INSTALL RandomizedDenseConjugateGradient.hpp)
+set(RandomizedDenseCG_SRC RandomizedDenseConjugateGradient.cpp ${CMAKE_SOURCE_DIR}/resolve/hykkt/randomized_cg/RandomizedConjugateGradientCuda.cu ${CMAKE_SOURCE_DIR}/resolve/hykkt/randomized_cg/RandomizedConjugateGradientHip.hip)
+set(RandomizedDenseCG_HEADER_INSTALL RandomizedDenseConjugateGradient.hpp ${CMAKE_SOURCE_DIR}/resolve/hykkt/randomized_cg/RandomizedConjugateGradientCuda.hpp ${CMAKE_SOURCE_DIR}/resolve/hykkt/randomized_cg/RandomizedConjugateGradientHip.hpp)
 
 # Build shared library ReSolve::hykkt
 add_library(resolve_hykkt_randomized_dense_cg SHARED ${RandomizedDenseCG_SRC})

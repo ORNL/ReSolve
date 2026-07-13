@@ -48,7 +48,7 @@ namespace ReSolve
 
       void addMatrixInfo(matrix::Csr* A);
       void addVectorInfo(vector::Vector* x_0, vector::Vector* b);
-      void addPreconditionerInfo(vector::Vector* d_inv);
+      void addPreconditionerInfo(vector::Vector* d, vector::Vector* d_inv);
       void setSolverTolerance(double tol);
       void setSolverItmax(int itmax);
 
@@ -58,7 +58,7 @@ namespace ReSolve
 
     private:
       index_type n_;             // Dimension of outer system
-      int        itmax_ = 70000;   // Maximum iterations for conjugate gradient
+      int        itmax_ = 400000;   // Maximum iterations for conjugate gradient
       double     tol_   = 1e-12; // Solver tolerance for Schur
 
       MatrixHandler* matrix_handler_{nullptr}; ///< Backend-specific matrix handler.
@@ -72,6 +72,7 @@ namespace ReSolve
       vector::Vector* b_{nullptr};   // RHS of entire system
 
       matrix::Csr* A_prec_{nullptr};
+      vector::Vector* d_{nullptr};
       vector::Vector* d_inv_{nullptr};
 
       // scalars used for conjugate gradient

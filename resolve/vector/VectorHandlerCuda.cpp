@@ -81,7 +81,7 @@ namespace ReSolve
   {
     cublasHandle_t handle_cublas = workspace_->getCublasHandle();
     cublasStatus_t st            = cublasDscal(handle_cublas,
-                                    x->getSize(),
+                                    x->getSize() * x->getNumVectors(),
                                     &alpha,
                                     x->getData(memory::DEVICE),
                                     1);
@@ -194,7 +194,7 @@ namespace ReSolve
                   &beta,
                   x->getData(memory::DEVICE),
                   1);
-      return;
+      break;
     case 'N':
       assert((V->getSize() == x->getSize())
              && "gemv: Size mismatch! Size of V does not match size of x.");
@@ -513,7 +513,8 @@ namespace ReSolve
     real_type* diag_data = diag->getData(memory::DEVICE);
     real_type* vec_data  = vec->getData(memory::DEVICE);
     index_type n         = vec->getSize();
-    cuda::scale(n, diag_data, vec_data);
+    index_type k         = vec->getNumVectors();
+    cuda::scale(n, k, diag_data, vec_data);
     vec->setDataUpdated(memory::DEVICE);
   }
 
@@ -536,7 +537,8 @@ namespace ReSolve
     real_type* diag_data = &diag->getData(memory::DEVICE)[diag_offset];
     real_type* vec_data  = vec->getData(memory::DEVICE);
     index_type n         = vec->getSize();
-    cuda::scale(n, diag_data, vec_data);
+    index_type k         = vec->getNumVectors();
+    cuda::scale(n, k, diag_data, vec_data);
     vec->setDataUpdated(memory::DEVICE);
   }
   

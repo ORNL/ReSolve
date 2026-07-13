@@ -45,6 +45,8 @@ namespace ReSolve
 
     int rightScale(matrix::Csr* A, vector_type* diag) override;
 
+    int extractRootDiagonal(matrix::Csr* A, vector_type* diag) override;
+
     int extractInverseRootDiagonal(matrix::Csr* A, vector_type* diag) override;
 
     virtual int matvec(matrix::Sparse*  A,

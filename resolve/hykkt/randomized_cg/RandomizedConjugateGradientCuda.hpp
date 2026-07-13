@@ -29,10 +29,13 @@ namespace ReSolve
       int SpMMTallSkinny(matrix::Csr* A, vector::Vector* X, vector::Vector* result);
       int bestBasis(vector::Vector* R, index_type* h_best_basis, real_type* h_best_basis_norm);
       int choleskyQr(vector::Vector* W, vector::Vector* R, memory::MemorySpace memspace);
+      int updateXRSplit(vector::Vector* Xi_inv, vector::Vector* Sigma, vector::Vector* S, vector::Vector* A_S, vector::Vector* Xi_Sigma, vector::Vector* X_res, vector::Vector* R_prec);
+      int updateXR(vector::Vector* Xi_inv, vector::Vector* Sigma, vector::Vector* S, vector::Vector* A_S, vector::Vector* X_res, vector::Vector* R_prec);
+      int choleskyFactorizeSolve(vector::Vector* A, vector::Vector* B, vector::Vector* X);
       int updateW(vector::Vector* W, vector::Vector* L, vector::Vector* B, memory::MemorySpace memspace);
       int multTSMTTSM(vector::Vector* A, vector::Vector* B, vector::Vector* C, memory::MemorySpace memspace);
       int updateSSigma(vector::Vector* W, vector::Vector* S, vector::Vector* Zeta, vector::Vector* Sigma, memory::MemorySpace memspace);
-      // int innerProductTSM(vector::Vector* A, vector::Vector* result, memory::MemorySpace memspace);
+      int preconditionDense(vector::Vector* A, vector::Vector* d);
 
     private:
       MemoryHandler mem_;

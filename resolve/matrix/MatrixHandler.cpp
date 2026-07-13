@@ -362,6 +362,21 @@ namespace ReSolve
     }
     return 1;
   }
+
+    int MatrixHandler::extractRootDiagonal(matrix::Csr* A, vector_type* diag, memory::MemorySpace memspace)
+  {
+    using namespace ReSolve::memory;
+    switch (memspace)
+    {
+    case HOST:
+      return cpuImpl_->extractRootDiagonal(A, diag);
+      break;
+    case DEVICE:
+      return devImpl_->extractRootDiagonal(A, diag);
+      break;
+    }
+    return 1;
+  }
   
   int MatrixHandler::extractInverseRootDiagonal(matrix::Csr* A, vector_type* diag, memory::MemorySpace memspace)
   {

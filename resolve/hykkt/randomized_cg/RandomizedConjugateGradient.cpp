@@ -4,6 +4,8 @@
 #include <cmath>
 #include <chrono>
 #include <limits>
+#include <iomanip>
+#include <limits>
 
 #include <resolve/Common.hpp>
 #include <resolve/utilities/logger/Logger.hpp>
@@ -101,8 +103,9 @@ namespace ReSolve
      * @param[in] L - Pointer to the lower triangular preconditioner matrix (L) in CSR format.
      * @param[in] L_tr_ - Pointer to the transpose preconditioner matrix (L^T) in CSR format.
      */
-    void RandomizedConjugateGradient::addPreconditionerInfo(vector::VectorDistributed* d_inv)
+    void RandomizedConjugateGradient::addPreconditionerInfo(vector::Vector* d, vector::Vector* d_inv)
     {
+      d_ = d;
       d_inv_ = d_inv;
     }
 
@@ -220,6 +223,7 @@ namespace ReSolve
       
       std::chrono::time_point<std::chrono::steady_clock> start;
       std::chrono::time_point<std::chrono::steady_clock> end;
+      start = std::chrono::steady_clock::now();
 
       precondition();
       generateGuesses();
@@ -239,70 +243,69 @@ namespace ReSolve
         // todo: fallback
       }
 
-      A_prec_->syncData(memory::HOST);
-
       // S = L^-1 * W
-      S_->copyFromExternal(W_, 0, memspace_, memspace_);
-      start = std::chrono::steady_clock::now();
+      S_->copyFromExternal(W_, memspace_, memspace_);
 
       int i;
       for (i = 0; i < itmax_; i++)
       {
-        deviceSynchronize();
-        auto it_start = std::chrono::steady_clock::now();
+        // deviceSynchronize(); // optional
+        // auto it_start = std::chrono::steady_clock::now();
         
-        // A * S
-        auto spmv_start = std::chrono::steady_clock::now();
-        // Xi_inv = S^T * (A * S)
+        // 1. SpMM / SpMV Section
+        // auto spmv_start = std::chrono::steady_clock::now();
         // matrix_handler_->matvec(A_prec_, S_, Temp_nxk_, &ONE, &ZERO, memspace_);
         impl_->SpMMTallSkinny(A_prec_, S_, Temp_nxk_);
-        deviceSynchronize();
-        auto spmv_end = std::chrono::steady_clock::now();
-        printf("  [it %d] spmv: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(spmv_end - spmv_start).count());
+        // deviceSynchronize(); // optional
+        // auto spmv_end = std::chrono::steady_clock::now();
+        // printf("  [it %d] spmv: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(spmv_end - spmv_start).count()); // optional
 
-        // S^T * (A * S)
-        auto gemm_xi_start = std::chrono::steady_clock::now();
+        // 2. S^T * (A * S) GEMM Section
+        // auto gemm_xi_start = std::chrono::steady_clock::now();
         // vector_handler_->gemm('T', 'N', ONE, ZERO, S_, Temp_nxk_, Xi_inv_, memspace_);
         impl_->multTSMTTSM(S_, Temp_nxk_, Xi_inv_, memspace_);
-        deviceSynchronize();
-        auto gemm_xi_end = std::chrono::steady_clock::now();
-        printf("  [it %d] gemm_xi: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(gemm_xi_end - gemm_xi_start).count());
+        // deviceSynchronize(); // optional
+        // auto gemm_xi_end = std::chrono::steady_clock::now();
+        // printf("  [it %d] gemm_xi: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(gemm_xi_end - gemm_xi_start).count()); // optional
 
-        auto chol_update_start = std::chrono::steady_clock::now();
-        // X_res = X_res + S * (Xi * Sigma)
-        if (vector_handler_->choleskyFactorize(Xi_inv_, 'L', memspace_) != 0)
-        {
-          out::error() << "Cholesky failed!";
-          return 1;
-        }
-        Temp_kxk_->copyFromExternal(Sigma_, 0, memspace_, memspace_);
-        vector_handler_->choleskySolve(Xi_inv_->getData(0, memspace_), Temp_kxk_, 'L', memspace_); // Temp_kxk = Xi * Sigma
-        vector_handler_->gemm('N', 'N', ONE, ONE, S_, Temp_kxk_, X_res_, memspace_);
-        // R_prec = R_prec - (A * S) * Xi * Sigma. Temp_kxk_ = Xi * Sigma
-        vector_handler_->gemm('N', 'N', MINUS_ONE, ONE, Temp_nxk_, Temp_kxk_, R_prec_, memspace_);
-        deviceSynchronize();
-        auto chol_update_end = std::chrono::steady_clock::now();
-        printf("  [it %d] cholesky & update: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(chol_update_end - chol_update_start).count());
+        // 3. Cholesky & X_res/R_prec Update Section
+        // auto chol_update_start = std::chrono::steady_clock::now();
+        // if (vector_handler_->choleskyFactorize(Xi_inv_, 'L', memspace_) != 0)
+        // {
+        //   out::error() << "Cholesky failed!";
+        //   return 1;
+        // }
+        // Temp_kxk_->copyFromExternal(Sigma_, memspace_, memspace_);
+        // vector_handler_->choleskySolve(Xi_inv_->getData(memspace_), Temp_kxk_, 'L', memspace_); // Temp_kxk = Xi * Sigma
+        // vector_handler_->gemm('N', 'N', ONE, ONE, S_, Temp_kxk_, X_res_, memspace_);
+        // vector_handler_->gemm('N', 'N', MINUS_ONE, ONE, Temp_nxk_, Temp_kxk_, R_prec_, memspace_);
+        impl_->updateXRSplit(Xi_inv_, Sigma_, S_, Temp_nxk_, Temp_kxk_, X_res_, R_prec_);
+        // impl_->updateXR(Xi_inv_, Sigma_, S_, Temp_nxk_, X_res_, R_prec_);
+        // deviceSynchronize(); // optional
+        // auto chol_update_end = std::chrono::steady_clock::now();
+        // printf("  [it %d] cholesky & update: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(chol_update_end - chol_update_start).count()); // optional
 
-        // W = W - A * S * Xi. DEPENDENCY: Cholesky factorization of Xi (stored in Xi_inv_)
-        auto w_update_start = std::chrono::steady_clock::now();
-        // vector_handler_->choleskySolve(Xi_inv_->getData(0, memspace_), Temp_nxk_, 'R', memspace_); // Temp_nxk_ now contains A * S * Xi
+        // 4. Update W Section (W = W - A * S * Xi)
+        // auto w_update_start = std::chrono::steady_clock::now();
+        // vector_handler_->choleskySolve(Xi_inv_->getData(memspace_), Temp_nxk_, 'R', memspace_); // Temp_nxk_ now contains A * S * Xi
         // vector_handler_->axpy(MINUS_ONE, Temp_nxk_, W_, memspace_);
-        impl_->updateW(W_, Xi_inv_, Temp_nxk_, memspace_); // Temp_nxk_ is overridden
-        deviceSynchronize();
-        auto w_update_end = std::chrono::steady_clock::now();
-        printf("  [it %d] w_update: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(w_update_end - w_update_start).count());
+        impl_->updateW(W_, Xi_inv_, Temp_nxk_, memspace_); // This is wrong I think. accessing garbage half of Xi_inv_?
+        // deviceSynchronize(); // optional
+        // auto w_update_end = std::chrono::steady_clock::now();
+        // printf("  [it %d] w_update: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(w_update_end - w_update_start).count()); // optional
 
-        auto r_scale_start = std::chrono::steady_clock::now();
-        // R = b_norm * L * R_prec
-        R_->copyFromExternal(R_prec_, 0, memspace_, memspace_);
-        vector_handler_->diagSolve(d_inv_, R_, memspace_);
+        // 5. Scale & Diagonal Solve R Section
+        // auto r_scale_start = std::chrono::steady_clock::now();
+        R_->copyFromExternal(R_prec_, memspace_, memspace_);
+        vector_handler_->scal(d_, R_, memspace_);
         vector_handler_->scal(b_norm_, R_, memspace_);
-        deviceSynchronize();
-        auto r_scale_end = std::chrono::steady_clock::now();
-        printf("  [it %d] r_scale: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(r_scale_end - r_scale_start).count());
+        // deviceSynchronize(); // optional
+        // auto r_scale_end = std::chrono::steady_clock::now();
+        // printf("  [it %d] r_scale: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(r_scale_end - r_scale_start).count()); // optional
 
-        auto basis_loop_start = std::chrono::steady_clock::now();
+        // 6. Best Basis Vector Norm Loop Section
+        // auto basis_loop_start = std::chrono::steady_clock::now();
+
         index_type best_basis;
         real_type best_basis_r_norm;
         impl_->bestBasis(R_, &best_basis, &best_basis_r_norm);
@@ -319,15 +322,17 @@ namespace ReSolve
         //   }
         // }
         
-        best_basis_error = best_basis_r_norm / b_norm_;
         deviceSynchronize();
-        auto basis_loop_end = std::chrono::steady_clock::now();
-        printf("  [it %d] basis_norm_loop: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(basis_loop_end - basis_loop_start).count());
+        best_basis_error = best_basis_r_norm / b_norm_;
+        // auto basis_loop_end = std::chrono::steady_clock::now();
+        // printf("  [it %d] basis_norm_loop: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(basis_loop_end - basis_loop_start).count()); // optional
         // printf("error %f\n", best_basis_error);
 
+        // std::cout << std::setprecision(std::numeric_limits<double>::max_digits10) << best_basis_error << '\n';
+        // 7. Convergence Checking & Final Calculations Block
         if (best_basis_error < initial_tol_)
         {
-          auto conv_block_start = std::chrono::steady_clock::now();
+          // auto conv_block_start = std::chrono::steady_clock::now();
           // A * X = B - R
           Temp_nxk_->copyFromExternal(B_, 0, memspace_, memspace_);
           vector_handler_->axpy(MINUS_ONE, R_, Temp_nxk_, memspace_);
@@ -336,95 +341,108 @@ namespace ReSolve
           // vector_handler_->gemm('T', 'N', ONE, ZERO, Temp_nxk_, Temp_nxk_, Temp_kxk_, memspace_);
           impl_->multTSMTTSM(Temp_nxk_, Temp_nxk_, Temp_kxk_, memspace_); // use innerProductTSM
           vector_handler_->gemv('T', k_, ONE, ZERO, Temp_nxk_, b_, c_, memspace_);
+          deviceSynchronize();
 
+          bool use_best_basis = false;
           real_type x_norm;
           real_type r_norm;
-          if (true)
+          // if (true)
+          if (k_ == 1)
           {
             lincomb_error = best_basis_error;
             r_norm = best_basis_r_norm;
           }
           else
-          {    
-            if (vector_handler_->choleskySolve(Temp_kxk_->getData(0, memspace_), c_, 'L', memspace_) != 0)
-            {
-              printf("Cholesky solve failed!\n");
-            }
-              
-            // r = b - AX * c, but it's actually r = AX * c - b because sign doesn't matter
+          {
+            impl_->choleskyFactorizeSolve(Temp_kxk_, c_, c_);
+            
+            // r = b - AX * c
             vector_handler_->gemv('N', k_, ONE, ZERO, Temp_nxk_, c_, r_, memspace_);
             vector_handler_->axpy(MINUS_ONE, b_, r_, memspace_);
             r_norm = vector_handler_->norm(r_, memspace_);
-            lincomb_error = r_norm / b_norm_;
+            // deviceSynchronize();
+            if (r_norm > best_basis_r_norm || std::isnan(r_norm))
+            {
+              r_norm = best_basis_r_norm;
+              lincomb_error = best_basis_error;
+              use_best_basis = true;
+            }
+            else{
+              lincomb_error = r_norm / b_norm_;
+              // printf("%.5e\n", lincomb_error);
+            }
           }
           
           if (lincomb_error < convergence_tol_)
           {
-            // Get ||r|| / (||A|| * ||x|| + ||b||) error
-            // X = b_norm * L * X_prec
-            vector_handler_->geam('N', 'N', ONE, ZERO, X_res_, X_prec_0_, Temp_nxk_, memspace_);
-            vector_handler_->diagSolve(d_inv_, Temp_nxk_, memspace_);
+            vector_handler_->geam('N', 'N', ONE, ONE, X_res_, X_prec_0_, Temp_nxk_, memspace_);
+            vector_handler_->scal(d_inv_, Temp_nxk_, memspace_);
             vector_handler_->scal(b_norm_, Temp_nxk_, memspace_);
 
-            // lincomb
-            vector_handler_->gemm('N', 'N', ONE, ZERO, Temp_nxk_, c_, x_, memspace_);
-            real_type x_norm = vector_handler_->norm(x_, memspace_);
-            
+            if (use_best_basis)
+            {
+              x_->copyFromExternal(Temp_nxk_->getData(best_basis, memspace_), memspace_, memspace_);
+            }
+            else
+            {
+              vector_handler_->gemm('N', 'N', ONE, ZERO, Temp_nxk_, c_, x_, memspace_);
+            }
             end = std::chrono::steady_clock::now();
             std::chrono::duration<double, std::milli> elapsed = (end - start);
 
-            // Best basis
+            real_type x_norm = vector_handler_->norm(x_, memspace_);
             real_type best_basis_x_norm = vector_handler_->norm(Temp_nxk_, best_basis, memspace_);
 
             deviceSynchronize();
-            auto conv_block_end = std::chrono::steady_clock::now();
-            printf("  [it %d] convergence_overhead: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(conv_block_end - conv_block_start).count());
+            // auto conv_block_end = std::chrono::steady_clock::now();
+            // printf("  [it %d] convergence_overhead: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(conv_block_end - conv_block_start).count()); // optional
 
-            // printf("Convergence occured at iteration %d. Total Solve Time: %f ms\n", i, elapsed.count());
+            printf("Convergence occured at iteration %d. Total Solve Time: %f ms\n", i, elapsed.count());
             printf("||r|| / (||A|| * ||x|| + ||b||) error: %.5e, best basis error: %.5e\n",
                    r_norm / (A_norm_ * x_norm + b_norm_),
                    best_basis_r_norm / (A_norm_ * best_basis_x_norm + b_norm_));
             printf("||r|| / ||b|| error: %.5e, best basis error: %.5e\n", lincomb_error, best_basis_error);
             return 0;
           }
-          deviceSynchronize();
-          auto conv_block_end = std::chrono::steady_clock::now();
-          printf("  [it %d] convergence_overhead (failed conv_tol): %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(conv_block_end - conv_block_start).count());
+          // deviceSynchronize(); // optional
+          // auto conv_block_end = std::chrono::steady_clock::now();
+          // printf("  [it %d] convergence_overhead (failed conv_tol): %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(conv_block_end - conv_block_start).count()); // optional
         }
 
-        // QR
-        auto qr_start = std::chrono::steady_clock::now();
-        Zeta_->setToZero(0, 0, memspace_);
+        // 8. Cholesky QR Section
+        // auto qr_start = std::chrono::steady_clock::now();
+        Zeta_->setToZero(memspace_);
         if (impl_->choleskyQr(W_, Zeta_, memspace_) != 0)
         {
           out::error() << "QR failed!";
           return 1;
         }
-        deviceSynchronize();
-        auto qr_end = std::chrono::steady_clock::now();
-        printf("  [it %d] qr: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(qr_end - qr_start).count());
+        // deviceSynchronize(); // optional
+        // auto qr_end = std::chrono::steady_clock::now();
+        // printf("  [it %d] qr: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(qr_end - qr_start).count()); // optional
 
-        auto s_sigma_update_start = std::chrono::steady_clock::now();
-        // S = L_inv * W + S * Zeta.T. T is recycled as intermediate memory storage. do preconditioner later
-        // Sigma = Zeta * Sigma
-        impl_->updateSSigma(W_, S_, Zeta_, Sigma_, memspace_);
+        // 9. S and Sigma Base Orthogonalization Update Section
+        // auto s_sigma_update_start = std::chrono::steady_clock::now();
 
-        // Temp_nxk_->copyFromExternal(W_, 0, memspace_, memspace_);
+        // Temp_nxk_->copyFromExternal(W_, memspace_, memspace_);
         // vector_handler_->gemm('N', 'T', ONE, ONE, S_, Zeta_, Temp_nxk_, memspace_);
-        // S_->copyFromExternal(Temp_nxk_, 0, memspace_, memspace_);
+        // S_->copyFromExternal(Temp_nxk_, memspace_, memspace_);
         
         // vector_handler_->gemm('N', 'N', ONE, ZERO, Zeta_, Sigma_, Temp_kxk_, memspace_);
-        // Sigma_->copyFromExternal(Temp_kxk_, 0, memspace_, memspace_);
-        deviceSynchronize();
-        auto s_sigma_update_end = std::chrono::steady_clock::now();
-        printf("  [it %d] s_sigma_update: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(s_sigma_update_end - s_sigma_update_start).count());
+        // Sigma_->copyFromExternal(Temp_kxk_, memspace_, memspace_);
 
-        auto it_end = std::chrono::steady_clock::now();
-        printf("[Iteration %d Total]: %f ms\n\n", i, static_cast<std::chrono::duration<double, std::milli>>(it_end - it_start).count());
+        impl_->updateSSigma(W_, S_, Zeta_, Sigma_, memspace_);
+        // deviceSynchronize(); // optional
+        // auto s_sigma_update_end = std::chrono::steady_clock::now();
+        // printf("  [it %d] s_sigma_update: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(s_sigma_update_end - s_sigma_update_start).count()); // optional
+
+        // auto it_end = std::chrono::steady_clock::now();
+        // printf("[Iteration %d Total]: %f ms\n\n", i, static_cast<std::chrono::duration<double, std::milli>>(it_end - it_start).count());
       }
 
       if (i == itmax_)
       {
+        deviceSynchronize();
         end = std::chrono::steady_clock::now();
         std::chrono::duration<double, std::milli> elapsed = (end - start);
         printf("No CG convergence in %d iterations\n", itmax_);

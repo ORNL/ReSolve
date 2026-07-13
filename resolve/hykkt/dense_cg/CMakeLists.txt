@@ -1,6 +1,6 @@
 # Add source files for the DenseCG module
-set(DenseCG_SRC DenseConjugateGradient.cpp)
-set(DenseCG_HEADER_INSTALL DenseConjugateGradient.hpp)
+set(DenseCG_SRC DenseConjugateGradient.cpp ${CMAKE_SOURCE_DIR}/resolve/hykkt/randomized_cg/RandomizedConjugateGradientCuda.cu ${CMAKE_SOURCE_DIR}/resolve/hykkt/randomized_cg/RandomizedConjugateGradientHip.hip)
+set(DenseCG_HEADER_INSTALL DenseConjugateGradient.hpp ${CMAKE_SOURCE_DIR}/resolve/hykkt/randomized_cg/RandomizedConjugateGradientCuda.hpp ${CMAKE_SOURCE_DIR}/resolve/hykkt/randomized_cg/RandomizedConjugateGradientHip.hpp)
 
 # Build shared library ReSolve::hykkt
 add_library(resolve_hykkt_dense_cg SHARED ${DenseCG_SRC})

@@ -2,6 +2,8 @@
 
 #include <cmath>
 #include <chrono>
+#include <iomanip>
+#include <limits>
 
 #include <resolve/Common.hpp>
 
@@ -71,8 +73,9 @@ namespace ReSolve
      * @param[in] L - Pointer to the lower triangular preconditioner matrix (L) in CSR format.
      * @param[in] L_tr_ - Pointer to the transpose preconditioner matrix (L^T) in CSR format.
      */
-    void ConjugateGradient::addPreconditionerInfo(vector::Vector* d_inv)
+    void ConjugateGradient::addPreconditionerInfo(vector::Vector* d, vector::Vector* d_inv)
     {
+      d_ = d;
       d_inv_ = d_inv;
     }
 
@@ -106,22 +109,7 @@ namespace ReSolve
       s_->allocate(memspace_);
       w_->allocate(memspace_);
 
-      A_prec_->copyFromExternal(A_->getRowData(memspace_),
-                                A_->getColData(memspace_),
-                                A_->getValues(memspace_),
-                                memspace_,
-                                memspace_);
-      r_->copyFromExternal(b_, memspace_, memspace_);
-      b_prec_->copyFromExternal(b_, memspace_, memspace_);
-      p_->copyFromExternal(b_, memspace_, memspace_);
-      s_->copyFromExternal(b_, memspace_, memspace_);
-      w_->copyFromExternal(b_, memspace_, memspace_);
-
-      x_0_->setToZero(memspace_);
-
       beta_ = 0;
-
-      b_norm_ = std::sqrt(vector_handler_->dot(b_, b_, memspace_));
       
       impl_->setup(1);
     }
@@ -132,6 +120,11 @@ namespace ReSolve
 
       // A_prec = L^-1 * A * L^-T
       // variable names are a bit messed up
+      A_prec_->copyFromExternal(A_->getRowData(memspace_),
+                                A_->getColData(memspace_),
+                                A_->getValues(memspace_),
+                                memspace_,
+                                memspace_);
       matrix_handler_->leftScale(d_inv_, A_prec_, memspace_);
       matrix_handler_->rightScale(A_prec_, d_inv_, memspace_);
 
@@ -144,6 +137,10 @@ namespace ReSolve
     int ConjugateGradient::solve()
     {
       using namespace constants;
+      auto start = std::chrono::steady_clock::now();
+
+      x_0_->setToZero(memspace_);
+      b_norm_ = std::sqrt(vector_handler_->dot(b_, b_, memspace_));
 
       precondition();
       r_prec_->copyFromExternal(b_prec_, memspace_, memspace_);
@@ -156,7 +153,6 @@ namespace ReSolve
       delta_ = vector_handler_->dot(w_, r_prec_, memspace_);
       alpha_ = gamma_i_ / delta_;
 
-      auto start = std::chrono::steady_clock::now();
       int i;
       for (i = 0; i < itmax_; i++)
       {
@@ -170,10 +166,11 @@ namespace ReSolve
         gamma_i1_ = vector_handler_->dot(r_prec_, r_prec_, memspace_);
 
         r_->copyFromExternal(r_prec_, memspace_, memspace_);
-        vector_handler_->diagSolve(d_inv_, r_, memspace_);
+        vector_handler_->scal(d_, r_, memspace_);
         vector_handler_->scal(b_norm_, r_, memspace_); // can maybe save one operation in computing error
         r_norm_ = std::sqrt(vector_handler_->dot(r_, r_, memspace_));
         error_ = r_norm_ / b_norm_;
+        // std::cout << std::setprecision(std::numeric_limits<double>::max_digits10) << error_ << '\n';
         if (error_ < tol_)
         {
           auto end = std::chrono::steady_clock::now();
@@ -187,8 +184,8 @@ namespace ReSolve
         beta_    = gamma_i1_ / gamma_i_;
         gamma_i_ = gamma_i1_;
         alpha_   = gamma_i_ / (delta_ - beta_ * gamma_i_ / alpha_);
-        auto end = std::chrono::steady_clock::now();
-        std::chrono::duration<double, std::milli> elapsed = (end - start);
+        // auto end = std::chrono::steady_clock::now();
+        // std::chrono::duration<double, std::milli> elapsed = (end - start);
         // printf("time = %f, error = %f\n", elapsed.count(), error_);
       }
 

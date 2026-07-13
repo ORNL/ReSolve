@@ -18,3 +18,6 @@ spack-configure-*
 docs/dox.warnings
 docs/@dox_output_dir@axom.tag
 docs/html
+Release/*
+tests/unit/hykkt/RandomizedCGTestMatrices/*
+tests/unit/hykkt/RandomizedDenseCGTestMatrices/*

@@ -78,22 +78,28 @@ namespace ReSolve
         
         vector::Vector* d = new vector::Vector(n);
         d->allocate(memspace_);
-        matrix_handler_.extractInverseRootDiagonal(A, d, memspace_);
+        matrix_handler_.extractRootDiagonal(A, d, memspace_);
+
+        vector::Vector* d_inv = new vector::Vector(n);
+        d_inv->allocate(memspace_);
+        matrix_handler_.extractInverseRootDiagonal(A, d_inv, memspace_);
 
         randomized_cg.addMatrixInfo(A);
         randomized_cg.addVectorInfo(x, b);
-        randomized_cg.addPreconditionerInfo(d);
+        randomized_cg.addPreconditionerInfo(d, d_inv);
         randomized_cg.setup();
         int converged_n = randomized_cg.solve(); // 0 if converged, 1 if not
 
         TestStatus  status;
         std::string testname(__func__);
-        testname += " n=" + std::to_string(n) + ", k=" + std::to_string(k) + ", nnz =" + std::to_string(nnz);
+        testname += " n= " + std::to_string(n) + ", k= " + std::to_string(k) + ", nnz = " + std::to_string(nnz);
         status *= validateResult(x, converged_n);
 
         delete A;
         delete x;
         delete b;
+        delete d;
+        delete d_inv;
 
         return status.report(testname.c_str());
       }

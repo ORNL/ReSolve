@@ -76,6 +76,10 @@ namespace ReSolve
         vector::Vector* b = new vector::Vector(n);
         b->allocateAll(memspace_);
         vector_handler_.randomVector(b, rng_min, rng_max, memspace_);
+        
+        vector::Vector* d = new vector::Vector(n);
+        d->allocate(memspace_);
+        matrix_handler_.extractRootDiagonal(A, d, memspace_);
 
         vector::Vector* d_inv = new vector::Vector(n);
         d_inv->allocate(memspace_);
@@ -83,7 +87,7 @@ namespace ReSolve
 
         cg.addMatrixInfo(A);
         cg.addVectorInfo(x, b);
-        cg.addPreconditionerInfo(d_inv);
+        cg.addPreconditionerInfo(d, d_inv);
         cg.setup();
         int converged_n = cg.solve(); // 0 if converged, 1 if not
 
@@ -95,6 +99,8 @@ namespace ReSolve
         delete A;
         delete x;
         delete b;
+        delete d;
+        delete d_inv;
 
         return status.report(testname.c_str());
       }

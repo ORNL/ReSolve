@@ -15,6 +15,14 @@
 #include <resolve/vector/VectorHandler.hpp>
 #include <tests/unit/TestBase.hpp>
 
+#ifdef RESOLVE_USE_CUDA
+#include <cuda_runtime.h>
+#define deviceSynchronize cudaDeviceSynchronize
+#elif defined(RESOLVE_USE_HIP)
+#include <hip/hip_runtime.h>
+#define deviceSynchronize hipDeviceSynchronize
+#endif
+
 namespace ReSolve
 {
   namespace tests
@@ -58,20 +66,17 @@ namespace ReSolve
         hykkt::DenseConjugateGradient cg(n, &matrix_handler_, &vector_handler_, memspace_);
         cg.setSolverTolerance(cg_tol);
         
-        vector::Vector* L = new vector::Vector(n, n);
-        L->allocateAll(memspace_);
-        vector_handler_.randomVector(L, rng_min, rng_max, memspace_);
+        vector::Vector* M = new vector::Vector(n, n);
+        M->allocateAll(memspace_);
+        vector_handler_.randomVector(M, rng_min , rng_max, memspace_);
+        // M->syncData(memory::HOST);
 
         vector::Vector* A = new vector::Vector(n, n);
         A->allocateAll(memspace_);
 
-        vector_handler_.gemm('T', 'N', 1.0, 0.0, L, L, A, memspace_);
-        if (memspace_ == memory::DEVICE)
-        {
-          A->syncData(memory::HOST);
-        }
-
-        vector_handler_.gemm('T', 'N', 1.0, 0.0, L, L, A, memspace_);
+        vector_handler_.gemm('T', 'N', 1.0, 0.0, M, M, A, memspace_);
+        // vector_handler_.addIdentity(A, 1.0, memspace_);
+        A->syncData(memory::HOST);
 
         vector::Vector* x = new vector::Vector(n);
         x->allocateAll(memspace_);
@@ -79,9 +84,40 @@ namespace ReSolve
         vector::Vector* b = new vector::Vector(n);
         b->allocateAll(memspace_);
         vector_handler_.randomVector(b, rng_min, rng_max, memspace_);
+        
+        vector::Vector* d = new vector::Vector(n);
+        d->allocateAll(memspace_);
+
+        real_type* d_vals = d->getData(memory::HOST);
+        for (int i = 0; i < n; i++) {
+            // (i * n + i) maps to the diagonal elements of a flat n x n matrix
+            d_vals[i] = std::sqrt(A->getData(i, memory::HOST)[i]); 
+        }
+
+        d->setDataUpdated(memory::HOST);
+        if (memspace_ == memory::DEVICE)
+        {
+          d->syncData(memory::DEVICE);
+        }
+
+        vector::Vector* d_inv = new vector::Vector(n);
+        d_inv->allocateAll(memspace_);
+
+        real_type* d_inv_vals = d_inv->getData(memory::HOST);
+        for (int i = 0; i < n; i++) {
+            // (i * n + i) maps to the diagonal elements of a flat n x n matrix
+            d_inv_vals[i] = 1.0 / std::sqrt(A->getData(i, memory::HOST)[i]); 
+        }
+
+        d_inv->setDataUpdated(memory::HOST);
+        if (memspace_ == memory::DEVICE)
+        {
+          d_inv->syncData(memory::DEVICE);
+        }
 
         cg.addMatrixInfo(A);
         cg.addVectorInfo(x, b);
+        cg.addPreconditionerInfo(d, d_inv);
         cg.setup();
         int converged_n = cg.solve(); // 0 if converged, 1 if not
 
@@ -90,7 +126,8 @@ namespace ReSolve
         testname += " n=" + std::to_string(n);
         status *= validateResult(x, converged_n);
 
-        delete L;
+        delete d;
+        delete d_inv;
         delete A;
         delete x;
         delete b;
@@ -104,7 +141,7 @@ namespace ReSolve
       VectorHandler&      vector_handler_; ///< Backend-specific vector handler.
 
       static constexpr real_type cholesky_tol = 1e-12;
-      static constexpr real_type cg_tol     = 1e-3;
+      static constexpr real_type cg_tol     = 1e-12;
       static constexpr real_type entry_tol    = 1e-6; // Tolerance for checking individual entries
 
       /**
