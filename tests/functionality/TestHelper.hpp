@@ -74,45 +74,6 @@ public:
   }
 
   /**
-   * @brief TestHelper constructor
-   *
-   * @param A[in] - Linear system matrix
-   * @param r[in] - Linear system right-hand side
-   * @param x[in] - Computed solution of the linear system
-   * @param[in,out] workspace - workspace for matrix and vector handlers
-   *
-   * @pre The linear solver has solved system A * x = r.
-   * @pre A, r, and x are all in the same memory space as the workspace.
-   * @pre Workspace handles are initialized
-   *
-   * @post Handlers are instantiated and vectors res_ and x_true_ are
-   * allocated
-   * @post Solution vector x_true_ elements are all set to 1.
-   * @post Solution error with respect to x_true_ and residual norms
-   * are computed.
-   */
-  TestHelper(ReSolve::matrix::Sparse* A,
-             ReSolve::vector::Vector* r,
-             ReSolve::vector::Vector* x,
-             workspace_type&          workspace)
-    : A_(A),
-      r_(r),
-      x_(x),
-      mh_(&workspace),
-      vh_(&workspace),
-      res_(new ReSolve::vector::Vector(A->getNumRows())),
-      x_true_(new ReSolve::vector::Vector(A->getNumRows()))
-  {
-    if (mh_.getIsCudaEnabled() || mh_.getIsHipEnabled())
-    {
-      memspace_ = ReSolve::memory::DEVICE;
-    }
-
-    setSolutionVector();
-    computeNorms();
-  }
-
-  /**
    * @brief Destroy the TestHelper object
    *
    * @post Vectors res_ and x_true_ are deleted.
@@ -180,12 +141,6 @@ public:
     r_ = r;
     x_ = x;
     computeNorms();
-  }
-
-  /// Set the name of the test to `name`.
-  void setTestName(const std::string& name)
-  {
-    test_name_ += name;
   }
 
   /// Return L2 norm of the linear system residual.
@@ -487,8 +442,6 @@ private:
   ReSolve::matrix::Sparse* A_; ///< pointer to system matrix
   ReSolve::vector::Vector* r_; ///< pointer to system right-hand side
   ReSolve::vector::Vector* x_; ///< pointer to the computed solution
-
-  std::string test_name_{"Test "}; ///< test name
 
   ReSolve::MatrixHandler mh_; ///< matrix handler instance
   ReSolve::VectorHandler vh_; ///< vector handler instance
