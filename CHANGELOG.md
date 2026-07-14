@@ -40,6 +40,8 @@
 
 - Remove automatic memory allocation and memory syncing in various memory management functions and require the user to explicitly manage their own memory.
 
+* Added size assertions to `VectorHandler::gemv` and fixed vector sizing in `GramSchmidt` accordingly.
+
 ## Changes to Re::Solve in release 0.99.2
 
 ### Major Features
