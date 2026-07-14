@@ -159,6 +159,7 @@ int main(int argc, char* argv[])
 
       vec_rhs = ReSolve::io::createVectorFromFile(rhs_file);
       vec_x   = new vector_type(A->getNumRows());
+      vec_x->allocate(memory::HOST);
     }
     else
     {
