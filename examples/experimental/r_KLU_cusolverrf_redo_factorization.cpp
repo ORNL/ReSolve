@@ -110,6 +110,16 @@ int main(int argc, char* argv[])
       vec_rhs = new vector_type(A->getNumRows());
       vec_x   = new vector_type(A->getNumRows());
       vec_r   = new vector_type(A->getNumRows());
+
+      A->allocateMatrixData(ReSolve::memory::DEVICE);
+
+      vec_rhs->allocate(ReSolve::memory::HOST);
+      vec_rhs->allocate(ReSolve::memory::DEVICE);
+
+      vec_x->allocate(ReSolve::memory::HOST);
+      vec_x->allocate(ReSolve::memory::DEVICE);
+
+      vec_r->allocate(ReSolve::memory::DEVICE);
     }
     else
     {
@@ -117,7 +127,6 @@ int main(int argc, char* argv[])
       ReSolve::io::updateArrayFromFile(rhs_file, &rhs);
     }
     // Copy matrix data to device
-    A->allocateMatrixData(ReSolve::memory::DEVICE);
     A->syncData(ReSolve::memory::DEVICE);
 
     std::cout << "Finished reading the matrix and rhs, size: " << A->getNumRows() << " x " << A->getNumColumns()
@@ -127,17 +136,10 @@ int main(int argc, char* argv[])
     mat_file.close();
     rhs_file.close();
 
-    // Update host and device data.
-    if (i < 2)
-    {
-      vec_rhs->allocate(ReSolve::memory::HOST);
-      vec_rhs->copyFromExternal(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
-    }
-    else
-    {
-      vec_rhs->allocate(ReSolve::memory::DEVICE);
-      vec_rhs->copyFromExternal(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-    }
+    // Update the host copy of the rhs, then synchronize it to the device.
+    vec_rhs->copyFromExternal(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+    vec_rhs->syncData(ReSolve::memory::DEVICE);
+
     std::cout << "CSR matrix loaded. Expanded NNZ: " << A->getNnz() << std::endl;
 
     // Now call direct solver
@@ -150,6 +152,10 @@ int main(int argc, char* argv[])
       std::cout << "KLU factorization status: " << status << std::endl;
       status = KLU->solve(vec_rhs, vec_x);
       std::cout << "KLU solve status: " << status << std::endl;
+      if (status == 0)
+      {
+        vec_x->syncData(ReSolve::memory::DEVICE);
+      }
       if (i == 1)
       {
         L = (ReSolve::matrix::Csr*) KLU->getLFactor();
@@ -185,7 +191,6 @@ int main(int argc, char* argv[])
     }
 
     // Make sure vec_r is properly initialized before using it.
-    vec_r->allocate(ReSolve::memory::DEVICE);
     vec_r->copyFromExternal(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
 
     matrix_handler->setValuesChanged(true, ReSolve::memory::DEVICE);
@@ -214,6 +219,11 @@ int main(int argc, char* argv[])
       std::cout << "KLU factorization status: " << status << std::endl;
       status = KLU->solve(vec_rhs, vec_x);
       std::cout << "KLU solve status: " << status << std::endl;
+
+      if (status == 0)
+      {
+        vec_x->syncData(ReSolve::memory::DEVICE);
+      }
 
       vec_rhs->copyFromExternal(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
       vec_r->copyFromExternal(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
@@ -246,33 +256,6 @@ int main(int argc, char* argv[])
     }
   } // for (int i = 0; i < numSystems; ++i)
 
-  if (vec_r != nullptr)
-  {
-    delete vec_r;
-    vec_r = nullptr;
-  }
-  if (vec_x != nullptr)
-  {
-    delete vec_x;
-    vec_x = nullptr;
-  }
-  if (vec_rhs != nullptr)
-  {
-    delete vec_rhs;
-    vec_rhs = nullptr;
-  }
-
-  if (x != nullptr)
-  {
-    delete[] x;
-    x = nullptr;
-  }
-  if (rhs != nullptr)
-  {
-    delete[] rhs;
-    rhs = nullptr;
-  }
-
   if (Rf != nullptr)
   {
     delete Rf;
@@ -288,6 +271,26 @@ int main(int argc, char* argv[])
   {
     delete A;
     A = nullptr;
+  }
+  delete[] x;
+  x = nullptr;
+
+  delete[] rhs;
+  rhs = nullptr;
+  if (vec_r != nullptr)
+  {
+    delete vec_r;
+    vec_r = nullptr;
+  }
+  if (vec_x != nullptr)
+  {
+    delete vec_x;
+    vec_x = nullptr;
+  }
+  if (vec_rhs != nullptr)
+  {
+    delete vec_rhs;
+    vec_rhs = nullptr;
   }
 
   if (matrix_handler != nullptr)
