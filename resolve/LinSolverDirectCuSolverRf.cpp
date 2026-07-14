@@ -106,6 +106,8 @@ namespace ReSolve
 
     status_cusolverrf_ = cusolverRfSetResetValuesFastMode(handle_cusolverrf_, CUSOLVERRF_RESET_VALUES_FAST_MODE_ON);
     error_sum += status_cusolverrf_;
+    L->allocateMatrixData(memory::DEVICE);
+    U->allocateMatrixData(memory::DEVICE);
     L->syncData(memory::DEVICE);
     U->syncData(memory::DEVICE);
     status_cusolverrf_ = cusolverRfSetupDevice(n,

@@ -280,7 +280,10 @@ int gpuRefactor(int argc, char* argv[])
 
       // Triangular solve
       status = KLU.solve(vec_rhs, vec_x);
-
+      if (status == 0)
+      {
+        vec_x->syncData(memory::DEVICE);
+      }
       syncDevice();
       auto solve_end = std::chrono::high_resolution_clock::now();
       solve_time_ms  = std::chrono::duration<double, std::milli>(solve_end - solve_start).count();
