@@ -196,7 +196,6 @@ namespace ReSolve
    * where `x` is `[k x 1]`, `V` is `[n x k]` and `y` is `[n x 1]`.
    *
    * @param[in] Transpose - yes (T) or no (N)
-   * @param[in] n         - Number of rows in (non-transposed) matrix
    * @param[in] k         - Number of columns in (non-transposed) matrix to use
    * @param[in] alpha     - Constant real number
    * @param[in] beta      - Constant real number
@@ -208,7 +207,7 @@ namespace ReSolve
    * @note Parameter k is not the total number of columns in V but the number
    * of columns to use in matrix-vector product.
    *
-   * @pre _n_ > 0, _k_ > 0
+   * @pre Number of rows in V > 0 and k > 0.
    * @pre Number of columns in V >= k
    * @pre If transpose = N, size of y must equal k. If transpose = T, size of
    * x must equal k.
@@ -224,6 +223,20 @@ namespace ReSolve
                            memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
+
+    assert(V != nullptr && y != nullptr && x != nullptr && "V, y, and x must not be null.");
+    assert(k > 0 && "k must be positive.");
+    assert(V->getSize() > 0 && "V must have at least one row.");
+    assert(V->getNumVectors() >= k && "V must have at least k columns.");
+
+    if (transpose == 'N')
+    {
+      assert(y->getSize() == k && "N: y size must equal k.");
+    }
+    else if (transpose == 'T')
+    {
+      assert(x->getSize() == k && "T: x size must equal k.");
+    }
 
     switch (memspace)
     {
