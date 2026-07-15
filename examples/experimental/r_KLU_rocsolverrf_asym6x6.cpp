@@ -170,6 +170,7 @@ int main()
   }
   std::cout << "]" << std::endl;
 
+  vec_x->syncData(ReSolve::memory::DEVICE);
   helper.printShortSummary(A, vec_rhs, vec_x);
   ReSolve::matrix::Csr* L = (ReSolve::matrix::Csr*) KLU.getLFactor();
   ReSolve::matrix::Csr* U = (ReSolve::matrix::Csr*) KLU.getUFactor();
