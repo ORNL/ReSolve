@@ -238,7 +238,6 @@ int runTest(int argc, char* argv[], std::string& solver_name)
   }
   ReSolve::io::updateArrayFromFile(rhs2_file, &rhs);
   rhs2_file.close();
-  vec_rhs.allocate(ReSolve::memory::DEVICE);
   vec_rhs.copyFromExternal(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
 
   // Refactorize second matrix
