@@ -174,8 +174,6 @@ int runTest(int argc, char* argv[], std::string& solver_name)
   matrix_type* U = KLU.getUFactor();
   index_type*  P = KLU.getPOrdering();
   index_type*  Q = KLU.getQOrdering();
-  L->allocateMatrixData(ReSolve::memory::DEVICE);
-  U->allocateMatrixData(ReSolve::memory::DEVICE);
 
   status = Rf.setup(A, L, U, P, Q, &vec_rhs);
   error_sum += status;

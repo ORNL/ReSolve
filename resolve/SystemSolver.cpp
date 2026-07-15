@@ -484,8 +484,6 @@ namespace ReSolve
 
     L_ = factorizationSolver_->getLFactor();
     U_ = factorizationSolver_->getUFactor();
-    L_->allocateMatrixData(memory::DEVICE);
-    U_->allocateMatrixData(memory::DEVICE);
     P_ = factorizationSolver_->getPOrdering();
     Q_ = factorizationSolver_->getQOrdering();
 
