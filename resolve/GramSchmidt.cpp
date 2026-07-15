@@ -178,19 +178,15 @@ namespace ReSolve
       return 0;
 
     case CGS2:
-      // std::cout << "k = " << i + 1 << std::endl;
-      // std::cout << "size of V: " << V->getSize() << std::endl;
-      // std::cout << "num vecs in V: " << V->getNumVectors() << std::endl;
-      // std::cout << "size of y (vec_v_): " << vec_v_->getSize() << std::endl;
-      // std::cout << "size of x (vec_Hcolumn_): " << vec_Hcolumn_->getSize() << std::endl << std::endl;
       vec_v_->setData(V->getData(i + 1, memspace_), memspace_);
+      vec_Hcolumn_->resize(i + 1);
+
       vector_handler_->gemv('T', i + 1, ONE, ZERO, V, vec_v_, vec_Hcolumn_, memspace_);
       // V(:,i+1) = V(:, i+1) -  V(:,1:i)*Hcol
       vector_handler_->gemv('N', i + 1, ONE, MINUS_ONE, V, vec_Hcolumn_, vec_v_, memspace_);
 
       // copy H_col to aux, we will need it later
       vec_Hcolumn_->setDataUpdated(memspace_);
-      vec_Hcolumn_->resize(i + 1);
       if (memspace_ == memory::DEVICE)
       {
         vec_Hcolumn_->syncData(memory::HOST);
@@ -380,6 +376,8 @@ namespace ReSolve
 
     case CGS1:
       vec_v_->setData(V->getData(i + 1, memspace_), memspace_);
+      vec_Hcolumn_->resize(i + 1);
+
       // Hcol = V(:,1:i)^T*V(:,i+1);
       vector_handler_->gemv('T', i + 1, ONE, ZERO, V, vec_v_, vec_Hcolumn_, memspace_);
       // V(:,i+1) = V(:, i+1) -  V(:,1:i)*Hcol
@@ -391,7 +389,7 @@ namespace ReSolve
       {
         vec_Hcolumn_->syncData(memory::HOST);
       }
-      vec_Hcolumn_->resize(i + 1);
+
       vec_Hcolumn_->copyToExternal(&H[idxmap(i, 0, num_vecs_ + 1)], 0, memory::HOST, memory::HOST);
 
       t = vector_handler_->dot(vec_v_, vec_v_, memspace_);

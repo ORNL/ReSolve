@@ -53,9 +53,10 @@ int main(int argc, char* argv[])
 
   ReSolve::GramSchmidt* GS = new ReSolve::GramSchmidt(vector_handler, ReSolve::GramSchmidt::CGS2);
 
-  ReSolve::LinSolverDirectKLU*        KLU    = new ReSolve::LinSolverDirectKLU;
-  ReSolve::LinSolverDirectCuSolverRf* Rf     = new ReSolve::LinSolverDirectCuSolverRf;
-  ReSolve::LinSolverIterativeFGMRES*  FGMRES = new ReSolve::LinSolverIterativeFGMRES(matrix_handler, vector_handler, GS);
+  ReSolve::LinSolverDirectKLU*        KLU            = new ReSolve::LinSolverDirectKLU;
+  ReSolve::LinSolverDirectCuSolverRf* Rf             = new ReSolve::LinSolverDirectCuSolverRf;
+  ReSolve::LinSolverIterativeFGMRES*  FGMRES         = new ReSolve::LinSolverIterativeFGMRES(matrix_handler, vector_handler, GS);
+  ReSolve::PreconditionerLU*          preconditioner = nullptr;
 
   for (int i = 0; i < numSystems; ++i)
   {
@@ -104,9 +105,14 @@ int main(int argc, char* argv[])
       x       = new real_type[A->getNumRows()];
       vec_rhs = new vector_type(A->getNumRows());
       vec_x   = new vector_type(A->getNumRows());
+      vec_r   = new vector_type(A->getNumRows());
+
+      A->allocateMatrixData(ReSolve::memory::DEVICE);
+
+      vec_rhs->allocate(ReSolve::memory::HOST);
+      vec_rhs->allocate(ReSolve::memory::DEVICE);
       vec_x->allocate(ReSolve::memory::HOST); // for KLU
       vec_x->allocate(ReSolve::memory::DEVICE);
-      vec_r = new vector_type(A->getNumRows());
       vec_r->allocate(ReSolve::memory::DEVICE);
     }
     else
@@ -115,7 +121,6 @@ int main(int argc, char* argv[])
       ReSolve::io::updateArrayFromFile(rhs_file, &rhs);
     }
     // Copy matrix data to device
-    A->allocateMatrixData(ReSolve::memory::DEVICE);
     A->syncData(ReSolve::memory::DEVICE);
 
     std::cout << "Finished reading the matrix and rhs, size: " << A->getNumRows() << " x " << A->getNumColumns()
@@ -125,21 +130,10 @@ int main(int argc, char* argv[])
     mat_file.close();
     rhs_file.close();
 
-    // Update host and device data.
-    if (i < 2)
-    {
-      vec_rhs->allocate(ReSolve::memory::HOST);
-      vec_rhs->copyFromExternal(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
-      vec_rhs->setDataUpdated(ReSolve::memory::HOST);
-    }
-    else
-    {
-      vec_rhs->allocate(ReSolve::memory::HOST);
-      vec_rhs->allocate(ReSolve::memory::DEVICE);
-      A->setUpdated(ReSolve::memory::HOST);
-      A->syncData(ReSolve::memory::DEVICE);
-      vec_rhs->copyFromExternal(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
-    }
+    // Update the host copy of the rhs, then synchronize it to the device.
+    vec_rhs->copyFromExternal(rhs, ReSolve::memory::HOST, ReSolve::memory::HOST);
+    vec_rhs->syncData(ReSolve::memory::DEVICE);
+
     std::cout << "CSR matrix loaded. Expanded NNZ: " << A->getNnz() << std::endl;
 
     // Now call direct solver
@@ -155,6 +149,10 @@ int main(int argc, char* argv[])
       std::cout << "KLU factorization status: " << status << std::endl;
       status = KLU->solve(vec_rhs, vec_x);
       std::cout << "KLU solve status: " << status << std::endl;
+      if (status == 0)
+      {
+        vec_x->syncData(ReSolve::memory::DEVICE);
+      }
       vec_r->copyFromExternal(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
       norm_b = vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE);
       norm_b = sqrt(norm_b);
@@ -174,10 +172,12 @@ int main(int argc, char* argv[])
         index_type* P = KLU->getPOrdering();
         index_type* Q = KLU->getQOrdering();
         Rf->setup(A, L, U, P, Q);
+        preconditioner = new ReSolve::PreconditionerLU(Rf);
         std::cout << "about to set FGMRES" << std::endl;
         FGMRES->setRestart(1000);
         FGMRES->setMaxit(2000);
         FGMRES->setup(A);
+        FGMRES->setPreconditioner(preconditioner);
       }
     }
     else
@@ -189,10 +189,7 @@ int main(int argc, char* argv[])
         status = Rf->refactorize();
         std::cout << "CUSOLVER RF, using REAL refactorization, refactorization status: "
                   << status << std::endl;
-        vec_rhs->copyFromExternal(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
         status = Rf->solve(vec_rhs, vec_x);
-        ReSolve::PreconditionerLU preconditioner(Rf);
-        FGMRES->setPreconditioner(&preconditioner);
       }
       // if (i%2!=0)  vec_x->setToZero(ReSolve::memory::DEVICE);
       real_type norm_x = vector_handler->dot(vec_x, vec_x, ReSolve::memory::DEVICE);
@@ -201,7 +198,6 @@ int main(int argc, char* argv[])
                 << sqrt(norm_x) << "\n";
       std::cout << "CUSOLVER RF solve status: " << status << std::endl;
 
-      vec_rhs->copyFromExternal(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
       vec_r->copyFromExternal(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
       norm_b = vector_handler->dot(vec_r, vec_r, ReSolve::memory::DEVICE);
       norm_b = sqrt(norm_b);
@@ -218,7 +214,6 @@ int main(int argc, char* argv[])
                 << std::scientific << std::setprecision(16)
                 << norm_b << "\n";
 
-      vec_rhs->copyFromExternal(rhs, ReSolve::memory::HOST, ReSolve::memory::DEVICE);
       FGMRES->solve(vec_rhs, vec_x);
 
       std::cout << "FGMRES: init nrm: "
@@ -234,16 +229,23 @@ int main(int argc, char* argv[])
     }
   }
 
-  delete A;
-  delete KLU;
+  delete FGMRES;
+  delete preconditioner;
   delete Rf;
+  delete KLU;
+  delete GS;
+
+  delete A;
   delete[] x;
   delete[] rhs;
+
   delete vec_r;
   delete vec_x;
-  delete workspace_CUDA;
+  delete vec_rhs;
+
   delete matrix_handler;
   delete vector_handler;
+  delete workspace_CUDA;
 
   return 0;
 }

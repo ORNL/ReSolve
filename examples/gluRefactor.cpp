@@ -220,10 +220,13 @@ int gluRefactor(int argc, char* argv[])
     mat_file.close();
     rhs_file.close();
 
-    // Copy data to device
-    A->allocateMatrixData(memory::DEVICE);
+    // Allocate device storage once, then update it for each system
+    if (i == 1)
+    {
+      A->allocateMatrixData(memory::DEVICE);
+      vec_rhs->allocate(memory::DEVICE);
+    }
     A->syncData(memory::DEVICE);
-    vec_rhs->allocate(memory::DEVICE);
     vec_rhs->syncData(memory::DEVICE);
     RESOLVE_RANGE_POP("File input");
 

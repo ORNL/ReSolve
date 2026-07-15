@@ -41,6 +41,7 @@
 - Remove automatic memory allocation and memory syncing in various memory management functions and require the user to explicitly manage their own memory.
 
 - Set Re::Solve's real type and matrix/vector index type at CMake configuration time.
+* Added size assertions to `VectorHandler::gemv` and fixed vector sizing in `GramSchmidt` accordingly.
 
 ## Changes to Re::Solve in release 0.99.2
 
