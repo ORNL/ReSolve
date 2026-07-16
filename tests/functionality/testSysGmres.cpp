@@ -235,7 +235,7 @@ int test(int argc, char* argv[])
   }
   else
   {
-    std::cout << "A warning on the next line is expected for the bad initial guess test" << std::endl;
+    std::cout << "Expect a warning on the next line for the bad initial guess test." << std::endl;
   }
 
   // Use a scaled converged solution as a nonzero initial guess.
