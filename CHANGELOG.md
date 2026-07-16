@@ -44,6 +44,7 @@
 * Added size assertions to `VectorHandler::gemv` and fixed vector sizing in `GramSchmidt` accordingly.
 
 - Added line to testlog to tell the user to expect warnings as part of normal testing.
+- Fixed GPU refactorization allocation and synchronization errors, uninitialized GMRES example initial guesses, and CUDA ILU0 failures on stored numerical zero pivots.
 
 ## Changes to Re::Solve in release 0.99.2
 

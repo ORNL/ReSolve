@@ -160,6 +160,7 @@ int runGmresExample(int argc, char* argv[])
 
   vec_x = new vector_type(A->getNumRows());
   vec_x->allocate(memspace);
+  vec_x->setToZero(memspace);
   if (memspace == memory::DEVICE)
   {
     A->allocateMatrixData(memory::DEVICE);

@@ -59,6 +59,7 @@ namespace ReSolve
    * @param[in] rhs - pointer to the right-hand side vector (optional)
    *
    * @pre The matrix A is in CSR format.
+   * @post Device storage for L and U is allocated and synchronized.
    */
 
   int LinSolverDirectCuSolverRf::setup(matrix::Sparse* A,
@@ -106,6 +107,8 @@ namespace ReSolve
 
     status_cusolverrf_ = cusolverRfSetResetValuesFastMode(handle_cusolverrf_, CUSOLVERRF_RESET_VALUES_FAST_MODE_ON);
     error_sum += status_cusolverrf_;
+    L->allocateMatrixData(memory::DEVICE);
+    U->allocateMatrixData(memory::DEVICE);
     L->syncData(memory::DEVICE);
     U->syncData(memory::DEVICE);
     status_cusolverrf_ = cusolverRfSetupDevice(n,

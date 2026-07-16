@@ -238,6 +238,8 @@ int gpuRefactor(int argc, char* argv[])
       vec_x   = new vector_type(A->getNumRows());
       vec_x->allocate(memory::HOST);
       vec_x->allocate(memory::DEVICE);
+      A->allocateMatrixData(memory::DEVICE);
+      vec_rhs->allocate(memory::DEVICE);
     }
     else
     {
@@ -249,9 +251,7 @@ int gpuRefactor(int argc, char* argv[])
     rhs_file.close();
 
     // Copy data to device
-    A->allocateMatrixData(memory::DEVICE);
     A->syncData(memory::DEVICE);
-    vec_rhs->allocate(memory::DEVICE);
     vec_rhs->syncData(memory::DEVICE);
     RESOLVE_RANGE_POP("File input");
 
@@ -280,7 +280,10 @@ int gpuRefactor(int argc, char* argv[])
 
       // Triangular solve
       status = KLU.solve(vec_rhs, vec_x);
-
+      if (status == 0)
+      {
+        vec_x->syncData(memory::DEVICE);
+      }
       syncDevice();
       auto solve_end = std::chrono::high_resolution_clock::now();
       solve_time_ms  = std::chrono::duration<double, std::milli>(solve_end - solve_start).count();

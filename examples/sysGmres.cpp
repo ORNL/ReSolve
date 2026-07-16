@@ -219,6 +219,7 @@ int sysGmres(int argc, char* argv[])
   // Create solution vector
   vector_type* vec_x = new vector_type(A->getNumRows());
   vec_x->allocate(memspace);
+  vec_x->setToZero(memspace);
 
   if (memspace == memory::DEVICE)
   {

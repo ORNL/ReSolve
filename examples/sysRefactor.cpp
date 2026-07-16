@@ -306,9 +306,12 @@ int sysRefactor(int argc, char* argv[])
     // Ensure matrix data is synced to the device before any GPU operations
     if (hw_backend == "CUDA" || hw_backend == "HIP")
     {
-      A->allocateMatrixData(memory::DEVICE);
+      if (i == 1)
+      {
+        A->allocateMatrixData(memory::DEVICE);
+        vec_rhs->allocate(memory::DEVICE);
+      }
       A->syncData(memory::DEVICE);
-      vec_rhs->allocate(memory::DEVICE);
       vec_rhs->syncData(memory::DEVICE);
     }
 
@@ -353,6 +356,12 @@ int sysRefactor(int argc, char* argv[])
     }
 
     status = solver.solve(vec_rhs, vec_x);
+
+    if ((hw_backend == "CUDA" || hw_backend == "HIP") && i == 1)
+    {
+      vec_x->syncData(memory::DEVICE);
+    }
+
     if (hw_backend == "CUDA" || hw_backend == "HIP")
     {
       syncDevice(hw_backend);
