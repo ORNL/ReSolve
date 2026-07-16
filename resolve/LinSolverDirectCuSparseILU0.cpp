@@ -111,6 +111,25 @@ namespace ReSolve
                                                   buffer_);
 
     error_sum += status_cusparse_;
+
+    // Regularize small-magnitude pivots during CUDA ILU0 factorization.
+    real_type boost_tolerance = 1e-6;
+    real_type boost_value     = 1e-6;
+
+    status_cusparse_ =
+        cusparseDcsrilu02_numericBoost(workspace_->getCusparseHandle(),
+                                       info_A_,
+                                       1,
+                                       &boost_tolerance,
+                                       &boost_value);
+
+    if (status_cusparse_ != CUSPARSE_STATUS_SUCCESS)
+    {
+      out::error() << "CUDA ILU0 numerical boost setup failed with status "
+                   << static_cast<int>(status_cusparse_) << "\n";
+      return 1;
+    }
+
     // and now the actual decomposition
 
     // Compute incomplete LU factorization
