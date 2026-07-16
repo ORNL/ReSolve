@@ -43,6 +43,8 @@
 - Set Re::Solve's real type and matrix/vector index type at CMake configuration time.
 * Added size assertions to `VectorHandler::gemv` and fixed vector sizing in `GramSchmidt` accordingly.
 
+- Fixed GPU refactorization allocation and synchronization errors, uninitialized GMRES example initial guesses, and CUDA ILU0 failures on stored numerical zero pivots.
+
 ## Changes to Re::Solve in release 0.99.2
 
 ### Major Features
