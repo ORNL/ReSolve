@@ -233,6 +233,10 @@ int test(int argc, char* argv[])
               << "\tReturned residual      : " << rejected_guess_rnorm << "\n\n";
     error_sum++;
   }
+  else
+  {
+    std::cout << "A warning on the next line is expected for the bad initial guess test" << std::endl;
+  }
 
   // Use a scaled converged solution as a nonzero initial guess.
   vector_type vec_x_guess(vec_x.getSize());
