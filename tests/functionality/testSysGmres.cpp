@@ -22,6 +22,7 @@
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/matrix/io.hpp>
+#include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/utilities/params/CliOptions.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/vector/VectorHandler.hpp>
@@ -235,7 +236,9 @@ int test(int argc, char* argv[])
   }
   else
   {
-    Log::misc << "Expect a warning on the next line for the bad initial guess test." << std::endl;
+    ReSolve::io::Logger::setVerbosity(ReSolve::io::Logger::EVERYTHING);
+    ReSolve::io::Logger::misc() << "Warning expected as we are testing for the bad initial guess." << std::endl;
+    ReSolve::io::Logger::setVerbosity(ReSolve::io::Logger::WARNINGS);
   }
 
   // Use a scaled converged solution as a nonzero initial guess.
