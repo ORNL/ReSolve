@@ -1,3 +1,15 @@
+'''
+Split HyKKT matrix into matrix blocks (D_d, D_s, J, J_d) and RHS vector into vector blocks (r_x, r_s, r_y, r_yd).
+
+Usage: python ./hykkt_matrix_splitter.py [HyKKT matrix local path/URL] [HyKKT RHS local path/URL] [output directory]
+
+Notes:
+Matrix and RHS must be .mtx files if using local path. They can be .mtx.gz files if using URLs.
+It doesn't matter if output directory has "/" at the end.
+
+Might not work for very specific edge cases, such as when there is a very long diagonal of -1's outside the -I block.
+'''
+
 import sys
 import os
 import requests
