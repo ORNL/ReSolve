@@ -593,7 +593,7 @@ namespace ReSolve
    *
    * @return int 0 if successful, 1 if it fails
    */
-  int SystemSolver::preconditionerSetup(std::string side)
+  int SystemSolver::preconditionerSetup(Preconditioner::Side side)
   {
     int status = 0;
 
@@ -614,23 +614,7 @@ namespace ReSolve
       return status;
     }
 
-    Preconditioner::Side prec_side;
-    if (side == "left")
-    {
-      prec_side = Preconditioner::LEFT;
-    }
-    else if (side == "right")
-    {
-      prec_side = Preconditioner::RIGHT;
-    }
-    else
-    {
-      out::error() << "Preconditioning side '" << side
-                   << "' not recognized. Use 'left' or 'right'.\n";
-      return 1;
-    }
-
-    status += preconditioner_->setSide(prec_side);
+    status += preconditioner_->setSide(side);
     status += preconditioner_->setup(A_);
 
     if (memspace_ != "cpu")

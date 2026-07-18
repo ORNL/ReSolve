@@ -22,6 +22,7 @@
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/matrix/io.hpp>
+#include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/utilities/params/CliOptions.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/vector/VectorHandler.hpp>
@@ -42,7 +43,7 @@ template <class workspace_type>
 static int test(int argc, char* argv[]);
 
 /// Checks if inputs are valid, otherwise sets defaults
-static void processInputs(std::string& method, std::string& gs, std::string& sketch, std::string& side);
+static void processInputs(std::string& method, std::string& gs, std::string& sketch);
 
 /// Creates string with test description
 static std::string headerInfo(const std::string& method,
@@ -103,10 +104,27 @@ int test(int argc, char* argv[])
   opt                  = options.getParamFromKey("-x");
   std::string flexible = opt ? (*opt).second : "yes";
 
-  opt              = options.getParamFromKey("-p");
-  std::string side = opt ? (*opt).second : "right";
+  opt                                               = options.getParamFromKey("-p");
+  ReSolve::Preconditioner::Side preconditioner_side = ReSolve::Preconditioner::RIGHT;
+  if (opt)
+  {
+    if (opt->second == "left")
+    {
+      preconditioner_side = ReSolve::Preconditioner::LEFT;
+    }
+    else if (opt->second == "right")
+    {
+      preconditioner_side = ReSolve::Preconditioner::RIGHT;
+    }
+    else
+    {
+      std::cout << "Preconditioning side '" << opt->second
+                << "' not recognized. Use 'left' or 'right'.\n";
+      return 1;
+    }
+  }
 
-  processInputs(method, gs, sketch, side);
+  processInputs(method, gs, sketch);
 
   // Create workspace and initialize its handles.
   workspace_type workspace;
@@ -169,7 +187,7 @@ int test(int argc, char* argv[])
   solver.getIterativeSolver().setCliParam("restart", "200");
 
   // Set preconditioner (default in this case ILU0)
-  status = solver.preconditionerSetup(side);
+  status = solver.preconditionerSetup(preconditioner_side);
   error_sum += status;
 
   // Solve system
@@ -206,7 +224,7 @@ int test(int argc, char* argv[])
   bad_guess_solver.getIterativeSolver().setCliParam("flexible", flexible);
   bad_guess_solver.getIterativeSolver().setCliParam("restart", "200");
 
-  status = bad_guess_solver.preconditionerSetup(side);
+  status = bad_guess_solver.preconditionerSetup(preconditioner_side);
   error_sum += status;
 
   const real_type bad_guess_rnorm = bad_guess_solver.getResidualNorm(vec_rhs, &bad_guess_x);
@@ -235,7 +253,7 @@ int test(int argc, char* argv[])
   }
   else
   {
-    Log::misc << "Expect a warning on the next line for the bad initial guess test." << std::endl;
+    ReSolve::io::Logger::misc() << "Expect a warning on the next line for the bad initial guess test." << std::endl;
   }
 
   // Use a scaled converged solution as a nonzero initial guess.
@@ -262,7 +280,7 @@ int test(int argc, char* argv[])
   accepted_guess_solver.getIterativeSolver().setCliParam("flexible", flexible);
   accepted_guess_solver.getIterativeSolver().setCliParam("restart", "200");
 
-  status = accepted_guess_solver.preconditionerSetup(side);
+  status = accepted_guess_solver.preconditionerSetup(preconditioner_side);
   error_sum += status;
 
   const real_type initial_guess_rnorm = accepted_guess_solver.getResidualNorm(vec_rhs, &vec_x_guess);
@@ -311,7 +329,7 @@ int test(int argc, char* argv[])
 // Definitions of helper functions
 //
 
-void processInputs(std::string& method, std::string& gs, std::string& sketch, std::string& side)
+void processInputs(std::string& method, std::string& gs, std::string& sketch)
 {
   if (method == "randgmres")
   {
@@ -336,13 +354,6 @@ void processInputs(std::string& method, std::string& gs, std::string& sketch, st
     std::cout << "Unknown orthogonalization " << gs << "\n";
     std::cout << "Setting orthogonalization to the default (CGS2).\n\n";
     gs = "cgs2";
-  }
-
-  if ((side != "left") && (side != "right"))
-  {
-    std::cout << "Preconditioning side " << side << " not recognized.\n";
-    std::cout << "Setting preconditioning side to the default (right).\n\n";
-    side = "right";
   }
 }
 

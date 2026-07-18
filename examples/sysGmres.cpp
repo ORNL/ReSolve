@@ -57,8 +57,7 @@ static int sysGmres(int argc, char* argv[]);
 static void processInputs(std::string& method,
                           std::string& gs,
                           std::string& sketch,
-                          std::string& flexible,
-                          std::string& side);
+                          std::string& flexible);
 
 /// Main function selects example to be run
 int main(int argc, char* argv[])
@@ -166,10 +165,27 @@ int sysGmres(int argc, char* argv[])
   opt                  = options.getParamFromKey("-x");
   std::string flexible = opt ? (*opt).second : "yes";
 
-  opt              = options.getParamFromKey("-p");
-  std::string side = opt ? (*opt).second : "right";
+  opt                                      = options.getParamFromKey("-p");
+  Preconditioner::Side preconditioner_side = Preconditioner::RIGHT;
+  if (opt)
+  {
+    if (opt->second == "left")
+    {
+      preconditioner_side = Preconditioner::LEFT;
+    }
+    else if (opt->second == "right")
+    {
+      preconditioner_side = Preconditioner::RIGHT;
+    }
+    else
+    {
+      std::cout << "Preconditioning side '" << opt->second
+                << "' not recognized. Use 'left' or 'right'.\n";
+      return 1;
+    }
+  }
 
-  processInputs(method, gs, sketch, flexible, side);
+  processInputs(method, gs, sketch, flexible);
 
   std::cout << "Matrix file: " << matrix_pathname << "\n"
             << "RHS file: " << rhs_pathname << "\n";
@@ -255,7 +271,7 @@ int sysGmres(int argc, char* argv[])
   // Set up the preconditioner
   if (return_code == 0)
   {
-    status = solver.preconditionerSetup(side);
+    status = solver.preconditionerSetup(preconditioner_side);
     std::cout << "solver.preconditionerSetup returned status: " << status << "\n";
     if (status != 0)
     {
@@ -289,7 +305,10 @@ int sysGmres(int argc, char* argv[])
   return return_code;
 }
 
-void processInputs(std::string& method, std::string& gs, std::string& sketch, std::string& flexible, std::string& side)
+void processInputs(std::string& method,
+                   std::string& gs,
+                   std::string& sketch,
+                   std::string& flexible)
 {
   if (method == "randgmres")
   {
@@ -321,11 +340,5 @@ void processInputs(std::string& method, std::string& gs, std::string& sketch, st
     std::cout << "Flexible option " << flexible << " not recognized.\n";
     std::cout << "Setting flexible to the default (yes).\n\n";
     flexible = "yes";
-  }
-
-  if ((side != "left") && (side != "right"))
-  {
-    std::cout << "Preconditioning side " << side << " not recognized.\n";
-    std::cout << "Setting preconditioning side to the default (right).\n\n";
   }
 }

@@ -182,6 +182,12 @@ add_test(NAME sys_gmres_mgspm_test
          COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-x" "no" "-i" "fgmres"
                  "-g" "mgs_pm"
 )
+add_test(NAME sys_gmres_invalid_preconditioner_side_test
+         COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-p" "bogus"
+)
+set_tests_properties(
+  sys_gmres_invalid_preconditioner_side_test PROPERTIES WILL_FAIL TRUE
+)
 
 # Left-preconditioned Krylov solvers tests (GMRES)
 add_test(NAME sys_rand_count_gmres_left_cgs2_test
