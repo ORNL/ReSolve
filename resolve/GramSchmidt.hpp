@@ -44,6 +44,7 @@ namespace ReSolve
     index_type   num_vecs_; // the same as restart
     vector_type* vec_rv_{nullptr};
     vector_type* vec_Hcolumn_{nullptr};
+    vector_type* vec_Hcolumn_aux_{nullptr};
 
     real_type*     h_L_{nullptr};
     real_type*     h_aux_{nullptr};
