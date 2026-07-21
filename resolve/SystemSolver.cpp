@@ -18,6 +18,7 @@
 #ifdef RESOLVE_USE_CUDA
 #include <resolve/LinSolverDirectCuSolverGLU.hpp>
 #include <resolve/LinSolverDirectCuSolverRf.hpp>
+#include <resolve/LinSolverDirectCuDssRf.hpp>
 #include <resolve/LinSolverDirectCuSparseILU0.hpp>
 #include <resolve/workspace/LinAlgWorkspaceCUDA.hpp>
 #endif
@@ -316,6 +317,10 @@ namespace ReSolve
     else if (refactorizationMethod_ == "cusolverrf")
     {
       refactorizationSolver_ = new ReSolve::LinSolverDirectCuSolverRf();
+    }
+    else if (refactorizationMethod_ == "cudssrf")
+    {
+      refactorizationSolver_ = new ReSolve::LinSolverDirectCuDssRf();
 #endif
 #ifdef RESOLVE_USE_HIP
     }
@@ -452,7 +457,7 @@ namespace ReSolve
       return factorizationSolver_->refactorize();
     }
 
-    if (refactorizationMethod_ == "glu" || refactorizationMethod_ == "cusolverrf" || refactorizationMethod_ == "rocsolverrf")
+    if (refactorizationMethod_ == "glu" || refactorizationMethod_ == "cusolverrf" || refactorizationMethod_ == "cudssrf" || refactorizationMethod_ == "rocsolverrf")
     {
       is_solve_on_device_ = true;
       return refactorizationSolver_->refactorize();
@@ -499,12 +504,21 @@ namespace ReSolve
       is_solve_on_device_ = true;
       status += refactorizationSolver_->setup(A_, L_, U_, P_, Q_);
     }
-    if (refactorizationMethod_ == "cusolverrf")
+    else if (refactorizationMethod_ == "cusolverrf")
     {
       status += refactorizationSolver_->setup(A_, L_, U_, P_, Q_);
 
       LinSolverDirectCuSolverRf* Rf = dynamic_cast<LinSolverDirectCuSolverRf*>(refactorizationSolver_);
       Rf->setNumericalProperties(1e-14, 1e-1);
+
+      is_solve_on_device_ = false;
+    }
+    else if (refactorizationMethod_ == "cudssrf")
+    {
+      LinSolverDirectCuDssRf* Rf = dynamic_cast<LinSolverDirectCuDssRf*>(refactorizationSolver_);
+      Rf->setNumericalProperties(1e-14, 1e-1);
+
+      status += refactorizationSolver_->setup(A_, L_, U_, P_, Q_);
 
       is_solve_on_device_ = false;
     }
@@ -564,7 +578,7 @@ namespace ReSolve
       status += factorizationSolver_->solve(rhs, x);
     }
 
-    if (solveMethod_ == "glu" || solveMethod_ == "cusolverrf" || solveMethod_ == "rocsolverrf")
+    if (solveMethod_ == "glu" || solveMethod_ == "cusolverrf" || solveMethod_ == "cudssrf" || solveMethod_ == "rocsolverrf")
     {
       if (is_solve_on_device_)
       {

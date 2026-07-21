@@ -27,6 +27,7 @@
 
 #ifdef RESOLVE_USE_CUDA
 #include <resolve/LinSolverDirectCuSolverRf.hpp>
+#include <resolve/LinSolverDirectCuDssRf.hpp>
 #endif
 
 #ifdef RESOLVE_USE_HIP
@@ -36,7 +37,7 @@
 #include "TestHelper.hpp"
 
 template <class workspace_type>
-static int runTest(int argc, char* argv[], std::string backend);
+static int runTest(int argc, char* argv[], std::string backend, bool use_cudss);
 
 int main(int argc, char* argv[])
 {
@@ -46,18 +47,19 @@ int main(int argc, char* argv[])
   // error_sum += runTest<ReSolve::LinAlgWorkspaceCpu>(argc, argv, "cpu");
 
 #ifdef RESOLVE_USE_CUDA
-  error_sum += runTest<ReSolve::LinAlgWorkspaceCUDA>(argc, argv, "cuda");
+  error_sum += runTest<ReSolve::LinAlgWorkspaceCUDA>(argc, argv, "cuda", false);
+  error_sum += runTest<ReSolve::LinAlgWorkspaceCUDA>(argc, argv, "cuda", true);
 #endif
 
 #ifdef RESOLVE_USE_HIP
-  error_sum += runTest<ReSolve::LinAlgWorkspaceHIP>(argc, argv, "hip");
+  error_sum += runTest<ReSolve::LinAlgWorkspaceHIP>(argc, argv, "hip", false);
 #endif
 
   return error_sum;
 }
 
 template <class workspace_type>
-static int runTest(int argc, char* argv[], std::string backend)
+static int runTest(int argc, char* argv[], std::string backend, bool use_cudss)
 {
   // Use ReSolve data types.
   using namespace ReSolve;
@@ -118,7 +120,14 @@ static int runTest(int argc, char* argv[], std::string backend)
   std::string refactor("none");
   if (backend == "cuda")
   {
-    refactor = "cusolverrf";
+    if (use_cudss)
+    {
+      refactor = "cudssrf";
+    }
+    else
+    {
+      refactor = "cusolverrf";
+    }
   }
   else if (backend == "hip")
   {

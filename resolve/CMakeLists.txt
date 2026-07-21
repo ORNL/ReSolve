@@ -31,7 +31,7 @@ set(ReSolve_LUSOL_SRC LinSolverDirectLUSOL.cpp)
 # C++ code that links to CUDA SDK libraries
 set(ReSolve_CUDASDK_SRC
     LinSolverDirectCuSolverGLU.cpp LinSolverDirectCuSolverRf.cpp
-    LinSolverDirectCuSparseILU0.cpp
+    LinSolverDirectCuDssRf.cpp inSolverDirectCuSparseILU0.cpp
 )
 
 # C++ code that links to ROCm libraries
@@ -62,7 +62,7 @@ set(ReSolve_LUSOL_HEADER_INSTALL LinSolverDirectLUSOL.hpp)
 
 set(ReSolve_CUDA_HEADER_INSTALL
     LinSolverDirectCuSolverGLU.hpp LinSolverDirectCuSolverRf.hpp
-    LinSolverDirectCuSparseILU0.hpp
+    LinSolverDirectCuDssRf.hpp LinSolverDirectCuSparseILU0.hpp
 )
 
 set(ReSolve_ROCM_HEADER_INSTALL LinSolverDirectRocSolverRf.hpp
