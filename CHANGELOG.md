@@ -41,10 +41,14 @@
 - Remove automatic memory allocation and memory syncing in various memory management functions and require the user to explicitly manage their own memory.
 
 - Set Re::Solve's real type and matrix/vector index type at CMake configuration time.
-* Added size assertions to `VectorHandler::gemv` and fixed vector sizing in `GramSchmidt` accordingly.
+
+- Added size assertions to `VectorHandler::gemv` and fixed vector sizing in `GramSchmidt` accordingly.
 
 - Added line to testlog to tell the user to expect warnings as part of normal testing.
+
 - Fixed GPU refactorization allocation and synchronization errors, uninitialized GMRES example initial guesses, and CUDA ILU0 failures on stored numerical zero pivots.
+
+- Optimized CGS2 coefficient accumulation in `GramSchmidt` by eliminating an unnecessary device-to-host synchronization.
 
 ## Changes to Re::Solve in release 0.99.2
 
