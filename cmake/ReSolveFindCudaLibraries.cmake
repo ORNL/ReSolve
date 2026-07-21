@@ -4,10 +4,11 @@
 add_library(resolve_cuda INTERFACE)
 
 find_package(CUDAToolkit REQUIRED)
+find_package(cudss REQUIRED)
 
 target_link_libraries(
   resolve_cuda INTERFACE CUDA::cusolver CUDA::cublas CUDA::cusparse
-                         CUDA::cudart
+                         CUDA::cudart cudss
 )
 
 if(RESOLVE_USE_PROFILING)

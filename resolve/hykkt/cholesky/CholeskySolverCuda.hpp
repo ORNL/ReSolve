@@ -1,8 +1,12 @@
 /**
  * @file CholeskySolverCuda.hpp
  * @author Adham Ibrahim (ibrahimas@ornl.gov)
- * @brief Header for CUDA implementation of Cholesky Solver
+ * @brief Header for CUDA implementation of Cholesky Solver using cuDSS
  */
+
+#pragma once
+
+#include <cudss.h>
 
 #include <cublas_v2.h>
 #include <cusolverSp.h>
@@ -18,7 +22,7 @@ namespace ReSolve
     class CholeskySolverCuda : public CholeskySolverImpl
     {
     public:
-      CholeskySolverCuda();
+      CholeskySolverCuda(bool use_cudss = true);
       ~CholeskySolverCuda();
 
       void addMatrixInfo(matrix::Csr* A);
@@ -31,9 +35,18 @@ namespace ReSolve
 
       matrix::Csr* A_; // pointer to the input matrix
 
+      bool use_cudss_;
+
+      cudssHandle_t cudss_handle_;
+      cudssConfig_t cudss_config_;
+      cudssData_t   cudss_data_;
+      cudssMatrix_t descr_A_cudss_;
+      cudssMatrix_t descr_b_;
+      cudssMatrix_t descr_x_;
+
       // handle to the cuSPARSE library context
       cusolverSpHandle_t cusolverHandle_;
-      cusparseMatDescr_t descrA_;            // descriptor for matrix A
+      cusparseMatDescr_t descr_A_cusolver_;            // descriptor for matrix A
       csrcholInfo_t      factorizationInfo_; // stores Cholesky factorization
       void*              buffer_;            // buffer for Cholesky factorization
     };
