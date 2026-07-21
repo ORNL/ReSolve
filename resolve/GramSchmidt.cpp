@@ -119,7 +119,6 @@ namespace ReSolve
     }
     if (variant_ == CGS2)
     {
-      h_aux_       = new real_type[num_vecs_ + 1]();
       vec_Hcolumn_ = new vector_type(num_vecs_ + 1);
       vec_Hcolumn_->allocate(memspace_);
       vec_Hcolumn_->setToZero(memspace_);
@@ -429,10 +428,10 @@ namespace ReSolve
 
     if (variant_ == CGS2)
     {
-      delete[] h_aux_;
-      h_aux_ = nullptr;
       delete vec_Hcolumn_;
       vec_Hcolumn_ = nullptr;
+      delete vec_Hcolumn_aux_;
+      vec_Hcolumn_aux_ = nullptr;
     }
 
     if (variant_ == CGS1)
