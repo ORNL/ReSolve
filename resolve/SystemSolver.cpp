@@ -16,9 +16,9 @@
 #include <resolve/LinSolverIterativeRandFGMRES.hpp>
 
 #ifdef RESOLVE_USE_CUDA
+#include <resolve/LinSolverDirectCuDssRf.hpp>
 #include <resolve/LinSolverDirectCuSolverGLU.hpp>
 #include <resolve/LinSolverDirectCuSolverRf.hpp>
-#include <resolve/LinSolverDirectCuDssRf.hpp>
 #include <resolve/LinSolverDirectCuSparseILU0.hpp>
 #include <resolve/workspace/LinAlgWorkspaceCUDA.hpp>
 #endif

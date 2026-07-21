@@ -58,18 +58,18 @@ namespace ReSolve
       if (use_cudss_)
       {
         cudssMatrixCreateCsr(&descr_A_cudss_,
-                            A_->getNumRows(),
-                            A_->getNumColumns(),
-                            A_->getNnz(),
-                            A_->getRowData(memory::DEVICE),
-                            nullptr, // Row end offsets (null for standard CSR)
-                            A_->getColData(memory::DEVICE),
-                            A_->getValues(memory::DEVICE),
-                            CUDA_R_32I,
-                            CUDA_R_64F,
-                            CUDSS_MTYPE_SPD,
-                            CUDSS_MVIEW_LOWER,
-                            CUDSS_BASE_ZERO);
+                             A_->getNumRows(),
+                             A_->getNumColumns(),
+                             A_->getNnz(),
+                             A_->getRowData(memory::DEVICE),
+                             nullptr, // Row end offsets (null for standard CSR)
+                             A_->getColData(memory::DEVICE),
+                             A_->getValues(memory::DEVICE),
+                             CUDA_R_32I,
+                             CUDA_R_64F,
+                             CUDSS_MTYPE_SPD,
+                             CUDSS_MVIEW_LOWER,
+                             CUDSS_BASE_ZERO);
       }
     }
 
@@ -105,25 +105,25 @@ namespace ReSolve
       else
       {
         cusolverSpXcsrcholAnalysis(cusolverHandle_,
-                            A_->getNumRows(),
-                            A_->getNnz(),
-                            descr_A_cusolver_,
-                            A_->getRowData(memory::DEVICE),
-                            A_->getColData(memory::DEVICE),
-                            factorizationInfo_);
+                                   A_->getNumRows(),
+                                   A_->getNnz(),
+                                   descr_A_cusolver_,
+                                   A_->getRowData(memory::DEVICE),
+                                   A_->getColData(memory::DEVICE),
+                                   factorizationInfo_);
         // Calculate size of buffer needed
         size_t internalDataBytes = 0;
         size_t workspaceBytes    = 0;
         cusolverSpDcsrcholBufferInfo(cusolverHandle_,
-                                    A_->getNumRows(),
-                                    A_->getNnz(),
-                                    descr_A_cusolver_,
-                                    A_->getValues(memory::DEVICE),
-                                    A_->getRowData(memory::DEVICE),
-                                    A_->getColData(memory::DEVICE),
-                                    factorizationInfo_,
-                                    &internalDataBytes,
-                                    &workspaceBytes);
+                                     A_->getNumRows(),
+                                     A_->getNnz(),
+                                     descr_A_cusolver_,
+                                     A_->getValues(memory::DEVICE),
+                                     A_->getRowData(memory::DEVICE),
+                                     A_->getColData(memory::DEVICE),
+                                     factorizationInfo_,
+                                     &internalDataBytes,
+                                     &workspaceBytes);
         if (buffer_ != nullptr)
         {
           mem_.deleteOnDevice(buffer_);
@@ -134,7 +134,7 @@ namespace ReSolve
 
     /**
      * @brief Perform numerical factorization for the Cholesky factorization
-     * 
+     *
      * @param[in] tol - Tolerance for zero pivot detection.
      */
     void CholeskySolverCuda::numericalFactorization(real_type tol)
@@ -158,14 +158,14 @@ namespace ReSolve
       {
         int singularity = 0;
         cusolverSpDcsrcholFactor(cusolverHandle_,
-                                A_->getNumRows(),
-                                A_->getNnz(),
-                                descr_A_cusolver_,
-                                A_->getValues(memory::DEVICE),
-                                A_->getRowData(memory::DEVICE),
-                                A_->getColData(memory::DEVICE),
-                                factorizationInfo_,
-                                buffer_);
+                                 A_->getNumRows(),
+                                 A_->getNnz(),
+                                 descr_A_cusolver_,
+                                 A_->getValues(memory::DEVICE),
+                                 A_->getRowData(memory::DEVICE),
+                                 A_->getColData(memory::DEVICE),
+                                 factorizationInfo_,
+                                 buffer_);
         cusolverSpDcsrcholZeroPivot(cusolverHandle_,
                                     factorizationInfo_,
                                     tol,

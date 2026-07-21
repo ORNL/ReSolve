@@ -27,9 +27,9 @@
 #endif
 
 #ifdef RESOLVE_USE_CUDA
+#include <resolve/LinSolverDirectCuDssRf.hpp>
 #include <resolve/LinSolverDirectCuSolverGLU.hpp>
 #include <resolve/LinSolverDirectCuSolverRf.hpp>
-#include <resolve/LinSolverDirectCuDssRf.hpp>
 #endif
 
 #include "TestHelper.hpp"

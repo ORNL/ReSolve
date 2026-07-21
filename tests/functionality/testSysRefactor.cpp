@@ -26,8 +26,8 @@
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 
 #ifdef RESOLVE_USE_CUDA
-#include <resolve/LinSolverDirectCuSolverRf.hpp>
 #include <resolve/LinSolverDirectCuDssRf.hpp>
+#include <resolve/LinSolverDirectCuSolverRf.hpp>
 #endif
 
 #ifdef RESOLVE_USE_HIP

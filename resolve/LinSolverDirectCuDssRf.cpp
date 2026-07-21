@@ -55,7 +55,7 @@ namespace ReSolve
   int LinSolverDirectCuDssRf::setup(matrix::Sparse* A,
                                     matrix::Sparse*,
                                     matrix::Sparse*,
-                                    index_type*     P,
+                                    index_type* P,
                                     index_type*,
                                     vector_type*)
   {
@@ -78,11 +78,11 @@ namespace ReSolve
                                     index_type*     P)
   {
     assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW && "Matrix A has to be in CSR format for cuDssRf input.\n");
-    int error_sum = 0;
-    this->A_      = A;
-    index_type n  = A_->getNumRows();
+    int error_sum  = 0;
+    this->A_       = A;
+    index_type n   = A_->getNumRows();
     index_type nnz = A_->getNnz();
-    
+
     if (setup_completed_)
     {
       cudssMatrixDestroy(descr_A_);
@@ -151,12 +151,12 @@ namespace ReSolve
     assert(A_->getNnz() > 0 && "Matrix A must have positive nonzero count!");
 
     return cudssExecute(handle_cudss_,
-           CUDSS_PHASE_FACTORIZATION,
-           config_cudss_,
-           data_cudss_,
-           descr_A_,
-           nullptr,
-           nullptr);
+                        CUDSS_PHASE_FACTORIZATION,
+                        config_cudss_,
+                        data_cudss_,
+                        descr_A_,
+                        nullptr,
+                        nullptr);
   }
 
   /**
@@ -224,7 +224,7 @@ namespace ReSolve
    */
   int LinSolverDirectCuDssRf::setNumericalProperties(real_type nzero)
   {
-    zero_pivot_  = nzero;
+    zero_pivot_ = nzero;
     return cudssConfigSet(config_cudss_,
                           CUDSS_CONFIG_PIVOT_EPSILON,
                           &zero_pivot_,

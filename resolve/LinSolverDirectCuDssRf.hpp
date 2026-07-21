@@ -1,7 +1,8 @@
 #pragma once
 
-#include "Common.hpp"
 #include <cudss.h>
+
+#include "Common.hpp"
 #include <resolve/LinSolverDirect.hpp>
 #include <resolve/MemoryUtils.hpp>
 
@@ -36,8 +37,8 @@ namespace ReSolve
     int setup(matrix::Sparse* A,
               matrix::Sparse*,
               matrix::Sparse*,
-              index_type*     P,
-              index_type*     Q,
+              index_type* P,
+              index_type* Q,
               vector_type* = nullptr) override;
 
     int setup(matrix::Sparse* A,
@@ -68,7 +69,7 @@ namespace ReSolve
       PIVOT_BOOST
     };
 
-    real_type zero_pivot_{0.0};  ///< The value below which zero pivot is flagged.
+    real_type zero_pivot_{0.0}; ///< The value below which zero pivot is flagged.
 
     cudssHandle_t handle_cudss_{nullptr};
     cudssConfig_t config_cudss_{nullptr};

@@ -6,9 +6,8 @@
 
 #pragma once
 
-#include <cudss.h>
-
 #include <cublas_v2.h>
+#include <cudss.h>
 #include <cusolverSp.h>
 #include <cusolverSp_LOWLEVEL_PREVIEW.h>
 #include <cusparse.h>
@@ -46,7 +45,7 @@ namespace ReSolve
 
       // handle to the cuSPARSE library context
       cusolverSpHandle_t cusolverHandle_;
-      cusparseMatDescr_t descr_A_cusolver_;            // descriptor for matrix A
+      cusparseMatDescr_t descr_A_cusolver_;  // descriptor for matrix A
       csrcholInfo_t      factorizationInfo_; // stores Cholesky factorization
       void*              buffer_;            // buffer for Cholesky factorization
     };
