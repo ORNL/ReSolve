@@ -32,7 +32,7 @@ namespace ReSolve
    * from the device memory.
    *
    * @pre The cuDssRf handle, config, and data have been created.
-   * @post The cuDssRf handle, config, and data have destroyed.
+   * @post The cuDssRf handle, config, and data have been destroyed.
    *
    * @pre The permutation vectors are allocated on the device.
    * @post The permutation vectors are deleted from the device.
