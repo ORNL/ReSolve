@@ -41,6 +41,12 @@ if(RESOLVE_USE_KLU)
     add_executable(gluRefactor.exe gluRefactor.cpp)
     target_link_libraries(gluRefactor.exe PRIVATE ReSolve)
 
+    if(RESOLVE_USE_CUDSS)
+      # Build an example with a configurable and portable system solver implemented with cuDSS
+      add_executable(cudssRefactor.exe cudssRefactor.cpp)
+      target_link_libraries(cudssRefactor.exe PRIVATE ReSolve)
+    endif(RESOLVE_USE_CUDSS)
+
   endif(RESOLVE_USE_CUDA)
 
 endif(RESOLVE_USE_KLU)
