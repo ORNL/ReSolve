@@ -1,5 +1,6 @@
 #include <chrono>
 #include <cmath>
+#include <cuda_runtime.h>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -16,8 +17,6 @@
 #include <resolve/vector/Vector.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
-
-#include <cuda_runtime.h>
 
 /// Prints help message describing system usage.
 void printHelpInfo()
@@ -160,11 +159,11 @@ int cudssRefactor(int argc, char* argv[])
 
   // Create system solver
   ReSolve::SystemSolver solver(&workspace,
-                               "klu",    // factorization
+                               "klu",     // factorization
                                "cudssrf", // refactorization
                                "cudssrf", // triangular solve
-                               "none",   // preconditioner (always 'none' here)
-                               "none");  // iterative refinement
+                               "none",    // preconditioner (always 'none' here)
+                               "none");   // iterative refinement
 
   if (is_iterative_refinement)
   {
