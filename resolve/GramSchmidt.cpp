@@ -119,10 +119,13 @@ namespace ReSolve
     }
     if (variant_ == CGS2)
     {
-      h_aux_       = new real_type[num_vecs_ + 1]();
       vec_Hcolumn_ = new vector_type(num_vecs_ + 1);
       vec_Hcolumn_->allocate(memspace_);
       vec_Hcolumn_->setToZero(memspace_);
+
+      vec_Hcolumn_aux_ = new vector_type(num_vecs_ + 1);
+      vec_Hcolumn_aux_->allocate(memspace_);
+      vec_Hcolumn_aux_->setToZero(memspace_);
     }
     if (variant_ == CGS1)
     {
@@ -179,40 +182,30 @@ namespace ReSolve
 
     case CGS2:
       vec_v_->setData(V->getData(i + 1, memspace_), memspace_);
+      vec_Hcolumn_aux_->resize(i + 1);
       vec_Hcolumn_->resize(i + 1);
 
+      // First CGS orthogonalization
+
+      // Hcol = V(:,1:i)^T*V(:,i+1), then V(:,i+1) = V(:, i+1) - V(:,1:i)*Hcol
+      vector_handler_->gemv('T', i + 1, ONE, ZERO, V, vec_v_, vec_Hcolumn_aux_, memspace_);
+      vector_handler_->gemv('N', i + 1, ONE, MINUS_ONE, V, vec_Hcolumn_aux_, vec_v_, memspace_);
+
+      // Second CGS orthogonalization
+
+      // Hcol = V(:,1:i)^T*V(:,i+1), then V(:,i+1) = V(:, i+1) - V(:,1:i)*Hcol
       vector_handler_->gemv('T', i + 1, ONE, ZERO, V, vec_v_, vec_Hcolumn_, memspace_);
-      // V(:,i+1) = V(:, i+1) -  V(:,1:i)*Hcol
       vector_handler_->gemv('N', i + 1, ONE, MINUS_ONE, V, vec_Hcolumn_, vec_v_, memspace_);
 
-      // copy H_col to aux, we will need it later
-      vec_Hcolumn_->setDataUpdated(memspace_);
-      if (memspace_ == memory::DEVICE)
-      {
-        vec_Hcolumn_->syncData(memory::HOST);
-      }
-      vec_Hcolumn_->copyToExternal(h_aux_, 0, memory::HOST, memory::HOST);
-
-      // Hcol = V(:,1:i)^T*V(:,i+1);
-      vector_handler_->gemv('T', i + 1, ONE, ZERO, V, vec_v_, vec_Hcolumn_, memspace_);
-
-      // V(:,i+1) = V(:, i+1) -  V(:,1:i)*Hcol
-      vector_handler_->gemv('N', i + 1, ONE, MINUS_ONE, V, vec_Hcolumn_, vec_v_, memspace_);
+      // Accumulate the coefficients from both CGS steps
+      vector_handler_->axpy(ONE, vec_Hcolumn_aux_, vec_Hcolumn_, memspace_);
 
       // copy H_col to H
-      vec_Hcolumn_->setDataUpdated(memspace_);
       if (memspace_ == memory::DEVICE)
       {
         vec_Hcolumn_->syncData(memory::HOST);
       }
       vec_Hcolumn_->copyToExternal(&H[idxmap(i, 0, num_vecs_ + 1)], 0, memory::HOST, memory::HOST);
-
-      // add both pieces together (unstable otherwise, careful here!!)
-      t = 0.0;
-      for (int j = 0; j <= i; ++j)
-      {
-        H[idxmap(i, j, num_vecs_ + 1)] += h_aux_[j];
-      }
 
       t = vector_handler_->dot(vec_v_, vec_v_, memspace_);
       // set the last entry in Hessenberg matrix
@@ -435,10 +428,10 @@ namespace ReSolve
 
     if (variant_ == CGS2)
     {
-      delete[] h_aux_;
-      h_aux_ = nullptr;
       delete vec_Hcolumn_;
       vec_Hcolumn_ = nullptr;
+      delete vec_Hcolumn_aux_;
+      vec_Hcolumn_aux_ = nullptr;
     }
 
     if (variant_ == CGS1)
