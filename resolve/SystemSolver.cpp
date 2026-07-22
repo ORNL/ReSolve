@@ -319,12 +319,12 @@ namespace ReSolve
     else if (refactorizationMethod_ == "cusolverrf")
     {
       refactorizationSolver_ = new ReSolve::LinSolverDirectCuSolverRf();
-  #ifdef RESOLVE_USE_CUDSS
+#ifdef RESOLVE_USE_CUDSS
     }
     else if (refactorizationMethod_ == "cudssrf")
     {
       refactorizationSolver_ = new ReSolve::LinSolverDirectCuDssRf();
-  #endif
+#endif
 #endif
 #ifdef RESOLVE_USE_HIP
     }
@@ -463,7 +463,7 @@ namespace ReSolve
 
     if (refactorizationMethod_ == "glu" || refactorizationMethod_ == "cusolverrf" || refactorizationMethod_ == "rocsolverrf"
 #ifdef RESOLVE_USE_CUDSS
-        || refactorizationMethod_ == "cudssrf"    
+        || refactorizationMethod_ == "cudssrf"
 #endif
     )
     {
@@ -521,7 +521,7 @@ namespace ReSolve
 
       is_solve_on_device_ = false;
     }
-  #ifdef RESOLVE_USE_CUDSS
+#ifdef RESOLVE_USE_CUDSS
     else if (refactorizationMethod_ == "cudssrf")
     {
       LinSolverDirectCuDssRf* Rf = dynamic_cast<LinSolverDirectCuDssRf*>(refactorizationSolver_);
@@ -531,7 +531,7 @@ namespace ReSolve
 
       is_solve_on_device_ = false;
     }
-  #endif
+#endif
 #endif
 
 #ifdef RESOLVE_USE_HIP
@@ -590,7 +590,7 @@ namespace ReSolve
 
     if (solveMethod_ == "glu" || solveMethod_ == "cusolverrf" || solveMethod_ == "rocsolverrf"
 #ifdef RESOLVE_USE_CUDSS
-        || solveMethod_ == "cudssrf"    
+        || solveMethod_ == "cudssrf"
 #endif
     )
     {

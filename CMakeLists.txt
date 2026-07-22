@@ -189,7 +189,8 @@ if(RESOLVE_USE_CUDSS)
   if(NOT cudss_FOUND)
     message(STATUS "Cannot find cuDSS, disabling it ...")
     set(RESOLVE_USE_CUDSS
-        OFF CACHE BOOL FORCE
+        OFF
+        CACHE BOOL FORCE
     )
   endif()
 else()
