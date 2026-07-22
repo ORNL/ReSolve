@@ -148,7 +148,7 @@ namespace ReSolve
   {
     assert(A_ != nullptr && "Matrix A is null!");
     assert(A_->getNumRows() > 0 && "Matrix A must have positive row count!");
-    assert(A_->getNnz() > 0 && "Matrix A must have positive nonzero count!");
+    assert(A_->getNnz() > 0 && "Matrix A must have positive number of nonzeros!");
 
     return cudssExecute(handle_cudss_,
                         CUDSS_PHASE_FACTORIZATION,
