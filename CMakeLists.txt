@@ -44,6 +44,7 @@ option(RESOLVE_USE_UBSAN "Enable the undefined behavior sanitizer" OFF)
 option(RESOLVE_USE_DOXYGEN "Use Doxygen to generate Re::Solve documentation"
        OFF
 )
+option(RESOLVE_USE_CUDSS "Use the CUDA cuDSS libary" OFF)
 set(RESOLVE_CTEST_OUTPUT_DIR
     ${PROJECT_BINARY_DIR}
     CACHE PATH "Directory where CTest outputs are saved"
@@ -182,6 +183,18 @@ if(RESOLVE_USE_HIP)
 else()
   message(STATUS "Not using HIP")
 endif(RESOLVE_USE_HIP)
+
+if(RESOLVE_USE_CUDSS)
+  find_package(cudss)
+  if(NOT cudss_FOUND)
+    message(STATUS "Cannot find cuDSS, disabling it ...")
+    set(RESOLVE_USE_CUDSS
+        OFF CACHE BOOL FORCE
+    )
+  endif()
+else()
+  message(STATUS "Not using CUDA cuDSS")
+endif()
 
 # The binary dir is already a global include directory
 configure_file(

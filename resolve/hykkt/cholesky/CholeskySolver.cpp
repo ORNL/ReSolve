@@ -25,6 +25,16 @@ namespace ReSolve
      * @param[in] memspace - memory space to use for computations
      */
     CholeskySolver::CholeskySolver(memory::MemorySpace memspace)
+      : CholeskySolver(true, memspace)
+    {
+    }
+
+    /**
+     * @brief Cholesky Solver constructor that allows specifying whether to use cuDSS in the CUDA implementation
+     * @param[in] memspace - memory space to use for computations
+     * @param[in] use_cudss - whether to use cuDSS (true) or cuSolver in CUDA
+     */
+    CholeskySolver::CholeskySolver(bool use_cudss, memory::MemorySpace memspace)
       : memspace_(memspace)
     {
       if (memspace_ == memory::HOST)
@@ -34,7 +44,7 @@ namespace ReSolve
       else
       {
 #ifdef RESOLVE_USE_CUDA
-        impl_ = new CholeskySolverCuda();
+        impl_ = new CholeskySolverCuda(use_cudss);
 #elif defined(RESOLVE_USE_HIP)
         impl_ = new CholeskySolverHip();
 #else

@@ -18,6 +18,7 @@ namespace ReSolve
     {
     public:
       CholeskySolver(memory::MemorySpace memspace);
+      CholeskySolver(bool use_cudss, memory::MemorySpace memspace);
       ~CholeskySolver();
 
       void addMatrixInfo(matrix::Csr* A);

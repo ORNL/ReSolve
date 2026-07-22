@@ -7,7 +7,11 @@
 #pragma once
 
 #include <cublas_v2.h>
+
+#ifdef RESOLVE_USE_CUDSS
 #include <cudss.h>
+#endif
+
 #include <cusolverSp.h>
 #include <cusolverSp_LOWLEVEL_PREVIEW.h>
 #include <cusparse.h>
@@ -36,12 +40,14 @@ namespace ReSolve
 
       bool use_cudss_;
 
+#ifdef RESOLVE_USE_CUDSS
       cudssHandle_t cudss_handle_;
       cudssConfig_t cudss_config_;
       cudssData_t   cudss_data_;
       cudssMatrix_t descr_A_cudss_;
       cudssMatrix_t descr_b_;
       cudssMatrix_t descr_x_;
+#endif
 
       // handle to the cuSPARSE library context
       cusolverSpHandle_t cusolverHandle_;

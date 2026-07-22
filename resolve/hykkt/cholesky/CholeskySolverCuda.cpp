@@ -14,8 +14,14 @@ namespace ReSolve
   namespace hykkt
   {
     CholeskySolverCuda::CholeskySolverCuda(bool use_cudss)
-      : use_cudss_(use_cudss)
     {
+#ifdef RESOLVE_USE_CUDSS
+      use_cudss_ = use_cudss;
+#else
+      use_cudss_ = false;
+#endif
+
+#ifdef RESOLVE_USE_CUDSS
       if (use_cudss_)
       {
         cudssCreate(&cudss_handle_);
@@ -23,6 +29,7 @@ namespace ReSolve
         cudssDataCreate(cudss_handle_, &cudss_data_);
       }
       else
+#endif
       {
         cusolverSpCreate(&cusolverHandle_);
         cusparseCreateMatDescr(&descr_A_cusolver_);
@@ -33,6 +40,7 @@ namespace ReSolve
 
     CholeskySolverCuda::~CholeskySolverCuda()
     {
+#ifdef RESOLVE_USE_CUDSS
       if (use_cudss_)
       {
         cudssDataDestroy(cudss_handle_, cudss_data_);
@@ -43,6 +51,7 @@ namespace ReSolve
         cudssMatrixDestroy(descr_x_);
       }
       else
+#endif
       {
         cusolverSpDestroy(cusolverHandle_);
         cusparseDestroyMatDescr(descr_A_cusolver_);
@@ -55,6 +64,7 @@ namespace ReSolve
     {
       A_ = A;
 
+#ifdef RESOLVE_USE_CUDSS
       if (use_cudss_)
       {
         cudssMatrixCreateCsr(&descr_A_cudss_,
@@ -71,6 +81,7 @@ namespace ReSolve
                              CUDSS_MVIEW_LOWER,
                              CUDSS_BASE_ZERO);
       }
+#endif
     }
 
     /**
@@ -78,6 +89,7 @@ namespace ReSolve
      */
     void CholeskySolverCuda::symbolicAnalysis()
     {
+#ifdef RESOLVE_USE_CUDSS
       if (use_cudss_)
       {
         cudssMatrixCreateDn(&descr_b_,
@@ -103,6 +115,7 @@ namespace ReSolve
                      descr_b_);
       }
       else
+#endif
       {
         cusolverSpXcsrcholAnalysis(cusolverHandle_,
                                    A_->getNumRows(),
@@ -139,6 +152,7 @@ namespace ReSolve
      */
     void CholeskySolverCuda::numericalFactorization(real_type tol)
     {
+#ifdef RESOLVE_USE_CUDSS
       if (use_cudss_)
       {
         cudssConfigSet(cudss_config_, CUDSS_CONFIG_PIVOT_EPSILON, &tol, sizeof(real_type));
@@ -155,6 +169,7 @@ namespace ReSolve
         }
       }
       else
+#endif
       {
         int singularity = 0;
         cusolverSpDcsrcholFactor(cusolverHandle_,
@@ -187,6 +202,7 @@ namespace ReSolve
      */
     void CholeskySolverCuda::solve(vector::Vector* x, vector::Vector* b)
     {
+#ifdef RESOLVE_USE_CUDSS
       if (use_cudss_)
       {
         if (descr_b_)
@@ -220,6 +236,7 @@ namespace ReSolve
         }
       }
       else
+#endif
       {
         for (index_type i = 0; i < b->getNumVectors(); i++)
         {

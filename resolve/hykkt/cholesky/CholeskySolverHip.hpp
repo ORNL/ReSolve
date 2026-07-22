@@ -17,7 +17,7 @@ namespace ReSolve
     class CholeskySolverHip : public CholeskySolverImpl
     {
     public:
-      CholeskySolverHip();
+      CholeskySolverHip(bool = true); // The bool argument is use_cudss, Used by CUDA version. It's defaulted to true and unused here.
       ~CholeskySolverHip();
 
       void addMatrixInfo(matrix::Csr* A);

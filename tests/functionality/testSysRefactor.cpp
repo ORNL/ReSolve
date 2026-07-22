@@ -26,8 +26,10 @@
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 
 #ifdef RESOLVE_USE_CUDA
-#include <resolve/LinSolverDirectCuDssRf.hpp>
 #include <resolve/LinSolverDirectCuSolverRf.hpp>
+#ifdef RESOLVE_USE_CUDSS
+#include <resolve/LinSolverDirectCuDssRf.hpp>
+#endif
 #endif
 
 #ifdef RESOLVE_USE_HIP
@@ -48,7 +50,9 @@ int main(int argc, char* argv[])
 
 #ifdef RESOLVE_USE_CUDA
   error_sum += runTest<ReSolve::LinAlgWorkspaceCUDA>(argc, argv, "cuda", false);
+#ifdef RESOLVE_USE_CUDSS
   error_sum += runTest<ReSolve::LinAlgWorkspaceCUDA>(argc, argv, "cuda", true);
+#endif
 #endif
 
 #ifdef RESOLVE_USE_HIP

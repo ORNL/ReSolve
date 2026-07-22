@@ -16,11 +16,13 @@
 #include <resolve/LinSolverIterativeRandFGMRES.hpp>
 
 #ifdef RESOLVE_USE_CUDA
-#include <resolve/LinSolverDirectCuDssRf.hpp>
 #include <resolve/LinSolverDirectCuSolverGLU.hpp>
 #include <resolve/LinSolverDirectCuSolverRf.hpp>
 #include <resolve/LinSolverDirectCuSparseILU0.hpp>
 #include <resolve/workspace/LinAlgWorkspaceCUDA.hpp>
+#ifdef RESOLVE_USE_CUDSS
+#include <resolve/LinSolverDirectCuDssRf.hpp>
+#endif
 #endif
 
 #ifdef RESOLVE_USE_HIP
@@ -317,10 +319,12 @@ namespace ReSolve
     else if (refactorizationMethod_ == "cusolverrf")
     {
       refactorizationSolver_ = new ReSolve::LinSolverDirectCuSolverRf();
+  #ifdef RESOLVE_USE_CUDSS
     }
     else if (refactorizationMethod_ == "cudssrf")
     {
       refactorizationSolver_ = new ReSolve::LinSolverDirectCuDssRf();
+  #endif
 #endif
 #ifdef RESOLVE_USE_HIP
     }
@@ -457,7 +461,11 @@ namespace ReSolve
       return factorizationSolver_->refactorize();
     }
 
-    if (refactorizationMethod_ == "glu" || refactorizationMethod_ == "cusolverrf" || refactorizationMethod_ == "cudssrf" || refactorizationMethod_ == "rocsolverrf")
+    if (refactorizationMethod_ == "glu" || refactorizationMethod_ == "cusolverrf" || refactorizationMethod_ == "rocsolverrf"
+#ifdef RESOLVE_USE_CUDSS
+        || refactorizationMethod_ == "cudssrf"    
+#endif
+    )
     {
       is_solve_on_device_ = true;
       return refactorizationSolver_->refactorize();
@@ -513,6 +521,7 @@ namespace ReSolve
 
       is_solve_on_device_ = false;
     }
+  #ifdef RESOLVE_USE_CUDSS
     else if (refactorizationMethod_ == "cudssrf")
     {
       LinSolverDirectCuDssRf* Rf = dynamic_cast<LinSolverDirectCuDssRf*>(refactorizationSolver_);
@@ -522,6 +531,7 @@ namespace ReSolve
 
       is_solve_on_device_ = false;
     }
+  #endif
 #endif
 
 #ifdef RESOLVE_USE_HIP
@@ -578,7 +588,11 @@ namespace ReSolve
       status += factorizationSolver_->solve(rhs, x);
     }
 
-    if (solveMethod_ == "glu" || solveMethod_ == "cusolverrf" || solveMethod_ == "cudssrf" || solveMethod_ == "rocsolverrf")
+    if (solveMethod_ == "glu" || solveMethod_ == "cusolverrf" || solveMethod_ == "rocsolverrf"
+#ifdef RESOLVE_USE_CUDSS
+        || solveMethod_ == "cudssrf"    
+#endif
+    )
     {
       if (is_solve_on_device_)
       {
