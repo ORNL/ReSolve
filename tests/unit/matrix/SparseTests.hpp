@@ -240,6 +240,13 @@ namespace ReSolve
         // Clean up allocated memory
         delete[] val_data;
 
+        // In the device case h_val_data is a scratch host buffer allocated
+        // above; on host it aliases the matrix-owned data and must not be freed.
+        if (memspace_ != memory::HOST)
+        {
+          delete[] h_val_data;
+        }
+
         if (A.destroyMatrixData(memspace_) != 0)
         {
           std::cout << "Failed to destroy matrix data.\n";

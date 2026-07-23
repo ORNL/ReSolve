@@ -17,6 +17,33 @@ namespace ReSolve
   {
     mem_.deleteOnDevice(d_aux1_);
     mem_.deleteOnDevice(d_ILU_vals_);
+
+    if (buffer_ != nullptr)
+    {
+      mem_.deleteOnDevice(buffer_);
+      buffer_ = nullptr;
+    }
+
+    if (info_A_ != nullptr)
+    {
+      rocsparse_destroy_mat_info(info_A_);
+      info_A_ = nullptr;
+    }
+    if (descr_U_ != nullptr)
+    {
+      rocsparse_destroy_mat_descr(descr_U_);
+      descr_U_ = nullptr;
+    }
+    if (descr_L_ != nullptr)
+    {
+      rocsparse_destroy_mat_descr(descr_L_);
+      descr_L_ = nullptr;
+    }
+    if (descr_A_ != nullptr)
+    {
+      rocsparse_destroy_mat_descr(descr_A_);
+      descr_A_ = nullptr;
+    }
   }
 
   int LinSolverDirectRocSparseILU0::setup(matrix::Sparse* A,
