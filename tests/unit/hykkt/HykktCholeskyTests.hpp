@@ -27,8 +27,8 @@ namespace ReSolve
     class HykktCholeskyTests : public TestBase
     {
     public:
-      HykktCholeskyTests(memory::MemorySpace memspace, MatrixHandler& matrixHandler, std::mt19937& generator)
-        : memspace_(memspace), matrixHandler_(matrixHandler), generator_(generator)
+      HykktCholeskyTests(bool use_cudss, memory::MemorySpace memspace, MatrixHandler& matrixHandler, std::mt19937& generator)
+        : use_cudss_(use_cudss), memspace_(memspace), matrixHandler_(matrixHandler), generator_(generator)
       {
         cholmod_start(&Common);
       }
@@ -60,7 +60,7 @@ namespace ReSolve
           A->syncData(memory::DEVICE);
         }
 
-        ReSolve::hykkt::CholeskySolver solver(memspace_);
+        ReSolve::hykkt::CholeskySolver solver(use_cudss_, memspace_);
         solver.addMatrixInfo(A);
         solver.symbolicAnalysis();
         solver.setPivotTolerance(1e-12);
@@ -273,6 +273,7 @@ namespace ReSolve
       ReSolve::memory::MemorySpace memspace_;
       MatrixHandler&               matrixHandler_;
       std::mt19937&                generator_;
+      bool use_cudss_;
 
       cholmod_common Common;
 
