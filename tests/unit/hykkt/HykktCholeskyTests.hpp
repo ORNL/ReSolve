@@ -273,7 +273,7 @@ namespace ReSolve
       ReSolve::memory::MemorySpace memspace_;
       MatrixHandler&               matrixHandler_;
       std::mt19937&                generator_;
-      bool use_cudss_;
+      bool                         use_cudss_;
 
       cholmod_common Common;
 
