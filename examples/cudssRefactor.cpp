@@ -145,7 +145,7 @@ int cudssRefactor(int argc, char* argv[])
   workspace_type workspace;
   workspace.initializeHandles();
 
-  // Create a helper object (computing errors, printing summaries, etc.)
+  // Create a helper object (for computing errors, printing summaries, etc.)
   ExampleHelper<workspace_type> helper(workspace);
   std::cout << "cudssRefactor with CUDA backend\n";
 
