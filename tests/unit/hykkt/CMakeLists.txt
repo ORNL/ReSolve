@@ -34,8 +34,8 @@ target_link_libraries(
 if(RESOLVE_USE_CUDSS)
   add_executable(runHykktCholeskyCuDssTests.exe runHykktCholeskyCuDssTests.cpp)
   target_link_libraries(
-    runHykktCholeskyCuDssTests.exe PRIVATE resolve_hykkt_chol_cudss resolve_matrix
-                                      resolve_vector
+    runHykktCholeskyCuDssTests.exe PRIVATE resolve_hykkt_chol_cudss
+                                           resolve_matrix resolve_vector
   )
 endif()
 
@@ -87,5 +87,7 @@ add_test(NAME hykkt_spgemm_test COMMAND $<TARGET_FILE:runHykktSpGEMMTests.exe>)
 add_test(NAME hykkt_sccg_test COMMAND $<TARGET_FILE:runHykktSCCGTests.exe>)
 add_test(NAME hykkt_solver_test COMMAND $<TARGET_FILE:runHykktSolverTests.exe>)
 if(RESOLVE_USE_CUDSS)
-  add_test(NAME hykkt_chol_cudss_test COMMAND $<TARGET_FILE:runHykktCholeskyCuDssTests.exe>)
+  add_test(NAME hykkt_chol_cudss_test
+           COMMAND $<TARGET_FILE:runHykktCholeskyCuDssTests.exe>
+  )
 endif()

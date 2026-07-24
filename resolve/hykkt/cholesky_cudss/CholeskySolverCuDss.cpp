@@ -21,7 +21,7 @@ namespace ReSolve
      */
     CholeskySolverCuDss::CholeskySolverCuDss(memory::MemorySpace memspace)
       : memspace_(memspace),
-      impl_(new CholeskySolverCuDssCuda())
+        impl_(new CholeskySolverCuDssCuda())
     {
     }
 

@@ -35,18 +35,18 @@ namespace ReSolve
       A_ = A;
 
       cudssMatrixCreateCsr(&descr_A_cudss_,
-                            A_->getNumRows(),
-                            A_->getNumColumns(),
-                            A_->getNnz(),
-                            A_->getRowData(memory::DEVICE),
-                            nullptr, // Row end offsets (null for standard CSR)
-                            A_->getColData(memory::DEVICE),
-                            A_->getValues(memory::DEVICE),
-                            CUDA_R_32I,
-                            CUDA_R_64F,
-                            CUDSS_MTYPE_SPD,
-                            CUDSS_MVIEW_LOWER,
-                            CUDSS_BASE_ZERO);
+                           A_->getNumRows(),
+                           A_->getNumColumns(),
+                           A_->getNnz(),
+                           A_->getRowData(memory::DEVICE),
+                           nullptr, // Row end offsets (null for standard CSR)
+                           A_->getColData(memory::DEVICE),
+                           A_->getValues(memory::DEVICE),
+                           CUDA_R_32I,
+                           CUDA_R_64F,
+                           CUDSS_MTYPE_SPD,
+                           CUDSS_MVIEW_LOWER,
+                           CUDSS_BASE_ZERO);
     }
 
     /**
@@ -69,12 +69,12 @@ namespace ReSolve
                           CUDA_R_64F,
                           CUDSS_LAYOUT_COL_MAJOR);
       cudssExecute(cudss_handle_,
-                    CUDSS_PHASE_ANALYSIS,
-                    cudss_config_,
-                    cudss_data_,
-                    descr_A_cudss_,
-                    descr_x_,
-                    descr_b_);
+                   CUDSS_PHASE_ANALYSIS,
+                   cudss_config_,
+                   cudss_data_,
+                   descr_A_cudss_,
+                   descr_x_,
+                   descr_b_);
     }
 
     /**

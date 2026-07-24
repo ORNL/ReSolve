@@ -29,8 +29,8 @@ namespace ReSolve
     private:
       memory::MemorySpace memspace_;
 
-      matrix::Csr*        A_;
-      real_type           tol_ = 1e-12;
+      matrix::Csr*             A_;
+      real_type                tol_ = 1e-12;
       CholeskySolverCuDssCuda* impl_;
     };
   } // namespace hykkt
