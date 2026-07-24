@@ -12,6 +12,8 @@
 #include <iostream>
 #include <string>
 
+#include "TestHelper.hpp"
+#include <resolve/LinSolverDirectCuDssRf.hpp>
 #include <resolve/LinSolverDirectKLU.hpp>
 #include <resolve/LinSolverIterativeFGMRES.hpp>
 #include <resolve/SystemSolver.hpp>
@@ -24,10 +26,6 @@
 #include <resolve/vector/Vector.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
-
-#include <resolve/LinSolverDirectCuDssRf.hpp>
-
-#include "TestHelper.hpp"
 
 template <class workspace_type>
 static int runTest(int argc, char* argv[], std::string backend);

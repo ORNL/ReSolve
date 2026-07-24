@@ -297,7 +297,7 @@ if(RESOLVE_USE_KLU)
         "${test_data_dir}" "-m" "${asym_matrix_path}" "-r" "${asym_rhs_path}"
     )
   endif(RESOLVE_USE_CUDA)
-  
+
   # cUDSS specific tests
   if(RESOLVE_USE_CUDSS)
     add_test(
