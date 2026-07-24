@@ -1,6 +1,5 @@
 /**
  * @file CholeskySolverCuDss.cpp
- * @author Adham Ibrahim (ibrahimas@ornl.gov)
  * @brief Cholesky decomposition solver CuDSS implementation. This is a CUDA-only variant of CholeskySolver.
  */
 

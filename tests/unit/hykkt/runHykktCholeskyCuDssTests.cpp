@@ -1,7 +1,7 @@
 /**
  * @file runHykktCholeskyCuDssTests.hpp
  * @author Shaked Regev (regevs@ornl.gov)
- * @author Adham Ibrahim (ibrahimas@ornl.gov)
+ * @author Andrew Xu (xua1@ornl.gov)
  * @brief Tests for class hykkt::CholeskySolver
  *
  */
