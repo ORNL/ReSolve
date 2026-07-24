@@ -11,6 +11,9 @@ add_subdirectory(ruiz)
 add_subdirectory(cholesky)
 add_subdirectory(spgemm)
 add_subdirectory(sccg)
+if(RESOLVE_USE_CUDSS)
+  add_subdirectory(cholesky_cudss)
+endif()
 
 # Build shared library ReSolve::hykkt
 set(HYKKT_SOLVER_SRC HyKKTSolver.cpp)
@@ -30,7 +33,6 @@ target_link_libraries(
           resolve_vector
           resolve_matrix
 )
-
 # Link to CUDA ReSolve backend if CUDA is support enabled.
 
 # target_include_directories(resolve_hykkt_solver PUBLIC

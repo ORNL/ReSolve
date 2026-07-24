@@ -31,6 +31,14 @@ target_link_libraries(
                                     resolve_vector
 )
 
+if(RESOLVE_USE_CUDSS)
+  add_executable(runHykktCholeskyCuDssTests.exe runHykktCholeskyCuDssTests.cpp)
+  target_link_libraries(
+    runHykktCholeskyCuDssTests.exe PRIVATE resolve_hykkt_chol_cudss resolve_matrix
+                                      resolve_vector
+  )
+endif()
+
 add_executable(runHykktSCCGTests.exe runHykktSCCGTests.cpp)
 target_link_libraries(
   runHykktSCCGTests.exe
@@ -62,6 +70,9 @@ set(installable_tests
     runHykktPermutationTests.exe runHykktRuizScalingTests.exe
     runHykktCholeskyTests.exe runHykktSpGEMMTests.exe runHykktSolverTests.exe
 )
+if(RESOLVE_USE_CUDSS)
+  list(APPEND installable_tests runHykktCholeskyCuDssTests.exe)
+endif()
 
 install(TARGETS ${installable_tests} RUNTIME DESTINATION bin/resolve/tests/unit)
 
@@ -75,3 +86,6 @@ add_test(NAME hykkt_chol_test COMMAND $<TARGET_FILE:runHykktCholeskyTests.exe>)
 add_test(NAME hykkt_spgemm_test COMMAND $<TARGET_FILE:runHykktSpGEMMTests.exe>)
 add_test(NAME hykkt_sccg_test COMMAND $<TARGET_FILE:runHykktSCCGTests.exe>)
 add_test(NAME hykkt_solver_test COMMAND $<TARGET_FILE:runHykktSolverTests.exe>)
+if(RESOLVE_USE_CUDSS)
+  add_test(NAME hykkt_chol_cudss_test COMMAND $<TARGET_FILE:runHykktCholeskyCuDssTests.exe>)
+endif()

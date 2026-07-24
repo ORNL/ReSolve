@@ -186,7 +186,7 @@ endif(RESOLVE_USE_HIP)
 
 if(RESOLVE_USE_CUDSS)
   find_package(cudss)
-  if(NOT cudss_FOUND)
+  if(NOT (cudss_FOUND AND RESOLVE_USE_CUDA))
     message(STATUS "Cannot find cuDSS, disabling it ...")
     set(RESOLVE_USE_CUDSS
         OFF

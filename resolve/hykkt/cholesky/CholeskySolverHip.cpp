@@ -13,8 +13,7 @@ namespace ReSolve
 
   namespace hykkt
   {
-    // The bool argument is use_cudss, Used by CUDA version. It's defaulted to true and unused here.
-    CholeskySolverHip::CholeskySolverHip(bool)
+    CholeskySolverHip::CholeskySolverHip()
     {
       rocblas_create_handle(&handle_);
       rocsolver_create_rfinfo(&rfinfo_, handle_);

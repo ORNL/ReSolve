@@ -1,17 +1,12 @@
 /**
- * @file CholeskySolver.cpp
+ * @file CholeskySolverCuDss.cpp
  * @author Adham Ibrahim (ibrahimas@ornl.gov)
- * @brief Cholesky decomposition solver implementation
+ * @brief Cholesky decomposition solver CuDSS implementation. This is a CUDA-only variant of CholeskySolver.
  */
 
-#include "CholeskySolver.hpp"
+#include "CholeskySolverCuDss.hpp"
 
-#include "CholeskySolverCpu.hpp"
-#ifdef RESOLVE_USE_CUDA
-#include "CholeskySolverCuda.hpp"
-#elif defined(RESOLVE_USE_HIP)
-#include "CholeskySolverHip.hpp"
-#endif
+#include "CholeskySolverCuDssCuda.hpp"
 
 namespace ReSolve
 {
@@ -24,30 +19,16 @@ namespace ReSolve
      * @brief Cholesky Solver constructor
      * @param[in] memspace - memory space to use for computations
      */
-    CholeskySolver::CholeskySolver(memory::MemorySpace memspace)
-      : memspace_(memspace)
+    CholeskySolverCuDss::CholeskySolverCuDss(memory::MemorySpace memspace)
+      : memspace_(memspace),
+      impl_(new CholeskySolverCuDssCuda())
     {
-      if (memspace_ == memory::HOST)
-      {
-        impl_ = new CholeskySolverCpu();
-      }
-      else
-      {
-#ifdef RESOLVE_USE_CUDA
-        impl_ = new CholeskySolverCuda();
-#elif defined(RESOLVE_USE_HIP)
-        impl_ = new CholeskySolverHip();
-#else
-        out::error() << "Memory space set to DEVICE, though no GPU support enabled. Must enable RESOLVE_USE_CUDA or RESOLVE_USE_HIP.\n";
-        exit(1);
-#endif
-      }
     }
 
     /**
      * @brief Cholesky Solver destructor
      */
-    CholeskySolver::~CholeskySolver()
+    CholeskySolverCuDss::~CholeskySolverCuDss()
     {
       delete impl_;
     }
@@ -56,7 +37,7 @@ namespace ReSolve
      * @brief Loads or reloads matrix pointer to the solver
      * @param[in] A - pointer to the matrix in CSR format
      */
-    void CholeskySolver::addMatrixInfo(matrix::Csr* A)
+    void CholeskySolverCuDss::addMatrixInfo(matrix::Csr* A)
     {
       A_ = A;
       impl_->addMatrixInfo(A);
@@ -67,7 +48,7 @@ namespace ReSolve
      *        the factor L. Values will be computed by numerical analysis.
      *        This need only be called once as long as the sparsity pattern does not change.
      */
-    void CholeskySolver::symbolicAnalysis()
+    void CholeskySolverCuDss::symbolicAnalysis()
     {
       impl_->symbolicAnalysis();
     }
@@ -80,7 +61,7 @@ namespace ReSolve
      *
      * @param[in] tol - pivot tolerance value
      */
-    void CholeskySolver::setPivotTolerance(real_type tol)
+    void CholeskySolverCuDss::setPivotTolerance(real_type tol)
     {
       tol_ = tol;
     }
@@ -89,7 +70,7 @@ namespace ReSolve
      * @brief Performs numerical factorization. Fills in the values of the factor L such
      *        that LL^T = A.
      */
-    void CholeskySolver::numericalFactorization()
+    void CholeskySolverCuDss::numericalFactorization()
     {
       impl_->numericalFactorization(tol_);
     }
@@ -102,7 +83,7 @@ namespace ReSolve
      * @param[out] x - pointer to the solution vector
      * @param[in] b - pointer to the right-hand side vector
      */
-    void CholeskySolver::solve(vector::Vector* x, vector::Vector* b)
+    void CholeskySolverCuDss::solve(vector::Vector* x, vector::Vector* b)
     {
       impl_->solve(x, b);
       x->setDataUpdated(memspace_);

@@ -124,14 +124,7 @@ static int runTest(int argc, char* argv[], std::string backend, bool use_cudss)
   std::string refactor("none");
   if (backend == "cuda")
   {
-    if (use_cudss)
-    {
-      refactor = "cudssrf";
-    }
-    else
-    {
-      refactor = "cusolverrf";
-    }
+    refactor = "cusolverrf";
   }
   else if (backend == "hip")
   {

@@ -15,7 +15,7 @@ namespace ReSolve
     class CholeskySolverCpu : public CholeskySolverImpl
     {
     public:
-      CholeskySolverCpu(bool = true); // The bool argument is use_cudss, Used by CUDA version. It's defaulted to true and unused here.
+      CholeskySolverCpu();
       ~CholeskySolverCpu();
 
       void addMatrixInfo(matrix::Csr* A);

@@ -1,5 +1,5 @@
 /**
- * @file runHykktCholeskyTests.hpp
+ * @file runHykktCholeskyCuDssTests.hpp
  * @author Shaked Regev (regevs@ornl.gov)
  * @author Adham Ibrahim (ibrahimas@ornl.gov)
  * @brief Tests for class hykkt::CholeskySolver
@@ -11,7 +11,7 @@
 #include <string>
 
 #include "resolve/Common.hpp"
-#include "tests/unit/hykkt/HykktCholeskyTests.hpp"
+#include "tests/unit/hykkt/HykktCholeskyCuDssTests.hpp"
 
 /**
  * @brief Run tests with a given backend
@@ -28,7 +28,7 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
   workspace.initializeHandles();
   ReSolve::MatrixHandler             handler(&workspace);
   std::mt19937                       generator(ReSolve::constants::SEED); // set random seed for reproducibility
-  ReSolve::tests::HykktCholeskyTests test(memspace, handler, generator);
+  ReSolve::tests::HykktCholeskyCuDssTests test(memspace, handler, generator);
 
   result += test.minimalCorrectness();
   handler.setValuesChanged(true, memspace);
@@ -49,15 +49,7 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
 int main(int, char**)
 {
   ReSolve::tests::TestingResults result;
-  runTests<ReSolve::LinAlgWorkspaceCpu>("CPU", ReSolve::memory::HOST, result);
-
-#ifdef RESOLVE_USE_CUDA
   runTests<ReSolve::LinAlgWorkspaceCUDA>("CUDA", ReSolve::memory::DEVICE, result);
-#endif
-
-#ifdef RESOLVE_USE_HIP
-  runTests<ReSolve::LinAlgWorkspaceHIP>("HIP", ReSolve::memory::DEVICE, result);
-#endif
 
   return result.summary();
 }

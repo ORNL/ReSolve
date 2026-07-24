@@ -13,8 +13,7 @@ namespace ReSolve
 
   namespace hykkt
   {
-    // The bool argument is use_cudss, Used by CUDA version. It's defaulted to true and unused here.
-    CholeskySolverCpu::CholeskySolverCpu(bool)
+    CholeskySolverCpu::CholeskySolverCpu()
     {
       Common_.nmethods = 1;
       // Use natural ordering

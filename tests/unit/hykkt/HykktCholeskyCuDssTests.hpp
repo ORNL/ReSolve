@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-#include <resolve/hykkt/cholesky/CholeskySolver.hpp>
+#include <resolve/hykkt/cholesky_cudss/CholeskySolverCuDss.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/Vector.hpp>
@@ -21,19 +21,19 @@ namespace ReSolve
   namespace tests
   {
     /**
-     * @brief Tests for class hykkt::CholeskySolver
+     * @brief Tests for class hykkt::CholeskySolverCuDss
      *
      */
-    class HykktCholeskyTests : public TestBase
+    class HykktCholeskyCuDssTests : public TestBase
     {
     public:
-      HykktCholeskyTests(memory::MemorySpace memspace, MatrixHandler& matrixHandler, std::mt19937& generator)
+      HykktCholeskyCuDssTests(memory::MemorySpace memspace, MatrixHandler& matrixHandler, std::mt19937& generator)
         : memspace_(memspace), matrixHandler_(matrixHandler), generator_(generator)
       {
         cholmod_start(&Common);
       }
 
-      virtual ~HykktCholeskyTests()
+      virtual ~HykktCholeskyCuDssTests()
       {
         cholmod_finish(&Common);
       }
@@ -60,7 +60,7 @@ namespace ReSolve
           A->syncData(memory::DEVICE);
         }
 
-        ReSolve::hykkt::CholeskySolver solver(memspace_);
+        ReSolve::hykkt::CholeskySolverCuDss solver(memspace_);
         solver.addMatrixInfo(A);
         solver.symbolicAnalysis();
         solver.setPivotTolerance(1e-12);
@@ -126,7 +126,7 @@ namespace ReSolve
           A->syncData(memory::HOST);
         }
 
-        ReSolve::hykkt::CholeskySolver solver(memspace_);
+        ReSolve::hykkt::CholeskySolverCuDss solver(memspace_);
 
         // Add A to the solver, symbolic analysis, and numerical factorization
         solver.addMatrixInfo(A);
@@ -198,7 +198,7 @@ namespace ReSolve
           A->syncData(memory::HOST);
         }
 
-        ReSolve::hykkt::CholeskySolver solver(memspace_);
+        ReSolve::hykkt::CholeskySolverCuDss solver(memspace_);
         for (index_type i = 0; i < trials; ++i)
         {
           // Only do symbolic analysis the first iteration
@@ -332,6 +332,6 @@ namespace ReSolve
         }
         return v;
       }
-    }; // class HykktCholeskyTests
+    }; // class HykktCholeskyCuDssTests
   } // namespace tests
 } // namespace ReSolve
