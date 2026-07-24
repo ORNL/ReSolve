@@ -37,6 +37,12 @@ if(RESOLVE_USE_KLU)
     target_link_libraries(sys_glu_test.exe PRIVATE ReSolve)
 
   endif(RESOLVE_USE_CUDA)
+
+  if(RESOLVE_USE_CUDSS)
+    # System solver test with cuDSS rf and iterative refinement
+    add_executable(cudss_refactor_test.exe testCuDssRefactor.cpp)
+    target_link_libraries(cudss_refactor_test.exe PRIVATE ReSolve)
+  endif(RESOLVE_USE_CUDSS)
 endif(RESOLVE_USE_KLU)
 
 if(RESOLVE_USE_LUSOL)
@@ -291,6 +297,22 @@ if(RESOLVE_USE_KLU)
         "${test_data_dir}" "-m" "${asym_matrix_path}" "-r" "${asym_rhs_path}"
     )
   endif(RESOLVE_USE_CUDA)
+  
+  # cUDSS specific tests
+  if(RESOLVE_USE_CUDSS)
+    add_test(
+      NAME cudss_refactor_cuda_test
+      COMMAND
+        $<TARGET_FILE:cudss_refactor_test.exe> "${test_data_dir}" "-d"
+        "${test_data_dir}" "-m" "${sym_matrix_path}" "-r" "${sym_rhs_path}"
+    )
+    add_test(
+      NAME cudss_refactor_cuda_asym_test
+      COMMAND
+        $<TARGET_FILE:cudss_refactor_test.exe> "${test_data_dir}" "-d"
+        "${test_data_dir}" "-m" "${asym_matrix_path}" "-r" "${asym_rhs_path}"
+    )
+  endif(RESOLVE_USE_CUDSS)
 
   # ROCm specific tests
   if(RESOLVE_USE_HIP)

@@ -25,13 +25,7 @@
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 
-#ifdef RESOLVE_USE_CUDA
-#include <resolve/LinSolverDirectCuSolverRf.hpp>
-#endif
-
-#ifdef RESOLVE_USE_HIP
-#include <resolve/LinSolverDirectRocSolverRf.hpp>
-#endif
+#include <resolve/LinSolverDirectCuDssRf.hpp>
 
 #include "TestHelper.hpp"
 
@@ -45,13 +39,7 @@ int main(int argc, char* argv[])
   // Refactorization on CPU not currently supported in SystemSolver class
   // error_sum += runTest<ReSolve::LinAlgWorkspaceCpu>(argc, argv, "cpu");
 
-#ifdef RESOLVE_USE_CUDA
   error_sum += runTest<ReSolve::LinAlgWorkspaceCUDA>(argc, argv, "cuda");
-#endif
-
-#ifdef RESOLVE_USE_HIP
-  error_sum += runTest<ReSolve::LinAlgWorkspaceHIP>(argc, argv, "hip");
-#endif
 
   return error_sum;
 }
@@ -116,18 +104,7 @@ static int runTest(int argc, char* argv[], std::string backend)
 
   // Create system solver
   std::string refactor("none");
-  if (backend == "cuda")
-  {
-    refactor = "cusolverrf";
-  }
-  else if (backend == "hip")
-  {
-    refactor = "rocsolverrf";
-  }
-  else
-  {
-    refactor = "klu";
-  }
+  refactor = "cudssrf";
   ReSolve::SystemSolver solver(&workspace,
                                "klu",    // factorization
                                refactor, // refactorization
@@ -140,14 +117,7 @@ static int runTest(int argc, char* argv[], std::string backend)
   solver.setRefinementMethod("fgmres", "cgs2");
   solver.getIterativeSolver().setCliParam("restart", "100");
   solver.getIterativeSolver().setTol(ReSolve::constants::MACHINE_EPSILON);
-  if (backend == "hip")
-  {
-    solver.getIterativeSolver().setMaxit(200);
-  }
-  if (backend == "cuda")
-  {
-    solver.getIterativeSolver().setMaxit(400);
-  }
+  solver.getIterativeSolver().setMaxit(400);
 
   // Read first matrix
   std::ifstream mat1(matrix_file_name_1);
