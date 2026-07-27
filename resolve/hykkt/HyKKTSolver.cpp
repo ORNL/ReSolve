@@ -258,11 +258,6 @@ namespace ReSolve
       J_d_scaled_->allocateWithExternalSparsityPattern(J_d_->getRowData(memspace_), J_d_->getColData(memspace_), J_d_->getNnz(), memspace_);
       // H_tilde_ does not need to be allocated because loadResultMatrix() does it later
     }
-    else if (memspace_ == memory::DEVICE)
-    {
-      J_d_->syncData(memory::DEVICE); // check if this is redundant
-    }
-
     r_y_copy_->copyFromExternal(r_y_, memspace_, memspace_);
 
     // check if this is redundant in later iterations
@@ -557,10 +552,6 @@ namespace ReSolve
     // block-recovering the solution to the original system by parts
     // this part is to recover delta_x
     cholesky_->solve(z_, r_x_perm_);
-    if (memspace_ == memory::DEVICE)
-    {
-      x_->syncData(memory::DEVICE);
-    }
     permutation_->mapIndex(REV_PERM_V, z_->getData(memspace_), x_->getData(memspace_));
     x_->setDataUpdated(memspace_);
 
