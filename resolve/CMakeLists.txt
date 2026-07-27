@@ -157,6 +157,16 @@ endif()
 # Add HyKKT solver
 if(RESOLVE_USE_KLU)
   add_subdirectory(hykkt)
+  list(
+    APPEND
+    ReSolve_Targets_List
+    resolve_hykkt
+    resolve_hykkt_ruiz
+    resolve_hykkt_chol
+    resolve_hykkt_spgemm
+    resolve_hykkt_sccg
+    resolve_hykkt_solver
+  )
 endif()
 
 # Set installable targets
