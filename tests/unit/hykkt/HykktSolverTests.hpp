@@ -195,6 +195,15 @@ namespace ReSolve
         real_type second_error = hykktSolver.solve();
         status *= validateResult(second_error, tol);
 
+        // Changing J_d between nonempty and empty invalidates cached solver data.
+        matrix::Csr* J_d_empty = new matrix::Csr(J_d->getNumRows(),
+                                                 J_d->getNumColumns(),
+                                                 0);
+        hykktSolver.setMatrixBlocks(H, D_s, J, J_d_empty);
+        real_type structure_error = hykktSolver.solve();
+        status *= (structure_error == 1);
+        delete J_d_empty;
+
         delete H;
         delete D_s;
         delete J;

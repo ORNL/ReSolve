@@ -79,9 +79,13 @@ namespace ReSolve
     J_d_ = J_d;
 
     bool J_d_flag = J_d->getNnz() > 0;
-    // status_ = (J_d_flag_ == J_d_flag);
-    status_   = true; // when using API, we can't check if sparsity pattern changed
-    J_d_flag_ = J_d_flag;
+    // Arbitrary sparsity changes remain the caller's responsibility, but
+    // switching between empty and nonempty J_d invalidates cached HyKKT data.
+    if (!allocated_)
+    {
+      J_d_flag_ = J_d_flag;
+    }
+    status_ = (J_d_flag_ == J_d_flag);
   }
 
   /**
