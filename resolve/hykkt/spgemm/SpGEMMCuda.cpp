@@ -149,7 +149,7 @@ namespace ReSolve
         mem_.deleteOnDevice(temp_buffer_2);
 
         int64_t C_num_cols = 0;
-        int64_t C_nnz_     = 0;
+        C_nnz_             = 0;
         cusparseSpMatGetSize(C_descr_, &n_, &C_num_cols, &C_nnz_);
 
         mem_.allocateArrayOnDevice(&C_col_ind_, (index_type) C_nnz_);
