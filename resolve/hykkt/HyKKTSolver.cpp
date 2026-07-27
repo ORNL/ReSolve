@@ -513,7 +513,15 @@ namespace ReSolve
     schur_->copyFromExternal(r_y_, memspace_, memspace_);
     matrixHandler_->matvec(J_perm_, omega_perm_, schur_, &ONE, &MINUS_ONE, memspace_);
 
-    sccg_ = new SchurComplementConjugateGradient(J_->getNumRows(), J_->getNumColumns(), cholesky_, matrixHandler_, vectorHandler_, memspace_);
+    if (!allocated_)
+    {
+      sccg_ = new SchurComplementConjugateGradient(J_->getNumRows(),
+                                                   J_->getNumColumns(),
+                                                   cholesky_,
+                                                   matrixHandler_,
+                                                   vectorHandler_,
+                                                   memspace_);
+    }
     sccg_->addMatrixInfo(J_perm_, J_tr_perm_);
     y_->setToZero(memspace_);
     sccg_->addVectorInfo(y_, schur_);
