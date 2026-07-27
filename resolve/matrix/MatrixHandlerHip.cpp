@@ -281,22 +281,18 @@ namespace ReSolve
     index_type       n         = A->getNumColumns();
     index_type       nnz       = A->getNnz();
     rocsparse_status status;
-    bool             allocated = workspace_->isTransposeBufferAllocated();
-    if (!allocated)
-    {
-      // allocate transpose buffer
-      size_t bufferSize;
-      status = rocsparse_csr2csc_buffer_size(workspace_->getRocsparseHandle(),
-                                             m,
-                                             n,
-                                             nnz,
-                                             A->getRowData(memory::DEVICE),
-                                             A->getColData(memory::DEVICE),
-                                             rocsparse_action_numeric,
-                                             &bufferSize);
-      error_sum += status;
-      workspace_->setTransposeBufferWorkspace(bufferSize);
-    }
+    // Ensure the shared transpose workspace is large enough for this matrix.
+    size_t bufferSize;
+    status = rocsparse_csr2csc_buffer_size(workspace_->getRocsparseHandle(),
+                                           m,
+                                           n,
+                                           nnz,
+                                           A->getRowData(memory::DEVICE),
+                                           A->getColData(memory::DEVICE),
+                                           rocsparse_action_numeric,
+                                           &bufferSize);
+    error_sum += status;
+    error_sum += workspace_->setTransposeBufferWorkspace(bufferSize);
     status = rocsparse_dcsr2csc(workspace_->getRocsparseHandle(),
                                 m,
                                 n,

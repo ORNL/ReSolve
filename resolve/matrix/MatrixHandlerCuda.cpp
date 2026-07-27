@@ -306,30 +306,25 @@ namespace ReSolve
     index_type       n         = A->getNumColumns();
     index_type       nnz       = A->getNnz();
     cusparseStatus_t status;
-    bool             allocated = workspace_->isTransposeBufferAllocated();
-    // check dimensions of A and At
-    if (!allocated)
-    {
-      // allocate transpose buffer
-      size_t bufferSize;
-      status = cusparseCsr2cscEx2_bufferSize(workspace_->getCusparseHandle(),
-                                             m,
-                                             n,
-                                             nnz,
-                                             A->getValues(memory::DEVICE),
-                                             A->getRowData(memory::DEVICE),
-                                             A->getColData(memory::DEVICE),
-                                             At->getValues(memory::DEVICE),
-                                             At->getRowData(memory::DEVICE),
-                                             At->getColData(memory::DEVICE),
-                                             CUDA_R_64F,
-                                             CUSPARSE_ACTION_NUMERIC,
-                                             CUSPARSE_INDEX_BASE_ZERO,
-                                             CUSPARSE_CSR2CSC_ALG1,
-                                             &bufferSize);
-      error_sum += status;
-      workspace_->setTransposeBufferWorkspace(bufferSize);
-    }
+    // Ensure the shared transpose workspace is large enough for this matrix.
+    size_t bufferSize;
+    status = cusparseCsr2cscEx2_bufferSize(workspace_->getCusparseHandle(),
+                                           m,
+                                           n,
+                                           nnz,
+                                           A->getValues(memory::DEVICE),
+                                           A->getRowData(memory::DEVICE),
+                                           A->getColData(memory::DEVICE),
+                                           At->getValues(memory::DEVICE),
+                                           At->getRowData(memory::DEVICE),
+                                           At->getColData(memory::DEVICE),
+                                           CUDA_R_64F,
+                                           CUSPARSE_ACTION_NUMERIC,
+                                           CUSPARSE_INDEX_BASE_ZERO,
+                                           CUSPARSE_CSR2CSC_ALG1,
+                                           &bufferSize);
+    error_sum += status;
+    error_sum += workspace_->setTransposeBufferWorkspace(bufferSize);
     status = cusparseCsr2cscEx2(workspace_->getCusparseHandle(),
                                 m,
                                 n,

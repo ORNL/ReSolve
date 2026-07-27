@@ -71,6 +71,7 @@ namespace ReSolve
     real_type*    d_r_{nullptr};                     // needed for inf-norm
     real_type*    norm_buffer_{nullptr};             // needed for inf-norm
     void*         transpose_workspace_{nullptr};     // needed for transpose
+    size_t        transpose_workspace_size_{0};      // allocated size in bytes
     bool          transpose_workspace_ready_{false}; // to track if allocated
     index_type    d_r_size_{0};
     bool          norm_buffer_ready_{false}; // to track if allocated
