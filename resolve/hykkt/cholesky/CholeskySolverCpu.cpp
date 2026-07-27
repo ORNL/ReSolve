@@ -39,11 +39,12 @@ namespace ReSolve
 
     void CholeskySolverCpu::addMatrixInfo(matrix::Csr* A)
     {
+      A_ = A;
       if (A_chol_)
       {
         cholmod_free_sparse(&A_chol_, &Common_);
       }
-      A_chol_ = convertToCholmod(A);
+      A_chol_ = convertToCholmod(A_);
     }
 
     /**
@@ -71,6 +72,12 @@ namespace ReSolve
     void CholeskySolverCpu::numericalFactorization(real_type tol)
     {
       (void) tol; // Mark tol as unused
+
+      // CHOLMOD stores its own copy of the matrix values. Refresh that copy
+      // before numerical refactorization when the solver is reused.
+      mem_.copyArrayHostToHost(static_cast<real_type*>(A_chol_->x),
+                               A_->getValues(memory::HOST),
+                               A_->getNnz());
 
       cholmod_factorize(A_chol_, factorization_, &Common_);
       if (Common_.status < 0)

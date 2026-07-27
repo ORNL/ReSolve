@@ -142,6 +142,59 @@ namespace ReSolve
         testname += " N=" + std::to_string(N) + ", nnz =" + std::to_string(nnz) + '\n';
         status *= validateResult(error, tol);
 
+        // Update D_s and restore data modified by the first solve.
+        real_type* D_s_values = D_s->getValues(memory::HOST);
+        for (index_type i = 0; i < D_s->getNnz(); ++i)
+        {
+          D_s_values[i] *= 1.1;
+        }
+        D_s->setUpdated(memory::HOST);
+
+        std::ifstream J_reuse_file(J_file_name);
+        std::ifstream r_x_reuse_file(r_x_file_name);
+        std::ifstream r_s_reuse_file(r_s_file_name);
+        std::ifstream r_y_reuse_file(r_y_file_name);
+        std::ifstream r_yd_reuse_file(r_yd_file_name);
+
+        matrix::Csr* J_reuse = io::createCsrFromFile(J_reuse_file, false);
+
+        vector::Vector* r_x_reuse  = io::createVectorFromFile(r_x_reuse_file);
+        vector::Vector* r_s_reuse  = io::createVectorFromFile(r_s_reuse_file);
+        vector::Vector* r_y_reuse  = io::createVectorFromFile(r_y_reuse_file);
+        vector::Vector* r_yd_reuse = io::createVectorFromFile(r_yd_reuse_file);
+
+        int restore_status = 0;
+        restore_status |= J->copyFromExternal(J_reuse->getRowData(memory::HOST),
+                                              J_reuse->getColData(memory::HOST),
+                                              J_reuse->getValues(memory::HOST),
+                                              memory::HOST,
+                                              memory::HOST);
+        restore_status |= r_x->copyFromExternal(r_x_reuse, memory::HOST, memory::HOST);
+        restore_status |= r_s->copyFromExternal(r_s_reuse, memory::HOST, memory::HOST);
+        restore_status |= r_y->copyFromExternal(r_y_reuse, memory::HOST, memory::HOST);
+        restore_status |= r_yd->copyFromExternal(r_yd_reuse, memory::HOST, memory::HOST);
+
+        if (memspace_ == memory::DEVICE)
+        {
+          restore_status |= D_s->syncData(memory::DEVICE);
+          restore_status |= J->syncData(memory::DEVICE);
+          restore_status |= r_x->syncData(memory::DEVICE);
+          restore_status |= r_s->syncData(memory::DEVICE);
+          restore_status |= r_y->syncData(memory::DEVICE);
+          restore_status |= r_yd->syncData(memory::DEVICE);
+        }
+
+        status *= (restore_status == 0);
+
+        delete J_reuse;
+        delete r_x_reuse;
+        delete r_s_reuse;
+        delete r_y_reuse;
+        delete r_yd_reuse;
+
+        real_type second_error = hykktSolver.solve();
+        status *= validateResult(second_error, tol);
+
         delete H;
         delete D_s;
         delete J;

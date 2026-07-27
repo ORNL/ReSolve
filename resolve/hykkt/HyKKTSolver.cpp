@@ -403,6 +403,10 @@ namespace ReSolve
    */
   void hykkt::HyKKTSolver::computeSpGEMMHgamma()
   {
+    // Numerical values can change between solves while the sparsity pattern
+    // remains fixed, so refresh the SpGEMM inputs before recomputing H_gamma.
+    spgemm_hgamma_->loadProductMatrices(J_tr_, J_);
+    spgemm_hgamma_->loadSumMatrix(H_tilde_);
     spgemm_hgamma_->compute();
     r_x_hat_->copyFromExternal(r_x_til_, memspace_, memspace_);
     matrixHandler_->matvec(J_tr_, r_y_, r_x_hat_, &gamma_, &ONE, memspace_);

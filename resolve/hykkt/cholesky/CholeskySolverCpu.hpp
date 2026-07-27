@@ -27,6 +27,7 @@ namespace ReSolve
       MemoryHandler mem_;
 
       cholmod_common  Common_;
+      matrix::Csr*    A_ = nullptr;
       cholmod_sparse* A_chol_; // cholmod sparse matrix representation
       cholmod_factor* factorization_;
 
