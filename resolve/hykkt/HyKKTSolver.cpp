@@ -246,7 +246,6 @@ namespace ReSolve
       J_tr_perm_   = new matrix::Csr(J_tr_->getNumRows(), J_tr_->getNumColumns(), J_tr_->getNnz());
       J_d_scaled_  = new matrix::Csr(J_d_->getNumRows(), J_d_->getNumColumns(), J_d_->getNnz());
 
-      D_s_vals_->setData(D_s_->getValues(memspace_), memspace_);
       r_yd_scaled_->allocate(memspace_);
       r_x_perm_->allocate(memspace_);
       omega_perm_->allocate(memspace_);
@@ -262,6 +261,9 @@ namespace ReSolve
       J_d_scaled_->allocateWithExternalSparsityPattern(J_d_->getRowData(memspace_), J_d_->getColData(memspace_), J_d_->getNnz(), memspace_);
       // H_tilde_ does not need to be allocated because loadResultMatrix() does it later
     }
+
+    // D_s may be replaced between solves, so refresh the external value pointer.
+    D_s_vals_->setData(D_s_->getValues(memspace_), memspace_);
     r_y_copy_->copyFromExternal(r_y_, memspace_, memspace_);
 
     // check if this is redundant in later iterations

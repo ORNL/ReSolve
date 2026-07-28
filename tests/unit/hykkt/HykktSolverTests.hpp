@@ -142,13 +142,16 @@ namespace ReSolve
         testname += " N=" + std::to_string(N) + ", nnz =" + std::to_string(nnz) + '\n';
         status *= validateResult(error, tol);
 
-        // Update D_s and restore data modified by the first solve.
-        real_type* D_s_values = D_s->getValues(memory::HOST);
-        for (index_type i = 0; i < D_s->getNnz(); ++i)
+        // Replace D_s and restore data modified by the first solve.
+        std::ifstream D_s_reuse_file(D_s_file_name);
+        matrix::Csr*  D_s_reuse = io::createCsrFromFile(D_s_reuse_file, false);
+
+        real_type* D_s_values = D_s_reuse->getValues(memory::HOST);
+        for (index_type i = 0; i < D_s_reuse->getNnz(); ++i)
         {
           D_s_values[i] *= 1.1;
         }
-        D_s->setUpdated(memory::HOST);
+        D_s_reuse->setUpdated(memory::HOST);
 
         std::ifstream J_reuse_file(J_file_name);
         std::ifstream r_x_reuse_file(r_x_file_name);
@@ -176,7 +179,8 @@ namespace ReSolve
 
         if (memspace_ == memory::DEVICE)
         {
-          restore_status |= D_s->syncData(memory::DEVICE);
+          restore_status |= D_s_reuse->allocateMatrixData(memory::DEVICE);
+          restore_status |= D_s_reuse->syncData(memory::DEVICE);
           restore_status |= J->syncData(memory::DEVICE);
           restore_status |= r_x->syncData(memory::DEVICE);
           restore_status |= r_s->syncData(memory::DEVICE);
@@ -192,6 +196,8 @@ namespace ReSolve
         delete r_y_reuse;
         delete r_yd_reuse;
 
+        hykktSolver.setMatrixBlocks(H, D_s_reuse, J, J_d);
+
         // Change gamma to verify the cached SpGEMM coefficient is refreshed.
         hykktSolver.setGamma(gamma * 1.1);
         real_type second_error = hykktSolver.solve();
@@ -202,6 +208,7 @@ namespace ReSolve
                                                  J_d->getNumColumns(),
                                                  0);
         hykktSolver.setMatrixBlocks(H, D_s, J, J_d_empty);
+        delete D_s_reuse;
         real_type structure_error = hykktSolver.solve();
         status *= (structure_error == 1);
 
