@@ -104,6 +104,16 @@ namespace ReSolve
         testname += " n=" + std::to_string(n) + ", m=" + std::to_string(m) + ", nnz =" + std::to_string(nnz);
         status *= validateResult(x_0, converged_n);
 
+        // A zero initial residual is already converged and must not enter
+        // conjugate-gradient divisions with zero numerator and denominator.
+        x_0->setToZero(memspace_);
+        b->setToZero(memspace_);
+        sccg.addVectorInfo(x_0, b);
+        sccg.setup();
+        int zero_residual_converged_n = sccg.solve();
+        status *= (zero_residual_converged_n == 0);
+        status *= (vector_handler_.dot(x_0, x_0, memspace_) <= sccg_tol);
+
         delete H;
         delete J;
         delete J_tr;

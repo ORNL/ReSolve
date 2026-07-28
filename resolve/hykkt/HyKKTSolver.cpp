@@ -642,7 +642,11 @@ namespace ReSolve
 
     // Calculate final relative norm
     norm_resx_sq += norm_resy_sq;
-    real_type norm_res = sqrt(norm_resx_sq) / sqrt(norm_r_x_sq);
+    real_type norm_res = sqrt(norm_resx_sq);
+    if (norm_r_x_sq > 0)
+    {
+      norm_res /= sqrt(norm_r_x_sq);
+    }
     printf("||Ax-b||/||b|| = %32.32g\n\n", norm_res);
 
     allocated_ = true;

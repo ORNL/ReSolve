@@ -124,6 +124,12 @@ namespace ReSolve
       matrix_handler_->matvec(J_, z_, r_, &MINUS_ONE, &ONE, memspace_);
       gamma_i_ = vector_handler_->dot(r_, r_, memspace_);
 
+      if (sqrt(gamma_i_) < tol_)
+      {
+        gamma_i1_ = gamma_i_;
+        return 0;
+      }
+
       matrix_handler_->matvec(J_tr_, r_, y_, &ONE, &ZERO, memspace_);
       choleskySolver_->solve(z_, y_);
       matrix_handler_->matvec(J_, z_, w_, &ONE, &ZERO, memspace_);
