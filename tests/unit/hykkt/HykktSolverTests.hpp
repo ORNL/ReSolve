@@ -202,6 +202,21 @@ namespace ReSolve
         hykktSolver.setMatrixBlocks(H, D_s, J, J_d_empty);
         real_type structure_error = hykktSolver.solve();
         status *= (structure_error == 1);
+
+        // Starting without J_d is valid and must remain reusable.
+        hykkt::HyKKTSolver no_jd_solver(n_x, m_d, m_c, memspace_);
+        no_jd_solver.setMatrixBlocks(H, D_s, J, J_d_empty);
+        no_jd_solver.setRHSBlocks(r_x, r_s, r_y, r_yd);
+        no_jd_solver.setLHSPointers(x, s, y, y_d);
+        no_jd_solver.setGamma(gamma);
+        no_jd_solver.addHandlers(&matrixHandler_, &vectorHandler_);
+
+        real_type no_jd_error = no_jd_solver.solve();
+        status *= validateResult(no_jd_error, tol);
+
+        real_type no_jd_reuse_error = no_jd_solver.solve();
+        status *= validateResult(no_jd_reuse_error, tol);
+
         delete J_d_empty;
 
         delete H;
