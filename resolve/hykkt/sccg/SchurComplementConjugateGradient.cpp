@@ -86,19 +86,22 @@ namespace ReSolve
 
     void SchurComplementConjugateGradient::setup()
     {
-      y_ = new vector::Vector(m_);
-      z_ = new vector::Vector(m_);
-      r_ = new vector::Vector(n_);
-      p_ = new vector::Vector(n_);
-      s_ = new vector::Vector(n_);
-      w_ = new vector::Vector(n_);
+      if (!y_)
+      {
+        y_ = new vector::Vector(m_);
+        z_ = new vector::Vector(m_);
+        r_ = new vector::Vector(n_);
+        p_ = new vector::Vector(n_);
+        s_ = new vector::Vector(n_);
+        w_ = new vector::Vector(n_);
 
-      y_->allocate(memspace_);
-      z_->allocate(memspace_);
-      r_->allocate(memspace_);
-      p_->allocate(memspace_);
-      s_->allocate(memspace_);
-      w_->allocate(memspace_);
+        y_->allocate(memspace_);
+        z_->allocate(memspace_);
+        r_->allocate(memspace_);
+        p_->allocate(memspace_);
+        s_->allocate(memspace_);
+        w_->allocate(memspace_);
+      }
 
       y_->setToZero(memspace_);
       z_->setToZero(memspace_);
