@@ -23,6 +23,8 @@ namespace ReSolve
       SpGEMMImpl()          = default;
       virtual ~SpGEMMImpl() = default;
 
+      virtual void setAlpha(real_type alpha) = 0;
+
       virtual void loadProductMatrices(matrix::Csr* A, matrix::Csr* B) = 0;
       virtual void loadSumMatrix(matrix::Csr* D)                       = 0;
       virtual void loadResultMatrix(matrix::Csr** E_ptr)               = 0;

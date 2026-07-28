@@ -407,6 +407,7 @@ namespace ReSolve
   {
     // Numerical values can change between solves while the sparsity pattern
     // remains fixed, so refresh the SpGEMM inputs before recomputing H_gamma.
+    spgemm_hgamma_->setAlpha(gamma_);
     spgemm_hgamma_->loadProductMatrices(J_tr_, J_);
     spgemm_hgamma_->loadSumMatrix(H_tilde_);
     spgemm_hgamma_->compute();

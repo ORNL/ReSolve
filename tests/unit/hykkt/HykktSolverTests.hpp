@@ -192,6 +192,8 @@ namespace ReSolve
         delete r_y_reuse;
         delete r_yd_reuse;
 
+        // Change gamma to verify the cached SpGEMM coefficient is refreshed.
+        hykktSolver.setGamma(gamma * 1.1);
         real_type second_error = hykktSolver.solve();
         status *= validateResult(second_error, tol);
 
