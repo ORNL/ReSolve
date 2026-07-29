@@ -1,0 +1,13 @@
+# LeakSanitizer suppressions for ReSolve HIP/ROCm builds.
+#
+# These leaks originate inside the AMD ROCm runtime libraries (HSA runtime and
+# the HIP runtime), not in ReSolve. They are one-time allocations made during
+# runtime initialization that live for the entire process lifetime and are
+# reclaimed by the OS at exit. They are not fixable from within ReSolve.
+#
+# See ORNL/ReSolve#388.
+leak:libhsa-runtime64.so
+leak:libamdhip64.so
+leak:librocsparse.so
+leak:librocblas.so
+leak:librocsolver.so

@@ -41,6 +41,14 @@ namespace ReSolve
 
     delete L_csr_;
     delete U_csr_;
+
+    // setup() creates the combined factor matrix and the rocSOLVER refactorization
+    // info object; release them here so they are not leaked on teardown.
+    delete M_;
+    if (infoM_ != nullptr)
+    {
+      rocsolver_destroy_rfinfo(infoM_);
+    }
   }
 
   /**
@@ -71,6 +79,13 @@ namespace ReSolve
     index_type n = A_->getNumRows();
 
     // set matrix info
+    // setup() may be called more than once; destroy any previously created
+    // info object first so it is not leaked.
+    if (infoM_ != nullptr)
+    {
+      rocsolver_destroy_rfinfo(infoM_);
+      infoM_ = nullptr;
+    }
     rocsolver_create_rfinfo(&infoM_, workspace_->getRocblasHandle());
 
     // Combine factors L and U into matrix M_
@@ -335,6 +350,9 @@ namespace ReSolve
     index_type* U_row = U->getRowData(memory::HOST);
     index_type* U_col = U->getColData(memory::HOST);
     index_type  M_nnz = (L->getNnz() + U->getNnz() - n);
+    // combineFactors() is called from setup(), which may run more than once;
+    // release any matrix from a previous call before allocating a new one.
+    delete M_;
     M_                = new matrix::Csr(n, n, M_nnz);
     M_->allocateMatrixData(memory::HOST);
     index_type* M_row = M_->getRowData(memory::HOST);
