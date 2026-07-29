@@ -19,6 +19,55 @@ namespace ReSolve
     mem_.deleteOnDevice(d_aux1_);
     mem_.deleteOnDevice(d_aux2_);
     mem_.deleteOnDevice(d_ILU_vals_);
+
+    if (buffer_ != nullptr)
+    {
+      mem_.deleteOnDevice(buffer_);
+      buffer_ = nullptr;
+    }
+    if (buffer_L_ != nullptr)
+    {
+      mem_.deleteOnDevice(buffer_L_);
+      buffer_L_ = nullptr;
+    }
+    if (buffer_U_ != nullptr)
+    {
+      mem_.deleteOnDevice(buffer_U_);
+      buffer_U_ = nullptr;
+    }
+
+    if (descr_spsv_L_ != nullptr)
+    {
+      cusparseSpSV_destroyDescr(descr_spsv_L_);
+      descr_spsv_L_ = nullptr;
+    }
+    if (descr_spsv_U_ != nullptr)
+    {
+      cusparseSpSV_destroyDescr(descr_spsv_U_);
+      descr_spsv_U_ = nullptr;
+    }
+
+    if (mat_L_ != nullptr)
+    {
+      cusparseDestroySpMat(mat_L_);
+      mat_L_ = nullptr;
+    }
+    if (mat_U_ != nullptr)
+    {
+      cusparseDestroySpMat(mat_U_);
+      mat_U_ = nullptr;
+    }
+
+    if (info_A_ != nullptr)
+    {
+      cusparseDestroyCsrilu02Info(info_A_);
+      info_A_ = nullptr;
+    }
+    if (descr_A_ != nullptr)
+    {
+      cusparseDestroyMatDescr(descr_A_);
+      descr_A_ = nullptr;
+    }
   }
 
   int LinSolverDirectCuSparseILU0::setup(matrix::Sparse* A,
