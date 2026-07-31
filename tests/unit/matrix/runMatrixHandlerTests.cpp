@@ -46,8 +46,8 @@ void runTests(const std::string& backend, ReSolve::tests::TestingResults& result
   result += test.csc2csr(1200, 1024);
   workspace.resetLinAlgWorkspace();
   result += test.transpose(3, 3);
-  // Reuse the same GPU workspace for a much larger transpose to exercise
-  // transpose-buffer growth rather than first-use-only allocation.
+  // Reuse the same workspace for a much larger transpose. CUDA and HIP
+  // should grow the buffer instead of reusing the first allocation.
   result += test.transpose(2048, 1024);
   workspace.resetLinAlgWorkspace();
   result += test.transpose(5, 3);

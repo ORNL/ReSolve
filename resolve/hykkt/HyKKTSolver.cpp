@@ -62,6 +62,9 @@ namespace ReSolve
    * values. It will only set pointers to user provided data; it is user's
    * responsibility to supply and later delete that memory.
    *
+   * Reusing the solver requires the sparsity patterns of the matrix blocks
+   * to remain unchanged. Changing J_d between empty and nonempty is rejected.
+   *
    * @param[in] H_plus_D_x - Pointer to the Hessian matrix block (n_x x n_x),
    * corresponding to H + D_x in the HyKKT paper.
    * @param[in] D_s - Pointer to the slack variables derivatives matrix block
@@ -160,13 +163,10 @@ namespace ReSolve
    */
   real_type hykkt::HyKKTSolver::solve()
   {
-    // TODO: Review sparsity pattern checking in HyKKT
     if (!status_ && allocated_)
     {
-      printf("\n\nERROR: USING HYKKT WITH NEW NONZERO STRUCTURE\n\n");
-      std::cout << "status = " << status_
-                << ", allocated = " << allocated_
-                << "\n";
+      std::cout << "ERROR: Changing J_d between empty and nonempty is not "
+                   "supported when reusing HyKKT.\n";
       return 1;
     }
 
@@ -266,7 +266,7 @@ namespace ReSolve
     D_s_vals_->setData(D_s_->getValues(memspace_), memspace_);
     r_y_copy_->copyFromExternal(r_y_, memspace_, memspace_);
 
-    // check if this is redundant in later iterations
+    // Matrix values may change between solves, so refresh the transpose.
     matrixHandler_->transpose(J_, J_tr_, memspace_);
     if (J_d_flag_)
     {
@@ -640,14 +640,17 @@ namespace ReSolve
     matrixHandler_->matvec(J_copy_, x_, r_y_copy_, &MINUS_ONE, &ONE, memspace_);
     norm_resy_sq = vectorHandler_->dot(r_y_copy_, r_y_copy_, memspace_);
 
-    // Calculate final relative norm
     norm_resx_sq += norm_resy_sq;
     real_type norm_res = sqrt(norm_resx_sq);
     if (norm_r_x_sq > 0)
     {
       norm_res /= sqrt(norm_r_x_sq);
+      printf("||Ax-b||/||b|| = %32.32g\n\n", norm_res);
     }
-    printf("||Ax-b||/||b|| = %32.32g\n\n", norm_res);
+    else
+    {
+      printf("||Ax-b|| = %32.32g\n\n", norm_res);
+    }
 
     allocated_ = true;
 
