@@ -2,6 +2,7 @@
 
 ## HyKKT Release changes
 
+- Exported HyKKT libraries and fixed solver reuse by refreshing numerical data, reusing allocations, resizing GPU transpose workspaces, and handling zero residuals.
 - Added classes and tests for permutation, Ruiz scaling, Cholesky factorization, Schur complement conjugate gradient and matrix multiplication and addition.
 
 - Changed random number generation int tests to be C++ style and fixed-seed, to avoid random failures.
