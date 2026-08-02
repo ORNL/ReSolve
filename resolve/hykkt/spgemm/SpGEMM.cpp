@@ -54,13 +54,14 @@ namespace ReSolve
     }
 
     /**
-     * Updates the scalar multiplier for the matrix product.
+     * Updates the coefficients for the SpGEMM operation.
      *
-     * @param[in] alpha - Scalar multiplier for the product.
+     * @param[in] alpha - Scalar multiplier for the matrix product.
+     * @param[in] beta  - Scalar multiplier for the sum matrix.
      */
-    void SpGEMM::setAlpha(real_type alpha)
+    void SpGEMM::setCoefficients(real_type alpha, real_type beta)
     {
-      impl_->setAlpha(alpha);
+      impl_->setCoefficients(alpha, beta);
     }
 
     /**

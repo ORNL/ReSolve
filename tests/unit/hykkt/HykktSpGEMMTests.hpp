@@ -292,6 +292,59 @@ namespace ReSolve
 
         status *= verifyResult(E, 2.0);
 
+        // Recompute with updated product and sum coefficients.
+        spgemm.setCoefficients(3.0, 3.0);
+        spgemm.compute();
+
+        if (memspace_ == memory::DEVICE)
+        {
+          E->syncData(memory::HOST);
+        }
+
+        status *= verifyResult(E, 3.0);
+
+        // Change only beta and verify that the sum-matrix contribution changes.
+        real_type* equal_coefficient_values = new real_type[E->getNnz()];
+        for (index_type i = 0; i < E->getNnz(); ++i)
+        {
+          equal_coefficient_values[i] = E->getValues(memory::HOST)[i];
+        }
+
+        spgemm.setCoefficients(3.0, 5.0);
+        spgemm.compute();
+
+        if (memspace_ == memory::DEVICE)
+        {
+          E->syncData(memory::HOST);
+        }
+
+        bool beta_changed_result = false;
+        for (index_type i = 0; i < E->getNnz(); ++i)
+        {
+          if (fabs(E->getValues(memory::HOST)[i] -
+                   equal_coefficient_values[i]) > 1e-12)
+          {
+            beta_changed_result = true;
+            break;
+          }
+        }
+
+        if (!beta_changed_result)
+        {
+          std::cerr << "Changing beta did not change the SpGEMM result.\n";
+        }
+        status *= beta_changed_result;
+        delete[] equal_coefficient_values;
+
+        // Restore equal coefficients for the matrix-value reuse check below.
+        spgemm.setCoefficients(3.0, 3.0);
+        spgemm.compute();
+
+        if (memspace_ == memory::DEVICE)
+        {
+          E->syncData(memory::HOST);
+        }
+
         for (index_type j = 0; j < A->getNnz(); j++)
         {
           A->getValues(memory::HOST)[j] *= 2.0;
@@ -318,7 +371,7 @@ namespace ReSolve
           E->syncData(memory::HOST);
         }
 
-        status *= verifyResult(E, 4.0);
+        status *= verifyResult(E, 6.0);
 
         delete A;
         delete B;

@@ -16,7 +16,7 @@ namespace ReSolve
       SpGEMMCpu(real_type alpha, real_type beta);
       ~SpGEMMCpu();
 
-      void setAlpha(real_type alpha) override;
+      void setCoefficients(real_type alpha, real_type beta) override;
 
       void loadProductMatrices(matrix::Csr* A, matrix::Csr* B);
       void loadSumMatrix(matrix::Csr* D);

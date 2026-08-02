@@ -22,7 +22,7 @@ namespace ReSolve
       SpGEMM(memory::MemorySpace memspace, real_type alpha, real_type beta);
       ~SpGEMM();
 
-      void setAlpha(real_type alpha);
+      void setCoefficients(real_type alpha, real_type beta);
 
       void loadProductMatrices(matrix::Csr* A, matrix::Csr* B);
       void loadSumMatrix(matrix::Csr* D);

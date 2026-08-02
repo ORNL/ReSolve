@@ -29,9 +29,10 @@ namespace ReSolve
       cusparseDestroy(handle_);
     }
 
-    void SpGEMMCuda::setAlpha(real_type alpha)
+    void SpGEMMCuda::setCoefficients(real_type alpha, real_type beta)
     {
       alpha_ = alpha;
+      beta_  = beta;
     }
 
     void SpGEMMCuda::loadProductMatrices(matrix::Csr* A, matrix::Csr* B)

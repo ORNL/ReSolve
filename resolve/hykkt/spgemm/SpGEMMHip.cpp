@@ -30,9 +30,10 @@ namespace ReSolve
       mem_.deleteOnDevice(buffer_);
     }
 
-    void SpGEMMHip::setAlpha(real_type alpha)
+    void SpGEMMHip::setCoefficients(real_type alpha, real_type beta)
     {
       alpha_ = alpha;
+      beta_  = beta;
     }
 
     void SpGEMMHip::loadProductMatrices(matrix::Csr* A, matrix::Csr* B)
