@@ -109,7 +109,6 @@ namespace ReSolve
         x_0->setToZero(memspace_);
         b->setToZero(memspace_);
         sccg.addVectorInfo(x_0, b);
-        sccg.setup();
         int zero_residual_converged_n = sccg.solve();
         status *= (zero_residual_converged_n == 0);
         status *= (vector_handler_.dot(x_0, x_0, memspace_) <= sccg_tol);

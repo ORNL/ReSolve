@@ -212,6 +212,7 @@ namespace ReSolve
                                                    matrixHandler_,
                                                    vectorHandler_,
                                                    memspace_);
+      sccg_->setup();
     }
     setupConjugateGradient();
     computeConjugateGradient();
@@ -535,7 +536,6 @@ namespace ReSolve
     sccg_->addMatrixInfo(J_perm_, J_tr_perm_);
     y_->setToZero(memspace_);
     sccg_->addVectorInfo(y_, schur_);
-    sccg_->setup();
   }
 
   /**

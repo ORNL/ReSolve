@@ -49,6 +49,11 @@ namespace ReSolve
       void setSolverTolerance(double tol);
       void setSolverItmax(int itmax);
 
+      /**
+       * @brief Allocates internal work vectors.
+       *
+       * @pre Must be called exactly once before the first call to solve().
+       */
       void setup();
       int  solve();
 

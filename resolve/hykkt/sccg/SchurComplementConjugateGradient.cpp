@@ -86,22 +86,24 @@ namespace ReSolve
 
     void SchurComplementConjugateGradient::setup()
     {
-      if (!y_)
-      {
-        y_ = new vector::Vector(m_);
-        z_ = new vector::Vector(m_);
-        r_ = new vector::Vector(n_);
-        p_ = new vector::Vector(n_);
-        s_ = new vector::Vector(n_);
-        w_ = new vector::Vector(n_);
+      y_ = new vector::Vector(m_);
+      z_ = new vector::Vector(m_);
+      r_ = new vector::Vector(n_);
+      p_ = new vector::Vector(n_);
+      s_ = new vector::Vector(n_);
+      w_ = new vector::Vector(n_);
 
-        y_->allocate(memspace_);
-        z_->allocate(memspace_);
-        r_->allocate(memspace_);
-        p_->allocate(memspace_);
-        s_->allocate(memspace_);
-        w_->allocate(memspace_);
-      }
+      y_->allocate(memspace_);
+      z_->allocate(memspace_);
+      r_->allocate(memspace_);
+      p_->allocate(memspace_);
+      s_->allocate(memspace_);
+      w_->allocate(memspace_);
+    }
+
+    int SchurComplementConjugateGradient::solve()
+    {
+      using namespace constants;
 
       y_->setToZero(memspace_);
       z_->setToZero(memspace_);
@@ -113,11 +115,6 @@ namespace ReSolve
       x_0_->setToZero(memspace_);
 
       beta_ = 0;
-    }
-
-    int SchurComplementConjugateGradient::solve()
-    {
-      using namespace constants;
 
       matrix_handler_->matvec(J_tr_, x_0_, y_, &ONE, &ZERO, memspace_);
       choleskySolver_->solve(z_, y_);
