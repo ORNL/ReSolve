@@ -29,6 +29,11 @@ namespace ReSolve
       cusparseDestroy(handle_);
     }
 
+    void SpGEMMCuda::setAlpha(real_type alpha)
+    {
+      alpha_ = alpha;
+    }
+
     void SpGEMMCuda::loadProductMatrices(matrix::Csr* A, matrix::Csr* B)
     {
       A_descr_ = convertToCusparseType(A);

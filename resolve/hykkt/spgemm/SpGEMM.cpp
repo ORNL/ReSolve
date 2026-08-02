@@ -54,6 +54,16 @@ namespace ReSolve
     }
 
     /**
+     * Updates the scalar multiplier for the matrix product.
+     *
+     * @param[in] alpha - Scalar multiplier for the product.
+     */
+    void SpGEMM::setAlpha(real_type alpha)
+    {
+      impl_->setAlpha(alpha);
+    }
+
+    /**
      * Loads the two matrices for the product
      * @param A[in] - Pointer to CSR matrix
      * @param B[in] - Pointer to CSR matrix

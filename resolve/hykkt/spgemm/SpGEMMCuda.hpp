@@ -22,10 +22,7 @@ namespace ReSolve
       SpGEMMCuda(real_type alpha, real_type beta);
       ~SpGEMMCuda();
 
-      void setAlpha(real_type alpha) override
-      {
-        alpha_ = alpha;
-      }
+      void setAlpha(real_type alpha) override;
 
       void loadProductMatrices(matrix::Csr* A, matrix::Csr* B);
       void loadSumMatrix(matrix::Csr* D);

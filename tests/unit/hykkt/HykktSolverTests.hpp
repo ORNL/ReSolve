@@ -203,7 +203,7 @@ namespace ReSolve
         real_type second_error = hykktSolver.solve();
         status *= validateResult(second_error, tol);
 
-        // Verify an exact zero RHS is handled without producing NaNs.
+        // Check that a zero RHS doesn't result in NaNs.
         r_x->setToZero(memspace_);
         r_s->setToZero(memspace_);
         r_y->setToZero(memspace_);
@@ -211,7 +211,8 @@ namespace ReSolve
         real_type zero_rhs_error = hykktSolver.solve();
         status *= validateResult(zero_rhs_error, tol);
 
-        // Changing J_d between nonempty and empty invalidates cached solver data.
+        // Check that the solver raises an error when trying to change J_d
+        // from nonempty to empty.
         matrix::Csr* J_d_empty = new matrix::Csr(J_d->getNumRows(),
                                                  J_d->getNumColumns(),
                                                  0);

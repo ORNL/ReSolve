@@ -214,8 +214,8 @@ namespace ReSolve
   /**
    * @brief allocates and initiates variables for KKT system
    *
-   * @pre jd_flag_ determines if variables used for Spgemm H_tilde
-   *      should be initiated
+   * @pre J_d_flag_ determines whether variables used to form H_tilde with
+   *      SpGEMM should be initialized.
    *
    * @post all variables used for hykkt are allocated for; J_d-
    *       related variables are not initiated if J_d nnz == 0
@@ -392,9 +392,6 @@ namespace ReSolve
   void hykkt::HyKKTSolver::setupSpGEMMHgamma()
   {
     spgemm_hgamma_ = new SpGEMM(memspace_, gamma_, ONE);
-    spgemm_hgamma_->loadProductMatrices(J_tr_, J_);
-    spgemm_hgamma_->loadSumMatrix(H_tilde_);
-    spgemm_hgamma_->loadResultMatrix(&H_gamma_); // H_gamma_ will be created when calling SpGEMM->compute()
   }
 
   /*
@@ -412,6 +409,9 @@ namespace ReSolve
     spgemm_hgamma_->setAlpha(gamma_);
     spgemm_hgamma_->loadProductMatrices(J_tr_, J_);
     spgemm_hgamma_->loadSumMatrix(H_tilde_);
+    // HIP initializes the result descriptor using dimensions established by
+    // the product and sum inputs, so load the result matrix after both inputs.
+    spgemm_hgamma_->loadResultMatrix(&H_gamma_);
     spgemm_hgamma_->compute();
     r_x_hat_->copyFromExternal(r_x_til_, memspace_, memspace_);
     matrixHandler_->matvec(J_tr_, r_y_, r_x_hat_, &gamma_, &ONE, memspace_);

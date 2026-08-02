@@ -47,6 +47,11 @@ namespace ReSolve
       cholmod_finish(&Common_);
     }
 
+    void SpGEMMCpu::setAlpha(real_type alpha)
+    {
+      alpha_ = alpha;
+    }
+
     void SpGEMMCpu::loadProductMatrices(matrix::Csr* A, matrix::Csr* B)
     {
       if (!A_)
