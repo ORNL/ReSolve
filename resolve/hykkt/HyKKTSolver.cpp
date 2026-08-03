@@ -7,10 +7,12 @@
 #include "HyKKTSolver.hpp"
 
 #include <resolve/matrix/io.hpp>
+#include <resolve/utilities/logger/Logger.hpp>
 
 namespace ReSolve
 {
   using namespace constants;
+  using out = io::Logger;
 
   /**
    * @brief basic constructor
@@ -73,22 +75,32 @@ namespace ReSolve
    * (m_c x n_x).
    * @param[in] J_d - Pointer to the inequality constraints Jacobian block
    * (m_d x n_x)
+   *
+   * @return 0 if successful, 1 if the supplied blocks are incompatible with
+   *         the allocated solver state. On failure, the previously stored
+   *         blocks are left unchanged.
    */
-  void hykkt::HyKKTSolver::setMatrixBlocks(matrix::Csr* H_plus_D_x, matrix::Csr* D_s, matrix::Csr* J, matrix::Csr* J_d)
+  int hykkt::HyKKTSolver::setMatrixBlocks(matrix::Csr* H_plus_D_x, matrix::Csr* D_s, matrix::Csr* J, matrix::Csr* J_d)
   {
+    const bool J_d_flag = J_d->getNnz() > 0;
+
+    if (allocated_ && J_d_flag_ != J_d_flag)
+    {
+      out::error() << "Changing J_d between empty and nonempty is not "
+                      "supported when reusing HyKKT.\n";
+      return 1;
+    }
+
     H_   = H_plus_D_x;
     D_s_ = D_s;
     J_   = J;
     J_d_ = J_d;
 
-    bool J_d_flag = J_d->getNnz() > 0;
-    // Arbitrary sparsity changes remain the caller's responsibility, but
-    // switching between empty and nonempty J_d invalidates cached HyKKT data.
     if (!allocated_)
     {
       J_d_flag_ = J_d_flag;
     }
-    status_ = (J_d_flag_ == J_d_flag);
+    return 0;
   }
 
   /**
@@ -163,13 +175,6 @@ namespace ReSolve
    */
   real_type hykkt::HyKKTSolver::solve()
   {
-    if (!status_ && allocated_)
-    {
-      std::cout << "ERROR: Changing J_d between empty and nonempty is not "
-                   "supported when reusing HyKKT.\n";
-      return 1;
-    }
-
     setupParameters();
 
     if (!allocated_)

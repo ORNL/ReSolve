@@ -201,9 +201,9 @@ namespace ReSolve
         matrix::Csr* J_d_empty = new matrix::Csr(J_d->getNumRows(),
                                                  J_d->getNumColumns(),
                                                  0);
-        hykktSolver.setMatrixBlocks(H, D_s_reuse, J, J_d_empty);
-        real_type structure_error = hykktSolver.solve();
-        status *= (structure_error == 1);
+
+        int structure_status = hykktSolver.setMatrixBlocks(H, D_s_reuse, J, J_d_empty);
+        status *= (structure_status != 0);
 
         // Exercise initialization and reuse with an empty J_d.
         hykkt::HyKKTSolver no_jd_solver(n_x, m_d, m_c, memspace_);

@@ -41,7 +41,7 @@ namespace ReSolve
           std::istream& r_y_file,
           std::istream& r_yd_file);
 
-      void setMatrixBlocks(matrix::Csr* H_plus_D_x, matrix::Csr* D_s, matrix::Csr* J, matrix::Csr* J_d);
+      int  setMatrixBlocks(matrix::Csr* H_plus_D_x, matrix::Csr* D_s, matrix::Csr* J, matrix::Csr* J_d);
       void setRHSBlocks(vector::Vector* r_x, vector::Vector* r_s, vector::Vector* r_y, vector::Vector* r_yd);
       void setLHSPointers(vector::Vector* x, vector::Vector* s, vector::Vector* y, vector::Vector* y_d);
 
@@ -77,10 +77,6 @@ namespace ReSolve
 
       bool allocated_ = false;
       bool J_d_flag_  = false;
-
-      // Whether the solver is correctly used with matrices of
-      // the same nonzero structure
-      bool status_ = true;
 
       RuizScaling*                      ruiz_{nullptr};
       SpGEMM*                           spgemm_htil_{nullptr};
