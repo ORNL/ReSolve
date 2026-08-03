@@ -24,11 +24,11 @@ namespace ReSolve
 
       void setCoefficients(real_type alpha, real_type beta) override;
 
-      void loadProductMatrices(matrix::Csr* A, matrix::Csr* B);
-      void loadSumMatrix(matrix::Csr* D);
-      void loadResultMatrix(matrix::Csr** E_ptr);
+      void loadProductMatrices(matrix::Csr* A, matrix::Csr* B) override;
+      void loadSumMatrix(matrix::Csr* D) override;
+      void loadResultMatrix(matrix::Csr** E_ptr) override;
 
-      void compute();
+      void compute() override;
 
     private:
       MemoryHandler mem_;
