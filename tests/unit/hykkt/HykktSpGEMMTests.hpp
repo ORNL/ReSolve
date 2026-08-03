@@ -321,8 +321,7 @@ namespace ReSolve
         bool beta_changed_result = false;
         for (index_type i = 0; i < E->getNnz(); ++i)
         {
-          if (fabs(E->getValues(memory::HOST)[i] -
-                   equal_coefficient_values[i]) > 1e-12)
+          if (fabs(E->getValues(memory::HOST)[i] - equal_coefficient_values[i]) > 1e-12)
           {
             beta_changed_result = true;
             break;
