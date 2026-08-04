@@ -148,10 +148,13 @@ namespace ReSolve
       matrix_handler_->matvec(A_prec_, x_0_, r_prec_, &MINUS_ONE, &ONE, memspace_);
       gamma_i_ = vector_handler_->dot(r_prec_, r_prec_, memspace_);
 
-      matrix_handler_->matvec(A_prec_, r_prec_, w_, &ONE, &ZERO, memspace_);
-      // impl_->SpMMTallSkinny(A_prec_, r_prec_, w_); // IS THIS FASTER???
+      // matrix_handler_->matvec(A_prec_, r_prec_, w_, &ONE, &ZERO, memspace_);
+      impl_->hypreDevice_CSRMatrixMatvec(A_prec_, r_prec_, w_); // IS THIS FASTER???
       delta_ = vector_handler_->dot(w_, r_prec_, memspace_);
       alpha_ = gamma_i_ / delta_;
+
+      auto iterative_start = std::chrono::steady_clock::now();
+      std::chrono::time_point<std::chrono::steady_clock> iterative_end;
 
       int i;
       for (i = 0; i < itmax_; i++)
@@ -172,14 +175,16 @@ namespace ReSolve
         error_ = r_norm_ / b_norm_;
         // std::cout << std::setprecision(std::numeric_limits<double>::max_digits10) << error_ << '\n';
         if (error_ < tol_)
+        // if (false)
         {
           auto end = std::chrono::steady_clock::now();
           std::chrono::duration<double, std::milli> elapsed = (end - start);
           printf("Convergence occured at iteration %d. Took %f ms.\n", i, elapsed.count());
+          printf("Per iteration time: %.10f\n", (std::chrono::duration<double, std::milli>(iterative_end - iterative_start)).count() / i);
           break;
         }
-        matrix_handler_->matvec(A_prec_, r_prec_, w_, &ONE, &ZERO, memspace_);
-        // impl_->SpMMTallSkinny(A_prec_, r_prec_, w_);
+        // matrix_handler_->matvec(A_prec_, r_prec_, w_, &ONE, &ZERO, memspace_);
+        impl_->hypreDevice_CSRMatrixMatvec(A_prec_, r_prec_, w_);
         delta_   = vector_handler_->dot(w_, r_prec_, memspace_);
         beta_    = gamma_i1_ / gamma_i_;
         gamma_i_ = gamma_i1_;
@@ -187,12 +192,14 @@ namespace ReSolve
         // auto end = std::chrono::steady_clock::now();
         // std::chrono::duration<double, std::milli> elapsed = (end - start);
         // printf("time = %f, error = %f\n", elapsed.count(), error_);
+        iterative_end = std::chrono::steady_clock::now();
       }
 
       printf("Conjugate gradient error is %32.32g \n", error_);
       if (i == itmax_)
       {
         printf("No CG convergence in %d iterations\n", itmax_);
+        printf("Per iteration time: %.10f\n", (std::chrono::duration<double, std::milli>(iterative_end - iterative_start)).count() / i);
         return 1;
       }
       return 0;

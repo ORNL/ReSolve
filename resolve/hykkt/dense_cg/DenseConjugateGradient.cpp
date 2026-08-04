@@ -2,6 +2,8 @@
 
 #include <cmath>
 #include <chrono>
+#include <iomanip>
+#include <limits>
 
 #include <resolve/Common.hpp>
 
@@ -152,6 +154,9 @@ namespace ReSolve
       delta_ = vector_handler_->dot(w_, r_prec_, memspace_);
       alpha_ = gamma_i_ / delta_;
 
+      auto iterative_start = std::chrono::steady_clock::now();
+      std::chrono::time_point<std::chrono::steady_clock> iterative_end;
+
       int i;
       for (i = 0; i < itmax_; i++)
       {
@@ -169,12 +174,14 @@ namespace ReSolve
         vector_handler_->scal(b_norm_, r_, memspace_); // can maybe save one operation in computing error
         r_norm_ = std::sqrt(vector_handler_->dot(r_, r_, memspace_));
         error_ = r_norm_ / b_norm_;
-        // printf("%.7e\n", error_);
+        // std::cout << std::setprecision(std::numeric_limits<double>::max_digits10) << error_ << '\n';
+        // if (false)
         if (error_ < tol_)
         {
           auto end = std::chrono::steady_clock::now();
           std::chrono::duration<double, std::milli> elapsed = (end - start);
           printf("Convergence occured at iteration %d. Took %f ms.\n", i, elapsed.count());
+          printf("Per iteration time: %.10f\n", (std::chrono::duration<double, std::milli>(iterative_end - iterative_start)).count() / i);
           break;
         }
         vector_handler_->gemm('N', 'N', ONE, ZERO, A_prec_, r_prec_, w_, memspace_);
@@ -185,12 +192,14 @@ namespace ReSolve
         // auto end = std::chrono::steady_clock::now();
         // std::chrono::duration<double, std::milli> elapsed = (end - start);
         // printf("time = %f, error = %f\n", elapsed.count(), error_);
+        iterative_end = std::chrono::steady_clock::now();
       }
 
       printf("Conjugate gradient error is %32.32g \n", error_);
       if (i == itmax_)
       {
         printf("No CG convergence in %d iterations\n", itmax_);
+        printf("Per iteration time: %.10f\n", (std::chrono::duration<double, std::milli>(iterative_end - iterative_start)).count() / i);
         return 1;
       }
       return 0;

@@ -28,8 +28,9 @@ target_include_directories(resolve_hykkt_chol PUBLIC ${SUITESPARSE_INCLUDE_DIR})
 
 # Link to CUDA ReSolve backend if CUDA is support enabled
 if(RESOLVE_USE_CUDA)
+  find_package(cudss REQUIRED)
   target_sources(resolve_hykkt_chol PRIVATE ${HyKKT_CUDASDK_SRC})
-  target_link_libraries(resolve_hykkt_chol PUBLIC resolve_backend_cuda)
+  target_link_libraries(resolve_hykkt_chol PUBLIC resolve_backend_cuda cudss)
 endif()
 
 if(RESOLVE_USE_HIP)

@@ -885,6 +885,34 @@ namespace ReSolve
     x->setDataUpdated(memory::DEVICE);
   }
 
+  // ...
+  void VectorHandlerCuda::randomVectorExceptFirstColumn(vector::Vector* x, real_type min, real_type max)
+  {
+    if (x->getNumVectors() == 1)
+    {
+      x->setToZero(memory::DEVICE);
+      return;
+    }
+
+    index_type n = x->getSize() * (x->getNumVectors() - 1);
+    if (!workspace_->isRngReady())
+    {
+      if (workspace_->computeTotalThreads() != 0)
+      {
+        out::error() << "Can't compute total GPU threads!";
+      }
+      workspace_->initializeRng(n);
+    }
+    else if (workspace_->getRngStateSize() < std::min(n, workspace_->getTotalThreads()))
+    {
+      workspace_->resetRng();
+      workspace_->initializeRng(n);
+    }
+    cuda::randomVector(n, x->getData(1, memory::DEVICE), min, max, workspace_->getTotalThreads(), workspace_->getRngState());
+    x->setToZero(0, memory::DEVICE);
+    x->setDataUpdated(memory::DEVICE);
+  }
+
   void VectorHandlerCuda::addIdentity(vector::Vector* v, real_type alpha)
   {
     cuda::addIdentity(v->getSize(), v->getData(memory::DEVICE), alpha);

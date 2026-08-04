@@ -29,7 +29,7 @@
 template <typename WorkspaceType>
 void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace, ReSolve::tests::TestingResults& result)
 {
-// std::freopen("log.txt", "w", stdout);
+std::freopen("log.txt", "w", stdout);
   std::cout << "Running tests on " << backend << " device:\n";
 
   WorkspaceType workspace;
@@ -39,14 +39,39 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
   ReSolve::tests::HykktDenseConjugateGradientTests test(memspace, matrix_handler, vector_handler);
 
   std::string        source_dir = std::string(SOURCE_DIR);
-  std::string       A_file_name = source_dir + std::string("/RandomizedCGTestMatrices/crankseg_2.mtx");
   double rng_min = -1.0;
   double rng_max = 1.0;
+  
+  std::vector<size_t> n_list{
+    // 100,
+    // 100,
+    // 100,
+    // 40,
+    // 100,
+    // 200,
+    // 400,
+    // 800,
+    // 1600,
+    // 2400,
+    // 3200,
 
-  result += test.DenseCGTest(A_file_name, 6400, rng_min, rng_max);
+    4800,
+    
+    // 6400,
+    // 8000,
+    // 11200,
+    // 9600,
+    // 16000,
+    // 19200
+  };
+
+  for (size_t n : n_list)
+  {
+    result += test.DenseCGTest("", n, rng_min, rng_max);
+  }
 
   std::cout << "\n";
-    // std::fclose(stdout);
+    std::fclose(stdout);
 }
 
 int main(int, char**)

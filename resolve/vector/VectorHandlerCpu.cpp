@@ -621,4 +621,15 @@ namespace ReSolve
     v->setDataUpdated(memory::HOST);
   }
 
+  void VectorHandlerCpu::randomVectorExceptFirstColumn(vector::Vector* v, real_type min, real_type max)
+  {
+    std::uniform_real_distribution<real_type> distribution(min, max);
+    v->setToZero(0, memory::HOST);
+    for (index_type i = v->getSize(); i < v->getSize() * v->getNumVectors(); ++i)
+    {
+      v->getData(memory::HOST)[i] = distribution(workspace_->getRng());
+    }
+    v->setDataUpdated(memory::HOST);
+  }
+
 } // namespace ReSolve

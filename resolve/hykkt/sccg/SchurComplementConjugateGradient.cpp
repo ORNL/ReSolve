@@ -1,18 +1,34 @@
 #include "SchurComplementConjugateGradient.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <chrono>
+#include <limits>
+#include <iomanip>
+#include <limits>
 
 #include <resolve/Common.hpp>
+#include <resolve/utilities/logger/Logger.hpp>
+
+#ifdef RESOLVE_USE_CUDA
+#include <cuda_runtime.h>
+#define deviceSynchronize cudaDeviceSynchronize
+#elif defined(RESOLVE_USE_HIP)
+#include <hip/hip_runtime.h>
+#define deviceSynchronize hipDeviceSynchronize
+#endif
 
 namespace ReSolve
 {
+  using out = io::Logger;
+
   namespace hykkt
   {
     /** Constructor for SchurComplementConjugateGradient.
      *  @param n[in] - Dimension of outer system.
      *  @param m[in] - Dimension of inner system.
      *  @param choleskySolver[in] - Factorization of H_gamma to use for direct solve.
+
      *  @param memspace[in] - Memory space of incoming data and for computation.
      *  @param matrix_handler[in] - Matrix handler for the selected backend.
      *  @param vector_handler[in] - Vector handler for the selected backend.
@@ -26,22 +42,44 @@ namespace ReSolve
         memory::MemorySpace memspace)
       : n_(n),
         m_(m),
+        k_(1),
         choleskySolver_(choleskySolver),
         matrix_handler_(matrix_handler),
         vector_handler_(vector_handler),
         memspace_(memspace)
+        // gram_schmidt_(vector_handler_, GramSchmidt::GSVariant::CGS2)
     {
-      ;
+#ifdef RESOLVE_USE_CUDA
+      impl_ = new RandomizedConjugateGradientCuda(vector_handler_);
+#elif defined(RESOLVE_USE_HIP)
+      impl_ = new RandomizedConjugateGradientHip(vector_handler_);
+#endif
     }
 
     SchurComplementConjugateGradient::~SchurComplementConjugateGradient()
     {
-      delete y_;
-      delete z_;
+      // delete J_prec_;
+      // delete J_prec__tr_;
+      delete X_prec_0_;
+      delete X_res_;
+      // delete b_prec_;
+      delete B_res_;
+      delete B_;
+      // delete R_;
+      delete R_prec_;
+      delete S_;
+      delete Xi_inv_;
+      delete W_;
+      delete Sigma_;
+      delete Zeta_;
+      delete Temp_nxk_;
+      delete Temp_mxk_;
+      delete Temp_mxk1_;
+      delete Temp_kxk_;
+      delete A_S_;
+      delete c_;
       delete r_;
-      delete p_;
-      delete s_;
-      delete w_;
+      delete impl_;
     }
 
     /**
@@ -57,13 +95,13 @@ namespace ReSolve
 
     /**
      * @brief Loads or reloads vector pointers to the solver
-     * @param[in] x_0 - Pointer to the left-hand side vector.
+     * @param[in] x - Pointer to the left-hand side vector.
      * @param[in] b - Pointer to the right-hand side vector.
      */
-    void SchurComplementConjugateGradient::addVectorInfo(vector::Vector* x_0, vector::Vector* b)
+    void SchurComplementConjugateGradient::addVectorInfo(vector::Vector* x, vector::Vector* b)
     {
-      x_0_ = x_0;
-      b_   = b;
+      x_ = x;
+      b_ = b;
     }
 
     /**
@@ -75,9 +113,10 @@ namespace ReSolve
       choleskySolver_ = choleskySolver;
     }
 
-    void SchurComplementConjugateGradient::setSolverTolerance(double tol)
+    void SchurComplementConjugateGradient::setSolverTolerance(double initial_tol, double convergence_tol)
     {
-      tol_ = tol;
+      initial_tol_ = initial_tol;
+      convergence_tol_ = convergence_tol;
     }
 
     void SchurComplementConjugateGradient::setSolverItmax(int itmax)
@@ -87,84 +126,359 @@ namespace ReSolve
 
     void SchurComplementConjugateGradient::setup()
     {
-      y_ = new vector::Vector(m_);
-      z_ = new vector::Vector(m_);
-      r_ = new vector::Vector(n_);
-      p_ = new vector::Vector(n_);
-      s_ = new vector::Vector(n_);
-      w_ = new vector::Vector(n_);
+      // J_prec_ = new matrix::Csr(n_, n_, nnz_);
+      // J_prec_tr_ = new matrix::Csr(n_, n_, nnz_);
+      J_prec_ = J_;
+      J_prec_tr_ = J_tr_;
+      b_prec_ = b_;
+      X_prec_0_ = new vector::Vector(n_, k_);
+      X_res_ = new vector::Vector(n_, k_);
+      // b_prec_ = new vector::Vector(n_, 1);
+      B_res_ = new vector::Vector(n_, k_);
+      B_ = new vector::Vector(n_, k_);
+      // R_ = new vector::Vector(n_, k_);
+      R_prec_ = new vector::Vector(n_, k_);
+      R_ = R_prec_;
+      S_ = new vector::Vector(n_, k_);
+      Xi_inv_ = new vector::Vector(k_, k_);
+      W_ = new vector::Vector(n_, k_);
+      Sigma_ = new vector::Vector(k_, k_);
+      Zeta_ = new vector::Vector(k_, k_);
+      Temp_nxk_ = new vector::Vector(n_, k_);
+      Temp_mxk_ = new vector::Vector(m_, k_);
+      Temp_mxk1_ = new vector::Vector(m_, k_);
+      Temp_kxk_ = new vector::Vector(k_, k_);
+      A_S_ = new vector::Vector(n_, k_);
+      c_ = new vector::Vector(k_, 1);
+      r_ = new vector::Vector(n_, 1);
 
-      y_->allocate(memspace_);
-      z_->allocate(memspace_);
+      // J_prec_->allocateAll(memspace_);
+      // J_prec_tr_->allocateAll(memspace_);
+      X_prec_0_->allocate(memspace_);
+      X_res_->allocate(memspace_);
+      // b_prec_->allocate(memspace_);
+      B_res_->allocate(memspace_);
+      B_->allocate(memspace_);
+      // R_->allocate(memspace_);
+      R_prec_->allocate(memspace_);
+      S_->allocate(memspace_);
+      Xi_inv_->allocate(memspace_);
+      W_->allocate(memspace_);
+      Sigma_->allocate(memspace_);
+      Zeta_->allocate(memspace_);
+      Temp_nxk_->allocate(memspace_);
+      Temp_mxk_->allocate(memspace_);
+      Temp_mxk1_->allocate(memspace_);
+      Temp_kxk_->allocate(memspace_);
+      A_S_->allocate(memspace_);
+      c_->allocate(memspace_);
       r_->allocate(memspace_);
-      p_->allocate(memspace_);
-      s_->allocate(memspace_);
-      w_->allocate(memspace_);
 
-      y_->setToZero(memspace_);
-      z_->setToZero(memspace_);
-      r_->copyFromExternal(b_, memspace_, memspace_);
-      p_->copyFromExternal(b_, memspace_, memspace_);
-      s_->copyFromExternal(b_, memspace_, memspace_);
-      w_->copyFromExternal(b_, memspace_, memspace_);
+      A_norm_ = 0;
+      b_norm_ = vector_handler_->norm(b_, memspace_);
 
-      x_0_->setToZero(memspace_);
-
-      beta_ = 0;
+      // gram_schmidt_.setup(n_, k_);
     }
+
+    void SchurComplementConjugateGradient::precondition()
+    {
+      using namespace constants;
+
+      // J_prec = L^-1 * J
+      // J_prec_->copyFromExternal(J_->getRowData(memspace_),
+      //                           J_->getColData(memspace_),
+      //                           J_->getValues(memspace_),
+      //                           memspace_,
+      //                           memspace_);
+      // matrix_handler_->leftScale(d_inv_, J_prec_, memspace_);
+      // J_prec_tr_->copyFromExternal(J_tr_->getRowData(memspace_),
+      //                           J_tr_->getColData(memspace_),
+      //                           J_tr_->getValues(memspace_),
+      //                           memspace_,
+      //                           memspace_);
+      // matrix_handler_->leftScale(d_inv_, J_prec_tr_, memspace_);
+
+      // b_prec = 1 / b_norm * L^-1 * b
+      // b_prec_->copyFromExternal(b_, memspace_, memspace_);
+      // vector_handler_->scal(d_inv_, b_prec_, memspace_);
+      // vector_handler_->scal(1.0 / b_norm_, b_prec_, memspace_);
+
+      impl_->setup(k_);
+    }
+
+    // Generate starting guesses and set up residual space matrices & vectors
+    void SchurComplementConjugateGradient::generateGuesses()
+    {
+      using namespace constants;
+
+      // todo: tile add
+      for (index_type i=0; i < k_; i++)
+      {
+        b_->copyToExternal(B_->getData(i, memspace_), memspace_, memspace_);
+        b_prec_->copyToExternal(B_res_->getData(i, memspace_), memspace_, memspace_);
+      }
+
+      vector_handler_->randomVector(X_prec_0_, -1.0, 1.0, memspace_);
+      deviceSynchronize(); // for debugging
+
+      matrix_handler_->matvec(J_prec_tr_, X_prec_0_, Temp_mxk_, &ONE, &ZERO, memspace_);
+      choleskySolver_->solve(Temp_mxk1_, Temp_mxk_);
+      matrix_handler_->matvec(J_prec_, Temp_mxk1_, Temp_nxk_, &ONE, &ZERO, memspace_);
+
+      real_type AX_prec_0_norm = vector_handler_->norm(Temp_nxk_, memspace_);
+      real_type B_prec_norm = sqrt(static_cast<double>(k_)) * vector_handler_->norm(b_prec_, memspace_);
+      real_type normalization_factor = B_prec_norm / AX_prec_0_norm;
+      vector_handler_->scal(normalization_factor, X_prec_0_, memspace_);
+
+      X_res_->setToZero(memspace_);
+      vector_handler_->axpy(-normalization_factor, Temp_nxk_, B_res_, memspace_);
+    }
+
+    // todo: "X_res = X_res + P @ M" and "Tau = S * Xi" can be done in parallel
 
     int SchurComplementConjugateGradient::solve()
     {
       using namespace constants;
+      
+      std::chrono::time_point<std::chrono::steady_clock> start;
+      std::chrono::time_point<std::chrono::steady_clock> end;
+      start = std::chrono::steady_clock::now();
 
-      matrix_handler_->matvec(J_tr_, x_0_, y_, &ONE, &ZERO, memspace_);
-      choleskySolver_->solve(z_, y_);
-      matrix_handler_->matvec(J_, z_, r_, &MINUS_ONE, &ONE, memspace_);
-      gamma_i_ = vector_handler_->dot(r_, r_, memspace_);
+      precondition();
+      generateGuesses();
+      
+      real_type best_basis_error = std::numeric_limits<real_type>::infinity();
+      real_type lincomb_error = std::numeric_limits<real_type>::infinity();
 
-      matrix_handler_->matvec(J_tr_, r_, y_, &ONE, &ZERO, memspace_);
-      choleskySolver_->solve(z_, y_);
-      matrix_handler_->matvec(J_, z_, w_, &ONE, &ZERO, memspace_);
-      delta_ = vector_handler_->dot(w_, r_, memspace_);
-      alpha_ = gamma_i_ / delta_;
+      R_prec_->copyFromExternal(B_res_, memspace_, memspace_);
+      
+      // ADD PRECONDITIONER LATER. W = L^-1 * R
+      W_->copyFromExternal(R_prec_, memspace_, memspace_); // with preconditioner, this is L_inv * R_res
+      Sigma_->setToZero(memspace_);
+      if (impl_->choleskyQr(W_, Sigma_, memspace_) != 0)
+      {
+        printf("QR failed!\n");
+        return 1;
+        // todo: fallback
+      }
+
+      // S = L^-1 * W
+      S_->copyFromExternal(W_, memspace_, memspace_);
+      
+      auto iterative_start = std::chrono::steady_clock::now();
+      std::chrono::time_point<std::chrono::steady_clock> iterative_end;
 
       int i;
       for (i = 0; i < itmax_; i++)
       {
-        auto start = std::chrono::steady_clock::now();
-        vector_handler_->scal(beta_, p_, memspace_);
-        vector_handler_->axpy(ONE, r_, p_, memspace_);
-        vector_handler_->scal(beta_, s_, memspace_);
-        vector_handler_->axpy(ONE, w_, s_, memspace_);
-        vector_handler_->axpy(alpha_, p_, x_0_, memspace_);
-        vector_handler_->axpy(-alpha_, s_, r_, memspace_);
-        gamma_i1_ = vector_handler_->dot(r_, r_, memspace_);
-        if (sqrt(gamma_i1_) < tol_)
+        // deviceSynchronize(); // optional
+        // auto it_start = std::chrono::steady_clock::now(); // optional
+        
+        // 1. SpMM / SpMV Section
+        // auto spmv_start = std::chrono::steady_clock::now(); // optional
+        matrix_handler_->matvec(J_prec_tr_, S_, Temp_mxk_, &ONE, &ZERO, memspace_);
+        choleskySolver_->solve(Temp_mxk1_, Temp_mxk_);
+        matrix_handler_->matvec(J_prec_, Temp_mxk1_, Temp_nxk_, &ONE, &ZERO, memspace_);
+
+        // deviceSynchronize(); // optional
+        // auto spmv_end = std::chrono::steady_clock::now(); // optional
+        // printf("  [it %d] spmv: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(spmv_end - spmv_start).count()); // optional
+
+        // 2. S^T * (A * S) GEMM Section
+        // auto gemm_xi_start = std::chrono::steady_clock::now(); // optional
+        // vector_handler_->gemm('T', 'N', ONE, ZERO, S_, Temp_nxk_, Xi_inv_, memspace_);
+        impl_->multTSMTTSM(S_, Temp_nxk_, Xi_inv_, memspace_);
+        // deviceSynchronize(); // optional
+        // auto gemm_xi_end = std::chrono::steady_clock::now(); // optional
+        // printf("  [it %d] gemm_xi: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(gemm_xi_end - gemm_xi_start).count()); // optional
+
+        // 3. Cholesky & X_res/R_prec Update Section
+        // auto chol_update_start = std::chrono::steady_clock::now(); // optional
+        if (vector_handler_->choleskyFactorize(Xi_inv_, 'L', memspace_) != 0)
         {
-          printf("Convergence occured at iteration %d\n", i);
-          break;
+          out::error() << "Cholesky failed!";
+          return 1;
         }
-        matrix_handler_->matvec(J_tr_, r_, y_, &ONE, &ZERO, memspace_);
-        choleskySolver_->solve(z_, y_);
-        matrix_handler_->matvec(J_, z_, w_, &ONE, &ZERO, memspace_);
-        delta_   = vector_handler_->dot(w_, r_, memspace_);
-        beta_    = gamma_i1_ / gamma_i_;
-        gamma_i_ = gamma_i1_;
-        alpha_   = gamma_i_ / (delta_ - beta_ * gamma_i_ / alpha_);
-        auto end = std::chrono::steady_clock::now();
-        std::chrono::duration<double, std::milli> elapsed = (end - start);
-        printf("time = %f\n", elapsed.count());
+        Temp_kxk_->copyFromExternal(Sigma_, memspace_, memspace_);
+        vector_handler_->choleskySolve(Xi_inv_->getData(memspace_), Temp_kxk_, 'L', memspace_); // Temp_kxk = Xi * Sigma
+        vector_handler_->gemm('N', 'N', ONE, ONE, S_, Temp_kxk_, X_res_, memspace_);
+        vector_handler_->gemm('N', 'N', MINUS_ONE, ONE, Temp_nxk_, Temp_kxk_, R_prec_, memspace_);
+        // impl_->updateXRSplit(Xi_inv_, Sigma_, S_, Temp_nxk_, Temp_kxk_, X_res_, R_prec_);
+        // impl_->updateXR(Xi_inv_, Sigma_, S_, Temp_nxk_, X_res_, R_prec_);
+        // deviceSynchronize(); // optional
+        // auto chol_update_end = std::chrono::steady_clock::now(); // optional
+        // printf("  [it %d] cholesky & update: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(chol_update_end - chol_update_start).count()); // optional
+
+        // 4. Update W Section (W = W - A * S * Xi)
+        // auto w_update_start = std::chrono::steady_clock::now(); // optional
+        // vector_handler_->choleskySolve(Xi_inv_->getData(memspace_), Temp_nxk_, 'R', memspace_); // Temp_nxk_ now contains A * S * Xi
+        // vector_handler_->axpy(MINUS_ONE, Temp_nxk_, W_, memspace_);
+        impl_->updateW(W_, Xi_inv_, Temp_nxk_, memspace_); // This is wrong I think. accessing garbage half of Xi_inv_?
+        // deviceSynchronize(); // optional
+        // auto w_update_end = std::chrono::steady_clock::now(); // optional
+        // printf("  [it %d] w_update: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(w_update_end - w_update_start).count()); // optional
+
+        // 5. Scale & Diagonal Solve R Section
+        // auto r_scale_start = std::chrono::steady_clock::now(); // optional
+        // R_->copyFromExternal(R_prec_, memspace_, memspace_);
+        // vector_handler_->scal(d_, R_, memspace_);
+        // vector_handler_->scal(b_norm_, R_, memspace_);
+        // deviceSynchronize(); // optional
+        // auto r_scale_end = std::chrono::steady_clock::now(); // optional
+        // printf("  [it %d] r_scale: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(r_scale_end - r_scale_start).count()); // optional
+
+        // 6. Best Basis Vector Norm Loop Section
+        // auto basis_loop_start = std::chrono::steady_clock::now(); // optional
+
+        index_type best_basis;
+        real_type best_basis_r_norm;
+        impl_->bestBasis(R_, &best_basis, &best_basis_r_norm);
+
+        // index_type best_basis = -1;
+        // real_type best_basis_r_norm = std::numeric_limits<real_type>::infinity();
+        // for (index_type j = 0; j < k_; j++)
+        // {
+        //   real_type basis_r_norm = vector_handler_->norm(R_, j, memspace_);
+        //   if (basis_r_norm < best_basis_r_norm)
+        //   {
+        //     best_basis = j;
+        //     best_basis_r_norm = basis_r_norm;
+        //   }
+        // }
+        
+        deviceSynchronize();
+        best_basis_error = best_basis_r_norm / b_norm_;
+        // auto basis_loop_end = std::chrono::steady_clock::now(); // optional
+        // printf("  [it %d] basis_norm_loop: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(basis_loop_end - basis_loop_start).count()); // optional
+        // printf("error %f\n", best_basis_error);
+
+        // std::cout << std::setprecision(std::numeric_limits<double>::max_digits10) << best_basis_error << '\n';
+        // 7. Convergence Checking & Final Calculations Block
+        if (best_basis_error < initial_tol_)
+        {
+          // auto conv_block_start = std::chrono::steady_clock::now(); // optional
+          // A * X = B - R
+          Temp_nxk_->copyFromExternal(B_, memspace_, memspace_);
+          vector_handler_->axpy(MINUS_ONE, R_, Temp_nxk_, memspace_);
+
+          // (AX)^T * AX * c = (AX)^T * b
+          // vector_handler_->gemm('T', 'N', ONE, ZERO, Temp_nxk_, Temp_nxk_, Temp_kxk_, memspace_);
+          impl_->multTSMTTSM(Temp_nxk_, Temp_nxk_, Temp_kxk_, memspace_); // use innerProductTSM
+          vector_handler_->gemv('T', k_, ONE, ZERO, Temp_nxk_, b_, c_, memspace_);
+          deviceSynchronize();
+
+          bool use_best_basis = false;
+          real_type x_norm;
+          real_type r_norm;
+          // if (true)
+          if (k_ == 1)
+          {
+            lincomb_error = best_basis_error;
+            r_norm = best_basis_r_norm;
+            use_best_basis = true;
+          }
+          else
+          {
+            impl_->choleskyFactorizeSolve(Temp_kxk_, c_, c_);
+            
+            // r = b - AX * c
+            vector_handler_->gemv('N', k_, ONE, ZERO, Temp_nxk_, c_, r_, memspace_);
+            vector_handler_->axpy(MINUS_ONE, b_, r_, memspace_);
+            r_norm = vector_handler_->norm(r_, memspace_);
+            // deviceSynchronize();
+            if (r_norm > best_basis_r_norm || std::isnan(r_norm))
+            {
+              r_norm = best_basis_r_norm;
+              lincomb_error = best_basis_error;
+              use_best_basis = true;
+            }
+            else{
+              lincomb_error = r_norm / b_norm_;
+              // printf("%.5e\n", lincomb_error);
+            }
+          }
+          
+          if (lincomb_error < convergence_tol_)
+          {
+            vector_handler_->geam('N', 'N', ONE, ONE, X_res_, X_prec_0_, Temp_nxk_, memspace_);
+            // vector_handler_->scal(d_inv_, Temp_nxk_, memspace_);
+            // vector_handler_->scal(b_norm_, Temp_nxk_, memspace_);
+
+            if (use_best_basis)
+            {
+              x_->copyFromExternal(Temp_nxk_->getData(best_basis, memspace_), memspace_, memspace_);
+            }
+            else
+            {
+              vector_handler_->gemm('N', 'N', ONE, ZERO, Temp_nxk_, c_, x_, memspace_);
+            }
+            end = std::chrono::steady_clock::now();
+            std::chrono::duration<double, std::milli> elapsed = (end - start);
+
+            real_type x_norm = vector_handler_->norm(x_, memspace_);
+            real_type best_basis_x_norm = vector_handler_->norm(Temp_nxk_, best_basis, memspace_);
+
+            deviceSynchronize();
+            // auto conv_block_end = std::chrono::steady_clock::now(); // optional
+            // printf("  [it %d] convergence_overhead: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(conv_block_end - conv_block_start).count()); // optional
+
+            printf("Convergence occured at iteration %d. Total Solve Time: %f ms\n", i, elapsed.count());
+            printf("Per iteration time: %.10f\n", (std::chrono::duration<double, std::milli>(iterative_end - iterative_start)).count() / i);
+            printf("||r|| / (||A|| * ||x|| + ||b||) error: %.5e, best basis error: %.5e\n",
+                   r_norm / (A_norm_ * x_norm + b_norm_),
+                   best_basis_r_norm / (A_norm_ * best_basis_x_norm + b_norm_));
+            printf("||r|| / ||b|| error: %.5e, best basis error: %.5e\n", lincomb_error, best_basis_error);
+            return 0;
+          }
+          // deviceSynchronize(); // optional
+          // auto conv_block_end = std::chrono::steady_clock::now(); // optional
+          // printf("  [it %d] convergence_overhead (failed conv_tol): %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(conv_block_end - conv_block_start).count()); // optional
+        }
+
+        // 8. Cholesky QR Section
+        // auto qr_start = std::chrono::steady_clock::now(); // optional
+        Zeta_->setToZero(memspace_);
+        if (impl_->choleskyQr(W_, Zeta_, memspace_) != 0)
+        {
+          out::error() << "QR failed!";
+          return 1;
+        }
+        // deviceSynchronize(); // optional
+        // auto qr_end = std::chrono::steady_clock::now(); // optional
+        // printf("  [it %d] qr: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(qr_end - qr_start).count()); // optional
+
+        // 9. S and Sigma Base Orthogonalization Update Section
+        // auto s_sigma_update_start = std::chrono::steady_clock::now(); // optional
+
+        // Temp_nxk_->copyFromExternal(W_, memspace_, memspace_);
+        // vector_handler_->gemm('N', 'T', ONE, ONE, S_, Zeta_, Temp_nxk_, memspace_);
+        // S_->copyFromExternal(Temp_nxk_, memspace_, memspace_);
+        
+        // vector_handler_->gemm('N', 'N', ONE, ZERO, Zeta_, Sigma_, Temp_kxk_, memspace_);
+        // Sigma_->copyFromExternal(Temp_kxk_, memspace_, memspace_);
+
+        impl_->updateSSigma(W_, S_, Zeta_, Sigma_, memspace_);
+        // deviceSynchronize(); // optional
+        // auto s_sigma_update_end = std::chrono::steady_clock::now(); // optional
+        // printf("  [it %d] s_sigma_update: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(s_sigma_update_end - s_sigma_update_start).count()); // optional
+
+        // auto it_end = std::chrono::steady_clock::now(); // optional
+        // printf("[Iteration %d Total]: %f ms\n\n", i, static_cast<std::chrono::duration<double, std::milli>>(it_end - it_start).count()); // optional
+        iterative_end = std::chrono::steady_clock::now();
       }
 
-      printf("Conjugate gradient error is %32.32g \n", sqrt(gamma_i1_));
       if (i == itmax_)
       {
+        deviceSynchronize();
+        end = std::chrono::steady_clock::now();
+        std::chrono::duration<double, std::milli> elapsed = (end - start);
         printf("No CG convergence in %d iterations\n", itmax_);
+        printf("Total Solve Time: %.10f ms, error: %.5e\n", elapsed.count(), best_basis_error);
+        printf("Per iteration time: %.10f\n", (std::chrono::duration<double, std::milli>(iterative_end - iterative_start)).count() / i);
         return 1;
       }
 
       return 0;
     }
-
   } // namespace hykkt
 } // namespace ReSolve

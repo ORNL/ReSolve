@@ -264,8 +264,8 @@ namespace ReSolve
       VectorHandler&      vector_handler_; ///< Backend-specific vector handler.
 
       static constexpr real_type cholesky_tol = 1e-12;
-      static constexpr real_type randomized_cg_initial_tol     = 1e-12;
-      static constexpr real_type randomized_cg_convergence_tol     = 1e-12;
+      static constexpr real_type randomized_cg_initial_tol     = 1e-8;
+      static constexpr real_type randomized_cg_convergence_tol     = 1e-8;
       static constexpr real_type entry_tol    = 1e-6; // Tolerance for checking individual entries
 
       /**

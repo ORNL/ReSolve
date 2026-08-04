@@ -1,6 +1,7 @@
 # Add source files for the SCCG module
-set(SCCG_SRC SchurComplementConjugateGradient.cpp)
-set(SCCG_HEADER_INSTALL SchurComplementConjugateGradient.hpp)
+set(SCCG_SRC SchurComplementConjugateGradient.cpp ${CMAKE_SOURCE_DIR}/resolve/hykkt/randomized_cg/RandomizedConjugateGradientCuda.cu ${CMAKE_SOURCE_DIR}/resolve/hykkt/randomized_cg/RandomizedConjugateGradientHip.hip)
+set(SCCG_HEADER_INSTALL SchurComplementConjugateGradient DenseConjugateGradient.hpp ${CMAKE_SOURCE_DIR}/resolve/hykkt/randomized_cg/RandomizedConjugateGradientCuda.hpp ${CMAKE_SOURCE_DIR}/resolve/hykkt/randomized_cg/RandomizedConjugateGradientHip.hpp)
+
 
 # Build shared library ReSolve::hykkt
 add_library(resolve_hykkt_sccg SHARED ${SCCG_SRC})

@@ -101,6 +101,7 @@ namespace ReSolve
 
     // ....
     virtual void randomVector(vector::Vector* v, real_type min, real_type max) = 0;
+    virtual void randomVectorExceptFirstColumn(vector::Vector* v, real_type min, real_type max) = 0;
 
     virtual void addIdentity(vector::Vector* x, real_type alpha) = 0;
   };

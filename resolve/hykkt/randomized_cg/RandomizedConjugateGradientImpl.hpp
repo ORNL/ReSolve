@@ -32,6 +32,8 @@ namespace ReSolve
       virtual int multTSMTTSM(vector::Vector* A, vector::Vector* B, vector::Vector* C, memory::MemorySpace memspace) = 0;
       virtual int updateSSigma(vector::Vector* W, vector::Vector* S, vector::Vector* Zeta, vector::Vector* Sigma, memory::MemorySpace memspace) = 0;
       virtual int preconditionDense(vector::Vector* A, vector::Vector* d) = 0;
+      //
+      virtual int hypreDevice_CSRMatrixMatvec(matrix::Csr* A, vector::Vector* X, vector::Vector* result) = 0;
     };
   } // namespace hykkt
 } // namespace ReSolve

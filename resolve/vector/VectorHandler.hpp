@@ -107,6 +107,7 @@ namespace ReSolve
     real_type norm(vector::Vector* x, index_type i, memory::MemorySpace memspace);
 
     void randomVector(vector::Vector* x, real_type min, real_type max, memory::MemorySpace memspace);
+    void randomVectorExceptFirstColumn(vector::Vector* x, real_type min, real_type max, memory::MemorySpace memspace);
 
     void addIdentity(vector::Vector* x, real_type alpha, memory::MemorySpace memspace);
 

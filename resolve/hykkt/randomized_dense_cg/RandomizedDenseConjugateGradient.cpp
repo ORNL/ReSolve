@@ -205,7 +205,7 @@ namespace ReSolve
         b_prec_->copyToExternal(B_res_->getData(i, memspace_), memspace_, memspace_);
       }
 
-      vector_handler_->randomVector(X_prec_0_, -1.0, 1.0, memspace_);
+      vector_handler_->randomVectorExceptFirstColumn(X_prec_0_, -1.0, 1.0, memspace_);
       vector_handler_->gemm('N', 'N', ONE, ZERO, A_prec_, X_prec_0_, Temp_nxk_, memspace_);
       real_type AX_prec_0_norm = vector_handler_->norm(Temp_nxk_, memspace_);
       real_type B_prec_norm = sqrt(static_cast<double>(k_)) * vector_handler_->norm(b_prec_, memspace_);
@@ -248,6 +248,9 @@ namespace ReSolve
 
       // S = L^-1 * W
       S_->copyFromExternal(W_, memspace_, memspace_);
+
+      auto iterative_start = std::chrono::steady_clock::now();
+      std::chrono::time_point<std::chrono::steady_clock> iterative_end;
 
       int i;
       for (i = 0; i < itmax_; i++)
@@ -322,10 +325,10 @@ namespace ReSolve
         // printf("  [it %d] basis_norm_loop: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(basis_loop_end - basis_loop_start).count()); // optional
         // printf("error %f\n", best_basis_error);
 
-        std::cout << std::setprecision(std::numeric_limits<double>::max_digits10) << best_basis_error << '\n';
+        // std::cout << std::setprecision(std::numeric_limits<double>::max_digits10) << best_basis_error << '\n';
         // 7. Convergence Checking & Final Calculations Block
-        if (false)
-        // if (best_basis_error < initial_tol_)
+        // if (false)
+        if (best_basis_error < initial_tol_)
         {
           // auto conv_block_start = std::chrono::steady_clock::now();
           // A * X = B - R
@@ -384,6 +387,7 @@ namespace ReSolve
             // printf("  [it %d] convergence_overhead: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(conv_block_end - conv_block_start).count()); // optional
 
             printf("Convergence occured at iteration %d. Total Solve Time: %f ms\n", i, elapsed.count());
+            printf("Per iteration time: %.10f\n", (std::chrono::duration<double, std::milli>(iterative_end - iterative_start)).count() / i);
             printf("||r|| / (||A|| * ||x|| + ||b||) error: %.5e, best basis error: %.5e\n",
                    r_norm / (A_norm_ * x_norm + b_norm_),
                    best_basis_r_norm / (A_norm_ * best_basis_x_norm + b_norm_));
@@ -424,6 +428,7 @@ namespace ReSolve
 
         // auto it_end = std::chrono::steady_clock::now();
         // printf("[Iteration %d Total]: %f ms\n\n", i, static_cast<std::chrono::duration<double, std::milli>>(it_end - it_start).count());
+        iterative_end = std::chrono::steady_clock::now();
       }
 
       if (i == itmax_)
@@ -433,6 +438,7 @@ namespace ReSolve
         std::chrono::duration<double, std::milli> elapsed = (end - start);
         printf("No CG convergence in %d iterations\n", itmax_);
         printf("Total Solve Time: %f ms, error: %.5e\n", elapsed.count(), best_basis_error);
+        printf("Per iteration time: %.10f\n", (std::chrono::duration<double, std::milli>(iterative_end - iterative_start)).count() / i);
         return 1;
       }
 

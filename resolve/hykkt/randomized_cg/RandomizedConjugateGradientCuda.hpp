@@ -36,6 +36,8 @@ namespace ReSolve
       int multTSMTTSM(vector::Vector* A, vector::Vector* B, vector::Vector* C, memory::MemorySpace memspace);
       int updateSSigma(vector::Vector* W, vector::Vector* S, vector::Vector* Zeta, vector::Vector* Sigma, memory::MemorySpace memspace);
       int preconditionDense(vector::Vector* A, vector::Vector* d);
+      //
+      int hypreDevice_CSRMatrixMatvec(matrix::Csr* A, vector::Vector* X, vector::Vector* result);
 
     private:
       MemoryHandler mem_;

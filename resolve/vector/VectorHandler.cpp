@@ -699,6 +699,20 @@ namespace ReSolve
     }
   }
 
+  void VectorHandler::randomVectorExceptFirstColumn(vector::Vector* x, real_type min, real_type max, memory::MemorySpace memspace)
+  {
+    using namespace ReSolve::memory;
+    switch (memspace)
+    {
+    case HOST:
+      return cpuImpl_->randomVectorExceptFirstColumn(x, min, max);
+      break;
+    case DEVICE:
+      return devImpl_->randomVectorExceptFirstColumn(x, min, max);
+      break;
+    }
+  }
+
   void VectorHandler::addIdentity(vector::Vector* x, real_type alpha, memory::MemorySpace memspace)
   {
     devImpl_->addIdentity(x, alpha);

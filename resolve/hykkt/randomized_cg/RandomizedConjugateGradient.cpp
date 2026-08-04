@@ -49,7 +49,6 @@ namespace ReSolve
 #elif defined(RESOLVE_USE_HIP)
       impl_ = new RandomizedConjugateGradientHip(vector_handler_);
 #endif
-      num_devices_ = impl_->num_devices_;
     }
 
     RandomizedConjugateGradient::~RandomizedConjugateGradient()
@@ -91,7 +90,7 @@ namespace ReSolve
      * @param[in] x - Pointer to the left-hand side vector.
      * @param[in] b - Pointer to the right-hand side vector.
      */
-    void RandomizedConjugateGradient::addVectorInfo(vector::VectorDistributed* x, vector::VectorDistributed* b)
+    void RandomizedConjugateGradient::addVectorInfo(vector::Vector* x, vector::Vector* b)
     {
       x_ = x;
       b_ = b;
@@ -123,24 +122,24 @@ namespace ReSolve
     void RandomizedConjugateGradient::setup()
     {
       A_prec_ = new matrix::Csr(n_, n_, nnz_);
-      X_prec_0_ = new vector::VectorDistributed(n_, k_, num_devices_);
-      X_res_ = new vector::VectorDistributed(n_, k_, num_devices_);
-      b_prec_ = new vector::VectorDistributed(n_, 1, num_devices_);
-      B_res_ = new vector::VectorDistributed(n_, k_, num_devices_);
-      B_ = new vector::VectorDistributed(n_, k_, num_devices_);
-      R_ = new vector::VectorDistributed(n_, k_, num_devices_);
-      R_prec_ = new vector::VectorDistributed(n_, k_, num_devices_);
-      S_ = new vector::VectorDistributed(n_, k_, num_devices_);
-      Xi_inv_ = new vector::VectorDistributed(k_, k_, num_devices_);
-      W_ = new vector::VectorDistributed(n_, k_, num_devices_);
-      Sigma_ = new vector::VectorDistributed(k_, k_, num_devices_);
-      Zeta_ = new vector::VectorDistributed(k_, k_, num_devices_);
-      Temp_nxk_ = new vector::VectorDistributed(n_, k_, num_devices_);
-      Temp_nxk1_ = new vector::VectorDistributed(n_, k_, num_devices_);
-      Temp_kxk_ = new vector::VectorDistributed(k_, k_, num_devices_);
-      A_S_ = new vector::VectorDistributed(n_, k_, num_devices_);
-      c_ = new vector::VectorDistributed(k_, 1, num_devices_);
-      r_ = new vector::VectorDistributed(n_, 1, num_devices_);
+      X_prec_0_ = new vector::Vector(n_, k_);
+      X_res_ = new vector::Vector(n_, k_);
+      b_prec_ = new vector::Vector(n_, 1);
+      B_res_ = new vector::Vector(n_, k_);
+      B_ = new vector::Vector(n_, k_);
+      R_ = new vector::Vector(n_, k_);
+      R_prec_ = new vector::Vector(n_, k_);
+      S_ = new vector::Vector(n_, k_);
+      Xi_inv_ = new vector::Vector(k_, k_);
+      W_ = new vector::Vector(n_, k_);
+      Sigma_ = new vector::Vector(k_, k_);
+      Zeta_ = new vector::Vector(k_, k_);
+      Temp_nxk_ = new vector::Vector(n_, k_);
+      Temp_nxk1_ = new vector::Vector(n_, k_);
+      Temp_kxk_ = new vector::Vector(k_, k_);
+      A_S_ = new vector::Vector(n_, k_);
+      c_ = new vector::Vector(k_, 1);
+      r_ = new vector::Vector(n_, 1);
 
       A_prec_->allocateAll(memspace_);
       X_prec_0_->allocate(memspace_);
@@ -183,11 +182,11 @@ namespace ReSolve
       matrix_handler_->rightScale(A_prec_, d_inv_, memspace_);
 
       // b_prec = 1 / b_norm * L^-1 * b
-      b_prec_->copyFromExternal(b_, 0, memspace_, memspace_);
+      b_prec_->copyFromExternal(b_, memspace_, memspace_);
       vector_handler_->scal(d_inv_, b_prec_, memspace_);
       vector_handler_->scal(1.0 / b_norm_, b_prec_, memspace_);
 
-      impl_->setup(A_prec_, k_);
+      impl_->setup(k_);
     }
 
     // Generate starting guesses and set up residual space matrices & vectors
@@ -202,16 +201,17 @@ namespace ReSolve
         b_prec_->copyToExternal(B_res_->getData(i, memspace_), memspace_, memspace_);
       }
 
-      vector_handler_->randomVector(X_prec_0_, -1.0, 1.0, memspace_);
-      deviceSynchronize(); // for debugging
-      impl_->SpMMTallSkinny(A_prec_, X_prec_0_, Temp_nxk_);
+      vector_handler_->randomVectorExceptFirstColumn(X_prec_0_, -1.0, 1.0, memspace_);
+      // deviceSynchronize(); // for debugging
+      // impl_->SpMMTallSkinny(A_prec_, X_prec_0_, Temp_nxk_);
+      impl_->hypreDevice_CSRMatrixMatvec(A_prec_, X_prec_0_, Temp_nxk_);
       // matrix_handler_->matvec(A_prec_, X_prec_0_, Temp_nxk_, &ONE, &ZERO, memspace_);
       real_type AX_prec_0_norm = vector_handler_->norm(Temp_nxk_, memspace_);
       real_type B_prec_norm = sqrt(static_cast<double>(k_)) * vector_handler_->norm(b_prec_, memspace_);
       real_type normalization_factor = B_prec_norm / AX_prec_0_norm;
       vector_handler_->scal(normalization_factor, X_prec_0_, memspace_);
 
-      X_res_->setToZero(0, 0, memspace_);
+      X_res_->setToZero(memspace_);
       vector_handler_->axpy(-normalization_factor, Temp_nxk_, B_res_, memspace_);
     }
 
@@ -231,11 +231,11 @@ namespace ReSolve
       real_type best_basis_error = std::numeric_limits<real_type>::infinity();
       real_type lincomb_error = std::numeric_limits<real_type>::infinity();
 
-      R_prec_->copyFromExternal(B_res_, 0, memspace_, memspace_);
+      R_prec_->copyFromExternal(B_res_, memspace_, memspace_);
       
       // ADD PRECONDITIONER LATER. W = L^-1 * R
-      W_->copyFromExternal(R_prec_, 0, memspace_, memspace_); // with preconditioner, this is L_inv * R_res
-      Sigma_->setToZero(0, 0, memspace_);
+      W_->copyFromExternal(R_prec_, memspace_, memspace_); // with preconditioner, this is L_inv * R_res
+      Sigma_->setToZero(memspace_);
       if (impl_->choleskyQr(W_, Sigma_, memspace_) != 0)
       {
         printf("QR failed!\n");
@@ -245,6 +245,9 @@ namespace ReSolve
 
       // S = L^-1 * W
       S_->copyFromExternal(W_, memspace_, memspace_);
+      
+      auto iterative_start = std::chrono::steady_clock::now();
+      std::chrono::time_point<std::chrono::steady_clock> iterative_end;
 
       int i;
       for (i = 0; i < itmax_; i++)
@@ -255,7 +258,8 @@ namespace ReSolve
         // 1. SpMM / SpMV Section
         // auto spmv_start = std::chrono::steady_clock::now();
         // matrix_handler_->matvec(A_prec_, S_, Temp_nxk_, &ONE, &ZERO, memspace_);
-        impl_->SpMMTallSkinny(A_prec_, S_, Temp_nxk_);
+        // impl_->SpMMTallSkinny(A_prec_, S_, Temp_nxk_);
+        impl_->hypreDevice_CSRMatrixMatvec(A_prec_, S_, Temp_nxk_);
         // deviceSynchronize(); // optional
         // auto spmv_end = std::chrono::steady_clock::now();
         // printf("  [it %d] spmv: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(spmv_end - spmv_start).count()); // optional
@@ -331,10 +335,11 @@ namespace ReSolve
         // std::cout << std::setprecision(std::numeric_limits<double>::max_digits10) << best_basis_error << '\n';
         // 7. Convergence Checking & Final Calculations Block
         if (best_basis_error < initial_tol_)
+        // if (false)
         {
           // auto conv_block_start = std::chrono::steady_clock::now();
           // A * X = B - R
-          Temp_nxk_->copyFromExternal(B_, 0, memspace_, memspace_);
+          Temp_nxk_->copyFromExternal(B_, memspace_, memspace_);
           vector_handler_->axpy(MINUS_ONE, R_, Temp_nxk_, memspace_);
 
           // (AX)^T * AX * c = (AX)^T * b
@@ -398,6 +403,7 @@ namespace ReSolve
             // printf("  [it %d] convergence_overhead: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(conv_block_end - conv_block_start).count()); // optional
 
             printf("Convergence occured at iteration %d. Total Solve Time: %f ms\n", i, elapsed.count());
+            printf("Per iteration time: %.10f\n", (std::chrono::duration<double, std::milli>(iterative_end - iterative_start)).count() / i);
             printf("||r|| / (||A|| * ||x|| + ||b||) error: %.5e, best basis error: %.5e\n",
                    r_norm / (A_norm_ * x_norm + b_norm_),
                    best_basis_r_norm / (A_norm_ * best_basis_x_norm + b_norm_));
@@ -438,6 +444,7 @@ namespace ReSolve
 
         // auto it_end = std::chrono::steady_clock::now();
         // printf("[Iteration %d Total]: %f ms\n\n", i, static_cast<std::chrono::duration<double, std::milli>>(it_end - it_start).count());
+        iterative_end = std::chrono::steady_clock::now();
       }
 
       if (i == itmax_)
@@ -446,7 +453,8 @@ namespace ReSolve
         end = std::chrono::steady_clock::now();
         std::chrono::duration<double, std::milli> elapsed = (end - start);
         printf("No CG convergence in %d iterations\n", itmax_);
-        printf("Total Solve Time: %f ms, error: %.5e\n", elapsed.count(), best_basis_error);
+        printf("Total Solve Time: %.10f ms, error: %.5e\n", elapsed.count(), best_basis_error);
+        printf("Per iteration time: %.10f\n", (std::chrono::duration<double, std::milli>(iterative_end - iterative_start)).count() / i);
         return 1;
       }
 

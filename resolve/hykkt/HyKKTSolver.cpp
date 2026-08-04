@@ -512,6 +512,8 @@ namespace ReSolve
   {
     cholesky_->solve(omega_perm_, r_x_perm_);
     schur_->copyFromExternal(r_y_, memspace_, memspace_);
+    J_perm_->syncData(memory::HOST);
+    J_tr_perm_->syncData(memory::HOST);
     matrixHandler_->matvec(J_perm_, omega_perm_, schur_, &ONE, &MINUS_ONE, memspace_);
 
     sccg_ = new SchurComplementConjugateGradient(J_->getNumRows(), J_->getNumColumns(), cholesky_, matrixHandler_, vectorHandler_, memspace_);

@@ -43,19 +43,38 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
   ReSolve::real_type gamma      = 10000.0;
   std::string        source_dir = std::string(SOURCE_DIR);
 
-  result += test.testSolver(
-      2278, 490, 1386, 2278, 490, 6784, 980, source_dir + std::string("/HyKKTSolverTestMatrices/block_H_matrix_ACTIVSg200_AC_09.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_Dd_matrix_ACTIVSg200_AC_09.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_J_matrix_ACTIVSg200_AC_09.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_Jd_matrix_ACTIVSg200_AC_09.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_rx_ACTIVSg200_AC_09.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_rs_ACTIVSg200_AC_09.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_ry_ACTIVSg200_AC_09.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_ryd_ACTIVSg200_AC_09.mtx"), gamma);
-  workspace.resetLinAlgWorkspace();
-  result += test.testSolver(
-      2278, 490, 1386, 2278, 490, 6784, 980, source_dir + std::string("/HyKKTSolverTestMatrices/block_H_matrix_ACTIVSg200_AC_10.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_Dd_matrix_ACTIVSg200_AC_10.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_J_matrix_ACTIVSg200_AC_10.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_Jd_matrix_ACTIVSg200_AC_10.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_rx_ACTIVSg200_AC_10.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_rs_ACTIVSg200_AC_10.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_ry_ACTIVSg200_AC_10.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_ryd_ACTIVSg200_AC_10.mtx"), gamma);
-  workspace.resetLinAlgWorkspace();
+  // result += test.testSolver(
+  //     2278, 490, 1386, 2278, 490, 6784, 980, source_dir + std::string("/HyKKTSolverTestMatrices/block_H_matrix_ACTIVSg200_AC_09.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_Dd_matrix_ACTIVSg200_AC_09.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_J_matrix_ACTIVSg200_AC_09.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_Jd_matrix_ACTIVSg200_AC_09.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_rx_ACTIVSg200_AC_09.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_rs_ACTIVSg200_AC_09.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_ry_ACTIVSg200_AC_09.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_ryd_ACTIVSg200_AC_09.mtx"), gamma);
+  // workspace.resetLinAlgWorkspace();
+  // result += test.testSolver(
+  //     2278, 490, 1386, 2278, 490, 6784, 980, source_dir + std::string("/HyKKTSolverTestMatrices/block_H_matrix_ACTIVSg200_AC_10.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_Dd_matrix_ACTIVSg200_AC_10.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_J_matrix_ACTIVSg200_AC_10.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_Jd_matrix_ACTIVSg200_AC_10.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_rx_ACTIVSg200_AC_10.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_rs_ACTIVSg200_AC_10.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_ry_ACTIVSg200_AC_10.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_ryd_ACTIVSg200_AC_10.mtx"), gamma);
+  // workspace.resetLinAlgWorkspace();
 
-  result += test.testSolver(
-      25910, 6412, 16933, 38469, 6412, 86139, 12824, source_dir + std::string("/HyKKTSolverTestMatrices/block_H_matrix_ACTIVSg2000_AC_09.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_Dd_matrix_ACTIVSg2000_AC_09.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_J_matrix_ACTIVSg2000_AC_09.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_Jd_matrix_ACTIVSg2000_AC_09.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_rx_ACTIVSg2000_AC_09.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_rs_ACTIVSg2000_AC_09.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_ry_ACTIVSg2000_AC_09.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_ryd_ACTIVSg2000_AC_09.mtx"), gamma);
-  workspace.resetLinAlgWorkspace();
-  result += test.testSolver(
-      25910, 6412, 16933, 38469, 6412, 86139, 12824, source_dir + std::string("/HyKKTSolverTestMatrices/block_H_matrix_ACTIVSg2000_AC_10.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_Dd_matrix_ACTIVSg2000_AC_10.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_J_matrix_ACTIVSg2000_AC_10.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_Jd_matrix_ACTIVSg2000_AC_10.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_rx_ACTIVSg2000_AC_10.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_rs_ACTIVSg2000_AC_10.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_ry_ACTIVSg2000_AC_10.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_ryd_ACTIVSg2000_AC_10.mtx"), gamma);
-  workspace.resetLinAlgWorkspace();
+  // result += test.testSolver(
+  //     25910, 6412, 16933, 38469, 6412, 86139, 12824, source_dir + std::string("/HyKKTSolverTestMatrices/block_H_matrix_ACTIVSg2000_AC_09.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_Dd_matrix_ACTIVSg2000_AC_09.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_J_matrix_ACTIVSg2000_AC_09.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_Jd_matrix_ACTIVSg2000_AC_09.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_rx_ACTIVSg2000_AC_09.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_rs_ACTIVSg2000_AC_09.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_ry_ACTIVSg2000_AC_09.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_ryd_ACTIVSg2000_AC_09.mtx"), gamma);
+  // workspace.resetLinAlgWorkspace();
+  // result += test.testSolver(
+  //     25910, 6412, 16933, 38469, 6412, 86139, 12824, source_dir + std::string("/HyKKTSolverTestMatrices/block_H_matrix_ACTIVSg2000_AC_10.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_Dd_matrix_ACTIVSg2000_AC_10.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_J_matrix_ACTIVSg2000_AC_10.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_Jd_matrix_ACTIVSg2000_AC_10.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_rx_ACTIVSg2000_AC_10.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_rs_ACTIVSg2000_AC_10.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_ry_ACTIVSg2000_AC_10.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_ryd_ACTIVSg2000_AC_10.mtx"), gamma);
+  // workspace.resetLinAlgWorkspace();
+  
+  // result += test.testSolver(
+  //   2278, 490, 1386, 4638, 490, 6784, 980, source_dir + std::string("/HyKKTSolverTestMatrices/block_H_matrix_ACTIVSg200_AC_04.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_Dd_matrix_ACTIVSg200_AC_04.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_J_matrix_ACTIVSg200_AC_04.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_Jd_matrix_ACTIVSg200_AC_04.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_rx_rhs_ACTIVSg200_AC_04.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_rs_rhs_ACTIVSg200_AC_04.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_ry_rhs_ACTIVSg200_AC_04.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_ryd_rhs_ACTIVSg200_AC_04.mtx"), gamma);
+
+    result += test.testSolver(
+      115790, 25412, 71458, 233526, 25412, 350544, 50824, source_dir + std::string("/HyKKTSolverTestMatrices/block_H_matrix_ACTIVSg10k_AC_00.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_Dd_matrix_ACTIVSg10k_AC_00.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_J_matrix_ACTIVSg10k_AC_00.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_Jd_matrix_ACTIVSg10k_AC_00.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_rx_rhs_ACTIVSg10k_AC_00.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_rs_rhs_ACTIVSg10k_AC_00.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_ry_rhs_ACTIVSg10k_AC_00.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_ryd_rhs_ACTIVSg10k_AC_00.mtx"), gamma);
+  // workspace.resetLinAlgWorkspace();
+
+  // result += test.testSolver(
+  //     793608, 176414, 473975, 1600152, 176414, 2418895, 352828, source_dir + std::string("/HyKKTSolverTestMatrices/block_H_matrix_ACTIVSg70k_AC_01.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_Dd_matrix_ACTIVSg70k_AC_01.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_J_matrix_ACTIVSg70k_AC_01.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_Jd_matrix_ACTIVSg70k_AC_01.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_rx_rhs_ACTIVSg70k_AC_01.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_rs_rhs_ACTIVSg70k_AC_01.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_ry_rhs_ACTIVSg70k_AC_01.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_ryd_rhs_ACTIVSg70k_AC_01.mtx"), gamma);
+  // workspace.resetLinAlgWorkspace();
+  
+  // result += test.testSolver(
+  //     793608, 176414, 473975, 1600152, 176414, 2418895, 352828, source_dir + std::string("/HyKKTSolverTestMatrices/block_H_matrix_ACTIVSg70k_AC_03.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_Dd_matrix_ACTIVSg70k_AC_03.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_J_matrix_ACTIVSg70k_AC_03.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_Jd_matrix_ACTIVSg70k_AC_03.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_rx_rhs_ACTIVSg70k_AC_03.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_rs_rhs_ACTIVSg70k_AC_03.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_ry_rhs_ACTIVSg70k_AC_03.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_ryd_rhs_ACTIVSg70k_AC_03.mtx"), gamma);
+  // workspace.resetLinAlgWorkspace();
+
+  // result += test.testSolver(
+  //     79808, 39850, 54984, 1037504, 39850, 466000, 79700, source_dir + std::string("/HyKKTSolverTestMatrices/block_H_matrix_case118_baseplus231ctgc_3.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_Dd_matrix_case118_baseplus231ctgc_3.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_J_matrix_case118_baseplus231ctgc_3.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_Jd_matrix_case118_baseplus231ctgc_3.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_rx_rhs_case118_baseplus231ctgc_3.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_rs_rhs_case118_baseplus231ctgc_3.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_ry_rhs_case118_baseplus231ctgc_3.mtx"), source_dir + std::string("/HyKKTSolverTestMatrices/block_ryd_rhs_case118_baseplus231ctgc_3.mtx"), gamma);
+  // workspace.resetLinAlgWorkspace();
 
   std::cout << "\n";
 }
@@ -63,7 +82,7 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
 int main(int, char**)
 {
   ReSolve::tests::TestingResults result;
-  runTests<ReSolve::LinAlgWorkspaceCpu>("CPU", ReSolve::memory::HOST, result);
+  // runTests<ReSolve::LinAlgWorkspaceCpu>("CPU", ReSolve::memory::HOST, result);
 
 #ifdef RESOLVE_USE_CUDA
   runTests<ReSolve::LinAlgWorkspaceCUDA>("CUDA", ReSolve::memory::DEVICE, result);

@@ -38,27 +38,53 @@ std::freopen("log.txt", "w", stdout);
   ReSolve::VectorHandler                                     vector_handler(&workspace);
   ReSolve::tests::HykktRandomizedDenseConjugateGradientTests test(memspace, matrix_handler, vector_handler);
 
-  size_t n = 6400;
   std::string        source_dir = std::string(SOURCE_DIR);
-  std::string        A_file_name = source_dir + std::string("/RandomizedDenseCGTestMatrices/A_") + std::to_string(n) + std::string(".mtx");
-  std::string        b_file_name = source_dir + std::string("/RandomizedDenseCGTestMatrices/b_") + std::to_string(n) + std::string(".mtx");
+  // std::string        "" = source_dir + std::string("/RandomizedDenseCGTestMatrices/A_") + std::to_string(n) + std::string(".mtx");
+  // std::string        "" = source_dir + std::string("/RandomizedDenseCGTestMatrices/b_") + std::to_string(n) + std::string(".mtx");
   double rng_min = -1.0;
   double rng_max = 1.0;
 
-  // test.generateVectors(A_file_name, b_file_name, n, rng_min, rng_max);
-  // test.choleskyTests(A_file_name, b_file_name, n);
-  result += test.RandomizedDenseCGTest(A_file_name, b_file_name, n, 1, rng_min, rng_max);
-  // workspace.resetLinAlgWorkspace();
-  // result += test.RandomizedDenseCGTest(A_file_name, b_file_name, n, 2, rng_min, rng_max);
-  // workspace.resetLinAlgWorkspace();
-  // result += test.RandomizedDenseCGTest(A_file_name, b_file_name, n, 4, rng_min, rng_max);
-  // workspace.resetLinAlgWorkspace();
-  // result += test.RandomizedDenseCGTest(A_file_name, b_file_name, n, 8, rng_min, rng_max);
-  // workspace.resetLinAlgWorkspace();
-  // result += test.RandomizedDenseCGTest(A_file_name, b_file_name, n, 16, rng_min, rng_max);
-  // workspace.resetLinAlgWorkspace();
-  // result += test.RandomizedDenseCGTest(A_file_name, b_file_name, n, 32, rng_min, rng_max);
+  std::vector<size_t> n_list{
+    // 100,
+    // 100,
+    // 100,
 
+    // 40,
+    // 100,
+    // 200,
+    // 400,
+    // 800,
+    // 1600,
+    // 2400,
+    // 3200,
+
+    4800,
+
+    // 6400,
+    // 8000,
+    // 11200,
+    // 9600,
+    // 16000,
+    // 19200
+  };
+
+  for (size_t n : n_list)
+  {
+  printf("\n\n\nn = %d\n", n);
+    // test.generateVectors("", "", n, rng_min, rng_max);
+    // test.choleskyTests("", "", n);
+    result += test.RandomizedDenseCGTest("", "", n, 1, rng_min, rng_max);
+    workspace.resetLinAlgWorkspace();
+    result += test.RandomizedDenseCGTest("", "", n, 2, rng_min, rng_max);
+    workspace.resetLinAlgWorkspace();
+    result += test.RandomizedDenseCGTest("", "", n, 4, rng_min, rng_max);
+    workspace.resetLinAlgWorkspace();
+    result += test.RandomizedDenseCGTest("", "", n, 8, rng_min, rng_max);
+    // workspace.resetLinAlgWorkspace();
+    // result += test.RandomizedDenseCGTest("", "", n, 16, rng_min, rng_max);
+    // workspace.resetLinAlgWorkspace();
+    // result += test.RandomizedDenseCGTest("", "", n, 32, rng_min, rng_max);
+  }
   std::cout << "\n";
     std::fclose(stdout);
 }

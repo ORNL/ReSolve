@@ -140,6 +140,8 @@ namespace ReSolve
     
     virtual void randomVector(vector::Vector* v, real_type min, real_type max);
     
+    virtual void randomVectorExceptFirstColumn(vector::Vector* v, real_type min, real_type max);
+    
     virtual void addIdentity(vector::Vector* v, real_type alpha);
 
   private:
