@@ -200,7 +200,7 @@ namespace ReSolve
     if (precondition_method_ != "none")
     {
       delete preconditioner_;
-      delete preconditionSolver_;
+      delete preconditionerSolver_;
     }
 
     delete matrixHandler_;
@@ -264,10 +264,10 @@ namespace ReSolve
       delete refactorizationSolver_;
       refactorizationSolver_ = nullptr;
     }
-    if (preconditionSolver_)
+    if (preconditionerSolver_)
     {
-      delete preconditionSolver_;
-      preconditionSolver_ = nullptr;
+      delete preconditionerSolver_;
+      preconditionerSolver_ = nullptr;
     }
     if (preconditioner_)
     {
@@ -358,21 +358,21 @@ namespace ReSolve
     {
       if (memspace_ == "cpu")
       {
-        preconditionSolver_ = new LinSolverDirectCpuILU0(workspaceCpu_);
-        preconditioner_     = new PreconditionerLU(preconditionSolver_);
+        preconditionerSolver_ = new LinSolverDirectCpuILU0(workspaceCpu_);
+        preconditioner_       = new PreconditionerLU(preconditionerSolver_);
 #ifdef RESOLVE_USE_CUDA
       }
       else if (memspace_ == "cuda")
       {
-        preconditionSolver_ = new LinSolverDirectCuSparseILU0(workspaceCuda_);
-        preconditioner_     = new PreconditionerLU(preconditionSolver_);
+        preconditionerSolver_ = new LinSolverDirectCuSparseILU0(workspaceCuda_);
+        preconditioner_       = new PreconditionerLU(preconditionerSolver_);
 #endif
 #ifdef RESOLVE_USE_HIP
       }
       else if (memspace_ == "hip")
       {
-        preconditionSolver_ = new LinSolverDirectRocSparseILU0(workspaceHip_);
-        preconditioner_     = new PreconditionerLU(preconditionSolver_);
+        preconditionerSolver_ = new LinSolverDirectRocSparseILU0(workspaceHip_);
+        preconditioner_       = new PreconditionerLU(preconditionerSolver_);
 #endif
       }
       else
@@ -713,6 +713,11 @@ namespace ReSolve
   LinSolverDirect& SystemSolver::getRefactorizationSolver()
   {
     return *refactorizationSolver_;
+  }
+
+  LinSolverDirect& SystemSolver::getPreconditionerSolver()
+  {
+    return *preconditionerSolver_;
   }
 
   LinSolverIterative& SystemSolver::getIterativeSolver()

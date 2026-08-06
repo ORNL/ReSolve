@@ -112,16 +112,12 @@ namespace ReSolve
 
     error_sum += status_cusparse_;
 
-    // Regularize small-magnitude pivots during CUDA ILU0 factorization.
-    real_type boost_tolerance = 1e-6;
-    real_type boost_value     = 1e-6;
-
     status_cusparse_ =
         cusparseDcsrilu02_numericBoost(workspace_->getCusparseHandle(),
                                        info_A_,
                                        1,
-                                       &boost_tolerance,
-                                       &boost_value);
+                                       &zero_diagonal_,
+                                       &zero_diagonal_);
 
     if (status_cusparse_ != CUSPARSE_STATUS_SUCCESS)
     {
@@ -330,6 +326,21 @@ namespace ReSolve
     cusparseDestroyDnVec(vec_Y_);
 
     return error_sum;
+  }
+
+  /**
+   * @brief Sets approximation to zero on matrix diagonal.
+   *
+   * During CUDA ILU0 factorization, pivots whose magnitude is below this
+   * threshold are replaced with the specified value. The default is 1e-6.
+   *
+   * @param z - small value approximating zero
+   * @return int - returns status code
+   */
+  int LinSolverDirectCuSparseILU0::setZeroDiagonal(real_type z)
+  {
+    zero_diagonal_ = z;
+    return 0;
   }
 
   /**
