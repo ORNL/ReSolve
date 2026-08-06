@@ -73,7 +73,7 @@ namespace ReSolve
     int         printCliParam(const std::string id) const override;
 
   private:
-    enum ParamaterIDs
+    enum ParameterIDs
     {
       TOL = 0,
       MAXIT,

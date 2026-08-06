@@ -67,7 +67,7 @@ namespace ReSolve
         x.allocate(memory::HOST);
 
         // Reference solutions are for zero diagonal approximated with 0.1
-        solver.setZeroDiagonal(0.1);
+        status *= (solver.setCliParam("zero_diagonal", "0.1") == 0);
 
         // Test ILU0 analysis and factorization
         solver.setup(A);

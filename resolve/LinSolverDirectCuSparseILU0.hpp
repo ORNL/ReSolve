@@ -52,6 +52,13 @@ namespace ReSolve
     int         printCliParam(const std::string id) const override;
 
   private:
+    enum ParameterIDs
+    {
+      ZERO_DIAGONAL = 0
+    };
+
+    void initParamList();
+
     cusparseStatus_t status_cusparse_;
 
     MemoryHandler        mem_; ///< Device memory manager object

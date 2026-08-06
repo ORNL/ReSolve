@@ -44,6 +44,8 @@ namespace ReSolve
     int solve(vector_type* rhs, vector_type* x) override;
     int solve(vector_type* rhs) override; // the solution is returned IN RHS (rhs is overwritten)
 
+    int setZeroDiagonal(real_type z);
+
     int         setCliParam(const std::string id, const std::string value) override;
     std::string getCliParamString(const std::string id) const override;
     index_type  getCliParamInt(const std::string id) const override;
@@ -52,6 +54,13 @@ namespace ReSolve
     int         printCliParam(const std::string id) const override;
 
   private:
+    enum ParameterIDs
+    {
+      ZERO_DIAGONAL = 0
+    };
+
+    void initParamList();
+
     rocsparse_status status_rocsparse_;
 
     MemoryHandler       mem_; ///< Device memory manager object
@@ -68,5 +77,7 @@ namespace ReSolve
     real_type* d_aux1_{nullptr};
     // since ILU OVERWRITES THE MATRIX values, we need a buffer to keep the values of ILU decomposition.
     real_type* d_ILU_vals_{nullptr};
+
+    real_type zero_diagonal_{1e-6}; ///< Approximation for zero diagonal
   };
 } // namespace ReSolve

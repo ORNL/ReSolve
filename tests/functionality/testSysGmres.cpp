@@ -15,6 +15,7 @@
 
 #include "TestHelper.hpp"
 #include <resolve/GramSchmidt.hpp>
+#include <resolve/LinSolverDirect.hpp>
 #include <resolve/LinSolverIterativeRandFGMRES.hpp>
 #include <resolve/Preconditioner.hpp>
 #include <resolve/SystemSolver.hpp>
@@ -136,6 +137,10 @@ int test(int argc, char* argv[])
   // Create system solver
   ReSolve::SystemSolver solver(&workspace, "none", "none", method, "ilu0", "none");
   solver.setGramSchmidtMethod(gs);
+
+  // Configure ILU0
+  status = solver.getPreconditionerSolver().setCliParam("zero_diagonal", "1e-7");
+  error_sum += status;
 
   // Generate linear system data
   ReSolve::matrix::Csr* A       = generateMatrix(N, memspace);

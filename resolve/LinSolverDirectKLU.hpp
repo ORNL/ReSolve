@@ -59,7 +59,7 @@ namespace ReSolve
     int         printCliParam(const std::string id) const override;
 
   private:
-    enum ParamaterIDs
+    enum ParameterIDs
     {
       PIVOT_TOL = 0,
       ORDERING,
