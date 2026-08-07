@@ -117,8 +117,8 @@ namespace ReSolve
         cusparseDcsrilu02_numericBoost(workspace_->getCusparseHandle(),
                                        info_A_,
                                        1,
-                                       &zero_pivot_,
-                                       &pivot_boost_);
+                                       &boost_tolerance_,
+                                       &boost_value_);
 
     if (status_cusparse_ != CUSPARSE_STATUS_SUCCESS)
     {
@@ -341,11 +341,11 @@ namespace ReSolve
   {
     switch (getParamId(id))
     {
-    case ZERO_PIVOT:
-      zero_pivot_ = atof(value.c_str());
+    case BOOST_TOLERANCE:
+      boost_tolerance_ = atof(value.c_str());
       return 0;
-    case PIVOT_BOOST:
-      pivot_boost_ = atof(value.c_str());
+    case BOOST_VALUE:
+      boost_value_ = atof(value.c_str());
       return 0;
     default:
       std::cout << "Setting parameter failed!\n";
@@ -404,10 +404,10 @@ namespace ReSolve
   {
     switch (getParamId(id))
     {
-    case ZERO_PIVOT:
-      return zero_pivot_;
-    case PIVOT_BOOST:
-      return pivot_boost_;
+    case BOOST_TOLERANCE:
+      return boost_tolerance_;
+    case BOOST_VALUE:
+      return boost_value_;
     default:
       out::error() << "Trying to get unknown real parameter " << id << "\n";
     }
@@ -445,11 +445,11 @@ namespace ReSolve
   {
     switch (getParamId(id))
     {
-    case ZERO_PIVOT:
-      std::cout << zero_pivot_ << "\n";
+    case BOOST_TOLERANCE:
+      std::cout << boost_tolerance_ << "\n";
       break;
-    case PIVOT_BOOST:
-      std::cout << pivot_boost_ << "\n";
+    case BOOST_VALUE:
+      std::cout << boost_value_ << "\n";
       break;
     default:
       out::error() << "Trying to print unknown parameter " << id << "\n";
@@ -462,13 +462,13 @@ namespace ReSolve
    * @brief Initialize the parameter list for ILU0 solver.
    *
    * @post params_list_ is populated with the ILU0 solver parameters:
-   * - zero_pivot
-   * - pivot_boost
+   * - boost_tolerance
+   * - boost_value
    */
   void LinSolverDirectCuSparseILU0::initParamList()
   {
-    params_list_["zero_pivot"]  = ZERO_PIVOT;
-    params_list_["pivot_boost"] = PIVOT_BOOST;
+    params_list_["boost_tolerance"] = BOOST_TOLERANCE;
+    params_list_["boost_value"]     = BOOST_VALUE;
   }
 
 } // namespace ReSolve

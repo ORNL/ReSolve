@@ -52,8 +52,8 @@ namespace ReSolve
   private:
     enum ParameterIDs
     {
-      ZERO_PIVOT = 0,
-      PIVOT_BOOST
+      BOOST_TOLERANCE = 0,
+      BOOST_VALUE
     };
 
     void initParamList();
@@ -85,7 +85,7 @@ namespace ReSolve
     // since ILU OVERWRITES THE MATRIX values, we need a buffer to keep the values of ILU decomposition.
     real_type* d_ILU_vals_{nullptr};
 
-    real_type zero_pivot_{1e-6};  ///< The value below which zero pivot is flagged.
-    real_type pivot_boost_{1e-6}; ///< The value which is substituted for zero pivot.
+    real_type boost_tolerance_{1e-6}; ///< Threshold below which a diagonal entry is replaced.
+    real_type boost_value_{1e-6};     ///< Value substituted for a small diagonal entry.
   };
 } // namespace ReSolve
