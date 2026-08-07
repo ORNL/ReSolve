@@ -42,8 +42,6 @@ namespace ReSolve
     int solve(vector_type* rhs, vector_type* x) override;
     int solve(vector_type* rhs) override;
 
-    int setZeroDiagonal(real_type z);
-
     int         setCliParam(const std::string id, const std::string value) override;
     std::string getCliParamString(const std::string id) const override;
     index_type  getCliParamInt(const std::string id) const override;
@@ -54,7 +52,8 @@ namespace ReSolve
   private:
     enum ParameterIDs
     {
-      ZERO_DIAGONAL = 0
+      ZERO_PIVOT = 0,
+      PIVOT_BOOST
     };
 
     void initParamList();
@@ -86,6 +85,7 @@ namespace ReSolve
     // since ILU OVERWRITES THE MATRIX values, we need a buffer to keep the values of ILU decomposition.
     real_type* d_ILU_vals_{nullptr};
 
-    real_type zero_diagonal_{1e-6}; ///< Approximation for zero diagonal
+    real_type zero_pivot_{1e-6};  ///< The value below which zero pivot is flagged.
+    real_type pivot_boost_{1e-6}; ///< The value which is substituted for zero pivot.
   };
 } // namespace ReSolve

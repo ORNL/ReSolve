@@ -63,7 +63,7 @@
 
 - Added optional timing output to `gpuRefactor`, `kluRefactor`, `gluRefactor`, and `sysRefactor` plus benchmark utilities for parsing logs and generating timing/residual plots.
 
-- Added a configurable zero-diagonal boost for CUDA ILU0 and exposed the preconditioner solver through `SystemSolver`.
+- Added configurable zero-pivot and pivot-boost parameters for CUDA and HIP ILU0 and exposed the preconditioner solver through `SystemSolver` for configuring them.
 
 ## Changes to Re::Solve in release 0.99.2
 

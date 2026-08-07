@@ -133,8 +133,8 @@ namespace ReSolve
     status_rocsparse_ = rocsparse_dcsrilu0_numeric_boost(workspace_->getRocsparseHandle(),
                                                          info_A_,
                                                          1,
-                                                         &zero_diagonal_,
-                                                         &zero_diagonal_);
+                                                         &zero_pivot_,
+                                                         &pivot_boost_);
 
     if (status_rocsparse_ != rocsparse_status_success)
     {
@@ -311,21 +311,6 @@ namespace ReSolve
   }
 
   /**
-   * @brief Sets approximation to zero on matrix diagonal.
-   *
-   * During HIP ILU0 factorization, pivots whose magnitude is below this
-   * threshold are replaced with the specified value. The default is 1e-6.
-   *
-   * @param[in] z - small value approximating zero
-   * @return int - returns status code
-   */
-  int LinSolverDirectRocSparseILU0::setZeroDiagonal(real_type z)
-  {
-    zero_diagonal_ = z;
-    return 0;
-  }
-
-  /**
    * @brief Set Cli parameters for ILU0 solver.
    *
    * @param[in] id    - string ID for parameter to set
@@ -337,8 +322,12 @@ namespace ReSolve
   {
     switch (getParamId(id))
     {
-    case ZERO_DIAGONAL:
-      return setZeroDiagonal(atof(value.c_str()));
+    case ZERO_PIVOT:
+      zero_pivot_ = atof(value.c_str());
+      return 0;
+    case PIVOT_BOOST:
+      pivot_boost_ = atof(value.c_str());
+      return 0;
     default:
       std::cout << "Setting parameter failed!\n";
       return 1;
@@ -396,8 +385,10 @@ namespace ReSolve
   {
     switch (getParamId(id))
     {
-    case ZERO_DIAGONAL:
-      return zero_diagonal_;
+    case ZERO_PIVOT:
+      return zero_pivot_;
+    case PIVOT_BOOST:
+      return pivot_boost_;
     default:
       out::error() << "Trying to get unknown real parameter " << id << "\n";
     }
@@ -435,8 +426,11 @@ namespace ReSolve
   {
     switch (getParamId(id))
     {
-    case ZERO_DIAGONAL:
-      std::cout << zero_diagonal_ << "\n";
+    case ZERO_PIVOT:
+      std::cout << zero_pivot_ << "\n";
+      break;
+    case PIVOT_BOOST:
+      std::cout << pivot_boost_ << "\n";
       break;
     default:
       out::error() << "Trying to print unknown parameter " << id << "\n";
@@ -449,11 +443,13 @@ namespace ReSolve
    * @brief Initialize the parameter list for ILU0 solver.
    *
    * @post params_list_ is populated with the ILU0 solver parameters:
-   * - zero_diagonal
+   * - zero_pivot
+   * - pivot_boost
    */
   void LinSolverDirectRocSparseILU0::initParamList()
   {
-    params_list_["zero_diagonal"] = ZERO_DIAGONAL;
+    params_list_["zero_pivot"]  = ZERO_PIVOT;
+    params_list_["pivot_boost"] = PIVOT_BOOST;
   }
 
 } // namespace ReSolve

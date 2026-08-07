@@ -138,8 +138,16 @@ int test(int argc, char* argv[])
   ReSolve::SystemSolver solver(&workspace, "none", "none", method, "ilu0", "none");
   solver.setGramSchmidtMethod(gs);
 
-  // Configure ILU0
-  status = solver.getPreconditionerSolver().setCliParam("zero_diagonal", "1e-7");
+  // Configure ILU0 zero-pivot handling
+  if (hwbackend == "CPU")
+  {
+    status = solver.getPreconditionerSolver().setCliParam("zero_diagonal", "1e-7");
+  }
+  else
+  {
+    status = solver.getPreconditionerSolver().setCliParam("zero_pivot", "1e-7");
+    status += solver.getPreconditionerSolver().setCliParam("pivot_boost", "1e-7");
+  }
   error_sum += status;
 
   // Generate linear system data
