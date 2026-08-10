@@ -41,9 +41,10 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
   std::string        source_dir = std::string(SOURCE_DIR);
 
   std::vector<std::string> matrix_names{
-    "mhd4800b", // WARMUP
-    "mhd4800b", // WARMUP
-    "mhd4800b", // WARMUP
+    // "mhd4800b", // WARMUP
+    // "mhd4800b", // WARMUP
+    // "mhd4800b", // WARMUP
+    "bcsstk18", // WARMUP
 
     // "hood",
     // "Fault_639",
@@ -53,7 +54,7 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
     // "Chem97ZtZ",
     // "sts4098",
     // "bcsstk13",
-    // "bcsstk18",
+    "bcsstk18",
     // "torsion1",
     // "shallow_water1",
     // "Kuu",
@@ -120,7 +121,7 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
     // "msc04515",
     // "bcsstk24",
     // "bcsstk15",
-    "Trefethen_20000",
+    // "Trefethen_20000",
     // "Dubcova1",
     // "ted_B",
     // "minsurfo",

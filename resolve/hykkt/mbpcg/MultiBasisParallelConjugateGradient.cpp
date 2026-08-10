@@ -203,8 +203,8 @@ namespace ReSolve
 
       vector_handler_->randomVector(X_prec_0_, -1.0, 1.0, memspace_);
       // deviceSynchronize(); // for debugging
-      // impl_->SpMMTallSkinny(A_prec_, X_prec_0_, Temp_nxk_);
-      impl_->hypreDevice_CSRMatrixMatvec(A_prec_, X_prec_0_, Temp_nxk_);
+      impl_->SpMMTallSkinny(A_prec_, X_prec_0_, Temp_nxk_);
+      // impl_->hypreDevice_CSRMatrixMatvec(A_prec_, X_prec_0_, Temp_nxk_);
       // matrix_handler_->matvec(A_prec_, X_prec_0_, Temp_nxk_, &ONE, &ZERO, memspace_);
       real_type AX_prec_0_norm = vector_handler_->norm(Temp_nxk_, memspace_);
       real_type B_prec_norm = sqrt(static_cast<double>(k_)) * vector_handler_->norm(b_prec_, memspace_);
@@ -258,8 +258,8 @@ namespace ReSolve
         // 1. SpMM / SpMV Section
         // auto spmv_start = std::chrono::steady_clock::now();
         // matrix_handler_->matvec(A_prec_, S_, Temp_nxk_, &ONE, &ZERO, memspace_);
-        // impl_->SpMMTallSkinny(A_prec_, S_, Temp_nxk_);
-        impl_->hypreDevice_CSRMatrixMatvec(A_prec_, S_, Temp_nxk_);
+        impl_->SpMMTallSkinny(A_prec_, S_, Temp_nxk_);
+        // impl_->hypreDevice_CSRMatrixMatvec(A_prec_, S_, Temp_nxk_);
         // deviceSynchronize(); // optional
         // auto spmv_end = std::chrono::steady_clock::now();
         // printf("  [it %d] spmv: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(spmv_end - spmv_start).count()); // optional

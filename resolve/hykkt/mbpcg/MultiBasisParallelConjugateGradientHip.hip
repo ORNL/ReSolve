@@ -122,9 +122,8 @@ namespace ReSolve
         #pragma unroll
         for (index_type offset = k / 2; offset > 0; offset /= 2)
         {
-          constexpr unsigned long long REDUCTION_MASK = (1u << k) - 1;
-          index_type target_index = __shfl_down(best_basis_local, offset);
-          real_type target_norm = __shfl_down(sq_norm_local, offset);
+          index_type target_index = __shfl_down(best_basis_local, offset, k);
+          real_type target_norm = __shfl_down(sq_norm_local, offset, k);
           if (target_norm < sq_norm_local)
           {
             best_basis_local = target_index;
@@ -140,13 +139,13 @@ namespace ReSolve
       }
 
       template <index_type k>
-      __device__ constexpr index_type indexUpperTriangular(index_type i, index_type j)
+      __device__ __forceinline__ index_type indexUpperTriangular(index_type i, index_type j)
       {
         return (j * (j + 1)) / 2 + i;
       }
 
       template <index_type k>
-      __device__ constexpr index_type indexLowerTriangular(index_type i, index_type j)
+      __device__ __forceinline__ index_type indexLowerTriangular(index_type i, index_type j)
       {
         return (j * (2 * k - 1 - j)) / 2 + i;
       }
@@ -874,7 +873,7 @@ namespace ReSolve
       dim3       block_size(64, k);
       int        num_blocks = num_sms_ * 4; // Pretty arbitrary. Tune this later
       hipMemsetAsync(d_sq_norms_, 0.0, k * sizeof(real_type));
-      kernels::columnWiseSquaredNorms<<<num_blocks, block_size>>>(R->getData(memory::DEVICE), d_sq_norms_, n);
+      kernels::columnWiseSquaredNorms<<<num_blocks, block_size>>>(R->getData(memory::DEVICE), d_sq_norms_, n); // before calling SquaredNormArgMin, the first entry is always very large. check if this happens on cuda
 
       // Kernel writes back into first entry of d_sq_norms_
       switch (k)
@@ -898,7 +897,7 @@ namespace ReSolve
         return 1;
       }
 
-      hipMemcpyAsync(h_best_basis, d_best_basis_, sizeof(real_type), hipMemcpyDeviceToHost);
+      hipMemcpyAsync(h_best_basis, d_best_basis_, sizeof(index_type), hipMemcpyDeviceToHost);
       hipMemcpyAsync(h_best_basis_norm, d_sq_norms_, sizeof(real_type), hipMemcpyDeviceToHost);
 
       return 0;

@@ -29,7 +29,6 @@
 template <typename WorkspaceType>
 void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace, ReSolve::tests::TestingResults& result)
 {
-std::freopen("log.txt", "w", stdout);
   std::cout << "Running regular CG tests on " << backend << " device:\n";
 
   WorkspaceType workspace;
@@ -53,7 +52,7 @@ std::freopen("log.txt", "w", stdout);
     // "Chem97ZtZ",
     // "sts4098",
     // "bcsstk13",
-    // "bcsstk18",
+    "bcsstk18",
     // "torsion1",
     // "shallow_water1",
     // "Kuu",
@@ -96,7 +95,7 @@ std::freopen("log.txt", "w", stdout);
     // "ct20stif",
     // "PFlow_742",//
 
-    "cant",
+    // "cant",
     // "offshore",
 
     // "Dubcova3",
@@ -194,7 +193,6 @@ std::freopen("log.txt", "w", stdout);
 
     std::cout << "\n";
   }
-    std::fclose(stdout);
 }
 
 int main(int, char**)
