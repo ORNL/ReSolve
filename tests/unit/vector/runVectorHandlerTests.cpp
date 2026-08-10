@@ -23,7 +23,7 @@ int main(int, char**)
     result += test.amax(50);
     result += test.gemv(5000, 10);
     result += test.gemm(5000, 30, 10);
-    // ANDREW TODO: add geam test
+    result += test.geam(5000, 10);
     result += test.axpyMulti(100, 10);
     result += test.massDot(100, 10);
     result += test.scale(100);

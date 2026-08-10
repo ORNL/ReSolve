@@ -285,6 +285,51 @@ namespace ReSolve
         return status.report(__func__);
       }
 
+      TestOutcome geam(index_type N, index_type K)
+      {
+        TestStatus status;
+
+        vector::Vector A_N(N, K); ///< For the test with NO TRANSPOSE
+        vector::Vector B_N(N, K);
+        vector::Vector A_T(K, N); ///< for the test with TRANSPOSE
+        vector::Vector B_T(K, N);
+        vector::Vector C_NN(N, K);
+        vector::Vector C_NT(N, K);
+        vector::Vector C_TN(N, K);
+        vector::Vector C_TT(N, K);
+
+        A_N.allocate(memspace_);
+        B_N.allocate(memspace_);
+        A_T.allocate(memspace_);
+        B_T.allocate(memspace_);
+        C_NN.allocate(memspace_);
+        C_NT.allocate(memspace_);
+        C_TN.allocate(memspace_);
+        C_TT.allocate(memspace_);
+
+        A_N.setToConst(1.0, memspace_);
+        B_N.setToConst(2.0, memspace_);
+        A_T.setToConst(1.0, memspace_);
+        B_T.setToConst(2.0, memspace_);
+        C_NN.setToConst(5.0, memspace_);
+        C_NT.setToConst(5.0, memspace_);
+        C_TN.setToConst(5.0, memspace_);
+        C_TT.setToConst(5.0, memspace_);
+
+        real_type alpha = -1.0;
+        real_type beta  = 1.0;
+        handler_.geam('N', 'N', alpha, beta, &A_N, &B_N, &C_NN, memspace_);
+        status *= verifyAnswer(C_NN, 2.0);
+        handler_.geam('N', 'T', alpha, beta, &A_N, &B_T, &C_NT, memspace_);
+        status *= verifyAnswer(C_NT, 2.0);
+        handler_.geam('T', 'N', alpha, beta, &A_T, &B_N, &C_TN, memspace_);
+        status *= verifyAnswer(C_TN, 2.0);
+        handler_.geam('T', 'T', alpha, beta, &A_T, &B_T, &C_TT, memspace_);
+        status *= verifyAnswer(C_TT, 2.0);
+
+        return status.report(__func__);
+      }
+
       TestOutcome scale(index_type N)
       {
         TestStatus status;
