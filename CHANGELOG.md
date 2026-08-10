@@ -65,6 +65,8 @@
 
 - Added configurable zero-pivot and pivot-boost parameters for CUDA and HIP ILU0 and exposed the preconditioner solver through `SystemSolver` for configuring them.
 
+- Fixed reversed `gemv` coefficients in CGS1 and CGS2 orthogonalization and added CGS1 convergence tests.
+
 ## Changes to Re::Solve in release 0.99.2
 
 ### Major Features

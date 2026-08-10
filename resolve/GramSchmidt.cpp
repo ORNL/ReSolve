@@ -189,13 +189,13 @@ namespace ReSolve
 
       // Hcol = V(:,1:i)^T*V(:,i+1), then V(:,i+1) = V(:, i+1) - V(:,1:i)*Hcol
       vector_handler_->gemv('T', i + 1, ONE, ZERO, V, vec_v_, vec_Hcolumn_aux_, memspace_);
-      vector_handler_->gemv('N', i + 1, ONE, MINUS_ONE, V, vec_Hcolumn_aux_, vec_v_, memspace_);
+      vector_handler_->gemv('N', i + 1, MINUS_ONE, ONE, V, vec_Hcolumn_aux_, vec_v_, memspace_);
 
       // Second CGS orthogonalization
 
       // Hcol = V(:,1:i)^T*V(:,i+1), then V(:,i+1) = V(:, i+1) - V(:,1:i)*Hcol
       vector_handler_->gemv('T', i + 1, ONE, ZERO, V, vec_v_, vec_Hcolumn_, memspace_);
-      vector_handler_->gemv('N', i + 1, ONE, MINUS_ONE, V, vec_Hcolumn_, vec_v_, memspace_);
+      vector_handler_->gemv('N', i + 1, MINUS_ONE, ONE, V, vec_Hcolumn_, vec_v_, memspace_);
 
       // Accumulate the coefficients from both CGS steps
       vector_handler_->axpy(ONE, vec_Hcolumn_aux_, vec_Hcolumn_, memspace_);
@@ -374,7 +374,7 @@ namespace ReSolve
       // Hcol = V(:,1:i)^T*V(:,i+1);
       vector_handler_->gemv('T', i + 1, ONE, ZERO, V, vec_v_, vec_Hcolumn_, memspace_);
       // V(:,i+1) = V(:, i+1) -  V(:,1:i)*Hcol
-      vector_handler_->gemv('N', i + 1, ONE, MINUS_ONE, V, vec_Hcolumn_, vec_v_, memspace_);
+      vector_handler_->gemv('N', i + 1, MINUS_ONE, ONE, V, vec_Hcolumn_, vec_v_, memspace_);
 
       // copy H_col to H
       vec_Hcolumn_->setDataUpdated(memspace_);

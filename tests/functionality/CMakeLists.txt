@@ -93,6 +93,10 @@ if(RESOLVE_USE_LUSOL)
 endif()
 
 # Krylov solvers tests (FGMRES)
+add_test(NAME sys_rand_count_fgmres_cgs1_test
+         COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-i" "randgmres" "-g"
+                 "cgs1" "-s" "count"
+)
 add_test(NAME sys_rand_count_fgmres_cgs2_test
          COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-i" "randgmres" "-g"
                  "cgs2" "-s" "count"
@@ -109,6 +113,10 @@ add_test(NAME sys_rand_count_fgmres_mgspm_test
          COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-i" "randgmres" "-g"
                  "mgs_pm" "-s" "count"
 )
+add_test(NAME sys_rand_fwht_fgmres_cgs1_test
+         COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-i" "randgmres" "-g"
+                 "cgs1" "-s" "fwht"
+)
 add_test(NAME sys_rand_fwht_fgmres_cgs2_test
          COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-i" "randgmres" "-g"
                  "cgs2" "-s" "fwht"
@@ -124,6 +132,10 @@ add_test(NAME sys_rand_fwht_fgmres_mgs2sync_test
 add_test(NAME sys_rand_fwht_fgmres_mgspm_test
          COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-i" "randgmres" "-g"
                  "mgs_pm" "-s" "fwht"
+)
+add_test(NAME sys_fgmres_cgs1_test
+         COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-i" "fgmres" "-g"
+                 "cgs1"
 )
 add_test(NAME sys_fgmres_cgs2_test
          COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-i" "fgmres" "-g"
@@ -142,6 +154,10 @@ add_test(NAME sys_fgmres_mgspm_test
 )
 
 # Krylov solvers tests (GMRES)
+add_test(NAME sys_rand_count_gmres_cgs1_test
+         COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-x" "no" "-i"
+                 "randgmres" "-g" "cgs1" "-s" "count"
+)
 add_test(NAME sys_rand_count_gmres_cgs2_test
          COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-x" "no" "-i"
                  "randgmres" "-g" "cgs2" "-s" "count"
@@ -158,6 +174,10 @@ add_test(NAME sys_rand_count_gmres_mgspm_test
          COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-x" "no" "-i"
                  "randgmres" "-g" "mgs_pm" "-s" "count"
 )
+add_test(NAME sys_rand_fwht_gmres_cgs1_test
+         COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-x" "no" "-i"
+                 "randgmres" "-g" "cgs1" "-s" "fwht"
+)
 add_test(NAME sys_rand_fwht_gmres_cgs2_test
          COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-x" "no" "-i"
                  "randgmres" "-g" "cgs2" "-s" "fwht"
@@ -173,6 +193,9 @@ add_test(NAME sys_rand_fwht_gmres_mgs2sync_test
 add_test(NAME sys_rand_fwht_gmres_mgspm_test
          COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-x" "no" "-i"
                  "randgmres" "-g" "mgs_pm" "-s" "fwht"
+)
+add_test(NAME sys_gmres_cgs1_test COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe>
+                                          "-x" "no" "-i" "fgmres" "-g" "cgs1"
 )
 add_test(NAME sys_gmres_cgs2_test COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe>
                                           "-x" "no" "-i" "fgmres" "-g" "cgs2"
