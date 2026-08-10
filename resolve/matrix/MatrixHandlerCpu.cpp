@@ -431,6 +431,18 @@ namespace ReSolve
     return 0;
   }
 
+  // Not used in any CPU-compatible solvers
+  int MatrixHandlerCpu::extractRootDiagonal(matrix::Csr* A, vector_type* diag)
+  {
+    out::error() << "Not implemented!";
+  }
+
+  // Not used in any CPU-compatible solvers
+  int MatrixHandlerCpu::extractInverseRootDiagonal(matrix::Csr* A, vector_type* diag)
+  {
+    out::error() << "Not implemented!";
+  }
+
   /**
    * @brief Add a constant to all nonzero values in the matrix
    *

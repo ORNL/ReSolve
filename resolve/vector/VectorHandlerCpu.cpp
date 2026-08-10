@@ -106,6 +106,48 @@ namespace ReSolve
     }
     return vecmax;
   }
+  
+  /**
+   * @brief compute norm of a vector or Frobenius norm of a multivector
+   *
+   * @param[in] x The vector or multivector
+   *
+   * @return Norm of _x_
+   *
+   */
+  real_type VectorHandlerCpu::norm(vector::Vector* x)
+  {    
+    const real_type* x_data = x->getData(memory::HOST);
+    real_type        sum    = 0.0;
+    real_type        c      = 0.0;
+    // real_type t, y;
+    for (int i = 0; i < x->getSize() * x->getNumVectors(); ++i)
+    {
+      real_type y = (x_data[i] * x_data[i]) - c;
+      real_type t = sum + y;
+      c           = (t - sum) - y;
+      sum         = t;
+      // sum += (x_data[i] * x_data[i]);
+    }
+    return sum;
+  }
+
+  real_type VectorHandlerCpu::norm(vector::Vector* x, index_type i)
+  {    
+    const real_type* x_data = x->getData(i, memory::HOST);
+    real_type        sum    = 0.0;
+    real_type        c      = 0.0;
+    // real_type t, y;
+    for (int i = 0; i < x->getSize(); ++i)
+    {
+      real_type y = (x_data[i] * x_data[i]) - c;
+      real_type t = sum + y;
+      c           = (t - sum) - y;
+      sum         = t;
+      // sum += (x_data[i] * x_data[i]);
+    }
+    return sum;
+  }
 
   /**
    * @brief axpy i.e, y = alpha*x+y where alpha is a constant
@@ -376,6 +418,18 @@ namespace ReSolve
 
     C->setDataUpdated(memory::HOST);
     return;
+  }
+
+  // Not used in any CPU-compatible solvers
+  void VectorHandlerCpu::geam(char,
+                    char,
+                    const real_type,
+                    const real_type,
+                    vector::Vector*,
+                    vector::Vector*,
+                    vector::Vector*)
+  {
+    out::error() << "Not implemented!";
   }
 
   /**
