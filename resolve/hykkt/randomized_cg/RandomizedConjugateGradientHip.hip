@@ -15,86 +15,6 @@ namespace ReSolve
     namespace kernels
     {
       template <index_type K, index_type BLOCK_SIZE>
-      __global__ void __launch_bounds__(BLOCK_SIZE) SpMMTallSkinnyKernelVectorDistributed(
-        const index_type* __restrict__ A_row_ptr,
-        const index_type* __restrict__ A_col_idx,
-        const real_type* __restrict__ A_val,
-        const real_type* __restrict__ B,
-        real_type* __restrict__ result,
-        index_type n,
-        index_type devices_per_vector,
-        index_type device_in_vector)
-      {
-        const index_type thread = blockIdx.x * blockDim.x + threadIdx.x;
-        const index_type warp = threadIdx.x / 64;
-        const index_type max_rows_per_device = (n + devices_per_vector - 1) / devices_per_vector;
-        const index_type row_start = max_rows_per_device * device_in_vector;
-        const index_type row = row_start + thread / 64;
-        const index_type lane = thread % 64;
-        const index_type rows_per_block = BLOCK_SIZE / 64;
-
-        __shared__ real_type result_shared[rows_per_block * K];
-
-        // index_type k = K;
-
-        if (row >= n || row >= row_start + max_rows_per_device) return;
-
-        // for (index_type row = row_offset; row < n; row += gridDim.x * blockDim.x / 64)
-        {
-          index_type col_start = A_row_ptr[row];
-          index_type col_end   = A_row_ptr[row + 1];
-
-          real_type sum[K] = { 0.0 };
-
-          for (index_type j = col_start + lane; j < col_end; j += 64)
-          {
-            index_type col = A_col_idx[j];
-            real_type a = A_val[j];
-
-            #pragma unroll
-            for (int i = 0; i < K; ++i)
-            {
-              sum[i] += a * B[i * n + col];
-            }
-          }
-
-          #pragma unroll
-          for (int i = 0; i < K; ++i)
-          {
-            for (index_type offset = 64 / 2; offset > 0; offset /= 2)
-            {
-              sum[i] += __shfl_down(sum[i], offset);
-            }
-          }
-
-          if (lane == 0)
-          {
-            #pragma unroll
-            for (int i = 0; i < K; ++i)
-            // result_shared[lane * rows_per_block + threadIdx.x / 64];
-              result[i * n + row] = sum[i];
-          }
-
-          // if (lane == 0)
-          // {
-          //   for (int i = 0; i < k; ++i)
-          //   {
-          //     result_shared[i * rows_per_block + warp] = sum[i];
-          //     // result[i * n + row] = sum[i];
-          //   }
-          // }
-
-          // __syncthreads();
-          // if (threadIdx.x < (rows_per_block * k))
-          // {
-          //   index_type row = threadIdx.x % rows_per_block + blockIdx.x * rows_per_block;
-          //   index_type col = threadIdx.x / rows_per_block;
-          //   result[col * n + row] = result_shared[threadIdx.x];
-          // }
-        }
-      }
-
-      template <index_type K, index_type BLOCK_SIZE>
       __global__ void __launch_bounds__(BLOCK_SIZE) SpMMTallSkinnyKernelVector(
         const index_type* __restrict__ A_row_ptr,
         const index_type* __restrict__ A_col_idx,
@@ -360,6 +280,260 @@ namespace ReSolve
         }
       }
 
+      // ANDREW TODO: TEST THIS
+      template <index_type k>
+      __global__ void updateXRSplit(real_type* __restrict__ Xi_inv,
+                               const real_type* __restrict__ Sigma,
+                               const real_type* __restrict__ S,
+                               const real_type* __restrict__ A_S,
+                               real_type* __restrict__ Xi_Sigma,
+                               real_type* __restrict__ X_res,
+                               real_type* __restrict__ R_prec,
+                               index_type n)
+      {
+        index_type thread = blockIdx.x * blockDim.x + threadIdx.x;
+        index_type stride = gridDim.x * blockDim.x;
+
+        __shared__ real_type Xi_Sigma_shared[k * k];
+        if (threadIdx.x < k * k)
+        {
+          Xi_Sigma_shared[threadIdx.x] = Xi_Sigma[threadIdx.x];
+        }
+        __syncthreads();
+
+        for (index_type row = thread; row < n; row += gridDim.x * blockDim.x)
+        {
+          // #pragma unroll 1
+          for (index_type col = 0; col < k; col++)
+          {
+            real_type x_dot = 0;
+            real_type r_dot = 0;
+            // #pragma unroll 1
+            for (index_type i = 0; i < k; i++)
+            {
+              x_dot +=   S[i * n + row] * Xi_Sigma_shared[col * k + i];
+              r_dot -= A_S[i * n + row] * Xi_Sigma_shared[col * k + i];
+            }
+            X_res[col * n + row] += x_dot;
+            R_prec[col * n + row] += r_dot;
+          }
+        }
+      }
+      
+      // ANDREW TODO: TEST THIS
+      template <index_type k>
+      __global__ void choleskyFactorizeSolve(real_type* __restrict__ A,
+                               const real_type* B,
+                               real_type* X)
+      {
+        index_type thread = blockIdx.x * blockDim.x + threadIdx.x;
+        index_type stride = gridDim.x * blockDim.x;
+      
+      // choleskyFactorize(A), lower
+        __shared__ real_type A_shared[k * (k + 1) / 2]; // Only need this much for kxk symmetric matrix
+        if constexpr (k <= 4)
+        {
+          if (threadIdx.x < 32) // k <= 4 for now
+          {
+            index_type i = threadIdx.x % k;
+            index_type j = threadIdx.x / k;
+            if ((i < k) && (j < k) && (i >= j))
+            {
+              A_shared[indexLowerTriangular<k>(i, j)] = A[j * k + i];
+            }
+            __syncwarp();
+
+            // // For warp size 64 and k <= 8, everything can be done in one warp
+            // if constexpr (k * (k + 1) / 2 > 64)
+            // {
+            //   __syncthreads();
+            // }
+
+            // Do all of this inside one warp. One thread per entry
+            // #pragma unroll 1
+            for (index_type h = 0; h < k; h++)
+            {
+              if (threadIdx.x == 0)
+              {
+                A_shared[indexLowerTriangular<k>(h, h)] = sqrt(A_shared[indexLowerTriangular<k>(h, h)]);
+              }
+              __syncwarp();
+              if (threadIdx.x > h && threadIdx.x < k)
+              {
+                A_shared[indexLowerTriangular<k>(threadIdx.x, h)] /= A_shared[indexLowerTriangular<k>(h, h)];
+              }
+              __syncwarp();
+              if ((j < k) && (j > h) && (i < k) && (i >= j))
+              {
+                A_shared[indexLowerTriangular<k>(i, j)] -= A_shared[indexLowerTriangular<k>(i, h)] * A_shared[indexLowerTriangular<k>(j, h)];
+              }
+              __syncwarp();
+            }
+            
+            if ((i < k) && (j < k) && (blockIdx.x == 0))
+            {
+              if (i >= j)
+              {
+                A[j * k + i] = A_shared[indexLowerTriangular<k>(i, j)];
+              }
+              else
+              {
+                A[j * k + i] = 0.0;
+              }
+            }
+          }
+        }
+        else
+        {
+          index_type i = threadIdx.x % k;
+          index_type j = threadIdx.x / k;
+          if ((i < k) && (j < k) && (i >= j))
+          {
+            A_shared[indexLowerTriangular<k>(i, j)] = A[j * k + i];
+          }
+          __syncthreads();
+
+          // #pragma unroll 1
+          for (index_type h = 0; h < k; h++)
+          {
+            if (threadIdx.x == 0)
+            {
+              A_shared[indexLowerTriangular<k>(h, h)] = sqrt(A_shared[indexLowerTriangular<k>(h, h)]);
+            }
+            __syncthreads();
+            if (threadIdx.x > h && threadIdx.x < k)
+            {
+              A_shared[indexLowerTriangular<k>(threadIdx.x, h)] /= A_shared[indexLowerTriangular<k>(h, h)];
+            }
+            __syncthreads();
+            if ((j < k) && (j > h) && (i < k) && (i >= j))
+            {
+              A_shared[indexLowerTriangular<k>(i, j)] -= A_shared[indexLowerTriangular<k>(i, h)] * A_shared[indexLowerTriangular<k>(j, h)];
+            }
+            __syncthreads();
+          }
+          __syncthreads();
+          
+          if ((i < k) && (j < k) && (blockIdx.x == 0))
+          {
+            if (i >= j)
+            {
+              A[j * k + i] = A_shared[indexLowerTriangular<k>(i, j)];
+            }
+            else
+            {
+              A[j * k + i] = 0.0;
+            }
+          }
+        }
+
+      // X = Xi * B => A * X = B => L * L^real_type * X = B, choleskySolve
+        __shared__ real_type Xi_Sigma_shared[k * k];
+        if constexpr (k <= 4)
+        {
+          if (threadIdx.x < 32) // k <= 4 for now. Still only one warp
+          {
+            if (threadIdx.x < k * k)
+            {
+              Xi_Sigma_shared[threadIdx.x] = B[threadIdx.x];
+            }
+            __syncwarp(); // CUDA needs to __syncwarp() at all these places
+
+            //  L * Y = B
+            if (threadIdx.x < k)
+            {
+              index_type col = threadIdx.x; // Talking about rows and columns of B
+
+              // #pragma unroll 1
+              for (index_type row = 0; row < k; row++)
+              {
+                real_type y_local = Xi_Sigma_shared[col * k + row];
+                // #pragma unroll 1
+                for (index_type i = 0; i < row; i++)
+                {
+                  y_local -= Xi_Sigma_shared[col * k + i] * A_shared[indexLowerTriangular<k>(row, i)]; // A_shared can be overridden. Here it contains Y
+                }
+                y_local /= A_shared[indexLowerTriangular<k>(row, row)];
+                Xi_Sigma_shared[col * k + row] = y_local;
+              }
+            }
+            __syncwarp();
+
+            //  L^real_type * X = Y
+            if (threadIdx.x < k)
+            {
+              index_type col = threadIdx.x; // Talking about rows and columns of B
+
+              // #pragma unroll 1
+              for (index_type row = k - 1; row >= 0; row--)
+              {
+                real_type y_local = Xi_Sigma_shared[col * k + row];
+                // #pragma unroll 1
+                for (index_type i = row + 1; i < k; i++)
+                {
+                  y_local -= Xi_Sigma_shared[col * k + i] * A_shared[indexLowerTriangular<k>(i, row)]; // A_shared can be overridden. Here it contains Y
+                }
+                y_local /= A_shared[indexLowerTriangular<k>(row, row)];
+                Xi_Sigma_shared[col * k + row] = y_local;
+              }
+            }
+          }
+        }
+        else
+        {
+          if (threadIdx.x < k * k)
+          {
+            Xi_Sigma_shared[threadIdx.x] = B[threadIdx.x];
+          }
+          __syncthreads();
+
+          //  L * Y = B
+          if (threadIdx.x < k)
+          {
+            index_type col = threadIdx.x; // Talking about rows and columns of B
+
+            // #pragma unroll 1
+            for (index_type row = 0; row < k; row++)
+            {
+              real_type y_local = Xi_Sigma_shared[col * k + row];
+              // #pragma unroll 1
+              for (index_type i = 0; i < row; i++)
+              {
+                y_local -= Xi_Sigma_shared[col * k + i] * A_shared[indexLowerTriangular<k>(row, i)]; // A_shared can be overridden. Here it contains Y
+              }
+              y_local /= A_shared[indexLowerTriangular<k>(row, row)];
+              Xi_Sigma_shared[col * k + row] = y_local;
+            }
+          }
+          __syncthreads();
+
+          //  L^real_type * X = Y
+          if (threadIdx.x < k)
+          {
+            index_type col = threadIdx.x; // Talking about rows and columns of B
+
+            // #pragma unroll 1
+            for (index_type row = k - 1; row >= 0; row--)
+            {
+              real_type y_local = Xi_Sigma_shared[col * k + row];
+              // #pragma unroll 1
+              for (index_type i = row + 1; i < k; i++)
+              {
+                y_local -= Xi_Sigma_shared[col * k + i] * A_shared[indexLowerTriangular<k>(i, row)]; // A_shared can be overridden. Here it contains Y
+              }
+              y_local /= A_shared[indexLowerTriangular<k>(row, row)];
+              Xi_Sigma_shared[col * k + row] = y_local;
+            }
+          }
+        }
+        __syncthreads();
+        
+        if (threadIdx.x < k * k)
+        {
+          X[threadIdx.x] = Xi_Sigma_shared[threadIdx.x];
+        }
+      }
+
       // W = W - B * L^-T * L^-1
       template <index_type k>
       __global__ void updateW(real_type* __restrict__ W, const real_type* __restrict__ L, real_type* __restrict__ B, index_type n)
@@ -409,7 +583,7 @@ namespace ReSolve
           #pragma unroll
           for (index_type col = k - 1; col >= 0; col--)
           {
-            real_type x_local = Y[col * n + row];
+            real_type x_local = B[col * n + row];
             #pragma unroll
             for (index_type i = col + 1; i < k; i++)
             {
@@ -422,13 +596,13 @@ namespace ReSolve
           #pragma unroll
           for (index_type col = 0; col < k; col++)
           {
-            W[col * n + row] = x_row[col];
+            W[col * n + row] -= x_row[col];
           }
         }
       }
 
       template <index_type k>
-      __global__ void multTSMTTSM(real_type* A, real_type* B, real_type* C, index_type n)
+      __global__ void multTSMTTSM(const real_type* A, const real_type* B, real_type* __restrict__ C, index_type n)
       {
         index_type thread = blockIdx.x * blockDim.x + threadIdx.x;
         index_type stride = gridDim.x * blockDim.x;
@@ -467,7 +641,7 @@ namespace ReSolve
           atomicAdd(&C[threadIdx.x], C_shared[threadIdx.x]);
         }
       }
-    
+
       template <index_type k, index_type BLOCK_DIM>
       __global__ void updateSSigma(const real_type* __restrict__ W, real_type* __restrict__ S, const real_type* __restrict__ Zeta, real_type* __restrict__ Sigma, index_type n)
       {
@@ -559,6 +733,19 @@ namespace ReSolve
           Sigma[thread] = result_shared[thread];
         }
       }
+
+      // ANDREW TODO: TEST THIS
+      __global__ void preconditionDense(real_type* __restrict__ A, const real_type* __restrict__ d, index_type n)
+      {
+        int thread = blockIdx.x * blockDim.x + threadIdx.x;
+        
+        if (thread < n * n)
+        {
+          int row = thread % n;
+          int col = thread / n;
+          A[thread] *= (d[row] * d[col]);
+        }
+      }
     } // namespace kernels
     
     RandomizedConjugateGradientHip::RandomizedConjugateGradientHip(VectorHandler* vector_handler)
@@ -570,17 +757,16 @@ namespace ReSolve
       hipGetDeviceProperties(&properties, device_id);
       num_sms_     = properties.multiProcessorCount; // 110
       num_threads_ = num_sms_ * properties.maxThreadsPerMultiProcessor; // 225280
-      hipGetDeviceCount(&num_devices_);
-      printf("Total devices: %d, total SMs: %d, total threads: %d\n", num_devices_, num_sms_, num_threads_);
-
-      streams_ = std::vector<hipStream_t>(num_devices_);
+      printf("Total SMs: %d, total threads: %d\n", num_sms_, num_threads_);
     }
 
     RandomizedConjugateGradientHip::~RandomizedConjugateGradientHip()
     {
+      mem_.deleteOnDevice(d_best_basis_);
+      mem_.deleteOnDevice(d_sq_norms_);
     }
 
-    int RandomizedConjugateGradientHip::setup(matrix::Csr* A, index_type k)
+    int RandomizedConjugateGradientHip::setup(index_type k)
     {
       // For choleskyQr()
       switch (k)
@@ -619,118 +805,6 @@ namespace ReSolve
         d_sq_norms_ = nullptr;
       }
       mem_.allocateArrayOnDevice(&d_sq_norms_, k);
-      
-      index_type n = A->getNumRows();
-      index_type nnz = A->getNnz();
-
-      d_A_row_ptr.resize(num_devices_);
-      d_A_col_idx.resize(num_devices_);
-      d_A_val.resize(num_devices_);
-      for (index_type i = 0; i < num_devices_; i++)
-      {
-        hipSetDevice(i);
-        hipStreamCreate(&streams_[i]);
-        
-        mem_.allocateArrayOnDevice(&d_A_row_ptr[i], n + 1);
-        mem_.allocateArrayOnDevice(&d_A_col_idx[i], nnz);
-        mem_.allocateArrayOnDevice(&d_A_val[i], nnz);
-
-        hipMemcpyAsync(d_A_row_ptr[i], A->getRowData(memory::DEVICE), (n + 1) * sizeof(index_type), hipMemcpyDeviceToDevice);
-        hipMemcpyAsync(d_A_col_idx[i], A->getColData(memory::DEVICE), nnz * sizeof(index_type), hipMemcpyDeviceToDevice);
-        hipMemcpyAsync(d_A_val[i], A->getValues(memory::DEVICE), nnz * sizeof(real_type), hipMemcpyDeviceToDevice);
-        hipStreamSynchronize(streams_[i]);
-      }
-      hipSetDevice(0);
-
-      return 0;
-    }
-  
-  int RandomizedConjugateGradientHip::SpMMTallSkinnyDistributed(matrix::Csr* A, vector::VectorDistributed* X, vector::VectorDistributed* result)
-    {
-      index_type n = A->getNumRows();
-      index_type k = X->getNumVectors();
-
-      int devices_per_vector = std::max(num_devices_ / k, 1);
-      constexpr int       block_size = 256;
-      int max_rows_per_device = (n + devices_per_vector - 1) / devices_per_vector;
-      int       num_blocks = (max_rows_per_device * 64 + block_size - 1) / block_size;
-
-      for (index_type i = 0; i < num_devices_; i++)
-      {
-        hipSetDevice(i);
-        index_type vector = i % devices_per_vector;
-        
-        if (i != 0)
-          hipMemcpyAsync(X->getData(vector, i, memory::DEVICE), X->getData(vector, 0, memory::DEVICE), n * sizeof(real_type), hipMemcpyDeviceToDevice, streams_[i]);
-        
-        switch (std::max(k / num_devices_, 1))
-        {
-        case 1:
-          kernels::SpMMTallSkinnyKernelVectorDistributed<1, block_size><<<num_blocks, block_size, 0, streams_[i]>>>(
-                                                                  d_A_row_ptr[i],
-                                                                  d_A_col_idx[i],
-                                                                  d_A_val[i],
-                                                                  X->getData(vector, i, memory::DEVICE),
-                                                                  result->getData(vector, i, memory::DEVICE),
-                                                                  n,
-                                                                  devices_per_vector,
-                                                                  vector); 
-          break;
-        case 2:
-          kernels::SpMMTallSkinnyKernelVectorDistributed<2, block_size><<<num_blocks, block_size, 0, streams_[i]>>>(
-                                                                  d_A_row_ptr[i],
-                                                                  d_A_col_idx[i],
-                                                                  d_A_val[i],
-                                                                  X->getData(vector, i, memory::DEVICE),
-                                                                  result->getData(vector, i, memory::DEVICE),
-                                                                  n,
-                                                                  devices_per_vector,
-                                                                  vector); 
-          break;
-        case 4:
-          kernels::SpMMTallSkinnyKernelVectorDistributed<4, block_size><<<num_blocks, block_size, 0, streams_[i]>>>(
-                                                                  d_A_row_ptr[i],
-                                                                  d_A_col_idx[i],
-                                                                  d_A_val[i],
-                                                                  X->getData(vector, i, memory::DEVICE),
-                                                                  result->getData(vector, i, memory::DEVICE),
-                                                                  n,
-                                                                  devices_per_vector,
-                                                                  vector); 
-          break;
-        case 8:
-          kernels::SpMMTallSkinnyKernelVectorDistributed<8, block_size><<<num_blocks, block_size, 0, streams_[i]>>>(
-                                                                  d_A_row_ptr[i],
-                                                                  d_A_col_idx[i],
-                                                                  d_A_val[i],
-                                                                  X->getData(vector, i, memory::DEVICE),
-                                                                  result->getData(vector, i, memory::DEVICE),
-                                                                  n,
-                                                                  devices_per_vector,
-                                                                  vector); 
-          break;
-        case 16:
-          kernels::SpMMTallSkinnyKernelVectorDistributed<16, block_size><<<num_blocks, block_size, 0, streams_[i]>>>(
-                                                                  d_A_row_ptr[i],
-                                                                  d_A_col_idx[i],
-                                                                  d_A_val[i],
-                                                                  X->getData(vector, i, memory::DEVICE),
-                                                                  result->getData(vector, i, memory::DEVICE),
-                                                                  n,
-                                                                  devices_per_vector,
-                                                                  vector); 
-          break;
-        }
-
-        if (i != 0)
-          hipMemcpyAsync(result->getData(vector, 0, memory::DEVICE), result->getData(vector, i, memory::DEVICE), n * sizeof(real_type), hipMemcpyDeviceToDevice, streams_[i]);
-      }
-      for (index_type i = 0; i < num_devices_; i++)
-      {
-        hipSetDevice(i);
-        hipStreamSynchronize(streams_[i]);
-      }
-      hipSetDevice(0);
 
       return 0;
     }
@@ -862,6 +936,150 @@ namespace ReSolve
       
       if (status != hipSuccess) {
           return 1;
+      }
+
+      return 0;
+    }
+    
+    // ANDREW TODO: test this
+    int RandomizedConjugateGradientHip::updateXRSplit(vector::Vector* Xi_inv, vector::Vector* Sigma, vector::Vector* S, vector::Vector* A_S, vector::Vector* Xi_Sigma, vector::Vector* X_res, vector::Vector* R_prec)
+    {
+      index_type n = A_S->getSize();
+      index_type k = A_S->getNumVectors();
+
+      int       block_size = 64; // Must be at least k^2
+      int       num_blocks = 1; // quite arbitrary
+
+      switch (k)
+      {
+      case 1:
+        kernels::choleskyFactorizeSolve<1><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+                                                         Sigma->getData(memory::DEVICE),
+                                                         Xi_Sigma->getData(memory::DEVICE));
+        break;
+      case 2:
+        kernels::choleskyFactorizeSolve<2><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+                                                         Sigma->getData(memory::DEVICE),
+                                                         Xi_Sigma->getData(memory::DEVICE));
+        break;
+      case 4:
+        kernels::choleskyFactorizeSolve<4><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+                                                         Sigma->getData(memory::DEVICE),
+                                                         Xi_Sigma->getData(memory::DEVICE));
+        break;
+      case 8:
+        kernels::choleskyFactorizeSolve<8><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+                                                         Sigma->getData(memory::DEVICE),
+                                                         Xi_Sigma->getData(memory::DEVICE));
+        break;
+      case 16:
+        kernels::choleskyFactorizeSolve<16><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+                                                         Sigma->getData(memory::DEVICE),
+                                                         Xi_Sigma->getData(memory::DEVICE));
+        break;
+      default:
+        return 1;
+      }
+
+      block_size = 256; // Must be at least k^2
+      num_blocks = num_sms_ * 64; // quite arbitrary
+
+      switch (k)
+      {
+      case 1:
+        kernels::updateXRSplit<1><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+                                                         Sigma->getData(memory::DEVICE),
+                                                         S->getData(memory::DEVICE),
+                                                         A_S->getData(memory::DEVICE),
+                                                         Xi_Sigma->getData(memory::DEVICE),
+                                                         X_res->getData(memory::DEVICE),
+                                                         R_prec->getData(memory::DEVICE),
+                                                         n);
+        break;
+      case 2:
+        kernels::updateXRSplit<2><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+                                                         Sigma->getData(memory::DEVICE),
+                                                         S->getData(memory::DEVICE),
+                                                         A_S->getData(memory::DEVICE),
+                                                         Xi_Sigma->getData(memory::DEVICE),
+                                                         X_res->getData(memory::DEVICE),
+                                                         R_prec->getData(memory::DEVICE),
+                                                         n);
+        break;
+      case 4:
+        kernels::updateXRSplit<4><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+                                                         Sigma->getData(memory::DEVICE),
+                                                         S->getData(memory::DEVICE),
+                                                         A_S->getData(memory::DEVICE),
+                                                         Xi_Sigma->getData(memory::DEVICE),
+                                                         X_res->getData(memory::DEVICE),
+                                                         R_prec->getData(memory::DEVICE),
+                                                         n);
+        break;
+      case 8:
+        kernels::updateXRSplit<8><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+                                                         Sigma->getData(memory::DEVICE),
+                                                         S->getData(memory::DEVICE),
+                                                         A_S->getData(memory::DEVICE),
+                                                         Xi_Sigma->getData(memory::DEVICE),
+                                                         X_res->getData(memory::DEVICE),
+                                                         R_prec->getData(memory::DEVICE),
+                                                         n);
+        break;
+      case 16:
+        kernels::updateXRSplit<16><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+                                                         Sigma->getData(memory::DEVICE),
+                                                         S->getData(memory::DEVICE),
+                                                         A_S->getData(memory::DEVICE),
+                                                         Xi_Sigma->getData(memory::DEVICE),
+                                                         X_res->getData(memory::DEVICE),
+                                                         R_prec->getData(memory::DEVICE),
+                                                         n);
+        break;
+      default:
+        return 1;
+      }
+
+      return 0;
+    }
+
+    // ANDREW TODO: test this
+    int RandomizedConjugateGradientHip::choleskyFactorizeSolve(vector::Vector* A, vector::Vector* B, vector::Vector* X)
+    {
+      index_type k = A->getSize();
+
+      int       block_size = 64; // Must be at least k^2
+      int       num_blocks = 1; // quite arbitrary
+
+      switch (k)
+      {
+      case 1:
+        kernels::choleskyFactorizeSolve<1><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
+                                                         B->getData(memory::DEVICE),
+                                                         X->getData(memory::DEVICE));
+        break;
+      case 2:
+        kernels::choleskyFactorizeSolve<2><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
+                                                         B->getData(memory::DEVICE),
+                                                         X->getData(memory::DEVICE));
+        break;
+      case 4:
+        kernels::choleskyFactorizeSolve<4><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
+                                                         B->getData(memory::DEVICE),
+                                                         X->getData(memory::DEVICE));
+        break;
+      case 8:
+        kernels::choleskyFactorizeSolve<8><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
+                                                         B->getData(memory::DEVICE),
+                                                         X->getData(memory::DEVICE));
+        break;
+      case 16:
+        kernels::choleskyFactorizeSolve<16><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
+                                                         B->getData(memory::DEVICE),
+                                                         X->getData(memory::DEVICE));
+        break;
+      default:
+        return 1;
       }
 
       return 0;
@@ -1015,6 +1233,468 @@ namespace ReSolve
       }
 
       return 0;
+    }
+
+    int RandomizedConjugateGradientHip::preconditionDense(vector::Vector* A, vector::Vector* d)
+    {
+      index_type n = A->getSize();
+
+      constexpr int block_size = 256;
+      int num_blocks = (n * n + block_size - 1) / block_size;
+      kernels::preconditionDense<<<num_blocks, block_size>>>(A->getData(memory::DEVICE), d->getData(memory::DEVICE), n);
+
+      return 0;
+    }
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /******************************************************************************
+    * Copyright (c) 1998 Lawrence Livermore National Security, LLC and other
+    * HYPRE Project Developers. See the top-level COPYRIGHT file for details.
+    *
+    * SPDX-License-Identifier: (Apache-2.0 OR MIT)
+    ******************************************************************************/
+    using hypre_DeviceItem = void*;
+    #ifndef hypre_CSR_SPMV_DEVICE_H
+    #define hypre_CSR_SPMV_DEVICE_H
+
+    #define HYPRE_SPMV_BLOCKDIM 512
+    #define HYPRE_SPMV_VERSION 1
+    #define HYPRE_SPMV_FILL_STRICT_LOWER -2
+    #define HYPRE_SPMV_FILL_LOWER -1
+    #define HYPRE_SPMV_FILL_WHOLE 0
+    #define HYPRE_SPMV_FILL_UPPER 1
+    #define HYPRE_SPMV_FILL_STRICT_UPPER 2
+
+    #define HYPRE_SPMV_ADD_SUM(p, nv)                                                         \
+    {                                                                                         \
+      const index_type col = __ldg(&d_ja[p]);                                        \
+      if constexpr (F == HYPRE_SPMV_FILL_WHOLE)                                                        \
+      {                                                                                      \
+          const real_type val = d_a ? __ldg(&d_a[p]) : real_type(1);                                 \
+          for (index_type i = 0; i < nv; i++)                                                  \
+          {                                                                                   \
+            sum[i] += val * __ldg(&d_x[col * idxstride_x + i * vecstride_x]);       \
+          }                                                                                   \
+      }                                                                                      \
+      else if constexpr (F == HYPRE_SPMV_FILL_LOWER)                                                   \
+      {                                                                                      \
+          if (col <= grid_group_id)                                                           \
+          {                                                                                   \
+            const real_type val = d_a ? __ldg(&d_a[p]) : real_type(1);                              \
+            for (index_type i = 0; i < nv; i++)                                               \
+            {                                                                                \
+                sum[i] += val * __ldg(&d_x[col * idxstride_x + i * vecstride_x]);    \
+            }                                                                                \
+          }                                                                                   \
+      }                                                                                      \
+      else if constexpr (F == HYPRE_SPMV_FILL_UPPER)                                                   \
+      {                                                                                      \
+          if (col >= grid_group_id)                                                           \
+          {                                                                                   \
+            const real_type val = d_a ? __ldg(&d_a[p]) : real_type(1);                              \
+            for (index_type i = 0; i < nv; i++)                                               \
+            {                                                                                \
+                sum[i] += val * __ldg(&d_x[col * idxstride_x + i * vecstride_x]);    \
+            }                                                                                \
+          }                                                                                   \
+      }                                                                                      \
+      else if constexpr (F == HYPRE_SPMV_FILL_STRICT_LOWER)                                            \
+      {                                                                                      \
+          if (col < grid_group_id)                                                            \
+          {                                                                                   \
+            const real_type val = d_a ? __ldg(&d_a[p]) : real_type(1);                              \
+            for (index_type i = 0; i < nv; i++)                                               \
+            {                                                                                \
+                sum[i] += val * __ldg(&d_x[col * idxstride_x + i * vecstride_x]);    \
+            }                                                                                \
+          }                                                                                   \
+      }                                                                                      \
+      else if constexpr (F == HYPRE_SPMV_FILL_STRICT_UPPER)                                            \
+      {                                                                                      \
+          if (col > grid_group_id)                                                            \
+          {                                                                                   \
+            const real_type val = d_a ? __ldg(&d_a[p]) : real_type(1);                              \
+            for (index_type i = 0; i < nv; i++)                                               \
+            {                                                                                \
+                sum[i] += val * __ldg(&d_x[col * idxstride_x + i * vecstride_x]);    \
+            }                                                                                \
+          }                                                                                   \
+      }                                                                                      \
+    }
+
+    #define HYPRE_SPMV_GPU_LAUNCH(kernel, nv)                                                  \
+      if (avg_rownnz >= avg_rownnz_lower_bounds[0])                                           \
+      {                                                                                       \
+          const dim3 gDim =                                                                    \
+            dim3((num_rows + num_groups_per_block[0] - 1) / num_groups_per_block[0]);   \
+          HYPRE_GPU_LAUNCH( (kernel<F, group_sizes[0], nv, real_type>),                                \
+                            gDim, bDim, item, num_rows, num_vectors, rowid = nullptr, idxstride_x,             \
+                            idxstride_y, vecstride_x, vecstride_y, alpha,                      \
+                            d_ia, d_ja, d_a, d_x, beta, d_y );                                 \
+      }                                                                                       \
+      else if (avg_rownnz >= avg_rownnz_lower_bounds[1])                                      \
+      {                                                                                       \
+          const dim3 gDim =                                                                    \
+            dim3((num_rows + num_groups_per_block[1] - 1) / num_groups_per_block[1]);   \
+          HYPRE_GPU_LAUNCH( (kernel<F, group_sizes[1], nv, real_type>),                                \
+                            gDim, bDim, item, num_rows, num_vectors, rowid = nullptr, idxstride_x,             \
+                            idxstride_y, vecstride_x, vecstride_y, alpha,                      \
+                            d_ia, d_ja, d_a, d_x, beta, d_y );                                 \
+      }                                                                                       \
+      else if (avg_rownnz >= avg_rownnz_lower_bounds[2])                                      \
+      {                                                                                       \
+          const dim3 gDim =                                                                    \
+            dim3((num_rows + num_groups_per_block[2] - 1) / num_groups_per_block[2]);   \
+          HYPRE_GPU_LAUNCH( (kernel<F, group_sizes[2], nv, real_type>),                                \
+                            gDim, bDim, item, num_rows, num_vectors, rowid = nullptr, idxstride_x,             \
+                            idxstride_y, vecstride_x, vecstride_y, alpha,                      \
+                            d_ia, d_ja, d_a, d_x, beta, d_y );                                 \
+      }                                                                                       \
+      else if (avg_rownnz >= avg_rownnz_lower_bounds[3])                                      \
+      {                                                                                       \
+          const dim3 gDim =                                                                    \
+            dim3((num_rows + num_groups_per_block[3] - 1) / num_groups_per_block[3]);   \
+          HYPRE_GPU_LAUNCH( (kernel<F, group_sizes[3], nv, real_type>),                                \
+                            gDim, bDim, item, num_rows, num_vectors, rowid = nullptr, idxstride_x,             \
+                            idxstride_y, vecstride_x, vecstride_y, alpha,                      \
+                            d_ia, d_ja, d_a, d_x, beta, d_y );                                 \
+      }                                                                                       \
+      else                                                                                    \
+      {                                                                                       \
+          const dim3 gDim =                                                                    \
+            dim3((num_rows + num_groups_per_block[4] - 1) / num_groups_per_block[4]);   \
+          HYPRE_GPU_LAUNCH( (kernel<F, group_sizes[4], nv, real_type>),                                \
+                            gDim, bDim, item, num_rows, num_vectors, rowid = nullptr, idxstride_x,             \
+                            idxstride_y, vecstride_x, vecstride_y, alpha,                      \
+                            d_ia, d_ja, d_a, d_x, beta, d_y );                                 \
+      }
+
+      #define HYPRE_GPU_LAUNCH(kernel_name, gridsize, blocksize, ...) kernel_name<<<gridsize, blocksize>>>(__VA_ARGS__)
+
+    #endif
+
+        
+    template <index_type F, index_type K, index_type NV, typename T>
+    __global__ void
+    hypreGPUKernel_CSRMatvecShuffleGT8(hypre_DeviceItem &item,
+                                      index_type         num_rows,
+                                      index_type         num_vectors,
+                                      index_type        *row_id,
+                                      index_type         idxstride_x,
+                                      index_type         idxstride_y,
+                                      index_type         vecstride_x,
+                                      index_type         vecstride_y,
+                                      T                 alpha,
+                                      index_type        *d_ia,
+                                      index_type        *d_ja,
+                                      T                *d_a,
+                                      T                *d_x,
+                                      T                 beta,
+                                      T                *d_y )
+    {
+    #if defined (HYPRE_USING_SYCL)
+      const index_type  grid_ngroups  = item.get_group_range(2) * (HYPRE_SPMV_BLOCKDIM / K);
+      index_type        grid_group_id = __shfl_sync(et_group(2) * HYPRE_SPMV_BLOCKDIM + item.get_local_id(
+                                            2)) / K;
+      const index_type  group_lane    = item.get_local_id(2) & (K - 1);
+    #else
+      const index_type  grid_ngroups  = gridDim.x * (HYPRE_SPMV_BLOCKDIM / K);
+      index_type        grid_group_id = (blockIdx.x * HYPRE_SPMV_BLOCKDIM + threadIdx.x) / K;
+      const index_type  group_lane    = threadIdx.x & (K - 1);
+    #endif
+      T sum[64];
+
+      for (; __any_sync(0xffffffffffffffff, grid_group_id < num_rows);
+            grid_group_id += grid_ngroups)
+      {
+          index_type grid_row_id = -1, p = 0, q = 0;
+
+          if (row_id)
+          {
+            if (grid_group_id < num_rows && group_lane == 0)
+            {
+                grid_row_id = __ldg(&row_id[grid_group_id]);
+            }
+            grid_row_id = __shfl_sync(0xffffffffffffffff, grid_row_id, 0, K);
+          }
+          else
+          {
+            grid_row_id = grid_group_id;
+          }
+
+          if (grid_group_id < num_rows && group_lane < 2)
+          {
+            p = __ldg(&d_ia[grid_row_id + group_lane]);
+          }
+          q = __shfl_sync(0xffffffffffffffff, p, 1, K);
+          p = __shfl_sync(0xffffffffffffffff, p, 0, K);
+
+          for (index_type i = 0; i < num_vectors; i++)
+          {
+            sum[i] = T(0.0);
+          }
+
+    #pragma unroll 1
+          for (p += group_lane; p < q; p += K * 2)
+          {
+            HYPRE_SPMV_ADD_SUM(p, num_vectors)
+            if (p + K < q)
+            {
+                HYPRE_SPMV_ADD_SUM((p + K), num_vectors)
+            }
+          }
+
+          // parallel reduction
+          for (index_type i = 0; i < num_vectors; i++)
+          {
+            for (index_type d = K / 2; d > 0; d >>= 1)
+            {
+                sum[i] += __shfl_down_sync(0xffffffffffffffff, sum[i], d);
+            }
+          }
+
+          if (grid_group_id < num_rows && group_lane == 0)
+          {
+            if (beta)
+            {
+                for (index_type i = 0; i < num_vectors; i++)
+                {
+                  d_y[grid_row_id * idxstride_y + i * vecstride_y] =
+                      alpha * sum[i] +
+                      beta * d_y[grid_row_id * idxstride_y + i * vecstride_y];
+                }
+            }
+            else
+            {
+                for (index_type i = 0; i < num_vectors; i++)
+                {
+                  d_y[grid_row_id * idxstride_y + i * vecstride_y] = alpha * sum[i];
+                }
+            }
+          }
+      }
+    }
+
+    // ANDREW TODO: TEST THIS
+    /*--------------------------------------------------------------------------
+    * hypreGPUKernel_CSRMatvecShuffle
+    *
+    * Templated SpMV device kernel based of warp-shuffle reduction.
+    * Uses groups of K threads per row
+    *
+    * Template parameters:
+    *   1) K:  number of threads working on a single row. K = 2, 4, 8, 16, 32
+    *   2) F:  fill-mode. See hypreDevice_CSRMatrixMatvec for supported values
+    *   3) NV: number of vectors (> 1 for multi-component vectors)
+    *   4) T:  data type of matrix/vector coefficients
+    *--------------------------------------------------------------------------*/
+
+    template <index_type F, index_type K, index_type NV, typename T>
+    __global__ void
+    //__launch_bounds__(512, 1)
+    hypreGPUKernel_CSRMatvecShuffle(hypre_DeviceItem &item,
+                                    index_type         num_rows,
+                                    index_type         num_vectors,
+                                    index_type        *row_id,
+                                    index_type         idxstride_x,
+                                    index_type         idxstride_y,
+                                    index_type         vecstride_x,
+                                    index_type         vecstride_y,
+                                    T                 alpha,
+                                    index_type        *d_ia,
+                                    index_type        *d_ja,
+                                    T                *d_a,
+                                    T                *d_x,
+                                    T                 beta,
+                                    T                *d_y )
+    {
+    #if defined(HYPRE_USING_SYCL)
+      index_type grid_ngroups  = item.get_group_range(2) * (HYPRE_SPMV_BLOCKDIM / K);
+      index_type grid_group_id = __shfl_sync(et_group(2) * HYPRE_SPMV_BLOCKDIM + item.get_local_id(2)) / K;
+      index_type group_lane    = item.get_local_id(2) & (K - 1);
+    #else
+      const index_type  grid_ngroups  = gridDim.x * (HYPRE_SPMV_BLOCKDIM / K);
+      index_type        grid_group_id = (blockIdx.x * HYPRE_SPMV_BLOCKDIM + threadIdx.x) / K;
+      const index_type  group_lane    = threadIdx.x & (K - 1);
+    #endif
+
+      for (; __any_sync(0xffffffffffffffff, grid_group_id < num_rows);
+            grid_group_id += grid_ngroups)
+      {
+        {
+          index_type grid_row_id = -1, p = 0, q = 0;
+
+          if (row_id)
+          {
+            if (grid_group_id < num_rows && group_lane == 0)
+            {
+                grid_row_id = __ldg(&row_id[grid_group_id]);
+            }
+            grid_row_id = __shfl_sync(0xffffffffffffffff, grid_row_id, 0, K);
+          }
+          else
+          {
+            grid_row_id = grid_group_id;
+          }
+
+          if (grid_group_id < num_rows && group_lane < 2)
+          {
+            p = __ldg(&d_ia[grid_row_id + group_lane]);
+          }
+          q = __shfl_sync(0xffffffffffffffff, p, 1, K);
+          p = __shfl_sync(0xffffffffffffffff, p, 0, K);
+
+          T sum[NV] = {T(0)};
+    #if HYPRE_SPMV_VERSION == 1
+    #pragma unroll 1
+          for (p += group_lane; p < q; p += K * 2)
+          {
+            HYPRE_SPMV_ADD_SUM(p, NV)
+            if (p + K < q)
+            {
+                HYPRE_SPMV_ADD_SUM((p + K), NV)
+            }
+          }
+    #elif HYPRE_SPMV_VERSION == 2
+    #pragma unroll 1
+          for (p += group_lane; __any_sync(0xffffffffffffffff, p < q); p += K)
+          {
+            if (p < q)
+            {
+                HYPRE_SPMV_ADD_SUM(p, NV)
+            }
+          }
+    #else
+    #pragma unroll 1
+          for (p += group_lane;  p < q; p += K)
+          {
+            HYPRE_SPMV_ADD_SUM(p, NV)
+          }
+    #endif
+
+          // parallel reduction
+          for (index_type i = 0; i < NV; i++)
+          {
+            for (index_type d = K / 2; d > 0; d >>= 1)
+            {
+                sum[i] += __shfl_down_sync(0xffffffffffffffff, sum[i], d);
+            }
+          }
+
+          if (grid_group_id < num_rows && group_lane == 0)
+          {
+            for (index_type i = 0; i < NV; i++)
+            {
+              d_y[grid_row_id * idxstride_y + i * vecstride_y] = sum[i];
+            }
+            // if (beta)
+            // {
+            //     for (index_type i = 0; i < NV; i++)
+            //     {
+            //       d_y[grid_row_id * idxstride_y + i * vecstride_y] =
+            //           alpha * sum[i] +
+            //           beta * d_y[grid_row_id * idxstride_y + i * vecstride_y];
+            //     }
+            // }
+            // else
+            // {
+            //     for (index_type i = 0; i < NV; i++)
+            //     {
+            //       d_y[grid_row_id * idxstride_y + i * vecstride_y] = alpha * sum[i];
+            //     }
+            // }
+          }
+        }
+      }
+    }
+
+    int RandomizedConjugateGradientHip::hypreDevice_CSRMatrixMatvec(matrix::Csr* A, vector::Vector* X, vector::Vector* result)
+    {
+      hypre_DeviceItem item = nullptr;
+      index_type  num_vectors = X->getNumVectors();
+      index_type  num_rows = A->getNumRows();
+      index_type *rowid = nullptr;
+      index_type  num_nonzeros = A->getNnz();
+      index_type  idxstride_x = 1;
+      index_type  idxstride_y = 1;
+      index_type  vecstride_x = num_rows;
+      index_type  vecstride_y = num_rows;
+      real_type          alpha = 1.0;
+      index_type *d_ia = A->getRowData(memory::DEVICE);
+      index_type *d_ja = A->getColData(memory::DEVICE);
+      real_type         *d_a = A->getValues(memory::DEVICE);
+      real_type         *d_x = X->getData(memory::DEVICE);
+      real_type          beta 
+      = 0.0;
+      real_type         *d_y = result->getData(memory::DEVICE);
+      assert(d_ia && d_ja && d_x && d_y);
+
+      constexpr int F = HYPRE_SPMV_FILL_WHOLE;
+
+      const index_type avg_rownnz = (num_nonzeros + num_rows - 1) / num_rows;
+
+      static constexpr index_type group_sizes[5] = {32, 16, 8, 4, 4};
+
+      static constexpr index_type unroll_depth[9] = {0, 1, 2, 3, 4, 5, 6, 7, 8};
+
+      static index_type avg_rownnz_lower_bounds[5] = {64, 32, 16, 8, 0};
+
+      static index_type num_groups_per_block[5] = { HYPRE_SPMV_BLOCKDIM / group_sizes[0],
+                                                    HYPRE_SPMV_BLOCKDIM / group_sizes[1],
+                                                    HYPRE_SPMV_BLOCKDIM / group_sizes[2],
+                                                    HYPRE_SPMV_BLOCKDIM / group_sizes[3],
+                                                    HYPRE_SPMV_BLOCKDIM / group_sizes[4]
+                                                  };
+
+      const dim3 bDim = dim3(HYPRE_SPMV_BLOCKDIM);
+
+      /* Select execution path */
+      switch (num_vectors)
+      {
+          case unroll_depth[1]:
+            HYPRE_SPMV_GPU_LAUNCH(hypreGPUKernel_CSRMatvecShuffle, unroll_depth[1]);
+            break;
+
+          case unroll_depth[2]:
+            HYPRE_SPMV_GPU_LAUNCH(hypreGPUKernel_CSRMatvecShuffle, unroll_depth[2]);
+            break;
+
+          // case unroll_depth[3]:
+          //   HYPRE_SPMV_GPU_LAUNCH(hypreGPUKernel_CSRMatvecShuffle, unroll_depth[3]);
+          //   break;
+
+          case unroll_depth[4]:
+            HYPRE_SPMV_GPU_LAUNCH(hypreGPUKernel_CSRMatvecShuffle, unroll_depth[4]);
+            break;
+
+          // case unroll_depth[5]:
+          //   HYPRE_SPMV_GPU_LAUNCH(hypreGPUKernel_CSRMatvecShuffle, unroll_depth[5]);
+          //   break;
+
+          // case unroll_depth[6]:
+          //   HYPRE_SPMV_GPU_LAUNCH(hypreGPUKernel_CSRMatvecShuffle, unroll_depth[6]);
+          //   break;
+
+          // case unroll_depth[7]:
+          //   HYPRE_SPMV_GPU_LAUNCH(hypreGPUKernel_CSRMatvecShuffle, unroll_depth[7]);
+          //   break;
+
+          case unroll_depth[8]:
+            HYPRE_SPMV_GPU_LAUNCH(hypreGPUKernel_CSRMatvecShuffle, unroll_depth[8]);
+            break;
+
+          default:
+            HYPRE_SPMV_GPU_LAUNCH(hypreGPUKernel_CSRMatvecShuffleGT8, unroll_depth[8]);
+            break;
+      }
+
+      hipDeviceSynchronize();
+      hipError_t error = hipGetLastError();
+      if (error != hipSuccess) {
+          printf("Kernel error: %s\n", hipGetErrorString(error));
+      }
+
+      return error;
     }
   } // namespace hykkt
 } // namespace ReSolve

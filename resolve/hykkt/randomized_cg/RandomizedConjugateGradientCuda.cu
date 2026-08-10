@@ -12,82 +12,6 @@ namespace ReSolve
   {
     namespace kernels
     {
-      template <index_type K>
-      __global__ void SpMMTallSkinnyKernelScalar(
-        const index_type* __restrict__ A_row_ptr,
-        const index_type* __restrict__ A_col_idx,
-        const real_type* __restrict__ A_val,
-        const real_type* __restrict__ B,
-        real_type* __restrict__ result,
-        index_type n)
-      {
-        const index_type row = blockIdx.x * blockDim.x + threadIdx.x;
-
-        if (row >= n) return;
-
-        index_type col_start = A_row_ptr[row];
-        index_type col_end   = A_row_ptr[row + 1];
-
-        real_type sum[K] = { 0.0 };
-
-        for (index_type j = col_start; j < col_end; j++)
-        {
-          index_type col = A_col_idx[j];
-          real_type a = A_val[j];
-
-          #pragma unroll
-          for (int i = 0; i < K; ++i)
-          {
-            sum[i] += a * B[i * n + col];
-          }
-        }
-
-        for (int i = 0; i < K; ++i) {
-          result[i * n + row] = sum[i];
-        }
-      }
-      
-      template <index_type K>
-      __global__ void SpMMTallSkinnyKernelVectorMod(
-        const index_type* __restrict__ A_row_ptr,
-        const index_type* __restrict__ A_col_idx,
-        const real_type* __restrict__ A_val,
-        const real_type* __restrict__ B,
-        real_type* __restrict__ result,
-        index_type n)
-      {
-        // Always same i within the same warp
-        const index_type thread = blockIdx.x * blockDim.x + threadIdx.x;
-        const index_type row = thread / 32;
-        const index_type i = threadIdx.y;
-        const index_type lane = thread % 32;
-
-        if (row >= n) return;
-
-        index_type col_start = A_row_ptr[row];
-        index_type col_end   = A_row_ptr[row + 1];
-
-        real_type sum = 0.0;
-
-        for (index_type j = col_start + lane; j < col_end; j += 32)
-        {
-          index_type col = A_col_idx[j];
-          real_type a = A_val[j];
-
-          sum += a * B[i * n + col];
-        }
-
-        for (index_type offset = 32 / 2; offset > 0; offset /= 2)
-        {
-          sum += __shfl_down_sync(0xffffffff, sum, offset);
-        }
-
-        if (lane == 0)
-        {
-          result[i * n + row] = sum;
-        }
-      }
-
       template <index_type K, index_type BLOCK_SIZE, index_type THREADS_PER_ROW>
       __global__ void SpMMTallSkinnyKernelVector(
         const index_type* __restrict__ A_row_ptr,
@@ -167,201 +91,6 @@ namespace ReSolve
           // }
         }
       }
-
-    template <index_type K, int BLOCK_SIZE>
-    __global__ void SpMMAdaptiveTallSkinnyKernelAdaptive(
-        const index_type* __restrict__ A_row_ptr,
-        const index_type* __restrict__ A_col_idx,
-        const real_type* __restrict__ A_val,
-        const real_type* __restrict__ B,
-        real_type* __restrict__ result,
-        const index_type* __restrict__ row_blocks,
-        index_type n)
-    {
-        const index_type block_row_begin = row_blocks[blockIdx.x];
-        const index_type block_row_end   = row_blocks[blockIdx.x + 1];
-        const index_type num_rows        = block_row_end - block_row_begin;
-        const index_type nnz             = A_row_ptr[block_row_end] - A_row_ptr[block_row_begin];
-
-        // __shared__ real_type cache[K * BLOCK_SIZE];
-
-        // if (false) {
-        //     // CSR-Stream Case
-        //     const index_type i = threadIdx.x;
-        //     const index_type block_data_begin = A_row_ptr[block_row_begin];
-
-        //     if (i < nnz) {
-        //         const index_type data_idx = block_data_begin + i;
-        //         const real_type a_val     = A_val[data_idx];
-        //         const index_type col      = A_col_idx[data_idx];
-
-        //         #pragma unroll
-        //         for (int k = 0; k < K; ++k) {
-        //             cache[k * BLOCK_SIZE + i] = a_val * __ldg(&B[k * n + col]);
-        //         }
-        //     }
-        //     __syncthreads();
-
-        //     const index_type threads_for_reduction = prev_power_of_2(BLOCK_SIZE / num_rows);
-
-        //     if (threads_for_reduction > 1) {
-        //         const index_type thread_in_block = i % threads_for_reduction;
-        //         const index_type local_row       = block_row_begin + (i / threads_for_reduction);
-
-        //         real_type dot[K] = {0.0};
-
-        //         if (local_row < block_row_end) {
-        //             const index_type local_first = A_row_ptr[local_row] - block_data_begin;
-        //             const index_type local_last  = A_row_ptr[local_row + 1] - block_data_begin;
-
-        //             for (index_type j = local_first + thread_in_block; j < local_last; j += threads_for_reduction) {
-        //                 #pragma unroll
-        //                 for (int k = 0; k < K; ++k) dot[k] += cache[k * BLOCK_SIZE + j];
-        //             }
-        //         }
-        //         __syncthreads();
-
-        //         if (local_row < block_row_end) {
-        //             #pragma unroll
-        //             for (int k = 0; k < K; ++k) cache[k * BLOCK_SIZE + i] = dot[k];
-        //         }
-
-        //         for (int step = threads_for_reduction / 2; step > 0; step /= 2) {
-        //             __syncthreads();
-        //             bool use_result = (thread_in_block < step) && (i + step < BLOCK_SIZE) && (local_row < block_row_end);
-        //             if (use_result) {
-        //                 #pragma unroll
-        //                 for (int k = 0; k < K; ++k) {
-        //                     cache[k * BLOCK_SIZE + i] += cache[k * BLOCK_SIZE + i + step];
-        //                 }
-        //             }
-        //         }
-
-        //         if (thread_in_block == 0 && local_row < block_row_end) {
-        //             #pragma unroll
-        //             for (int k = 0; k < K; ++k) {
-        //                 result[k * n + local_row] = cache[k * BLOCK_SIZE + i];
-        //             }
-        //         }
-        //     } else {
-        //         index_type local_row = block_row_begin + i;
-        //         while (local_row < block_row_end) {
-        //             real_type dot[K] = {0.0};
-        //             index_type local_first = A_row_ptr[local_row] - block_data_begin;
-        //             index_type local_last  = A_row_ptr[local_row + 1] - block_data_begin;
-
-        //             for (index_type j = local_first; j < local_last; ++j) {
-        //                 #pragma unroll
-        //                 for (int k = 0; k < K; ++k) dot[k] += cache[k * BLOCK_SIZE + j];
-        //             }
-
-        //             #pragma unroll
-        //             for (int k = 0; k < K; ++k) {
-        //                 result[k * n + local_row] = dot[k];
-        //             }
-        //             local_row += BLOCK_SIZE;
-        //         }
-        //     }
-        // } else
-        {
-            // CSR-Vector / VectorL Case// CSR-Vector / VectorL Case
-            const index_type lane    = threadIdx.x % 32;
-            const index_type warp_id = threadIdx.x / 32;
-
-            // Each warp gets its own distinct row within the block's range
-            const index_type row     = block_row_begin + warp_id; 
-
-            real_type dot[K] = {0.0};
-
-            // Ensure the row is valid and falls within this block's designated row chunk
-            if (row < block_row_end && row < n) {
-                const index_type row_start = A_row_ptr[row];
-                const index_type row_end   = A_row_ptr[row + 1];
-
-                for (index_type element = row_start + lane; element < row_end; element += 32) {
-                    const real_type a_val = A_val[element];
-                    const index_type col  = A_col_idx[element];
-
-                    #pragma unroll
-                    for (int k = 0; k < K; ++k) {
-                        dot[k] += a_val * __ldg(&B[k * n + col]);
-                    }
-                }
-
-                // Determine active threads in this warp for safe reduction
-                // (Important if rows are short or threads diverge)
-                // unsigned int active_mask = 0xffffffff;
-
-                #pragma unroll
-                for (int k = 0; k < K; ++k) {
-                    for (int offset = 16; offset > 0; offset /= 2) {
-                        dot[k] += __shfl_down_sync(0xffffffff, dot[k], offset);
-                    }
-                }
-
-                // Only the first lane of the warp writes out the final dot product for this row
-                if (lane == 0) {
-                    #pragma unroll
-                    for (int k = 0; k < K; ++k) {
-                        result[k * n + row] = dot[k];
-                    }
-                }
-            }
-            // else {
-            //     if (row < n) {
-            //         const index_type row_start = A_row_ptr[row];
-            //         const index_type row_end   = A_row_ptr[row + 1];
-
-            //         for (index_type element = row_start + threadIdx.x; element < row_end; element += BLOCK_SIZE) {
-            //             const real_type a_val = A_val[element];
-            //             const index_type col  = A_col_idx[element];
-
-            //             #pragma unroll
-            //             for (int k = 0; k < K; ++k) dot[k] += a_val * __ldg(&B[k * n + col]);
-            //         }
-            //     }
-
-            //     #pragma unroll
-            //     for (int k = 0; k < K; ++k) {
-            //         for (int offset = 16; offset > 0; offset /= 2) {
-            //             dot[k] += __shfl_down_sync(0xffffffff, dot[k], offset);
-            //         }
-            //     }
-
-            //     if (lane == 0) {
-            //         #pragma unroll
-            //         for (int k = 0; k < K; ++k) {
-            //             cache[k * (BLOCK_SIZE / 32) + warp_id] = dot[k];
-            //         }
-            //     }
-            //     __syncthreads();
-
-            //     if (warp_id == 0) {
-            //         #pragma unroll
-            //         for (int k = 0; k < K; ++k) dot[k] = 0.0;
-
-            //         if (lane < (BLOCK_SIZE / 32)) {
-            //             #pragma unroll
-            //             for (int k = 0; k < K; ++k) {
-            //                 dot[k] = cache[k * (BLOCK_SIZE / 32) + lane];
-            //             }
-            //         }
-
-            //         #pragma unroll
-            //         for (int k = 0; k < K; ++k) {
-            //             for (int offset = 16; offset > 0; offset /= 2) {
-            //                 dot[k] += __shfl_down_sync(0xffffffff, dot[k], offset);
-            //             }
-            //         }
-
-            //         if (lane == 0 && row < n) {
-            //             #pragma unroll
-            //             for (int k = 0; k < K; ++k) result[k * n + row] = dot[k];
-            //         }
-            //     }
-            // }
-        }
-    }
       
       __global__ void columnWiseSquaredNorms(real_type* R, real_type* sq_norms, index_type n)
       {
@@ -600,7 +329,46 @@ namespace ReSolve
           }
         }
       }
-            
+
+      template <index_type k>
+      __global__ void updateXRSplit(real_type* __restrict__ Xi_inv,
+                               const real_type* __restrict__ Sigma,
+                               const real_type* __restrict__ S,
+                               const real_type* __restrict__ A_S,
+                               real_type* __restrict__ Xi_Sigma,
+                               real_type* __restrict__ X_res,
+                               real_type* __restrict__ R_prec,
+                               index_type n)
+      {
+        index_type thread = blockIdx.x * blockDim.x + threadIdx.x;
+        index_type stride = gridDim.x * blockDim.x;
+
+        __shared__ real_type Xi_Sigma_shared[k * k];
+        if (threadIdx.x < k * k)
+        {
+          Xi_Sigma_shared[threadIdx.x] = Xi_Sigma[threadIdx.x];
+        }
+        __syncthreads();
+
+        for (index_type row = thread; row < n; row += gridDim.x * blockDim.x)
+        {
+          // #pragma unroll 1
+          for (index_type col = 0; col < k; col++)
+          {
+            real_type x_dot = 0;
+            real_type r_dot = 0;
+            // #pragma unroll 1
+            for (index_type i = 0; i < k; i++)
+            {
+              x_dot +=   S[i * n + row] * Xi_Sigma_shared[col * k + i];
+              r_dot -= A_S[i * n + row] * Xi_Sigma_shared[col * k + i];
+            }
+            X_res[col * n + row] += x_dot;
+            R_prec[col * n + row] += r_dot;
+          }
+        }
+      }
+      
       template <index_type k>
       __global__ void choleskyFactorizeSolve(real_type* __restrict__ A,
                                const real_type* B,
@@ -814,274 +582,6 @@ namespace ReSolve
         }
       }
 
-      template <index_type k>
-      __global__ void updateXRSplit(real_type* __restrict__ Xi_inv,
-                               const real_type* __restrict__ Sigma,
-                               const real_type* __restrict__ S,
-                               const real_type* __restrict__ A_S,
-                               real_type* __restrict__ Xi_Sigma,
-                               real_type* __restrict__ X_res,
-                               real_type* __restrict__ R_prec,
-                               index_type n)
-      {
-        index_type thread = blockIdx.x * blockDim.x + threadIdx.x;
-        index_type stride = gridDim.x * blockDim.x;
-
-        __shared__ real_type Xi_Sigma_shared[k * k];
-        if (threadIdx.x < k * k)
-        {
-          Xi_Sigma_shared[threadIdx.x] = Xi_Sigma[threadIdx.x];
-        }
-        __syncthreads();
-
-        for (index_type row = thread; row < n; row += gridDim.x * blockDim.x)
-        {
-          // #pragma unroll 1
-          for (index_type col = 0; col < k; col++)
-          {
-            real_type x_dot = 0;
-            real_type r_dot = 0;
-            // #pragma unroll 1
-            for (index_type i = 0; i < k; i++)
-            {
-              x_dot +=   S[i * n + row] * Xi_Sigma_shared[col * k + i];
-              r_dot -= A_S[i * n + row] * Xi_Sigma_shared[col * k + i];
-            }
-            X_res[col * n + row] += x_dot;
-            R_prec[col * n + row] += r_dot;
-          }
-        }
-      }
-      
-      template <index_type k>
-      __global__ void updateXR(real_type* __restrict__ Xi_inv,
-                               const real_type* __restrict__ Sigma,
-                               const real_type* __restrict__ S,
-                               const real_type* __restrict__ A_S,
-                               real_type* __restrict__ X_res,
-                               real_type* __restrict__ R_prec,
-                               index_type n)
-      {
-        index_type thread = blockIdx.x * blockDim.x + threadIdx.x;
-        index_type stride = gridDim.x * blockDim.x;
-      
-      // choleskyFactorize(Xi_inv), lower
-        __shared__ real_type Xi_inv_shared[k * (k + 1) / 2]; // Only need this much for kxk symmetric matrix
-        if constexpr (k <= 4)
-        {
-          if (threadIdx.x < 32) // k <= 4 for now
-          {
-            index_type i = threadIdx.x % k;
-            index_type j = threadIdx.x / k;
-            if ((i < k) && (j < k) && (i >= j))
-            {
-              Xi_inv_shared[indexLowerTriangular<k>(i, j)] = Xi_inv[j * k + i];
-            }
-            __syncwarp();
-
-            // // For warp size 64 and k <= 8, everything can be done in one warp
-            // if constexpr (k * (k + 1) / 2 > 64)
-            // {
-            //   __syncthreads();
-            // }
-
-            // Do all of this inside one warp. One thread per entry
-            // #pragma unroll 1
-            for (index_type h = 0; h < k; h++)
-            {
-              if (threadIdx.x == 0)
-              {
-                Xi_inv_shared[indexLowerTriangular<k>(h, h)] = sqrt(Xi_inv_shared[indexLowerTriangular<k>(h, h)]);
-              }
-              __syncwarp();
-              if (threadIdx.x > h && threadIdx.x < k)
-              {
-                Xi_inv_shared[indexLowerTriangular<k>(threadIdx.x, h)] /= Xi_inv_shared[indexLowerTriangular<k>(h, h)];
-              }
-              __syncwarp();
-              if ((j < k) && (j > h) && (i < k) && (i >= j))
-              {
-                Xi_inv_shared[indexLowerTriangular<k>(i, j)] -= Xi_inv_shared[indexLowerTriangular<k>(i, h)] * Xi_inv_shared[indexLowerTriangular<k>(j, h)];
-              }
-              __syncwarp();
-            }
-            
-            if ((i < k) && (j < k) && (blockIdx.x == 0))
-            {
-              if (i >= j)
-              {
-                Xi_inv[j * k + i] = Xi_inv_shared[indexLowerTriangular<k>(i, j)];
-              }
-              else
-              {
-                Xi_inv[j * k + i] = 0.0;
-              }
-            }
-          }
-        }
-        else
-        {
-          index_type i = threadIdx.x % k;
-          index_type j = threadIdx.x / k;
-          if ((i < k) && (j < k) && (i >= j))
-          {
-            Xi_inv_shared[indexLowerTriangular<k>(i, j)] = Xi_inv[j * k + i];
-          }
-          __syncthreads();
-
-          // #pragma unroll 1
-          for (index_type h = 0; h < k; h++)
-          {
-            if (threadIdx.x == 0)
-            {
-              Xi_inv_shared[indexLowerTriangular<k>(h, h)] = sqrt(Xi_inv_shared[indexLowerTriangular<k>(h, h)]);
-            }
-            __syncthreads();
-            if (threadIdx.x > h && threadIdx.x < k)
-            {
-              Xi_inv_shared[indexLowerTriangular<k>(threadIdx.x, h)] /= Xi_inv_shared[indexLowerTriangular<k>(h, h)];
-            }
-            __syncthreads();
-            if ((j < k) && (j > h) && (i < k) && (i >= j))
-            {
-              Xi_inv_shared[indexLowerTriangular<k>(i, j)] -= Xi_inv_shared[indexLowerTriangular<k>(i, h)] * Xi_inv_shared[indexLowerTriangular<k>(j, h)];
-            }
-            __syncthreads();
-          }
-          
-          if ((i < k) && (j < k) && (blockIdx.x == 0))
-          {
-            if (i >= j)
-            {
-              Xi_inv[j * k + i] = Xi_inv_shared[indexLowerTriangular<k>(i, j)];
-            }
-            else
-            {
-              Xi_inv[j * k + i] = 0.0;
-            }
-          }
-        }
-
-      // X = Xi * Sigma => Xi_inv * X = Sigma => L * L^real_type * X = Sigma, choleskySolve
-        __shared__ real_type Xi_Sigma_shared[k * k];
-        if constexpr (k <= 4)
-        {
-          if (threadIdx.x < 32) // k <= 4 for now. Still only one warp
-          {
-            if (threadIdx.x < k * k)
-            {
-              Xi_Sigma_shared[threadIdx.x] = Sigma[threadIdx.x];
-            }
-            __syncwarp(); // CUDA needs to __syncwarp() at all these places
-
-            //  L * Y = Sigma
-            if (threadIdx.x < k)
-            {
-              index_type col = threadIdx.x; // Talking about rows and columns of Sigma
-
-              // #pragma unroll 1
-              for (index_type row = 0; row < k; row++)
-              {
-                real_type y_local = Xi_Sigma_shared[col * k + row];
-                // #pragma unroll 1
-                for (index_type i = 0; i < row; i++)
-                {
-                  y_local -= Xi_Sigma_shared[col * k + i] * Xi_inv_shared[indexLowerTriangular<k>(row, i)]; // Xi_inv_shared can be overridden. Here it contains Y
-                }
-                y_local /= Xi_inv_shared[indexLowerTriangular<k>(row, row)];
-                Xi_Sigma_shared[col * k + row] = y_local;
-              }
-            }
-            __syncwarp();
-
-            //  L^real_type * X = Y
-            if (threadIdx.x < k)
-            {
-              index_type col = threadIdx.x; // Talking about rows and columns of Sigma
-
-              // #pragma unroll 1
-              for (index_type row = k - 1; row >= 0; row--)
-              {
-                real_type y_local = Xi_Sigma_shared[col * k + row];
-                // #pragma unroll 1
-                for (index_type i = row + 1; i < k; i++)
-                {
-                  y_local -= Xi_Sigma_shared[col * k + i] * Xi_inv_shared[indexLowerTriangular<k>(i, row)]; // Xi_inv_shared can be overridden. Here it contains Y
-                }
-                y_local /= Xi_inv_shared[indexLowerTriangular<k>(row, row)];
-                Xi_Sigma_shared[col * k + row] = y_local;
-              }
-            }
-          }
-        }
-        else
-        {
-          if (threadIdx.x < k * k)
-          {
-            Xi_Sigma_shared[threadIdx.x] = Sigma[threadIdx.x];
-          }
-          __syncthreads();
-
-          //  L * Y = Sigma
-          if (threadIdx.x < k)
-          {
-            index_type col = threadIdx.x; // Talking about rows and columns of Sigma
-
-            // #pragma unroll 1
-            for (index_type row = 0; row < k; row++)
-            {
-              real_type y_local = Xi_Sigma_shared[col * k + row];
-              // #pragma unroll 1
-              for (index_type i = 0; i < row; i++)
-              {
-                y_local -= Xi_Sigma_shared[col * k + i] * Xi_inv_shared[indexLowerTriangular<k>(row, i)]; // Xi_inv_shared can be overridden. Here it contains Y
-              }
-              y_local /= Xi_inv_shared[indexLowerTriangular<k>(row, row)];
-              Xi_Sigma_shared[col * k + row] = y_local;
-            }
-          }
-          __syncthreads();
-
-          //  L^real_type * X = Y
-          if (threadIdx.x < k)
-          {
-            index_type col = threadIdx.x; // Talking about rows and columns of Sigma
-
-            // #pragma unroll 1
-            for (index_type row = k - 1; row >= 0; row--)
-            {
-              real_type y_local = Xi_Sigma_shared[col * k + row];
-              // #pragma unroll 1
-              for (index_type i = row + 1; i < k; i++)
-              {
-                y_local -= Xi_Sigma_shared[col * k + i] * Xi_inv_shared[indexLowerTriangular<k>(i, row)]; // Xi_inv_shared can be overridden. Here it contains Y
-              }
-              y_local /= Xi_inv_shared[indexLowerTriangular<k>(row, row)];
-              Xi_Sigma_shared[col * k + row] = y_local;
-            }
-          }
-        }
-        __syncthreads();
-
-        for (index_type row = thread; row < n; row += gridDim.x * blockDim.x)
-        {
-          // #pragma unroll 1
-          for (index_type col = 0; col < k; col++)
-          {
-            real_type x_dot = 0;
-            real_type r_dot = 0;
-            // #pragma unroll 1
-            for (index_type i = 0; i < k; i++)
-            {
-              x_dot +=   S[i * n + row] * Xi_Sigma_shared[col * k + i];
-              r_dot -= A_S[i * n + row] * Xi_Sigma_shared[col * k + i];
-            }
-            X_res[col * n + row] += x_dot;
-            R_prec[col * n + row] += r_dot;
-          }
-        }
-      }
-
       // W = W - B * L^-1
       template <index_type k>
       __global__ void updateW(real_type* __restrict__ W, const real_type* __restrict__ L, real_type* __restrict__ B, index_type n)
@@ -1100,10 +600,10 @@ namespace ReSolve
           }
         }
         __syncthreads();
-        
+
         for (index_type row = thread; row < n; row += stride)
         {
-          //  Y * L^real_type = B
+          //  Y * L^T = B
           real_type y_row[k];
 
           #pragma unroll
@@ -1113,7 +613,7 @@ namespace ReSolve
             #pragma unroll
             for (index_type i = 0; i < col; i++)
             {
-              y_local -= y_row[i] * L_shared[indexLowerTriangular<k>(col, i)]; // L^real_type[i, col]
+              y_local -= y_row[i] * L_shared[indexLowerTriangular<k>(col, i)]; // L^T[i, col]
             }
             y_local /= L_shared[indexLowerTriangular<k>(col, col)];
             y_row[col] = y_local;
@@ -1189,7 +689,7 @@ namespace ReSolve
           atomicAdd(&C[threadIdx.x], C_shared[threadIdx.x]);
         }
       }
-    
+
       template <index_type k, index_type BLOCK_DIM>
       __global__ void updateSSigma(const real_type* __restrict__ W, real_type* __restrict__ S, const real_type* __restrict__ Zeta, real_type* __restrict__ Sigma, index_type n)
       {
@@ -1298,10 +798,6 @@ namespace ReSolve
     RandomizedConjugateGradientCuda::RandomizedConjugateGradientCuda(VectorHandler* vector_handler)
     {
       vector_handler_ = vector_handler;
-      cusolverSpCreate(&cusolverHandle_);
-      cusparseCreateMatDescr(&descrA_);
-      cusolverSpCreateCsrcholInfo(&factorizationInfo_);
-      buffer_ = nullptr;
 
       int device_id = 0;
       cudaDeviceProp properties;
@@ -1313,10 +809,6 @@ namespace ReSolve
 
     RandomizedConjugateGradientCuda::~RandomizedConjugateGradientCuda()
     {
-      cusolverSpDestroy(cusolverHandle_);
-      cusparseDestroyMatDescr(descrA_);
-      cusolverSpDestroyCsrcholInfo(factorizationInfo_);
-      mem_.deleteOnDevice(buffer_);
       mem_.deleteOnDevice(d_best_basis_);
       mem_.deleteOnDevice(d_sq_norms_);
     }
@@ -1646,68 +1138,6 @@ namespace ReSolve
         kernels::choleskyFactorizeSolve<16><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
                                                          B->getData(memory::DEVICE),
                                                          X->getData(memory::DEVICE));
-        break;
-      default:
-        return 1;
-      }
-
-      return 0;
-    }
-    
-    int RandomizedConjugateGradientCuda::updateXR(vector::Vector* Xi_inv, vector::Vector* Sigma, vector::Vector* S, vector::Vector* A_S, vector::Vector* X_res, vector::Vector* R_prec)
-    {
-      index_type n = A_S->getSize();
-      index_type k = A_S->getNumVectors();
-
-      int       block_size = 256; // Must be at least k^2
-      int       num_blocks = num_sms_ * 64; // quite arbitrary
-
-      switch (k)
-      {
-      case 1:
-        kernels::updateXR<1><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
-                                                         Sigma->getData(memory::DEVICE),
-                                                         S->getData(memory::DEVICE),
-                                                         A_S->getData(memory::DEVICE),
-                                                         X_res->getData(memory::DEVICE),
-                                                         R_prec->getData(memory::DEVICE),
-                                                         n);
-        break;
-      case 2:
-        kernels::updateXR<2><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
-                                                         Sigma->getData(memory::DEVICE),
-                                                         S->getData(memory::DEVICE),
-                                                         A_S->getData(memory::DEVICE),
-                                                         X_res->getData(memory::DEVICE),
-                                                         R_prec->getData(memory::DEVICE),
-                                                         n);
-        break;
-      case 4:
-        kernels::updateXR<4><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
-                                                         Sigma->getData(memory::DEVICE),
-                                                         S->getData(memory::DEVICE),
-                                                         A_S->getData(memory::DEVICE),
-                                                         X_res->getData(memory::DEVICE),
-                                                         R_prec->getData(memory::DEVICE),
-                                                         n);
-        break;
-      case 8:
-        kernels::updateXR<8><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
-                                                         Sigma->getData(memory::DEVICE),
-                                                         S->getData(memory::DEVICE),
-                                                         A_S->getData(memory::DEVICE),
-                                                         X_res->getData(memory::DEVICE),
-                                                         R_prec->getData(memory::DEVICE),
-                                                         n);
-        break;
-      case 16:
-        kernels::updateXR<16><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
-                                                         Sigma->getData(memory::DEVICE),
-                                                         S->getData(memory::DEVICE),
-                                                         A_S->getData(memory::DEVICE),
-                                                         X_res->getData(memory::DEVICE),
-                                                         R_prec->getData(memory::DEVICE),
-                                                         n);
         break;
       default:
         return 1;
