@@ -158,7 +158,7 @@ namespace ReSolve
     double         nrm            = 0.0;
 
     rocblas_status st = rocblas_ddot(handle_rocblas,
-                                     x->getSize() * x->getNumVectors(),
+                                     x->getSize(),
                                      x->getData(i, memory::DEVICE),
                                      1,
                                      x->getData(i, memory::DEVICE),
