@@ -132,6 +132,31 @@ namespace ReSolve
     x->setDataUpdated(memspace);
   }
 
+  /**  // ANDREW TODO: pretty sure this is unused
+   * @brief scale a vector by a constant, then store it in another vector.
+   * i.e, y = alpha*x where alpha is a constant
+   *
+   * @param[in] alpha The constant
+   * @param[in] in The input vector to be scaled
+   * @param[out] out The vector to store the output in 
+   * @param memspace[in] string containg memspace (cpu or cuda or hip)
+   *
+   */
+  void VectorHandler::scal(const real_type alpha, vector::Vector* in, vector::Vector* out, memory::MemorySpace memspace)
+  {
+    using namespace ReSolve::memory;
+    switch (memspace)
+    {
+    case HOST:
+      cpuImpl_->scal(alpha, in);
+      break;
+    case DEVICE:
+      devImpl_->scal(alpha, in);
+      break;
+    }
+    in->setDataUpdated(memspace);
+  }
+
   /**
    * @brief compute infinity norm of a vector (i.e., find an entry with largest absolute value)
    *
@@ -151,6 +176,54 @@ namespace ReSolve
       break;
     case DEVICE:
       return devImpl_->amax(x);
+      break;
+    }
+    return -1.0;
+  }
+
+  /**
+   * @brief compute norm of a vector or Frobenius norm of a multivector
+   *
+   * @param[in] x The multivector
+   * @param[in] memspace string containg memspace (cpu or cuda or hip)
+   *
+   * @return Norm of _x_
+   *
+   */
+  real_type VectorHandler::norm(vector::Vector* x, memory::MemorySpace memspace)
+  {
+    using namespace ReSolve::memory;
+    switch (memspace)
+    {
+    case HOST:
+      return cpuImpl_->norm(x);
+      break;
+    case DEVICE:
+      return devImpl_->norm(x);
+      break;
+    }
+    return -1.0;
+  }
+  
+  /** // ...
+   * @brief compute norm of a vector or Frobenius norm of a vector inside a multivector
+   *
+   * @param[in] The vector
+   * @param[in] memspace string containg memspace (cpu or cuda or hip)
+   *
+   * @return Norm of _x_
+   *
+   */
+  real_type VectorHandler::norm(vector::Vector* x, index_type i, memory::MemorySpace memspace)
+  {
+    using namespace ReSolve::memory;
+    switch (memspace)
+    {
+    case HOST:
+      return cpuImpl_->norm(x, i);
+      break;
+    case DEVICE:
+      return devImpl_->norm(x, i);
       break;
     }
     return -1.0;
@@ -248,6 +321,89 @@ namespace ReSolve
       break;
     }
     x->setDataUpdated(memspace);
+  }
+
+  /**
+   * @brief gemm computes dense matrix-matrix (or multivector-multivector) product.
+   *
+   * Compute C := alpha * A * B + beta * C.
+   * A is replaced with A^T if transpose_A = T.
+   * B is replaced with B^T if transpose_A = T.
+   *
+   * @param[in] transpose_A - yes (T) or no (N)
+   * @param[in] transpose_B - yes (T) or no (N)
+   * @param[in] alpha     - Constant real number
+   * @param[in] beta      - Constant real number
+   * @param[in] A         - Multivector containing the A matrix, organized columnwise
+   * @param[in] B         - Multivector containing the B matrix, organized columnwise
+   * @param[in] C         - Multivector containing the C (result) matrix, organized columnwise
+   * @param[in] memspace  - enum specifying HOST or DEVICE memory space.
+   */
+  void VectorHandler::gemm(char                transpose_A,
+                           char                transpose_B,
+                           const real_type     alpha,
+                           const real_type     beta,
+                           vector::Vector*     A,
+                           vector::Vector*     B,
+                           vector::Vector*     C,
+                           memory::MemorySpace memspace)
+  {
+    using namespace ReSolve::memory;
+
+    assert((A != C) && "In-place gemm is not allowed!");
+
+    switch (memspace)
+    {
+    case HOST:
+      cpuImpl_->gemm(transpose_A, transpose_B, alpha, beta, A, B, C);
+      break;
+    case DEVICE:
+      devImpl_->gemm(transpose_A, transpose_B, alpha, beta, A, B, C);
+      break;
+    }
+    C->setDataUpdated(memspace);
+  }
+
+  /** // ... UPDATE COMMENT
+   * C := alpha * op(A) + beta * op(B)
+   * @brief gemm computes dense matrix-matrix (or multivector-multivector) product.
+   *
+   * Compute C := alpha * A * B + beta * C.
+   * A is replaced with A^T if transpose_A = T.
+   * B is replaced with B^T if transpose_A = T.
+   *
+   * @param[in] transpose_A - yes (T) or no (N)
+   * @param[in] transpose_B - yes (T) or no (N)
+   * @param[in] alpha     - Constant real number
+   * @param[in] beta      - Constant real number
+   * @param[in] A         - Multivector containing the A matrix, organized columnwise
+   * @param[in] B         - Multivector containing the B matrix, organized columnwise
+   * @param[in] C         - Multivector containing the C (result) matrix, organized columnwise
+   * @param[in] memspace  - enum specifying HOST or DEVICE memory space.
+   */
+  void VectorHandler::geam(char                transpose_A,
+                           char                transpose_B,
+                           const real_type     alpha,
+                           const real_type     beta,
+                           vector::Vector*     A,
+                           vector::Vector*     B,
+                           vector::Vector*     C,
+                           memory::MemorySpace memspace)
+  {
+    using namespace ReSolve::memory;
+
+    assert((A != C) && "In-place gemm is not allowed!");
+
+    switch (memspace)
+    {
+    case HOST:
+      cpuImpl_->geam(transpose_A, transpose_B, alpha, beta, A, B, C);
+      break;
+    case DEVICE:
+      devImpl_->geam(transpose_A, transpose_B, alpha, beta, A, B, C);
+      break;
+    }
+    C->setDataUpdated(memspace);
   }
 
   /**
@@ -476,6 +632,20 @@ namespace ReSolve
     return 1;
   }
 
+  void VectorHandler::randomVector(vector::Vector* x, real_type min, real_type max, memory::MemorySpace memspace)
+  {
+    using namespace ReSolve::memory;
+    switch (memspace)
+    {
+    case HOST:
+      return cpuImpl_->randomVector(x, min, max);
+      break;
+    case DEVICE:
+      return devImpl_->randomVector(x, min, max);
+      break;
+    }
+  }
+  
   /**
    * @brief If CUDA support is enabled in the handler.
    *

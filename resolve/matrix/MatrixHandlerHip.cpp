@@ -153,6 +153,150 @@ namespace ReSolve
     return error_sum;
   }
 
+  /** // ... and fix comments
+   * @brief result := alpha * A * x + beta * result
+   *
+   * @param[in]     A - matrix
+   * @param[in]     vec_x - multivector multiplied by A
+   * @param[in,out] vec_result - resulting multivector
+   * @param[in]     alpha - matrix-vector multiplication factor
+   * @param[in]     beta - sum into result factor
+   * @return int    error code, 0 if successful
+   *
+   * @pre Matrix `A` is in CSR format.
+   *
+   * @note If we decide to implement this function for different matrix
+   * format, the check for CSR matrix will be replaced with a switch
+   * statement to select implementation for recognized input matrix
+   * format.
+   */
+  int MatrixHandlerHip::matMultivec(matrix::Sparse*  A,
+                               vector_type*     vec_x,
+                               vector_type*     vec_result,
+                               const real_type* alpha,
+                               const real_type* beta)
+  {
+  //   using namespace constants;
+
+  //   assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW && "Matrix has to be in CSR format for matrix-vector product.\n");
+
+  //   int error_sum = 0;
+  //   // result = alpha *A*x + beta * result
+  //   rocsparse_status     status;
+  //   rocsparse_dnmat_descr mat_X = workspace_->getMatX();
+
+  //   // In SpMV, A is m x n and the operation is y = A*x so
+  //   // x must have length n, the number of columns of A and
+  //   // y must have length m, the number of rows of A.
+  //   // This matters for non-square matrices used in SCCG.
+  //   rocsparse_create_dnmat_descr(&mat_X, vec_x->getSize(), vec_x->getNumVectors(), vec_x->getSize(), vec_x->getData(memory::DEVICE), rocsparse_datatype_f64_r, rocsparse_order_column);
+
+  //   rocsparse_dnmat_descr mat_AX = workspace_->getMatY();
+  //   rocsparse_create_dnmat_descr(&mat_AX, vec_result->getSize(), vec_result->getNumVectors(), vec_result->getSize(), vec_result->getData(memory::DEVICE), rocsparse_datatype_f64_r, rocsparse_order_column);
+
+  //   rocsparse_handle handle_cusparse = workspace_->getCusparseHandle();
+
+  //   // The workspace caches one backend SpMV setup and temporary buffer between
+  //   // matvec calls. SCCG can call matvec with different matrices, such as JC and
+  //   // JC^T, so the cached setup may no longer match the current matrix structure.
+  //   // Track the matrix pointer and dimensions/nnz so stale setup data is reset
+  //   // before running SpMV with a different matrix.
+  //   bool matrix_changed =
+  //       (matrix_for_matvec_ != A) || (matvec_num_rows_ != A->getNumRows()) || (matvec_num_cols_ != A->getNumColumns()) || (matvec_nnz_ != A->getNnz());
+
+  //   if (matrix_changed || values_changed_)
+  //   {
+  //     workspace_->resetMatvecSetup();
+  //   }
+  //   rocsparse_spmat_descr mat_A       = workspace_->getSpmvMatrixDescriptor();
+  //   void* buffer_spmv = workspace_->getSpmvBuffer();
+  //   if (!workspace_->matvecSetup())
+  //   {
+  //     // Setup, allocate, then compute.
+  //     status = rocsparse_create_csr_descr(&mat_A,
+  //                                         A->getNumRows(),
+  //                                         A->getNumColumns(),
+  //                                         A->getNnz(),
+  //                                         A->getRowData(memory::DEVICE),
+  //                                         A->getColData(memory::DEVICE),
+  //                                         A->getValues(memory::DEVICE),
+  //                                         rocsparse_indextype_i32,
+  //                                         rocsparse_indextype_i32,
+  //                                         rocsparse_index_base_zero,
+  //                                         rocsparse_datatype_f64_r);
+  //     error_sum += status;
+  //     index_type bufferSize = 0;
+
+  //     status = rocsparse_spmm(handle_cusparse,
+  //                             rocsparse_operation_none,
+  //                             rocsparse_operation_none,
+  //                             &MINUS_ONE,
+  //                             mat_A,
+  //                             mat_X,
+  //                             &ONE,
+  //                             mat_AX,
+  //                             rocsparse_datatype_f64_r,
+  //                             rocsparse_spmm_alg_default,
+  //                             rocsparse_spmm_stage_buffer_size,
+  //                             &bufferSize,
+  //                             nullptr);
+  //     error_sum += status;
+  //     mem_.allocateBufferOnDevice(&buffer_spmv, bufferSize);
+  //     workspace_->setSpmvMatrixDescriptor(mat_A);
+  //     workspace_->setSpmvBuffer(buffer_spmv, bufferSize);
+
+  //     status = rocsparse_spmm(handle_cusparse,
+  //                             rocsparse_operation_none,
+  //                             rocsparse_operation_none,
+  //                             &MINUS_ONE,
+  //                             mat_A,
+  //                             mat_X,
+  //                             &ONE,
+  //                             mat_AX,
+  //                             rocsparse_datatype_f64_r,
+  //                             rocsparse_spmm_alg_default,
+  //                             rocsparse_spmm_stage_preprocess,
+  //                             &bufferSize,
+  //                             buffer_spmv);
+  //     error_sum += status;
+
+  //     workspace_->matvecSetupDone();
+
+  //     matrix_for_matvec_ = A;
+  //     matvec_num_rows_   = A->getNumRows();
+  //     matvec_num_cols_   = A->getNumColumns();
+  //     matvec_nnz_        = A->getNnz();
+
+  //     values_changed_ = false;
+  //   }
+
+  //   index_type bufferSize = getSpmvBufferSize();
+
+  //   status = rocsparse_spmm(handle_cusparse,
+  //                           rocsparse_operation_none,
+  //                           rocsparse_operation_none,
+  //                           alpha,
+  //                           mat_A,
+  //                           mat_X,
+  //                           beta,
+  //                           mat_AX,
+  //                           rocsparse_datatype_f64_r,
+  //                           rocsparse_spmm_alg_default,
+  //                           rocsparse_spmm_stage_compute,
+  //                           &bufferSize,
+  //                           buffer_spmv);
+  //   error_sum += status;
+  //   if (status)
+  //     out::error() << "MatMultivec status: " << status << ". "
+  //                  << "Last error code: " << mem_.getLastDeviceError() << ".\n";
+  //   vec_result->setDataUpdated(memory::DEVICE);
+
+  //   rocsparse_destroy_dnmat_descr(mat_X);
+  //   rocsparse_destroy_dnmat_descr(mat_AX);
+  //   return error_sum;
+    return 1;
+  }
+
   /**
    * @brief Matrix infinity norm
    *
@@ -206,6 +350,26 @@ namespace ReSolve
                        workspace_->getNormBuffer(),
                        norm);
     return 0;
+  }
+
+  real_type MatrixHandlerHip::norm(matrix::Sparse* A)
+  {
+    
+    rocblas_handle handle_rocblas = workspace_->getRocblasHandle();
+
+    double         nrm{0.0};
+    rocblas_status st = rocblas_ddot(handle_rocblas,
+                                   A->getNnz(),
+                                   A->getValues(memory::DEVICE),
+                                   1,
+                                   A->getValues(memory::DEVICE),
+                                   1,
+                                   &nrm);
+    if (st != 0)
+    {
+      out::error() << "matrix norm returned error code " << st << "\n";
+    }
+    return sqrt(nrm);
   }
 
   /**
@@ -380,6 +544,19 @@ namespace ReSolve
     hip::rightScale(n, a_row_ptr, a_col_idx, a_vals, diag_data);
     A->setUpdated(memory::DEVICE);
     mem_.deviceSynchronize();
+    return 0;
+  }
+
+  // ANDREW TODO: extractRootDiagonal
+  int MatrixHandlerHip::extractInverseRootDiagonal(matrix::Csr* A, vector_type* diag)
+  {
+    real_type*  diag_data = diag->getData(memory::DEVICE);
+    const index_type* a_row_ptr = A->getRowData(memory::DEVICE);
+    const index_type* a_col_idx = A->getColData(memory::DEVICE);
+    const real_type*  a_vals    = A->getValues(memory::DEVICE);
+    index_type  n         = A->getNumRows();
+    hip::extractInverseRootDiagonal(n, a_row_ptr, a_col_idx, a_vals, diag_data);
+    A->setUpdated(memory::DEVICE);
     return 0;
   }
 

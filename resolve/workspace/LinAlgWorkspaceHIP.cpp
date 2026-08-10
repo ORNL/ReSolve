@@ -21,6 +21,9 @@ namespace ReSolve
     norm_buffer_ready_         = false;
     transpose_workspace_       = nullptr;
     transpose_workspace_ready_ = false;
+    rng_state_                 = nullptr;
+    rng_ready_                 = false;
+    rng_state_size_            = 0;
   }
 
   LinAlgWorkspaceHIP::~LinAlgWorkspaceHIP()
@@ -41,6 +44,10 @@ namespace ReSolve
     if (transpose_workspace_ready_)
     {
       mem_.deleteOnDevice(transpose_workspace_);
+    }
+    if (rng_ready_)
+    {
+      mem_.deleteOnDevice(rng_state_);
     }
   }
 
@@ -71,6 +78,13 @@ namespace ReSolve
       mem_.deleteOnDevice(transpose_workspace_);
       transpose_workspace_       = nullptr;
       transpose_workspace_ready_ = false;
+    }
+    if (rng_ready_)
+    {
+      mem_.deleteOnDevice(rng_state_);
+      rng_state_size_ = 0;
+      total_threads_ = 0;
+      rng_ready_ = false;
     }
     return;
   }
@@ -145,6 +159,12 @@ namespace ReSolve
     matvec_setup_done_ = true;
   }
 
+  /**
+    * @brief Reset the cached HIP SpMV setup.
+    *
+    * Destroys the cached rocSPARSE matrix descriptor and matrix info so the
+    * next matvec call can rebuild the setup if the matrix or its dimensions have changed.
+    */
   void LinAlgWorkspaceHIP::resetMatvecSetup()
   {
     if (mat_A_ != nullptr)
@@ -164,6 +184,19 @@ namespace ReSolve
   {
     rocsparse_create_handle(&handle_rocsparse_);
     rocblas_create_handle(&handle_rocblas_);
+  }
+  
+  void LinAlgWorkspaceHIP::initializeRng(index_type size)
+  {
+    hip::initializeRng(size, total_threads_, &rng_state_);
+    rng_state_size_ = std::min(size, total_threads_);
+    rng_ready_ = true;
+  }
+
+  void LinAlgWorkspaceHIP::resetRng()
+  {
+    mem_.deleteOnDevice(rng_state_);
+    rng_ready_ = false;
   }
 
   index_type LinAlgWorkspaceHIP::getDrSize()
@@ -185,6 +218,35 @@ namespace ReSolve
   {
     return norm_buffer_;
   }
+  
+  bool LinAlgWorkspaceHIP::isRngReady()
+  {
+    return rng_ready_;
+  }
+  
+  hiprandState* LinAlgWorkspaceHIP::getRngState()
+  {
+    return rng_state_;
+  }
+
+  index_type LinAlgWorkspaceHIP::getRngStateSize()
+  {
+    return rng_state_size_;
+  }
+
+  int LinAlgWorkspaceHIP::computeTotalThreads()
+  {
+    int device_id = 0;
+    hipDeviceProp_t properties;
+    hipError_t status = hipGetDeviceProperties(&properties, device_id);
+    total_threads_ = properties.multiProcessorCount * properties.maxThreadsPerMultiProcessor;
+    return status;
+  }
+
+  index_type LinAlgWorkspaceHIP::getTotalThreads()
+  {
+    return total_threads_;
+  }
 
   void* LinAlgWorkspaceHIP::getTransposeBufferWorkspace()
   {
@@ -193,15 +255,10 @@ namespace ReSolve
 
   int LinAlgWorkspaceHIP::setTransposeBufferWorkspace(size_t bufferSize)
   {
-    if (transpose_workspace_ready_ && bufferSize <= transpose_workspace_size_)
-    {
-      return 0;
-    }
-
     if (transpose_workspace_ready_)
     {
-      mem_.deleteOnDevice(transpose_workspace_);
-      transpose_workspace_ = nullptr;
+      out::error() << "Transpose workspace already set!\n";
+      return 1;
     }
 
     mem_.allocateBufferOnDevice(&transpose_workspace_, bufferSize);

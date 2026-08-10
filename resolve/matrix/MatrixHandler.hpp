@@ -60,6 +60,10 @@ namespace ReSolve
 
     int rightScale(matrix::Csr* A, vector_type* diag, memory::MemorySpace memspace);
 
+    int extractRootDiagonal(matrix::Csr* A, vector_type* diag, memory::MemorySpace memspace);
+
+    int extractInverseRootDiagonal(matrix::Csr* A, vector_type* diag, memory::MemorySpace memspace);
+
     int addConst(matrix::Sparse* A, real_type alpha, memory::MemorySpace memspace);
 
     /// Should compute vec_result := alpha*A*vec_x + beta*vec_result, but at least on cpu alpha and beta are flipped
@@ -70,6 +74,7 @@ namespace ReSolve
                 const real_type*    beta,
                 memory::MemorySpace memspace);
     int  matrixInfNorm(matrix::Sparse* A, real_type* norm, memory::MemorySpace memspace);
+    real_type norm(matrix::Sparse* A, memory::MemorySpace memspace);
     void setValuesChanged(bool toWhat, memory::MemorySpace memspace);
 
     bool getIsCudaEnabled() const;

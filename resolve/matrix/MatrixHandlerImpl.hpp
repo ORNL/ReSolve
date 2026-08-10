@@ -44,6 +44,10 @@ namespace ReSolve
 
     virtual int rightScale(matrix::Csr* A, vector_type* diag) = 0;
 
+    virtual int extractRootDiagonal(matrix::Csr* A, vector_type* diag) = 0;
+
+    virtual int extractInverseRootDiagonal(matrix::Csr* A, vector_type* diag) = 0;
+
     virtual int addConst(matrix::Sparse* A, real_type alpha) = 0;
 
     virtual int matvec(matrix::Sparse*  A,
@@ -51,7 +55,13 @@ namespace ReSolve
                        vector_type*     vec_result,
                        const real_type* alpha,
                        const real_type* beta)                     = 0;
+    virtual int matMultivec(matrix::Sparse*  A,
+                            vector_type*     vec_x,
+                            vector_type*     vec_result,
+                            const real_type* alpha,
+                            const real_type* beta)                     = 0;
     virtual int matrixInfNorm(matrix::Sparse* A, real_type* norm) = 0;
+    virtual real_type norm(matrix::Sparse* A) = 0;
 
     virtual void setValuesChanged(bool isValuesChanged) = 0;
   };

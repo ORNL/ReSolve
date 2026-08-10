@@ -3,6 +3,7 @@
 #include "cublas_v2.h"
 #include "cusolverSp.h"
 #include "cusparse.h"
+#include "curand_kernel.h"
 #include <resolve/Common.hpp>
 #include <resolve/MemoryUtils.hpp>
 
@@ -34,6 +35,9 @@ namespace ReSolve
     index_type           getDrSize();
     real_type*           getDr();
     bool                 getNormBufferState();
+    bool                 isRngReady();
+    curandState*         getRngState();
+    index_type           getRngStateSize();
 
     void setCublasHandle(cublasHandle_t handle);
     void setCusolverSpHandle(cusolverSpHandle_t handle);
@@ -44,16 +48,13 @@ namespace ReSolve
     void setNormBufferState(bool r);
 
     void initializeHandles();
+    void initializeRng(index_type size);
+    void resetRng();
+    int computeTotalThreads();
+    index_type getTotalThreads();
 
     bool matvecSetup();
     void matvecSetupDone();
-    /**
-     * @brief Reset the cached CUDA SpMV setup.
-     *
-     * Destroys the cached sparse matrix descriptor and frees the SpMV buffer so
-     * the next matvec call can rebuild the SpMV setup if the matrix or its dimensions have changed.
-     */
-    void resetMatvecSetup();
 
   private:
     // handles
@@ -81,6 +82,11 @@ namespace ReSolve
     real_type* d_r_{nullptr}; // needed for one-norm
     index_type d_r_size_{0};
     bool       norm_buffer_ready_{false}; // to track if allocated
+
+    bool rng_ready_{false};
+    index_type rng_state_size_{0};
+    curandState* rng_state_;
+    index_type total_threads_;
 
     MemoryHandler mem_;
   };

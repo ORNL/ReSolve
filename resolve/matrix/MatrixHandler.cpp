@@ -147,13 +147,30 @@ namespace ReSolve
                             memory::MemorySpace memspace)
   {
     using namespace ReSolve::memory;
+
+    assert((vec_x != vec_result) && "In-place matvec is not allowed!");
+
     switch (memspace)
     {
     case HOST:
-      return cpuImpl_->matvec(A, vec_x, vec_result, alpha, beta);
+      if (vec_x->getNumVectors() == 1)
+      {
+        return cpuImpl_->matvec(A, vec_x, vec_result, alpha, beta);
+      }
+      else
+      {
+        return cpuImpl_->matMultivec(A, vec_x, vec_result, alpha, beta);
+      }
       break;
     case DEVICE:
-      return devImpl_->matvec(A, vec_x, vec_result, alpha, beta);
+      if (vec_x->getNumVectors() == 1)
+      {
+        return devImpl_->matvec(A, vec_x, vec_result, alpha, beta);
+      }
+      else
+      {
+        return devImpl_->matMultivec(A, vec_x, vec_result, alpha, beta);
+      }
       break;
     }
     return 1;
@@ -178,6 +195,22 @@ namespace ReSolve
       break;
     case DEVICE:
       return devImpl_->matrixInfNorm(A, norm);
+      break;
+    }
+    return 1;
+  }
+
+  //// ... 
+  real_type MatrixHandler::norm(matrix::Sparse* A, memory::MemorySpace memspace)
+  {
+    using namespace ReSolve::memory;
+    switch (memspace)
+    {
+    case HOST:
+      return cpuImpl_->norm(A);
+      break;
+    case DEVICE:
+      return devImpl_->norm(A);
       break;
     }
     return 1;
@@ -325,6 +358,38 @@ namespace ReSolve
       break;
     case DEVICE:
       return devImpl_->rightScale(A, diag);
+      break;
+    }
+    return 1;
+  }
+
+  // ...
+  int MatrixHandler::extractRootDiagonal(matrix::Csr* A, vector_type* diag, memory::MemorySpace memspace)
+  {
+    using namespace ReSolve::memory;
+    switch (memspace)
+    {
+    case HOST:
+      return cpuImpl_->extractRootDiagonal(A, diag);
+      break;
+    case DEVICE:
+      return devImpl_->extractRootDiagonal(A, diag);
+      break;
+    }
+    return 1;
+  }
+  
+  // ...
+  int MatrixHandler::extractInverseRootDiagonal(matrix::Csr* A, vector_type* diag, memory::MemorySpace memspace)
+  {
+    using namespace ReSolve::memory;
+    switch (memspace)
+    {
+    case HOST:
+      return cpuImpl_->extractInverseRootDiagonal(A, diag);
+      break;
+    case DEVICE:
+      return devImpl_->extractInverseRootDiagonal(A, diag);
       break;
     }
     return 1;

@@ -33,6 +33,10 @@ namespace ReSolve
 
     // vector infinity norm
     virtual real_type amax(vector::Vector* x);
+    
+    // vector norm // ANDREW TODO
+    virtual real_type norm(vector::Vector* x) {return -1.0;}
+    virtual real_type norm(vector::Vector* x, index_type i) {return -1.0;}
 
     // mass axpy: x*alpha + y where x is [n x k] and alpha is [k x 1]; x is stored columnwise
     virtual void axpyMulti(index_type size, vector::Vector* alpha, index_type k, vector::Vector* x, vector::Vector* y);
@@ -54,6 +58,24 @@ namespace ReSolve
                       vector::Vector* V,
                       vector::Vector* y,
                       vector::Vector* x);
+                      
+    // Dense multivector-multivector product.
+    virtual void gemm(char transpose_A,
+                      char transpose_B,
+                      const real_type alpha,
+                      const real_type beta,
+                      vector::Vector* A,
+                      vector::Vector* B,
+                      vector::Vector* C);
+                      
+    // ....    
+    virtual void geam(char transpose_A,
+                      char transpose_B,
+                      const real_type alpha,
+                      const real_type beta,
+                      vector::Vector* A,
+                      vector::Vector* B,
+                      vector::Vector* C) {};
 
     virtual void scal(vector::Vector* diag, vector::Vector* vec);
     virtual void scal(vector::Vector* diag, vector::Vector* vec, index_type diag_offset);
@@ -63,7 +85,9 @@ namespace ReSolve
     virtual int max(/* const */ vector::Vector* x, /* const */ vector::Vector* y, vector::Vector* out);
 
     virtual int abs(/* const */ vector::Vector* in, vector::Vector* out);
-
+    
+    virtual void randomVector(vector::Vector* v, real_type min, real_type max);
+    
   private:
     LinAlgWorkspaceCpu* workspace_;
   };

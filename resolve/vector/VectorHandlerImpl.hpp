@@ -34,6 +34,10 @@ namespace ReSolve
 
     // amax = ||x||_\infty
     virtual real_type amax(vector::Vector* x) = 0;
+    
+    // norm = ||x||_2
+    virtual real_type norm(vector::Vector* x) = 0;
+    virtual real_type norm(vector::Vector* x, index_type i) = 0;
 
     // mass axpy: x*alpha + y where x is [n x k] and alpha is [k x 1]; x is stored columnwise
     virtual void axpyMulti(index_type size, vector::Vector* alpha, index_type k, vector::Vector* x, vector::Vector* y) = 0;
@@ -43,8 +47,7 @@ namespace ReSolve
     virtual void dot2Multi(index_type size, vector::Vector* V, index_type k, vector::Vector* x, vector::Vector* res) = 0;
 
     // Scale a vector by a diagonal matrix
-    virtual void scal(vector::Vector* diag, vector::Vector* vec)                    = 0;
-    virtual void scal(vector::Vector* diag, vector::Vector* vec, index_type offset) = 0;
+    virtual void scal(vector::Vector* diag, vector::Vector* vec) = 0;
 
     // Divide the elements of a vector by the elements of another vector
     virtual int diagSolve(vector::Vector* diag, vector::Vector* vec) = 0;
@@ -68,6 +71,27 @@ namespace ReSolve
                       vector::Vector* V,
                       vector::Vector* y,
                       vector::Vector* x) = 0;
+
+    // Dense multivector-multivector product.
+    virtual void gemm(char transpose_A,
+                      char transpose_B,
+                      const real_type alpha,
+                      const real_type beta,
+                      vector::Vector* A,
+                      vector::Vector* B,
+                      vector::Vector* C) = 0;
+                      
+    // ....
+    virtual void geam(char transpose_A,
+                      char transpose_B,
+                      const real_type alpha,
+                      const real_type beta,
+                      vector::Vector* A,
+                      vector::Vector* B,
+                      vector::Vector* C) = 0;
+
+    // ....
+    virtual void randomVector(vector::Vector* v, real_type min, real_type max) = 0;
   };
 
 } // namespace ReSolve

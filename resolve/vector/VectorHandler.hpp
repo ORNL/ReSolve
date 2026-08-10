@@ -37,6 +37,7 @@ namespace ReSolve
 
     // Scale vector by scalar
     void scal(const real_type alpha, vector::Vector* x, memory::MemorySpace memspace);
+    void scal(const real_type alpha, vector::Vector* in, vector::Vector* out, memory::MemorySpace memspace); // ANDREW TODO: pretty sure this is unused
 
     // Scale vector by diagonal matrix represented as a vector (i.e., vec = diag*vec)
     void scal(vector::Vector* diag, vector::Vector* vec, memory::MemorySpace memspace);
@@ -71,6 +72,26 @@ namespace ReSolve
               vector::Vector*     x,
               memory::MemorySpace memspace);
 
+    // Dense multivector-multivector product.
+    void gemm(char transpose_A,
+              char transpose_B,
+              const real_type alpha,
+              const real_type beta,
+              vector::Vector* A,
+              vector::Vector* B,
+              vector::Vector* C,
+              memory::MemorySpace memspace);
+
+    // Dense adition and trnapose
+    void geam(char transpose_A,
+              char transpose_B,
+              const real_type alpha,
+              const real_type beta,
+              vector::Vector* A,
+              vector::Vector* B,
+              vector::Vector* C,
+              memory::MemorySpace memspace);
+    
     int diagSolve(vector::Vector* diag, vector::Vector* vec, memory::MemorySpace memspace);
     int max(/* const */ vector::Vector* x, /* const */ vector::Vector* y, vector::Vector* out, memory::MemorySpace memspace);
 
@@ -78,6 +99,11 @@ namespace ReSolve
 
     // Vector infinity norm
     real_type amax(vector::Vector* x, memory::MemorySpace memspace);
+    
+    real_type norm(vector::Vector* x, memory::MemorySpace memspace);
+    real_type norm(vector::Vector* x, index_type i, memory::MemorySpace memspace);
+
+    void randomVector(vector::Vector* x, real_type min, real_type max, memory::MemorySpace memspace);
 
     bool getIsCudaEnabled() const;
     bool getIsHipEnabled() const;

@@ -1,6 +1,7 @@
 #include "VectorHandlerCpu.hpp"
 
 #include <cassert>
+#include <random>
 
 #include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/vector/Vector.hpp>
@@ -119,7 +120,7 @@ namespace ReSolve
     // AXPY:  y = alpha * x + y
     real_type* x_data = x->getData(memory::HOST);
     real_type* y_data = y->getData(memory::HOST);
-    for (int i = 0; i < x->getSize(); ++i)
+    for (int i = 0; i < x->getSize() * x->getNumVectors(); ++i)
     {
       y_data[i] = alpha * x_data[i] + y_data[i];
     }
@@ -132,7 +133,7 @@ namespace ReSolve
    *
    * @param[in] Transpose - transposed = 'T' or not 'N'
    * @param[in] n Number of rows in (non-transposed) matrix
-   * @param[in] k Number of columns in (non-transposed)
+   * @param[in] k Number of columns in (non-transposed) matrix
    * @param[in] alpha Constant real number
    * @param[in] beta Constant real number
    * @param[in] V Multivector containing the matrix, organized columnwise
@@ -207,6 +208,173 @@ namespace ReSolve
                    << " in gemv. Valid options are 'N' (not transposed) and 'T' (transposed).\n";
     } // switch
     x->setDataUpdated(memory::HOST);
+    return;
+  }
+
+  /**
+   * @brief gemm computes dense matrix-matrix (or multivector-multivector) product.
+   *
+   * Compute C := alpha * A * B + beta * C.
+   * A is replaced with A^T if transpose_A = T.
+   * B is replaced with B^T if transpose_A = T.
+   *
+   * @param[in] transpose_A - yes (T) or no (N)
+   * @param[in] transpose_B - yes (T) or no (N)
+   * @param[in] alpha     - Constant real number
+   * @param[in] beta      - Constant real number
+   * @param[in] A         - Multivector containing the A matrix, organized columnwise
+   * @param[in] B         - Multivector containing the B matrix, organized columnwise
+   * @param[in] C         - Multivector containing the C (result) matrix, organized columnwise
+   */
+  void VectorHandlerCpu::gemm(char transpose_A,
+                              char transpose_B,
+                              const real_type alpha,
+                              const real_type beta,
+                              vector::Vector* A,
+                              vector::Vector* B,
+                              vector::Vector* C)
+  {
+    const real_type* A_data = A->getData(memory::HOST);
+    const real_type* B_data = B->getData(memory::HOST);
+    real_type*       C_data = C->getData(memory::HOST);
+
+    // Shape is post-transpose, if applicable
+    index_type m = C->getSize();
+    index_type n = C->getNumVectors();
+    index_type k; // inner dimension
+
+    switch (transpose_A)
+    {
+    case 'T':
+      assert((A->getNumVectors() == m)
+              && "gemm: Shape mismatch! Shape of A does not match shape of C.");
+      k = A->getSize();
+      break;
+    case 'N':
+      assert((A->getSize() == m)
+              && "gemm: Shape mismatch! Shape of A does not match shape of C.");
+      k = A->getNumVectors();
+      break;
+    default:
+      out::error() << "Unrecognized transpose option " << transpose_A
+                   << " in gemm. Valid options are 'N' (not transposed) and 'T' (transposed).\n";
+      break;
+    }
+
+    switch (transpose_B)
+    {
+    case 'T':
+      assert((B->getNumVectors() == k)
+              && "gemm: Shape mismatch! Shape of A does not match shape of B.");
+      assert((B->getSize() == n)
+              && "gemm: Shape mismatch! Shape of A does not match shape of C.");
+      break;
+    case 'N':
+      assert((B->getSize() == k)
+              && "gemm: Shape mismatch! Shape of A does not match shape of B.");
+      assert((B->getNumVectors() == n)
+              && "gemm: Shape mismatch! Shape of A does not match shape of C.");
+      break;
+    default:
+      out::error() << "Unrecognized transpose option " << transpose_B
+                   << " in gemm. Valid options are 'N' (not transposed) and 'T' (transposed).\n";
+      break;
+    }
+
+    index_type i, j, l;
+    real_type  sum;
+    switch (transpose_A)
+    {
+    case 'T':
+      switch (transpose_B)
+      {
+      case 'T':
+        for (i = 0; i < n; ++i)
+        {
+          for (j = 0; j < m; ++j)
+          {
+            sum         = beta * C_data[j + i * m];
+            real_type c = 0.0;
+            for (l = 0; l < k; ++l)
+            {
+              real_type y = (alpha * A_data[j * k + l] * B_data[i + l * n]) - c;
+              real_type t = sum + y;
+              c           = (t - sum) - y;
+              sum         = t;
+              // sum += ((*alpha) * A_data[j * k + l] * B_data[i + l * n]);
+            }
+            C_data[j + i * m] = sum;
+          }
+        }
+        break;
+      case 'N':
+        for (i = 0; i < n; ++i)
+        {
+          for (j = 0; j < m; ++j)
+          {
+            sum         = beta * C_data[j + i * m];
+            real_type c = 0.0;
+            for (l = 0; l < k; ++l)
+            {
+              real_type y = (alpha * A_data[j * k + l] * B_data[l + i * k]) - c;
+              real_type t = sum + y;
+              c           = (t - sum) - y;
+              sum         = t;
+              // sum += ((*alpha) * A_data[j * k + l] * B_data[l + i * k]);
+            }
+            C_data[j + i * m] = sum;
+          }
+        }
+        break;
+      } // switch (transpose_B)
+      break;
+    
+    case 'N':
+      switch (transpose_B)
+      {
+      case 'T':
+        for (i = 0; i < n; ++i)
+        {
+          for (j = 0; j < m; ++j)
+          {
+            sum         = beta * C_data[j + i * m];
+            real_type c = 0.0;
+            for (l = 0; l < k; ++l)
+            {
+              real_type y = (alpha * A_data[l * m + j] * B_data[i + l * n]) - c;
+              real_type t = sum + y;
+              c           = (t - sum) - y;
+              sum         = t;
+              // sum += ((*alpha) * A_data[l * m + j] * B_data[i + l * n]);
+            }
+            C_data[j + i * m] = sum;
+          }
+        }
+        break;
+      case 'N':
+        for (i = 0; i < n; ++i)
+        {
+          for (j = 0; j < m; ++j)
+          {
+            sum         = beta * C_data[j + i * m];
+            real_type c = 0.0;
+            for (l = 0; l < k; ++l)
+            {
+              real_type y = (alpha * A_data[l * m + j] * B_data[l + i * k]) - c;
+              real_type t = sum + y;
+              c           = (t - sum) - y;
+              sum         = t;
+              // sum += ((*alpha) * A_data[l * m + j] * B_data[l + i * k]);
+            }
+            C_data[j + i * m] = sum;
+          }
+        }
+        break;
+      } // switch (transpose_B)
+      break;
+    } // switch (transpose_A)
+
+    C->setDataUpdated(memory::HOST);
     return;
   }
 
@@ -409,4 +577,14 @@ namespace ReSolve
     return 0;
   }
 
+  // ...
+  void VectorHandlerCpu::randomVector(vector::Vector* v, real_type min, real_type max)
+  {
+    std::uniform_real_distribution<real_type> distribution(min, max);
+    for (index_type i = 0; i < v->getSize() * v->getNumVectors(); ++i)
+    {
+      v->getData(memory::HOST)[i] = distribution(workspace_->getRng());
+    }
+    v->setDataUpdated(memory::HOST);
+  }
 } // namespace ReSolve

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <hip/hip_runtime.h>
+#include <hiprand/hiprand_kernel.h>
 #include <rocblas/rocblas.h>
 #include <rocsparse/rocsparse.h>
 
@@ -33,17 +34,18 @@ namespace ReSolve
     void setRocsparseHandle(rocsparse_handle handle);
     void setSpmvMatrixDescriptor(rocsparse_mat_descr mat);
     void setSpmvMatrixInfo(rocsparse_mat_info info);
+    bool                 isRngReady();
+    hiprandState*         getRngState();
+    index_type           getRngStateSize();
 
     void initializeHandles();
+    void initializeRng(index_type size);
+    void resetRng();
+    int computeTotalThreads();
+    index_type getTotalThreads();
 
     bool matvecSetup();
     void matvecSetupDone();
-    /**
-     * @brief Reset the cached HIP SpMV setup.
-     *
-     * Destroys the cached rocSPARSE matrix descriptor and matrix info so the
-     * next matvec call can rebuild the setup if the matrix or its dimensions have changed.
-     */
     void resetMatvecSetup();
 
     void setDrSize(index_type new_sz);
@@ -76,6 +78,12 @@ namespace ReSolve
     index_type    d_r_size_{0};
     bool          norm_buffer_ready_{false}; // to track if allocated
     MemoryHandler mem_;                      ///< Memory handler not needed for now
+
+    bool rng_ready_{false};
+    index_type rng_state_size_{0};
+    hiprandState* rng_state_;
+    index_type total_threads_;
+
   };
 
 } // namespace ReSolve

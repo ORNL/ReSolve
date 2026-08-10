@@ -35,6 +35,10 @@ namespace ReSolve
     // vector infinity norm
     virtual real_type amax(vector::Vector* x);
 
+    // vector norm
+    virtual real_type norm(vector::Vector* x);
+    virtual real_type norm(vector::Vector* x, index_type i);
+
     // mass axpy: x*alpha + y where x is [n x k] and alpha is [k x 1]; x is stored columnwise
     virtual void axpyMulti(index_type size, vector::Vector* alpha, index_type k, vector::Vector* x, vector::Vector* y);
 
@@ -56,6 +60,24 @@ namespace ReSolve
                       vector::Vector* y,
                       vector::Vector* x);
 
+    // Dense multivector-multivector product.
+    virtual void gemm(char transpose_A,
+                      char transpose_B,
+                      const real_type alpha,
+                      const real_type beta,
+                      vector::Vector* A,
+                      vector::Vector* B,
+                      vector::Vector* C);
+
+    // .....
+    virtual void geam(char transpose_A,
+                      char transpose_B,
+                      const real_type alpha,
+                      const real_type beta,
+                      vector::Vector* A,
+                      vector::Vector* B,
+                      vector::Vector* C);
+
     /**
      * @brief scale: scales a vector by a diagonal matrix
      *
@@ -65,17 +87,6 @@ namespace ReSolve
      * @return 0 if successful, 1 otherwise
      */
     virtual void scal(vector::Vector* diag, vector::Vector* vec);
-
-    /**
-     * @brief scale: scales a vector by a diagonal matrix represented by a contiguous subvector of an input vector
-     *
-     * @param[in] diag diagonal vector of size n x 1
-     * @param[in,out] vec vector of size n x 1 (this is where the result is stored)
-     * @param[in] diag_offset - the index of diag where the diagonal matrix begins offset
-     *
-     * @return 0 if successful, 1 otherwise
-     */
-    virtual void scal(vector::Vector* diag, vector::Vector* vec, index_type diag_offset);
 
     /**
      * @brief Multiplies vector by an inverse of a diagonal matrix.
@@ -107,7 +118,9 @@ namespace ReSolve
      * @return 0 if successful, 1 otherwise
      */
     virtual int abs(/* const */ vector::Vector* in, vector::Vector* out);
-
+    
+    virtual void randomVector(vector::Vector* v, real_type min, real_type max);
+    
   private:
     MemoryHandler        mem_; ///< Device memory manager object
     LinAlgWorkspaceCUDA* workspace_;

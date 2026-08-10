@@ -29,6 +29,7 @@ void runTests(const std::string& backend, ReSolve::tests::TestingResults& result
   result += test.matrixHandlerConstructor();
   result += test.matrixInfNorm(10000);
   result += test.matVec(50);
+  result += test.matMultivec(50, 5);
   result += test.csc2csr(3, 3);
   workspace.resetLinAlgWorkspace();
   result += test.csc2csr(5, 3);

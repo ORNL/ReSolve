@@ -2,6 +2,7 @@
 
 #include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/workspace/LinAlgWorkspaceCUDA.hpp>
+#include <resolve/cuda/cudaVectorKernels.h>
 
 namespace ReSolve
 {
@@ -20,6 +21,9 @@ namespace ReSolve
     d_r_size_                  = 0;
     matvec_setup_done_         = false;
     norm_buffer_ready_         = false;
+    rng_state_                 = nullptr;
+    rng_ready_                 = false;
+    rng_state_size_            = 0;
   }
 
   LinAlgWorkspaceCUDA::~LinAlgWorkspaceCUDA()
@@ -40,6 +44,10 @@ namespace ReSolve
     if (transpose_workspace_ready_)
     {
       mem_.deleteOnDevice(transpose_workspace_);
+    }
+    if (rng_ready_)
+    {
+      mem_.deleteOnDevice(rng_state_);
     }
   }
 
@@ -74,6 +82,13 @@ namespace ReSolve
       mem_.deleteOnDevice(transpose_workspace_);
       transpose_workspace_       = nullptr;
       transpose_workspace_ready_ = false;
+    }
+    if (rng_ready_)
+    {
+      mem_.deleteOnDevice(rng_state_);
+      rng_state_size_ = 0;
+      total_threads_ = 0;
+      rng_ready_ = false;
     }
     return;
   }
@@ -120,6 +135,35 @@ namespace ReSolve
   bool LinAlgWorkspaceCUDA::getNormBufferState()
   {
     return norm_buffer_ready_;
+  }
+  
+  bool LinAlgWorkspaceCUDA::isRngReady()
+  {
+    return rng_ready_;
+  }
+  
+  curandState* LinAlgWorkspaceCUDA::getRngState()
+  {
+    return rng_state_;
+  }
+
+  index_type LinAlgWorkspaceCUDA::getRngStateSize()
+  {
+    return rng_state_size_;
+  }
+
+  int LinAlgWorkspaceCUDA::computeTotalThreads()
+  {
+    int device_id = 0;
+    cudaDeviceProp properties;
+    cudaError_t status = cudaGetDeviceProperties(&properties, device_id);
+    total_threads_ = properties.multiProcessorCount * properties.maxThreadsPerMultiProcessor;
+    return status;
+  }
+
+  index_type LinAlgWorkspaceCUDA::getTotalThreads()
+  {
+    return total_threads_;
   }
 
   void LinAlgWorkspaceCUDA::setSpmvBuffer(void* buffer)
@@ -218,8 +262,11 @@ namespace ReSolve
   }
 
   /**
-   * @brief Reset cached SpMV resources.
-   */
+    * @brief Reset the cached CUDA SpMV setup.
+    *
+    * Destroys the cached sparse matrix descriptor and frees the SpMV buffer so
+    * the next matvec call can rebuild the SpMV setup if the matrix or its dimensions have changed.
+    */
   void LinAlgWorkspaceCUDA::resetMatvecSetup()
   {
     if (matvec_setup_done_)
@@ -239,5 +286,18 @@ namespace ReSolve
     cusparseCreate(&handle_cusparse_);
     cublasCreate(&handle_cublas_);
     cusolverSpCreate(&handle_cusolversp_);
+  }
+  
+  void LinAlgWorkspaceCUDA::initializeRng(index_type size)
+  {
+    cuda::initializeRng(size, total_threads_, &rng_state_);
+    rng_state_size_ = std::min(size, total_threads_);
+    rng_ready_ = true;
+  }
+
+  void LinAlgWorkspaceCUDA::resetRng()
+  {
+    mem_.deleteOnDevice(rng_state_);
+    rng_ready_ = false;
   }
 } // namespace ReSolve

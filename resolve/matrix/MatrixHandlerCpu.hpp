@@ -44,6 +44,11 @@ namespace ReSolve
 
     int rightScale(matrix::Csr* A, vector_type* diag) override;
 
+    // ANDREW TODO: add placeholder implementations
+    int extractRootDiagonal(matrix::Csr* A, vector_type* diag) override {return 1;}
+
+    int extractInverseRootDiagonal(matrix::Csr* A, vector_type* diag) override {return 1;}
+
     int addConst(matrix::Sparse* A, real_type alpha) override;
 
     virtual int matvec(matrix::Sparse*  A,
@@ -51,8 +56,15 @@ namespace ReSolve
                        vector_type*     vec_result,
                        const real_type* alpha,
                        const real_type* beta) override;
+    virtual int matMultivec(matrix::Sparse*  A,
+                            vector_type*     vec_x,
+                            vector_type*     vec_result,
+                            const real_type* alpha,
+                            const real_type* beta) override;
 
     virtual int matrixInfNorm(matrix::Sparse* A, real_type* norm) override;
+
+    virtual real_type norm(matrix::Sparse* A) override {return -1.0;};
 
     void setValuesChanged(bool isValuesChanged) override;
 
