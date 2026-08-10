@@ -48,30 +48,32 @@ namespace ReSolve {
       }
 
       /**
-      * @brief Scales a vector by a diagonal matrix represented by a vector
-      *
-      * @param[in]  n      - size of the vector
-      * @param[in, out] vec - vector to be scaled. Changes in place.
-      * @param[in]  d_val  - diagonal values
-      *
-      * @todo Decide how to allow user to configure grid and block sizes.
-      */
-      __global__ void scale(index_type n,
-                                      const real_type* diag,
-                                      real_type* vec)
+       * @brief Scales a vector or multivector by a diagonal matrix represented by a vector
+       *
+       * @param[in]  n      - size of the vector
+       * @param[in]  k      - number of vectors in the multivector
+       * @param[in, out] vec - vector to be scaled. Changes in place.
+       * @param[in]  d_val  - diagonal values
+       *
+       * @todo Decide how to allow user to configure grid and block sizes.
+       */
+      __global__ void scale(index_type       n,
+                            index_type       k,
+                            const real_type* d_val,
+                            real_type*       vec)
       {
         // Get the index of the element to be processed
         index_type idx = blockIdx.x * blockDim.x + threadIdx.x;
 
         // Check if the index is within bounds
-        if (idx < n) {
+        if (idx < n * k)
+        {
           // Scale the vector element by the corresponding diagonal value
-          vec[idx] *= diag[idx];
+          vec[idx] *= d_val[idx % k];
         }
       }
 
       /**
-       * ANDREW TODO- OVERLOAD THIS TO AVOID MOD FOR SINGLE VECTORS
        * @brief Multiplies vector by an inverse of a diagonal matrix.
        *
        * @param[in]  n       - size of the vectors
@@ -81,7 +83,6 @@ namespace ReSolve {
        * @todo Decide how to allow user to configure grid and block sizes.
        */
       __global__ void diagSolve(index_type       n,
-                                index_type       k,
                                 const real_type* d_val,
                                 real_type*       vec)
       {
@@ -89,10 +90,10 @@ namespace ReSolve {
         index_type idx = blockIdx.x * blockDim.x + threadIdx.x;
 
         // Check if the index is within bounds
-        if (idx < n * k)
+        if (idx < n)
         {
           // Divide the vector element by the corresponding diag value
-          vec[idx] /= d_val[idx % n];
+          vec[idx] /= d_val[idx];
         }
       }
 
@@ -191,23 +192,25 @@ namespace ReSolve {
     }
 
     /**
-    * @brief Wrapper that scales a vector by a diagonal matrix
-    *
-    * @param[in]  n      - size of the vector
-    * @param[in, out] vec - vector to be scaled. Changes in place.
-    * @param[in]  d_val  - diagonal values
-    *
-    * @todo Decide how to allow user to configure grid and block sizes.
-    */
-    void scale(index_type n,
-                        const real_type* diag,
-                        real_type* vec)
+     * @brief Wrapper that scales a vector by a diagonal matrix
+     *
+     * @param[in]  n      - size of the vector
+     * @param[in]  k      - number of vectors in the multivector
+     * @param[in, out] vec - vector to be scaled. Changes in place.
+     * @param[in]  d_val  - diagonal values
+     *
+     * @todo Decide how to allow user to configure grid and block sizes.
+     */
+    void scale(index_type       n,
+               index_type       k,
+               const real_type* diag,
+               real_type*       vec)
     {
       // Define block size and number of blocks
       const int block_size = 256;
-      int num_blocks = (n + block_size - 1) / block_size;
+      int       num_blocks = (n * k + block_size - 1) / block_size;
       // Launch the kernel
-      kernels::scale<<<num_blocks, block_size>>>(n, diag, vec);
+      kernels::scale<<<num_blocks, block_size>>>(n, k, diag, vec);
     }
 
     /**
@@ -220,13 +223,12 @@ namespace ReSolve {
      * @todo Decide how to allow user to configure grid and block sizes.
      */
     void diagSolve(index_type       n,
-                   index_type       k,
                    const real_type* diag,
                    real_type*       vec)
     {
-      int num_blocks = (n * k + block_size - 1) / block_size;
+      int num_blocks = (n + block_size - 1) / block_size;
       // Launch the kernel
-      kernels::diagSolve<<<num_blocks, block_size>>>(n, k, diag, vec);
+      kernels::diagSolve<<<num_blocks, block_size>>>(n, diag, vec);
     }
 
     /**

@@ -550,7 +550,7 @@ namespace ReSolve
   }
 
   /**
-   * @brief Scale a vector by a diagonal matrix in HIP
+   * @brief Scale a vector or multivector by a diagonal matrix in HIP
    *
    * @param[in]  diag - vector representing the diagonal matrix
    * @param[in, out]  vec - vector to be scaled
@@ -567,12 +567,13 @@ namespace ReSolve
     real_type* diag_data = diag->getData(memory::DEVICE);
     real_type* vec_data  = vec->getData(memory::DEVICE);
     index_type n         = vec->getSize();
-    hip::scale(n, diag_data, vec_data);
+    index_type k         = vec->getNumVectors();
+    hip::scale(n, k, diag_data, vec_data);
     vec->setDataUpdated(memory::DEVICE);
   }
 
   /**
-   * @brief Scale a vector by a diagonal matrix in HIP
+   * @brief Scale a vector or multivector by a diagonal matrix in HIP
    *
    * @param[in]  diag - vector representing the diagonal matrix
    * @param[in, out]  vec - vector to be scaled
@@ -590,7 +591,8 @@ namespace ReSolve
     real_type* diag_data = &diag->getData(memory::DEVICE)[diag_offset];
     real_type* vec_data  = vec->getData(memory::DEVICE);
     index_type n         = vec->getSize();
-    hip::scale(n, diag_data, vec_data);
+    index_type k         = vec->getNumVectors();
+    hip::scale(n, k, diag_data, vec_data);
     vec->setDataUpdated(memory::DEVICE);
     mem_.deviceSynchronize();
   }
@@ -612,7 +614,7 @@ namespace ReSolve
     real_type* diag_data = diag->getData(memory::DEVICE);
     real_type* vec_data  = vec->getData(memory::DEVICE);
     index_type n         = vec->getSize();
-    hip::diagSolve(n, vec->getNumVectors(), diag_data, vec_data);
+    hip::diagSolve(n, diag_data, vec_data);
     vec->setDataUpdated(memory::DEVICE);
     mem_.deviceSynchronize();
     return 0;

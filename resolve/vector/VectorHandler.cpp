@@ -132,31 +132,6 @@ namespace ReSolve
     x->setDataUpdated(memspace);
   }
 
-  /**  // ANDREW TODO: pretty sure this is unused
-   * @brief scale a vector by a constant, then store it in another vector.
-   * i.e, y = alpha*x where alpha is a constant
-   *
-   * @param[in] alpha The constant
-   * @param[in] in The input vector to be scaled
-   * @param[out] out The vector to store the output in 
-   * @param memspace[in] string containg memspace (cpu or cuda or hip)
-   *
-   */
-  void VectorHandler::scal(const real_type alpha, vector::Vector* in, vector::Vector* out, memory::MemorySpace memspace)
-  {
-    using namespace ReSolve::memory;
-    switch (memspace)
-    {
-    case HOST:
-      cpuImpl_->scal(alpha, in);
-      break;
-    case DEVICE:
-      devImpl_->scal(alpha, in);
-      break;
-    }
-    in->setDataUpdated(memspace);
-  }
-
   /**
    * @brief compute infinity norm of a vector (i.e., find an entry with largest absolute value)
    *
@@ -511,12 +486,11 @@ namespace ReSolve
   }
 
   /**
-   * @brief Scale a vector by a diagonal matrix represented by a contiguous subvector of an input vector
+   * @brief Scale a vector or multivector by a diagonal matrix represented by a contiguous subvector of an input vector
    *
    * @param[in] diag - vector representing the diagonal matrix
    * @param[in,out] vec - vector to be scaled
-   * @param[in] diag_begin - the index of diag where the diagonal matrix begins (inclusive)
-   * @param[in] diag_end - the index of diag where the diagonal matrix ends (exclusive)
+   * @param[in] diag_offset - the index of diag where the diagonal matrix begins
    * @param[in] memspace - Device where the operation is computed
    *
    * @pre The diagonal vector must be of the same size as the vector.

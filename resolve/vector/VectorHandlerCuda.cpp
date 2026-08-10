@@ -496,7 +496,7 @@ namespace ReSolve
   }
 
   /**
-   * @brief Scale a vector by a diagonal matrix in CUDA
+   * @brief Scale a vector or multivector by a diagonal matrix in CUDA
    *
    * @param[in]  diag - vector representing the diagonal matrix
    * @param[in, out]  vec - vector to be scaled
@@ -519,30 +519,7 @@ namespace ReSolve
   }
 
   /**
-   * @brief Scale a vector by a diagonal matrix in CUDA
-   *
-   * @param[in]  diag - vector representing the diagonal matrix
-   * @param[in, out]  vec - vector to be scaled
-   * @param[in] diag_offset - the index of diag where the diagonal matrix begins
-   *
-   * @pre The diagonal vector must be of the same size as the vector.
-   * @pre vec is unscaled
-   * @post vec is scaled
-   * @invariant diag
-   *
-   * @return 0 if successful, 1 otherwise
-   */
-  void VectorHandlerCuda::scal(vector::Vector* diag, vector::Vector* vec, index_type diag_offset)
-  {
-    real_type* diag_data = &diag->getData(memory::DEVICE)[diag_offset];
-    real_type* vec_data  = vec->getData(memory::DEVICE);
-    index_type n         = vec->getSize();
-    cuda::scale(n, diag_data, vec_data);
-    vec->setDataUpdated(memory::DEVICE);
-  }
-
-  /**
-   * @brief Scale a vector by a diagonal matrix in CUDA
+   * @brief Scale a vector or multivector by a diagonal matrix defined by a subvector of a vector in CUDA
    *
    * @param[in]  diag - vector representing the diagonal matrix
    * @param[in, out]  vec - vector to be scaled
@@ -566,7 +543,6 @@ namespace ReSolve
   }
   
   /**
-   * LEFT SCALE FOR MULTIVECTORS
    * @brief Multiplies vector by an inverse of a diagonal matrix.
    *
    * @param[in]  diag   - diagonal matrix stored in a vector object
@@ -583,8 +559,7 @@ namespace ReSolve
     real_type* diag_data = diag->getData(memory::DEVICE);
     real_type* vec_data  = vec->getData(memory::DEVICE);
     index_type n         = vec->getSize();
-    index_type k         = vec->getNumVectors();
-    cuda::diagSolve(n, k, diag_data, vec_data);
+    cuda::diagSolve(n, diag_data, vec_data);
     vec->setDataUpdated(memory::DEVICE);
     return 0;
   }
@@ -639,9 +614,10 @@ namespace ReSolve
   }
   
   /**
-   * @brief compute norm of a vector or Frobenius norm of a multivector
+   * @brief compute norm of a vector in multivector
    *
    * @param[in] x The vector
+   * @param[in] i The vector
    *
    * @return Norm of _x_
    *

@@ -48,6 +48,9 @@ namespace ReSolve
 
     // Scale a vector by a diagonal matrix
     virtual void scal(vector::Vector* diag, vector::Vector* vec) = 0;
+    
+    // Scale a vector or multivector by a diagonal matrix defined by a subvector of a vector
+    virtual void scal(vector::Vector* diag, vector::Vector* vec, index_type diag_offset) = 0;
 
     // Divide the elements of a vector by the elements of another vector
     virtual int diagSolve(vector::Vector* diag, vector::Vector* vec) = 0;
