@@ -52,7 +52,8 @@ namespace ReSolve
   private:
     enum ParameterIDs
     {
-      BOOST_TOLERANCE = 0,
+      NUMERIC_BOOST = 0,
+      BOOST_TOLERANCE,
       BOOST_VALUE
     };
 
@@ -85,6 +86,7 @@ namespace ReSolve
     // since ILU OVERWRITES THE MATRIX values, we need a buffer to keep the values of ILU decomposition.
     real_type* d_ILU_vals_{nullptr};
 
+    bool      numeric_boost_{true};   ///< Whether numeric boost is enabled.
     real_type boost_tolerance_{1e-6}; ///< Threshold below which a diagonal entry is replaced.
     real_type boost_value_{1e-6};     ///< Value substituted for a small diagonal entry.
   };

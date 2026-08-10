@@ -145,7 +145,8 @@ int test(int argc, char* argv[])
   }
   else
   {
-    status = solver.getPreconditionerSolver().setCliParam("boost_tolerance", "1e-7");
+    status = solver.getPreconditionerSolver().setCliParam("numeric_boost", "yes");
+    status += solver.getPreconditionerSolver().setCliParam("boost_tolerance", "1e-7");
     status += solver.getPreconditionerSolver().setCliParam("boost_value", "1e-7");
   }
   error_sum += status;
