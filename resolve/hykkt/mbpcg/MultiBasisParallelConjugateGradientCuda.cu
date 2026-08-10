@@ -1,4 +1,4 @@
-#include "RandomizedConjugateGradientCuda.hpp"
+#include "MultiBasisParallelConjugateGradientCuda.hpp"
 
 #include <cub/cub.cuh>
 #include <cooperative_groups.h>
@@ -795,7 +795,7 @@ namespace ReSolve
       }
     } // namespace kernels
     
-    RandomizedConjugateGradientCuda::RandomizedConjugateGradientCuda(VectorHandler* vector_handler)
+    MultiBasisParallelConjugateGradientCuda::MultiBasisParallelConjugateGradientCuda(VectorHandler* vector_handler)
     {
       vector_handler_ = vector_handler;
 
@@ -807,13 +807,13 @@ namespace ReSolve
       printf("Total SMs: %d, total threads: %d\n", num_sms_, num_threads_);
     }
 
-    RandomizedConjugateGradientCuda::~RandomizedConjugateGradientCuda()
+    MultiBasisParallelConjugateGradientCuda::~MultiBasisParallelConjugateGradientCuda()
     {
       mem_.deleteOnDevice(d_best_basis_);
       mem_.deleteOnDevice(d_sq_norms_);
     }
 
-    int RandomizedConjugateGradientCuda::setup(index_type k)
+    int MultiBasisParallelConjugateGradientCuda::setup(index_type k)
     {
       // For choleskyQr()
       switch (k)
@@ -856,7 +856,7 @@ namespace ReSolve
       return 0;
     }
 
-    int RandomizedConjugateGradientCuda::SpMMTallSkinny(matrix::Csr* A, vector::Vector* X, vector::Vector* result)
+    int MultiBasisParallelConjugateGradientCuda::SpMMTallSkinny(matrix::Csr* A, vector::Vector* X, vector::Vector* result)
     {
       index_type n = A->getNumRows();
       index_type k = X->getNumVectors();
@@ -929,7 +929,7 @@ namespace ReSolve
       return 0;
     }
     
-    int RandomizedConjugateGradientCuda::bestBasis(vector::Vector* R, index_type* h_best_basis, real_type* h_best_basis_norm)
+    int MultiBasisParallelConjugateGradientCuda::bestBasis(vector::Vector* R, index_type* h_best_basis, real_type* h_best_basis_norm)
     {
       index_type n = R->getSize();
       index_type k = R->getNumVectors();
@@ -968,7 +968,7 @@ namespace ReSolve
     }
 
     // R must be zeroed
-    int RandomizedConjugateGradientCuda::choleskyQr(vector::Vector* W, vector::Vector* R, memory::MemorySpace memspace)
+    int MultiBasisParallelConjugateGradientCuda::choleskyQr(vector::Vector* W, vector::Vector* R, memory::MemorySpace memspace)
     {
       index_type n = W->getSize();
       index_type k = W->getNumVectors();
@@ -1004,7 +1004,7 @@ namespace ReSolve
       return 0;
     }
     
-    int RandomizedConjugateGradientCuda::updateXRSplit(vector::Vector* Xi_inv, vector::Vector* Sigma, vector::Vector* S, vector::Vector* A_S, vector::Vector* Xi_Sigma, vector::Vector* X_res, vector::Vector* R_prec)
+    int MultiBasisParallelConjugateGradientCuda::updateXRSplit(vector::Vector* Xi_inv, vector::Vector* Sigma, vector::Vector* S, vector::Vector* A_S, vector::Vector* Xi_Sigma, vector::Vector* X_res, vector::Vector* R_prec)
     {
       index_type n = A_S->getSize();
       index_type k = A_S->getNumVectors();
@@ -1105,7 +1105,7 @@ namespace ReSolve
       return 0;
     }
 
-    int RandomizedConjugateGradientCuda::choleskyFactorizeSolve(vector::Vector* A, vector::Vector* B, vector::Vector* X)
+    int MultiBasisParallelConjugateGradientCuda::choleskyFactorizeSolve(vector::Vector* A, vector::Vector* B, vector::Vector* X)
     {
       index_type k = A->getSize();
 
@@ -1146,7 +1146,7 @@ namespace ReSolve
       return 0;
     }
 
-    int RandomizedConjugateGradientCuda::updateW(vector::Vector* W, vector::Vector* L, vector::Vector* B, memory::MemorySpace memspace)
+    int MultiBasisParallelConjugateGradientCuda::updateW(vector::Vector* W, vector::Vector* L, vector::Vector* B, memory::MemorySpace memspace)
     {
       index_type n = B->getSize();
       index_type k = B->getNumVectors();
@@ -1194,7 +1194,7 @@ namespace ReSolve
     }
 
     // C = A^real_type * B
-    int RandomizedConjugateGradientCuda::multTSMTTSM(vector::Vector* A, vector::Vector* B, vector::Vector* C, memory::MemorySpace memspace)
+    int MultiBasisParallelConjugateGradientCuda::multTSMTTSM(vector::Vector* A, vector::Vector* B, vector::Vector* C, memory::MemorySpace memspace)
     {
       index_type n = A->getSize();
       index_type k = A->getNumVectors();
@@ -1242,7 +1242,7 @@ namespace ReSolve
       return 0;
     }
 
-    int RandomizedConjugateGradientCuda::updateSSigma(vector::Vector* W, vector::Vector* S, vector::Vector* Zeta, vector::Vector* Sigma, memory::MemorySpace memspace)
+    int MultiBasisParallelConjugateGradientCuda::updateSSigma(vector::Vector* W, vector::Vector* S, vector::Vector* Zeta, vector::Vector* Sigma, memory::MemorySpace memspace)
     {
       index_type n = W->getSize();
       index_type k = W->getNumVectors();  
@@ -1296,7 +1296,7 @@ namespace ReSolve
       return 0;
     }
 
-    int RandomizedConjugateGradientCuda::preconditionDense(vector::Vector* A, vector::Vector* d)
+    int MultiBasisParallelConjugateGradientCuda::preconditionDense(vector::Vector* A, vector::Vector* d)
     {
       index_type n = A->getSize();
 
@@ -1668,7 +1668,7 @@ namespace ReSolve
       }
     }
 
-    int RandomizedConjugateGradientCuda::hypreDevice_CSRMatrixMatvec(matrix::Csr* A, vector::Vector* X, vector::Vector* result)
+    int MultiBasisParallelConjugateGradientCuda::hypreDevice_CSRMatrixMatvec(matrix::Csr* A, vector::Vector* X, vector::Vector* result)
     {
       hypre_DeviceItem item = nullptr;
       index_type  num_vectors = X->getNumVectors();

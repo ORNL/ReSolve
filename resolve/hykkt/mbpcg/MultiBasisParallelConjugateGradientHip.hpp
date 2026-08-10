@@ -1,6 +1,6 @@
 #pragma once
 
-#include "RandomizedConjugateGradientImpl.hpp"
+#include "MultiBasisParallelConjugateGradientImpl.hpp"
 
 #include <resolve/Common.hpp>
 #include <resolve/MemoryUtils.hpp>
@@ -13,11 +13,11 @@ namespace ReSolve
 {
   namespace hykkt
   {
-    class RandomizedConjugateGradientHip : public RandomizedConjugateGradientImpl
+    class MultiBasisParallelConjugateGradientHip : public MultiBasisParallelConjugateGradientImpl
     {
     public:
-      RandomizedConjugateGradientHip(VectorHandler* vector_handler);
-      ~RandomizedConjugateGradientHip();
+      MultiBasisParallelConjugateGradientHip(VectorHandler* vector_handler);
+      ~MultiBasisParallelConjugateGradientHip();
 
       int setup(index_type k);
       int SpMMTallSkinny(matrix::Csr* A, vector::Vector* X, vector::Vector* result);

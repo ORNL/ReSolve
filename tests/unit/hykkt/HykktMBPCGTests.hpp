@@ -1,6 +1,6 @@
 /**
- * @file HykktRandomizedConjugateGradientTests.hpp
- * @brief Implementation of tests for class hykkt::RandomizedConjugateGradient
+ * @file HykktMultiBasisParallelConjugateGradientTests.hpp
+ * @brief Implementation of tests for class hykkt::MultiBasisParallelConjugateGradient
  *
  */
 #pragma once
@@ -8,7 +8,7 @@
 #include <filesystem>
 
 #include <resolve/MemoryUtils.hpp>
-#include <resolve/hykkt/randomized_cg/RandomizedConjugateGradient.hpp>
+#include <resolve/hykkt/mbpcg/MultiBasisParallelConjugateGradient.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/matrix/io.hpp>
@@ -20,14 +20,14 @@ namespace ReSolve
   namespace tests
   {
     /**
-     * @brief Tests for class hykkt::RandomizedConjugateGradient. There is currently only
+     * @brief Tests for class hykkt::MultiBasisParallelConjugateGradient. There is currently only
      * one set of input matrices being tested.
      */
-    class HykktRandomizedConjugateGradientTests : public TestBase
+    class HykktMultiBasisParallelConjugateGradientTests : public TestBase
     {
     public:
       /**
-       * @brief Constructs the RandomizedCG test fixture with the specified memory space and handlers.
+       * @brief Constructs the MBPCG test fixture with the specified memory space and handlers.
        *
        * The test fixture uses caller-provided matrix and vector handlers so the same test can be run with CPU, CUDA, or HIP backends.
        *
@@ -35,7 +35,7 @@ namespace ReSolve
        * @param[in] matrix_handler Reference to a matrix handler for the selected backend.
        * @param[in] vector_handler Reference to a vector handler for the selected backend.
        */
-      HykktRandomizedConjugateGradientTests(memory::MemorySpace memspace,
+      HykktMultiBasisParallelConjugateGradientTests(memory::MemorySpace memspace,
                                                  MatrixHandler&      matrix_handler,
                                                  VectorHandler&      vector_handler)
         : memspace_(memspace),
@@ -44,16 +44,16 @@ namespace ReSolve
       {
       }
 
-      virtual ~HykktRandomizedConjugateGradientTests()
+      virtual ~HykktMultiBasisParallelConjugateGradientTests()
       {
       }
 
       /**
-       * @brief Test the RandomizedConjugateGradient implementation with matrices in tests\unit\hykkt\RandomizedCGTestMatrices
+       * @brief Test the MultiBasisParallelConjugateGradient implementation with matrices in tests\unit\hykkt\MBPCGTestMatrices
        *
        * @return TestOutcome Result of the test
        */
-      TestOutcome RandomizedCGTest(const std::string& A_file_name, index_type k, real_type rng_min, real_type rng_max)
+      TestOutcome MBPCGTest(const std::string& A_file_name, index_type k, real_type rng_min, real_type rng_max)
       {
         std::ifstream A_file(A_file_name);
 
@@ -66,8 +66,8 @@ namespace ReSolve
 
         index_type                              n   = A->getNumRows();
         index_type                              nnz = A->getNnz();
-        hykkt::RandomizedConjugateGradient randomized_cg(n, k, &matrix_handler_, &vector_handler_, memspace_);
-        randomized_cg.setSolverTolerance(initial_tol, convergence_tol);
+        hykkt::MultiBasisParallelConjugateGradient mbpcg(n, k, &matrix_handler_, &vector_handler_, memspace_);
+        mbpcg.setSolverTolerance(initial_tol, convergence_tol);
 
         vector::Vector* x = new vector::Vector(n);
         x->allocate(memspace_);
@@ -84,11 +84,11 @@ namespace ReSolve
         d_inv->allocate(memspace_);
         matrix_handler_.extractInverseRootDiagonal(A, d_inv, memspace_);
 
-        randomized_cg.addMatrixInfo(A);
-        randomized_cg.addVectorInfo(x, b);
-        randomized_cg.addPreconditionerInfo(d, d_inv);
-        randomized_cg.setup();
-        int converged_n = randomized_cg.solve(); // 0 if converged, 1 if not
+        mbpcg.addMatrixInfo(A);
+        mbpcg.addVectorInfo(x, b);
+        mbpcg.addPreconditionerInfo(d, d_inv);
+        mbpcg.setup();
+        int converged_n = mbpcg.solve(); // 0 if converged, 1 if not
 
         TestStatus  status;
         std::string testname(__func__);
@@ -114,13 +114,13 @@ namespace ReSolve
       static constexpr real_type entry_tol    = 1e-6; // Tolerance for checking individual entries
 
       /**
-       * @brief Validate the RandomizedCG result.
+       * @brief Validate the MBPCG result.
        * @param[in] x Pointer to the output x vector.
        */
       bool validateResult(vector::Vector* x, int converged_n)
       {
         return true;
       }
-    }; // class HykktRandomizedConjugateGradientTests
+    }; // class HykktMultiBasisParallelConjugateGradientTests
   } // namespace tests
 } // namespace ReSolve

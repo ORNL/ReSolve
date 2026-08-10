@@ -92,9 +92,9 @@ namespace ReSolve
     void ConjugateGradient::setup()
     {
 #ifdef RESOLVE_USE_CUDA
-      impl_ = new RandomizedConjugateGradientCuda(vector_handler_);
+      impl_ = new MultiBasisParallelConjugateGradientCuda(vector_handler_);
 #elif defined(RESOLVE_USE_HIP)
-      impl_ = new RandomizedConjugateGradientHip(vector_handler_);
+      impl_ = new MultiBasisParallelConjugateGradientHip(vector_handler_);
 #endif
 
       A_prec_ = new matrix::Csr(n_, n_, A_->getNnz());

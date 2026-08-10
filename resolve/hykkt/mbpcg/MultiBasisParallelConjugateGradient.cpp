@@ -1,4 +1,4 @@
-#include "RandomizedConjugateGradient.hpp"
+#include "MultiBasisParallelConjugateGradient.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -24,14 +24,14 @@ namespace ReSolve
 
   namespace hykkt
   {
-    /** Constructor for RandomizedConjugateGradient.
+    /** Constructor for MultiBasisParallelConjugateGradient.
      *  @param n[in] - Dimension of outer system.
      *  @param m[in] - Dimension of inner system.
      *  @param memspace[in] - Memory space of incoming data and for computation.
      *  @param matrix_handler[in] - Matrix handler for the selected backend.
      *  @param vector_handler[in] - Vector handler for the selected backend.
      */
-    RandomizedConjugateGradient::RandomizedConjugateGradient(
+    MultiBasisParallelConjugateGradient::MultiBasisParallelConjugateGradient(
         index_type          n,
         index_type          k,
         MatrixHandler*      matrix_handler,
@@ -45,13 +45,13 @@ namespace ReSolve
         gram_schmidt_(vector_handler_, GramSchmidt::GSVariant::CGS2)
     {
 #ifdef RESOLVE_USE_CUDA
-      impl_ = new RandomizedConjugateGradientCuda(vector_handler_);
+      impl_ = new MultiBasisParallelConjugateGradientCuda(vector_handler_);
 #elif defined(RESOLVE_USE_HIP)
-      impl_ = new RandomizedConjugateGradientHip(vector_handler_);
+      impl_ = new MultiBasisParallelConjugateGradientHip(vector_handler_);
 #endif
     }
 
-    RandomizedConjugateGradient::~RandomizedConjugateGradient()
+    MultiBasisParallelConjugateGradient::~MultiBasisParallelConjugateGradient()
     {
       delete A_prec_;
       delete X_prec_0_;
@@ -79,7 +79,7 @@ namespace ReSolve
      * @brief Loads or reloads matrix pointers to the solver
      * @param[in] J - Pointer to the JC matrix in CSR format.
      */
-    void RandomizedConjugateGradient::addMatrixInfo(matrix::Csr* A)
+    void MultiBasisParallelConjugateGradient::addMatrixInfo(matrix::Csr* A)
     {
       A_ = A;
       nnz_ = A->getNnz();
@@ -90,7 +90,7 @@ namespace ReSolve
      * @param[in] x - Pointer to the left-hand side vector.
      * @param[in] b - Pointer to the right-hand side vector.
      */
-    void RandomizedConjugateGradient::addVectorInfo(vector::Vector* x, vector::Vector* b)
+    void MultiBasisParallelConjugateGradient::addVectorInfo(vector::Vector* x, vector::Vector* b)
     {
       x_ = x;
       b_ = b;
@@ -102,24 +102,24 @@ namespace ReSolve
      * @param[in] L - Pointer to the lower triangular preconditioner matrix (L) in CSR format.
      * @param[in] L_tr_ - Pointer to the transpose preconditioner matrix (L^T) in CSR format.
      */
-    void RandomizedConjugateGradient::addPreconditionerInfo(vector::Vector* d, vector::Vector* d_inv)
+    void MultiBasisParallelConjugateGradient::addPreconditionerInfo(vector::Vector* d, vector::Vector* d_inv)
     {
       d_ = d;
       d_inv_ = d_inv;
     }
 
-    void RandomizedConjugateGradient::setSolverTolerance(double initial_tol, double convergence_tol)
+    void MultiBasisParallelConjugateGradient::setSolverTolerance(double initial_tol, double convergence_tol)
     {
       initial_tol_ = initial_tol;
       convergence_tol_ = convergence_tol;
     }
 
-    void RandomizedConjugateGradient::setSolverItmax(int itmax)
+    void MultiBasisParallelConjugateGradient::setSolverItmax(int itmax)
     {
       itmax_ = itmax;
     }
 
-    void RandomizedConjugateGradient::setup()
+    void MultiBasisParallelConjugateGradient::setup()
     {
       A_prec_ = new matrix::Csr(n_, n_, nnz_);
       X_prec_0_ = new vector::Vector(n_, k_);
@@ -167,7 +167,7 @@ namespace ReSolve
       gram_schmidt_.setup(n_, k_);
     }
 
-    void RandomizedConjugateGradient::precondition()
+    void MultiBasisParallelConjugateGradient::precondition()
     {
       using namespace constants;
 
@@ -190,7 +190,7 @@ namespace ReSolve
     }
 
     // Generate starting guesses and set up residual space matrices & vectors
-    void RandomizedConjugateGradient::generateGuesses()
+    void MultiBasisParallelConjugateGradient::generateGuesses()
     {
       using namespace constants;
 
@@ -217,7 +217,7 @@ namespace ReSolve
 
     // todo: "X_res = X_res + P @ M" and "Tau = S * Xi" can be done in parallel
 
-    int RandomizedConjugateGradient::solve()
+    int MultiBasisParallelConjugateGradient::solve()
     {
       using namespace constants;
       

@@ -1,4 +1,4 @@
-#include "RandomizedConjugateGradientHip.hpp"
+#include "MultiBasisParallelConjugateGradientHip.hpp"
 
 #include <hip/hip_runtime.h>
 #include <hip/hip_cooperative_groups.h>
@@ -748,7 +748,7 @@ namespace ReSolve
       }
     } // namespace kernels
     
-    RandomizedConjugateGradientHip::RandomizedConjugateGradientHip(VectorHandler* vector_handler)
+    MultiBasisParallelConjugateGradientHip::MultiBasisParallelConjugateGradientHip(VectorHandler* vector_handler)
     {
       vector_handler_ = vector_handler;
 
@@ -760,13 +760,13 @@ namespace ReSolve
       printf("Total SMs: %d, total threads: %d\n", num_sms_, num_threads_);
     }
 
-    RandomizedConjugateGradientHip::~RandomizedConjugateGradientHip()
+    MultiBasisParallelConjugateGradientHip::~MultiBasisParallelConjugateGradientHip()
     {
       mem_.deleteOnDevice(d_best_basis_);
       mem_.deleteOnDevice(d_sq_norms_);
     }
 
-    int RandomizedConjugateGradientHip::setup(index_type k)
+    int MultiBasisParallelConjugateGradientHip::setup(index_type k)
     {
       // For choleskyQr()
       switch (k)
@@ -809,7 +809,7 @@ namespace ReSolve
       return 0;
     }
 
-  int RandomizedConjugateGradientHip::SpMMTallSkinny(matrix::Csr* A, vector::Vector* X, vector::Vector* result)
+  int MultiBasisParallelConjugateGradientHip::SpMMTallSkinny(matrix::Csr* A, vector::Vector* X, vector::Vector* result)
     {
       index_type n = A->getNumRows();
       index_type k = X->getNumVectors();
@@ -866,7 +866,7 @@ namespace ReSolve
       return 0;
     }
     
-    int RandomizedConjugateGradientHip::bestBasis(vector::Vector* R, index_type* h_best_basis, real_type* h_best_basis_norm)
+    int MultiBasisParallelConjugateGradientHip::bestBasis(vector::Vector* R, index_type* h_best_basis, real_type* h_best_basis_norm)
     {
       index_type n = R->getSize();
       index_type k = R->getNumVectors();
@@ -905,7 +905,7 @@ namespace ReSolve
     }
 
     // R must be zeroed
-    int RandomizedConjugateGradientHip::choleskyQr(vector::Vector* W, vector::Vector* R, memory::MemorySpace memspace)
+    int MultiBasisParallelConjugateGradientHip::choleskyQr(vector::Vector* W, vector::Vector* R, memory::MemorySpace memspace)
     {
       index_type n = W->getSize();
       index_type k = W->getNumVectors();
@@ -942,7 +942,7 @@ namespace ReSolve
     }
     
     // ANDREW TODO: test this
-    int RandomizedConjugateGradientHip::updateXRSplit(vector::Vector* Xi_inv, vector::Vector* Sigma, vector::Vector* S, vector::Vector* A_S, vector::Vector* Xi_Sigma, vector::Vector* X_res, vector::Vector* R_prec)
+    int MultiBasisParallelConjugateGradientHip::updateXRSplit(vector::Vector* Xi_inv, vector::Vector* Sigma, vector::Vector* S, vector::Vector* A_S, vector::Vector* Xi_Sigma, vector::Vector* X_res, vector::Vector* R_prec)
     {
       index_type n = A_S->getSize();
       index_type k = A_S->getNumVectors();
@@ -1044,7 +1044,7 @@ namespace ReSolve
     }
 
     // ANDREW TODO: test this
-    int RandomizedConjugateGradientHip::choleskyFactorizeSolve(vector::Vector* A, vector::Vector* B, vector::Vector* X)
+    int MultiBasisParallelConjugateGradientHip::choleskyFactorizeSolve(vector::Vector* A, vector::Vector* B, vector::Vector* X)
     {
       index_type k = A->getSize();
 
@@ -1085,7 +1085,7 @@ namespace ReSolve
       return 0;
     }
 
-    int RandomizedConjugateGradientHip::updateW(vector::Vector* W, vector::Vector* L, vector::Vector* B, memory::MemorySpace memspace)
+    int MultiBasisParallelConjugateGradientHip::updateW(vector::Vector* W, vector::Vector* L, vector::Vector* B, memory::MemorySpace memspace)
     {
       index_type n = B->getSize();
       index_type k = B->getNumVectors();
@@ -1133,7 +1133,7 @@ namespace ReSolve
     }
 
     // C = A^T * B
-    int RandomizedConjugateGradientHip::multTSMTTSM(vector::Vector* A, vector::Vector* B, vector::Vector* C, memory::MemorySpace memspace)
+    int MultiBasisParallelConjugateGradientHip::multTSMTTSM(vector::Vector* A, vector::Vector* B, vector::Vector* C, memory::MemorySpace memspace)
     {
       index_type n = A->getSize();
       index_type k = A->getNumVectors();
@@ -1181,7 +1181,7 @@ namespace ReSolve
       return 0;
     }
 
-    int RandomizedConjugateGradientHip::updateSSigma(vector::Vector* W, vector::Vector* S, vector::Vector* Zeta, vector::Vector* Sigma, memory::MemorySpace memspace)
+    int MultiBasisParallelConjugateGradientHip::updateSSigma(vector::Vector* W, vector::Vector* S, vector::Vector* Zeta, vector::Vector* Sigma, memory::MemorySpace memspace)
     {
       index_type n = W->getSize();
       index_type k = W->getNumVectors();  
@@ -1235,7 +1235,7 @@ namespace ReSolve
       return 0;
     }
 
-    int RandomizedConjugateGradientHip::preconditionDense(vector::Vector* A, vector::Vector* d)
+    int MultiBasisParallelConjugateGradientHip::preconditionDense(vector::Vector* A, vector::Vector* d)
     {
       index_type n = A->getSize();
 
@@ -1608,7 +1608,7 @@ namespace ReSolve
       }
     }
 
-    int RandomizedConjugateGradientHip::hypreDevice_CSRMatrixMatvec(matrix::Csr* A, vector::Vector* X, vector::Vector* result)
+    int MultiBasisParallelConjugateGradientHip::hypreDevice_CSRMatrixMatvec(matrix::Csr* A, vector::Vector* X, vector::Vector* result)
     {
       hypre_DeviceItem item = nullptr;
       index_type  num_vectors = X->getNumVectors();

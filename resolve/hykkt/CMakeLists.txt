@@ -14,7 +14,7 @@ if(RESOLVE_USE_CUDSS)
 endif()
 add_subdirectory(spgemm)
 add_subdirectory(sccg)
-add_subdirectory(randomized_cg)
+add_subdirectory(mbpcg)
 add_subdirectory(cg)
 
 # Build shared library ReSolve::hykkt

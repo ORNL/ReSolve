@@ -1,5 +1,5 @@
 /**
- * @file runHykktRandomizedCGTests.hpp
+ * @file runHykktMBPCGTests.hpp
  * @brief Tests for class hykkt::SchurComplementConjugateGradient
  *
  */
@@ -17,7 +17,7 @@
 #include <resolve/workspace/LinAlgWorkspaceHIP.hpp>
 #endif
 
-#include "HykktRandomizedCGTests.hpp"
+#include "HykktMBPCGTests.hpp"
 #include <resolve/vector/Vector.hpp>
 
 /**
@@ -36,7 +36,7 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
   workspace.initializeHandles();
   ReSolve::MatrixHandler                                     matrix_handler(&workspace);
   ReSolve::VectorHandler                                     vector_handler(&workspace);
-  ReSolve::tests::HykktRandomizedConjugateGradientTests test(memspace, matrix_handler, vector_handler);
+  ReSolve::tests::HykktMultiBasisParallelConjugateGradientTests test(memspace, matrix_handler, vector_handler);
 
   std::string        source_dir = std::string(SOURCE_DIR);
 
@@ -194,18 +194,18 @@ broken (maybe theres limits to how low the error can get)
 
   for (const std::string& matrix_name : matrix_names)
   {
-    std::string        A_file_name = source_dir + std::string("/RandomizedCGTestMatrices/") + matrix_name + std::string(".mtx");
+    std::string        A_file_name = source_dir + std::string("/MBPCGTestMatrices/") + matrix_name + std::string(".mtx");
     double rng_min = -1.0;
     double rng_max = 1.0;
 
     printf("\n\n\nMatrix: %s\n", matrix_name.c_str());
-    result += test.RandomizedCGTest(A_file_name, 1, rng_min, rng_max);
+    result += test.MBPCGTest(A_file_name, 1, rng_min, rng_max);
     workspace.resetLinAlgWorkspace();
-    result += test.RandomizedCGTest(A_file_name, 2, rng_min, rng_max);
+    result += test.MBPCGTest(A_file_name, 2, rng_min, rng_max);
     workspace.resetLinAlgWorkspace();
-    result += test.RandomizedCGTest(A_file_name, 4, rng_min, rng_max);
+    result += test.MBPCGTest(A_file_name, 4, rng_min, rng_max);
     workspace.resetLinAlgWorkspace();
-    result += test.RandomizedCGTest(A_file_name, 8, rng_min, rng_max);
+    result += test.MBPCGTest(A_file_name, 8, rng_min, rng_max);
 
     std::cout << "\n";
   }

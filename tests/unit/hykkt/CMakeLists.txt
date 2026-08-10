@@ -49,14 +49,14 @@ target_compile_definitions(
   runHykktSCCGTests.exe PRIVATE SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
 ) # For file paths
 
-add_executable(runHykktRandomizedCGTests.exe runHykktRandomizedCGTests.cpp)
+add_executable(runHykktMBPCGTests.exe runHykktMBPCGTests.cpp)
 target_link_libraries(
-  runHykktRandomizedCGTests.exe
-  PRIVATE resolve_hykkt resolve_hykkt_randomized_cg resolve_hykkt_chol resolve_matrix
+  runHykktMBPCGTests.exe
+  PRIVATE resolve_hykkt resolve_hykkt_mbpcg resolve_hykkt_chol resolve_matrix
           resolve_vector
 )
 target_compile_definitions(
-  runHykktRandomizedCGTests.exe PRIVATE SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
+  runHykktMBPCGTests.exe PRIVATE SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
 ) # For file paths
 
 add_executable(runHykktCGTests.exe runHykktCGTests.cpp)
@@ -77,7 +77,7 @@ target_link_libraries(
           resolve_hykkt_chol
           resolve_hykkt_spgemm
           resolve_hykkt_sccg
-          resolve_hykkt_randomized_cg
+          resolve_hykkt_mbpcg
           resolve_hykkt_cg
           resolve_hykkt_solver
           resolve_vector
@@ -91,7 +91,7 @@ target_compile_definitions(
 set(installable_tests
     runHykktPermutationTests.exe runHykktRuizScalingTests.exe
     runHykktCholeskyTests.exe runHykktSpGEMMTests.exe runHykktSCCGTests.exe
-    runHykktRandomizedCGTests.exe runHykktCGTests.exe runHykktSolverTests.exe
+    runHykktMBPCGTests.exe runHykktCGTests.exe runHykktSolverTests.exe
 )
 if(RESOLVE_USE_CUDSS)
   list(APPEND installable_tests runHykktCholeskyCuDssTests.exe)
@@ -113,6 +113,6 @@ if(RESOLVE_USE_CUDSS)
 endif()
 add_test(NAME hykkt_spgemm_test COMMAND $<TARGET_FILE:runHykktSpGEMMTests.exe>)
 add_test(NAME hykkt_sccg_test COMMAND $<TARGET_FILE:runHykktSCCGTests.exe>)
-add_test(NAME hykkt_randomized_cg_test COMMAND $<TARGET_FILE:runHykktRandomizedCGTests.exe>)
+add_test(NAME hykkt_mbpcg_test COMMAND $<TARGET_FILE:runHykktMBPCGTests.exe>)
 add_test(NAME hykkt_cg_test COMMAND $<TARGET_FILE:runHykktCGTests.exe>)
 add_test(NAME hykkt_solver_test COMMAND $<TARGET_FILE:runHykktSolverTests.exe>)

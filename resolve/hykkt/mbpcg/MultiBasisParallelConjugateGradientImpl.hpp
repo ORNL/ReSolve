@@ -1,5 +1,5 @@
 /**
- * @file RandomizedConjugateGradientImpl.hpp
+ * @file MultiBasisParallelConjugateGradientImpl.hpp
  * @author Adham Ibrahim (ibrahimas@ornl.gov)
  * @brief Abstract interface for Cholesky Solver implementations
  */
@@ -15,11 +15,11 @@ namespace ReSolve
 {
   namespace hykkt
   {
-    class RandomizedConjugateGradientImpl
+    class MultiBasisParallelConjugateGradientImpl
     {
     public:
-      RandomizedConjugateGradientImpl()          = default;
-      virtual ~RandomizedConjugateGradientImpl() = default;
+      MultiBasisParallelConjugateGradientImpl()          = default;
+      virtual ~MultiBasisParallelConjugateGradientImpl() = default;
 
       virtual int setup(index_type k) = 0;
       virtual int SpMMTallSkinny(matrix::Csr* A, vector::Vector* X, vector::Vector* result) = 0;

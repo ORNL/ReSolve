@@ -185,7 +185,7 @@ std::freopen("log.txt", "w", stdout);
 
   for (const std::string& matrix_name : matrix_names)
   {
-    std::string        A_file_name = source_dir + std::string("/RandomizedCGTestMatrices/") + matrix_name + std::string(".mtx");
+    std::string        A_file_name = source_dir + std::string("/MBPCGTestMatrices/") + matrix_name + std::string(".mtx");
     double rng_min = -1.0;
     double rng_max = 1.0;
 

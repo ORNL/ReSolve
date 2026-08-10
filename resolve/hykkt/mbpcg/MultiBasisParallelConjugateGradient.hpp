@@ -1,15 +1,15 @@
 /**
- * @file RandomizedConjugateGradient.hpp
+ * @file MultiBasisParallelConjugateGradient.hpp
  * @brief Schur complement conjugate gradient solver for HyKKT.
  */
 
 #pragma once
 
-#include "RandomizedConjugateGradientImpl.hpp"
+#include "MultiBasisParallelConjugateGradientImpl.hpp"
 #ifdef RESOLVE_USE_CUDA
-#include "RandomizedConjugateGradientCuda.hpp"
+#include "MultiBasisParallelConjugateGradientCuda.hpp"
 #elif defined(RESOLVE_USE_HIP)
-#include "RandomizedConjugateGradientHip.hpp"
+#include "MultiBasisParallelConjugateGradientHip.hpp"
 #endif
 
 #include <resolve/Common.hpp>
@@ -29,11 +29,11 @@ namespace ReSolve
 
   namespace hykkt
   {
-    class RandomizedConjugateGradient
+    class MultiBasisParallelConjugateGradient
     {
     public:
       /**
-       * @brief Constructor for RandomizedConjugateGradient.
+       * @brief Constructor for MultiBasisParallelConjugateGradient.
        *
        * The solver uses caller-provided matrix and vector handlers so the same solver can be run with CPU, CUDA, or HIP backends.
        *
@@ -43,12 +43,12 @@ namespace ReSolve
        * @param[in] vector_handler Vector handler for the selected backend.
        * @param[in] memspace Memory space of incoming data and for computation.
        */
-      RandomizedConjugateGradient(index_type          n,
+      MultiBasisParallelConjugateGradient(index_type          n,
                                   index_type          k,
                                   MatrixHandler*      matrix_handler,
                                   VectorHandler*      vector_handler,
                                   memory::MemorySpace memspace);
-      ~RandomizedConjugateGradient();
+      ~MultiBasisParallelConjugateGradient();
 
       void addMatrixInfo(matrix::Csr* A);
       void addVectorInfo(vector::Vector* x_0, vector::Vector* b);
@@ -108,9 +108,9 @@ namespace ReSolve
       vector::Vector* c_{nullptr};
       vector::Vector* r_{nullptr};
       
-      RandomizedConjugateGradientImpl* impl_{nullptr};
+      MultiBasisParallelConjugateGradientImpl* impl_{nullptr};
 
       memory::MemorySpace memspace_;
-    }; // class RandomizedConjugateGradient
+    }; // class MultiBasisParallelConjugateGradient
   } // namespace hykkt
 } // namespace ReSolve
