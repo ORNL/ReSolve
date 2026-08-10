@@ -163,8 +163,6 @@ namespace ReSolve
 
       A_norm_ = matrix_handler_->norm(A_, memspace_);
       b_norm_ = vector_handler_->norm(b_, memspace_);
-
-      gram_schmidt_.setup(n_, k_);
     }
 
     void MultiBasisParallelConjugateGradient::precondition()

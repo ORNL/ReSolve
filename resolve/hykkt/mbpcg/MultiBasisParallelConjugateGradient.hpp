@@ -73,8 +73,6 @@ namespace ReSolve
     
       MatrixHandler* matrix_handler_{nullptr}; ///< Backend-specific matrix handler.
       VectorHandler* vector_handler_{nullptr}; ///< Backend-specific vector handler.
-      
-      GramSchmidt gram_schmidt_;
 
       matrix::Csr* A_{nullptr};
       vector::Vector* x_{nullptr};   // LHS of entire system
