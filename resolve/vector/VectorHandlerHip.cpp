@@ -249,7 +249,7 @@ namespace ReSolve
                   &ONE,
                   y->getData(memory::DEVICE), // c
                   size);                      // ldc
-  y->setDataUpdated(memory::DEVICE);
+    y->setDataUpdated(memory::DEVICE);
     mem_.deviceSynchronize();
   }
 
