@@ -64,8 +64,8 @@ namespace ReSolve
       
       MultiBasisParallelConjugateGradientImpl* impl_{nullptr}; // ANDREW TODO: TEST AND DELETE
 
-      bool do_diagonal_scaling_{false};
-      bool do_preconditioning_{false};
+      bool enable_diagonal_scaling_{false};
+      bool enable_preconditioning_{false};
 
       matrix::Csr* A_{nullptr};
 

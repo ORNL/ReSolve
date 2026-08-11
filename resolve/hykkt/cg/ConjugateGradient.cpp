@@ -48,7 +48,7 @@ namespace ReSolve
     {
       if (cholesky_solver_)
       {
-        do_diagonal_scaling_ = true;
+        enable_diagonal_scaling_ = true;
       }
     }
 
@@ -58,7 +58,7 @@ namespace ReSolve
       delete p_;
       delete s_;
       delete w_;
-      if (do_diagonal_scaling_)
+      if (enable_diagonal_scaling_)
       {
         delete d_;
         delete d_inv_;
@@ -66,7 +66,7 @@ namespace ReSolve
         delete b_scal_;
         delete r_scal_;
       }
-      if (do_preconditioning_)
+      if (enable_preconditioning_)
       {
         delete z_;
       }
@@ -94,19 +94,20 @@ namespace ReSolve
     }
     
     /**
-     * @brief Reloads pointer to the Cholesky solver
-     * @param[in] cholesky_solver - Factorization of the preconditioner.
+     * @brief Reloads pointer to the Cholesky solver for preconditioning. If a Cholesky solver is
+     * not previously set, and cholesky_solver is not a nullptr, this will enable preconditioning.
+     * @param[in] cholesky_solver - Factorization of the preconditioner
      */
     void ConjugateGradient::updateCholeskySolver(CholeskySolver* cholesky_solver)
     {
       cholesky_solver_ = cholesky_solver;
       if (cholesky_solver)
       {
-        do_preconditioning_ = true;
+        enable_preconditioning_ = true;
       }
       else
       {
-        do_preconditioning_ = false;
+        enable_preconditioning_ = false;
       }
     }
 
@@ -142,14 +143,14 @@ namespace ReSolve
       s_->allocate(memspace_);
       w_->allocate(memspace_);
 
-      if (!do_diagonal_scaling_)
+      if (!enable_diagonal_scaling_)
       {
         A_scal_ = A_;
         b_scal_ = b_;
         r_scal_ = r_;
       }
 
-      if (do_preconditioning_)
+      if (enable_preconditioning_)
       {
         z_ = new vector::Vector(n_);
         z_->allocate(memspace_);
@@ -196,7 +197,7 @@ namespace ReSolve
       matrix_handler_->leftScale(d_inv_, A_scal_, memspace_);
       matrix_handler_->rightScale(A_scal_, d_inv_, memspace_);
 
-      do_diagonal_scaling_ = true;
+      enable_diagonal_scaling_ = true;
     }
 
     int ConjugateGradient::solve()
@@ -208,7 +209,7 @@ namespace ReSolve
       x_0_->setToZero(memspace_);
       b_norm_ = std::sqrt(vector_handler_->dot(b_, b_, memspace_));
 
-      if (do_diagonal_scaling_)
+      if (enable_diagonal_scaling_)
       {
         // b_scal_ = 1 / b_norm * L^-1 * b
         b_scal_->copyFromExternal(b_, memspace_, memspace_);
@@ -219,7 +220,7 @@ namespace ReSolve
       }
 
       matrix_handler_->matvec(A_scal_, x_0_, r_scal_, &MINUS_ONE, &ONE, memspace_);
-      if (do_preconditioning_)
+      if (enable_preconditioning_)
       {
         cholesky_solver_->solve(z_, r_scal_);
       }
@@ -244,7 +245,7 @@ namespace ReSolve
         vector_handler_->axpy(alpha_, p_, x_0_, memspace_);
         vector_handler_->axpy(-alpha_, s_, r_scal_, memspace_);
 
-        if (do_diagonal_scaling_)
+        if (enable_diagonal_scaling_)
         {
           r_->copyFromExternal(r_scal_, memspace_, memspace_);
           vector_handler_->scal(d_, r_, memspace_);
@@ -260,7 +261,7 @@ namespace ReSolve
           printf("Per iteration time: %.10f\n", (std::chrono::duration<double, std::milli>(iterative_end - iterative_start)).count() / i);
           break;
         }
-        if (do_preconditioning_)
+        if (enable_preconditioning_)
         {
           cholesky_solver_->solve(z_, r_scal_);
         }
