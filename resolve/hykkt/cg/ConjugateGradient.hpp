@@ -6,6 +6,7 @@
 #pragma once
 
 #include <resolve/Common.hpp>
+#include <resolve/hykkt/cholesky/CholeskySolver.hpp>
 #include <resolve/hykkt/mbpcg/MultiBasisParallelConjugateGradientImpl.hpp>
 #ifdef RESOLVE_USE_CUDA
 #include <resolve/hykkt/mbpcg/MultiBasisParallelConjugateGradientCuda.hpp>
@@ -28,70 +29,71 @@ namespace ReSolve
     class ConjugateGradient
     {
     public:
-      /**
-       * @brief Constructor for ConjugateGradient.
-       *
-       * The solver uses caller-provided matrix and vector handlers so the same solver can be run with CPU, CUDA, or HIP backends.
-       *
-       * @param[in] n Dimension of outer system.
-       * @param[in] m Dimension of inner system.
-       * @param[in] choleskySolver Factorization of Hgamma to use for direct solves.
-       * @param[in] matrix_handler Matrix handler for the selected backend.
-       * @param[in] vector_handler Vector handler for the selected backend.
-       * @param[in] memspace Memory space of incoming data and for computation.
-       */
+      // Set up CG without a preconditioner
       ConjugateGradient(index_type          n,
-                                       MatrixHandler*      matrix_handler_,
-                                       VectorHandler*      vector_handler_,
-                                       memory::MemorySpace memspace);
+                        MatrixHandler*      matrix_handler,
+                        VectorHandler*      vector_handler,
+                        memory::MemorySpace memspace);
+      // Set up CG with a preconditioner (loaded into cholesky_solver)
+      ConjugateGradient(index_type          n,
+                        CholeskySolver*     cholesky_solver,
+                        MatrixHandler*      matrix_handler,
+                        VectorHandler*      vector_handler,
+                        memory::MemorySpace memspace);
       ~ConjugateGradient();
 
       void addMatrixInfo(matrix::Csr* A);
       void addVectorInfo(vector::Vector* x_0, vector::Vector* b);
-      void addPreconditionerInfo(vector::Vector* d, vector::Vector* d_inv);
+      void updateCholeskySolver(CholeskySolver* choleskySolver);
       void setSolverTolerance(double tol);
       void setSolverItmax(int itmax);
 
       void setup();
-      void precondition();
+      void diagonalScale();
       int  solve();
 
     private:
-      index_type n_;             // Dimension of outer system
+      index_type n_;               // Dimension of outer system
       int        itmax_ = 12000;   // Maximum iterations for conjugate gradient
-      double     tol_   = 1e-8; // Solver tolerance for Schur
+      double     tol_   = 1e-8;    // Solver tolerance
 
       MatrixHandler* matrix_handler_{nullptr}; ///< Backend-specific matrix handler.
       VectorHandler* vector_handler_{nullptr}; ///< Backend-specific vector handler.
+
+      CholeskySolver* cholesky_solver_{nullptr}; // Used for preconditioning. Contains the preconditioner matrix.
       
-      MultiBasisParallelConjugateGradientImpl* impl_{nullptr};
+      MultiBasisParallelConjugateGradientImpl* impl_{nullptr}; // ANDREW TODO: TEST AND DELETE
+
+      bool do_diagonal_scaling_{false};
+      bool do_preconditioning_{false};
 
       matrix::Csr* A_{nullptr};
 
       vector::Vector* x_0_{nullptr}; // LHS of entire system
       vector::Vector* b_{nullptr};   // RHS of entire system
 
-      matrix::Csr* A_prec_{nullptr};
+      matrix::Csr* A_scal_{nullptr};
       vector::Vector* d_{nullptr};
       vector::Vector* d_inv_{nullptr};
 
       // scalars used for conjugate gradient
-      double beta_;
-      double delta_;
-      double alpha_;
-      double gamma_i_;
-      double gamma_i1_;
-      double b_norm_;
-      double r_norm_;
-      double error_;
+      real_type beta_;
+      real_type delta_;
+      real_type alpha_;
+      real_type gamma_i_;
+      real_type gamma_i1_;
+      real_type b_norm_;
+      real_type r_norm_;
+      real_type error_;
 
       // Vectors used for conjugate gradient
       vector::Vector* r_{nullptr}; // Residual
-      vector::Vector* r_prec_{nullptr};
-      vector::Vector* b_prec_{nullptr};
+      vector::Vector* r_scal_{nullptr};
+      vector::Vector* b_scal_{nullptr};
       vector::Vector* p_{nullptr};
       vector::Vector* s_{nullptr};
       vector::Vector* w_{nullptr};
+      vector::Vector* z_{nullptr}; // If no Cholesky solver is provided (i.e. no preconditioning), z_ will point to r_
 
       memory::MemorySpace memspace_;
     }; // class ConjugateGradient

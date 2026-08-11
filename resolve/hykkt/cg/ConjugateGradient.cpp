@@ -2,24 +2,18 @@
 
 #include <cmath>
 #include <chrono>
-#include <iomanip>
-#include <limits>
 
 #include <resolve/Common.hpp>
-
-// #include <cuda_runtime.h>
 
 namespace ReSolve
 {
   namespace hykkt
   {
-    /** Constructor for ConjugateGradient.
-     *  @param n[in] - Dimension of outer system.
-     *  @param m[in] - Dimension of inner system.
-     *  @param choleskySolver[in] - Factorization of H_gamma to use for direct solve.
-     *  @param memspace[in] - Memory space of incoming data and for computation.
+    /** Constructor for ConjugateGradient without preconditioning.
+     *  @param n[in] - Dimension of the system.
      *  @param matrix_handler[in] - Matrix handler for the selected backend.
      *  @param vector_handler[in] - Vector handler for the selected backend.
+     *  @param memspace[in] - Memory space of incoming data and for computation.
      */
     ConjugateGradient::ConjugateGradient(
         index_type          n,
@@ -31,25 +25,57 @@ namespace ReSolve
         vector_handler_(vector_handler),
         memspace_(memspace)
     {
-      ;
+    }
+
+    /** Constructor for ConjugateGradient.
+     *  @param n[in] - Dimension of the system.
+     *  @param cholesky_solver[in] - Factorization of the preconditioner.
+     *  @param matrix_handler[in] - Matrix handler for the selected backend.
+     *  @param vector_handler[in] - Vector handler for the selected backend.
+     *  @param memspace[in] - Memory space of incoming data and for computation.
+     */
+    ConjugateGradient::ConjugateGradient(
+        index_type          n,
+        CholeskySolver*     cholesky_solver,
+        MatrixHandler*      matrix_handler,
+        VectorHandler*      vector_handler,
+        memory::MemorySpace memspace)
+      : n_(n),
+        cholesky_solver_(cholesky_solver),
+        matrix_handler_(matrix_handler),
+        vector_handler_(vector_handler),
+        memspace_(memspace)
+    {
+      if (cholesky_solver_)
+      {
+        do_diagonal_scaling_ = true;
+      }
     }
 
     ConjugateGradient::~ConjugateGradient()
     {
-      delete A_prec_;
       delete r_;
-      delete r_prec_;
-      delete b_prec_;
       delete p_;
       delete s_;
       delete w_;
+      if (do_diagonal_scaling_)
+      {
+        delete d_;
+        delete d_inv_;
+        delete A_scal_;
+        delete b_scal_;
+        delete r_scal_;
+      }
+      if (do_preconditioning_)
+      {
+        delete z_;
+      }
       delete impl_;
     }
 
     /**
      * @brief Loads or reloads matrix pointers to the solver
-     * @param[in] J - Pointer to the JC matrix in CSR format.
-     * @param[in] J_tr - Pointer to the transposed JC matrix in CSR format.
+     * @param[in] A - Pointer to the A matrix in CSR format.
      */
     void ConjugateGradient::addMatrixInfo(matrix::Csr* A)
     {
@@ -66,17 +92,22 @@ namespace ReSolve
       x_0_ = x_0;
       b_   = b;
     }
-
+    
     /**
-     * @brief Loads or reloads preconditioner matrix pointers to the solver. This transforms
-     * the system into L^-1 * A * L^-T * y = L * b.
-     * @param[in] L - Pointer to the lower triangular preconditioner matrix (L) in CSR format.
-     * @param[in] L_tr_ - Pointer to the transpose preconditioner matrix (L^T) in CSR format.
+     * @brief Reloads pointer to the Cholesky solver
+     * @param[in] cholesky_solver - Factorization of the preconditioner.
      */
-    void ConjugateGradient::addPreconditionerInfo(vector::Vector* d, vector::Vector* d_inv)
+    void ConjugateGradient::updateCholeskySolver(CholeskySolver* cholesky_solver)
     {
-      d_ = d;
-      d_inv_ = d_inv;
+      cholesky_solver_ = cholesky_solver;
+      if (cholesky_solver)
+      {
+        do_preconditioning_ = true;
+      }
+      else
+      {
+        do_preconditioning_ = false;
+      }
     }
 
     void ConjugateGradient::setSolverTolerance(double tol)
@@ -89,6 +120,10 @@ namespace ReSolve
       itmax_ = itmax;
     }
 
+    /*
+    * // ...
+    * For repeated solves, this only needs to be called once
+    */
     void ConjugateGradient::setup()
     {
 #ifdef RESOLVE_USE_CUDA
@@ -97,64 +132,102 @@ namespace ReSolve
       impl_ = new MultiBasisParallelConjugateGradientHip(vector_handler_);
 #endif
 
-      A_prec_ = new matrix::Csr(n_, n_, A_->getNnz());
       r_ = new vector::Vector(n_);
-      r_prec_ = new vector::Vector(n_);
-      b_prec_ = new vector::Vector(n_);
       p_ = new vector::Vector(n_);
       s_ = new vector::Vector(n_);
       w_ = new vector::Vector(n_);
 
-      A_prec_->allocateMatrixData(memspace_);
       r_->allocate(memspace_);
-      r_prec_->allocate(memspace_);
-      b_prec_->allocate(memspace_);
       p_->allocate(memspace_);
       s_->allocate(memspace_);
       w_->allocate(memspace_);
+
+      if (!do_diagonal_scaling_)
+      {
+        A_scal_ = A_;
+        b_scal_ = b_;
+        r_scal_ = r_;
+      }
+
+      if (do_preconditioning_)
+      {
+        z_ = new vector::Vector(n_);
+        z_->allocate(memspace_);
+      }
+      else
+      {
+        z_ = r_scal_;
+      }
 
       beta_ = 0;
       
       impl_->setup(1);
     }
 
-    void ConjugateGradient::precondition()
+    /** // ...
+    * @post b_scal_, r_scal_ ...
+    */
+    void ConjugateGradient::diagonalScale()
     {
       using namespace constants;
+        
+      d_ = new vector::Vector(n_);
+      d_->allocate(memspace_);
+      matrix_handler_->extractRootDiagonal(A_, d_, memspace_);
 
-      // A_prec = L^-1 * A * L^-T
+      d_inv_ = new vector::Vector(n_);
+      d_inv_->allocate(memspace_);
+      matrix_handler_->extractInverseRootDiagonal(A_, d_inv_, memspace_);
+      
+      A_scal_ = new matrix::Csr(n_, n_, A_->getNnz());
+      b_scal_ = new vector::Vector(n_);
+      r_scal_ = new vector::Vector(n_);
+      A_scal_->allocateMatrixData(memspace_);
+      b_scal_->allocate(memspace_);
+      r_scal_->allocate(memspace_);
+
+      // A_scal_ = L^-1 * A * L^-T
       // variable names are a bit messed up
-      A_prec_->copyFromExternal(A_->getRowData(memspace_),
+      A_scal_->copyFromExternal(A_->getRowData(memspace_),
                                 A_->getColData(memspace_),
                                 A_->getValues(memspace_),
                                 memspace_,
                                 memspace_);
-      matrix_handler_->leftScale(d_inv_, A_prec_, memspace_);
-      matrix_handler_->rightScale(A_prec_, d_inv_, memspace_);
+      matrix_handler_->leftScale(d_inv_, A_scal_, memspace_);
+      matrix_handler_->rightScale(A_scal_, d_inv_, memspace_);
 
-      // b_prec = 1 / b_norm * L^-1 * b
-      b_prec_->copyFromExternal(b_, memspace_, memspace_);
-      vector_handler_->scal(d_inv_, b_prec_, memspace_);
-      vector_handler_->scal(1.0 / b_norm_, b_prec_, memspace_);
+      do_diagonal_scaling_ = true;
     }
 
     int ConjugateGradient::solve()
     {
       using namespace constants;
+
       auto start = std::chrono::steady_clock::now();
 
       x_0_->setToZero(memspace_);
       b_norm_ = std::sqrt(vector_handler_->dot(b_, b_, memspace_));
 
-      precondition();
-      r_prec_->copyFromExternal(b_prec_, memspace_, memspace_);
+      if (do_diagonal_scaling_)
+      {
+        // b_scal_ = 1 / b_norm * L^-1 * b
+        b_scal_->copyFromExternal(b_, memspace_, memspace_);
+        vector_handler_->scal(d_inv_, b_scal_, memspace_);
+        vector_handler_->scal(1.0 / b_norm_, b_scal_, memspace_);
+        
+        r_scal_->copyFromExternal(b_scal_, memspace_, memspace_);
+      }
 
-      matrix_handler_->matvec(A_prec_, x_0_, r_prec_, &MINUS_ONE, &ONE, memspace_);
-      gamma_i_ = vector_handler_->dot(r_prec_, r_prec_, memspace_);
+      matrix_handler_->matvec(A_scal_, x_0_, r_scal_, &MINUS_ONE, &ONE, memspace_);
+      if (do_preconditioning_)
+      {
+        cholesky_solver_->solve(z_, r_scal_);
+      }
+      gamma_i_ = vector_handler_->dot(r_scal_, z_, memspace_);
 
-      // matrix_handler_->matvec(A_prec_, r_prec_, w_, &ONE, &ZERO, memspace_);
-      impl_->hypreDevice_CSRMatrixMatvec(A_prec_, r_prec_, w_); // IS THIS FASTER???
-      delta_ = vector_handler_->dot(w_, r_prec_, memspace_);
+      matrix_handler_->matvec(A_scal_, z_, w_, &ONE, &ZERO, memspace_);
+      // impl_->hypreDevice_CSRMatrixMatvec(A_scal_, z_, w_); // ANDREW TODO: check if this is faster on cuda. pretty sure it's very slightly faster
+      delta_ = vector_handler_->dot(w_, z_, memspace_);
       alpha_ = gamma_i_ / delta_;
 
       auto iterative_start = std::chrono::steady_clock::now();
@@ -165,21 +238,21 @@ namespace ReSolve
       {
       // auto start = std::chrono::steady_clock::now();
         vector_handler_->scal(beta_, p_, memspace_);
-        vector_handler_->axpy(ONE, r_prec_, p_, memspace_);
+        vector_handler_->axpy(ONE, z_, p_, memspace_);
         vector_handler_->scal(beta_, s_, memspace_);
         vector_handler_->axpy(ONE, w_, s_, memspace_);
         vector_handler_->axpy(alpha_, p_, x_0_, memspace_);
-        vector_handler_->axpy(-alpha_, s_, r_prec_, memspace_);
-        gamma_i1_ = vector_handler_->dot(r_prec_, r_prec_, memspace_);
+        vector_handler_->axpy(-alpha_, s_, r_scal_, memspace_);
 
-        r_->copyFromExternal(r_prec_, memspace_, memspace_);
-        vector_handler_->scal(d_, r_, memspace_);
-        vector_handler_->scal(b_norm_, r_, memspace_); // can maybe save one operation in computing error
+        if (do_diagonal_scaling_)
+        {
+          r_->copyFromExternal(r_scal_, memspace_, memspace_);
+          vector_handler_->scal(d_, r_, memspace_);
+          vector_handler_->scal(b_norm_, r_, memspace_); // can maybe save one operation in computing error
+        }
         r_norm_ = std::sqrt(vector_handler_->dot(r_, r_, memspace_));
         error_ = r_norm_ / b_norm_;
-        // std::cout << std::setprecision(std::numeric_limits<double>::max_digits10) << error_ << '\n';
         if (error_ < tol_)
-        // if (false)
         {
           auto end = std::chrono::steady_clock::now();
           std::chrono::duration<double, std::milli> elapsed = (end - start);
@@ -187,9 +260,14 @@ namespace ReSolve
           printf("Per iteration time: %.10f\n", (std::chrono::duration<double, std::milli>(iterative_end - iterative_start)).count() / i);
           break;
         }
-        // matrix_handler_->matvec(A_prec_, r_prec_, w_, &ONE, &ZERO, memspace_);
-        impl_->hypreDevice_CSRMatrixMatvec(A_prec_, r_prec_, w_);
-        delta_   = vector_handler_->dot(w_, r_prec_, memspace_);
+        if (do_preconditioning_)
+        {
+          cholesky_solver_->solve(z_, r_scal_);
+        }
+        matrix_handler_->matvec(A_scal_, z_, w_, &ONE, &ZERO, memspace_);
+        // impl_->hypreDevice_CSRMatrixMatvec(A_scal_, z_, w_);
+        delta_   = vector_handler_->dot(w_, z_, memspace_);
+        gamma_i1_ = vector_handler_->dot(r_scal_, z_, memspace_);
         beta_    = gamma_i1_ / gamma_i_;
         gamma_i_ = gamma_i1_;
         alpha_   = gamma_i_ / (delta_ - beta_ * gamma_i_ / alpha_);

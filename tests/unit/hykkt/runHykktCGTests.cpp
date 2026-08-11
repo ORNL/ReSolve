@@ -29,7 +29,7 @@
 template <typename WorkspaceType>
 void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace, ReSolve::tests::TestingResults& result)
 {
-  std::cout << "Running regular CG tests on " << backend << " device:\n";
+  std::cout << "Running conjugate gradient tests on " << backend << " device:\n";
 
   WorkspaceType workspace;
   workspace.initializeHandles();
@@ -52,6 +52,7 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
     // "Chem97ZtZ",
     // "sts4098",
     // "bcsstk13",
+    "bcsstk18",
     "bcsstk18",
     // "torsion1",
     // "shallow_water1",
@@ -185,11 +186,9 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
   for (const std::string& matrix_name : matrix_names)
   {
     std::string        A_file_name = source_dir + std::string("/MBPCGTestMatrices/") + matrix_name + std::string(".mtx");
-    double rng_min = -1.0;
-    double rng_max = 1.0;
 
     printf("\n\n\nMatrix: %s\n", matrix_name.c_str());
-    result += test.CGTest(A_file_name, rng_min, rng_max);
+    result += test.CGTest(A_file_name);
 
     std::cout << "\n";
   }

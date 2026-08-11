@@ -50,10 +50,14 @@ namespace ReSolve
 
       /**
        * @brief Test the ConjugateGradient implementation with matrices in tests\unit\hykkt\CGTestMatrices
+       * 
+       * @param[in] A_file_name Path of the .mtx file for the matrix A
+       * @param[in] b_file_name Path of the .mtx file for the RHS vector b. Optional
+       * @param[in] use_file_for_b Choose whether to load a file from b_file_name to use for the RHS. If false, randomly generate b
        *
        * @return TestOutcome Result of the test
        */
-      TestOutcome CGTest(const std::string& A_file_name, real_type rng_min, real_type rng_max)
+      TestOutcome CGTest(const std::string& A_file_name, const std::string& b_file_name = "", bool use_file_for_b = false)
       {
         std::ifstream A_file(A_file_name);
 
@@ -66,6 +70,24 @@ namespace ReSolve
 
         index_type                              n   = A->getNumRows();
         index_type                              nnz = A->getNnz();
+
+        vector::Vector* b;
+        if (use_file_for_b)
+        {
+          std::ifstream b_file(b_file_name);
+          b = io::createVectorFromFile(b_file);
+          if (memspace_ == memory::DEVICE)
+          {
+            b->syncData(memory::DEVICE);
+          }
+        }
+        else
+        {
+          b = new vector::Vector(n);
+          b->allocateAll(memspace_);
+          vector_handler_.randomVector(b, -1.0, 1.0, memspace_);
+        }
+
         hykkt::ConjugateGradient cg(n, &matrix_handler_, &vector_handler_, memspace_);
         cg.setSolverTolerance(cg_tol);
 
@@ -73,34 +95,20 @@ namespace ReSolve
         x->allocateAll(memspace_);
         x->setToZero(memspace_);
 
-        vector::Vector* b = new vector::Vector(n);
-        b->allocateAll(memspace_);
-        vector_handler_.randomVector(b, rng_min, rng_max, memspace_);
-        
-        vector::Vector* d = new vector::Vector(n);
-        d->allocate(memspace_);
-        matrix_handler_.extractRootDiagonal(A, d, memspace_);
-
-        vector::Vector* d_inv = new vector::Vector(n);
-        d_inv->allocate(memspace_);
-        matrix_handler_.extractInverseRootDiagonal(A, d_inv, memspace_);
-
         cg.addMatrixInfo(A);
         cg.addVectorInfo(x, b);
-        cg.addPreconditionerInfo(d, d_inv);
+        cg.diagonalScale();
         cg.setup();
-        int converged_n = cg.solve(); // 0 if converged, 1 if not
+        int converged = cg.solve(); // 0 if converged, 1 if not
 
         TestStatus  status;
         std::string testname(__func__);
         testname += " n=" + std::to_string(n) + ", nnz =" + std::to_string(nnz);
-        status *= validateResult(x, converged_n);
+        status *= validateResult(converged);
 
         delete A;
         delete x;
         delete b;
-        delete d;
-        delete d_inv;
 
         return status.report(testname.c_str());
       }
@@ -112,15 +120,14 @@ namespace ReSolve
 
       static constexpr real_type cholesky_tol = 1e-12;
       static constexpr real_type cg_tol     = 1e-8;
-      static constexpr real_type entry_tol    = 1e-6; // Tolerance for checking individual entries
 
       /**
        * @brief Validate the CG result.
        * @param[in] x Pointer to the output x vector.
        */
-      bool validateResult(vector::Vector* x, int converged_n)
+      bool validateResult(int converged)
       {
-        return true;
+        return converged == 0;
       }
     }; // class HykktConjugateGradientTests
   } // namespace tests
