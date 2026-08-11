@@ -32,17 +32,6 @@ namespace ReSolve
     class MultiBasisParallelConjugateGradient
     {
     public:
-      /**
-       * @brief Constructor for MultiBasisParallelConjugateGradient.
-       *
-       * The solver uses caller-provided matrix and vector handlers so the same solver can be run with CPU, CUDA, or HIP backends.
-       *
-       * @param[in] n Dimension of outer system.
-       * @param[in] choleskySolver Factorization of Hgamma to use for direct solves.
-       * @param[in] matrix_handler Matrix handler for the selected backend.
-       * @param[in] vector_handler Vector handler for the selected backend.
-       * @param[in] memspace Memory space of incoming data and for computation.
-       */
       MultiBasisParallelConjugateGradient(index_type          n,
                                   index_type          k,
                                   MatrixHandler*      matrix_handler,

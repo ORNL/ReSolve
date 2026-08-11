@@ -1,6 +1,6 @@
 # Add source files for the MBPCG module
-set(MBPCG_SRC MultiBasisParallelConjugateGradient.cpp MultiBasisParallelConjugateGradientCuda.cu MultiBasisParallelConjugateGradientHip.hip)
-set(MBPCG_HEADER_INSTALL MultiBasisParallelConjugateGradient.hpp MultiBasisParallelConjugateGradientImpl.hpp MultiBasisParallelConjugateGradientCuda.hpp MultiBasisParallelConjugateGradientHip.hpp)
+set(MBPCG_SRC MultiBasisParallelConjugateGradient.cpp MultiBasisParallelConjugateGradientCuda.cu MultiBasisParallelConjugateGradientHip.hip SpMMCuda.cu SpMMHip.hip)
+set(MBPCG_HEADER_INSTALL MultiBasisParallelConjugateGradient.hpp MultiBasisParallelConjugateGradientImpl.hpp MultiBasisParallelConjugateGradientCuda.hpp MultiBasisParallelConjugateGradientHip.hpp SpMMCuda.hip SpMMHip.hip)
 
 # Build shared library ReSolve::hykkt
 add_library(resolve_hykkt_mbpcg SHARED ${MBPCG_SRC})

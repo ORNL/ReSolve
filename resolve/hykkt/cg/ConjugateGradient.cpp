@@ -5,6 +5,7 @@
 
 #include <resolve/Common.hpp>
 
+#include <hip/hip_runtime.h>
 namespace ReSolve
 {
   namespace hykkt
@@ -70,7 +71,6 @@ namespace ReSolve
       {
         delete z_;
       }
-      delete impl_;
     }
 
     /**
@@ -127,12 +127,6 @@ namespace ReSolve
     */
     void ConjugateGradient::setup()
     {
-#ifdef RESOLVE_USE_CUDA
-      impl_ = new MultiBasisParallelConjugateGradientCuda(vector_handler_);
-#elif defined(RESOLVE_USE_HIP)
-      impl_ = new MultiBasisParallelConjugateGradientHip(vector_handler_);
-#endif
-
       r_ = new vector::Vector(n_);
       p_ = new vector::Vector(n_);
       s_ = new vector::Vector(n_);
@@ -161,8 +155,6 @@ namespace ReSolve
       }
 
       beta_ = 0;
-      
-      impl_->setup(1);
     }
 
     /** // ...
@@ -227,7 +219,6 @@ namespace ReSolve
       gamma_i_ = vector_handler_->dot(r_scal_, z_, memspace_);
 
       matrix_handler_->matvec(A_scal_, z_, w_, &ONE, &ZERO, memspace_);
-      // impl_->hypreDevice_CSRMatrixMatvec(A_scal_, z_, w_); // ANDREW TODO: check if this is faster on cuda. pretty sure it's very slightly faster
       delta_ = vector_handler_->dot(w_, z_, memspace_);
       alpha_ = gamma_i_ / delta_;
 
@@ -237,7 +228,7 @@ namespace ReSolve
       int i;
       for (i = 0; i < itmax_; i++)
       {
-      // auto start = std::chrono::steady_clock::now();
+      auto start = std::chrono::steady_clock::now();
         vector_handler_->scal(beta_, p_, memspace_);
         vector_handler_->axpy(ONE, z_, p_, memspace_);
         vector_handler_->scal(beta_, s_, memspace_);
@@ -266,7 +257,6 @@ namespace ReSolve
           cholesky_solver_->solve(z_, r_scal_);
         }
         matrix_handler_->matvec(A_scal_, z_, w_, &ONE, &ZERO, memspace_);
-        // impl_->hypreDevice_CSRMatrixMatvec(A_scal_, z_, w_);
         delta_   = vector_handler_->dot(w_, z_, memspace_);
         gamma_i1_ = vector_handler_->dot(r_scal_, z_, memspace_);
         beta_    = gamma_i1_ / gamma_i_;

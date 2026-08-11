@@ -12,86 +12,6 @@ namespace ReSolve
   {
     namespace kernels
     {
-      template <index_type K, index_type BLOCK_SIZE, index_type THREADS_PER_ROW>
-      __global__ void SpMMTallSkinnyKernelVector(
-        const index_type* __restrict__ A_row_ptr,
-        const index_type* __restrict__ A_col_idx,
-        const real_type* __restrict__ A_val,
-        const real_type* __restrict__ B,
-        real_type*  result,
-        index_type n)
-      {
-        const index_type thread = blockIdx.x * blockDim.x + threadIdx.x;
-        const index_type row = thread / THREADS_PER_ROW;
-        const index_type lane = thread % THREADS_PER_ROW;
-        constexpr index_type rows_per_block = BLOCK_SIZE / THREADS_PER_ROW;
-
-        __shared__ real_type result_shared[rows_per_block * K];
-
-        index_type k = K;
-
-        if (row >= n) return;
-
-        // for (index_type row = row_offset; row < n; row += gridDim.x * blockDim.x / 32)
-        {
-          index_type col_start = A_row_ptr[row];
-          index_type col_end   = A_row_ptr[row + 1];
-
-          real_type sum[K] = { 0.0 };
-
-          for (index_type j = col_start + lane; j < col_end; j += THREADS_PER_ROW)
-          {
-            index_type col = A_col_idx[j];
-            real_type a = A_val[j];
-            real_type b_local[K];
-
-            // #pragma unroll
-            for (int i = 0; i < k; ++i)
-            {
-              b_local[i] = B[i * n + col];
-            }
-
-            for (int i = 0; i < k; ++i)
-            {
-              sum[i] += a * b_local[i];
-            }
-          }
-
-          // #pragma unroll
-          for (int i = 0; i < k; ++i)
-          {
-            for (index_type offset = THREADS_PER_ROW / 2; offset > 0; offset /= 2)
-            {
-              sum[i] += __shfl_down_sync(0xffffffff, sum[i], offset);
-            }
-          }
-
-          if (lane == 0)
-          {
-            for (int i = 0; i < k; ++i)
-            // result_shared[lane * rows_per_block + threadIdx.x / 32];
-              result[i * n + row] = sum[i];
-          }
-
-          // if (lane == 0)
-          // {
-          //   for (int i = 0; i < k; ++i)
-          //   {
-          //     result_shared[i * rows_per_block + warp] = sum[i];
-          //     // result[i * n + row] = sum[i];
-          //   }
-          // }
-
-          // __syncthreads();
-          // if (threadIdx.x < (rows_per_block * k))
-          // {
-          //   index_type row = threadIdx.x % rows_per_block + blockIdx.x * rows_per_block;
-          //   index_type col = threadIdx.x / rows_per_block;
-          //   result[col * n + row] = result_shared[threadIdx.x];
-          // }
-        }
-      }
-      
       __global__ void columnWiseSquaredNorms(real_type* R, real_type* sq_norms, index_type n)
       {
         index_type col = threadIdx.y;
@@ -856,77 +776,9 @@ namespace ReSolve
       return 0;
     }
 
-    int MultiBasisParallelConjugateGradientCuda::SpMMTallSkinny(matrix::Csr* A, vector::Vector* X, vector::Vector* result)
+    int MultiBasisParallelConjugateGradientCuda::SpMM(matrix::Csr* A, vector::Vector* X, vector::Vector* result)
     {
-      index_type n = A->getNumRows();
-      index_type k = X->getNumVectors();
-
-      constexpr int       block_size = 256;
-      int       num_blocks = (n * 32 + block_size - 1) / block_size;
-
-      
-      #define SPMM_LAUNCH(THREADS_PER_ROW) \
-        switch (k) \
-        { \
-        case 1: \
-          kernels::SpMMTallSkinnyKernelVector<1, block_size, THREADS_PER_ROW><<<num_blocks, block_size>>>(A->getRowData(memory::DEVICE), \
-                                                                  A->getColData(memory::DEVICE), \
-                                                                  A->getValues(memory::DEVICE), \
-                                                                  X->getData(memory::DEVICE), \
-                                                                  result->getData(memory::DEVICE), \
-                                                                  n); \
-          break; \
-        case 2: \
-          kernels::SpMMTallSkinnyKernelVector<2, block_size, THREADS_PER_ROW><<<num_blocks, block_size>>>(A->getRowData(memory::DEVICE), \
-                                                                  A->getColData(memory::DEVICE), \
-                                                                  A->getValues(memory::DEVICE), \
-                                                                  X->getData(memory::DEVICE), \
-                                                                  result->getData(memory::DEVICE), \
-                                                                  n); \
-          break; \
-        case 4: \
-          kernels::SpMMTallSkinnyKernelVector<4, block_size, THREADS_PER_ROW><<<num_blocks, block_size>>>(A->getRowData(memory::DEVICE), \
-                                                                  A->getColData(memory::DEVICE), \
-                                                                  A->getValues(memory::DEVICE), \
-                                                                  X->getData(memory::DEVICE), \
-                                                                  result->getData(memory::DEVICE), \
-                                                                  n); \
-          break; \
-        case 8: \
-          kernels::SpMMTallSkinnyKernelVector<8, block_size, THREADS_PER_ROW><<<num_blocks, block_size>>>(A->getRowData(memory::DEVICE), \
-                                                                  A->getColData(memory::DEVICE), \
-                                                                  A->getValues(memory::DEVICE), \
-                                                                  X->getData(memory::DEVICE), \
-                                                                  result->getData(memory::DEVICE), \
-                                                                  n); \
-          break; \
-        case 16: \
-          kernels::SpMMTallSkinnyKernelVector<16, block_size, THREADS_PER_ROW><<<num_blocks, block_size>>>(A->getRowData(memory::DEVICE), \
-                                                                  A->getColData(memory::DEVICE), \
-                                                                  A->getValues(memory::DEVICE), \
-                                                                  X->getData(memory::DEVICE), \
-                                                                  result->getData(memory::DEVICE), \
-                                                                  n); \
-          break; \
-        default: \
-          return 1; \
-        }
-
-      int nnz_ratio = A->getNnz() / n;
-      if (nnz_ratio >= 32)
-      {
-        SPMM_LAUNCH(32);
-      }
-      else if (nnz_ratio >= 5) // up to 25
-      {
-        SPMM_LAUNCH(8);
-      }
-      else
-      {
-        SPMM_LAUNCH(2);
-      }
-      
-      return 0;
+      return spmm_hypre_.hypreDevice_CSRMatrixMatvec(A, X, result);
     }
     
     int MultiBasisParallelConjugateGradientCuda::bestBasis(vector::Vector* R, index_type* h_best_basis, real_type* h_best_basis_norm)
@@ -1004,7 +856,7 @@ namespace ReSolve
       return 0;
     }
     
-    int MultiBasisParallelConjugateGradientCuda::updateXRSplit(vector::Vector* Xi_inv, vector::Vector* Sigma, vector::Vector* S, vector::Vector* A_S, vector::Vector* Xi_Sigma, vector::Vector* X_res, vector::Vector* R_prec)
+    int MultiBasisParallelConjugateGradientCuda::updateXR(vector::Vector* Xi_inv, vector::Vector* Sigma, vector::Vector* S, vector::Vector* A_S, vector::Vector* Xi_Sigma, vector::Vector* X_res, vector::Vector* R_prec)
     {
       index_type n = A_S->getSize();
       index_type k = A_S->getNumVectors();
@@ -1015,27 +867,22 @@ namespace ReSolve
       switch (k)
       {
       case 1:
-        kernels::choleskyFactorizeSolve<1><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+        kernels::choleskySolve<1><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
                                                          Sigma->getData(memory::DEVICE),
                                                          Xi_Sigma->getData(memory::DEVICE));
         break;
       case 2:
-        kernels::choleskyFactorizeSolve<2><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+        kernels::choleskySolve<2><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
                                                          Sigma->getData(memory::DEVICE),
                                                          Xi_Sigma->getData(memory::DEVICE));
         break;
       case 4:
-        kernels::choleskyFactorizeSolve<4><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+        kernels::choleskySolve<4><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
                                                          Sigma->getData(memory::DEVICE),
                                                          Xi_Sigma->getData(memory::DEVICE));
         break;
       case 8:
-        kernels::choleskyFactorizeSolve<8><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
-                                                         Sigma->getData(memory::DEVICE),
-                                                         Xi_Sigma->getData(memory::DEVICE));
-        break;
-      case 16:
-        kernels::choleskyFactorizeSolve<16><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+        kernels::choleskySolve<8><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
                                                          Sigma->getData(memory::DEVICE),
                                                          Xi_Sigma->getData(memory::DEVICE));
         break;
@@ -1049,7 +896,7 @@ namespace ReSolve
       switch (k)
       {
       case 1:
-        kernels::updateXRSplit<1><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+        kernels::updateXR<1><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
                                                          Sigma->getData(memory::DEVICE),
                                                          S->getData(memory::DEVICE),
                                                          A_S->getData(memory::DEVICE),
@@ -1059,7 +906,7 @@ namespace ReSolve
                                                          n);
         break;
       case 2:
-        kernels::updateXRSplit<2><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+        kernels::updateXR<2><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
                                                          Sigma->getData(memory::DEVICE),
                                                          S->getData(memory::DEVICE),
                                                          A_S->getData(memory::DEVICE),
@@ -1069,7 +916,7 @@ namespace ReSolve
                                                          n);
         break;
       case 4:
-        kernels::updateXRSplit<4><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+        kernels::updateXR<4><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
                                                          Sigma->getData(memory::DEVICE),
                                                          S->getData(memory::DEVICE),
                                                          A_S->getData(memory::DEVICE),
@@ -1079,17 +926,7 @@ namespace ReSolve
                                                          n);
         break;
       case 8:
-        kernels::updateXRSplit<8><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
-                                                         Sigma->getData(memory::DEVICE),
-                                                         S->getData(memory::DEVICE),
-                                                         A_S->getData(memory::DEVICE),
-                                                         Xi_Sigma->getData(memory::DEVICE),
-                                                         X_res->getData(memory::DEVICE),
-                                                         R_prec->getData(memory::DEVICE),
-                                                         n);
-        break;
-      case 16:
-        kernels::updateXRSplit<16><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+        kernels::updateXR<8><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
                                                          Sigma->getData(memory::DEVICE),
                                                          S->getData(memory::DEVICE),
                                                          A_S->getData(memory::DEVICE),
@@ -1105,7 +942,7 @@ namespace ReSolve
       return 0;
     }
 
-    int MultiBasisParallelConjugateGradientCuda::choleskyFactorizeSolve(vector::Vector* A, vector::Vector* B, vector::Vector* X)
+    int MultiBasisParallelConjugateGradientCuda::choleskySolve(vector::Vector* A, vector::Vector* B, vector::Vector* X)
     {
       index_type k = A->getSize();
 
@@ -1115,27 +952,22 @@ namespace ReSolve
       switch (k)
       {
       case 1:
-        kernels::choleskyFactorizeSolve<1><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
+        kernels::choleskySolve<1><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
                                                          B->getData(memory::DEVICE),
                                                          X->getData(memory::DEVICE));
         break;
       case 2:
-        kernels::choleskyFactorizeSolve<2><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
+        kernels::choleskySolve<2><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
                                                          B->getData(memory::DEVICE),
                                                          X->getData(memory::DEVICE));
         break;
       case 4:
-        kernels::choleskyFactorizeSolve<4><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
+        kernels::choleskySolve<4><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
                                                          B->getData(memory::DEVICE),
                                                          X->getData(memory::DEVICE));
         break;
       case 8:
-        kernels::choleskyFactorizeSolve<8><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
-                                                         B->getData(memory::DEVICE),
-                                                         X->getData(memory::DEVICE));
-        break;
-      case 16:
-        kernels::choleskyFactorizeSolve<16><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
+        kernels::choleskySolve<8><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
                                                          B->getData(memory::DEVICE),
                                                          X->getData(memory::DEVICE));
         break;
@@ -1294,467 +1126,6 @@ namespace ReSolve
       }
 
       return 0;
-    }
-
-    int MultiBasisParallelConjugateGradientCuda::preconditionDense(vector::Vector* A, vector::Vector* d)
-    {
-      index_type n = A->getSize();
-
-      constexpr int block_size = 256;
-      int num_blocks = (n * n + block_size - 1) / block_size;
-      kernels::preconditionDense<<<num_blocks, block_size>>>(A->getData(memory::DEVICE), d->getData(memory::DEVICE), n);
-
-      return 0;
-    }
-
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /******************************************************************************
-    * Copyright (c) 1998 Lawrence Livermore National Security, LLC and other
-    * HYPRE Project Developers. See the top-level COPYRIGHT file for details.
-    *
-    * SPDX-License-Identifier: (Apache-2.0 OR MIT)
-    ******************************************************************************/
-    using hypre_DeviceItem = void*;
-    #ifndef hypre_CSR_SPMV_DEVICE_H
-    #define hypre_CSR_SPMV_DEVICE_H
-
-    #define HYPRE_SPMV_BLOCKDIM 512
-    #define HYPRE_SPMV_VERSION 1
-    #define HYPRE_SPMV_FILL_STRICT_LOWER -2
-    #define HYPRE_SPMV_FILL_LOWER -1
-    #define HYPRE_SPMV_FILL_WHOLE 0
-    #define HYPRE_SPMV_FILL_UPPER 1
-    #define HYPRE_SPMV_FILL_STRICT_UPPER 2
-
-    #define HYPRE_SPMV_ADD_SUM(p, nv)                                                         \
-    {                                                                                         \
-      const index_type col = __ldg(&d_ja[p]);                                        \
-      if constexpr (F == HYPRE_SPMV_FILL_WHOLE)                                                        \
-      {                                                                                      \
-          const real_type val = d_a ? __ldg(&d_a[p]) : real_type(1);                                 \
-          for (index_type i = 0; i < nv; i++)                                                  \
-          {                                                                                   \
-            sum[i] += val * __ldg(&d_x[col * idxstride_x + i * vecstride_x]);       \
-          }                                                                                   \
-      }                                                                                      \
-      else if constexpr (F == HYPRE_SPMV_FILL_LOWER)                                                   \
-      {                                                                                      \
-          if (col <= grid_group_id)                                                           \
-          {                                                                                   \
-            const real_type val = d_a ? __ldg(&d_a[p]) : real_type(1);                              \
-            for (index_type i = 0; i < nv; i++)                                               \
-            {                                                                                \
-                sum[i] += val * __ldg(&d_x[col * idxstride_x + i * vecstride_x]);    \
-            }                                                                                \
-          }                                                                                   \
-      }                                                                                      \
-      else if constexpr (F == HYPRE_SPMV_FILL_UPPER)                                                   \
-      {                                                                                      \
-          if (col >= grid_group_id)                                                           \
-          {                                                                                   \
-            const real_type val = d_a ? __ldg(&d_a[p]) : real_type(1);                              \
-            for (index_type i = 0; i < nv; i++)                                               \
-            {                                                                                \
-                sum[i] += val * __ldg(&d_x[col * idxstride_x + i * vecstride_x]);    \
-            }                                                                                \
-          }                                                                                   \
-      }                                                                                      \
-      else if constexpr (F == HYPRE_SPMV_FILL_STRICT_LOWER)                                            \
-      {                                                                                      \
-          if (col < grid_group_id)                                                            \
-          {                                                                                   \
-            const real_type val = d_a ? __ldg(&d_a[p]) : real_type(1);                              \
-            for (index_type i = 0; i < nv; i++)                                               \
-            {                                                                                \
-                sum[i] += val * __ldg(&d_x[col * idxstride_x + i * vecstride_x]);    \
-            }                                                                                \
-          }                                                                                   \
-      }                                                                                      \
-      else if constexpr (F == HYPRE_SPMV_FILL_STRICT_UPPER)                                            \
-      {                                                                                      \
-          if (col > grid_group_id)                                                            \
-          {                                                                                   \
-            const real_type val = d_a ? __ldg(&d_a[p]) : real_type(1);                              \
-            for (index_type i = 0; i < nv; i++)                                               \
-            {                                                                                \
-                sum[i] += val * __ldg(&d_x[col * idxstride_x + i * vecstride_x]);    \
-            }                                                                                \
-          }                                                                                   \
-      }                                                                                      \
-    }
-
-    #define HYPRE_SPMV_GPU_LAUNCH(kernel, nv)                                                  \
-      if (avg_rownnz >= avg_rownnz_lower_bounds[0])                                           \
-      {                                                                                       \
-          const dim3 gDim =                                                                    \
-            dim3((num_rows + num_groups_per_block[0] - 1) / num_groups_per_block[0]);   \
-          HYPRE_GPU_LAUNCH( (kernel<F, group_sizes[0], nv, real_type>),                                \
-                            gDim, bDim, item, num_rows, num_vectors, rowid = nullptr, idxstride_x,             \
-                            idxstride_y, vecstride_x, vecstride_y, alpha,                      \
-                            d_ia, d_ja, d_a, d_x, beta, d_y );                                 \
-      }                                                                                       \
-      else if (avg_rownnz >= avg_rownnz_lower_bounds[1])                                      \
-      {                                                                                       \
-          const dim3 gDim =                                                                    \
-            dim3((num_rows + num_groups_per_block[1] - 1) / num_groups_per_block[1]);   \
-          HYPRE_GPU_LAUNCH( (kernel<F, group_sizes[1], nv, real_type>),                                \
-                            gDim, bDim, item, num_rows, num_vectors, rowid = nullptr, idxstride_x,             \
-                            idxstride_y, vecstride_x, vecstride_y, alpha,                      \
-                            d_ia, d_ja, d_a, d_x, beta, d_y );                                 \
-      }                                                                                       \
-      else if (avg_rownnz >= avg_rownnz_lower_bounds[2])                                      \
-      {                                                                                       \
-          const dim3 gDim =                                                                    \
-            dim3((num_rows + num_groups_per_block[2] - 1) / num_groups_per_block[2]);   \
-          HYPRE_GPU_LAUNCH( (kernel<F, group_sizes[2], nv, real_type>),                                \
-                            gDim, bDim, item, num_rows, num_vectors, rowid = nullptr, idxstride_x,             \
-                            idxstride_y, vecstride_x, vecstride_y, alpha,                      \
-                            d_ia, d_ja, d_a, d_x, beta, d_y );                                 \
-      }                                                                                       \
-      else if (avg_rownnz >= avg_rownnz_lower_bounds[3])                                      \
-      {                                                                                       \
-          const dim3 gDim =                                                                    \
-            dim3((num_rows + num_groups_per_block[3] - 1) / num_groups_per_block[3]);   \
-          HYPRE_GPU_LAUNCH( (kernel<F, group_sizes[3], nv, real_type>),                                \
-                            gDim, bDim, item, num_rows, num_vectors, rowid = nullptr, idxstride_x,             \
-                            idxstride_y, vecstride_x, vecstride_y, alpha,                      \
-                            d_ia, d_ja, d_a, d_x, beta, d_y );                                 \
-      }                                                                                       \
-      else                                                                                    \
-      {                                                                                       \
-          const dim3 gDim =                                                                    \
-            dim3((num_rows + num_groups_per_block[4] - 1) / num_groups_per_block[4]);   \
-          HYPRE_GPU_LAUNCH( (kernel<F, group_sizes[4], nv, real_type>),                                \
-                            gDim, bDim, item, num_rows, num_vectors, rowid = nullptr, idxstride_x,             \
-                            idxstride_y, vecstride_x, vecstride_y, alpha,                      \
-                            d_ia, d_ja, d_a, d_x, beta, d_y );                                 \
-      }
-
-      #define HYPRE_GPU_LAUNCH(kernel_name, gridsize, blocksize, ...) kernel_name<<<gridsize, blocksize>>>(__VA_ARGS__)
-
-    #endif
-
-        
-    template <index_type F, index_type K, index_type NV, typename T>
-    __global__ void
-    hypreGPUKernel_CSRMatvecShuffleGT8(hypre_DeviceItem &item,
-                                      index_type         num_rows,
-                                      index_type         num_vectors,
-                                      index_type        *row_id,
-                                      index_type         idxstride_x,
-                                      index_type         idxstride_y,
-                                      index_type         vecstride_x,
-                                      index_type         vecstride_y,
-                                      T                 alpha,
-                                      index_type        *d_ia,
-                                      index_type        *d_ja,
-                                      T                *d_a,
-                                      T                *d_x,
-                                      T                 beta,
-                                      T                *d_y )
-    {
-    #if defined (HYPRE_USING_SYCL)
-      const index_type  grid_ngroups  = item.get_group_range(2) * (HYPRE_SPMV_BLOCKDIM / K);
-      index_type        grid_group_id = __shfl_sync(et_group(2) * HYPRE_SPMV_BLOCKDIM + item.get_local_id(
-                                            2)) / K;
-      const index_type  group_lane    = item.get_local_id(2) & (K - 1);
-    #else
-      const index_type  grid_ngroups  = gridDim.x * (HYPRE_SPMV_BLOCKDIM / K);
-      index_type        grid_group_id = (blockIdx.x * HYPRE_SPMV_BLOCKDIM + threadIdx.x) / K;
-      const index_type  group_lane    = threadIdx.x & (K - 1);
-    #endif
-      T sum[64];
-
-      for (; __any_sync(0xffffffff, grid_group_id < num_rows);
-            grid_group_id += grid_ngroups)
-      {
-          index_type grid_row_id = -1, p = 0, q = 0;
-
-          if (row_id)
-          {
-            if (grid_group_id < num_rows && group_lane == 0)
-            {
-                grid_row_id = __ldg(&row_id[grid_group_id]);
-            }
-            grid_row_id = __shfl_sync(0xffffffff, grid_row_id, 0, K);
-          }
-          else
-          {
-            grid_row_id = grid_group_id;
-          }
-
-          if (grid_group_id < num_rows && group_lane < 2)
-          {
-            p = __ldg(&d_ia[grid_row_id + group_lane]);
-          }
-          q = __shfl_sync(0xffffffff, p, 1, K);
-          p = __shfl_sync(0xffffffff, p, 0, K);
-
-          for (index_type i = 0; i < num_vectors; i++)
-          {
-            sum[i] = T(0.0);
-          }
-
-    #pragma unroll 1
-          for (p += group_lane; p < q; p += K * 2)
-          {
-            HYPRE_SPMV_ADD_SUM(p, num_vectors)
-            if (p + K < q)
-            {
-                HYPRE_SPMV_ADD_SUM((p + K), num_vectors)
-            }
-          }
-
-          // parallel reduction
-          for (index_type i = 0; i < num_vectors; i++)
-          {
-            for (index_type d = K / 2; d > 0; d >>= 1)
-            {
-                sum[i] += __shfl_down_sync(0xffffffff, sum[i], d);
-            }
-          }
-
-          if (grid_group_id < num_rows && group_lane == 0)
-          {
-            if (beta)
-            {
-                for (index_type i = 0; i < num_vectors; i++)
-                {
-                  d_y[grid_row_id * idxstride_y + i * vecstride_y] =
-                      alpha * sum[i] +
-                      beta * d_y[grid_row_id * idxstride_y + i * vecstride_y];
-                }
-            }
-            else
-            {
-                for (index_type i = 0; i < num_vectors; i++)
-                {
-                  d_y[grid_row_id * idxstride_y + i * vecstride_y] = alpha * sum[i];
-                }
-            }
-          }
-      }
-    }
-
-    /*--------------------------------------------------------------------------
-    * hypreGPUKernel_CSRMatvecShuffle
-    *
-    * Templated SpMV device kernel based of warp-shuffle reduction.
-    * Uses groups of K threads per row
-    *
-    * Template parameters:
-    *   1) K:  number of threads working on a single row. K = 2, 4, 8, 16, 32
-    *   2) F:  fill-mode. See hypreDevice_CSRMatrixMatvec for supported values
-    *   3) NV: number of vectors (> 1 for multi-component vectors)
-    *   4) T:  data type of matrix/vector coefficients
-    *--------------------------------------------------------------------------*/
-
-    template <index_type F, index_type K, index_type NV, typename T>
-    __global__ void
-    //__launch_bounds__(512, 1)
-    hypreGPUKernel_CSRMatvecShuffle(hypre_DeviceItem &item,
-                                    index_type         num_rows,
-                                    index_type         num_vectors,
-                                    index_type        *row_id,
-                                    index_type         idxstride_x,
-                                    index_type         idxstride_y,
-                                    index_type         vecstride_x,
-                                    index_type         vecstride_y,
-                                    T                 alpha,
-                                    index_type        *d_ia,
-                                    index_type        *d_ja,
-                                    T                *d_a,
-                                    T                *d_x,
-                                    T                 beta,
-                                    T                *d_y )
-    {
-    #if defined(HYPRE_USING_SYCL)
-      index_type grid_ngroups  = item.get_group_range(2) * (HYPRE_SPMV_BLOCKDIM / K);
-      index_type grid_group_id = __shfl_sync(et_group(2) * HYPRE_SPMV_BLOCKDIM + item.get_local_id(2)) / K;
-      index_type group_lane    = item.get_local_id(2) & (K - 1);
-    #else
-      const index_type  grid_ngroups  = gridDim.x * (HYPRE_SPMV_BLOCKDIM / K);
-      index_type        grid_group_id = (blockIdx.x * HYPRE_SPMV_BLOCKDIM + threadIdx.x) / K;
-      const index_type  group_lane    = threadIdx.x & (K - 1);
-    #endif
-
-      for (; __any_sync(0xffffffff, grid_group_id < num_rows);
-            grid_group_id += grid_ngroups)
-      {
-        {
-          index_type grid_row_id = -1, p = 0, q = 0;
-
-          if (row_id)
-          {
-            if (grid_group_id < num_rows && group_lane == 0)
-            {
-                grid_row_id = __ldg(&row_id[grid_group_id]);
-            }
-            grid_row_id = __shfl_sync(0xffffffff, grid_row_id, 0, K);
-          }
-          else
-          {
-            grid_row_id = grid_group_id;
-          }
-
-          if (grid_group_id < num_rows && group_lane < 2)
-          {
-            p = __ldg(&d_ia[grid_row_id + group_lane]);
-          }
-          q = __shfl_sync(0xffffffff, p, 1, K);
-          p = __shfl_sync(0xffffffff, p, 0, K);
-
-          T sum[NV] = {T(0)};
-    #if HYPRE_SPMV_VERSION == 1
-    #pragma unroll 1
-          for (p += group_lane; p < q; p += K * 2)
-          {
-            HYPRE_SPMV_ADD_SUM(p, NV)
-            if (p + K < q)
-            {
-                HYPRE_SPMV_ADD_SUM((p + K), NV)
-            }
-          }
-    #elif HYPRE_SPMV_VERSION == 2
-    #pragma unroll 1
-          for (p += group_lane; __any_sync(0xffffffff, p < q); p += K)
-          {
-            if (p < q)
-            {
-                HYPRE_SPMV_ADD_SUM(p, NV)
-            }
-          }
-    #else
-    #pragma unroll 1
-          for (p += group_lane;  p < q; p += K)
-          {
-            HYPRE_SPMV_ADD_SUM(p, NV)
-          }
-    #endif
-
-          // parallel reduction
-          for (index_type i = 0; i < NV; i++)
-          {
-            for (index_type d = K / 2; d > 0; d >>= 1)
-            {
-                sum[i] += __shfl_down_sync(0xffffffff, sum[i], d);
-            }
-          }
-
-          if (grid_group_id < num_rows && group_lane == 0)
-          {
-            for (index_type i = 0; i < NV; i++)
-            {
-              d_y[grid_row_id * idxstride_y + i * vecstride_y] = sum[i];
-            }
-            // if (beta)
-            // {
-            //     for (index_type i = 0; i < NV; i++)
-            //     {
-            //       d_y[grid_row_id * idxstride_y + i * vecstride_y] =
-            //           alpha * sum[i] +
-            //           beta * d_y[grid_row_id * idxstride_y + i * vecstride_y];
-            //     }
-            // }
-            // else
-            // {
-            //     for (index_type i = 0; i < NV; i++)
-            //     {
-            //       d_y[grid_row_id * idxstride_y + i * vecstride_y] = alpha * sum[i];
-            //     }
-            // }
-          }
-        }
-      }
-    }
-
-    int MultiBasisParallelConjugateGradientCuda::hypreDevice_CSRMatrixMatvec(matrix::Csr* A, vector::Vector* X, vector::Vector* result)
-    {
-      hypre_DeviceItem item = nullptr;
-      index_type  num_vectors = X->getNumVectors();
-      index_type  num_rows = A->getNumRows();
-      index_type *rowid = nullptr;
-      index_type  num_nonzeros = A->getNnz();
-      index_type  idxstride_x = 1;
-      index_type  idxstride_y = 1;
-      index_type  vecstride_x = num_rows;
-      index_type  vecstride_y = num_rows;
-      real_type          alpha = 1.0;
-      index_type *d_ia = A->getRowData(memory::DEVICE);
-      index_type *d_ja = A->getColData(memory::DEVICE);
-      real_type         *d_a = A->getValues(memory::DEVICE);
-      real_type         *d_x = X->getData(memory::DEVICE);
-      real_type          beta 
-      = 0.0;
-      real_type         *d_y = result->getData(memory::DEVICE);
-      assert(d_ia && d_ja && d_x && d_y);
-
-      constexpr int F = HYPRE_SPMV_FILL_WHOLE;
-
-      const index_type avg_rownnz = (num_nonzeros + num_rows - 1) / num_rows;
-
-      static constexpr index_type group_sizes[5] = {32, 16, 8, 4, 4};
-
-      static constexpr index_type unroll_depth[9] = {0, 1, 2, 3, 4, 5, 6, 7, 8};
-
-      static index_type avg_rownnz_lower_bounds[5] = {64, 32, 16, 8, 0};
-
-      static index_type num_groups_per_block[5] = { HYPRE_SPMV_BLOCKDIM / group_sizes[0],
-                                                    HYPRE_SPMV_BLOCKDIM / group_sizes[1],
-                                                    HYPRE_SPMV_BLOCKDIM / group_sizes[2],
-                                                    HYPRE_SPMV_BLOCKDIM / group_sizes[3],
-                                                    HYPRE_SPMV_BLOCKDIM / group_sizes[4]
-                                                  };
-
-      const dim3 bDim = dim3(HYPRE_SPMV_BLOCKDIM);
-
-      /* Select execution path */
-      switch (num_vectors)
-      {
-          case unroll_depth[1]:
-            HYPRE_SPMV_GPU_LAUNCH(hypreGPUKernel_CSRMatvecShuffle, unroll_depth[1]);
-            break;
-
-          case unroll_depth[2]:
-            HYPRE_SPMV_GPU_LAUNCH(hypreGPUKernel_CSRMatvecShuffle, unroll_depth[2]);
-            break;
-
-          // case unroll_depth[3]:
-          //   HYPRE_SPMV_GPU_LAUNCH(hypreGPUKernel_CSRMatvecShuffle, unroll_depth[3]);
-          //   break;
-
-          case unroll_depth[4]:
-            HYPRE_SPMV_GPU_LAUNCH(hypreGPUKernel_CSRMatvecShuffle, unroll_depth[4]);
-            break;
-
-          // case unroll_depth[5]:
-          //   HYPRE_SPMV_GPU_LAUNCH(hypreGPUKernel_CSRMatvecShuffle, unroll_depth[5]);
-          //   break;
-
-          // case unroll_depth[6]:
-          //   HYPRE_SPMV_GPU_LAUNCH(hypreGPUKernel_CSRMatvecShuffle, unroll_depth[6]);
-          //   break;
-
-          // case unroll_depth[7]:
-          //   HYPRE_SPMV_GPU_LAUNCH(hypreGPUKernel_CSRMatvecShuffle, unroll_depth[7]);
-          //   break;
-
-          case unroll_depth[8]:
-            HYPRE_SPMV_GPU_LAUNCH(hypreGPUKernel_CSRMatvecShuffle, unroll_depth[8]);
-            break;
-
-          default:
-            HYPRE_SPMV_GPU_LAUNCH(hypreGPUKernel_CSRMatvecShuffleGT8, unroll_depth[8]);
-            break;
-      }
-
-      cudaDeviceSynchronize();
-      cudaError_t error = cudaGetLastError();
-      if (error != cudaSuccess) {
-          printf("Kernel error: %s\n", cudaGetErrorString(error));
-      }
-
-      return error;
     }
   } // namespace hykkt
 } // namespace ReSolve

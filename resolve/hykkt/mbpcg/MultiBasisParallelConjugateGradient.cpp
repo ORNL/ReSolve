@@ -26,7 +26,7 @@ namespace ReSolve
   {
     /** Constructor for MultiBasisParallelConjugateGradient.
      *  @param n[in] - Dimension of outer system.
-     *  @param m[in] - Dimension of inner system.
+     *  @param k[in] - Number of copies of the systems solved at once.
      *  @param memspace[in] - Memory space of incoming data and for computation.
      *  @param matrix_handler[in] - Matrix handler for the selected backend.
      *  @param vector_handler[in] - Vector handler for the selected backend.
@@ -41,14 +41,18 @@ namespace ReSolve
         k_(k),
         matrix_handler_(matrix_handler),
         vector_handler_(vector_handler),
-        memspace_(memspace),
-        gram_schmidt_(vector_handler_, GramSchmidt::GSVariant::CGS2)
+        memspace_(memspace)
     {
 #ifdef RESOLVE_USE_CUDA
       impl_ = new MultiBasisParallelConjugateGradientCuda(vector_handler_);
 #elif defined(RESOLVE_USE_HIP)
       impl_ = new MultiBasisParallelConjugateGradientHip(vector_handler_);
 #endif
+
+      if (k != 1 && k != 2 && k != 4 && k != 8)
+      {
+        out::warning() << "Unfamiliar k value! MBPCG is optimized for k of 1, 2, 4, or 8. Other values may work but will perform poorly.";
+      }
     }
 
     MultiBasisParallelConjugateGradient::~MultiBasisParallelConjugateGradient()
@@ -97,6 +101,7 @@ namespace ReSolve
     }
 
     /**
+     * // ...
      * @brief Loads or reloads preconditioner matrix pointers to the solver. This transforms
      * the system into L^-1 * A * L^-T * y = L * b.
      * @param[in] L - Pointer to the lower triangular preconditioner matrix (L) in CSR format.
@@ -201,8 +206,7 @@ namespace ReSolve
 
       vector_handler_->randomVector(X_prec_0_, -1.0, 1.0, memspace_);
       // deviceSynchronize(); // for debugging
-      impl_->SpMMTallSkinny(A_prec_, X_prec_0_, Temp_nxk_);
-      // impl_->hypreDevice_CSRMatrixMatvec(A_prec_, X_prec_0_, Temp_nxk_);
+      impl_->SpMM(A_prec_, X_prec_0_, Temp_nxk_);
       // matrix_handler_->matvec(A_prec_, X_prec_0_, Temp_nxk_, &ONE, &ZERO, memspace_);
       real_type AX_prec_0_norm = vector_handler_->norm(Temp_nxk_, memspace_);
       real_type B_prec_norm = sqrt(static_cast<double>(k_)) * vector_handler_->norm(b_prec_, memspace_);
@@ -212,8 +216,6 @@ namespace ReSolve
       X_res_->setToZero(memspace_);
       vector_handler_->axpy(-normalization_factor, Temp_nxk_, B_res_, memspace_);
     }
-
-    // todo: "X_res = X_res + P @ M" and "Tau = S * Xi" can be done in parallel
 
     int MultiBasisParallelConjugateGradient::solve()
     {
@@ -234,12 +236,7 @@ namespace ReSolve
       // ADD PRECONDITIONER LATER. W = L^-1 * R
       W_->copyFromExternal(R_prec_, memspace_, memspace_); // with preconditioner, this is L_inv * R_res
       Sigma_->setToZero(memspace_);
-      if (impl_->choleskyQr(W_, Sigma_, memspace_) != 0)
-      {
-        printf("QR failed!\n");
-        return 1;
-        // todo: fallback
-      }
+      impl_->choleskyQr(W_, Sigma_, memspace_);
 
       // S = L^-1 * W
       S_->copyFromExternal(W_, memspace_, memspace_);
@@ -256,8 +253,7 @@ namespace ReSolve
         // 1. SpMM / SpMV Section
         // auto spmv_start = std::chrono::steady_clock::now();
         // matrix_handler_->matvec(A_prec_, S_, Temp_nxk_, &ONE, &ZERO, memspace_);
-        impl_->SpMMTallSkinny(A_prec_, S_, Temp_nxk_);
-        // impl_->hypreDevice_CSRMatrixMatvec(A_prec_, S_, Temp_nxk_);
+        impl_->SpMM(A_prec_, S_, Temp_nxk_);
         // deviceSynchronize(); // optional
         // auto spmv_end = std::chrono::steady_clock::now();
         // printf("  [it %d] spmv: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(spmv_end - spmv_start).count()); // optional
@@ -281,8 +277,7 @@ namespace ReSolve
         // vector_handler_->choleskySolve(Xi_inv_->getData(memspace_), Temp_kxk_, 'L', memspace_); // Temp_kxk = Xi * Sigma
         // vector_handler_->gemm('N', 'N', ONE, ONE, S_, Temp_kxk_, X_res_, memspace_);
         // vector_handler_->gemm('N', 'N', MINUS_ONE, ONE, Temp_nxk_, Temp_kxk_, R_prec_, memspace_);
-        impl_->updateXRSplit(Xi_inv_, Sigma_, S_, Temp_nxk_, Temp_kxk_, X_res_, R_prec_);
-        // impl_->updateXR(Xi_inv_, Sigma_, S_, Temp_nxk_, X_res_, R_prec_);
+        impl_->updateXR(Xi_inv_, Sigma_, S_, Temp_nxk_, Temp_kxk_, X_res_, R_prec_);
         // deviceSynchronize(); // optional
         // auto chol_update_end = std::chrono::steady_clock::now();
         // printf("  [it %d] cholesky & update: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(chol_update_end - chol_update_start).count()); // optional
@@ -324,16 +319,15 @@ namespace ReSolve
         //   }
         // }
         
-        deviceSynchronize();
         best_basis_error = best_basis_r_norm / b_norm_;
         // auto basis_loop_end = std::chrono::steady_clock::now();
         // printf("  [it %d] basis_norm_loop: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(basis_loop_end - basis_loop_start).count()); // optional
         // printf("error %f\n", best_basis_error);
 
         // std::cout << std::setprecision(std::numeric_limits<double>::max_digits10) << best_basis_error << '\n';
+        // printf("%e\n", best_basis_error);
         // 7. Convergence Checking & Final Calculations Block
         if (best_basis_error < initial_tol_)
-        // if (false)
         {
           // auto conv_block_start = std::chrono::steady_clock::now();
           // A * X = B - R
@@ -357,7 +351,7 @@ namespace ReSolve
           }
           else
           {
-            impl_->choleskyFactorizeSolve(Temp_kxk_, c_, c_);
+            impl_->choleskySolve(Temp_kxk_, c_, c_);
             
             // r = b - AX * c
             vector_handler_->gemv('N', k_, ONE, ZERO, Temp_nxk_, c_, r_, memspace_);
@@ -416,11 +410,7 @@ namespace ReSolve
         // 8. Cholesky QR Section
         // auto qr_start = std::chrono::steady_clock::now();
         Zeta_->setToZero(memspace_);
-        if (impl_->choleskyQr(W_, Zeta_, memspace_) != 0)
-        {
-          out::error() << "QR failed!";
-          return 1;
-        }
+        impl_->choleskyQr(W_, Zeta_, memspace_);
         // deviceSynchronize(); // optional
         // auto qr_end = std::chrono::steady_clock::now();
         // printf("  [it %d] qr: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(qr_end - qr_start).count()); // optional

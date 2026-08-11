@@ -7,12 +7,6 @@
 
 #include <resolve/Common.hpp>
 #include <resolve/hykkt/cholesky/CholeskySolver.hpp>
-#include <resolve/hykkt/mbpcg/MultiBasisParallelConjugateGradientImpl.hpp>
-#ifdef RESOLVE_USE_CUDA
-#include <resolve/hykkt/mbpcg/MultiBasisParallelConjugateGradientCuda.hpp>
-#elif defined(RESOLVE_USE_HIP)
-#include <resolve/hykkt/mbpcg/MultiBasisParallelConjugateGradientHip.hpp>
-#endif
 #include <resolve/MemoryUtils.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
@@ -62,8 +56,6 @@ namespace ReSolve
 
       CholeskySolver* cholesky_solver_{nullptr}; // Used for preconditioning. Contains the preconditioner matrix.
       
-      MultiBasisParallelConjugateGradientImpl* impl_{nullptr}; // ANDREW TODO: TEST AND DELETE
-
       bool enable_diagonal_scaling_{false};
       bool enable_preconditioning_{false};
 

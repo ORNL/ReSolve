@@ -216,7 +216,6 @@ broken (maybe theres limits to how low the error can get)
 int main(int, char**)
 {
   ReSolve::tests::TestingResults result;
-  // runTests<ReSolve::LinAlgWorkspaceCpu>("CPU", ReSolve::memory::HOST, result);
 
 #ifdef RESOLVE_USE_CUDA
   runTests<ReSolve::LinAlgWorkspaceCUDA>("CUDA", ReSolve::memory::DEVICE, result);
