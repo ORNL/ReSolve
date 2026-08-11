@@ -234,33 +234,22 @@ namespace ReSolve
                                    vector::Vector* y)
   {
     using namespace constants;
-    if (k < 200)
-    {
-      hip::axpy_multi(size,
-                      k,
-                      x->getData(memory::DEVICE),
-                      y->getData(memory::DEVICE),
-                      alpha->getData(memory::DEVICE));
-    }
-    else
-    {
-      rocblas_handle handle_rocblas = workspace_->getRocblasHandle();
-      rocblas_dgemm(handle_rocblas,
-                    rocblas_operation_none,
-                    rocblas_operation_none,
-                    size,                           // m
-                    1,                              // n
-                    k,                              // k
-                    &MINUS_ONE,                     // alpha
-                    x->getData(memory::DEVICE),     // A
-                    size,                           // lda
-                    alpha->getData(memory::DEVICE), // B
-                    k,                              // ldb
-                    &ONE,
-                    y->getData(memory::DEVICE), // c
-                    size);                      // ldc
-    }
-    y->setDataUpdated(memory::DEVICE);
+    rocblas_handle handle_rocblas = workspace_->getRocblasHandle();
+    rocblas_dgemm(handle_rocblas,
+                  rocblas_operation_none,
+                  rocblas_operation_none,
+                  size,                           // m
+                  1,                              // n
+                  k,                              // k
+                  &MINUS_ONE,                     // alpha
+                  x->getData(memory::DEVICE),     // A
+                  size,                           // lda
+                  alpha->getData(memory::DEVICE), // B
+                  k,                              // ldb
+                  &ONE,
+                  y->getData(memory::DEVICE), // c
+                  size);                      // ldc
+  y->setDataUpdated(memory::DEVICE);
     mem_.deviceSynchronize();
   }
 
@@ -285,34 +274,21 @@ namespace ReSolve
                                    vector::Vector* res)
   {
     using namespace constants;
-
-    if (k < 200)
-    {
-      hip::dot_2_multi(size,
-                       k,
-                       x->getData(0, memory::DEVICE),
-                       x->getData(1, memory::DEVICE),
-                       V->getData(memory::DEVICE),
-                       res->getData(memory::DEVICE));
-    }
-    else
-    {
-      rocblas_handle handle_rocblas = workspace_->getRocblasHandle();
-      rocblas_dgemm(handle_rocblas,
-                    rocblas_operation_transpose,
-                    rocblas_operation_none,
-                    k,                          // m
-                    2,                          // n
-                    size,                       // k
-                    &ONE,                       // alpha
-                    V->getData(memory::DEVICE), // A
-                    size,                       // lda
-                    x->getData(memory::DEVICE), // B
-                    size,                       // ldb
-                    &ZERO,
-                    res->getData(memory::DEVICE), // c
-                    k);                           // ldc
-    }
+    rocblas_handle handle_rocblas = workspace_->getRocblasHandle();
+    rocblas_dgemm(handle_rocblas,
+                  rocblas_operation_transpose,
+                  rocblas_operation_none,
+                  k,                          // m
+                  2,                          // n
+                  size,                       // k
+                  &ONE,                       // alpha
+                  V->getData(memory::DEVICE), // A
+                  size,                       // lda
+                  x->getData(memory::DEVICE), // B
+                  size,                       // ldb
+                  &ZERO,
+                  res->getData(memory::DEVICE), // c
+                  k);                           // ldc
     res->setDataUpdated(memory::DEVICE);
     mem_.deviceSynchronize();
   }

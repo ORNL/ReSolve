@@ -235,32 +235,21 @@ namespace ReSolve
                                     vector::Vector* y)
   {
     using namespace constants;
-    if (k < 200)
-    {
-      cuda::axpy_multi(size,
-                       k,
-                       x->getData(memory::DEVICE),
-                       y->getData(memory::DEVICE),
-                       alpha->getData(memory::DEVICE));
-    }
-    else
-    {
-      cublasHandle_t handle_cublas = workspace_->getCublasHandle();
-      cublasDgemm(handle_cublas,
-                  CUBLAS_OP_N,
-                  CUBLAS_OP_N,
-                  size,                           // m
-                  1,                              // n
-                  k,                              // k
-                  &MINUS_ONE,                     // alpha
-                  x->getData(memory::DEVICE),     // A
-                  size,                           // lda
-                  alpha->getData(memory::DEVICE), // B
-                  k,                              // ldb
-                  &ONE,
-                  y->getData(memory::DEVICE), // c
-                  size);                      // ldc
-    }
+    cublasHandle_t handle_cublas = workspace_->getCublasHandle();
+    cublasDgemm(handle_cublas,
+                CUBLAS_OP_N,
+                CUBLAS_OP_N,
+                size,                           // m
+                1,                              // n
+                k,                              // k
+                &MINUS_ONE,                     // alpha
+                x->getData(memory::DEVICE),     // A
+                size,                           // lda
+                alpha->getData(memory::DEVICE), // B
+                k,                              // ldb
+                &ONE,
+                y->getData(memory::DEVICE), // c
+                size);                      // ldc
     y->setDataUpdated(memory::DEVICE);
   }
 
@@ -285,34 +274,21 @@ namespace ReSolve
                                     vector::Vector* res)
   {
     using namespace constants;
-
-    if (k < 200)
-    {
-      cuda::dot_2_multi(size,
-                        k,
-                        x->getData(0, memory::DEVICE),
-                        x->getData(1, memory::DEVICE),
-                        V->getData(memory::DEVICE),
-                        res->getData(memory::DEVICE));
-    }
-    else
-    {
-      cublasHandle_t handle_cublas = workspace_->getCublasHandle();
-      cublasDgemm(handle_cublas,
-                  CUBLAS_OP_T,
-                  CUBLAS_OP_N,
-                  k,                          // m
-                  2,                          // n
-                  size,                       // k
-                  &ONE,                       // alpha
-                  V->getData(memory::DEVICE), // A
-                  size,                       // lda
-                  x->getData(memory::DEVICE), // B
-                  size,                       // ldb
-                  &ZERO,
-                  res->getData(memory::DEVICE), // c
-                  k);                           // ldc
-    }
+    cublasHandle_t handle_cublas = workspace_->getCublasHandle();
+    cublasDgemm(handle_cublas,
+                CUBLAS_OP_T,
+                CUBLAS_OP_N,
+                k,                          // m
+                2,                          // n
+                size,                       // k
+                &ONE,                       // alpha
+                V->getData(memory::DEVICE), // A
+                size,                       // lda
+                x->getData(memory::DEVICE), // B
+                size,                       // ldb
+                &ZERO,
+                res->getData(memory::DEVICE), // c
+                k);                           // ldc
     res->setDataUpdated(memory::DEVICE);
   }
 
