@@ -61,7 +61,7 @@ namespace ReSolve
     int factorize(); //  numeric part
     int refactorize();
     int refactorizationSetup();
-    int preconditionerSetup(std::string side);
+    int preconditionerSetup(Preconditioner::Side side);
     int resetPreconditioner(matrix_type* A);
     int solve(vector_type* rhs, vector_type* x);  // for direct and iterative
     int refine(vector_type* rhs, vector_type* x); // for iterative refinement

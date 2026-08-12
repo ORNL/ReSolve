@@ -9,6 +9,7 @@
 #include <string>
 
 #include "ExampleHelper.hpp"
+#include <resolve/Preconditioner.hpp>
 #include <resolve/SystemSolver.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/io.hpp>
@@ -171,6 +172,11 @@ int sysGmres(int argc, char* argv[])
 
   processInputs(method, gs, sketch, flexible, side);
 
+  // processInputs guarantees `side` is "left" or "right".
+  ReSolve::Preconditioner::Side prec_side =
+      (side == "left") ? ReSolve::Preconditioner::Side::LEFT
+                       : ReSolve::Preconditioner::Side::RIGHT;
+
   std::cout << "Matrix file: " << matrix_pathname << "\n"
             << "RHS file: " << rhs_pathname << "\n";
 
@@ -255,7 +261,7 @@ int sysGmres(int argc, char* argv[])
   // Set up the preconditioner
   if (return_code == 0)
   {
-    status = solver.preconditionerSetup(side);
+    status = solver.preconditionerSetup(prec_side);
     std::cout << "solver.preconditionerSetup returned status: " << status << "\n";
     if (status != 0)
     {
