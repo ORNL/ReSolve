@@ -109,6 +109,11 @@ int test(int argc, char* argv[])
 
   processInputs(method, gs, sketch, side);
 
+  // processInputs guarantees `side` is "left" or "right".
+  ReSolve::Preconditioner::Side prec_side =
+      (side == "left") ? ReSolve::Preconditioner::Side::LEFT
+                       : ReSolve::Preconditioner::Side::RIGHT;
+
   // Create workspace and initialize its handles.
   workspace_type workspace;
   workspace.initializeHandles();
@@ -170,7 +175,7 @@ int test(int argc, char* argv[])
   solver.getIterativeSolver().setCliParam("restart", "200");
 
   // Set preconditioner (default in this case ILU0)
-  status = solver.preconditionerSetup(side);
+  status = solver.preconditionerSetup(prec_side);
   error_sum += status;
 
   // Solve system
@@ -207,7 +212,7 @@ int test(int argc, char* argv[])
   bad_guess_solver.getIterativeSolver().setCliParam("flexible", flexible);
   bad_guess_solver.getIterativeSolver().setCliParam("restart", "200");
 
-  status = bad_guess_solver.preconditionerSetup(side);
+  status = bad_guess_solver.preconditionerSetup(prec_side);
   error_sum += status;
 
   const real_type bad_guess_rnorm = bad_guess_solver.getResidualNorm(vec_rhs, &bad_guess_x);
@@ -265,7 +270,7 @@ int test(int argc, char* argv[])
   accepted_guess_solver.getIterativeSolver().setCliParam("flexible", flexible);
   accepted_guess_solver.getIterativeSolver().setCliParam("restart", "200");
 
-  status = accepted_guess_solver.preconditionerSetup(side);
+  status = accepted_guess_solver.preconditionerSetup(prec_side);
   error_sum += status;
 
   const real_type initial_guess_rnorm = accepted_guess_solver.getResidualNorm(vec_rhs, &vec_x_guess);
