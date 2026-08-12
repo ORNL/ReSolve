@@ -71,6 +71,7 @@ namespace ReSolve
 
     LinSolverDirect&    getFactorizationSolver();
     LinSolverDirect&    getRefactorizationSolver();
+    LinSolverDirect&    getPreconditionerSolver();
     LinSolverIterative& getIterativeSolver();
     Preconditioner&     getPreconditioner();
 
@@ -96,7 +97,7 @@ namespace ReSolve
   private:
     LinSolverDirect*    factorizationSolver_{nullptr};
     LinSolverDirect*    refactorizationSolver_{nullptr};
-    LinSolverDirect*    preconditionSolver_{nullptr};
+    LinSolverDirect*    preconditionerSolver_{nullptr};
     LinSolverIterative* iterativeSolver_{nullptr};
     GramSchmidt*        gs_{nullptr};
     Preconditioner*     preconditioner_{nullptr};

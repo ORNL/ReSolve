@@ -9,6 +9,7 @@
 #include <string>
 
 #include "ExampleHelper.hpp"
+#include <resolve/LinSolverDirect.hpp>
 #include <resolve/SystemSolver.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/io.hpp>
@@ -33,6 +34,10 @@ void printHelpInfo()
   std::cout << "\t-h \tPrints this message.\n";
   std::cout << "\t-i <iter method> \tIterative method: randgmres or fgmres (default 'randgmres').\n";
   std::cout << "\t-g <gs method> \tGram-Schmidt method: cgs1, cgs2, or mgs (default 'cgs2').\n";
+  std::cout << "\t-n <yes|no> \tEnable numeric boost on CUDA/HIP (default 'yes' on CUDA, 'no' on HIP).\n";
+  std::cout << "\t-t <boost tolerance> \tNumeric boost tolerance for CUDA/HIP (default '1e-6').\n";
+  std::cout << "\t-v <boost value> \tNumeric boost replacement value for CUDA/HIP (default '1e-6').\n";
+  std::cout << "\t-z <zero diagonal> \tZero diagonal replacement value for CPU (default '1e-6').\n";
   std::cout << "\t-s <sketching method> \tSketching method: count or fwht (default 'count')\n";
   std::cout << "\t-x <flexible> \tEnable flexible: yes or no (default 'yes')\n\n";
   std::cout << "\t-p <preconditioner side> \tPreconditioner side: left or right (default 'right')\n\n";
@@ -59,6 +64,11 @@ static void processInputs(std::string& method,
                           std::string& sketch,
                           std::string& flexible,
                           std::string& side);
+
+/// Processes backend-specific ILU0 zero-pivot options
+static int processILU0Inputs(SystemSolver&      solver,
+                             const std::string& hw_backend,
+                             const CliOptions&  options);
 
 /// Main function selects example to be run
 int main(int argc, char* argv[])
@@ -196,6 +206,12 @@ int sysGmres(int argc, char* argv[])
 
   solver.setGramSchmidtMethod(gs);
 
+  status = processILU0Inputs(solver, hw_backend, options);
+  if (status != 0)
+  {
+    return 1;
+  }
+
   // Read and open matrix and right-hand-side vector
   std::ifstream mat_file(matrix_pathname);
   if (!mat_file.is_open())
@@ -328,4 +344,70 @@ void processInputs(std::string& method, std::string& gs, std::string& sketch, st
     std::cout << "Preconditioning side " << side << " not recognized.\n";
     std::cout << "Setting preconditioning side to the default (right).\n\n";
   }
+}
+
+int processILU0Inputs(SystemSolver& solver, const std::string& hw_backend, const CliOptions& options)
+{
+  auto numeric_boost   = options.getParamFromKey("-n");
+  auto boost_tolerance = options.getParamFromKey("-t");
+  auto boost_value     = options.getParamFromKey("-v");
+  auto zero_diagonal   = options.getParamFromKey("-z");
+
+  if (hw_backend == "CPU")
+  {
+    if (numeric_boost || boost_tolerance || boost_value)
+    {
+      std::cout << "Options -n, -t, and -v are only supported by CUDA and HIP backends.\n"
+                << "For the CPU backend, use -z to set the zero diagonal value.\n";
+      return 1;
+    }
+
+    if (zero_diagonal)
+    {
+      if (zero_diagonal->second.empty())
+      {
+        std::cout << "Option -z requires a zero diagonal value.\n";
+        return 1;
+      }
+      return solver.getPreconditionerSolver().setCliParam("zero_diagonal", zero_diagonal->second);
+    }
+    return 0;
+  }
+
+  if (zero_diagonal)
+  {
+    std::cout << "Option -z is only supported by the CPU backend.\n"
+              << "For CUDA and HIP backends, use -n, -t, and -v.\n";
+    return 1;
+  }
+
+  int status = 0;
+  if (numeric_boost)
+  {
+    if ((numeric_boost->second != "yes") && (numeric_boost->second != "no"))
+    {
+      std::cout << "Numeric boost option must be 'yes' or 'no'.\n";
+      return 1;
+    }
+    status += solver.getPreconditionerSolver().setCliParam("numeric_boost", numeric_boost->second);
+  }
+  if (boost_tolerance)
+  {
+    if (boost_tolerance->second.empty())
+    {
+      std::cout << "Option -t requires a boost tolerance value.\n";
+      return 1;
+    }
+    status += solver.getPreconditionerSolver().setCliParam("boost_tolerance", boost_tolerance->second);
+  }
+  if (boost_value)
+  {
+    if (boost_value->second.empty())
+    {
+      std::cout << "Option -v requires a boost replacement value.\n";
+      return 1;
+    }
+    status += solver.getPreconditionerSolver().setCliParam("boost_value", boost_value->second);
+  }
+  return status;
 }

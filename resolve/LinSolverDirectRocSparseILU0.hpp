@@ -52,6 +52,15 @@ namespace ReSolve
     int         printCliParam(const std::string id) const override;
 
   private:
+    enum ParameterIDs
+    {
+      NUMERIC_BOOST = 0,
+      BOOST_TOLERANCE,
+      BOOST_VALUE
+    };
+
+    void initParamList();
+
     rocsparse_status status_rocsparse_;
 
     MemoryHandler       mem_; ///< Device memory manager object
@@ -68,5 +77,9 @@ namespace ReSolve
     real_type* d_aux1_{nullptr};
     // since ILU OVERWRITES THE MATRIX values, we need a buffer to keep the values of ILU decomposition.
     real_type* d_ILU_vals_{nullptr};
+
+    bool      numeric_boost_{false};  ///< Whether numeric boost is enabled.
+    real_type boost_tolerance_{1e-6}; ///< Threshold below which a diagonal entry is replaced.
+    real_type boost_value_{1e-6};     ///< Value substituted for a small diagonal entry.
   };
 } // namespace ReSolve

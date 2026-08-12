@@ -21,6 +21,7 @@ namespace ReSolve
   LinSolverDirectCpuILU0::LinSolverDirectCpuILU0(LinAlgWorkspaceCpu* /* workspace */)
   // : workspace_(workspace)
   {
+    initParamList();
   }
 
   /**
@@ -381,23 +382,23 @@ namespace ReSolve
   }
 
   /**
-   * @brief Placeholder function for now.
+   * @brief Set Cli parameters for ILU0 solver.
    *
-   * The following switch (getParamId(Id)) cases always run the default and
-   * are currently redundant code (like an if (true)).
-   * In the future, they will be expanded to include more options.
+   * @param[in] id    - string ID for parameter to set
+   * @param[in] value - string value for parameter to set
    *
-   * @param id - string ID for parameter to set.
-   * @return int Error code.
+   * @return 0 if successful, 1 otherwise
    */
-  int LinSolverDirectCpuILU0::setCliParam(const std::string id, const std::string /* value */)
+  int LinSolverDirectCpuILU0::setCliParam(const std::string id, const std::string value)
   {
     switch (getParamId(id))
     {
+    case ZERO_DIAGONAL:
+      return setZeroDiagonal(atof(value.c_str()));
     default:
       std::cout << "Setting parameter failed!\n";
+      return 1;
     }
-    return 0;
   }
 
   /**
@@ -441,19 +442,18 @@ namespace ReSolve
   }
 
   /**
-   * @brief Placeholder function for now.
+   * @brief Get the real parameter for the ILU0 solver.
    *
-   * The following switch (getParamId(Id)) cases always run the default and
-   * are currently redundant code (like an if (true)).
-   * In the future, they will be expanded to include more options.
+   * @param[in] id - string ID for parameter to get
    *
-   * @param id - string ID for parameter to get.
-   * @return real_type Value of the real_type parameter to return.
+   * @return real_type - parameter value, or NaN if parameter is unknown
    */
   real_type LinSolverDirectCpuILU0::getCliParamReal(const std::string id) const
   {
     switch (getParamId(id))
     {
+    case ZERO_DIAGONAL:
+      return zero_diagonal_;
     default:
       out::error() << "Trying to get unknown real parameter " << id << "\n";
     }
@@ -480,15 +480,36 @@ namespace ReSolve
     return false;
   }
 
+  /**
+   * @brief Print the ILU0 Cli parameters.
+   *
+   * @param[in] id - string ID for parameter to print
+   *
+   * @return 0 if successful, 1 otherwise
+   */
   int LinSolverDirectCpuILU0::printCliParam(const std::string id) const
   {
     switch (getParamId(id))
     {
+    case ZERO_DIAGONAL:
+      std::cout << zero_diagonal_ << "\n";
+      break;
     default:
       out::error() << "Trying to print unknown parameter " << id << "\n";
       return 1;
     }
     return 0;
+  }
+
+  /**
+   * @brief Initialize the parameter list for ILU0 solver.
+   *
+   * @post params_list_ is populated with the ILU0 solver parameters:
+   * - zero_diagonal
+   */
+  void LinSolverDirectCpuILU0::initParamList()
+  {
+    params_list_["zero_diagonal"] = ZERO_DIAGONAL;
   }
 
 } // namespace ReSolve

@@ -59,7 +59,7 @@ namespace ReSolve
     int  csc2csr(matrix::Csc* A_csc, matrix::Csr* A_csr);
 
   private:
-    enum ParamaterIDs
+    enum ParameterIDs
     {
       ZERO_PIVOT = 0,
       PIVOT_BOOST

@@ -50,7 +50,20 @@
 - Fixed GPU refactorization allocation and synchronization errors, uninitialized GMRES example initial guesses, and CUDA ILU0 failures on stored numerical zero pivots.
 
 - Added cuDSS implementation of Cholesky solver (HyKKT) and refactorization
+
 - Optimized CGS2 coefficient accumulation in `GramSchmidt` by eliminating an unnecessary device-to-host synchronization.
+
+- Added examples/sysGmres.cpp to demonstrate how to use SystemSolver with GMRES.
+
+- Updated MatrixHandler::addConst to return integer error codes instead of void.
+
+- Added a preconditioner interface class so users can define their own preconditioners.
+
+- Added left preconditioning support for GMRES and a user-defined preconditioner class.
+
+- Added optional timing output to `gpuRefactor`, `kluRefactor`, `gluRefactor`, and `sysRefactor` plus benchmark utilities for parsing logs and generating timing/residual plots.
+
+- Added configurable zero-pivot and pivot-boost parameters for CUDA and HIP ILU0 and exposed the preconditioner solver through `SystemSolver` for configuring them.
 
 ## Changes to Re::Solve in release 0.99.2
 
@@ -105,13 +118,3 @@ It is seamless from the user perspective and fixed many bugs.
 13. Added LUSOL direct solver, which can factorize matrices and extract factors independently of KLU.
 
 14. Various Spack updates.
-
-15. Added examples/sysGmres.cpp to demonstrate how to use SystemSolver with GMRES. 
-
-16. Updated MatrixHandler::addConst to return integer error codes instead of void.
-
-17. Added a preconditioner interface class so users can define their own preconditioners.
-
-18. Added left preconditioning support for GMRES and a user-defined preconditioner class.
-
-19. Added optional timing output to `gpuRefactor`, `kluRefactor`, `gluRefactor`, and `sysRefactor` plus benchmark utilities for parsing logs and generating timing/residual plots.

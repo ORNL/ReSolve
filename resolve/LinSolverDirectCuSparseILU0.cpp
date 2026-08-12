@@ -12,6 +12,7 @@ namespace ReSolve
   LinSolverDirectCuSparseILU0::LinSolverDirectCuSparseILU0(LinAlgWorkspaceCUDA* workspace)
   {
     workspace_ = workspace;
+    initParamList();
   }
 
   LinSolverDirectCuSparseILU0::~LinSolverDirectCuSparseILU0()
@@ -112,16 +113,11 @@ namespace ReSolve
 
     error_sum += status_cusparse_;
 
-    // Regularize small-magnitude pivots during CUDA ILU0 factorization.
-    real_type boost_tolerance = 1e-6;
-    real_type boost_value     = 1e-6;
-
-    status_cusparse_ =
-        cusparseDcsrilu02_numericBoost(workspace_->getCusparseHandle(),
-                                       info_A_,
-                                       1,
-                                       &boost_tolerance,
-                                       &boost_value);
+    status_cusparse_ = cusparseDcsrilu02_numericBoost(workspace_->getCusparseHandle(),
+                                                      info_A_,
+                                                      static_cast<int>(numeric_boost_),
+                                                      &boost_tolerance_,
+                                                      &boost_value_);
 
     if (status_cusparse_ != CUSPARSE_STATUS_SUCCESS)
     {
@@ -333,23 +329,30 @@ namespace ReSolve
   }
 
   /**
-   * @brief Placeholder function for now.
+   * @brief Set Cli parameters for ILU0 solver.
    *
-   * The following switch (getParamId(Id)) cases always run the default and
-   * are currently redundant code (like an if (true)).
-   * In the future, they will be expanded to include more options.
+   * @param[in] id    - string ID for parameter to set
+   * @param[in] value - string value for parameter to set
    *
-   * @param id - string ID for parameter to set.
-   * @return int Error code.
+   * @return 0 if successful, 1 otherwise
    */
-  int LinSolverDirectCuSparseILU0::setCliParam(const std::string id, const std::string /* value */)
+  int LinSolverDirectCuSparseILU0::setCliParam(const std::string id, const std::string value)
   {
     switch (getParamId(id))
     {
+    case NUMERIC_BOOST:
+      numeric_boost_ = (value == "yes");
+      return 0;
+    case BOOST_TOLERANCE:
+      boost_tolerance_ = atof(value.c_str());
+      return 0;
+    case BOOST_VALUE:
+      boost_value_ = atof(value.c_str());
+      return 0;
     default:
       std::cout << "Setting parameter failed!\n";
+      return 1;
     }
-    return 0;
   }
 
   /**
@@ -393,19 +396,20 @@ namespace ReSolve
   }
 
   /**
-   * @brief Placeholder function for now.
+   * @brief Get the real parameter for the ILU0 solver.
    *
-   * The following switch (getParamId(Id)) cases always run the default and
-   * are currently redundant code (like an if (true)).
-   * In the future, they will be expanded to include more options.
+   * @param[in] id - string ID for parameter to get
    *
-   * @param id - string ID for parameter to get.
-   * @return real_type Value of the real_type parameter to return.
+   * @return real_type - parameter value, or NaN if parameter is unknown
    */
   real_type LinSolverDirectCuSparseILU0::getCliParamReal(const std::string id) const
   {
     switch (getParamId(id))
     {
+    case BOOST_TOLERANCE:
+      return boost_tolerance_;
+    case BOOST_VALUE:
+      return boost_value_;
     default:
       out::error() << "Trying to get unknown real parameter " << id << "\n";
     }
@@ -413,34 +417,64 @@ namespace ReSolve
   }
 
   /**
-   * @brief Placeholder function for now.
+   * @brief Get the boolean parameter for the ILU0 solver.
    *
-   * The following switch (getParamId(Id)) cases always run the default and
-   * are currently redundant code (like an if (true)).
-   * In the future, they will be expanded to include more options.
+   * @param[in] id - string ID for parameter to get
    *
-   * @param id - string ID for parameter to get.
-   * @return bool Value of the bool parameter to return.
+   * @return bool - true if numeric boost is enabled, false otherwise
    */
   bool LinSolverDirectCuSparseILU0::getCliParamBool(const std::string id) const
   {
     switch (getParamId(id))
     {
+    case NUMERIC_BOOST:
+      return numeric_boost_;
     default:
       out::error() << "Trying to get unknown boolean parameter " << id << "\n";
     }
     return false;
   }
 
+  /**
+   * @brief Print the ILU0 Cli parameters.
+   *
+   * @param[in] id - string ID for parameter to print
+   *
+   * @return 0 if successful, 1 otherwise
+   */
   int LinSolverDirectCuSparseILU0::printCliParam(const std::string id) const
   {
     switch (getParamId(id))
     {
+    case NUMERIC_BOOST:
+      std::cout << numeric_boost_ << "\n";
+      break;
+    case BOOST_TOLERANCE:
+      std::cout << boost_tolerance_ << "\n";
+      break;
+    case BOOST_VALUE:
+      std::cout << boost_value_ << "\n";
+      break;
     default:
       out::error() << "Trying to print unknown parameter " << id << "\n";
       return 1;
     }
     return 0;
+  }
+
+  /**
+   * @brief Initialize the parameter list for ILU0 solver.
+   *
+   * @post params_list_ is populated with the ILU0 solver parameters:
+   * - numeric_boost
+   * - boost_tolerance
+   * - boost_value
+   */
+  void LinSolverDirectCuSparseILU0::initParamList()
+  {
+    params_list_["numeric_boost"]   = NUMERIC_BOOST;
+    params_list_["boost_tolerance"] = BOOST_TOLERANCE;
+    params_list_["boost_value"]     = BOOST_VALUE;
   }
 
 } // namespace ReSolve
