@@ -134,6 +134,7 @@ Re::Solve project would not be possible without significant contributions from
 - Jaelyn Litzinger
 - Phil Roth
 - Cameron Rutherford
+- Kakeru Ueda
 - Andrew Xu
 
 Development of this code was supported by the Exascale Computing Project (ECP),
