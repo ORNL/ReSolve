@@ -14,7 +14,9 @@ if(RESOLVE_USE_CUDSS)
 endif()
 add_subdirectory(spgemm)
 add_subdirectory(sccg)
-add_subdirectory(mbpcg)
+if(RESOLVE_USE_GPU)
+  add_subdirectory(mbpcg)
+endif()
 add_subdirectory(cg)
 
 # Build shared library ReSolve::hykkt

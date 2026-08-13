@@ -27,11 +27,6 @@ if(RESOLVE_USE_HIP)
   target_link_libraries(resolve_hykkt_mbpcg PUBLIC resolve_backend_hip)
 endif()
 
-# Link to dummy device backend if GPU support is not enabled
-if(NOT RESOLVE_USE_GPU)
-  target_link_libraries(resolve_hykkt_mbpcg PUBLIC resolve_backend_cpu)
-endif()
-
 target_include_directories(
   resolve_hykkt_mbpcg INTERFACE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
                                $<INSTALL_INTERFACE:include>

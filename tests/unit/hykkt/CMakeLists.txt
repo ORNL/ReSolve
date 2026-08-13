@@ -49,15 +49,17 @@ target_compile_definitions(
   runHykktSCCGTests.exe PRIVATE SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
 ) # For file paths
 
-add_executable(runHykktMBPCGTests.exe runHykktMBPCGTests.cpp)
-target_link_libraries(
-  runHykktMBPCGTests.exe
-  PRIVATE resolve_hykkt resolve_hykkt_mbpcg resolve_hykkt_chol resolve_matrix
-          resolve_vector
-)
-target_compile_definitions(
-  runHykktMBPCGTests.exe PRIVATE SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
-) # For file paths
+if (RESOLVE_USE_GPU)
+  add_executable(runHykktMBPCGTests.exe runHykktMBPCGTests.cpp)
+  target_link_libraries(
+    runHykktMBPCGTests.exe
+    PRIVATE resolve_hykkt resolve_hykkt_mbpcg resolve_hykkt_chol resolve_matrix
+            resolve_vector
+  )
+  target_compile_definitions(
+    runHykktMBPCGTests.exe PRIVATE SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
+  ) # For file paths
+endif()
 
 add_executable(runHykktCGTests.exe runHykktCGTests.cpp)
 target_link_libraries(
