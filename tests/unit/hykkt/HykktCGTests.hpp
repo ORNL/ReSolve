@@ -95,7 +95,6 @@ namespace ReSolve
         TestStatus  status;
       
         printf("\nTesting with diagonal scaling.\n");
-        
         hykkt::ConjugateGradient cg_diag_scal(n, &matrix_handler_, &vector_handler_, memspace_);
         cg_diag_scal.setSolverTolerance(cg_tol);
         // cg_diag_scal.setSolverItmax();
@@ -108,13 +107,15 @@ namespace ReSolve
         int converged = cg_diag_scal.solve(); // 0 if converged, 1 if not
         status *= (converged == 0);
         
-        printf("\nTest with preconditioning.\n");
-        
+        printf("\nTesting with preconditioner.\n");
         // The preconditioner here is just the diagonal scaling matrix without the square root (D^T * D)
         matrix::Csr* M = new matrix::Csr(n, n, n);
         M->allocateAll(memspace_);
         matrix_handler_.extractDiagonal(A, M, memspace_);
-        M->syncData(memory::HOST);
+        if (memspace_ == memory::DEVICE)
+        {
+          M->syncData(memory::HOST);
+        }
         hykkt::CholeskySolver cholesky_solver(memspace_);
         cholesky_solver.addMatrixInfo(M);
         cholesky_solver.symbolicAnalysis();

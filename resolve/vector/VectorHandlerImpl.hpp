@@ -55,6 +55,9 @@ namespace ReSolve
     // Divide the elements of a vector by the elements of another vector
     virtual int diagSolve(vector::Vector* diag, vector::Vector* vec) = 0;
 
+    // Compute element-wise inverse (reciprocal) of a vector
+    virtual int elementWiseInverse(vector::Vector* in, vector::Vector* out) = 0;
+
     // Compute element-wise max of two vectors
     virtual int max(/* const */ vector::Vector* x, /* const */ vector::Vector* y, vector::Vector* out) = 0;
 

@@ -81,7 +81,7 @@ namespace ReSolve
               vector::Vector* C,
               memory::MemorySpace memspace);
 
-    // Dense adition and trnapose
+    // Dense adition and transpose
     void geam(char transpose_A,
               char transpose_B,
               const real_type alpha,
@@ -92,6 +92,9 @@ namespace ReSolve
               memory::MemorySpace memspace);
     
     int diagSolve(vector::Vector* diag, vector::Vector* vec, memory::MemorySpace memspace);
+
+    int elementWiseInverse(vector::Vector* in, vector::Vector* out, memory::MemorySpace memspace);
+
     int max(/* const */ vector::Vector* x, /* const */ vector::Vector* y, vector::Vector* out, memory::MemorySpace memspace);
 
     int abs(/* const */ vector::Vector* in, vector::Vector* out, memory::MemorySpace memspace);

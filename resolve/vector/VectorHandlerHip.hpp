@@ -109,6 +109,9 @@ namespace ReSolve
      */
     virtual int diagSolve(vector::Vector* diag, vector::Vector* vec);
 
+    // ...
+    virtual int elementWiseInverse(vector::Vector* in, vector::Vector* out);
+
     /**
      * @brief max: calculate the element-wise maximum of two vectors
      *

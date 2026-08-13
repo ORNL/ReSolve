@@ -547,6 +547,37 @@ namespace ReSolve
   }
 
   /**
+   * // ...
+   * @brief Compute element-wise inverse (reciprocal) of a vector
+   *
+   * @param[in]  diag   - diagonal matrix stored in a vector object
+   * @param[in,out] vec - vector to be divided
+   * @param[in] memspace - Device where the operation is computed
+   *
+   * @pre The two vectors must be the same size
+   *
+   * @return 0 if successful, 1 otherwise
+   */
+  int VectorHandler::elementWiseInverse(vector::Vector* in, vector::Vector* out, memory::MemorySpace memspace)
+  {
+    assert(in->getData(memspace) != nullptr && "Vector in data is null!");
+    assert(out->getData(memspace) != nullptr && "Vector out data is null!");
+    assert(in->getSize() == out->getSize() && "Vector sizes do not match!");
+
+    using namespace ReSolve::memory;
+    switch (memspace)
+    {
+    case HOST:
+      return cpuImpl_->elementWiseInverse(in, out);
+      break;
+    case DEVICE:
+      return devImpl_->elementWiseInverse(in, out);
+      break;
+    }
+    return 1;
+  }
+
+  /**
    * @brief Takes the element-wise max between two vectors.
    *
    * @param[in]  x        - The first vector

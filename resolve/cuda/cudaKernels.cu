@@ -278,7 +278,7 @@ namespace ReSolve
                                              const index_type* a_row_ptr,
                                              const index_type* a_col_ind,
                                              const real_type*  a_val,
-                                             real_type*        d_val)
+                                             real_type*        diag)
       {
         // Get row index from thread and block indices
         index_type row = blockIdx.x * blockDim.x + threadIdx.x;
@@ -291,45 +291,14 @@ namespace ReSolve
           index_type row_end   = a_row_ptr[row + 1];
 
           // Get the scaling factor for this row from the diagonal matrix
-          real_type scale = d_val[row];
+          real_type scale = diag[row];
 
           // Scale all non-zero elements in this row
           for (index_type i = 0; i < row_end - row_start; i++)
           {
             if (a_col_ind[a_row_ptr[row] + i] == row)
             {
-              d_val[row] = sqrt(a_val[a_row_ptr[row] + i]);
-            }
-          }
-        }
-      }
-      
-      // ...
-      __global__ void extractInverseRootDiagonal(index_type        n,
-                                             const index_type* a_row_ptr,
-                                             const index_type* a_col_ind,
-                                             const real_type*  a_val,
-                                             real_type*        d_val)
-      {
-        // Get row index from thread and block indices
-        index_type row = blockIdx.x * blockDim.x + threadIdx.x;
-
-        // Check if the thread's row is within matrix bounds
-        if (row < n)
-        {
-          // Get the start and end positions for this row in the CSR format
-          index_type row_start = a_row_ptr[row];
-          index_type row_end   = a_row_ptr[row + 1];
-
-          // Get the scaling factor for this row from the diagonal matrix
-          real_type scale = d_val[row];
-
-          // Scale all non-zero elements in this row
-          for (index_type i = 0; i < row_end - row_start; i++)
-          {
-            if (a_col_ind[a_row_ptr[row] + i] == row)
-            {
-              d_val[row] = 1.0 / sqrt(a_val[a_row_ptr[row] + i]);
+              diag[row] = sqrt(a_val[a_row_ptr[row] + i]);
             }
           }
         }
@@ -482,27 +451,13 @@ namespace ReSolve
                                 const index_type* a_row_ptr,
                                 const index_type* a_col_ind,
                                 const real_type*  a_val,
-                                real_type*        d_val)
+                                real_type*        diag)
     {
       // Define block size and number of blocks
       const int block_size = 256;
       int       num_blocks = (n + block_size - 1) / block_size;
       // Launch the kernel
-      kernels::extractRootDiagonal<<<num_blocks, block_size>>>(n, a_row_ptr, a_col_ind, a_val, d_val);
-    }
-    
-    // ...
-    void extractInverseRootDiagonal(index_type        n,
-                                const index_type* a_row_ptr,
-                                const index_type* a_col_ind,
-                                const real_type*  a_val,
-                                real_type*        d_val)
-    {
-      // Define block size and number of blocks
-      const int block_size = 256;
-      int       num_blocks = (n + block_size - 1) / block_size;
-      // Launch the kernel
-      kernels::extractInverseRootDiagonal<<<num_blocks, block_size>>>(n, a_row_ptr, a_col_ind, a_val, d_val);
+      kernels::extractRootDiagonal<<<num_blocks, block_size>>>(n, a_row_ptr, a_col_ind, a_val, diag);
     }
 
     /**

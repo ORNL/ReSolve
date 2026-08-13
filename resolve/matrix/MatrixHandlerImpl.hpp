@@ -48,8 +48,6 @@ namespace ReSolve
 
     virtual int extractRootDiagonal(matrix::Csr* A, vector_type* diag) = 0;
 
-    virtual int extractInverseRootDiagonal(matrix::Csr* A, vector_type* diag) = 0;
-
     virtual int addConst(matrix::Sparse* A, real_type alpha) = 0;
 
     virtual int matvec(matrix::Sparse*  A,

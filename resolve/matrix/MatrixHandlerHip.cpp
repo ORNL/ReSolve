@@ -573,18 +573,4 @@ namespace ReSolve
     diag->setDataUpdated(memory::DEVICE);
     return 0;
   }
-
-  // ...
-  int MatrixHandlerHip::extractInverseRootDiagonal(matrix::Csr* A, vector_type* diag)
-  {
-    real_type*  diag_data = diag->getData(memory::DEVICE);
-    const index_type* a_row_ptr = A->getRowData(memory::DEVICE);
-    const index_type* a_col_idx = A->getColData(memory::DEVICE);
-    const real_type*  a_vals    = A->getValues(memory::DEVICE);
-    index_type  n         = A->getNumRows();
-    hip::extractInverseRootDiagonal(n, a_row_ptr, a_col_idx, a_vals, diag_data);
-    diag->setDataUpdated(memory::DEVICE);
-    return 0;
-  }
-
 } // namespace ReSolve

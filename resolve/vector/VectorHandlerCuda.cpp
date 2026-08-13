@@ -565,6 +565,19 @@ namespace ReSolve
   }
 
   /**
+   * // ...
+   */
+  int VectorHandlerCuda::elementWiseInverse(vector::Vector* in, vector::Vector* out)
+  {
+    const real_type* in_data = in->getData(memory::DEVICE);
+    real_type* out_data  = out->getData(memory::DEVICE);
+    index_type n = in->getSize();
+    cuda::elementWiseInverse(n, in_data, out_data);
+    out->setDataUpdated(memory::DEVICE);
+    return 0;
+  }
+
+  /**
    * @brief Calculate element-wise maximum between two vectors in CUDA
    *
    * @param[in]  x   - The first vector

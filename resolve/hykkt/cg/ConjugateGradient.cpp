@@ -144,6 +144,11 @@ namespace ReSolve
       s_->allocate(memspace_);
       w_->allocate(memspace_);
 
+      // Clear out any nan's
+      p_->setToZero(memspace_);
+      s_->setToZero(memspace_);
+      w_->setToZero(memspace_);
+
       if (!enable_diagonal_scaling_)
       {
         A_scal_ = A_;
@@ -164,7 +169,8 @@ namespace ReSolve
       beta_ = 0;
     }
 
-    /** // ...
+    /** // ... ANDREW TODO: make this interface better? like a boolean toggle?
+     * // ANDREW TODO again: scale b by b_norm_ regardless of diagonal scaling flag?
     * @post b_scal_, r_scal_ ...
     */
     void ConjugateGradient::diagonalScale()
@@ -182,7 +188,7 @@ namespace ReSolve
 
       d_inv_ = new vector::Vector(n_);
       d_inv_->allocate(memspace_);
-      matrix_handler_->extractInverseRootDiagonal(A_, d_inv_, memspace_);
+      vector_handler_->elementWiseInverse(d_, d_inv_, memspace_);
       
       A_scal_ = new matrix::Csr(n_, n_, A_->getNnz());
       b_scal_ = new vector::Vector(n_);
@@ -211,21 +217,16 @@ namespace ReSolve
       auto start = std::chrono::steady_clock::now();
 
       x_->setToZero(memspace_);
-      b_norm_ = std::sqrt(vector_handler_->dot(b_, b_, memspace_));
 
+      b_norm_ = std::sqrt(vector_handler_->dot(b_, b_, memspace_));
       if (enable_diagonal_scaling_)
       {
         // b_scal_ = 1 / b_norm * L^-1 * b
         b_scal_->copyFromExternal(b_, memspace_, memspace_);
         vector_handler_->scal(d_inv_, b_scal_, memspace_);
         vector_handler_->scal(1.0 / b_norm_, b_scal_, memspace_);
-        
-        r_scal_->copyFromExternal(b_scal_, memspace_, memspace_);
       }
-      else
-      {
-        r_scal_->copyFromExternal(b_, memspace_, memspace_);
-      }
+      r_scal_->copyFromExternal(b_scal_, memspace_, memspace_);
 
       matrix_handler_->matvec(A_scal_, x_, r_scal_, &MINUS_ONE, &ONE, memspace_);
       if (enable_preconditioning_)

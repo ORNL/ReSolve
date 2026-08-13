@@ -112,6 +112,27 @@ namespace ReSolve
       }
 
       /**
+       * // ...
+       * @param[in]  n       - size of the vectors
+       *
+       * @todo Decide how to allow user to configure grid and block sizes.
+       */
+      __global__ void elementWiseInverse(index_type       n,
+                                const real_type* in,
+                                real_type*       out)
+      {
+        // Get the index of the element to be processed
+        index_type idx = blockIdx.x * blockDim.x + threadIdx.x;
+
+        // Check if the index is within bounds
+        if (idx < n)
+        {
+          // Divide the vector element by the corresponding diag value
+          out[idx] = 1.0 / in[idx];
+        }
+      }
+
+      /**
        * @brief Computes the element-wise max of two vectors.
        *
        * @param[in]  n   - size of the vectors
@@ -246,6 +267,20 @@ namespace ReSolve
     }
 
     /**
+     * // ...
+     *
+     * @todo Decide how to allow user to configure grid and block sizes.
+     */
+    void elementWiseInverse(index_type       n,
+                   const real_type* in,
+                   real_type*       out)
+    {
+      int num_blocks = (n + block_size - 1) / block_size;
+      // Launch the kernel
+      kernels::elementWiseInverse<<<num_blocks, block_size>>>(n, in, out);
+    }
+
+    /**
      * @brief Wrapper that computes the element-wise max of two vectors.
      *
      * @param[in]  n   - size of the vectors
@@ -285,16 +320,17 @@ namespace ReSolve
 
     void initializeRng(index_type n, index_type total_threads, curandState** state)
     {
-      index_type threads_to_use = std::min(n, total_threads);
-      int num_blocks = (threads_to_use + block_size - 1) / block_size;
+      index_type num_threads = std::min(n, total_threads);
+      int num_blocks = (num_threads + block_size - 1) / block_size;
 
-      cudaMalloc((void**)state, threads_to_use * sizeof(curandState));
-      kernels::initializeRng<<<num_blocks, block_size>>>(threads_to_use, *state);
+      cudaMalloc((void**)state, num_threads * sizeof(curandState));
+      kernels::initializeRng<<<num_blocks, block_size>>>(num_threads, *state);
     }
     
     void randomVector(index_type n, real_type* x, real_type min, real_type max, index_type total_threads, curandState* state)
     {
-      int num_blocks = std::min((n + block_size - 1), total_threads) / block_size;
+      int num_threads = std::min(n, total_threads);
+      int num_blocks = (num_threads + block_size - 1) / block_size;
       kernels::randomVector<<<num_blocks, block_size>>>(n, x, min, max, state);
     };
   } // namespace cuda

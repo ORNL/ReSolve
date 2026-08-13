@@ -81,6 +81,8 @@ namespace ReSolve
     virtual void scal(vector::Vector* diag, vector::Vector* vec, index_type diag_offset);
 
     virtual int diagSolve(vector::Vector* diag, vector::Vector* vec);
+    
+    virtual int elementWiseInverse(vector::Vector* in, vector::Vector* out);
 
     virtual int max(/* const */ vector::Vector* x, /* const */ vector::Vector* y, vector::Vector* out);
 

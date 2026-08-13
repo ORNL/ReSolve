@@ -621,6 +621,19 @@ namespace ReSolve
   }
 
   /**
+   * // ...
+   */
+  int VectorHandlerHip::elementWiseInverse(vector::Vector* in, vector::Vector* out)
+  {
+    const real_type* in_data = in->getData(memory::DEVICE);
+    real_type* out_data  = out->getData(memory::DEVICE);
+    index_type n = in->getSize();
+    hip::elementWiseInverse(n, in_data, out_data);
+    out->setDataUpdated(memory::DEVICE);
+    return 0;
+  }
+
+  /**
    * @brief Calculate element-wise maximum between two vectors in HIP
    *
    * @param[in]  x   - The first vector
@@ -679,5 +692,6 @@ namespace ReSolve
     }
     hip::randomVector(n, x->getData(memory::DEVICE), min, max, workspace_->getTotalThreads(), workspace_->getRngState());
     x->setDataUpdated(memory::DEVICE);
+    mem_.deviceSynchronize();
   }
 } // namespace ReSolve

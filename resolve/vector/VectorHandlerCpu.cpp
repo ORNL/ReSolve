@@ -129,7 +129,7 @@ namespace ReSolve
       sum         = t;
       // sum += (x_data[i] * x_data[i]);
     }
-    return sum;
+    return std::sqrt(sum);
   }
 
   real_type VectorHandlerCpu::norm(vector::Vector* x, index_type i)
@@ -146,7 +146,7 @@ namespace ReSolve
       sum         = t;
       // sum += (x_data[i] * x_data[i]);
     }
-    return sum;
+    return std::sqrt(sum);
   }
 
   /**
@@ -580,6 +580,23 @@ namespace ReSolve
       vec_data[i] /= diag_data[i];
     }
     vec->setDataUpdated(memory::HOST);
+    return 0;
+  }
+
+  /**
+   * // ...
+   */
+  int VectorHandlerCpu::elementWiseInverse(vector::Vector* in, vector::Vector* out)
+  {
+    index_type n = in->getSize();
+    const real_type* in_data = in->getData(memory::HOST);
+    real_type* out_data = out->getData(memory::HOST);
+
+    for (index_type i = 0; i < n; ++i)
+    {
+      out_data[i] = 1.0 / in_data[i];
+    }
+    out->setDataUpdated(memory::HOST);
     return 0;
   }
 

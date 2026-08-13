@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <numeric>
 
 #include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/Csc.hpp>
@@ -431,22 +432,70 @@ namespace ReSolve
     return 0;
   }
 
-  // ANDREW TODO: implement
   int MatrixHandlerCpu::extractDiagonal(matrix::Csr* A, matrix::Csr* diag)
   {
-    out::error() << "Not implemented!";
+    index_type n = A->getNumRows();
+    const index_type* a_row_ptr = A->getRowData(memory::HOST);
+    const index_type* a_col_ind = A->getColData(memory::HOST);
+    const real_type*  a_val     = A->getValues(memory::HOST);
+    index_type* d_row_ptr = diag->getRowData(memory::HOST);
+    index_type* d_col_ind = diag->getColData(memory::HOST);
+    real_type*  d_val     = diag->getValues(memory::HOST);    
+
+    for (index_type row = 0; row < n; ++row)
+    {
+      // Get the start and end positions for this row in the CSR format
+      index_type row_start = a_row_ptr[row];
+      index_type row_end   = a_row_ptr[row + 1];
+
+      // Get the scaling factor for this row from the diagonal matrix
+      real_type scale = d_val[row];
+
+      // Scale all non-zero elements in this row
+      for (index_type i = 0; i < row_end - row_start; i++)
+      {
+        if (a_col_ind[a_row_ptr[row] + i] == row)
+        {
+          d_val[row] = a_val[a_row_ptr[row] + i];
+        }
+      }
+    }
+
+    // Fill row and column arrays with increasing numbers to make a diagonal matrix
+    std::iota(d_row_ptr, d_row_ptr + n + 1, 0);
+    std::iota(d_col_ind, d_col_ind + n, 0);
+
+    return 0;
   }
 
-  // ANDREW TODO: implement
   int MatrixHandlerCpu::extractRootDiagonal(matrix::Csr* A, vector_type* diag)
   {
-    out::error() << "Not implemented!";
-  }
+    index_type n = A->getNumRows();
+    const index_type* a_row_ptr = A->getRowData(memory::HOST);
+    const index_type* a_col_ind = A->getColData(memory::HOST);
+    const real_type*  a_val     = A->getValues(memory::HOST);
+    real_type*  d_data     = diag->getData(memory::HOST);    
 
-  // ANDREW TODO: implement
-  int MatrixHandlerCpu::extractInverseRootDiagonal(matrix::Csr* A, vector_type* diag)
-  {
-    out::error() << "Not implemented!";
+    for (index_type row = 0; row < n; ++row)
+    {
+      // Get the start and end positions for this row in the CSR format
+      index_type row_start = a_row_ptr[row];
+      index_type row_end   = a_row_ptr[row + 1];
+
+      // Get the scaling factor for this row from the diagonal matrix
+      real_type scale = d_data[row];
+
+      // Scale all non-zero elements in this row
+      for (index_type i = 0; i < row_end - row_start; i++)
+      {
+        if (a_col_ind[a_row_ptr[row] + i] == row)
+        {
+          d_data[row] = sqrt(a_val[a_row_ptr[row] + i]);
+        }
+      }
+    }
+
+    return 0;
   }
 
   /**
