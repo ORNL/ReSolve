@@ -298,7 +298,7 @@ namespace ReSolve
     // Shape is post-transpose, if applicable
     index_type m = C->getSize();
     index_type n = C->getNumVectors();
-    index_type k; // inner dimension
+    index_type k = 0; // inner dimension
 
     switch (transpose_A)
     {

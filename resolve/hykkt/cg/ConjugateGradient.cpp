@@ -245,7 +245,7 @@ namespace ReSolve
       int i;
       for (i = 0; i < itmax_; i++)
       {
-      auto start = std::chrono::steady_clock::now();
+      // auto start = std::chrono::steady_clock::now();
         vector_handler_->scal(beta_, p_, memspace_);
         vector_handler_->axpy(ONE, z_, p_, memspace_);
         vector_handler_->scal(beta_, s_, memspace_);
