@@ -50,11 +50,15 @@ from (in alphabetic order):
 * Maksudul Alam (ORNL)
 * Kaleb Brunhoeber (ORNL)
 * Ryan Danehy (PNNL)
+* Tamar Dewilde
 * Adham Ibrahim (ORNL)
 * Nicholson Koukpaizan (ORNL)
 * Jaelyn Litzinger (PNNL)
 * Phil Roth (ORNL)
 * Cameron Rutherford (PNNL)
+* Kakeru Ueda
+* Andrew Xu
+
 
 Development of this code was supported by the Exascale Computing Project (ECP),
 Project Number: 17-SC-20-SC, a collaborative effort of two DOE organizations
