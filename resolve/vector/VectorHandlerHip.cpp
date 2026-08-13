@@ -79,7 +79,7 @@ namespace ReSolve
     rocblas_handle handle_rocblas = workspace_->getRocblasHandle();
 
     rocblas_status st = rocblas_dscal(handle_rocblas,
-                                      x->getSize(),
+                                      x->getSize() * x->getNumVectors(),
                                       &alpha,
                                       x->getData(memory::DEVICE),
                                       1);
