@@ -53,7 +53,7 @@ namespace ReSolve
        *
        * @return TestOutcome Result of the test
        */
-      TestOutcome MBPCGTest(const std::string& A_file_name, index_type k, real_type rng_min, real_type rng_max)
+      TestOutcome MBPCGTest(const std::string& A_file_name, real_type rng_min, real_type rng_max)
       {
         std::ifstream A_file(A_file_name);
 
@@ -66,8 +66,6 @@ namespace ReSolve
 
         index_type                              n   = A->getNumRows();
         index_type                              nnz = A->getNnz();
-        hykkt::MultiBasisParallelConjugateGradient mbpcg(n, k, &matrix_handler_, &vector_handler_, memspace_);
-        mbpcg.setSolverTolerance(initial_tol, convergence_tol);
 
         vector::Vector* x = new vector::Vector(n);
         x->allocate(memspace_);
@@ -75,31 +73,33 @@ namespace ReSolve
         vector::Vector* b = new vector::Vector(n);
         b->allocate(memspace_);
         vector_handler_.randomVector(b, rng_min, rng_max, memspace_);
+
+        int num_converged = 0;
+        // k = 1, 2, 4, 8
+        for (index_type k = 1; k <= 8; k *= 2)
+        {
+          // if (k == 1) continue;
+          printf("\nk=%d\n", k);
+          hykkt::MultiBasisParallelConjugateGradient mbpcg(n, k, &matrix_handler_, &vector_handler_, memspace_);
+          mbpcg.setSolverTolerance(initial_tol, convergence_tol);
+          // mbpcg.setSolverItmax();
+
+          mbpcg.addMatrixInfo(A);
+          mbpcg.addVectorInfo(x, b);
+          mbpcg.diagonalScale();
+          mbpcg.setup();
+          int converged = mbpcg.solve(); // 0 if converged, 1 if not
+          num_converged += (converged == 0);
+        }
         
-        vector::Vector* d = new vector::Vector(n);
-        d->allocate(memspace_);
-        matrix_handler_.extractRootDiagonal(A, d, memspace_);
-
-        vector::Vector* d_inv = new vector::Vector(n);
-        d_inv->allocate(memspace_);
-        matrix_handler_.extractInverseRootDiagonal(A, d_inv, memspace_);
-
-        mbpcg.addMatrixInfo(A);
-        mbpcg.addVectorInfo(x, b);
-        mbpcg.addPreconditionerInfo(d, d_inv);
-        mbpcg.setup();
-        int converged_n = mbpcg.solve(); // 0 if converged, 1 if not
-
         TestStatus  status;
         std::string testname(__func__);
-        testname += " n= " + std::to_string(n) + ", k= " + std::to_string(k) + ", nnz = " + std::to_string(nnz);
-        status *= validateResult(x, converged_n);
+        testname += " n=" + std::to_string(n) + ", nnz=" + std::to_string(nnz);
+        status *= (num_converged == 4);
 
         delete A;
         delete x;
         delete b;
-        delete d;
-        delete d_inv;
 
         return status.report(testname.c_str());
       }
@@ -112,15 +112,6 @@ namespace ReSolve
       static constexpr real_type initial_tol = 1e-8;
       static constexpr real_type convergence_tol     = 1e-8;
       static constexpr real_type entry_tol    = 1e-6; // Tolerance for checking individual entries
-
-      /**
-       * @brief Validate the MBPCG result.
-       * @param[in] x Pointer to the output x vector.
-       */
-      bool validateResult(vector::Vector* x, int converged_n)
-      {
-        return true;
-      }
     }; // class HykktMultiBasisParallelConjugateGradientTests
   } // namespace tests
 } // namespace ReSolve

@@ -200,13 +200,7 @@ broken (maybe theres limits to how low the error can get)
     double rng_max = 1.0;
 
     printf("\n\n\nMatrix: %s\n", matrix_name.c_str());
-    result += test.MBPCGTest(A_file_name, 1, rng_min, rng_max);
-    workspace.resetLinAlgWorkspace();
-    result += test.MBPCGTest(A_file_name, 2, rng_min, rng_max);
-    workspace.resetLinAlgWorkspace();
-    result += test.MBPCGTest(A_file_name, 4, rng_min, rng_max);
-    workspace.resetLinAlgWorkspace();
-    result += test.MBPCGTest(A_file_name, 8, rng_min, rng_max);
+    result += test.MBPCGTest(A_file_name, rng_min, rng_max);
 
     std::cout << "\n";
   }
