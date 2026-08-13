@@ -20,7 +20,7 @@ namespace ReSolve {
 
       __global__ void set_array_to_const(index_type n, real_type val, real_type* arr)
       {
-        index_type i = blockIdx.x * blockDim.x + threadIdx.x;
+        index_type i = static_cast<index_type>(blockIdx.x * blockDim.x + threadIdx.x);
         while (i < n)
         {
           arr[i] = val;
@@ -40,7 +40,7 @@ namespace ReSolve {
       */
       __global__ void addConst(index_type n, real_type val, real_type* arr)
       {
-        index_type i = blockIdx.x * blockDim.x + threadIdx.x;
+        index_type i = static_cast<index_type>(blockIdx.x * blockDim.x + threadIdx.x);
         if(i < n)
         {
           arr[i] += val;
@@ -61,7 +61,7 @@ namespace ReSolve {
                                       real_type* vec)
       {
         // Get the index of the element to be processed
-        index_type idx = blockIdx.x * blockDim.x + threadIdx.x;
+        index_type idx = static_cast<index_type>(blockIdx.x * blockDim.x + threadIdx.x);
 
         // Check if the index is within bounds
         if (idx < n) {
@@ -84,7 +84,7 @@ namespace ReSolve {
                                 real_type*       vec)
       {
         // Get the index of the element to be processed
-        index_type idx = blockIdx.x * blockDim.x + threadIdx.x;
+        index_type idx = static_cast<index_type>(blockIdx.x * blockDim.x + threadIdx.x);
 
         // Check if the index is within bounds
         if (idx < n)
@@ -110,7 +110,7 @@ namespace ReSolve {
                           real_type*       out)
       {
         // Get the index of the element to be processed
-        index_type idx = blockIdx.x * blockDim.x + threadIdx.x;
+        index_type idx = static_cast<index_type>(blockIdx.x * blockDim.x + threadIdx.x);
 
         // Check if the index is within bounds
         if (idx < n)
@@ -134,7 +134,7 @@ namespace ReSolve {
                           real_type*       out)
       {
         // Get the index of the element to be processed
-        index_type idx = blockIdx.x * blockDim.x + threadIdx.x;
+        index_type idx = static_cast<index_type>(blockIdx.x * blockDim.x + threadIdx.x);
 
         // Check if the index is within bounds
         if (idx < n)
@@ -152,7 +152,7 @@ namespace ReSolve {
       index_type num_blocks;
       index_type block_size = 512;
       num_blocks = (n + block_size - 1) / block_size;
-      hipLaunchKernelGGL(kernels::set_array_to_const, dim3(num_blocks), dim3(block_size), 0, 0, n, c, v);
+      hipLaunchKernelGGL(kernels::set_array_to_const, dim3(static_cast<unsigned int>(num_blocks)), dim3(static_cast<unsigned int>(block_size)), 0, 0, n, c, v);
     }
 
     void addConst(index_type n, real_type val, real_type* arr)
@@ -160,7 +160,7 @@ namespace ReSolve {
       index_type num_blocks;
       index_type block_size = 512;
       num_blocks = (n + block_size - 1) / block_size;
-      hipLaunchKernelGGL(kernels::addConst, dim3(num_blocks), dim3(block_size), 0, 0, n, val, arr);
+      hipLaunchKernelGGL(kernels::addConst, dim3(static_cast<unsigned int>(num_blocks)), dim3(static_cast<unsigned int>(block_size)), 0, 0, n, val, arr);
     }
 
     /**
@@ -180,7 +180,7 @@ namespace ReSolve {
       const int block_size = 256;
       int num_blocks = (n + block_size - 1) / block_size;
       // Launch the kernel
-      kernels::scale<<<num_blocks, block_size>>>(n, diag, vec);
+      kernels::scale<<<static_cast<unsigned int>(num_blocks), static_cast<unsigned int>(block_size)>>>(n, diag, vec);
     }
 
     /**
@@ -198,7 +198,7 @@ namespace ReSolve {
     {
       int num_blocks = (n + block_size - 1) / block_size;
       // Launch the kernel
-      kernels::diagSolve<<<num_blocks, block_size>>>(n, diag, vec);
+      kernels::diagSolve<<<static_cast<unsigned int>(num_blocks), static_cast<unsigned int>(block_size)>>>(n, diag, vec);
     }
 
     /**
@@ -218,7 +218,7 @@ namespace ReSolve {
     {
       int num_blocks = (n + block_size - 1) / block_size;
       // Launch the kernel
-      kernels::max<<<num_blocks, block_size>>>(n, x, y, out);
+      kernels::max<<<static_cast<unsigned int>(num_blocks), static_cast<unsigned int>(block_size)>>>(n, x, y, out);
     }
 
     /**
@@ -236,7 +236,7 @@ namespace ReSolve {
     {
       int num_blocks = (n + block_size - 1) / block_size;
       // Launch the kernel
-      kernels::abs<<<num_blocks, block_size>>>(n, in, out);
+      kernels::abs<<<static_cast<unsigned int>(num_blocks), static_cast<unsigned int>(block_size)>>>(n, in, out);
     }
   } // namespace hip
 } // namespace ReSolve
