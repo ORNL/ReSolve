@@ -42,7 +42,6 @@ namespace ReSolve
 
       index_type num_sms_;
       index_type num_threads_;
-      index_type qr_blocks_per_sm_;
 
       void(*cholesky_qr_kernel_)(real_type*, real_type*, index_type){nullptr};
 

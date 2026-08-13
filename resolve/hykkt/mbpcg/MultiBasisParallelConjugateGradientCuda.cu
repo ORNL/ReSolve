@@ -1,6 +1,5 @@
 #include "MultiBasisParallelConjugateGradientCuda.hpp"
 
-#include <cub/cub.cuh>
 #include <cooperative_groups.h>
 
 namespace ReSolve
@@ -10,6 +9,8 @@ namespace ReSolve
 
   namespace hykkt
   {
+    constexpr index_type WARP_SIZE = 32;
+
     namespace kernels
     {
       __global__ void columnWiseSquaredNorms(real_type* R, real_type* sq_norms, index_type n)
@@ -23,7 +24,7 @@ namespace ReSolve
         {
           r_sq += R[col * n + row] * R[col * n + row];
         }
-        for (index_type offset = 32 / 2; offset > 0; offset /= 2)
+        for (index_type offset = WARP_SIZE / 2; offset > 0; offset /= 2)
         {
           r_sq += __shfl_down_sync(0xffffffff, r_sq, offset);
         }
@@ -118,69 +119,22 @@ namespace ReSolve
             real_type g = G_local[indexUpperTriangular<k>(i, j)];
 
             #pragma unroll
-            for (index_type offset = 32 / 2; offset > 0; offset /= 2)
+            for (index_type offset = WARP_SIZE / 2; offset > 0; offset /= 2)
             {
               g += __shfl_down_sync(0xffffffff, g, offset);
             }
-            if (threadIdx.x % 32 == 0)
+            if (threadIdx.x % WARP_SIZE == 0)
             {
               atomicAdd(&R[j * k + i], g);
             }
           }
         }
-        // Now R = W^real_type * W. Lower half is garbage and doesn't matter though, because everything well get overridden soon
+        // Now R = W^T * W. Lower half is garbage and doesn't matter though, because everything well get overridden soon
 
         grid.sync();
       
       // Upper Cholesky factorization
         __shared__ real_type R_shared[k * (k + 1) / 2]; // Only need this much for kxk symmetric matrix
-        if constexpr (k <= 0) // CAREFUL: SHOULD BE 4?
-        {
-          if (threadIdx.x < 32)
-          {
-            index_type i = threadIdx.x % k;
-            index_type j = threadIdx.x / k;
-            if ((i < k) && (j < k) && (i <= j))
-            {
-              R_shared[indexUpperTriangular<k>(i, j)] = R[j * k + i];
-            }
-            __syncwarp();
-
-            // Do all of this inside one warp
-            for (index_type h = 0; h < k; h++)
-            {
-              if (threadIdx.x == 0)
-              {
-                R_shared[indexUpperTriangular<k>(h, h)] = sqrt(R_shared[indexUpperTriangular<k>(h, h)]);
-              }
-              __syncwarp();
-              if (threadIdx.x > h && threadIdx.x < k)
-              {
-                R_shared[indexUpperTriangular<k>(h, threadIdx.x)] /= R_shared[indexUpperTriangular<k>(h, h)];
-              }
-              __syncwarp();
-              if ((i < k) && (i > h) && (j < k) && (i <= j))
-              {
-                R_shared[indexUpperTriangular<k>(i, j)] -= R_shared[indexUpperTriangular<k>(h, i)] * R_shared[indexUpperTriangular<k>(h, j)];
-              }
-              __syncwarp();
-            }
-            
-            if ((i < k) && (j < k) && (blockIdx.x == 0))
-            {
-              if (i <= j)
-              {
-                R[j * k + i] = R_shared[indexUpperTriangular<k>(i, j)];
-              }
-              else
-              {
-                R[j * k + i] = 0.0;
-              }
-            }
-          }
-          __syncthreads();
-        }
-        else
         {
           index_type i = threadIdx.x % k;
           index_type j = threadIdx.x / k;
@@ -251,7 +205,7 @@ namespace ReSolve
       }
 
       template <index_type k>
-      __global__ void updateXRSplit(real_type* __restrict__ Xi_inv,
+      __global__ void updateXR(real_type* __restrict__ Xi_inv,
                                const real_type* __restrict__ Sigma,
                                const real_type* __restrict__ S,
                                const real_type* __restrict__ A_S,
@@ -290,7 +244,7 @@ namespace ReSolve
       }
       
       template <index_type k>
-      __global__ void choleskyFactorizeSolve(real_type* __restrict__ A,
+      __global__ void choleskySolve(real_type* __restrict__ A,
                                const real_type* B,
                                real_type* X)
       {
@@ -301,7 +255,7 @@ namespace ReSolve
         __shared__ real_type A_shared[k * (k + 1) / 2]; // Only need this much for kxk symmetric matrix
         if constexpr (k <= 4)
         {
-          if (threadIdx.x < 32) // k <= 4 for now
+          if (threadIdx.x < WARP_SIZE) // k <= 4 for now
           {
             index_type i = threadIdx.x % k;
             index_type j = threadIdx.x / k;
@@ -310,12 +264,6 @@ namespace ReSolve
               A_shared[indexLowerTriangular<k>(i, j)] = A[j * k + i];
             }
             __syncwarp();
-
-            // // For warp size 64 and k <= 8, everything can be done in one warp
-            // if constexpr (k * (k + 1) / 2 > 64)
-            // {
-            //   __syncthreads();
-            // }
 
             // Do all of this inside one warp. One thread per entry
             // #pragma unroll 1
@@ -395,22 +343,22 @@ namespace ReSolve
           }
         }
 
-      // X = Xi * B => A * X = B => L * L^real_type * X = B, choleskySolve
+      // X = Xi * B => A * X = B => L * L^T * X = B, choleskySolve
         __shared__ real_type Xi_Sigma_shared[k * k];
         if constexpr (k <= 4)
         {
-          if (threadIdx.x < 32) // k <= 4 for now. Still only one warp
+          if (threadIdx.x < WARP_SIZE) // k <= 4 for now. Still only one warp
           {
             if (threadIdx.x < k * k)
             {
               Xi_Sigma_shared[threadIdx.x] = B[threadIdx.x];
             }
-            __syncwarp(); // CUDA needs to __syncwarp() at all these places
+            __syncwarp();
 
             //  L * Y = B
             if (threadIdx.x < k)
             {
-              index_type col = threadIdx.x; // Talking about rows and columns of B
+              index_type col = threadIdx.x; // Rows and columns of B
 
               // #pragma unroll 1
               for (index_type row = 0; row < k; row++)
@@ -427,10 +375,10 @@ namespace ReSolve
             }
             __syncwarp();
 
-            //  L^real_type * X = Y
+            //  L^T * X = Y
             if (threadIdx.x < k)
             {
-              index_type col = threadIdx.x; // Talking about rows and columns of B
+              index_type col = threadIdx.x; // Rows and columns of B
 
               // #pragma unroll 1
               for (index_type row = k - 1; row >= 0; row--)
@@ -458,7 +406,7 @@ namespace ReSolve
           //  L * Y = B
           if (threadIdx.x < k)
           {
-            index_type col = threadIdx.x; // Talking about rows and columns of B
+            index_type col = threadIdx.x; // Rows and columns of B
 
             // #pragma unroll 1
             for (index_type row = 0; row < k; row++)
@@ -475,10 +423,10 @@ namespace ReSolve
           }
           __syncthreads();
 
-          //  L^real_type * X = Y
+          //  L^T * X = Y
           if (threadIdx.x < k)
           {
-            index_type col = threadIdx.x; // Talking about rows and columns of B
+            index_type col = threadIdx.x; // Rows and columns of B
 
             // #pragma unroll 1
             for (index_type row = k - 1; row >= 0; row--)
@@ -623,7 +571,7 @@ namespace ReSolve
       
         __shared__ real_type S_shared[BLOCK_DIM * k];
         __shared__ real_type result_shared[BLOCK_DIM * k];
-        // Compute S = W + P * Zeta^real_type
+        // Compute S = W + P * Zeta^T
         if (blockIdx.x < (n + BLOCK_DIM - 1) / BLOCK_DIM)
         {
           // Cache a horizontally-sliced block of S for coalesced reads
@@ -750,9 +698,6 @@ namespace ReSolve
       case 8: 
         cholesky_qr_kernel_ = kernels::choleskyQr<8>; 
         break;
-      case 16:
-        cholesky_qr_kernel_ = kernels::choleskyQr<16>;
-        break;
       default:
         return 1;
       }
@@ -786,7 +731,7 @@ namespace ReSolve
       index_type n = R->getSize();
       index_type k = R->getNumVectors();
 
-      dim3       block_size(32, k);
+      dim3       block_size(WARP_SIZE, k);
       int        num_blocks = num_sms_ * 4; // Pretty arbitrary. Tune this later
       cudaMemsetAsync(d_sq_norms_, 0.0, k * sizeof(real_type));
       kernels::columnWiseSquaredNorms<<<num_blocks, block_size>>>(R->getData(memory::DEVICE), d_sq_norms_, n);
@@ -806,15 +751,13 @@ namespace ReSolve
       case 8:
         kernels::SquaredNormArgMin<8><<<1, k>>>(d_sq_norms_, d_best_basis_);
         break;
-      case 16:
-        kernels::SquaredNormArgMin<16><<<1, k>>>(d_sq_norms_, d_best_basis_);
-        break;
       default:
         return 1;
       }
 
       cudaMemcpyAsync(h_best_basis, d_best_basis_, sizeof(index_type), cudaMemcpyDeviceToHost);
       cudaMemcpyAsync(h_best_basis_norm, d_sq_norms_, sizeof(real_type), cudaMemcpyDeviceToHost);
+      cudaDeviceSynchronize();
 
       return 0;
     }
@@ -833,8 +776,6 @@ namespace ReSolve
         return 0;
       }
 
-      cudaError_t status;
-
       real_type* d_W = W->getData(memory::DEVICE);
       real_type* d_R = R->getData(memory::DEVICE);
       
@@ -847,13 +788,9 @@ namespace ReSolve
       int       block_size = 256; // Must be at least k^2
       int       num_blocks = num_sms_ * qr_blocks_per_sm_;
 
-      status = cudaLaunchCooperativeKernel((void*)cholesky_qr_kernel_, num_blocks, block_size, args, 0, 0);
-      
-      if (status != cudaSuccess) {
-          return 1;
-      }
+      cudaError_t status = cudaLaunchCooperativeKernel((void*)cholesky_qr_kernel_, num_blocks, block_size, args, 0, 0);
 
-      return 0;
+      return status;
     }
     
     int MultiBasisParallelConjugateGradientCuda::updateXR(vector::Vector* Xi_inv, vector::Vector* Sigma, vector::Vector* S, vector::Vector* A_S, vector::Vector* Xi_Sigma, vector::Vector* X_res, vector::Vector* R_prec)
@@ -984,7 +921,7 @@ namespace ReSolve
       index_type k = B->getNumVectors();
 
       int       block_size = 256; // Must be at least k^2
-      int       num_blocks = num_sms_ * 32; // quite arbitrary
+      int       num_blocks = num_sms_ * WARP_SIZE;
 
       switch (k)
       {
@@ -1012,12 +949,6 @@ namespace ReSolve
                                                                    B->getData(memory::DEVICE),
                                                                    n);
         break;
-      case 16:
-        kernels::updateW<16><<<num_blocks, block_size>>>(W->getData(memory::DEVICE),
-                                                                   L->getData(memory::DEVICE),
-                                                                   B->getData(memory::DEVICE),
-                                                                   n);
-        break;
       default:
         return 1;
       }
@@ -1025,14 +956,14 @@ namespace ReSolve
       return 0;
     }
 
-    // C = A^real_type * B
+    // C = A^T * B
     int MultiBasisParallelConjugateGradientCuda::multTSMTTSM(vector::Vector* A, vector::Vector* B, vector::Vector* C, memory::MemorySpace memspace)
     {
       index_type n = A->getSize();
       index_type k = A->getNumVectors();
 
       int       block_size = 256;
-      int       num_blocks = num_sms_ * 32;
+      int       num_blocks = num_sms_ * WARP_SIZE;
       
       C->setToZero(memory::DEVICE);
       switch (k)
@@ -1061,12 +992,6 @@ namespace ReSolve
                                                             C->getData(memory::DEVICE),
                                                             n);
         break;
-      case 16:
-        kernels::multTSMTTSM<16><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
-                                                            B->getData(memory::DEVICE),
-                                                            C->getData(memory::DEVICE),
-                                                            n);
-        break;
       default:
         return 1;
       }
@@ -1079,7 +1004,7 @@ namespace ReSolve
       index_type n = W->getSize();
       index_type k = W->getNumVectors();  
 
-      // One thread per row for S = W + S * Zeta^real_type
+      // One thread per row for S = W + S * Zeta^T
       // One block for Sigma = Zeta * Sigma
       constexpr int block_size = 128; // Must be at least k^2. IMPROVE UPON THIS??
       int           num_blocks = (n + block_size - 1) / block_size + 1;
@@ -1109,13 +1034,6 @@ namespace ReSolve
         break;
       case 8:
         kernels::updateSSigma<8, block_size><<<num_blocks, block_size>>>(W->getData(memory::DEVICE),
-                                                                   S->getData(memory::DEVICE),
-                                                                   Zeta->getData(memory::DEVICE),
-                                                                   Sigma->getData(memory::DEVICE),
-                                                                   n);
-        break;
-      case 16:
-        kernels::updateSSigma<16, block_size><<<num_blocks, block_size>>>(W->getData(memory::DEVICE),
                                                                    S->getData(memory::DEVICE),
                                                                    Zeta->getData(memory::DEVICE),
                                                                    Sigma->getData(memory::DEVICE),

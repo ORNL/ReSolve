@@ -38,8 +38,8 @@ namespace ReSolve
       SchurComplementConjugateGradient(index_type          n,
                                        index_type          m,
                                        CholeskySolver*     choleskySolver,
-                                       MatrixHandler*      matrix_handler_,
-                                       VectorHandler*      vector_handler_,
+                                       MatrixHandler*      matrix_handler,
+                                       VectorHandler*      vector_handler,
                                        memory::MemorySpace memspace);
       ~SchurComplementConjugateGradient();
 

@@ -25,11 +25,11 @@ namespace ReSolve
   namespace hykkt
   {
     /** Constructor for MultiBasisParallelConjugateGradient.
-     *  @param n[in] - Dimension of outer system.
+     *  @param n[in] - Dimension of the system.
      *  @param k[in] - Number of copies of the systems solved at once.
-     *  @param memspace[in] - Memory space of incoming data and for computation.
      *  @param matrix_handler[in] - Matrix handler for the selected backend.
      *  @param vector_handler[in] - Vector handler for the selected backend.
+     *  @param memspace[in] - Memory space of incoming data and for computation.
      */
     MultiBasisParallelConjugateGradient::MultiBasisParallelConjugateGradient(
         index_type          n,
@@ -51,31 +51,35 @@ namespace ReSolve
 
       if (k != 1 && k != 2 && k != 4 && k != 8)
       {
-        out::warning() << "Unfamiliar k value! MBPCG is optimized for k of 1, 2, 4, or 8. Other values may work but will perform poorly.";
+        out::warning() << "k must be 1, 2, 4, or 8!";
       }
     }
 
     MultiBasisParallelConjugateGradient::~MultiBasisParallelConjugateGradient()
     {
-      delete A_prec_;
-      delete X_prec_0_;
+      delete X_scal_0_;
       delete X_res_;
-      delete b_prec_;
       delete B_res_;
       delete B_;
       delete R_;
-      delete R_prec_;
       delete S_;
       delete Xi_inv_;
       delete W_;
       delete Sigma_;
       delete Zeta_;
       delete Temp_nxk_;
-      delete Temp_nxk1_;
       delete Temp_kxk_;
-      delete A_S_;
       delete c_;
       delete r_;
+      if (enable_diagonal_scaling_)
+      {
+        delete d_;
+        delete d_inv_;
+        delete A_scal_;
+        delete b_scal_;
+        delete R_scal_;
+      }
+
       delete impl_;
     }
 
@@ -86,31 +90,18 @@ namespace ReSolve
     void MultiBasisParallelConjugateGradient::addMatrixInfo(matrix::Csr* A)
     {
       A_ = A;
-      nnz_ = A->getNnz();
+      A_norm_ = matrix_handler_->norm(A_, memspace_);
     }
 
     /**
      * @brief Loads or reloads vector pointers to the solver
-     * @param[in] x - Pointer to the left-hand side vector.
+     * @param[in] x - Pointer to the left-hand side vector. It should contain the initial guess vector.
      * @param[in] b - Pointer to the right-hand side vector.
      */
     void MultiBasisParallelConjugateGradient::addVectorInfo(vector::Vector* x, vector::Vector* b)
     {
       x_ = x;
       b_ = b;
-    }
-
-    /**
-     * // ...
-     * @brief Loads or reloads preconditioner matrix pointers to the solver. This transforms
-     * the system into L^-1 * A * L^-T * y = L * b.
-     * @param[in] L - Pointer to the lower triangular preconditioner matrix (L) in CSR format.
-     * @param[in] L_tr_ - Pointer to the transpose preconditioner matrix (L^T) in CSR format.
-     */
-    void MultiBasisParallelConjugateGradient::addPreconditionerInfo(vector::Vector* d, vector::Vector* d_inv)
-    {
-      d_ = d;
-      d_inv_ = d_inv;
     }
 
     void MultiBasisParallelConjugateGradient::setSolverTolerance(double initial_tol, double convergence_tol)
@@ -126,70 +117,83 @@ namespace ReSolve
 
     void MultiBasisParallelConjugateGradient::setup()
     {
-      A_prec_ = new matrix::Csr(n_, n_, nnz_);
-      X_prec_0_ = new vector::Vector(n_, k_);
+      X_scal_0_ = new vector::Vector(n_, k_);
       X_res_ = new vector::Vector(n_, k_);
-      b_prec_ = new vector::Vector(n_, 1);
       B_res_ = new vector::Vector(n_, k_);
       B_ = new vector::Vector(n_, k_);
       R_ = new vector::Vector(n_, k_);
-      R_prec_ = new vector::Vector(n_, k_);
       S_ = new vector::Vector(n_, k_);
       Xi_inv_ = new vector::Vector(k_, k_);
       W_ = new vector::Vector(n_, k_);
       Sigma_ = new vector::Vector(k_, k_);
       Zeta_ = new vector::Vector(k_, k_);
       Temp_nxk_ = new vector::Vector(n_, k_);
-      Temp_nxk1_ = new vector::Vector(n_, k_);
       Temp_kxk_ = new vector::Vector(k_, k_);
-      A_S_ = new vector::Vector(n_, k_);
       c_ = new vector::Vector(k_, 1);
       r_ = new vector::Vector(n_, 1);
 
-      A_prec_->allocateAll(memspace_);
-      X_prec_0_->allocate(memspace_);
+      X_scal_0_->allocate(memspace_);
       X_res_->allocate(memspace_);
-      b_prec_->allocate(memspace_);
       B_res_->allocate(memspace_);
       B_->allocate(memspace_);
       R_->allocate(memspace_);
-      R_prec_->allocate(memspace_);
       S_->allocate(memspace_);
       Xi_inv_->allocate(memspace_);
       W_->allocate(memspace_);
       Sigma_->allocate(memspace_);
       Zeta_->allocate(memspace_);
       Temp_nxk_->allocate(memspace_);
-      Temp_nxk1_->allocate(memspace_);
       Temp_kxk_->allocate(memspace_);
-      A_S_->allocate(memspace_);
       c_->allocate(memspace_);
       r_->allocate(memspace_);
+      
+      X_res_->setToZero(memspace_);
+      Sigma_->setToZero(memspace_);
+      Temp_kxk_->setToZero(memspace_);
+      c_->setToZero(memspace_);
+      r_->setToZero(memspace_);
 
-      A_norm_ = matrix_handler_->norm(A_, memspace_);
-      b_norm_ = vector_handler_->norm(b_, memspace_);
+      if (!enable_diagonal_scaling_)
+      {
+        A_scal_ = A_;
+        b_scal_ = b_;
+        R_scal_ = R_;
+      }
+
+      impl_->setup(k_);
     }
 
-    void MultiBasisParallelConjugateGradient::precondition()
+    // ... called once for the matrix A
+    void MultiBasisParallelConjugateGradient::diagonalScale()
     {
       using namespace constants;
 
-      // A_prec = L^-1 * A * L^-T
+      d_ = new vector::Vector(n_);
+      d_->allocate(memspace_);
+      matrix_handler_->extractRootDiagonal(A_, d_, memspace_);
+
+      d_inv_ = new vector::Vector(n_);
+      d_inv_->allocate(memspace_);
+      vector_handler_->elementWiseInverse(d_, d_inv_, memspace_);
+      
+      A_scal_ = new matrix::Csr(n_, n_, A_->getNnz());
+      b_scal_ = new vector::Vector(n_);
+      R_scal_ = new vector::Vector(n_, k_);
+      A_scal_->allocateMatrixData(memspace_);
+      b_scal_->allocate(memspace_);
+      R_scal_->allocate(memspace_);
+
+      // A_scal = D^-1 * A * D^-T
       // variable names are a bit messed up
-      A_prec_->copyFromExternal(A_->getRowData(memspace_),
+      A_scal_->copyFromExternal(A_->getRowData(memspace_),
                                 A_->getColData(memspace_),
                                 A_->getValues(memspace_),
                                 memspace_,
                                 memspace_);
-      matrix_handler_->leftScale(d_inv_, A_prec_, memspace_);
-      matrix_handler_->rightScale(A_prec_, d_inv_, memspace_);
+      matrix_handler_->leftScale(d_inv_, A_scal_, memspace_);
+      matrix_handler_->rightScale(A_scal_, d_inv_, memspace_);
 
-      // b_prec = 1 / b_norm * L^-1 * b
-      b_prec_->copyFromExternal(b_, memspace_, memspace_);
-      vector_handler_->scal(d_inv_, b_prec_, memspace_);
-      vector_handler_->scal(1.0 / b_norm_, b_prec_, memspace_);
-
-      impl_->setup(k_);
+      enable_diagonal_scaling_ = true;
     }
 
     // Generate starting guesses and set up residual space matrices & vectors
@@ -201,19 +205,17 @@ namespace ReSolve
       for (index_type i=0; i < k_; i++)
       {
         b_->copyToExternal(B_->getData(i, memspace_), memspace_, memspace_);
-        b_prec_->copyToExternal(B_res_->getData(i, memspace_), memspace_, memspace_);
+        b_scal_->copyToExternal(B_res_->getData(i, memspace_), memspace_, memspace_);
       }
 
-      vector_handler_->randomVector(X_prec_0_, -1.0, 1.0, memspace_);
+      vector_handler_->randomVector(X_scal_0_, -1.0, 1.0, memspace_);
       // deviceSynchronize(); // for debugging
-      impl_->SpMM(A_prec_, X_prec_0_, Temp_nxk_);
-      // matrix_handler_->matvec(A_prec_, X_prec_0_, Temp_nxk_, &ONE, &ZERO, memspace_);
-      real_type AX_prec_0_norm = vector_handler_->norm(Temp_nxk_, memspace_);
-      real_type B_prec_norm = sqrt(static_cast<double>(k_)) * vector_handler_->norm(b_prec_, memspace_);
-      real_type normalization_factor = B_prec_norm / AX_prec_0_norm;
-      vector_handler_->scal(normalization_factor, X_prec_0_, memspace_);
-
-      X_res_->setToZero(memspace_);
+      impl_->SpMM(A_scal_, X_scal_0_, Temp_nxk_);
+      // matrix_handler_->matvec(A_scal_, X_scal_0_, Temp_nxk_, &ONE, &ZERO, memspace_);
+      real_type AX_scal_0_norm = vector_handler_->norm(Temp_nxk_, memspace_);
+      real_type B_scal_norm = sqrt(static_cast<double>(k_)) * vector_handler_->norm(b_scal_, memspace_);
+      real_type normalization_factor = B_scal_norm / AX_scal_0_norm;
+      vector_handler_->scal(normalization_factor, X_scal_0_, memspace_);
       vector_handler_->axpy(-normalization_factor, Temp_nxk_, B_res_, memspace_);
     }
 
@@ -224,21 +226,27 @@ namespace ReSolve
       std::chrono::time_point<std::chrono::steady_clock> start;
       std::chrono::time_point<std::chrono::steady_clock> end;
       start = std::chrono::steady_clock::now();
-
-      precondition();
-      generateGuesses();
-      
+    
       real_type best_basis_error = std::numeric_limits<real_type>::infinity();
       real_type lincomb_error = std::numeric_limits<real_type>::infinity();
 
-      R_prec_->copyFromExternal(B_res_, memspace_, memspace_);
+      b_norm_ = vector_handler_->norm(b_, memspace_); // put this somewhere else? in setup()? addVectorInfo?
+      if (enable_diagonal_scaling_)
+      {
+        // b_scal = 1 / b_norm * D^-1 * b
+        b_scal_->copyFromExternal(b_, memspace_, memspace_);
+        vector_handler_->scal(d_inv_, b_scal_, memspace_);
+        vector_handler_->scal(1.0 / b_norm_, b_scal_, memspace_);
+      }
       
-      // ADD PRECONDITIONER LATER. W = L^-1 * R
-      W_->copyFromExternal(R_prec_, memspace_, memspace_); // with preconditioner, this is L_inv * R_res
-      Sigma_->setToZero(memspace_);
+      generateGuesses();
+      
+      R_scal_->copyFromExternal(B_res_, memspace_, memspace_);
+           
+      W_->copyFromExternal(R_scal_, memspace_, memspace_); // with preconditioner, this is L_inv * R_res
       impl_->choleskyQr(W_, Sigma_, memspace_);
 
-      // S = L^-1 * W
+      // S = D^-1 * W
       S_->copyFromExternal(W_, memspace_, memspace_);
       
       auto iterative_start = std::chrono::steady_clock::now();
@@ -252,8 +260,8 @@ namespace ReSolve
         
         // 1. SpMM / SpMV Section
         // auto spmv_start = std::chrono::steady_clock::now();
-        // matrix_handler_->matvec(A_prec_, S_, Temp_nxk_, &ONE, &ZERO, memspace_);
-        impl_->SpMM(A_prec_, S_, Temp_nxk_);
+        // matrix_handler_->matvec(A_scal_, S_, Temp_nxk_, &ONE, &ZERO, memspace_);
+        impl_->SpMM(A_scal_, S_, Temp_nxk_);
         // deviceSynchronize(); // optional
         // auto spmv_end = std::chrono::steady_clock::now();
         // printf("  [it %d] spmv: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(spmv_end - spmv_start).count()); // optional
@@ -266,18 +274,18 @@ namespace ReSolve
         // auto gemm_xi_end = std::chrono::steady_clock::now();
         // printf("  [it %d] gemm_xi: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(gemm_xi_end - gemm_xi_start).count()); // optional
 
-        // 3. Cholesky & X_res/R_prec Update Section
+        // 3. Cholesky & X_res/R_scal Update Section
         // auto chol_update_start = std::chrono::steady_clock::now();
-        // if (vector_handler_->choleskyFactorize(Xi_inv_, 'L', memspace_) != 0)
+        // if (vector_handler_->choleskyFactorize(Xi_inv_, 'D', memspace_) != 0)
         // {
         //   out::error() << "Cholesky failed!";
         //   return 1;
         // }
         // Temp_kxk_->copyFromExternal(Sigma_, memspace_, memspace_);
-        // vector_handler_->choleskySolve(Xi_inv_->getData(memspace_), Temp_kxk_, 'L', memspace_); // Temp_kxk = Xi * Sigma
+        // vector_handler_->choleskySolve(Xi_inv_->getData(memspace_), Temp_kxk_, 'D', memspace_); // Temp_kxk = Xi * Sigma
         // vector_handler_->gemm('N', 'N', ONE, ONE, S_, Temp_kxk_, X_res_, memspace_);
-        // vector_handler_->gemm('N', 'N', MINUS_ONE, ONE, Temp_nxk_, Temp_kxk_, R_prec_, memspace_);
-        impl_->updateXR(Xi_inv_, Sigma_, S_, Temp_nxk_, Temp_kxk_, X_res_, R_prec_);
+        // vector_handler_->gemm('N', 'N', MINUS_ONE, ONE, Temp_nxk_, Temp_kxk_, R_scal_, memspace_);
+        impl_->updateXR(Xi_inv_, Sigma_, S_, Temp_nxk_, Temp_kxk_, X_res_, R_scal_);
         // deviceSynchronize(); // optional
         // auto chol_update_end = std::chrono::steady_clock::now();
         // printf("  [it %d] cholesky & update: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(chol_update_end - chol_update_start).count()); // optional
@@ -291,18 +299,21 @@ namespace ReSolve
         // auto w_update_end = std::chrono::steady_clock::now();
         // printf("  [it %d] w_update: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(w_update_end - w_update_start).count()); // optional
 
-        // 5. Scale & Diagonal Solve R Section
-        // auto r_scale_start = std::chrono::steady_clock::now();
-        R_->copyFromExternal(R_prec_, memspace_, memspace_);
-        vector_handler_->scal(d_, R_, memspace_);
-        vector_handler_->scal(b_norm_, R_, memspace_);
-        // deviceSynchronize(); // optional
-        // auto r_scale_end = std::chrono::steady_clock::now();
-        // printf("  [it %d] r_scale: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(r_scale_end - r_scale_start).count()); // optional
+        if (enable_diagonal_scaling_)
+        {
+          // 5. Scale & Diagonal Solve R Section
+          // auto r_scale_start = std::chrono::steady_clock::now();
+          R_->copyFromExternal(R_scal_, memspace_, memspace_);
+          vector_handler_->scal(d_, R_, memspace_);
+          vector_handler_->scal(b_norm_, R_, memspace_);
+          // deviceSynchronize(); // optional
+          // auto r_scale_end = std::chrono::steady_clock::now();
+          // printf("  [it %d] r_scale: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(r_scale_end - r_scale_start).count()); // optional
+
+        }
 
         // 6. Best Basis Vector Norm Loop Section
         // auto basis_loop_start = std::chrono::steady_clock::now();
-
         index_type best_basis;
         real_type best_basis_r_norm;
         impl_->bestBasis(R_, &best_basis, &best_basis_r_norm);
@@ -324,6 +335,11 @@ namespace ReSolve
         // printf("  [it %d] basis_norm_loop: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(basis_loop_end - basis_loop_start).count()); // optional
         // printf("error %f\n", best_basis_error);
 
+        if (best_basis_error < 3e-2)
+        {
+          int a = 3;
+        }
+
         // std::cout << std::setprecision(std::numeric_limits<double>::max_digits10) << best_basis_error << '\n';
         // printf("%e\n", best_basis_error);
         // 7. Convergence Checking & Final Calculations Block
@@ -341,7 +357,6 @@ namespace ReSolve
           deviceSynchronize();
 
           bool use_best_basis = false;
-          real_type x_norm;
           real_type r_norm;
           // if (true)
           if (k_ == 1)
@@ -372,9 +387,12 @@ namespace ReSolve
           
           if (lincomb_error < convergence_tol_)
           {
-            vector_handler_->geam('N', 'N', ONE, ONE, X_res_, X_prec_0_, Temp_nxk_, memspace_);
-            vector_handler_->scal(d_inv_, Temp_nxk_, memspace_);
-            vector_handler_->scal(b_norm_, Temp_nxk_, memspace_);
+            vector_handler_->geam('N', 'N', ONE, ONE, X_res_, X_scal_0_, Temp_nxk_, memspace_);
+            if (enable_diagonal_scaling_)
+            {
+              vector_handler_->scal(d_inv_, Temp_nxk_, memspace_);
+              vector_handler_->scal(b_norm_, Temp_nxk_, memspace_);
+            }
 
             if (use_best_basis)
             {
@@ -387,19 +405,13 @@ namespace ReSolve
             end = std::chrono::steady_clock::now();
             std::chrono::duration<double, std::milli> elapsed = (end - start);
 
-            real_type x_norm = vector_handler_->norm(x_, memspace_);
-            real_type best_basis_x_norm = vector_handler_->norm(Temp_nxk_, best_basis, memspace_);
-
             deviceSynchronize();
             // auto conv_block_end = std::chrono::steady_clock::now();
             // printf("  [it %d] convergence_overhead: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(conv_block_end - conv_block_start).count()); // optional
 
-            printf("Convergence occured at iteration %d. Total Solve Time: %f ms\n", i, elapsed.count());
+            printf("MBPCG convergence occured at iteration %d. Total Solve Time: %f ms\n", i, elapsed.count());
             printf("Per iteration time: %.10f\n", (std::chrono::duration<double, std::milli>(iterative_end - iterative_start)).count() / i);
-            printf("||r|| / (||A|| * ||x|| + ||b||) error: %.5e, best basis error: %.5e\n",
-                   r_norm / (A_norm_ * x_norm + b_norm_),
-                   best_basis_r_norm / (A_norm_ * best_basis_x_norm + b_norm_));
-            printf("||r|| / ||b|| error: %.5e, best basis error: %.5e\n", lincomb_error, best_basis_error);
+            printf("Error: %.5e, best basis' error: %.5e\n", lincomb_error, best_basis_error);
             return 0;
           }
           // deviceSynchronize(); // optional
@@ -440,8 +452,8 @@ namespace ReSolve
         deviceSynchronize();
         end = std::chrono::steady_clock::now();
         std::chrono::duration<double, std::milli> elapsed = (end - start);
-        printf("No CG convergence in %d iterations\n", itmax_);
-        printf("Total Solve Time: %.10f ms, error: %.5e\n", elapsed.count(), best_basis_error);
+        printf("No MBPCG convergence in %d iterations\n", itmax_);
+        printf("Total Solve Time: %.10f ms, best basis' error: %.5e\n", elapsed.count(), best_basis_error);
         printf("Per iteration time: %.10f\n", (std::chrono::duration<double, std::milli>(iterative_end - iterative_start)).count() / i);
         return 1;
       }

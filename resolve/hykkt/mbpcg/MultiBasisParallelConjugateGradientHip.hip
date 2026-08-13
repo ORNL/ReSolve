@@ -3,8 +3,6 @@
 #include <hip/hip_runtime.h>
 #include <hip/hip_cooperative_groups.h>
 
-#define HIP_ENABLE_WARP_SYNC_BUILTINS 1
-
 namespace ReSolve
 {
   using real_type = ReSolve::real_type;
@@ -12,6 +10,8 @@ namespace ReSolve
 
   namespace hykkt
   {
+    constexpr index_type WAVEFRONT_SIZE = 64;
+    
     namespace kernels
     {      
       __global__ void columnWiseSquaredNorms(real_type* R, real_type* sq_norms, index_type n)
@@ -118,11 +118,11 @@ namespace ReSolve
             real_type g = G_local[indexUpperTriangular<k>(i, j)];
 
             #pragma unroll
-            for (index_type offset = 64 / 2; offset > 0; offset /= 2)
+            for (index_type offset = WAVEFRONT_SIZE / 2; offset > 0; offset /= 2)
             {
               g += __shfl_down(g, offset);
             }
-            if (threadIdx.x % 64 == 0)
+            if (threadIdx.x % WAVEFRONT_SIZE == 0)
             {
               atomicAdd(&R[j * k + i], g);
             }
@@ -203,7 +203,6 @@ namespace ReSolve
         }
       }
 
-      // ANDREW TODO: TEST THIS
       template <index_type k>
       __global__ void updateXR(real_type* __restrict__ Xi_inv,
                                const real_type* __restrict__ Sigma,
@@ -243,7 +242,6 @@ namespace ReSolve
         }
       }
       
-      // ANDREW TODO: TEST THIS
       template <index_type k>
       __global__ void choleskySolve(real_type* __restrict__ A,
                                const real_type* B,
@@ -553,7 +551,6 @@ namespace ReSolve
         }
       }
 
-      // ANDREW TODO: TEST THIS
       __global__ void preconditionDense(real_type* __restrict__ A, const real_type* __restrict__ d, index_type n)
       {
         int thread = blockIdx.x * blockDim.x + threadIdx.x;
@@ -602,16 +599,9 @@ namespace ReSolve
       case 8: 
         cholesky_qr_kernel_ = kernels::choleskyQr<8>; 
         break;
-      case 16:
-        cholesky_qr_kernel_ = kernels::choleskyQr<16>;
-        break;
       default:
         return 1;
       }
-      hipOccupancyMaxActiveBlocksPerMultiprocessor(&qr_blocks_per_sm_,
-                                                    cholesky_qr_kernel_,
-                                                    256,
-                                                    0);
 
       // For bestBasis()
       if (!d_best_basis_)
@@ -638,10 +628,10 @@ namespace ReSolve
       index_type n = R->getSize();
       index_type k = R->getNumVectors();
 
-      dim3       block_size(64, k);
+      dim3       block_size(WAVEFRONT_SIZE, k);
       int        num_blocks = num_sms_ * 4; // Pretty arbitrary. Tune this later
       hipMemsetAsync(d_sq_norms_, 0.0, k * sizeof(real_type));
-      kernels::columnWiseSquaredNorms<<<num_blocks, block_size>>>(R->getData(memory::DEVICE), d_sq_norms_, n); // before calling SquaredNormArgMin, the first entry is always very large. check if this happens on cuda
+      kernels::columnWiseSquaredNorms<<<num_blocks, block_size>>>(R->getData(memory::DEVICE), d_sq_norms_, n);
 
       // Kernel writes back into first entry of d_sq_norms_
       switch (k)
@@ -658,15 +648,13 @@ namespace ReSolve
       case 8:
         kernels::SquaredNormArgMin<8><<<1, k>>>(d_sq_norms_, d_best_basis_);
         break;
-      case 16:
-        kernels::SquaredNormArgMin<16><<<1, k>>>(d_sq_norms_, d_best_basis_);
-        break;
       default:
         return 1;
       }
 
       hipMemcpyAsync(h_best_basis, d_best_basis_, sizeof(index_type), hipMemcpyDeviceToHost);
       hipMemcpyAsync(h_best_basis_norm, d_sq_norms_, sizeof(real_type), hipMemcpyDeviceToHost);
+      hipDeviceSynchronize();
 
       return 0;
     }
@@ -685,8 +673,6 @@ namespace ReSolve
         return 0;
       }
 
-      hipError_t status;
-
       real_type* d_W = W->getData(memory::DEVICE);
       real_type* d_R = R->getData(memory::DEVICE);
       
@@ -697,50 +683,40 @@ namespace ReSolve
       };
       
       int       block_size = 256; // Must be at least k^2
-      int       num_blocks = num_sms_ * qr_blocks_per_sm_;
+      int       num_blocks = num_sms_; // One block per SM. On CUDA it's num_sms_ * qr_blocks_per_sm_, but on HIP one block per SM performs best and a high qr_blocks_per_sm_ often causes grid sync issues
 
-      status = hipLaunchCooperativeKernel((void*)cholesky_qr_kernel_, num_blocks, block_size, args, 0, 0);
-      
-      if (status != hipSuccess) {
-          return 1;
-      }
+      hipError_t status = hipLaunchCooperativeKernel((void*)cholesky_qr_kernel_, num_blocks, block_size, args, 0, 0);
 
-      return 0;
+      return status;
     }
     
-    // ANDREW TODO: test this
-    int MultiBasisParallelConjugateGradientHip::updateXRSplit(vector::Vector* Xi_inv, vector::Vector* Sigma, vector::Vector* S, vector::Vector* A_S, vector::Vector* Xi_Sigma, vector::Vector* X_res, vector::Vector* R_prec)
+    int MultiBasisParallelConjugateGradientHip::updateXR(vector::Vector* Xi_inv, vector::Vector* Sigma, vector::Vector* S, vector::Vector* A_S, vector::Vector* Xi_Sigma, vector::Vector* X_res, vector::Vector* R_prec)
     {
       index_type n = A_S->getSize();
       index_type k = A_S->getNumVectors();
 
-      int       block_size = 64; // Must be at least k^2
+      int       block_size = (k <= 4) ? 32 : 64; // Must be at least k^2
       int       num_blocks = 1; // quite arbitrary
 
       switch (k)
       {
       case 1:
-        kernels::choleskyFactorizeSolve<1><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+        kernels::choleskySolve<1><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
                                                          Sigma->getData(memory::DEVICE),
                                                          Xi_Sigma->getData(memory::DEVICE));
         break;
       case 2:
-        kernels::choleskyFactorizeSolve<2><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+        kernels::choleskySolve<2><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
                                                          Sigma->getData(memory::DEVICE),
                                                          Xi_Sigma->getData(memory::DEVICE));
         break;
       case 4:
-        kernels::choleskyFactorizeSolve<4><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+        kernels::choleskySolve<4><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
                                                          Sigma->getData(memory::DEVICE),
                                                          Xi_Sigma->getData(memory::DEVICE));
         break;
       case 8:
-        kernels::choleskyFactorizeSolve<8><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
-                                                         Sigma->getData(memory::DEVICE),
-                                                         Xi_Sigma->getData(memory::DEVICE));
-        break;
-      case 16:
-        kernels::choleskyFactorizeSolve<16><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+        kernels::choleskySolve<8><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
                                                          Sigma->getData(memory::DEVICE),
                                                          Xi_Sigma->getData(memory::DEVICE));
         break;
@@ -754,7 +730,7 @@ namespace ReSolve
       switch (k)
       {
       case 1:
-        kernels::updateXRSplit<1><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+        kernels::updateXR<1><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
                                                          Sigma->getData(memory::DEVICE),
                                                          S->getData(memory::DEVICE),
                                                          A_S->getData(memory::DEVICE),
@@ -764,7 +740,7 @@ namespace ReSolve
                                                          n);
         break;
       case 2:
-        kernels::updateXRSplit<2><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+        kernels::updateXR<2><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
                                                          Sigma->getData(memory::DEVICE),
                                                          S->getData(memory::DEVICE),
                                                          A_S->getData(memory::DEVICE),
@@ -774,7 +750,7 @@ namespace ReSolve
                                                          n);
         break;
       case 4:
-        kernels::updateXRSplit<4><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+        kernels::updateXR<4><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
                                                          Sigma->getData(memory::DEVICE),
                                                          S->getData(memory::DEVICE),
                                                          A_S->getData(memory::DEVICE),
@@ -784,17 +760,7 @@ namespace ReSolve
                                                          n);
         break;
       case 8:
-        kernels::updateXRSplit<8><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
-                                                         Sigma->getData(memory::DEVICE),
-                                                         S->getData(memory::DEVICE),
-                                                         A_S->getData(memory::DEVICE),
-                                                         Xi_Sigma->getData(memory::DEVICE),
-                                                         X_res->getData(memory::DEVICE),
-                                                         R_prec->getData(memory::DEVICE),
-                                                         n);
-        break;
-      case 16:
-        kernels::updateXRSplit<16><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+        kernels::updateXR<8><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
                                                          Sigma->getData(memory::DEVICE),
                                                          S->getData(memory::DEVICE),
                                                          A_S->getData(memory::DEVICE),
@@ -810,38 +776,32 @@ namespace ReSolve
       return 0;
     }
 
-    // ANDREW TODO: test this
-    int MultiBasisParallelConjugateGradientHip::choleskyFactorizeSolve(vector::Vector* A, vector::Vector* B, vector::Vector* X)
+    int MultiBasisParallelConjugateGradientHip::choleskySolve(vector::Vector* A, vector::Vector* B, vector::Vector* X)
     {
       index_type k = A->getSize();
 
-      int       block_size = 64; // Must be at least k^2
+      int       block_size = (k <= 4) ? 32 : 64; // Must be at least k^2
       int       num_blocks = 1; // quite arbitrary
 
       switch (k)
       {
       case 1:
-        kernels::choleskyFactorizeSolve<1><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
+        kernels::choleskySolve<1><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
                                                          B->getData(memory::DEVICE),
                                                          X->getData(memory::DEVICE));
         break;
       case 2:
-        kernels::choleskyFactorizeSolve<2><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
+        kernels::choleskySolve<2><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
                                                          B->getData(memory::DEVICE),
                                                          X->getData(memory::DEVICE));
         break;
       case 4:
-        kernels::choleskyFactorizeSolve<4><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
+        kernels::choleskySolve<4><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
                                                          B->getData(memory::DEVICE),
                                                          X->getData(memory::DEVICE));
         break;
       case 8:
-        kernels::choleskyFactorizeSolve<8><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
-                                                         B->getData(memory::DEVICE),
-                                                         X->getData(memory::DEVICE));
-        break;
-      case 16:
-        kernels::choleskyFactorizeSolve<16><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
+        kernels::choleskySolve<8><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
                                                          B->getData(memory::DEVICE),
                                                          X->getData(memory::DEVICE));
         break;
@@ -858,7 +818,7 @@ namespace ReSolve
       index_type k = B->getNumVectors();
 
       int       block_size = 256; // Must be at least k^2
-      int       num_blocks = num_sms_ * 64; // quite arbitrary
+      int       num_blocks = num_sms_ * WAVEFRONT_SIZE;
 
       switch (k)
       {
@@ -886,12 +846,6 @@ namespace ReSolve
                                                                    B->getData(memory::DEVICE),
                                                                    n);
         break;
-      case 16:
-        kernels::updateW<16><<<num_blocks, block_size>>>(W->getData(memory::DEVICE),
-                                                                   L->getData(memory::DEVICE),
-                                                                   B->getData(memory::DEVICE),
-                                                                   n);
-        break;
       default:
         return 1;
       }
@@ -899,6 +853,7 @@ namespace ReSolve
       return 0;
     }
 
+    // Tall & skinny matrix times transposed tall & skinny matrix
     // C = A^T * B
     int MultiBasisParallelConjugateGradientHip::multTSMTTSM(vector::Vector* A, vector::Vector* B, vector::Vector* C, memory::MemorySpace memspace)
     {
@@ -906,7 +861,7 @@ namespace ReSolve
       index_type k = A->getNumVectors();
 
       int       block_size = 256;
-      int       num_blocks = num_sms_ * 64;
+      int       num_blocks = num_sms_ * WAVEFRONT_SIZE;
       
       C->setToZero(memory::DEVICE);
       switch (k)
@@ -931,12 +886,6 @@ namespace ReSolve
         break;
       case 8:
         kernels::multTSMTTSM<8><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
-                                                            B->getData(memory::DEVICE),
-                                                            C->getData(memory::DEVICE),
-                                                            n);
-        break;
-      case 16:
-        kernels::multTSMTTSM<16><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
                                                             B->getData(memory::DEVICE),
                                                             C->getData(memory::DEVICE),
                                                             n);
@@ -983,13 +932,6 @@ namespace ReSolve
         break;
       case 8:
         kernels::updateSSigma<8, block_size><<<num_blocks, block_size>>>(W->getData(memory::DEVICE),
-                                                                   S->getData(memory::DEVICE),
-                                                                   Zeta->getData(memory::DEVICE),
-                                                                   Sigma->getData(memory::DEVICE),
-                                                                   n);
-        break;
-      case 16:
-        kernels::updateSSigma<16, block_size><<<num_blocks, block_size>>>(W->getData(memory::DEVICE),
                                                                    S->getData(memory::DEVICE),
                                                                    Zeta->getData(memory::DEVICE),
                                                                    Sigma->getData(memory::DEVICE),
