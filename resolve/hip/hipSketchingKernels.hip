@@ -5,6 +5,7 @@
  * 
  * 
  */
+#include <cstddef>
 
 #include <hip/hip_runtime.h>
 #include <hip/hip_cooperative_groups.h>
@@ -34,7 +35,8 @@ namespace ReSolve
                                           const real_type* input,
                                           real_type* output)
       {
-        index_type idx = blockIdx.x * blockDim.x + threadIdx.x; 
+        (void) k;
+        index_type idx = static_cast<index_type>(blockIdx.x * blockDim.x + threadIdx.x);
         while (idx < n) {
           real_type val = input[idx];
           if (flip[idx] != 1){
@@ -58,7 +60,7 @@ namespace ReSolve
                                     const real_type* input,
                                     real_type* output)
       {
-        index_type idx = blockIdx.x * blockDim.x + threadIdx.x; 
+        index_type idx = static_cast<index_type>(blockIdx.x * blockDim.x + threadIdx.x);
         while (idx < k) {
           output[idx] = input[perm[idx]];
           idx += blockDim.x * gridDim.x;
@@ -78,7 +80,7 @@ namespace ReSolve
                                       const real_type* x,
                                       real_type* y)
       {
-        index_type idx = blockIdx.x * blockDim.x + threadIdx.x; 
+        index_type idx = static_cast<index_type>(blockIdx.x * blockDim.x + threadIdx.x);
 
         while (idx < n) {
 
@@ -101,11 +103,11 @@ namespace ReSolve
        */
       __global__ void fwtBatch2Kernel(real_type* d_Output, real_type* d_Input, index_type stride) 
       {
-        const index_type pos = blockIdx.x * blockDim.x + threadIdx.x;
-        const index_type N = blockDim.x * gridDim.x * 4;
+        const index_type pos = static_cast<index_type>(blockIdx.x * blockDim.x + threadIdx.x);
+        const index_type N = static_cast<index_type>(blockDim.x * gridDim.x * 4);
 
-        real_type* d_Src = d_Input + blockIdx.y * N;
-        real_type* d_Dst = d_Output + blockIdx.y * N;
+        real_type* d_Src = d_Input + static_cast<index_type>(blockIdx.y) * N;
+        real_type* d_Dst = d_Output + static_cast<index_type>(blockIdx.y) * N;
 
         index_type lo = pos & (stride - 1);
         index_type i0 = ((pos - lo) << 2) + lo;
@@ -150,19 +152,19 @@ namespace ReSolve
 
         cooperative_groups::thread_block cta = cooperative_groups::this_thread_block();
         const index_type N = 1 << log2N;
-        const index_type base = blockIdx.x << log2N;
+        const index_type base =  static_cast<index_type>(blockIdx.x) << log2N;
 
         //(2 ** 11) * 4 bytes == 8KB -- maximum s_data[] size for G80
         extern __shared__ real_type s_data[];
         real_type* d_Src = d_Input + base;
         real_type* d_Dst = d_Output + base;
 
-        for (index_type pos = threadIdx.x; pos < N; pos += blockDim.x) {
+        for (index_type pos = static_cast<index_type>(threadIdx.x); pos < N; pos += static_cast<index_type>(blockDim.x)) {
           s_data[pos] = d_Src[pos];
         }
 
         // Main radix-4 stages
-        const index_type pos = threadIdx.x;
+        const index_type pos = static_cast<index_type>(threadIdx.x);
 
         for (index_type stride = N >> 2; stride > 0; stride >>= 2) {
           index_type lo = pos & (stride - 1);
@@ -197,7 +199,7 @@ namespace ReSolve
 
           cooperative_groups::sync(cta);
 
-          for (index_type pos = threadIdx.x; pos < N / 2; pos += blockDim.x) {
+          for (index_type pos = static_cast<index_type>(threadIdx.x); pos < N / 2; pos += static_cast<index_type>(blockDim.x)) {
             index_type i0 = pos << 1;
             index_type i1 = i0 + 1;
 
@@ -210,7 +212,7 @@ namespace ReSolve
 
         cooperative_groups::sync(cta);
 
-        for (index_type pos = threadIdx.x; pos < N; pos += blockDim.x) {
+        for (index_type pos = static_cast<index_type>(threadIdx.x); pos < N; pos += static_cast<index_type>(blockDim.x)) {
           d_Dst[pos] = s_data[pos];
         }
       }
@@ -303,13 +305,13 @@ namespace ReSolve
       const index_type ELEMENTARY_LOG2SIZE = 11;
       const index_type THREAD_N = 1024;
       index_type N = 1 << log2N;
-      dim3 grid((1 << log2N) / (4 * THREAD_N), M, 1);
+      dim3 grid(static_cast<unsigned int>((1 << log2N) / (4 * THREAD_N)), static_cast<unsigned int>(M), 1);
 
       for (; log2N > ELEMENTARY_LOG2SIZE; log2N -= 2, N >>= 2, M <<= 2) {
-        hipLaunchKernelGGL(kernels::fwtBatch2Kernel, grid, dim3(THREAD_N), 0, 0,  d_Data, d_Data, N / 4);
+        hipLaunchKernelGGL(kernels::fwtBatch2Kernel, grid, dim3(static_cast<unsigned int>(THREAD_N)), 0, 0,  d_Data, d_Data, N / 4);
       }
 
-      hipLaunchKernelGGL(kernels::fwtBatch1Kernel, dim3(M), dim3(N / 4), N * sizeof(real_type), 0, d_Data, d_Data, log2N);
+      hipLaunchKernelGGL(kernels::fwtBatch1Kernel, dim3(static_cast<unsigned int>(M)), dim3(static_cast<unsigned int>(N / 4)), static_cast<std::size_t>(N) * sizeof(real_type), 0, d_Data, d_Data, log2N);
     }
   } // namespace hip
 } // namespace ReSolve

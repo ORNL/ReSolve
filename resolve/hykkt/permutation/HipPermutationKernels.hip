@@ -22,7 +22,7 @@ namespace ReSolve
      */
     __global__ void mapIdxKernel(index_type n, const index_type* perm, const real_type* old_val, real_type* new_val)
     {
-      index_type i = blockIdx.x * blockDim.x + threadIdx.x;
+      index_type i = static_cast<index_type>(blockIdx.x * blockDim.x + threadIdx.x);
       if (i < n)
       {
         new_val[i] = old_val[perm[i]];
@@ -47,7 +47,7 @@ namespace ReSolve
       // Launch the CUDA kernel
       index_type blockSize = 256;
       index_type numBlocks = (n + blockSize - 1) / blockSize;
-      mapIdxKernel<<<numBlocks, blockSize>>>(n, perm, old_val, new_val);
+      mapIdxKernel<<<static_cast<unsigned int>(numBlocks), static_cast<unsigned int>(blockSize)>>>(n, perm, old_val, new_val);
     }
   } // namespace hykkt
 } // namespace ReSolve
