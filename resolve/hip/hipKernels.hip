@@ -37,15 +37,15 @@ namespace ReSolve {
                                           const index_type k,
                                           const index_type N)
       {
-        index_type t = threadIdx.x;
-        index_type bsize = blockDim.x;
+        index_type t = static_cast<index_type>(threadIdx.x);
+        index_type bsize = static_cast<index_type>(blockDim.x);
 
         // assume T threads per thread block (and k reductions to be performed)
         volatile __shared__ real_type s_tmp1[Tv5];
 
         volatile __shared__ real_type s_tmp2[Tv5];
         // map between thread index space and the problem index space
-        index_type j = blockIdx.x;
+        index_type j = static_cast<index_type>(blockIdx.x);
         s_tmp1[t] = 0.0;
         s_tmp2[t] = 0.0;
         index_type nn = t;
@@ -113,8 +113,8 @@ namespace ReSolve {
           s_tmp2[t] += s_tmp2[t + 1];
         }
         if (t == 0) {
-          result[blockIdx.x] = s_tmp1[0];
-          result[blockIdx.x + k] = s_tmp2[0];
+          result[j] = s_tmp1[0];
+          result[j + k] = s_tmp2[0];
         }
       }
 
@@ -137,8 +137,8 @@ namespace ReSolve {
                                        real_type* y_data,
                                        const real_type* alpha)
       {
-        index_type i = blockIdx.x * blockDim.x + threadIdx.x;
-        index_type t = threadIdx.x;
+        index_type i = static_cast<index_type>(blockIdx.x * blockDim.x + threadIdx.x);
+        index_type t = static_cast<index_type>(threadIdx.x);
 
         __shared__ real_type s_alpha[Tmaxk];
         if (t < k) {
@@ -170,7 +170,8 @@ namespace ReSolve {
                                          const real_type* a_val,
                                          real_type* result)
       {
-        index_type idx = blockIdx.x*blockDim.x + threadIdx.x;
+        (void) nnz;
+        index_type idx = static_cast<index_type>(blockIdx.x*blockDim.x + threadIdx.x);
         while (idx < n) {
           real_type sum = 0.0;
           for (index_type i = a_ia[idx]; i < a_ia[idx+1]; ++i) {
@@ -193,11 +194,11 @@ namespace ReSolve {
                                     real_type* result)
       {
 
-        index_type idx = blockIdx.x * blockDim.x + threadIdx.x;
+        index_type idx = static_cast<index_type>(blockIdx.x * blockDim.x + threadIdx.x);
 
         volatile __shared__ real_type s_max[1024];
-        index_type t = threadIdx.x;
-        index_type bsize = blockDim.x;
+        index_type t = static_cast<index_type>(threadIdx.x);
+        index_type bsize = static_cast<index_type>(blockDim.x);
         real_type local_max = 0.0;
         if (idx < n) {
           local_max = fabs(input[idx]);
@@ -252,8 +253,6 @@ namespace ReSolve {
 
         }
         if (t == 0) {
-          index_type bid = blockIdx.x;
-          index_type gid = gridDim.x;
           result[blockIdx.x] = s_max[0];
         }
       }
@@ -273,7 +272,7 @@ namespace ReSolve {
                                             real_type* vec_out)
       {
         //one thread per vector entry, pass through rows
-        index_type idx = blockIdx.x*blockDim.x + threadIdx.x;
+        index_type idx = static_cast<index_type>(blockIdx.x*blockDim.x + threadIdx.x);
         while (idx < n) {
           vec_out[idx] = vec_in[perm_vector[idx]];
           idx += (blockDim.x * gridDim.x);
@@ -294,7 +293,7 @@ namespace ReSolve {
                                             real_type* vec_out)
       {
         //one thread per vector entry, pass through rows
-        index_type idx = blockIdx.x*blockDim.x + threadIdx.x;
+        index_type idx = static_cast<index_type>(blockIdx.x*blockDim.x + threadIdx.x);
         while (idx < n) {
           vec_out[perm_vector[idx]] = vec_in[idx];
           idx += (blockDim.x * gridDim.x);
@@ -317,7 +316,7 @@ namespace ReSolve {
                                 const real_type* d_val)
       {
         // Get row index from thread and block indices
-        index_type row = blockIdx.x * blockDim.x + threadIdx.x;
+        index_type row = static_cast<index_type>(blockIdx.x * blockDim.x + threadIdx.x);
 
         // Check if the thread's row is within matrix bounds
         if (row < n) {
@@ -353,7 +352,7 @@ namespace ReSolve {
                                  const real_type* d_val)
       {
         // Get row index from thread and block indices
-        index_type row = blockIdx.x * blockDim.x + threadIdx.x;
+        index_type row = static_cast<index_type>(blockIdx.x * blockDim.x + threadIdx.x);
 
         // Check if the thread's row is within matrix bounds
         if (row < n) {
@@ -396,7 +395,7 @@ namespace ReSolve {
                      real_type* result)
     {
       hipLaunchKernelGGL(kernels::MassIPTwoVec_kernel,
-                         dim3(i),
+                         dim3(static_cast<unsigned int>(i)),
                          dim3(1024),
                          0,
                          0,
@@ -420,7 +419,7 @@ namespace ReSolve {
     void axpy_multi(index_type n, index_type i, real_type* x, real_type* y, real_type* alpha)
     {
       hipLaunchKernelGGL(kernels::axpyMulti3_kernel,
-                         dim3((n + 384 - 1) / 384),
+                         dim3(static_cast<unsigned int>((n + 384 - 1) / 384)),
                          dim3(384),
                          0,
                          0,
@@ -539,7 +538,7 @@ namespace ReSolve {
       const int block_size = 1;
       int num_blocks = (n + block_size - 1) / block_size;
       // Launch the kernel
-      kernels::leftScale<<<num_blocks, block_size>>>(n, a_row_ptr, a_val, d_val);
+      kernels::leftScale<<<static_cast<unsigned int>(num_blocks), static_cast<unsigned int>(block_size)>>>(n, a_row_ptr, a_val, d_val);
     }
 
     /**
@@ -563,7 +562,7 @@ namespace ReSolve {
       const int block_size = 256;
       int num_blocks = (n + block_size - 1) / block_size;
       // Launch the kernel
-      kernels::rightScale<<<num_blocks, block_size>>>(n, a_row_ptr, a_col_ind, a_val, d_val);
+      kernels::rightScale<<<static_cast<unsigned int>(num_blocks), static_cast<unsigned int>(block_size)>>>(n, a_row_ptr, a_col_ind, a_val, d_val);
     }
   } // namespace hip
 } // namespace ReSolve

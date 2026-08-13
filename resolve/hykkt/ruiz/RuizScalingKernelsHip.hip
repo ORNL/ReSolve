@@ -36,7 +36,7 @@ namespace ReSolve
       {
         real_type  max_l = 0;
         real_type  max_u = 0;
-        index_type i     = blockIdx.x * blockDim.x + threadIdx.x;
+        index_type i     = static_cast<index_type>(blockIdx.x * blockDim.x + threadIdx.x);
         index_type j;
         real_type  entry;
         if (i < n_hes)
@@ -115,7 +115,7 @@ namespace ReSolve
                                      real_type* aggregate_scaling_vector, 
                                      const real_type* scaling_vector)
       {
-        index_type i = blockIdx.x * blockDim.x + threadIdx.x;
+        index_type i = static_cast<index_type>(blockIdx.x * blockDim.x + threadIdx.x);
         if (i < n_hes)
         {
           for (index_type j = hes_i[i]; j < hes_i[i + 1]; j++)
@@ -169,7 +169,7 @@ namespace ReSolve
       int num_blocks;
       int block_size = 256;
       num_blocks     = (n_total + block_size - 1) / block_size;
-      kernelsHIP::adaptRowMax<<<num_blocks, block_size>>>(n_hes, 
+      kernelsHIP::adaptRowMax<<<static_cast<unsigned int>(num_blocks), static_cast<unsigned int>(block_size)>>>(n_hes,
                                                           n_total, 
                                                           hes->getRowData(memory::DEVICE), 
                                                           hes->getValues(memory::DEVICE),
@@ -214,7 +214,7 @@ namespace ReSolve
     {
       int block_size = 256;
       int num_blocks = (n_total + block_size - 1) / block_size;
-      kernelsHIP::adaptDiagScale<<<num_blocks, block_size>>>(n_hes, 
+      kernelsHIP::adaptDiagScale<<<static_cast<unsigned int>(num_blocks), static_cast<unsigned int>(block_size)>>>(n_hes,
                                                              n_total, 
                                                              hes->getRowData(memory::DEVICE), 
                                                              hes->getColData(memory::DEVICE), 
