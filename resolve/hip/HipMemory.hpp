@@ -1,7 +1,7 @@
 #pragma once
 
-#include <iostream>
 #include <cstddef>
+#include <iostream>
 
 #include <hip/hip_runtime.h>
 #include <resolve/hip/hipVectorKernels.h>
