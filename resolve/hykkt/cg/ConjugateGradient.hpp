@@ -61,7 +61,7 @@ namespace ReSolve
 
       matrix::Csr* A_{nullptr};
 
-      vector::Vector* x_0_{nullptr}; // LHS of entire system
+      vector::Vector* x_{nullptr}; // LHS of entire system
       vector::Vector* b_{nullptr};   // RHS of entire system
 
       matrix::Csr* A_scal_{nullptr};

@@ -233,6 +233,47 @@ namespace ReSolve
       }
       
       // ...
+      __global__ void extractDiagonal(index_type        n,
+                                             const index_type* a_row_ptr,
+                                             const index_type* a_col_ind,
+                                             const real_type*  a_val,
+                                             index_type* d_row_ptr,
+                                             index_type* d_col_ind,
+                                             real_type*  d_val)
+      {
+        // Get row index from thread and block indices
+        index_type row = blockIdx.x * blockDim.x + threadIdx.x;
+
+        if (row < n + 1)
+        {
+          d_row_ptr[row] = row;
+        }
+
+        // Check if the thread's row is within matrix bounds
+        if (row < n)
+        {
+          // Since D is a diagonal matrix, the row index is also the column index
+          d_col_ind[row] = row;
+
+          // Get the start and end positions for this row in the CSR format
+          index_type row_start = a_row_ptr[row];
+          index_type row_end   = a_row_ptr[row + 1];
+
+          // Get the scaling factor for this row from the diagonal matrix
+          real_type scale = d_val[row];
+
+          // Scale all non-zero elements in this row
+          for (index_type i = 0; i < row_end - row_start; i++)
+          {
+            if (a_col_ind[a_row_ptr[row] + i] == row)
+            {
+              d_val[row] = a_val[a_row_ptr[row] + i];
+            }
+          }
+        }
+      }
+      
+      // ...
       __global__ void extractRootDiagonal(index_type        n,
                                              const index_type* a_row_ptr,
                                              const index_type* a_col_ind,
@@ -418,6 +459,22 @@ namespace ReSolve
       int       num_blocks = (n + block_size - 1) / block_size;
       // Launch the kernel
       kernels::rightScale<<<num_blocks, block_size>>>(n, a_row_ptr, a_col_ind, a_val, d_val);
+    }
+    
+    // ...
+    void extractDiagonal(index_type        n,
+                                const index_type* a_row_ptr,
+                                const index_type* a_col_ind,
+                                const real_type*  a_val,
+                                index_type* d_row_ptr,
+                                index_type* d_col_ind,
+                                real_type*  d_val)
+    {
+      // Define block size and number of blocks
+      const int block_size = 256;
+      int       num_blocks = (n + 1 + block_size - 1) / block_size;
+      // Launch the kernel
+      kernels::extractDiagonal<<<num_blocks, block_size>>>(n, a_row_ptr, a_col_ind, a_val, d_row_ptr, d_col_ind, d_val);
     }
     
     // ...

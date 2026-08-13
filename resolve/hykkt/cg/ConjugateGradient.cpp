@@ -4,10 +4,13 @@
 #include <chrono>
 
 #include <resolve/Common.hpp>
+#include <resolve/utilities/logger/Logger.hpp>
 
 #include <hip/hip_runtime.h>
 namespace ReSolve
 {
+  using out = io::Logger;
+
   namespace hykkt
   {
     /** Constructor for ConjugateGradient without preconditioning.
@@ -28,7 +31,7 @@ namespace ReSolve
     {
     }
 
-    /** Constructor for ConjugateGradient.
+    /** Constructor for ConjugateGradient with preconditioning.
      *  @param n[in] - Dimension of the system.
      *  @param cholesky_solver[in] - Factorization of the preconditioner.
      *  @param matrix_handler[in] - Matrix handler for the selected backend.
@@ -49,7 +52,7 @@ namespace ReSolve
     {
       if (cholesky_solver_)
       {
-        enable_diagonal_scaling_ = true;
+        enable_preconditioning_ = true;
       }
     }
 
@@ -84,12 +87,12 @@ namespace ReSolve
 
     /**
      * @brief Loads or reloads vector pointers to the solver
-     * @param[in] x_0 - Pointer to the left-hand side vector.
+     * @param[in] x - Pointer to the left-hand side vector. It should contain the initial guess vector.
      * @param[in] b - Pointer to the right-hand side vector.
      */
-    void ConjugateGradient::addVectorInfo(vector::Vector* x_0, vector::Vector* b)
+    void ConjugateGradient::addVectorInfo(vector::Vector* x, vector::Vector* b)
     {
-      x_0_ = x_0;
+      x_ = x;
       b_   = b;
     }
     
@@ -103,6 +106,10 @@ namespace ReSolve
       cholesky_solver_ = cholesky_solver;
       if (cholesky_solver)
       {
+        if (enable_preconditioning_)
+        {
+          out::warning() << "Avoid combining preconditioning and diagonal scaling. The diagonal scaling will be done in reference to the original matrix, not the preconditioned matrix.";
+        }
         enable_preconditioning_ = true;
       }
       else
@@ -163,7 +170,12 @@ namespace ReSolve
     void ConjugateGradient::diagonalScale()
     {
       using namespace constants;
-        
+
+      if (enable_preconditioning_)
+      {
+        out::warning() << "Avoid combining preconditioning and diagonal scaling. The diagonal scaling will be done in reference to the original matrix, not the preconditioned matrix.";
+      }
+
       d_ = new vector::Vector(n_);
       d_->allocate(memspace_);
       matrix_handler_->extractRootDiagonal(A_, d_, memspace_);
@@ -198,7 +210,7 @@ namespace ReSolve
 
       auto start = std::chrono::steady_clock::now();
 
-      x_0_->setToZero(memspace_);
+      x_->setToZero(memspace_);
       b_norm_ = std::sqrt(vector_handler_->dot(b_, b_, memspace_));
 
       if (enable_diagonal_scaling_)
@@ -210,8 +222,12 @@ namespace ReSolve
         
         r_scal_->copyFromExternal(b_scal_, memspace_, memspace_);
       }
+      else
+      {
+        r_scal_->copyFromExternal(b_, memspace_, memspace_);
+      }
 
-      matrix_handler_->matvec(A_scal_, x_0_, r_scal_, &MINUS_ONE, &ONE, memspace_);
+      matrix_handler_->matvec(A_scal_, x_, r_scal_, &MINUS_ONE, &ONE, memspace_);
       if (enable_preconditioning_)
       {
         cholesky_solver_->solve(z_, r_scal_);
@@ -233,7 +249,7 @@ namespace ReSolve
         vector_handler_->axpy(ONE, z_, p_, memspace_);
         vector_handler_->scal(beta_, s_, memspace_);
         vector_handler_->axpy(ONE, w_, s_, memspace_);
-        vector_handler_->axpy(alpha_, p_, x_0_, memspace_);
+        vector_handler_->axpy(alpha_, p_, x_, memspace_);
         vector_handler_->axpy(-alpha_, s_, r_scal_, memspace_);
 
         if (enable_diagonal_scaling_)

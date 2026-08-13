@@ -60,6 +60,8 @@ namespace ReSolve
 
     int rightScale(matrix::Csr* A, vector_type* diag, memory::MemorySpace memspace);
 
+    int extractDiagonal(matrix::Csr* A, matrix::Csr* diag, memory::MemorySpace memspace);
+
     int extractRootDiagonal(matrix::Csr* A, vector_type* diag, memory::MemorySpace memspace);
 
     int extractInverseRootDiagonal(matrix::Csr* A, vector_type* diag, memory::MemorySpace memspace);

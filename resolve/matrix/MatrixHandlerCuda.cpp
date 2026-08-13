@@ -541,6 +541,20 @@ namespace ReSolve
     return 0;
   }
 
+  int MatrixHandlerCuda::extractDiagonal(matrix::Csr* A, matrix::Csr* diag)
+  {
+    index_type* diag_row_ptr = diag->getRowData(memory::DEVICE);
+    index_type* diag_col_ptr = diag->getColData(memory::DEVICE);
+    real_type*  diag_vals = diag->getValues(memory::DEVICE);
+    const index_type* a_row_ptr = A->getRowData(memory::DEVICE);
+    const index_type* a_col_idx = A->getColData(memory::DEVICE);
+    const real_type*  a_vals    = A->getValues(memory::DEVICE);
+    index_type  n         = A->getNumRows();
+    cuda::extractDiagonal(n, a_row_ptr, a_col_idx, a_vals, diag_row_ptr, diag_col_ptr, diag_vals);
+    A->setUpdated(memory::DEVICE);
+    return 0;
+  }
+
   int MatrixHandlerCuda::extractRootDiagonal(matrix::Csr* A, vector_type* diag)
   {
     real_type*  diag_data = diag->getData(memory::DEVICE);

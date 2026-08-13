@@ -431,13 +431,19 @@ namespace ReSolve
     return 0;
   }
 
-  // Not used in any CPU-compatible solvers
+  // ANDREW TODO: implement
+  int MatrixHandlerCpu::extractDiagonal(matrix::Csr* A, matrix::Csr* diag)
+  {
+    out::error() << "Not implemented!";
+  }
+
+  // ANDREW TODO: implement
   int MatrixHandlerCpu::extractRootDiagonal(matrix::Csr* A, vector_type* diag)
   {
     out::error() << "Not implemented!";
   }
 
-  // Not used in any CPU-compatible solvers
+  // ANDREW TODO: implement
   int MatrixHandlerCpu::extractInverseRootDiagonal(matrix::Csr* A, vector_type* diag)
   {
     out::error() << "Not implemented!";

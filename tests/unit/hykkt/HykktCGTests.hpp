@@ -9,6 +9,7 @@
 
 #include <resolve/MemoryUtils.hpp>
 #include <resolve/hykkt/cg/ConjugateGradient.hpp>
+#include <resolve/hykkt/cholesky/CholeskySolver.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/matrix/io.hpp>
@@ -88,23 +89,51 @@ namespace ReSolve
           vector_handler_.randomVector(b, -1.0, 1.0, memspace_);
         }
 
-        hykkt::ConjugateGradient cg(n, &matrix_handler_, &vector_handler_, memspace_);
-        cg.setSolverTolerance(cg_tol);
-
         vector::Vector* x = new vector::Vector(n);
         x->allocateAll(memspace_);
-        x->setToZero(memspace_);
-
-        cg.addMatrixInfo(A);
-        cg.addVectorInfo(x, b);
-        cg.diagonalScale();
-        cg.setup();
-        int converged = cg.solve(); // 0 if converged, 1 if not
 
         TestStatus  status;
+      
+        printf("\nTesting with diagonal scaling.\n");
+        
+        hykkt::ConjugateGradient cg_diag_scal(n, &matrix_handler_, &vector_handler_, memspace_);
+        cg_diag_scal.setSolverTolerance(cg_tol);
+        // cg_diag_scal.setSolverItmax();
+
+        x->setToZero(memspace_);
+        cg_diag_scal.addMatrixInfo(A);
+        cg_diag_scal.addVectorInfo(x, b);
+        cg_diag_scal.diagonalScale();
+        cg_diag_scal.setup();
+        int converged = cg_diag_scal.solve(); // 0 if converged, 1 if not
+        status *= (converged == 0);
+        
+        printf("\nTest with preconditioning.\n");
+        
+        // The preconditioner here is just the diagonal scaling matrix without the square root (D^T * D)
+        matrix::Csr* M = new matrix::Csr(n, n, n);
+        M->allocateAll(memspace_);
+        matrix_handler_.extractDiagonal(A, M, memspace_);
+        M->syncData(memory::HOST);
+        hykkt::CholeskySolver cholesky_solver(memspace_);
+        cholesky_solver.addMatrixInfo(M);
+        cholesky_solver.symbolicAnalysis();
+        cholesky_solver.setPivotTolerance(cholesky_tol);
+        cholesky_solver.numericalFactorization();
+
+        hykkt::ConjugateGradient cg_prec(n, &cholesky_solver, &matrix_handler_, &vector_handler_, memspace_);
+        cg_prec.setSolverTolerance(cg_tol);
+        // cg_prec.setSolverItmax();
+
+        x->setToZero(memspace_);
+        cg_prec.addMatrixInfo(A);
+        cg_prec.addVectorInfo(x, b);
+        cg_prec.setup();
+        converged = cg_prec.solve(); // 0 if converged, 1 if not
+        status *= (converged == 0);
+      
         std::string testname(__func__);
         testname += " n=" + std::to_string(n) + ", nnz =" + std::to_string(nnz);
-        status *= validateResult(converged);
 
         delete A;
         delete x;
@@ -120,15 +149,6 @@ namespace ReSolve
 
       static constexpr real_type cholesky_tol = 1e-12;
       static constexpr real_type cg_tol     = 1e-8;
-
-      /**
-       * @brief Validate the CG result.
-       * @param[in] x Pointer to the output x vector.
-       */
-      bool validateResult(int converged)
-      {
-        return converged == 0;
-      }
     }; // class HykktConjugateGradientTests
   } // namespace tests
 } // namespace ReSolve
