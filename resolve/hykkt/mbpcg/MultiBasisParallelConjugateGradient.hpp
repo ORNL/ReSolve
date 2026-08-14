@@ -55,7 +55,7 @@ namespace ReSolve
     private:
       index_type n_;             // Dimension of outer system
       index_type k_;             // Number of copies of the systems to solve at once
-      int        itmax_ = 6000;   // Maximum iterations for conjugate gradient
+      int        itmax_ = 12000;   // Maximum iterations for conjugate gradient
       real_type  initial_tol_   = 1e-8; // Solver tolerance for Schur // ...
       real_type  convergence_tol_   = 1e-8; // Solver tolerance for Schur // ...
     
@@ -84,11 +84,10 @@ namespace ReSolve
       vector::Vector* B_{nullptr};
       vector::Vector* R_{nullptr};
       vector::Vector* R_scal_{nullptr};
-      vector::Vector* S_{nullptr};
+      vector::Vector* P_{nullptr};
       vector::Vector* Xi_inv_{nullptr};
-      vector::Vector* W_{nullptr};
-      vector::Vector* Sigma_{nullptr};
-      vector::Vector* Zeta_{nullptr};
+      vector::Vector* Delta_{nullptr};
+      vector::Vector* Psi_{nullptr};
       vector::Vector* Temp_nxk_{nullptr};
       vector::Vector* Temp_kxk_{nullptr};
       vector::Vector* c_{nullptr};

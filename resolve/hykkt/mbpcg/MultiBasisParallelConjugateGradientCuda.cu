@@ -244,7 +244,7 @@ namespace ReSolve
       }
       
       template <index_type k>
-      __global__ void choleskySolve(real_type* __restrict__ A,
+      __global__ void choleskyFactorizeSolve(real_type* __restrict__ A,
                                const real_type* B,
                                real_type* X)
       {
@@ -452,7 +452,7 @@ namespace ReSolve
 
       // W = W - B * L^-1
       template <index_type k>
-      __global__ void updateW(real_type* __restrict__ W, const real_type* __restrict__ L, real_type* __restrict__ B, index_type n)
+      __global__ void updateP(real_type* __restrict__ W, real_type* __restrict__ P, const real_type* __restrict__ R, const real_type* __restrict__ Xi_inv_chol, const real_type* __restrict__ Delta, index_type n)
       {
         index_type thread = blockIdx.x * blockDim.x + threadIdx.x;
         index_type stride = gridDim.x * blockDim.x;
@@ -879,7 +879,7 @@ namespace ReSolve
       return 0;
     }
 
-    int MultiBasisParallelConjugateGradientCuda::choleskySolve(vector::Vector* A, vector::Vector* B, vector::Vector* X)
+    int MultiBasisParallelConjugateGradientCuda::choleskyFactorizeSolve(vector::Vector* A, vector::Vector* B, vector::Vector* X)
     {
       index_type k = A->getSize();
 
@@ -915,7 +915,7 @@ namespace ReSolve
       return 0;
     }
 
-    int MultiBasisParallelConjugateGradientCuda::updateW(vector::Vector* W, vector::Vector* L, vector::Vector* B, memory::MemorySpace memspace)
+    int MultiBasisParallelConjugateGradientCuda::updateP(vector::Vector* P, vector::Vector* R, vector::Vector* Xi_inv_chol, vector::Vector* Delta, memory::MemorySpace memspace)
     {
       index_type n = B->getSize();
       index_type k = B->getNumVectors();
@@ -926,25 +926,25 @@ namespace ReSolve
       switch (k)
       {
       case 1:
-        kernels::updateW<1><<<num_blocks, block_size>>>(W->getData(memory::DEVICE),
+        kernels::updateP<1><<<num_blocks, block_size>>>(W->getData(memory::DEVICE),
                                                                    L->getData(memory::DEVICE),
                                                                    B->getData(memory::DEVICE),
                                                                    n);
         break;
       case 2:
-        kernels::updateW<2><<<num_blocks, block_size>>>(W->getData(memory::DEVICE),
+        kernels::updateP<2><<<num_blocks, block_size>>>(W->getData(memory::DEVICE),
                                                                    L->getData(memory::DEVICE),
                                                                    B->getData(memory::DEVICE),
                                                                    n);
         break;
       case 4:
-        kernels::updateW<4><<<num_blocks, block_size>>>(W->getData(memory::DEVICE),
+        kernels::updateP<4><<<num_blocks, block_size>>>(W->getData(memory::DEVICE),
                                                                    L->getData(memory::DEVICE),
                                                                    B->getData(memory::DEVICE),
                                                                    n);
         break;
       case 8:
-        kernels::updateW<8><<<num_blocks, block_size>>>(W->getData(memory::DEVICE),
+        kernels::updateP<8><<<num_blocks, block_size>>>(W->getData(memory::DEVICE),
                                                                    L->getData(memory::DEVICE),
                                                                    B->getData(memory::DEVICE),
                                                                    n);

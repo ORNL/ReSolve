@@ -62,11 +62,10 @@ namespace ReSolve
       delete B_res_;
       delete B_;
       delete R_;
-      delete S_;
+      delete P_;
       delete Xi_inv_;
-      delete W_;
-      delete Sigma_;
-      delete Zeta_;
+      delete Delta_;
+      delete Psi_;
       delete Temp_nxk_;
       delete Temp_kxk_;
       delete c_;
@@ -122,11 +121,10 @@ namespace ReSolve
       B_res_ = new vector::Vector(n_, k_);
       B_ = new vector::Vector(n_, k_);
       R_ = new vector::Vector(n_, k_);
-      S_ = new vector::Vector(n_, k_);
+      P_ = new vector::Vector(n_, k_);
       Xi_inv_ = new vector::Vector(k_, k_);
-      W_ = new vector::Vector(n_, k_);
-      Sigma_ = new vector::Vector(k_, k_);
-      Zeta_ = new vector::Vector(k_, k_);
+      Delta_ = new vector::Vector(k_, k_);
+      Psi_ = new vector::Vector(k_, k_);
       Temp_nxk_ = new vector::Vector(n_, k_);
       Temp_kxk_ = new vector::Vector(k_, k_);
       c_ = new vector::Vector(k_, 1);
@@ -137,18 +135,17 @@ namespace ReSolve
       B_res_->allocate(memspace_);
       B_->allocate(memspace_);
       R_->allocate(memspace_);
-      S_->allocate(memspace_);
+      P_->allocate(memspace_);
       Xi_inv_->allocate(memspace_);
-      W_->allocate(memspace_);
-      Sigma_->allocate(memspace_);
-      Zeta_->allocate(memspace_);
+      Delta_->allocate(memspace_);
+      Psi_->allocate(memspace_);
       Temp_nxk_->allocate(memspace_);
       Temp_kxk_->allocate(memspace_);
       c_->allocate(memspace_);
       r_->allocate(memspace_);
       
       X_res_->setToZero(memspace_);
-      Sigma_->setToZero(memspace_);
+      Psi_->setToZero(memspace_);
       Temp_kxk_->setToZero(memspace_);
       c_->setToZero(memspace_);
       r_->setToZero(memspace_);
@@ -242,12 +239,10 @@ namespace ReSolve
       generateGuesses();
       
       R_scal_->copyFromExternal(B_res_, memspace_, memspace_);
-           
-      W_->copyFromExternal(R_scal_, memspace_, memspace_); // with preconditioner, this is L_inv * R_res
-      impl_->choleskyQr(W_, Sigma_, memspace_);
 
-      // S = D^-1 * W
-      S_->copyFromExternal(W_, memspace_, memspace_);
+      // P, \Psi = qr(R)
+      P_->copyFromExternal(R_scal_, memspace_, memspace_); // with preconditioner, this is L_inv * R_res
+      impl_->choleskyQr(P_, Psi_, memspace_);
       
       auto iterative_start = std::chrono::steady_clock::now();
       std::chrono::time_point<std::chrono::steady_clock> iterative_end;
@@ -260,19 +255,23 @@ namespace ReSolve
         
         // 1. SpMM / SpMV Section
         // auto spmv_start = std::chrono::steady_clock::now();
-        // matrix_handler_->matvec(A_scal_, S_, Temp_nxk_, &ONE, &ZERO, memspace_);
-        impl_->SpMM(A_scal_, S_, Temp_nxk_);
+        // matrix_handler_->matvec(A_scal_, P_, Temp_nxk_, &ONE, &ZERO, memspace_);
+        impl_->SpMM(A_scal_, P_, Temp_nxk_);
+
         // deviceSynchronize(); // optional
         // auto spmv_end = std::chrono::steady_clock::now();
         // printf("  [it %d] spmv: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(spmv_end - spmv_start).count()); // optional
-
+        
         // 2. S^T * (A * S) GEMM Section
         // auto gemm_xi_start = std::chrono::steady_clock::now();
-        // vector_handler_->gemm('T', 'N', ONE, ZERO, S_, Temp_nxk_, Xi_inv_, memspace_);
-        impl_->multTSMTTSM(S_, Temp_nxk_, Xi_inv_, memspace_);
+        // vector_handler_->gemm('T', 'N', ONE, ZERO, P_, Temp_nxk_, Xi_inv_, memspace_);
+        impl_->multTSMTTSM(P_, Temp_nxk_, Xi_inv_, memspace_);
         // deviceSynchronize(); // optional
         // auto gemm_xi_end = std::chrono::steady_clock::now();
         // printf("  [it %d] gemm_xi: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(gemm_xi_end - gemm_xi_start).count()); // optional
+
+        // Sigma = P^T * R_scal ---- Temp_kxk_ = Sigma
+        impl_->multTSMTTSM(P_, R_scal_, Temp_kxk_, memspace_);  
 
         // 3. Cholesky & X_res/R_scal Update Section
         // auto chol_update_start = std::chrono::steady_clock::now();
@@ -281,23 +280,26 @@ namespace ReSolve
         //   out::error() << "Cholesky failed!";
         //   return 1;
         // }
-        // Temp_kxk_->copyFromExternal(Sigma_, memspace_, memspace_);
-        // vector_handler_->choleskySolve(Xi_inv_->getData(memspace_), Temp_kxk_, 'D', memspace_); // Temp_kxk = Xi * Sigma
-        // vector_handler_->gemm('N', 'N', ONE, ONE, S_, Temp_kxk_, X_res_, memspace_);
+        // Temp_kxk_->copyFromExternal(DELETE, memspace_, memspace_);
+        // vector_handler_->choleskyFactorizeSolve(Xi_inv_->getData(memspace_), Temp_kxk_, 'D', memspace_); // Temp_kxk = Xi * Sigma
+        // vector_handler_->gemm('N', 'N', ONE, ONE, P_, Temp_kxk_, X_res_, memspace_);
         // vector_handler_->gemm('N', 'N', MINUS_ONE, ONE, Temp_nxk_, Temp_kxk_, R_scal_, memspace_);
-        impl_->updateXR(Xi_inv_, Sigma_, S_, Temp_nxk_, Temp_kxk_, X_res_, R_scal_);
+        impl_->updateXR(Xi_inv_, Temp_kxk_, P_, Temp_nxk_, Temp_kxk_, X_res_, R_scal_); // this step cholesky factorizes Xi_inv_ in place
         // deviceSynchronize(); // optional
         // auto chol_update_end = std::chrono::steady_clock::now();
         // printf("  [it %d] cholesky & update: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(chol_update_end - chol_update_start).count()); // optional
 
+        impl_->multTSMTTSM(Temp_nxk_, R_scal_, Delta_, memspace_);
+
         // 4. Update W Section (W = W - A * S * Xi)
         // auto w_update_start = std::chrono::steady_clock::now();
-        // vector_handler_->choleskySolve(Xi_inv_->getData(memspace_), Temp_nxk_, 'R', memspace_); // Temp_nxk_ now contains A * S * Xi
-        // vector_handler_->axpy(MINUS_ONE, Temp_nxk_, W_, memspace_);
-        impl_->updateW(W_, Xi_inv_, Temp_nxk_, memspace_); // This is wrong I think. accessing garbage half of Xi_inv_?
+        // vector_handler_->choleskyFactorizeSolve(Xi_inv_->getData(memspace_), Temp_nxk_, 'R', memspace_); // Temp_nxk_ now contains A * S * Xi
+        // vector_handler_->axpy(MINUS_ONE, Temp_nxk_, Delta_, memspace_);
+        // impl_->updateP(Delta_, Xi_inv_, Temp_nxk_, Delta_, memspace_); // This is wrong I think. accessing garbage half of Xi_inv_?
         // deviceSynchronize(); // optional
         // auto w_update_end = std::chrono::steady_clock::now();
         // printf("  [it %d] w_update: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(w_update_end - w_update_start).count()); // optional
+        impl_->updateP(P_, R_scal_, Xi_inv_, Delta_, memspace_);
 
         if (enable_diagonal_scaling_)
         {
@@ -329,16 +331,11 @@ namespace ReSolve
         //     best_basis_r_norm = basis_r_norm;
         //   }
         // }
-        
+
         best_basis_error = best_basis_r_norm / b_norm_;
         // auto basis_loop_end = std::chrono::steady_clock::now();
         // printf("  [it %d] basis_norm_loop: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(basis_loop_end - basis_loop_start).count()); // optional
         // printf("error %f\n", best_basis_error);
-
-        if (best_basis_error < 3e-2)
-        {
-          int a = 3;
-        }
 
         // std::cout << std::setprecision(std::numeric_limits<double>::max_digits10) << best_basis_error << '\n';
         // printf("%e\n", best_basis_error);
@@ -366,7 +363,7 @@ namespace ReSolve
           }
           else
           {
-            impl_->choleskySolve(Temp_kxk_, c_, c_);
+            impl_->choleskyFactorizeSolve(Temp_kxk_, c_, c_);
             
             // r = b - AX * c
             vector_handler_->gemv('N', k_, ONE, ZERO, Temp_nxk_, c_, r_, memspace_);
@@ -421,8 +418,8 @@ namespace ReSolve
 
         // 8. Cholesky QR Section
         // auto qr_start = std::chrono::steady_clock::now();
-        Zeta_->setToZero(memspace_);
-        impl_->choleskyQr(W_, Zeta_, memspace_);
+        Psi_->setToZero(memspace_);
+        impl_->choleskyQr(P_, Psi_, memspace_);
         // deviceSynchronize(); // optional
         // auto qr_end = std::chrono::steady_clock::now();
         // printf("  [it %d] qr: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(qr_end - qr_start).count()); // optional
@@ -430,14 +427,14 @@ namespace ReSolve
         // 9. S and Sigma Base Orthogonalization Update Section
         // auto s_sigma_update_start = std::chrono::steady_clock::now();
 
-        // Temp_nxk_->copyFromExternal(W_, memspace_, memspace_);
-        // vector_handler_->gemm('N', 'T', ONE, ONE, S_, Zeta_, Temp_nxk_, memspace_);
-        // S_->copyFromExternal(Temp_nxk_, memspace_, memspace_);
+        // Temp_nxk_->copyFromExternal(Delta_, memspace_, memspace_);
+        // vector_handler_->gemm('N', 'T', ONE, ONE, P_, Psi_, Temp_nxk_, memspace_);
+        // P_->copyFromExternal(Temp_nxk_, memspace_, memspace_);
         
-        // vector_handler_->gemm('N', 'N', ONE, ZERO, Zeta_, Sigma_, Temp_kxk_, memspace_);
-        // Sigma_->copyFromExternal(Temp_kxk_, memspace_, memspace_);
+        // vector_handler_->gemm('N', 'N', ONE, ZERO, Psi_, DELETE, Temp_kxk_, memspace_);
+        // DELETE->copyFromExternal(Temp_kxk_, memspace_, memspace_);
 
-        impl_->updateSSigma(W_, S_, Zeta_, Sigma_, memspace_);
+        // impl_->updateSSigma(Delta_, P_, Psi_, DELETE, memspace_);
         // deviceSynchronize(); // optional
         // auto s_sigma_update_end = std::chrono::steady_clock::now();
         // printf("  [it %d] s_sigma_update: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(s_sigma_update_end - s_sigma_update_start).count()); // optional
