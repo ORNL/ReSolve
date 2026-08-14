@@ -44,7 +44,7 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
     // "mhd4800b", // WARMUP
     // "mhd4800b", // WARMUP
     // "mhd4800b", // WARMUP
-    "bcsstk18", // WARMUP
+    // "bcsstk18", // WARMUP
 
     // "hood",
     // "Fault_639",
@@ -54,7 +54,7 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
     // "Chem97ZtZ",
     // "sts4098",
     // "bcsstk13",
-    "bcsstk18",
+    // "bcsstk18",
     // "torsion1",
     // "shallow_water1",
     // "Kuu",
@@ -108,7 +108,7 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
     // "s2rmq4m1",
 
     // "pwtk",
-    // "crankseg_2",
+    "crankseg_2",
     // "Fault_639",
     // "ldoor",
     // "boneS10",

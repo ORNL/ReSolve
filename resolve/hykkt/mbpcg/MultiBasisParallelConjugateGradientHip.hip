@@ -3,6 +3,9 @@
 #include <hip/hip_runtime.h>
 #include <hip/hip_cooperative_groups.h>
 
+#include <chrono>
+#include <type_traits>
+
 namespace ReSolve
 {
   using real_type = ReSolve::real_type;
@@ -305,7 +308,7 @@ namespace ReSolve
         //  L * Y = B
         if (threadIdx.x < k)
         {
-          index_type col = threadIdx.x; // Rows and columns of Bl
+          index_type col = threadIdx.x; // Rows and columns of B
 
           // #pragma unroll 1
           for (index_type row = 0; row < k; row++)
@@ -476,7 +479,53 @@ namespace ReSolve
         }
       }
 
-      template <index_type k>
+      /**
+       * The point of this is to turn on/off loop unrolling based on the template argument k. C++11 doesn't support partial template specialization,
+       * so this is the workaround. k=8 needs loop unrolling off for HIP due to register pressure.
+       */
+      template <index_type k, bool Unroll>
+      __device__ inline typename std::enable_if<!Unroll>::type multTSMTTSMLoop(const real_type* A, const real_type* B, real_type* __restrict__ C_shared, index_type row, index_type n)
+      {
+        real_type a_row[k];
+        real_type b_row[k];
+        
+        #pragma unroll
+        for (index_type col = 0; col < k; col++)
+        {
+          a_row[col] = A[col * n + row];
+          b_row[col] = B[col * n + row];
+        }
+
+        #pragma unroll
+        for (index_type i = threadIdx.x; i < threadIdx.x + k * k; i++)
+        {
+          index_type idx = i % (k * k);
+          atomicAdd(&C_shared[idx], a_row[idx % k] * b_row[idx / k]);
+        }
+      }
+
+      template <index_type k, bool Unroll>
+      __device__ inline typename std::enable_if<Unroll>::type multTSMTTSMLoop(const real_type* A, const real_type* B, real_type* __restrict__ C_shared, index_type row, index_type n)
+      {
+        real_type a_row[k];
+        real_type b_row[k];
+        
+        #pragma unroll 1
+        for (index_type col = 0; col < k; col++)
+        {
+          a_row[col] = A[col * n + row];
+          b_row[col] = B[col * n + row];
+        }
+
+        #pragma unroll 1
+        for (index_type i = threadIdx.x; i < threadIdx.x + k * k; i++)
+        {
+          index_type idx = i % (k * k);
+          atomicAdd(&C_shared[idx], a_row[idx % k] * b_row[idx / k]);
+        }
+      }
+
+      template <index_type k> // ANDREW TODO: rename template "k" to "K" (capitalized)
       __global__ void multTSMTTSM(const real_type* A, const real_type* B, real_type* __restrict__ C, index_type n)
       {
         index_type thread = blockIdx.x * blockDim.x + threadIdx.x;
@@ -492,22 +541,8 @@ namespace ReSolve
         // the sum of n kxk outer products
         for (index_type row = thread; row < n; row += stride)
         {
-          real_type a_row[k];
-          real_type b_row[k];
-
-          #pragma unroll
-          for (index_type col = 0; col < k; col++)
-          {
-            a_row[col] = A[col * n + row];
-            b_row[col] = B[col * n + row];
-          }
-
-          #pragma unroll
-          for (index_type i = threadIdx.x; i < threadIdx.x + k * k; i++)
-          {
-            index_type idx = i % (k * k);
-            atomicAdd(&C_shared[idx], a_row[idx % k] * b_row[idx / k]);
-          }
+          constexpr bool unroll = (k <= 4);
+          multTSMTTSMLoop<k, unroll>(A, B, C_shared, row, n);
         }
         __syncthreads();
         
@@ -879,6 +914,7 @@ namespace ReSolve
 
       int       block_size_choleskySolve = WAVEFRONT_SIZE; // Must be at least k^2
       int       num_blocks = 1;
+      auto start = std::chrono::steady_clock::now();
 
       switch (k)
       {
@@ -940,7 +976,7 @@ namespace ReSolve
         return 1;
       }
 
-      P->setDataUpdated(memory::DEVICE); // ANDREW TODO: add this for all kernels (or not)
+      // P->setDataUpdated(memory::DEVICE); // ANDREW TODO: add this for all kernels (or not)
 
       return 0;
     }
