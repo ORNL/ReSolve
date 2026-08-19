@@ -13,6 +13,71 @@ namespace ReSolve
 
     namespace kernels
     {
+      template <index_type k>
+      __device__ __forceinline__ index_type indexLowerTriangular(index_type i, index_type j)
+      {
+        return (j * (2 * k - 1 - j)) / 2 + i;
+      }
+
+      __device__ __forceinline__ real_type warpReduceSum(real_type val)
+      {
+        #pragma unroll
+        for (int offset = WARP_SIZE / 2; offset > 0; offset /= 2)
+        {
+          val += __shfl_down(val, offset);
+        }
+        return val;
+      }
+
+      __device__ inline void gridReduceSum(const cooperative_groups::grid_group& grid,
+                                           const real_type* __restrict__ local_vals,
+                                           real_type* __restrict__ result,
+                                           index_type length,
+                                           real_type* __restrict__ workspace_global,
+                                           real_type* __restrict__ workspace_shared)
+      {
+        if (grid.thread_rank() < length)
+        {
+          workspace_global[grid.thread_rank()] = 0.0;
+        }
+        grid.sync();
+
+        index_type lane = threadIdx.x % WARP_SIZE;
+        index_type wavefront = threadIdx.x / WARP_SIZE;
+        index_type num_wavefronts = blockDim.x / WARP_SIZE;
+
+        // Reduce in wavefront
+        for (int i = 0; i < length; ++i)
+        {
+          real_type wavefront_sum = warpReduceSum(local_vals[i]);
+          if (lane == 0)
+          {
+            workspace_shared[wavefront * length + i] = wavefront_sum;
+          }
+        }
+        __syncthreads();
+
+        if (threadIdx.x < length)
+        {
+          // Reduce in block
+          real_type block_sum = 0.0;
+          for (int i = 0; i < num_wavefronts; i++)
+          {
+            block_sum += workspace_shared[i * length + threadIdx.x];
+          }
+          // Reduce globally
+          atomicAdd(&workspace_global[threadIdx.x], block_sum);
+        }
+
+        grid.sync();
+
+        // Broadcast
+        for (int i = 0; i < length; i++)
+        {
+          result[i] = workspace_global[i];
+        }
+      }
+
       __global__ void columnWiseSquaredNorms(real_type* R, real_type* sq_norms, index_type n)
       {
         index_type col = threadIdx.y;
@@ -24,10 +89,7 @@ namespace ReSolve
         {
           r_sq += R[col * n + row] * R[col * n + row];
         }
-        for (index_type offset = WARP_SIZE / 2; offset > 0; offset /= 2)
-        {
-          r_sq += __shfl_down_sync(0xffffffff, r_sq, offset);
-        }
+        warpReduceSum(r_sq);
         if (threadIdx.x == 0)
         {
           atomicAdd(&sq_norms[col], r_sq);
@@ -63,151 +125,245 @@ namespace ReSolve
         }
       }
 
-      template <index_type k>
-      __device__ __forceinline__ index_type indexUpperTriangular(index_type i, index_type j)
+      template <index_type k> // ANDREW TODO: test this for cuda
+      __global__ void qr(real_type* __restrict__ Q, real_type* __restrict__ R, index_type n)
       {
-        return (j * (j + 1)) / 2 + i;
-      }
-
-      template <index_type k>
-      __device__ __forceinline__ index_type indexLowerTriangular(index_type i, index_type j)
-      {
-        return (j * (2 * k - 1 - j)) / 2 + i;
-      }
-
-      template <index_type k>
-      __global__ void qr(real_type* Q, real_type* R, index_type n)
-      {
-        // k <= 16
-        
         cooperative_groups::grid_group grid = cooperative_groups::this_grid();
         index_type thread = blockIdx.x * blockDim.x + threadIdx.x;
         index_type stride = gridDim.x * blockDim.x;
 
-      // Compute Gram matrix
-        real_type G_local[k * (k + 1) / 2] = { 0.0 };
+        __shared__ real_type R_shared[k * k];
+        __shared__ real_type tau_shared[k];
+        __shared__ real_type reduction_workspace[4 * k];
 
-        // the sum of n kxk outer products
-        for (index_type row = thread; row < n; row += stride)
+        for (index_type idx = threadIdx.x; idx < k * k; idx += blockDim.x)
         {
-          real_type w_row[k];
-
-          #pragma unroll
-          for (index_type col = 0; col < k; col++)
-          {
-            w_row[col] = Q[col * n + row];
-          }
-
-          #pragma unroll
-          for (index_type i = 0; i < k; i++)
-          {
-            #pragma unroll
-            for (index_type j = i; j < k; j++) // Only use upper triangle
-            {
-              G_local[indexUpperTriangular<k>(i, j)] += w_row[i] * w_row[j];
-            }
-          }
+          R_shared[idx] = 0.0;
         }
+        __syncthreads();
 
-        // Sum reduction to get the sums in each warp
-        #pragma unroll
+        // Forward pass
         for (index_type i = 0; i < k; i++)
         {
-          #pragma unroll
-          for (index_type j = i; j < k; j++)
+          // Square norm of column i from rows i to n-1
+          real_type sq_local = 0.0;
+          for (index_type row = thread; row < n; row += stride)
           {
-            real_type g = G_local[indexUpperTriangular<k>(i, j)];
-
-            #pragma unroll
-            for (index_type offset = WARP_SIZE / 2; offset > 0; offset /= 2)
+            if (row >= i)
             {
-              g += __shfl_down_sync(0xffffffff, g, offset);
-            }
-            if (threadIdx.x % WARP_SIZE == 0)
-            {
-              atomicAdd(&R[j * k + i], g);
+              real_type val = Q[i * n + row];
+              sq_local += val * val;
             }
           }
-        }
-        // Now R = Q^T * Q. Lower half is garbage and doesn't matter though, because everything well get overridden soon
 
-        grid.sync();
-      
-      // Upper Cholesky factorization
-        __shared__ real_type R_shared[k * (k + 1) / 2]; // Only need this much for kxk symmetric matrix
-        {
-          index_type i = threadIdx.x % k;
-          index_type j = threadIdx.x / k;
-          if ((i < k) && (j < k) && (i <= j))
+          real_type norm_sq;
+          gridReduceSum(grid, &sq_local, &norm_sq, 1, R, reduction_workspace);
+
+          if (grid.thread_rank() == 0)
           {
-            R_shared[indexUpperTriangular<k>(i, j)] = R[j * k + i];
+            real_type q_ii = Q[i * n + i];
+            real_type norm_x = sqrt(norm_sq);
+
+            real_type alpha = 0.0;
+            real_type beta = 0.0;
+            real_type tau = 0.0;
+
+            if (norm_x > 0.0)
+            {
+              alpha = (q_ii >= 0.0) ? -norm_x : norm_x;
+              beta = q_ii - alpha; // No cancellation error since q_ii and alpha have opposite signs
+              tau = -beta / alpha;
+            }
+
+            // k >= 2, so we can reuse R for temporary storage. k=1 skips this kernel
+            R[0] = q_ii;
+            R[1] = alpha;
+            R[2] = beta;
+            R[3] = tau;
+          }
+          grid.sync();
+
+          real_type alpha = R[1];
+          real_type beta  = R[2];
+          real_type tau   = R[3];
+
+          if (threadIdx.x == 0)
+          {
+            tau_shared[i] = tau;
+            R_shared[i * k + i] = alpha;
           }
           __syncthreads();
 
-          // Do all of this inside one warp
-          for (index_type h = 0; h < k; h++)
+          // Normalize below the diagonal
+          for (index_type row = thread; row < n; row += stride)
           {
-            if (threadIdx.x == 0)
+            if (row > i)
             {
-              R_shared[indexUpperTriangular<k>(h, h)] = sqrt(R_shared[indexUpperTriangular<k>(h, h)]);
+              if (beta == 0.0)
+              {
+                Q[i * n + row] = 0.0;
+              }
+              else
+              {
+                Q[i * n + row] /= beta;
+              }
             }
-            __syncthreads();
-            if (threadIdx.x > h && threadIdx.x < k)
-            {
-              R_shared[indexUpperTriangular<k>(h, threadIdx.x)] /= R_shared[indexUpperTriangular<k>(h, h)];
-            }
-            __syncthreads();
-            if ((i < k) && (i > h) && (j < k) && (i <= j))
-            {
-              R_shared[indexUpperTriangular<k>(i, j)] -= R_shared[indexUpperTriangular<k>(h, i)] * R_shared[indexUpperTriangular<k>(h, j)];
-            }
-            __syncthreads();
           }
-          
-          if ((i < k) && (j < k) && (blockIdx.x == 0))
+          grid.sync();
+
+          // Update values above the diagonal
+          int cols_remaining = k - (i + 1);
+          if (cols_remaining > 0)
           {
-            if (i <= j)
+            real_type p_local[16] = { 0.0 };
+
+            for (index_type row = thread; row < n; row += stride)
             {
-              R[j * k + i] = R_shared[indexUpperTriangular<k>(i, j)];
+              if (row == i)
+              {
+                #pragma unroll // ANDREW TODO: test no unroll
+                for (int j = i + 1; j < k; j++)
+                {
+                  p_local[j - (i + 1)] += 1.0 * Q[j * n + row];
+                }
+              }
+              else if (row > i)
+              {
+                real_type v_val = Q[i * n + row];
+                #pragma unroll
+                for (int j = i + 1; j < k; j++)
+                {
+                  p_local[j - (i + 1)] += v_val * Q[j * n + row];
+                }
+              }
+            }
+
+            real_type p[16];
+            gridReduceSum(grid, p_local, p, cols_remaining, R, reduction_workspace);
+
+            for (index_type row = thread; row < n; row += stride)
+            {
+              if (row == i)
+              {
+                #pragma unroll
+                for (int j = i + 1; j < k; ++j)
+                {
+                  real_type r = Q[j * n + row] - tau * 1.0 * p[j - (i + 1)]; // R[i, j]
+                  Q[j * n + row] = r;
+                  if (threadIdx.x == 0)
+                  {
+                    R_shared[j * k + i] = r;
+                  }
+                }
+              }
+              else if (row > i)
+              {
+                real_type v_val = Q[i * n + row];
+                #pragma unroll
+                for (int j = i + 1; j < k; ++j)
+                {
+                  Q[j * n + row] -= tau * v_val * p[j - (i + 1)];
+                }
+              }
+            }
+            grid.sync();
+          }
+        }
+
+        // Backward pass
+        for (int i = k - 1; i >= 0; i--)
+        {
+          real_type tau = tau_shared[i];
+          int cols_remaining = k - (i + 1);
+
+          real_type d[16] = { 0.0 };
+          if (cols_remaining > 0)
+          {
+            real_type local_d[16] = { 0.0 };
+            for (index_type row = thread; row < n; row += stride)
+            {
+              if (row == i)
+              {
+                #pragma unroll
+                for (int c = i + 1; c < k; ++c)
+                {
+                  local_d[c - (i + 1)] += 1.0 * Q[c * n + row];
+                }
+              }
+              else if (row > i)
+              {
+                real_type v_val = Q[i * n + row];
+                #pragma unroll
+                for (int c = i + 1; c < k; ++c)
+                {
+                  local_d[c - (i + 1)] += v_val * Q[c * n + row];
+                }
+              }
+            }
+            gridReduceSum(grid, local_d, d, cols_remaining, R, reduction_workspace);
+          }
+
+          for (index_type row = thread; row < n; row += stride)
+          {
+            real_type v_r;
+            if (row == i)
+            {
+              v_r = 1.0;
+            }
+            else if (row > i)
+            {
+              v_r = Q[i * n + row];
             }
             else
             {
-              R[j * k + i] = 0.0;
+              v_r = 0.0;
             }
-          }
-        }
-      // No grid-wise sync needed because every block computes R_shared
-      
-      // Back substitution, QR = A
-      // each q is dependent only on q's to the left of it, as well as R and A (Q)
-        real_type q_row[k];
-        for (index_type row = thread; row < n; row += stride)
-        {
-          #pragma unroll
-          for (index_type col = 0; col < k; col++)
-          {
-            real_type q_local = Q[col * n + row];
-            #pragma unroll
-            for (index_type i = 0; i < col; i++)
-            {
-              q_local -= q_row[i] * R_shared[indexUpperTriangular<k>(i, col)];
-            }
-            q_local /= R_shared[indexUpperTriangular<k>(col, col)];
-            q_row[col] = q_local;
-          }
 
-          #pragma unroll
-          for (index_type col = 0; col < k; col++)
+            // col > i
+            #pragma unroll
+            for (int col = i + 1; col < k; ++col)
+            {
+              if (row >= i)
+              {
+                Q[col * n + row] -= tau * v_r * d[col - (i + 1)];
+              }
+            }
+
+            // Column i
+            if (row < i)
+            {
+              Q[i * n + row] = 0.0;
+            }
+            else if (row == i)
+            {
+              Q[i * n + row] = 1.0 - tau;
+            }
+            else
+            {
+              Q[i * n + row] = -tau * v_r;
+            }
+          }
+          grid.sync();
+        }
+
+        // Writeback
+        for (index_type idx = grid.thread_rank(); idx < k * k; idx += gridDim.x * blockDim.x)
+        {
+          index_type r = idx % k;
+          index_type c = idx / k;
+          if (r > c)
           {
-            Q[col * n + row] = q_row[col];
+            R[c * k + r] = R_shared[c * k + r];
+          }
+          else
+          {
+            R[c * k + r] = 0.0;
           }
         }
       }
 
       template <index_type k>
-      __global__ void updateXR(real_type* __restrict__ Xi_inv,
-                               const real_type* __restrict__ Sigma,
-                               const real_type* __restrict__ S,
+      __global__ void updateXR(const real_type* __restrict__ Xi_inv,
                                const real_type* __restrict__ A_S,
                                real_type* __restrict__ Xi_Sigma,
                                real_type* __restrict__ X_res,
@@ -450,69 +606,64 @@ namespace ReSolve
         }
       }
 
-      // W = W - B * L^-1
-      template <index_type k>
-      __global__ void updateP(real_type* __restrict__ W, real_type* __restrict__ P, const real_type* __restrict__ R, const real_type* __restrict__ Xi_inv_chol, const real_type* __restrict__ Delta, index_type n)
+      template <index_type k, index_type BLOCK_DIM>
+      __global__ void updateP(real_type* __restrict__ P, const real_type* __restrict__ R, const real_type* __restrict__ Xi_Delta, index_type n)
       {
-        index_type thread = blockIdx.x * blockDim.x + threadIdx.x;
-        index_type stride = gridDim.x * blockDim.x;
-        
-        __shared__ real_type L_shared[k * (k + 1) / 2]; // Only need this much for kxk symmetric matrix
+        index_type thread = blockIdx.x * BLOCK_DIM + threadIdx.x;
 
+        __shared__ real_type Xi_Delta_shared[k * k];
+        if (threadIdx.x < k * k)
         {
-          index_type i = threadIdx.x % k;
-          index_type j = threadIdx.x / k;
-          if ((i < k) && (j < k) && (i >= j))
-          {
-            L_shared[indexLowerTriangular<k>(i, j)] = L[j * k + i];
-          }
+          Xi_Delta_shared[threadIdx.x] = Xi_Delta[threadIdx.x];
         }
-        __syncthreads();
-
-        for (index_type row = thread; row < n; row += stride)
+      
+        __shared__ real_type P_shared[BLOCK_DIM * k];
+        __shared__ real_type result_shared[BLOCK_DIM * k];
+        // Compute P = R + P * Xi_Delta
+        if (blockIdx.x < (n + BLOCK_DIM - 1) / BLOCK_DIM)
         {
-          //  Y * L^T = B
-          real_type y_row[k];
-
-          #pragma unroll
-          for (index_type col = 0; col < k; col++)
+          // Cache a horizontally-sliced block of P for coalesced reads
+          for (index_type i = threadIdx.x; i < BLOCK_DIM * k; i += BLOCK_DIM)
           {
-            real_type y_local = B[col * n + row];
-            #pragma unroll
-            for (index_type i = 0; i < col; i++)
+            index_type block_row = i % BLOCK_DIM;
+            index_type global_row = block_row + blockIdx.x * BLOCK_DIM;
+            index_type col = i / BLOCK_DIM;
+            if (global_row < n)
             {
-              y_local -= y_row[i] * L_shared[indexLowerTriangular<k>(col, i)]; // L^T[i, col]
+              P_shared[i] = P[col * n + global_row];
+            } else {
+              P_shared[i] = 0.0;
             }
-            y_local /= L_shared[indexLowerTriangular<k>(col, col)];
-            y_row[col] = y_local;
+            result_shared[i] = 0.0;
           }
+          __syncthreads();
 
-          #pragma unroll
-          for (index_type col = 0; col < k; col++)
+          if (thread < n)
           {
-            B[col * n + row] = y_row[col]; // Y is stored in B. B is overridden
-          }
-        
-          // X * L = Y
-          real_type x_row[k];
-
-          #pragma unroll
-          for (index_type col = k - 1; col >= 0; col--)
-          {
-            real_type x_local = B[col * n + row];
-            #pragma unroll
-            for (index_type i = col + 1; i < k; i++)
+            
+            for (index_type j = 0; j < k; j++)
             {
-              x_local -= x_row[i] * L_shared[indexLowerTriangular<k>(i, col)];
+              real_type dot = 0.0;
+              for (index_type i = 0; i < k; i++)
+              {
+                dot += P_shared[i * BLOCK_DIM + threadIdx.x] * Xi_Delta_shared[i + j * k];
+              }
+              result_shared[j * BLOCK_DIM + threadIdx.x] = dot;
             }
-            x_local /= L_shared[indexLowerTriangular<k>(col, col)];
-            x_row[col] = x_local;
           }
+          __syncthreads();
 
           #pragma unroll
-          for (index_type col = 0; col < k; col++)
+          for (index_type i = threadIdx.x; i < BLOCK_DIM * k; i += BLOCK_DIM)
           {
-            W[col * n + row] -= x_row[col];
+            index_type block_row = i % BLOCK_DIM;
+            index_type global_row = block_row + blockIdx.x * BLOCK_DIM;
+            index_type col = i / BLOCK_DIM;
+            if (global_row < n)
+            {
+              P[col * n + global_row] = R[col * n + global_row] - result_shared[i];
+            }
+            result_shared[i] = 0.0;
           }
         }
       }
@@ -649,18 +800,6 @@ namespace ReSolve
           Sigma[thread] = result_shared[thread];
         }
       }
-
-      __global__ void preconditionDense(real_type* __restrict__ A, const real_type* __restrict__ d, index_type n)
-      {
-        int thread = blockIdx.x * blockDim.x + threadIdx.x;
-        
-        if (thread < n * n)
-        {
-          int row = thread % n;
-          int col = thread / n;
-          A[thread] *= (d[row] * d[col]);
-        }
-      }
     } // namespace kernels
     
     MultiBasisParallelConjugateGradientCuda::MultiBasisParallelConjugateGradientCuda(VectorHandler* vector_handler)
@@ -770,9 +909,9 @@ namespace ReSolve
 
       if (k == 1)
       {
-        real_type W_norm = vector_handler_->norm(Q, memory::DEVICE);
-        vector_handler_->scal(1 / W_norm, Q, memory::DEVICE);
-        R->setToConst(W_norm, memory::DEVICE);
+        real_type Q_norm = vector_handler_->norm(Q, memory::DEVICE);
+        vector_handler_->scal(1 / Q_norm, Q, memory::DEVICE);
+        R->setToConst(Q_norm, memory::DEVICE);
         return 0;
       }
 
@@ -793,49 +932,18 @@ namespace ReSolve
       return status;
     }
     
-    int MultiBasisParallelConjugateGradientCuda::updateXR(vector::Vector* Xi_inv, vector::Vector* Sigma, vector::Vector* S, vector::Vector* A_S, vector::Vector* Xi_Sigma, vector::Vector* X_res, vector::Vector* R_prec)
+    int MultiBasisParallelConjugateGradientCuda::updateXR(vector::Vector* S, vector::Vector* A_S, vector::Vector* Xi_Sigma, vector::Vector* X_res, vector::Vector* R_prec)
     {
-      index_type n = A_S->getSize();
-      index_type k = A_S->getNumVectors();
+      index_type n = S->getSize();
+      index_type k = S->getNumVectors();
 
-      int       block_size = (k <= 4) ? 32 : 64; // Must be at least k^2
-      int       num_blocks = 1; // quite arbitrary
-
-      switch (k)
-      {
-      case 1:
-        kernels::choleskySolve<1><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
-                                                         Sigma->getData(memory::DEVICE),
-                                                         Xi_Sigma->getData(memory::DEVICE));
-        break;
-      case 2:
-        kernels::choleskySolve<2><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
-                                                         Sigma->getData(memory::DEVICE),
-                                                         Xi_Sigma->getData(memory::DEVICE));
-        break;
-      case 4:
-        kernels::choleskySolve<4><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
-                                                         Sigma->getData(memory::DEVICE),
-                                                         Xi_Sigma->getData(memory::DEVICE));
-        break;
-      case 8:
-        kernels::choleskySolve<8><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
-                                                         Sigma->getData(memory::DEVICE),
-                                                         Xi_Sigma->getData(memory::DEVICE));
-        break;
-      default:
-        return 1;
-      }
-
-      block_size = 256; // Must be at least k^2
-      num_blocks = num_sms_ * 64; // quite arbitrary
+      index_type block_size = 256; // Must be at least k^2
+      index_type num_blocks = num_sms_ * 64; // quite arbitrary
 
       switch (k)
       {
       case 1:
-        kernels::updateXR<1><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
-                                                         Sigma->getData(memory::DEVICE),
-                                                         S->getData(memory::DEVICE),
+        kernels::updateXR<1><<<num_blocks, block_size>>>(S->getData(memory::DEVICE),
                                                          A_S->getData(memory::DEVICE),
                                                          Xi_Sigma->getData(memory::DEVICE),
                                                          X_res->getData(memory::DEVICE),
@@ -843,9 +951,7 @@ namespace ReSolve
                                                          n);
         break;
       case 2:
-        kernels::updateXR<2><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
-                                                         Sigma->getData(memory::DEVICE),
-                                                         S->getData(memory::DEVICE),
+        kernels::updateXR<2><<<num_blocks, block_size>>>(S->getData(memory::DEVICE),
                                                          A_S->getData(memory::DEVICE),
                                                          Xi_Sigma->getData(memory::DEVICE),
                                                          X_res->getData(memory::DEVICE),
@@ -853,9 +959,7 @@ namespace ReSolve
                                                          n);
         break;
       case 4:
-        kernels::updateXR<4><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
-                                                         Sigma->getData(memory::DEVICE),
-                                                         S->getData(memory::DEVICE),
+        kernels::updateXR<4><<<num_blocks, block_size>>>(S->getData(memory::DEVICE),
                                                          A_S->getData(memory::DEVICE),
                                                          Xi_Sigma->getData(memory::DEVICE),
                                                          X_res->getData(memory::DEVICE),
@@ -863,9 +967,7 @@ namespace ReSolve
                                                          n);
         break;
       case 8:
-        kernels::updateXR<8><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
-                                                         Sigma->getData(memory::DEVICE),
-                                                         S->getData(memory::DEVICE),
+        kernels::updateXR<8><<<num_blocks, block_size>>>(S->getData(memory::DEVICE),
                                                          A_S->getData(memory::DEVICE),
                                                          Xi_Sigma->getData(memory::DEVICE),
                                                          X_res->getData(memory::DEVICE),
@@ -915,39 +1017,71 @@ namespace ReSolve
       return 0;
     }
 
+    // ... ANDREW TODO: rename R to Z
     int MultiBasisParallelConjugateGradientCuda::updateP(vector::Vector* P, vector::Vector* R, vector::Vector* Xi_inv_chol, vector::Vector* Delta, memory::MemorySpace memspace)
     {
-      index_type n = B->getSize();
-      index_type k = B->getNumVectors();
+      index_type n = P->getSize();
+      index_type k = P->getNumVectors();
 
-      int       block_size = 256; // Must be at least k^2
-      int       num_blocks = num_sms_ * WARP_SIZE;
+      int       block_size_choleskySolve = WAVEFRONT_SIZE; // Must be at least k^2
+      int       num_blocks = 1;
+      auto start = std::chrono::steady_clock::now();
 
       switch (k)
       {
       case 1:
-        kernels::updateP<1><<<num_blocks, block_size>>>(W->getData(memory::DEVICE),
-                                                                   L->getData(memory::DEVICE),
-                                                                   B->getData(memory::DEVICE),
-                                                                   n);
+        kernels::choleskySolve<1><<<num_blocks, block_size_choleskySolve>>>(Delta->getData(memory::DEVICE),
+                                                        Xi_inv_chol->getData(memory::DEVICE),
+                                                        Delta->getData(memory::DEVICE));
         break;
       case 2:
-        kernels::updateP<2><<<num_blocks, block_size>>>(W->getData(memory::DEVICE),
-                                                                   L->getData(memory::DEVICE),
-                                                                   B->getData(memory::DEVICE),
-                                                                   n);
+        kernels::choleskySolve<2><<<num_blocks, block_size_choleskySolve>>>(Delta->getData(memory::DEVICE),
+                                                        Xi_inv_chol->getData(memory::DEVICE),
+                                                        Delta->getData(memory::DEVICE));
         break;
       case 4:
-        kernels::updateP<4><<<num_blocks, block_size>>>(W->getData(memory::DEVICE),
-                                                                   L->getData(memory::DEVICE),
-                                                                   B->getData(memory::DEVICE),
-                                                                   n);
+        kernels::choleskySolve<4><<<num_blocks, block_size_choleskySolve>>>(Delta->getData(memory::DEVICE),
+                                                        Xi_inv_chol->getData(memory::DEVICE),
+                                                        Delta->getData(memory::DEVICE));
         break;
       case 8:
-        kernels::updateP<8><<<num_blocks, block_size>>>(W->getData(memory::DEVICE),
-                                                                   L->getData(memory::DEVICE),
-                                                                   B->getData(memory::DEVICE),
-                                                                   n);
+        kernels::choleskySolve<8><<<num_blocks, block_size_choleskySolve>>>(Delta->getData(memory::DEVICE),
+                                                        Xi_inv_chol->getData(memory::DEVICE),
+                                                        Delta->getData(memory::DEVICE));
+        break;
+      default:
+        return 1;
+      }
+
+      // One thread per row of P
+      constexpr int block_size_updateP = 128; // Must be at least k^2.. TODO: TEST 256
+      num_blocks = (n + block_size_updateP - 1) / block_size_updateP;
+
+      switch (k)
+      {
+      case 1:
+        kernels::updateP<1, block_size_updateP><<<num_blocks, block_size_updateP>>>(P->getData(memory::DEVICE),
+                                                        R->getData(memory::DEVICE),
+                                                        Delta->getData(memory::DEVICE),
+                                                        n);
+        break;
+      case 2:
+        kernels::updateP<2, block_size_updateP><<<num_blocks, block_size_updateP>>>(P->getData(memory::DEVICE),
+                                                        R->getData(memory::DEVICE),
+                                                        Delta->getData(memory::DEVICE),
+                                                        n);
+        break;
+      case 4:
+        kernels::updateP<4, block_size_updateP><<<num_blocks, block_size_updateP>>>(P->getData(memory::DEVICE),
+                                                        R->getData(memory::DEVICE),
+                                                        Delta->getData(memory::DEVICE),
+                                                        n);
+        break;
+      case 8:
+        kernels::updateP<8, block_size_updateP><<<num_blocks, block_size_updateP>>>(P->getData(memory::DEVICE),
+                                                        R->getData(memory::DEVICE),
+                                                        Delta->getData(memory::DEVICE),
+                                                        n);
         break;
       default:
         return 1;

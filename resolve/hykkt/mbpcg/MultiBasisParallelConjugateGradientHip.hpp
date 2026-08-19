@@ -25,12 +25,11 @@ namespace ReSolve
       int SpMM(matrix::Csr* A, vector::Vector* X, vector::Vector* result);
       int bestBasis(vector::Vector* R, index_type* h_best_basis, real_type* h_best_basis_norm);
       int qr(vector::Vector* Q, vector::Vector* R, memory::MemorySpace memspace);
-      int updateXR(vector::Vector* Xi_inv, vector::Vector* Sigma, vector::Vector* S, vector::Vector* A_S, vector::Vector* Xi_Sigma, vector::Vector* X_res, vector::Vector* R_prec);
+      int updateXR(vector::Vector* S, vector::Vector* A_S, vector::Vector* Xi_Sigma, vector::Vector* X_res, vector::Vector* R_prec);
       int choleskyFactorizeSolve(vector::Vector* A, vector::Vector* B, vector::Vector* X);
       int updateP(vector::Vector* P, vector::Vector* R, vector::Vector* Xi_inv_chol, vector::Vector* Delta, memory::MemorySpace memspace);
       int multTSMTTSM(vector::Vector* A, vector::Vector* B, vector::Vector* C, memory::MemorySpace memspace);
       int updateSSigma(vector::Vector* W, vector::Vector* S, vector::Vector* Zeta, vector::Vector* Sigma, memory::MemorySpace memspace);
-      int preconditionDense(vector::Vector* A, vector::Vector* d);
 
     private:
       MemoryHandler mem_;
@@ -43,7 +42,7 @@ namespace ReSolve
       index_type num_sms_;
       index_type num_threads_;
 
-      void(*cholesky_qr_kernel_)(real_type*, real_type*, index_type){nullptr};
+      void(*qr_kernel_)(real_type*, real_type*, index_type){nullptr};
 
       size_t best_basis_workspace_size_;
       void* d_best_basis_workspace_{nullptr};

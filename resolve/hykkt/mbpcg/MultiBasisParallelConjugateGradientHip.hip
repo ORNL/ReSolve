@@ -14,7 +14,7 @@ namespace ReSolve
   namespace hykkt
   {
     constexpr index_type WAVEFRONT_SIZE = 64;
-    
+
     namespace kernels
     {
       template <index_type k>
@@ -23,7 +23,6 @@ namespace ReSolve
         return (j * (2 * k - 1 - j)) / 2 + i;
       }
 
-      // ANDREW TODO: use this everywhere
       __device__ __forceinline__ real_type warpReduceSum(real_type val)
       {
         #pragma unroll
@@ -308,7 +307,19 @@ namespace ReSolve
 
           for (index_type row = thread; row < n; row += stride)
           {
-            real_type v_r = (row == i) ? 1.0 : ((row > i) ? Q[i * n + row] : 0.0);
+            real_type v_r;
+            if (row == i)
+            {
+              v_r = 1.0;
+            }
+            else if (row > i)
+            {
+              v_r = Q[i * n + row];
+            }
+            else
+            {
+              v_r = 0.0;
+            }
 
             // col > i
             #pragma unroll
@@ -354,9 +365,7 @@ namespace ReSolve
       }
 
       template <index_type k>
-      __global__ void updateXR(real_type* __restrict__ Xi_inv,
-                               const real_type* __restrict__ Sigma,
-                               const real_type* __restrict__ S,
+      __global__ void updateXR(const real_type* __restrict__ S,
                                const real_type* __restrict__ A_S,
                                real_type* __restrict__ Xi_Sigma,
                                real_type* __restrict__ X_res,
@@ -790,18 +799,6 @@ namespace ReSolve
           Sigma[thread] = result_shared[thread];
         }
       }
-
-      __global__ void preconditionDense(real_type* __restrict__ A, const real_type* __restrict__ d, index_type n)
-      {
-        int thread = blockIdx.x * blockDim.x + threadIdx.x;
-        
-        if (thread < n * n)
-        {
-          int row = thread % n;
-          int col = thread / n;
-          A[thread] *= (d[row] * d[col]);
-        }
-      }
     } // namespace kernels
     
     MultiBasisParallelConjugateGradientHip::MultiBasisParallelConjugateGradientHip(VectorHandler* vector_handler)
@@ -824,6 +821,24 @@ namespace ReSolve
 
     int MultiBasisParallelConjugateGradientHip::setup(index_type k)
     {
+      // For qr()
+      switch (k)
+      {
+      case 1: 
+        qr_kernel_ = kernels::qr<1>; 
+        break;
+      case 2: 
+        qr_kernel_ = kernels::qr<2>; 
+        break;
+      case 4: 
+        qr_kernel_ = kernels::qr<4>; 
+        break;
+      case 8: 
+        qr_kernel_ = kernels::qr<8>; 
+        break;
+      default:
+        return 1;
+      }
       // For bestBasis()
       if (!d_best_basis_)
       {
@@ -902,80 +917,27 @@ namespace ReSolve
         (void*)&n
     };
 
-    void* kernel = nullptr;
-    switch (k)
-    {
-    case 1: 
-        kernel = (void*)kernels::qr<1>; 
-        break;
-    case 2: 
-        kernel = (void*)kernels::qr<2>; 
-        break;
-    case 4: 
-        kernel = (void*)kernels::qr<4>; 
-        break;
-    case 8: 
-        kernel = (void*)kernels::qr<8>; 
-        break;
-    case 16:
-        kernel = (void*)kernels::qr<16>;
-        break;
-    default:
-        return 1;
-    }
-
     int block_size = 256;
     int num_blocks = num_sms_;
 
-    hipError_t status = hipLaunchCooperativeKernel(kernel, num_blocks, block_size, args, 0, 0);
+    hipError_t status = hipLaunchCooperativeKernel((void*)qr_kernel_, num_blocks, block_size, args, 0, 0);
 
     return status;
 }
     
     // ANDREW TODO: separate out all of the cholesky functions. no reason to be combined. also, rename S to P
-    int MultiBasisParallelConjugateGradientHip::updateXR(vector::Vector* Xi_inv, vector::Vector* Sigma, vector::Vector* S, vector::Vector* A_S, vector::Vector* Xi_Sigma, vector::Vector* X_res, vector::Vector* R_prec)
+    int MultiBasisParallelConjugateGradientHip::updateXR(vector::Vector* S, vector::Vector* A_S, vector::Vector* Xi_Sigma, vector::Vector* X_res, vector::Vector* R_prec)
     {
-      index_type n = A_S->getSize();
-      index_type k = A_S->getNumVectors();
+      index_type n = S->getSize();
+      index_type k = S->getNumVectors();
 
-      int       block_size = WAVEFRONT_SIZE; // Must be at least k^2
-      int       num_blocks = 1; // quite arbitrary
-
-      switch (k)
-      {
-      case 1:
-        kernels::choleskyFactorizeSolve<1><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
-                                                         Sigma->getData(memory::DEVICE),
-                                                         Xi_Sigma->getData(memory::DEVICE));
-        break;
-      case 2:
-        kernels::choleskyFactorizeSolve<2><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
-                                                         Sigma->getData(memory::DEVICE),
-                                                         Xi_Sigma->getData(memory::DEVICE));
-        break;
-      case 4:
-        kernels::choleskyFactorizeSolve<4><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
-                                                         Sigma->getData(memory::DEVICE),
-                                                         Xi_Sigma->getData(memory::DEVICE));
-        break;
-      case 8:
-        kernels::choleskyFactorizeSolve<8><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
-                                                         Sigma->getData(memory::DEVICE),
-                                                         Xi_Sigma->getData(memory::DEVICE));
-        break;
-      default:
-        return 1;
-      }
-
-      block_size = 256; // Must be at least k^2
-      num_blocks = num_sms_ * 64; // quite arbitrary
+      index_type block_size = 256; // Must be at least k^2
+      index_type num_blocks = num_sms_ * 64; // quite arbitrary
 
       switch (k)
       {
       case 1:
-        kernels::updateXR<1><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
-                                                         Sigma->getData(memory::DEVICE),
-                                                         S->getData(memory::DEVICE),
+        kernels::updateXR<1><<<num_blocks, block_size>>>(S->getData(memory::DEVICE),
                                                          A_S->getData(memory::DEVICE),
                                                          Xi_Sigma->getData(memory::DEVICE),
                                                          X_res->getData(memory::DEVICE),
@@ -983,9 +945,7 @@ namespace ReSolve
                                                          n);
         break;
       case 2:
-        kernels::updateXR<2><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
-                                                         Sigma->getData(memory::DEVICE),
-                                                         S->getData(memory::DEVICE),
+        kernels::updateXR<2><<<num_blocks, block_size>>>(S->getData(memory::DEVICE),
                                                          A_S->getData(memory::DEVICE),
                                                          Xi_Sigma->getData(memory::DEVICE),
                                                          X_res->getData(memory::DEVICE),
@@ -993,9 +953,7 @@ namespace ReSolve
                                                          n);
         break;
       case 4:
-        kernels::updateXR<4><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
-                                                         Sigma->getData(memory::DEVICE),
-                                                         S->getData(memory::DEVICE),
+        kernels::updateXR<4><<<num_blocks, block_size>>>(S->getData(memory::DEVICE),
                                                          A_S->getData(memory::DEVICE),
                                                          Xi_Sigma->getData(memory::DEVICE),
                                                          X_res->getData(memory::DEVICE),
@@ -1003,9 +961,7 @@ namespace ReSolve
                                                          n);
         break;
       case 8:
-        kernels::updateXR<8><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
-                                                         Sigma->getData(memory::DEVICE),
-                                                         S->getData(memory::DEVICE),
+        kernels::updateXR<8><<<num_blocks, block_size>>>(S->getData(memory::DEVICE),
                                                          A_S->getData(memory::DEVICE),
                                                          Xi_Sigma->getData(memory::DEVICE),
                                                          X_res->getData(memory::DEVICE),
@@ -1215,17 +1171,6 @@ namespace ReSolve
       default:
         return 1;
       }
-
-      return 0;
-    }
-
-    int MultiBasisParallelConjugateGradientHip::preconditionDense(vector::Vector* A, vector::Vector* d)
-    {
-      index_type n = A->getSize();
-
-      constexpr int block_size = 256;
-      int num_blocks = (n * n + block_size - 1) / block_size;
-      kernels::preconditionDense<<<num_blocks, block_size>>>(A->getData(memory::DEVICE), d->getData(memory::DEVICE), n);
 
       return 0;
     }

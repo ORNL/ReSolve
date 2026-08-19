@@ -374,7 +374,8 @@ namespace ReSolve
         // vector_handler_->choleskyFactorizeSolve(Xi_inv_->getData(memspace_), Temp_kxk_, 'D', memspace_); // Temp_kxk = Xi * Sigma
         // vector_handler_->gemm('N', 'N', ONE, ONE, P_, Temp_kxk_, X_res_, memspace_);
         // vector_handler_->gemm('N', 'N', MINUS_ONE, ONE, Temp_nxk_, Temp_kxk_, R_scal_, memspace_);
-        impl_->updateXR(Xi_inv_, Temp_kxk_, P_, Temp_nxk_, Temp_kxk_, X_res_, R_scal_); // this step cholesky factorizes Xi_inv_ in place
+        impl_->choleskyFactorizeSolve(Xi_inv_, Temp_kxk_, Temp_kxk_);
+        impl_->updateXR(P_, Temp_nxk_, Temp_kxk_, X_res_, R_scal_);
         // deviceSynchronize(); // optional
         // auto chol_update_end = std::chrono::steady_clock::now(); // optional
         // printf("  [it %d] cholesky & update: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(chol_update_end - chol_update_start).count()); // optional
