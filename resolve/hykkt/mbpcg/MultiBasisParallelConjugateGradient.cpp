@@ -24,21 +24,21 @@ namespace ReSolve
 
   namespace hykkt
   {
-    /** Constructor for MultiBasisParallelConjugateGradient.
+    /** Constructor for MultiBasisParallelConjugateGradient without preconditioning.
      *  @param n[in] - Dimension of the system.
-     *  @param k[in] - Number of copies of the systems solved at once.
+     *  @param num_rhs[in] - Number of copies of the systems solved at once.
      *  @param matrix_handler[in] - Matrix handler for the selected backend.
      *  @param vector_handler[in] - Vector handler for the selected backend.
      *  @param memspace[in] - Memory space of incoming data and for computation.
      */
     MultiBasisParallelConjugateGradient::MultiBasisParallelConjugateGradient(
         index_type          n,
-        index_type          k,
+        index_type          num_rhs,
         MatrixHandler*      matrix_handler,
         VectorHandler*      vector_handler,
         memory::MemorySpace memspace)
       : n_(n),
-        k_(k),
+        k_(num_rhs),
         matrix_handler_(matrix_handler),
         vector_handler_(vector_handler),
         memspace_(memspace)
@@ -49,9 +49,48 @@ namespace ReSolve
       impl_ = new MultiBasisParallelConjugateGradientHip(vector_handler_);
 #endif
 
-      if (k != 1 && k != 2 && k != 4 && k != 8)
+      if (k_ != 1 && k_ != 2 && k_ != 4 && k_ != 8)
       {
-        out::warning() << "k must be 1, 2, 4, or 8!";
+        out::warning() << "num_rhs must be 1, 2, 4, or 8!";
+      }
+    }
+
+    /** Constructor for MultiBasisParallelConjugateGradient with preconditioning.
+     *  @param n[in] - Dimension of the system.
+     *  @param preconditioner[in] - Factorization of the preconditioner.
+     *  @param num_rhs[in] - Number of copies of the systems solved at once.
+     *  @param matrix_handler[in] - Matrix handler for the selected backend.
+     *  @param vector_handler[in] - Vector handler for the selected backend.
+     *  @param memspace[in] - Memory space of incoming data and for computation.
+     */
+    MultiBasisParallelConjugateGradient::MultiBasisParallelConjugateGradient(
+        index_type          n,
+        index_type          num_rhs,
+        Preconditioner*     preconditioner,
+        MatrixHandler*      matrix_handler,
+        VectorHandler*      vector_handler,
+        memory::MemorySpace memspace)
+      : n_(n),
+        k_(num_rhs),
+        preconditioner_(preconditioner),
+        matrix_handler_(matrix_handler),
+        vector_handler_(vector_handler),
+        memspace_(memspace)
+    {
+#ifdef RESOLVE_USE_CUDA
+      impl_ = new MultiBasisParallelConjugateGradientCuda(vector_handler_);
+#elif defined(RESOLVE_USE_HIP)
+      impl_ = new MultiBasisParallelConjugateGradientHip(vector_handler_);
+#endif
+
+      if (k_ != 1 && k_ != 2 && k_ != 4 && k_ != 8)
+      {
+        out::warning() << "num_rhs must be 1, 2, 4, or 8!";
+      }
+
+      if (preconditioner_)
+      {
+        enable_preconditioning_ = true;
       }
     }
 
@@ -78,6 +117,10 @@ namespace ReSolve
         delete b_scal_;
         delete R_scal_;
       }
+      if (enable_preconditioning_)
+      {
+        delete Z_;
+      }
 
       delete impl_;
     }
@@ -101,6 +144,28 @@ namespace ReSolve
     {
       x_ = x;
       b_ = b;
+    }
+    
+    /**
+     * @brief Reloads pointer to the preconditioner. If a preconditioner is not previously set, and 
+     * the preconditioner argument is not a nullptr, this will enable preconditioning.
+     * @param[in] preconditioner - Factorization of the preconditioner
+     */
+    void MultiBasisParallelConjugateGradient::addPreconditionerInfo(Preconditioner* preconditioner)
+    {
+      preconditioner_ = preconditioner;
+      if (preconditioner)
+      {
+        if (enable_preconditioning_)
+        {
+          out::warning() << "Avoid combining preconditioning and diagonal scaling. The diagonal scaling will be done in reference to the original matrix, not the preconditioned matrix.";
+        }
+        enable_preconditioning_ = true;
+      }
+      else
+      {
+        enable_preconditioning_ = false;
+      }
     }
 
     void MultiBasisParallelConjugateGradient::setSolverTolerance(double initial_tol, double convergence_tol)
@@ -155,6 +220,16 @@ namespace ReSolve
         A_scal_ = A_;
         b_scal_ = b_;
         R_scal_ = R_;
+      }
+
+      if (enable_preconditioning_)
+      {
+        Z_ = new vector::Vector(n_, k_);
+        Z_->allocate(memspace_);
+      }
+      else
+      {
+        Z_ = R_scal_;
       }
 
       impl_->setup(k_);
@@ -240,8 +315,13 @@ namespace ReSolve
       
       R_scal_->copyFromExternal(B_res_, memspace_, memspace_);
 
+      if (enable_preconditioning_)
+      {
+        preconditioner_->apply(R_scal_, Z_);
+      }
+
       // P, \Psi = qr(R)
-      P_->copyFromExternal(R_scal_, memspace_, memspace_); // with preconditioner, this is L_inv * R_res
+      P_->copyFromExternal(Z_, memspace_, memspace_); // with preconditioner, this is L_inv * R_res
       impl_->choleskyQr(P_, Psi_, memspace_);
       
       // deviceSynchronize(); // optional
@@ -277,7 +357,7 @@ namespace ReSolve
         // Sigma = P^T * R_scal ---- Temp_kxk_ = Sigma
         // deviceSynchronize(); // optional
         // auto sigma_start = std::chrono::steady_clock::now(); // optional
-        impl_->multTSMTTSM(P_, R_scal_, Temp_kxk_, memspace_);
+        impl_->multTSMTTSM(P_, R_scal_, Temp_kxk_, memspace_); // ANDREW TODO: Z_ here? instead of R_scal_
         // deviceSynchronize(); // optional
         // auto sigma_end = std::chrono::steady_clock::now(); // optional
         // printf("  [it %d] sigma: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(sigma_end - sigma_start).count()); // optional
@@ -300,21 +380,21 @@ namespace ReSolve
         // printf("  [it %d] cholesky & update: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(chol_update_end - chol_update_start).count()); // optional
 
         // deviceSynchronize(); // optional
+        // auto preconditioning_start = std::chrono::steady_clock::now(); // optional
+        if (enable_preconditioning_)
+        { // ANDREW TODO: maybe move this after error check & spli
+          preconditioner_->apply(R_scal_, Z_);
+        }
+        // deviceSynchronize(); // optional
+        // auto preconditioning_end = std::chrono::steady_clock::now(); // optional
+        // printf("  [it %d] preconditioning: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(preconditioning_end - preconditioning_start).count()); // optional
+
+        // deviceSynchronize(); // optional
         // auto delta_update_start = std::chrono::steady_clock::now(); // optional
-        impl_->multTSMTTSM(Temp_nxk_, R_scal_, Delta_, memspace_);
+        impl_->multTSMTTSM(Temp_nxk_, Z_, Delta_, memspace_);
         // deviceSynchronize(); // optional
         // auto delta_update_end = std::chrono::steady_clock::now(); // optional
         // printf("  [it %d] delta: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(delta_update_end - delta_update_start).count()); // optional
-
-        // 4. Update W Section (W = W - A * S * Xi)
-        // deviceSynchronize(); // optional
-        // auto w_update_start = std::chrono::steady_clock::now(); // optional
-        // vector_handler_->choleskyFactorizeSolve(Xi_inv_->getData(memspace_), Temp_nxk_, 'R', memspace_); // Temp_nxk_ now contains A * S * Xi
-        // vector_handler_->axpy(MINUS_ONE, Temp_nxk_, Delta_, memspace_);
-        impl_->updateP(P_, R_scal_, Xi_inv_, Delta_, memspace_);
-        // deviceSynchronize(); // optional
-        // auto w_update_end = std::chrono::steady_clock::now(); // optional
-        // printf("  [it %d] w_update: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(w_update_end - w_update_start).count()); // optional
 
         if (enable_diagonal_scaling_)
         {
@@ -355,7 +435,11 @@ namespace ReSolve
         // printf("error %f\n", best_basis_error);
 
         // std::cout << std::setprecision(std::numeric_limits<double>::max_digits10) << best_basis_error << '\n';
-        // printf("%e\n", best_basis_error);
+        // if (k_ == 8) printf("%.10e\n", best_basis_error);
+        // if (best_basis_error > 1e10)
+        // {
+        //   printf("hi\n");
+        // }
         // 7. Convergence Checking & Final Calculations Block
         if (best_basis_error < initial_tol_)
         {
@@ -433,6 +517,16 @@ namespace ReSolve
           // auto conv_block_end = std::chrono::steady_clock::now(); // optional
           // printf("  [it %d] convergence_overhead (failed conv_tol): %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(conv_block_end - conv_block_start).count()); // optional
         }
+
+        // 4. Update W Section (W = W - A * S * Xi)
+        // deviceSynchronize(); // optional
+        // auto w_update_start = std::chrono::steady_clock::now(); // optional
+        // vector_handler_->choleskyFactorizeSolve(Xi_inv_->getData(memspace_), Temp_nxk_, 'R', memspace_); // Temp_nxk_ now contains A * S * Xi
+        // vector_handler_->axpy(MINUS_ONE, Temp_nxk_, Delta_, memspace_);
+        impl_->updateP(P_, Z_, Xi_inv_, Delta_, memspace_);
+        // deviceSynchronize(); // optional
+        // auto w_update_end = std::chrono::steady_clock::now(); // optional
+        // printf("  [it %d] w_update: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(w_update_end - w_update_start).count()); // optional
 
         // 8. Cholesky QR Section
         // deviceSynchronize(); // optional

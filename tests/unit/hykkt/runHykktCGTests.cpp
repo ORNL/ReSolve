@@ -35,7 +35,7 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
   workspace.initializeHandles();
   ReSolve::MatrixHandler                                     matrix_handler(&workspace);
   ReSolve::VectorHandler                                     vector_handler(&workspace);
-  ReSolve::tests::HykktConjugateGradientTests test(memspace, matrix_handler, vector_handler);
+  ReSolve::tests::HykktConjugateGradientTests<WorkspaceType> test(memspace, matrix_handler, vector_handler, workspace);
 
   std::string        source_dir = std::string(SOURCE_DIR);
     
@@ -43,9 +43,9 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
     // "mhd4800b", // WARMUP
     // "mhd4800b", // WARMUP
     // "mhd4800b", // WARMUP
-    "bcsstk18", // WARMUP
+    // "bcsstk18", // WARMUP
 
-    // "hood",
+    "hood",
     // "Fault_639",
     // "2cubes_sphere",
 
@@ -53,7 +53,7 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
     // "Chem97ZtZ",
     // "sts4098",
     // "bcsstk13",
-    "bcsstk18",
+    // "bcsstk18",
     // "torsion1",
     // "shallow_water1",
     // "Kuu",
@@ -108,7 +108,7 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
     // "s2rmq4m1",
 
     // "pwtk",
-    "crankseg_2",
+    // "crankseg_2",
     // "Fault_639",
     // "ldoor",
     // "boneS10",

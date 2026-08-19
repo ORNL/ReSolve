@@ -64,6 +64,8 @@ namespace ReSolve
 
     int extractRootDiagonal(matrix::Csr* A, vector_type* diag, memory::MemorySpace memspace);
 
+    int addDiag(matrix::Csr* A, real_type alpha, memory::MemorySpace memspace);
+
     int addConst(matrix::Sparse* A, real_type alpha, memory::MemorySpace memspace);
 
     /// Should compute vec_result := alpha*A*vec_x + beta*vec_result, but at least on cpu alpha and beta are flipped

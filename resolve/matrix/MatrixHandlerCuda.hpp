@@ -39,8 +39,6 @@ namespace ReSolve
 
     int transpose(matrix::Csr* A, matrix::Csr* At) override;
 
-    int addConst(matrix::Sparse* A, real_type alpha) override;
-
     int leftScale(vector_type* diag, matrix::Csr* A) override;
 
     int rightScale(matrix::Csr* A, vector_type* diag) override;
@@ -48,6 +46,10 @@ namespace ReSolve
     int extractDiagonal(matrix::Csr* A, matrix::Csr* diag) override;
 
     int extractRootDiagonal(matrix::Csr* A, vector_type* diag) override;
+
+    int addDiag(matrix::Csr* A, real_type alpha) override;
+
+    int addConst(matrix::Sparse* A, real_type alpha) override;
 
     virtual int matvec(matrix::Sparse*  A,
                        vector_type*     vec_x,

@@ -448,9 +448,6 @@ namespace ReSolve
       index_type row_start = a_row_ptr[row];
       index_type row_end   = a_row_ptr[row + 1];
 
-      // Get the scaling factor for this row from the diagonal matrix
-      real_type scale = d_val[row];
-
       // Scale all non-zero elements in this row
       for (index_type i = 0; i < row_end - row_start; i++)
       {
@@ -482,15 +479,39 @@ namespace ReSolve
       index_type row_start = a_row_ptr[row];
       index_type row_end   = a_row_ptr[row + 1];
 
-      // Get the scaling factor for this row from the diagonal matrix
-      real_type scale = d_data[row];
-
       // Scale all non-zero elements in this row
       for (index_type i = 0; i < row_end - row_start; i++)
       {
         if (a_col_ind[a_row_ptr[row] + i] == row)
         {
           d_data[row] = sqrt(a_val[a_row_ptr[row] + i]);
+        }
+      }
+    }
+
+    return 0;
+  }
+
+  // ...
+  int MatrixHandlerCpu::addDiag(matrix::Csr* A, real_type alpha)
+  {
+    index_type n = A->getNumRows();
+    const index_type* a_row_ptr = A->getRowData(memory::HOST);
+    const index_type* a_col_ind = A->getColData(memory::HOST);
+    real_type*  a_val     = A->getValues(memory::HOST);
+
+    for (index_type row = 0; row < n; ++row)
+    {
+      // Get the start and end positions for this row in the CSR format
+      index_type row_start = a_row_ptr[row];
+      index_type row_end   = a_row_ptr[row + 1];
+
+      // ...
+      for (index_type i = 0; i < row_end - row_start; i++)
+      {
+        if (a_col_ind[a_row_ptr[row] + i] == row)
+        {
+          a_val[a_row_ptr[row] + i] += alpha;
         }
       }
     }

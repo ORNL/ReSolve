@@ -17,6 +17,7 @@
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/GramSchmidt.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
+#include <resolve/Preconditioner.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 
@@ -33,7 +34,13 @@ namespace ReSolve
     {
     public:
       MultiBasisParallelConjugateGradient(index_type          n,
-                                  index_type          k,
+                                  index_type          num_rhs,
+                                  MatrixHandler*      matrix_handler,
+                                  VectorHandler*      vector_handler,
+                                  memory::MemorySpace memspace);
+      MultiBasisParallelConjugateGradient(index_type          n,
+                                  index_type          num_rhs,
+                                  Preconditioner*     preconditioner,
                                   MatrixHandler*      matrix_handler,
                                   VectorHandler*      vector_handler,
                                   memory::MemorySpace memspace);
@@ -41,6 +48,7 @@ namespace ReSolve
 
       void addMatrixInfo(matrix::Csr* A);
       void addVectorInfo(vector::Vector* x_0, vector::Vector* b);
+      void addPreconditionerInfo(Preconditioner* preconditioner);
       void setSolverTolerance(double initial_tol, double convergence_tol);
       void setSolverItmax(int itmax);
 
@@ -55,14 +63,17 @@ namespace ReSolve
     private:
       index_type n_;             // Dimension of outer system
       index_type k_;             // Number of copies of the systems to solve at once
-      int        itmax_ = 10000;   // Maximum iterations for conjugate gradient
+      int        itmax_ = 3000;   // Maximum iterations for conjugate gradient
       real_type  initial_tol_   = 1e-8; // Solver tolerance for Schur // ...
       real_type  convergence_tol_   = 1e-8; // Solver tolerance for Schur // ...
     
       MatrixHandler* matrix_handler_{nullptr}; ///< Backend-specific matrix handler.
       VectorHandler* vector_handler_{nullptr}; ///< Backend-specific vector handler.
+
+      Preconditioner* preconditioner_{nullptr};
       
       bool enable_diagonal_scaling_{false};
+      bool enable_preconditioning_{false};
 
       matrix::Csr* A_{nullptr};
       vector::Vector* x_{nullptr};   // LHS of entire system
@@ -84,6 +95,7 @@ namespace ReSolve
       vector::Vector* B_{nullptr};
       vector::Vector* R_{nullptr};
       vector::Vector* R_scal_{nullptr};
+      vector::Vector* Z_{nullptr};
       vector::Vector* P_{nullptr};
       vector::Vector* Xi_inv_{nullptr};
       vector::Vector* Delta_{nullptr};

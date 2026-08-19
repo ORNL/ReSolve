@@ -6,10 +6,10 @@
 #pragma once
 
 #include <resolve/Common.hpp>
-#include <resolve/hykkt/cholesky/CholeskySolver.hpp>
 #include <resolve/MemoryUtils.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
+#include <resolve/Preconditioner.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 
@@ -28,9 +28,9 @@ namespace ReSolve
                         MatrixHandler*      matrix_handler,
                         VectorHandler*      vector_handler,
                         memory::MemorySpace memspace);
-      // Set up CG with a preconditioner (loaded into cholesky_solver)
+      // Set up CG with a preconditioner
       ConjugateGradient(index_type          n,
-                        CholeskySolver*     cholesky_solver,
+                        Preconditioner*     preconditioner,
                         MatrixHandler*      matrix_handler,
                         VectorHandler*      vector_handler,
                         memory::MemorySpace memspace);
@@ -38,7 +38,7 @@ namespace ReSolve
 
       void addMatrixInfo(matrix::Csr* A);
       void addVectorInfo(vector::Vector* x_0, vector::Vector* b);
-      void updateCholeskySolver(CholeskySolver* choleskySolver);
+      void addPreconditionerInfo(Preconditioner* preconditioner);
       void setSolverTolerance(double tol);
       void setSolverItmax(int itmax);
 
@@ -54,7 +54,7 @@ namespace ReSolve
       MatrixHandler* matrix_handler_{nullptr}; ///< Backend-specific matrix handler.
       VectorHandler* vector_handler_{nullptr}; ///< Backend-specific vector handler.
 
-      CholeskySolver* cholesky_solver_{nullptr}; // Used for preconditioning. Contains the preconditioner matrix.
+      Preconditioner* preconditioner_{nullptr};
       
       bool enable_diagonal_scaling_{false};
       bool enable_preconditioning_{false};

@@ -573,4 +573,15 @@ namespace ReSolve
     diag->setDataUpdated(memory::DEVICE);
     return 0;
   }
+
+  int MatrixHandlerHip::addDiag(matrix::Csr* A, real_type alpha)
+  {
+    const index_type* a_row_ptr = A->getRowData(memory::DEVICE);
+    const index_type* a_col_idx = A->getColData(memory::DEVICE);
+    real_type*  a_vals    = A->getValues(memory::DEVICE);
+    index_type  n         = A->getNumRows();
+    hip::addDiag(n, a_row_ptr, a_col_idx, a_vals, alpha);
+    A->setUpdated(memory::DEVICE);
+    return 0;
+  }
 } // namespace ReSolve

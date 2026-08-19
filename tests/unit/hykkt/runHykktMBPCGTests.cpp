@@ -30,13 +30,13 @@ template <typename WorkspaceType>
 void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace, ReSolve::tests::TestingResults& result)
 {
 // std::freopen("log.txt", "w", stdout);
-  std::cout << "Running tests on " << backend << " device:\n";
+  std::cout << "Running MBPCG tests on " << backend << " device:\n";
 
   WorkspaceType workspace;
   workspace.initializeHandles();
   ReSolve::MatrixHandler                                     matrix_handler(&workspace);
   ReSolve::VectorHandler                                     vector_handler(&workspace);
-  ReSolve::tests::HykktMultiBasisParallelConjugateGradientTests test(memspace, matrix_handler, vector_handler);
+  ReSolve::tests::HykktMultiBasisParallelConjugateGradientTests<WorkspaceType> test(memspace, matrix_handler, vector_handler, workspace);
 
   std::string        source_dir = std::string(SOURCE_DIR);
 
@@ -46,7 +46,7 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
     // "mhd4800b", // WARMUP
     // "bcsstk18", // WARMUP
 
-    // "hood",
+    "hood",
     // "Fault_639",
     // "2cubes_sphere",
 
@@ -108,7 +108,7 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
     // "s2rmq4m1",
 
     // "pwtk",
-    "crankseg_2",
+    // "crankseg_2",
     // "Fault_639",
     // "ldoor",
     // "boneS10",
@@ -196,11 +196,9 @@ broken (maybe theres limits to how low the error can get)
   for (const std::string& matrix_name : matrix_names)
   {
     std::string        A_file_name = source_dir + std::string("/MBPCGTestMatrices/") + matrix_name + std::string(".mtx");
-    double rng_min = -1.0;
-    double rng_max = 1.0;
 
     printf("\n\n\nMatrix: %s\n", matrix_name.c_str());
-    result += test.MBPCGTest(A_file_name, rng_min, rng_max);
+    result += test.MBPCGTest(A_file_name);
 
     std::cout << "\n";
   }

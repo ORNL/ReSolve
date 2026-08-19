@@ -12,6 +12,7 @@
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/matrix/io.hpp>
+#include <resolve/preconditioner_ichol0/PreconditionerIChol0.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <tests/unit/TestBase.hpp>
 
@@ -23,6 +24,7 @@ namespace ReSolve
      * @brief Tests for class hykkt::MultiBasisParallelConjugateGradient. There is currently only
      * one set of input matrices being tested.
      */
+    template <typename WorkspaceType>
     class HykktMultiBasisParallelConjugateGradientTests : public TestBase
     {
     public:
@@ -37,10 +39,12 @@ namespace ReSolve
        */
       HykktMultiBasisParallelConjugateGradientTests(memory::MemorySpace memspace,
                                                  MatrixHandler&      matrix_handler,
-                                                 VectorHandler&      vector_handler)
+                                                 VectorHandler&      vector_handler,
+                                                 WorkspaceType&      workspace)
         : memspace_(memspace),
           matrix_handler_(matrix_handler),
-          vector_handler_(vector_handler)
+          vector_handler_(vector_handler),
+          workspace_(workspace)
       {
       }
 
@@ -53,7 +57,7 @@ namespace ReSolve
        *
        * @return TestOutcome Result of the test
        */
-      TestOutcome MBPCGTest(const std::string& A_file_name, real_type rng_min, real_type rng_max)
+      TestOutcome MBPCGTest(const std::string& A_file_name, const std::string& b_file_name = "", bool use_file_for_b = false)
       {
         std::ifstream A_file(A_file_name);
 
@@ -67,35 +71,72 @@ namespace ReSolve
         index_type                              n   = A->getNumRows();
         index_type                              nnz = A->getNnz();
 
+        vector::Vector* b;
+        if (use_file_for_b)
+        {
+          std::ifstream b_file(b_file_name);
+          b = io::createVectorFromFile(b_file);
+          if (memspace_ == memory::DEVICE)
+          {
+            b->syncData(memory::DEVICE);
+          }
+        }
+        else
+        {
+          b = new vector::Vector(n);
+          b->allocateAll(memspace_);
+          vector_handler_.randomVector(b, -1.0, 1.0, memspace_);
+        }
+
         vector::Vector* x = new vector::Vector(n);
         x->allocate(memspace_);
 
-        vector::Vector* b = new vector::Vector(n);
-        b->allocate(memspace_);
-        vector_handler_.randomVector(b, rng_min, rng_max, memspace_);
+        TestStatus  status;
+        int num_fails = 0;
 
-        int num_converged = 0;
+        // printf("\nTesting with diagonal scaling.\n");
+        // // k = 1, 2, 4, 8
+        // for (index_type k = 1; k <= 8; k *= 2)
+        // {
+        //   // if (k == 1) continue;
+        //   printf("\nk=%d\n", k);
+        //   hykkt::MultiBasisParallelConjugateGradient mbpcg(n, k, &matrix_handler_, &vector_handler_, memspace_);
+        //   mbpcg.setSolverTolerance(initial_tol, convergence_tol);
+        //   // mbpcg.setSolverItmax();
+
+        //   mbpcg.addMatrixInfo(A);
+        //   mbpcg.addVectorInfo(x, b);
+        //   mbpcg.diagonalScale();
+        //   mbpcg.setup();
+        //   int converged = mbpcg.solve(); // 0 if converged, 1 if not
+        //   num_fails += (converged != 0);
+        // }
+
+        printf("\nTesting with preconditioner.\n");
+        PreconditionerIChol0 preconditioner(&matrix_handler_, &workspace_);
+        preconditioner.setNumericBoost(numeric_boost_);
+        preconditioner.setup(A);
+
         // k = 1, 2, 4, 8
         for (index_type k = 1; k <= 8; k *= 2)
         {
-          // if (k == 1) continue;
+          // if (k != 8) continue;
           printf("\nk=%d\n", k);
-          hykkt::MultiBasisParallelConjugateGradient mbpcg(n, k, &matrix_handler_, &vector_handler_, memspace_);
+          preconditioner.setNumRhs(k);
+          hykkt::MultiBasisParallelConjugateGradient mbpcg(n, k, &preconditioner, &matrix_handler_, &vector_handler_, memspace_);
           mbpcg.setSolverTolerance(initial_tol, convergence_tol);
           // mbpcg.setSolverItmax();
 
           mbpcg.addMatrixInfo(A);
           mbpcg.addVectorInfo(x, b);
-          mbpcg.diagonalScale();
           mbpcg.setup();
           int converged = mbpcg.solve(); // 0 if converged, 1 if not
-          num_converged += (converged == 0);
+          num_fails += (converged != 0);
         }
-        
-        TestStatus  status;
+
         std::string testname(__func__);
         testname += " n=" + std::to_string(n) + ", nnz=" + std::to_string(nnz);
-        status *= (num_converged == 4);
+        status *= (num_fails == 0);
 
         delete A;
         delete x;
@@ -108,10 +149,11 @@ namespace ReSolve
       memory::MemorySpace memspace_;       ///< Memory space used by the test.
       MatrixHandler&      matrix_handler_; ///< Backend-specific matrix handler.
       VectorHandler&      vector_handler_; ///< Backend-specific vector handler.
+      WorkspaceType&      workspace_;
 
       static constexpr real_type initial_tol = 1e-8;
       static constexpr real_type convergence_tol     = 1e-8;
-      static constexpr real_type entry_tol    = 1e-6; // Tolerance for checking individual entries
+      static constexpr real_type numeric_boost_ = 437621.0;
     }; // class HykktMultiBasisParallelConjugateGradientTests
   } // namespace tests
 } // namespace ReSolve

@@ -48,6 +48,12 @@ namespace ReSolve
                     const index_type* a_col_idx,
                     const real_type*        a_val,
                     real_type*  diag);
+                    
+    void addDiag(index_type        n,
+                    const index_type* a_row_ptr,
+                    const index_type* a_col_idx,
+                    real_type*        a_val,
+                    real_type alpha);
 
     // needed for matrix inf nrm
     void matrixRowSums(index_type  n,

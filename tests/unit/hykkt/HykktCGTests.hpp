@@ -9,10 +9,10 @@
 
 #include <resolve/MemoryUtils.hpp>
 #include <resolve/hykkt/cg/ConjugateGradient.hpp>
-#include <resolve/hykkt/cholesky/CholeskySolver.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/matrix/io.hpp>
+#include <resolve/preconditioner_ichol0/PreconditionerIChol0.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <tests/unit/TestBase.hpp>
 
@@ -24,6 +24,7 @@ namespace ReSolve
      * @brief Tests for class hykkt::ConjugateGradient. There is currently only
      * one set of input matrices being tested.
      */
+    template <typename WorkspaceType>
     class HykktConjugateGradientTests : public TestBase
     {
     public:
@@ -38,10 +39,12 @@ namespace ReSolve
        */
       HykktConjugateGradientTests(memory::MemorySpace memspace,
                                                  MatrixHandler&      matrix_handler,
-                                                 VectorHandler&      vector_handler)
+                                                 VectorHandler&      vector_handler,
+                                                 WorkspaceType&      workspace)
         : memspace_(memspace),
           matrix_handler_(matrix_handler),
-          vector_handler_(vector_handler)
+          vector_handler_(vector_handler),
+          workspace_(workspace)
       {
       }
 
@@ -90,13 +93,13 @@ namespace ReSolve
         }
 
         vector::Vector* x = new vector::Vector(n);
-        x->allocateAll(memspace_);
+        x->allocate(memspace_);
 
         TestStatus  status;
       
         printf("\nTesting with diagonal scaling.\n");
         hykkt::ConjugateGradient cg_diag_scal(n, &matrix_handler_, &vector_handler_, memspace_);
-        cg_diag_scal.setSolverTolerance(cg_tol);
+        cg_diag_scal.setSolverTolerance(cg_tol_);
         // cg_diag_scal.setSolverItmax();
 
         x->setToZero(memspace_);
@@ -107,23 +110,14 @@ namespace ReSolve
         int converged = cg_diag_scal.solve(); // 0 if converged, 1 if not
         status *= (converged == 0);
         
+#ifdef RESOLVE_USE_GPU
         printf("\nTesting with preconditioner.\n");
-        // The preconditioner here is just the diagonal scaling matrix without the square root (D^T * D)
-        matrix::Csr* M = new matrix::Csr(n, n, n);
-        M->allocateAll(memspace_);
-        matrix_handler_.extractDiagonal(A, M, memspace_);
-        if (memspace_ == memory::DEVICE)
-        {
-          M->syncData(memory::HOST);
-        }
-        hykkt::CholeskySolver cholesky_solver(memspace_);
-        cholesky_solver.addMatrixInfo(M);
-        cholesky_solver.symbolicAnalysis();
-        cholesky_solver.setPivotTolerance(cholesky_tol);
-        cholesky_solver.numericalFactorization();
+        PreconditionerIChol0 preconditioner(&matrix_handler_, &workspace_);
+        preconditioner.setNumericBoost(numeric_boost_);
+        preconditioner.setup(A);
 
-        hykkt::ConjugateGradient cg_prec(n, &cholesky_solver, &matrix_handler_, &vector_handler_, memspace_);
-        cg_prec.setSolverTolerance(cg_tol);
+        hykkt::ConjugateGradient cg_prec(n, &preconditioner, &matrix_handler_, &vector_handler_, memspace_);
+        cg_prec.setSolverTolerance(cg_tol_);
         // cg_prec.setSolverItmax();
 
         x->setToZero(memspace_);
@@ -132,6 +126,7 @@ namespace ReSolve
         cg_prec.setup();
         converged = cg_prec.solve(); // 0 if converged, 1 if not
         status *= (converged == 0);
+#endif
       
         std::string testname(__func__);
         testname += " n=" + std::to_string(n) + ", nnz =" + std::to_string(nnz);
@@ -147,9 +142,11 @@ namespace ReSolve
       memory::MemorySpace memspace_;       ///< Memory space used by the test.
       MatrixHandler&      matrix_handler_; ///< Backend-specific matrix handler.
       VectorHandler&      vector_handler_; ///< Backend-specific vector handler.
+      WorkspaceType&      workspace_;
 
-      static constexpr real_type cholesky_tol = 1e-12;
-      static constexpr real_type cg_tol     = 1e-8;
+      static constexpr real_type cholesky_tol_ = 1e-12;
+      static constexpr real_type cg_tol_     = 1e-8;
+      static constexpr real_type numeric_boost_ = 437621.0;
     }; // class HykktConjugateGradientTests
   } // namespace tests
 } // namespace ReSolve

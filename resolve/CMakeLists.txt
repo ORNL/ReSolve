@@ -86,6 +86,9 @@ add_subdirectory(random)
 # Build shared library ReSolve
 add_library(resolve_tpl INTERFACE)
 
+add_subdirectory(preconditioner_ichol0)
+list(APPEND ReSolve_Targets_List resolve_preconditioner_ichol0)
+
 if(RESOLVE_USE_KLU)
   target_link_libraries(resolve_tpl INTERFACE ${suitesparse_klu})
   target_include_directories(resolve_tpl INTERFACE ${SUITESPARSE_INCLUDE_DIR})

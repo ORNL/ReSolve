@@ -395,6 +395,22 @@ namespace ReSolve
     return 1;
   }
 
+  // ...
+  int MatrixHandler::addDiag(matrix::Csr* A, real_type alpha, memory::MemorySpace memspace)
+  {
+    using namespace ReSolve::memory;
+    switch (memspace)
+    {
+    case HOST:
+      return cpuImpl_->addDiag(A, alpha);
+      break;
+    case DEVICE:
+      return devImpl_->addDiag(A, alpha);
+      break;
+    }
+    return 1;
+  }
+
   /**
    * @brief Add a constant to the nonzero values of a csr matrix.
    * @param[in,out] A - Sparse matrix

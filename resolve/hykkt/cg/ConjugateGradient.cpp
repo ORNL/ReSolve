@@ -33,24 +33,24 @@ namespace ReSolve
 
     /** Constructor for ConjugateGradient with preconditioning.
      *  @param n[in] - Dimension of the system.
-     *  @param cholesky_solver[in] - Factorization of the preconditioner.
+     *  @param preconditioner[in] - Factorization of the preconditioner.
      *  @param matrix_handler[in] - Matrix handler for the selected backend.
      *  @param vector_handler[in] - Vector handler for the selected backend.
      *  @param memspace[in] - Memory space of incoming data and for computation.
      */
     ConjugateGradient::ConjugateGradient(
         index_type          n,
-        CholeskySolver*     cholesky_solver,
+        Preconditioner*     preconditioner,
         MatrixHandler*      matrix_handler,
         VectorHandler*      vector_handler,
         memory::MemorySpace memspace)
       : n_(n),
-        cholesky_solver_(cholesky_solver),
+        preconditioner_(preconditioner),
         matrix_handler_(matrix_handler),
         vector_handler_(vector_handler),
         memspace_(memspace)
     {
-      if (cholesky_solver_)
+      if (preconditioner_)
       {
         enable_preconditioning_ = true;
       }
@@ -97,14 +97,14 @@ namespace ReSolve
     }
     
     /**
-     * @brief Reloads pointer to the Cholesky solver for preconditioning. If a Cholesky solver is
-     * not previously set, and cholesky_solver is not a nullptr, this will enable preconditioning.
-     * @param[in] cholesky_solver - Factorization of the preconditioner
+     * @brief Reloads pointer to the preconditioner. If a preconditioner is not previously set, and 
+     * the preconditioner argument is not a nullptr, this will enable preconditioning.
+     * @param[in] preconditioner - Factorization of the preconditioner
      */
-    void ConjugateGradient::updateCholeskySolver(CholeskySolver* cholesky_solver)
+    void ConjugateGradient::addPreconditionerInfo(Preconditioner* preconditioner)
     {
-      cholesky_solver_ = cholesky_solver;
-      if (cholesky_solver)
+      preconditioner_ = preconditioner;
+      if (preconditioner)
       {
         if (enable_preconditioning_)
         {
@@ -231,7 +231,7 @@ namespace ReSolve
       matrix_handler_->matvec(A_scal_, x_, r_scal_, &MINUS_ONE, &ONE, memspace_);
       if (enable_preconditioning_)
       {
-        cholesky_solver_->solve(z_, r_scal_);
+        preconditioner_->apply(r_scal_, z_);
       }
       gamma_i_ = vector_handler_->dot(r_scal_, z_, memspace_);
 
@@ -261,6 +261,7 @@ namespace ReSolve
         }
         r_norm_ = std::sqrt(vector_handler_->dot(r_, r_, memspace_));
         error_ = r_norm_ / b_norm_;
+        // printf("%.10e\n", error_);
         if (error_ < tol_)
         {
           auto end = std::chrono::steady_clock::now();
@@ -271,7 +272,7 @@ namespace ReSolve
         }
         if (enable_preconditioning_)
         {
-          cholesky_solver_->solve(z_, r_scal_);
+          preconditioner_->apply(r_scal_, z_);
         }
         matrix_handler_->matvec(A_scal_, z_, w_, &ONE, &ZERO, memspace_);
         delta_   = vector_handler_->dot(w_, z_, memspace_);

@@ -303,6 +303,33 @@ namespace ReSolve
           }
         }
       }
+      
+      __global__ void addDiag(index_type        n,
+                                             const index_type* a_row_ptr,
+                                             const index_type* a_col_ind,
+                                             real_type*  a_val,
+                                             real_type         alpha)
+      {
+        // Get row index from thread and block indices
+        index_type row = blockIdx.x * blockDim.x + threadIdx.x;
+
+        // Check if the thread's row is within matrix bounds
+        if (row < n)
+        {
+          // Get the start and end positions for this row in the CSR format
+          index_type row_start = a_row_ptr[row];
+          index_type row_end   = a_row_ptr[row + 1];
+
+          // Get the diagonal entry
+          for (index_type i = 0; i < row_end - row_start; i++)
+          {
+            if (a_col_ind[a_row_ptr[row] + i] == row)
+            {
+              a_val[a_row_ptr[row] + i] += alpha;
+            }
+          }
+        }
+      }
 
       /**
        * @brief Scales a csr matrix on the right by a diagonal matrix
@@ -458,6 +485,20 @@ namespace ReSolve
       int       num_blocks = (n + block_size - 1) / block_size;
       // Launch the kernel
       kernels::extractRootDiagonal<<<num_blocks, block_size>>>(n, a_row_ptr, a_col_ind, a_val, diag);
+    }
+    
+    // ...
+    void addDiag(index_type        n,
+                                const index_type* a_row_ptr,
+                                const index_type* a_col_ind,
+                                real_type*  a_val,
+                                real_type         alpha)
+    {
+      // Define block size and number of blocks
+      const int block_size = 256;
+      int       num_blocks = (n + block_size - 1) / block_size;
+      // Launch the kernel
+      kernels::addDiag<<<num_blocks, block_size>>>(n, a_row_ptr, a_col_ind, a_val, alpha);
     }
 
     /**

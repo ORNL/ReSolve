@@ -53,8 +53,8 @@ if (RESOLVE_USE_GPU)
   add_executable(runHykktMBPCGTests.exe runHykktMBPCGTests.cpp)
   target_link_libraries(
     runHykktMBPCGTests.exe
-    PRIVATE resolve_hykkt resolve_hykkt_mbpcg resolve_hykkt_chol resolve_matrix
-            resolve_vector
+    PRIVATE ReSolve resolve_hykkt resolve_hykkt_mbpcg resolve_hykkt_chol resolve_matrix
+            resolve_vector resolve_preconditioner_ichol0
   )
   target_compile_definitions(
     runHykktMBPCGTests.exe PRIVATE SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
@@ -64,8 +64,8 @@ endif()
 add_executable(runHykktCGTests.exe runHykktCGTests.cpp)
 target_link_libraries(
   runHykktCGTests.exe
-  PRIVATE resolve_hykkt resolve_hykkt_cg resolve_hykkt_chol resolve_matrix
-          resolve_vector
+  PRIVATE ReSolve resolve_hykkt resolve_hykkt_cg resolve_hykkt_chol resolve_matrix
+          resolve_vector resolve_preconditioner_ichol0
 )
 target_compile_definitions(
   runHykktCGTests.exe PRIVATE SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
