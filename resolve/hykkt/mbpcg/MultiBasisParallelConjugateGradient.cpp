@@ -322,7 +322,7 @@ namespace ReSolve
 
       // P, \Psi = qr(R)
       P_->copyFromExternal(Z_, memspace_, memspace_); // with preconditioner, this is L_inv * R_res
-      impl_->choleskyQr(P_, Psi_, memspace_);
+      impl_->qr(P_, Psi_, memspace_);
       
       // deviceSynchronize(); // optional
       auto iterative_start = std::chrono::steady_clock::now();
@@ -532,7 +532,7 @@ namespace ReSolve
         // deviceSynchronize(); // optional
         // auto qr_start = std::chrono::steady_clock::now(); // optional
         Psi_->setToZero(memspace_);
-        impl_->choleskyQr(P_, Psi_, memspace_);
+        impl_->qr(P_, Psi_, memspace_);
         // deviceSynchronize(); // optional
         // auto qr_end = std::chrono::steady_clock::now(); // optional
         // printf("  [it %d] qr: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(qr_end - qr_start).count()); // optional

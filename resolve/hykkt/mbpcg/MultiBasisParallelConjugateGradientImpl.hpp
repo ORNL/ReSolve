@@ -25,7 +25,7 @@ namespace ReSolve
       virtual int setup(index_type k) = 0;
       virtual int SpMM(matrix::Csr* A, vector::Vector* X, vector::Vector* result) = 0;
       virtual int bestBasis(vector::Vector* R, index_type* h_best_basis, real_type* h_best_basis_norm) = 0;
-      virtual int choleskyQr(vector::Vector* W, vector::Vector* R, memory::MemorySpace memspace) = 0;
+      virtual int qr(vector::Vector* Q, vector::Vector* R, memory::MemorySpace memspace) = 0;
       virtual int updateXR(vector::Vector* Xi_inv, vector::Vector* Sigma, vector::Vector* S, vector::Vector* A_S, vector::Vector* Xi_Sigma, vector::Vector* X_res, vector::Vector* R_prec) = 0;
       virtual int choleskyFactorizeSolve(vector::Vector* A, vector::Vector* B, vector::Vector* X) = 0;
       virtual int updateP(vector::Vector* P, vector::Vector* R, vector::Vector* Xi_inv_chol, vector::Vector* Delta, memory::MemorySpace memspace) = 0;

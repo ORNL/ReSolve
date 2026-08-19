@@ -16,7 +16,73 @@ namespace ReSolve
     constexpr index_type WAVEFRONT_SIZE = 64;
     
     namespace kernels
-    {      
+    {
+      template <index_type k>
+      __device__ __forceinline__ index_type indexLowerTriangular(index_type i, index_type j)
+      {
+        return (j * (2 * k - 1 - j)) / 2 + i;
+      }
+
+      // ANDREW TODO: use this everywhere
+      __device__ __forceinline__ real_type warpReduceSum(real_type val)
+      {
+        #pragma unroll
+        for (int offset = WAVEFRONT_SIZE / 2; offset > 0; offset /= 2)
+        {
+          val += __shfl_down(val, offset);
+        }
+        return val;
+      }
+
+      __device__ inline void gridReduceSum(const cooperative_groups::grid_group& grid,
+                                           const real_type* __restrict__ local_vals,
+                                           real_type* __restrict__ result,
+                                           index_type length,
+                                           real_type* __restrict__ workspace_global,
+                                           real_type* __restrict__ workspace_shared)
+      {
+        if (grid.thread_rank() < length)
+        {
+          workspace_global[grid.thread_rank()] = 0.0;
+        }
+        grid.sync();
+
+        index_type lane = threadIdx.x % WAVEFRONT_SIZE;
+        index_type wavefront = threadIdx.x / WAVEFRONT_SIZE;
+        index_type num_wavefronts = blockDim.x / WAVEFRONT_SIZE;
+
+        // Reduce in wavefront
+        for (int i = 0; i < length; ++i)
+        {
+          real_type wavefront_sum = warpReduceSum(local_vals[i]);
+          if (lane == 0)
+          {
+            workspace_shared[wavefront * length + i] = wavefront_sum;
+          }
+        }
+        __syncthreads();
+
+        if (threadIdx.x < length)
+        {
+          // Reduce in block
+          real_type block_sum = 0.0;
+          for (int i = 0; i < num_wavefronts; i++)
+          {
+            block_sum += workspace_shared[i * length + threadIdx.x];
+          }
+          // Reduce globally
+          atomicAdd(&workspace_global[threadIdx.x], block_sum);
+        }
+
+        grid.sync();
+
+        // Broadcast
+        for (int i = 0; i < length; i++)
+        {
+          result[i] = workspace_global[i];
+        }
+      }
+
       __global__ void columnWiseSquaredNorms(real_type* R, real_type* sq_norms, index_type n)
       {
         index_type col = threadIdx.y;
@@ -28,10 +94,7 @@ namespace ReSolve
         {
           r_sq += R[col * n + row] * R[col * n + row];
         }
-        for (index_type offset = 64 / 2; offset > 0; offset /= 2)
-        {
-          r_sq += __shfl_down(r_sq, offset);
-        }
+        warpReduceSum(r_sq);
         if (threadIdx.x == 0)
         {
           atomicAdd(&sq_norms[col], r_sq);
@@ -66,439 +129,229 @@ namespace ReSolve
       }
 
       template <index_type k>
-      __device__ __forceinline__ index_type indexUpperTriangular(index_type i, index_type j)
+      __global__ void qr(real_type* __restrict__ Q, real_type* __restrict__ R, index_type n)
       {
-        return (j * (j + 1)) / 2 + i;
-      }
-
-      template <index_type k>
-      __device__ __forceinline__ index_type indexLowerTriangular(index_type i, index_type j)
-      {
-        return (j * (2 * k - 1 - j)) / 2 + i;
-      }
-
-      template <index_type k>
-      __global__ void choleskyQr(real_type* W, real_type* R, index_type n)
-      {
-        // k <= 16
-        
         cooperative_groups::grid_group grid = cooperative_groups::this_grid();
         index_type thread = blockIdx.x * blockDim.x + threadIdx.x;
         index_type stride = gridDim.x * blockDim.x;
 
-      // Compute Gram matrix
-        real_type G_local[k * (k + 1) / 2] = { 0.0 };
+        __shared__ real_type R_shared[k * k];
+        __shared__ real_type tau_shared[k];
+        __shared__ real_type reduction_workspace[4 * k];
 
-        // the sum of n kxk outer products
-        for (index_type row = thread; row < n; row += stride)
+        for (index_type idx = threadIdx.x; idx < k * k; idx += blockDim.x)
         {
-          real_type w_row[k];
-
-          #pragma unroll
-          for (index_type col = 0; col < k; col++)
-          {
-            w_row[col] = W[col * n + row];
-          }
-
-          #pragma unroll
-          for (index_type i = 0; i < k; i++)
-          {
-            #pragma unroll
-            for (index_type j = i; j < k; j++) // Only use upper triangle
-            {
-              G_local[indexUpperTriangular<k>(i, j)] += w_row[i] * w_row[j];
-            }
-          }
-        }
-
-        // Sum reduction to get the sums in each warp
-        #pragma unroll
-        for (index_type i = 0; i < k; i++)
-        {
-          #pragma unroll
-          for (index_type j = i; j < k; j++)
-          {
-            real_type g = G_local[indexUpperTriangular<k>(i, j)];
-
-            #pragma unroll
-            for (index_type offset = WAVEFRONT_SIZE / 2; offset > 0; offset /= 2)
-            {
-              g += __shfl_down(g, offset);
-            }
-            if (threadIdx.x % WAVEFRONT_SIZE == 0)
-            {
-              atomicAdd(&R[j * k + i], g);
-            }
-          }
-        }
-      // Now R = W^T * W
-
-        grid.sync();
-      
-      // Upper Cholesky factorization
-        __shared__ real_type R_shared[k * (k + 1) / 2]; // Only need this much for kxk symmetric matrix
-        {
-          index_type i = threadIdx.x % k;
-          index_type j = threadIdx.x / k;
-          if ((i < k) && (j < k) && (i <= j))
-          {
-            R_shared[indexUpperTriangular<k>(i, j)] = R[j * k + i];
-          }
-          __syncthreads();
-
-          // Do all of this inside one warp
-          for (index_type h = 0; h < k; h++)
-          {
-            if (threadIdx.x == 0)
-            {
-              // R_shared[indexUpperTriangular<k>(h, h)] = sqrt(R_shared[indexUpperTriangular<k>(h, h)]);
-              R_shared[indexUpperTriangular<k>(h, h)] = sqrt(fmax(R_shared[indexUpperTriangular<k>(h, h)], 1e-16)); // Prevent sqrt of negative number or division by a tiny number
-            }
-            __syncthreads();
-            if (threadIdx.x > h && threadIdx.x < k)
-            {
-              R_shared[indexUpperTriangular<k>(h, threadIdx.x)] /= R_shared[indexUpperTriangular<k>(h, h)];
-            }
-            __syncthreads();
-            if ((i < k) && (i > h) && (j < k) && (i <= j))
-            {
-              R_shared[indexUpperTriangular<k>(i, j)] -= R_shared[indexUpperTriangular<k>(h, i)] * R_shared[indexUpperTriangular<k>(h, j)];
-            }
-            __syncthreads();
-          }
-          
-          if ((i < k) && (j < k) && (blockIdx.x == 0))
-          {
-            if (i <= j)
-            {
-              R[j * k + i] = R_shared[indexUpperTriangular<k>(i, j)];
-            }
-            else
-            {
-              R[j * k + i] = 0.0;
-            }
-          }
-        }
-      // No sync needed because every block computes R_shared
-      
-      // Back substitution, QR = A
-      // each q is dependent only on q's to the left of it, as well as R and A (W)
-        real_type q_row[k];
-        for (index_type row = thread; row < n; row += stride)
-        {
-          #pragma unroll
-          for (index_type col = 0; col < k; col++)
-          {
-            real_type q_local = W[col * n + row];
-            #pragma unroll
-            for (index_type i = 0; i < col; i++)
-            {
-              q_local -= q_row[i] * R_shared[indexUpperTriangular<k>(i, col)];
-            }
-            q_local /= R_shared[indexUpperTriangular<k>(col, col)];
-            q_row[col] = q_local;
-          }
-
-          #pragma unroll
-          for (index_type col = 0; col < k; col++)
-          {
-            W[col * n + row] = q_row[col];
-          }
-        }
-      }
-
-      // -----------------------------------------------------------------------------
-// Helper: 64-thread Wavefront Shuffle Sum Reduction
-// -----------------------------------------------------------------------------
-template <typename T>
-__device__ __forceinline__ T warpReduceSum(T val)
-{
-    #pragma unroll
-    for (int offset = 32; offset > 0; offset /= 2)
-    {
-        val += __shfl_down(val, offset);
-    }
-    return val;
-}
-
-// -----------------------------------------------------------------------------
-// Helper: Cooperative Grid Reduction across all Blocks
-// -----------------------------------------------------------------------------
-template <typename T>
-__device__ inline void gridReduceSum(
-    const cooperative_groups::grid_group& grid,
-    T* d_scratch,
-    const T* local_vals,
-    T* out_vals,
-    int count,
-    T* s_mem)
-{
-    // Block 0 clears scratch memory
-    if (grid.thread_rank() < count)
-    {
-        d_scratch[grid.thread_rank()] = 0.0;
-    }
-    grid.sync();
-
-    int lane = threadIdx.x % 64;
-    int warp_id = threadIdx.x / 64;
-    int num_warps = blockDim.x / 64;
-
-    // Intra-warp sum reduction
-    for (int m = 0; m < count; ++m)
-    {
-        T wsum = warpReduceSum(local_vals[m]);
-        if (lane == 0)
-        {
-            s_mem[warp_id * count + m] = wsum;
-        }
-    }
-    __syncthreads();
-
-    // Combine warp results into global scratch
-    if (threadIdx.x < count)
-    {
-        T bsum = 0.0;
-        for (int w = 0; w < num_warps; ++w)
-        {
-            bsum += s_mem[w * count + threadIdx.x];
-        }
-        atomicAdd(&d_scratch[threadIdx.x], bsum);
-    }
-
-    grid.sync();
-
-    // Broadcast result to all threads
-    for (int m = 0; m < count; ++m)
-    {
-        out_vals[m] = d_scratch[m];
-    }
-}
-
-// -----------------------------------------------------------------------------
-// Main Householder QR Kernel (Column-Major Matrix W: n x k, Matrix R: k x k)
-// -----------------------------------------------------------------------------
-template <index_type k>
-__global__ void householderQr(real_type* W, real_type* R, index_type n)
-{
-    cooperative_groups::grid_group grid = cooperative_groups::this_grid();
-    index_type thread = blockIdx.x * blockDim.x + threadIdx.x;
-    index_type stride = gridDim.x * blockDim.x;
-
-    __shared__ real_type s_R[k * k];       // Local R matrix accumulator
-    __shared__ real_type s_tau[k];         // Householder scalars tau_0 ... tau_{k-1}
-    __shared__ real_type s_reduce[4 * k];  // Shared workspace for grid reductions
-
-    // Clear shared R matrix storage
-    for (index_type idx = threadIdx.x; idx < k * k; idx += blockDim.x)
-    {
-        s_R[idx] = 0.0;
-    }
-    __syncthreads();
-
-    // =========================================================================
-    // PHASE 1: Forward Householder Reduction (Compute R and store v_i in W)
-    // =========================================================================
-    for (index_type i = 0; i < k; ++i)
-    {
-        // 1. Compute square norm of column i from row i to n-1
-        real_type local_sq = 0.0;
-        for (index_type row = thread; row < n; row += stride)
-        {
-            if (row >= i)
-            {
-                real_type val = W[i * n + row];
-                local_sq += val * val;
-            }
-        }
-
-        real_type norm_sq;
-        gridReduceSum(grid, R, &local_sq, &norm_sq, 1, s_reduce);
-
-        // 2. Compute Householder reflection parameters (alpha, beta, tau)
-        if (grid.thread_rank() == 0)
-        {
-            real_type w_ii = W[i * n + i];
-            real_type norm_x = sqrt(norm_sq);
-
-            real_type alpha = 0.0;
-            real_type beta  = 0.0;
-            real_type tau   = 0.0;
-
-            if (norm_x > 0.0)
-            {
-                alpha = (w_ii >= 0.0) ? -norm_x : norm_x;
-                beta  = w_ii - alpha; // No cancellation error since w_ii and alpha have opposite signs
-                tau   = -beta / alpha;
-            }
-
-            R[0] = w_ii;
-            R[1] = alpha;
-            R[2] = beta;
-            R[3] = tau;
-        }
-        grid.sync();
-
-        real_type alpha = R[1];
-        real_type beta  = R[2];
-        real_type tau   = R[3];
-
-        if (threadIdx.x == 0)
-        {
-            s_tau[i] = tau;
-            s_R[i * k + i] = alpha; // Store R[i, i]
+          R_shared[idx] = 0.0;
         }
         __syncthreads();
 
-        // 3. Normalize column i below diagonal to form Householder vector v_i
-        for (index_type row = thread; row < n; row += stride)
+        // Forward pass
+        for (index_type i = 0; i < k; i++)
         {
+          // Square norm of column i from rows i to n-1
+          real_type sq_local = 0.0;
+          for (index_type row = thread; row < n; row += stride)
+          {
+            if (row >= i)
+            {
+              real_type val = Q[i * n + row];
+              sq_local += val * val;
+            }
+          }
+
+          real_type norm_sq;
+          gridReduceSum(grid, &sq_local, &norm_sq, 1, R, reduction_workspace);
+
+          if (grid.thread_rank() == 0)
+          {
+            real_type q_ii = Q[i * n + i];
+            real_type norm_x = sqrt(norm_sq);
+
+            real_type alpha = 0.0;
+            real_type beta = 0.0;
+            real_type tau = 0.0;
+
+            if (norm_x > 0.0)
+            {
+              alpha = (q_ii >= 0.0) ? -norm_x : norm_x;
+              beta = q_ii - alpha; // No cancellation error since q_ii and alpha have opposite signs
+              tau = -beta / alpha;
+            }
+
+            // k >= 2, so we can reuse R for temporary storage. k=1 skips this kernel
+            R[0] = q_ii;
+            R[1] = alpha;
+            R[2] = beta;
+            R[3] = tau;
+          }
+          grid.sync();
+
+          real_type alpha = R[1];
+          real_type beta  = R[2];
+          real_type tau   = R[3];
+
+          if (threadIdx.x == 0)
+          {
+            tau_shared[i] = tau;
+            R_shared[i * k + i] = alpha;
+          }
+          __syncthreads();
+
+          // Normalize below the diagonal
+          for (index_type row = thread; row < n; row += stride)
+          {
             if (row > i)
             {
-                W[i * n + row] = (beta != 0.0) ? (W[i * n + row] / beta) : 0.0;
+              if (beta == 0.0)
+              {
+                Q[i * n + row] = 0.0;
+              }
+              else
+              {
+                Q[i * n + row] /= beta;
+              }
             }
-        }
-        grid.sync();
+          }
+          grid.sync();
 
-        // 4. Update trailing columns j > i: W[:, j] = (I - tau * v_i * v_i^T) * W[:, j]
-        int num_rem = k - (i + 1);
-        if (num_rem > 0)
-        {
-            real_type local_p[16] = { 0.0 };
+          // Update values above the diagonal
+          int cols_remaining = k - (i + 1);
+          if (cols_remaining > 0)
+          {
+            real_type p_local[16] = { 0.0 };
 
             for (index_type row = thread; row < n; row += stride)
             {
-                if (row == i)
+              if (row == i)
+              {
+                #pragma unroll // ANDREW TODO: test no unroll
+                for (int j = i + 1; j < k; j++)
                 {
-                    #pragma unroll
-                    for (int j = i + 1; j < k; ++j)
-                    {
-                        local_p[j - (i + 1)] += 1.0 * W[j * n + row];
-                    }
+                  p_local[j - (i + 1)] += 1.0 * Q[j * n + row];
                 }
-                else if (row > i)
+              }
+              else if (row > i)
+              {
+                real_type v_val = Q[i * n + row];
+                #pragma unroll
+                for (int j = i + 1; j < k; j++)
                 {
-                    real_type v_val = W[i * n + row];
-                    #pragma unroll
-                    for (int j = i + 1; j < k; ++j)
-                    {
-                        local_p[j - (i + 1)] += v_val * W[j * n + row];
-                    }
+                  p_local[j - (i + 1)] += v_val * Q[j * n + row];
                 }
+              }
             }
 
             real_type p[16];
-            gridReduceSum(grid, R, local_p, p, num_rem, s_reduce);
+            gridReduceSum(grid, p_local, p, cols_remaining, R, reduction_workspace);
 
-            // Apply update to trailing columns
             for (index_type row = thread; row < n; row += stride)
             {
-                if (row == i)
+              if (row == i)
+              {
+                #pragma unroll
+                for (int j = i + 1; j < k; ++j)
                 {
-                    #pragma unroll
-                    for (int j = i + 1; j < k; ++j)
-                    {
-                        real_type r_ij = W[j * n + row] - tau * 1.0 * p[j - (i + 1)];
-                        W[j * n + row] = r_ij;
-                        if (threadIdx.x == 0)
-                        {
-                            s_R[j * k + i] = r_ij; // Store R[i, j]
-                        }
-                    }
+                  real_type r = Q[j * n + row] - tau * 1.0 * p[j - (i + 1)]; // R[i, j]
+                  Q[j * n + row] = r;
+                  if (threadIdx.x == 0)
+                  {
+                    R_shared[j * k + i] = r;
+                  }
                 }
-                else if (row > i)
+              }
+              else if (row > i)
+              {
+                real_type v_val = Q[i * n + row];
+                #pragma unroll
+                for (int j = i + 1; j < k; ++j)
                 {
-                    real_type v_val = W[i * n + row];
-                    #pragma unroll
-                    for (int j = i + 1; j < k; ++j)
-                    {
-                        W[j * n + row] -= tau * v_val * p[j - (i + 1)];
-                    }
+                  Q[j * n + row] -= tau * v_val * p[j - (i + 1)];
                 }
+              }
             }
             grid.sync();
+          }
         }
-    }
 
-    // =========================================================================
-    // PHASE 2: Accumulate Q = H_0 * H_1 * ... * H_{k-1} * [I_k; 0] (In-Place in W)
-    // =========================================================================
-    for (int i = k - 1; i >= 0; --i)
-    {
-        real_type tau = s_tau[i];
-        int num_rem = k - (i + 1);
-
-        // Compute dot products d_c = v_i^T * Q[:, c] for c > i
-        real_type d[16] = { 0.0 };
-        if (num_rem > 0)
+        // Backward pass
+        for (int i = k - 1; i >= 0; i--)
         {
+          real_type tau = tau_shared[i];
+          int cols_remaining = k - (i + 1);
+
+          real_type d[16] = { 0.0 };
+          if (cols_remaining > 0)
+          {
             real_type local_d[16] = { 0.0 };
             for (index_type row = thread; row < n; row += stride)
             {
-                if (row == i)
+              if (row == i)
+              {
+                #pragma unroll
+                for (int c = i + 1; c < k; ++c)
                 {
-                    #pragma unroll
-                    for (int c = i + 1; c < k; ++c)
-                    {
-                        local_d[c - (i + 1)] += 1.0 * W[c * n + row];
-                    }
+                  local_d[c - (i + 1)] += 1.0 * Q[c * n + row];
                 }
-                else if (row > i)
+              }
+              else if (row > i)
+              {
+                real_type v_val = Q[i * n + row];
+                #pragma unroll
+                for (int c = i + 1; c < k; ++c)
                 {
-                    real_type v_val = W[i * n + row];
-                    #pragma unroll
-                    for (int c = i + 1; c < k; ++c)
-                    {
-                        local_d[c - (i + 1)] += v_val * W[c * n + row];
-                    }
+                  local_d[c - (i + 1)] += v_val * Q[c * n + row];
                 }
+              }
             }
+            gridReduceSum(grid, local_d, d, cols_remaining, R, reduction_workspace);
+          }
 
-            gridReduceSum(grid, R, local_d, d, num_rem, s_reduce);
-        }
+          for (index_type row = thread; row < n; row += stride)
+          {
+            real_type v_r = (row == i) ? 1.0 : ((row > i) ? Q[i * n + row] : 0.0);
 
-        // Apply update to columns c >= i
-        for (index_type row = thread; row < n; row += stride)
-        {
-            real_type v_r = (row == i) ? 1.0 : ((row > i) ? W[i * n + row] : 0.0);
-
-            // Update columns c > i
+            // col > i
             #pragma unroll
-            for (int c = i + 1; c < k; ++c)
+            for (int col = i + 1; col < k; ++col)
             {
-                if (row >= i)
-                {
-                    W[c * n + row] -= tau * v_r * d[c - (i + 1)];
-                }
+              if (row >= i)
+              {
+                Q[col * n + row] -= tau * v_r * d[col - (i + 1)];
+              }
             }
 
-            // Update column i: Q[:, i] = e_i - tau * v_i
+            // Column i
             if (row < i)
             {
-                W[i * n + row] = 0.0;
+              Q[i * n + row] = 0.0;
             }
             else if (row == i)
             {
-                W[i * n + row] = 1.0 - tau;
+              Q[i * n + row] = 1.0 - tau;
             }
             else
             {
-                W[i * n + row] = -tau * v_r;
+              Q[i * n + row] = -tau * v_r;
             }
+          }
+          grid.sync();
         }
-        grid.sync();
-    }
 
-    // =========================================================================
-    // PHASE 3: Write Upper-Triangular Matrix R to Global Memory
-    // =========================================================================
-    for (index_type idx = grid.thread_rank(); idx < k * k; idx += gridDim.x * blockDim.x)
-    {
-        index_type r = idx % k;
-        index_type c = idx / k;
-        R[c * k + r] = (r <= c) ? s_R[c * k + r] : 0.0;
-    }
-}
+        // Writeback
+        for (index_type idx = grid.thread_rank(); idx < k * k; idx += gridDim.x * blockDim.x)
+        {
+          index_type r = idx % k;
+          index_type c = idx / k;
+          if (r > c)
+          {
+            R[c * k + r] = R_shared[c * k + r];
+          }
+          else
+          {
+            R[c * k + r] = 0.0;
+          }
+        }
+      }
 
       template <index_type k>
       __global__ void updateXR(real_type* __restrict__ Xi_inv,
@@ -636,7 +489,7 @@ __global__ void householderQr(real_type* W, real_type* R, index_type n)
             X_shared[col * k + row] = y_local;
           }
         }
-        __syncwarp(); // ANDREW TODO: change to syncwarp
+        __syncwarp();
         
         if (threadIdx.x < k * k)
         {
@@ -778,7 +631,7 @@ __global__ void householderQr(real_type* W, real_type* R, index_type n)
        * so this is the workaround. k=8 needs loop unrolling off for HIP due to register pressure.
        */
       template <index_type k, bool Unroll>
-      __device__ inline typename std::enable_if<!Unroll>::type multTSMTTSMLoop(const real_type* A, const real_type* B, real_type* __restrict__ C_shared, index_type row, index_type n)
+      __device__ __forceinline__ typename std::enable_if<!Unroll>::type multTSMTTSMLoop(const real_type* A, const real_type* B, real_type* __restrict__ C_shared, index_type row, index_type n)
       {
         real_type a_row[k];
         real_type b_row[k];
@@ -799,7 +652,7 @@ __global__ void householderQr(real_type* W, real_type* R, index_type n)
       }
 
       template <index_type k, bool Unroll>
-      __device__ inline typename std::enable_if<Unroll>::type multTSMTTSMLoop(const real_type* A, const real_type* B, real_type* __restrict__ C_shared, index_type row, index_type n)
+      __device__ __forceinline__ typename std::enable_if<Unroll>::type multTSMTTSMLoop(const real_type* A, const real_type* B, real_type* __restrict__ C_shared, index_type row, index_type n)
       {
         real_type a_row[k];
         real_type b_row[k];
@@ -971,25 +824,6 @@ __global__ void householderQr(real_type* W, real_type* R, index_type n)
 
     int MultiBasisParallelConjugateGradientHip::setup(index_type k)
     {
-      // For choleskyQr()
-      switch (k)
-      {
-      case 1: 
-        cholesky_qr_kernel_ = kernels::choleskyQr<1>; 
-        break;
-      case 2: 
-        cholesky_qr_kernel_ = kernels::choleskyQr<2>; 
-        break;
-      case 4: 
-        cholesky_qr_kernel_ = kernels::choleskyQr<4>; 
-        break;
-      case 8: 
-        cholesky_qr_kernel_ = kernels::choleskyQr<8>; 
-        break;
-      default:
-        return 1;
-      }
-
       // For bestBasis()
       if (!d_best_basis_)
       {
@@ -1046,87 +880,54 @@ __global__ void householderQr(real_type* W, real_type* R, index_type n)
       return 0;
     }
 
-    
-    // // R must be zeroed
-    // int MultiBasisParallelConjugateGradientHip::choleskyQr(vector::Vector* W, vector::Vector* R, memory::MemorySpace memspace)
-    // {
-    //   index_type n = W->getSize();
-    //   index_type k = W->getNumVectors();
-
-    //   if (k == 1)
-    //   {
-    //     real_type W_norm = vector_handler_->norm(W, memory::DEVICE);
-    //     vector_handler_->scal(1 / W_norm, W, memory::DEVICE);
-    //     R->setToConst(W_norm, memory::DEVICE);
-    //     return 0;
-    //   }
-
-    //   real_type* d_W = W->getData(memory::DEVICE);
-    //   real_type* d_R = R->getData(memory::DEVICE);
-      
-    //   void* args[] = {
-    //       (void*)&d_W,
-    //       (void*)&d_R,
-    //       (void*)&n
-    //   };
-      
-    //   int       block_size = 256; // Must be at least k^2
-    //   int       num_blocks = num_sms_; // One block per SM. On CUDA it's num_sms_ * qr_blocks_per_sm_, but on HIP one block per SM performs best and a high qr_blocks_per_sm_ often causes grid sync issues
-
-    //   hipError_t status = hipLaunchCooperativeKernel((void*)cholesky_qr_kernel_, num_blocks, block_size, args, 0, 0);
-    //   // status = hipLaunchCooperativeKernel((void*)cholesky_qr_kernel_, num_blocks, block_size, args, 0, 0);
-
-    //   return status;
-    // }
-
-int MultiBasisParallelConjugateGradientHip::choleskyQr(vector::Vector* W, vector::Vector* R, memory::MemorySpace memspace)
-{
-    index_type n = W->getSize();
-    index_type k = W->getNumVectors();
+  int MultiBasisParallelConjugateGradientHip::qr(vector::Vector* Q, vector::Vector* R, memory::MemorySpace memspace)
+  {
+    index_type n = Q->getSize();
+    index_type k = Q->getNumVectors();
 
     if (k == 1)
     {
-        real_type W_norm = vector_handler_->norm(W, memory::DEVICE);
-        vector_handler_->scal(1 / W_norm, W, memory::DEVICE);
-        R->setToConst(W_norm, memory::DEVICE);
+        real_type Q_norm = vector_handler_->norm(Q, memory::DEVICE);
+        vector_handler_->scal(1 / Q_norm, Q, memory::DEVICE);
+        R->setToConst(Q_norm, memory::DEVICE);
         return 0;
     }
 
-    real_type* d_W = W->getData(memory::DEVICE);
+    real_type* d_Q = Q->getData(memory::DEVICE);
     real_type* d_R = R->getData(memory::DEVICE);
 
     void* args[] = {
-        (void*)&d_W,
+        (void*)&d_Q,
         (void*)&d_R,
         (void*)&n
     };
 
-    void* kernel_func = nullptr;
+    void* kernel = nullptr;
     switch (k)
     {
     case 1: 
-        kernel_func = (void*)kernels::householderQr<1>; 
+        kernel = (void*)kernels::qr<1>; 
         break;
     case 2: 
-        kernel_func = (void*)kernels::householderQr<2>; 
+        kernel = (void*)kernels::qr<2>; 
         break;
     case 4: 
-        kernel_func = (void*)kernels::householderQr<4>; 
+        kernel = (void*)kernels::qr<4>; 
         break;
     case 8: 
-        kernel_func = (void*)kernels::householderQr<8>; 
+        kernel = (void*)kernels::qr<8>; 
         break;
     case 16:
-        kernel_func = (void*)kernels::householderQr<16>;
+        kernel = (void*)kernels::qr<16>;
         break;
     default:
         return 1;
     }
 
     int block_size = 256;
-    int num_blocks = num_sms_; // Cooperative grid launch across SMs
+    int num_blocks = num_sms_;
 
-    hipError_t status = hipLaunchCooperativeKernel(kernel_func, num_blocks, block_size, args, 0, 0);
+    hipError_t status = hipLaunchCooperativeKernel(kernel, num_blocks, block_size, args, 0, 0);
 
     return status;
 }

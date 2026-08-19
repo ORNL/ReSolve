@@ -76,7 +76,7 @@ namespace ReSolve
       }
 
       template <index_type k>
-      __global__ void choleskyQr(real_type* W, real_type* R, index_type n)
+      __global__ void qr(real_type* Q, real_type* R, index_type n)
       {
         // k <= 16
         
@@ -95,7 +95,7 @@ namespace ReSolve
           #pragma unroll
           for (index_type col = 0; col < k; col++)
           {
-            w_row[col] = W[col * n + row];
+            w_row[col] = Q[col * n + row];
           }
 
           #pragma unroll
@@ -129,7 +129,7 @@ namespace ReSolve
             }
           }
         }
-        // Now R = W^T * W. Lower half is garbage and doesn't matter though, because everything well get overridden soon
+        // Now R = Q^T * Q. Lower half is garbage and doesn't matter though, because everything well get overridden soon
 
         grid.sync();
       
@@ -179,14 +179,14 @@ namespace ReSolve
       // No grid-wise sync needed because every block computes R_shared
       
       // Back substitution, QR = A
-      // each q is dependent only on q's to the left of it, as well as R and A (W)
+      // each q is dependent only on q's to the left of it, as well as R and A (Q)
         real_type q_row[k];
         for (index_type row = thread; row < n; row += stride)
         {
           #pragma unroll
           for (index_type col = 0; col < k; col++)
           {
-            real_type q_local = W[col * n + row];
+            real_type q_local = Q[col * n + row];
             #pragma unroll
             for (index_type i = 0; i < col; i++)
             {
@@ -199,7 +199,7 @@ namespace ReSolve
           #pragma unroll
           for (index_type col = 0; col < k; col++)
           {
-            W[col * n + row] = q_row[col];
+            Q[col * n + row] = q_row[col];
           }
         }
       }
@@ -683,20 +683,20 @@ namespace ReSolve
 
     int MultiBasisParallelConjugateGradientCuda::setup(index_type k)
     {
-      // For choleskyQr()
+      // For qr()
       switch (k)
       {
       case 1: 
-        cholesky_qr_kernel_ = kernels::choleskyQr<1>; 
+        cholesky_qr_kernel_ = kernels::qr<1>; 
         break;
       case 2: 
-        cholesky_qr_kernel_ = kernels::choleskyQr<2>; 
+        cholesky_qr_kernel_ = kernels::qr<2>; 
         break;
       case 4: 
-        cholesky_qr_kernel_ = kernels::choleskyQr<4>; 
+        cholesky_qr_kernel_ = kernels::qr<4>; 
         break;
       case 8: 
-        cholesky_qr_kernel_ = kernels::choleskyQr<8>; 
+        cholesky_qr_kernel_ = kernels::qr<8>; 
         break;
       default:
         return 1;
@@ -763,20 +763,20 @@ namespace ReSolve
     }
 
     // R must be zeroed
-    int MultiBasisParallelConjugateGradientCuda::choleskyQr(vector::Vector* W, vector::Vector* R, memory::MemorySpace memspace)
+    int MultiBasisParallelConjugateGradientCuda::qr(vector::Vector* Q, vector::Vector* R, memory::MemorySpace memspace)
     {
-      index_type n = W->getSize();
-      index_type k = W->getNumVectors();
+      index_type n = Q->getSize();
+      index_type k = Q->getNumVectors();
 
       if (k == 1)
       {
-        real_type W_norm = vector_handler_->norm(W, memory::DEVICE);
-        vector_handler_->scal(1 / W_norm, W, memory::DEVICE);
+        real_type W_norm = vector_handler_->norm(Q, memory::DEVICE);
+        vector_handler_->scal(1 / W_norm, Q, memory::DEVICE);
         R->setToConst(W_norm, memory::DEVICE);
         return 0;
       }
 
-      real_type* d_W = W->getData(memory::DEVICE);
+      real_type* d_W = Q->getData(memory::DEVICE);
       real_type* d_R = R->getData(memory::DEVICE);
       
       void* args[] = {
