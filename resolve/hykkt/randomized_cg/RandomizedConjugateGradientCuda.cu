@@ -2318,7 +2318,7 @@ namespace ReSolve
             break;
       }
 
-      cudaDeviceSynchronize();
+      // cudaDeviceSynchronize();
       cudaError_t error = cudaGetLastError();
       if (error != cudaSuccess) {
           printf("Kernel error: %s\n", cudaGetErrorString(error));

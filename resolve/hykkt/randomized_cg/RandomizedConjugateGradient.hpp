@@ -15,7 +15,6 @@
 #include <resolve/Common.hpp>
 #include <resolve/MemoryUtils.hpp>
 #include <resolve/matrix/Csr.hpp>
-#include <resolve/GramSchmidt.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/vector/VectorHandler.hpp>
@@ -74,8 +73,6 @@ namespace ReSolve
       MatrixHandler* matrix_handler_{nullptr}; ///< Backend-specific matrix handler.
       VectorHandler* vector_handler_{nullptr}; ///< Backend-specific vector handler.
       
-      GramSchmidt gram_schmidt_;
-
       matrix::Csr* A_{nullptr};
       vector::Vector* x_{nullptr};   // LHS of entire system
       vector::Vector* b_{nullptr};   // RHS of entire system

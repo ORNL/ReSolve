@@ -41,8 +41,7 @@ namespace ReSolve
         k_(k),
         matrix_handler_(matrix_handler),
         vector_handler_(vector_handler),
-        memspace_(memspace),
-        gram_schmidt_(vector_handler_, GramSchmidt::GSVariant::CGS2)
+        memspace_(memspace)
     {
 #ifdef RESOLVE_USE_CUDA
       impl_ = new RandomizedConjugateGradientCuda(vector_handler_);
@@ -163,8 +162,6 @@ namespace ReSolve
 
       A_norm_ = matrix_handler_->norm(A_, memspace_);
       b_norm_ = vector_handler_->norm(b_, memspace_);
-
-      gram_schmidt_.setup(n_, k_);
     }
 
     void RandomizedConjugateGradient::precondition()
@@ -201,7 +198,7 @@ namespace ReSolve
         b_prec_->copyToExternal(B_res_->getData(i, memspace_), memspace_, memspace_);
       }
 
-      vector_handler_->randomVectorExceptFirstColumn(X_prec_0_, -1.0, 1.0, memspace_);
+      vector_handler_->randomVector(X_prec_0_, -1.0, 1.0, memspace_);
       // deviceSynchronize(); // for debugging
       // impl_->SpMMTallSkinny(A_prec_, X_prec_0_, Temp_nxk_);
       impl_->hypreDevice_CSRMatrixMatvec(A_prec_, X_prec_0_, Temp_nxk_);

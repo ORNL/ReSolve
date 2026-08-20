@@ -205,7 +205,7 @@ namespace ReSolve
         b_prec_->copyToExternal(B_res_->getData(i, memspace_), memspace_, memspace_);
       }
 
-      vector_handler_->randomVectorExceptFirstColumn(X_prec_0_, -1.0, 1.0, memspace_);
+      vector_handler_->randomVector(X_prec_0_, -1.0, 1.0, memspace_);
       vector_handler_->gemm('N', 'N', ONE, ZERO, A_prec_, X_prec_0_, Temp_nxk_, memspace_);
       real_type AX_prec_0_norm = vector_handler_->norm(Temp_nxk_, memspace_);
       real_type B_prec_norm = sqrt(static_cast<double>(k_)) * vector_handler_->norm(b_prec_, memspace_);
