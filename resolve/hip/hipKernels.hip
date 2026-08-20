@@ -320,7 +320,8 @@ namespace ReSolve {
         index_type row = blockIdx.x * blockDim.x + threadIdx.x;
 
         // Check if the thread's row is within matrix bounds
-        if (row < n) {
+        if (row < n)
+        {
           // Get the start and end positions for this row in the CSR format
           index_type row_start = a_row_ptr[row];
           index_type row_end = a_row_ptr[row + 1];
@@ -329,7 +330,8 @@ namespace ReSolve {
           real_type scale = d_val[row];
 
           // Scale all non-zero elements in this row
-          for (index_type i = row_start; i < row_end; i++) {
+          for (index_type i = row_start; i < row_end; i++)
+          {
             a_val[i] *= scale;
           }
         }
@@ -356,13 +358,15 @@ namespace ReSolve {
         index_type row = blockIdx.x * blockDim.x + threadIdx.x;
 
         // Check if the thread's row is within matrix bounds
-        if (row < n) {
+        if (row < n)
+        {
           // Get the start and end positions for this row in the CSR format
           index_type row_start = a_row_ptr[row];
           index_type row_end = a_row_ptr[row + 1];
 
           // Scale all non-zero elements in this row
-          for (index_type i = row_start; i < row_end; i++) {
+          for (index_type i = row_start; i < row_end; i++)
+          {
             a_val[i] *= d_val[a_col_ind[i]];
           }
         }
@@ -657,7 +661,7 @@ namespace ReSolve {
       kernels::rightScale<<<num_blocks, block_size>>>(n, a_row_ptr, a_col_ind, a_val, d_val);
     }
     
-    // ...
+    // ... unused
     void extractDiagonal(index_type        n,
                                 const index_type* a_row_ptr,
                                 const index_type* a_col_ind,
@@ -681,7 +685,7 @@ namespace ReSolve {
                                 real_type*        diag)
     {
       // Define block size and number of blocks
-      const int block_size = 256;
+      const int block_size = 256; // For some reason block_size = 256 breaks and only every other 64 threads launch
       int       num_blocks = (n + block_size - 1) / block_size;
       // Launch the kernel
       kernels::extractRootDiagonal<<<num_blocks, block_size>>>(n, a_row_ptr, a_col_ind, a_val, diag);

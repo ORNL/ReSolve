@@ -114,7 +114,14 @@ namespace ReSolve {
         if (idx < n)
         {
           // Divide the vector element by the corresponding diag value
-          out[idx] = 1.0 / in[idx];
+          if (in[idx] == 0.0) // ANDREW TODO: only really do this in cg. for some reason this is needed
+          {
+            out[idx] = 0.0;
+          }
+          else
+          {
+            out[idx] = 1.0 / in[idx];
+          }
         }
       }
 

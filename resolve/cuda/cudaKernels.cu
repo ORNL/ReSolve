@@ -259,10 +259,7 @@ namespace ReSolve
           index_type row_start = a_row_ptr[row];
           index_type row_end   = a_row_ptr[row + 1];
 
-          // Get the scaling factor for this row from the diagonal matrix
-          real_type scale = d_val[row];
-
-          // Scale all non-zero elements in this row
+          // Get the diagonal entry
           for (index_type i = 0; i < row_end - row_start; i++)
           {
             if (a_col_ind[a_row_ptr[row] + i] == row)
@@ -290,10 +287,7 @@ namespace ReSolve
           index_type row_start = a_row_ptr[row];
           index_type row_end   = a_row_ptr[row + 1];
 
-          // Get the scaling factor for this row from the diagonal matrix
-          real_type scale = diag[row];
-
-          // Scale all non-zero elements in this row
+          // Get the diagonal entry
           for (index_type i = 0; i < row_end - row_start; i++)
           {
             if (a_col_ind[a_row_ptr[row] + i] == row)
