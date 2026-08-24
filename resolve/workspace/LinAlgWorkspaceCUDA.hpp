@@ -7,6 +7,10 @@
 #include <resolve/Common.hpp>
 #include <resolve/MemoryUtils.hpp>
 
+#ifdef RESOLVE_USE_CUDSS
+#include <cudss.h>
+#endif
+
 namespace ReSolve
 {
   class LinAlgWorkspaceCUDA
@@ -29,6 +33,9 @@ namespace ReSolve
     cublasHandle_t       getCublasHandle();
     cusolverSpHandle_t   getCusolverSpHandle(); // needed for 1-norms etc
     cusparseHandle_t     getCusparseHandle();
+#ifdef RESOLVE_USE_CUDSS
+    cudssHandle_t        getCudssHandle();
+#endif
     cusparseSpMatDescr_t getSpmvMatrixDescriptor();
     cusparseDnVecDescr_t getVecX();
     cusparseDnVecDescr_t getVecY();
@@ -55,12 +62,16 @@ namespace ReSolve
 
     bool matvecSetup();
     void matvecSetupDone();
+    void resetMatvecSetup();
 
   private:
     // handles
     cublasHandle_t     handle_cublas_;
     cusolverSpHandle_t handle_cusolversp_; // needed for 1-norm
     cusparseHandle_t   handle_cusparse_;
+#ifdef RESOLVE_USE_CUDSS
+    cudssHandle_t      handle_cudss_;
+#endif
 
     // matrix descriptors
     cusparseSpMatDescr_t mat_A_;

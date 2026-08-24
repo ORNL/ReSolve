@@ -188,103 +188,103 @@ namespace ReSolve
                                      const real_type* alpha,
                                      const real_type* beta)
   {
-    using namespace constants;
+    // using namespace constants;
 
-    assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW && "Matrix has to be in CSR format for matrix-vector product.\n");
+    // assert(A->getSparseFormat() == matrix::Sparse::COMPRESSED_SPARSE_ROW && "Matrix has to be in CSR format for matrix-vector product.\n");
 
-    int error_sum = 0;
-    // result = alpha *A*x + beta * result
-    cusparseStatus_t     status;
-    cusparseDnMatDescr_t mat_X = workspace_->getMatX();
+    // int error_sum = 0;
+    // // result = alpha *A*x + beta * result
+    // cusparseStatus_t     status;
+    // cusparseDnMatDescr_t mat_X = workspace_->getMatX();
 
-    // In SpMV, A is m x n and the operation is y = A*x so
-    // x must have length n, the number of columns of A and
-    // y must have length m, the number of rows of A.
-    // This matters for non-square matrices used in SCCG.
-    cusparseCreateDnMat(&mat_X, vec_x->getSize(), vec_x->getNumVectors(), vec_x->getSize(), vec_x->getData(memory::DEVICE), CUDA_R_64F, CUSPARSE_ORDER_COL);
+    // // In SpMV, A is m x n and the operation is y = A*x so
+    // // x must have length n, the number of columns of A and
+    // // y must have length m, the number of rows of A.
+    // // This matters for non-square matrices used in SCCG.
+    // cusparseCreateDnMat(&mat_X, vec_x->getSize(), vec_x->getNumVectors(), vec_x->getSize(), vec_x->getData(memory::DEVICE), CUDA_R_64F, CUSPARSE_ORDER_COL);
 
-    cusparseDnMatDescr_t mat_AX = workspace_->getMatY();
-    cusparseCreateDnMat(&mat_AX, vec_result->getSize(), vec_result->getNumVectors(), vec_result->getSize(), vec_result->getData(memory::DEVICE), CUDA_R_64F, CUSPARSE_ORDER_COL);
+    // cusparseDnMatDescr_t mat_AX = workspace_->getMatY();
+    // cusparseCreateDnMat(&mat_AX, vec_result->getSize(), vec_result->getNumVectors(), vec_result->getSize(), vec_result->getData(memory::DEVICE), CUDA_R_64F, CUSPARSE_ORDER_COL);
 
-    cusparseHandle_t handle_cusparse = workspace_->getCusparseHandle();
+    // cusparseHandle_t handle_cusparse = workspace_->getCusparseHandle();
 
-    // The workspace caches one backend SpMV setup and temporary buffer between
-    // matvec calls. SCCG can call matvec with different matrices, such as JC and
-    // JC^T, so the cached setup may no longer match the current matrix structure.
-    // Track the matrix pointer and dimensions/nnz so stale setup data is reset
-    // before running SpMV with a different matrix.
-    bool matrix_changed =
-        (matrix_for_matvec_ != A) || (matvec_num_rows_ != A->getNumRows()) || (matvec_num_cols_ != A->getNumColumns()) || (matvec_nnz_ != A->getNnz());
+    // // The workspace caches one backend SpMV setup and temporary buffer between
+    // // matvec calls. SCCG can call matvec with different matrices, such as JC and
+    // // JC^T, so the cached setup may no longer match the current matrix structure.
+    // // Track the matrix pointer and dimensions/nnz so stale setup data is reset
+    // // before running SpMV with a different matrix.
+    // bool matrix_changed =
+    //     (matrix_for_matvec_ != A) || (matvec_num_rows_ != A->getNumRows()) || (matvec_num_cols_ != A->getNumColumns()) || (matvec_nnz_ != A->getNnz());
 
-    if (matrix_changed || values_changed_)
-    {
-      workspace_->resetMatvecSetup();
-    }
-    cusparseSpMatDescr_t mat_A       = workspace_->getSpmvMatrixDescriptor();
-    void*                buffer_spmv = workspace_->getSpmvBuffer();
-    if (!workspace_->matvecSetup())
-    {
-      // Setup, allocate, then compute.
-      status = cusparseCreateCsr(&mat_A,
-                                 A->getNumRows(),
-                                 A->getNumColumns(),
-                                 A->getNnz(),
-                                 A->getRowData(memory::DEVICE),
-                                 A->getColData(memory::DEVICE),
-                                 A->getValues(memory::DEVICE),
-                                 CUSPARSE_INDEX_32I,
-                                 CUSPARSE_INDEX_32I,
-                                 CUSPARSE_INDEX_BASE_ZERO,
-                                 CUDA_R_64F);
-      error_sum += status;
-      size_t bufferSize = 0;
+    // if (matrix_changed || values_changed_)
+    // {
+    //   workspace_->resetMatvecSetup();
+    // }
+    // cusparseSpMatDescr_t mat_A       = workspace_->getSpmvMatrixDescriptor();
+    // void*                buffer_spmv = workspace_->getSpmvBuffer();
+    // if (!workspace_->matvecSetup())
+    // {
+    //   // Setup, allocate, then compute.
+    //   status = cusparseCreateCsr(&mat_A,
+    //                              A->getNumRows(),
+    //                              A->getNumColumns(),
+    //                              A->getNnz(),
+    //                              A->getRowData(memory::DEVICE),
+    //                              A->getColData(memory::DEVICE),
+    //                              A->getValues(memory::DEVICE),
+    //                              CUSPARSE_INDEX_32I,
+    //                              CUSPARSE_INDEX_32I,
+    //                              CUSPARSE_INDEX_BASE_ZERO,
+    //                              CUDA_R_64F);
+    //   error_sum += status;
+    //   size_t bufferSize = 0;
 
-      status = cusparseSpMM_bufferSize(handle_cusparse,
-                                       CUSPARSE_OPERATION_NON_TRANSPOSE,
-                                       CUSPARSE_OPERATION_NON_TRANSPOSE,
-                                       &MINUS_ONE,
-                                       mat_A,
-                                       mat_X,
-                                       &ONE,
-                                       mat_AX,
-                                       CUDA_R_64F,
-                                       CUSPARSE_SPMM_ALG_DEFAULT,
-                                       &bufferSize);
-      error_sum += status;
-      mem_.allocateBufferOnDevice(&buffer_spmv, bufferSize);
-      workspace_->setSpmvMatrixDescriptor(mat_A);
-      workspace_->setSpmvBuffer(buffer_spmv);
+    //   status = cusparseSpMM_bufferSize(handle_cusparse,
+    //                                    CUSPARSE_OPERATION_NON_TRANSPOSE,
+    //                                    CUSPARSE_OPERATION_NON_TRANSPOSE,
+    //                                    &MINUS_ONE,
+    //                                    mat_A,
+    //                                    mat_X,
+    //                                    &ONE,
+    //                                    mat_AX,
+    //                                    CUDA_R_64F,
+    //                                    CUSPARSE_SPMM_ALG_DEFAULT,
+    //                                    &bufferSize);
+    //   error_sum += status;
+    //   mem_.allocateBufferOnDevice(&buffer_spmv, bufferSize);
+    //   workspace_->setSpmvMatrixDescriptor(mat_A);
+    //   workspace_->setSpmvBuffer(buffer_spmv);
 
-      workspace_->matvecSetupDone();
+    //   workspace_->matvecSetupDone();
 
-      matrix_for_matvec_ = A;
-      matvec_num_rows_   = A->getNumRows();
-      matvec_num_cols_   = A->getNumColumns();
-      matvec_nnz_        = A->getNnz();
+    //   matrix_for_matvec_ = A;
+    //   matvec_num_rows_   = A->getNumRows();
+    //   matvec_num_cols_   = A->getNumColumns();
+    //   matvec_nnz_        = A->getNnz();
 
-      values_changed_ = false;
-    }
+    //   values_changed_ = false;
+    // }
 
-    status = cusparseSpMM(handle_cusparse,
-                          CUSPARSE_OPERATION_NON_TRANSPOSE,
-                          CUSPARSE_OPERATION_NON_TRANSPOSE,
-                          alpha,
-                          mat_A,
-                          mat_X,
-                          beta,
-                          mat_AX,
-                          CUDA_R_64F,
-                          CUSPARSE_SPMM_ALG_DEFAULT,
-                          buffer_spmv);
-    error_sum += status;
-    if (status)
-      out::error() << "MatMultivec status: " << status << ". "
-                   << "Last error code: " << mem_.getLastDeviceError() << ".\n";
-    vec_result->setDataUpdated(memory::DEVICE);
+    // status = cusparseSpMM(handle_cusparse,
+    //                       CUSPARSE_OPERATION_NON_TRANSPOSE,
+    //                       CUSPARSE_OPERATION_NON_TRANSPOSE,
+    //                       alpha,
+    //                       mat_A,
+    //                       mat_X,
+    //                       beta,
+    //                       mat_AX,
+    //                       CUDA_R_64F,
+    //                       CUSPARSE_SPMM_ALG_DEFAULT,
+    //                       buffer_spmv);
+    // error_sum += status;
+    // if (status)
+    //   out::error() << "MatMultivec status: " << status << ". "
+    //                << "Last error code: " << mem_.getLastDeviceError() << ".\n";
+    // vec_result->setDataUpdated(memory::DEVICE);
 
-    cusparseDestroyDnMat(mat_X);
-    cusparseDestroyDnMat(mat_AX);
-    return error_sum;
+    // cusparseDestroyDnMat(mat_X);
+    // cusparseDestroyDnMat(mat_AX);
+    // return error_sum;
   }
 
 

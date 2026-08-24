@@ -1,3 +1,5 @@
+// ANDREW TODO: cusparse (no cudss) compatibility, or at least make it work w/o preconditioner
+
 #include "MultiBasisParallelConjugateGradient.hpp"
 
 #include <algorithm>
@@ -320,7 +322,7 @@ namespace ReSolve
         preconditioner_->apply(R_scal_, Z_);
       }
 
-      // P, \Psi = qr(R)
+      // P, Psi = qr(R)
       P_->copyFromExternal(Z_, memspace_, memspace_); // with preconditioner, this is L_inv * R_res
       impl_->qr(P_, Psi_, memspace_);
       
@@ -436,7 +438,7 @@ namespace ReSolve
         // printf("error %f\n", best_basis_error);
 
         // std::cout << std::setprecision(std::numeric_limits<double>::max_digits10) << best_basis_error << '\n';
-        // if (k_ == 8) printf("%.10e\n", best_basis_error);
+        // if (k_ == 1) printf("%.10e\n", best_basis_error);
         // if (best_basis_error > 1e10)
         // {
         //   printf("hi\n");

@@ -11,7 +11,7 @@ cmake_minimum_required(VERSION 3.22)
 # Adds version settings and set variable CMAKE_PROJECT_VERSION
 project(ReSolve VERSION "0.99.2")
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 
 set(PACKAGE_NAME "ReSolve")
 set(PACKAGE_TARNAME "resolve")
@@ -158,7 +158,7 @@ if(RESOLVE_USE_CUDA)
   check_language(CUDA)
 
   if(NOT DEFINED CMAKE_CUDA_STANDARD)
-    set(CMAKE_CUDA_STANDARD 11)
+    set(CMAKE_CUDA_STANDARD 17)
     set(CMAKE_CUDA_STANDARD_REQUIRED ON)
   endif()
 

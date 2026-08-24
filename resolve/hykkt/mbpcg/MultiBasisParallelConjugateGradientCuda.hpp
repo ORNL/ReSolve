@@ -49,6 +49,7 @@ namespace ReSolve
       index_type num_threads_;
 
       void(*qr_kernel_)(real_type*, real_type*, index_type){nullptr};
+      index_type qr_blocks_per_sm_;
 
       size_t best_basis_workspace_size_;
       void* d_best_basis_workspace_{nullptr};

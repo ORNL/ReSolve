@@ -298,7 +298,7 @@ namespace ReSolve
     // Shape is post-transpose, if applicable
     index_type m = C->getSize();
     index_type n = C->getNumVectors();
-    index_type k = 0; // inner dimension
+    index_type k; // inner dimension
 
     switch (transpose_A)
     {
@@ -390,44 +390,6 @@ namespace ReSolve
     // Shape is post-transpose, if applicable
     index_type m = C->getSize();
     index_type n = C->getNumVectors();
-
-    // switch (transpose_A)
-    // {
-    // case 'T':
-    //   assert((A->getNumVectors() == m)
-    //           && "gemm: Shape mismatch! Shape of A does not match shape of C.");
-    //   k = A->getSize();
-    //   break;
-    // case 'N':
-    //   assert((A->getSize() == m)
-    //           && "gemm: Shape mismatch! Shape of A does not match shape of C.");
-    //   k = A->getNumVectors();
-    //   break;
-    // default:
-    //   out::error() << "Unrecognized transpose option " << transpose_A
-    //                << " in gemm. Valid options are 'N' (not transposed) and 'T' (transposed).\n";
-    //   break;
-    // }
-
-    // switch (transpose_B)
-    // {
-    // case 'T':
-    //   assert((B->getNumVectors() == k)
-    //           && "gemm: Shape mismatch! Shape of A does not match shape of B.");
-    //   assert((B->getSize() == n)
-    //           && "gemm: Shape mismatch! Shape of A does not match shape of C.");
-    //   break;
-    // case 'N':
-    //   assert((B->getSize() == k)
-    //           && "gemm: Shape mismatch! Shape of A does not match shape of B.");
-    //   assert((B->getNumVectors() == n)
-    //           && "gemm: Shape mismatch! Shape of A does not match shape of C.");
-    //   break;
-    // default:
-    //   out::error() << "Unrecognized transpose option " << transpose_B
-    //                << " in gemm. Valid options are 'N' (not transposed) and 'T' (transposed).\n";
-    //   break;
-    // }
 
     rocblas_operation transpose_A_rocblas = (transpose_A == 'T') ? rocblas_operation_transpose : rocblas_operation_none;
     rocblas_operation transpose_B_rocblas = (transpose_B == 'T') ? rocblas_operation_transpose : rocblas_operation_none; 

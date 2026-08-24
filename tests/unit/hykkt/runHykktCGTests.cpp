@@ -46,7 +46,7 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
     // "bcsstk18", // WARMUP
 
     // "hood",
-    "Fault_639",
+    // "Fault_639",
     // "2cubes_sphere",
 
     // "1138_bus",

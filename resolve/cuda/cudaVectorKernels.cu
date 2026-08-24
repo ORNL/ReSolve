@@ -127,8 +127,14 @@ namespace ReSolve
         // Check if the index is within bounds
         if (idx < n)
         {
-          // Divide the vector element by the corresponding diag value
-          out[idx] = 1.0 / in[idx];
+          // if (in[idx] == 0.0)
+          // {
+          //   out[idx] = 0.0; // For some reason this works for CG diagonal scaling. ANDREW TODO: do something about this
+          // }
+          // else
+          {
+            out[idx] = 1.0 / in[idx];
+          }
         }
       }
 

@@ -13,6 +13,9 @@ namespace ReSolve
     handle_cusolversp_         = nullptr;
     handle_cusparse_           = nullptr;
     handle_cublas_             = nullptr;
+#ifdef RESOLVE_USE_CUDSS
+    handle_cudss_              = nullptr;
+#endif
     buffer_spmv_               = nullptr;
     buffer_1norm_              = nullptr;
     transpose_workspace_       = nullptr;
@@ -37,6 +40,9 @@ namespace ReSolve
     cusparseDestroy(handle_cusparse_);
     cusolverSpDestroy(handle_cusolversp_);
     cublasDestroy(handle_cublas_);
+#ifdef RESOLVE_USE_CUDSS
+    cudssDestroy(handle_cudss_);
+#endif
     if (matvec_setup_done_)
     {
       cusparseDestroySpMat(mat_A_);
@@ -186,6 +192,13 @@ namespace ReSolve
     return handle_cusparse_;
   }
 
+#ifdef RESOLVE_USE_CUDSS
+  cudssHandle_t LinAlgWorkspaceCUDA::getCudssHandle()
+  {
+    return handle_cudss_;
+  }
+#endif
+
   void LinAlgWorkspaceCUDA::setCusparseHandle(cusparseHandle_t handle)
   {
     handle_cusparse_ = handle;
@@ -286,6 +299,9 @@ namespace ReSolve
     cusparseCreate(&handle_cusparse_);
     cublasCreate(&handle_cublas_);
     cusolverSpCreate(&handle_cusolversp_);
+#ifdef RESOLVE_USE_CUDSS
+    cudssCreate(&handle_cudss_);
+#endif
   }
   
   void LinAlgWorkspaceCUDA::initializeRng(index_type size)

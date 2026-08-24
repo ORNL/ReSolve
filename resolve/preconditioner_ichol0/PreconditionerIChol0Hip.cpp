@@ -86,7 +86,7 @@ namespace ReSolve
 
     int status = 0;
 
-    size_t buffer_size;
+    size_t buffer_size = 0;
     status += rocsparse_dcsric0_buffer_size(workspace_->getRocsparseHandle(),
                                             L_->getNumRows(),
                                             L_->getNnz(),
@@ -111,7 +111,7 @@ namespace ReSolve
                                          rocsparse_solve_policy_auto,
                                          buffer);
 
-    int position;
+    int position = -1;
     status += rocsparse_csric0_zero_pivot(workspace_->getRocsparseHandle(), L_info_setup, &position);
     if (position != -1)
     {

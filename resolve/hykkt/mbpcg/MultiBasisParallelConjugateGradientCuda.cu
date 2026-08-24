@@ -24,7 +24,7 @@ namespace ReSolve
         #pragma unroll
         for (int offset = WARP_SIZE / 2; offset > 0; offset /= 2)
         {
-          val += __shfl_down(val, offset);
+          val += __shfl_down_sync(0xffffffff, val, offset);
         }
         return val;
       }
@@ -363,7 +363,7 @@ namespace ReSolve
       }
 
       template <index_type k>
-      __global__ void updateXR(const real_type* __restrict__ Xi_inv,
+      __global__ void updateXR(const real_type* __restrict__ S,
                                const real_type* __restrict__ A_S,
                                real_type* __restrict__ Xi_Sigma,
                                real_type* __restrict__ X_res,
@@ -373,10 +373,10 @@ namespace ReSolve
         index_type thread = blockIdx.x * blockDim.x + threadIdx.x;
         index_type stride = gridDim.x * blockDim.x;
 
-        __shared__ real_type Xi_Sigma_shared[k * k];
+        __shared__ real_type X_shared[k * k];
         if (threadIdx.x < k * k)
         {
-          Xi_Sigma_shared[threadIdx.x] = Xi_Sigma[threadIdx.x];
+          X_shared[threadIdx.x] = Xi_Sigma[threadIdx.x];
         }
         __syncthreads();
 
@@ -390,8 +390,8 @@ namespace ReSolve
             // #pragma unroll 1
             for (index_type i = 0; i < k; i++)
             {
-              x_dot +=   S[i * n + row] * Xi_Sigma_shared[col * k + i];
-              r_dot -= A_S[i * n + row] * Xi_Sigma_shared[col * k + i];
+              x_dot +=   S[i * n + row] * X_shared[col * k + i];
+              r_dot -= A_S[i * n + row] * X_shared[col * k + i];
             }
             X_res[col * n + row] += x_dot;
             R_prec[col * n + row] += r_dot;
@@ -500,14 +500,14 @@ namespace ReSolve
         }
 
       // X = Xi * B => A * X = B => L * L^T * X = B, choleskySolve
-        __shared__ real_type Xi_Sigma_shared[k * k];
+        __shared__ real_type X_shared[k * k];
         if constexpr (k <= 4)
         {
           if (threadIdx.x < WARP_SIZE) // k <= 4 for now. Still only one warp
           {
             if (threadIdx.x < k * k)
             {
-              Xi_Sigma_shared[threadIdx.x] = B[threadIdx.x];
+              X_shared[threadIdx.x] = B[threadIdx.x];
             }
             __syncwarp();
 
@@ -519,14 +519,14 @@ namespace ReSolve
               // #pragma unroll 1
               for (index_type row = 0; row < k; row++)
               {
-                real_type y_local = Xi_Sigma_shared[col * k + row];
+                real_type y_local = X_shared[col * k + row];
                 // #pragma unroll 1
                 for (index_type i = 0; i < row; i++)
                 {
-                  y_local -= Xi_Sigma_shared[col * k + i] * A_shared[indexLowerTriangular<k>(row, i)]; // A_shared can be overridden. Here it contains Y
+                  y_local -= X_shared[col * k + i] * A_shared[indexLowerTriangular<k>(row, i)]; // A_shared can be overridden. Here it contains Y
                 }
                 y_local /= A_shared[indexLowerTriangular<k>(row, row)];
-                Xi_Sigma_shared[col * k + row] = y_local;
+                X_shared[col * k + row] = y_local;
               }
             }
             __syncwarp();
@@ -539,14 +539,14 @@ namespace ReSolve
               // #pragma unroll 1
               for (index_type row = k - 1; row >= 0; row--)
               {
-                real_type y_local = Xi_Sigma_shared[col * k + row];
+                real_type y_local = X_shared[col * k + row];
                 // #pragma unroll 1
                 for (index_type i = row + 1; i < k; i++)
                 {
-                  y_local -= Xi_Sigma_shared[col * k + i] * A_shared[indexLowerTriangular<k>(i, row)]; // A_shared can be overridden. Here it contains Y
+                  y_local -= X_shared[col * k + i] * A_shared[indexLowerTriangular<k>(i, row)]; // A_shared can be overridden. Here it contains Y
                 }
                 y_local /= A_shared[indexLowerTriangular<k>(row, row)];
-                Xi_Sigma_shared[col * k + row] = y_local;
+                X_shared[col * k + row] = y_local;
               }
             }
           }
@@ -555,7 +555,7 @@ namespace ReSolve
         {
           if (threadIdx.x < k * k)
           {
-            Xi_Sigma_shared[threadIdx.x] = B[threadIdx.x];
+            X_shared[threadIdx.x] = B[threadIdx.x];
           }
           __syncthreads();
 
@@ -567,14 +567,14 @@ namespace ReSolve
             // #pragma unroll 1
             for (index_type row = 0; row < k; row++)
             {
-              real_type y_local = Xi_Sigma_shared[col * k + row];
+              real_type y_local = X_shared[col * k + row];
               // #pragma unroll 1
               for (index_type i = 0; i < row; i++)
               {
-                y_local -= Xi_Sigma_shared[col * k + i] * A_shared[indexLowerTriangular<k>(row, i)]; // A_shared can be overridden. Here it contains Y
+                y_local -= X_shared[col * k + i] * A_shared[indexLowerTriangular<k>(row, i)]; // A_shared can be overridden. Here it contains Y
               }
               y_local /= A_shared[indexLowerTriangular<k>(row, row)];
-              Xi_Sigma_shared[col * k + row] = y_local;
+              X_shared[col * k + row] = y_local;
             }
           }
           __syncthreads();
@@ -587,14 +587,14 @@ namespace ReSolve
             // #pragma unroll 1
             for (index_type row = k - 1; row >= 0; row--)
             {
-              real_type y_local = Xi_Sigma_shared[col * k + row];
+              real_type y_local = X_shared[col * k + row];
               // #pragma unroll 1
               for (index_type i = row + 1; i < k; i++)
               {
-                y_local -= Xi_Sigma_shared[col * k + i] * A_shared[indexLowerTriangular<k>(i, row)]; // A_shared can be overridden. Here it contains Y
+                y_local -= X_shared[col * k + i] * A_shared[indexLowerTriangular<k>(i, row)]; // A_shared can be overridden. Here it contains Y
               }
               y_local /= A_shared[indexLowerTriangular<k>(row, row)];
-              Xi_Sigma_shared[col * k + row] = y_local;
+              X_shared[col * k + row] = y_local;
             }
           }
         }
@@ -602,7 +602,128 @@ namespace ReSolve
         
         if (threadIdx.x < k * k)
         {
-          X[threadIdx.x] = Xi_Sigma_shared[threadIdx.x];
+          X[threadIdx.x] = X_shared[threadIdx.x];
+        }
+      }
+
+      template <index_type k>
+      __global__ void choleskySolve(real_type* X, const real_type* __restrict__ L, const real_type* B)
+      {
+      // X = A * B => A * X = B => L * L^T * X = B, choleskySolve // ANDREW TODO: cleanup notation
+
+        __shared__ real_type L_shared[k * (k + 1) / 2]; // Only need this much for kxk symmetric matrix. fits in one wavefront
+        {
+          index_type i = threadIdx.x % k;
+          index_type j = threadIdx.x / k;
+          if ((i < k) && (j < k) && (i >= j))
+          {
+            L_shared[indexLowerTriangular<k>(i, j)] = L[j * k + i];
+          }
+        }
+
+        __shared__ real_type X_shared[k * k];
+        if constexpr (k <= 4)
+        {
+          if (threadIdx.x < WARP_SIZE) // k <= 4 for now. Still only one warp
+          {
+            if (threadIdx.x < k * k)
+            {
+              X_shared[threadIdx.x] = B[threadIdx.x];
+            }
+            __syncwarp();
+
+            //  L * Y = B
+            if (threadIdx.x < k)
+            {
+              index_type col = threadIdx.x; // Rows and columns of B
+
+              // #pragma unroll 1
+              for (index_type row = 0; row < k; row++)
+              {
+                real_type y_local = X_shared[col * k + row];
+                // #pragma unroll 1
+                for (index_type i = 0; i < row; i++)
+                {
+                  y_local -= X_shared[col * k + i] * L_shared[indexLowerTriangular<k>(row, i)]; // L_shared can be overridden. Here it contains Y
+                }
+                y_local /= L_shared[indexLowerTriangular<k>(row, row)];
+                X_shared[col * k + row] = y_local;
+              }
+            }
+            __syncwarp();
+
+            //  L^T * X = Y
+            if (threadIdx.x < k)
+            {
+              index_type col = threadIdx.x; // Rows and columns of B
+
+              // #pragma unroll 1
+              for (index_type row = k - 1; row >= 0; row--)
+              {
+                real_type y_local = X_shared[col * k + row];
+                // #pragma unroll 1
+                for (index_type i = row + 1; i < k; i++)
+                {
+                  y_local -= X_shared[col * k + i] * L_shared[indexLowerTriangular<k>(i, row)]; // L_shared can be overridden. Here it contains Y
+                }
+                y_local /= L_shared[indexLowerTriangular<k>(row, row)];
+                X_shared[col * k + row] = y_local;
+              }
+            }
+          }
+        }
+        else
+        {
+          if (threadIdx.x < k * k)
+          {
+            X_shared[threadIdx.x] = B[threadIdx.x];
+          }
+          __syncthreads();
+
+          //  L * Y = B
+          if (threadIdx.x < k)
+          {
+            index_type col = threadIdx.x; // Rows and columns of B
+
+            // #pragma unroll 1
+            for (index_type row = 0; row < k; row++)
+            {
+              real_type y_local = X_shared[col * k + row];
+              // #pragma unroll 1
+              for (index_type i = 0; i < row; i++)
+              {
+                y_local -= X_shared[col * k + i] * L_shared[indexLowerTriangular<k>(row, i)]; // L_shared can be overridden. Here it contains Y
+              }
+              y_local /= L_shared[indexLowerTriangular<k>(row, row)];
+              X_shared[col * k + row] = y_local;
+            }
+          }
+          __syncthreads();
+
+          //  L^T * X = Y
+          if (threadIdx.x < k)
+          {
+            index_type col = threadIdx.x; // Rows and columns of B
+
+            // #pragma unroll 1
+            for (index_type row = k - 1; row >= 0; row--)
+            {
+              real_type y_local = X_shared[col * k + row];
+              // #pragma unroll 1
+              for (index_type i = row + 1; i < k; i++)
+              {
+                y_local -= X_shared[col * k + i] * L_shared[indexLowerTriangular<k>(i, row)]; // L_shared can be overridden. Here it contains Y
+              }
+              y_local /= L_shared[indexLowerTriangular<k>(row, row)];
+              X_shared[col * k + row] = y_local;
+            }
+          }
+        }
+        __syncwarp(); // check if syncwarp instead of syncthreads breaks anything
+        
+        if (threadIdx.x < k * k)
+        {
+          X[threadIdx.x] = X_shared[threadIdx.x];
         }
       }
 
@@ -826,22 +947,22 @@ namespace ReSolve
       switch (k)
       {
       case 1: 
-        cholesky_qr_kernel_ = kernels::qr<1>; 
+        qr_kernel_ = kernels::qr<1>; 
         break;
       case 2: 
-        cholesky_qr_kernel_ = kernels::qr<2>; 
+        qr_kernel_ = kernels::qr<2>; 
         break;
       case 4: 
-        cholesky_qr_kernel_ = kernels::qr<4>; 
+        qr_kernel_ = kernels::qr<4>; 
         break;
       case 8: 
-        cholesky_qr_kernel_ = kernels::qr<8>; 
+        qr_kernel_ = kernels::qr<8>; 
         break;
       default:
         return 1;
       }
       cudaOccupancyMaxActiveBlocksPerMultiprocessor(&qr_blocks_per_sm_,
-                                                    cholesky_qr_kernel_,
+                                                    qr_kernel_,
                                                     256,
                                                     0);
 
@@ -927,7 +1048,7 @@ namespace ReSolve
       int       block_size = 256; // Must be at least k^2
       int       num_blocks = num_sms_ * qr_blocks_per_sm_;
 
-      cudaError_t status = cudaLaunchCooperativeKernel((void*)cholesky_qr_kernel_, num_blocks, block_size, args, 0, 0);
+      cudaError_t status = cudaLaunchCooperativeKernel((void*)qr_kernel_, num_blocks, block_size, args, 0, 0);
 
       return status;
     }
@@ -991,22 +1112,22 @@ namespace ReSolve
       switch (k)
       {
       case 1:
-        kernels::choleskySolve<1><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
+        kernels::choleskyFactorizeSolve<1><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
                                                          B->getData(memory::DEVICE),
                                                          X->getData(memory::DEVICE));
         break;
       case 2:
-        kernels::choleskySolve<2><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
+        kernels::choleskyFactorizeSolve<2><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
                                                          B->getData(memory::DEVICE),
                                                          X->getData(memory::DEVICE));
         break;
       case 4:
-        kernels::choleskySolve<4><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
+        kernels::choleskyFactorizeSolve<4><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
                                                          B->getData(memory::DEVICE),
                                                          X->getData(memory::DEVICE));
         break;
       case 8:
-        kernels::choleskySolve<8><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
+        kernels::choleskyFactorizeSolve<8><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
                                                          B->getData(memory::DEVICE),
                                                          X->getData(memory::DEVICE));
         break;
@@ -1023,7 +1144,7 @@ namespace ReSolve
       index_type n = P->getSize();
       index_type k = P->getNumVectors();
 
-      int       block_size_choleskySolve = WAVEFRONT_SIZE; // Must be at least k^2
+      int       block_size_choleskySolve = WARP_SIZE; // Must be at least k^2
       int       num_blocks = 1;
       auto start = std::chrono::steady_clock::now();
 

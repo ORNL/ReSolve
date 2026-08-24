@@ -119,7 +119,7 @@ namespace ReSolve
               {
                   grid_row_id = __ldg(&row_id[grid_group_id]);
               }
-              grid_row_id = __shfl_sync(0xffffffffffffffff, grid_row_id, 0, K);
+              grid_row_id = __shfl_sync(0xffffffff, grid_row_id, 0, K);
             }
             else
             {
@@ -130,8 +130,8 @@ namespace ReSolve
             {
               p = __ldg(&d_ia[grid_row_id + group_lane]);
             }
-            q = __shfl_sync(0xffffffffffffffff, p, 1, K);
-            p = __shfl_sync(0xffffffffffffffff, p, 0, K);
+            q = __shfl_sync(0xffffffff, p, 1, K);
+            p = __shfl_sync(0xffffffff, p, 0, K);
 
             for (index_type i = 0; i < num_vectors; i++)
             {
@@ -153,7 +153,7 @@ namespace ReSolve
             {
               for (index_type d = K / 2; d > 0; d >>= 1)
               {
-                  sum[i] += __shfl_down_sync(0xffffffffffffffff, sum[i], d);
+                  sum[i] += __shfl_down_sync(0xffffffff, sum[i], d);
               }
             }
 
@@ -214,7 +214,7 @@ namespace ReSolve
         index_type        grid_group_id = (blockIdx.x * HYPRE_SPMV_BLOCKDIM + threadIdx.x) / K;
         const index_type  group_lane    = threadIdx.x & (K - 1);
 
-        for (; __any_sync(0xffffffffffffffff, grid_group_id < num_rows);
+        for (; __any_sync(0xffffffff, grid_group_id < num_rows);
               grid_group_id += grid_ngroups)
         {
           {
@@ -226,7 +226,7 @@ namespace ReSolve
               {
                   grid_row_id = __ldg(&row_id[grid_group_id]);
               }
-              grid_row_id = __shfl_sync(0xffffffffffffffff, grid_row_id, 0, K);
+              grid_row_id = __shfl_sync(0xffffffff, grid_row_id, 0, K);
             }
             else
             {
@@ -237,8 +237,8 @@ namespace ReSolve
             {
               p = __ldg(&d_ia[grid_row_id + group_lane]);
             }
-            q = __shfl_sync(0xffffffffffffffff, p, 1, K);
-            p = __shfl_sync(0xffffffffffffffff, p, 0, K);
+            q = __shfl_sync(0xffffffff, p, 1, K);
+            p = __shfl_sync(0xffffffff, p, 0, K);
 
             T sum[NV] = {T(0)};
 #if HYPRE_SPMV_VERSION == 1
@@ -253,7 +253,7 @@ namespace ReSolve
             }
 #elif HYPRE_SPMV_VERSION == 2
             #pragma unroll 1
-            for (p += group_lane; __any_sync(0xffffffffffffffff, p < q); p += K)
+            for (p += group_lane; __any_sync(0xffffffff, p < q); p += K)
             {
               if (p < q)
               {
@@ -273,7 +273,7 @@ namespace ReSolve
             {
               for (index_type d = K / 2; d > 0; d >>= 1)
               {
-                  sum[i] += __shfl_down_sync(0xffffffffffffffff, sum[i], d);
+                  sum[i] += __shfl_down_sync(0xffffffff, sum[i], d);
               }
             }
 
@@ -327,20 +327,11 @@ namespace ReSolve
                               idxstride_y, vecstride_x, vecstride_y, alpha,                              \
                               d_ia, d_ja, d_a, d_x, beta, d_y );                                         \
         }                                                                                                \
-        else if (avg_rownnz >= avg_rownnz_lower_bounds[4])                                               \
+        else                                                                                             \
         {                                                                                                \
             const dim3 gDim =                                                                            \
               dim3((num_rows + num_groups_per_block[4] - 1) / num_groups_per_block[4]);                  \
             HYPRE_GPU_LAUNCH( (kernel<F, group_sizes[4], nv, real_type>),                                \
-                              gDim, bDim, item, num_rows, num_vectors, rowid = nullptr, idxstride_x,     \
-                              idxstride_y, vecstride_x, vecstride_y, alpha,                              \
-                              d_ia, d_ja, d_a, d_x, beta, d_y );                                         \
-        }                                                                                                \
-        else                                                                                             \
-        {                                                                                                \
-            const dim3 gDim =                                                                            \
-              dim3((num_rows + num_groups_per_block[5] - 1) / num_groups_per_block[5]);                  \
-            HYPRE_GPU_LAUNCH( (kernel<F, group_sizes[5], nv, real_type>),                                \
                               gDim, bDim, item, num_rows, num_vectors, rowid = nullptr, idxstride_x,     \
                               idxstride_y, vecstride_x, vecstride_y, alpha,                              \
                               d_ia, d_ja, d_a, d_x, beta, d_y );                                         \

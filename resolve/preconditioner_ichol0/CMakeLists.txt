@@ -6,12 +6,22 @@
 
 ]]
 
-set(PreconditionerIChol0_SRC PreconditionerIChol0.cpp PreconditionerIChol0Hip.cpp)
+set(PreconditionerIChol0_SRC PreconditionerIChol0.cpp)
 
-set(PreconditionerIChol0_HEADER_INSTALL PreconditionerIChol0.hpp PreconditionerIChol0Impl.hpp PreconditionerIChol0Hip.hpp)
+set(PreconditionerIChol0_HEADER_INSTALL PreconditionerIChol0.hpp PreconditionerIChol0Impl.hpp)
+
+if(RESOLVE_USE_CUDSS)
+  list(APPEND PreconditionerIChol0_SRC PreconditionerIChol0Cuda.cpp)
+  list(APPEND PreconditionerIChol0_HEADER_INSTALL PreconditionerIChol0Cuda.hpp)
+elseif(RESOLVE_USE_HIP)
+  list(APPEND PreconditionerIChol0_SRC PreconditionerIChol0Hip.cpp)
+  list(APPEND PreconditionerIChol0_HEADER_INSTALL PreconditionerIChol0Hip.hpp)
+endif()
 
 # Build shared library ReSolve
 add_library(resolve_preconditioner_ichol0 OBJECT ${PreconditionerIChol0_SRC})
+
+target_link_libraries(resolve_preconditioner_ichol0 PUBLIC resolve_tpl)
 
 target_include_directories(
   resolve_preconditioner_ichol0

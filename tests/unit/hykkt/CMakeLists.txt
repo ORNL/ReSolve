@@ -93,10 +93,13 @@ target_compile_definitions(
 set(installable_tests
     runHykktPermutationTests.exe runHykktRuizScalingTests.exe
     runHykktCholeskyTests.exe runHykktSpGEMMTests.exe runHykktSCCGTests.exe
-    runHykktMBPCGTests.exe runHykktCGTests.exe runHykktSolverTests.exe
+    runHykktCGTests.exe runHykktSolverTests.exe
 )
 if(RESOLVE_USE_CUDSS)
   list(APPEND installable_tests runHykktCholeskyCuDssTests.exe)
+endif()
+if(RESOLVE_USE_GPU)
+  list(APPEND installable_tests runHykktMBPCGTests.exe)
 endif()
 
 install(TARGETS ${installable_tests} RUNTIME DESTINATION bin/resolve/tests/unit)
@@ -115,6 +118,8 @@ if(RESOLVE_USE_CUDSS)
 endif()
 add_test(NAME hykkt_spgemm_test COMMAND $<TARGET_FILE:runHykktSpGEMMTests.exe>)
 add_test(NAME hykkt_sccg_test COMMAND $<TARGET_FILE:runHykktSCCGTests.exe>)
-add_test(NAME hykkt_mbpcg_test COMMAND $<TARGET_FILE:runHykktMBPCGTests.exe>)
+if(RESOLVE_USE_GPU)
+  add_test(NAME hykkt_mbpcg_test COMMAND $<TARGET_FILE:runHykktMBPCGTests.exe>)
+endif()
 add_test(NAME hykkt_cg_test COMMAND $<TARGET_FILE:runHykktCGTests.exe>)
 add_test(NAME hykkt_solver_test COMMAND $<TARGET_FILE:runHykktSolverTests.exe>)

@@ -6,7 +6,6 @@
 #include <resolve/Common.hpp>
 #include <resolve/utilities/logger/Logger.hpp>
 
-#include <hip/hip_runtime.h>
 namespace ReSolve
 {
   using out = io::Logger;
@@ -232,6 +231,15 @@ namespace ReSolve
       if (enable_preconditioning_)
       {
         preconditioner_->apply(r_scal_, z_);
+      }
+      z_->syncData(memory::HOST);
+      for (index_type i = 0; i < n_; i++)
+      {
+        if (std::isnan(z_->getData(memory::HOST)[i]))
+        {
+          printf("nan %d\n", i);
+          break;
+        }
       }
       gamma_i_ = vector_handler_->dot(r_scal_, z_, memspace_);
 

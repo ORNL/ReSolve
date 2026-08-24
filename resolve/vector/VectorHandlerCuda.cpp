@@ -339,44 +339,6 @@ namespace ReSolve
     index_type m = C->getSize();
     index_type n = C->getNumVectors();
 
-    switch (transpose_A)
-    {
-    case 'T':
-      assert((A->getNumVectors() == m)
-              && "gemm: Shape mismatch! Shape of A does not match shape of C.");
-      k = A->getSize();
-      break;
-    case 'N':
-      assert((A->getSize() == m)
-              && "gemm: Shape mismatch! Shape of A does not match shape of C.");
-      k = A->getNumVectors();
-      break;
-    default:
-      out::error() << "Unrecognized transpose option " << transpose_A
-                   << " in gemm. Valid options are 'N' (not transposed) and 'T' (transposed).\n";
-      break;
-    }
-
-    switch (transpose_B)
-    {
-    case 'T':
-      assert((B->getNumVectors() == k)
-              && "gemm: Shape mismatch! Shape of A does not match shape of B.");
-      assert((B->getSize() == n)
-              && "gemm: Shape mismatch! Shape of A does not match shape of C.");
-      break;
-    case 'N':
-      assert((B->getSize() == k)
-              && "gemm: Shape mismatch! Shape of A does not match shape of B.");
-      assert((B->getNumVectors() == n)
-              && "gemm: Shape mismatch! Shape of A does not match shape of C.");
-      break;
-    default:
-      out::error() << "Unrecognized transpose option " << transpose_B
-                   << " in gemm. Valid options are 'N' (not transposed) and 'T' (transposed).\n";
-      break;
-    }
-
     cublasOperation_t transpose_A_cublas = (transpose_A == 'T') ? CUBLAS_OP_T : CUBLAS_OP_N;
     cublasOperation_t transpose_B_cublas = (transpose_B == 'T') ? CUBLAS_OP_T : CUBLAS_OP_N; 
 
