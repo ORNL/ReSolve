@@ -427,7 +427,7 @@ namespace ReSolve
             {
               if (threadIdx.x == 0)
               {
-                A_shared[indexLowerTriangular<k>(h, h)] = sqrt(A_shared[indexLowerTriangular<k>(h, h)]);
+                A_shared[indexLowerTriangular<k>(h, h)] = sqrt(fmax(A_shared[indexLowerTriangular<k>(h, h)], 1e-16)); // Prevent sqrt of negative number or division by a tiny number
               }
               __syncwarp();
               if (threadIdx.x > h && threadIdx.x < k)
