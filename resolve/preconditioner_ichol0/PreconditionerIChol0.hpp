@@ -9,6 +9,7 @@
 
 #include "PreconditionerIChol0Impl.hpp"
 #ifdef RESOLVE_USE_CUDA
+#include "PreconditionerIChol0Cuda.hpp"
 #elif defined(RESOLVE_USE_HIP)
 #include "PreconditionerIChol0Hip.hpp"
 #endif

@@ -651,11 +651,11 @@ namespace ReSolve
   // ...
   void VectorHandlerCpu::randomVector(vector::Vector* v, real_type min, real_type max)
   {
-    std::uniform_real_distribution<real_type> distribution(min, max);
-    for (index_type i = 0; i < v->getSize() * v->getNumVectors(); ++i)
-    {
-      v->getData(memory::HOST)[i] = distribution(workspace_->getRng());
-    }
-    v->setDataUpdated(memory::HOST);
+    // std::uniform_real_distribution<real_type> distribution(min, max);
+    // for (index_type i = 0; i < v->getSize() * v->getNumVectors(); ++i)
+    // {
+    //   v->getData(memory::HOST)[i] = distribution(workspace_->getRng());
+    // }
+    // v->setDataUpdated(memory::HOST);
   }
 } // namespace ReSolve

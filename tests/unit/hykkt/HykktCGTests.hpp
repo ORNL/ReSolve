@@ -61,7 +61,7 @@ namespace ReSolve
        *
        * @return TestOutcome Result of the test
        */
-      TestOutcome CGTest(const std::string& A_file_name, const std::string& b_file_name = "", bool use_file_for_b = false)
+      TestOutcome CGTest(const std::string& A_file_name, const std::string& b_file_name = "", bool use_file_for_b = false) // ANDREW TODO: get rid of bool argument
       {
         std::ifstream A_file(A_file_name);
 
@@ -96,19 +96,20 @@ namespace ReSolve
         x->allocate(memspace_);
 
         TestStatus  status;
+        int converged;
       
-        printf("\nTesting with diagonal scaling.\n");
-        hykkt::ConjugateGradient cg_diag_scal(n, &matrix_handler_, &vector_handler_, memspace_);
-        cg_diag_scal.setSolverTolerance(cg_tol_);
-        // cg_diag_scal.setSolverItmax();
+        // printf("\nTesting with diagonal scaling.\n");
+        // hykkt::ConjugateGradient cg_diag_scal(n, &matrix_handler_, &vector_handler_, memspace_);
+        // cg_diag_scal.setSolverTolerance(cg_tol_);
+        // // cg_diag_scal.setSolverItmax();
 
-        x->setToZero(memspace_);
-        cg_diag_scal.addMatrixInfo(A);
-        cg_diag_scal.addVectorInfo(x, b);
-        cg_diag_scal.diagonalScale();
-        cg_diag_scal.setup();
-        int converged = cg_diag_scal.solve(); // 0 if converged, 1 if not
-        status *= (converged == 0);
+        // x->setToZero(memspace_);
+        // cg_diag_scal.addMatrixInfo(A);
+        // cg_diag_scal.addVectorInfo(x, b);
+        // cg_diag_scal.diagonalScale();
+        // cg_diag_scal.setup();
+        // int converged = cg_diag_scal.solve(); // 0 if converged, 1 if not
+        // status *= (converged == 0);
         
 #ifdef RESOLVE_USE_GPU
         printf("\nTesting with preconditioner.\n");

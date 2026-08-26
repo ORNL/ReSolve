@@ -269,7 +269,6 @@ namespace ReSolve
         }
         r_norm_ = std::sqrt(vector_handler_->dot(r_, r_, memspace_));
         error_ = r_norm_ / b_norm_;
-        // printf("%.10e\n", error_);
         if (error_ < tol_)
         {
           auto end = std::chrono::steady_clock::now();

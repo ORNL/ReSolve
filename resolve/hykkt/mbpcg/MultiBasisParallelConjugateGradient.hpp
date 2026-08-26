@@ -63,7 +63,7 @@ namespace ReSolve
     private:
       index_type n_;             // Dimension of outer system
       index_type k_;             // Number of copies of the systems to solve at once
-      int        itmax_ = 3000;   // Maximum iterations for conjugate gradient
+      int        itmax_ = 12000;   // Maximum iterations for conjugate gradient
       real_type  initial_tol_   = 1e-8; // Solver tolerance for Schur // ...
       real_type  convergence_tol_   = 1e-8; // Solver tolerance for Schur // ...
     

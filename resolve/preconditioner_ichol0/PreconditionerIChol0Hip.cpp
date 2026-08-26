@@ -115,7 +115,7 @@ namespace ReSolve
     status += rocsparse_csric0_zero_pivot(workspace_->getRocsparseHandle(), L_info_setup, &position);
     if (position != -1)
     {
-      out::warning() << "Zero pivot found. Increase numeric boost.";
+      out::error() << "Matrix is not SPD!";
     }
     status += (position != -1);
 
@@ -133,7 +133,7 @@ namespace ReSolve
     status += rocsparse_csric0_zero_pivot(workspace_->getRocsparseHandle(), L_info_setup, &position);
     if (position != -1)
     {
-      out::warning() << "Zero pivot found. Increase numeric boost.";
+      out::warning() << "Numerical zero pivot found. Increase numeric boost to compensate.";
     }
     status += (position != -1);
 
@@ -161,6 +161,33 @@ namespace ReSolve
       rocsparse_create_mat_info(&L_tr_info_[i]);
     }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
     status += rocsparse_dcsrsv_buffer_size(workspace_->getRocsparseHandle(),
                                             rocsparse_operation_none,
                                             n,

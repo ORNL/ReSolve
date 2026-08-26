@@ -127,11 +127,11 @@ namespace ReSolve
         // Check if the index is within bounds
         if (idx < n)
         {
-          // if (in[idx] == 0.0)
-          // {
-          //   out[idx] = 0.0; // For some reason this works for CG diagonal scaling. ANDREW TODO: do something about this
-          // }
-          // else
+          if (in[idx] == 0.0)
+          {
+            out[idx] = 0.0; // For some reason this works for CG diagonal scaling. ANDREW TODO: do something about this
+          }
+          else
           {
             out[idx] = 1.0 / in[idx];
           }

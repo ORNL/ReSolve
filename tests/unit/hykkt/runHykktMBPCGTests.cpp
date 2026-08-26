@@ -46,7 +46,7 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
     // "mhd4800b", // WARMUP
     // "bcsstk18", // WARMUP
 
-    "hood",
+    // "hood",
     // "Fault_639",
     // "2cubes_sphere",
 
@@ -68,7 +68,7 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
     // "bundle1",
     // "qa8fm",
     // "cfd2",
-    // "parabolic_fem",
+    "parabolic_fem",
     // "ecology2",
     // "tmt_sym",
     // "G3_circuit",
@@ -196,9 +196,10 @@ broken (maybe theres limits to how low the error can get)
   for (const std::string& matrix_name : matrix_names)
   {
     std::string        A_file_name = source_dir + std::string("/MBPCGTestMatrices/") + matrix_name + std::string(".mtx");
+    std::string        b_file_name = source_dir + std::string("/MBPCGTestMatrices/") + matrix_name + std::string("_b.mtx");
 
     printf("\n\n\nMatrix: %s\n", matrix_name.c_str());
-    result += test.MBPCGTest(A_file_name);
+    result += test.MBPCGTest(A_file_name, b_file_name, false);
 
     std::cout << "\n";
   }

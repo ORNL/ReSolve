@@ -1,5 +1,7 @@
 #include "PreconditionerIChol0.hpp"
 
+#include <cassert>
+
 namespace ReSolve
 {
   using out = io::Logger;
@@ -21,10 +23,10 @@ namespace ReSolve
    *
    * @param[in] solver - Pointer to the CholeskyType object.
    */
-  PreconditionerIChol0::PreconditionerIChol0(MatrixHandler* matrix_handler, LinAlgWorkspaceCUDA*)
+  PreconditionerIChol0::PreconditionerIChol0(MatrixHandler* matrix_handler, LinAlgWorkspaceCUDA* workspace)
     : matrix_handler_(matrix_handler)
   {
-    out::error() << "Not implemented!";
+    impl_ = new PreconditionerIChol0Cuda(workspace);
   }
 
 #elif defined(RESOLVE_USE_HIP)

@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cmath>
 #include <numeric>
 
 #include <resolve/matrix/Coo.hpp>
