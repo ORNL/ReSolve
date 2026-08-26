@@ -446,18 +446,6 @@ namespace ReSolve
         // 7. Convergence Checking & Final Calculations Block
         if (best_basis_error < initial_tol_)
         {
-          // deviceSynchronize(); // optional
-          // auto conv_block_start = std::chrono::steady_clock::now(); // optional
-          // A * X = B - R
-          Temp_nxk_->copyFromExternal(B_, memspace_, memspace_);
-          vector_handler_->axpy(MINUS_ONE, R_, Temp_nxk_, memspace_);
-
-          // (AX)^T * AX * c = (AX)^T * b
-          // vector_handler_->gemm('T', 'N', ONE, ZERO, Temp_nxk_, Temp_nxk_, Temp_kxk_, memspace_);
-          impl_->multTSMTTSM(Temp_nxk_, Temp_nxk_, Temp_kxk_, memspace_); // use innerProductTSM
-          vector_handler_->gemv('T', k_, ONE, ZERO, Temp_nxk_, b_, c_, memspace_);
-          deviceSynchronize();
-
           bool use_best_basis = false;
           real_type r_norm;
           // if (true)
@@ -468,13 +456,23 @@ namespace ReSolve
           }
           else
           {
+            // deviceSynchronize(); // optional
+            // auto conv_block_start = std::chrono::steady_clock::now(); // optional
+            // A * X = B - R
+            Temp_nxk_->copyFromExternal(B_, memspace_, memspace_);
+            vector_handler_->axpy(MINUS_ONE, R_, Temp_nxk_, memspace_);
+
+            // (AX)^T * AX * c = (AX)^T * b
+            // vector_handler_->gemm('T', 'N', ONE, ZERO, Temp_nxk_, Temp_nxk_, Temp_kxk_, memspace_);
+            impl_->multTSMTTSM(Temp_nxk_, Temp_nxk_, Temp_kxk_, memspace_); // use innerProductTSM
+            vector_handler_->gemv('T', k_, ONE, ZERO, Temp_nxk_, b_, c_, memspace_);
             impl_->choleskyFactorizeSolve(Temp_kxk_, c_, c_);
             
             // r = b - AX * c
             vector_handler_->gemv('N', k_, ONE, ZERO, Temp_nxk_, c_, r_, memspace_);
             vector_handler_->axpy(MINUS_ONE, b_, r_, memspace_);
             r_norm = vector_handler_->norm(r_, memspace_);
-            // deviceSynchronize();
+            deviceSynchronize();
             if (r_norm > best_basis_r_norm || std::isnan(r_norm))
             {
               r_norm = best_basis_r_norm;
