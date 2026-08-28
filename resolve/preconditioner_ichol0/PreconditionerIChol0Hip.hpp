@@ -6,16 +6,18 @@
 #include <resolve/vector/Vector.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
 
-#include <cuda_runtime.h>
-#include <cusparse.h>
+#include <hip/hip_runtime.h>
+#include <rocsparse/rocsparse.h>
+
+#include <vector>
 
 namespace ReSolve
 {
-  class PreconditionerIChol0Cuda : public PreconditionerIChol0Impl
+  class PreconditionerIChol0Hip : public PreconditionerIChol0Impl
   {
   public:
-    PreconditionerIChol0Cuda(LinAlgWorkspaceCUDA* workspace);
-    ~PreconditionerIChol0Cuda() override;
+    PreconditionerIChol0Hip(LinAlgWorkspaceHIP* workspace);
+    ~PreconditionerIChol0Hip() override;
 
     int setup(matrix::Csr* L) override;
     int apply(vector::Vector* rhs, vector::Vector* x) override;
@@ -25,23 +27,23 @@ namespace ReSolve
     void freeData();
     int  analysis();
 
-    LinAlgWorkspaceCUDA* workspace_{nullptr};
-    matrix::Csr*         L_{nullptr};
+    LinAlgWorkspaceHIP* workspace_{nullptr};
+    matrix::Csr*        L_{nullptr};
 
-    // Legacy descriptor for IC(0) factorization
-    cusparseMatDescr_t L_descr_{nullptr};
-    csric02Info_t      info_{nullptr};
+    rocsparse_mat_descr L_descr_{nullptr};
 
-    // Generic cuSPARSE descriptors for SpSM (Batched / Multi-RHS Solve)
-    cusparseSpMatDescr_t mat_L_{nullptr};
-    cusparseDnMatDescr_t mat_B_{nullptr};
-    cusparseDnMatDescr_t mat_X_{nullptr};
+    std::vector<rocsparse_mat_info> L_info_;
+    std::vector<rocsparse_mat_info> L_tr_info_;
 
-    cusparseSpSMDescr_t L_descr_spsm_{nullptr};
-    cusparseSpSMDescr_t L_tr_descr_spsm_{nullptr};
+    void*  L_buffer_{nullptr};
+    size_t L_buffer_size_{0};
 
-    void*  spsm_buffer_{nullptr};
-    size_t spsm_buffer_size_{0};
+    void*  L_tr_buffer_{nullptr};
+    size_t L_tr_buffer_size_{0};
+
+    std::vector<hipStream_t> streams_;
+    hipEvent_t               start_event_{nullptr};
+    std::vector<hipEvent_t>  end_events_;
 
     index_type k_{1};
   };
