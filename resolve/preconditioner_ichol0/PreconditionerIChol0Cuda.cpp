@@ -149,7 +149,7 @@ namespace ReSolve
     status += cusparseXcsric02_zeroPivot(workspace_->getCusparseHandle(), info_, &position);
     if (position != -1)
     {
-      out::warning() << "Matrix is not SPD!";
+      out::error() << "Matrix is not SPD!";
     }
     status += (position != -1);
 
@@ -169,7 +169,7 @@ namespace ReSolve
     {
       out::warning() << "Numerical zero pivot found at row " << position << ". Increase numeric boost to compensate.";
     }
-    status += (position != -1);
+    // status += (position != -1);
 
     L_->setUpdated(memory::DEVICE);
 
