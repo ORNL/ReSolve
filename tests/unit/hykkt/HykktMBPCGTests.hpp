@@ -106,7 +106,7 @@ namespace ReSolve
           preconditioner.setNumRhs(k);
           hykkt::MultiBasisParallelConjugateGradient mbpcg(n, k, &preconditioner, &matrix_handler_, &vector_handler_, memspace_);
           mbpcg.setSolverTolerance(initial_tol, convergence_tol);
-          // mbpcg.setSolverItmax();
+          mbpcg.setSolverItmax(10);
 
           mbpcg.addMatrixInfo(A);
           mbpcg.addVectorInfo(x, b);
@@ -123,7 +123,7 @@ namespace ReSolve
           preconditioner.setNumRhs(k);
           hykkt::MultiBasisParallelConjugateGradient mbpcg(n, k, &preconditioner, &matrix_handler_, &vector_handler_, memspace_);
           mbpcg.setSolverTolerance(initial_tol, convergence_tol);
-          // mbpcg.setSolverItmax();
+          mbpcg.setSolverItmax(10);
 
           mbpcg.addMatrixInfo(A);
           mbpcg.addVectorInfo(x, b);
@@ -140,7 +140,7 @@ namespace ReSolve
           preconditioner.setNumRhs(k);
           hykkt::MultiBasisParallelConjugateGradient mbpcg(n, k, &preconditioner, &matrix_handler_, &vector_handler_, memspace_);
           mbpcg.setSolverTolerance(initial_tol, convergence_tol);
-          // mbpcg.setSolverItmax();
+          mbpcg.setSolverItmax(10);
 
           mbpcg.addMatrixInfo(A);
           mbpcg.addVectorInfo(x, b);
