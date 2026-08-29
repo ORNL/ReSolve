@@ -1,6 +1,3 @@
-// ...
-// This uses rocSPARSE srsv with multiple streams instead of srsm because srsm is very slow. Maybe it will be different on different hardware.
-
 #include "PreconditionerIChol0Hip.hpp"
 
 #include <resolve/utilities/logger/Logger.hpp>
@@ -23,40 +20,23 @@ namespace ReSolve
     if (L_descr_)
     {
       rocsparse_destroy_mat_descr(L_descr_);
+      L_descr_ = nullptr;
     }
   }
 
   void PreconditionerIChol0Hip::freeData()
   {
-    for (hipStream_t stream : streams_)
+    if (L_info_)
     {
-      hipStreamDestroy(stream);
-    }
-    streams_.clear();
-
-    if (start_event_)
-    {
-      hipEventDestroy(start_event_);
-      start_event_ = nullptr;
+      rocsparse_destroy_mat_info(L_info_);
+      L_info_ = nullptr;
     }
 
-    for (hipEvent_t event : end_events_)
+    if (L_tr_info_)
     {
-      hipEventDestroy(event);
+      rocsparse_destroy_mat_info(L_tr_info_);
+      L_tr_info_ = nullptr;
     }
-    end_events_.clear();
-
-    for (rocsparse_mat_info info : L_info_)
-    {
-      rocsparse_destroy_mat_info(info);
-    }
-    L_info_.clear();
-
-    for (rocsparse_mat_info info : L_tr_info_)
-    {
-      rocsparse_destroy_mat_info(info);
-    }
-    L_tr_info_.clear();
 
     if (L_buffer_)
     {
@@ -75,11 +55,14 @@ namespace ReSolve
   {
     L_ = L;
 
-    rocsparse_create_mat_descr(&L_descr_);
-    rocsparse_set_mat_index_base(L_descr_, rocsparse_index_base_zero);
-    rocsparse_set_mat_type(L_descr_, rocsparse_matrix_type_general);
-    rocsparse_set_mat_fill_mode(L_descr_, rocsparse_fill_mode_lower);
-    rocsparse_set_mat_diag_type(L_descr_, rocsparse_diag_type_non_unit);
+    if (!L_descr_)
+    {
+      rocsparse_create_mat_descr(&L_descr_);
+      rocsparse_set_mat_index_base(L_descr_, rocsparse_index_base_zero);
+      rocsparse_set_mat_type(L_descr_, rocsparse_matrix_type_general);
+      rocsparse_set_mat_fill_mode(L_descr_, rocsparse_fill_mode_lower);
+      rocsparse_set_mat_diag_type(L_descr_, rocsparse_diag_type_non_unit);
+    }
 
     rocsparse_mat_info L_info_setup;
     rocsparse_create_mat_info(&L_info_setup);
@@ -149,74 +132,41 @@ namespace ReSolve
 
   int PreconditionerIChol0Hip::analysis()
   {
+    freeData();
+
     index_type n = L_->getNumRows();
     int status = 0;
+    static constexpr real_type alpha = 1.0;
 
-    L_info_.resize(k_);
-    L_tr_info_.resize(k_);
+    rocsparse_create_mat_info(&L_info_);
+    rocsparse_create_mat_info(&L_tr_info_);
 
-    for (index_type i = 0; i < k_; ++i)
+    if (k_ == 1)
     {
-      rocsparse_create_mat_info(&L_info_[i]);
-      rocsparse_create_mat_info(&L_tr_info_[i]);
-    }
+      status += rocsparse_dcsrsv_buffer_size(workspace_->getRocsparseHandle(),
+                                              rocsparse_operation_none,
+                                              n,
+                                              L_->getNnz(),
+                                              L_descr_,
+                                              L_->getValues(memory::DEVICE),
+                                              L_->getRowData(memory::DEVICE),
+                                              L_->getColData(memory::DEVICE),
+                                              L_info_,
+                                              &L_buffer_size_);
 
+      status += rocsparse_dcsrsv_buffer_size(workspace_->getRocsparseHandle(),
+                                              rocsparse_operation_transpose,
+                                              n,
+                                              L_->getNnz(),
+                                              L_descr_,
+                                              L_->getValues(memory::DEVICE),
+                                              L_->getRowData(memory::DEVICE),
+                                              L_->getColData(memory::DEVICE),
+                                              L_tr_info_,
+                                              &L_tr_buffer_size_);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-    status += rocsparse_dcsrsv_buffer_size(workspace_->getRocsparseHandle(),
-                                            rocsparse_operation_none,
-                                            n,
-                                            L_->getNnz(),
-                                            L_descr_,
-                                            L_->getValues(memory::DEVICE),
-                                            L_->getRowData(memory::DEVICE),
-                                            L_->getColData(memory::DEVICE),
-                                            L_info_[0],
-                                            &L_buffer_size_);
-
-    status += rocsparse_dcsrsv_buffer_size(workspace_->getRocsparseHandle(),
-                                            rocsparse_operation_transpose,
-                                            n,
-                                            L_->getNnz(),
-                                            L_descr_,
-                                            L_->getValues(memory::DEVICE),
-                                            L_->getRowData(memory::DEVICE),
-                                            L_->getColData(memory::DEVICE),
-                                            L_tr_info_[0],
-                                            &L_tr_buffer_size_);
-
-    status += hipMalloc(&L_buffer_, L_buffer_size_ * k_);
-    status += hipMalloc(&L_tr_buffer_, L_tr_buffer_size_ * k_);
-
-    for (index_type i = 0; i < k_; i++)
-    {
-      void* L_buf_i = static_cast<char*>(L_buffer_) + i * L_buffer_size_;
-      void* L_tr_buf_i = static_cast<char*>(L_tr_buffer_) + i * L_tr_buffer_size_;
+      status += hipMalloc(&L_buffer_, L_buffer_size_ > 0 ? L_buffer_size_ : 1);
+      status += hipMalloc(&L_tr_buffer_, L_tr_buffer_size_ > 0 ? L_tr_buffer_size_ : 1);
 
       status += rocsparse_dcsrsv_analysis(workspace_->getRocsparseHandle(),
                                            rocsparse_operation_none,
@@ -226,10 +176,10 @@ namespace ReSolve
                                            L_->getValues(memory::DEVICE),
                                            L_->getRowData(memory::DEVICE),
                                            L_->getColData(memory::DEVICE),
-                                           L_info_[i],
+                                           L_info_,
                                            rocsparse_analysis_policy_force,
                                            rocsparse_solve_policy_auto,
-                                           L_buf_i);
+                                           L_buffer_);
 
       status += rocsparse_dcsrsv_analysis(workspace_->getRocsparseHandle(),
                                            rocsparse_operation_transpose,
@@ -239,23 +189,83 @@ namespace ReSolve
                                            L_->getValues(memory::DEVICE),
                                            L_->getRowData(memory::DEVICE),
                                            L_->getColData(memory::DEVICE),
-                                           L_tr_info_[i],
+                                           L_tr_info_,
                                            rocsparse_analysis_policy_force,
                                            rocsparse_solve_policy_auto,
-                                           L_tr_buf_i);
+                                           L_tr_buffer_);
     }
-
-    if (k_ > 1)
+    else
     {
-      streams_.resize(k_);
-      end_events_.resize(k_);
-      status += hipEventCreate(&start_event_);
+      // Allocate a non-null dummy GPU buffer so rocsparse_dcsrsm pointer checks succeed
+      void* dummy_B = nullptr;
+      status += hipMalloc(&dummy_B, n * k_ * sizeof(real_type));
 
-      for (index_type i = 0; i < k_; ++i)
-      {
-        status += hipStreamCreate(&streams_[i]);
-        status += hipEventCreate(&end_events_[i]);
-      }
+      status += rocsparse_dcsrsm_buffer_size(workspace_->getRocsparseHandle(),
+                                              rocsparse_operation_none,
+                                              rocsparse_operation_none,
+                                              n, k_,
+                                              L_->getNnz(),
+                                              &alpha,
+                                              L_descr_,
+                                              L_->getValues(memory::DEVICE),
+                                              L_->getRowData(memory::DEVICE),
+                                              L_->getColData(memory::DEVICE),
+                                              static_cast<real_type*>(dummy_B), n,
+                                              L_info_,
+                                              rocsparse_solve_policy_auto,
+                                              &L_buffer_size_);
+
+      status += rocsparse_dcsrsm_buffer_size(workspace_->getRocsparseHandle(),
+                                              rocsparse_operation_transpose,
+                                              rocsparse_operation_none,
+                                              n, k_,
+                                              L_->getNnz(),
+                                              &alpha,
+                                              L_descr_,
+                                              L_->getValues(memory::DEVICE),
+                                              L_->getRowData(memory::DEVICE),
+                                              L_->getColData(memory::DEVICE),
+                                              static_cast<real_type*>(dummy_B), n,
+                                              L_tr_info_,
+                                              rocsparse_solve_policy_auto,
+                                              &L_tr_buffer_size_);
+
+      status += hipMalloc(&L_buffer_, L_buffer_size_ > 0 ? L_buffer_size_ : 1);
+      status += hipMalloc(&L_tr_buffer_, L_tr_buffer_size_ > 0 ? L_tr_buffer_size_ : 1);
+
+      status += rocsparse_dcsrsm_analysis(workspace_->getRocsparseHandle(),
+                                           rocsparse_operation_none,
+                                           rocsparse_operation_none,
+                                           n, k_,
+                                           L_->getNnz(),
+                                           &alpha,
+                                           L_descr_,
+                                           L_->getValues(memory::DEVICE),
+                                           L_->getRowData(memory::DEVICE),
+                                           L_->getColData(memory::DEVICE),
+                                           static_cast<real_type*>(dummy_B), n,
+                                           L_info_,
+                                           rocsparse_analysis_policy_force,
+                                           rocsparse_solve_policy_auto,
+                                           L_buffer_);
+
+      status += rocsparse_dcsrsm_analysis(workspace_->getRocsparseHandle(),
+                                           rocsparse_operation_transpose,
+                                           rocsparse_operation_none,
+                                           n, k_,
+                                           L_->getNnz(),
+                                           &alpha,
+                                           L_descr_,
+                                           L_->getValues(memory::DEVICE),
+                                           L_->getRowData(memory::DEVICE),
+                                           L_->getColData(memory::DEVICE),
+                                           static_cast<real_type*>(dummy_B), n,
+                                           L_tr_info_,
+                                           rocsparse_analysis_policy_force,
+                                           rocsparse_solve_policy_auto,
+                                           L_tr_buffer_);
+
+      hipFree(dummy_B);
     }
 
     return status;
@@ -267,7 +277,6 @@ namespace ReSolve
     k_ = num_rhs;
     if (L_)
     {
-      freeData();
       analysis();
     }
   }
@@ -281,6 +290,7 @@ namespace ReSolve
     real_type* x_ptr = x->getData(memory::DEVICE);
 
     int status = 0;
+
     if (k_ == 1)
     {
       status += rocsparse_dcsrsv_solve(workspace_->getRocsparseHandle(),
@@ -292,7 +302,7 @@ namespace ReSolve
                                       L_->getValues(memory::DEVICE),
                                       L_->getRowData(memory::DEVICE),
                                       L_->getColData(memory::DEVICE),
-                                      L_info_[0],
+                                      L_info_,
                                       rhs_data,
                                       x_ptr,
                                       rocsparse_solve_policy_auto,
@@ -307,7 +317,7 @@ namespace ReSolve
                                       L_->getValues(memory::DEVICE),
                                       L_->getRowData(memory::DEVICE),
                                       L_->getColData(memory::DEVICE),
-                                      L_tr_info_[0],
+                                      L_tr_info_,
                                       x_ptr,
                                       x_ptr,
                                       rocsparse_solve_policy_auto,
@@ -315,66 +325,40 @@ namespace ReSolve
     }
     else
     {
-      hipStream_t main_stream;
-      rocsparse_get_stream(workspace_->getRocsparseHandle(), &main_stream);
+      status += hipMemcpy(x_ptr, rhs_data, n * k_ * sizeof(real_type), hipMemcpyDeviceToDevice);
 
-      hipEventRecord(start_event_, main_stream);
+      status += rocsparse_dcsrsm_solve(workspace_->getRocsparseHandle(),
+                                      rocsparse_operation_none,
+                                      rocsparse_operation_none,
+                                      n, k_,
+                                      L_->getNnz(),
+                                      &alpha,
+                                      L_descr_,
+                                      L_->getValues(memory::DEVICE),
+                                      L_->getRowData(memory::DEVICE),
+                                      L_->getColData(memory::DEVICE),
+                                      x_ptr, n,
+                                      L_info_,
+                                      rocsparse_solve_policy_auto,
+                                      L_buffer_);
 
-      for (index_type i = 0; i < k_; i++)
-      {
-        hipStreamWaitEvent(streams_[i], start_event_, 0);
-        rocsparse_set_stream(workspace_->getRocsparseHandle(), streams_[i]);
-
-        const real_type* rhs_i = rhs_data + i * n;
-        real_type* x_i = x_ptr + i * n;
-
-        void* L_buf_i = static_cast<char*>(L_buffer_) + i * L_buffer_size_;
-        void* L_tr_buf_i = static_cast<char*>(L_tr_buffer_) + i * L_tr_buffer_size_;
-
-        status += rocsparse_dcsrsv_solve(workspace_->getRocsparseHandle(),
-                                        rocsparse_operation_none,
-                                        n,
-                                        L_->getNnz(),
-                                        &alpha,
-                                        L_descr_,
-                                        L_->getValues(memory::DEVICE),
-                                        L_->getRowData(memory::DEVICE),
-                                        L_->getColData(memory::DEVICE),
-                                        L_info_[i],
-                                        rhs_i,
-                                        x_i,
-                                        rocsparse_solve_policy_auto,
-                                        L_buf_i);
-
-        status += rocsparse_dcsrsv_solve(workspace_->getRocsparseHandle(),
-                                        rocsparse_operation_transpose,
-                                        n,
-                                        L_->getNnz(),
-                                        &alpha,
-                                        L_descr_,
-                                        L_->getValues(memory::DEVICE),
-                                        L_->getRowData(memory::DEVICE),
-                                        L_->getColData(memory::DEVICE),
-                                        L_tr_info_[i],
-                                        x_i,
-                                        x_i,
-                                        rocsparse_solve_policy_auto,
-                                        L_tr_buf_i);
-
-        hipEventRecord(end_events_[i], streams_[i]);
-      }
-
-      // Sync main stream with other streams
-      for (index_type i = 0; i < k_; ++i)
-      {
-        hipStreamWaitEvent(main_stream, end_events_[i], 0);
-      }
-
-      rocsparse_set_stream(workspace_->getRocsparseHandle(), main_stream);
+      status += rocsparse_dcsrsm_solve(workspace_->getRocsparseHandle(),
+                                      rocsparse_operation_transpose,
+                                      rocsparse_operation_none,
+                                      n, k_,
+                                      L_->getNnz(),
+                                      &alpha,
+                                      L_descr_,
+                                      L_->getValues(memory::DEVICE),
+                                      L_->getRowData(memory::DEVICE),
+                                      L_->getColData(memory::DEVICE),
+                                      x_ptr, n,
+                                      L_tr_info_,
+                                      rocsparse_solve_policy_auto,
+                                      L_tr_buffer_);
     }
 
     x->setDataUpdated(memory::DEVICE);
-
 
     return status;
   }

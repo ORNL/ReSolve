@@ -9,8 +9,6 @@
 #include <hip/hip_runtime.h>
 #include <rocsparse/rocsparse.h>
 
-#include <vector>
-
 namespace ReSolve
 {
   class PreconditionerIChol0Hip : public PreconditionerIChol0Impl
@@ -32,18 +30,14 @@ namespace ReSolve
 
     rocsparse_mat_descr L_descr_{nullptr};
 
-    std::vector<rocsparse_mat_info> L_info_;
-    std::vector<rocsparse_mat_info> L_tr_info_;
+    rocsparse_mat_info L_info_{nullptr};
+    rocsparse_mat_info L_tr_info_{nullptr};
 
     void*  L_buffer_{nullptr};
     size_t L_buffer_size_{0};
 
     void*  L_tr_buffer_{nullptr};
     size_t L_tr_buffer_size_{0};
-
-    std::vector<hipStream_t> streams_;
-    hipEvent_t               start_event_{nullptr};
-    std::vector<hipEvent_t>  end_events_;
 
     index_type k_{1};
   };
