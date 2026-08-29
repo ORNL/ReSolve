@@ -293,7 +293,7 @@ namespace ReSolve
       vector_handler_->axpy(-normalization_factor, Temp_nxk_, B_res_, memspace_);
     }
 
-    int MultiBasisParallelConjugateGradient::solve()
+    int MultiBasisParallelConjugateGradient::solve(MultTSMTTSMMode mult_tsmttsm_mode)
     {
       using namespace constants;
       
@@ -326,131 +326,182 @@ namespace ReSolve
       P_->copyFromExternal(Z_, memspace_, memspace_); // with preconditioner, this is L_inv * R_res
       impl_->qr(P_, Psi_, memspace_);
       
-      // deviceSynchronize(); // timing
-      auto iterative_start = std::chrono::steady_clock::now();
+      deviceSynchronize();
+      std::chrono::time_point<std::chrono::steady_clock> iterative_start;
       std::chrono::time_point<std::chrono::steady_clock> iterative_end;
+
+      constexpr int first_it_to_time = 3; // Treat the first 3 iterations as warmup and drop them
+      real_type spmm_total_time = 0.0;
+      real_type xi_update_total_time = 0.0;
+      real_type sigma_update_total_time = 0.0;
+      real_type chol_xr_update_total_time = 0.0;
+      real_type preconditioning_total_time = 0.0;
+      real_type delta_update_total_time = 0.0;
+      real_type r_scale_total_time = 0.0;
+      real_type best_basis_total_time = 0.0;
+      real_type p_update_total_time = 0.0;
+      real_type qr_total_time = 0.0;
 
       int i;
       for (i = 0; i < itmax_; i++)
       {
-        // deviceSynchronize(); // timing
-        // deviceSynchronize(); // timing
-        // auto it_start = std::chrono::steady_clock::now(); // timing
+        if (i == first_it_to_time)
+        {
+          iterative_start = std::chrono::steady_clock::now();
+        }
+
+        deviceSynchronize();
+        auto it_start = std::chrono::steady_clock::now();
         
         // SpMM
-        // deviceSynchronize(); // timing
-        // auto spmm_start = std::chrono::steady_clock::now(); // timing
+        deviceSynchronize();
+        auto spmm_start = std::chrono::steady_clock::now();
         // matrix_handler_->matvec(A_scal_, P_, Temp_nxk_, &ONE, &ZERO, memspace_);
         impl_->SpMM(A_scal_, P_, Temp_nxk_);
 
-        // deviceSynchronize(); // timing
-        // auto spmm_end = std::chrono::steady_clock::now(); // timing
-        // printf("  [Iteration %d] spmm: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(spmm_end - spmm_start).count()); // timing
+        deviceSynchronize();
+        auto spmm_end = std::chrono::steady_clock::now();
+        if (i >= first_it_to_time)
+        {
+          spmm_total_time += static_cast<std::chrono::duration<double, std::milli>>(spmm_end - spmm_start).count();
+        }
+        // printf("[Iteration %d] spmm: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(spmm_end - spmm_start).count()); // Uncomment to get timing info for every iteration
         
         // 2. S^T * (A * S), multTSMTTSM
-        // auto gemm_xi_start = std::chrono::steady_clock::now(); // timing
-        // real_type a = vector_handler_->dot(P_, Temp_nxk_, memspace_);
-        // vector_handler_->gemm('T', 'N', ONE, ZERO, P_, Temp_nxk_, Xi_inv_, memspace_);
-        impl_->multTSMTTSM(P_, Temp_nxk_, Xi_inv_, memspace_);
-        // deviceSynchronize(); // timing
-        // auto gemm_xi_end = std::chrono::steady_clock::now(); // timing
-        // printf("  [Iteration %d] gemm_xi: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(gemm_xi_end - gemm_xi_start).count()); // timing
+        std::chrono::time_point<std::chrono::steady_clock> xi_update_start;
+        switch (mult_tsmttsm_mode)
+        {
+        case MultTSMTTSMMode::CUSTOM_KERNEL_SYMMETRIC:
+          xi_update_start = std::chrono::steady_clock::now();
+          impl_->multTSMTTSMSymmetric(P_, Temp_nxk_, Xi_inv_, memspace_);
+          break;
+        case MultTSMTTSMMode::CUSTOM_KERNEL_ASYMMETRIC:
+          xi_update_start = std::chrono::steady_clock::now();
+          impl_->multTSMTTSMAsymmetric(P_, Temp_nxk_, Xi_inv_, memspace_);
+          break;
+        case MultTSMTTSMMode::GEMM_LIBRARY:
+          xi_update_start = std::chrono::steady_clock::now();
+          vector_handler_->gemm('T', 'N', ONE, ZERO, P_, Temp_nxk_, Xi_inv_, memspace_);
+          break;
+        }
+        deviceSynchronize();
+        auto xi_update_end = std::chrono::steady_clock::now();
+        if (i >= first_it_to_time)
+        {
+          xi_update_total_time += static_cast<std::chrono::duration<double, std::milli>>(xi_update_end - xi_update_start).count();
+        }
+        // printf("[Iteration %d] Xi update: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(xi_update_end - xi_update_start).count()); // Uncomment to get timing info for every iteration
 
         // Sigma = P^T * R_scal (Temp_kxk_ = Sigma)
-        // deviceSynchronize(); // timing
-        // auto sigma_start = std::chrono::steady_clock::now(); // timing
-        impl_->multTSMTTSM(P_, R_scal_, Temp_kxk_, memspace_); // ANDREW TODO: Z_ here? instead of R_scal_
-        // deviceSynchronize(); // timing
-        // auto sigma_end = std::chrono::steady_clock::now(); // timing
-        // printf("  [Iteration %d] sigma: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(sigma_end - sigma_start).count()); // timing
+        deviceSynchronize();        
+        std::chrono::time_point<std::chrono::steady_clock> sigma_update_start;
+        switch (mult_tsmttsm_mode)
+        {
+        case MultTSMTTSMMode::CUSTOM_KERNEL_SYMMETRIC: // This result is not symmetric, so use always the asymmetric kernel
+        case MultTSMTTSMMode::CUSTOM_KERNEL_ASYMMETRIC:
+          sigma_update_start = std::chrono::steady_clock::now();
+          impl_->multTSMTTSMAsymmetric(P_, R_scal_, Temp_kxk_, memspace_);
+          break;
+        case MultTSMTTSMMode::GEMM_LIBRARY:
+          sigma_update_start = std::chrono::steady_clock::now();
+          vector_handler_->gemm('T', 'N', ONE, ZERO, P_, R_scal_, Temp_kxk_, memspace_);
+          break;
+        }
+        deviceSynchronize();
+        auto sigma_update_end = std::chrono::steady_clock::now();
+        if (i >= first_it_to_time)
+        {
+          sigma_update_total_time += static_cast<std::chrono::duration<double, std::milli>>(sigma_update_end - sigma_update_start).count();
+        }
+        // printf("[Iteration %d] Sigma: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(sigma_update_end - sigma_update_start).count()); // Uncomment to get timing info for every iteration
 
         // Cholesky, X_res, R_scal
-        // deviceSynchronize(); // timing
-        // auto chol_update_start = std::chrono::steady_clock::now(); // timing
-        // if (vector_handler_->choleskyFactorize(Xi_inv_, 'D', memspace_) != 0)
-        // {
-        //   out::error() << "Cholesky failed!";
-        //   return 1;
-        // }
-        // Temp_kxk_->copyFromExternal(DELETE, memspace_, memspace_);
-        // vector_handler_->choleskyFactorizeSolve(Xi_inv_->getData(memspace_), Temp_kxk_, 'D', memspace_); // Temp_kxk = Xi * Sigma
-        // vector_handler_->gemm('N', 'N', ONE, ONE, P_, Temp_kxk_, X_res_, memspace_);
-        // vector_handler_->gemm('N', 'N', MINUS_ONE, ONE, Temp_nxk_, Temp_kxk_, R_scal_, memspace_);
+        deviceSynchronize();
+        auto chol_xr_update_start = std::chrono::steady_clock::now();
         impl_->choleskyFactorizeSolve(Xi_inv_, Temp_kxk_, Temp_kxk_);
         impl_->updateXR(P_, Temp_nxk_, Temp_kxk_, X_res_, R_scal_);
-        // deviceSynchronize(); // timing
-        // auto chol_update_end = std::chrono::steady_clock::now(); // timing
-        // printf("  [Iteration %d] cholesky & update: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(chol_update_end - chol_update_start).count()); // timing
+        deviceSynchronize();
+        auto chol_xr_update_end = std::chrono::steady_clock::now();
+        if (i >= first_it_to_time)
+        {
+          chol_xr_update_total_time += static_cast<std::chrono::duration<double, std::milli>>(chol_xr_update_end - chol_xr_update_start).count();
+        }
+        // printf("[Iteration %d] cholesky, X & R update: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(chol_xr_update_end - chol_xr_update_start).count()); // Uncomment to get timing info for every iteration
 
-        // deviceSynchronize(); // timing
-        // auto preconditioning_start = std::chrono::steady_clock::now(); // timing
+        deviceSynchronize();
+        auto preconditioning_start = std::chrono::steady_clock::now();
         if (enable_preconditioning_)
-        { // ANDREW TODO: maybe move this after error check & spli
+        {
           preconditioner_->apply(R_scal_, Z_);
         }
-        // deviceSynchronize(); // timing
-        // auto preconditioning_end = std::chrono::steady_clock::now(); // timing
-        // printf("  [Iteration %d] preconditioning: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(preconditioning_end - preconditioning_start).count()); // timing
+        deviceSynchronize();
+        auto preconditioning_end = std::chrono::steady_clock::now();
+        if (i >= first_it_to_time)
+        {
+          preconditioning_total_time += static_cast<std::chrono::duration<double, std::milli>>(preconditioning_end - preconditioning_start).count();
+        }
+        // printf("[Iteration %d] preconditioning: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(preconditioning_end - preconditioning_start).count()); // Uncomment to get timing info for every iteration
 
-        // deviceSynchronize(); // timing
-        // auto delta_update_start = std::chrono::steady_clock::now(); // timing
-        impl_->multTSMTTSM(Temp_nxk_, Z_, Delta_, memspace_);
-        // deviceSynchronize(); // timing
-        // auto delta_update_end = std::chrono::steady_clock::now(); // timing
-        // printf("  [Iteration %d] delta: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(delta_update_end - delta_update_start).count()); // timing
+        deviceSynchronize();        
+        std::chrono::time_point<std::chrono::steady_clock> delta_update_start;
+        switch (mult_tsmttsm_mode)
+        {
+        case MultTSMTTSMMode::CUSTOM_KERNEL_SYMMETRIC: // This result is not symmetric, so use always the asymmetric kernel
+        case MultTSMTTSMMode::CUSTOM_KERNEL_ASYMMETRIC:
+          delta_update_start = std::chrono::steady_clock::now();
+          impl_->multTSMTTSMAsymmetric(Temp_nxk_, Z_, Delta_, memspace_);
+          break;
+        case MultTSMTTSMMode::GEMM_LIBRARY:
+          delta_update_start = std::chrono::steady_clock::now();
+          vector_handler_->gemm('T', 'N', ONE, ZERO, Temp_nxk_, Z_, Delta_, memspace_);
+          break;
+        }
+        deviceSynchronize();
+        auto delta_update_end = std::chrono::steady_clock::now();
+        if (i >= first_it_to_time)
+        {
+          delta_update_total_time += static_cast<std::chrono::duration<double, std::milli>>(delta_update_end - delta_update_start).count();
+        }
+        // printf("[Iteration %d] Delta: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(delta_update_end - delta_update_start).count()); // Uncomment to get timing info for every iteration
 
         if (enable_diagonal_scaling_)
         {
-          // deviceSynchronize(); // timing
-          // auto r_scale_start = std::chrono::steady_clock::now(); // timing
+          deviceSynchronize();
+          auto r_scale_start = std::chrono::steady_clock::now();
           R_->copyFromExternal(R_scal_, memspace_, memspace_);
           vector_handler_->scal(d_, R_, memspace_);
           vector_handler_->scal(b_norm_, R_, memspace_);
-          // deviceSynchronize(); // timing
-          // auto r_scale_end = std::chrono::steady_clock::now(); // timing
-          // printf("  [Iteration %d] R scale: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(r_scale_end - r_scale_start).count()); // timing
-
+          deviceSynchronize();
+          auto r_scale_end = std::chrono::steady_clock::now();
+          if (i >= first_it_to_time)
+          {
+            r_scale_total_time += static_cast<std::chrono::duration<double, std::milli>>(r_scale_end - r_scale_start).count();
+          }
+          // printf("[Iteration %d] R scale: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(r_scale_end - r_scale_start).count()); // Uncomment to get timing info for every iteration
         }
 
         // Best basis
-        // deviceSynchronize(); // timing
-        // auto basis_loop_start = std::chrono::steady_clock::now(); // timing
+        deviceSynchronize();
+        auto best_basis_start = std::chrono::steady_clock::now();
         index_type best_basis;
         real_type best_basis_r_norm;
         impl_->bestBasis(R_, &best_basis, &best_basis_r_norm);
 
-        // index_type best_basis = -1;
-        // real_type best_basis_r_norm = std::numeric_limits<real_type>::infinity();
-        // for (index_type j = 0; j < k_; j++)
-        // {
-        //   real_type basis_r_norm = vector_handler_->norm(R_, j, memspace_);
-        //   if (basis_r_norm < best_basis_r_norm)
-        //   {
-        //     best_basis = j;
-        //     best_basis_r_norm = basis_r_norm;
-        //   }
-        // }
-
         best_basis_error = best_basis_r_norm / b_norm_;
-        // auto basis_loop_end = std::chrono::steady_clock::now(); // timing
-        // printf("  [Iteration %d] best basis: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(basis_loop_end - basis_loop_start).count()); // timing
-        // printf("error %f\n", best_basis_error);
+        auto best_basis_end = std::chrono::steady_clock::now();
+        if (i >= first_it_to_time)
+        {
+          best_basis_total_time += static_cast<std::chrono::duration<double, std::milli>>(best_basis_end - best_basis_start).count();
+        }
+        // printf("[Iteration %d] best basis: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(best_basis_end - best_basis_start).count()); // Uncomment to get timing info for every iteration
 
-        // std::cout << std::setprecision(std::numeric_limits<double>::max_digits10) << best_basis_error << '\n';
-        // if (k_ == 1) printf("%.10e\n", best_basis_error);
-        // if (best_basis_error > 1e10)
-        // {
-        //   printf("hi\n");
-        // }
-        // 7. Convergence Checking & Final Calculations Block
         if (best_basis_error < initial_tol_)
         {
           bool use_best_basis = false;
           real_type r_norm;
 
-          // auto conv_block_start = std::chrono::steady_clock::now(); // timing
+          auto conv_block_start = std::chrono::steady_clock::now();
 
-          // if (true)
           if (k_ == 1)
           {
             lincomb_error = best_basis_error;
@@ -458,15 +509,14 @@ namespace ReSolve
           }
           else
           {
-            // deviceSynchronize(); // timing
+            deviceSynchronize();
             // A * X = B - R
             Temp_nxk_->copyFromExternal(B_, memspace_, memspace_);
             vector_handler_->axpy(MINUS_ONE, R_, Temp_nxk_, memspace_);
 
             // (AX)^T * AX * c = (AX)^T * b
             // vector_handler_->gemm('T', 'N', ONE, ZERO, Temp_nxk_, Temp_nxk_, Temp_kxk_, memspace_);
-            impl_->multTSMTTSM(Temp_nxk_, Temp_nxk_, Temp_kxk_, memspace_); // use innerProductTSM
-            vector_handler_->gemv('T', k_, ONE, ZERO, Temp_nxk_, b_, c_, memspace_);
+            impl_->multTSMTTSMSymmetric(Temp_nxk_, Temp_nxk_, Temp_kxk_, memspace_); // This part isn't included in the timing
             impl_->choleskyFactorizeSolve(Temp_kxk_, c_, c_);
             
             // r = b - AX * c
@@ -507,40 +557,45 @@ namespace ReSolve
             std::chrono::duration<double, std::milli> elapsed = (end - start);
 
             deviceSynchronize();
-            // auto conv_block_end = std::chrono::steady_clock::now(); // timing
-            // printf("  [Iteration %d] convergence check: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(conv_block_end - conv_block_start).count()); // timing
+            auto conv_block_end = std::chrono::steady_clock::now();
+            // printf("[Iteration %d] convergence check: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(conv_block_end - conv_block_start).count()); // Uncomment to get timing info for every iteration
 
             printf("MBPCG convergence occured at iteration %d. Total Solve Time: %f ms\n", i, elapsed.count());
-            printf("Per iteration time: %.10f\n", (std::chrono::duration<double, std::milli>(iterative_end - iterative_start)).count() / i);
+            printf("Per iteration time: %.10f\n", (std::chrono::duration<double, std::milli>(iterative_end - iterative_start)).count() / (i - first_it_to_time));
             printf("Error: %.5e, best basis' error: %.5e\n", lincomb_error, best_basis_error);
             return 0;
           }
-          // deviceSynchronize(); // timing
-          // auto conv_block_end = std::chrono::steady_clock::now(); // timing
-          // printf("  [Iteration %d] convergence_overhead (failed conv_tol): %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(conv_block_end - conv_block_start).count()); // timing
         }
 
         // Update P
-        // deviceSynchronize(); // timing
-        // auto p_update_start = std::chrono::steady_clock::now(); // timing
+        deviceSynchronize();
+        auto p_update_start = std::chrono::steady_clock::now();
         // vector_handler_->choleskyFactorizeSolve(Xi_inv_->getData(memspace_), Temp_nxk_, 'R', memspace_); // Temp_nxk_ now contains A * S * Xi
         // vector_handler_->axpy(MINUS_ONE, Temp_nxk_, Delta_, memspace_);
         impl_->updateP(P_, Z_, Xi_inv_, Delta_, memspace_);
-        // deviceSynchronize(); // timing
-        // auto p_update_end = std::chrono::steady_clock::now(); // timing
-        // printf("  [Iteration %d] P update: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(p_update_end - p_update_start).count()); // timing
+        deviceSynchronize();
+        auto p_update_end = std::chrono::steady_clock::now();
+        if (i >= first_it_to_time)
+        {
+          p_update_total_time += static_cast<std::chrono::duration<double, std::milli>>(p_update_end - p_update_start).count();
+        }
+        // printf("[Iteration %d] P update: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(p_update_end - p_update_start).count()); // Uncomment to get timing info for every iteration
 
         // QR
-        // deviceSynchronize(); // timing
-        // auto qr_start = std::chrono::steady_clock::now(); // timing
+        deviceSynchronize();
+        auto qr_start = std::chrono::steady_clock::now();
         Psi_->setToZero(memspace_);
         impl_->qr(P_, Psi_, memspace_);
-        // deviceSynchronize(); // timing
-        // auto qr_end = std::chrono::steady_clock::now(); // timing
-        // printf("  [Iteration %d] QR: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(qr_end - qr_start).count()); // timing
+        deviceSynchronize();
+        auto qr_end = std::chrono::steady_clock::now();
+        if (i >= first_it_to_time)
+        {
+          qr_total_time += static_cast<std::chrono::duration<double, std::milli>>(qr_end - qr_start).count();
+        }
+        // printf("[Iteration %d] QR: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(qr_end - qr_start).count()); // Uncomment to get timing info for every iteration
 
-        // auto it_end = std::chrono::steady_clock::now(); // timing
-        // printf("  [Iteration %d] Total: %f ms\n\n", i, static_cast<std::chrono::duration<double, std::milli>>(it_end - it_start).count()); // timing
+        auto it_end = std::chrono::steady_clock::now();
+        // printf("[Iteration %d] Total: %f ms\n\n", i, static_cast<std::chrono::duration<double, std::milli>>(it_end - it_start).count()); // Uncomment to get timing info for every iteration
         iterative_end = std::chrono::steady_clock::now();
       }
 
@@ -550,8 +605,20 @@ namespace ReSolve
         end = std::chrono::steady_clock::now();
         std::chrono::duration<double, std::milli> elapsed = (end - start);
         printf("No MBPCG convergence in %d iterations\n", itmax_);
-        printf("Total Solve Time: %.10f ms, best basis' error: %.5e\n", elapsed.count(), best_basis_error);
-        printf("Per iteration time: %.10f\n", (std::chrono::duration<double, std::milli>(iterative_end - iterative_start)).count() / i);
+        printf("Total time elapsed: %.10f ms, best basis' error: %.5e\n", elapsed.count(), best_basis_error);
+
+        index_type it_count = itmax_ - first_it_to_time;
+        printf("SpMM average time per iteration: %f ms\n", spmm_total_time / it_count);
+        printf("Xi update (symmetric multTSMTTSM) average time per iteration: %f ms\n", xi_update_total_time / it_count);
+        printf("Sigma update (asymmetric multTSMTTSM) average time per iteration: %f ms\n", sigma_update_total_time / it_count);
+        printf("Cholesky, X & R update average time per iteration: %f ms\n", chol_xr_update_total_time / it_count);
+        printf("Precondiitioning average time per iteration: %f ms\n", preconditioning_total_time / it_count);
+        printf("Delta update (asymmetric multTSMTTSM) average time per iteration: %f ms\n", delta_update_total_time / it_count);
+        printf("Best basis average time per iteration: %f ms\n", best_basis_total_time / it_count);
+        printf("P update average time per iteration: %f ms\n", p_update_total_time / it_count);
+        printf("QR average time per iteration: %f ms\n", qr_total_time / it_count);
+        printf("Total time per iteration: %f ms\n", (std::chrono::duration<double, std::milli>(iterative_end - iterative_start)).count() / it_count);
+
         return 1;
       }
 

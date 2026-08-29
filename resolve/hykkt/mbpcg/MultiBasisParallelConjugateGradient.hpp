@@ -33,6 +33,12 @@ namespace ReSolve
     class MultiBasisParallelConjugateGradient
     {
     public:
+      enum class MultTSMTTSMMode {
+        CUSTOM_KERNEL_SYMMETRIC,
+        CUSTOM_KERNEL_ASYMMETRIC,
+        GEMM_LIBRARY
+      };
+
       MultiBasisParallelConjugateGradient(index_type          n,
                                   index_type          num_rhs,
                                   MatrixHandler*      matrix_handler,
@@ -58,12 +64,12 @@ namespace ReSolve
       void randomVector(vector::Vector* v, real_type min, real_type max);
       void generateGuesses();
       void computeQr(vector::Vector* V, vector::Vector* H);
-      int  solve();
+      int  solve(MultTSMTTSMMode mult_tsmttsm_mode);
 
     private:
       index_type n_;             // Dimension of outer system
       index_type k_;             // Number of copies of the systems to solve at once
-      int        itmax_ = 12000;   // Maximum iterations for conjugate gradient
+      int        itmax_ = 10;   // Maximum iterations for conjugate gradient
       real_type  initial_tol_   = 1e-8; // Solver tolerance for Schur // ...
       real_type  convergence_tol_   = 1e-8; // Solver tolerance for Schur // ...
     
