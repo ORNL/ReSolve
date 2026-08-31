@@ -46,7 +46,7 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
     // "mhd4800b", // WARMUP
     // "bcsstk18", // WARMUP
 
-    // "hood",
+    "hood",
     // "Fault_639",
     // "2cubes_sphere",
 
@@ -68,7 +68,7 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
     // "bundle1",
     // "qa8fm",
     // "cfd2",
-    "parabolic_fem",
+    // "parabolic_fem",
     // "ecology2",
     // "tmt_sym",
     // "G3_circuit",

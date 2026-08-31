@@ -131,10 +131,6 @@ namespace ReSolve
                              buffer);
 
     status += rocsparse_csric0_zero_pivot(workspace_->getRocsparseHandle(), L_info_setup, &position);
-    if (position != -1)
-    {
-      out::warning() << "Numerical zero pivot found. Increase numeric boost to compensate.";
-    }
     status += (position != -1);
 
     L_->setUpdated(memory::DEVICE);

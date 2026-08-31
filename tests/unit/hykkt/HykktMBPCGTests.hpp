@@ -118,7 +118,7 @@ namespace ReSolve
 
         printf("\nTesting with preconditioner.\n");
         PreconditionerIChol0 preconditioner(&matrix_handler_, &workspace_);
-        if (!preconditioner.setup(A))
+        if (preconditioner.setup(A))
         {
           bool found = false;
           real_type inf_norm;
