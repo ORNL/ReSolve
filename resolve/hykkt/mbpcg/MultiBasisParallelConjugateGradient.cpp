@@ -608,15 +608,16 @@ namespace ReSolve
         printf("Total time elapsed: %.10f ms, best basis' error: %.5e\n", elapsed.count(), best_basis_error);
 
         index_type it_count = itmax_ - first_it_to_time;
-        printf("SpMM average time per iteration: %f ms\n", spmm_total_time / it_count);
-        printf("Xi update (symmetric multTSMTTSM) average time per iteration: %f ms\n", xi_update_total_time / it_count);
-        printf("Sigma update (asymmetric multTSMTTSM) average time per iteration: %f ms\n", sigma_update_total_time / it_count);
-        printf("Cholesky, X & R update average time per iteration: %f ms\n", chol_xr_update_total_time / it_count);
-        printf("Precondiitioning average time per iteration: %f ms\n", preconditioning_total_time / it_count);
-        printf("Delta update (asymmetric multTSMTTSM) average time per iteration: %f ms\n", delta_update_total_time / it_count);
-        printf("Best basis average time per iteration: %f ms\n", best_basis_total_time / it_count);
-        printf("P update average time per iteration: %f ms\n", p_update_total_time / it_count);
-        printf("QR average time per iteration: %f ms\n", qr_total_time / it_count);
+        printf("Operation: %-32s  kernel: %-30s  average time: %f ms\n", "SpMM", "SpMM", spmm_total_time / it_count);
+        printf("Operation: %-32s  kernel: %-30s  average time: %f ms\n", "Xi update", "symmetric multTSMTTSM", xi_update_total_time / it_count);
+        printf("  (May be implemented using asymmetric multTSMTTSM depending on the test)\n");
+        printf("Operation: %-32s  kernel: %-30s  average time: %f ms\n", "Sigma update", "asymmetric multTSMTTSM", sigma_update_total_time / it_count);
+        printf("Operation: %-32s  kernel: %-30s  average time: %f ms\n", "Cholesky, X & R update", "updateXR", chol_xr_update_total_time / it_count);
+        printf("Operation: %-32s  kernel: %-30s  average time: %f ms\n", "Precondiitioning", "SRSV/SRSM", preconditioning_total_time / it_count);
+        printf("Operation: %-32s  kernel: %-30s  average time: %f ms\n", "Delta update", "asymmetric multTSMTTSM", delta_update_total_time / it_count);
+        printf("Operation: %-32s  kernel: %-30s  average time: %f ms\n", "Best basis", "bestBasis", best_basis_total_time / it_count);
+        printf("Operation: %-32s  kernel: %-30s  average time: %f ms\n", "P update", "updateP", p_update_total_time / it_count);
+        printf("Operation: %-32s  kernel: %-30s  average time: %f ms\n", "Householder QR", "qr", qr_total_time / it_count);
         printf("Total time per iteration: %f ms\n", (std::chrono::duration<double, std::milli>(iterative_end - iterative_start)).count() / it_count);
 
         return 1;
