@@ -13,11 +13,14 @@
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/matrix/io.hpp>
 #include <resolve/preconditioner_ichol0/PreconditionerIChol0.hpp>
+#include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <tests/unit/TestBase.hpp>
 
 namespace ReSolve
 {
+  using out = io::Logger;
+  
   namespace tests
   {
     /**
@@ -114,8 +117,28 @@ namespace ReSolve
 #ifdef RESOLVE_USE_GPU
         printf("\nTesting with preconditioner.\n");
         PreconditionerIChol0 preconditioner(&matrix_handler_, &workspace_);
-        preconditioner.setNumericBoost(numeric_boost_);
-        preconditioner.setup(A);
+        if (!preconditioner.setup(A))
+        {
+          bool found = false;
+          real_type inf_norm;
+          matrix_handler_.matrixInfNorm(A, &inf_norm, memspace_);
+          real_type numeric_boost = inf_norm / 32.0;
+          for (index_type i = 0; i < 10; i++)
+          {
+            printf("Trying boost value %f\n", numeric_boost);
+            preconditioner.setNumericBoost(numeric_boost);
+            if (!preconditioner.setup(A))
+            {
+              found = true;
+              break;
+            }
+            numeric_boost *= 2.0;
+          }
+          if (!found)
+          {
+            out::error() << "Preconditioning failed!";
+          }
+        }
 
         hykkt::ConjugateGradient cg_prec(n, &preconditioner, &matrix_handler_, &vector_handler_, memspace_);
         cg_prec.setSolverTolerance(cg_tol_);
@@ -147,7 +170,6 @@ namespace ReSolve
 
       static constexpr real_type cholesky_tol_ = 1e-12;
       static constexpr real_type cg_tol_     = 1e-8;
-      static constexpr real_type numeric_boost_ = 437621.0;
     }; // class HykktConjugateGradientTests
   } // namespace tests
 } // namespace ReSolve

@@ -40,7 +40,7 @@ namespace ReSolve
 
   private:
     matrix::Csr* L_{nullptr};
-    real_type numeric_boost_ = 1e-7;
+    real_type numeric_boost_ = 0;
     MatrixHandler* matrix_handler_{nullptr};
 
     PreconditionerIChol0Impl* impl_{nullptr};

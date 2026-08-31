@@ -78,13 +78,7 @@ namespace ReSolve
       matrix_handler_->addDiag(L_, numeric_boost_, memory::DEVICE);
     }
 
-    int status = impl_->setup(L_);
-    if (status != 0)
-    {
-      out::error() << "Preconditioner setup failed!";
-    }
-
-    // L_->syncData(memory::HOST);
+    return impl_->setup(L_);
   
     return 0;
   }
@@ -129,6 +123,7 @@ namespace ReSolve
   // ...
   void PreconditionerIChol0::setNumericBoost(real_type numeric_boost)
   {
+    matrix_handler_->addDiag(L_, numeric_boost - numeric_boost_, memory::DEVICE);
     numeric_boost_ = numeric_boost;
   }
 }
