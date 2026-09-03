@@ -43,10 +43,10 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
     // "mhd4800b", // WARMUP
     // "mhd4800b", // WARMUP
     // "mhd4800b", // WARMUP
-    // "bcsstk18", // WARMUP
+    "bcsstk18", // WARMUP
 
     "hood",
-    // "Fault_639",
+    "Fault_639",
     // "2cubes_sphere",
 
     // "1138_bus",
@@ -67,7 +67,7 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
     // "bundle1",
     // "qa8fm",
     // "cfd2",
-    // "parabolic_fem",
+    "parabolic_fem",
     // "ecology2",
     // "tmt_sym",
     // "G3_circuit",
@@ -84,9 +84,8 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
     // "bmwcra_1",
     // "bmw7st_1",//
     // "af_shell4",
-    // "nd6k",
+    "nd6k",
     // "olafu",
-    // "uni_chimera_i2",
     // "consph",
 
     // "s3dkq4m2",
@@ -161,13 +160,9 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
     // "bcsstk03",
     // "bcsstk01",
     // "494_bus",
-    // "Trefethen_20",
-    // "LFAT5",
-    // "LF10",
     // "mesh3em5",
     // "mesh1em6",
     // "ex5",
-    // "nos4",
     // "nos1",
 
     // "bcsstk34",
@@ -175,8 +170,7 @@ void runTests(const std::string& backend, ReSolve::memory::MemorySpace memspace,
     // "bcsstk25",
     // "bcsstk10",
     // "plbuckle",
-    // "msc01050",
-
+    // "msc01050"
     // "thermomech_dM",
     // "oilpan",
     // "bundle_adj",

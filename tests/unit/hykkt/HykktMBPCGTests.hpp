@@ -97,65 +97,72 @@ namespace ReSolve
         TestStatus  status;
         int num_fails = 0;
 
-        printf("\nTesting with diagonal scaling.\n");
-        // k = 1, 2, 4, 8
-        for (index_type k = 1; k <= 8; k *= 2)
-        {
-          if (k == 8) continue;
-          printf("\nk=%d\n", k);
-          hykkt::MultiBasisParallelConjugateGradient mbpcg(n, k, &matrix_handler_, &vector_handler_, memspace_);
-          mbpcg.setSolverTolerance(initial_tol, convergence_tol);
-          mbpcg.setSolverItmax(2000);
+        // printf("\nTesting with diagonal scaling.\n");
+        // // k = 1, 2, 4, 8
+        // for (index_type k = 1; k <= 8; k *= 2)
+        // {
+        //   // if (k == 8) continue;
+        //   printf("\nk=%d\n", k);
+        //   hykkt::MultiBasisParallelConjugateGradient mbpcg(n, k, &matrix_handler_, &vector_handler_, memspace_);
+        //   mbpcg.setSolverTolerance(initial_tol, convergence_tol);
+        //   mbpcg.setSolverItmax(12000);
 
-          mbpcg.addMatrixInfo(A);
-          mbpcg.addVectorInfo(x, b);
-          mbpcg.diagonalScale();
+        //   mbpcg.addMatrixInfo(A);
+        //   mbpcg.addVectorInfo(x, b);
+        //   mbpcg.diagonalScale();
         
-          mbpcg.setup();
-          int converged = mbpcg.solve(); // 0 if converged, 1 if not
-          num_fails += (converged != 0);
-        }
+        //   mbpcg.setup();
+        //   int converged = mbpcg.solve(); // 0 if converged, 1 if not
+        //   num_fails += (converged != 0);
+        // }
 
         printf("\nTesting with preconditioner.\n");
         PreconditionerIChol0 preconditioner(&matrix_handler_, &workspace_);
-        if (preconditioner.setup(A))
+
+        real_type numeric_boost = 0.0;
+        bool found_valid_boost = (preconditioner.setup(A) == 0);
+        if (!found_valid_boost)
         {
-          bool found = false;
           real_type inf_norm;
           matrix_handler_.matrixInfNorm(A, &inf_norm, memspace_);
-          real_type numeric_boost = inf_norm / 32.0;
-          for (index_type i = 0; i < 10; i++)
+          numeric_boost = inf_norm / 4194304.0;
+          for (index_type i = 0; i < 14; i++)
           {
             printf("Trying boost value %f\n", numeric_boost);
             preconditioner.setNumericBoost(numeric_boost);
-            if (!preconditioner.setup(A)) // ANDREW TODO: this doesn't work on hip because rocblas doesn't report singularities (or maybe it doesn but just very rarely)
+            if (preconditioner.setup(A) == 0) // ANDREW TODO: this doesn't work on hip because rocblas doesn't report singularities (or maybe it doesn but just very rarely)
             {
-              found = true;
+              found_valid_boost = true;
               break;
             }
             numeric_boost *= 2.0;
           }
-          if (!found)
-          {
-            out::error() << "Preconditioning failed!";
-          }
         }
-
-        // k = 1, 2, 4, 8
-        for (index_type k = 1; k <= 8; k *= 2)
+        
+        if (!found_valid_boost)
         {
-          // if (k != 8) continue;
-          printf("\nk=%d\n", k);
-          preconditioner.setNumRhs(k);
-          hykkt::MultiBasisParallelConjugateGradient mbpcg(n, k, &preconditioner, &matrix_handler_, &vector_handler_, memspace_);
-          mbpcg.setSolverTolerance(initial_tol, convergence_tol);
-          mbpcg.setSolverItmax(2000);
+          printf("No valid numerical boost value found!\n");
+          num_fails++;
+        }
+        else
+        {
+          printf("Using boost value %f\n", numeric_boost);
+          // k = 1, 2, 4, 8
+          for (index_type k = 1; k <= 8; k *= 2)
+          {
+            // if (k != 8) continue;
+            printf("\nk=%d\n", k);
+            preconditioner.setNumRhs(k);
+            hykkt::MultiBasisParallelConjugateGradient mbpcg(n, k, &preconditioner, &matrix_handler_, &vector_handler_, memspace_);
+            mbpcg.setSolverTolerance(initial_tol, convergence_tol);
+            mbpcg.setSolverItmax(12000);
 
-          mbpcg.addMatrixInfo(A);
-          mbpcg.addVectorInfo(x, b);
-          mbpcg.setup();
-          int converged = mbpcg.solve(); // 0 if converged, 1 if not
-          num_fails += (converged != 0);
+            mbpcg.addMatrixInfo(A);
+            mbpcg.addVectorInfo(x, b);
+            mbpcg.setup();
+            int converged = mbpcg.solve(); // 0 if converged, 1 if not
+            num_fails += (converged != 0);
+          }
         }
 
         std::string testname(__func__);

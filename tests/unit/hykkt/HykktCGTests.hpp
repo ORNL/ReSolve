@@ -104,7 +104,7 @@ namespace ReSolve
         // printf("\nTesting with diagonal scaling.\n");
         // hykkt::ConjugateGradient cg_diag_scal(n, &matrix_handler_, &vector_handler_, memspace_);
         // cg_diag_scal.setSolverTolerance(cg_tol_);
-        // // cg_diag_scal.setSolverItmax();
+        // cg_diag_scal.setSolverItmax(12000);
 
         // x->setToZero(memspace_);
         // cg_diag_scal.addMatrixInfo(A);
@@ -117,39 +117,46 @@ namespace ReSolve
 #ifdef RESOLVE_USE_GPU
         printf("\nTesting with preconditioner.\n");
         PreconditionerIChol0 preconditioner(&matrix_handler_, &workspace_);
-        if (!preconditioner.setup(A))
+        
+        real_type numeric_boost = 0.0;
+        bool found_valid_boost = (preconditioner.setup(A) == 0);
+        if (!found_valid_boost)
         {
-          bool found = false;
           real_type inf_norm;
           matrix_handler_.matrixInfNorm(A, &inf_norm, memspace_);
-          real_type numeric_boost = inf_norm / 32.0;
-          for (index_type i = 0; i < 10; i++)
+          numeric_boost = inf_norm / 4194304.0;
+          for (index_type i = 0; i < 14; i++)
           {
             printf("Trying boost value %f\n", numeric_boost);
             preconditioner.setNumericBoost(numeric_boost);
-            if (!preconditioner.setup(A))
+            if (preconditioner.setup(A) == 0)
             {
-              found = true;
+              found_valid_boost = true;
               break;
             }
             numeric_boost *= 2.0;
           }
-          if (!found)
-          {
-            out::error() << "Preconditioning failed!";
-          }
         }
+        
+        if (!found_valid_boost)
+        {
+          printf("No valid numerical boost value found!\n");
+          status *= 0;
+        }
+        else
+        {
+          printf("Using boost value %f\n", numeric_boost);
+          hykkt::ConjugateGradient cg_prec(n, &preconditioner, &matrix_handler_, &vector_handler_, memspace_);
+          cg_prec.setSolverTolerance(cg_tol_);
+          cg_prec.setSolverItmax(12000);
 
-        hykkt::ConjugateGradient cg_prec(n, &preconditioner, &matrix_handler_, &vector_handler_, memspace_);
-        cg_prec.setSolverTolerance(cg_tol_);
-        // cg_prec.setSolverItmax();
-
-        x->setToZero(memspace_);
-        cg_prec.addMatrixInfo(A);
-        cg_prec.addVectorInfo(x, b);
-        cg_prec.setup();
-        converged = cg_prec.solve(); // 0 if converged, 1 if not
-        status *= (converged == 0);
+          x->setToZero(memspace_);
+          cg_prec.addMatrixInfo(A);
+          cg_prec.addVectorInfo(x, b);
+          cg_prec.setup();
+          converged = cg_prec.solve(); // 0 if converged, 1 if not
+          status *= (converged == 0);
+        }
 #endif
       
         std::string testname(__func__);
