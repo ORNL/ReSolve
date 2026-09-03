@@ -165,6 +165,10 @@ namespace ReSolve
                                buffer);
 
     status += cusparseXcsric02_zeroPivot(workspace_->getCusparseHandle(), info_, &position);
+    if (position != -1)
+    {
+      out::warning() << "Numerical zero pivot found at row " << status << ". Increase numeric boost to compensate.\n";
+    }
 
     L_->setUpdated(memory::DEVICE);
 
@@ -202,7 +206,7 @@ namespace ReSolve
 
     static constexpr real_type alpha = 1.0;
 
-    if (k_ == 1)
+    // if (k_ == 1)
     {
       // SpSV
       status += cusparseCreateDnVec(&vec_b_, n, L_->getValues(memory::DEVICE), CUDA_R_64F);
@@ -256,64 +260,64 @@ namespace ReSolve
                                       L_tr_descr_spsv_,
                                       L_tr_buffer_spsv_);
     }
-    else
-    {
-      // SpSM
-      status += cusparseCreateDnMat(&mat_B_, n, k, n, L_->getValues(memory::DEVICE), CUDA_R_64F, CUSPARSE_ORDER_COL);
-      status += cusparseCreateDnMat(&mat_X_, n, k, n, L_->getValues(memory::DEVICE), CUDA_R_64F, CUSPARSE_ORDER_COL);
+    // else
+    // {
+    //   // SpSM
+    //   status += cusparseCreateDnMat(&mat_B_, n, k, n, L_->getValues(memory::DEVICE), CUDA_R_64F, CUSPARSE_ORDER_COL);
+    //   status += cusparseCreateDnMat(&mat_X_, n, k, n, L_->getValues(memory::DEVICE), CUDA_R_64F, CUSPARSE_ORDER_COL);
 
-      status += cusparseSpSM_createDescr(&L_descr_spsm_);
-      status += cusparseSpSM_createDescr(&L_tr_descr_spsm_);
+    //   status += cusparseSpSM_createDescr(&L_descr_spsm_);
+    //   status += cusparseSpSM_createDescr(&L_tr_descr_spsm_);
 
-      status += cusparseSpSM_bufferSize(workspace_->getCusparseHandle(),
-                                        CUSPARSE_OPERATION_NON_TRANSPOSE,
-                                        CUSPARSE_OPERATION_NON_TRANSPOSE,
-                                        &alpha,
-                                        mat_L_,
-                                        mat_B_,
-                                        mat_X_,
-                                        CUDA_R_64F,
-                                        CUSPARSE_SPSM_ALG_DEFAULT,
-                                        L_descr_spsm_,
-                                        &L_buffer_size_spsm_);
-      status += cusparseSpSM_bufferSize(workspace_->getCusparseHandle(),
-                                        CUSPARSE_OPERATION_TRANSPOSE,
-                                        CUSPARSE_OPERATION_NON_TRANSPOSE,
-                                        &alpha,
-                                        mat_L_,
-                                        mat_X_,
-                                        mat_X_,
-                                        CUDA_R_64F,
-                                        CUSPARSE_SPSM_ALG_DEFAULT,
-                                        L_tr_descr_spsm_,
-                                        &L_tr_buffer_size_spsm_);
+    //   status += cusparseSpSM_bufferSize(workspace_->getCusparseHandle(),
+    //                                     CUSPARSE_OPERATION_NON_TRANSPOSE,
+    //                                     CUSPARSE_OPERATION_NON_TRANSPOSE,
+    //                                     &alpha,
+    //                                     mat_L_,
+    //                                     mat_B_,
+    //                                     mat_X_,
+    //                                     CUDA_R_64F,
+    //                                     CUSPARSE_SPSM_ALG_DEFAULT,
+    //                                     L_descr_spsm_,
+    //                                     &L_buffer_size_spsm_);
+    //   status += cusparseSpSM_bufferSize(workspace_->getCusparseHandle(),
+    //                                     CUSPARSE_OPERATION_TRANSPOSE,
+    //                                     CUSPARSE_OPERATION_NON_TRANSPOSE,
+    //                                     &alpha,
+    //                                     mat_L_,
+    //                                     mat_X_,
+    //                                     mat_X_,
+    //                                     CUDA_R_64F,
+    //                                     CUSPARSE_SPSM_ALG_DEFAULT,
+    //                                     L_tr_descr_spsm_,
+    //                                     &L_tr_buffer_size_spsm_);
 
-      status += cudaMalloc(&L_buffer_spsm_, L_buffer_size_spsm_);
-      status += cudaMalloc(&L_tr_buffer_spsm_, L_tr_buffer_size_spsm_);
+    //   status += cudaMalloc(&L_buffer_spsm_, L_buffer_size_spsm_);
+    //   status += cudaMalloc(&L_tr_buffer_spsm_, L_tr_buffer_size_spsm_);
 
-      status += cusparseSpSM_analysis(workspace_->getCusparseHandle(),
-                                      CUSPARSE_OPERATION_NON_TRANSPOSE,
-                                      CUSPARSE_OPERATION_NON_TRANSPOSE,
-                                      &alpha,
-                                      mat_L_,
-                                      mat_B_,
-                                      mat_X_,
-                                      CUDA_R_64F,
-                                      CUSPARSE_SPSM_ALG_DEFAULT,
-                                      L_descr_spsm_,
-                                      L_buffer_spsm_);
-      status += cusparseSpSM_analysis(workspace_->getCusparseHandle(),
-                                      CUSPARSE_OPERATION_TRANSPOSE,
-                                      CUSPARSE_OPERATION_NON_TRANSPOSE,
-                                      &alpha,
-                                      mat_L_,
-                                      mat_X_,
-                                      mat_X_,
-                                      CUDA_R_64F,
-                                      CUSPARSE_SPSM_ALG_DEFAULT,
-                                      L_tr_descr_spsm_,
-                                      L_tr_buffer_spsm_);
-    }
+    //   status += cusparseSpSM_analysis(workspace_->getCusparseHandle(),
+    //                                   CUSPARSE_OPERATION_NON_TRANSPOSE,
+    //                                   CUSPARSE_OPERATION_NON_TRANSPOSE,
+    //                                   &alpha,
+    //                                   mat_L_,
+    //                                   mat_B_,
+    //                                   mat_X_,
+    //                                   CUDA_R_64F,
+    //                                   CUSPARSE_SPSM_ALG_DEFAULT,
+    //                                   L_descr_spsm_,
+    //                                   L_buffer_spsm_);
+    //   status += cusparseSpSM_analysis(workspace_->getCusparseHandle(),
+    //                                   CUSPARSE_OPERATION_TRANSPOSE,
+    //                                   CUSPARSE_OPERATION_NON_TRANSPOSE,
+    //                                   &alpha,
+    //                                   mat_L_,
+    //                                   mat_X_,
+    //                                   mat_X_,
+    //                                   CUDA_R_64F,
+    //                                   CUSPARSE_SPSM_ALG_DEFAULT,
+    //                                   L_tr_descr_spsm_,
+    //                                   L_tr_buffer_spsm_);
+    // }
 
     return status;
   }
@@ -335,10 +339,11 @@ namespace ReSolve
 
     int status = 0;
 
-    if (k_ == 1)
+    // if (k_ == 1)
+    for (size_t i = 0; i < rhs->getNumVectors(); i++)
     {
-      cusparseDnVecSetValues(vec_b_, rhs->getData(memory::DEVICE));
-      cusparseDnVecSetValues(vec_x_, x->getData(memory::DEVICE));
+      cusparseDnVecSetValues(vec_b_, rhs->getData(i, memory::DEVICE));
+      cusparseDnVecSetValues(vec_x_, x->getData(i, memory::DEVICE));
 
       status += cusparseSpSV_solve(workspace_->getCusparseHandle(),
                                    CUSPARSE_OPERATION_NON_TRANSPOSE,
@@ -359,32 +364,32 @@ namespace ReSolve
                                    CUSPARSE_SPSV_ALG_DEFAULT,
                                    L_tr_descr_spsv_);
     }
-    else
-    {
-      cusparseDnMatSetValues(mat_B_, rhs->getData(memory::DEVICE));
-      cusparseDnMatSetValues(mat_X_, x->getData(memory::DEVICE));
+    // else
+    // {
+    //   cusparseDnMatSetValues(mat_B_, rhs->getData(memory::DEVICE));
+    //   cusparseDnMatSetValues(mat_X_, x->getData(memory::DEVICE));
 
-      status += cusparseSpSM_solve(workspace_->getCusparseHandle(),
-                                   CUSPARSE_OPERATION_NON_TRANSPOSE,
-                                   CUSPARSE_OPERATION_NON_TRANSPOSE,
-                                   &alpha,
-                                   mat_L_,
-                                   mat_B_,
-                                   mat_X_,
-                                   CUDA_R_64F,
-                                   CUSPARSE_SPSM_ALG_DEFAULT,
-                                   L_descr_spsm_);
-      status += cusparseSpSM_solve(workspace_->getCusparseHandle(),
-                                   CUSPARSE_OPERATION_TRANSPOSE,
-                                   CUSPARSE_OPERATION_NON_TRANSPOSE,
-                                   &alpha,
-                                   mat_L_,
-                                   mat_X_,
-                                   mat_X_,
-                                   CUDA_R_64F,
-                                   CUSPARSE_SPSM_ALG_DEFAULT,
-                                   L_tr_descr_spsm_);
-    }
+    //   status += cusparseSpSM_solve(workspace_->getCusparseHandle(),
+    //                                CUSPARSE_OPERATION_NON_TRANSPOSE,
+    //                                CUSPARSE_OPERATION_NON_TRANSPOSE,
+    //                                &alpha,
+    //                                mat_L_,
+    //                                mat_B_,
+    //                                mat_X_,
+    //                                CUDA_R_64F,
+    //                                CUSPARSE_SPSM_ALG_DEFAULT,
+    //                                L_descr_spsm_);
+    //   status += cusparseSpSM_solve(workspace_->getCusparseHandle(),
+    //                                CUSPARSE_OPERATION_TRANSPOSE,
+    //                                CUSPARSE_OPERATION_NON_TRANSPOSE,
+    //                                &alpha,
+    //                                mat_L_,
+    //                                mat_X_,
+    //                                mat_X_,
+    //                                CUDA_R_64F,
+    //                                CUSPARSE_SPSM_ALG_DEFAULT,
+    //                                L_tr_descr_spsm_);
+    // }
 
     x->setDataUpdated(memory::DEVICE);
 
