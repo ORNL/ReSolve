@@ -347,11 +347,11 @@ namespace ReSolve
         // auto spmm_end = std::chrono::steady_clock::now(); // timing
         // printf("  [Iteration %d] spmm: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(spmm_end - spmm_start).count()); // timing
         
-        // 2. S^T * (A * S), multTSMTTSM
+        // 2. S^T * (A * S), multTSMTTSMSymmetric
         // auto gemm_xi_start = std::chrono::steady_clock::now(); // timing
         // real_type a = vector_handler_->dot(P_, Temp_nxk_, memspace_);
         // vector_handler_->gemm('T', 'N', ONE, ZERO, P_, Temp_nxk_, Xi_inv_, memspace_);
-        impl_->multTSMTTSM(P_, Temp_nxk_, Xi_inv_, memspace_);
+        impl_->multTSMTTSMSymmetric(P_, Temp_nxk_, Xi_inv_, memspace_);
         // deviceSynchronize(); // timing
         // auto gemm_xi_end = std::chrono::steady_clock::now(); // timing
         // printf("  [Iteration %d] gemm_xi: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(gemm_xi_end - gemm_xi_start).count()); // timing
@@ -359,7 +359,7 @@ namespace ReSolve
         // Sigma = P^T * R_scal (Temp_kxk_ = Sigma)
         // deviceSynchronize(); // timing
         // auto sigma_start = std::chrono::steady_clock::now(); // timing
-        impl_->multTSMTTSM(P_, R_scal_, Temp_kxk_, memspace_); // ANDREW TODO: Z_ here? instead of R_scal_
+        impl_->multTSMTTSMAsymmetric(P_, R_scal_, Temp_kxk_, memspace_); // ANDREW TODO: Z_ here? instead of R_scal_
         // deviceSynchronize(); // timing
         // auto sigma_end = std::chrono::steady_clock::now(); // timing
         // printf("  [Iteration %d] sigma: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(sigma_end - sigma_start).count()); // timing
@@ -394,7 +394,7 @@ namespace ReSolve
 
         // deviceSynchronize(); // timing
         // auto delta_update_start = std::chrono::steady_clock::now(); // timing
-        impl_->multTSMTTSM(Temp_nxk_, Z_, Delta_, memspace_);
+        impl_->multTSMTTSMAsymmetric(Temp_nxk_, Z_, Delta_, memspace_);
         // deviceSynchronize(); // timing
         // auto delta_update_end = std::chrono::steady_clock::now(); // timing
         // printf("  [Iteration %d] delta: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(delta_update_end - delta_update_start).count()); // timing
@@ -465,7 +465,7 @@ namespace ReSolve
 
             // (AX)^T * AX * c = (AX)^T * b
             // vector_handler_->gemm('T', 'N', ONE, ZERO, Temp_nxk_, Temp_nxk_, Temp_kxk_, memspace_);
-            impl_->multTSMTTSM(Temp_nxk_, Temp_nxk_, Temp_kxk_, memspace_); // use innerProductTSM
+            impl_->multTSMTTSMSymmetric(Temp_nxk_, Temp_nxk_, Temp_kxk_, memspace_); // use innerProductTSM
             vector_handler_->gemv('T', k_, ONE, ZERO, Temp_nxk_, b_, c_, memspace_);
             impl_->choleskyFactorizeSolve(Temp_kxk_, c_, c_);
             

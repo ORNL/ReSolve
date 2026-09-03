@@ -34,7 +34,8 @@ namespace ReSolve
       int updateXR(vector::Vector* S, vector::Vector* A_S, vector::Vector* Xi_Sigma, vector::Vector* X_res, vector::Vector* R_prec);
       int choleskyFactorizeSolve(vector::Vector* A, vector::Vector* B, vector::Vector* X);
       int updateP(vector::Vector* P, vector::Vector* R, vector::Vector* Xi_inv_chol, vector::Vector* Delta, memory::MemorySpace memspace);
-      int multTSMTTSM(vector::Vector* A, vector::Vector* B, vector::Vector* C, memory::MemorySpace memspace);
+      int multTSMTTSMSymmetric(vector::Vector* A, vector::Vector* B, vector::Vector* C, memory::MemorySpace memspace);
+      int multTSMTTSMAsymmetric(vector::Vector* A, vector::Vector* B, vector::Vector* C, memory::MemorySpace memspace);
       int updateSSigma(vector::Vector* W, vector::Vector* S, vector::Vector* Zeta, vector::Vector* Sigma, memory::MemorySpace memspace);
 
     private:
