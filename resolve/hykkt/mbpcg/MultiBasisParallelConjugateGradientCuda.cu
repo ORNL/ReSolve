@@ -89,7 +89,7 @@ namespace ReSolve
         {
           r_sq += R[col * n + row] * R[col * n + row];
         }
-        warpReduceSum(r_sq);
+        r_sq = warpReduceSum(r_sq);
         if (threadIdx.x == 0)
         {
           atomicAdd(&sq_norms[col], r_sq);
@@ -470,7 +470,7 @@ namespace ReSolve
           {
             if (threadIdx.x == 0)
             {
-              A_shared[indexLowerTriangular<k>(h, h)] = sqrt(A_shared[indexLowerTriangular<k>(h, h)]);
+              A_shared[indexLowerTriangular<k>(h, h)] = sqrt(fmax(A_shared[indexLowerTriangular<k>(h, h)], 1e-16));
             }
             __syncthreads();
             if (threadIdx.x > h && threadIdx.x < k)
@@ -719,7 +719,7 @@ namespace ReSolve
             }
           }
         }
-        __syncwarp(); // check if syncwarp instead of syncthreads breaks anything
+        __syncthreads(); // check if syncwarp instead of syncthreads breaks anything
         
         if (threadIdx.x < k * k)
         {
@@ -831,7 +831,7 @@ namespace ReSolve
       }
 
       template <index_type k>
-      __global__ void multTSMTTSM(const real_type* A, const real_type* B, real_type* __restrict__ C, index_type n)
+      __global__ void multTSMTTSMSymmetric(const real_type* A, const real_type* B, real_type* __restrict__ C, index_type n)
       {
         index_type thread = blockIdx.x * blockDim.x + threadIdx.x;
         index_type stride = gridDim.x * blockDim.x;
@@ -1190,7 +1190,7 @@ namespace ReSolve
       index_type n = P->getSize();
       index_type k = P->getNumVectors();
 
-      int       block_size_choleskySolve = WARP_SIZE; // Must be at least k^2
+      int       block_size_choleskySolve = (k <= 4) ? 32 : 64; // Must be at least k^2
       int       num_blocks = 1;
       auto start = std::chrono::steady_clock::now();
 

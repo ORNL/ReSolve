@@ -79,8 +79,6 @@ namespace ReSolve
     }
 
     return impl_->setup(L_);
-  
-    return 0;
   }
 
   /**
