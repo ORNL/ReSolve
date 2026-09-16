@@ -33,10 +33,11 @@ namespace ReSolve
    * @brief Incomplete LU factorization solver.
    *
    * Implements ILU0 factorization from Algorithm 1 in 2023 paper by Suzuki,
-   * Fukaya, and Iwashita with modification where zero diagonal elements in
-   * the matrix are replaced by small values specified in `zero_diagonal_`.
-   * Factors L and U are stored in separate CSR matrices. Factor L does not
-   * store ones at the diagonal.
+   * Fukaya, and Iwashita. Missing diagonal entries are inserted as explicit
+   * numerical zeros. Once an ILU0 pivot is fully computed, optional numeric
+   * boosting replaces it when its magnitude is at or below the configured
+   * tolerance. Factors L and U are stored in separate CSR matrices. Factor L
+   * does not store ones at the diagonal.
    *
    * Methods in this class perform all operations on raw matrix data.
    *
@@ -66,8 +67,6 @@ namespace ReSolve
     matrix::Sparse* getLFactor() override;
     matrix::Sparse* getUFactor() override;
 
-    int setZeroDiagonal(real_type z);
-
     int         setCliParam(const std::string id, const std::string value) override;
     std::string getCliParamString(const std::string id) const override;
     index_type  getCliParamInt(const std::string id) const override;
@@ -78,7 +77,9 @@ namespace ReSolve
   private:
     enum ParameterIDs
     {
-      ZERO_DIAGONAL = 0
+      NUMERIC_BOOST = 0,
+      BOOST_TOLERANCE,
+      BOOST_VALUE
     };
 
     void initParamList();
@@ -91,6 +92,8 @@ namespace ReSolve
     index_type*  idxmap_{nullptr};     ///< Mapping for matrix column indices
     bool         owns_factors_{false}; ///< If the class owns L and U factors
 
-    real_type zero_diagonal_{1e-6}; ///< Approximation for zero diagonal
+    bool      numeric_boost_{true};   ///< Whether numeric boost is enabled.
+    real_type boost_tolerance_{1e-6}; ///< Threshold for replacing an ILU0 pivot.
+    real_type boost_value_{1e-6};     ///< Replacement value for a small ILU0 pivot.
   };
 } // namespace ReSolve

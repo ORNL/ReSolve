@@ -139,16 +139,9 @@ int test(int argc, char* argv[])
   solver.setGramSchmidtMethod(gs);
 
   // Configure ILU0 zero-pivot handling
-  if (hwbackend == "CPU")
-  {
-    status = solver.getPreconditionerSolver().setCliParam("zero_diagonal", "1e-7");
-  }
-  else
-  {
-    status = solver.getPreconditionerSolver().setCliParam("numeric_boost", "yes");
-    status += solver.getPreconditionerSolver().setCliParam("boost_tolerance", "1e-7");
-    status += solver.getPreconditionerSolver().setCliParam("boost_value", "1e-7");
-  }
+  status = solver.getPreconditionerSolver().setCliParam("numeric_boost", "yes");
+  status += solver.getPreconditionerSolver().setCliParam("boost_tolerance", "1e-7");
+  status += solver.getPreconditionerSolver().setCliParam("boost_value", "1e-7");
   error_sum += status;
 
   // Generate linear system data

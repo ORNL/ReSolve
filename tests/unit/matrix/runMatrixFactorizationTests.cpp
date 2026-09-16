@@ -16,6 +16,7 @@ int main(int, char**)
 
     result += test.matrixFactorizationConstructor();
     result += test.matrixILU0();
+    result += test.matrixILU0NumericBoost();
 
     std::cout << "\n";
   }

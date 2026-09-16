@@ -66,8 +66,10 @@ namespace ReSolve
         ReSolve::vector::Vector x(A->getNumRows());
         x.allocate(memory::HOST);
 
-        // Reference solutions are for zero diagonal approximated with 0.1
-        status *= (solver.setCliParam("zero_diagonal", "0.1") == 0);
+        // Configure numeric boosting through the portable ILU0 parameters.
+        status *= (solver.setCliParam("numeric_boost", "yes") == 0);
+        status *= (solver.setCliParam("boost_tolerance", "0.1") == 0);
+        status *= (solver.setCliParam("boost_value", "0.1") == 0);
 
         // Test ILU0 analysis and factorization
         solver.setup(A);
@@ -86,6 +88,53 @@ namespace ReSolve
         // Test forward-backward substitution
         solver.solve(&rhs);
         status *= verifyAnswer(rhs, solX_, "cpu");
+
+        delete A;
+
+        return status.report(__func__);
+      }
+
+      /**
+       * @brief Test numeric boosting of completed ILU0 pivots.
+       *
+       * @return TestOutcome
+       */
+      TestOutcome matrixILU0NumericBoost()
+      {
+        TestStatus status;
+
+        const std::vector<index_type> rowsA = {0, 1, 2, 4, 6};
+        const std::vector<index_type> colsA = {0, 1, 2, 3, 2, 3};
+        const std::vector<real_type>  valsA = {-2.0, -0.25, 1.0, 1.0, 1.0, 1.0};
+
+        auto* A = new matrix::Csr(4, 4, static_cast<index_type>(valsA.size()));
+        A->allocateMatrixData(memory::HOST);
+        A->copyFromExternal(rowsA.data(), colsA.data(), valsA.data(), memory::HOST, memory::HOST);
+
+        LinSolverDirectCpuILU0 solver;
+        status *= (solver.setCliParam("numeric_boost", "yes") == 0);
+        status *= (solver.setCliParam("boost_tolerance", "0.25") == 0);
+        status *= (solver.setCliParam("boost_value", "0.5") == 0);
+        status *= solver.getCliParamBool("numeric_boost");
+        status *= isEqual(solver.getCliParamReal("boost_tolerance"), 0.25);
+        status *= isEqual(solver.getCliParamReal("boost_value"), 0.5);
+
+        const std::vector<index_type> rowsL = {0, 0, 0, 0, 1};
+        const std::vector<index_type> colsL = {2};
+        const std::vector<real_type>  valsL = {1.0};
+
+        const std::vector<index_type> rowsU = {0, 1, 2, 4, 5};
+        const std::vector<index_type> colsU = {0, 1, 2, 3, 3};
+        const std::vector<real_type>  valsU = {-2.0, 0.5, 1.0, 1.0, 0.5};
+
+        status *= (solver.setup(A) == 0);
+        status *= verifyAnswer(*(solver.getLFactor()), rowsL, colsL, valsL, "cpu");
+        status *= verifyAnswer(*(solver.getUFactor()), rowsU, colsU, valsU, "cpu");
+
+        // Reset must apply the same boost rules after reloading matrix values.
+        status *= (solver.reset(A) == 0);
+        status *= verifyAnswer(*(solver.getLFactor()), rowsL, colsL, valsL, "cpu");
+        status *= verifyAnswer(*(solver.getUFactor()), rowsU, colsU, valsU, "cpu");
 
         delete A;
 
@@ -206,22 +255,24 @@ namespace ReSolve
                                          7.0,
                                          8.0};
 
-      // Upper triangular part of the test matrix A (zero_diagonal_ = 0.1):
+      // Upper triangular part of the test matrix A. Structurally missing
+      // diagonal entries are represented by explicit zeros:
       //
       //            [     2      0      0      0      1      0      3      0      0]
       //            [            7      0      5      0      4      0      0      0]
-      //            [                 0.1      0      3      0      0      2      0]
+      //            [                   0      0      3      0      0      2      0]
       //            [                          3      0      2      0      0      8]
-      // upper(A) = [                               0.1      0      0      0      0]
+      // upper(A) = [                                 0      0      0      0      0]
       //            [                                        1      6      0      0]
       //            [                                               3      3      0]
       //            [                                                      5      1]
       //            [                                                             4]
       std::vector<index_type> rowsAU_ = {0, 3, 6, 9, 12, 13, 15, 17, 19, 20};
       std::vector<index_type> colsAU_ = {0, 4, 6, 1, 3, 5, 2, 4, 7, 3, 5, 8, 4, 5, 6, 6, 7, 7, 8, 8};
-      std::vector<real_type>  valsAU_ = {2.0, 1.0, 3.0, 7.0, 5.0, 4.0, 0.1, 3.0, 2.0, 3.0, 2.0, 8.0, 0.1, 1.0, 6.0, 3.0, 3.0, 5.0, 1.0, 4.0};
+      std::vector<real_type>  valsAU_ = {2.0, 1.0, 3.0, 7.0, 5.0, 4.0, 0.0, 3.0, 2.0, 3.0, 2.0, 8.0, 0.0, 1.0, 6.0, 3.0, 3.0, 5.0, 1.0, 4.0};
 
-      // Incomplete factor L of the test matrix (assumes zero_diagonal_ = 0.1):
+      // Incomplete factor L of the test matrix (numeric boost tolerance and
+      // replacement value are both 0.1):
       //
       //     [                                                              ]
       //     [     0                                                        ]
@@ -229,9 +280,9 @@ namespace ReSolve
       //     [     0      0      0                                          ]
       // L = [   0.5      0      0      0                                   ]
       //     [     0 0.5714      0 0.7143      0                            ]
-      //     [     0      0     20      0    120      0                     ]
+      //     [     0      0     20      0     96      0                     ]
       //     [     1      0      0      0      0      0      0              ]
-      //     [     0      0     70      0  417.5      0      0      0       ]
+      //     [     0      0     70      0    334      0      0      0       ]
       std::vector<index_type> rowsL_ = {0, 0, 0, 1, 1, 2, 4, 6, 7, 9};
       std::vector<index_type> colsL_ = {0,
                                         0,
@@ -247,25 +298,26 @@ namespace ReSolve
                                         5.714285714285714e-01,
                                         7.142857142857144e-01,
                                         20.0,
-                                        120.0,
+                                        96.0,
                                         1.0,
                                         70.0,
-                                        417.5};
+                                        334.0};
 
-      // Incomplete factor U of the test matrix (assumes zero_diagonal_ = 0.1):
+      // Incomplete factor U of the test matrix (numeric boost tolerance and
+      // replacement value are both 0.1):
       //
       //     [     2      0      0      0      1      0      3      0      0]
       //     [            7      0      5      0      4      0      0      0]
       //     [                 0.1      0    2.5      0      0      2      0]
       //     [                          3      0      2      0      0      8]
-      // U = [                              -0.4      0      0      0      0]
+      // U = [                              -0.5      0      0      0      0]
       //     [                                   -2.714      6      0      0]
       //     [                                               3    -37      0]
       //     [                                                      5      1]
       //     [                                                             4]
       std::vector<index_type> rowsU_ = {0, 3, 6, 9, 12, 13, 15, 17, 19, 20};
       std::vector<index_type> colsU_ = {0, 4, 6, 1, 3, 5, 2, 4, 7, 3, 5, 8, 4, 5, 6, 6, 7, 7, 8, 8};
-      std::vector<real_type>  valsU_ = {2.0, 1.0, 3.0, 7.0, 5.0, 4.0, 0.1, 2.5, 2.0, 3.0, 2.0, 8.0, -0.4, -2.714285714285714, 6.0, 3.0, -37.0, 5.0, 1.0, 4.0};
+      std::vector<real_type>  valsU_ = {2.0, 1.0, 3.0, 7.0, 5.0, 4.0, 0.1, 2.5, 2.0, 3.0, 2.0, 8.0, -0.5, -2.714285714285714, 6.0, 3.0, -37.0, 5.0, 1.0, 4.0};
 
       /**
        * @brief Compare sparse matrix with a reference.
@@ -326,15 +378,15 @@ namespace ReSolve
 
       /// Reference solution to LUx = 1, where L and U are ILU0 factors
       /// and 1 is vector with all elements set to one.
-      std::vector<real_type> solX_ = {-1.889187500000000e+02,
-                                      -1.423733082706767e+02,
-                                      -2.065000000000000e+02,
-                                      -2.461315789473683e+01,
-                                      -1.250000000000000e+00,
-                                      2.801697368421052e+02,
-                                      1.266958333333333e+02,
-                                      1.213750000000000e+01,
-                                      -6.068750000000000e+01};
+      std::vector<real_type> solX_ = {-1.564250000000000e+02,
+                                      -1.179142857142857e+02,
+                                      -1.710000000000000e+02,
+                                      -2.040000000000002e+01,
+                                      -1.000000000000000e+00,
+                                      2.321000000000000e+02,
+                                      1.049500000000000e+02,
+                                      1.005000000000000e+01,
+                                      -5.025000000000000e+01};
 
       /**
        * @brief Compare vector with a reference vector.

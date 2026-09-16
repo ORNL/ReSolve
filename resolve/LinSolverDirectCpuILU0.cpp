@@ -8,6 +8,7 @@
 #include "LinSolverDirectCpuILU0.hpp"
 
 #include <cassert>
+#include <cmath>
 
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/utilities/logger/Logger.hpp>
@@ -72,6 +73,7 @@ namespace ReSolve
     index_type* colsU = U_->getColData(HOST);
     real_type*  valsU = U_->getValues(HOST);
 
+    const index_type* rowsA = A_->getRowData(HOST);
     const index_type* colsA = A_->getColData(HOST);
     const real_type*  valsA = A_->getValues(HOST);
 
@@ -87,9 +89,9 @@ namespace ReSolve
       }
       for (index_type j = rowsU[i]; j < rowsU[i + 1]; ++j)
       {
-        if ((colsU[j] == i) && (colsA[acount] != i))
+        if ((colsU[j] == i) && ((acount >= rowsA[i + 1]) || (colsA[acount] != i)))
         {
-          valsU[j] = zero_diagonal_;
+          valsU[j] = 0.0;
         }
         else
         {
@@ -124,7 +126,7 @@ namespace ReSolve
 
     // Initialize buffer to store diagonal elements of U
     diagU_ = new real_type[N];
-    std::fill(diagU_, diagU_ + N, zero_diagonal_);
+    std::fill(diagU_, diagU_ + N, 0.0);
 
     // Find number of nonzeros and row pointers for L and U factors
     bool has_diagonal = false;
@@ -143,7 +145,7 @@ namespace ReSolve
           if (colsA[j] == i)
           {
             has_diagonal = true;
-            diagU_[i]    = valsA[j] < zero_diagonal_ ? zero_diagonal_ : valsA[j];
+            diagU_[i]    = valsA[j];
           }
           nnzU++;
         }
@@ -155,7 +157,8 @@ namespace ReSolve
       else
       {
         nnzU++;
-        diagU_[i] = zero_diagonal_;
+        // Reserve an zero entry for the missing diagonal
+        diagU_[i] = 0.0;
       }
     }
     rowsL[N] = nnzL;
@@ -223,8 +226,7 @@ namespace ReSolve
     for (index_type u = 0; u < N; ++u)
       idxmap_[u] = -1;
 
-    // Factorize (incompletely)
-    for (index_type i = 1; i < N; ++i)
+    for (index_type i = 0; i < N; ++i)
     {
       for (index_type v = rowsL[i]; v < rowsL[i + 1]; ++v)
       {
@@ -253,6 +255,19 @@ namespace ReSolve
 
         for (index_type u = 0; u < N; ++u)
           idxmap_[u] = -1;
+      }
+
+      // Apply numeric boosting to the pivot
+      real_type& pivot = valsU[rowsU[i]];
+      if (numeric_boost_ && (std::abs(valsU[rowsU[i]]) <= boost_tolerance_))
+      {
+        pivot = boost_value_;
+      }
+
+      if (pivot == 0.0)
+      {
+        out::error() << "CPU ILU0 encountered a zero pivot at row " << i << ".\n";
+        return 1;
       }
     }
 
@@ -366,22 +381,6 @@ namespace ReSolve
   }
 
   /**
-   * @brief Sets approximation to zero on matrix diagonal.
-   *
-   * If the original matrix has structural zeros on the diagonal, the ILU0
-   * analysis will add diagonal elements and set them to `zero_diagonal_`
-   * value. The default is 1e-6, this function allows user to change that.
-   *
-   * @param z - small value approximating zero
-   * @return int - returns status code
-   */
-  int LinSolverDirectCpuILU0::setZeroDiagonal(real_type z)
-  {
-    zero_diagonal_ = z;
-    return 0;
-  }
-
-  /**
    * @brief Set Cli parameters for ILU0 solver.
    *
    * @param[in] id    - string ID for parameter to set
@@ -393,8 +392,15 @@ namespace ReSolve
   {
     switch (getParamId(id))
     {
-    case ZERO_DIAGONAL:
-      return setZeroDiagonal(atof(value.c_str()));
+    case NUMERIC_BOOST:
+      numeric_boost_ = (value == "yes");
+      return 0;
+    case BOOST_TOLERANCE:
+      boost_tolerance_ = atof(value.c_str());
+      return 0;
+    case BOOST_VALUE:
+      boost_value_ = atof(value.c_str());
+      return 0;
     default:
       std::cout << "Setting parameter failed!\n";
       return 1;
@@ -452,8 +458,10 @@ namespace ReSolve
   {
     switch (getParamId(id))
     {
-    case ZERO_DIAGONAL:
-      return zero_diagonal_;
+    case BOOST_TOLERANCE:
+      return boost_tolerance_;
+    case BOOST_VALUE:
+      return boost_value_;
     default:
       out::error() << "Trying to get unknown real parameter " << id << "\n";
     }
@@ -461,11 +469,7 @@ namespace ReSolve
   }
 
   /**
-   * @brief Placeholder function for now.
-   *
-   * The following switch (getParamId(Id)) cases always run the default and
-   * are currently redundant code (like an if (true)).
-   * In the future, they will be expanded to include more options.
+   * @brief Get a boolean parameter for the ILU0 solver.
    *
    * @param id - string ID for parameter to get.
    * @return bool Value of the bool parameter to return.
@@ -474,6 +478,8 @@ namespace ReSolve
   {
     switch (getParamId(id))
     {
+    case NUMERIC_BOOST:
+      return numeric_boost_;
     default:
       out::error() << "Trying to get unknown boolean parameter " << id << "\n";
     }
@@ -491,8 +497,14 @@ namespace ReSolve
   {
     switch (getParamId(id))
     {
-    case ZERO_DIAGONAL:
-      std::cout << zero_diagonal_ << "\n";
+    case NUMERIC_BOOST:
+      std::cout << numeric_boost_ << "\n";
+      break;
+    case BOOST_TOLERANCE:
+      std::cout << boost_tolerance_ << "\n";
+      break;
+    case BOOST_VALUE:
+      std::cout << boost_value_ << "\n";
       break;
     default:
       out::error() << "Trying to print unknown parameter " << id << "\n";
@@ -505,11 +517,15 @@ namespace ReSolve
    * @brief Initialize the parameter list for ILU0 solver.
    *
    * @post params_list_ is populated with the ILU0 solver parameters:
-   * - zero_diagonal
+   * - numeric_boost
+   * - boost_tolerance
+   * - boost_value
    */
   void LinSolverDirectCpuILU0::initParamList()
   {
-    params_list_["zero_diagonal"] = ZERO_DIAGONAL;
+    params_list_["numeric_boost"]   = NUMERIC_BOOST;
+    params_list_["boost_tolerance"] = BOOST_TOLERANCE;
+    params_list_["boost_value"]     = BOOST_VALUE;
   }
 
 } // namespace ReSolve
