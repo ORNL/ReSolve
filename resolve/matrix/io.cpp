@@ -411,7 +411,9 @@ namespace ReSolve
       }
       real_type  a;
       index_type i = 0;
-      while (file >> a)
+      // The caller's buffer holds n values when this function allocated it, and
+      // the header is all there is to go on when it did not.
+      while (i < n && file >> a)
       {
         rhs[i] = a;
         i++;
