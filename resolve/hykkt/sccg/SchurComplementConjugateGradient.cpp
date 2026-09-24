@@ -1,7 +1,6 @@
 #include "SchurComplementConjugateGradient.hpp"
 
 #include <cmath>
-#include <iomanip>
 
 #include <resolve/Common.hpp>
 
@@ -146,7 +145,7 @@ namespace ReSolve
         gamma_i1_ = vector_handler_->dot(r_, r_, memspace_);
         if (sqrt(gamma_i1_) < tol_)
         {
-          ReSolve::io::Logger::misc() << "Convergence occured at iteration " << std::to_string(i) << std::endl;
+          printf("Convergence occured at iteration %d\n", i);
           break;
         }
         matrix_handler_->matvec(J_tr_, r_, y_, &ONE, &ZERO, memspace_);
@@ -158,10 +157,10 @@ namespace ReSolve
         alpha_   = gamma_i_ / (delta_ - beta_ * gamma_i_ / alpha_);
       }
 
-      ReSolve::io::Logger::misc() << "Conjugate gradient error is " << std::setprecision(16) << sqrt(gamma_i1_) << std::endl;
+      printf("Conjugate gradient error is %32.32g \n", sqrt(gamma_i1_));
       if (i == itmax_)
       {
-        ReSolve::io::Logger::misc() << "No CG convergence in " << std::to_string(itmax_) << " iterations" << std::endl;
+        printf("No CG convergence in %d iterations\n", itmax_);
         return 1;
       }
 

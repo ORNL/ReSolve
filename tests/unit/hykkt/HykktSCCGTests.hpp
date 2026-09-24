@@ -12,7 +12,6 @@
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/matrix/io.hpp>
-#include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <tests/unit/TestBase.hpp>
 
@@ -98,9 +97,7 @@ namespace ReSolve
         sccg.addMatrixInfo(J, J_tr);
         sccg.addVectorInfo(x_0, b);
         sccg.setup();
-        ReSolve::io::Logger::setVerbosity(ReSolve::io::Logger::EVERYTHING); // Enable printing for solver convergence & error values
-        int converged_n = sccg.solve();                                     // 0 if converged, 1 if not
-        ReSolve::io::Logger::setVerbosity(ReSolve::io::Logger::WARNINGS);
+        int converged_n = sccg.solve(); // 0 if converged, 1 if not
 
         TestStatus  status;
         std::string testname(__func__);
