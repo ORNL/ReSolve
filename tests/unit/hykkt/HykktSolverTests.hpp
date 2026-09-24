@@ -118,16 +118,16 @@ namespace ReSolve
 
         // Get RHS norm
         real_type norm_r_x_sq  = 0;
-        real_type norm_r_s_sq   = 0;
+        real_type norm_r_s_sq  = 0;
         real_type norm_r_y_sq  = 0;
         real_type norm_r_yd_sq = 0;
-        
+
         // This will aggregate the squared norms of the residual and rhs
         // Note that by construction the residuals of r_s and r_yd are 0
-        norm_r_x_sq  = vectorHandler_.dot(r_x, r_x, memspace_);
-        norm_r_s_sq  = vectorHandler_.dot(r_s, r_s, memspace_);
-        norm_r_y_sq  = vectorHandler_.dot(r_y, r_y, memspace_);
-        norm_r_yd_sq = vectorHandler_.dot(r_yd, r_yd, memspace_);
+        norm_r_x_sq        = vectorHandler_.dot(r_x, r_x, memspace_);
+        norm_r_s_sq        = vectorHandler_.dot(r_s, r_s, memspace_);
+        norm_r_y_sq        = vectorHandler_.dot(r_y, r_y, memspace_);
+        norm_r_yd_sq       = vectorHandler_.dot(r_yd, r_yd, memspace_);
         real_type norm_rhs = sqrt(norm_r_x_sq + norm_r_s_sq + norm_r_y_sq + norm_r_yd_sq);
 
         // LHS vector blocks
@@ -230,7 +230,6 @@ namespace ReSolve
         real_type no_jd_error = no_jd_solver.solve();
         status *= validateResult(no_jd_error, tol);
 
-        
         ReSolve::io::Logger::setVerbosity(ReSolve::io::Logger::EVERYTHING); // Enable printing for solver convergence & error values
         real_type no_jd_reuse_error = no_jd_solver.solve();
         status *= validateResult(no_jd_reuse_error, tol);
