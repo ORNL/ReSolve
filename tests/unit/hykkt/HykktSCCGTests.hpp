@@ -99,7 +99,7 @@ namespace ReSolve
         sccg.addVectorInfo(x_0, b);
         sccg.setup();
         ReSolve::io::Logger::setVerbosity(ReSolve::io::Logger::EVERYTHING); // Enable printing for solver convergence & error values
-        int converged_n = sccg.solve(); // 0 if converged, 1 if not
+        int converged_n = sccg.solve();                                     // 0 if converged, 1 if not
         ReSolve::io::Logger::setVerbosity(ReSolve::io::Logger::WARNINGS);
 
         TestStatus  status;

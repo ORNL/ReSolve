@@ -6,10 +6,10 @@
 
 #include "HyKKTSolver.hpp"
 
+#include <iomanip>
+
 #include <resolve/matrix/io.hpp>
 #include <resolve/utilities/logger/Logger.hpp>
-
-#include <iomanip>
 
 namespace ReSolve
 {

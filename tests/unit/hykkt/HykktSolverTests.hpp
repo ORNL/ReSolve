@@ -133,8 +133,7 @@ namespace ReSolve
         hykktSolver.setLHSPointers(x, s, y, y_d);
         hykktSolver.setGamma(gamma);
         hykktSolver.addHandlers(&matrixHandler_, &vectorHandler_);
-    
-    
+
         ReSolve::io::Logger::setVerbosity(ReSolve::io::Logger::EVERYTHING); // Enable printing for solver convergence & error values
         real_type error = hykktSolver.solve();
         ReSolve::io::Logger::setVerbosity(ReSolve::io::Logger::WARNINGS);
@@ -227,7 +226,6 @@ namespace ReSolve
 
         status *= validateResult(no_jd_error, tol);
 
-        
         ReSolve::io::Logger::setVerbosity(ReSolve::io::Logger::EVERYTHING); // Enable printing for solver convergence & error values
         real_type no_jd_reuse_error = no_jd_solver.solve();
         ReSolve::io::Logger::setVerbosity(ReSolve::io::Logger::WARNINGS);
