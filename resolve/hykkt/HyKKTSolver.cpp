@@ -9,6 +9,8 @@
 #include <resolve/matrix/io.hpp>
 #include <resolve/utilities/logger/Logger.hpp>
 
+#include <iomanip>
+
 namespace ReSolve
 {
   using namespace constants;
@@ -238,10 +240,6 @@ namespace ReSolve
   void hykkt::HyKKTSolver::setupParameters()
   {
     // Assume all matrix blocks and RHS blocks are already set
-
-    std::cout << "H size: " << H_->getNumRows() << " " << H_->getNumColumns() << " " << H_->getNnz() << " \n";
-    std::cout << "J size: " << J_->getNumRows() << "  " << J_->getNumColumns() << "  " << J_->getNnz() << " \n";
-    std::cout << "D_s nnz = " << D_s_->getNnz() << "\n";
 
     if (!allocated_)
     {
@@ -650,11 +648,11 @@ namespace ReSolve
     if (norm_r_x_sq > 0)
     {
       norm_res /= sqrt(norm_r_x_sq);
-      printf("||Ax-b||/||b|| = %32.32g\n\n", norm_res);
+      ReSolve::io::Logger::misc() << "||Ax-b||/||b|| = " << std::setprecision(16) << norm_res << std::endl;
     }
     else
     {
-      printf("||Ax-b|| = %32.32g\n\n", norm_res);
+      ReSolve::io::Logger::misc() << "||Ax-b|| = " << std::setprecision(16) << norm_res << std::endl;
     }
 
     allocated_ = true;

@@ -14,6 +14,7 @@
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/matrix/io.hpp>
+#include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <tests/unit/TestBase.hpp>
 
@@ -132,8 +133,11 @@ namespace ReSolve
         hykktSolver.setLHSPointers(x, s, y, y_d);
         hykktSolver.setGamma(gamma);
         hykktSolver.addHandlers(&matrixHandler_, &vectorHandler_);
-
+    
+    
+        ReSolve::io::Logger::setVerbosity(ReSolve::io::Logger::EVERYTHING); // Enable printing for solver convergence & error values
         real_type error = hykktSolver.solve();
+        ReSolve::io::Logger::setVerbosity(ReSolve::io::Logger::WARNINGS);
 
         TestStatus  status;
         std::string testname(__func__);
@@ -185,7 +189,9 @@ namespace ReSolve
 
         // Change gamma to verify the cached SpGEMM coefficient is refreshed.
         hykktSolver.setGamma(gamma * 1.1);
+        ReSolve::io::Logger::setVerbosity(ReSolve::io::Logger::EVERYTHING); // Enable printing for solver convergence & error values
         real_type second_error = hykktSolver.solve();
+        ReSolve::io::Logger::setVerbosity(ReSolve::io::Logger::WARNINGS);
         status *= validateResult(second_error, tol);
 
         // Check that a zero RHS doesn't result in NaNs.
@@ -193,7 +199,9 @@ namespace ReSolve
         r_s->setToZero(memspace_);
         r_y->setToZero(memspace_);
         r_yd->setToZero(memspace_);
+        ReSolve::io::Logger::setVerbosity(ReSolve::io::Logger::EVERYTHING); // Enable printing for solver convergence & error values
         real_type zero_rhs_error = hykktSolver.solve();
+        ReSolve::io::Logger::setVerbosity(ReSolve::io::Logger::WARNINGS);
         status *= validateResult(zero_rhs_error, tol);
 
         // Check that the solver raises an error when trying to change J_d
@@ -213,10 +221,16 @@ namespace ReSolve
         no_jd_solver.setGamma(gamma);
         no_jd_solver.addHandlers(&matrixHandler_, &vectorHandler_);
 
+        ReSolve::io::Logger::setVerbosity(ReSolve::io::Logger::EVERYTHING); // Enable printing for solver convergence & error values
         real_type no_jd_error = no_jd_solver.solve();
+        ReSolve::io::Logger::setVerbosity(ReSolve::io::Logger::WARNINGS);
+
         status *= validateResult(no_jd_error, tol);
 
+        
+        ReSolve::io::Logger::setVerbosity(ReSolve::io::Logger::EVERYTHING); // Enable printing for solver convergence & error values
         real_type no_jd_reuse_error = no_jd_solver.solve();
+        ReSolve::io::Logger::setVerbosity(ReSolve::io::Logger::WARNINGS);
         status *= validateResult(no_jd_reuse_error, tol);
 
         delete D_s_reuse;
