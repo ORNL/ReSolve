@@ -101,6 +101,12 @@ namespace ReSolve
       w_->allocate(memspace_);
     }
 
+    /**
+     * @brief Solves the system
+     * @return The number of iterations required to converge, or -1 if solver failed to converge
+     * @pre x_0_ contains the initial guess
+     * @post x_0_ contains the solution
+     */
     int SchurComplementConjugateGradient::solve()
     {
       using namespace constants;
@@ -145,7 +151,6 @@ namespace ReSolve
         gamma_i1_ = vector_handler_->dot(r_, r_, memspace_);
         if (sqrt(gamma_i1_) < tol_)
         {
-          printf("Convergence occured at iteration %d\n", i);
           break;
         }
         matrix_handler_->matvec(J_tr_, r_, y_, &ONE, &ZERO, memspace_);
@@ -157,14 +162,12 @@ namespace ReSolve
         alpha_   = gamma_i_ / (delta_ - beta_ * gamma_i_ / alpha_);
       }
 
-      printf("Conjugate gradient error is %32.32g \n", sqrt(gamma_i1_));
       if (i == itmax_)
       {
-        printf("No CG convergence in %d iterations\n", itmax_);
-        return 1;
+        return -1;
       }
 
-      return 0;
+      return i + 1; // Add 1 to return the total number of iterations elapsed instead of the iteration index
     }
 
   } // namespace hykkt

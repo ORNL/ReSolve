@@ -97,20 +97,22 @@ namespace ReSolve
         sccg.addMatrixInfo(J, J_tr);
         sccg.addVectorInfo(x_0, b);
         sccg.setup();
-        int converged_n = sccg.solve(); // 0 if converged, 1 if not
+        int iters = sccg.solve(); // -1 if solver failed to converge
+        printf("Convergence occured after %d iteration(s) for non-trivial test system.\n", iters);
 
         TestStatus  status;
         std::string testname(__func__);
         testname += " n=" + std::to_string(n) + ", m=" + std::to_string(m) + ", nnz =" + std::to_string(nnz);
-        status *= validateResult(x_0, converged_n);
+        status *= validateResult(x_0, iters);
 
         // A zero initial residual is already converged and must not enter
         // conjugate-gradient divisions with zero numerator and denominator.
         x_0->setToZero(memspace_);
         b->setToZero(memspace_);
         sccg.addVectorInfo(x_0, b);
-        int zero_residual_converged_n = sccg.solve();
-        status *= (zero_residual_converged_n == 0);
+        int zero_residual_iters = sccg.solve();
+        printf("Convergence occured after %d iteration(s) for zero-residual (trivial) test system.\n", zero_residual_iters);
+        status *= (zero_residual_iters == 0);
         status *= (vector_handler_.dot(x_0, x_0, memspace_) <= sccg_tol);
 
         delete H;
@@ -144,9 +146,9 @@ namespace ReSolve
        * @brief Validate the SCCG result.
        * @param[in] x_0 Pointer to the output x_0 vector.
        */
-      bool validateResult(vector::Vector* x_0, int converged_n)
+      bool validateResult(vector::Vector* x_0, int iters)
       {
-        if (converged_n != 0)
+        if (iters == -1)
         {
           return false;
         }

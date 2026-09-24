@@ -116,6 +116,20 @@ namespace ReSolve
           r_yd->syncData(memory::DEVICE);
         }
 
+        // Get RHS norm
+        real_type norm_r_x_sq  = 0;
+        real_type norm_r_s_sq   = 0;
+        real_type norm_r_y_sq  = 0;
+        real_type norm_r_yd_sq = 0;
+        
+        // This will aggregate the squared norms of the residual and rhs
+        // Note that by construction the residuals of r_s and r_yd are 0
+        norm_r_x_sq  = vectorHandler_.dot(r_x, r_x, memspace_);
+        norm_r_s_sq  = vectorHandler_.dot(r_s, r_s, memspace_);
+        norm_r_y_sq  = vectorHandler_.dot(r_y, r_y, memspace_);
+        norm_r_yd_sq = vectorHandler_.dot(r_yd, r_yd, memspace_);
+        real_type norm_rhs = sqrt(norm_r_x_sq + norm_r_s_sq + norm_r_y_sq + norm_r_yd_sq);
+
         // LHS vector blocks
         vector::Vector* x   = new vector::Vector(n_x);
         vector::Vector* s   = new vector::Vector(m_d);
@@ -133,7 +147,7 @@ namespace ReSolve
         hykktSolver.setGamma(gamma);
         hykktSolver.addHandlers(&matrixHandler_, &vectorHandler_);
 
-        real_type error = hykktSolver.solve();
+        real_type error = hykktSolver.solve() / norm_rhs;
 
         TestStatus  status;
         std::string testname(__func__);
@@ -185,7 +199,7 @@ namespace ReSolve
 
         // Change gamma to verify the cached SpGEMM coefficient is refreshed.
         hykktSolver.setGamma(gamma * 1.1);
-        real_type second_error = hykktSolver.solve();
+        real_type second_error = hykktSolver.solve() / norm_rhs;
         status *= validateResult(second_error, tol);
 
         // Check that a zero RHS doesn't result in NaNs.
