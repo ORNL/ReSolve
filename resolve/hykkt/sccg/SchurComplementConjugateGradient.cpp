@@ -101,6 +101,12 @@ namespace ReSolve
       w_->allocate(memspace_);
     }
 
+    /**
+     * @brief Solves the system
+     * @return 0 if the system converged. 1 if it did not converge
+     * @pre x_0_ contains the initial guess
+     * @post x_0_ contains the solution, itcount_ contains the number of iterations elapsed until convergence
+     */
     int SchurComplementConjugateGradient::solve()
     {
       using namespace constants;
@@ -124,6 +130,8 @@ namespace ReSolve
       if (sqrt(gamma_i_) < tol_)
       {
         gamma_i1_ = gamma_i_;
+        error_    = sqrt(gamma_i_);
+        itcount_  = 0;
         return 0;
       }
 
@@ -145,7 +153,6 @@ namespace ReSolve
         gamma_i1_ = vector_handler_->dot(r_, r_, memspace_);
         if (sqrt(gamma_i1_) < tol_)
         {
-          printf("Convergence occured at iteration %d\n", i);
           break;
         }
         matrix_handler_->matvec(J_tr_, r_, y_, &ONE, &ZERO, memspace_);
@@ -157,15 +164,38 @@ namespace ReSolve
         alpha_   = gamma_i_ / (delta_ - beta_ * gamma_i_ / alpha_);
       }
 
-      printf("Conjugate gradient error is %32.32g \n", sqrt(gamma_i1_));
       if (i == itmax_)
       {
-        printf("No CG convergence in %d iterations\n", itmax_);
         return 1;
       }
 
+      error_   = sqrt(gamma_i1_);
+      itcount_ = i + 1; // Add 1 to return the total number of iterations elapsed instead of the iteration index
       return 0;
     }
 
+    /**
+     * @brief get the number of iterations elapsed until solver convergence
+     *
+     * @pre solve() is called
+     *
+     * @return - Iteration count
+     */
+    int SchurComplementConjugateGradient::checkItcount()
+    {
+      return itcount_;
+    }
+
+    /**
+     * @brief calculates the error of the solution
+     *
+     * @pre solve() is called
+     *
+     * @return - Error of Ax - b
+     */
+    real_type SchurComplementConjugateGradient::checkError()
+    {
+      return error_;
+    }
   } // namespace hykkt
 } // namespace ReSolve

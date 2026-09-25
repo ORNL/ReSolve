@@ -6,6 +6,8 @@
 
 #include "HyKKTSolver.hpp"
 
+#include <iomanip>
+
 #include <resolve/matrix/io.hpp>
 #include <resolve/utilities/logger/Logger.hpp>
 
@@ -169,11 +171,11 @@ namespace ReSolve
    *
    * @pre matrix files have been loaded into the solver
    *
-   * @param[out] - Error of Ax - b
+   * @param[out] - Status code. 0 for successful solve
    *
    * @post solution to given KKT system is computed using Hykkt
    */
-  real_type hykkt::HyKKTSolver::solve()
+  int hykkt::HyKKTSolver::solve()
   {
     setupParameters();
 
@@ -223,7 +225,7 @@ namespace ReSolve
     computeConjugateGradient();
 
     recoverSolution();
-    return checkError();
+    return 0;
   }
 
   /**
@@ -238,10 +240,6 @@ namespace ReSolve
   void hykkt::HyKKTSolver::setupParameters()
   {
     // Assume all matrix blocks and RHS blocks are already set
-
-    std::cout << "H size: " << H_->getNumRows() << " " << H_->getNumColumns() << " " << H_->getNnz() << " \n";
-    std::cout << "J size: " << J_->getNumRows() << "  " << J_->getNumColumns() << "  " << J_->getNnz() << " \n";
-    std::cout << "D_s nnz = " << D_s_->getNnz() << "\n";
 
     if (!allocated_)
     {
@@ -607,31 +605,17 @@ namespace ReSolve
   }
 
   /**
-   * @brief calculates the error of Ax - b
+   * @brief calculates the error of Ax - b (||Ax-b||, without normalization)
    *
-   * @pre solution properly recovered using recoverSolution()
+   * @pre solve() is called
    *
-   * @param[out] norm_res - Error of Ax - b
+   * @return - Error of Ax - b
    */
   real_type hykkt::HyKKTSolver::checkError()
   {
-    //  Start of block, calculate error of Ax-b
     //  Calculate error in r_x
-    real_type norm_r_x_sq  = 0;
-    real_type norm_rs_sq   = 0;
-    real_type norm_r_y_sq  = 0;
-    real_type norm_r_yd_sq = 0;
     real_type norm_resx_sq = 0;
     real_type norm_resy_sq = 0;
-
-    // This will aggregate the squared norms of the residual and rhs
-    // Note that by construction the residuals of r_s and r_yd are 0
-    norm_r_x_sq  = vectorHandler_->dot(r_x_, r_x_, memspace_);
-    norm_rs_sq   = vectorHandler_->dot(r_s_, r_s_, memspace_);
-    norm_r_y_sq  = vectorHandler_->dot(r_y_copy_, r_y_copy_, memspace_);
-    norm_r_yd_sq = vectorHandler_->dot(r_yd_, r_yd_, memspace_);
-
-    norm_r_x_sq += norm_rs_sq + norm_r_y_sq + norm_r_yd_sq;
 
     matrixHandler_->matvec(H_, x_, r_x_, &MINUS_ONE, &ONE, memspace_);
     if (J_d_flag_)
@@ -646,19 +630,9 @@ namespace ReSolve
     norm_resy_sq = vectorHandler_->dot(r_y_copy_, r_y_copy_, memspace_);
 
     norm_resx_sq += norm_resy_sq;
-    real_type norm_res = sqrt(norm_resx_sq);
-    if (norm_r_x_sq > 0)
-    {
-      norm_res /= sqrt(norm_r_x_sq);
-      printf("||Ax-b||/||b|| = %32.32g\n\n", norm_res);
-    }
-    else
-    {
-      printf("||Ax-b|| = %32.32g\n\n", norm_res);
-    }
 
     allocated_ = true;
 
-    return norm_res;
+    return sqrt(norm_resx_sq);
   }
 } // namespace ReSolve

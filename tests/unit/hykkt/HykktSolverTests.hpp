@@ -116,6 +116,20 @@ namespace ReSolve
           r_yd->syncData(memory::DEVICE);
         }
 
+        // Get RHS norm
+        real_type norm_r_x_sq  = 0;
+        real_type norm_r_s_sq  = 0;
+        real_type norm_r_y_sq  = 0;
+        real_type norm_r_yd_sq = 0;
+
+        // This will aggregate the squared norms of the residual and rhs
+        // Note that by construction the residuals of r_s and r_yd are 0
+        norm_r_x_sq        = vectorHandler_.dot(r_x, r_x, memspace_);
+        norm_r_s_sq        = vectorHandler_.dot(r_s, r_s, memspace_);
+        norm_r_y_sq        = vectorHandler_.dot(r_y, r_y, memspace_);
+        norm_r_yd_sq       = vectorHandler_.dot(r_yd, r_yd, memspace_);
+        real_type norm_rhs = sqrt(norm_r_x_sq + norm_r_s_sq + norm_r_y_sq + norm_r_yd_sq);
+
         // LHS vector blocks
         vector::Vector* x   = new vector::Vector(n_x);
         vector::Vector* s   = new vector::Vector(m_d);
@@ -133,7 +147,8 @@ namespace ReSolve
         hykktSolver.setGamma(gamma);
         hykktSolver.addHandlers(&matrixHandler_, &vectorHandler_);
 
-        real_type error = hykktSolver.solve();
+        hykktSolver.solve();
+        real_type error = hykktSolver.checkError() / norm_rhs;
 
         TestStatus  status;
         std::string testname(__func__);
@@ -185,7 +200,8 @@ namespace ReSolve
 
         // Change gamma to verify the cached SpGEMM coefficient is refreshed.
         hykktSolver.setGamma(gamma * 1.1);
-        real_type second_error = hykktSolver.solve();
+        hykktSolver.solve();
+        real_type second_error = hykktSolver.checkError() / norm_rhs;
         status *= validateResult(second_error, tol);
 
         // Check that a zero RHS doesn't result in NaNs.
@@ -193,7 +209,8 @@ namespace ReSolve
         r_s->setToZero(memspace_);
         r_y->setToZero(memspace_);
         r_yd->setToZero(memspace_);
-        real_type zero_rhs_error = hykktSolver.solve();
+        hykktSolver.solve();
+        real_type zero_rhs_error = hykktSolver.checkError();
         status *= validateResult(zero_rhs_error, tol);
 
         // Check that the solver raises an error when trying to change J_d
@@ -213,10 +230,12 @@ namespace ReSolve
         no_jd_solver.setGamma(gamma);
         no_jd_solver.addHandlers(&matrixHandler_, &vectorHandler_);
 
-        real_type no_jd_error = no_jd_solver.solve();
+        no_jd_solver.solve();
+        real_type no_jd_error = no_jd_solver.checkError();
         status *= validateResult(no_jd_error, tol);
 
-        real_type no_jd_reuse_error = no_jd_solver.solve();
+        no_jd_solver.solve();
+        real_type no_jd_reuse_error = no_jd_solver.checkError();
         status *= validateResult(no_jd_reuse_error, tol);
 
         delete D_s_reuse;
@@ -250,7 +269,13 @@ namespace ReSolve
        */
       bool validateResult(real_type error, real_type tol)
       {
-        return error < tol;
+        if (error >= tol)
+        {
+          printf("Solve failed! Error is %32.32g.\n", error);
+          return false;
+        }
+
+        return true;
       }
     }; // class HykktSolverTests
   } // namespace tests
