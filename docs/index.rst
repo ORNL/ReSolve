@@ -50,7 +50,7 @@ from (in alphabetic order):
 * Maksudul Alam (ORNL)
 * Kaleb Brunhoeber (ORNL)
 * Ryan Danehy (PNNL)
-* Tamar Dewilde
+* Tamar DeWilde
 * Adham Ibrahim (ORNL)
 * Nicholson Koukpaizan (ORNL)
 * Jaelyn Litzinger (PNNL)
