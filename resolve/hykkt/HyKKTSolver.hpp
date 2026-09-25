@@ -49,26 +49,26 @@ namespace ReSolve
 
       void addHandlers(MatrixHandler* matrixHandler, VectorHandler* vectorHandler);
 
-      int solve();
+      int       solve();
       real_type checkError();
 
     private:
       // Intermediate steps of solving the system
-      void      setupParameters();
-      void      setupSpGEMMHtilde();
-      void      computeSpGEMMHtilde();
-      void      setupSolutionCheck();
-      void      setupRuizScaling();
-      void      computeRuizScaling();
-      void      setupSpGEMMHgamma();
-      void      computeSpGEMMHgamma();
-      void      setupPermutation();
-      void      applyPermutation();
-      void      setupHgammaFactorization(); // Uses Cholesky
-      void      computeHgammaFactorization();
-      void      setupConjugateGradient();
-      void      computeConjugateGradient();
-      void      recoverSolution();
+      void setupParameters();
+      void setupSpGEMMHtilde();
+      void computeSpGEMMHtilde();
+      void setupSolutionCheck();
+      void setupRuizScaling();
+      void computeRuizScaling();
+      void setupSpGEMMHgamma();
+      void computeSpGEMMHgamma();
+      void setupPermutation();
+      void applyPermutation();
+      void setupHgammaFactorization(); // Uses Cholesky
+      void computeHgammaFactorization();
+      void setupConjugateGradient();
+      void computeConjugateGradient();
+      void recoverSolution();
 
       static constexpr int    ruiz_its_     = 2;
       static constexpr double cholesky_tol_ = 1e-12;

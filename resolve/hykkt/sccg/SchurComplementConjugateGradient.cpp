@@ -130,8 +130,8 @@ namespace ReSolve
       if (sqrt(gamma_i_) < tol_)
       {
         gamma_i1_ = gamma_i_;
-        error_ = sqrt(gamma_i_);
-        itcount_ = 0;
+        error_    = sqrt(gamma_i_);
+        itcount_  = 0;
         return 0;
       }
 
@@ -169,11 +169,11 @@ namespace ReSolve
         return 1;
       }
 
-      error_ = sqrt(gamma_i1_);
+      error_   = sqrt(gamma_i1_);
       itcount_ = i + 1; // Add 1 to return the total number of iterations elapsed instead of the iteration index
       return 0;
     }
-    
+
     /**
      * @brief get the number of iterations elapsed until solver convergence
      *
@@ -185,7 +185,7 @@ namespace ReSolve
     {
       return itcount_;
     }
-    
+
     /**
      * @brief calculates the error of the solution
      *

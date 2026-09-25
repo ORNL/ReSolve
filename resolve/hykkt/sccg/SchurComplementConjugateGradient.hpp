@@ -54,9 +54,9 @@ namespace ReSolve
        *
        * @pre Must be called exactly once before the first call to solve().
        */
-      void setup();
-      int  solve();
-      int checkItcount();
+      void      setup();
+      int       solve();
+      int       checkItcount();
       real_type checkError();
 
     private:
@@ -65,8 +65,8 @@ namespace ReSolve
       int        itmax_ = 100;   // Maximum iterations for conjugate gradient
       double     tol_   = 1e-12; // Solver tolerance for Schur
 
-      int        itcount_; // Number of iterations elapsed until convergence
-      real_type  error_; // Error of the solution
+      int       itcount_; // Number of iterations elapsed until convergence
+      real_type error_;   // Error of the solution
 
       CholeskySolver* choleskySolver_{nullptr}; // Cholesky factorization on 1,1 block
 

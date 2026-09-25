@@ -234,7 +234,7 @@ namespace ReSolve
         real_type no_jd_error = no_jd_solver.checkError();
         status *= validateResult(no_jd_error, tol);
 
-        no_jd_solver.solve();        
+        no_jd_solver.solve();
         real_type no_jd_reuse_error = no_jd_solver.checkError();
         status *= validateResult(no_jd_reuse_error, tol);
 
