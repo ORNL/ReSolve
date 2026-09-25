@@ -32,6 +32,10 @@
 /// timing does not make an unnecessary CUDA or HIP runtime call.
 static void syncDevice(const std::string& hw_backend)
 {
+#if !defined(RESOLVE_USE_CUDA) && !defined(RESOLVE_USE_HIP)
+  (void) hw_backend;
+#endif
+
 #ifdef RESOLVE_USE_CUDA
   if (hw_backend == "CUDA")
   {

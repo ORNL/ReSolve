@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <iostream>
 
 #include <hip/hip_runtime.h>
@@ -57,7 +58,7 @@ namespace ReSolve
       template <typename I, typename T>
       static int allocateArrayOnDevice(T** v, I n)
       {
-        return checkHipErrors(hipMalloc((void**) v, sizeof(T) * n));
+        return checkHipErrors(hipMalloc((void**) v, sizeof(T) * static_cast<std::size_t>(n)));
       }
 
       /**
@@ -94,7 +95,7 @@ namespace ReSolve
       template <typename I, typename T>
       static int setZeroArrayOnDevice(T* v, I n)
       {
-        return checkHipErrors(hipMemset(v, 0, sizeof(T) * n));
+        return checkHipErrors(hipMemset(v, 0, sizeof(T) * static_cast<std::size_t>(n)));
       }
 
       /**
@@ -130,7 +131,7 @@ namespace ReSolve
       template <typename I, typename T>
       static int copyArrayDeviceToHost(T* dst, const T* src, I n)
       {
-        return checkHipErrors(hipMemcpy(dst, src, sizeof(T) * n, hipMemcpyDeviceToHost));
+        return checkHipErrors(hipMemcpy(dst, src, sizeof(T) * static_cast<std::size_t>(n), hipMemcpyDeviceToHost));
       }
 
       /**
@@ -147,7 +148,7 @@ namespace ReSolve
       template <typename I, typename T>
       static int copyArrayDeviceToDevice(T* dst, const T* src, I n)
       {
-        return checkHipErrors(hipMemcpy(dst, src, sizeof(T) * n, hipMemcpyDeviceToDevice));
+        return checkHipErrors(hipMemcpy(dst, src, sizeof(T) * static_cast<std::size_t>(n), hipMemcpyDeviceToDevice));
       }
 
       /**
@@ -164,7 +165,7 @@ namespace ReSolve
       template <typename I, typename T>
       static int copyArrayHostToDevice(T* dst, const T* src, I n)
       {
-        return checkHipErrors(hipMemcpy(dst, src, sizeof(T) * n, hipMemcpyHostToDevice));
+        return checkHipErrors(hipMemcpy(dst, src, sizeof(T) * static_cast<std::size_t>(n), hipMemcpyHostToDevice));
       }
     };
   } // namespace memory
