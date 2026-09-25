@@ -97,22 +97,34 @@ namespace ReSolve
         sccg.addMatrixInfo(J, J_tr);
         sccg.addVectorInfo(x_0, b);
         sccg.setup();
-        int iters = sccg.solve(); // -1 if solver failed to converge
-        printf("Convergence occured after %d iteration(s) for non-trivial test system.\n", iters);
+        bool converged = (sccg.solve() == 0);
+        if (!converged)
+        {
+          real_type error = sccg.checkError();
+          printf("Convergence failed to converge for non-trivial test system, with error %32.32g.\n", error);
+        }
 
         TestStatus  status;
         std::string testname(__func__);
         testname += " n=" + std::to_string(n) + ", m=" + std::to_string(m) + ", nnz =" + std::to_string(nnz);
-        status *= validateResult(x_0, iters);
+        status *= converged;
+        if (converged)
+        {
+          status *= validateResult(x_0);
+        }
 
         // A zero initial residual is already converged and must not enter
         // conjugate-gradient divisions with zero numerator and denominator.
         x_0->setToZero(memspace_);
         b->setToZero(memspace_);
         sccg.addVectorInfo(x_0, b);
-        int zero_residual_iters = sccg.solve();
-        printf("Convergence occured after %d iteration(s) for zero-residual (trivial) test system.\n", zero_residual_iters);
-        status *= (zero_residual_iters == 0);
+        bool zero_residual_converged = (sccg.solve() == 0);
+        if (!zero_residual_converged)
+        {
+          real_type error = sccg.checkError();
+          printf("Convergence failed to converge for zero-initial-residual (trivial) test system, with error %32.32g.\n", error);
+        }
+        status *= zero_residual_converged;
         status *= (vector_handler_.dot(x_0, x_0, memspace_) <= sccg_tol);
 
         delete H;
@@ -146,12 +158,8 @@ namespace ReSolve
        * @brief Validate the SCCG result.
        * @param[in] x_0 Pointer to the output x_0 vector.
        */
-      bool validateResult(vector::Vector* x_0, int iters)
+      bool validateResult(vector::Vector* x_0)
       {
-        if (iters == -1)
-        {
-          return false;
-        }
         if (memspace_ == memory::DEVICE)
         {
           x_0->syncData(memory::HOST);

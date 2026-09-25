@@ -103,9 +103,9 @@ namespace ReSolve
 
     /**
      * @brief Solves the system
-     * @return The number of iterations required to converge, or -1 if solver failed to converge
+     * @return 0 if the system converged. 1 if it did not converge
      * @pre x_0_ contains the initial guess
-     * @post x_0_ contains the solution
+     * @post x_0_ contains the solution, itcount_ contains the number of iterations elapsed until convergence
      */
     int SchurComplementConjugateGradient::solve()
     {
@@ -130,6 +130,8 @@ namespace ReSolve
       if (sqrt(gamma_i_) < tol_)
       {
         gamma_i1_ = gamma_i_;
+        error_ = sqrt(gamma_i_);
+        itcount_ = 0;
         return 0;
       }
 
@@ -164,11 +166,36 @@ namespace ReSolve
 
       if (i == itmax_)
       {
-        return -1;
+        return 1;
       }
 
-      return i + 1; // Add 1 to return the total number of iterations elapsed instead of the iteration index
+      error_ = sqrt(gamma_i1_);
+      itcount_ = i + 1; // Add 1 to return the total number of iterations elapsed instead of the iteration index
+      return 0;
     }
-
+    
+    /**
+     * @brief get the number of iterations elapsed until solver convergence
+     *
+     * @pre solve() is called
+     *
+     * @return - Iteration count
+     */
+    int SchurComplementConjugateGradient::checkItcount()
+    {
+      return itcount_;
+    }
+    
+    /**
+     * @brief calculates the error of the solution
+     *
+     * @pre solve() is called
+     *
+     * @return - Error of Ax - b
+     */
+    real_type SchurComplementConjugateGradient::checkError()
+    {
+      return error_;
+    }
   } // namespace hykkt
 } // namespace ReSolve

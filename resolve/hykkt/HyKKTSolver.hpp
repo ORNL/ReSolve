@@ -49,7 +49,8 @@ namespace ReSolve
 
       void addHandlers(MatrixHandler* matrixHandler, VectorHandler* vectorHandler);
 
-      real_type solve();
+      int solve();
+      real_type checkError();
 
     private:
       // Intermediate steps of solving the system
@@ -68,7 +69,6 @@ namespace ReSolve
       void      setupConjugateGradient();
       void      computeConjugateGradient();
       void      recoverSolution();
-      real_type checkError();
 
       static constexpr int    ruiz_its_     = 2;
       static constexpr double cholesky_tol_ = 1e-12;

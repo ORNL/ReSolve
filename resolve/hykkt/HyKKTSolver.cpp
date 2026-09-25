@@ -171,11 +171,11 @@ namespace ReSolve
    *
    * @pre matrix files have been loaded into the solver
    *
-   * @param[out] - Error of Ax - b
+   * @param[out] - Status code. 0 for successful solve
    *
    * @post solution to given KKT system is computed using Hykkt
    */
-  real_type hykkt::HyKKTSolver::solve()
+  int hykkt::HyKKTSolver::solve()
   {
     setupParameters();
 
@@ -225,7 +225,7 @@ namespace ReSolve
     computeConjugateGradient();
 
     recoverSolution();
-    return checkError();
+    return 0;
   }
 
   /**
@@ -607,7 +607,7 @@ namespace ReSolve
   /**
    * @brief calculates the error of Ax - b (||Ax-b||, without normalization)
    *
-   * @pre solution properly recovered using recoverSolution()
+   * @pre solve() is called
    *
    * @return - Error of Ax - b
    */

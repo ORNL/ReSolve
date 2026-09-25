@@ -147,7 +147,8 @@ namespace ReSolve
         hykktSolver.setGamma(gamma);
         hykktSolver.addHandlers(&matrixHandler_, &vectorHandler_);
 
-        real_type error = hykktSolver.solve() / norm_rhs;
+        hykktSolver.solve();
+        real_type error = hykktSolver.checkError() / norm_rhs;
 
         TestStatus  status;
         std::string testname(__func__);
@@ -199,7 +200,8 @@ namespace ReSolve
 
         // Change gamma to verify the cached SpGEMM coefficient is refreshed.
         hykktSolver.setGamma(gamma * 1.1);
-        real_type second_error = hykktSolver.solve() / norm_rhs;
+        hykktSolver.solve();
+        real_type second_error = hykktSolver.checkError() / norm_rhs;
         status *= validateResult(second_error, tol);
 
         // Check that a zero RHS doesn't result in NaNs.
@@ -207,7 +209,8 @@ namespace ReSolve
         r_s->setToZero(memspace_);
         r_y->setToZero(memspace_);
         r_yd->setToZero(memspace_);
-        real_type zero_rhs_error = hykktSolver.solve();
+        hykktSolver.solve();
+        real_type zero_rhs_error = hykktSolver.checkError();
         status *= validateResult(zero_rhs_error, tol);
 
         // Check that the solver raises an error when trying to change J_d
@@ -227,11 +230,12 @@ namespace ReSolve
         no_jd_solver.setGamma(gamma);
         no_jd_solver.addHandlers(&matrixHandler_, &vectorHandler_);
 
-        real_type no_jd_error = no_jd_solver.solve();
+        no_jd_solver.solve();
+        real_type no_jd_error = no_jd_solver.checkError();
         status *= validateResult(no_jd_error, tol);
 
-        ReSolve::io::Logger::setVerbosity(ReSolve::io::Logger::EVERYTHING); // Enable printing for solver convergence & error values
-        real_type no_jd_reuse_error = no_jd_solver.solve();
+        no_jd_solver.solve();        
+        real_type no_jd_reuse_error = no_jd_solver.checkError();
         status *= validateResult(no_jd_reuse_error, tol);
 
         delete D_s_reuse;
@@ -265,7 +269,13 @@ namespace ReSolve
        */
       bool validateResult(real_type error, real_type tol)
       {
-        return error < tol;
+        if (error >= tol)
+        {
+          printf("Solve failed! Error is %32.32g.\n", error);
+          return false;
+        }
+
+        return true;
       }
     }; // class HykktSolverTests
   } // namespace tests
