@@ -267,7 +267,9 @@ namespace ReSolve
 
       real_type* vec = new real_type[n];
       real_type  a;
-      while (file >> a)
+      // Stop at the number of values the header declares; a longer body would
+      // otherwise be written past the end of the allocation.
+      while (i < n && file >> a)
       {
         vec[i] = a;
         i++;
@@ -299,7 +301,8 @@ namespace ReSolve
       vector::Vector* vec = new vector::Vector(n);
       vec->allocate(memory::HOST);
       real_type a;
-      while (file >> a)
+      // As above, the header decides how many values fit.
+      while (i < n && file >> a)
       {
         vec->getData(memory::HOST)[i] = a;
         i++;
@@ -408,7 +411,9 @@ namespace ReSolve
       }
       real_type  a;
       index_type i = 0;
-      while (file >> a)
+      // The caller's buffer holds n values when this function allocated it, and
+      // the header is all there is to go on when it did not.
+      while (i < n && file >> a)
       {
         rhs[i] = a;
         i++;
@@ -446,7 +451,9 @@ namespace ReSolve
       real_type* rhs = vec_rhs->getData(memory::HOST);
       real_type  a   = 0.0;
       index_type i   = 0;
-      while (file >> a)
+      // The size check above compares the declared length, not how many values
+      // the body actually carries, so the loop is bounded here too.
+      while (i < n && file >> a)
       {
         rhs[i] = a;
         // std::cout << i << ": " << a << "\n";
