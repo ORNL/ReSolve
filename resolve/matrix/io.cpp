@@ -1,11 +1,13 @@
 #include "io.hpp"
 
+#include <algorithm>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <list>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/Csr.hpp>
@@ -148,10 +150,11 @@ namespace ReSolve
                                            matrix::Sparse*                  A,
                                            std::list<MatrixElementTriplet>& tmp);
     // static void print_list(std::list<MatrixElementTriplet>& l);
-    static int loadToList(std::istream& file, bool is_expand_symmetric, std::list<MatrixElementTriplet>& tmp);
-    static int removeDuplicates(std::list<MatrixElementTriplet>& tmp);
-    static int copyListToCoo(const std::list<MatrixElementTriplet>& tmp, matrix::Coo* A);
-    static int copyListToCsr(const std::list<MatrixElementTriplet>& tmp, matrix::Csr* A);
+    static int  loadToList(std::istream& file, bool is_expand_symmetric, std::list<MatrixElementTriplet>& tmp);
+    static int  removeDuplicates(std::list<MatrixElementTriplet>& tmp);
+    static int  copyListToCoo(const std::list<MatrixElementTriplet>& tmp, matrix::Coo* A);
+    static int  copyListToCsr(const std::list<MatrixElementTriplet>& tmp, matrix::Csr* A);
+    static bool readArrayBody(std::istream& file, index_type n, std::vector<real_type>& values);
 
     /**
      * @brief Create a COO matrix and populate it with data from Matrix Market
@@ -254,7 +257,6 @@ namespace ReSolve
 
       std::stringstream ss;
       std::string       line;
-      index_type        i = 0;
       index_type        n, m;
 
       std::getline(file, line);
@@ -265,15 +267,14 @@ namespace ReSolve
       ss << line;
       ss >> n >> m;
 
-      real_type* vec = new real_type[n];
-      real_type  a;
-      // Stop at the number of values the header declares; a longer body would
-      // otherwise be written past the end of the allocation.
-      while (i < n && file >> a)
+      std::vector<real_type> values;
+      if (!readArrayBody(file, n, values))
       {
-        vec[i] = a;
-        i++;
+        return nullptr;
       }
+
+      real_type* vec = new real_type[n];
+      std::copy(values.begin(), values.end(), vec);
       return vec;
     }
 
@@ -287,7 +288,6 @@ namespace ReSolve
 
       std::stringstream ss;
       std::string       line;
-      index_type        i = 0;
       index_type        n, m;
 
       std::getline(file, line);
@@ -298,15 +298,15 @@ namespace ReSolve
       ss << line;
       ss >> n >> m;
 
+      std::vector<real_type> values;
+      if (!readArrayBody(file, n, values))
+      {
+        return nullptr;
+      }
+
       vector::Vector* vec = new vector::Vector(n);
       vec->allocate(memory::HOST);
-      real_type a;
-      // As above, the header decides how many values fit.
-      while (i < n && file >> a)
-      {
-        vec->getData(memory::HOST)[i] = a;
-        i++;
-      }
+      std::copy(values.begin(), values.end(), vec->getData(memory::HOST));
       vec->setDataUpdated(memory::HOST);
       return vec;
     }
@@ -405,19 +405,18 @@ namespace ReSolve
       ss << line;
       ss >> n >> m;
 
+      std::vector<real_type> values;
+      if (!readArrayBody(file, n, values))
+      {
+        Logger::error() << "Array not updated!\n";
+        return;
+      }
+
       if (rhs == nullptr)
       {
         rhs = new real_type[n];
       }
-      real_type  a;
-      index_type i = 0;
-      // The caller's buffer holds n values when this function allocated it, and
-      // the header is all there is to go on when it did not.
-      while (i < n && file >> a)
-      {
-        rhs[i] = a;
-        i++;
-      }
+      std::copy(values.begin(), values.end(), rhs);
     }
 
     void updateVectorFromFile(std::istream& file, vector::Vector* vec_rhs)
@@ -448,17 +447,14 @@ namespace ReSolve
         return;
       }
 
-      real_type* rhs = vec_rhs->getData(memory::HOST);
-      real_type  a   = 0.0;
-      index_type i   = 0;
-      // The size check above compares the declared length, not how many values
-      // the body actually carries, so the loop is bounded here too.
-      while (i < n && file >> a)
+      std::vector<real_type> values;
+      if (!readArrayBody(file, n, values))
       {
-        rhs[i] = a;
-        // std::cout << i << ": " << a << "\n";
-        i++;
+        Logger::error() << "Vector not updated!\n";
+        return;
       }
+
+      std::copy(values.begin(), values.end(), vec_rhs->getData(memory::HOST));
       vec_rhs->setDataUpdated(memory::HOST);
     }
 
@@ -528,6 +524,55 @@ namespace ReSolve
 
     //
     // Static helper functions
+
+    /**
+     * @brief Reads the body of a Matrix Market vector into `values`.
+     *
+     * The header says how many entries the body has. Reading fewer or more
+     * than that means the file is malformed, so nothing is returned to the
+     * caller in that case. Trailing blank lines are not entries; the
+     * extraction operator skips them.
+     *
+     * @param file - input stream positioned at the first entry.
+     * @param n - number of entries declared in the header.
+     * @param values - output, filled only when the body matches the header.
+     * @return true if the body holds exactly `n` entries.
+     */
+    static bool readArrayBody(std::istream& file, index_type n, std::vector<real_type>& values)
+    {
+      values.clear();
+      if (n < 0)
+      {
+        Logger::error() << "Matrix market header declares a negative length " << n << ".\n";
+        return false;
+      }
+      values.reserve(static_cast<size_t>(n));
+
+      real_type a;
+      while (values.size() < static_cast<size_t>(n) && file >> a)
+      {
+        values.push_back(a);
+      }
+
+      if (values.size() < static_cast<size_t>(n))
+      {
+        Logger::error() << "Matrix market header declares " << n << " entries but only "
+                        << values.size() << " were read.\n";
+        values.clear();
+        return false;
+      }
+
+      if (file >> a)
+      {
+        Logger::error() << "Matrix market header declares " << n
+                        << " entries but the body has more.\n";
+        values.clear();
+        return false;
+      }
+
+      return true;
+    }
+
     //
 
     /**

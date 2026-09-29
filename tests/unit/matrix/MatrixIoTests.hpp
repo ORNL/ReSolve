@@ -8,6 +8,7 @@
 #include <resolve/matrix/Coo.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/io.hpp>
+#include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <tests/unit/TestBase.hpp>
 
@@ -454,6 +455,96 @@ namespace ReSolve
         return status.report(__func__);
       }
 
+      /**
+       * @brief Reject a vector file whose body does not match its header.
+       *
+       * The header of a Matrix Market vector says how many entries follow.
+       * A file with fewer or more than that is malformed, so the readers
+       * return nothing and leave the caller's data alone.
+       */
+      TestOutcome rhsVectorLengthMismatch()
+      {
+        TestStatus status;
+        status = true;
+
+        // These cases all log an error on purpose, so keep the output quiet.
+        ReSolve::io::Logger::setVerbosity(ReSolve::io::Logger::NONE);
+
+        const std::string bad_files[2] = {short_vector_file_, long_vector_file_};
+        const char*       bad_names[2] = {"short", "long"};
+
+        for (int k = 0; k < 2; ++k)
+        {
+          std::istringstream array_file(bad_files[k]);
+          real_type*         rhs_array = ReSolve::io::createArrayFromFile(array_file);
+          if (rhs_array != nullptr)
+          {
+            std::cout << "createArrayFromFile accepted a " << bad_names[k] << " body.\n";
+            status = false;
+            delete[] rhs_array;
+          }
+
+          std::istringstream vector_file(bad_files[k]);
+          vector::Vector*    rhs_vector = ReSolve::io::createVectorFromFile(vector_file);
+          if (rhs_vector != nullptr)
+          {
+            std::cout << "createVectorFromFile accepted a " << bad_names[k] << " body.\n";
+            status = false;
+            delete rhs_vector;
+          }
+
+          // An update leaves the target untouched, so the sentinel survives.
+          index_type     N = static_cast<index_type>(general_vector_vals_.size());
+          vector::Vector vec_rhs(N);
+          vec_rhs.allocate(memory::HOST);
+          real_type* data = vec_rhs.getData(memory::HOST);
+          for (index_type i = 0; i < N; ++i)
+          {
+            data[i] = -1.0;
+          }
+
+          std::istringstream update_file(bad_files[k]);
+          ReSolve::io::updateVectorFromFile(update_file, &vec_rhs);
+          for (index_type i = 0; i < N; ++i)
+          {
+            if (!isEqual(vec_rhs.getData(memory::HOST)[i], -1.0))
+            {
+              std::cout << "updateVectorFromFile wrote data from a " << bad_names[k]
+                        << " body at element " << i << ".\n";
+              status = false;
+              break;
+            }
+          }
+        }
+
+        ReSolve::io::Logger::setVerbosity(ReSolve::io::Logger::WARNINGS);
+
+        // Blank lines after the last entry are not entries.
+        std::istringstream padded_file(padded_vector_file_);
+        vector::Vector*    padded = ReSolve::io::createVectorFromFile(padded_file);
+        if (padded == nullptr)
+        {
+          std::cout << "createVectorFromFile rejected a file with trailing blank lines.\n";
+          status = false;
+        }
+        else
+        {
+          const real_type* padded_data = padded->getData(memory::HOST);
+          for (size_t i = 0; i < general_vector_vals_.size(); ++i)
+          {
+            if (!isEqual(padded_data[i], general_vector_vals_[i]))
+            {
+              std::cout << "Incorrect vector value at storage element " << i << ".\n";
+              status = false;
+              break;
+            }
+          }
+          delete padded;
+        }
+
+        return status.report(__func__);
+      }
+
     private:
       bool verifyAnswer(/* const */ ReSolve::matrix::Coo& answer,
                         const std::vector<index_type>&    row_data,
@@ -737,6 +828,41 @@ namespace ReSolve
    3.000e-02
    4.000e+00
    5.505e+02
+)";
+
+      /// Header says five entries, body has three.
+      const std::string short_vector_file_ =
+          R"(%%MatrixMarket matrix array real general
+  5  1
+   1.000e+00
+   2.000e+01
+   3.000e-02
+)";
+
+      /// Header says five entries, body has seven.
+      const std::string long_vector_file_ =
+          R"(%%MatrixMarket matrix array real general
+  5  1
+   1.000e+00
+   2.000e+01
+   3.000e-02
+   4.000e+00
+   5.505e+02
+   6.000e+00
+   7.000e+00
+)";
+
+      /// Five entries, then blank lines that are not entries.
+      const std::string padded_vector_file_ =
+          R"(%%MatrixMarket matrix array real general
+  5  1
+   1.000e+00
+   2.000e+01
+   3.000e-02
+   4.000e+00
+   5.505e+02
+
+
 )";
 
       const std::vector<real_type> general_vector_vals_ = {1.000e+00,

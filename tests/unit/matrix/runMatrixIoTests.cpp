@@ -22,6 +22,7 @@ int main(int, char**)
   result += test.rhsVectorReadFromFile();
   result += test.rhsArrayReadAndUpdate();
   result += test.rhsVectorReadAndUpdate();
+  result += test.rhsVectorLengthMismatch();
 
   return result.summary();
 }
