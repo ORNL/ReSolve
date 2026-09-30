@@ -14,6 +14,7 @@
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/matrix/io.hpp>
+#include <resolve/utilities/logger/Logger.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <tests/unit/TestBase.hpp>
 
@@ -214,12 +215,16 @@ namespace ReSolve
         status *= validateResult(zero_rhs_error, tol);
 
         // Check that the solver raises an error when trying to change J_d
-        // from nonempty to empty.
+        // from nonempty to empty. The error is expected, so mute the logger
+        // while triggering it.
         matrix::Csr* J_d_empty = new matrix::Csr(J_d->getNumRows(),
                                                  J_d->getNumColumns(),
                                                  0);
 
+        io::Logger::Verbosity saved_verbosity = io::Logger::verbosity();
+        io::Logger::setVerbosity(io::Logger::NONE);
         int structure_status = hykktSolver.setMatrixBlocks(H, D_s_reuse, J, J_d_empty);
+        io::Logger::setVerbosity(saved_verbosity);
         status *= (structure_status != 0);
 
         // Exercise initialization and reuse with an empty J_d.
