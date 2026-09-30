@@ -124,7 +124,6 @@ namespace ReSolve
       double Control[AMD_CONTROL], Info[AMD_INFO];
 
       amd_defaults(Control);
-      amd_control(Control);
 
       int result = amd_order(n_hes_, hes_i_, hes_j_, perm_, Control, Info);
 
