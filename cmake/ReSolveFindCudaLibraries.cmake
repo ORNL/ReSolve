@@ -15,7 +15,12 @@ if(RESOLVE_USE_CUDSS)
 endif()
 
 if(RESOLVE_USE_PROFILING)
-  target_link_libraries(resolve_cuda INTERFACE CUDA::nvToolsExt)
+  if(TARGET CUDA::nvtx3)
+    target_link_libraries(resolve_cuda INTERFACE CUDA::nvtx3)
+    target_compile_definitions(resolve_cuda INTERFACE RESOLVE_USE_NVTX3)
+  else()
+    target_link_libraries(resolve_cuda INTERFACE CUDA::nvToolsExt)
+  endif()
 endif()
 
 install(TARGETS resolve_cuda EXPORT ReSolveTargets)
