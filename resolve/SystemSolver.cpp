@@ -97,6 +97,25 @@ namespace ReSolve
       return GramSchmidt::CGS2;
     }
 
+    /// Canonical string ID for a Gram-Schmidt variant (inverse of gsVariantFromString).
+    const char* gsVariantName(GramSchmidt::GSVariant variant)
+    {
+      switch (variant)
+      {
+      case GramSchmidt::CGS2:
+        return "cgs2";
+      case GramSchmidt::MGS:
+        return "mgs";
+      case GramSchmidt::MGS_TWO_SYNC:
+        return "mgs_two_sync";
+      case GramSchmidt::MGS_PM:
+        return "mgs_pm";
+      case GramSchmidt::CGS1:
+        return "cgs1";
+      }
+      return "cgs2";
+    }
+
     /// Memory space ID associated with each workspace type.
     const char* memorySpaceName(LinAlgWorkspaceCpu*)
     {
@@ -1057,9 +1076,25 @@ namespace ReSolve
     return 0;
   }
 
+  /**
+   * @brief Sets Gram-Schmidt orthogonalization variant.
+   *
+   * Records the variant in `gs_method_` so that it survives re-creation of
+   * the Krylov solver, and applies it to the existing `GramSchmidt` object
+   * or creates one if none exists yet. An unrecognized string ID falls back
+   * to CGS2 with a warning, and `gs_method_` is set to "cgs2" accordingly.
+   *
+   * @param[in] variant - string ID of the Gram-Schmidt variant
+   *
+   * @return int 0 on success
+   */
   int SystemSolver::setGramSchmidtMethod(std::string variant)
   {
     GramSchmidt::GSVariant gs_variant = gsVariantFromString(variant);
+
+    // Store the canonical name so that the stored ID always matches the
+    // variant actually in use.
+    gs_method_ = gsVariantName(gs_variant);
 
     if (gs_)
     {
