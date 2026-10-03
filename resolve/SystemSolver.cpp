@@ -644,12 +644,22 @@ namespace ReSolve
    * refactorization object. Sets refactorization method ID
    * to the value in input parameter `method`. Resets
    * `is_solve_on_device_` since the new solver has not been set up yet.
+   * If iterative refinement is enabled, its preconditioner wraps the
+   * refactorization solver and is destroyed as well; `refactorizationSetup()`
+   * recreates it.
    *
    * @return int 0 if successful, 1 if method is not recognized
    */
   int SystemSolver::setRefactorizationMethod(std::string method)
   {
     refactorization_method_ = method;
+
+    // Iterative refinement preconditioner holds a non-owning pointer to the
+    // refactorization solver, so it must not outlive it.
+    if (ir_method_ != "none")
+    {
+      preconditioner_.reset();
+    }
     refactorization_solver_.reset();
     is_solve_on_device_ = false;
 
