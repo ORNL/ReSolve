@@ -35,19 +35,19 @@ namespace ReSolve
     using vector_type = vector::Vector;
     using matrix_type = matrix::Sparse;
 
-    SystemSolver(LinAlgWorkspaceCpu* workspaceCpu,
+    SystemSolver(LinAlgWorkspaceCpu* workspace_cpu,
                  std::string         factor   = "klu",
                  std::string         refactor = "klu",
                  std::string         solve    = "klu",
                  std::string         precond  = "none",
                  std::string         ir       = "none");
-    SystemSolver(LinAlgWorkspaceCUDA* workspaceCuda,
+    SystemSolver(LinAlgWorkspaceCUDA* workspace_cuda,
                  std::string          factor   = "klu",
                  std::string          refactor = "cusolverrf",
                  std::string          solve    = "cusolverrf",
                  std::string          precond  = "none",
                  std::string          ir       = "none");
-    SystemSolver(LinAlgWorkspaceHIP* workspaceHip,
+    SystemSolver(LinAlgWorkspaceHIP* workspace_hip,
                  std::string         factor   = "klu",
                  std::string         refactor = "rocsolverrf",
                  std::string         solve    = "rocsolverrf",
@@ -96,24 +96,28 @@ namespace ReSolve
     int  setGramSchmidtMethod(std::string gs_method);
 
   private:
-    int createRefactorizationSolver();
+    template <class Workspace>
+    void completeSetup(Workspace* workspace);
+    void validateConfiguration();
+    int  createRefactorizationSolver();
+    int  createIterativeSolver(const std::string& method);
 
-    std::unique_ptr<MatrixHandler> matrixHandler_;
-    std::unique_ptr<VectorHandler> vectorHandler_;
+    std::unique_ptr<MatrixHandler> matrix_handler_;
+    std::unique_ptr<VectorHandler> vector_handler_;
 
     // Owned solver components. Declaration order matters for destruction:
     // members are destroyed in reverse order, so dependents are listed
     // after the objects they reference.
-    std::unique_ptr<LinSolverDirect>    factorizationSolver_;
-    std::unique_ptr<LinSolverDirect>    refactorizationSolver_;
-    std::unique_ptr<LinSolverDirect>    preconditionerSolver_;
+    std::unique_ptr<LinSolverDirect>    factorization_solver_;
+    std::unique_ptr<LinSolverDirect>    refactorization_solver_;
+    std::unique_ptr<LinSolverDirect>    preconditioner_solver_;
     std::unique_ptr<GramSchmidt>        gs_;
     std::unique_ptr<Preconditioner>     preconditioner_;
-    std::unique_ptr<LinSolverIterative> iterativeSolver_;
+    std::unique_ptr<LinSolverIterative> iterative_solver_;
 
-    LinAlgWorkspaceCUDA* workspaceCuda_{nullptr};
-    LinAlgWorkspaceHIP*  workspaceHip_{nullptr};
-    LinAlgWorkspaceCpu*  workspaceCpu_{nullptr};
+    LinAlgWorkspaceCUDA* workspace_cuda_{nullptr};
+    LinAlgWorkspaceHIP*  workspace_hip_{nullptr};
+    LinAlgWorkspaceCpu*  workspace_cpu_{nullptr};
 
     bool is_solve_on_device_{false};
 
@@ -123,17 +127,17 @@ namespace ReSolve
     index_type* P_{nullptr};
     index_type* Q_{nullptr};
 
-    std::unique_ptr<vector_type> resVector_;
+    std::unique_ptr<vector_type> res_vector_;
 
     matrix::Sparse* A_{nullptr};
 
     // Configuration parameters
-    std::string factorizationMethod_{"none"};
-    std::string refactorizationMethod_{"none"};
-    std::string solveMethod_{"none"};
+    std::string factorization_method_{"none"};
+    std::string refactorization_method_{"none"};
+    std::string solve_method_{"none"};
     std::string precondition_method_{"none"};
-    std::string irMethod_{"none"};
-    std::string gsMethod_{"cgs2"};
+    std::string ir_method_{"none"};
+    std::string gs_method_{"cgs2"};
     std::string sketching_method_{"count"}; ///< @todo move this to LinSolverIterative class
 
     std::string memspace_;
