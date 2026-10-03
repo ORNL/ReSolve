@@ -905,27 +905,27 @@ namespace ReSolve
     return resnorm / (norm_x * norm_A);
   }
 
-  const std::string SystemSolver::getFactorizationMethod() const
+  const std::string& SystemSolver::getFactorizationMethod() const
   {
     return factorization_method_;
   }
 
-  const std::string SystemSolver::getRefactorizationMethod() const
+  const std::string& SystemSolver::getRefactorizationMethod() const
   {
     return refactorization_method_;
   }
 
-  const std::string SystemSolver::getSolveMethod() const
+  const std::string& SystemSolver::getSolveMethod() const
   {
     return solve_method_;
   }
 
-  const std::string SystemSolver::getRefinementMethod() const
+  const std::string& SystemSolver::getRefinementMethod() const
   {
     return ir_method_;
   }
 
-  const std::string SystemSolver::getGramSchmidtMethod() const
+  const std::string& SystemSolver::getGramSchmidtMethod() const
   {
     return gs_method_;
   }

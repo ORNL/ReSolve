@@ -78,11 +78,11 @@ namespace ReSolve
     real_type getNormOfScaledResiduals(vector_type* rhs, vector_type* x);
 
     // Get solver parameters
-    const std::string getFactorizationMethod() const;
-    const std::string getRefactorizationMethod() const;
-    const std::string getSolveMethod() const;
-    const std::string getRefinementMethod() const;
-    const std::string getGramSchmidtMethod() const;
+    const std::string& getFactorizationMethod() const;
+    const std::string& getRefactorizationMethod() const;
+    const std::string& getSolveMethod() const;
+    const std::string& getRefinementMethod() const;
+    const std::string& getGramSchmidtMethod() const;
 
     // Set solver parameters
     int  setFactorizationMethod(std::string method);
