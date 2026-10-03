@@ -239,19 +239,14 @@ namespace ReSolve
     }
 
     // If we use iterative solver, we can set it up here
-    if (solve_method_ == "randgmres")
+    if (solve_method_ == "randgmres" || solve_method_ == "fgmres")
     {
-      auto* rgmres = dynamic_cast<LinSolverIterativeRandFGMRES*>(iterative_solver_.get());
-      status += rgmres->setup(A_);
-    }
-    else if (solve_method_ == "fgmres")
-    {
-      auto* fgmres = dynamic_cast<LinSolverIterativeFGMRES*>(iterative_solver_.get());
-      status += fgmres->setup(A_);
-    }
-    else
-    {
-      // do nothing
+      if (iterative_solver_ == nullptr)
+      {
+        out::error() << "Iterative solver not initialized!\n";
+        return 1;
+      }
+      status += iterative_solver_->setup(A_);
     }
 
     return status;
@@ -362,6 +357,9 @@ namespace ReSolve
       factorization_solver_->setup(A_);
       return factorization_solver_->analyze();
     }
+
+    out::error() << "Cannot analyze: factorization method '" << factorization_method_
+                 << "' does not provide a factorization solver.\n";
     return 1;
   }
 
@@ -372,6 +370,9 @@ namespace ReSolve
       is_solve_on_device_ = false;
       return factorization_solver_->factorize();
     }
+
+    out::error() << "Cannot factorize: factorization method '" << factorization_method_
+                 << "' does not provide a factorization solver.\n";
     return 1;
   }
 
@@ -437,7 +438,12 @@ namespace ReSolve
     {
       status += refactorization_solver_->setup(A_, L_, U_, P_, Q_);
 
-      LinSolverDirectCuSolverRf* Rf = dynamic_cast<LinSolverDirectCuSolverRf*>(refactorization_solver_.get());
+      auto* Rf = dynamic_cast<LinSolverDirectCuSolverRf*>(refactorization_solver_.get());
+      if (Rf == nullptr)
+      {
+        out::error() << "Refactorization solver is not a cuSolverRf instance!\n";
+        return 1;
+      }
       Rf->setNumericalProperties(1e-14, 1e-1);
 
       is_solve_on_device_ = false;
@@ -445,7 +451,12 @@ namespace ReSolve
 #ifdef RESOLVE_USE_CUDSS
     else if (refactorization_method_ == "cudssrf")
     {
-      LinSolverDirectCuDssRf* Rf = dynamic_cast<LinSolverDirectCuDssRf*>(refactorization_solver_.get());
+      auto* Rf = dynamic_cast<LinSolverDirectCuDssRf*>(refactorization_solver_.get());
+      if (Rf == nullptr)
+      {
+        out::error() << "Refactorization solver is not a cuDSS instance!\n";
+        return 1;
+      }
       Rf->setNumericalProperties(1e-14, 1e-1);
 
       status += refactorization_solver_->setup(A_, L_, U_, P_, Q_);
@@ -757,8 +768,11 @@ namespace ReSolve
    *
    * @param[in] method   - string ID for the iterative refinement method
    * @param[in] gs_method - string ID for the orthogonalization method to be used
+   *
+   * @return int 0 if the requested method is now active, 1 if it was rejected
+   * or not recognized
    */
-  void SystemSolver::setRefinementMethod(std::string method, std::string gs_method)
+  int SystemSolver::setRefinementMethod(std::string method, std::string gs_method)
   {
     // With an iterative solve method the Krylov solver belongs to the solve
     // path, not to iterative refinement, so leave it untouched.
@@ -769,9 +783,11 @@ namespace ReSolve
         out::warning() << "Iterative refinement cannot be enabled together with an "
                        << "iterative solve method ('randgmres' or 'fgmres'). "
                        << "Keeping refinement method 'none'.\n";
+        ir_method_ = "none";
+        return 1;
       }
       ir_method_ = "none";
-      return;
+      return 0;
     }
 
     // Direct solve path: the Krylov solver, if any, is the refinement solver.
@@ -781,7 +797,7 @@ namespace ReSolve
 
     if (method == "none")
     {
-      return;
+      return 0;
     }
 
     gs_method_ = gs_method;
@@ -789,11 +805,11 @@ namespace ReSolve
     if (method == "fgmres" && createIterativeSolver(method) == 0)
     {
       ir_method_ = method;
+      return 0;
     }
-    else
-    {
-      out::error() << "Iterative refinement method " << method << " not recognized.\n";
-    }
+
+    out::error() << "Iterative refinement method " << method << " not recognized.\n";
+    return 1;
   }
 
   real_type SystemSolver::getVectorNorm(vector_type* rhs)
@@ -958,6 +974,11 @@ namespace ReSolve
     {
       // TODO: Use cast here as a temporary solution; will be replaced by parameter setting framework
       auto* sol = dynamic_cast<LinSolverIterativeRandFGMRES*>(iterative_solver_.get());
+      if (sol == nullptr)
+      {
+        out::error() << "Iterative solver is not a randomized FGMRES instance!\n";
+        return 1;
+      }
       sol->setSketchingMethod(tmp);
     }
 

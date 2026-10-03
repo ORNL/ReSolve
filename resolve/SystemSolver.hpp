@@ -85,12 +85,12 @@ namespace ReSolve
     const std::string& getGramSchmidtMethod() const;
 
     // Set solver parameters
-    int  setFactorizationMethod(std::string method);
-    int  setRefactorizationMethod(std::string method);
-    int  setSolveMethod(std::string method);
-    void setRefinementMethod(std::string method, std::string gs = "cgs2");
-    int  setSketchingMethod(std::string method);
-    int  setGramSchmidtMethod(std::string gs_method);
+    int setFactorizationMethod(std::string method);
+    int setRefactorizationMethod(std::string method);
+    int setSolveMethod(std::string method);
+    int setRefinementMethod(std::string method, std::string gs = "cgs2");
+    int setSketchingMethod(std::string method);
+    int setGramSchmidtMethod(std::string gs_method);
 
   private:
     template <class Workspace>
