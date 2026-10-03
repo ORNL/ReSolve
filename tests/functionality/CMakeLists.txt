@@ -21,14 +21,16 @@ if(RESOLVE_USE_KLU)
   # Build KLU+KLU test
   add_executable(klu_klu_test.exe testKlu.cpp)
   target_link_libraries(klu_klu_test.exe PRIVATE ReSolve)
+
+  # System solver test with refactorization (KLU on CPU, cusolver/rocsolver Rf
+  # on GPU) and iterative refinement
+  add_executable(sys_refactor_test.exe testSysRefactor.cpp)
+  target_link_libraries(sys_refactor_test.exe PRIVATE ReSolve)
+
   if(RESOLVE_USE_GPU)
     # Build KLU+Rf tests
     add_executable(klu_rf_test.exe testRefactor.cpp)
     target_link_libraries(klu_rf_test.exe PRIVATE ReSolve)
-
-    # System solver test with cusolver rf and iterative refinement
-    add_executable(sys_refactor_test.exe testSysRefactor.cpp)
-    target_link_libraries(sys_refactor_test.exe PRIVATE ReSolve)
   endif(RESOLVE_USE_GPU)
 
   if(RESOLVE_USE_CUDA)
@@ -56,9 +58,9 @@ list(APPEND installable_tests rand_gmres_test.exe)
 list(APPEND installable_tests sys_rand_gmres_test.exe)
 
 if(RESOLVE_USE_KLU)
-  list(APPEND installable_tests klu_klu_test.exe)
+  list(APPEND installable_tests klu_klu_test.exe sys_refactor_test.exe)
   if(RESOLVE_USE_GPU)
-    list(APPEND installable_tests klu_rf_test.exe sys_refactor_test.exe)
+    list(APPEND installable_tests klu_rf_test.exe)
   endif(RESOLVE_USE_GPU)
 
   if(RESOLVE_USE_CUDA)
@@ -243,6 +245,20 @@ add_test(NAME sys_gmres_left_mgspm_test
 add_test(NAME rand_gmres_test COMMAND $<TARGET_FILE:rand_gmres_test.exe>)
 
 if(RESOLVE_USE_KLU)
+  # System solver with KLU refactorization and iterative refinement on CPU
+  add_test(
+    NAME sys_refactor_cpu_test
+    COMMAND
+      $<TARGET_FILE:sys_refactor_test.exe> "${test_data_dir}" "-d"
+      "${test_data_dir}" "-m" "${sym_matrix_path}" "-r" "${sym_rhs_path}"
+  )
+  add_test(
+    NAME sys_refactor_cpu_asym_test
+    COMMAND
+      $<TARGET_FILE:sys_refactor_test.exe> "${test_data_dir}" "-d"
+      "${test_data_dir}" "-m" "${asym_matrix_path}" "-r" "${asym_rhs_path}"
+  )
+
   # Using KLU as refactorization solver
   add_test(NAME klu_klu_test
            COMMAND $<TARGET_FILE:klu_klu_test.exe> "-d" "${test_data_dir}" "-m"

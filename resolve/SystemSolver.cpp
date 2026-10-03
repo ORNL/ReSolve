@@ -467,7 +467,12 @@ namespace ReSolve
     {
       status += iterative_solver_->setup(A_);
 
-      preconditioner_.reset(new PreconditionerLU(refactorization_solver_.get()));
+      // The refinement preconditioner applies the LU factors. With "klu"
+      // refactorization there is no separate refactorization solver and the
+      // factorization solver provides the factors.
+      LinSolverDirect* lu_solver = refactorization_solver_ ? refactorization_solver_.get()
+                                                           : factorization_solver_.get();
+      preconditioner_.reset(new PreconditionerLU(lu_solver));
       status += iterative_solver_->setPreconditioner(preconditioner_.get());
     }
     return status;
@@ -519,9 +524,12 @@ namespace ReSolve
       }
     }
 
-    if (ir_method_ == "fgmres")
+    // Iterative refinement is applied once the LU solver wrapped by its
+    // preconditioner is ready: after refactorizationSetup() on the host KLU
+    // path, or once the device refactorization solver has taken over.
+    if (ir_method_ == "fgmres" && preconditioner_)
     {
-      if (is_solve_on_device_)
+      if (is_solve_on_device_ || refactorization_method_ == "klu")
       {
         status += refine(rhs, x);
       }
@@ -749,8 +757,6 @@ namespace ReSolve
    *
    * @param[in] method   - string ID for the iterative refinement method
    * @param[in] gs_method - string ID for the orthogonalization method to be used
-   *
-   * @todo Iterative refinement temporarily disabled on CPU. Need to fix that.
    */
   void SystemSolver::setRefinementMethod(std::string method, std::string gs_method)
   {
@@ -775,13 +781,6 @@ namespace ReSolve
 
     if (method == "none")
     {
-      return;
-    }
-
-    if (memspace_ == "cpu")
-    {
-      out::warning() << "Iterative refinement not supported on CPU. "
-                     << "Turning off ...\n";
       return;
     }
 
