@@ -241,40 +241,8 @@ namespace ReSolve
     }
 
     // Create refactorization solver
-    if (refactorizationMethod_ == "none")
+    if (createRefactorizationSolver() != 0)
     {
-      // do nothing
-    }
-    else if (refactorizationMethod_ == "klu")
-    {
-      // do nothing for now, KLU is the only factorization solver available
-#ifdef RESOLVE_USE_CUDA
-    }
-    else if (refactorizationMethod_ == "glu")
-    {
-      refactorizationSolver_.reset(new ReSolve::LinSolverDirectCuSolverGLU(workspaceCuda_));
-    }
-    else if (refactorizationMethod_ == "cusolverrf")
-    {
-      refactorizationSolver_.reset(new ReSolve::LinSolverDirectCuSolverRf());
-#ifdef RESOLVE_USE_CUDSS
-    }
-    else if (refactorizationMethod_ == "cudssrf")
-    {
-      refactorizationSolver_.reset(new ReSolve::LinSolverDirectCuDssRf());
-#endif
-#endif
-#ifdef RESOLVE_USE_HIP
-    }
-    else if (refactorizationMethod_ == "rocsolverrf")
-    {
-      refactorizationSolver_.reset(new ReSolve::LinSolverDirectRocSolverRf(workspaceHip_));
-#endif
-    }
-    else
-    {
-      out::error() << "Refactorization method " << refactorizationMethod_
-                   << " not recognized ...\n";
       return 1;
     }
 
@@ -673,41 +641,20 @@ namespace ReSolve
    * @param[in] method - ID for the refactorization method
    *
    * @post Destroys whatever refactorization solver existed before
-   * and sets `refactorization_solver_` pointer to the new
+   * and sets `refactorizationSolver_` pointer to the new
    * refactorization object. Sets refactorization method ID
-   * to the value in input parameter `method`.
+   * to the value in input parameter `method`. Resets
+   * `is_solve_on_device_` since the new solver has not been set up yet.
+   *
+   * @return int 0 if successful, 1 if method is not recognized
    */
-  void SystemSolver::setRefactorizationMethod(std::string method)
+  int SystemSolver::setRefactorizationMethod(std::string method)
   {
     refactorizationMethod_ = method;
     refactorizationSolver_.reset();
+    is_solve_on_device_ = false;
 
-    // Create refactorization solver
-    if (refactorizationMethod_ == "klu")
-    {
-      // do nothing for now
-#ifdef RESOLVE_USE_CUDA
-    }
-    else if (refactorizationMethod_ == "glu")
-    {
-      refactorizationSolver_.reset(new ReSolve::LinSolverDirectCuSolverGLU(workspaceCuda_));
-    }
-    else if (refactorizationMethod_ == "cusolverrf")
-    {
-      refactorizationSolver_.reset(new ReSolve::LinSolverDirectCuSolverRf());
-#endif
-#ifdef RESOLVE_USE_HIP
-    }
-    else if (refactorizationMethod_ == "rocsolverrf")
-    {
-      refactorizationSolver_.reset(new ReSolve::LinSolverDirectRocSolverRf(workspaceHip_));
-#endif
-    }
-    else
-    {
-      out::error() << "Refactorization method " << refactorizationMethod_
-                   << " not recognized ...\n";
-    }
+    return createRefactorizationSolver();
   }
 
   /**
@@ -998,6 +945,60 @@ namespace ReSolve
   //
   // Private methods
   //
+
+  /**
+   * @brief Instantiates refactorization solver selected by `refactorizationMethod_`.
+   *
+   * Shared by `initialize()` and `setRefactorizationMethod()` so the list of
+   * supported backends is maintained in one place.
+   *
+   * @pre `refactorizationSolver_` is null.
+   * @post `refactorizationSolver_` points to a new solver, or stays null for
+   * methods "none" and "klu" (KLU refactorization reuses the factorization
+   * solver).
+   *
+   * @return int 0 if successful, 1 if method is not recognized
+   */
+  int SystemSolver::createRefactorizationSolver()
+  {
+    if (refactorizationMethod_ == "none")
+    {
+      // do nothing
+    }
+    else if (refactorizationMethod_ == "klu")
+    {
+      // do nothing for now, KLU is the only factorization solver available
+#ifdef RESOLVE_USE_CUDA
+    }
+    else if (refactorizationMethod_ == "glu")
+    {
+      refactorizationSolver_.reset(new ReSolve::LinSolverDirectCuSolverGLU(workspaceCuda_));
+    }
+    else if (refactorizationMethod_ == "cusolverrf")
+    {
+      refactorizationSolver_.reset(new ReSolve::LinSolverDirectCuSolverRf());
+#ifdef RESOLVE_USE_CUDSS
+    }
+    else if (refactorizationMethod_ == "cudssrf")
+    {
+      refactorizationSolver_.reset(new ReSolve::LinSolverDirectCuDssRf());
+#endif
+#endif
+#ifdef RESOLVE_USE_HIP
+    }
+    else if (refactorizationMethod_ == "rocsolverrf")
+    {
+      refactorizationSolver_.reset(new ReSolve::LinSolverDirectRocSolverRf(workspaceHip_));
+#endif
+    }
+    else
+    {
+      out::error() << "Refactorization method " << refactorizationMethod_
+                   << " not recognized ...\n";
+      return 1;
+    }
+    return 0;
+  }
 
   int SystemSolver::setGramSchmidtMethod(std::string variant)
   {

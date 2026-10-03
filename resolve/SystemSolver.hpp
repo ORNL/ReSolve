@@ -89,13 +89,15 @@ namespace ReSolve
 
     // Set solver parameters
     void setFactorizationMethod(std::string method);
-    void setRefactorizationMethod(std::string method);
+    int  setRefactorizationMethod(std::string method);
     int  setSolveMethod(std::string method);
     void setRefinementMethod(std::string method, std::string gs = "cgs2");
     int  setSketchingMethod(std::string method);
     int  setGramSchmidtMethod(std::string gs_method);
 
   private:
+    int createRefactorizationSolver();
+
     std::unique_ptr<MatrixHandler> matrixHandler_;
     std::unique_ptr<VectorHandler> vectorHandler_;
 
