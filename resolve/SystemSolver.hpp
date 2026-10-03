@@ -67,9 +67,6 @@ namespace ReSolve
     int solve(vector_type* rhs, vector_type* x);  // for direct and iterative
     int refine(vector_type* rhs, vector_type* x); // for iterative refinement
 
-    // we update the matrix once it changed
-    int updateMatrix(std::string format, int* ia, int* ja, double* a);
-
     LinSolverDirect&    getFactorizationSolver();
     LinSolverDirect&    getRefactorizationSolver();
     LinSolverDirect&    getPreconditionerSolver();
@@ -85,10 +82,10 @@ namespace ReSolve
     const std::string getRefactorizationMethod() const;
     const std::string getSolveMethod() const;
     const std::string getRefinementMethod() const;
-    const std::string getOrthogonalizationMethod() const;
+    const std::string getGramSchmidtMethod() const;
 
     // Set solver parameters
-    void setFactorizationMethod(std::string method);
+    int  setFactorizationMethod(std::string method);
     int  setRefactorizationMethod(std::string method);
     int  setSolveMethod(std::string method);
     void setRefinementMethod(std::string method, std::string gs = "cgs2");
@@ -99,6 +96,7 @@ namespace ReSolve
     template <class Workspace>
     void completeSetup(Workspace* workspace);
     void validateConfiguration();
+    int  createFactorizationSolver();
     int  createRefactorizationSolver();
     int  createIterativeSolver(const std::string& method);
 

@@ -152,7 +152,15 @@ namespace ReSolve
     vector_handler_.reset(new VectorHandler(workspace));
     memspace_ = memorySpaceName(workspace);
 
-    initialize();
+    if (initialize() != 0)
+    {
+      out::error() << "SystemSolver initialization failed with factorization '" << factorization_method_
+                   << "', refactorization '" << refactorization_method_
+                   << "', solve '" << solve_method_
+                   << "', preconditioner '" << precondition_method_
+                   << "', iterative refinement '" << ir_method_
+                   << "'. Solver is not usable in this state.\n";
+    }
   }
 
   SystemSolver::SystemSolver(LinAlgWorkspaceCpu* workspace_cpu,
@@ -271,19 +279,8 @@ namespace ReSolve
     gs_.reset();
 
     // Create factorization solver
-    if (factorization_method_ == "none")
+    if (createFactorizationSolver() != 0)
     {
-      // do nothing
-#ifdef RESOLVE_USE_KLU
-    }
-    else if (factorization_method_ == "klu")
-    {
-      factorization_solver_.reset(new ReSolve::LinSolverDirectKLU());
-#endif
-    }
-    else
-    {
-      out::error() << "Unrecognized factorization " << factorization_method_ << "\n";
       return 1;
     }
 
@@ -648,9 +645,48 @@ namespace ReSolve
     return *preconditioner_;
   }
 
-  void SystemSolver::setFactorizationMethod(std::string method)
+  /**
+   * @brief Sets factorization method to use
+   *
+   * @param[in] method - ID for the factorization method
+   *
+   * @post Destroys the existing factorization solver together with the
+   * factors and permutation vectors it owned, and creates a new solver
+   * of the requested type. If refactorization method is "klu", the
+   * refactorization path reuses the factorization solver, so
+   * `refactorization_solver_` is reset as well. The caller must run
+   * `analyze()`, `factorize()` and, if applicable, `refactorizationSetup()`
+   * again before the next solve.
+   *
+   * @return int 0 if successful, 1 if method is not recognized or an
+   * iterative solve method is active
+   */
+  int SystemSolver::setFactorizationMethod(std::string method)
   {
+    if (solve_method_ == "fgmres" || solve_method_ == "randgmres")
+    {
+      out::error() << "Factorization method cannot be set while iterative solve method '"
+                   << solve_method_ << "' is active. Keeping '" << factorization_method_ << "'.\n";
+      return 1;
+    }
+
     factorization_method_ = method;
+    factorization_solver_.reset();
+
+    // Factors and permutations were owned by the old solver.
+    L_                  = nullptr;
+    U_                  = nullptr;
+    P_                  = nullptr;
+    Q_                  = nullptr;
+    is_solve_on_device_ = false;
+
+    // KLU refactorization reuses the factorization solver; drop any stale state.
+    if (refactorization_method_ == "klu")
+    {
+      refactorization_solver_.reset();
+    }
+
+    return createFactorizationSolver();
   }
 
   /**
@@ -890,7 +926,7 @@ namespace ReSolve
     return ir_method_;
   }
 
-  const std::string SystemSolver::getOrthogonalizationMethod() const
+  const std::string SystemSolver::getGramSchmidtMethod() const
   {
     return gs_method_;
   }
@@ -924,6 +960,38 @@ namespace ReSolve
       // TODO: Use cast here as a temporary solution; will be replaced by parameter setting framework
       auto* sol = dynamic_cast<LinSolverIterativeRandFGMRES*>(iterative_solver_.get());
       sol->setSketchingMethod(tmp);
+    }
+
+    return 0;
+  }
+
+  /**
+   * @brief Sets Gram-Schmidt orthogonalization variant.
+   *
+   * Records the variant in `gs_method_` so that it survives re-creation of
+   * the Krylov solver, and applies it to the existing `GramSchmidt` object
+   * or creates one if none exists yet. An unrecognized string ID falls back
+   * to CGS2 with a warning, and `gs_method_` is set to "cgs2" accordingly.
+   *
+   * @param[in] variant - string ID of the Gram-Schmidt variant
+   *
+   * @return int 0 on success
+   */
+  int SystemSolver::setGramSchmidtMethod(std::string variant)
+  {
+    GramSchmidt::GSVariant gs_variant = gsVariantFromString(variant);
+
+    // Store the canonical name so that the stored ID always matches the
+    // variant actually in use.
+    gs_method_ = gsVariantName(gs_variant);
+
+    if (gs_)
+    {
+      gs_->setVariant(gs_variant);
+    }
+    else
+    {
+      gs_.reset(new GramSchmidt(vector_handler_.get(), gs_variant));
     }
 
     return 0;
@@ -1023,6 +1091,39 @@ namespace ReSolve
   }
 
   /**
+   * @brief Instantiates factorization solver selected by `factorization_method_`.
+   *
+   * Shared by `initialize()` and `setFactorizationMethod()` so the list of
+   * supported backends is maintained in one place.
+   *
+   * @pre `factorization_solver_` is null.
+   * @post `factorization_solver_` points to a new solver, or stays null for
+   * method "none".
+   *
+   * @return int 0 if successful, 1 if method is not recognized
+   */
+  int SystemSolver::createFactorizationSolver()
+  {
+    if (factorization_method_ == "none")
+    {
+      // do nothing
+#ifdef RESOLVE_USE_KLU
+    }
+    else if (factorization_method_ == "klu")
+    {
+      factorization_solver_.reset(new ReSolve::LinSolverDirectKLU());
+#endif
+    }
+    else
+    {
+      out::error() << "Factorization method " << factorization_method_
+                   << " not recognized ...\n";
+      return 1;
+    }
+    return 0;
+  }
+
+  /**
    * @brief Instantiates refactorization solver selected by `refactorization_method_`.
    *
    * Shared by `initialize()` and `setRefactorizationMethod()` so the list of
@@ -1073,38 +1174,6 @@ namespace ReSolve
                    << " not recognized ...\n";
       return 1;
     }
-    return 0;
-  }
-
-  /**
-   * @brief Sets Gram-Schmidt orthogonalization variant.
-   *
-   * Records the variant in `gs_method_` so that it survives re-creation of
-   * the Krylov solver, and applies it to the existing `GramSchmidt` object
-   * or creates one if none exists yet. An unrecognized string ID falls back
-   * to CGS2 with a warning, and `gs_method_` is set to "cgs2" accordingly.
-   *
-   * @param[in] variant - string ID of the Gram-Schmidt variant
-   *
-   * @return int 0 on success
-   */
-  int SystemSolver::setGramSchmidtMethod(std::string variant)
-  {
-    GramSchmidt::GSVariant gs_variant = gsVariantFromString(variant);
-
-    // Store the canonical name so that the stored ID always matches the
-    // variant actually in use.
-    gs_method_ = gsVariantName(gs_variant);
-
-    if (gs_)
-    {
-      gs_->setVariant(gs_variant);
-    }
-    else
-    {
-      gs_.reset(new GramSchmidt(vector_handler_.get(), gs_variant));
-    }
-
     return 0;
   }
 
