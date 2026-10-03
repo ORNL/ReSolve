@@ -248,9 +248,8 @@ if(RESOLVE_USE_KLU)
   # System solver with KLU refactorization and iterative refinement on CPU
   add_test(
     NAME sys_refactor_cpu_test
-    COMMAND
-      $<TARGET_FILE:sys_refactor_test.exe> "${test_data_dir}" "-d"
-      "${test_data_dir}" "-m" "${sym_matrix_path}" "-r" "${sym_rhs_path}"
+    COMMAND $<TARGET_FILE:sys_refactor_test.exe> "${test_data_dir}" "-d"
+            "${test_data_dir}" "-m" "${sym_matrix_path}" "-r" "${sym_rhs_path}"
   )
   add_test(
     NAME sys_refactor_cpu_asym_test
