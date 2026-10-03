@@ -120,8 +120,8 @@ namespace ReSolve
    * @brief Shared tail of all constructors.
    *
    * Creates matrix and vector handlers for the given workspace, derives the
-   * memory space ID from the workspace type, validates the user-selected
-   * method combination and instantiates solver components.
+   * memory space ID from the workspace type and instantiates solver
+   * components via `initialize()`.
    *
    * @tparam Workspace - one of LinAlgWorkspaceCpu, LinAlgWorkspaceCUDA, LinAlgWorkspaceHIP
    * @param[in] workspace - pointer to the workspace (not owned)
@@ -133,7 +133,6 @@ namespace ReSolve
     vector_handler_.reset(new VectorHandler(workspace));
     memspace_ = memorySpaceName(workspace);
 
-    validateConfiguration();
     initialize();
   }
 
@@ -234,11 +233,16 @@ namespace ReSolve
   /**
    * @brief Sets up the system solver
    *
-   * This method instantiates components of the system solver based on
-   * user inputs.
+   * This method validates the selected method combination (see
+   * `validateConfiguration()`) and then instantiates components of the
+   * system solver based on user inputs. It can be called again after the
+   * configuration has been changed through setters.
    */
   int SystemSolver::initialize()
   {
+    // Make sure the method combination is consistent before creating objects
+    validateConfiguration();
+
     // First delete old objects
     iterative_solver_.reset();
     preconditioner_.reset();
@@ -685,19 +689,27 @@ namespace ReSolve
    */
   void SystemSolver::setRefinementMethod(std::string method, std::string gs_method)
   {
+    // With an iterative solve method the Krylov solver belongs to the solve
+    // path, not to iterative refinement, so leave it untouched.
+    if (solve_method_ == "randgmres" || solve_method_ == "fgmres")
+    {
+      if (method != "none")
+      {
+        out::warning() << "Iterative refinement cannot be enabled together with an "
+                       << "iterative solve method ('randgmres' or 'fgmres'). "
+                       << "Keeping refinement method 'none'.\n";
+      }
+      ir_method_ = "none";
+      return;
+    }
+
+    // Direct solve path: the Krylov solver, if any, is the refinement solver.
     iterative_solver_.reset();
     gs_.reset();
-
     ir_method_ = "none";
 
     if (method == "none")
-      return;
-
-    if (solve_method_ == "randgmres" || solve_method_ == "fgmres")
     {
-      out::warning() << "Iterative refinement cannot be enabled together with an "
-                     << "iterative solve method ('randgmres' or 'fgmres'). "
-                     << "Keeping refinement method 'none'.\n";
       return;
     }
 
@@ -893,29 +905,55 @@ namespace ReSolve
   //
 
   /**
-   * @brief Checks for unsupported combinations of user-selected methods.
+   * @brief Enforces supported combinations of user-selected methods.
    *
-   * Refactorization and preconditioning are mutually exclusive, as are
-   * iterative refinement and an iterative solve method. Offending settings
-   * are reset to "none" with a warning.
+   * Two configurations are supported:
+   * - Iterative solver ("fgmres" or "randgmres" as the solve method):
+   *   preconditioner may be set; factorization, refactorization and
+   *   iterative refinement must be "none".
+   * - Direct solver (any other solve method): factorization and
+   *   refactorization are set, iterative refinement is optional, and the
+   *   preconditioner must be "none".
+   *
+   * Offending settings are reset to "none" with a warning.
    */
   void SystemSolver::validateConfiguration()
   {
-    if ((refactorization_method_ != "none") && (precondition_method_ != "none"))
-    {
-      out::warning() << "Incorrect input: "
-                     << "Refactorization and preconditioning cannot both be enabled.\n"
-                     << "Setting both to 'none' ...\n";
-      refactorization_method_ = "none";
-      precondition_method_    = "none";
-    }
+    const bool is_iterative_solve = (solve_method_ == "fgmres" || solve_method_ == "randgmres");
 
-    if ((solve_method_ == "randgmres" || solve_method_ == "fgmres") && (ir_method_ != "none"))
+    if (is_iterative_solve)
     {
-      out::warning() << "Incorrect input: "
-                     << "Iterative refinement cannot be enabled together with an iterative solve method.\n"
-                     << "Setting refinement method to 'none' ...\n";
-      ir_method_ = "none";
+      if (factorization_method_ != "none")
+      {
+        out::warning() << "Incorrect input: factorization method '" << factorization_method_
+                       << "' cannot be used with iterative solve method '" << solve_method_
+                       << "'. Setting factorization to 'none' ...\n";
+        factorization_method_ = "none";
+      }
+      if (refactorization_method_ != "none")
+      {
+        out::warning() << "Incorrect input: refactorization method '" << refactorization_method_
+                       << "' cannot be used with iterative solve method '" << solve_method_
+                       << "'. Setting refactorization to 'none' ...\n";
+        refactorization_method_ = "none";
+      }
+      if (ir_method_ != "none")
+      {
+        out::warning() << "Incorrect input: iterative refinement cannot be enabled "
+                       << "together with iterative solve method '" << solve_method_
+                       << "'. Setting refinement method to 'none' ...\n";
+        ir_method_ = "none";
+      }
+    }
+    else
+    {
+      if (precondition_method_ != "none")
+      {
+        out::warning() << "Incorrect input: preconditioner '" << precondition_method_
+                       << "' can only be used with an iterative solve method ('fgmres' or 'randgmres'). "
+                       << "Setting preconditioner to 'none' ...\n";
+        precondition_method_ = "none";
+      }
     }
   }
 
