@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <string>
 
 #include <resolve/Common.hpp>
@@ -95,19 +96,22 @@ namespace ReSolve
     int  setGramSchmidtMethod(std::string gs_method);
 
   private:
-    LinSolverDirect*    factorizationSolver_{nullptr};
-    LinSolverDirect*    refactorizationSolver_{nullptr};
-    LinSolverDirect*    preconditionerSolver_{nullptr};
-    LinSolverIterative* iterativeSolver_{nullptr};
-    GramSchmidt*        gs_{nullptr};
-    Preconditioner*     preconditioner_{nullptr};
+    std::unique_ptr<MatrixHandler> matrixHandler_;
+    std::unique_ptr<VectorHandler> vectorHandler_;
+
+    // Owned solver components. Declaration order matters for destruction:
+    // members are destroyed in reverse order, so dependents are listed
+    // after the objects they reference.
+    std::unique_ptr<LinSolverDirect>    factorizationSolver_;
+    std::unique_ptr<LinSolverDirect>    refactorizationSolver_;
+    std::unique_ptr<LinSolverDirect>    preconditionerSolver_;
+    std::unique_ptr<GramSchmidt>        gs_;
+    std::unique_ptr<Preconditioner>     preconditioner_;
+    std::unique_ptr<LinSolverIterative> iterativeSolver_;
 
     LinAlgWorkspaceCUDA* workspaceCuda_{nullptr};
     LinAlgWorkspaceHIP*  workspaceHip_{nullptr};
     LinAlgWorkspaceCpu*  workspaceCpu_{nullptr};
-
-    MatrixHandler* matrixHandler_{nullptr};
-    VectorHandler* vectorHandler_{nullptr};
 
     bool is_solve_on_device_{false};
 
@@ -117,7 +121,7 @@ namespace ReSolve
     index_type* P_{nullptr};
     index_type* Q_{nullptr};
 
-    vector_type* resVector_{nullptr};
+    std::unique_ptr<vector_type> resVector_;
 
     matrix::Sparse* A_{nullptr};
 

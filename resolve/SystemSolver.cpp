@@ -75,8 +75,8 @@ namespace ReSolve
     }
 
     // Instantiate handlers
-    matrixHandler_ = new MatrixHandler(workspaceCpu_);
-    vectorHandler_ = new VectorHandler(workspaceCpu_);
+    matrixHandler_.reset(new MatrixHandler(workspaceCpu_));
+    vectorHandler_.reset(new VectorHandler(workspaceCpu_));
 
     memspace_ = "cpu";
 
@@ -115,8 +115,8 @@ namespace ReSolve
     }
 
     // Instantiate handlers
-    matrixHandler_ = new MatrixHandler(workspaceCuda_);
-    vectorHandler_ = new VectorHandler(workspaceCuda_);
+    matrixHandler_.reset(new MatrixHandler(workspaceCuda_));
+    vectorHandler_.reset(new VectorHandler(workspaceCuda_));
 
     memspace_ = "cuda";
 
@@ -156,8 +156,8 @@ namespace ReSolve
     }
 
     // Instantiate handlers
-    matrixHandler_ = new MatrixHandler(workspaceHip_);
-    vectorHandler_ = new VectorHandler(workspaceHip_);
+    matrixHandler_.reset(new MatrixHandler(workspaceHip_));
+    vectorHandler_.reset(new VectorHandler(workspaceHip_));
 
     memspace_ = "hip";
 
@@ -165,57 +165,19 @@ namespace ReSolve
   }
 #endif
 
-  SystemSolver::~SystemSolver()
-  {
-    if (resVector_ != nullptr)
-    {
-      delete resVector_;
-    }
-
-    if (factorizationMethod_ != "none")
-    {
-      delete factorizationSolver_;
-    }
-
-    if (refactorizationMethod_ != "none")
-    {
-      delete refactorizationSolver_;
-    }
-
-    if (solveMethod_ == "randgmres" || solveMethod_ == "fgmres")
-    {
-      delete iterativeSolver_;
-    }
-
-    if (gs_ != nullptr)
-    {
-      delete gs_;
-    }
-
-    if (irMethod_ != "none")
-    {
-      delete iterativeSolver_;
-    }
-
-    if (precondition_method_ != "none")
-    {
-      delete preconditioner_;
-      delete preconditionerSolver_;
-    }
-
-    delete matrixHandler_;
-    delete vectorHandler_;
-  }
+  /**
+   * @brief Destructor
+   *
+   * All owned components are held in `std::unique_ptr` and are released
+   * automatically in reverse declaration order.
+   */
+  SystemSolver::~SystemSolver() = default;
 
   int SystemSolver::setMatrix(matrix_type* A)
   {
     int status = 0;
     A_         = A;
-    if (resVector_)
-    {
-      delete resVector_;
-    }
-    resVector_ = new vector_type(A->getNumRows());
+    resVector_.reset(new vector_type(A->getNumRows()));
     if (memspace_ == "cpu")
     {
       resVector_->allocate(memory::HOST);
@@ -229,12 +191,12 @@ namespace ReSolve
     // If we use iterative solver, we can set it up here
     if (solveMethod_ == "randgmres")
     {
-      auto* rgmres = dynamic_cast<LinSolverIterativeRandFGMRES*>(iterativeSolver_);
+      auto* rgmres = dynamic_cast<LinSolverIterativeRandFGMRES*>(iterativeSolver_.get());
       status += rgmres->setup(A_);
     }
     else if (solveMethod_ == "fgmres")
     {
-      auto* fgmres = dynamic_cast<LinSolverIterativeFGMRES*>(iterativeSolver_);
+      auto* fgmres = dynamic_cast<LinSolverIterativeFGMRES*>(iterativeSolver_.get());
       status += fgmres->setup(A_);
     }
     else
@@ -254,36 +216,12 @@ namespace ReSolve
   int SystemSolver::initialize()
   {
     // First delete old objects
-    if (factorizationSolver_)
-    {
-      delete factorizationSolver_;
-      factorizationSolver_ = nullptr;
-    }
-    if (refactorizationSolver_)
-    {
-      delete refactorizationSolver_;
-      refactorizationSolver_ = nullptr;
-    }
-    if (preconditionerSolver_)
-    {
-      delete preconditionerSolver_;
-      preconditionerSolver_ = nullptr;
-    }
-    if (preconditioner_)
-    {
-      delete preconditioner_;
-      preconditioner_ = nullptr;
-    }
-    if (iterativeSolver_)
-    {
-      delete iterativeSolver_;
-      iterativeSolver_ = nullptr;
-    }
-    if (gs_)
-    {
-      delete gs_;
-      gs_ = nullptr;
-    }
+    iterativeSolver_.reset();
+    preconditioner_.reset();
+    preconditionerSolver_.reset();
+    refactorizationSolver_.reset();
+    factorizationSolver_.reset();
+    gs_.reset();
 
     // Create factorization solver
     if (factorizationMethod_ == "none")
@@ -293,7 +231,7 @@ namespace ReSolve
     }
     else if (factorizationMethod_ == "klu")
     {
-      factorizationSolver_ = new ReSolve::LinSolverDirectKLU();
+      factorizationSolver_.reset(new ReSolve::LinSolverDirectKLU());
 #endif
     }
     else
@@ -314,23 +252,23 @@ namespace ReSolve
     }
     else if (refactorizationMethod_ == "glu")
     {
-      refactorizationSolver_ = new ReSolve::LinSolverDirectCuSolverGLU(workspaceCuda_);
+      refactorizationSolver_.reset(new ReSolve::LinSolverDirectCuSolverGLU(workspaceCuda_));
     }
     else if (refactorizationMethod_ == "cusolverrf")
     {
-      refactorizationSolver_ = new ReSolve::LinSolverDirectCuSolverRf();
+      refactorizationSolver_.reset(new ReSolve::LinSolverDirectCuSolverRf());
 #ifdef RESOLVE_USE_CUDSS
     }
     else if (refactorizationMethod_ == "cudssrf")
     {
-      refactorizationSolver_ = new ReSolve::LinSolverDirectCuDssRf();
+      refactorizationSolver_.reset(new ReSolve::LinSolverDirectCuDssRf());
 #endif
 #endif
 #ifdef RESOLVE_USE_HIP
     }
     else if (refactorizationMethod_ == "rocsolverrf")
     {
-      refactorizationSolver_ = new ReSolve::LinSolverDirectRocSolverRf(workspaceHip_);
+      refactorizationSolver_.reset(new ReSolve::LinSolverDirectRocSolverRf(workspaceHip_));
 #endif
     }
     else
@@ -344,9 +282,9 @@ namespace ReSolve
     if (irMethod_ == "fgmres")
     {
       setGramSchmidtMethod(gsMethod_);
-      iterativeSolver_ = new LinSolverIterativeFGMRES(matrixHandler_,
-                                                      vectorHandler_,
-                                                      gs_);
+      iterativeSolver_.reset(new LinSolverIterativeFGMRES(matrixHandler_.get(),
+                                                          vectorHandler_.get(),
+                                                          gs_.get()));
     }
 
     // Create preconditioner
@@ -358,21 +296,21 @@ namespace ReSolve
     {
       if (memspace_ == "cpu")
       {
-        preconditionerSolver_ = new LinSolverDirectCpuILU0(workspaceCpu_);
-        preconditioner_       = new PreconditionerLU(preconditionerSolver_);
+        preconditionerSolver_.reset(new LinSolverDirectCpuILU0(workspaceCpu_));
+        preconditioner_.reset(new PreconditionerLU(preconditionerSolver_.get()));
 #ifdef RESOLVE_USE_CUDA
       }
       else if (memspace_ == "cuda")
       {
-        preconditionerSolver_ = new LinSolverDirectCuSparseILU0(workspaceCuda_);
-        preconditioner_       = new PreconditionerLU(preconditionerSolver_);
+        preconditionerSolver_.reset(new LinSolverDirectCuSparseILU0(workspaceCuda_));
+        preconditioner_.reset(new PreconditionerLU(preconditionerSolver_.get()));
 #endif
 #ifdef RESOLVE_USE_HIP
       }
       else if (memspace_ == "hip")
       {
-        preconditionerSolver_ = new LinSolverDirectRocSparseILU0(workspaceHip_);
-        preconditioner_       = new PreconditionerLU(preconditionerSolver_);
+        preconditionerSolver_.reset(new LinSolverDirectRocSparseILU0(workspaceHip_));
+        preconditioner_.reset(new PreconditionerLU(preconditionerSolver_.get()));
 #endif
       }
       else
@@ -408,17 +346,17 @@ namespace ReSolve
         sketch = LinSolverIterativeRandFGMRES::cs;
       }
       setGramSchmidtMethod(gsMethod_);
-      iterativeSolver_ = new LinSolverIterativeRandFGMRES(matrixHandler_,
-                                                          vectorHandler_,
-                                                          sketch,
-                                                          gs_);
+      iterativeSolver_.reset(new LinSolverIterativeRandFGMRES(matrixHandler_.get(),
+                                                              vectorHandler_.get(),
+                                                              sketch,
+                                                              gs_.get()));
     }
     else if (solveMethod_ == "fgmres")
     {
       setGramSchmidtMethod(gsMethod_);
-      iterativeSolver_ = new LinSolverIterativeFGMRES(matrixHandler_,
-                                                      vectorHandler_,
-                                                      gs_);
+      iterativeSolver_.reset(new LinSolverIterativeFGMRES(matrixHandler_.get(),
+                                                          vectorHandler_.get(),
+                                                          gs_.get()));
     }
     else
     {
@@ -516,7 +454,7 @@ namespace ReSolve
     {
       status += refactorizationSolver_->setup(A_, L_, U_, P_, Q_);
 
-      LinSolverDirectCuSolverRf* Rf = dynamic_cast<LinSolverDirectCuSolverRf*>(refactorizationSolver_);
+      LinSolverDirectCuSolverRf* Rf = dynamic_cast<LinSolverDirectCuSolverRf*>(refactorizationSolver_.get());
       Rf->setNumericalProperties(1e-14, 1e-1);
 
       is_solve_on_device_ = false;
@@ -524,7 +462,7 @@ namespace ReSolve
 #ifdef RESOLVE_USE_CUDSS
     else if (refactorizationMethod_ == "cudssrf")
     {
-      LinSolverDirectCuDssRf* Rf = dynamic_cast<LinSolverDirectCuDssRf*>(refactorizationSolver_);
+      LinSolverDirectCuDssRf* Rf = dynamic_cast<LinSolverDirectCuDssRf*>(refactorizationSolver_.get());
       Rf->setNumericalProperties(1e-14, 1e-1);
 
       status += refactorizationSolver_->setup(A_, L_, U_, P_, Q_);
@@ -538,7 +476,7 @@ namespace ReSolve
     if (refactorizationMethod_ == "rocsolverrf")
     {
       is_solve_on_device_ = false;
-      status += refactorizationSolver_->setup(A_, L_, U_, P_, Q_, resVector_);
+      status += refactorizationSolver_->setup(A_, L_, U_, P_, Q_, resVector_.get());
     }
 #endif
 
@@ -546,14 +484,8 @@ namespace ReSolve
     {
       status += iterativeSolver_->setup(A_);
 
-      if (preconditioner_)
-      {
-        delete preconditioner_;
-        preconditioner_ = nullptr;
-      }
-
-      preconditioner_ = new PreconditionerLU(refactorizationSolver_);
-      status += iterativeSolver_->setPreconditioner(preconditioner_);
+      preconditioner_.reset(new PreconditionerLU(refactorizationSolver_.get()));
+      status += iterativeSolver_->setPreconditioner(preconditioner_.get());
     }
     return status;
   }
@@ -665,7 +597,7 @@ namespace ReSolve
     {
       is_solve_on_device_ = true;
     }
-    status += iterativeSolver_->setPreconditioner(preconditioner_);
+    status += iterativeSolver_->setPreconditioner(preconditioner_.get());
 
     return status;
   }
@@ -748,11 +680,7 @@ namespace ReSolve
   void SystemSolver::setRefactorizationMethod(std::string method)
   {
     refactorizationMethod_ = method;
-    if (refactorizationSolver_)
-    {
-      delete refactorizationSolver_;
-      refactorizationSolver_ = nullptr;
-    }
+    refactorizationSolver_.reset();
 
     // Create refactorization solver
     if (refactorizationMethod_ == "klu")
@@ -762,17 +690,17 @@ namespace ReSolve
     }
     else if (refactorizationMethod_ == "glu")
     {
-      refactorizationSolver_ = new ReSolve::LinSolverDirectCuSolverGLU(workspaceCuda_);
+      refactorizationSolver_.reset(new ReSolve::LinSolverDirectCuSolverGLU(workspaceCuda_));
     }
     else if (refactorizationMethod_ == "cusolverrf")
     {
-      refactorizationSolver_ = new ReSolve::LinSolverDirectCuSolverRf();
+      refactorizationSolver_.reset(new ReSolve::LinSolverDirectCuSolverRf());
 #endif
 #ifdef RESOLVE_USE_HIP
     }
     else if (refactorizationMethod_ == "rocsolverrf")
     {
-      refactorizationSolver_ = new ReSolve::LinSolverDirectRocSolverRf(workspaceHip_);
+      refactorizationSolver_.reset(new ReSolve::LinSolverDirectRocSolverRf(workspaceHip_));
 #endif
     }
     else
@@ -794,11 +722,7 @@ namespace ReSolve
 
     // Remove existing iterative solver and set IR to "none".
     irMethod_ = "none";
-    if (iterativeSolver_)
-    {
-      delete iterativeSolver_;
-      iterativeSolver_ = nullptr;
-    }
+    iterativeSolver_.reset();
 
     if (method == "randgmres")
     {
@@ -819,17 +743,17 @@ namespace ReSolve
       }
 
       setGramSchmidtMethod(gsMethod_);
-      iterativeSolver_ = new LinSolverIterativeRandFGMRES(matrixHandler_,
-                                                          vectorHandler_,
-                                                          sketch,
-                                                          gs_);
+      iterativeSolver_.reset(new LinSolverIterativeRandFGMRES(matrixHandler_.get(),
+                                                              vectorHandler_.get(),
+                                                              sketch,
+                                                              gs_.get()));
     }
     else if (solveMethod_ == "fgmres")
     {
       setGramSchmidtMethod(gsMethod_);
-      iterativeSolver_ = new LinSolverIterativeFGMRES(matrixHandler_,
-                                                      vectorHandler_,
-                                                      gs_);
+      iterativeSolver_.reset(new LinSolverIterativeFGMRES(matrixHandler_.get(),
+                                                          vectorHandler_.get(),
+                                                          gs_.get()));
     }
     else
     {
@@ -850,17 +774,8 @@ namespace ReSolve
    */
   void SystemSolver::setRefinementMethod(std::string method, std::string gsMethod)
   {
-    if (iterativeSolver_ != nullptr)
-    {
-      delete iterativeSolver_;
-      iterativeSolver_ = nullptr;
-    }
-
-    if (gs_ != nullptr)
-    {
-      delete gs_;
-      gs_ = nullptr;
-    }
+    iterativeSolver_.reset();
+    gs_.reset();
 
     irMethod_ = "none";
 
@@ -887,10 +802,10 @@ namespace ReSolve
     if (method == "fgmres")
     {
       setGramSchmidtMethod(gsMethod);
-      iterativeSolver_ = new LinSolverIterativeFGMRES(matrixHandler_,
-                                                      vectorHandler_,
-                                                      gs_);
-      irMethod_        = method;
+      iterativeSolver_.reset(new LinSolverIterativeFGMRES(matrixHandler_.get(),
+                                                          vectorHandler_.get(),
+                                                          gs_.get()));
+      irMethod_ = method;
     }
     else
     {
@@ -937,7 +852,7 @@ namespace ReSolve
     if (memspace_ == "cpu")
     {
       resVector_->copyFromExternal(rhs, memory::HOST, memory::HOST);
-      norm_b = std::sqrt(vectorHandler_->dot(resVector_, resVector_, memory::HOST));
+      norm_b = std::sqrt(vectorHandler_->dot(resVector_.get(), resVector_.get(), memory::HOST));
 #if defined(RESOLVE_USE_HIP) || defined(RESOLVE_USE_CUDA)
     }
     else if (memspace_ == "cuda" || memspace_ == "hip")
@@ -945,13 +860,13 @@ namespace ReSolve
       if (is_solve_on_device_)
       {
         resVector_->copyFromExternal(rhs, memory::DEVICE, memory::DEVICE);
-        norm_b = std::sqrt(vectorHandler_->dot(resVector_, resVector_, memory::DEVICE));
+        norm_b = std::sqrt(vectorHandler_->dot(resVector_.get(), resVector_.get(), memory::DEVICE));
       }
       else
       {
         resVector_->copyFromExternal(rhs, memory::HOST, memory::DEVICE);
         resVector_->syncData(memory::HOST);
-        norm_b = std::sqrt(vectorHandler_->dot(resVector_, resVector_, memory::HOST));
+        norm_b = std::sqrt(vectorHandler_->dot(resVector_.get(), resVector_.get(), memory::HOST));
         // ms = memory::HOST;
       }
       ms = memory::DEVICE;
@@ -963,8 +878,8 @@ namespace ReSolve
       return -1.0;
     }
     matrixHandler_->setValuesChanged(true, ms);
-    matrixHandler_->matvec(A_, x, resVector_, &ONE, &MINUS_ONE, ms);
-    resnorm = std::sqrt(vectorHandler_->dot(resVector_, resVector_, ms));
+    matrixHandler_->matvec(A_, x, resVector_.get(), &ONE, &MINUS_ONE, ms);
+    resnorm = std::sqrt(vectorHandler_->dot(resVector_.get(), resVector_.get(), ms));
     return resnorm / norm_b;
   }
 
@@ -1000,8 +915,8 @@ namespace ReSolve
       return -1.0;
     }
     matrixHandler_->setValuesChanged(true, ms);
-    matrixHandler_->matvec(A_, x, resVector_, &ONE, &MINUS_ONE, ms);
-    resnorm = vectorHandler_->amax(resVector_, ms);
+    matrixHandler_->matvec(A_, x, resVector_.get(), &ONE, &MINUS_ONE, ms);
+    resnorm = vectorHandler_->amax(resVector_.get(), ms);
     norm_x  = vectorHandler_->amax(x, ms);
     matrixHandler_->matrixInfNorm(A_, &norm_A, ms);
     return resnorm / (norm_x * norm_A);
@@ -1073,7 +988,7 @@ namespace ReSolve
     if (iterativeSolver_)
     {
       // TODO: Use cast here as a temporary solution; will be replaced by parameter setting framework
-      auto* sol = dynamic_cast<LinSolverIterativeRandFGMRES*>(iterativeSolver_);
+      auto* sol = dynamic_cast<LinSolverIterativeRandFGMRES*>(iterativeSolver_.get());
       sol->setSketchingMethod(tmp);
     }
 
@@ -1121,7 +1036,7 @@ namespace ReSolve
     }
     else
     {
-      gs_ = new GramSchmidt(vectorHandler_, gs_variant);
+      gs_.reset(new GramSchmidt(vectorHandler_.get(), gs_variant));
     }
 
     return 0;
