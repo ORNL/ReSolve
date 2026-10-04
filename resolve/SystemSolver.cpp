@@ -135,7 +135,6 @@ namespace ReSolve
 #endif
   } // namespace
 
-
   SystemSolver::SystemSolver(LinAlgWorkspaceCpu* workspace_cpu,
                              std::string         factor,
                              std::string         refactor,
@@ -785,9 +784,9 @@ namespace ReSolve
 
   /**
    * @brief Compute L2 vector norm.
-   * 
+   *
    * @param[in] rhs - pointer to the vector.
-   * 
+   *
    * @pre `rhs` is not a multivector.
    * @invariant `rhs` is unmodified by this method.
    * @return L2 norm of vector `rhs`.
@@ -823,18 +822,18 @@ namespace ReSolve
 
   /**
    * @brief Compute relative residual norm.
-   * 
+   *
    * The method evaluates ||A x - b|| / ||b||, where ||...|| is L2 norm,
    * for a linear system A x = b, where A is n x n matrix, x is unknown
    * n x 1 vector, and b is known right-hand-side vector. When the system
    * is solved for x, the relative residual norm provides a measure of solution
    * consistency.
-   * 
+   *
    * @param[in] rhs - right-hand side vector of a linear system.
    * @param[in] x   - solution vector of a linear system.
    * @invariant Matrix `A_` and vectors `x` and `rhs` are not modified by this
    * method.
-   * 
+   *
    * @return Relative residual norm
    */
   real_type SystemSolver::getResidualNorm(vector_type* rhs, vector_type* x)
@@ -879,12 +878,12 @@ namespace ReSolve
 
   /**
    * @brief Norm of scaled residuals.
-   * 
+   *
    * @param[in] rhs - right-hand side vector of a linear system.
    * @param[in] x   - solution vector of a linear system.
    * @invariant Matrix `A_` and vectors `x` and `rhs` are not modified by this
    * method.
-   * 
+   *
    * @return Norm of scaled residuals.
    */
   real_type SystemSolver::getNormOfScaledResiduals(vector_type* rhs, vector_type* x)
