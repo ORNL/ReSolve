@@ -58,17 +58,7 @@ namespace ReSolve
    */
   LinSolverDirectKLU::~LinSolverDirectKLU()
   {
-    if (factors_extracted_)
-    {
-      delete L_;
-      delete U_;
-      delete[] P_;
-      delete[] Q_;
-      L_ = nullptr;
-      U_ = nullptr;
-      P_ = nullptr;
-      Q_ = nullptr;
-    }
+    freeExtractedFactors();
     klu_free_symbolic(&Symbolic_, &Common_);
     klu_free_numeric(&Numeric_, &Common_);
   }
@@ -106,23 +96,11 @@ namespace ReSolve
     {
       klu_free_symbolic(&Symbolic_, &Common_);
     }
-    Symbolic_          = klu_analyze(A_->getNumRows(),
+    Symbolic_ = klu_analyze(A_->getNumRows(),
                             A_->getRowData(memory::HOST),
                             A_->getColData(memory::HOST),
                             &Common_);
-    factors_extracted_ = false;
-
-    if (L_ != nullptr)
-    {
-      delete L_;
-      L_ = nullptr;
-    }
-
-    if (U_ != nullptr)
-    {
-      delete U_;
-      U_ = nullptr;
-    }
+    freeExtractedFactors();
 
     if (Symbolic_ == nullptr)
     {
@@ -151,19 +129,7 @@ namespace ReSolve
                           Symbolic_,
                           &Common_);
 
-    factors_extracted_ = false;
-
-    if (L_ != nullptr)
-    {
-      delete L_;
-      L_ = nullptr;
-    }
-
-    if (U_ != nullptr)
-    {
-      delete U_;
-      U_ = nullptr;
-    }
+    freeExtractedFactors();
 
     if (Numeric_ == nullptr)
     {
@@ -193,19 +159,7 @@ namespace ReSolve
                                  Numeric_,
                                  &Common_);
 
-    factors_extracted_ = false;
-
-    if (L_ != nullptr)
-    {
-      delete L_;
-      L_ = nullptr;
-    }
-
-    if (U_ != nullptr)
-    {
-      delete U_;
-      U_ = nullptr;
-    }
+    freeExtractedFactors();
 
     if (!kluStatus)
     {
@@ -349,8 +303,11 @@ namespace ReSolve
   {
     if (Numeric_ != nullptr)
     {
-      P_           = new index_type[A_->getNumRows()];
       size_t nrows = static_cast<size_t>(A_->getNumRows());
+      if (P_ == nullptr)
+      {
+        P_ = new index_type[nrows];
+      }
       std::memcpy(P_, Symbolic_->Q, nrows * sizeof(index_type)); // KLU's CSC Symbolic_->Q is the CSR P vector.
       // Only a symbolic factorization is needed to get Q, because there is only row pivoting for the numeric factorization.
       return P_;
@@ -373,8 +330,11 @@ namespace ReSolve
   {
     if (Numeric_ != nullptr)
     {
-      Q_           = new index_type[A_->getNumRows()];
       size_t nrows = static_cast<size_t>(A_->getNumRows());
+      if (Q_ == nullptr)
+      {
+        Q_ = new index_type[nrows];
+      }
       std::memcpy(Q_, Numeric_->Pnum, nrows * sizeof(index_type)); // KLU's CSC Numeric_->Pnum is the CSR Q vector.
       // A numeric factorization is needed to get Pnum, because there is row pivoting for the numeric factorization.
       return Q_;
@@ -593,6 +553,27 @@ namespace ReSolve
     params_list_["pivot_tol"]        = PIVOT_TOL;
     params_list_["ordering"]         = ORDERING;
     params_list_["halt_if_singular"] = HALT_IF_SINGULAR;
+  }
+
+  /**
+   * @brief Releases factors and permutation vectors extracted from KLU.
+   *
+   * L and U factors as well as copies of permutation vectors P and Q are
+   * allocated on demand by the getters and owned by this object. They are
+   * invalidated whenever a new symbolic or numeric factorization is
+   * computed and must be released then and in the destructor.
+   */
+  void LinSolverDirectKLU::freeExtractedFactors()
+  {
+    delete L_;
+    delete U_;
+    delete[] P_;
+    delete[] Q_;
+    L_                 = nullptr;
+    U_                 = nullptr;
+    P_                 = nullptr;
+    Q_                 = nullptr;
+    factors_extracted_ = false;
   }
 
 } // namespace ReSolve
