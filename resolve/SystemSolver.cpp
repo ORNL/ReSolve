@@ -135,33 +135,6 @@ namespace ReSolve
 #endif
   } // namespace
 
-  /**
-   * @brief Shared tail of all constructors.
-   *
-   * Creates matrix and vector handlers for the given workspace, derives the
-   * memory space ID from the workspace type and instantiates solver
-   * components via `initialize()`.
-   *
-   * @tparam Workspace - one of LinAlgWorkspaceCpu, LinAlgWorkspaceCUDA, LinAlgWorkspaceHIP
-   * @param[in] workspace - pointer to the workspace (not owned)
-   */
-  template <class Workspace>
-  void SystemSolver::completeSetup(Workspace* workspace)
-  {
-    matrix_handler_.reset(new MatrixHandler(workspace));
-    vector_handler_.reset(new VectorHandler(workspace));
-    memspace_ = memorySpaceName(workspace);
-
-    if (initialize() != 0)
-    {
-      out::error() << "SystemSolver initialization failed with factorization '" << factorization_method_
-                   << "', refactorization '" << refactorization_method_
-                   << "', solve '" << solve_method_
-                   << "', preconditioner '" << precondition_method_
-                   << "', iterative refinement '" << ir_method_
-                   << "'. Solver is not usable in this state.\n";
-    }
-  }
 
   SystemSolver::SystemSolver(LinAlgWorkspaceCpu* workspace_cpu,
                              std::string         factor,
@@ -407,9 +380,7 @@ namespace ReSolve
    * solver to run on GPU.
    *
    * @pre Factorization solver exists and provides access to L and U factors,
-   * as well as left and right permutation vectors P and Q. Since KLU is
-   * the only factorization solver available through ReSolve, the factors are
-   * expected in CSC format.
+   * as well as left and right permutation vectors P and Q.
    *
    * @return int 0 if successful, 1 if it fails
    */
@@ -812,6 +783,15 @@ namespace ReSolve
     return 1;
   }
 
+  /**
+   * @brief Compute L2 vector norm.
+   * 
+   * @param[in] rhs - pointer to the vector.
+   * 
+   * @pre `rhs` is not a multivector.
+   * @invariant `rhs` is unmodified by this method.
+   * @return L2 norm of vector `rhs`.
+   */
   real_type SystemSolver::getVectorNorm(vector_type* rhs)
   {
     using namespace ReSolve::constants;
@@ -819,7 +799,7 @@ namespace ReSolve
     if (memspace_ == "cpu")
     {
       norm_b = std::sqrt(vector_handler_->dot(rhs, rhs, memory::HOST));
-#if defined(RESOLVE_USE_HIP) || defined(RESOLVE_USE_CUDA)
+#ifdef RESOLVE_USE_GPU
     }
     else if (memspace_ == "cuda" || memspace_ == "hip")
     {
@@ -831,7 +811,7 @@ namespace ReSolve
       {
         norm_b = std::sqrt(vector_handler_->dot(rhs, rhs, memory::HOST));
       }
-#endif
+#endif // RESOLVE_USE_GPU
     }
     else
     {
@@ -841,6 +821,22 @@ namespace ReSolve
     return norm_b;
   }
 
+  /**
+   * @brief Compute relative residual norm.
+   * 
+   * The method evaluates ||A x - b|| / ||b||, where ||...|| is L2 norm,
+   * for a linear system A x = b, where A is n x n matrix, x is unknown
+   * n x 1 vector, and b is known right-hand-side vector. When the system
+   * is solved for x, the relative residual norm provides a measure of solution
+   * consistency.
+   * 
+   * @param[in] rhs - right-hand side vector of a linear system.
+   * @param[in] x   - solution vector of a linear system.
+   * @invariant Matrix `A_` and vectors `x` and `rhs` are not modified by this
+   * method.
+   * 
+   * @return Relative residual norm
+   */
   real_type SystemSolver::getResidualNorm(vector_type* rhs, vector_type* x)
   {
     using namespace ReSolve::constants;
@@ -852,7 +848,7 @@ namespace ReSolve
     {
       res_vector_->copyFromExternal(rhs, memory::HOST, memory::HOST);
       norm_b = std::sqrt(vector_handler_->dot(res_vector_.get(), res_vector_.get(), memory::HOST));
-#if defined(RESOLVE_USE_HIP) || defined(RESOLVE_USE_CUDA)
+#ifdef RESOLVE_USE_GPU
     }
     else if (memspace_ == "cuda" || memspace_ == "hip")
     {
@@ -866,10 +862,9 @@ namespace ReSolve
         res_vector_->copyFromExternal(rhs, memory::HOST, memory::DEVICE);
         res_vector_->syncData(memory::HOST);
         norm_b = std::sqrt(vector_handler_->dot(res_vector_.get(), res_vector_.get(), memory::HOST));
-        // ms = memory::HOST;
       }
       ms = memory::DEVICE;
-#endif
+#endif // RESOLVE_USE_GPU
     }
     else
     {
@@ -882,6 +877,16 @@ namespace ReSolve
     return resnorm / norm_b;
   }
 
+  /**
+   * @brief Norm of scaled residuals.
+   * 
+   * @param[in] rhs - right-hand side vector of a linear system.
+   * @param[in] x   - solution vector of a linear system.
+   * @invariant Matrix `A_` and vectors `x` and `rhs` are not modified by this
+   * method.
+   * 
+   * @return Norm of scaled residuals.
+   */
   real_type SystemSolver::getNormOfScaledResiduals(vector_type* rhs, vector_type* x)
   {
     using namespace ReSolve::constants;
@@ -893,7 +898,7 @@ namespace ReSolve
     if (memspace_ == "cpu")
     {
       res_vector_->copyFromExternal(rhs, memory::HOST, memory::HOST);
-#if defined(RESOLVE_USE_HIP) || defined(RESOLVE_USE_CUDA)
+#ifdef RESOLVE_USE_GPU
     }
     else if (memspace_ == "cuda" || memspace_ == "hip")
     {
@@ -906,7 +911,7 @@ namespace ReSolve
         res_vector_->copyFromExternal(rhs, memory::HOST, memory::DEVICE);
       }
       ms = memory::DEVICE;
-#endif
+#endif // RESOLVE_USE_GPU
     }
     else
     {
@@ -1020,6 +1025,34 @@ namespace ReSolve
   //
   // Private methods
   //
+
+  /**
+   * @brief Shared tail of all constructors.
+   *
+   * Creates matrix and vector handlers for the given workspace, derives the
+   * memory space ID from the workspace type and instantiates solver
+   * components via `initialize()`.
+   *
+   * @tparam Workspace - one of LinAlgWorkspaceCpu, LinAlgWorkspaceCUDA, LinAlgWorkspaceHIP
+   * @param[in] workspace - pointer to the workspace (not owned)
+   */
+  template <class Workspace>
+  void SystemSolver::completeSetup(Workspace* workspace)
+  {
+    matrix_handler_.reset(new MatrixHandler(workspace));
+    vector_handler_.reset(new VectorHandler(workspace));
+    memspace_ = memorySpaceName(workspace);
+
+    if (initialize() != 0)
+    {
+      out::error() << "SystemSolver initialization failed with factorization '" << factorization_method_
+                   << "', refactorization '" << refactorization_method_
+                   << "', solve '" << solve_method_
+                   << "', preconditioner '" << precondition_method_
+                   << "', iterative refinement '" << ir_method_
+                   << "'. Solver is not usable in this state.\n";
+    }
+  }
 
   /**
    * @brief Enforces supported combinations of user-selected methods.
