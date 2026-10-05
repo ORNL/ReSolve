@@ -749,7 +749,7 @@ namespace ReSolve
       if (method != "none")
       {
         out::error() << "Iterative refinement cannot be enabled together with an "
-                       << "iterative solve method ('randgmres' or 'fgmres').\n";
+                     << "iterative solve method ('randgmres' or 'fgmres').\n";
         return 1;
       }
       ir_method_ = "none";
@@ -1069,20 +1069,20 @@ namespace ReSolve
       if (factorization_method_ != "none")
       {
         out::error() << "Incorrect input: factorization method '" << factorization_method_
-                       << "' cannot be used with iterative solve method '" << solve_method_
-                       << "\n";
+                     << "' cannot be used with iterative solve method '" << solve_method_
+                     << "\n";
       }
       if (refactorization_method_ != "none")
       {
         out::error() << "Incorrect input: refactorization method '" << refactorization_method_
-                       << "' cannot be used with iterative solve method '" << solve_method_
-                       << "\n";
+                     << "' cannot be used with iterative solve method '" << solve_method_
+                     << "\n";
       }
       if (ir_method_ != "none")
       {
         out::error() << "Incorrect input: iterative refinement cannot be enabled "
-                       << "together with iterative solve method '" << solve_method_
-                       << "\n";
+                     << "together with iterative solve method '" << solve_method_
+                     << "\n";
       }
     }
     else
@@ -1090,8 +1090,8 @@ namespace ReSolve
       if (precondition_method_ != "none")
       {
         out::error() << "Incorrect input: preconditioner '" << precondition_method_
-                       << "' can only be used with an iterative solve method ('fgmres' or 'randgmres'). "
-                       << "\n";
+                     << "' can only be used with an iterative solve method ('fgmres' or 'randgmres'). "
+                     << "\n";
       }
     }
   }
