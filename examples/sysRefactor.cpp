@@ -243,12 +243,6 @@ int sysRefactor(int argc, char* argv[])
                                "none",   // preconditioner (always 'none' here)
                                "none");  // iterative refinement
 
-  // Disable iterative refinement temporarily for CPU backend
-  if (hw_backend == "CPU")
-  {
-    is_iterative_refinement = false;
-  }
-
   if (is_iterative_refinement)
   {
     solver.setRefinementMethod("fgmres", "cgs2");

@@ -44,202 +44,181 @@ namespace ReSolve
   // Create a shortcut name for Logger static class
   using out = io::Logger;
 
-  SystemSolver::SystemSolver(LinAlgWorkspaceCpu* workspaceCpu,
+  // The helpers below map user-facing string IDs to solver enums. They are kept
+  // in an anonymous namespace (still inside ReSolve) so they have internal
+  // linkage. This means they are implementation details of SystemSolver, are not part
+  // of the library's exported symbols, and cannot collide with same-named
+  // functions in other translation units. If these mappings become useful
+  // elsewhere, move them to the classes that own the enums (GramSchmidt and
+  // LinSolverIterativeRandFGMRES) as public static methods.
+  namespace
+  {
+    /// Maps string ID to the sketching method enum, warns and defaults to count sketch.
+    LinSolverIterativeRandFGMRES::SketchingMethod sketchingMethodFromString(const std::string& method)
+    {
+      if (method == "count")
+      {
+        return LinSolverIterativeRandFGMRES::cs;
+      }
+      if (method == "fwht")
+      {
+        return LinSolverIterativeRandFGMRES::fwht;
+      }
+      out::warning() << "Sketching method " << method << " not recognized!\n"
+                     << "Using default (count sketch).\n";
+      return LinSolverIterativeRandFGMRES::cs;
+    }
+
+    /// Maps string ID to the Gram-Schmidt variant enum, warns and defaults to CGS2.
+    GramSchmidt::GSVariant gsVariantFromString(const std::string& variant)
+    {
+      if (variant == "cgs2")
+      {
+        return GramSchmidt::CGS2;
+      }
+      if (variant == "mgs")
+      {
+        return GramSchmidt::MGS;
+      }
+      if (variant == "mgs_two_sync")
+      {
+        return GramSchmidt::MGS_TWO_SYNC;
+      }
+      if (variant == "mgs_pm")
+      {
+        return GramSchmidt::MGS_PM;
+      }
+      if (variant == "cgs1")
+      {
+        return GramSchmidt::CGS1;
+      }
+      out::warning() << "Gram-Schmidt variant " << variant << " not recognized.\n";
+      out::warning() << "Using default CGS2 Gram-Schmidt variant.\n";
+      return GramSchmidt::CGS2;
+    }
+
+    /// Canonical string ID for a Gram-Schmidt variant (inverse of gsVariantFromString).
+    const char* gsVariantName(GramSchmidt::GSVariant variant)
+    {
+      switch (variant)
+      {
+      case GramSchmidt::CGS2:
+        return "cgs2";
+      case GramSchmidt::MGS:
+        return "mgs";
+      case GramSchmidt::MGS_TWO_SYNC:
+        return "mgs_two_sync";
+      case GramSchmidt::MGS_PM:
+        return "mgs_pm";
+      case GramSchmidt::CGS1:
+        return "cgs1";
+      }
+      return "cgs2";
+    }
+
+    /// Memory space ID associated with each workspace type.
+    const char* memorySpaceName(LinAlgWorkspaceCpu*)
+    {
+      return "cpu";
+    }
+#ifdef RESOLVE_USE_CUDA
+    const char* memorySpaceName(LinAlgWorkspaceCUDA*)
+    {
+      return "cuda";
+    }
+#endif
+#ifdef RESOLVE_USE_HIP
+    const char* memorySpaceName(LinAlgWorkspaceHIP*)
+    {
+      return "hip";
+    }
+#endif
+  } // namespace
+
+  SystemSolver::SystemSolver(LinAlgWorkspaceCpu* workspace_cpu,
                              std::string         factor,
                              std::string         refactor,
                              std::string         solve,
                              std::string         precond,
                              std::string         ir)
-    : workspaceCpu_(workspaceCpu),
-      factorizationMethod_(factor),
-      refactorizationMethod_(refactor),
-      solveMethod_(solve),
+    : workspace_cpu_(workspace_cpu),
+      factorization_method_(factor),
+      refactorization_method_(refactor),
+      solve_method_(solve),
       precondition_method_(precond),
-      irMethod_(ir)
+      ir_method_(ir)
   {
-    if ((refactor != "none") && (precond != "none"))
-    {
-      out::warning() << "Incorrect input: "
-                     << "Refactorization and preconditioning cannot both be enabled.\n"
-                     << "Setting both to 'none' ...\n";
-      refactorizationMethod_ = "none";
-      precondition_method_   = "none";
-    }
-
-    if ((solve == "randgmres" || solve == "fgmres") && (ir != "none"))
-    {
-      out::warning() << "Incorrect input: "
-                     << "Iterative refinement cannot be enabled together with an iterative solve method.\n"
-                     << "Setting refinement method to 'none' ...\n";
-      irMethod_ = "none";
-    }
-
-    // Instantiate handlers
-    matrixHandler_ = new MatrixHandler(workspaceCpu_);
-    vectorHandler_ = new VectorHandler(workspaceCpu_);
-
-    memspace_ = "cpu";
-
-    initialize();
+    completeSetup(workspace_cpu_);
   }
 
 #ifdef RESOLVE_USE_CUDA
-  SystemSolver::SystemSolver(LinAlgWorkspaceCUDA* workspaceCuda,
+  SystemSolver::SystemSolver(LinAlgWorkspaceCUDA* workspace_cuda,
                              std::string          factor,
                              std::string          refactor,
                              std::string          solve,
                              std::string          precond,
                              std::string          ir)
-    : workspaceCuda_(workspaceCuda),
-      factorizationMethod_(factor),
-      refactorizationMethod_(refactor),
-      solveMethod_(solve),
+    : workspace_cuda_(workspace_cuda),
+      factorization_method_(factor),
+      refactorization_method_(refactor),
+      solve_method_(solve),
       precondition_method_(precond),
-      irMethod_(ir)
+      ir_method_(ir)
   {
-    if ((refactor != "none") && (precond != "none"))
-    {
-      out::warning() << "Incorrect input: "
-                     << "Refactorization and preconditioning cannot both be enabled.\n"
-                     << "Setting both to 'none' ...\n";
-      refactorizationMethod_ = "none";
-      precondition_method_   = "none";
-    }
-
-    if ((solve == "randgmres" || solve == "fgmres") && (ir != "none"))
-    {
-      out::warning() << "Incorrect input: "
-                     << "Iterative refinement cannot be enabled together with an iterative solve method.\n"
-                     << "Setting refinement method to 'none' ...\n";
-      irMethod_ = "none";
-    }
-
-    // Instantiate handlers
-    matrixHandler_ = new MatrixHandler(workspaceCuda_);
-    vectorHandler_ = new VectorHandler(workspaceCuda_);
-
-    memspace_ = "cuda";
-
-    initialize();
+    completeSetup(workspace_cuda_);
   }
 #endif
 
 #ifdef RESOLVE_USE_HIP
-  SystemSolver::SystemSolver(LinAlgWorkspaceHIP* workspaceHip,
+  SystemSolver::SystemSolver(LinAlgWorkspaceHIP* workspace_hip,
                              std::string         factor,
                              std::string         refactor,
                              std::string         solve,
                              std::string         precond,
                              std::string         ir)
-    : workspaceHip_(workspaceHip),
-      factorizationMethod_(factor),
-      refactorizationMethod_(refactor),
-      solveMethod_(solve),
+    : workspace_hip_(workspace_hip),
+      factorization_method_(factor),
+      refactorization_method_(refactor),
+      solve_method_(solve),
       precondition_method_(precond),
-      irMethod_(ir)
+      ir_method_(ir)
   {
-    if ((refactor != "none") && (precond != "none"))
-    {
-      out::warning() << "Incorrect input: "
-                     << "Refactorization and preconditioning cannot both be enabled.\n"
-                     << "Setting both to 'none' ...\n";
-      refactorizationMethod_ = "none";
-      precondition_method_   = "none";
-    }
-
-    if ((solve == "randgmres" || solve == "fgmres") && (ir != "none"))
-    {
-      out::warning() << "Incorrect input: "
-                     << "Iterative refinement cannot be enabled together with an iterative solve method.\n"
-                     << "Setting refinement method to 'none' ...\n";
-      irMethod_ = "none";
-    }
-
-    // Instantiate handlers
-    matrixHandler_ = new MatrixHandler(workspaceHip_);
-    vectorHandler_ = new VectorHandler(workspaceHip_);
-
-    memspace_ = "hip";
-
-    initialize();
+    completeSetup(workspace_hip_);
   }
 #endif
 
-  SystemSolver::~SystemSolver()
-  {
-    if (resVector_ != nullptr)
-    {
-      delete resVector_;
-    }
-
-    if (factorizationMethod_ != "none")
-    {
-      delete factorizationSolver_;
-    }
-
-    if (refactorizationMethod_ != "none")
-    {
-      delete refactorizationSolver_;
-    }
-
-    if (solveMethod_ == "randgmres" || solveMethod_ == "fgmres")
-    {
-      delete iterativeSolver_;
-    }
-
-    if (gs_ != nullptr)
-    {
-      delete gs_;
-    }
-
-    if (irMethod_ != "none")
-    {
-      delete iterativeSolver_;
-    }
-
-    if (precondition_method_ != "none")
-    {
-      delete preconditioner_;
-      delete preconditionerSolver_;
-    }
-
-    delete matrixHandler_;
-    delete vectorHandler_;
-  }
+  /**
+   * @brief Destructor
+   *
+   * All owned components are held in `std::unique_ptr` and are released
+   * automatically in reverse declaration order.
+   */
+  SystemSolver::~SystemSolver() = default;
 
   int SystemSolver::setMatrix(matrix_type* A)
   {
     int status = 0;
     A_         = A;
-    if (resVector_)
-    {
-      delete resVector_;
-    }
-    resVector_ = new vector_type(A->getNumRows());
+    res_vector_.reset(new vector_type(A->getNumRows()));
     if (memspace_ == "cpu")
     {
-      resVector_->allocate(memory::HOST);
+      res_vector_->allocate(memory::HOST);
     }
     else
     {
-      resVector_->allocate(memory::DEVICE);
-      matrixHandler_->setValuesChanged(true, memory::DEVICE);
+      res_vector_->allocate(memory::DEVICE);
+      matrix_handler_->setValuesChanged(true, memory::DEVICE);
     }
 
     // If we use iterative solver, we can set it up here
-    if (solveMethod_ == "randgmres")
+    if (solve_method_ == "randgmres" || solve_method_ == "fgmres")
     {
-      auto* rgmres = dynamic_cast<LinSolverIterativeRandFGMRES*>(iterativeSolver_);
-      status += rgmres->setup(A_);
-    }
-    else if (solveMethod_ == "fgmres")
-    {
-      auto* fgmres = dynamic_cast<LinSolverIterativeFGMRES*>(iterativeSolver_);
-      status += fgmres->setup(A_);
-    }
-    else
-    {
-      // do nothing
+      if (iterative_solver_ == nullptr)
+      {
+        out::error() << "Iterative solver not initialized!\n";
+        return 1;
+      }
+      status += iterative_solver_->setup(A_);
     }
 
     return status;
@@ -248,105 +227,44 @@ namespace ReSolve
   /**
    * @brief Sets up the system solver
    *
-   * This method instantiates components of the system solver based on
-   * user inputs.
+   * This method validates the selected method combination (see
+   * `validateConfiguration()`) and then instantiates components of the
+   * system solver based on user inputs. It can be called again after the
+   * configuration has been changed through setters.
    */
   int SystemSolver::initialize()
   {
+    // Make sure the method combination is consistent before creating objects
+    validateConfiguration();
+
     // First delete old objects
-    if (factorizationSolver_)
-    {
-      delete factorizationSolver_;
-      factorizationSolver_ = nullptr;
-    }
-    if (refactorizationSolver_)
-    {
-      delete refactorizationSolver_;
-      refactorizationSolver_ = nullptr;
-    }
-    if (preconditionerSolver_)
-    {
-      delete preconditionerSolver_;
-      preconditionerSolver_ = nullptr;
-    }
-    if (preconditioner_)
-    {
-      delete preconditioner_;
-      preconditioner_ = nullptr;
-    }
-    if (iterativeSolver_)
-    {
-      delete iterativeSolver_;
-      iterativeSolver_ = nullptr;
-    }
-    if (gs_)
-    {
-      delete gs_;
-      gs_ = nullptr;
-    }
+    iterative_solver_.reset();
+    preconditioner_.reset();
+    preconditioner_solver_.reset();
+    refactorization_solver_.reset();
+    factorization_solver_.reset();
+    gs_.reset();
 
     // Create factorization solver
-    if (factorizationMethod_ == "none")
+    if (createFactorizationSolver() != 0)
     {
-      // do nothing
-#ifdef RESOLVE_USE_KLU
-    }
-    else if (factorizationMethod_ == "klu")
-    {
-      factorizationSolver_ = new ReSolve::LinSolverDirectKLU();
-#endif
-    }
-    else
-    {
-      out::error() << "Unrecognized factorization " << factorizationMethod_ << "\n";
       return 1;
     }
 
     // Create refactorization solver
-    if (refactorizationMethod_ == "none")
+    if (createRefactorizationSolver() != 0)
     {
-      // do nothing
-    }
-    else if (refactorizationMethod_ == "klu")
-    {
-      // do nothing for now, KLU is the only factorization solver available
-#ifdef RESOLVE_USE_CUDA
-    }
-    else if (refactorizationMethod_ == "glu")
-    {
-      refactorizationSolver_ = new ReSolve::LinSolverDirectCuSolverGLU(workspaceCuda_);
-    }
-    else if (refactorizationMethod_ == "cusolverrf")
-    {
-      refactorizationSolver_ = new ReSolve::LinSolverDirectCuSolverRf();
-#ifdef RESOLVE_USE_CUDSS
-    }
-    else if (refactorizationMethod_ == "cudssrf")
-    {
-      refactorizationSolver_ = new ReSolve::LinSolverDirectCuDssRf();
-#endif
-#endif
-#ifdef RESOLVE_USE_HIP
-    }
-    else if (refactorizationMethod_ == "rocsolverrf")
-    {
-      refactorizationSolver_ = new ReSolve::LinSolverDirectRocSolverRf(workspaceHip_);
-#endif
-    }
-    else
-    {
-      out::error() << "Refactorization method " << refactorizationMethod_
-                   << " not recognized ...\n";
       return 1;
     }
 
     // Create iterative refinement
-    if (irMethod_ == "fgmres")
+    if (ir_method_ != "none")
     {
-      setGramSchmidtMethod(gsMethod_);
-      iterativeSolver_ = new LinSolverIterativeFGMRES(matrixHandler_,
-                                                      vectorHandler_,
-                                                      gs_);
+      if (createIterativeSolver(ir_method_) != 0)
+      {
+        out::error() << "Iterative refinement method " << ir_method_ << " not recognized.\n";
+        return 1;
+      }
     }
 
     // Create preconditioner
@@ -358,21 +276,21 @@ namespace ReSolve
     {
       if (memspace_ == "cpu")
       {
-        preconditionerSolver_ = new LinSolverDirectCpuILU0(workspaceCpu_);
-        preconditioner_       = new PreconditionerLU(preconditionerSolver_);
+        preconditioner_solver_.reset(new LinSolverDirectCpuILU0(workspace_cpu_));
+        preconditioner_.reset(new PreconditionerLU(preconditioner_solver_.get()));
 #ifdef RESOLVE_USE_CUDA
       }
       else if (memspace_ == "cuda")
       {
-        preconditionerSolver_ = new LinSolverDirectCuSparseILU0(workspaceCuda_);
-        preconditioner_       = new PreconditionerLU(preconditionerSolver_);
+        preconditioner_solver_.reset(new LinSolverDirectCuSparseILU0(workspace_cuda_));
+        preconditioner_.reset(new PreconditionerLU(preconditioner_solver_.get()));
 #endif
 #ifdef RESOLVE_USE_HIP
       }
       else if (memspace_ == "hip")
       {
-        preconditionerSolver_ = new LinSolverDirectRocSparseILU0(workspaceHip_);
-        preconditioner_       = new PreconditionerLU(preconditionerSolver_);
+        preconditioner_solver_.reset(new LinSolverDirectRocSparseILU0(workspace_hip_));
+        preconditioner_.reset(new PreconditionerLU(preconditioner_solver_.get()));
 #endif
       }
       else
@@ -390,39 +308,9 @@ namespace ReSolve
     }
 
     // Create iterative solver
-    if (solveMethod_ == "randgmres")
+    if (solve_method_ == "randgmres" || solve_method_ == "fgmres")
     {
-      LinSolverIterativeRandFGMRES::SketchingMethod sketch;
-      if (sketching_method_ == "count")
-      {
-        sketch = LinSolverIterativeRandFGMRES::cs;
-      }
-      else if (sketching_method_ == "fwht")
-      {
-        sketch = LinSolverIterativeRandFGMRES::fwht;
-      }
-      else
-      {
-        out::warning() << "Sketching method " << sketching_method_ << " not recognized!\n"
-                       << "Using default.\n";
-        sketch = LinSolverIterativeRandFGMRES::cs;
-      }
-      setGramSchmidtMethod(gsMethod_);
-      iterativeSolver_ = new LinSolverIterativeRandFGMRES(matrixHandler_,
-                                                          vectorHandler_,
-                                                          sketch,
-                                                          gs_);
-    }
-    else if (solveMethod_ == "fgmres")
-    {
-      setGramSchmidtMethod(gsMethod_);
-      iterativeSolver_ = new LinSolverIterativeFGMRES(matrixHandler_,
-                                                      vectorHandler_,
-                                                      gs_);
-    }
-    else
-    {
-      // do nothing
+      createIterativeSolver(solve_method_);
     }
 
     return 0;
@@ -436,39 +324,45 @@ namespace ReSolve
       return 1;
     }
 
-    if (factorizationMethod_ == "klu")
+    if (factorization_method_ == "klu")
     {
-      factorizationSolver_->setup(A_);
-      return factorizationSolver_->analyze();
+      factorization_solver_->setup(A_);
+      return factorization_solver_->analyze();
     }
+
+    out::error() << "Cannot analyze: factorization method '" << factorization_method_
+                 << "' does not provide a factorization solver.\n";
     return 1;
   }
 
   int SystemSolver::factorize()
   {
-    if (factorizationMethod_ == "klu")
+    if (factorization_method_ == "klu")
     {
       is_solve_on_device_ = false;
-      return factorizationSolver_->factorize();
+      return factorization_solver_->factorize();
     }
+
+    out::error() << "Cannot factorize: factorization method '" << factorization_method_
+                 << "' does not provide a factorization solver.\n";
     return 1;
   }
 
   int SystemSolver::refactorize()
   {
-    if (refactorizationMethod_ == "klu")
+    if (refactorization_method_ == "klu")
     {
-      return factorizationSolver_->refactorize();
+      return factorization_solver_->refactorize();
     }
 
-    if (refactorizationMethod_ == "glu" || refactorizationMethod_ == "cusolverrf" || refactorizationMethod_ == "rocsolverrf"
+    if (refactorization_method_ == "glu" || refactorization_method_ == "cusolverrf" || refactorization_method_ == "rocsolverrf"
 #ifdef RESOLVE_USE_CUDSS
-        || refactorizationMethod_ == "cudssrf"
+        || refactorization_method_ == "cudssrf"
 #endif
     )
     {
       is_solve_on_device_ = true;
-      return refactorizationSolver_->refactorize();
+      return refactorization_solver_->refactorize();
     }
 
     return 1;
@@ -485,9 +379,7 @@ namespace ReSolve
    * solver to run on GPU.
    *
    * @pre Factorization solver exists and provides access to L and U factors,
-   * as well as left and right permutation vectors P and Q. Since KLU is
-   * the only factorization solver available through ReSolve, the factors are
-   * expected in CSC format.
+   * as well as left and right permutation vectors P and Q.
    *
    * @return int 0 if successful, 1 if it fails
    */
@@ -495,10 +387,10 @@ namespace ReSolve
   {
     int status = 0;
 
-    L_ = factorizationSolver_->getLFactor();
-    U_ = factorizationSolver_->getUFactor();
-    P_ = factorizationSolver_->getPOrdering();
-    Q_ = factorizationSolver_->getQOrdering();
+    L_ = factorization_solver_->getLFactor();
+    U_ = factorization_solver_->getUFactor();
+    P_ = factorization_solver_->getPOrdering();
+    Q_ = factorization_solver_->getQOrdering();
 
     if (L_ == nullptr)
     {
@@ -507,27 +399,37 @@ namespace ReSolve
     }
 
 #ifdef RESOLVE_USE_CUDA
-    if (refactorizationMethod_ == "glu")
+    if (refactorization_method_ == "glu")
     {
       is_solve_on_device_ = true;
-      status += refactorizationSolver_->setup(A_, L_, U_, P_, Q_);
+      status += refactorization_solver_->setup(A_, L_, U_, P_, Q_);
     }
-    else if (refactorizationMethod_ == "cusolverrf")
+    else if (refactorization_method_ == "cusolverrf")
     {
-      status += refactorizationSolver_->setup(A_, L_, U_, P_, Q_);
+      status += refactorization_solver_->setup(A_, L_, U_, P_, Q_);
 
-      LinSolverDirectCuSolverRf* Rf = dynamic_cast<LinSolverDirectCuSolverRf*>(refactorizationSolver_);
+      auto* Rf = dynamic_cast<LinSolverDirectCuSolverRf*>(refactorization_solver_.get());
+      if (Rf == nullptr)
+      {
+        out::error() << "Refactorization solver is not a cuSolverRf instance!\n";
+        return 1;
+      }
       Rf->setNumericalProperties(1e-14, 1e-1);
 
       is_solve_on_device_ = false;
     }
 #ifdef RESOLVE_USE_CUDSS
-    else if (refactorizationMethod_ == "cudssrf")
+    else if (refactorization_method_ == "cudssrf")
     {
-      LinSolverDirectCuDssRf* Rf = dynamic_cast<LinSolverDirectCuDssRf*>(refactorizationSolver_);
+      auto* Rf = dynamic_cast<LinSolverDirectCuDssRf*>(refactorization_solver_.get());
+      if (Rf == nullptr)
+      {
+        out::error() << "Refactorization solver is not a cuDSS instance!\n";
+        return 1;
+      }
       Rf->setNumericalProperties(1e-14, 1e-1);
 
-      status += refactorizationSolver_->setup(A_, L_, U_, P_, Q_);
+      status += refactorization_solver_->setup(A_, L_, U_, P_, Q_);
 
       is_solve_on_device_ = false;
     }
@@ -535,25 +437,24 @@ namespace ReSolve
 #endif
 
 #ifdef RESOLVE_USE_HIP
-    if (refactorizationMethod_ == "rocsolverrf")
+    if (refactorization_method_ == "rocsolverrf")
     {
       is_solve_on_device_ = false;
-      status += refactorizationSolver_->setup(A_, L_, U_, P_, Q_, resVector_);
+      status += refactorization_solver_->setup(A_, L_, U_, P_, Q_, res_vector_.get());
     }
 #endif
 
-    if (irMethod_ == "fgmres")
+    if (ir_method_ == "fgmres")
     {
-      status += iterativeSolver_->setup(A_);
+      status += iterative_solver_->setup(A_);
 
-      if (preconditioner_)
-      {
-        delete preconditioner_;
-        preconditioner_ = nullptr;
-      }
-
-      preconditioner_ = new PreconditionerLU(refactorizationSolver_);
-      status += iterativeSolver_->setPreconditioner(preconditioner_);
+      // The refinement preconditioner applies the LU factors. With "klu"
+      // refactorization there is no separate refactorization solver and the
+      // factorization solver provides the factors.
+      LinSolverDirect* lu_solver = refactorization_solver_ ? refactorization_solver_.get()
+                                                           : factorization_solver_.get();
+      preconditioner_.reset(new PreconditionerLU(lu_solver));
+      status += iterative_solver_->setPreconditioner(preconditioner_.get());
     }
     return status;
   }
@@ -576,37 +477,40 @@ namespace ReSolve
     int status = 0;
 
     // Use Krylov solver if selected
-    if (solveMethod_ == "randgmres" || solveMethod_ == "fgmres")
+    if (solve_method_ == "randgmres" || solve_method_ == "fgmres")
     {
-      status += iterativeSolver_->resetMatrix(A_);
-      status += iterativeSolver_->solve(rhs, x);
+      status += iterative_solver_->resetMatrix(A_);
+      status += iterative_solver_->solve(rhs, x);
       return status;
     }
 
-    if (solveMethod_ == "klu")
+    if (solve_method_ == "klu")
     {
-      status += factorizationSolver_->solve(rhs, x);
+      status += factorization_solver_->solve(rhs, x);
     }
 
-    if (solveMethod_ == "glu" || solveMethod_ == "cusolverrf" || solveMethod_ == "rocsolverrf"
+    if (solve_method_ == "glu" || solve_method_ == "cusolverrf" || solve_method_ == "rocsolverrf"
 #ifdef RESOLVE_USE_CUDSS
-        || solveMethod_ == "cudssrf"
+        || solve_method_ == "cudssrf"
 #endif
     )
     {
       if (is_solve_on_device_)
       {
-        status += refactorizationSolver_->solve(rhs, x);
+        status += refactorization_solver_->solve(rhs, x);
       }
       else
       {
-        status += factorizationSolver_->solve(rhs, x);
+        status += factorization_solver_->solve(rhs, x);
       }
     }
 
-    if (irMethod_ == "fgmres")
+    // Iterative refinement is applied once the LU solver wrapped by its
+    // preconditioner is ready: after refactorizationSetup() on the host KLU
+    // path, or once the device refactorization solver has taken over.
+    if (ir_method_ == "fgmres" && preconditioner_)
     {
-      if (is_solve_on_device_)
+      if (is_solve_on_device_ || refactorization_method_ == "klu")
       {
         status += refine(rhs, x);
       }
@@ -631,7 +535,7 @@ namespace ReSolve
       status += 1;
     }
 
-    if (iterativeSolver_ == nullptr)
+    if (iterative_solver_ == nullptr)
     {
       out::error() << "Iterative solver not initialized!\n";
       status += 1;
@@ -665,7 +569,7 @@ namespace ReSolve
     {
       is_solve_on_device_ = true;
     }
-    status += iterativeSolver_->setPreconditioner(preconditioner_);
+    status += iterative_solver_->setPreconditioner(preconditioner_.get());
 
     return status;
   }
@@ -699,30 +603,30 @@ namespace ReSolve
   {
     int status = 0;
 
-    status += iterativeSolver_->resetMatrix(A_);
-    status += iterativeSolver_->solve(rhs, x);
+    status += iterative_solver_->resetMatrix(A_);
+    status += iterative_solver_->solve(rhs, x);
 
     return status;
   }
 
   LinSolverDirect& SystemSolver::getFactorizationSolver()
   {
-    return *factorizationSolver_;
+    return *factorization_solver_;
   }
 
   LinSolverDirect& SystemSolver::getRefactorizationSolver()
   {
-    return *refactorizationSolver_;
+    return *refactorization_solver_;
   }
 
   LinSolverDirect& SystemSolver::getPreconditionerSolver()
   {
-    return *preconditionerSolver_;
+    return *preconditioner_solver_;
   }
 
   LinSolverIterative& SystemSolver::getIterativeSolver()
   {
-    return *iterativeSolver_;
+    return *iterative_solver_;
   }
 
   Preconditioner& SystemSolver::getPreconditioner()
@@ -730,9 +634,48 @@ namespace ReSolve
     return *preconditioner_;
   }
 
-  void SystemSolver::setFactorizationMethod(std::string method)
+  /**
+   * @brief Sets factorization method to use
+   *
+   * @param[in] method - ID for the factorization method
+   *
+   * @post Destroys the existing factorization solver together with the
+   * factors and permutation vectors it owned, and creates a new solver
+   * of the requested type. If refactorization method is "klu", the
+   * refactorization path reuses the factorization solver, so
+   * `refactorization_solver_` is reset as well. The caller must run
+   * `analyze()`, `factorize()` and, if applicable, `refactorizationSetup()`
+   * again before the next solve.
+   *
+   * @return int 0 if successful, 1 if method is not recognized or an
+   * iterative solve method is active
+   */
+  int SystemSolver::setFactorizationMethod(std::string method)
   {
-    factorizationMethod_ = method;
+    if (solve_method_ == "fgmres" || solve_method_ == "randgmres")
+    {
+      out::error() << "Factorization method cannot be set while iterative solve method '"
+                   << solve_method_ << "' is active. Keeping '" << factorization_method_ << "'.\n";
+      return 1;
+    }
+
+    factorization_method_ = method;
+    factorization_solver_.reset();
+
+    // Factors and permutations were owned by the old solver.
+    L_                  = nullptr;
+    U_                  = nullptr;
+    P_                  = nullptr;
+    Q_                  = nullptr;
+    is_solve_on_device_ = false;
+
+    // KLU refactorization reuses the factorization solver; drop any stale state.
+    if (refactorization_method_ == "klu")
+    {
+      refactorization_solver_.reset();
+    }
+
+    return createFactorizationSolver();
   }
 
   /**
@@ -743,43 +686,28 @@ namespace ReSolve
    * @post Destroys whatever refactorization solver existed before
    * and sets `refactorization_solver_` pointer to the new
    * refactorization object. Sets refactorization method ID
-   * to the value in input parameter `method`.
+   * to the value in input parameter `method`. Resets
+   * `is_solve_on_device_` since the new solver has not been set up yet.
+   * If iterative refinement is enabled, its preconditioner wraps the
+   * refactorization solver and is destroyed as well; `refactorizationSetup()`
+   * recreates it.
+   *
+   * @return int 0 if successful, 1 if method is not recognized
    */
-  void SystemSolver::setRefactorizationMethod(std::string method)
+  int SystemSolver::setRefactorizationMethod(std::string method)
   {
-    refactorizationMethod_ = method;
-    if (refactorizationSolver_)
-    {
-      delete refactorizationSolver_;
-      refactorizationSolver_ = nullptr;
-    }
+    refactorization_method_ = method;
 
-    // Create refactorization solver
-    if (refactorizationMethod_ == "klu")
+    // Iterative refinement preconditioner holds a non-owning pointer to the
+    // refactorization solver, so it must not outlive it.
+    if (ir_method_ != "none")
     {
-      // do nothing for now
-#ifdef RESOLVE_USE_CUDA
+      preconditioner_.reset();
     }
-    else if (refactorizationMethod_ == "glu")
-    {
-      refactorizationSolver_ = new ReSolve::LinSolverDirectCuSolverGLU(workspaceCuda_);
-    }
-    else if (refactorizationMethod_ == "cusolverrf")
-    {
-      refactorizationSolver_ = new ReSolve::LinSolverDirectCuSolverRf();
-#endif
-#ifdef RESOLVE_USE_HIP
-    }
-    else if (refactorizationMethod_ == "rocsolverrf")
-    {
-      refactorizationSolver_ = new ReSolve::LinSolverDirectRocSolverRf(workspaceHip_);
-#endif
-    }
-    else
-    {
-      out::error() << "Refactorization method " << refactorizationMethod_
-                   << " not recognized ...\n";
-    }
+    refactorization_solver_.reset();
+    is_solve_on_device_ = false;
+
+    return createRefactorizationSolver();
   }
 
   /**
@@ -790,50 +718,15 @@ namespace ReSolve
    */
   int SystemSolver::setSolveMethod(std::string method)
   {
-    solveMethod_ = method;
+    solve_method_ = method;
 
     // Remove existing iterative solver and set IR to "none".
-    irMethod_ = "none";
-    if (iterativeSolver_)
-    {
-      delete iterativeSolver_;
-      iterativeSolver_ = nullptr;
-    }
+    ir_method_ = "none";
+    iterative_solver_.reset();
 
-    if (method == "randgmres")
+    if (createIterativeSolver(method) != 0)
     {
-      LinSolverIterativeRandFGMRES::SketchingMethod sketch;
-      if (sketching_method_ == "count")
-      {
-        sketch = LinSolverIterativeRandFGMRES::cs;
-      }
-      else if (sketching_method_ == "fwht")
-      {
-        sketch = LinSolverIterativeRandFGMRES::fwht;
-      }
-      else
-      {
-        out::warning() << "Sketching method " << sketching_method_ << " not recognized!\n"
-                       << "Using default.\n";
-        sketch = LinSolverIterativeRandFGMRES::cs;
-      }
-
-      setGramSchmidtMethod(gsMethod_);
-      iterativeSolver_ = new LinSolverIterativeRandFGMRES(matrixHandler_,
-                                                          vectorHandler_,
-                                                          sketch,
-                                                          gs_);
-    }
-    else if (solveMethod_ == "fgmres")
-    {
-      setGramSchmidtMethod(gsMethod_);
-      iterativeSolver_ = new LinSolverIterativeFGMRES(matrixHandler_,
-                                                      vectorHandler_,
-                                                      gs_);
-    }
-    else
-    {
-      out::error() << "Solve method " << solveMethod_
+      out::error() << "Solve method " << solve_method_
                    << " not recognized ...\n";
       return 1;
     }
@@ -844,80 +737,80 @@ namespace ReSolve
    * @brief Sets iterative refinement method and related orthogonalization.
    *
    * @param[in] method   - string ID for the iterative refinement method
-   * @param[in] gsMethod - string ID for the orthogonalization method to be used
+   * @param[in] gs_method - string ID for the orthogonalization method to be used
    *
-   * @todo Iterative refinement temporarily disabled on CPU. Need to fix that.
+   * @return int 0 if the requested method is now active, 1 if it was rejected
+   * or not recognized
    */
-  void SystemSolver::setRefinementMethod(std::string method, std::string gsMethod)
+  int SystemSolver::setRefinementMethod(std::string method, std::string gs_method)
   {
-    if (iterativeSolver_ != nullptr)
+    // With an iterative solve method the Krylov solver belongs to the solve
+    // path, not to iterative refinement, so leave it untouched.
+    if (solve_method_ == "randgmres" || solve_method_ == "fgmres")
     {
-      delete iterativeSolver_;
-      iterativeSolver_ = nullptr;
+      if (method != "none")
+      {
+        out::warning() << "Iterative refinement cannot be enabled together with an "
+                       << "iterative solve method ('randgmres' or 'fgmres'). "
+                       << "Keeping refinement method 'none'.\n";
+        ir_method_ = "none";
+        return 1;
+      }
+      ir_method_ = "none";
+      return 0;
     }
 
-    if (gs_ != nullptr)
-    {
-      delete gs_;
-      gs_ = nullptr;
-    }
-
-    irMethod_ = "none";
+    // Direct solve path: the Krylov solver, if any, is the refinement solver.
+    iterative_solver_.reset();
+    gs_.reset();
+    ir_method_ = "none";
 
     if (method == "none")
-      return;
-
-    if (solveMethod_ == "randgmres" || solveMethod_ == "fgmres")
     {
-      out::warning() << "Iterative refinement cannot be enabled together with an "
-                     << "iterative solve method ('randgmres' or 'fgmres'). "
-                     << "Keeping refinement method 'none'.\n";
-      return;
+      return 0;
     }
 
-    if (memspace_ == "cpu")
+    gs_method_ = gs_method;
+
+    if (method == "fgmres" && createIterativeSolver(method) == 0)
     {
-      out::warning() << "Iterative refinement not supported on CPU. "
-                     << "Turning off ...\n";
-      return;
+      ir_method_ = method;
+      return 0;
     }
 
-    gsMethod_ = gsMethod;
-
-    if (method == "fgmres")
-    {
-      setGramSchmidtMethod(gsMethod);
-      iterativeSolver_ = new LinSolverIterativeFGMRES(matrixHandler_,
-                                                      vectorHandler_,
-                                                      gs_);
-      irMethod_        = method;
-    }
-    else
-    {
-      out::error() << "Iterative refinement method " << method << " not recognized.\n";
-    }
+    out::error() << "Iterative refinement method " << method << " not recognized.\n";
+    return 1;
   }
 
+  /**
+   * @brief Compute L2 vector norm.
+   *
+   * @param[in] rhs - pointer to the vector.
+   *
+   * @pre `rhs` is not a multivector.
+   * @invariant `rhs` is unmodified by this method.
+   * @return L2 norm of vector `rhs`.
+   */
   real_type SystemSolver::getVectorNorm(vector_type* rhs)
   {
     using namespace ReSolve::constants;
     real_type norm_b = 0.0;
     if (memspace_ == "cpu")
     {
-      norm_b = std::sqrt(vectorHandler_->dot(rhs, rhs, memory::HOST));
-#if defined(RESOLVE_USE_HIP) || defined(RESOLVE_USE_CUDA)
+      norm_b = std::sqrt(vector_handler_->dot(rhs, rhs, memory::HOST));
+#ifdef RESOLVE_USE_GPU
     }
     else if (memspace_ == "cuda" || memspace_ == "hip")
     {
       if (is_solve_on_device_)
       {
-        norm_b = std::sqrt(vectorHandler_->dot(rhs, rhs, memory::DEVICE));
+        norm_b = std::sqrt(vector_handler_->dot(rhs, rhs, memory::DEVICE));
       }
       else
       {
-        norm_b = std::sqrt(vectorHandler_->dot(rhs, rhs, memory::HOST));
+        norm_b = std::sqrt(vector_handler_->dot(rhs, rhs, memory::HOST));
       }
-#endif
+#endif // RESOLVE_USE_GPU
     }
     else
     {
@@ -927,109 +820,134 @@ namespace ReSolve
     return norm_b;
   }
 
+  /**
+   * @brief Compute relative residual norm.
+   *
+   * The method evaluates ||A x - b|| / ||b||, where ||...|| is L2 norm,
+   * for a linear system A x = b, where A is n x n matrix, x is unknown
+   * n x 1 vector, and b is known right-hand-side vector. When the system
+   * is solved for x, the relative residual norm provides a measure of solution
+   * consistency.
+   *
+   * @param[in] rhs - right-hand side vector of a linear system.
+   * @param[in] x   - solution vector of a linear system.
+   * @invariant Matrix `A_` and vectors `x` and `rhs` are not modified by this
+   * method.
+   *
+   * @return Relative residual norm
+   */
   real_type SystemSolver::getResidualNorm(vector_type* rhs, vector_type* x)
   {
     using namespace ReSolve::constants;
-    assert(rhs->getSize() == resVector_->getSize());
+    assert(rhs->getSize() == res_vector_->getSize());
     real_type           norm_b  = 0.0;
     real_type           resnorm = 0.0;
     memory::MemorySpace ms      = memory::HOST;
     if (memspace_ == "cpu")
     {
-      resVector_->copyFromExternal(rhs, memory::HOST, memory::HOST);
-      norm_b = std::sqrt(vectorHandler_->dot(resVector_, resVector_, memory::HOST));
-#if defined(RESOLVE_USE_HIP) || defined(RESOLVE_USE_CUDA)
+      res_vector_->copyFromExternal(rhs, memory::HOST, memory::HOST);
+      norm_b = std::sqrt(vector_handler_->dot(res_vector_.get(), res_vector_.get(), memory::HOST));
+#ifdef RESOLVE_USE_GPU
     }
     else if (memspace_ == "cuda" || memspace_ == "hip")
     {
       if (is_solve_on_device_)
       {
-        resVector_->copyFromExternal(rhs, memory::DEVICE, memory::DEVICE);
-        norm_b = std::sqrt(vectorHandler_->dot(resVector_, resVector_, memory::DEVICE));
+        res_vector_->copyFromExternal(rhs, memory::DEVICE, memory::DEVICE);
+        norm_b = std::sqrt(vector_handler_->dot(res_vector_.get(), res_vector_.get(), memory::DEVICE));
       }
       else
       {
-        resVector_->copyFromExternal(rhs, memory::HOST, memory::DEVICE);
-        resVector_->syncData(memory::HOST);
-        norm_b = std::sqrt(vectorHandler_->dot(resVector_, resVector_, memory::HOST));
-        // ms = memory::HOST;
+        res_vector_->copyFromExternal(rhs, memory::HOST, memory::DEVICE);
+        res_vector_->syncData(memory::HOST);
+        norm_b = std::sqrt(vector_handler_->dot(res_vector_.get(), res_vector_.get(), memory::HOST));
       }
       ms = memory::DEVICE;
-#endif
+#endif // RESOLVE_USE_GPU
     }
     else
     {
       out::error() << "Unrecognized device " << memspace_ << "\n";
       return -1.0;
     }
-    matrixHandler_->setValuesChanged(true, ms);
-    matrixHandler_->matvec(A_, x, resVector_, &ONE, &MINUS_ONE, ms);
-    resnorm = std::sqrt(vectorHandler_->dot(resVector_, resVector_, ms));
+    matrix_handler_->setValuesChanged(true, ms);
+    matrix_handler_->matvec(A_, x, res_vector_.get(), &ONE, &MINUS_ONE, ms);
+    resnorm = std::sqrt(vector_handler_->dot(res_vector_.get(), res_vector_.get(), ms));
     return resnorm / norm_b;
   }
 
+  /**
+   * @brief Norm of scaled residuals.
+   *
+   * @param[in] rhs - right-hand side vector of a linear system.
+   * @param[in] x   - solution vector of a linear system.
+   * @invariant Matrix `A_` and vectors `x` and `rhs` are not modified by this
+   * method.
+   *
+   * @return Norm of scaled residuals.
+   */
   real_type SystemSolver::getNormOfScaledResiduals(vector_type* rhs, vector_type* x)
   {
     using namespace ReSolve::constants;
-    assert(rhs->getSize() == resVector_->getSize());
+    assert(rhs->getSize() == res_vector_->getSize());
     real_type           norm_x  = 0.0;
     real_type           norm_A  = 0.0;
     real_type           resnorm = 0.0;
     memory::MemorySpace ms      = memory::HOST;
     if (memspace_ == "cpu")
     {
-      resVector_->copyFromExternal(rhs, memory::HOST, memory::HOST);
-#if defined(RESOLVE_USE_HIP) || defined(RESOLVE_USE_CUDA)
+      res_vector_->copyFromExternal(rhs, memory::HOST, memory::HOST);
+#ifdef RESOLVE_USE_GPU
     }
     else if (memspace_ == "cuda" || memspace_ == "hip")
     {
       if (is_solve_on_device_)
       {
-        resVector_->copyFromExternal(rhs, memory::DEVICE, memory::DEVICE);
+        res_vector_->copyFromExternal(rhs, memory::DEVICE, memory::DEVICE);
       }
       else
       {
-        resVector_->copyFromExternal(rhs, memory::HOST, memory::DEVICE);
+        res_vector_->copyFromExternal(rhs, memory::HOST, memory::DEVICE);
       }
       ms = memory::DEVICE;
-#endif
+#endif // RESOLVE_USE_GPU
     }
     else
     {
       out::error() << "Unrecognized device " << memspace_ << "\n";
       return -1.0;
     }
-    matrixHandler_->setValuesChanged(true, ms);
-    matrixHandler_->matvec(A_, x, resVector_, &ONE, &MINUS_ONE, ms);
-    resnorm = vectorHandler_->amax(resVector_, ms);
-    norm_x  = vectorHandler_->amax(x, ms);
-    matrixHandler_->matrixInfNorm(A_, &norm_A, ms);
+    matrix_handler_->setValuesChanged(true, ms);
+    matrix_handler_->matvec(A_, x, res_vector_.get(), &ONE, &MINUS_ONE, ms);
+    resnorm = vector_handler_->amax(res_vector_.get(), ms);
+    norm_x  = vector_handler_->amax(x, ms);
+    matrix_handler_->matrixInfNorm(A_, &norm_A, ms);
     return resnorm / (norm_x * norm_A);
   }
 
-  const std::string SystemSolver::getFactorizationMethod() const
+  const std::string& SystemSolver::getFactorizationMethod() const
   {
-    return factorizationMethod_;
+    return factorization_method_;
   }
 
-  const std::string SystemSolver::getRefactorizationMethod() const
+  const std::string& SystemSolver::getRefactorizationMethod() const
   {
-    return refactorizationMethod_;
+    return refactorization_method_;
   }
 
-  const std::string SystemSolver::getSolveMethod() const
+  const std::string& SystemSolver::getSolveMethod() const
   {
-    return solveMethod_;
+    return solve_method_;
   }
 
-  const std::string SystemSolver::getRefinementMethod() const
+  const std::string& SystemSolver::getRefinementMethod() const
   {
-    return irMethod_;
+    return ir_method_;
   }
 
-  const std::string SystemSolver::getOrthogonalizationMethod() const
+  const std::string& SystemSolver::getGramSchmidtMethod() const
   {
-    return gsMethod_;
+    return gs_method_;
   }
 
   /**
@@ -1044,37 +962,60 @@ namespace ReSolve
    */
   int SystemSolver::setSketchingMethod(std::string sketching_method)
   {
-    if (solveMethod_ != "randgmres")
+    if (solve_method_ != "randgmres")
     {
       out::warning() << "Trying to set sketching method to an incompatible solver.\n";
       out::warning() << "The setting will be ignored.\n";
       return 1;
     }
 
-    LinSolverIterativeRandFGMRES::SketchingMethod tmp;
-    if (sketching_method == "count")
-    {
-      tmp = LinSolverIterativeRandFGMRES::cs;
-    }
-    else if (sketching_method == "fwht")
-    {
-      tmp = LinSolverIterativeRandFGMRES::fwht;
-    }
-    else
-    {
-      out::warning() << "Sketching method " << sketching_method << " not recognized!\n"
-                     << "Using default (count sketch).\n";
-      tmp = LinSolverIterativeRandFGMRES::cs;
-    }
+    LinSolverIterativeRandFGMRES::SketchingMethod tmp = sketchingMethodFromString(sketching_method);
 
     sketching_method_ = sketching_method;
 
     // At this point iterative solver, if created, can only be LinSolverIterativeRandFGMRES
-    if (iterativeSolver_)
+    if (iterative_solver_)
     {
       // TODO: Use cast here as a temporary solution; will be replaced by parameter setting framework
-      auto* sol = dynamic_cast<LinSolverIterativeRandFGMRES*>(iterativeSolver_);
+      auto* sol = dynamic_cast<LinSolverIterativeRandFGMRES*>(iterative_solver_.get());
+      if (sol == nullptr)
+      {
+        out::error() << "Iterative solver is not a randomized FGMRES instance!\n";
+        return 1;
+      }
       sol->setSketchingMethod(tmp);
+    }
+
+    return 0;
+  }
+
+  /**
+   * @brief Sets Gram-Schmidt orthogonalization variant.
+   *
+   * Records the variant in `gs_method_` so that it survives re-creation of
+   * the Krylov solver, and applies it to the existing `GramSchmidt` object
+   * or creates one if none exists yet. An unrecognized string ID falls back
+   * to CGS2 with a warning, and `gs_method_` is set to "cgs2" accordingly.
+   *
+   * @param[in] variant - string ID of the Gram-Schmidt variant
+   *
+   * @return int 0 on success
+   */
+  int SystemSolver::setGramSchmidtMethod(std::string variant)
+  {
+    GramSchmidt::GSVariant gs_variant = gsVariantFromString(variant);
+
+    // Store the canonical name so that the stored ID always matches the
+    // variant actually in use.
+    gs_method_ = gsVariantName(gs_variant);
+
+    if (gs_)
+    {
+      gs_->setVariant(gs_variant);
+    }
+    else
+    {
+      gs_.reset(new GramSchmidt(vector_handler_.get(), gs_variant));
     }
 
     return 0;
@@ -1084,46 +1025,207 @@ namespace ReSolve
   // Private methods
   //
 
-  int SystemSolver::setGramSchmidtMethod(std::string variant)
+  /**
+   * @brief Shared tail of all constructors.
+   *
+   * Creates matrix and vector handlers for the given workspace, derives the
+   * memory space ID from the workspace type and instantiates solver
+   * components via `initialize()`.
+   *
+   * @tparam Workspace - one of LinAlgWorkspaceCpu, LinAlgWorkspaceCUDA, LinAlgWorkspaceHIP
+   * @param[in] workspace - pointer to the workspace (not owned)
+   */
+  template <class Workspace>
+  void SystemSolver::completeSetup(Workspace* workspace)
   {
-    // Map string input to the Gram-Schmidt variant enum
-    GramSchmidt::GSVariant gs_variant;
-    if (variant == "cgs2")
+    matrix_handler_.reset(new MatrixHandler(workspace));
+    vector_handler_.reset(new VectorHandler(workspace));
+    memspace_ = memorySpaceName(workspace);
+
+    if (initialize() != 0)
     {
-      gs_variant = GramSchmidt::CGS2;
+      out::error() << "SystemSolver initialization failed with factorization '" << factorization_method_
+                   << "', refactorization '" << refactorization_method_
+                   << "', solve '" << solve_method_
+                   << "', preconditioner '" << precondition_method_
+                   << "', iterative refinement '" << ir_method_
+                   << "'. Solver is not usable in this state.\n";
     }
-    else if (variant == "mgs")
+  }
+
+  /**
+   * @brief Enforces supported combinations of user-selected methods.
+   *
+   * Two configurations are supported:
+   * - Iterative solver ("fgmres" or "randgmres" as the solve method):
+   *   preconditioner may be set; factorization, refactorization and
+   *   iterative refinement must be "none".
+   * - Direct solver (any other solve method): factorization and
+   *   refactorization are set, iterative refinement is optional, and the
+   *   preconditioner must be "none".
+   *
+   * Offending settings are reset to "none" with a warning.
+   */
+  void SystemSolver::validateConfiguration()
+  {
+    const bool is_iterative_solve = (solve_method_ == "fgmres" || solve_method_ == "randgmres");
+
+    if (is_iterative_solve)
     {
-      gs_variant = GramSchmidt::MGS;
-    }
-    else if (variant == "mgs_two_sync")
-    {
-      gs_variant = GramSchmidt::MGS_TWO_SYNC;
-    }
-    else if (variant == "mgs_pm")
-    {
-      gs_variant = GramSchmidt::MGS_PM;
-    }
-    else if (variant == "cgs1")
-    {
-      gs_variant = GramSchmidt::CGS1;
+      if (factorization_method_ != "none")
+      {
+        out::warning() << "Incorrect input: factorization method '" << factorization_method_
+                       << "' cannot be used with iterative solve method '" << solve_method_
+                       << "'. Setting factorization to 'none' ...\n";
+        factorization_method_ = "none";
+      }
+      if (refactorization_method_ != "none")
+      {
+        out::warning() << "Incorrect input: refactorization method '" << refactorization_method_
+                       << "' cannot be used with iterative solve method '" << solve_method_
+                       << "'. Setting refactorization to 'none' ...\n";
+        refactorization_method_ = "none";
+      }
+      if (ir_method_ != "none")
+      {
+        out::warning() << "Incorrect input: iterative refinement cannot be enabled "
+                       << "together with iterative solve method '" << solve_method_
+                       << "'. Setting refinement method to 'none' ...\n";
+        ir_method_ = "none";
+      }
     }
     else
     {
-      out::warning() << "Gram-Schmidt variant " << variant << " not recognized.\n";
-      out::warning() << "Using default CGS2 Gram-Schmidt variant.\n";
-      gs_variant = GramSchmidt::CGS2;
+      if (precondition_method_ != "none")
+      {
+        out::warning() << "Incorrect input: preconditioner '" << precondition_method_
+                       << "' can only be used with an iterative solve method ('fgmres' or 'randgmres'). "
+                       << "Setting preconditioner to 'none' ...\n";
+        precondition_method_ = "none";
+      }
     }
+  }
 
-    if (gs_)
+  /**
+   * @brief Instantiates Krylov solver of the requested type.
+   *
+   * Used both for iterative solve methods and for iterative refinement.
+   * Configures Gram-Schmidt orthogonalization according to `gs_method_`
+   * and, for randomized GMRES, sketching according to `sketching_method_`.
+   *
+   * @param[in] method - "fgmres" or "randgmres"
+   * @post `iterative_solver_` points to a new solver.
+   *
+   * @return int 0 if successful, 1 if method is not recognized
+   */
+  int SystemSolver::createIterativeSolver(const std::string& method)
+  {
+    if (method == "randgmres")
     {
-      gs_->setVariant(gs_variant);
+      setGramSchmidtMethod(gs_method_);
+      iterative_solver_.reset(new LinSolverIterativeRandFGMRES(matrix_handler_.get(),
+                                                               vector_handler_.get(),
+                                                               sketchingMethodFromString(sketching_method_),
+                                                               gs_.get()));
+    }
+    else if (method == "fgmres")
+    {
+      setGramSchmidtMethod(gs_method_);
+      iterative_solver_.reset(new LinSolverIterativeFGMRES(matrix_handler_.get(),
+                                                           vector_handler_.get(),
+                                                           gs_.get()));
     }
     else
     {
-      gs_ = new GramSchmidt(vectorHandler_, gs_variant);
+      return 1;
     }
+    return 0;
+  }
 
+  /**
+   * @brief Instantiates factorization solver selected by `factorization_method_`.
+   *
+   * Shared by `initialize()` and `setFactorizationMethod()` so the list of
+   * supported backends is maintained in one place.
+   *
+   * @pre `factorization_solver_` is null.
+   * @post `factorization_solver_` points to a new solver, or stays null for
+   * method "none".
+   *
+   * @return int 0 if successful, 1 if method is not recognized
+   */
+  int SystemSolver::createFactorizationSolver()
+  {
+    if (factorization_method_ == "none")
+    {
+      // do nothing
+#ifdef RESOLVE_USE_KLU
+    }
+    else if (factorization_method_ == "klu")
+    {
+      factorization_solver_.reset(new ReSolve::LinSolverDirectKLU());
+#endif
+    }
+    else
+    {
+      out::error() << "Factorization method " << factorization_method_
+                   << " not recognized ...\n";
+      return 1;
+    }
+    return 0;
+  }
+
+  /**
+   * @brief Instantiates refactorization solver selected by `refactorization_method_`.
+   *
+   * Shared by `initialize()` and `setRefactorizationMethod()` so the list of
+   * supported backends is maintained in one place.
+   *
+   * @pre `refactorization_solver_` is null.
+   * @post `refactorization_solver_` points to a new solver, or stays null for
+   * methods "none" and "klu" (KLU refactorization reuses the factorization
+   * solver).
+   *
+   * @return int 0 if successful, 1 if method is not recognized
+   */
+  int SystemSolver::createRefactorizationSolver()
+  {
+    if (refactorization_method_ == "none")
+    {
+      // do nothing
+    }
+    else if (refactorization_method_ == "klu")
+    {
+      // do nothing for now, KLU is the only factorization solver available
+#ifdef RESOLVE_USE_CUDA
+    }
+    else if (refactorization_method_ == "glu")
+    {
+      refactorization_solver_.reset(new ReSolve::LinSolverDirectCuSolverGLU(workspace_cuda_));
+    }
+    else if (refactorization_method_ == "cusolverrf")
+    {
+      refactorization_solver_.reset(new ReSolve::LinSolverDirectCuSolverRf());
+#ifdef RESOLVE_USE_CUDSS
+    }
+    else if (refactorization_method_ == "cudssrf")
+    {
+      refactorization_solver_.reset(new ReSolve::LinSolverDirectCuDssRf());
+#endif
+#endif
+#ifdef RESOLVE_USE_HIP
+    }
+    else if (refactorization_method_ == "rocsolverrf")
+    {
+      refactorization_solver_.reset(new ReSolve::LinSolverDirectRocSolverRf(workspace_hip_));
+#endif
+    }
+    else
+    {
+      out::error() << "Refactorization method " << refactorization_method_
+                   << " not recognized ...\n";
+      return 1;
+    }
     return 0;
   }
 
