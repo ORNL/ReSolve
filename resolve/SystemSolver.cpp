@@ -53,8 +53,8 @@ namespace ReSolve
   // LinSolverIterativeRandFGMRES) as public static methods.
   namespace
   {
-    /// Maps string ID to the sketching method enum, warns and defaults to count sketch.
-    LinSolverIterativeRandFGMRES::SketchingMethod sketchingMethodFromString(const std::string& method)
+    /// Maps string ID to the sketching method enum. Throws an error if the method is not recognized.
+    LinSolverIterativeRandFGMRES::SketchingMethod sketchingMethodFromString(const std::string& method = "count")
     {
       if (method == "count")
       {
@@ -64,13 +64,12 @@ namespace ReSolve
       {
         return LinSolverIterativeRandFGMRES::fwht;
       }
-      out::warning() << "Sketching method " << method << " not recognized!\n"
-                     << "Using default (count sketch).\n";
+      out::error() << "Sketching method " << method << " not recognized! Valid arguments are \"count\" and \"fwht\".\n";
       return LinSolverIterativeRandFGMRES::cs;
     }
 
-    /// Maps string ID to the Gram-Schmidt variant enum, warns and defaults to CGS2.
-    GramSchmidt::GSVariant gsVariantFromString(const std::string& variant)
+    /// Maps string ID to the Gram-Schmidt variant enum. Defaults to CGS2.
+    GramSchmidt::GSVariant gsVariantFromString(const std::string& variant = "cgs2")
     {
       if (variant == "cgs2")
       {
@@ -92,8 +91,7 @@ namespace ReSolve
       {
         return GramSchmidt::CGS1;
       }
-      out::warning() << "Gram-Schmidt variant " << variant << " not recognized.\n";
-      out::warning() << "Using default CGS2 Gram-Schmidt variant.\n";
+      out::error() << "Gram-Schmidt variant " << variant << " not recognized! Valid arguments are \"cgs2\", \"mgs\", \"mgs_two_sync\", \"mgs_pm\", and \"cgs1\".\n";
       return GramSchmidt::CGS2;
     }
 
@@ -750,10 +748,8 @@ namespace ReSolve
     {
       if (method != "none")
       {
-        out::warning() << "Iterative refinement cannot be enabled together with an "
-                       << "iterative solve method ('randgmres' or 'fgmres'). "
-                       << "Keeping refinement method 'none'.\n";
-        ir_method_ = "none";
+        out::error() << "Iterative refinement cannot be enabled together with an "
+                       << "iterative solve method ('randgmres' or 'fgmres').\n";
         return 1;
       }
       ir_method_ = "none";
@@ -964,8 +960,7 @@ namespace ReSolve
   {
     if (solve_method_ != "randgmres")
     {
-      out::warning() << "Trying to set sketching method to an incompatible solver.\n";
-      out::warning() << "The setting will be ignored.\n";
+      out::error() << "Trying to set sketching method to an incompatible solver. Sketching can only be used with the \"randgmres\" solver.\n";
       return 1;
     }
 
@@ -994,8 +989,7 @@ namespace ReSolve
    *
    * Records the variant in `gs_method_` so that it survives re-creation of
    * the Krylov solver, and applies it to the existing `GramSchmidt` object
-   * or creates one if none exists yet. An unrecognized string ID falls back
-   * to CGS2 with a warning, and `gs_method_` is set to "cgs2" accordingly.
+   * or creates one if none exists yet.
    *
    * @param[in] variant - string ID of the Gram-Schmidt variant
    *
@@ -1064,7 +1058,7 @@ namespace ReSolve
    *   refactorization are set, iterative refinement is optional, and the
    *   preconditioner must be "none".
    *
-   * Offending settings are reset to "none" with a warning.
+   * If the user selects incompatible methods, the program will terminate with an error message.
    */
   void SystemSolver::validateConfiguration()
   {
@@ -1074,34 +1068,30 @@ namespace ReSolve
     {
       if (factorization_method_ != "none")
       {
-        out::warning() << "Incorrect input: factorization method '" << factorization_method_
+        out::error() << "Incorrect input: factorization method '" << factorization_method_
                        << "' cannot be used with iterative solve method '" << solve_method_
-                       << "'. Setting factorization to 'none' ...\n";
-        factorization_method_ = "none";
+                       << "\n";
       }
       if (refactorization_method_ != "none")
       {
-        out::warning() << "Incorrect input: refactorization method '" << refactorization_method_
+        out::error() << "Incorrect input: refactorization method '" << refactorization_method_
                        << "' cannot be used with iterative solve method '" << solve_method_
-                       << "'. Setting refactorization to 'none' ...\n";
-        refactorization_method_ = "none";
+                       << "\n";
       }
       if (ir_method_ != "none")
       {
-        out::warning() << "Incorrect input: iterative refinement cannot be enabled "
+        out::error() << "Incorrect input: iterative refinement cannot be enabled "
                        << "together with iterative solve method '" << solve_method_
-                       << "'. Setting refinement method to 'none' ...\n";
-        ir_method_ = "none";
+                       << "\n";
       }
     }
     else
     {
       if (precondition_method_ != "none")
       {
-        out::warning() << "Incorrect input: preconditioner '" << precondition_method_
+        out::error() << "Incorrect input: preconditioner '" << precondition_method_
                        << "' can only be used with an iterative solve method ('fgmres' or 'randgmres'). "
-                       << "Setting preconditioner to 'none' ...\n";
-        precondition_method_ = "none";
+                       << "\n";
       }
     }
   }
