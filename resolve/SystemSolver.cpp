@@ -53,7 +53,7 @@ namespace ReSolve
   // LinSolverIterativeRandFGMRES) as public static methods.
   namespace
   {
-    /// Maps string ID to the sketching method enum. Throws an error if the method is not recognized.
+    /// Maps string ID to the sketching method enum. Throws an error if the user inputs an unrecognized method.
     LinSolverIterativeRandFGMRES::SketchingMethod sketchingMethodFromString(const std::string& method = "count")
     {
       if (method == "count")
@@ -68,7 +68,7 @@ namespace ReSolve
       return LinSolverIterativeRandFGMRES::cs;
     }
 
-    /// Maps string ID to the Gram-Schmidt variant enum. Defaults to CGS2.
+    /// Maps string ID to the Gram-Schmidt variant enum. Throws an error if the user inputs an unrecognized method.
     GramSchmidt::GSVariant gsVariantFromString(const std::string& variant = "cgs2")
     {
       if (variant == "cgs2")
