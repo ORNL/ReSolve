@@ -215,14 +215,13 @@ namespace ReSolve
         status *= validateResult(zero_rhs_error, tol);
 
         // Check that the solver raises an error when trying to change J_d
-        // from nonempty to empty. The error is expected, so mute the logger
-        // while triggering it.
+        // from nonempty to empty. 
         matrix::Csr* J_d_empty = new matrix::Csr(J_d->getNumRows(),
                                                  J_d->getNumColumns(),
                                                  0);
 
         io::Logger::Verbosity saved_verbosity = io::Logger::verbosity();
-        io::Logger::setVerbosity(io::Logger::NONE);
+        io::Logger::setVerbosity(io::Logger::NONE); //The error is expected, so mute the logger before triggering it.
         int structure_status = hykktSolver.setMatrixBlocks(H, D_s_reuse, J, J_d_empty);
         io::Logger::setVerbosity(saved_verbosity);
         status *= (structure_status != 0);
