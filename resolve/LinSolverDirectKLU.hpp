@@ -100,7 +100,6 @@ namespace ReSolve
 
   private:
     void          initParamList();
-    void          freeExtractedFactors();
     bool          factors_extracted_{false};
     klu_common    Common_; // settings
     klu_symbolic* Symbolic_{nullptr};

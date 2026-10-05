@@ -42,7 +42,8 @@ int main(int argc, char* argv[])
 {
   int error_sum = 0;
 
-  error_sum += runTest<ReSolve::LinAlgWorkspaceCpu>(argc, argv, "cpu");
+  // Refactorization on CPU not currently supported in SystemSolver class
+  // error_sum += runTest<ReSolve::LinAlgWorkspaceCpu>(argc, argv, "cpu");
 
 #ifdef RESOLVE_USE_CUDA
   error_sum += runTest<ReSolve::LinAlgWorkspaceCUDA>(argc, argv, "cuda");

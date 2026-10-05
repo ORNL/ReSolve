@@ -1,6 +1,5 @@
 #pragma once
 
-#include <memory>
 #include <string>
 
 #include <resolve/Common.hpp>
@@ -35,19 +34,19 @@ namespace ReSolve
     using vector_type = vector::Vector;
     using matrix_type = matrix::Sparse;
 
-    SystemSolver(LinAlgWorkspaceCpu* workspace_cpu,
+    SystemSolver(LinAlgWorkspaceCpu* workspaceCpu,
                  std::string         factor   = "klu",
                  std::string         refactor = "klu",
                  std::string         solve    = "klu",
                  std::string         precond  = "none",
                  std::string         ir       = "none");
-    SystemSolver(LinAlgWorkspaceCUDA* workspace_cuda,
+    SystemSolver(LinAlgWorkspaceCUDA* workspaceCuda,
                  std::string          factor   = "klu",
                  std::string          refactor = "cusolverrf",
                  std::string          solve    = "cusolverrf",
                  std::string          precond  = "none",
                  std::string          ir       = "none");
-    SystemSolver(LinAlgWorkspaceHIP* workspace_hip,
+    SystemSolver(LinAlgWorkspaceHIP* workspaceHip,
                  std::string         factor   = "klu",
                  std::string         refactor = "rocsolverrf",
                  std::string         solve    = "rocsolverrf",
@@ -67,6 +66,9 @@ namespace ReSolve
     int solve(vector_type* rhs, vector_type* x);  // for direct and iterative
     int refine(vector_type* rhs, vector_type* x); // for iterative refinement
 
+    // we update the matrix once it changed
+    int updateMatrix(std::string format, int* ia, int* ja, double* a);
+
     LinSolverDirect&    getFactorizationSolver();
     LinSolverDirect&    getRefactorizationSolver();
     LinSolverDirect&    getPreconditionerSolver();
@@ -78,44 +80,34 @@ namespace ReSolve
     real_type getNormOfScaledResiduals(vector_type* rhs, vector_type* x);
 
     // Get solver parameters
-    const std::string& getFactorizationMethod() const;
-    const std::string& getRefactorizationMethod() const;
-    const std::string& getSolveMethod() const;
-    const std::string& getRefinementMethod() const;
-    const std::string& getGramSchmidtMethod() const;
+    const std::string getFactorizationMethod() const;
+    const std::string getRefactorizationMethod() const;
+    const std::string getSolveMethod() const;
+    const std::string getRefinementMethod() const;
+    const std::string getOrthogonalizationMethod() const;
 
     // Set solver parameters
-    int setFactorizationMethod(std::string method);
-    int setRefactorizationMethod(std::string method);
-    int setSolveMethod(std::string method);
-    int setRefinementMethod(std::string method, std::string gs = "cgs2");
-    int setSketchingMethod(std::string method);
-    int setGramSchmidtMethod(std::string gs_method);
+    void setFactorizationMethod(std::string method);
+    void setRefactorizationMethod(std::string method);
+    int  setSolveMethod(std::string method);
+    void setRefinementMethod(std::string method, std::string gs = "cgs2");
+    int  setSketchingMethod(std::string method);
+    int  setGramSchmidtMethod(std::string gs_method);
 
   private:
-    template <class Workspace>
-    void completeSetup(Workspace* workspace);
-    void validateConfiguration();
-    int  createFactorizationSolver();
-    int  createRefactorizationSolver();
-    int  createIterativeSolver(const std::string& method);
+    LinSolverDirect*    factorizationSolver_{nullptr};
+    LinSolverDirect*    refactorizationSolver_{nullptr};
+    LinSolverDirect*    preconditionerSolver_{nullptr};
+    LinSolverIterative* iterativeSolver_{nullptr};
+    GramSchmidt*        gs_{nullptr};
+    Preconditioner*     preconditioner_{nullptr};
 
-    std::unique_ptr<MatrixHandler> matrix_handler_;
-    std::unique_ptr<VectorHandler> vector_handler_;
+    LinAlgWorkspaceCUDA* workspaceCuda_{nullptr};
+    LinAlgWorkspaceHIP*  workspaceHip_{nullptr};
+    LinAlgWorkspaceCpu*  workspaceCpu_{nullptr};
 
-    // Owned solver components. Declaration order matters for destruction:
-    // members are destroyed in reverse order, so dependents are listed
-    // after the objects they reference.
-    std::unique_ptr<LinSolverDirect>    factorization_solver_;
-    std::unique_ptr<LinSolverDirect>    refactorization_solver_;
-    std::unique_ptr<LinSolverDirect>    preconditioner_solver_;
-    std::unique_ptr<GramSchmidt>        gs_;
-    std::unique_ptr<Preconditioner>     preconditioner_;
-    std::unique_ptr<LinSolverIterative> iterative_solver_;
-
-    LinAlgWorkspaceCUDA* workspace_cuda_{nullptr};
-    LinAlgWorkspaceHIP*  workspace_hip_{nullptr};
-    LinAlgWorkspaceCpu*  workspace_cpu_{nullptr};
+    MatrixHandler* matrixHandler_{nullptr};
+    VectorHandler* vectorHandler_{nullptr};
 
     bool is_solve_on_device_{false};
 
@@ -125,17 +117,17 @@ namespace ReSolve
     index_type* P_{nullptr};
     index_type* Q_{nullptr};
 
-    std::unique_ptr<vector_type> res_vector_;
+    vector_type* resVector_{nullptr};
 
     matrix::Sparse* A_{nullptr};
 
     // Configuration parameters
-    std::string factorization_method_{"none"};
-    std::string refactorization_method_{"none"};
-    std::string solve_method_{"none"};
+    std::string factorizationMethod_{"none"};
+    std::string refactorizationMethod_{"none"};
+    std::string solveMethod_{"none"};
     std::string precondition_method_{"none"};
-    std::string ir_method_{"none"};
-    std::string gs_method_{"cgs2"};
+    std::string irMethod_{"none"};
+    std::string gsMethod_{"cgs2"};
     std::string sketching_method_{"count"}; ///< @todo move this to LinSolverIterative class
 
     std::string memspace_;
