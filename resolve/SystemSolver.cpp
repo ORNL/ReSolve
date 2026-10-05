@@ -44,16 +44,16 @@ namespace ReSolve
   // Create a shortcut name for Logger static class
   using out = io::Logger;
 
-  // Helpers below map user-facing string IDs to solver enums. They are kept
+  // The helpers below map user-facing string IDs to solver enums. They are kept
   // in an anonymous namespace (still inside ReSolve) so they have internal
-  // linkage: they are implementation details of SystemSolver, are not part
+  // linkage. This means they are implementation details of SystemSolver, are not part
   // of the library's exported symbols, and cannot collide with same-named
   // functions in other translation units. If these mappings become useful
   // elsewhere, move them to the classes that own the enums (GramSchmidt and
   // LinSolverIterativeRandFGMRES) as public static methods.
   namespace
   {
-    /// Maps string ID to the sketching method enum; warns and defaults to count sketch.
+    /// Maps string ID to the sketching method enum, warns and defaults to count sketch.
     LinSolverIterativeRandFGMRES::SketchingMethod sketchingMethodFromString(const std::string& method)
     {
       if (method == "count")
@@ -69,7 +69,7 @@ namespace ReSolve
       return LinSolverIterativeRandFGMRES::cs;
     }
 
-    /// Maps string ID to the Gram-Schmidt variant enum; warns and defaults to CGS2.
+    /// Maps string ID to the Gram-Schmidt variant enum, warns and defaults to CGS2.
     GramSchmidt::GSVariant gsVariantFromString(const std::string& variant)
     {
       if (variant == "cgs2")

@@ -558,10 +558,10 @@ namespace ReSolve
   /**
    * @brief Releases factors and permutation vectors extracted from KLU.
    *
-   * L and U factors as well as copies of permutation vectors P and Q are
-   * allocated on demand by the getters and owned by this object. They are
-   * invalidated whenever a new symbolic or numeric factorization is
-   * computed and must be released then and in the destructor.
+   * L and U factors and copies of permutation vectors P and Q are
+   * allocated on demand by the getters and owned by this object. The old factors
+   * are invalidated when a new symbolic or numeric factorization is
+   * computed and then must be released in the destructor.
    */
   void LinSolverDirectKLU::freeExtractedFactors()
   {
