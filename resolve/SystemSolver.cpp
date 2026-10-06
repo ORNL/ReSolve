@@ -53,7 +53,7 @@ namespace ReSolve
   // LinSolverIterativeRandFGMRES) as public static methods.
   namespace
   {
-    /// Maps string ID to the sketching method enum. Throws an error if the user inputs an unrecognized method.
+    /// Maps string ID to the sketching method enum. Returns an error if the user inputs an unrecognized method.
     LinSolverIterativeRandFGMRES::SketchingMethod sketchingMethodFromString(const std::string& method = "count")
     {
       if (method == "count")
@@ -68,7 +68,7 @@ namespace ReSolve
       return LinSolverIterativeRandFGMRES::cs;
     }
 
-    /// Maps string ID to the Gram-Schmidt variant enum. Throws an error if the user inputs an unrecognized method.
+    /// Maps string ID to the Gram-Schmidt variant enum. Returns an error if the user inputs an unrecognized method.
     GramSchmidt::GSVariant gsVariantFromString(const std::string& variant = "cgs2")
     {
       if (variant == "cgs2")
@@ -91,7 +91,8 @@ namespace ReSolve
       {
         return GramSchmidt::CGS1;
       }
-      out::error() << "Gram-Schmidt variant " << variant << " not recognized! Valid arguments are \"cgs2\", \"mgs\", \"mgs_two_sync\", \"mgs_pm\", and \"cgs1\".\n";
+      out::error() << "Gram-Schmidt variant " << variant << " not recognized! Valid arguments are:\n"
+      "\"cgs2\", \"mgs\", \"mgs_two_sync\", \"mgs_pm\", and \"cgs1\".\n";
       return GramSchmidt::CGS2;
     }
 
@@ -960,7 +961,8 @@ namespace ReSolve
   {
     if (solve_method_ != "randgmres")
     {
-      out::error() << "Trying to set sketching method to an incompatible solver. Sketching can only be used with the \"randgmres\" solver.\n";
+      out::error() << "Trying to set sketching method to an incompatible solver\n."
+      "Sketching can only be used with the \"randgmres\" solver.\n";
       return 1;
     }
 
