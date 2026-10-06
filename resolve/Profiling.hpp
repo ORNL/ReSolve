@@ -12,7 +12,11 @@
 #endif // RESOLVE_USE_HIP
 
 #ifdef RESOLVE_USE_CUDA
+#ifdef RESOLVE_USE_NVTX3
+#include <nvtx3/nvToolsExt.h>
+#else
 #include <nvToolsExt.h>
+#endif // RESOLVE_USE_NVTX3
 #define RESOLVE_RANGE_PUSH(x) nvtxRangePush(x)
 #define RESOLVE_RANGE_POP(x) \
   nvtxRangePop();            \
