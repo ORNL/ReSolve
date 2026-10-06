@@ -3,7 +3,7 @@
 ## Changes to Re::Solve since release 0.99.4
 
 - Refactored system solver: Added helper functions to check and fix conflicts in configuration options and to reduce code duplication.
-- Code throws errors instead of warnings when encountering ambiguous erronneus inputs from the user.
+- Code returns errors instead of warnings when encountering ambiguous erronneus inputs from the user.
 
 ## HyKKT Release changes
 
