@@ -92,7 +92,7 @@ namespace ReSolve
         return GramSchmidt::CGS1;
       }
       out::error() << "Gram-Schmidt variant " << variant << " not recognized! Valid arguments are:\n"
-      "\"cgs2\", \"mgs\", \"mgs_two_sync\", \"mgs_pm\", and \"cgs1\".\n";
+                                                            "\"cgs2\", \"mgs\", \"mgs_two_sync\", \"mgs_pm\", and \"cgs1\".\n";
       return GramSchmidt::CGS2;
     }
 
@@ -962,7 +962,7 @@ namespace ReSolve
     if (solve_method_ != "randgmres")
     {
       out::error() << "Trying to set sketching method to an incompatible solver\n."
-      "Sketching can only be used with the \"randgmres\" solver.\n";
+                      "Sketching can only be used with the \"randgmres\" solver.\n";
       return 1;
     }
 
