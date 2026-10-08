@@ -15,9 +15,9 @@
 namespace ReSolve
 {
   /**
-   * @brief Constructs an identity preconditioner for a memory space.
+   * @brief Constructs an identity preconditioner.
    *
-   * @param[in] memspace Memory space used by input and output vectors
+   * @param[in] memspace Memory space used by input and output vectors.
    */
   PreconditionerIdentity::PreconditionerIdentity(memory::MemorySpace memspace)
     : memspace_(memspace)

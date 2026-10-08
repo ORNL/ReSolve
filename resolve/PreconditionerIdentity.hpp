@@ -15,8 +15,8 @@ namespace ReSolve
   /**
    * @brief Identity preconditioner.
    *
-   * Applying this preconditioner computes x = rhs. It can be used to run an
-   * iterative solver without changing its preconditioner-based code path.
+   * This preconditioner uses the identity matrix,
+   * so applying it copies rhs to x.
    */
   class PreconditionerIdentity : public Preconditioner
   {
