@@ -38,6 +38,7 @@ namespace ReSolve
 
         PreconditionerIdentity preconditioner(memspace_);
         status *= (preconditioner.setup(nullptr) == 0);
+        status *= (preconditioner.reset(nullptr) == 0);
 
         return status.report(__func__);
       }
@@ -74,6 +75,8 @@ namespace ReSolve
         rhs.copyFromExternal(values, memory::HOST, memspace_);
 
         PreconditionerIdentity preconditioner(memspace_);
+        status *= (preconditioner.apply(nullptr, &x) == 1);
+        status *= (preconditioner.apply(&rhs, nullptr) == 1);
         status *= (preconditioner.apply(&rhs, &x) == 0);
 
         if (memspace_ == memory::DEVICE)

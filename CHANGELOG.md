@@ -2,9 +2,9 @@
 
 ## Changes to Re::Solve since release 0.99.4
 
-- Added an identity preconditioner with CPU and GPU support.
 - Refactored system solver: Added helper functions to check and fix conflicts in configuration options and to reduce code duplication.
 - Code returns errors instead of warnings when encountering ambiguous erronneus inputs from the user.
+- Added an identity preconditioner for unpreconditioned GMRES.
 
 ## HyKKT Release changes
 

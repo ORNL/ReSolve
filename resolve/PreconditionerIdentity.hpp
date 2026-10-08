@@ -27,6 +27,7 @@ namespace ReSolve
     explicit PreconditionerIdentity(memory::MemorySpace memspace);
 
     int setup(matrix_type* A) override;
+    int reset(matrix_type* A) override;
     int apply(vector_type* rhs, vector_type* x) override;
 
   private:

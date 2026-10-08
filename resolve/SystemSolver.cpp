@@ -4,6 +4,7 @@
 #include <resolve/GramSchmidt.hpp>
 #include <resolve/LinSolverDirectCpuILU0.hpp>
 #include <resolve/LinSolverIterativeFGMRES.hpp>
+#include <resolve/PreconditionerIdentity.hpp>
 #include <resolve/PreconditionerLU.hpp>
 #include <resolve/matrix/Csc.hpp>
 #include <resolve/matrix/Csr.hpp>
@@ -236,6 +237,8 @@ namespace ReSolve
     // Make sure the method combination is consistent before creating objects
     validateConfiguration();
 
+    const bool is_iterative_solve = (solve_method_ == "randgmres" || solve_method_ == "fgmres");
+
     // First delete old objects
     iterative_solver_.reset();
     preconditioner_.reset();
@@ -269,7 +272,11 @@ namespace ReSolve
     // Create preconditioner
     if (precondition_method_ == "none")
     {
-      // do nothing
+      if (is_iterative_solve)
+      {
+        const memory::MemorySpace memspace = memspace_ == "cpu" ? memory::HOST : memory::DEVICE;
+        preconditioner_.reset(new PreconditionerIdentity(memspace));
+      }
     }
     else if (precondition_method_ == "ilu0")
     {
@@ -307,9 +314,17 @@ namespace ReSolve
     }
 
     // Create iterative solver
-    if (solve_method_ == "randgmres" || solve_method_ == "fgmres")
+    if (is_iterative_solve)
     {
-      createIterativeSolver(solve_method_);
+      if (createIterativeSolver(solve_method_) != 0)
+      {
+        return 1;
+      }
+
+      if (precondition_method_ == "none")
+      {
+        return iterative_solver_->setPreconditioner(preconditioner_.get());
+      }
     }
 
     return 0;
@@ -723,12 +738,25 @@ namespace ReSolve
     ir_method_ = "none";
     iterative_solver_.reset();
 
+    if ((method == "fgmres" || method == "randgmres") && precondition_method_ == "none")
+    {
+      const memory::MemorySpace solve_memspace =
+          memspace_ == "cpu" ? memory::HOST : memory::DEVICE;
+      preconditioner_.reset(new PreconditionerIdentity(solve_memspace));
+    }
+
     if (createIterativeSolver(method) != 0)
     {
       out::error() << "Solve method " << solve_method_
                    << " not recognized ...\n";
       return 1;
     }
+
+    if (preconditioner_ != nullptr)
+    {
+      return iterative_solver_->setPreconditioner(preconditioner_.get());
+    }
+
     return 0;
   }
 
