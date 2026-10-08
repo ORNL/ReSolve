@@ -20,6 +20,7 @@ set(ReSolve_SRC
     LinSolverIterativeRandFGMRES.cpp
     SystemSolver.cpp
     Preconditioner.cpp
+    PreconditionerIdentity.cpp
     PreconditionerLU.cpp
     PreconditionerUserMatrix.cpp
 )
@@ -55,6 +56,7 @@ set(ReSolve_HEADER_INSTALL
     GramSchmidt.hpp
     MemoryUtils.hpp
     Preconditioner.hpp
+    PreconditionerIdentity.hpp
     PreconditionerLU.hpp
     PreconditionerUserMatrix.hpp
 )

@@ -4,6 +4,7 @@
 #include <resolve/GramSchmidt.hpp>
 #include <resolve/LinSolverDirectCpuILU0.hpp>
 #include <resolve/LinSolverIterativeFGMRES.hpp>
+#include <resolve/PreconditionerIdentity.hpp>
 #include <resolve/PreconditionerLU.hpp>
 #include <resolve/matrix/Csc.hpp>
 #include <resolve/matrix/Csr.hpp>
@@ -132,6 +133,13 @@ namespace ReSolve
       return "hip";
     }
 #endif
+
+    /// Returns true when the method selects a supported iterative solver.
+    bool isIterativeSolve(const std::string& method)
+    {
+      return method == "fgmres" || method == "randgmres";
+    }
+
   } // namespace
 
   SystemSolver::SystemSolver(LinAlgWorkspaceCpu* workspace_cpu,
@@ -144,7 +152,7 @@ namespace ReSolve
       factorization_method_(factor),
       refactorization_method_(refactor),
       solve_method_(solve),
-      precondition_method_(precond),
+      preconditioner_method_(precond),
       ir_method_(ir)
   {
     completeSetup(workspace_cpu_);
@@ -161,7 +169,7 @@ namespace ReSolve
       factorization_method_(factor),
       refactorization_method_(refactor),
       solve_method_(solve),
-      precondition_method_(precond),
+      preconditioner_method_(precond),
       ir_method_(ir)
   {
     completeSetup(workspace_cuda_);
@@ -179,7 +187,7 @@ namespace ReSolve
       factorization_method_(factor),
       refactorization_method_(refactor),
       solve_method_(solve),
-      precondition_method_(precond),
+      preconditioner_method_(precond),
       ir_method_(ir)
   {
     completeSetup(workspace_hip_);
@@ -210,7 +218,7 @@ namespace ReSolve
     }
 
     // If we use iterative solver, we can set it up here
-    if (solve_method_ == "randgmres" || solve_method_ == "fgmres")
+    if (isIterativeSolve(solve_method_))
     {
       if (iterative_solver_ == nullptr)
       {
@@ -267,11 +275,15 @@ namespace ReSolve
     }
 
     // Create preconditioner
-    if (precondition_method_ == "none")
+    if (preconditioner_method_ == "none")
     {
-      // do nothing
+      if (isIterativeSolve(solve_method_))
+      {
+        const memory::MemorySpace memspace = memspace_ == "cpu" ? memory::HOST : memory::DEVICE;
+        preconditioner_.reset(new PreconditionerIdentity(memspace));
+      }
     }
-    else if (precondition_method_ == "ilu0")
+    else if (preconditioner_method_ == "ilu0")
     {
       if (memspace_ == "cpu")
       {
@@ -301,15 +313,23 @@ namespace ReSolve
     }
     else
     {
-      out::error() << "Preconditioner method " << precondition_method_
+      out::error() << "Preconditioner method " << preconditioner_method_
                    << " not recognized ...\n";
       return 1;
     }
 
     // Create iterative solver
-    if (solve_method_ == "randgmres" || solve_method_ == "fgmres")
+    if (isIterativeSolve(solve_method_))
     {
-      createIterativeSolver(solve_method_);
+      if (createIterativeSolver(solve_method_) != 0)
+      {
+        return 1;
+      }
+
+      if (preconditioner_method_ == "none")
+      {
+        return iterative_solver_->setPreconditioner(preconditioner_.get());
+      }
     }
 
     return 0;
@@ -476,7 +496,7 @@ namespace ReSolve
     int status = 0;
 
     // Use Krylov solver if selected
-    if (solve_method_ == "randgmres" || solve_method_ == "fgmres")
+    if (isIterativeSolve(solve_method_))
     {
       status += iterative_solver_->resetMatrix(A_);
       status += iterative_solver_->solve(rhs, x);
@@ -651,7 +671,7 @@ namespace ReSolve
    */
   int SystemSolver::setFactorizationMethod(std::string method)
   {
-    if (solve_method_ == "fgmres" || solve_method_ == "randgmres")
+    if (isIterativeSolve(solve_method_))
     {
       out::error() << "Factorization method cannot be set while iterative solve method '"
                    << solve_method_ << "' is active. Keeping '" << factorization_method_ << "'.\n";
@@ -723,12 +743,25 @@ namespace ReSolve
     ir_method_ = "none";
     iterative_solver_.reset();
 
+    if (isIterativeSolve(method) && preconditioner_method_ == "none")
+    {
+      const memory::MemorySpace solve_memspace =
+          memspace_ == "cpu" ? memory::HOST : memory::DEVICE;
+      preconditioner_.reset(new PreconditionerIdentity(solve_memspace));
+    }
+
     if (createIterativeSolver(method) != 0)
     {
       out::error() << "Solve method " << solve_method_
                    << " not recognized ...\n";
       return 1;
     }
+
+    if (preconditioner_ != nullptr)
+    {
+      return iterative_solver_->setPreconditioner(preconditioner_.get());
+    }
+
     return 0;
   }
 
@@ -745,7 +778,7 @@ namespace ReSolve
   {
     // With an iterative solve method the Krylov solver belongs to the solve
     // path, not to iterative refinement, so leave it untouched.
-    if (solve_method_ == "randgmres" || solve_method_ == "fgmres")
+    if (isIterativeSolve(solve_method_))
     {
       if (method != "none")
       {
@@ -1043,7 +1076,7 @@ namespace ReSolve
       out::error() << "SystemSolver initialization failed with factorization '" << factorization_method_
                    << "', refactorization '" << refactorization_method_
                    << "', solve '" << solve_method_
-                   << "', preconditioner '" << precondition_method_
+                   << "', preconditioner '" << preconditioner_method_
                    << "', iterative refinement '" << ir_method_
                    << "'. Solver is not usable in this state.\n";
     }
@@ -1064,9 +1097,7 @@ namespace ReSolve
    */
   void SystemSolver::validateConfiguration()
   {
-    const bool is_iterative_solve = (solve_method_ == "fgmres" || solve_method_ == "randgmres");
-
-    if (is_iterative_solve)
+    if (isIterativeSolve(solve_method_))
     {
       if (factorization_method_ != "none")
       {
@@ -1089,9 +1120,9 @@ namespace ReSolve
     }
     else
     {
-      if (precondition_method_ != "none")
+      if (preconditioner_method_ != "none")
       {
-        out::error() << "Incorrect input: preconditioner '" << precondition_method_
+        out::error() << "Incorrect input: preconditioner '" << preconditioner_method_
                      << "' can only be used with an iterative solve method ('fgmres' or 'randgmres'). "
                      << "\n";
       }

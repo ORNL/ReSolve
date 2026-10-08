@@ -44,13 +44,18 @@ template <class workspace_type>
 static int test(int argc, char* argv[]);
 
 /// Checks if inputs are valid, otherwise sets defaults
-static void processInputs(std::string& method, std::string& gs, std::string& sketch, std::string& side);
+static void processInputs(std::string& method,
+                          std::string& gs,
+                          std::string& sketch,
+                          std::string& side,
+                          std::string& preconditioner);
 
 /// Creates string with test description
 static std::string headerInfo(const std::string& method,
                               const std::string& gs,
                               const std::string& sketch,
-                              std::string        flexible);
+                              std::string        flexible,
+                              const std::string& preconditioner);
 
 /// Generates test system matrix
 static ReSolve::matrix::Csr* generateMatrix(const index_type N, MemorySpace memspace);
@@ -108,7 +113,10 @@ int test(int argc, char* argv[])
   opt              = options.getParamFromKey("-p");
   std::string side = opt ? (*opt).second : "right";
 
-  processInputs(method, gs, sketch, side);
+  opt                        = options.getParamFromKey("-c");
+  std::string preconditioner = opt ? (*opt).second : "ilu0";
+
+  processInputs(method, gs, sketch, side, preconditioner);
 
   // Create workspace and initialize its handles.
   workspace_type workspace;
@@ -135,15 +143,15 @@ int test(int argc, char* argv[])
   }
 
   // Create system solver
-  ReSolve::SystemSolver solver(&workspace, "none", "none", method, "ilu0", "none");
+  ReSolve::SystemSolver solver(&workspace, "none", "none", method, preconditioner, "none");
   solver.setGramSchmidtMethod(gs);
 
   // Configure ILU0 zero-pivot handling
-  if (hwbackend == "CPU")
+  if (preconditioner == "ilu0" && hwbackend == "CPU")
   {
     status = solver.getPreconditionerSolver().setCliParam("zero_diagonal", "1e-7");
   }
-  else
+  else if (preconditioner == "ilu0")
   {
     status = solver.getPreconditionerSolver().setCliParam("numeric_boost", "yes");
     status += solver.getPreconditionerSolver().setCliParam("boost_tolerance", "1e-7");
@@ -183,9 +191,12 @@ int test(int argc, char* argv[])
   solver.getIterativeSolver().setCliParam("flexible", flexible);
   solver.getIterativeSolver().setCliParam("restart", "200");
 
-  // Set preconditioner (default in this case ILU0)
-  status = solver.preconditionerSetup(side);
-  error_sum += status;
+  // Set up the requested non-identity preconditioner.
+  if (preconditioner == "ilu0")
+  {
+    status = solver.preconditionerSetup(side);
+    error_sum += status;
+  }
 
   // Solve system
   status = solver.solve(vec_rhs, &vec_x);
@@ -203,7 +214,7 @@ int test(int argc, char* argv[])
   bad_guess_x.allocateAll(memspace);
   bad_guess_x.setToConst(1.0e6, memspace);
 
-  ReSolve::SystemSolver bad_guess_solver(&workspace, "none", "none", method, "ilu0", "none");
+  ReSolve::SystemSolver bad_guess_solver(&workspace, "none", "none", method, preconditioner, "none");
   bad_guess_solver.setGramSchmidtMethod(gs);
   bad_guess_solver.getIterativeSolver().setCliParam("maxit", "2500");
   bad_guess_solver.getIterativeSolver().setCliParam("tol", "1e-12");
@@ -221,8 +232,11 @@ int test(int argc, char* argv[])
   bad_guess_solver.getIterativeSolver().setCliParam("flexible", flexible);
   bad_guess_solver.getIterativeSolver().setCliParam("restart", "200");
 
-  status = bad_guess_solver.preconditionerSetup(side);
-  error_sum += status;
+  if (preconditioner == "ilu0")
+  {
+    status = bad_guess_solver.preconditionerSetup(side);
+    error_sum += status;
+  }
 
   const real_type bad_guess_rnorm = bad_guess_solver.getResidualNorm(vec_rhs, &bad_guess_x);
 
@@ -261,7 +275,7 @@ int test(int argc, char* argv[])
   vec_x_guess.copyFromExternal(&vec_x, memspace, memspace);
   vector_handler.scal(0.9, &vec_x_guess, memspace);
 
-  ReSolve::SystemSolver accepted_guess_solver(&workspace, "none", "none", method, "ilu0", "none");
+  ReSolve::SystemSolver accepted_guess_solver(&workspace, "none", "none", method, preconditioner, "none");
   accepted_guess_solver.setGramSchmidtMethod(gs);
   accepted_guess_solver.getIterativeSolver().setCliParam("maxit", "2500");
   accepted_guess_solver.getIterativeSolver().setCliParam("tol", "1e-12");
@@ -279,8 +293,11 @@ int test(int argc, char* argv[])
   accepted_guess_solver.getIterativeSolver().setCliParam("flexible", flexible);
   accepted_guess_solver.getIterativeSolver().setCliParam("restart", "200");
 
-  status = accepted_guess_solver.preconditionerSetup(side);
-  error_sum += status;
+  if (preconditioner == "ilu0")
+  {
+    status = accepted_guess_solver.preconditionerSetup(side);
+    error_sum += status;
+  }
 
   const real_type initial_guess_rnorm = accepted_guess_solver.getResidualNorm(vec_rhs, &vec_x_guess);
 
@@ -309,7 +326,7 @@ int test(int argc, char* argv[])
   helper.setSystem(A, vec_rhs, &vec_x);
 
   std::cout << std::defaultfloat
-            << headerInfo(method, gs, sketch, flexible)
+            << headerInfo(method, gs, sketch, flexible, preconditioner)
             << "\t Hardware backend:               " << hwbackend << "\n"
             << "\t Solver tolerance:               " << tol_out << "\n";
   helper.printIterativeSolverSummary(&(solver.getIterativeSolver()));
@@ -328,7 +345,11 @@ int test(int argc, char* argv[])
 // Definitions of helper functions
 //
 
-void processInputs(std::string& method, std::string& gs, std::string& sketch, std::string& side)
+void processInputs(std::string& method,
+                   std::string& gs,
+                   std::string& sketch,
+                   std::string& side,
+                   std::string& preconditioner)
 {
   if (method == "randgmres")
   {
@@ -361,12 +382,20 @@ void processInputs(std::string& method, std::string& gs, std::string& sketch, st
     std::cout << "Setting preconditioning side to the default (right).\n\n";
     side = "right";
   }
+
+  if (preconditioner != "ilu0" && preconditioner != "none")
+  {
+    std::cout << "Preconditioner " << preconditioner << " not recognized.\n";
+    std::cout << "Setting preconditioner to the default (ILU0).\n\n";
+    preconditioner = "ilu0";
+  }
 }
 
 std::string headerInfo(const std::string& method,
                        const std::string& gs,
                        const std::string& sketch,
-                       std::string        flexible)
+                       std::string        flexible,
+                       const std::string& preconditioner)
 {
   bool        is_flexible = !(flexible == "no");
   std::string header("Results for ");
@@ -420,6 +449,9 @@ std::string headerInfo(const std::string& method,
   {
     // do nothing
   }
+
+  header += "\t Preconditioner:                  ";
+  header += preconditioner == "none" ? "identity\n" : "ILU0\n";
 
   return header;
 }

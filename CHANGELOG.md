@@ -4,6 +4,7 @@
 
 - Refactored system solver: Added helper functions to check and fix conflicts in configuration options and to reduce code duplication.
 - Code returns errors instead of warnings when encountering ambiguous erronneus inputs from the user.
+- Added an identity preconditioner for unpreconditioned GMRES.
 
 ## HyKKT Release changes
 

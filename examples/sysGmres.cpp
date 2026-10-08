@@ -31,6 +31,7 @@ void printHelpInfo()
   std::cout << "sysGmres.exe -m <matrix file> -r <rhs file>\n\n";
   std::cout << "Optional features:\n";
   std::cout << "\t-b <cpu|cuda|hip> \tSelects hardware backend.\n";
+  std::cout << "\t-c <ilu0|none> \tSelects preconditioner (default 'ilu0').\n";
   std::cout << "\t-h \tPrints this message.\n";
   std::cout << "\t-i <iter method> \tIterative method: randgmres or fgmres (default 'randgmres').\n";
   std::cout << "\t-g <gs method> \tGram-Schmidt method: cgs1, cgs2, or mgs (default 'cgs2').\n";
@@ -63,7 +64,8 @@ static void processInputs(std::string& method,
                           std::string& gs,
                           std::string& sketch,
                           std::string& flexible,
-                          std::string& side);
+                          std::string& side,
+                          std::string& preconditioner);
 
 /// Processes backend-specific ILU0 zero-pivot options
 static int processILU0Inputs(SystemSolver&      solver,
@@ -179,10 +181,14 @@ int sysGmres(int argc, char* argv[])
   opt              = options.getParamFromKey("-p");
   std::string side = opt ? (*opt).second : "right";
 
-  processInputs(method, gs, sketch, flexible, side);
+  opt                        = options.getParamFromKey("-c");
+  std::string preconditioner = opt ? (*opt).second : "ilu0";
+
+  processInputs(method, gs, sketch, flexible, side, preconditioner);
 
   std::cout << "Matrix file: " << matrix_pathname << "\n"
-            << "RHS file: " << rhs_pathname << "\n";
+            << "RHS file: " << rhs_pathname << "\n"
+            << "Preconditioner: " << (preconditioner == "none" ? "none (identity)" : "ILU0") << "\n";
 
   // Create workspace
   workspace_type workspace;
@@ -201,15 +207,18 @@ int sysGmres(int argc, char* argv[])
                       "none",
                       "none",
                       method,
-                      "ilu0",
+                      preconditioner,
                       "none");
 
   solver.setGramSchmidtMethod(gs);
 
-  status = processILU0Inputs(solver, hw_backend, options);
-  if (status != 0)
+  if (preconditioner == "ilu0")
   {
-    return 1;
+    status = processILU0Inputs(solver, hw_backend, options);
+    if (status != 0)
+    {
+      return 1;
+    }
   }
 
   // Read and open matrix and right-hand-side vector
@@ -268,8 +277,8 @@ int sysGmres(int argc, char* argv[])
   solver.getIterativeSolver().setCliParam("flexible", flexible);
   solver.getIterativeSolver().setCliParam("restart", "200");
 
-  // Set up the preconditioner
-  if (return_code == 0)
+  // Set up the requested non-identity preconditioner
+  if (return_code == 0 && preconditioner == "ilu0")
   {
     status = solver.preconditionerSetup(side);
     std::cout << "solver.preconditionerSetup returned status: " << status << "\n";
@@ -305,7 +314,12 @@ int sysGmres(int argc, char* argv[])
   return return_code;
 }
 
-void processInputs(std::string& method, std::string& gs, std::string& sketch, std::string& flexible, std::string& side)
+void processInputs(std::string& method,
+                   std::string& gs,
+                   std::string& sketch,
+                   std::string& flexible,
+                   std::string& side,
+                   std::string& preconditioner)
 {
   if (method == "randgmres")
   {
@@ -343,6 +357,13 @@ void processInputs(std::string& method, std::string& gs, std::string& sketch, st
   {
     std::cout << "Preconditioning side " << side << " not recognized.\n";
     std::cout << "Setting preconditioning side to the default (right).\n\n";
+  }
+
+  if (preconditioner != "ilu0" && preconditioner != "none")
+  {
+    std::cout << "Preconditioner " << preconditioner << " not recognized.\n";
+    std::cout << "Setting preconditioner to the default (ILU0).\n\n";
+    preconditioner = "ilu0";
   }
 }
 

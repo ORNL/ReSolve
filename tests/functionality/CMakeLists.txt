@@ -191,6 +191,16 @@ add_test(NAME sys_gmres_mgspm_test
                  "-g" "mgs_pm"
 )
 
+# Unpreconditioned GMRES uses the identity preconditioner.
+add_test(NAME sys_gmres_unpreconditioned_test
+         COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-x" "no" "-i" "fgmres"
+                 "-g" "cgs2" "-c" "none"
+)
+add_test(NAME sys_rand_gmres_unpreconditioned_test
+         COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-x" "no" "-i"
+                 "randgmres" "-g" "cgs2" "-s" "count" "-c" "none"
+)
+
 # Left-preconditioned Krylov solvers tests (GMRES)
 add_test(NAME sys_rand_count_gmres_left_cgs2_test
          COMMAND $<TARGET_FILE:sys_rand_gmres_test.exe> "-x" "no" "-i"
