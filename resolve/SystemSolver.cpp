@@ -133,6 +133,13 @@ namespace ReSolve
       return "hip";
     }
 #endif
+
+    /// Returns true when the method selects a supported iterative solver.
+    bool isIterativeSolve(const std::string& method)
+    {
+      return method == "fgmres" || method == "randgmres";
+    }
+
   } // namespace
 
   SystemSolver::SystemSolver(LinAlgWorkspaceCpu* workspace_cpu,
@@ -211,7 +218,7 @@ namespace ReSolve
     }
 
     // If we use iterative solver, we can set it up here
-    if (solve_method_ == "randgmres" || solve_method_ == "fgmres")
+    if (isIterativeSolve(solve_method_))
     {
       if (iterative_solver_ == nullptr)
       {
@@ -236,8 +243,6 @@ namespace ReSolve
   {
     // Make sure the method combination is consistent before creating objects
     validateConfiguration();
-
-    const bool is_iterative_solve = (solve_method_ == "randgmres" || solve_method_ == "fgmres");
 
     // First delete old objects
     iterative_solver_.reset();
@@ -272,7 +277,7 @@ namespace ReSolve
     // Create preconditioner
     if (precondition_method_ == "none")
     {
-      if (is_iterative_solve)
+      if (isIterativeSolve(solve_method_))
       {
         const memory::MemorySpace memspace = memspace_ == "cpu" ? memory::HOST : memory::DEVICE;
         preconditioner_.reset(new PreconditionerIdentity(memspace));
@@ -314,7 +319,7 @@ namespace ReSolve
     }
 
     // Create iterative solver
-    if (is_iterative_solve)
+    if (isIterativeSolve(solve_method_))
     {
       if (createIterativeSolver(solve_method_) != 0)
       {
@@ -491,7 +496,7 @@ namespace ReSolve
     int status = 0;
 
     // Use Krylov solver if selected
-    if (solve_method_ == "randgmres" || solve_method_ == "fgmres")
+    if (isIterativeSolve(solve_method_))
     {
       status += iterative_solver_->resetMatrix(A_);
       status += iterative_solver_->solve(rhs, x);
@@ -666,7 +671,7 @@ namespace ReSolve
    */
   int SystemSolver::setFactorizationMethod(std::string method)
   {
-    if (solve_method_ == "fgmres" || solve_method_ == "randgmres")
+    if (isIterativeSolve(solve_method_))
     {
       out::error() << "Factorization method cannot be set while iterative solve method '"
                    << solve_method_ << "' is active. Keeping '" << factorization_method_ << "'.\n";
@@ -738,7 +743,7 @@ namespace ReSolve
     ir_method_ = "none";
     iterative_solver_.reset();
 
-    if ((method == "fgmres" || method == "randgmres") && precondition_method_ == "none")
+    if (isIterativeSolve(method) && precondition_method_ == "none")
     {
       const memory::MemorySpace solve_memspace =
           memspace_ == "cpu" ? memory::HOST : memory::DEVICE;
@@ -773,7 +778,7 @@ namespace ReSolve
   {
     // With an iterative solve method the Krylov solver belongs to the solve
     // path, not to iterative refinement, so leave it untouched.
-    if (solve_method_ == "randgmres" || solve_method_ == "fgmres")
+    if (isIterativeSolve(solve_method_))
     {
       if (method != "none")
       {
@@ -1092,9 +1097,7 @@ namespace ReSolve
    */
   void SystemSolver::validateConfiguration()
   {
-    const bool is_iterative_solve = (solve_method_ == "fgmres" || solve_method_ == "randgmres");
-
-    if (is_iterative_solve)
+    if (isIterativeSolve(solve_method_))
     {
       if (factorization_method_ != "none")
       {
