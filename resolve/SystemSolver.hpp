@@ -133,7 +133,7 @@ namespace ReSolve
     std::string factorization_method_{"none"};
     std::string refactorization_method_{"none"};
     std::string solve_method_{"none"};
-    std::string precondition_method_{"none"};
+    std::string preconditioner_method_{"none"};
     std::string ir_method_{"none"};
     std::string gs_method_{"cgs2"};
     std::string sketching_method_{"count"}; ///< @todo move this to LinSolverIterative class

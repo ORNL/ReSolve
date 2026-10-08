@@ -152,7 +152,7 @@ namespace ReSolve
       factorization_method_(factor),
       refactorization_method_(refactor),
       solve_method_(solve),
-      precondition_method_(precond),
+      preconditioner_method_(precond),
       ir_method_(ir)
   {
     completeSetup(workspace_cpu_);
@@ -169,7 +169,7 @@ namespace ReSolve
       factorization_method_(factor),
       refactorization_method_(refactor),
       solve_method_(solve),
-      precondition_method_(precond),
+      preconditioner_method_(precond),
       ir_method_(ir)
   {
     completeSetup(workspace_cuda_);
@@ -187,7 +187,7 @@ namespace ReSolve
       factorization_method_(factor),
       refactorization_method_(refactor),
       solve_method_(solve),
-      precondition_method_(precond),
+      preconditioner_method_(precond),
       ir_method_(ir)
   {
     completeSetup(workspace_hip_);
@@ -275,7 +275,7 @@ namespace ReSolve
     }
 
     // Create preconditioner
-    if (precondition_method_ == "none")
+    if (preconditioner_method_ == "none")
     {
       if (isIterativeSolve(solve_method_))
       {
@@ -283,7 +283,7 @@ namespace ReSolve
         preconditioner_.reset(new PreconditionerIdentity(memspace));
       }
     }
-    else if (precondition_method_ == "ilu0")
+    else if (preconditioner_method_ == "ilu0")
     {
       if (memspace_ == "cpu")
       {
@@ -313,7 +313,7 @@ namespace ReSolve
     }
     else
     {
-      out::error() << "Preconditioner method " << precondition_method_
+      out::error() << "Preconditioner method " << preconditioner_method_
                    << " not recognized ...\n";
       return 1;
     }
@@ -326,7 +326,7 @@ namespace ReSolve
         return 1;
       }
 
-      if (precondition_method_ == "none")
+      if (preconditioner_method_ == "none")
       {
         return iterative_solver_->setPreconditioner(preconditioner_.get());
       }
@@ -743,7 +743,7 @@ namespace ReSolve
     ir_method_ = "none";
     iterative_solver_.reset();
 
-    if (isIterativeSolve(method) && precondition_method_ == "none")
+    if (isIterativeSolve(method) && preconditioner_method_ == "none")
     {
       const memory::MemorySpace solve_memspace =
           memspace_ == "cpu" ? memory::HOST : memory::DEVICE;
@@ -1076,7 +1076,7 @@ namespace ReSolve
       out::error() << "SystemSolver initialization failed with factorization '" << factorization_method_
                    << "', refactorization '" << refactorization_method_
                    << "', solve '" << solve_method_
-                   << "', preconditioner '" << precondition_method_
+                   << "', preconditioner '" << preconditioner_method_
                    << "', iterative refinement '" << ir_method_
                    << "'. Solver is not usable in this state.\n";
     }
@@ -1120,9 +1120,9 @@ namespace ReSolve
     }
     else
     {
-      if (precondition_method_ != "none")
+      if (preconditioner_method_ != "none")
       {
-        out::error() << "Incorrect input: preconditioner '" << precondition_method_
+        out::error() << "Incorrect input: preconditioner '" << preconditioner_method_
                      << "' can only be used with an iterative solve method ('fgmres' or 'randgmres'). "
                      << "\n";
       }
