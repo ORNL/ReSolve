@@ -303,7 +303,8 @@ namespace ReSolve
           if (threadIdx.x < k * k)
           {
             Xi_Sigma_shared[threadIdx.x] = B[threadIdx.x];
-        __syncwarp();
+          }
+          __syncwarp();
 
           //  L * Y = B
           if (threadIdx.x < k)

@@ -345,6 +345,11 @@ namespace ReSolve
         // 7. Convergence Checking & Final Calculations Block
         if (best_basis_error < initial_tol_)
         {
+          Temp_nxk_->copyFromExternal(R_, memspace_, memspace_);
+          impl_->choleskyQr(Temp_nxk_, Temp_kxk_, memspace_);
+
+          ////////////////////////////
+
           // auto conv_block_start = std::chrono::steady_clock::now();
           // A * X = B - R
           Temp_nxk_->copyFromExternal(B_, memspace_, memspace_);
@@ -375,11 +380,13 @@ namespace ReSolve
             // deviceSynchronize();
             if (r_norm > best_basis_r_norm || std::isnan(r_norm))
             {
+              printf("fail\n");
               r_norm = best_basis_r_norm;
               lincomb_error = best_basis_error;
               use_best_basis = true;
             }
             else{
+              printf("success\n");
               lincomb_error = r_norm / b_norm_;
               // printf("%.5e\n", lincomb_error);
             }
