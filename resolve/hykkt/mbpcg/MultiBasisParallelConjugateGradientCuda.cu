@@ -351,7 +351,7 @@ namespace ReSolve
         {
           index_type r = idx % k;
           index_type c = idx / k;
-          if (r > c)
+          if (r <= c)
           {
             R[c * k + r] = R_shared[c * k + r];
           }
