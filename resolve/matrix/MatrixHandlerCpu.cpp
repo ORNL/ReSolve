@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cmath>
 #include <numeric>
 
 #include <resolve/matrix/Coo.hpp>
@@ -490,7 +491,7 @@ namespace ReSolve
       {
         if (a_col_ind[a_row_ptr[row] + i] == row)
         {
-          d_data[row] = sqrt(a_val[a_row_ptr[row] + i]);
+          d_data[row] = std::sqrt(a_val[a_row_ptr[row] + i]);
         }
       }
     }
