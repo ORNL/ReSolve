@@ -861,7 +861,7 @@ namespace ReSolve
 
     // Tall & skinny matrix times transposed tall & skinny matrix
     // C = A^T * B
-    int MultiBasisParallelConjugateGradientHip::multTSMTTSM(vector::Vector* A, vector::Vector* B, vector::Vector* C, memory::MemorySpace memspace)
+    int MultiBasisParallelConjugateGradientHip::multTSMTTSMSymmetric(vector::Vector* A, vector::Vector* B, vector::Vector* C, memory::MemorySpace memspace)
     {
       index_type n = A->getSize();
       index_type k = A->getNumVectors();
@@ -873,25 +873,25 @@ namespace ReSolve
       switch (k)
       {
       case 1:
-        kernels::multTSMTTSM<1><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
+        kernels::multTSMTTSMSymmetric<1><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
                                                             B->getData(memory::DEVICE),
                                                             C->getData(memory::DEVICE),
                                                             n);
         break;
       case 2:
-        kernels::multTSMTTSM<2><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
+        kernels::multTSMTTSMSymmetric<2><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
                                                             B->getData(memory::DEVICE),
                                                             C->getData(memory::DEVICE),
                                                             n);
         break;
       case 4:
-        kernels::multTSMTTSM<4><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
+        kernels::multTSMTTSMSymmetric<4><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
                                                             B->getData(memory::DEVICE),
                                                             C->getData(memory::DEVICE),
                                                             n);
         break;
       case 8:
-        kernels::multTSMTTSM<8><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
+        kernels::multTSMTTSMSymmetric<8><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
                                                             B->getData(memory::DEVICE),
                                                             C->getData(memory::DEVICE),
                                                             n);
