@@ -269,7 +269,7 @@ namespace ReSolve
         // 2. S^T * (A * S) GEMM Section
         // auto gemm_xi_start = std::chrono::steady_clock::now();
         // vector_handler_->gemm('T', 'N', ONE, ZERO, S_, Temp_nxk_, Xi_inv_, memspace_);
-        impl_->multTSMTTSM(S_, Temp_nxk_, Xi_inv_, memspace_);
+        impl_->multTSMTTSMSymmetric(S_, Temp_nxk_, Xi_inv_, memspace_);
         // deviceSynchronize(); // optional
         // auto gemm_xi_end = std::chrono::steady_clock::now();
         // printf("  [it %d] gemm_xi: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(gemm_xi_end - gemm_xi_start).count()); // optional

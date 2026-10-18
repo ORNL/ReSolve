@@ -420,13 +420,13 @@ namespace ReSolve
       }
 
       template <index_type k>
-      __global__ void multTSMTTSM(const real_type* A, const real_type* B, real_type* __restrict__ C, index_type n)
+      __global__ void multTSMTTSMSymmetric(const real_type* A, const real_type* B, real_type* __restrict__ C, index_type n)
       {
         index_type thread = blockIdx.x * blockDim.x + threadIdx.x;
         index_type stride = gridDim.x * blockDim.x;
 
-        __shared__ real_type C_shared[k * k];
-        if (threadIdx.x < k * k)
+        __shared__ real_type C_shared[k * (k + 1) / 2];
+        if (threadIdx.x < k * (k + 1) / 2)
         {
           C_shared[threadIdx.x] = 0.0;
         }
@@ -438,25 +438,30 @@ namespace ReSolve
           real_type a_row[k];
           real_type b_row[k];
 
-          #pragma unroll
+          #pragma unroll 1 // Benchmarks show not unrolling is faster
           for (index_type col = 0; col < k; col++)
           {
             a_row[col] = A[col * n + row];
             b_row[col] = B[col * n + row];
           }
 
-          #pragma unroll
-          for (index_type i = threadIdx.x; i < threadIdx.x + k * k; i++)
+          #pragma unroll 1
+          for (index_type i = 0; i < k; i++)
           {
-            index_type idx = i % (k * k);
-            atomicAdd(&C_shared[idx], a_row[idx % k] * b_row[idx / k]);
+            #pragma unroll 1
+            for (index_type j = 0; j <= i; j++)
+            {
+              atomicAdd(&C_shared[indexLowerTriangular<k>(i, j)], a_row[i] * b_row[j]);
+            }
           }
         }
         __syncthreads();
         
-        if (threadIdx.x < k * k)
+        index_type i = threadIdx.x % k;
+        index_type j = threadIdx.x / k;
+        if (i < k && j < k && i >= j)
         {
-          atomicAdd(&C[threadIdx.x], C_shared[threadIdx.x]);
+          atomicAdd(&C[j * k + i], C_shared[indexLowerTriangular<k>(i, j)]);
         }
       }
 
