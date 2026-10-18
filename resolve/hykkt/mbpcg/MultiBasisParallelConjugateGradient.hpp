@@ -91,6 +91,7 @@ namespace ReSolve
       vector::Vector* Zeta_{nullptr};
       vector::Vector* Temp_nxk_{nullptr};
       vector::Vector* Temp_kxk_{nullptr};
+      vector::Vector* e_{nullptr};
       vector::Vector* c_{nullptr};
       vector::Vector* r_{nullptr};
       

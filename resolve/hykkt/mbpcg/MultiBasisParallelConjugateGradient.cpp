@@ -69,6 +69,7 @@ namespace ReSolve
       delete Zeta_;
       delete Temp_nxk_;
       delete Temp_kxk_;
+      delete e_;
       delete c_;
       delete r_;
       if (enable_diagonal_scaling_)
@@ -129,6 +130,7 @@ namespace ReSolve
       Zeta_ = new vector::Vector(k_, k_);
       Temp_nxk_ = new vector::Vector(n_, k_);
       Temp_kxk_ = new vector::Vector(k_, k_);
+      e_ = new vector::Vector(k_, 1);
       c_ = new vector::Vector(k_, 1);
       r_ = new vector::Vector(n_, 1);
 
@@ -144,12 +146,14 @@ namespace ReSolve
       Zeta_->allocate(memspace_);
       Temp_nxk_->allocate(memspace_);
       Temp_kxk_->allocate(memspace_);
+      e_->allocate(memspace_);
       c_->allocate(memspace_);
       r_->allocate(memspace_);
       
       X_res_->setToZero(memspace_);
       Sigma_->setToZero(memspace_);
       Temp_kxk_->setToZero(memspace_);
+      e_->setToConst(1.0, memspace_);
       c_->setToZero(memspace_);
       r_->setToZero(memspace_);
 
@@ -222,6 +226,9 @@ namespace ReSolve
     int MultiBasisParallelConjugateGradient::solve()
     {
       using namespace constants;
+
+      bool initial_tol_reached = false;
+      index_type initial_tol_iter;
       
       std::chrono::time_point<std::chrono::steady_clock> start;
       std::chrono::time_point<std::chrono::steady_clock> end;
@@ -282,7 +289,7 @@ namespace ReSolve
         //   return 1;
         // }
         // Temp_kxk_->copyFromExternal(Sigma_, memspace_, memspace_);
-        // vector_handler_->choleskySolve(Xi_inv_->getData(memspace_), Temp_kxk_, 'D', memspace_); // Temp_kxk = Xi * Sigma
+        // vector_handler_->choleskyFactorizeSolve(Xi_inv_->getData(memspace_), Temp_kxk_, 'D', memspace_); // Temp_kxk = Xi * Sigma
         // vector_handler_->gemm('N', 'N', ONE, ONE, S_, Temp_kxk_, X_res_, memspace_);
         // vector_handler_->gemm('N', 'N', MINUS_ONE, ONE, Temp_nxk_, Temp_kxk_, R_scal_, memspace_);
         impl_->updateXR(Xi_inv_, Sigma_, S_, Temp_nxk_, Temp_kxk_, X_res_, R_scal_);
@@ -292,7 +299,7 @@ namespace ReSolve
 
         // 4. Update W Section (W = W - A * S * Xi)
         // auto w_update_start = std::chrono::steady_clock::now();
-        // vector_handler_->choleskySolve(Xi_inv_->getData(memspace_), Temp_nxk_, 'R', memspace_); // Temp_nxk_ now contains A * S * Xi
+        // vector_handler_->choleskyFactorizeSolve(Xi_inv_->getData(memspace_), Temp_nxk_, 'R', memspace_); // Temp_nxk_ now contains A * S * Xi
         // vector_handler_->axpy(MINUS_ONE, Temp_nxk_, W_, memspace_);
         impl_->updateW(W_, Xi_inv_, Temp_nxk_, memspace_); // This is wrong I think. accessing garbage half of Xi_inv_?
         // deviceSynchronize(); // optional
@@ -312,103 +319,85 @@ namespace ReSolve
 
         }
 
-        // 6. Best Basis Vector Norm Loop Section
-        // auto basis_loop_start = std::chrono::steady_clock::now();
-        index_type best_basis;
-        real_type best_basis_r_norm;
-        impl_->bestBasis(R_, &best_basis, &best_basis_r_norm);
-
-        // index_type best_basis = -1;
-        // real_type best_basis_r_norm = std::numeric_limits<real_type>::infinity();
-        // for (index_type j = 0; j < k_; j++)
-        // {
-        //   real_type basis_r_norm = vector_handler_->norm(R_, j, memspace_);
-        //   if (basis_r_norm < best_basis_r_norm)
-        //   {
-        //     best_basis = j;
-        //     best_basis_r_norm = basis_r_norm;
-        //   }
-        // }
-        
-        best_basis_error = best_basis_r_norm / b_norm_;
-        // auto basis_loop_end = std::chrono::steady_clock::now();
-        // printf("  [it %d] basis_norm_loop: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(basis_loop_end - basis_loop_start).count()); // optional
-        // printf("error %f\n", best_basis_error);
-
-        if (best_basis_error < 3e-2)
+        if (!initial_tol_reached)
         {
-          int a = 3;
+          // 6. Best Basis Vector Norm Loop Section
+          // auto basis_loop_start = std::chrono::steady_clock::now();
+          index_type best_basis;
+          real_type best_basis_r_norm;
+          impl_->bestBasis(R_, &best_basis, &best_basis_r_norm);
+
+          // index_type best_basis = -1;
+          // real_type best_basis_r_norm = std::numeric_limits<real_type>::infinity();
+          // for (index_type j = 0; j < k_; j++)
+          // {
+          //   real_type basis_r_norm = vector_handler_->norm(R_, j, memspace_);
+          //   if (basis_r_norm < best_basis_r_norm)
+          //   {
+          //     best_basis = j;
+          //     best_basis_r_norm = basis_r_norm;
+          //   }
+          // }
+          
+          best_basis_error = best_basis_r_norm / b_norm_;
+          // auto basis_loop_end = std::chrono::steady_clock::now();
+          // printf("  [it %d] basis_norm_loop: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(basis_loop_end - basis_loop_start).count()); // optional
+          // printf("error %f\n", best_basis_error);
+
+          // std::cout << std::setprecision(std::numeric_limits<double>::max_digits10) << best_basis_error << '\n';
+          // printf("%e\n", best_basis_error);
+        
+          if (best_basis_error < initial_tol_)
+          {
+            initial_tol_reached = true;
+            initial_tol_iter = i;
+          }
         }
 
-        // std::cout << std::setprecision(std::numeric_limits<double>::max_digits10) << best_basis_error << '\n';
-        // printf("%e\n", best_basis_error);
         // 7. Convergence Checking & Final Calculations Block
-        if (best_basis_error < initial_tol_)
+        if (initial_tol_reached)
         {
-          Temp_nxk_->copyFromExternal(R_, memspace_, memspace_);
-          impl_->choleskyQr(Temp_nxk_, Temp_kxk_, memspace_);
-
-          ////////////////////////////
-
-          // auto conv_block_start = std::chrono::steady_clock::now();
-          // A * X = B - R
-          Temp_nxk_->copyFromExternal(B_, memspace_, memspace_);
-          vector_handler_->axpy(MINUS_ONE, R_, Temp_nxk_, memspace_);
-
-          // (AX)^T * AX * c = (AX)^T * b
-          // vector_handler_->gemm('T', 'N', ONE, ZERO, Temp_nxk_, Temp_nxk_, Temp_kxk_, memspace_);
-          impl_->multTSMTTSM(Temp_nxk_, Temp_nxk_, Temp_kxk_, memspace_); // use innerProductTSM
-          vector_handler_->gemv('T', k_, ONE, ZERO, Temp_nxk_, b_, c_, memspace_);
-          deviceSynchronize();
-
-          bool use_best_basis = false;
-          real_type r_norm;
-          // if (true)
+          real_type lincomb_error;
+          real_type scaling_factor;
           if (k_ == 1)
           {
-            lincomb_error = best_basis_error;
-            r_norm = best_basis_r_norm;
+            lincomb_error = vector_handler_->norm(R_, memspace_) / b_norm_;
           }
           else
           {
-            impl_->choleskySolve(Temp_kxk_, c_, c_);
-            
-            // r = b - AX * c
-            vector_handler_->gemv('N', k_, ONE, ZERO, Temp_nxk_, c_, r_, memspace_);
-            vector_handler_->axpy(MINUS_ONE, b_, r_, memspace_);
-            r_norm = vector_handler_->norm(r_, memspace_);
-            // deviceSynchronize();
-            if (r_norm > best_basis_r_norm || std::isnan(r_norm))
-            {
-              printf("fail\n");
-              r_norm = best_basis_r_norm;
-              lincomb_error = best_basis_error;
-              use_best_basis = true;
-            }
-            else{
-              printf("success\n");
-              lincomb_error = r_norm / b_norm_;
-              // printf("%.5e\n", lincomb_error);
-            }
+            Temp_nxk_->copyFromExternal(R_, memspace_, memspace_);
+            Temp_kxk_->setToZero(memspace_);
+            impl_->choleskyQr(Temp_nxk_, Temp_kxk_, memspace_);
+            impl_->choleskySolve(Temp_kxk_, e_, c_);
+            scaling_factor = 1.0 / vector_handler_->dot(e_, c_, memspace_);
+            vector_handler_->gemv('N', k_, ONE, ZERO, R_, c_, r_, memspace_);
+            vector_handler_->scal(scaling_factor, r_, memspace_);
+            lincomb_error = vector_handler_->norm(r_, memspace_) / b_norm_;
           }
           
           if (lincomb_error < convergence_tol_)
           {
-            vector_handler_->geam('N', 'N', ONE, ONE, X_res_, X_scal_0_, Temp_nxk_, memspace_);
-            if (enable_diagonal_scaling_)
+            if (k_ == 1)
             {
-              vector_handler_->scal(d_inv_, Temp_nxk_, memspace_);
-              vector_handler_->scal(b_norm_, Temp_nxk_, memspace_);
-            }
-
-            if (use_best_basis)
-            {
-              x_->copyFromExternal(Temp_nxk_->getData(best_basis, memspace_), memspace_, memspace_);
+              vector_handler_->geam('N', 'N', ONE, ONE, X_res_, X_scal_0_, x_, memspace_);
+              if (enable_diagonal_scaling_)
+              {
+                vector_handler_->scal(d_inv_, x_, memspace_);
+                vector_handler_->scal(b_norm_, x_, memspace_);
+              }
             }
             else
             {
-              vector_handler_->gemm('N', 'N', ONE, ZERO, Temp_nxk_, c_, x_, memspace_);
+              vector_handler_->geam('N', 'N', ONE, ONE, X_res_, X_scal_0_, Temp_nxk_, memspace_);
+              if (enable_diagonal_scaling_)
+              {
+                vector_handler_->scal(d_inv_, Temp_nxk_, memspace_);
+                vector_handler_->scal(b_norm_, Temp_nxk_, memspace_);
+              }
+              vector_handler_->gemv('N', k_, ONE, ZERO, Temp_nxk_, c_, x_, memspace_);
+              vector_handler_->scal(scaling_factor, x_, memspace_);
             }
+
             end = std::chrono::steady_clock::now();
             std::chrono::duration<double, std::milli> elapsed = (end - start);
 
@@ -417,6 +406,7 @@ namespace ReSolve
             // printf("  [it %d] convergence_overhead: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(conv_block_end - conv_block_start).count()); // optional
 
             printf("MBPCG convergence occured at iteration %d. Total Solve Time: %f ms\n", i, elapsed.count());
+            printf("Initial tolerance reached at iteration %d.\n", initial_tol_iter);
             printf("Per iteration time: %.10f\n", (std::chrono::duration<double, std::milli>(iterative_end - iterative_start)).count() / i);
             printf("Error: %.5e, best basis' error: %.5e\n", lincomb_error, best_basis_error);
             return 0;

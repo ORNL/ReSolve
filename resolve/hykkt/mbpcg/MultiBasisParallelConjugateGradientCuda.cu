@@ -244,7 +244,7 @@ namespace ReSolve
       }
       
       template <index_type k>
-      __global__ void choleskySolve(real_type* __restrict__ A,
+      __global__ void choleskyFactorizeSolve(real_type* __restrict__ A,
                                const real_type* B,
                                real_type* X)
       {
@@ -343,7 +343,7 @@ namespace ReSolve
           }
         }
 
-      // X = Xi * B => A * X = B => L * L^T * X = B, choleskySolve
+      // X = Xi * B => A * X = B => L * L^T * X = B, choleskyFactorizeSolve
         __shared__ real_type Xi_Sigma_shared[k * k];
         if constexpr (k <= 4)
         {
@@ -809,22 +809,22 @@ namespace ReSolve
       switch (k)
       {
       case 1:
-        kernels::choleskySolve<1><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+        kernels::choleskyFactorizeSolve<1><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
                                                          Sigma->getData(memory::DEVICE),
                                                          Xi_Sigma->getData(memory::DEVICE));
         break;
       case 2:
-        kernels::choleskySolve<2><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+        kernels::choleskyFactorizeSolve<2><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
                                                          Sigma->getData(memory::DEVICE),
                                                          Xi_Sigma->getData(memory::DEVICE));
         break;
       case 4:
-        kernels::choleskySolve<4><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+        kernels::choleskyFactorizeSolve<4><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
                                                          Sigma->getData(memory::DEVICE),
                                                          Xi_Sigma->getData(memory::DEVICE));
         break;
       case 8:
-        kernels::choleskySolve<8><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+        kernels::choleskyFactorizeSolve<8><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
                                                          Sigma->getData(memory::DEVICE),
                                                          Xi_Sigma->getData(memory::DEVICE));
         break;
@@ -884,7 +884,7 @@ namespace ReSolve
       return 0;
     }
 
-    int MultiBasisParallelConjugateGradientCuda::choleskySolve(vector::Vector* A, vector::Vector* B, vector::Vector* X)
+    int MultiBasisParallelConjugateGradientCuda::choleskyFactorizeSolve(vector::Vector* A, vector::Vector* B, vector::Vector* X)
     {
       index_type k = A->getSize();
 
@@ -894,22 +894,22 @@ namespace ReSolve
       switch (k)
       {
       case 1:
-        kernels::choleskySolve<1><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
+        kernels::choleskyFactorizeSolve<1><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
                                                          B->getData(memory::DEVICE),
                                                          X->getData(memory::DEVICE));
         break;
       case 2:
-        kernels::choleskySolve<2><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
+        kernels::choleskyFactorizeSolve<2><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
                                                          B->getData(memory::DEVICE),
                                                          X->getData(memory::DEVICE));
         break;
       case 4:
-        kernels::choleskySolve<4><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
+        kernels::choleskyFactorizeSolve<4><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
                                                          B->getData(memory::DEVICE),
                                                          X->getData(memory::DEVICE));
         break;
       case 8:
-        kernels::choleskySolve<8><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
+        kernels::choleskyFactorizeSolve<8><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
                                                          B->getData(memory::DEVICE),
                                                          X->getData(memory::DEVICE));
         break;

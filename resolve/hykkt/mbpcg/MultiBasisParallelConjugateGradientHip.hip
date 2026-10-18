@@ -243,7 +243,7 @@ namespace ReSolve
       }
       
       template <index_type k>
-      __global__ void choleskySolve(real_type* __restrict__ A,
+      __global__ void choleskyFactorizeSolve(real_type* __restrict__ A,
                                const real_type* B,
                                real_type* X)
       {
@@ -296,7 +296,7 @@ namespace ReSolve
           }
         }
 
-      // X = Xi * B => A * X = B => L * L^T * X = B, choleskySolve
+      // X = Xi * B => A * X = B => L * L^T * X = B, choleskyFactorizeSolve
         __shared__ real_type Xi_Sigma_shared[k * k];
         if (threadIdx.x < WAVEFRONT_SIZE) // Still only one warp
         {
@@ -349,6 +349,66 @@ namespace ReSolve
         if (threadIdx.x < k * k)
         {
           X[threadIdx.x] = Xi_Sigma_shared[threadIdx.x];
+        }
+      }
+
+      template <index_type k>
+      __global__ void choleskySolve(const real_type* __restrict__ L_tr, const real_type* B, real_type* X)
+      {
+      // X = A * B => A * X = B => L * L^T * X = B, choleskySolve // ANDREW TODO: cleanup notation
+
+        __shared__ real_type L_shared[k * (k + 1) / 2]; // Only need this much for kxk symmetric matrix. fits in one wavefront
+        {
+          index_type i = threadIdx.x % k;
+          index_type j = threadIdx.x / k;
+          if ((i < k) && (j < k) && (i >= j))
+          {
+            L_shared[indexLowerTriangular<k>(i, j)] = L_tr[i * k + j];
+          }
+        }
+
+        __shared__ real_type X_shared[k];
+        if (threadIdx.x < k)
+        {
+          X_shared[threadIdx.x] = B[threadIdx.x];
+        }
+        __syncwarp();
+
+        //  L * Y = B
+        if (threadIdx.x == 0)
+        {
+          // #pragma unroll 1
+          for (index_type row = 0; row < k; row++)
+          {
+            real_type y_local = X_shared[row];
+            // #pragma unroll 1
+            for (index_type i = 0; i < row; i++)
+            {
+              y_local -= X_shared[i] * L_shared[indexLowerTriangular<k>(row, i)]; // L_shared can be overridden. Here it contains Y
+            }
+            y_local /= L_shared[indexLowerTriangular<k>(row, row)];
+            X_shared[row] = y_local;
+          }
+
+          //  L^T * X = Y
+          // #pragma unroll 1
+          for (index_type row = k - 1; row >= 0; row--)
+          {
+            real_type y_local = X_shared[row];
+            // #pragma unroll 1
+            for (index_type i = row + 1; i < k; i++)
+            {
+              y_local -= X_shared[i] * L_shared[indexLowerTriangular<k>(i, row)]; // L_shared can be overridden. Here it contains Y
+            }
+            y_local /= L_shared[indexLowerTriangular<k>(row, row)];
+            X_shared[row] = y_local;
+          }
+        }
+        __syncwarp(); // check if syncwarp instead of syncthreads breaks anything
+        
+        if (threadIdx.x < k)
+        {
+          X[threadIdx.x] = X_shared[threadIdx.x];
         }
       }
 
@@ -701,28 +761,28 @@ namespace ReSolve
       index_type n = A_S->getSize();
       index_type k = A_S->getNumVectors();
 
-      int       block_size = (k <= 4) ? 32 : 64; // Must be at least k^2
+      int       block_size = WAVEFRONT_SIZE; // Must be at least k^2
       int       num_blocks = 1; // quite arbitrary
 
       switch (k)
       {
       case 1:
-        kernels::choleskySolve<1><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+        kernels::choleskyFactorizeSolve<1><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
                                                          Sigma->getData(memory::DEVICE),
                                                          Xi_Sigma->getData(memory::DEVICE));
         break;
       case 2:
-        kernels::choleskySolve<2><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+        kernels::choleskyFactorizeSolve<2><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
                                                          Sigma->getData(memory::DEVICE),
                                                          Xi_Sigma->getData(memory::DEVICE));
         break;
       case 4:
-        kernels::choleskySolve<4><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+        kernels::choleskyFactorizeSolve<4><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
                                                          Sigma->getData(memory::DEVICE),
                                                          Xi_Sigma->getData(memory::DEVICE));
         break;
       case 8:
-        kernels::choleskySolve<8><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
+        kernels::choleskyFactorizeSolve<8><<<num_blocks, block_size>>>(Xi_inv->getData(memory::DEVICE),
                                                          Sigma->getData(memory::DEVICE),
                                                          Xi_Sigma->getData(memory::DEVICE));
         break;
@@ -782,32 +842,69 @@ namespace ReSolve
       return 0;
     }
 
-    int MultiBasisParallelConjugateGradientHip::choleskySolve(vector::Vector* A, vector::Vector* B, vector::Vector* X)
+    int MultiBasisParallelConjugateGradientHip::choleskyFactorizeSolve(vector::Vector* A, vector::Vector* B, vector::Vector* X)
     {
       index_type k = A->getSize();
 
-      int       block_size = (k <= 4) ? 32 : 64; // Must be at least k^2
+      int       block_size = WAVEFRONT_SIZE; // Must be at least k^2
       int       num_blocks = 1; // quite arbitrary
 
       switch (k)
       {
       case 1:
-        kernels::choleskySolve<1><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
+        kernels::choleskyFactorizeSolve<1><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
                                                          B->getData(memory::DEVICE),
                                                          X->getData(memory::DEVICE));
         break;
       case 2:
-        kernels::choleskySolve<2><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
+        kernels::choleskyFactorizeSolve<2><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
                                                          B->getData(memory::DEVICE),
                                                          X->getData(memory::DEVICE));
         break;
       case 4:
-        kernels::choleskySolve<4><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
+        kernels::choleskyFactorizeSolve<4><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
                                                          B->getData(memory::DEVICE),
                                                          X->getData(memory::DEVICE));
         break;
       case 8:
-        kernels::choleskySolve<8><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
+        kernels::choleskyFactorizeSolve<8><<<num_blocks, block_size>>>(A->getData(memory::DEVICE),
+                                                         B->getData(memory::DEVICE),
+                                                         X->getData(memory::DEVICE));
+        break;
+      default:
+        return 1;
+      }
+
+      return 0;
+    }
+
+    // B AND X ARE SINGLE VECTORS
+    int MultiBasisParallelConjugateGradientHip::choleskySolve(vector::Vector* L_tr, vector::Vector* B, vector::Vector* X)
+    {
+      index_type k = L_tr->getSize();
+
+      int       block_size = k * k; // Must be at least k^2
+      int       num_blocks = 1; // quite arbitrary
+
+      switch (k)
+      {
+      case 1:
+        kernels::choleskySolve<1><<<num_blocks, block_size>>>(L_tr->getData(memory::DEVICE),
+                                                         B->getData(memory::DEVICE),
+                                                         X->getData(memory::DEVICE));
+        break;
+      case 2:
+        kernels::choleskySolve<2><<<num_blocks, block_size>>>(L_tr->getData(memory::DEVICE),
+                                                         B->getData(memory::DEVICE),
+                                                         X->getData(memory::DEVICE));
+        break;
+      case 4:
+        kernels::choleskySolve<4><<<num_blocks, block_size>>>(L_tr->getData(memory::DEVICE),
+                                                         B->getData(memory::DEVICE),
+                                                         X->getData(memory::DEVICE));
+        break;
+      case 8:
+        kernels::choleskySolve<8><<<num_blocks, block_size>>>(L_tr->getData(memory::DEVICE),
                                                          B->getData(memory::DEVICE),
                                                          X->getData(memory::DEVICE));
         break;

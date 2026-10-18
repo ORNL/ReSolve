@@ -26,7 +26,8 @@ namespace ReSolve
       virtual int bestBasis(vector::Vector* R, index_type* h_best_basis, real_type* h_best_basis_norm) = 0;
       virtual int choleskyQr(vector::Vector* W, vector::Vector* R, memory::MemorySpace memspace) = 0;
       virtual int updateXR(vector::Vector* Xi_inv, vector::Vector* Sigma, vector::Vector* S, vector::Vector* A_S, vector::Vector* Xi_Sigma, vector::Vector* X_res, vector::Vector* R_prec) = 0;
-      virtual int choleskySolve(vector::Vector* A, vector::Vector* B, vector::Vector* X) = 0;
+      virtual int choleskyFactorizeSolve(vector::Vector* A, vector::Vector* B, vector::Vector* X) = 0;
+      virtual int choleskySolve(vector::Vector* L_tr, vector::Vector* B, vector::Vector* X) = 0;
       virtual int updateW(vector::Vector* W, vector::Vector* L, vector::Vector* B, memory::MemorySpace memspace) = 0;
       virtual int multTSMTTSMSymmetric(vector::Vector* A, vector::Vector* B, vector::Vector* C, memory::MemorySpace memspace) = 0;
       virtual int updateSSigma(vector::Vector* W, vector::Vector* S, vector::Vector* Zeta, vector::Vector* Sigma, memory::MemorySpace memspace) = 0;
