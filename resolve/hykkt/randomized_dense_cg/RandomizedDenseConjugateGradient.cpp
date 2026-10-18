@@ -388,7 +388,7 @@ namespace ReSolve
 
             printf("MBPCG convergence occured at iteration %d. Total Solve Time: %f ms\n", i, elapsed.count());
             printf("Initial tolerance reached at iteration %d.\n", initial_tol_iter);
-            printf("Per iteration time: %.10f\n", (std::chrono::duration<double, std::milli>(iterative_end - iterative_start)).count() / i);
+            printf("Per iteration time: %.10f\n", (std::chrono::duration<double, std::milli>(iterative_end - iterative_start)).count() / (initial_tol_iter + 1));
             printf("Error: %.5e, best basis' error: %.5e\n", lincomb_error, best_basis_error);
             return 0;
           }
@@ -436,7 +436,7 @@ namespace ReSolve
         std::chrono::duration<double, std::milli> elapsed = (end - start);
         printf("No CG convergence in %d iterations\n", itmax_);
         printf("Total Solve Time: %f ms, error: %.5e\n", elapsed.count(), best_basis_error);
-        printf("Per iteration time: %.10f\n", (std::chrono::duration<double, std::milli>(iterative_end - iterative_start)).count() / i);
+        printf("Per iteration time: %.10f\n", (std::chrono::duration<double, std::milli>(iterative_end - iterative_start)).count() / (i + 1));
         return 1;
       }
 

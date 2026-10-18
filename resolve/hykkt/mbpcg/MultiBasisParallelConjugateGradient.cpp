@@ -229,6 +229,8 @@ namespace ReSolve
 
       bool initial_tol_reached = false;
       index_type initial_tol_iter;
+    
+      deviceSynchronize();
       
       std::chrono::time_point<std::chrono::steady_clock> start;
       std::chrono::time_point<std::chrono::steady_clock> end;
@@ -337,6 +339,7 @@ namespace ReSolve
         
           if (best_basis_error < initial_tol_)
           {
+            iterative_end = std::chrono::steady_clock::now();
             initial_tol_reached = true;
             initial_tol_iter = i;
           }
@@ -391,16 +394,16 @@ namespace ReSolve
               vector_handler_->scal(scaling_factor, x_, memspace_);
             }
 
+            deviceSynchronize();
             end = std::chrono::steady_clock::now();
             std::chrono::duration<double, std::milli> elapsed = (end - start);
 
-            deviceSynchronize();
             // auto conv_block_end = std::chrono::steady_clock::now();
             // printf("  [it %d] convergence_overhead: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(conv_block_end - conv_block_start).count()); // optional
 
             printf("MBPCG convergence occured at iteration %d. Total Solve Time: %f ms\n", i, elapsed.count());
             printf("Initial tolerance reached at iteration %d.\n", initial_tol_iter);
-            printf("Per iteration time: %.10f\n", (std::chrono::duration<double, std::milli>(iterative_end - iterative_start)).count() / i);
+            printf("Per iteration time: %.10f\n", (std::chrono::duration<double, std::milli>(iterative_end - iterative_start)).count() / (initial_tol_iter + 1));
             printf("Error: %.5e, best basis' error: %.5e\n", lincomb_error, best_basis_error);
             return 0;
           }
@@ -434,7 +437,6 @@ namespace ReSolve
 
         // auto it_end = std::chrono::steady_clock::now();
         // printf("[Iteration %d Total]: %f ms\n\n", i, static_cast<std::chrono::duration<double, std::milli>>(it_end - it_start).count());
-        iterative_end = std::chrono::steady_clock::now();
       }
 
       if (i == itmax_)
@@ -444,7 +446,7 @@ namespace ReSolve
         std::chrono::duration<double, std::milli> elapsed = (end - start);
         printf("No MBPCG convergence in %d iterations\n", itmax_);
         printf("Total Solve Time: %.10f ms, best basis' error: %.5e\n", elapsed.count(), best_basis_error);
-        printf("Per iteration time: %.10f\n", (std::chrono::duration<double, std::milli>(iterative_end - iterative_start)).count() / i);
+        printf("Per iteration time: %.10f\n", (std::chrono::duration<double, std::milli>(iterative_end - iterative_start)).count() / (i + 1));
         return 1;
       }
 
