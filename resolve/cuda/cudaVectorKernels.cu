@@ -16,6 +16,8 @@
 
 #include "resolve/Common.hpp"
 
+#include <algorithm>
+
 namespace ReSolve
 {
   namespace cuda
