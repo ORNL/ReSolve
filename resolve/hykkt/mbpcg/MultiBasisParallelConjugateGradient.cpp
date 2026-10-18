@@ -365,7 +365,7 @@ namespace ReSolve
           // deviceSynchronize();
           // auto solution_averaging_end = std::chrono::steady_clock::now();
           // printf("  [it %d] solution averaging: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(solution_averaging_end - solution_averaging_start).count()); // optional
-          printf("error %f\n", best_basis_error);
+          // printf("error %f\n", best_basis_error);
           }
           
           if (lincomb_error < convergence_tol_)

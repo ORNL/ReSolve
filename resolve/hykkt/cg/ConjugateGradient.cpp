@@ -6,7 +6,6 @@
 #include <resolve/Common.hpp>
 #include <resolve/utilities/logger/Logger.hpp>
 
-#include <hip/hip_runtime.h>
 namespace ReSolve
 {
   using out = io::Logger;

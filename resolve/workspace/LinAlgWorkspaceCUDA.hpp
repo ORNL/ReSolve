@@ -55,6 +55,7 @@ namespace ReSolve
 
     bool matvecSetup();
     void matvecSetupDone();
+    void resetMatvecSetup();
 
   private:
     // handles

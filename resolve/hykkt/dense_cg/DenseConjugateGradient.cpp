@@ -91,7 +91,11 @@ namespace ReSolve
 
     void DenseConjugateGradient::setup()
     {
+#ifdef RESOLVE_USE_CUDA
+      impl_ = new MultiBasisParallelConjugateGradientCuda(vector_handler_);
+#elif defined(RESOLVE_USE_HIP)
       impl_ = new MultiBasisParallelConjugateGradientHip(vector_handler_);
+#endif
 
       A_prec_ = new vector::Vector(n_, n_);
       r_ = new vector::Vector(n_);
