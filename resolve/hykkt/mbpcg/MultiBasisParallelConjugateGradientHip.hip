@@ -883,7 +883,7 @@ namespace ReSolve
     {
       index_type k = L_tr->getSize();
 
-      int       block_size = k * k; // Must be at least k^2
+      int       block_size = k;
       int       num_blocks = 1; // quite arbitrary
 
       switch (k)

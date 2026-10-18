@@ -451,7 +451,7 @@ namespace ReSolve
       }
 
       template <index_type k>
-      __global__ void choleskySolve(real_type* X, const real_type* __restrict__ L, const real_type* B)
+      __global__ void choleskySolve(const real_type* __restrict__ L_tr, const real_type* B, real_type* X)
       {
       // X = A * B => A * X = B => L * L^T * X = B, choleskySolve // ANDREW TODO: cleanup notation
 
@@ -461,111 +461,50 @@ namespace ReSolve
           index_type j = threadIdx.x / k;
           if ((i < k) && (j < k) && (i >= j))
           {
-            L_shared[indexLowerTriangular<k>(i, j)] = L[j * k + i];
+            L_shared[indexLowerTriangular<k>(i, j)] = L_tr[i * k + j];
           }
         }
 
-        __shared__ real_type X_shared[k * k];
-        if constexpr (k <= 4)
+        __shared__ real_type X_shared[k];
+        if (threadIdx.x < k)
         {
-          if (threadIdx.x < WARP_SIZE) // k <= 4 for now. Still only one warp
-          {
-            if (threadIdx.x < k * k)
-            {
-              X_shared[threadIdx.x] = B[threadIdx.x];
-            }
-            __syncwarp();
-
-            //  L * Y = B
-            if (threadIdx.x < k)
-            {
-              index_type col = threadIdx.x; // Rows and columns of B
-
-              // #pragma unroll 1
-              for (index_type row = 0; row < k; row++)
-              {
-                real_type y_local = X_shared[col * k + row];
-                // #pragma unroll 1
-                for (index_type i = 0; i < row; i++)
-                {
-                  y_local -= X_shared[col * k + i] * L_shared[indexLowerTriangular<k>(row, i)]; // L_shared can be overridden. Here it contains Y
-                }
-                y_local /= L_shared[indexLowerTriangular<k>(row, row)];
-                X_shared[col * k + row] = y_local;
-              }
-            }
-            __syncwarp();
-
-            //  L^T * X = Y
-            if (threadIdx.x < k)
-            {
-              index_type col = threadIdx.x; // Rows and columns of B
-
-              // #pragma unroll 1
-              for (index_type row = k - 1; row >= 0; row--)
-              {
-                real_type y_local = X_shared[col * k + row];
-                // #pragma unroll 1
-                for (index_type i = row + 1; i < k; i++)
-                {
-                  y_local -= X_shared[col * k + i] * L_shared[indexLowerTriangular<k>(i, row)]; // L_shared can be overridden. Here it contains Y
-                }
-                y_local /= L_shared[indexLowerTriangular<k>(row, row)];
-                X_shared[col * k + row] = y_local;
-              }
-            }
-          }
+          X_shared[threadIdx.x] = B[threadIdx.x];
         }
-        else
+        __syncwarp();
+
+        //  L * Y = B
+        if (threadIdx.x == 0)
         {
-          if (threadIdx.x < k * k)
+          // #pragma unroll 1
+          for (index_type row = 0; row < k; row++)
           {
-            X_shared[threadIdx.x] = B[threadIdx.x];
-          }
-          __syncthreads();
-
-          //  L * Y = B
-          if (threadIdx.x < k)
-          {
-            index_type col = threadIdx.x; // Rows and columns of B
-
+            real_type y_local = X_shared[row];
             // #pragma unroll 1
-            for (index_type row = 0; row < k; row++)
+            for (index_type i = 0; i < row; i++)
             {
-              real_type y_local = X_shared[col * k + row];
-              // #pragma unroll 1
-              for (index_type i = 0; i < row; i++)
-              {
-                y_local -= X_shared[col * k + i] * L_shared[indexLowerTriangular<k>(row, i)]; // L_shared can be overridden. Here it contains Y
-              }
-              y_local /= L_shared[indexLowerTriangular<k>(row, row)];
-              X_shared[col * k + row] = y_local;
+              y_local -= X_shared[i] * L_shared[indexLowerTriangular<k>(row, i)]; // L_shared can be overridden. Here it contains Y
             }
+            y_local /= L_shared[indexLowerTriangular<k>(row, row)];
+            X_shared[row] = y_local;
           }
-          __syncthreads();
 
           //  L^T * X = Y
-          if (threadIdx.x < k)
+          // #pragma unroll 1
+          for (index_type row = k - 1; row >= 0; row--)
           {
-            index_type col = threadIdx.x; // Rows and columns of B
-
+            real_type y_local = X_shared[row];
             // #pragma unroll 1
-            for (index_type row = k - 1; row >= 0; row--)
+            for (index_type i = row + 1; i < k; i++)
             {
-              real_type y_local = X_shared[col * k + row];
-              // #pragma unroll 1
-              for (index_type i = row + 1; i < k; i++)
-              {
-                y_local -= X_shared[col * k + i] * L_shared[indexLowerTriangular<k>(i, row)]; // L_shared can be overridden. Here it contains Y
-              }
-              y_local /= L_shared[indexLowerTriangular<k>(row, row)];
-              X_shared[col * k + row] = y_local;
+              y_local -= X_shared[i] * L_shared[indexLowerTriangular<k>(i, row)]; // L_shared can be overridden. Here it contains Y
             }
+            y_local /= L_shared[indexLowerTriangular<k>(row, row)];
+            X_shared[row] = y_local;
           }
         }
-        __syncthreads(); // check if syncwarp instead of syncthreads breaks anything
+        __syncwarp(); // check if syncwarp instead of syncthreads breaks anything
         
-        if (threadIdx.x < k * k)
+        if (threadIdx.x < k)
         {
           X[threadIdx.x] = X_shared[threadIdx.x];
         }
@@ -1042,11 +981,11 @@ namespace ReSolve
     }
 
     // B AND X ARE SINGLE VECTORS
-    int MultiBasisParallelConjugateGradientHip::choleskySolve(vector::Vector* L_tr, vector::Vector* B, vector::Vector* X)
+    int MultiBasisParallelConjugateGradientCuda::choleskySolve(vector::Vector* L_tr, vector::Vector* B, vector::Vector* X)
     {
       index_type k = L_tr->getSize();
 
-      int       block_size = k * k; // Must be at least k^2
+      int       block_size = k;
       int       num_blocks = 1; // quite arbitrary
 
       switch (k)
@@ -1205,6 +1144,17 @@ namespace ReSolve
       default:
         return 1;
       }
+
+      return 0;
+    }
+
+    int MultiBasisParallelConjugateGradientCuda::preconditionDense(vector::Vector* A, vector::Vector* d)
+    {
+      index_type n = A->getSize();
+
+      constexpr int block_size = 256;
+      int num_blocks = (n * n + block_size - 1) / block_size;
+      kernels::preconditionDense<<<num_blocks, block_size>>>(A->getData(memory::DEVICE), d->getData(memory::DEVICE), n);
 
       return 0;
     }
