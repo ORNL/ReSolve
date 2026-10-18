@@ -326,18 +326,6 @@ namespace ReSolve
           index_type best_basis;
           real_type best_basis_r_norm;
           impl_->bestBasis(R_, &best_basis, &best_basis_r_norm);
-
-          // index_type best_basis = -1;
-          // real_type best_basis_r_norm = std::numeric_limits<real_type>::infinity();
-          // for (index_type j = 0; j < k_; j++)
-          // {
-          //   real_type basis_r_norm = vector_handler_->norm(R_, j, memspace_);
-          //   if (basis_r_norm < best_basis_r_norm)
-          //   {
-          //     best_basis = j;
-          //     best_basis_r_norm = basis_r_norm;
-          //   }
-          // }
           
           best_basis_error = best_basis_r_norm / b_norm_;
           // auto basis_loop_end = std::chrono::steady_clock::now();
@@ -365,6 +353,7 @@ namespace ReSolve
           }
           else
           {
+          // auto solution_averaging_start = std::chrono::steady_clock::now();
             Temp_nxk_->copyFromExternal(R_, memspace_, memspace_);
             Temp_kxk_->setToZero(memspace_);
             impl_->choleskyQr(Temp_nxk_, Temp_kxk_, memspace_);
@@ -373,6 +362,10 @@ namespace ReSolve
             vector_handler_->gemv('N', k_, ONE, ZERO, R_, c_, r_, memspace_);
             vector_handler_->scal(scaling_factor, r_, memspace_);
             lincomb_error = vector_handler_->norm(r_, memspace_) / b_norm_;
+          // deviceSynchronize();
+          // auto solution_averaging_end = std::chrono::steady_clock::now();
+          // printf("  [it %d] solution averaging: %f ms\n", i, static_cast<std::chrono::duration<double, std::milli>>(solution_averaging_end - solution_averaging_start).count()); // optional
+          printf("error %f\n", best_basis_error);
           }
           
           if (lincomb_error < convergence_tol_)

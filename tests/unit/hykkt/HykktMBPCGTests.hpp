@@ -78,7 +78,7 @@ namespace ReSolve
         // k = 1, 2, 4, 8
         for (index_type k = 1; k <= 8; k *= 2)
         {
-          // if (k == 1) continue;
+          if (k == 1) continue;
           printf("\nk=%d\n", k);
           hykkt::MultiBasisParallelConjugateGradient mbpcg(n, k, &matrix_handler_, &vector_handler_, memspace_);
           mbpcg.setSolverTolerance(initial_tol, convergence_tol);
