@@ -16,8 +16,10 @@ add_subdirectory(spgemm)
 add_subdirectory(sccg)
 if(RESOLVE_USE_GPU)
   add_subdirectory(mbpcg)
+  add_subdirectory(randomized_dense_cg)
 endif()
 add_subdirectory(cg)
+add_subdirectory(dense_cg)
 
 # Build shared library ReSolve::hykkt
 set(HYKKT_SOLVER_SRC HyKKTSolver.cpp)

@@ -71,6 +71,26 @@ target_compile_definitions(
   runHykktCGTests.exe PRIVATE SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
 ) # For file paths
 
+add_executable(runHykktRandomizedDenseCGTests.exe runHykktRandomizedDenseCGTests.cpp)
+target_link_libraries(
+  runHykktRandomizedDenseCGTests.exe
+  PRIVATE resolve_hykkt resolve_hykkt_randomized_dense_cg resolve_hykkt_chol resolve_matrix
+          resolve_vector
+)
+target_compile_definitions(
+  runHykktRandomizedDenseCGTests.exe PRIVATE SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
+) # For file paths
+
+add_executable(runHykktDenseCGTests.exe runHykktDenseCGTests.cpp)
+target_link_libraries(
+  runHykktDenseCGTests.exe
+  PRIVATE resolve_hykkt resolve_hykkt_dense_cg resolve_hykkt_chol resolve_matrix
+          resolve_vector
+)
+target_compile_definitions(
+  runHykktDenseCGTests.exe PRIVATE SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
+) # For file paths
+
 add_executable(runHykktSolverTests.exe runHykktSolverTests.cpp)
 target_link_libraries(
   runHykktSolverTests.exe
@@ -81,6 +101,8 @@ target_link_libraries(
           resolve_hykkt_sccg
           resolve_hykkt_mbpcg
           resolve_hykkt_cg
+          resolve_hykkt_randomized_dense_cg
+          resolve_hykkt_dense_cg
           resolve_hykkt_solver
           resolve_vector
           resolve_matrix
@@ -93,7 +115,7 @@ target_compile_definitions(
 set(installable_tests
     runHykktPermutationTests.exe runHykktRuizScalingTests.exe
     runHykktCholeskyTests.exe runHykktSpGEMMTests.exe runHykktSCCGTests.exe
-    runHykktMBPCGTests.exe runHykktCGTests.exe runHykktSolverTests.exe
+    runHykktMBPCGTests.exe runHykktCGTests.exe runHykktRandomizedDenseCGTests.exe runHykktDenseCGTests.exe runHykktSolverTests.exe
 )
 if(RESOLVE_USE_CUDSS)
   list(APPEND installable_tests runHykktCholeskyCuDssTests.exe)
@@ -117,4 +139,6 @@ add_test(NAME hykkt_spgemm_test COMMAND $<TARGET_FILE:runHykktSpGEMMTests.exe>)
 add_test(NAME hykkt_sccg_test COMMAND $<TARGET_FILE:runHykktSCCGTests.exe>)
 add_test(NAME hykkt_mbpcg_test COMMAND $<TARGET_FILE:runHykktMBPCGTests.exe>)
 add_test(NAME hykkt_cg_test COMMAND $<TARGET_FILE:runHykktCGTests.exe>)
+add_test(NAME hykkt_randomized_dense_cg_test COMMAND $<TARGET_FILE:runHykktRandomizedDenseCGTests.exe>)
+add_test(NAME hykkt_dense_cg_test COMMAND $<TARGET_FILE:runHykktDenseCGTests.exe>)
 add_test(NAME hykkt_solver_test COMMAND $<TARGET_FILE:runHykktSolverTests.exe>)
